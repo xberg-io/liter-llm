@@ -135,6 +135,18 @@ const char *literllm_last_error_context(void);
 void literllm_free_string(char *ptr);
 
 /**
+ * Free a byte buffer previously returned by this library via out-params.
+ * `ptr`, `len`, and `cap` must match the values written by the library function,
+ * or the call must pass `ptr = null` (in which case it is a no-op).
+ * # Safety
+ * Pointer must have been returned by this library (via out_ptr / out_len / out_cap
+ * out-params), or be null. The len and cap values must be unchanged since the call.
+ */
+void literllm_free_bytes(uint8_t *ptr,
+                         uintptr_t len,
+                         uintptr_t cap);
+
+/**
  * Return the library version string. The pointer is static and must NOT be freed.
  * # Safety
  * Caller must ensure all pointer arguments are valid or null.
@@ -3836,8 +3848,11 @@ LITERLLMImagesResponse *literllm_default_client_image_generate(const LITERLLMDef
  * Caller must ensure all pointer arguments are valid or null.
  * Returned pointers must be freed with the appropriate free function.
  */
-uint8_t *literllm_default_client_speech(const LITERLLMDefaultClient *this_,
-                                        const LITERLLMCreateSpeechRequest *req);
+int32_t literllm_default_client_speech(const LITERLLMDefaultClient *this_,
+                                       const LITERLLMCreateSpeechRequest *req,
+                                       uint8_t **out_ptr,
+                                       uintptr_t *out_len,
+                                       uintptr_t *out_cap);
 
 /**
  * # Safety
@@ -3916,8 +3931,11 @@ LITERLLMFileListResponse *literllm_default_client_list_files(const LITERLLMDefau
  * Caller must ensure all pointer arguments are valid or null.
  * Returned pointers must be freed with the appropriate free function.
  */
-uint8_t *literllm_default_client_file_content(const LITERLLMDefaultClient *this_,
-                                              const char *file_id);
+int32_t literllm_default_client_file_content(const LITERLLMDefaultClient *this_,
+                                             const char *file_id,
+                                             uint8_t **out_ptr,
+                                             uintptr_t *out_len,
+                                             uintptr_t *out_cap);
 
 /**
  * # Safety
