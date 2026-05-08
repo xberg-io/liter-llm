@@ -564,6 +564,9 @@ options_type = "CreateSpeechRequest"
 result_is_simple = true
 result_is_array = true
 
+[crates.e2e.calls.speech.overrides.node]
+result_is_simple = true
+
 [crates.e2e.calls.speech.overrides.python]
 options_type = "CreateSpeechRequest"
 options_via = "from_json"
@@ -813,6 +816,9 @@ type = "string"
 
 [crates.e2e.calls.file_content.overrides.rust]
 # file_content() returns bytes::Bytes in Rust — not a struct with fields.
+result_is_simple = true
+
+[crates.e2e.calls.file_content.overrides.node]
 result_is_simple = true
 
 [crates.e2e.calls.file_content.overrides.c]

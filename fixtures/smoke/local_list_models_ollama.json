@@ -21,7 +21,7 @@
     }
   ],
   "skip": {
-    "languages": ["rust", "python"],
+    "languages": ["rust", "python", "node"],
     "reason": "requires local Ollama service; skipped in standard CI environments"
   }
 }

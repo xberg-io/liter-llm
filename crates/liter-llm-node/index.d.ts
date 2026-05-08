@@ -2,7 +2,7 @@
 /* eslint-disable */
 export declare class JsDefaultClient {
   chat(req: JsChatCompletionRequest): Promise<JsChatCompletionResponse>
-  chatStream(req: JsChatCompletionRequest): Promise<string>
+  chatStream(req: JsChatCompletionRequest): Promise<Array<JsChatCompletionChunk>>
   embed(req: JsEmbeddingRequest): Promise<JsEmbeddingResponse>
   listModels(): Promise<JsModelsListResponse>
   imageGenerate(req: JsCreateImageRequest): Promise<JsImagesResponse>
@@ -43,12 +43,6 @@ export interface JsAudioContent {
   format?: string
 }
 
-export declare const enum JsAuthHeaderFormat {
-  Bearer = 'Bearer',
-  ApiKey = 'ApiKey',
-  None = 'None'
-}
-
 export interface JsBatchListQuery {
   limit?: number
   after?: string
@@ -76,7 +70,7 @@ export interface JsBatchObject {
   failedAt?: number
   expiredAt?: number
   requestCounts?: JsBatchRequestCounts
-  metadata?: string
+  metadata?: any
 }
 
 export interface JsBatchRequestCounts {
@@ -127,7 +121,7 @@ export interface JsChatCompletionRequest {
   streamOptions?: JsStreamOptions
   seed?: number
   reasoningEffort?: JsReasoningEffort
-  extraBody?: string
+  extraBody?: any
 }
 
 export interface JsChatCompletionResponse {
@@ -142,7 +136,7 @@ export interface JsChatCompletionResponse {
 }
 
 export interface JsChatCompletionTool {
-  toolType: JsToolType
+  type: JsToolType
   function: JsFunctionDefinition
 }
 
@@ -164,7 +158,7 @@ export interface JsCreateBatchRequest {
   inputFileId?: string
   endpoint?: string
   completionWindow?: string
-  metadata?: string
+  metadata?: any
 }
 
 export interface JsCreateFileRequest {
@@ -186,12 +180,12 @@ export interface JsCreateImageRequest {
 
 export interface JsCreateResponseRequest {
   model?: string
-  input?: string
+  input?: any
   instructions?: string
   tools?: Array<JsResponseTool>
   temperature?: number
   maxOutputTokens?: number
-  metadata?: string
+  metadata?: any
 }
 
 export interface JsCreateSpeechRequest {
@@ -237,11 +231,6 @@ export interface JsDocumentContent {
 export declare const enum JsEmbeddingFormat {
   Float = 'float',
   Base64 = 'base64'
-}
-
-export declare const enum JsEmbeddingInput {
-  Single = 'Single',
-  Multiple = 'Multiple'
 }
 
 export interface JsEmbeddingObject {
@@ -311,7 +300,7 @@ export interface JsFunctionCall {
 export interface JsFunctionDefinition {
   name: string
   description?: string
-  parameters?: string
+  parameters?: any
   strict?: boolean
 }
 
@@ -345,7 +334,7 @@ export interface JsImageUrl {
 export interface JsJsonSchemaFormat {
   name?: string
   description?: string
-  schema?: string
+  schema?: any
   strict?: boolean
 }
 
@@ -376,13 +365,13 @@ export interface JsModerationCategories {
   sexual?: boolean
   hate?: boolean
   harassment?: boolean
-  selfHarm?: boolean
-  sexualMinors?: boolean
-  hateThreatening?: boolean
-  violenceGraphic?: boolean
-  selfHarmIntent?: boolean
-  selfHarmInstructions?: boolean
-  harassmentThreatening?: boolean
+  'self-harm'?: boolean
+  'sexual/minors'?: boolean
+  'hate/threatening'?: boolean
+  'violence/graphic'?: boolean
+  'self-harm/intent'?: boolean
+  'self-harm/instructions'?: boolean
+  'harassment/threatening'?: boolean
   violence?: boolean
 }
 
@@ -390,19 +379,14 @@ export interface JsModerationCategoryScores {
   sexual?: number
   hate?: number
   harassment?: number
-  selfHarm?: number
-  sexualMinors?: number
-  hateThreatening?: number
-  violenceGraphic?: number
-  selfHarmIntent?: number
-  selfHarmInstructions?: number
-  harassmentThreatening?: number
+  'self-harm'?: number
+  'sexual/minors'?: number
+  'hate/threatening'?: number
+  'violence/graphic'?: number
+  'self-harm/intent'?: number
+  'self-harm/instructions'?: number
+  'harassment/threatening'?: number
   violence?: number
-}
-
-export declare const enum JsModerationInput {
-  Single = 'Single',
-  Multiple = 'Multiple'
 }
 
 export interface JsModerationRequest {
@@ -470,11 +454,6 @@ export declare const enum JsReasoningEffort {
   High = 'high'
 }
 
-export declare const enum JsRerankDocument {
-  Text = 'Text',
-  Object = 'Object'
-}
-
 export interface JsRerankRequest {
   model: string
   query: string
@@ -486,7 +465,7 @@ export interface JsRerankRequest {
 export interface JsRerankResponse {
   id?: string
   results: Array<JsRerankResult>
-  meta?: string
+  meta?: any
 }
 
 export interface JsRerankResult {
@@ -512,17 +491,17 @@ export interface JsResponseObject {
   status?: string
   output?: Array<JsResponseOutputItem>
   usage?: JsResponseUsage
-  error?: string
+  error?: any
 }
 
 export interface JsResponseOutputItem {
-  itemType?: string
-  content?: string
+  type?: string
+  content?: any
 }
 
 export interface JsResponseTool {
-  toolType?: string
-  config?: string
+  type?: string
+  config?: any
 }
 
 export interface JsResponseUsage {
@@ -556,13 +535,8 @@ export interface JsSpecificFunction {
 }
 
 export interface JsSpecificToolChoice {
-  choiceType?: JsToolType
+  type?: JsToolType
   function?: JsSpecificFunction
-}
-
-export declare const enum JsStopSequence {
-  Single = 'Single',
-  Multiple = 'Multiple'
 }
 
 export interface JsStreamChoice {
@@ -591,7 +565,7 @@ export interface JsStreamOptions {
 export interface JsStreamToolCall {
   index?: number
   id?: string
-  callType?: JsToolType
+  type?: JsToolType
   function?: JsStreamFunctionCall
 }
 
@@ -602,13 +576,8 @@ export interface JsSystemMessage {
 
 export interface JsToolCall {
   id: string
-  callType: JsToolType
+  type: JsToolType
   function: JsFunctionCall
-}
-
-export declare const enum JsToolChoice {
-  Mode = 'Mode',
-  Specific = 'Specific'
 }
 
 export declare const enum JsToolChoiceMode {
@@ -624,7 +593,7 @@ export interface JsToolMessage {
 }
 
 export declare const enum JsToolType {
-  Function = 'Function'
+  Function = 'function'
 }
 
 export interface JsTranscriptionResponse {
@@ -646,11 +615,6 @@ export interface JsUsage {
   completionTokens?: number
   totalTokens?: number
   promptTokensDetails?: JsPromptTokensDetails
-}
-
-export declare const enum JsUserContent {
-  Text = 'Text',
-  Parts = 'Parts'
 }
 
 export interface JsUserMessage {
