@@ -212,7 +212,9 @@ jobs:
       - uses: kreuzberg-dev/actions/build-python-wheels@v1
         with:
           package-dir: packages/python
-          cibw-build: "cp310-* cp311-* cp312-* cp313-*"
+          # abi3-py310 is enabled in pyo3 features → one wheel per platform covers 3.10+.
+          # Without this override, cibuildwheel rebuilds for cp310/cp311/cp312/cp313/cp314 = 5x duplicates.
+          cibw-build: "cp310-*"
           cibw-skip: "*-musllinux* *-win32 *-manylinux_i686 *-macosx_x86_64"
           artifact-name: python-wheel-${{ matrix.label }}
 
