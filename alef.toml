@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.14.22"
+alef_version = "0.15.1"
 languages = ["python", "node", "ruby", "php", "ffi", "go", "java", "csharp", "elixir", "wasm"]
 
 [workspace.sync]
@@ -1237,6 +1237,7 @@ core_path = "chat_stream"
 owner_type = "DefaultClient"
 item_type = "ChatCompletionChunk"
 error_type = "LiterLlmError"
+request_type = "liter_llm::ChatCompletionRequest"
 
 [[crates.adapters.params]]
 name = "req"
