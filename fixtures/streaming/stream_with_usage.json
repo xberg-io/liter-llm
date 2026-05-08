@@ -5,7 +5,7 @@
   "tags": ["streaming"],
   "call": "chat_stream",
   "skip": {
-    "languages": ["rust", "python", "node"],
+    "languages": ["rust", "python", "node", "ruby"],
     "reason": "Rust returns BoxStream — collecting usage from the final chunk requires consuming the stream, which is not supported by the generator; Python ChatStreamIterator does not expose a .usage attribute"
   },
   "input": {

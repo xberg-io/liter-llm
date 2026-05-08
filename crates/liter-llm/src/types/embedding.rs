@@ -17,7 +17,7 @@ pub enum EmbeddingFormat {
 
 // ─── Request ──────────────────────────────────────────────────────────────────
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct EmbeddingRequest {
     pub model: String,

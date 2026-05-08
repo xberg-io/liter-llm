@@ -280,7 +280,12 @@ cmake_config = true
 fixtures = "fixtures"
 output = "e2e"
 # Fields whose values are enum types — assertions use _alef_e2e_text() instead of .strip().
-fields_enum = ["status", "purpose"]
+fields_enum = [
+  "status",
+  "purpose",
+  "choices[0].finish_reason",
+  "choices[0].message.role",
+]
 # Optional fields on result types — generator emits unwrap handling for these paths.
 fields_optional = [
   # ChatCompletionResponse
@@ -575,6 +580,7 @@ result_is_simple = true
 
 [crates.e2e.calls.speech.overrides.ruby]
 options_type = "LiterLlm::CreateSpeechRequest"
+result_is_simple = true
 
 [crates.e2e.calls.transcribe]
 function = "transcribe"
@@ -799,6 +805,12 @@ extra_args = ["None"]
 [crates.e2e.calls.list_files.overrides.go]
 extra_args = ["nil"]
 
+[crates.e2e.calls.list_files.overrides.ruby]
+extra_args = ["nil"]
+
+[crates.e2e.calls.list_files.overrides.node]
+extra_args = ["undefined"]
+
 [crates.e2e.calls.list_files.overrides.c]
 result_type = "ListFilesResponse"
 
@@ -819,6 +831,9 @@ type = "string"
 result_is_simple = true
 
 [crates.e2e.calls.file_content.overrides.node]
+result_is_simple = true
+
+[crates.e2e.calls.file_content.overrides.ruby]
 result_is_simple = true
 
 [crates.e2e.calls.file_content.overrides.c]
@@ -881,6 +896,12 @@ extra_args = ["None"]
 
 [crates.e2e.calls.list_batches.overrides.go]
 extra_args = ["nil"]
+
+[crates.e2e.calls.list_batches.overrides.ruby]
+extra_args = ["nil"]
+
+[crates.e2e.calls.list_batches.overrides.node]
+extra_args = ["undefined"]
 
 [crates.e2e.calls.list_batches.overrides.c]
 result_type = "ListBatchesResponse"
