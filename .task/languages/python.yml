@@ -9,6 +9,12 @@ tasks:
       - uv --version
       - uv sync --no-install-project
 
+  build:
+    desc: Build Python wheel via maturin (uv sync)
+    dir: packages/python
+    cmds:
+      - uv sync
+
   format:
     desc: Format Python code
     cmds:
