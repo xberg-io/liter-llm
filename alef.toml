@@ -425,6 +425,7 @@ type = "json_object"
 owned = true
 
 [crates.e2e.calls.chat.overrides.c]
+options_type = "ChatCompletionRequest"
 result_type = "ChatCompletionResponse"
 
 [crates.e2e.calls.chat.overrides.csharp]
@@ -462,6 +463,7 @@ type = "json_object"
 owned = true
 
 [crates.e2e.calls.chat_stream.overrides.c]
+options_type = "ChatCompletionRequest"
 result_type = "ChatCompletionChunk"
 
 [crates.e2e.calls.chat_stream.overrides.csharp]
@@ -495,6 +497,7 @@ type = "json_object"
 owned = true
 
 [crates.e2e.calls.embed.overrides.c]
+options_type = "EmbeddingRequest"
 result_type = "EmbeddingResponse"
 
 [crates.e2e.calls.embed.overrides.csharp]
@@ -544,6 +547,7 @@ type = "json_object"
 owned = true
 
 [crates.e2e.calls.image_generate.overrides.c]
+options_type = "CreateImageRequest"
 result_type = "ImageResponse"
 
 [crates.e2e.calls.image_generate.overrides.csharp]
@@ -584,6 +588,7 @@ owned = true
 result_is_simple = true
 
 [crates.e2e.calls.speech.overrides.c]
+options_type = "CreateSpeechRequest"
 result_type = "SpeechResponse"
 
 [crates.e2e.calls.speech.overrides.csharp]
@@ -627,6 +632,7 @@ type = "json_object"
 owned = true
 
 [crates.e2e.calls.transcribe.overrides.c]
+options_type = "CreateTranscriptionRequest"
 result_type = "TranscriptionResponse"
 
 [crates.e2e.calls.transcribe.overrides.csharp]
@@ -663,6 +669,7 @@ type = "json_object"
 owned = true
 
 [crates.e2e.calls.moderate.overrides.c]
+options_type = "ModerationRequest"
 result_type = "ModerationResponse"
 
 [crates.e2e.calls.moderate.overrides.csharp]
@@ -699,6 +706,7 @@ type = "json_object"
 owned = true
 
 [crates.e2e.calls.rerank.overrides.c]
+options_type = "RerankRequest"
 result_type = "RerankResponse"
 
 [crates.e2e.calls.rerank.overrides.csharp]
@@ -735,6 +743,7 @@ type = "json_object"
 owned = true
 
 [crates.e2e.calls.search.overrides.c]
+options_type = "SearchRequest"
 result_type = "SearchResponse"
 
 [crates.e2e.calls.search.overrides.csharp]
@@ -771,6 +780,7 @@ type = "json_object"
 owned = true
 
 [crates.e2e.calls.ocr.overrides.c]
+options_type = "OcrRequest"
 result_type = "OcrResponse"
 
 [crates.e2e.calls.ocr.overrides.csharp]
@@ -807,6 +817,7 @@ type = "json_object"
 owned = true
 
 [crates.e2e.calls.create_file.overrides.c]
+options_type = "CreateFileRequest"
 result_type = "FileResponse"
 
 [crates.e2e.calls.create_file.overrides.csharp]
@@ -932,6 +943,7 @@ type = "json_object"
 owned = true
 
 [crates.e2e.calls.create_batch.overrides.c]
+options_type = "CreateBatchRequest"
 result_type = "BatchResponse"
 
 [crates.e2e.calls.create_batch.overrides.csharp]
@@ -1028,6 +1040,7 @@ type = "json_object"
 owned = true
 
 [crates.e2e.calls.create_response.overrides.c]
+options_type = "CreateResponseRequest"
 result_type = "ResponseResponse"
 
 [crates.e2e.calls.create_response.overrides.csharp]
