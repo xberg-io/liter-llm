@@ -12,7 +12,9 @@ defmodule E2eElixir.MixProject do
 
   defp deps do
     [
-
+      {:liter_llm, path: "../../packages/elixir"},
+      {:rustler_precompiled, "~> 0.9"},
+      {:rustler, "~> 0.37.0", runtime: false}
     ]
   end
 end

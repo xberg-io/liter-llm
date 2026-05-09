@@ -430,6 +430,9 @@ result_type = "ChatCompletionResponse"
 [crates.e2e.calls.chat.overrides.csharp]
 options_type = "ChatCompletionRequest"
 
+[crates.e2e.calls.chat.overrides.elixir]
+function = "defaultclient_chat"
+
 [crates.e2e.calls.chat.overrides.php]
 options_type = "ChatCompletionRequest"
 
@@ -464,6 +467,9 @@ result_type = "ChatCompletionChunk"
 [crates.e2e.calls.chat_stream.overrides.csharp]
 options_type = "ChatCompletionRequest"
 
+[crates.e2e.calls.chat_stream.overrides.elixir]
+function = "defaultclient_chat_stream"
+
 [crates.e2e.calls.chat_stream.overrides.php]
 options_type = "ChatCompletionRequest"
 
@@ -494,6 +500,9 @@ result_type = "EmbeddingResponse"
 [crates.e2e.calls.embed.overrides.csharp]
 options_type = "EmbeddingRequest"
 
+[crates.e2e.calls.embed.overrides.elixir]
+function = "defaultclient_embed"
+
 [crates.e2e.calls.embed.overrides.php]
 options_type = "EmbeddingRequest"
 
@@ -516,6 +525,9 @@ method = "GET"
 module = "liter_llm"
 async = true
 
+[crates.e2e.calls.list_models.overrides.elixir]
+function = "defaultclient_list_models"
+
 [crates.e2e.calls.list_models.overrides.c]
 result_type = "ListModelsResponse"
 
@@ -536,6 +548,9 @@ result_type = "ImageResponse"
 
 [crates.e2e.calls.image_generate.overrides.csharp]
 options_type = "CreateImageRequest"
+
+[crates.e2e.calls.image_generate.overrides.elixir]
+function = "defaultclient_image_generate"
 
 [crates.e2e.calls.image_generate.overrides.php]
 options_type = "CreateImageRequest"
@@ -573,6 +588,9 @@ result_type = "SpeechResponse"
 
 [crates.e2e.calls.speech.overrides.csharp]
 options_type = "CreateSpeechRequest"
+
+[crates.e2e.calls.speech.overrides.elixir]
+function = "defaultclient_speech"
 
 [crates.e2e.calls.speech.overrides.php]
 options_type = "CreateSpeechRequest"
@@ -614,6 +632,9 @@ result_type = "TranscriptionResponse"
 [crates.e2e.calls.transcribe.overrides.csharp]
 options_type = "CreateTranscriptionRequest"
 
+[crates.e2e.calls.transcribe.overrides.elixir]
+function = "defaultclient_transcribe"
+
 [crates.e2e.calls.transcribe.overrides.php]
 options_type = "CreateTranscriptionRequest"
 
@@ -646,6 +667,9 @@ result_type = "ModerationResponse"
 
 [crates.e2e.calls.moderate.overrides.csharp]
 options_type = "ModerationRequest"
+
+[crates.e2e.calls.moderate.overrides.elixir]
+function = "defaultclient_moderate"
 
 [crates.e2e.calls.moderate.overrides.php]
 options_type = "ModerationRequest"
@@ -680,6 +704,9 @@ result_type = "RerankResponse"
 [crates.e2e.calls.rerank.overrides.csharp]
 options_type = "RerankRequest"
 
+[crates.e2e.calls.rerank.overrides.elixir]
+function = "defaultclient_rerank"
+
 [crates.e2e.calls.rerank.overrides.php]
 options_type = "RerankRequest"
 
@@ -712,6 +739,9 @@ result_type = "SearchResponse"
 
 [crates.e2e.calls.search.overrides.csharp]
 options_type = "SearchRequest"
+
+[crates.e2e.calls.search.overrides.elixir]
+function = "defaultclient_search"
 
 [crates.e2e.calls.search.overrides.php]
 options_type = "SearchRequest"
@@ -746,6 +776,9 @@ result_type = "OcrResponse"
 [crates.e2e.calls.ocr.overrides.csharp]
 options_type = "OcrRequest"
 
+[crates.e2e.calls.ocr.overrides.elixir]
+function = "defaultclient_ocr"
+
 [crates.e2e.calls.ocr.overrides.php]
 options_type = "OcrRequest"
 
@@ -779,6 +812,9 @@ result_type = "FileResponse"
 [crates.e2e.calls.create_file.overrides.csharp]
 options_type = "CreateFileRequest"
 
+[crates.e2e.calls.create_file.overrides.elixir]
+function = "defaultclient_create_file"
+
 [crates.e2e.calls.create_file.overrides.php]
 options_type = "CreateFileRequest"
 
@@ -801,6 +837,9 @@ method = "GET"
 module = "liter_llm"
 async = true
 
+[crates.e2e.calls.retrieve_file.overrides.elixir]
+function = "defaultclient_retrieve_file"
+
 [[crates.e2e.calls.retrieve_file.args]]
 name = "file_id"
 field = "input.file_id"
@@ -816,6 +855,9 @@ method = "DELETE"
 module = "liter_llm"
 async = true
 
+[crates.e2e.calls.delete_file.overrides.elixir]
+function = "defaultclient_delete_file"
+
 [[crates.e2e.calls.delete_file.args]]
 name = "file_id"
 field = "input.file_id"
@@ -830,6 +872,9 @@ path = "/files"
 method = "GET"
 module = "liter_llm"
 async = true
+
+[crates.e2e.calls.list_files.overrides.elixir]
+function = "defaultclient_list_files"
 
 [crates.e2e.calls.list_files.overrides.rust]
 extra_args = ["None"]
@@ -852,6 +897,9 @@ path = "/files"
 method = "GET"
 module = "liter_llm"
 async = true
+
+[crates.e2e.calls.file_content.overrides.elixir]
+function = "defaultclient_file_content"
 
 [[crates.e2e.calls.file_content.args]]
 name = "file_id"
@@ -889,6 +937,9 @@ result_type = "BatchResponse"
 [crates.e2e.calls.create_batch.overrides.csharp]
 options_type = "CreateBatchRequest"
 
+[crates.e2e.calls.create_batch.overrides.elixir]
+function = "defaultclient_create_batch"
+
 [crates.e2e.calls.create_batch.overrides.php]
 options_type = "CreateBatchRequest"
 
@@ -911,6 +962,9 @@ method = "GET"
 module = "liter_llm"
 async = true
 
+[crates.e2e.calls.retrieve_batch.overrides.elixir]
+function = "defaultclient_retrieve_batch"
+
 [[crates.e2e.calls.retrieve_batch.args]]
 name = "batch_id"
 field = "input.batch_id"
@@ -925,6 +979,9 @@ path = "/batches"
 method = "GET"
 module = "liter_llm"
 async = true
+
+[crates.e2e.calls.list_batches.overrides.elixir]
+function = "defaultclient_list_batches"
 
 [crates.e2e.calls.list_batches.overrides.rust]
 extra_args = ["None"]
@@ -946,6 +1003,9 @@ function = "cancel_batch"
 path = "/batches"
 module = "liter_llm"
 async = true
+
+[crates.e2e.calls.cancel_batch.overrides.elixir]
+function = "defaultclient_cancel_batch"
 
 [[crates.e2e.calls.cancel_batch.args]]
 name = "batch_id"
@@ -973,6 +1033,9 @@ result_type = "ResponseResponse"
 [crates.e2e.calls.create_response.overrides.csharp]
 options_type = "CreateResponseRequest"
 
+[crates.e2e.calls.create_response.overrides.elixir]
+function = "defaultclient_create_response"
+
 [crates.e2e.calls.create_response.overrides.php]
 options_type = "CreateResponseRequest"
 
@@ -995,6 +1058,9 @@ method = "GET"
 module = "liter_llm"
 async = true
 
+[crates.e2e.calls.retrieve_response.overrides.elixir]
+function = "defaultclient_retrieve_response"
+
 [[crates.e2e.calls.retrieve_response.args]]
 name = "id"
 field = "input.id"
@@ -1009,6 +1075,9 @@ path = "/responses"
 module = "liter_llm"
 async = true
 
+[crates.e2e.calls.cancel_response.overrides.elixir]
+function = "defaultclient_cancel_response"
+
 [[crates.e2e.calls.cancel_response.args]]
 name = "id"
 field = "input.id"
@@ -1022,6 +1091,10 @@ name = "@kreuzberg/liter-llm-node"
 
 [crates.e2e.packages.python]
 name = "liter-llm"
+
+[crates.e2e.packages.elixir]
+name = "liter_llm"
+path = "../../packages/elixir"
 
 [crates.e2e.registry]
 output = "test_apps"
