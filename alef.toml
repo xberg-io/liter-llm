@@ -656,6 +656,7 @@ options_type = "CreateSpeechRequest"
 
 [crates.e2e.calls.speech.overrides.elixir]
 function = "defaultclient_speech"
+result_is_simple = true
 
 [crates.e2e.calls.speech.overrides.php]
 options_type = "CreateSpeechRequest"
@@ -999,6 +1000,7 @@ async = true
 
 [crates.e2e.calls.file_content.overrides.elixir]
 function = "defaultclient_file_content"
+result_is_simple = true
 
 [[crates.e2e.calls.file_content.args]]
 name = "file_id"
