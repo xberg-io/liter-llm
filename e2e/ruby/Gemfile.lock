@@ -74,7 +74,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  dotenv (~> 3.1)
+  dotenv (~> 3.2)
   faraday (~> 2.0)
   liter_llm!
   rspec (~> 3.13)

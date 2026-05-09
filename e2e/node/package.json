@@ -4,11 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node ./scripts/run-tests.mjs"
+    "test": "vitest run"
   },
   "devDependencies": {
     "@kreuzberg/liter-llm-node": "workspace:*",
-    "dotenv": "^16.4.5",
     "vitest": "^3.0.0"
   }
 }

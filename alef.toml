@@ -414,6 +414,7 @@ trait_imports = ["LlmClient", "FileClient", "BatchClient", "ResponseClient"]
 
 [crates.e2e.call.overrides.csharp]
 client_factory = "CreateClient"
+options_via = "from_json"
 
 [crates.e2e.call.overrides.ruby]
 client_factory = "create_client"
@@ -607,7 +608,10 @@ result_is_simple = true
 
 [crates.e2e.calls.speech.overrides.c]
 options_type = "CreateSpeechRequest"
-result_type = "SpeechResponse"
+# speech() uses the byte-buffer out-pointer FFI shape — the codegen emits
+# `int32_t literllm_default_client_speech(client, req, &out_ptr, &out_len, &out_cap)`
+# and frees with `literllm_free_bytes`. No SpeechResponse handle exists.
+result_is_bytes = true
 
 [crates.e2e.calls.speech.overrides.csharp]
 options_type = "CreateSpeechRequest"
@@ -950,7 +954,10 @@ result_is_simple = true
 result_is_simple = true
 
 [crates.e2e.calls.file_content.overrides.c]
-result_type = "FileContentResponse"
+# file_content() uses the byte-buffer out-pointer FFI shape — the codegen emits
+# `int32_t literllm_default_client_file_content(client, file_id, &out_ptr, &out_len, &out_cap)`
+# and frees with `literllm_free_bytes`. No FileContentResponse handle exists.
+result_is_bytes = true
 
 [crates.e2e.calls.create_batch]
 function = "create_batch"
