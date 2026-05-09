@@ -1819,3 +1819,38 @@ jobs:
             report "Homebrew"    "${{ needs.publish-homebrew.result }}"
           } >> "$GITHUB_STEP_SUMMARY"
         shell: bash
+
+  announce-discord:
+    name: Announce release on Discord
+    needs:
+      - prepare
+      - publish-crates
+      - publish-pypi
+      - publish-node
+      - publish-wasm
+      - publish-rubygems
+      - publish-maven
+      - publish-hex
+      - publish-nuget
+      - publish-packagist
+      - publish-homebrew
+      - upload-go-ffi
+      - upload-elixir-nifs
+      - upload-php-extensions
+      - upload-cli-binaries
+      - upload-homebrew-bottles
+      - release-finalize
+    if: |
+      always() &&
+      !cancelled() &&
+      needs.prepare.outputs.dry_run != 'true' &&
+      !contains(needs.*.result, 'failure')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: kreuzberg-dev/actions/announce-release-discord@v1
+        with:
+          tag: ${{ needs.prepare.outputs.tag }}
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          project-name: liter-llm
