@@ -599,6 +599,7 @@ function = "defaultclient_speech"
 
 [crates.e2e.calls.speech.overrides.php]
 options_type = "CreateSpeechRequest"
+result_is_simple = true
 
 [crates.e2e.calls.speech.overrides.go]
 client_factory = "CreateClient"
@@ -925,6 +926,9 @@ result_is_simple = true
 result_is_simple = true
 
 [crates.e2e.calls.file_content.overrides.ruby]
+result_is_simple = true
+
+[crates.e2e.calls.file_content.overrides.php]
 result_is_simple = true
 
 [crates.e2e.calls.file_content.overrides.c]
