@@ -42,6 +42,11 @@ tasks:
     cmds:
       - wasm-pack build "{{.WASM_DIR}}" --target nodejs --release
 
+  build:nodejs:
+    desc: Alias for build:node — produces a Node.js (CJS, self-initializing) pkg/ artifact
+    cmds:
+      - task: build:node
+
   test:
     desc: Run WASM tests
     dir: "{{.WASM_DIR}}"
@@ -60,6 +65,13 @@ tasks:
       PROJECT_ROOT: "{{.PROJECT_ROOT}}"
     cmds:
       - alef e2e generate --lang wasm
+
+  e2e:setup:
+    desc: Build the Node.js-target WASM pkg and install e2e deps
+    deps: [build:node]
+    dir: "{{.PROJECT_ROOT}}/e2e/wasm"
+    cmds:
+      - pnpm install
 
   update:
     desc: Update WASM dependencies
