@@ -8,35 +8,67 @@
 
 class LiterLlmError(Exception):
     """All errors that can occur when using `liter-llm`."""
+
+
 class AuthenticationError(LiterLlmError):
     """Authentication error."""
+
+
 class RateLimitedError(LiterLlmError):
     """Rate limited error."""
+
+
 class BadRequestError(LiterLlmError):
     """Bad request error."""
+
+
 class ContextWindowExceededError(LiterLlmError):
     """Context window exceeded error."""
+
+
 class ContentPolicyError(LiterLlmError):
     """Content policy error."""
+
+
 class NotFoundError(LiterLlmError):
     """Not found error."""
+
+
 class ServerError(LiterLlmError):
     """Server error."""
+
+
 class ServiceUnavailableError(LiterLlmError):
     """Service unavailable error."""
+
+
 class LiterLlmTimeoutError(LiterLlmError):
     """Liter llm timeout error."""
+
+
 class StreamingError(LiterLlmError):
     """A catch-all for errors that occur during streaming response processing."""
+
+
 class EndpointNotSupportedError(LiterLlmError):
     """Endpoint not supported error."""
+
+
 class InvalidHeaderError(LiterLlmError):
     """Invalid header error."""
+
+
 class SerializationError(LiterLlmError):
     """Serialization error."""
+
+
 class BudgetExceededError(LiterLlmError):
     """Budget exceeded error."""
+
+
 class HookRejectedError(LiterLlmError):
     """Hook rejected error."""
+
+
 class InternalError(LiterLlmError):
     """An internal logic error (e.g. unexpected Tower response variant)."""

@@ -14,7 +14,13 @@
  * @throws Returns [`LiterLlmError`] if the underlying HTTP client cannot be
  * constructed, or if the resolved provider configuration is invalid.
  */
-export declare function createClient(apiKey: string, baseUrl?: string | undefined | null, timeoutSecs?: number | undefined | null, maxRetries?: number | undefined | null, modelHint?: string | undefined | null): JsDefaultClient;
+export declare function createClient(
+  apiKey: string,
+  baseUrl?: string | undefined | null,
+  timeoutSecs?: number | undefined | null,
+  maxRetries?: number | undefined | null,
+  modelHint?: string | undefined | null,
+): JsDefaultClient;
 
 /**
  * Create a new LLM client from a JSON string.
@@ -26,19 +32,19 @@ export declare function createClient(apiKey: string, baseUrl?: string | undefine
 export declare function createClientFromJson(json: string): JsDefaultClient;
 
 export interface JsAssistantMessage {
-  content?: string
-  name?: string
-  toolCalls?: Array<JsToolCall>
-  refusal?: string
+  content?: string;
+  name?: string;
+  toolCalls?: Array<JsToolCall>;
+  refusal?: string;
   /** Deprecated legacy function_call field; retained for API compatibility. */
-  functionCall?: JsFunctionCall
+  functionCall?: JsFunctionCall;
 }
 
 export interface JsAudioContent {
   /** Base64-encoded audio data. */
-  data?: string
+  data?: string;
   /** Audio format (e.g., "wav", "mp3", "ogg"). */
-  format?: string
+  format?: string;
 }
 
 /** How the API key is sent in the HTTP request. */
@@ -52,39 +58,39 @@ export declare enum JsAuthHeaderFormat {
 }
 
 export interface JsBatchListQuery {
-  limit?: number
-  after?: string
+  limit?: number;
+  after?: string;
 }
 
 export interface JsBatchListResponse {
-  object?: string
-  data?: Array<JsBatchObject>
-  hasMore?: boolean
-  firstId?: string
-  lastId?: string
+  object?: string;
+  data?: Array<JsBatchObject>;
+  hasMore?: boolean;
+  firstId?: string;
+  lastId?: string;
 }
 
 export interface JsBatchObject {
-  id?: string
-  object?: string
-  endpoint?: string
-  inputFileId?: string
-  completionWindow?: string
-  status?: JsBatchStatus
-  outputFileId?: string
-  errorFileId?: string
-  createdAt?: number
-  completedAt?: number
-  failedAt?: number
-  expiredAt?: number
-  requestCounts?: JsBatchRequestCounts
-  metadata?: unknown
+  id?: string;
+  object?: string;
+  endpoint?: string;
+  inputFileId?: string;
+  completionWindow?: string;
+  status?: JsBatchStatus;
+  outputFileId?: string;
+  errorFileId?: string;
+  createdAt?: number;
+  completedAt?: number;
+  failedAt?: number;
+  expiredAt?: number;
+  requestCounts?: JsBatchRequestCounts;
+  metadata?: unknown;
 }
 
 export interface JsBatchRequestCounts {
-  total?: number
-  completed?: number
-  failed?: number
+  total?: number;
+  completed?: number;
+  failed?: number;
 }
 
 export declare enum JsBatchStatus {
@@ -99,154 +105,154 @@ export declare enum JsBatchStatus {
 }
 
 export interface JsChatCompletionChunk {
-  id?: string
+  id?: string;
   /**
    * Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored
    * as a plain `String` so non-standard provider values do not fail parsing.
    */
-  object?: string
-  created?: number
-  model?: string
-  choices?: Array<JsStreamChoice>
-  usage?: JsUsage
-  systemFingerprint?: string
-  serviceTier?: string
+  object?: string;
+  created?: number;
+  model?: string;
+  choices?: Array<JsStreamChoice>;
+  usage?: JsUsage;
+  systemFingerprint?: string;
+  serviceTier?: string;
 }
 
 export interface JsChatCompletionRequest {
-  model?: string
-  messages?: Array<JsMessage>
-  temperature?: number
-  topP?: number
-  n?: number
+  model?: string;
+  messages?: Array<JsMessage>;
+  temperature?: number;
+  topP?: number;
+  n?: number;
   /**
    * Whether to stream the response.
    *
    * Managed by the client layer — do not set directly.
    */
-  stream?: boolean
-  stop?: JsStopSequence
-  maxTokens?: number
-  presencePenalty?: number
-  frequencyPenalty?: number
+  stream?: boolean;
+  stop?: JsStopSequence;
+  maxTokens?: number;
+  presencePenalty?: number;
+  frequencyPenalty?: number;
   /**
    * Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic
    * serialization order — important when hashing or signing requests.
    */
-  logitBias?: Record<string, number>
-  user?: string
-  tools?: Array<JsChatCompletionTool>
-  toolChoice?: JsToolChoice
-  parallelToolCalls?: boolean
-  responseFormat?: JsResponseFormat
-  streamOptions?: JsStreamOptions
-  seed?: number
-  reasoningEffort?: JsReasoningEffort
+  logitBias?: Record<string, number>;
+  user?: string;
+  tools?: Array<JsChatCompletionTool>;
+  toolChoice?: JsToolChoice;
+  parallelToolCalls?: boolean;
+  responseFormat?: JsResponseFormat;
+  streamOptions?: JsStreamOptions;
+  seed?: number;
+  reasoningEffort?: JsReasoningEffort;
   /**
    * Provider-specific extra parameters merged into the request body.
    * Use for guardrails, safety settings, grounding config, etc.
    */
-  extraBody?: unknown
+  extraBody?: unknown;
 }
 
 export interface JsChatCompletionResponse {
-  id?: string
+  id?: string;
   /**
    * Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a
    * plain `String` so non-standard provider values do not break deserialization.
    */
-  object?: string
-  created?: number
-  model?: string
-  choices?: Array<JsChoice>
-  usage?: JsUsage
-  systemFingerprint?: string
-  serviceTier?: string
+  object?: string;
+  created?: number;
+  model?: string;
+  choices?: Array<JsChoice>;
+  usage?: JsUsage;
+  systemFingerprint?: string;
+  serviceTier?: string;
 }
 
 export interface JsChatCompletionTool {
-  toolType: JsToolType
-  function: JsFunctionDefinition
+  toolType: JsToolType;
+  function: JsFunctionDefinition;
 }
 
 export interface JsChoice {
-  index?: number
-  message?: JsAssistantMessage
-  finishReason?: JsFinishReason
+  index?: number;
+  message?: JsAssistantMessage;
+  finishReason?: JsFinishReason;
 }
 
 export type JsContentPart =
-  | { type: 'text'; text: string }
-  | { type: 'image_url'; imageUrl: JsImageUrl }
-  | { type: 'document'; document: JsDocumentContent }
-  | { type: 'input_audio'; inputAudio: JsAudioContent }
+  | { type: "text"; text: string }
+  | { type: "image_url"; imageUrl: JsImageUrl }
+  | { type: "document"; document: JsDocumentContent }
+  | { type: "input_audio"; inputAudio: JsAudioContent };
 
 export interface JsCreateBatchRequest {
-  inputFileId?: string
-  endpoint?: string
-  completionWindow?: string
-  metadata?: unknown
+  inputFileId?: string;
+  endpoint?: string;
+  completionWindow?: string;
+  metadata?: unknown;
 }
 
 export interface JsCreateFileRequest {
   /** Base64-encoded file data. */
-  file?: string
-  purpose?: JsFilePurpose
-  filename?: string
+  file?: string;
+  purpose?: JsFilePurpose;
+  filename?: string;
 }
 
 /** Request to create images from a text prompt. */
 export interface JsCreateImageRequest {
-  prompt?: string
-  model?: string
-  n?: number
-  size?: string
-  quality?: string
-  style?: string
-  responseFormat?: string
-  user?: string
+  prompt?: string;
+  model?: string;
+  n?: number;
+  size?: string;
+  quality?: string;
+  style?: string;
+  responseFormat?: string;
+  user?: string;
 }
 
 export interface JsCreateResponseRequest {
-  model?: string
-  input?: unknown
-  instructions?: string
-  tools?: Array<JsResponseTool>
-  temperature?: number
-  maxOutputTokens?: number
-  metadata?: unknown
+  model?: string;
+  input?: unknown;
+  instructions?: string;
+  tools?: Array<JsResponseTool>;
+  temperature?: number;
+  maxOutputTokens?: number;
+  metadata?: unknown;
 }
 
 /** Request to generate speech audio from text. */
 export interface JsCreateSpeechRequest {
-  model?: string
-  input?: string
-  voice?: string
-  responseFormat?: string
-  speed?: number
+  model?: string;
+  input?: string;
+  voice?: string;
+  responseFormat?: string;
+  speed?: number;
 }
 
 /** Request to transcribe audio into text. */
 export interface JsCreateTranscriptionRequest {
-  model?: string
+  model?: string;
   /** Base64-encoded audio file data. */
-  file?: string
-  language?: string
-  prompt?: string
-  responseFormat?: string
-  temperature?: number
+  file?: string;
+  language?: string;
+  prompt?: string;
+  responseFormat?: string;
+  temperature?: number;
 }
 
 /** Configuration for registering a custom LLM provider at runtime. */
 export interface JsCustomProviderConfig {
   /** Unique name for this provider (e.g., "my-provider"). */
-  name: string
+  name: string;
   /** Base URL for the provider's API (e.g., "https://api.my-provider.com/v1"). */
-  baseUrl: string
+  baseUrl: string;
   /** Authentication header format. */
-  authHeader: JsAuthHeaderFormat
+  authHeader: JsAuthHeaderFormat;
   /** Model name prefixes that route to this provider (e.g., ["my-"]). */
-  modelPrefixes: Array<string>
+  modelPrefixes: Array<string>;
 }
 
 /**
@@ -265,47 +271,47 @@ export interface JsCustomProviderConfig {
  * async closures and streaming tasks that must be `'static`.
  */
 export declare class JsDefaultClient {
-  chat(req: JsChatCompletionRequest): Promise<JsChatCompletionResponse>
-  chatStream(req: JsChatCompletionRequest): Promise<string>
-  embed(req: JsEmbeddingRequest): Promise<JsEmbeddingResponse>
-  listModels(): Promise<JsModelsListResponse>
-  imageGenerate(req: JsCreateImageRequest): Promise<JsImagesResponse>
-  speech(req: JsCreateSpeechRequest): Promise<Uint8Array>
-  transcribe(req: JsCreateTranscriptionRequest): Promise<JsTranscriptionResponse>
-  moderate(req: JsModerationRequest): Promise<JsModerationResponse>
-  rerank(req: JsRerankRequest): Promise<JsRerankResponse>
-  search(req: JsSearchRequest): Promise<JsSearchResponse>
-  ocr(req: JsOcrRequest): Promise<JsOcrResponse>
-  createFile(req: JsCreateFileRequest): Promise<JsFileObject>
-  retrieveFile(fileId: string): Promise<JsFileObject>
-  deleteFile(fileId: string): Promise<JsDeleteResponse>
-  listFiles(query?: JsFileListQuery | undefined | null): Promise<JsFileListResponse>
-  fileContent(fileId: string): Promise<Uint8Array>
-  createBatch(req: JsCreateBatchRequest): Promise<JsBatchObject>
-  retrieveBatch(batchId: string): Promise<JsBatchObject>
-  listBatches(query?: JsBatchListQuery | undefined | null): Promise<JsBatchListResponse>
-  cancelBatch(batchId: string): Promise<JsBatchObject>
-  createResponse(req: JsCreateResponseRequest): Promise<JsResponseObject>
-  retrieveResponse(id: string): Promise<JsResponseObject>
-  cancelResponse(id: string): Promise<JsResponseObject>
+  chat(req: JsChatCompletionRequest): Promise<JsChatCompletionResponse>;
+  chatStream(req: JsChatCompletionRequest): Promise<string>;
+  embed(req: JsEmbeddingRequest): Promise<JsEmbeddingResponse>;
+  listModels(): Promise<JsModelsListResponse>;
+  imageGenerate(req: JsCreateImageRequest): Promise<JsImagesResponse>;
+  speech(req: JsCreateSpeechRequest): Promise<Uint8Array>;
+  transcribe(req: JsCreateTranscriptionRequest): Promise<JsTranscriptionResponse>;
+  moderate(req: JsModerationRequest): Promise<JsModerationResponse>;
+  rerank(req: JsRerankRequest): Promise<JsRerankResponse>;
+  search(req: JsSearchRequest): Promise<JsSearchResponse>;
+  ocr(req: JsOcrRequest): Promise<JsOcrResponse>;
+  createFile(req: JsCreateFileRequest): Promise<JsFileObject>;
+  retrieveFile(fileId: string): Promise<JsFileObject>;
+  deleteFile(fileId: string): Promise<JsDeleteResponse>;
+  listFiles(query?: JsFileListQuery | undefined | null): Promise<JsFileListResponse>;
+  fileContent(fileId: string): Promise<Uint8Array>;
+  createBatch(req: JsCreateBatchRequest): Promise<JsBatchObject>;
+  retrieveBatch(batchId: string): Promise<JsBatchObject>;
+  listBatches(query?: JsBatchListQuery | undefined | null): Promise<JsBatchListResponse>;
+  cancelBatch(batchId: string): Promise<JsBatchObject>;
+  createResponse(req: JsCreateResponseRequest): Promise<JsResponseObject>;
+  retrieveResponse(id: string): Promise<JsResponseObject>;
+  cancelResponse(id: string): Promise<JsResponseObject>;
 }
 
 export interface JsDeleteResponse {
-  id?: string
-  object?: string
-  deleted?: boolean
+  id?: string;
+  object?: string;
+  deleted?: boolean;
 }
 
 export interface JsDeveloperMessage {
-  content?: string
-  name?: string
+  content?: string;
+  name?: string;
 }
 
 export interface JsDocumentContent {
   /** Base64-encoded document data or URL. */
-  data?: string
+  data?: string;
   /** MIME type (e.g., "application/pdf", "text/csv"). */
-  mediaType?: string
+  mediaType?: string;
 }
 
 /** The format in which the embedding vectors are returned. */
@@ -326,17 +332,17 @@ export interface JsEmbeddingObject {
    * Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain
    * `String` so non-standard provider values do not break deserialization.
    */
-  object: string
-  embedding: Array<number>
-  index: number
+  object: string;
+  embedding: Array<number>;
+  index: number;
 }
 
 export interface JsEmbeddingRequest {
-  model?: string
-  input?: JsEmbeddingInput
-  encodingFormat?: JsEmbeddingFormat
-  dimensions?: number
-  user?: string
+  model?: string;
+  input?: JsEmbeddingInput;
+  encodingFormat?: JsEmbeddingFormat;
+  dimensions?: number;
+  user?: string;
 }
 
 export interface JsEmbeddingResponse {
@@ -344,32 +350,32 @@ export interface JsEmbeddingResponse {
    * Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
    * `String` so non-standard provider values do not break deserialization.
    */
-  object: string
-  data: Array<JsEmbeddingObject>
-  model: string
-  usage?: JsUsage
+  object: string;
+  data: Array<JsEmbeddingObject>;
+  model: string;
+  usage?: JsUsage;
 }
 
 export interface JsFileListQuery {
-  purpose?: string
-  limit?: number
-  after?: string
+  purpose?: string;
+  limit?: number;
+  after?: string;
 }
 
 export interface JsFileListResponse {
-  object?: string
-  data?: Array<JsFileObject>
-  hasMore?: boolean
+  object?: string;
+  data?: Array<JsFileObject>;
+  hasMore?: boolean;
 }
 
 export interface JsFileObject {
-  id?: string
-  object?: string
-  bytes?: number
-  createdAt?: number
-  filename?: string
-  purpose?: string
-  status?: string
+  id?: string;
+  object?: string;
+  bytes?: number;
+  createdAt?: number;
+  filename?: string;
+  purpose?: string;
+  status?: string;
 }
 
 export declare enum JsFilePurpose {
@@ -400,28 +406,28 @@ export declare enum JsFinishReason {
 }
 
 export interface JsFunctionCall {
-  name: string
-  arguments: string
+  name: string;
+  arguments: string;
 }
 
 export interface JsFunctionDefinition {
-  name: string
-  description?: string
-  parameters?: unknown
-  strict?: boolean
+  name: string;
+  description?: string;
+  parameters?: unknown;
+  strict?: boolean;
 }
 
 /** Deprecated legacy function-role message body. */
 export interface JsFunctionMessage {
-  content?: string
-  name?: string
+  content?: string;
+  name?: string;
 }
 
 /** A single generated image, returned as either a URL or base64 data. */
 export interface JsImage {
-  url?: string
-  b64Json?: string
-  revisedPrompt?: string
+  url?: string;
+  b64Json?: string;
+  revisedPrompt?: string;
 }
 
 export declare enum JsImageDetail {
@@ -432,40 +438,40 @@ export declare enum JsImageDetail {
 
 /** Response containing generated images. */
 export interface JsImagesResponse {
-  created?: number
-  data?: Array<JsImage>
+  created?: number;
+  data?: Array<JsImage>;
 }
 
 export interface JsImageUrl {
-  url?: string
-  detail?: JsImageDetail
+  url?: string;
+  detail?: JsImageDetail;
 }
 
 export interface JsJsonSchemaFormat {
-  name?: string
-  description?: string
-  schema?: unknown
-  strict?: boolean
+  name?: string;
+  description?: string;
+  schema?: unknown;
+  strict?: boolean;
 }
 
 /** A chat message in a conversation. */
 export type JsMessage =
-  | { role: 'system'; 0: JsSystemMessage }
-  | { role: 'user'; 0: JsUserMessage }
-  | { role: 'assistant'; 0: JsAssistantMessage }
-  | { role: 'tool'; 0: JsToolMessage }
-  | { role: 'developer'; 0: JsDeveloperMessage }
-  | { role: 'function'; 0: JsFunctionMessage }
+  | { role: "system"; 0: JsSystemMessage }
+  | { role: "user"; 0: JsUserMessage }
+  | { role: "assistant"; 0: JsAssistantMessage }
+  | { role: "tool"; 0: JsToolMessage }
+  | { role: "developer"; 0: JsDeveloperMessage }
+  | { role: "function"; 0: JsFunctionMessage };
 
 export interface JsModelObject {
-  id?: string
+  id?: string;
   /**
    * Always `"model"` from OpenAI-compatible APIs.  Stored as a plain
    * `String` so non-standard provider values do not break deserialization.
    */
-  object?: string
-  created?: number
-  ownedBy?: string
+  object?: string;
+  created?: number;
+  ownedBy?: string;
 }
 
 export interface JsModelsListResponse {
@@ -473,38 +479,38 @@ export interface JsModelsListResponse {
    * Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
    * `String` so non-standard provider values do not break deserialization.
    */
-  object?: string
-  data?: Array<JsModelObject>
+  object?: string;
+  data?: Array<JsModelObject>;
 }
 
 /** Boolean flags for each moderation category. */
 export interface JsModerationCategories {
-  sexual?: boolean
-  hate?: boolean
-  harassment?: boolean
-  selfHarm?: boolean
-  sexualMinors?: boolean
-  hateThreatening?: boolean
-  violenceGraphic?: boolean
-  selfHarmIntent?: boolean
-  selfHarmInstructions?: boolean
-  harassmentThreatening?: boolean
-  violence?: boolean
+  sexual?: boolean;
+  hate?: boolean;
+  harassment?: boolean;
+  selfHarm?: boolean;
+  sexualMinors?: boolean;
+  hateThreatening?: boolean;
+  violenceGraphic?: boolean;
+  selfHarmIntent?: boolean;
+  selfHarmInstructions?: boolean;
+  harassmentThreatening?: boolean;
+  violence?: boolean;
 }
 
 /** Confidence scores for each moderation category. */
 export interface JsModerationCategoryScores {
-  sexual?: number
-  hate?: number
-  harassment?: number
-  selfHarm?: number
-  sexualMinors?: number
-  hateThreatening?: number
-  violenceGraphic?: number
-  selfHarmIntent?: number
-  selfHarmInstructions?: number
-  harassmentThreatening?: number
-  violence?: number
+  sexual?: number;
+  hate?: number;
+  harassment?: number;
+  selfHarm?: number;
+  sexualMinors?: number;
+  hateThreatening?: number;
+  violenceGraphic?: number;
+  selfHarmIntent?: number;
+  selfHarmInstructions?: number;
+  harassmentThreatening?: number;
+  violence?: number;
 }
 
 /** Input to the moderation endpoint — a single string or multiple strings. */
@@ -515,77 +521,77 @@ export declare enum JsModerationInput {
 
 /** Request to classify content for policy violations. */
 export interface JsModerationRequest {
-  input?: JsModerationInput
-  model?: string
+  input?: JsModerationInput;
+  model?: string;
 }
 
 /** Response from the moderation endpoint. */
 export interface JsModerationResponse {
-  id: string
-  model: string
-  results: Array<JsModerationResult>
+  id: string;
+  model: string;
+  results: Array<JsModerationResult>;
 }
 
 /** A single moderation classification result. */
 export interface JsModerationResult {
-  flagged: boolean
-  categories: JsModerationCategories
-  categoryScores: JsModerationCategoryScores
+  flagged: boolean;
+  categories: JsModerationCategories;
+  categoryScores: JsModerationCategoryScores;
 }
 
 /** Document input for OCR — either a URL or inline base64 data. */
 export type JsOcrDocument =
-  | { type: 'document_url'; url: string }
-  | { type: 'base64'; data: string; mediaType: string }
+  | { type: "document_url"; url: string }
+  | { type: "base64"; data: string; mediaType: string };
 
 /** An image extracted from an OCR page. */
 export interface JsOcrImage {
   /** Unique image identifier. */
-  id: string
+  id: string;
   /** Base64-encoded image data. */
-  imageBase64?: string
+  imageBase64?: string;
 }
 
 /** A single page of OCR output. */
 export interface JsOcrPage {
   /** Page index (0-based). */
-  index: number
+  index: number;
   /** Extracted content as Markdown. */
-  markdown: string
+  markdown: string;
   /** Extracted images, if `include_image_base64` was set. */
-  images?: Array<JsOcrImage>
+  images?: Array<JsOcrImage>;
   /** Page dimensions in pixels, if available. */
-  dimensions?: JsPageDimensions
+  dimensions?: JsPageDimensions;
 }
 
 /** An OCR request. */
 export interface JsOcrRequest {
   /** The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). */
-  model: string
+  model: string;
   /** The document to process. */
-  document: JsOcrDocument
+  document: JsOcrDocument;
   /** Specific pages to process (1-indexed). `None` means all pages. */
-  pages?: Array<number>
+  pages?: Array<number>;
   /** Whether to include base64-encoded images of each page. */
-  includeImageBase64?: boolean
+  includeImageBase64?: boolean;
 }
 
 /** An OCR response. */
 export interface JsOcrResponse {
   /** Extracted pages. */
-  pages: Array<JsOcrPage>
+  pages: Array<JsOcrPage>;
   /** The model used. */
-  model: string
+  model: string;
   /** Token usage, if reported by the provider. */
-  usage?: JsUsage
+  usage?: JsUsage;
 }
 
 /** Page dimensions in pixels. */
 export interface JsPageDimensions {
   /** Width in pixels. */
-  width: number
+  width: number;
   /** Height in pixels. */
-  height: number
+  height: number;
 }
 
 /**
@@ -598,9 +604,9 @@ export interface JsPageDimensions {
  */
 export interface JsPromptTokensDetails {
   /** Cached tokens present in the prompt. Defaults to 0 when absent. */
-  cachedTokens?: number
+  cachedTokens?: number;
   /** Audio input tokens present in the prompt. Defaults to 0 when absent. */
-  audioTokens?: number
+  audioTokens?: number;
 }
 
 /** Controls how much reasoning effort the model should use. */
@@ -618,105 +624,105 @@ export declare enum JsRerankDocument {
 
 /** Request to rerank documents by relevance to a query. */
 export interface JsRerankRequest {
-  model?: string
-  query?: string
-  documents?: Array<JsRerankDocument>
-  topN?: number
-  returnDocuments?: boolean
+  model?: string;
+  query?: string;
+  documents?: Array<JsRerankDocument>;
+  topN?: number;
+  returnDocuments?: boolean;
 }
 
 /** Response from the rerank endpoint. */
 export interface JsRerankResponse {
-  id?: string
-  results: Array<JsRerankResult>
-  meta?: unknown
+  id?: string;
+  results: Array<JsRerankResult>;
+  meta?: unknown;
 }
 
 /** A single reranked document with its relevance score. */
 export interface JsRerankResult {
-  index: number
-  relevanceScore: number
-  document?: JsRerankResultDocument
+  index: number;
+  relevanceScore: number;
+  document?: JsRerankResultDocument;
 }
 
 /** The text content of a reranked document, returned when `return_documents` is true. */
 export interface JsRerankResultDocument {
-  text: string
+  text: string;
 }
 
 export type JsResponseFormat =
-  | { type: 'text' }
-  | { type: 'json_object' }
-  | { type: 'json_schema'; jsonSchema: JsJsonSchemaFormat }
+  | { type: "text" }
+  | { type: "json_object" }
+  | { type: "json_schema"; jsonSchema: JsJsonSchemaFormat };
 
 export interface JsResponseObject {
-  id?: string
-  object?: string
-  createdAt?: number
-  model?: string
-  status?: string
-  output?: Array<JsResponseOutputItem>
-  usage?: JsResponseUsage
-  error?: unknown
+  id?: string;
+  object?: string;
+  createdAt?: number;
+  model?: string;
+  status?: string;
+  output?: Array<JsResponseOutputItem>;
+  usage?: JsResponseUsage;
+  error?: unknown;
 }
 
 export interface JsResponseOutputItem {
-  itemType?: string
-  content?: unknown
+  itemType?: string;
+  content?: unknown;
 }
 
 export interface JsResponseTool {
-  toolType?: string
-  config?: unknown
+  toolType?: string;
+  config?: unknown;
 }
 
 export interface JsResponseUsage {
-  inputTokens?: number
-  outputTokens?: number
-  totalTokens?: number
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
 }
 
 /** A search request. */
 export interface JsSearchRequest {
   /** The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). */
-  model?: string
+  model?: string;
   /** The search query. */
-  query?: string
+  query?: string;
   /** Maximum number of results to return. */
-  maxResults?: number
+  maxResults?: number;
   /** Domain filter — restrict results to specific domains. */
-  searchDomainFilter?: Array<string>
+  searchDomainFilter?: Array<string>;
   /** Country code for localized results (ISO 3166-1 alpha-2). */
-  country?: string
+  country?: string;
 }
 
 /** A search response. */
 export interface JsSearchResponse {
   /** The search results. */
-  results: Array<JsSearchResult>
+  results: Array<JsSearchResult>;
   /** The model used. */
-  model: string
+  model: string;
 }
 
 /** An individual search result. */
 export interface JsSearchResult {
   /** Title of the result. */
-  title: string
+  title: string;
   /** URL of the result. */
-  url: string
+  url: string;
   /** Text snippet / excerpt. */
-  snippet: string
+  snippet: string;
   /** Publication or last-updated date, if available. */
-  date?: string
+  date?: string;
 }
 
 export interface JsSpecificFunction {
-  name?: string
+  name?: string;
 }
 
 export interface JsSpecificToolChoice {
-  choiceType?: JsToolType
-  function?: JsSpecificFunction
+  choiceType?: JsToolType;
+  function?: JsSpecificFunction;
 }
 
 export declare enum JsStopSequence {
@@ -725,45 +731,45 @@ export declare enum JsStopSequence {
 }
 
 export interface JsStreamChoice {
-  index?: number
-  delta?: JsStreamDelta
-  finishReason?: JsFinishReason
+  index?: number;
+  delta?: JsStreamDelta;
+  finishReason?: JsFinishReason;
 }
 
 export interface JsStreamDelta {
-  role?: string
-  content?: string
-  toolCalls?: Array<JsStreamToolCall>
+  role?: string;
+  content?: string;
+  toolCalls?: Array<JsStreamToolCall>;
   /** Deprecated legacy function_call delta; retained for API compatibility. */
-  functionCall?: JsStreamFunctionCall
-  refusal?: string
+  functionCall?: JsStreamFunctionCall;
+  refusal?: string;
 }
 
 export interface JsStreamFunctionCall {
-  name?: string
-  arguments?: string
+  name?: string;
+  arguments?: string;
 }
 
 export interface JsStreamOptions {
-  includeUsage?: boolean
+  includeUsage?: boolean;
 }
 
 export interface JsStreamToolCall {
-  index?: number
-  id?: string
-  callType?: JsToolType
-  function?: JsStreamFunctionCall
+  index?: number;
+  id?: string;
+  callType?: JsToolType;
+  function?: JsStreamFunctionCall;
 }
 
 export interface JsSystemMessage {
-  content?: string
-  name?: string
+  content?: string;
+  name?: string;
 }
 
 export interface JsToolCall {
-  id: string
-  callType: JsToolType
-  function: JsFunctionCall
+  id: string;
+  callType: JsToolType;
+  function: JsFunctionCall;
 }
 
 export declare enum JsToolChoice {
@@ -778,9 +784,9 @@ export declare enum JsToolChoiceMode {
 }
 
 export interface JsToolMessage {
-  content?: string
-  toolCallId?: string
-  name?: string
+  content?: string;
+  toolCallId?: string;
+  name?: string;
 }
 
 /**
@@ -796,33 +802,33 @@ export declare enum JsToolType {
 
 /** Response from a transcription request. */
 export interface JsTranscriptionResponse {
-  text?: string
-  language?: string
-  duration?: number
-  segments?: Array<JsTranscriptionSegment>
+  text?: string;
+  language?: string;
+  duration?: number;
+  segments?: Array<JsTranscriptionSegment>;
 }
 
 /** A segment of transcribed audio with timing information. */
 export interface JsTranscriptionSegment {
-  id?: number
-  start?: number
-  end?: number
-  text?: string
+  id?: number;
+  start?: number;
+  end?: number;
+  text?: string;
 }
 
 export interface JsUsage {
   /** Prompt tokens used. Defaults to 0 when absent (some providers omit this). */
-  promptTokens?: number
+  promptTokens?: number;
   /** Completion tokens used. Defaults to 0 when absent (e.g. embedding responses). */
-  completionTokens?: number
+  completionTokens?: number;
   /** Total tokens used. Defaults to 0 when absent (some providers omit this). */
-  totalTokens?: number
+  totalTokens?: number;
   /**
    * Breakdown of tokens used in the prompt, including cached tokens served
    * at the provider's discounted cache-read rate. Absent when the provider
    * does not return prompt-token details.
    */
-  promptTokensDetails?: JsPromptTokensDetails
+  promptTokensDetails?: JsPromptTokensDetails;
 }
 
 export declare enum JsUserContent {
@@ -831,8 +837,8 @@ export declare enum JsUserContent {
 }
 
 export interface JsUserMessage {
-  content?: JsUserContent
-  name?: string
+  content?: JsUserContent;
+  name?: string;
 }
 
 /**
