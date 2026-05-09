@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.15.13"
+alef_version = "0.15.14"
 languages = ["python", "node", "ruby", "php", "ffi", "go", "java", "csharp", "elixir", "wasm"]
 
 [workspace.sync]
@@ -1092,6 +1092,7 @@ result_type = "BatchObject"
 
 [crates.e2e.calls.create_batch.overrides.csharp]
 options_type = "CreateBatchRequest"
+enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.create_batch.overrides.elixir]
 function = "defaultclient_create_batch"
@@ -1141,6 +1142,9 @@ result_type = "BatchObject"
 
 [crates.e2e.calls.retrieve_batch.overrides.java]
 client_factory = "createClient"
+enum_fields = { "status" = "BatchStatus" }
+
+[crates.e2e.calls.retrieve_batch.overrides.csharp]
 enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.retrieve_batch.overrides.wasm]
@@ -1202,6 +1206,9 @@ result_type = "BatchObject"
 
 [crates.e2e.calls.cancel_batch.overrides.java]
 client_factory = "createClient"
+enum_fields = { "status" = "BatchStatus" }
+
+[crates.e2e.calls.cancel_batch.overrides.csharp]
 enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.cancel_batch.overrides.wasm]
