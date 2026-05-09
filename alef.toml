@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.15.4"
+alef_version = "0.15.5"
 languages = ["python", "node", "ruby", "php", "ffi", "go", "java", "csharp", "elixir", "wasm"]
 
 [workspace.sync]
@@ -111,6 +111,10 @@ types = [
   # Internal error types
   "ErrorResponse",
   "ApiError",
+  # Tower-internal Service request/response enums (externally tagged, contain BoxStream/Bytes)
+  "LlmRequest",
+  "LlmResponse",
+  "CachedResponse",
   # Tower middleware (feature-gated, generic Service types)
   "BudgetConfig",
   "BudgetState",
