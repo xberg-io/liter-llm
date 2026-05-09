@@ -882,11 +882,15 @@ jobs:
           path: dist/php-package
           merge-multiple: true
       - name: Upload PHP PIE packages
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ needs.prepare.outputs.tag }}
-        run: scripts/publish/upload-php-pie.sh
-        shell: bash
+        uses: kreuzberg-dev/actions/upload-release-assets@v1
+        with:
+          tag: ${{ needs.prepare.outputs.tag }}
+          assets: |
+            dist/php-package/php_*.tgz
+            dist/php-package/php_*.tgz.sha256
+            dist/php-package/php_*.zip
+            dist/php-package/php_*.zip.sha256
+          fail-if-empty: "false"
 
   # ─────────────────────────────────────────────────────────────────────────
   # Phase 6 — Publish jobs (conditional on check + build results)
@@ -1301,9 +1305,6 @@ jobs:
         with:
           name: maven-packages
           path: packages/java/target
-      - name: Patch legacy Maven GPG arguments
-        run: scripts/publish/patch-maven-gpg-args.sh packages/java/pom.xml
-        shell: bash
       - name: Setup Java
         id: setup-java
         env:
@@ -1322,9 +1323,10 @@ jobs:
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
       - name: Setup Maven 3.9.11
         uses: kreuzberg-dev/actions/setup-maven@v1
-      - name: Prefer gpg2 binary
-        run: scripts/publish/prefer-gpg2-binary.sh
-        shell: bash
+      - name: Configure Maven GPG
+        uses: kreuzberg-dev/actions/configure-maven-gpg@v1
+        with:
+          pom-file: packages/java/pom.xml
       - name: Release Maven package
         uses: kreuzberg-dev/actions/publish-maven@v1
         with:
