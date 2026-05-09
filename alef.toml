@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.15.2"
+alef_version = "0.15.3"
 languages = ["python", "node", "ruby", "php", "ffi", "go", "java", "csharp", "elixir", "wasm"]
 
 [workspace.sync]
