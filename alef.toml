@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.15.6"
+alef_version = "0.15.8"
 languages = ["python", "node", "ruby", "php", "ffi", "go", "java", "csharp", "elixir", "wasm"]
 
 [workspace.sync]
@@ -283,6 +283,12 @@ cmake_config = true
 [crates.e2e]
 fixtures = "fixtures"
 output = "e2e"
+# Categories whose fixtures are NOT part of the public DefaultClient surface —
+# they exercise tower middleware (cache, router, fallback, budget, hooks) and
+# the proxy server's HTTP layer. Coverage lives in `crates/liter-llm/tests/*`
+# (Rust integration) and `crates/liter-llm-proxy/tests/*` (proxy server tests),
+# not in cross-language e2e bindings.
+exclude_categories = ["cache", "proxy", "budget", "hooks"]
 # Fields whose values are enum types — assertions use _alef_e2e_text() instead of .strip().
 fields_enum = [
   "status",

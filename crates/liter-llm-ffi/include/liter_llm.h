@@ -105,6 +105,14 @@ typedef struct LITERLLMUserMessage LITERLLMUserMessage;
 
 
 /**
+ * Opaque handle owning a tokio runtime and a boxed chat-stream for iterator-style consumption.
+ *
+ * Created by `literllm_default_client_chat_stream_start`, advanced by `literllm_default_client_chat_stream_next`, destroyed by `literllm_default_client_chat_stream_free`.
+ * The handle is NOT thread-safe — callers must ensure only one thread calls `_next` at a time.
+ */
+typedef struct LITERLLMLiterllmDefaultClientChatStreamStreamHandle LITERLLMLiterllmDefaultClientChatStreamStreamHandle;
+
+/**
  * Callback invoked for each streamed chunk.
  * `chunk_json` is a JSON-encoded chunk; `user_data` is forwarded from the caller.
  */
@@ -153,6 +161,48 @@ void literllm_free_bytes(uint8_t *ptr,
  * Returned pointers must be freed with the appropriate free function.
  */
 const char *literllm_version(void);
+
+/**
+ * Start a streaming chat completion and return an opaque iterator handle.
+ *
+ * Returns null and sets `literllm_last_error_code` on failure (null pointers or stream-open error).
+ * On success the caller owns the returned pointer and MUST call `literllm_default_client_chat_stream_free` when done.
+ *
+ * # Safety
+ * `client` must be a non-null valid pointer to a live `liter_llm::DefaultClient` produced by this library.
+ * `req` must be a non-null valid pointer to a live `liter_llm::ChatCompletionRequest` produced by this library.
+ * Both pointers must remain valid until this function returns.
+ */
+struct LITERLLMLiterllmDefaultClientChatStreamStreamHandle *literllm_default_client_chat_stream_start(const LITERLLMDefaultClient *client,
+                                                                                                      const LITERLLMChatCompletionRequest *req);
+
+/**
+ * Advance the stream and return a heap-allocated chunk, or null.
+ *
+ * Returns null in two cases:
+ * - Clean end-of-stream: `literllm_last_error_code()` returns 0.
+ * - Stream error: `literllm_last_error_code()` returns non-zero.
+ *
+ * The returned pointer is heap-allocated and the caller MUST free it by calling
+ * `literllm_default_client_ChatCompletionChunk_free` (or the appropriate type-free function).
+ *
+ * # Safety
+ * `handle` must be a non-null valid pointer previously returned by `literllm_default_client_chat_stream_start` and not yet
+ * freed. Calling `_next` after `_free` is undefined behaviour. The handle must not be shared
+ * across threads without external synchronisation.
+ */
+LITERLLMChatCompletionChunk *literllm_default_client_chat_stream_next(struct LITERLLMLiterllmDefaultClientChatStreamStreamHandle *handle);
+
+/**
+ * Free a stream handle created by `literllm_default_client_chat_stream_start`.
+ *
+ * Safe to call with a null pointer (no-op). After this call the handle pointer is invalid.
+ *
+ * # Safety
+ * `handle` must either be null or a valid pointer previously returned by `literllm_default_client_chat_stream_start` and
+ * not yet freed. Double-free is undefined behaviour.
+ */
+void literllm_default_client_chat_stream_free(struct LITERLLMLiterllmDefaultClientChatStreamStreamHandle *handle);
 
 /**
  * Create a `SystemMessage` from a JSON string. Returns null on failure.
