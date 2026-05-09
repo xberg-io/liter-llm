@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.15.9"
+alef_version = "0.15.10"
 languages = ["python", "node", "ruby", "php", "ffi", "go", "java", "csharp", "elixir", "wasm"]
 
 [workspace.sync]
@@ -489,6 +489,7 @@ options_type = "LiterLlm::ChatCompletionRequest"
 client_factory = "createClient"
 options_type = "ChatCompletionRequest"
 options_via = "from_json"
+enum_fields = { "choices[0].finish_reason" = "FinishReason", "choices[0].message.role" = "Role" }
 
 [crates.e2e.calls.chat.overrides.wasm]
 options_type = "WasmChatCompletionRequest"
@@ -532,6 +533,12 @@ async = false
 [crates.e2e.calls.chat_stream.overrides.ruby]
 options_type = "LiterLlm::ChatCompletionRequest"
 
+[crates.e2e.calls.chat_stream.overrides.java]
+client_factory = "createClient"
+options_type = "ChatCompletionRequest"
+options_via = "from_json"
+enum_fields = { "choices[0].finish_reason" = "FinishReason", "choices[0].message.role" = "Role" }
+
 [crates.e2e.calls.chat_stream.overrides.wasm]
 options_type = "WasmChatCompletionRequest"
 
@@ -571,6 +578,11 @@ from_json_module = "liter_llm._internal_bindings"
 
 [crates.e2e.calls.embed.overrides.ruby]
 options_type = "LiterLlm::EmbeddingRequest"
+
+[crates.e2e.calls.embed.overrides.java]
+client_factory = "createClient"
+options_type = "EmbeddingRequest"
+options_via = "from_json"
 
 [crates.e2e.calls.embed.overrides.wasm]
 options_type = "WasmEmbeddingRequest"
@@ -625,6 +637,11 @@ from_json_module = "liter_llm._internal_bindings"
 [crates.e2e.calls.image_generate.overrides.ruby]
 options_type = "LiterLlm::CreateImageRequest"
 
+[crates.e2e.calls.image_generate.overrides.java]
+client_factory = "createClient"
+options_type = "CreateImageRequest"
+options_via = "from_json"
+
 [crates.e2e.calls.image_generate.overrides.wasm]
 options_type = "WasmCreateImageRequest"
 
@@ -653,6 +670,8 @@ result_is_bytes = true
 
 [crates.e2e.calls.speech.overrides.csharp]
 options_type = "CreateSpeechRequest"
+options_via = "from_json"
+result_is_bytes = true
 
 [crates.e2e.calls.speech.overrides.elixir]
 function = "defaultclient_speech"
@@ -680,6 +699,13 @@ result_is_simple = true
 [crates.e2e.calls.speech.overrides.ruby]
 options_type = "LiterLlm::CreateSpeechRequest"
 result_is_simple = true
+
+[crates.e2e.calls.speech.overrides.java]
+client_factory = "createClient"
+options_type = "CreateSpeechRequest"
+options_via = "from_json"
+result_is_simple = true
+result_is_bytes = true
 
 [crates.e2e.calls.speech.overrides.wasm]
 options_type = "WasmCreateSpeechRequest"
@@ -721,6 +747,11 @@ from_json_module = "liter_llm._internal_bindings"
 
 [crates.e2e.calls.transcribe.overrides.ruby]
 options_type = "LiterLlm::CreateTranscriptionRequest"
+
+[crates.e2e.calls.transcribe.overrides.java]
+client_factory = "createClient"
+options_type = "CreateTranscriptionRequest"
+options_via = "from_json"
 
 [crates.e2e.calls.transcribe.overrides.wasm]
 options_type = "WasmCreateTranscriptionRequest"
@@ -987,6 +1018,13 @@ extra_args = ["undefined"]
 [crates.e2e.calls.list_files.overrides.wasm]
 extra_args = ["undefined"]
 
+[crates.e2e.calls.list_files.overrides.csharp]
+extra_args = ["null"]
+
+[crates.e2e.calls.list_files.overrides.java]
+client_factory = "createClient"
+extra_args = ["null"]
+
 [crates.e2e.calls.list_files.overrides.c]
 result_type = "FileListResponse"
 extra_args = ["NULL"]
@@ -1019,6 +1057,14 @@ result_is_simple = true
 
 [crates.e2e.calls.file_content.overrides.php]
 result_is_simple = true
+
+[crates.e2e.calls.file_content.overrides.csharp]
+result_is_bytes = true
+
+[crates.e2e.calls.file_content.overrides.java]
+client_factory = "createClient"
+result_is_simple = true
+result_is_bytes = true
 
 [crates.e2e.calls.file_content.overrides.c]
 # file_content() uses the byte-buffer out-pointer FFI shape — the codegen emits
@@ -1063,6 +1109,12 @@ from_json_module = "liter_llm._internal_bindings"
 [crates.e2e.calls.create_batch.overrides.ruby]
 options_type = "LiterLlm::CreateBatchRequest"
 
+[crates.e2e.calls.create_batch.overrides.java]
+client_factory = "createClient"
+options_type = "CreateBatchRequest"
+options_via = "from_json"
+enum_fields = { "status" = "BatchStatus" }
+
 [crates.e2e.calls.create_batch.overrides.wasm]
 options_type = "WasmCreateBatchRequest"
 result_enum_fields = { "status" = "WasmBatchStatus" }
@@ -1084,6 +1136,10 @@ type = "string"
 
 [crates.e2e.calls.retrieve_batch.overrides.c]
 result_type = "BatchObject"
+
+[crates.e2e.calls.retrieve_batch.overrides.java]
+client_factory = "createClient"
+enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.retrieve_batch.overrides.wasm]
 result_enum_fields = { "status" = "WasmBatchStatus" }
@@ -1114,6 +1170,13 @@ extra_args = ["undefined"]
 [crates.e2e.calls.list_batches.overrides.wasm]
 extra_args = ["undefined"]
 
+[crates.e2e.calls.list_batches.overrides.csharp]
+extra_args = ["null"]
+
+[crates.e2e.calls.list_batches.overrides.java]
+client_factory = "createClient"
+extra_args = ["null"]
+
 [crates.e2e.calls.list_batches.overrides.c]
 result_type = "BatchListResponse"
 extra_args = ["NULL"]
@@ -1134,6 +1197,10 @@ type = "string"
 
 [crates.e2e.calls.cancel_batch.overrides.c]
 result_type = "BatchObject"
+
+[crates.e2e.calls.cancel_batch.overrides.java]
+client_factory = "createClient"
+enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.cancel_batch.overrides.wasm]
 result_enum_fields = { "status" = "WasmBatchStatus" }
