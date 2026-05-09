@@ -91,6 +91,9 @@
     </dependencies>
 
     <build>
+        <!-- alef emits Java sources under packages/java/dev/kreuzberg/literllm/. The package
+             hierarchy is rooted at packages/java/, so sourceDirectory must point there. -->
+        <sourceDirectory>${project.basedir}</sourceDirectory>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -179,6 +182,14 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
                 <version>${maven-source-plugin.version}</version>
+                <configuration>
+                    <!-- sourceDirectory is the project basedir to match alef's emit layout
+                         (packages/java/dev/...). Exclude target/ so the source jar doesn't
+                         try to include itself. -->
+                    <excludes>
+                        <exclude>target/**</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <id>attach-sources</id>

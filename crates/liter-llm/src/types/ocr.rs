@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use super::common::Usage;
 
 /// An OCR request.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct OcrRequest {
     /// The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`).
