@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.15.1"
+alef_version = "0.15.2"
 languages = ["python", "node", "ruby", "php", "ffi", "go", "java", "csharp", "elixir", "wasm"]
 
 [workspace.sync]
@@ -382,7 +382,6 @@ client_factory = "createClient"
 
 [crates.e2e.call.overrides.php]
 php_client_factory = "createClient"
-options_via = "json"
 
 [crates.e2e.call.overrides.wasm]
 client_factory = "createClient"
@@ -431,6 +430,9 @@ result_type = "ChatCompletionResponse"
 [crates.e2e.calls.chat.overrides.csharp]
 options_type = "ChatCompletionRequest"
 
+[crates.e2e.calls.chat.overrides.php]
+options_type = "ChatCompletionRequest"
+
 [crates.e2e.calls.chat.overrides.go]
 client_factory = "CreateClient"
 options_type = "ChatCompletionRequest"
@@ -462,6 +464,9 @@ result_type = "ChatCompletionChunk"
 [crates.e2e.calls.chat_stream.overrides.csharp]
 options_type = "ChatCompletionRequest"
 
+[crates.e2e.calls.chat_stream.overrides.php]
+options_type = "ChatCompletionRequest"
+
 [crates.e2e.calls.chat_stream.overrides.python]
 options_type = "ChatCompletionRequest"
 options_via = "from_json"
@@ -487,6 +492,9 @@ owned = true
 result_type = "EmbeddingResponse"
 
 [crates.e2e.calls.embed.overrides.csharp]
+options_type = "EmbeddingRequest"
+
+[crates.e2e.calls.embed.overrides.php]
 options_type = "EmbeddingRequest"
 
 [crates.e2e.calls.embed.overrides.go]
@@ -529,6 +537,9 @@ result_type = "ImageResponse"
 [crates.e2e.calls.image_generate.overrides.csharp]
 options_type = "CreateImageRequest"
 
+[crates.e2e.calls.image_generate.overrides.php]
+options_type = "CreateImageRequest"
+
 [crates.e2e.calls.image_generate.overrides.go]
 client_factory = "CreateClient"
 options_type = "CreateImageRequest"
@@ -561,6 +572,9 @@ result_is_simple = true
 result_type = "SpeechResponse"
 
 [crates.e2e.calls.speech.overrides.csharp]
+options_type = "CreateSpeechRequest"
+
+[crates.e2e.calls.speech.overrides.php]
 options_type = "CreateSpeechRequest"
 
 [crates.e2e.calls.speech.overrides.go]
@@ -600,6 +614,9 @@ result_type = "TranscriptionResponse"
 [crates.e2e.calls.transcribe.overrides.csharp]
 options_type = "CreateTranscriptionRequest"
 
+[crates.e2e.calls.transcribe.overrides.php]
+options_type = "CreateTranscriptionRequest"
+
 [crates.e2e.calls.transcribe.overrides.go]
 client_factory = "CreateClient"
 options_type = "CreateTranscriptionRequest"
@@ -628,6 +645,9 @@ owned = true
 result_type = "ModerationResponse"
 
 [crates.e2e.calls.moderate.overrides.csharp]
+options_type = "ModerationRequest"
+
+[crates.e2e.calls.moderate.overrides.php]
 options_type = "ModerationRequest"
 
 [crates.e2e.calls.moderate.overrides.go]
@@ -660,6 +680,9 @@ result_type = "RerankResponse"
 [crates.e2e.calls.rerank.overrides.csharp]
 options_type = "RerankRequest"
 
+[crates.e2e.calls.rerank.overrides.php]
+options_type = "RerankRequest"
+
 [crates.e2e.calls.rerank.overrides.go]
 client_factory = "CreateClient"
 options_type = "RerankRequest"
@@ -688,6 +711,9 @@ owned = true
 result_type = "SearchResponse"
 
 [crates.e2e.calls.search.overrides.csharp]
+options_type = "SearchRequest"
+
+[crates.e2e.calls.search.overrides.php]
 options_type = "SearchRequest"
 
 [crates.e2e.calls.search.overrides.go]
@@ -720,6 +746,9 @@ result_type = "OcrResponse"
 [crates.e2e.calls.ocr.overrides.csharp]
 options_type = "OcrRequest"
 
+[crates.e2e.calls.ocr.overrides.php]
+options_type = "OcrRequest"
+
 [crates.e2e.calls.ocr.overrides.go]
 client_factory = "CreateClient"
 options_type = "OcrRequest"
@@ -748,6 +777,9 @@ owned = true
 result_type = "FileResponse"
 
 [crates.e2e.calls.create_file.overrides.csharp]
+options_type = "CreateFileRequest"
+
+[crates.e2e.calls.create_file.overrides.php]
 options_type = "CreateFileRequest"
 
 [crates.e2e.calls.create_file.overrides.go]
@@ -857,6 +889,9 @@ result_type = "BatchResponse"
 [crates.e2e.calls.create_batch.overrides.csharp]
 options_type = "CreateBatchRequest"
 
+[crates.e2e.calls.create_batch.overrides.php]
+options_type = "CreateBatchRequest"
+
 [crates.e2e.calls.create_batch.overrides.go]
 client_factory = "CreateClient"
 options_type = "CreateBatchRequest"
@@ -936,6 +971,9 @@ owned = true
 result_type = "ResponseResponse"
 
 [crates.e2e.calls.create_response.overrides.csharp]
+options_type = "CreateResponseRequest"
+
+[crates.e2e.calls.create_response.overrides.php]
 options_type = "CreateResponseRequest"
 
 [crates.e2e.calls.create_response.overrides.go]
