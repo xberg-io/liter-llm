@@ -263,7 +263,7 @@ e2e = ["cd e2e/wasm && pnpm install", "cd e2e/wasm && pnpm vitest run"]
 
 [crates.test.ffi]
 precondition = "command -v make >/dev/null 2>&1"
-before = "cargo build -p liter-llm-ffi --release"
+before = "cargo build -p liter-llm-ffi --release && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 e2e = "cd e2e/c && make test"
 
 [crates.publish]
@@ -492,6 +492,10 @@ options_via = "from_json"
 
 [crates.e2e.calls.chat.overrides.wasm]
 options_type = "WasmChatCompletionRequest"
+# wasm-bindgen exposes Rust enums as numeric discriminants. Map enum-typed
+# result fields to their JS class so `equals` assertions compare
+# `WasmFinishReason.Stop` instead of `(value ?? "").trim() === "stop"`.
+result_enum_fields = { "choices[0].finish_reason" = "WasmFinishReason" }
 
 [crates.e2e.calls.chat_stream]
 function = "chat_stream"
@@ -965,6 +969,7 @@ async = true
 
 [crates.e2e.calls.list_files.overrides.elixir]
 function = "defaultclient_list_files"
+extra_args = ["nil"]
 
 [crates.e2e.calls.list_files.overrides.rust]
 extra_args = ["None"]
@@ -1058,6 +1063,7 @@ options_type = "LiterLlm::CreateBatchRequest"
 
 [crates.e2e.calls.create_batch.overrides.wasm]
 options_type = "WasmCreateBatchRequest"
+result_enum_fields = { "status" = "WasmBatchStatus" }
 
 [crates.e2e.calls.retrieve_batch]
 function = "retrieve_batch"
@@ -1077,6 +1083,9 @@ type = "string"
 [crates.e2e.calls.retrieve_batch.overrides.c]
 result_type = "BatchObject"
 
+[crates.e2e.calls.retrieve_batch.overrides.wasm]
+result_enum_fields = { "status" = "WasmBatchStatus" }
+
 [crates.e2e.calls.list_batches]
 function = "list_batches"
 path = "/batches"
@@ -1086,6 +1095,7 @@ async = true
 
 [crates.e2e.calls.list_batches.overrides.elixir]
 function = "defaultclient_list_batches"
+extra_args = ["nil"]
 
 [crates.e2e.calls.list_batches.overrides.rust]
 extra_args = ["None"]
@@ -1122,6 +1132,9 @@ type = "string"
 
 [crates.e2e.calls.cancel_batch.overrides.c]
 result_type = "BatchObject"
+
+[crates.e2e.calls.cancel_batch.overrides.wasm]
+result_enum_fields = { "status" = "WasmBatchStatus" }
 
 [crates.e2e.calls.create_response]
 function = "create_response"
