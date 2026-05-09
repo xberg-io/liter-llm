@@ -422,6 +422,9 @@ options_type = "LiterLlm::ChatCompletionRequest"
 [crates.e2e.call.overrides.elixir]
 client_factory = "create_client"
 
+[crates.e2e.call.overrides.java]
+client_factory = "createClient"
+
 [crates.e2e.calls.chat]
 function = "chat"
 path = "/chat/completions"
@@ -458,6 +461,11 @@ from_json_module = "liter_llm._internal_bindings"
 
 [crates.e2e.calls.chat.overrides.ruby]
 options_type = "LiterLlm::ChatCompletionRequest"
+
+[crates.e2e.calls.chat.overrides.java]
+client_factory = "createClient"
+options_type = "ChatCompletionRequest"
+options_via = "from_json"
 
 [crates.e2e.calls.chat_stream]
 function = "chat_stream"

@@ -30,9 +30,6 @@ importers:
 
   e2e/wasm:
     devDependencies:
-      dotenv:
-        specifier: ^16.4.5
-        version: 16.6.1
       liter_llm:
         specifier: file:../../crates/liter-llm-wasm/pkg
         version: liter-llm-wasm@file:crates/liter-llm-wasm/pkg
