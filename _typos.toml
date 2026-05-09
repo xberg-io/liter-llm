@@ -11,6 +11,9 @@ extend-exclude = [
   ".lycheecache",
   "docs/assets/",
   "*.svg",
+  # Auto-generated Java bindings include Jackson imports like
+  # `com.fasterxml.jackson.databind.ser.std.*` whose "ser" segment trips typos.
+  "packages/java/",
 ]
 
 [default.extend-words]

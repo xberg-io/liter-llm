@@ -1,5 +1,13 @@
 [files]
-extend-exclude = ["target/", ".alef/", "*.lock", "*.min.js"]
+extend-exclude = [
+  "target/",
+  ".alef/",
+  "*.lock",
+  "*.min.js",
+  # Auto-generated Java bindings include Jackson imports like
+  # `com.fasterxml.jackson.databind.ser.std.*` whose "ser" segment trips typos.
+  "packages/java/**",
+]
 
 [default.extend-words]
 # Add project-specific words here

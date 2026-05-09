@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.15.10"
+alef_version = "0.15.13"
 languages = ["python", "node", "ruby", "php", "ffi", "go", "java", "csharp", "elixir", "wasm"]
 
 [workspace.sync]
@@ -290,9 +290,11 @@ output = "e2e"
 # not in cross-language e2e bindings.
 exclude_categories = ["cache", "proxy", "budget", "hooks"]
 # Fields whose values are enum types — assertions use _alef_e2e_text() instead of .strip().
+# NOTE: only include paths that are *always* enum-typed across every result type they
+# appear on. `status` / `purpose` are context-dependent (BatchStatus on BatchObject,
+# but plain String on ResponseObject/FileObject) so they are configured per-call via
+# `enum_fields = { "status" = "..." }` overrides, not globally.
 fields_enum = [
-  "status",
-  "purpose",
   "choices[0].finish_reason",
   "choices[0].message.role",
 ]

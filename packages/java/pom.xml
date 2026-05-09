@@ -284,6 +284,12 @@
                     <rulesets>
                         <ruleset>/rulesets/java/quickstart.xml</ruleset>
                     </rulesets>
+                    <!-- CPD's default minimum-tokens (100) flags alef-emitted FFI
+                         byte-buffer fetch boilerplate inside DefaultClient (~124 tokens),
+                         and the untagged-union wrapper boilerplate (~170 tokens). Both
+                         are intentional duplicates from codegen. Bumping the threshold
+                         past 200 keeps detection meaningful for hand-written code. -->
+                    <minimumTokens>200</minimumTokens>
                 </configuration>
                 <executions>
                     <execution>
