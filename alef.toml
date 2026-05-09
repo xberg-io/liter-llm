@@ -374,6 +374,25 @@ result_fields = [
   "content",
 ]
 
+# C FFI primitive accessor return types — used by the C e2e codegen to emit
+# typed local variables (uint64_t/int32_t/double/...) instead of char* for
+# leaf field accessors that return scalars in the FFI header.
+[crates.e2e.fields_c_types]
+"usage.prompt_tokens" = "uint64_t"
+"usage.completion_tokens" = "uint64_t"
+"usage.total_tokens" = "uint64_t"
+"file_object.bytes" = "uint64_t"
+"file_object.created_at" = "uint64_t"
+"delete_response.deleted" = "int32_t"
+"rerank_result.index" = "uint32_t"
+"rerank_result.relevance_score" = "double"
+"embedding_object.index" = "uint32_t"
+"moderation_result.flagged" = "int32_t"
+"ocr_page.index" = "uint32_t"
+"choice.index" = "uint32_t"
+"chat_completion_response.created" = "uint64_t"
+"images_response.created" = "uint64_t"
+
 [crates.e2e.call]
 function = "chat"
 path = "/chat/completions"
@@ -924,6 +943,7 @@ extra_args = ["undefined"]
 
 [crates.e2e.calls.list_files.overrides.c]
 result_type = "FileListResponse"
+extra_args = ["NULL"]
 
 [crates.e2e.calls.file_content]
 function = "file_content"
@@ -1038,6 +1058,7 @@ extra_args = ["undefined"]
 
 [crates.e2e.calls.list_batches.overrides.c]
 result_type = "BatchListResponse"
+extra_args = ["NULL"]
 
 [crates.e2e.calls.cancel_batch]
 function = "cancel_batch"
