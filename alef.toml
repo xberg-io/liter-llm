@@ -532,7 +532,7 @@ async = true
 function = "defaultclient_list_models"
 
 [crates.e2e.calls.list_models.overrides.c]
-result_type = "ListModelsResponse"
+result_type = "ModelsListResponse"
 
 [crates.e2e.calls.image_generate]
 function = "image_generate"
@@ -548,7 +548,7 @@ owned = true
 
 [crates.e2e.calls.image_generate.overrides.c]
 options_type = "CreateImageRequest"
-result_type = "ImageResponse"
+result_type = "ImagesResponse"
 
 [crates.e2e.calls.image_generate.overrides.csharp]
 options_type = "CreateImageRequest"
@@ -818,7 +818,7 @@ owned = true
 
 [crates.e2e.calls.create_file.overrides.c]
 options_type = "CreateFileRequest"
-result_type = "FileResponse"
+result_type = "FileObject"
 
 [crates.e2e.calls.create_file.overrides.csharp]
 options_type = "CreateFileRequest"
@@ -857,7 +857,7 @@ field = "input.file_id"
 type = "string"
 
 [crates.e2e.calls.retrieve_file.overrides.c]
-result_type = "FileResponse"
+result_type = "FileObject"
 
 [crates.e2e.calls.delete_file]
 function = "delete_file"
@@ -875,7 +875,7 @@ field = "input.file_id"
 type = "string"
 
 [crates.e2e.calls.delete_file.overrides.c]
-result_type = "DeleteFileResponse"
+result_type = "DeleteResponse"
 
 [crates.e2e.calls.list_files]
 function = "list_files"
@@ -900,7 +900,7 @@ extra_args = ["nil"]
 extra_args = ["undefined"]
 
 [crates.e2e.calls.list_files.overrides.c]
-result_type = "ListFilesResponse"
+result_type = "FileListResponse"
 
 [crates.e2e.calls.file_content]
 function = "file_content"
@@ -944,7 +944,7 @@ owned = true
 
 [crates.e2e.calls.create_batch.overrides.c]
 options_type = "CreateBatchRequest"
-result_type = "BatchResponse"
+result_type = "BatchObject"
 
 [crates.e2e.calls.create_batch.overrides.csharp]
 options_type = "CreateBatchRequest"
@@ -983,7 +983,7 @@ field = "input.batch_id"
 type = "string"
 
 [crates.e2e.calls.retrieve_batch.overrides.c]
-result_type = "BatchResponse"
+result_type = "BatchObject"
 
 [crates.e2e.calls.list_batches]
 function = "list_batches"
@@ -1008,7 +1008,7 @@ extra_args = ["nil"]
 extra_args = ["undefined"]
 
 [crates.e2e.calls.list_batches.overrides.c]
-result_type = "ListBatchesResponse"
+result_type = "BatchListResponse"
 
 [crates.e2e.calls.cancel_batch]
 function = "cancel_batch"
@@ -1025,7 +1025,7 @@ field = "input.batch_id"
 type = "string"
 
 [crates.e2e.calls.cancel_batch.overrides.c]
-result_type = "BatchResponse"
+result_type = "BatchObject"
 
 [crates.e2e.calls.create_response]
 function = "create_response"
@@ -1041,7 +1041,7 @@ owned = true
 
 [crates.e2e.calls.create_response.overrides.c]
 options_type = "CreateResponseRequest"
-result_type = "ResponseResponse"
+result_type = "ResponseObject"
 
 [crates.e2e.calls.create_response.overrides.csharp]
 options_type = "CreateResponseRequest"
@@ -1080,7 +1080,7 @@ field = "input.id"
 type = "string"
 
 [crates.e2e.calls.retrieve_response.overrides.c]
-result_type = "ResponseResponse"
+result_type = "ResponseObject"
 
 [crates.e2e.calls.cancel_response]
 function = "cancel_response"
@@ -1097,7 +1097,7 @@ field = "input.id"
 type = "string"
 
 [crates.e2e.calls.cancel_response.overrides.c]
-result_type = "ResponseResponse"
+result_type = "ResponseObject"
 
 [crates.e2e.packages.node]
 name = "@kreuzberg/liter-llm-node"
