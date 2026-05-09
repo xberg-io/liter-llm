@@ -415,7 +415,10 @@ php_client_factory = "createClient"
 [crates.e2e.call.overrides.wasm]
 client_factory = "createClient"
 options_type = "WasmChatCompletionRequest"
-bigint_fields = ["maxTokens", "seed", "promptTokens", "completionTokens", "totalTokens", "n"]
+# Fields whose wasm-bindgen setter expects BigInt (Rust u64/i64). The chat
+# request struct uses these for maxTokens (u64) and seed (i64); per-call
+# wasm overrides extend this set when their request struct adds more.
+bigint_fields = ["maxTokens", "seed"]
 
 [crates.e2e.call.overrides.c]
 result_type = "ChatCompletionResponse"
@@ -487,6 +490,9 @@ client_factory = "createClient"
 options_type = "ChatCompletionRequest"
 options_via = "from_json"
 
+[crates.e2e.calls.chat.overrides.wasm]
+options_type = "WasmChatCompletionRequest"
+
 [crates.e2e.calls.chat_stream]
 function = "chat_stream"
 path = "/chat/completions"
@@ -521,6 +527,9 @@ async = false
 
 [crates.e2e.calls.chat_stream.overrides.ruby]
 options_type = "LiterLlm::ChatCompletionRequest"
+
+[crates.e2e.calls.chat_stream.overrides.wasm]
+options_type = "WasmChatCompletionRequest"
 
 [crates.e2e.calls.embed]
 function = "embed"
@@ -558,6 +567,9 @@ from_json_module = "liter_llm._internal_bindings"
 
 [crates.e2e.calls.embed.overrides.ruby]
 options_type = "LiterLlm::EmbeddingRequest"
+
+[crates.e2e.calls.embed.overrides.wasm]
+options_type = "WasmEmbeddingRequest"
 
 [crates.e2e.calls.list_models]
 function = "list_models"
@@ -608,6 +620,9 @@ from_json_module = "liter_llm._internal_bindings"
 
 [crates.e2e.calls.image_generate.overrides.ruby]
 options_type = "LiterLlm::CreateImageRequest"
+
+[crates.e2e.calls.image_generate.overrides.wasm]
+options_type = "WasmCreateImageRequest"
 
 [crates.e2e.calls.speech]
 function = "speech"
@@ -661,6 +676,10 @@ result_is_simple = true
 options_type = "LiterLlm::CreateSpeechRequest"
 result_is_simple = true
 
+[crates.e2e.calls.speech.overrides.wasm]
+options_type = "WasmCreateSpeechRequest"
+result_is_simple = true
+
 [crates.e2e.calls.transcribe]
 function = "transcribe"
 path = "/audio/transcriptions"
@@ -697,6 +716,9 @@ from_json_module = "liter_llm._internal_bindings"
 
 [crates.e2e.calls.transcribe.overrides.ruby]
 options_type = "LiterLlm::CreateTranscriptionRequest"
+
+[crates.e2e.calls.transcribe.overrides.wasm]
+options_type = "WasmCreateTranscriptionRequest"
 
 [crates.e2e.calls.moderate]
 function = "moderate"
@@ -735,6 +757,9 @@ from_json_module = "liter_llm._internal_bindings"
 [crates.e2e.calls.moderate.overrides.ruby]
 options_type = "LiterLlm::ModerationRequest"
 
+[crates.e2e.calls.moderate.overrides.wasm]
+options_type = "WasmModerationRequest"
+
 [crates.e2e.calls.rerank]
 function = "rerank"
 path = "/rerank"
@@ -771,6 +796,9 @@ from_json_module = "liter_llm._internal_bindings"
 
 [crates.e2e.calls.rerank.overrides.ruby]
 options_type = "LiterLlm::RerankRequest"
+
+[crates.e2e.calls.rerank.overrides.wasm]
+options_type = "WasmRerankRequest"
 
 [crates.e2e.calls.search]
 function = "search"
@@ -809,6 +837,9 @@ from_json_module = "liter_llm._internal_bindings"
 [crates.e2e.calls.search.overrides.ruby]
 options_type = "LiterLlm::SearchRequest"
 
+[crates.e2e.calls.search.overrides.wasm]
+options_type = "WasmSearchRequest"
+
 [crates.e2e.calls.ocr]
 function = "ocr"
 path = "/ocr"
@@ -846,6 +877,9 @@ from_json_module = "liter_llm._internal_bindings"
 [crates.e2e.calls.ocr.overrides.ruby]
 options_type = "LiterLlm::OcrRequest"
 
+[crates.e2e.calls.ocr.overrides.wasm]
+options_type = "WasmOcrRequest"
+
 [crates.e2e.calls.create_file]
 function = "create_file"
 path = "/files"
@@ -882,6 +916,9 @@ from_json_module = "liter_llm._internal_bindings"
 
 [crates.e2e.calls.create_file.overrides.ruby]
 options_type = "LiterLlm::CreateFileRequest"
+
+[crates.e2e.calls.create_file.overrides.wasm]
+options_type = "WasmCreateFileRequest"
 
 [crates.e2e.calls.retrieve_file]
 function = "retrieve_file"
@@ -939,6 +976,9 @@ extra_args = ["nil"]
 extra_args = ["nil"]
 
 [crates.e2e.calls.list_files.overrides.node]
+extra_args = ["undefined"]
+
+[crates.e2e.calls.list_files.overrides.wasm]
 extra_args = ["undefined"]
 
 [crates.e2e.calls.list_files.overrides.c]
@@ -1016,6 +1056,9 @@ from_json_module = "liter_llm._internal_bindings"
 [crates.e2e.calls.create_batch.overrides.ruby]
 options_type = "LiterLlm::CreateBatchRequest"
 
+[crates.e2e.calls.create_batch.overrides.wasm]
+options_type = "WasmCreateBatchRequest"
+
 [crates.e2e.calls.retrieve_batch]
 function = "retrieve_batch"
 path = "/batches"
@@ -1054,6 +1097,9 @@ extra_args = ["nil"]
 extra_args = ["nil"]
 
 [crates.e2e.calls.list_batches.overrides.node]
+extra_args = ["undefined"]
+
+[crates.e2e.calls.list_batches.overrides.wasm]
 extra_args = ["undefined"]
 
 [crates.e2e.calls.list_batches.overrides.c]
@@ -1113,6 +1159,11 @@ from_json_module = "liter_llm._internal_bindings"
 
 [crates.e2e.calls.create_response.overrides.ruby]
 options_type = "LiterLlm::CreateResponseRequest"
+
+[crates.e2e.calls.create_response.overrides.wasm]
+options_type = "WasmCreateResponseRequest"
+# WasmCreateResponseRequest.maxOutputTokens is u64 — wasm-bindgen requires BigInt.
+bigint_fields = ["maxOutputTokens"]
 
 [crates.e2e.calls.retrieve_response]
 function = "retrieve_response"
