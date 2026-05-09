@@ -101,5 +101,5 @@ export {
   createClient,
   createClientFromJson,
   registerCustomProvider,
-  unregisterCustomProvider,
-} from "./wasm";
+  unregisterCustomProvider
+} from './wasm';
