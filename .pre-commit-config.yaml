@@ -140,12 +140,14 @@ repos:
       - id: cppcheck
       - id: rumdl-fmt
       - id: cpd
-  # Alef: multi-language formatting, linting, type checking, and version sync
+  # Alef: multi-language formatting, linting, type checking, and version sync.
+  # The script entry prefers a locally-installed `alef` binary whose --version
+  # matches the pinned alef.toml version, falling back to a sha256-verified
+  # release-tarball download. Do not override `entry:` here.
   - repo: https://github.com/kreuzberg-dev/alef
     rev: v0.15.1
     hooks:
       - id: alef-verify
-        entry: alef verify
       - id: alef-sync-versions
 
   # GitHub Actions: linting
