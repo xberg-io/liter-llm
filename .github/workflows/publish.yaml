@@ -822,11 +822,10 @@ jobs:
           path: go-ffi-release
           merge-multiple: true
       - name: Upload to GitHub Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ needs.prepare.outputs.tag }}
-        run: gh release upload "$TAG" go-ffi-release/*.tar.gz --clobber --repo ${{ github.repository }}
-        shell: bash
+        uses: kreuzberg-dev/actions/upload-release-assets@v1
+        with:
+          tag: ${{ needs.prepare.outputs.tag }}
+          assets: go-ffi-release/*.tar.gz
 
   upload-elixir-nifs:
     name: Upload Elixir NIF assets
@@ -841,22 +840,20 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.tag }}
       - name: Ensure GitHub release exists
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ needs.prepare.outputs.tag }}
-        run: gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1 || gh release create "$TAG" --draft --repo "${{ github.repository }}" --title "$TAG"
-        shell: bash
+        uses: kreuzberg-dev/actions/publish-github-release@v1
+        with:
+          tag: ${{ needs.prepare.outputs.tag }}
+          draft: "true"
       - uses: actions/download-artifact@v7
         with:
           pattern: elixir-nifs-*
           path: elixir-nifs
           merge-multiple: true
       - name: Upload to GitHub Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ needs.prepare.outputs.tag }}
-        run: gh release upload "$TAG" elixir-nifs/*.tar.gz --clobber --repo ${{ github.repository }}
-        shell: bash
+        uses: kreuzberg-dev/actions/upload-release-assets@v1
+        with:
+          tag: ${{ needs.prepare.outputs.tag }}
+          assets: elixir-nifs/*.tar.gz
 
   upload-php-extensions:
     name: Upload PHP extension assets
@@ -871,11 +868,10 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.tag }}
       - name: Ensure GitHub release exists
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ needs.prepare.outputs.tag }}
-        run: gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1 || gh release create "$TAG" --draft --repo "${{ github.repository }}" --title "$TAG"
-        shell: bash
+        uses: kreuzberg-dev/actions/publish-github-release@v1
+        with:
+          tag: ${{ needs.prepare.outputs.tag }}
+          draft: "true"
       - uses: actions/download-artifact@v7
         with:
           pattern: php-package-*
@@ -1141,15 +1137,11 @@ jobs:
 
       - name: Check if version already published to npm
         id: npm_check
-        run: |
-          VERSION=$(jq -r '.version' dist/package.json)
-          STATUS=$(npm view "@kreuzberg/liter-llm-wasm@${VERSION}" version 2>/dev/null || echo "")
-          if [ "$STATUS" = "$VERSION" ]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-        shell: bash
+        uses: kreuzberg-dev/actions/check-registry@v1
+        with:
+          registry: npm
+          package: "@kreuzberg/liter-llm-wasm"
+          version: ${{ needs.prepare.outputs.version }}
 
       - name: Publish to npm
         if: ${{ steps.npm_check.outputs.exists != 'true' }}
@@ -1645,32 +1637,20 @@ jobs:
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           cache-key-prefix: publish-homebrew-${{ matrix.bottle_tag }}
-      - name: Extract version
-        id: version
-        run: |
-          VERSION="${{ needs.prepare.outputs.version }}"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
       - name: Build CLI
         run: cargo build --release -p liter-llm-cli
       - name: Create Homebrew bottle
         id: bottle
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          bottle_root="/tmp/liter-llm-bottle"
-          bottle_dir="${bottle_root}/liter-llm/${VERSION}"
-          mkdir -p "${bottle_dir}/bin"
-          cp target/release/liter-llm "${bottle_dir}/bin/"
-          cd "${bottle_root}"
-          bottle_filename="liter-llm-${VERSION}.${{ matrix.bottle_tag }}.bottle.tar.gz"
-          tar -czf "${bottle_filename}" liter-llm/
-          sha256=$(shasum -a 256 "${bottle_filename}" | cut -d' ' -f1)
-          echo "sha256=${sha256}" >> "$GITHUB_OUTPUT"
-          echo "filename=${bottle_filename}" >> "$GITHUB_OUTPUT"
-          cp "${bottle_filename}" "${{ github.workspace }}/"
+        uses: kreuzberg-dev/actions/build-homebrew-bottle@v1
+        with:
+          binary-path: target/release/liter-llm
+          formula-name: liter-llm
+          version: ${{ needs.prepare.outputs.version }}
+          bottle-tag: ${{ matrix.bottle_tag }}
       - uses: actions/upload-artifact@v7
         with:
           name: homebrew-bottle-${{ matrix.bottle_tag }}
-          path: liter-llm-${{ steps.version.outputs.version }}.${{ matrix.bottle_tag }}.bottle.tar.gz
+          path: ${{ steps.bottle.outputs.filename }}
           retention-days: 14
 
   upload-homebrew-bottles:
@@ -1767,26 +1747,12 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.tag }}
 
-      - name: Create Go module tag
+      - name: Finalize release
         if: needs.prepare.outputs.dry_run != 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ needs.prepare.outputs.version }}
-        run: |
-          GO_TAG="packages/go/v${VERSION}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "$GO_TAG" || echo "Tag $GO_TAG already exists, skipping"
-          git push origin "$GO_TAG" || echo "Tag push skipped"
-        shell: bash
-
-      - name: Undraft GitHub Release
-        if: needs.prepare.outputs.dry_run != 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ needs.prepare.outputs.tag }}
-        run: gh release edit "$TAG" --draft=false
-        shell: bash
+        uses: kreuzberg-dev/actions/finalize-release@v1
+        with:
+          tag: ${{ needs.prepare.outputs.tag }}
+          go-module-path: packages/go
 
       - name: Publish summary
         env:

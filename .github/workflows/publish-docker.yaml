@@ -123,9 +123,14 @@ jobs:
             org.opencontainers.image.description=LiterLLM — OpenAI-compatible LLM proxy server
             org.opencontainers.image.licenses=MIT
 
+      - name: Pull published image for size check
+        if: ${{ !inputs.dry_run }}
+        run: docker pull ghcr.io/kreuzberg-dev/liter-llm:${{ needs.prepare.outputs.tag }}
+        shell: bash
+
       - name: Check image size
         if: ${{ !inputs.dry_run }}
-        run: |
-          docker pull ghcr.io/kreuzberg-dev/liter-llm:${{ needs.prepare.outputs.tag }} || true
-          size_mb=$(docker inspect ghcr.io/kreuzberg-dev/liter-llm:${{ needs.prepare.outputs.tag }} --format='{{.Size}}' 2>/dev/null | awk '{print int($1/1024/1024)}') || true
-          echo "Published image size: ${size_mb:-unknown}MB"
+        uses: kreuzberg-dev/actions/check-docker-image-size@v1
+        with:
+          image: ghcr.io/kreuzberg-dev/liter-llm:${{ needs.prepare.outputs.tag }}
+          label: liter-llm published

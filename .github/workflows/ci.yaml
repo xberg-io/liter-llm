@@ -498,13 +498,10 @@ jobs:
         shell: bash
 
       - name: Check image size
-        run: |
-          size_mb=$(docker inspect liter-llm:test --format='{{.Size}}' | awk '{print int($1/1024/1024)}')
-          echo "Image size: ${size_mb}MB"
-          if [ "$size_mb" -gt 100 ]; then
-            echo "::warning::Docker image is larger than 100MB (${size_mb}MB)"
-          fi
-        shell: bash
+        uses: kreuzberg-dev/actions/check-docker-image-size@v1
+        with:
+          image: liter-llm:test
+          warn-mb: "100"
 
       - name: Upload test results
         if: always()
