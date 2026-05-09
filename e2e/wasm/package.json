@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "vitest run"
+    "test": "node ./scripts/run-tests.mjs"
   },
   "devDependencies": {
+    "dotenv": "^16.4.5",
     "liter_llm": "file:../../crates/liter-llm-wasm/pkg",
     "rollup": "^4.53.3",
     "vite-plugin-wasm": "^3.4.0",
