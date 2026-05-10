@@ -1109,6 +1109,7 @@ options_type = "CreateBatchRequest"
 options_via = "from_json"
 from_json_module = "liter_llm._internal_bindings"
 enum_fields = { "status" = "BatchStatus" }
+assert_enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.create_batch.overrides.ruby]
 options_type = "LiterLlm::CreateBatchRequest"
@@ -1150,6 +1151,7 @@ enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.retrieve_batch.overrides.python]
 enum_fields = { "status" = "BatchStatus" }
+assert_enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.retrieve_batch.overrides.wasm]
 result_enum_fields = { "status" = "WasmBatchStatus" }
@@ -1217,6 +1219,7 @@ enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.cancel_batch.overrides.python]
 enum_fields = { "status" = "BatchStatus" }
+assert_enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.cancel_batch.overrides.wasm]
 result_enum_fields = { "status" = "WasmBatchStatus" }
