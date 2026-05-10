@@ -15,7 +15,7 @@ func TestMain(m *testing.M) {
 	_, filename, _, _ := runtime.Caller(0)
 	dir := filepath.Dir(filename)
 
-	// Change to the test_documents directory so that fixture file paths like
+	// Change to the configured test-documents directory so that fixture file paths like
 	// "pdf/fake_memo.pdf" resolve correctly when running go test from e2e/go/.
 	testDocumentsDir := filepath.Join(dir, "..", "..", "test_documents")
 	if err := os.Chdir(testDocumentsDir); err != nil {
