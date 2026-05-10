@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.15.25"
+alef_version = "0.15.29"
 languages = ["python", "node", "ruby", "php", "ffi", "go", "java", "csharp", "elixir", "wasm"]
 
 [workspace.sync]
@@ -255,7 +255,10 @@ e2e = [
 
 [crates.test.elixir]
 precondition = "command -v mix >/dev/null 2>&1"
-e2e = ["cd e2e/elixir && MIX_ENV=test mix deps.get", "cd e2e/elixir && MIX_ENV=test mix test"]
+e2e = [
+  "cd e2e/elixir && LITER_LLM_BUILD=1 MIX_ENV=test mix deps.get",
+  "cd e2e/elixir && LITER_LLM_BUILD=1 MIX_ENV=test mix test",
+]
 
 [crates.test.wasm]
 precondition = "command -v pnpm >/dev/null 2>&1"
@@ -1096,6 +1099,7 @@ enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.create_batch.overrides.elixir]
 function = "defaultclient_create_batch"
+enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.create_batch.overrides.php]
 options_type = "CreateBatchRequest"
@@ -1113,6 +1117,7 @@ assert_enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.create_batch.overrides.ruby]
 options_type = "LiterLlm::CreateBatchRequest"
+enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.create_batch.overrides.java]
 client_factory = "createClient"
@@ -1133,6 +1138,7 @@ async = true
 
 [crates.e2e.calls.retrieve_batch.overrides.elixir]
 function = "defaultclient_retrieve_batch"
+enum_fields = { "status" = "BatchStatus" }
 
 [[crates.e2e.calls.retrieve_batch.args]]
 name = "batch_id"
@@ -1152,6 +1158,9 @@ enum_fields = { "status" = "BatchStatus" }
 [crates.e2e.calls.retrieve_batch.overrides.python]
 enum_fields = { "status" = "BatchStatus" }
 assert_enum_fields = { "status" = "BatchStatus" }
+
+[crates.e2e.calls.retrieve_batch.overrides.ruby]
+enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.retrieve_batch.overrides.wasm]
 result_enum_fields = { "status" = "WasmBatchStatus" }
@@ -1201,6 +1210,7 @@ async = true
 
 [crates.e2e.calls.cancel_batch.overrides.elixir]
 function = "defaultclient_cancel_batch"
+enum_fields = { "status" = "BatchStatus" }
 
 [[crates.e2e.calls.cancel_batch.args]]
 name = "batch_id"
@@ -1220,6 +1230,9 @@ enum_fields = { "status" = "BatchStatus" }
 [crates.e2e.calls.cancel_batch.overrides.python]
 enum_fields = { "status" = "BatchStatus" }
 assert_enum_fields = { "status" = "BatchStatus" }
+
+[crates.e2e.calls.cancel_batch.overrides.ruby]
+enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.cancel_batch.overrides.wasm]
 result_enum_fields = { "status" = "WasmBatchStatus" }

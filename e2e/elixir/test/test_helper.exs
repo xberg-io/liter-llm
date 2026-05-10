@@ -10,11 +10,36 @@ if File.exists?(mock_server_bin) do
     :line,
     args: [fixtures_dir]
   ])
-  receive do
-    {^port, {:data, {:eol, "MOCK_SERVER_URL=" <> url}}} ->
-      System.put_env("MOCK_SERVER_URL", url)
-  after
-    30_000 ->
-      raise "mock-server startup timeout"
+  # Read startup lines: MOCK_SERVER_URL= then optional MOCK_SERVERS=.
+  {url, _} =
+    Enum.reduce_while(1..8, {nil, port}, fn _, {url_acc, p} ->
+      receive do
+        {^p, {:data, {:eol, "MOCK_SERVER_URL=" <> u}}} ->
+          {:cont, {u, p}}
+
+        {^p, {:data, {:eol, "MOCK_SERVERS=" <> json_val}}} ->
+          System.put_env("MOCK_SERVERS", json_val)
+          case Jason.decode(json_val) do
+            {:ok, servers} ->
+              Enum.each(servers, fn {fid, furl} ->
+                System.put_env("MOCK_SERVER_#{String.upcase(fid)}", furl)
+              end)
+
+            _ ->
+              :ok
+          end
+
+          {:halt, {url_acc, p}}
+
+        {^p, _other} when url_acc != nil ->
+          {:halt, {url_acc, p}}
+      after
+        30_000 ->
+          raise "mock-server startup timeout"
+      end
+    end)
+
+  if url != nil do
+    System.put_env("MOCK_SERVER_URL", url)
   end
 end
