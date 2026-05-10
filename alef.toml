@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.15.20"
+alef_version = "0.15.23"
 languages = ["python", "node", "ruby", "php", "ffi", "go", "java", "csharp", "elixir", "wasm"]
 
 [workspace.sync]
@@ -1108,6 +1108,7 @@ options_type = "CreateBatchRequest"
 options_type = "CreateBatchRequest"
 options_via = "from_json"
 from_json_module = "liter_llm._internal_bindings"
+enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.create_batch.overrides.ruby]
 options_type = "LiterLlm::CreateBatchRequest"
@@ -1145,6 +1146,9 @@ client_factory = "createClient"
 enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.retrieve_batch.overrides.csharp]
+enum_fields = { "status" = "BatchStatus" }
+
+[crates.e2e.calls.retrieve_batch.overrides.python]
 enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.retrieve_batch.overrides.wasm]
@@ -1209,6 +1213,9 @@ client_factory = "createClient"
 enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.cancel_batch.overrides.csharp]
+enum_fields = { "status" = "BatchStatus" }
+
+[crates.e2e.calls.cancel_batch.overrides.python]
 enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.cancel_batch.overrides.wasm]
