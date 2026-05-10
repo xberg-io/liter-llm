@@ -4380,6 +4380,381 @@ int32_t literllm_auth_header_format_from_i32(int32_t value);
 int32_t literllm_auth_header_format_from_str(const char *name);
 
 /**
+ * Free a heap-allocated `UserContent` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_user_content_free(LITERLLMUserContent *ptr);
+
+/**
+ * Serialize a heap-allocated `UserContent` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_user_content_to_json(const LITERLLMUserContent *ptr);
+
+/**
+ * Render a heap-allocated `UserContent` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_user_content_to_string(const LITERLLMUserContent *ptr);
+
+/**
+ * Free a heap-allocated `ImageDetail` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_image_detail_free(LITERLLMImageDetail *ptr);
+
+/**
+ * Serialize a heap-allocated `ImageDetail` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_image_detail_to_json(const LITERLLMImageDetail *ptr);
+
+/**
+ * Render a heap-allocated `ImageDetail` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_image_detail_to_string(const LITERLLMImageDetail *ptr);
+
+/**
+ * Free a heap-allocated `ToolType` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_tool_type_free(LITERLLMToolType *ptr);
+
+/**
+ * Serialize a heap-allocated `ToolType` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_tool_type_to_json(const LITERLLMToolType *ptr);
+
+/**
+ * Render a heap-allocated `ToolType` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_tool_type_to_string(const LITERLLMToolType *ptr);
+
+/**
+ * Free a heap-allocated `ToolChoice` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_tool_choice_free(LITERLLMToolChoice *ptr);
+
+/**
+ * Serialize a heap-allocated `ToolChoice` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_tool_choice_to_json(const LITERLLMToolChoice *ptr);
+
+/**
+ * Render a heap-allocated `ToolChoice` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_tool_choice_to_string(const LITERLLMToolChoice *ptr);
+
+/**
+ * Free a heap-allocated `ResponseFormat` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_response_format_free(LITERLLMResponseFormat *ptr);
+
+/**
+ * Serialize a heap-allocated `ResponseFormat` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_response_format_to_json(const LITERLLMResponseFormat *ptr);
+
+/**
+ * Render a heap-allocated `ResponseFormat` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_response_format_to_string(const LITERLLMResponseFormat *ptr);
+
+/**
+ * Free a heap-allocated `StopSequence` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_stop_sequence_free(LITERLLMStopSequence *ptr);
+
+/**
+ * Serialize a heap-allocated `StopSequence` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_stop_sequence_to_json(const LITERLLMStopSequence *ptr);
+
+/**
+ * Render a heap-allocated `StopSequence` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_stop_sequence_to_string(const LITERLLMStopSequence *ptr);
+
+/**
+ * Free a heap-allocated `FinishReason` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_finish_reason_free(LITERLLMFinishReason *ptr);
+
+/**
+ * Serialize a heap-allocated `FinishReason` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_finish_reason_to_json(const LITERLLMFinishReason *ptr);
+
+/**
+ * Render a heap-allocated `FinishReason` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_finish_reason_to_string(const LITERLLMFinishReason *ptr);
+
+/**
+ * Free a heap-allocated `ReasoningEffort` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_reasoning_effort_free(LITERLLMReasoningEffort *ptr);
+
+/**
+ * Serialize a heap-allocated `ReasoningEffort` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_reasoning_effort_to_json(const LITERLLMReasoningEffort *ptr);
+
+/**
+ * Render a heap-allocated `ReasoningEffort` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_reasoning_effort_to_string(const LITERLLMReasoningEffort *ptr);
+
+/**
+ * Free a heap-allocated `EmbeddingFormat` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_embedding_format_free(LITERLLMEmbeddingFormat *ptr);
+
+/**
+ * Serialize a heap-allocated `EmbeddingFormat` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_embedding_format_to_json(const LITERLLMEmbeddingFormat *ptr);
+
+/**
+ * Render a heap-allocated `EmbeddingFormat` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_embedding_format_to_string(const LITERLLMEmbeddingFormat *ptr);
+
+/**
+ * Free a heap-allocated `EmbeddingInput` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_embedding_input_free(LITERLLMEmbeddingInput *ptr);
+
+/**
+ * Serialize a heap-allocated `EmbeddingInput` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_embedding_input_to_json(const LITERLLMEmbeddingInput *ptr);
+
+/**
+ * Render a heap-allocated `EmbeddingInput` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_embedding_input_to_string(const LITERLLMEmbeddingInput *ptr);
+
+/**
+ * Free a heap-allocated `ModerationInput` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_moderation_input_free(LITERLLMModerationInput *ptr);
+
+/**
+ * Serialize a heap-allocated `ModerationInput` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_moderation_input_to_json(const LITERLLMModerationInput *ptr);
+
+/**
+ * Render a heap-allocated `ModerationInput` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_moderation_input_to_string(const LITERLLMModerationInput *ptr);
+
+/**
+ * Free a heap-allocated `OcrDocument` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_ocr_document_free(LITERLLMOcrDocument *ptr);
+
+/**
+ * Serialize a heap-allocated `OcrDocument` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_ocr_document_to_json(const LITERLLMOcrDocument *ptr);
+
+/**
+ * Render a heap-allocated `OcrDocument` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_ocr_document_to_string(const LITERLLMOcrDocument *ptr);
+
+/**
+ * Free a heap-allocated `FilePurpose` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_file_purpose_free(LITERLLMFilePurpose *ptr);
+
+/**
+ * Serialize a heap-allocated `FilePurpose` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_file_purpose_to_json(const LITERLLMFilePurpose *ptr);
+
+/**
+ * Render a heap-allocated `FilePurpose` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_file_purpose_to_string(const LITERLLMFilePurpose *ptr);
+
+/**
+ * Free a heap-allocated `BatchStatus` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_batch_status_free(LITERLLMBatchStatus *ptr);
+
+/**
+ * Serialize a heap-allocated `BatchStatus` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_batch_status_to_json(const LITERLLMBatchStatus *ptr);
+
+/**
+ * Render a heap-allocated `BatchStatus` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_batch_status_to_string(const LITERLLMBatchStatus *ptr);
+
+/**
+ * Free a heap-allocated `AuthHeaderFormat` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_auth_header_format_free(LITERLLMAuthHeaderFormat *ptr);
+
+/**
+ * Serialize a heap-allocated `AuthHeaderFormat` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_auth_header_format_to_json(const LITERLLMAuthHeaderFormat *ptr);
+
+/**
+ * Render a heap-allocated `AuthHeaderFormat` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_auth_header_format_to_string(const LITERLLMAuthHeaderFormat *ptr);
+
+/**
  * Create a new LLM client with simple scalar configuration.
  *
  * This is the primary binding entry-point. All parameters except `api_key`

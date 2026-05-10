@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.15.29"
+alef_version = "0.15.31"
 languages = ["python", "node", "ruby", "php", "ffi", "go", "java", "csharp", "elixir", "wasm"]
 
 [workspace.sync]
@@ -397,6 +397,11 @@ result_fields = [
 "choice.index" = "uint32_t"
 "chat_completion_response.created" = "uint64_t"
 "images_response.created" = "uint64_t"
+# Opaque enum returns: the FFI returns a pointer to an opaque struct (e.g.
+# LITERLLMBatchStatus*) and the C codegen must convert via
+# {prefix}_{enum_snake}_to_string before string-comparing. Pair with a per-call
+# `enum_fields = { "status" = "BatchStatus" }` override on each C call site.
+"batch_object.status" = "BatchStatus"
 
 [crates.e2e.call]
 function = "chat"
@@ -1092,6 +1097,7 @@ owned = true
 [crates.e2e.calls.create_batch.overrides.c]
 options_type = "CreateBatchRequest"
 result_type = "BatchObject"
+enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.create_batch.overrides.csharp]
 options_type = "CreateBatchRequest"
@@ -1147,6 +1153,7 @@ type = "string"
 
 [crates.e2e.calls.retrieve_batch.overrides.c]
 result_type = "BatchObject"
+enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.retrieve_batch.overrides.java]
 client_factory = "createClient"
@@ -1219,6 +1226,7 @@ type = "string"
 
 [crates.e2e.calls.cancel_batch.overrides.c]
 result_type = "BatchObject"
+enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.cancel_batch.overrides.java]
 client_factory = "createClient"
