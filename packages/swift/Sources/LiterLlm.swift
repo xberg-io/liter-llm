@@ -176,21 +176,6 @@ public typealias ResponseOutputItem = RustBridge.ResponseOutputItem
 
 public typealias ResponseUsage = RustBridge.ResponseUsage
 
-/// Default client implementation backed by `reqwest`.
-///
-/// The provider is resolved at construction time from `model_hint` (or
-/// defaults to OpenAI). However, individual requests can override the
-/// provider when their model string contains a prefix that clearly
-/// identifies a different provider (e.g. `"anthropic/claude-3"` will
-/// route to Anthropic even if the client was built without a hint).
-///
-/// When the model prefix does not match any known provider, the
-/// construction-time provider is used as the fallback.
-///
-/// The provider is stored behind an [`Arc`] so it can be shared cheaply into
-/// async closures and streaming tasks that must be `'static`.
-public typealias DefaultClient = RustBridge.DefaultClient
-
 /// Configuration for registering a custom LLM provider at runtime.
 public typealias CustomProviderConfig = RustBridge.CustomProviderConfig
 

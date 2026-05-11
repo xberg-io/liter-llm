@@ -739,14 +739,14 @@ pub fn create_client(api_key: []const u8, base_url: ?[]const u8, timeout_secs: ?
         std.heap.c_allocator, "{s}", .{v}, 0) else null;
     const model_hint_z: ?[:0]u8 = if (model_hint) |v| try std.fmt.allocPrintSentinel(
         std.heap.c_allocator, "{s}", .{v}, 0) else null;
-    const _result = c.literllm_create_client(api_key_z, if (base_url_z) |z| z.ptr else null, timeout_secs, max_retries, if (model_hint_z) |z| z.ptr else null);
+    const _result = c.literllm_create_client(api_key_z, if (base_url_z) |z| z.ptr else null, if (timeout_secs) |v| v else std.math.maxInt(u64), if (max_retries) |v| v else std.math.maxInt(u32), if (model_hint_z) |z| z.ptr else null);
     if (c.literllm_last_error_code() != 0) {
         return _first_error(LiterLlmError);
     }
     std.heap.c_allocator.free(api_key_z);
     if (base_url_z) |z| std.heap.c_allocator.free(z);
     if (model_hint_z) |z| std.heap.c_allocator.free(z);
-    return _result;
+    return DefaultClient{ ._handle = _result.? };
 }
 
 /// Create a new LLM client from a JSON string.
@@ -765,7 +765,7 @@ pub fn create_client_from_json(json: []const u8) (LiterLlmError||error{OutOfMemo
         return _first_error(LiterLlmError);
     }
     std.heap.c_allocator.free(json_z);
-    return _result;
+    return DefaultClient{ ._handle = _result.? };
 }
 
 /// Register a custom provider in the global runtime registry.
@@ -825,50 +825,411 @@ pub fn unregister_custom_provider(name: []const u8) (LiterLlmError||error{OutOfM
 pub const DefaultClient = struct {
     _handle: *anyopaque,
 
-    // Note: method `chat` is async and not supported in the zig backend.
+    pub fn chat(self: *DefaultClient, req: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        const req_handle = c.literllm_chat_completion_request_from_json(req_z.ptr);
+        const _result = c.literllm_default_client_chat(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(req_z);
+        c.literllm_chat_completion_request_free(req_handle);
+        return blk: {
+            const _json_ptr = c.literllm_chat_completion_response_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_chat_completion_response_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `chat_stream` is async and not supported in the zig backend.
+    pub fn chat_stream(self: *DefaultClient, req: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        const req_handle = c.literllm_chat_completion_request_from_json(req_z.ptr);
+        const _result = c.literllm_default_client_chat_stream(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(req_z);
+        c.literllm_chat_completion_request_free(req_handle);
+        return blk: {
+            const slice = std.mem.span(_result);
+            const owned = try std.heap.c_allocator.dupe(u8, slice);
+            c.literllm_free_string(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `embed` is async and not supported in the zig backend.
+    pub fn embed(self: *DefaultClient, req: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        const req_handle = c.literllm_embedding_request_from_json(req_z.ptr);
+        const _result = c.literllm_default_client_embed(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(req_z);
+        c.literllm_embedding_request_free(req_handle);
+        return blk: {
+            const _json_ptr = c.literllm_embedding_response_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_embedding_response_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `list_models` is async and not supported in the zig backend.
+    pub fn list_models(self: *DefaultClient) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const _result = c.literllm_default_client_list_models(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)));
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        return blk: {
+            const _json_ptr = c.literllm_models_list_response_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_models_list_response_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `image_generate` is async and not supported in the zig backend.
+    pub fn image_generate(self: *DefaultClient, req: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        const req_handle = c.literllm_create_image_request_from_json(req_z.ptr);
+        const _result = c.literllm_default_client_image_generate(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(req_z);
+        c.literllm_create_image_request_free(req_handle);
+        return blk: {
+            const _json_ptr = c.literllm_images_response_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_images_response_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `speech` is async and not supported in the zig backend.
+    pub fn speech(self: *DefaultClient, req: []const u8) (LiterLlmError||error{OutOfMemory})![]const u8 {
+        const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        const req_handle = c.literllm_create_speech_request_from_json(req_z.ptr);
+        const _result = c.literllm_default_client_speech(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(req_z);
+        c.literllm_create_speech_request_free(req_handle);
+        return _result;
+    }
 
-    // Note: method `transcribe` is async and not supported in the zig backend.
+    pub fn transcribe(self: *DefaultClient, req: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        const req_handle = c.literllm_create_transcription_request_from_json(req_z.ptr);
+        const _result = c.literllm_default_client_transcribe(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(req_z);
+        c.literllm_create_transcription_request_free(req_handle);
+        return blk: {
+            const _json_ptr = c.literllm_transcription_response_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_transcription_response_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `moderate` is async and not supported in the zig backend.
+    pub fn moderate(self: *DefaultClient, req: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        const req_handle = c.literllm_moderation_request_from_json(req_z.ptr);
+        const _result = c.literllm_default_client_moderate(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(req_z);
+        c.literllm_moderation_request_free(req_handle);
+        return blk: {
+            const _json_ptr = c.literllm_moderation_response_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_moderation_response_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `rerank` is async and not supported in the zig backend.
+    pub fn rerank(self: *DefaultClient, req: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        const req_handle = c.literllm_rerank_request_from_json(req_z.ptr);
+        const _result = c.literllm_default_client_rerank(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(req_z);
+        c.literllm_rerank_request_free(req_handle);
+        return blk: {
+            const _json_ptr = c.literllm_rerank_response_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_rerank_response_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `search` is async and not supported in the zig backend.
+    pub fn search(self: *DefaultClient, req: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        const req_handle = c.literllm_search_request_from_json(req_z.ptr);
+        const _result = c.literllm_default_client_search(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(req_z);
+        c.literllm_search_request_free(req_handle);
+        return blk: {
+            const _json_ptr = c.literllm_search_response_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_search_response_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `ocr` is async and not supported in the zig backend.
+    pub fn ocr(self: *DefaultClient, req: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        const req_handle = c.literllm_ocr_request_from_json(req_z.ptr);
+        const _result = c.literllm_default_client_ocr(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(req_z);
+        c.literllm_ocr_request_free(req_handle);
+        return blk: {
+            const _json_ptr = c.literllm_ocr_response_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_ocr_response_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `create_file` is async and not supported in the zig backend.
+    pub fn create_file(self: *DefaultClient, req: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        const req_handle = c.literllm_create_file_request_from_json(req_z.ptr);
+        const _result = c.literllm_default_client_create_file(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(req_z);
+        c.literllm_create_file_request_free(req_handle);
+        return blk: {
+            const _json_ptr = c.literllm_file_object_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_file_object_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `retrieve_file` is async and not supported in the zig backend.
+    pub fn retrieve_file(self: *DefaultClient, file_id: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const file_id_z = try std.heap.c_allocator.dupeZ(u8, file_id);
+        const _result = c.literllm_default_client_retrieve_file(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), file_id_z);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(file_id_z);
+        return blk: {
+            const _json_ptr = c.literllm_file_object_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_file_object_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `delete_file` is async and not supported in the zig backend.
+    pub fn delete_file(self: *DefaultClient, file_id: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const file_id_z = try std.heap.c_allocator.dupeZ(u8, file_id);
+        const _result = c.literllm_default_client_delete_file(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), file_id_z);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(file_id_z);
+        return blk: {
+            const _json_ptr = c.literllm_delete_response_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_delete_response_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `list_files` is async and not supported in the zig backend.
+    pub fn list_files(self: *DefaultClient, query: ?[]const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const query_z = try std.heap.c_allocator.dupeZ(u8, query);
+        const query_handle = c.literllm_file_list_query_from_json(query_z.ptr);
+        const _result = c.literllm_default_client_list_files(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), query_handle);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(query_z);
+        c.literllm_file_list_query_free(query_handle);
+        return blk: {
+            const _json_ptr = c.literllm_file_list_response_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_file_list_response_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `file_content` is async and not supported in the zig backend.
+    pub fn file_content(self: *DefaultClient, file_id: []const u8) (LiterLlmError||error{OutOfMemory})![]const u8 {
+        const file_id_z = try std.heap.c_allocator.dupeZ(u8, file_id);
+        const _result = c.literllm_default_client_file_content(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), file_id_z);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(file_id_z);
+        return _result;
+    }
 
-    // Note: method `create_batch` is async and not supported in the zig backend.
+    pub fn create_batch(self: *DefaultClient, req: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        const req_handle = c.literllm_create_batch_request_from_json(req_z.ptr);
+        const _result = c.literllm_default_client_create_batch(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(req_z);
+        c.literllm_create_batch_request_free(req_handle);
+        return blk: {
+            const _json_ptr = c.literllm_batch_object_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_batch_object_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `retrieve_batch` is async and not supported in the zig backend.
+    pub fn retrieve_batch(self: *DefaultClient, batch_id: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const batch_id_z = try std.heap.c_allocator.dupeZ(u8, batch_id);
+        const _result = c.literllm_default_client_retrieve_batch(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), batch_id_z);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(batch_id_z);
+        return blk: {
+            const _json_ptr = c.literllm_batch_object_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_batch_object_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `list_batches` is async and not supported in the zig backend.
+    pub fn list_batches(self: *DefaultClient, query: ?[]const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const query_z = try std.heap.c_allocator.dupeZ(u8, query);
+        const query_handle = c.literllm_batch_list_query_from_json(query_z.ptr);
+        const _result = c.literllm_default_client_list_batches(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), query_handle);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(query_z);
+        c.literllm_batch_list_query_free(query_handle);
+        return blk: {
+            const _json_ptr = c.literllm_batch_list_response_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_batch_list_response_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `cancel_batch` is async and not supported in the zig backend.
+    pub fn cancel_batch(self: *DefaultClient, batch_id: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const batch_id_z = try std.heap.c_allocator.dupeZ(u8, batch_id);
+        const _result = c.literllm_default_client_cancel_batch(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), batch_id_z);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(batch_id_z);
+        return blk: {
+            const _json_ptr = c.literllm_batch_object_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_batch_object_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `create_response` is async and not supported in the zig backend.
+    pub fn create_response(self: *DefaultClient, req: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        const req_handle = c.literllm_create_response_request_from_json(req_z.ptr);
+        const _result = c.literllm_default_client_create_response(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(req_z);
+        c.literllm_create_response_request_free(req_handle);
+        return blk: {
+            const _json_ptr = c.literllm_response_object_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_response_object_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `retrieve_response` is async and not supported in the zig backend.
+    pub fn retrieve_response(self: *DefaultClient, id: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const id_z = try std.heap.c_allocator.dupeZ(u8, id);
+        const _result = c.literllm_default_client_retrieve_response(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), id_z);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(id_z);
+        return blk: {
+            const _json_ptr = c.literllm_response_object_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_response_object_free(_result);
+            break :blk owned;
+        };
+    }
 
-    // Note: method `cancel_response` is async and not supported in the zig backend.
+    pub fn cancel_response(self: *DefaultClient, id: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
+        const id_z = try std.heap.c_allocator.dupeZ(u8, id);
+        const _result = c.literllm_default_client_cancel_response(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), id_z);
+        if (c.literllm_last_error_code() != 0) {
+            return _first_error(LiterLlmError);
+        }
+        std.heap.c_allocator.free(id_z);
+        return blk: {
+            const _json_ptr = c.literllm_response_object_to_json(_result);
+            const _json_slice = std.mem.span(_json_ptr);
+            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
+            c.literllm_free_string(_json_ptr);
+            c.literllm_response_object_free(_result);
+            break :blk owned;
+        };
+    }
 
+    /// Release the underlying FFI handle. Safe to call once per instance.
+    pub fn free(self: *DefaultClient) void {
+        c.literllm_default_client_free(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)));
+    }
 };
