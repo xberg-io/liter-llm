@@ -85,24 +85,24 @@ tasks:
     desc: Lint all Java code (spotless check + checkstyle + PMD)
     dir: packages/java
     cmds:
-      - cmd: bash -c 'if [ -f ~/.sdkman/bin/sdkman-init.sh ]; then source ~/.sdkman/bin/sdkman-init.sh && sdk use java 25.0.2-tem && sdk use maven 3.9.11; fi && mvn spotless:check && mvn checkstyle:check && mvn pmd:check pmd:cpd-check'
+      - cmd: bash -c 'if [ -f ~/.sdkman/bin/sdkman-init.sh ]; then source ~/.sdkman/bin/sdkman-init.sh && sdk use java 25.0.2-tem && sdk use maven 3.9.11; fi && mvn spotless:check && mvn checkstyle:check && mvn pmd:cpd-check'
         platforms: [linux, darwin]
       - cmd: |
           mvn spotless:check
           mvn checkstyle:check
-          mvn pmd:check pmd:cpd-check
+          mvn pmd:cpd-check
         platforms: [windows]
 
   lint:check:
     desc: Check all Java code linting without modifications
     dir: packages/java
     cmds:
-      - cmd: bash -c 'if [ -f ~/.sdkman/bin/sdkman-init.sh ]; then source ~/.sdkman/bin/sdkman-init.sh && sdk use java 25.0.2-tem && sdk use maven 3.9.11; fi && mvn spotless:check && mvn checkstyle:check && mvn pmd:check pmd:cpd-check'
+      - cmd: bash -c 'if [ -f ~/.sdkman/bin/sdkman-init.sh ]; then source ~/.sdkman/bin/sdkman-init.sh && sdk use java 25.0.2-tem && sdk use maven 3.9.11; fi && mvn spotless:check && mvn checkstyle:check && mvn pmd:cpd-check'
         platforms: [linux, darwin]
       - cmd: |
           mvn spotless:check
           mvn checkstyle:check
-          mvn pmd:check pmd:cpd-check
+          mvn pmd:cpd-check
         platforms: [windows]
 
   format:

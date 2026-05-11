@@ -4,27 +4,53 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
                              https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
-    <description>PMD ruleset for Java bindings</description>
+    <description>PMD ruleset for alef-generated Java bindings. Excludes rules that fire on FFI boilerplate (Throwable catches, empty catches for cleanup, single-line if/throw, etc.).</description>
 
     <rule ref="category/java/bestpractices.xml">
         <exclude name="LooseCoupling"/>
+        <exclude name="AvoidReassigningParameters"/>
+        <exclude name="PreserveStackTrace"/>
     </rule>
     <rule ref="category/java/codestyle.xml">
         <exclude name="AtLeastOneConstructor"/>
         <exclude name="CommentDefaultAccessModifier"/>
         <exclude name="OnlyOneReturn"/>
+        <exclude name="ControlStatementBraces"/>
+        <exclude name="ShortMethodName"/>
+        <exclude name="ShortVariable"/>
+        <exclude name="LongVariable"/>
+        <exclude name="UnnecessaryFullyQualifiedName"/>
+        <exclude name="UnnecessaryImport"/>
     </rule>
     <rule ref="category/java/design.xml">
         <exclude name="LawOfDemeter"/>
         <exclude name="DataClass"/>
+        <exclude name="AvoidCatchingGenericException"/>
+        <exclude name="AvoidThrowingRawExceptionTypes"/>
+        <exclude name="ExcessiveImports"/>
+        <exclude name="TooManyMethods"/>
+        <exclude name="GodClass"/>
+        <exclude name="CyclomaticComplexity"/>
+        <exclude name="NPathComplexity"/>
+        <exclude name="CognitiveComplexity"/>
+        <exclude name="ExcessiveParameterList"/>
+        <exclude name="ExcessivePublicCount"/>
     </rule>
     <rule ref="category/java/documentation.xml">
         <exclude name="CommentSize"/>
+        <exclude name="CommentRequired"/>
     </rule>
     <rule ref="category/java/errorprone.xml">
         <exclude name="EmptyCatchBlock"/>
+        <exclude name="AvoidCatchingThrowable"/>
+        <exclude name="AvoidLiteralsInIfCondition"/>
+        <exclude name="NullAssignment"/>
+        <exclude name="AvoidDuplicateLiterals"/>
+        <exclude name="UseProperClassLoader"/>
     </rule>
     <rule ref="category/java/multithreading.xml"/>
-    <rule ref="category/java/performance.xml"/>
+    <rule ref="category/java/performance.xml">
+        <exclude name="AvoidInstantiatingObjectsInLoops"/>
+    </rule>
     <rule ref="category/java/security.xml"/>
 </ruleset>
