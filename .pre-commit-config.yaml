@@ -138,6 +138,7 @@ repos:
       - id: oxlint
       - id: oxfmt
       - id: cppcheck
+        args: ["--suppress=unusedStructMember"]
       - id: rumdl-fmt
       - id: cpd
   # Alef: multi-language formatting, linting, type checking, and version sync.
@@ -145,7 +146,7 @@ repos:
   # matches the pinned alef.toml version, falling back to a sha256-verified
   # release-tarball download. Do not override `entry:` here.
   - repo: https://github.com/kreuzberg-dev/alef
-    rev: v0.15.32
+    rev: v0.15.33
     hooks:
       - id: alef-verify
       - id: alef-sync-versions
