@@ -947,14 +947,14 @@ jobs:
           package: liter-llm
           version: ${{ needs.prepare.outputs.version }}
       - name: Download all wheel + sdist artifacts
-        if: needs.prepare.outputs.dry_run != 'true' && (steps.recheck.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true')
+        if: steps.recheck.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true'
         uses: actions/download-artifact@v7
         with:
           pattern: python-*
           path: dist
           merge-multiple: true
       - name: List packages to publish
-        if: needs.prepare.outputs.dry_run != 'true' && (steps.recheck.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true')
+        if: steps.recheck.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true'
         run: |
           echo "Packages in dist:"
           ls -lh dist/ 2>/dev/null || echo "No packages found"
@@ -970,10 +970,9 @@ jobs:
     needs: [prepare, validate-versions, registry-results, build-node-native]
     if: |
       always() &&
-      needs.prepare.outputs.dry_run != 'true' &&
       needs.prepare.outputs.release_node == 'true' &&
       needs.validate-versions.result == 'success' &&
-      needs.registry-results.outputs.npm != 'true' &&
+      (needs.registry-results.outputs.npm != 'true' || needs.prepare.outputs.dry_run == 'true') &&
       needs.build-node-native.result == 'success'
     runs-on: ubuntu-latest
     permissions:
@@ -1116,10 +1115,9 @@ jobs:
     needs: [prepare, validate-versions, registry-results, build-wasm, publish-node]
     if: |
       always() &&
-      needs.prepare.outputs.dry_run != 'true' &&
       needs.prepare.outputs.release_wasm == 'true' &&
       needs.validate-versions.result == 'success' &&
-      needs.registry-results.outputs.npm_wasm != 'true' &&
+      (needs.registry-results.outputs.npm_wasm != 'true' || needs.prepare.outputs.dry_run == 'true') &&
       needs.build-wasm.result == 'success'
     runs-on: ubuntu-latest
     permissions:
@@ -1662,9 +1660,8 @@ jobs:
     needs: [prepare, check-homebrew, homebrew-bottles]
     if: |
       always() &&
-      needs.prepare.outputs.dry_run != 'true' &&
       needs.prepare.outputs.release_homebrew == 'true' &&
-      needs.check-homebrew.outputs.exists != 'true' &&
+      (needs.check-homebrew.outputs.exists != 'true' || needs.prepare.outputs.dry_run == 'true') &&
       needs.homebrew-bottles.result == 'success'
     runs-on: ubuntu-latest
     permissions:
@@ -1681,16 +1678,16 @@ jobs:
           tag: ${{ needs.prepare.outputs.tag }}
           artifacts: "dist/homebrew/*.tar.gz"
           draft: "false"
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   publish-homebrew:
     name: Update Homebrew formula
     needs: [prepare, validate-versions, check-homebrew, publish-crates, upload-homebrew-bottles]
     if: |
       always() &&
-      needs.prepare.outputs.dry_run != 'true' &&
       needs.prepare.outputs.release_homebrew == 'true' &&
-      needs.check-homebrew.outputs.exists != 'true' &&
-      needs.publish-crates.result == 'success' &&
+      (needs.check-homebrew.outputs.exists != 'true' || needs.prepare.outputs.dry_run == 'true') &&
+      (needs.publish-crates.result == 'success' || needs.prepare.outputs.dry_run == 'true') &&
       needs.upload-homebrew-bottles.result == 'success'
     runs-on: ubuntu-latest
     permissions:
@@ -1725,6 +1722,51 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────
   # Phase 7 — Finalize
   # ─────────────────────────────────────────────────────────────────────────
+  # ─────────────────────────────────────────────────────────────────────────
+  # Verify-install: install from registry (real-run) or local artifact
+  # (dry-run) and execute the alef-generated test_app smoke test against it.
+  # Backed by kreuzberg-dev/actions/verify-install@v1.
+  # ─────────────────────────────────────────────────────────────────────────
+  verify-install-python:
+    name: Verify install Python
+    needs: [prepare, build-python-wheels, build-python-sdist, publish-pypi]
+    if: |
+      always() &&
+      needs.prepare.outputs.release_python == 'true' &&
+      (needs.publish-pypi.result == 'success' || (needs.prepare.outputs.dry_run == 'true' && needs.build-python-wheels.result == 'success'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.tag }}
+      - name: Install uv (consumer toolchain)
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+      - name: Download python wheels (dry-run)
+        if: needs.prepare.outputs.dry_run == 'true'
+        uses: actions/download-artifact@v7
+        with:
+          pattern: python-*
+          path: ./wheelhouse
+          merge-multiple: true
+      - name: Wait for PyPI indexing (real-run)
+        if: needs.prepare.outputs.dry_run != 'true'
+        uses: kreuzberg-dev/actions/wait-for-package@v1
+        with:
+          registry: pypi
+          package: liter-llm
+          version: ${{ needs.prepare.outputs.version }}
+          max-attempts: "20"
+      - uses: kreuzberg-dev/actions/verify-install@v1
+        with:
+          language: python
+          version: ${{ needs.prepare.outputs.version }}
+          package-name: liter-llm
+          artifact-source: ${{ needs.prepare.outputs.dry_run == 'true' && 'wheelhouse' || 'registry' }}
+          local-path: ${{ needs.prepare.outputs.dry_run == 'true' && './wheelhouse' || '' }}
+
   release-finalize:
     name: Finalize release
     needs:
@@ -1741,6 +1783,7 @@ jobs:
       - publish-nuget
       - publish-packagist
       - publish-homebrew
+      - verify-install-python
     if: always()
     runs-on: ubuntu-latest
     permissions:
