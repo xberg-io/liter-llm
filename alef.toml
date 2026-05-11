@@ -91,6 +91,15 @@ package_name = "liter_llm"
 [crates.swift]
 package_name = "LiterLlm"
 
+[crates.swift.client_constructor_body]
+DefaultClient = """    let mut config = liter_llm::ClientConfig::new(api_key);
+    if let Some(url) = base_url {
+        config.base_url = Some(url);
+    }
+    liter_llm::client::DefaultClient::new(config, None)
+        .map_err(|e| e.to_string())
+        .map(DefaultClient)"""
+
 [crates.kotlin]
 package_name = "dev.kreuzberg.literllm"
 
@@ -108,7 +117,7 @@ csharp = "packages/csharp/"
 zig = "packages/zig/src/"
 gleam = "packages/gleam/src/"
 dart = "packages/dart/"
-swift = "packages/swift/Sources/"
+swift = "packages/swift/Sources/LiterLlm/"
 kotlin = "packages/kotlin/"
 
 [crates.exclude]
@@ -489,6 +498,8 @@ client_factory = "createClient"
 
 [crates.e2e.call.overrides.gleam]
 client_factory = "create_client"
+# create_client(api_key, base_url, timeout_secs, max_retries, model_hint) — pad with option.None
+client_factory_trailing_args = ["option.None", "option.None", "option.None"]
 
 [crates.e2e.call.overrides.dart]
 client_factory = "createClient"
@@ -1074,6 +1085,9 @@ extra_args = ["null"]
 result_type = "FileListResponse"
 extra_args = ["NULL"]
 
+[crates.e2e.calls.list_files.overrides.gleam]
+extra_args = ["option.None"]
+
 [crates.e2e.calls.file_content]
 function = "file_content"
 path = "/files"
@@ -1116,6 +1130,10 @@ result_is_bytes = true
 # `int32_t literllm_default_client_file_content(client, file_id, &out_ptr, &out_len, &out_cap)`
 # and frees with `literllm_free_bytes`. No FileContentResponse handle exists.
 result_is_bytes = true
+
+[crates.e2e.calls.file_content.overrides.gleam]
+# file_content() returns BitArray in Gleam — not a record with fields.
+result_is_simple = true
 
 [crates.e2e.calls.create_batch]
 function = "create_batch"
@@ -1207,6 +1225,9 @@ enum_fields = { "status" = "BatchStatus" }
 [crates.e2e.calls.retrieve_batch.overrides.wasm]
 result_enum_fields = { "status" = "WasmBatchStatus" }
 
+[crates.e2e.calls.retrieve_batch.overrides.gleam]
+enum_fields = { "status" = "BatchStatus" }
+
 [crates.e2e.calls.list_batches]
 function = "list_batches"
 path = "/batches"
@@ -1244,6 +1265,9 @@ extra_args = ["null"]
 result_type = "BatchListResponse"
 extra_args = ["NULL"]
 
+[crates.e2e.calls.list_batches.overrides.gleam]
+extra_args = ["option.None"]
+
 [crates.e2e.calls.cancel_batch]
 function = "cancel_batch"
 path = "/batches"
@@ -1279,6 +1303,9 @@ enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.cancel_batch.overrides.wasm]
 result_enum_fields = { "status" = "WasmBatchStatus" }
+
+[crates.e2e.calls.cancel_batch.overrides.gleam]
+enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.create_response]
 function = "create_response"
