@@ -132,9 +132,12 @@ repos:
         files: ^packages/java/
 
       - id: oxlint
+        require_serial: true
       - id: oxfmt
+        require_serial: true
       - id: cppcheck
         args: ["--suppress=unusedStructMember"]
+        require_serial: true
       - id: rumdl-fmt
       - id: cpd
   # Alef: multi-language formatting, linting, type checking, and version sync.
