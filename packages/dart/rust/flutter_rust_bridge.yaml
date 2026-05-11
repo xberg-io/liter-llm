@@ -1,0 +1,3 @@
+rust_root: .
+dart_output: ../lib/src/liter_llm_bridge_generated
+rust_input: crate

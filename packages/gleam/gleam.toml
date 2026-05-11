@@ -1,0 +1,11 @@
+name = "liter_llm"
+version = "1.4.0-rc.27"
+description = "Universal LLM API client with Rust-powered polyglot bindings."
+licences = ["MIT"]
+target = "erlang"
+
+[dependencies]
+gleam_stdlib = ">= 0.34.0 and < 2.0.0"
+
+[dev-dependencies]
+gleeunit = ">= 1.0.0 and < 2.0.0"

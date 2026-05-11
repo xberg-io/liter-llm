@@ -1,6 +1,6 @@
 [workspace]
-alef_version = "0.15.33"
-languages = ["python", "node", "ruby", "php", "ffi", "go", "java", "csharp", "elixir", "wasm"]
+alef_version = "0.15.39"
+languages = ["python", "node", "ruby", "php", "ffi", "go", "java", "csharp", "elixir", "wasm", "zig", "gleam", "dart", "swift", "kotlin"]
 
 [workspace.sync]
 extra_paths = [
@@ -79,6 +79,21 @@ project_file = "packages/java/pom.xml"
 namespace = "LiterLlm"
 project_file = "packages/csharp/LiterLlm/LiterLlm.csproj"
 
+[crates.zig]
+module_name = "liter_llm"
+
+[crates.gleam]
+package_name = "liter_llm"
+
+[crates.dart]
+package_name = "liter_llm"
+
+[crates.swift]
+package_name = "LiterLlm"
+
+[crates.kotlin]
+package_name = "dev.kreuzberg.literllm"
+
 [crates.output]
 python = "crates/liter-llm-py/src/"
 node = "crates/liter-llm-node/src/"
@@ -90,6 +105,11 @@ elixir = "packages/elixir/native/liter_llm_nif/src/"
 wasm = "crates/liter-llm-wasm/src/"
 java = "packages/java/"
 csharp = "packages/csharp/"
+zig = "packages/zig/src/"
+gleam = "packages/gleam/src/"
+dart = "packages/dart/"
+swift = "packages/swift/Sources/"
+kotlin = "packages/kotlin/"
 
 [crates.exclude]
 types = [
@@ -456,6 +476,21 @@ options_type = "LiterLlm::ChatCompletionRequest"
 client_factory = "create_client"
 
 [crates.e2e.call.overrides.java]
+client_factory = "createClient"
+
+[crates.e2e.call.overrides.zig]
+client_factory = "create_client"
+
+[crates.e2e.call.overrides.swift]
+client_factory = "createClient"
+
+[crates.e2e.call.overrides.kotlin]
+client_factory = "createClient"
+
+[crates.e2e.call.overrides.gleam]
+client_factory = "create_client"
+
+[crates.e2e.call.overrides.dart]
 client_factory = "createClient"
 
 [crates.e2e.calls.chat]
