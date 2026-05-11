@@ -216,6 +216,10 @@ jobs:
           # Without this override, cibuildwheel rebuilds for cp310/cp311/cp312/cp313/cp314 = 5x duplicates.
           cibw-build: "cp310-*"
           cibw-skip: "*-musllinux* *-win32 *-manylinux_i686 *-macosx_x86_64"
+          # The alef-generated .cargo/config.toml pins the aarch64-linux-gnu linker
+          # to `aarch64-linux-gnu-gcc` (cross-compile name), but manylinux containers
+          # running natively on arm64 only ship plain `cc`/`gcc`. Override per-target.
+          cibw-environment: 'MATURIN_BUILD_ARGS="--compatibility linux" CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=cc'
           artifact-name: python-wheel-${{ matrix.label }}
 
   build-python-sdist:
