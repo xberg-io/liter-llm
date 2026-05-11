@@ -1088,6 +1088,9 @@ extra_args = ["NULL"]
 [crates.e2e.calls.list_files.overrides.gleam]
 extra_args = ["option.None"]
 
+[crates.e2e.calls.list_files.overrides.swift]
+extra_args = ["nil"]
+
 [crates.e2e.calls.file_content]
 function = "file_content"
 path = "/files"
@@ -1133,6 +1136,10 @@ result_is_bytes = true
 
 [crates.e2e.calls.file_content.overrides.gleam]
 # file_content() returns BitArray in Gleam — not a record with fields.
+result_is_simple = true
+
+[crates.e2e.calls.file_content.overrides.swift]
+# file_content() returns Data in Swift — not a struct with fields.
 result_is_simple = true
 
 [crates.e2e.calls.create_batch]
@@ -1228,6 +1235,9 @@ result_enum_fields = { "status" = "WasmBatchStatus" }
 [crates.e2e.calls.retrieve_batch.overrides.gleam]
 enum_fields = { "status" = "BatchStatus" }
 
+[crates.e2e.calls.retrieve_batch.overrides.swift]
+enum_fields = { "status" = "BatchStatus" }
+
 [crates.e2e.calls.list_batches]
 function = "list_batches"
 path = "/batches"
@@ -1268,6 +1278,9 @@ extra_args = ["NULL"]
 [crates.e2e.calls.list_batches.overrides.gleam]
 extra_args = ["option.None"]
 
+[crates.e2e.calls.list_batches.overrides.swift]
+extra_args = ["nil"]
+
 [crates.e2e.calls.cancel_batch]
 function = "cancel_batch"
 path = "/batches"
@@ -1305,6 +1318,9 @@ enum_fields = { "status" = "BatchStatus" }
 result_enum_fields = { "status" = "WasmBatchStatus" }
 
 [crates.e2e.calls.cancel_batch.overrides.gleam]
+enum_fields = { "status" = "BatchStatus" }
+
+[crates.e2e.calls.cancel_batch.overrides.swift]
 enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.create_response]
