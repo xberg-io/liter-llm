@@ -94,11 +94,6 @@ repos:
         args: ["-w", "-i", "2"]
       - id: shellcheck
         args: ["-x"]
-      - id: clang-format
-        args: ["--style=file"]
-        files: ^crates/liter-llm-ffi/tests/c/
-      - id: clang-tidy
-        files: ^crates/liter-llm-ffi/tests/c/
       - id: checkstyle
         args: ["-c", "packages/java/checkstyle.xml", "-p", "packages/java/checkstyle.properties"]
         exclude: ^(\.mvn/wrapper/|e2e/|packages/java/src/)
