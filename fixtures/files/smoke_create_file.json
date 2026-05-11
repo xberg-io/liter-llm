@@ -3,6 +3,10 @@
   "description": "Upload a file for use with the API",
   "category": "files",
   "tags": ["smoke", "files"],
+  "skip": {
+    "languages": ["wasm"],
+    "reason": "WASM: alef-e2e codegen assigns purpose as a string literal to a WasmFilePurpose enum setter, which panics with RuntimeError: unreachable in wasm-bindgen"
+  },
   "call": "create_file",
   "input": {
     "file": "eyJwcm9tcHQiOiAiaGVsbG8ifQo=",
