@@ -4,3 +4,5 @@ packages:
   - "packages/typescript"
   - "e2e/node"
   - "e2e/wasm"
+allowBuilds:
+  esbuild: true
