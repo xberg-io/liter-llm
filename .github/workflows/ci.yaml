@@ -152,16 +152,21 @@ jobs:
       - name: Install C/C++ tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends clang-format shellcheck build-essential libpcre3-dev
-          # Build cppcheck 2.20.0 from source — Ubuntu 24.04 ships 2.13.0 but the
-          # kreuzberg-dev/pre-commit-hooks cppcheck wrapper pins 2.20.0 exactly.
+          sudo apt-get install -y --no-install-recommends clang-format shellcheck
+          # pre-commit-hooks cppcheck wrapper pins 2.20.0 exactly. Ubuntu 24.04
+          # ships 2.13.0 so build 2.20.0 from source via CMake.
           CPPCHECK_VERSION="2.20.0"
           if ! command -v cppcheck >/dev/null 2>&1 || [[ "$(cppcheck --version | awk '{print $2}')" != "${CPPCHECK_VERSION}" ]]; then
+            sudo apt-get install -y --no-install-recommends build-essential cmake libpcre3-dev
             curl -fsSL "https://github.com/danmar/cppcheck/archive/refs/tags/${CPPCHECK_VERSION}.tar.gz" | tar xz
-            cd "cppcheck-${CPPCHECK_VERSION}"
-            make MATCHCOMPILER=yes FILESDIR=/usr/share/cppcheck HAVE_RULES=yes CXXFLAGS="-O2 -DNDEBUG -Wall -Wno-sign-compare -Wno-unused-function" -j"$(nproc)"
-            sudo make install FILESDIR=/usr/share/cppcheck
-            cd .. && rm -rf "cppcheck-${CPPCHECK_VERSION}"
+            cmake -S "cppcheck-${CPPCHECK_VERSION}" -B "cppcheck-${CPPCHECK_VERSION}/build" \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_INSTALL_PREFIX=/usr/local \
+              -DHAVE_RULES=ON \
+              -DUSE_MATCHCOMPILER=Auto
+            cmake --build "cppcheck-${CPPCHECK_VERSION}/build" -j"$(nproc)"
+            sudo cmake --install "cppcheck-${CPPCHECK_VERSION}/build"
+            rm -rf "cppcheck-${CPPCHECK_VERSION}"
           fi
           cppcheck --version
         shell: bash
