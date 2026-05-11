@@ -8,8 +8,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AssistantMessage`, `AudioContent`, `BatchListQuery`, `BatchListResponse`, `BatchObject`, `BatchRequestCounts`, `BatchStatus`, `ChatCompletionChunk`, `ChatCompletionRequest`, `ChatCompletionResponse`, `ChatCompletionTool`, `Choice`, `ContentPart`, `CreateBatchRequest`, `CreateFileRequest`, `CreateImageRequest`, `CreateResponseRequest`, `CreateSpeechRequest`, `CreateTranscriptionRequest`, `DeleteResponse`, `DeveloperMessage`, `DocumentContent`, `EmbeddingFormat`, `EmbeddingInput`, `EmbeddingObject`, `EmbeddingRequest`, `EmbeddingResponse`, `FileListQuery`, `FileListResponse`, `FileObject`, `FilePurpose`, `FinishReason`, `FunctionCall`, `FunctionDefinition`, `FunctionMessage`, `ImageDetail`, `ImageUrl`, `Image`, `ImagesResponse`, `JsonSchemaFormat`, `Message`, `ModelObject`, `ModelsListResponse`, `ModerationCategories`, `ModerationCategoryScores`, `ModerationInput`, `ModerationRequest`, `ModerationResponse`, `ModerationResult`, `OcrDocument`, `OcrImage`, `OcrPage`, `OcrRequest`, `OcrResponse`, `PageDimensions`, `PromptTokensDetails`, `ReasoningEffort`, `RerankDocument`, `RerankRequest`, `RerankResponse`, `RerankResultDocument`, `RerankResult`, `ResponseFormat`, `ResponseObject`, `ResponseOutputItem`, `ResponseTool`, `ResponseUsage`, `SearchRequest`, `SearchResponse`, `SearchResult`, `SpecificFunction`, `SpecificToolChoice`, `StopSequence`, `StreamChoice`, `StreamDelta`, `StreamFunctionCall`, `StreamOptions`, `StreamToolCall`, `SystemMessage`, `ToolCall`, `ToolChoiceMode`, `ToolChoice`, `ToolMessage`, `ToolType`, `TranscriptionResponse`, `TranscriptionSegment`, `Usage`, `UserContent`, `UserMessage`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Create a new LLM client with simple scalar configuration.
 ///
@@ -68,8 +67,361 @@ Future<void> registerCustomProvider({required CustomProviderConfig config}) =>
 Future<bool> unregisterCustomProvider({required String name}) =>
     RustLib.instance.api.crateUnregisterCustomProvider(name: name);
 
+Future<SystemMessage> createSystemMessageFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateSystemMessageFromJson(json: json);
+
+Future<UserMessage> createUserMessageFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateUserMessageFromJson(json: json);
+
+Future<ImageUrl> createImageUrlFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateImageUrlFromJson(json: json);
+
+Future<DocumentContent> createDocumentContentFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateDocumentContentFromJson(json: json);
+
+Future<AudioContent> createAudioContentFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateAudioContentFromJson(json: json);
+
+Future<AssistantMessage> createAssistantMessageFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateAssistantMessageFromJson(json: json);
+
+Future<ToolMessage> createToolMessageFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateToolMessageFromJson(json: json);
+
+Future<DeveloperMessage> createDeveloperMessageFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateDeveloperMessageFromJson(json: json);
+
+Future<FunctionMessage> createFunctionMessageFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateFunctionMessageFromJson(json: json);
+
+Future<ChatCompletionTool> createChatCompletionToolFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateChatCompletionToolFromJson(json: json);
+
+Future<FunctionDefinition> createFunctionDefinitionFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateFunctionDefinitionFromJson(json: json);
+
+Future<ToolCall> createToolCallFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateToolCallFromJson(json: json);
+
+Future<FunctionCall> createFunctionCallFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateFunctionCallFromJson(json: json);
+
+Future<SpecificToolChoice> createSpecificToolChoiceFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateSpecificToolChoiceFromJson(json: json);
+
+Future<SpecificFunction> createSpecificFunctionFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateSpecificFunctionFromJson(json: json);
+
+Future<JsonSchemaFormat> createJsonSchemaFormatFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateJsonSchemaFormatFromJson(json: json);
+
+Future<Usage> createUsageFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateUsageFromJson(json: json);
+
+Future<PromptTokensDetails> createPromptTokensDetailsFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreatePromptTokensDetailsFromJson(json: json);
+
+Future<ChatCompletionRequest> createChatCompletionRequestFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateChatCompletionRequestFromJson(json: json);
+
+Future<StreamOptions> createStreamOptionsFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateStreamOptionsFromJson(json: json);
+
+Future<ChatCompletionResponse> createChatCompletionResponseFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateChatCompletionResponseFromJson(json: json);
+
+Future<Choice> createChoiceFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateChoiceFromJson(json: json);
+
+Future<ChatCompletionChunk> createChatCompletionChunkFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateChatCompletionChunkFromJson(json: json);
+
+Future<StreamChoice> createStreamChoiceFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateStreamChoiceFromJson(json: json);
+
+Future<StreamDelta> createStreamDeltaFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateStreamDeltaFromJson(json: json);
+
+Future<StreamToolCall> createStreamToolCallFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateStreamToolCallFromJson(json: json);
+
+Future<StreamFunctionCall> createStreamFunctionCallFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateStreamFunctionCallFromJson(json: json);
+
+Future<EmbeddingRequest> createEmbeddingRequestFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateEmbeddingRequestFromJson(json: json);
+
+Future<EmbeddingResponse> createEmbeddingResponseFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateEmbeddingResponseFromJson(json: json);
+
+Future<EmbeddingObject> createEmbeddingObjectFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateEmbeddingObjectFromJson(json: json);
+
+Future<CreateImageRequest> createCreateImageRequestFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateCreateImageRequestFromJson(json: json);
+
+Future<ImagesResponse> createImagesResponseFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateImagesResponseFromJson(json: json);
+
+Future<Image> createImageFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateImageFromJson(json: json);
+
+Future<CreateSpeechRequest> createCreateSpeechRequestFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateCreateSpeechRequestFromJson(json: json);
+
+Future<CreateTranscriptionRequest> createCreateTranscriptionRequestFromJson(
+        {required String json}) =>
+    RustLib.instance.api
+        .crateCreateCreateTranscriptionRequestFromJson(json: json);
+
+Future<TranscriptionResponse> createTranscriptionResponseFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateTranscriptionResponseFromJson(json: json);
+
+Future<TranscriptionSegment> createTranscriptionSegmentFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateTranscriptionSegmentFromJson(json: json);
+
+Future<ModerationRequest> createModerationRequestFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateModerationRequestFromJson(json: json);
+
+Future<ModerationResponse> createModerationResponseFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateModerationResponseFromJson(json: json);
+
+Future<ModerationResult> createModerationResultFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateModerationResultFromJson(json: json);
+
+Future<ModerationCategories> createModerationCategoriesFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateModerationCategoriesFromJson(json: json);
+
+Future<ModerationCategoryScores> createModerationCategoryScoresFromJson(
+        {required String json}) =>
+    RustLib.instance.api
+        .crateCreateModerationCategoryScoresFromJson(json: json);
+
+Future<RerankRequest> createRerankRequestFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateRerankRequestFromJson(json: json);
+
+Future<RerankResponse> createRerankResponseFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateRerankResponseFromJson(json: json);
+
+Future<RerankResult> createRerankResultFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateRerankResultFromJson(json: json);
+
+Future<RerankResultDocument> createRerankResultDocumentFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateRerankResultDocumentFromJson(json: json);
+
+Future<SearchRequest> createSearchRequestFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateSearchRequestFromJson(json: json);
+
+Future<SearchResponse> createSearchResponseFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateSearchResponseFromJson(json: json);
+
+Future<SearchResult> createSearchResultFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateSearchResultFromJson(json: json);
+
+Future<OcrRequest> createOcrRequestFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateOcrRequestFromJson(json: json);
+
+Future<OcrResponse> createOcrResponseFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateOcrResponseFromJson(json: json);
+
+Future<OcrPage> createOcrPageFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateOcrPageFromJson(json: json);
+
+Future<OcrImage> createOcrImageFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateOcrImageFromJson(json: json);
+
+Future<PageDimensions> createPageDimensionsFromJson({required String json}) =>
+    RustLib.instance.api.crateCreatePageDimensionsFromJson(json: json);
+
+Future<ModelsListResponse> createModelsListResponseFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateModelsListResponseFromJson(json: json);
+
+Future<ModelObject> createModelObjectFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateModelObjectFromJson(json: json);
+
+Future<CreateFileRequest> createCreateFileRequestFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateCreateFileRequestFromJson(json: json);
+
+Future<FileObject> createFileObjectFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateFileObjectFromJson(json: json);
+
+Future<FileListResponse> createFileListResponseFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateFileListResponseFromJson(json: json);
+
+Future<FileListQuery> createFileListQueryFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateFileListQueryFromJson(json: json);
+
+Future<DeleteResponse> createDeleteResponseFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateDeleteResponseFromJson(json: json);
+
+Future<CreateBatchRequest> createCreateBatchRequestFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateCreateBatchRequestFromJson(json: json);
+
+Future<BatchObject> createBatchObjectFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateBatchObjectFromJson(json: json);
+
+Future<BatchRequestCounts> createBatchRequestCountsFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateBatchRequestCountsFromJson(json: json);
+
+Future<BatchListResponse> createBatchListResponseFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateBatchListResponseFromJson(json: json);
+
+Future<BatchListQuery> createBatchListQueryFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateBatchListQueryFromJson(json: json);
+
+Future<CreateResponseRequest> createCreateResponseRequestFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateCreateResponseRequestFromJson(json: json);
+
+Future<ResponseTool> createResponseToolFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateResponseToolFromJson(json: json);
+
+Future<ResponseObject> createResponseObjectFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateResponseObjectFromJson(json: json);
+
+Future<ResponseOutputItem> createResponseOutputItemFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateResponseOutputItemFromJson(json: json);
+
+Future<ResponseUsage> createResponseUsageFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateResponseUsageFromJson(json: json);
+
+Future<CustomProviderConfig> createCustomProviderConfigFromJson(
+        {required String json}) =>
+    RustLib.instance.api.crateCreateCustomProviderConfigFromJson(json: json);
+
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DefaultClient>>
-abstract class DefaultClient implements RustOpaqueInterface {}
+abstract class DefaultClient implements RustOpaqueInterface {
+  Future<BatchObject> cancelBatch({required String batchId});
+
+  Future<ResponseObject> cancelResponse({required String id});
+
+  Future<ChatCompletionResponse> chat({required ChatCompletionRequest req});
+
+  Future<BatchObject> createBatch({required CreateBatchRequest req});
+
+  Future<FileObject> createFile({required CreateFileRequest req});
+
+  Future<ResponseObject> createResponse({required CreateResponseRequest req});
+
+  Future<DeleteResponse> deleteFile({required String fileId});
+
+  Future<EmbeddingResponse> embed({required EmbeddingRequest req});
+
+  Future<Uint8List> fileContent({required String fileId});
+
+  Future<ImagesResponse> imageGenerate({required CreateImageRequest req});
+
+  Future<BatchListResponse> listBatches({BatchListQuery? query});
+
+  Future<FileListResponse> listFiles({FileListQuery? query});
+
+  Future<ModelsListResponse> listModels();
+
+  Future<ModerationResponse> moderate({required ModerationRequest req});
+
+  Future<OcrResponse> ocr({required OcrRequest req});
+
+  Future<RerankResponse> rerank({required RerankRequest req});
+
+  Future<BatchObject> retrieveBatch({required String batchId});
+
+  Future<FileObject> retrieveFile({required String fileId});
+
+  Future<ResponseObject> retrieveResponse({required String id});
+
+  Future<SearchResponse> search({required SearchRequest req});
+
+  Future<Uint8List> speech({required CreateSpeechRequest req});
+
+  Future<TranscriptionResponse> transcribe(
+      {required CreateTranscriptionRequest req});
+}
+
+class AssistantMessage {
+  final String? content;
+  final String? name;
+  final List<ToolCall>? toolCalls;
+  final String? refusal;
+  final FunctionCall? functionCall;
+
+  const AssistantMessage({
+    this.content,
+    this.name,
+    this.toolCalls,
+    this.refusal,
+    this.functionCall,
+  });
+
+  @override
+  int get hashCode =>
+      content.hashCode ^
+      name.hashCode ^
+      toolCalls.hashCode ^
+      refusal.hashCode ^
+      functionCall.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AssistantMessage &&
+          runtimeType == other.runtimeType &&
+          content == other.content &&
+          name == other.name &&
+          toolCalls == other.toolCalls &&
+          refusal == other.refusal &&
+          functionCall == other.functionCall;
+}
+
+class AudioContent {
+  final String data;
+  final String format;
+
+  const AudioContent({
+    required this.data,
+    required this.format,
+  });
+
+  @override
+  int get hashCode => data.hashCode ^ format.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AudioContent &&
+          runtimeType == other.runtimeType &&
+          data == other.data &&
+          format == other.format;
+}
 
 @freezed
 sealed class AuthHeaderFormat with _$AuthHeaderFormat {
@@ -80,6 +432,640 @@ sealed class AuthHeaderFormat with _$AuthHeaderFormat {
     required String field0,
   }) = AuthHeaderFormat_ApiKey;
   const factory AuthHeaderFormat.none() = AuthHeaderFormat_None;
+}
+
+class BatchListQuery {
+  final PlatformInt64? limit;
+  final String? after;
+
+  const BatchListQuery({
+    this.limit,
+    this.after,
+  });
+
+  @override
+  int get hashCode => limit.hashCode ^ after.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BatchListQuery &&
+          runtimeType == other.runtimeType &&
+          limit == other.limit &&
+          after == other.after;
+}
+
+class BatchListResponse {
+  final String object;
+  final List<BatchObject> data;
+  final bool? hasMore;
+  final String? firstId;
+  final String? lastId;
+
+  const BatchListResponse({
+    required this.object,
+    required this.data,
+    this.hasMore,
+    this.firstId,
+    this.lastId,
+  });
+
+  @override
+  int get hashCode =>
+      object.hashCode ^
+      data.hashCode ^
+      hasMore.hashCode ^
+      firstId.hashCode ^
+      lastId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BatchListResponse &&
+          runtimeType == other.runtimeType &&
+          object == other.object &&
+          data == other.data &&
+          hasMore == other.hasMore &&
+          firstId == other.firstId &&
+          lastId == other.lastId;
+}
+
+class BatchObject {
+  final String id;
+  final String object;
+  final String endpoint;
+  final String inputFileId;
+  final String completionWindow;
+  final BatchStatus status;
+  final String? outputFileId;
+  final String? errorFileId;
+  final PlatformInt64 createdAt;
+  final PlatformInt64? completedAt;
+  final PlatformInt64? failedAt;
+  final PlatformInt64? expiredAt;
+  final BatchRequestCounts? requestCounts;
+  final String? metadata;
+
+  const BatchObject({
+    required this.id,
+    required this.object,
+    required this.endpoint,
+    required this.inputFileId,
+    required this.completionWindow,
+    required this.status,
+    this.outputFileId,
+    this.errorFileId,
+    required this.createdAt,
+    this.completedAt,
+    this.failedAt,
+    this.expiredAt,
+    this.requestCounts,
+    this.metadata,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      object.hashCode ^
+      endpoint.hashCode ^
+      inputFileId.hashCode ^
+      completionWindow.hashCode ^
+      status.hashCode ^
+      outputFileId.hashCode ^
+      errorFileId.hashCode ^
+      createdAt.hashCode ^
+      completedAt.hashCode ^
+      failedAt.hashCode ^
+      expiredAt.hashCode ^
+      requestCounts.hashCode ^
+      metadata.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BatchObject &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          object == other.object &&
+          endpoint == other.endpoint &&
+          inputFileId == other.inputFileId &&
+          completionWindow == other.completionWindow &&
+          status == other.status &&
+          outputFileId == other.outputFileId &&
+          errorFileId == other.errorFileId &&
+          createdAt == other.createdAt &&
+          completedAt == other.completedAt &&
+          failedAt == other.failedAt &&
+          expiredAt == other.expiredAt &&
+          requestCounts == other.requestCounts &&
+          metadata == other.metadata;
+}
+
+class BatchRequestCounts {
+  final PlatformInt64 total;
+  final PlatformInt64 completed;
+  final PlatformInt64 failed;
+
+  const BatchRequestCounts({
+    required this.total,
+    required this.completed,
+    required this.failed,
+  });
+
+  @override
+  int get hashCode => total.hashCode ^ completed.hashCode ^ failed.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BatchRequestCounts &&
+          runtimeType == other.runtimeType &&
+          total == other.total &&
+          completed == other.completed &&
+          failed == other.failed;
+}
+
+enum BatchStatus {
+  validating,
+  failed,
+  inProgress,
+  finalizing,
+  completed,
+  expired,
+  cancelling,
+  cancelled,
+  ;
+}
+
+class ChatCompletionChunk {
+  final String id;
+  final String object;
+  final PlatformInt64 created;
+  final String model;
+  final List<StreamChoice> choices;
+  final Usage? usage;
+  final String? systemFingerprint;
+  final String? serviceTier;
+
+  const ChatCompletionChunk({
+    required this.id,
+    required this.object,
+    required this.created,
+    required this.model,
+    required this.choices,
+    this.usage,
+    this.systemFingerprint,
+    this.serviceTier,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      object.hashCode ^
+      created.hashCode ^
+      model.hashCode ^
+      choices.hashCode ^
+      usage.hashCode ^
+      systemFingerprint.hashCode ^
+      serviceTier.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ChatCompletionChunk &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          object == other.object &&
+          created == other.created &&
+          model == other.model &&
+          choices == other.choices &&
+          usage == other.usage &&
+          systemFingerprint == other.systemFingerprint &&
+          serviceTier == other.serviceTier;
+}
+
+class ChatCompletionRequest {
+  final String model;
+  final List<Message> messages;
+  final double? temperature;
+  final double? topP;
+  final PlatformInt64? n;
+  final bool? stream;
+  final StopSequence? stop;
+  final PlatformInt64? maxTokens;
+  final double? presencePenalty;
+  final double? frequencyPenalty;
+  final Map<String, double>? logitBias;
+  final String? user;
+  final List<ChatCompletionTool>? tools;
+  final ToolChoice? toolChoice;
+  final bool? parallelToolCalls;
+  final ResponseFormat? responseFormat;
+  final StreamOptions? streamOptions;
+  final PlatformInt64? seed;
+  final ReasoningEffort? reasoningEffort;
+  final String? extraBody;
+
+  const ChatCompletionRequest({
+    required this.model,
+    required this.messages,
+    this.temperature,
+    this.topP,
+    this.n,
+    this.stream,
+    this.stop,
+    this.maxTokens,
+    this.presencePenalty,
+    this.frequencyPenalty,
+    this.logitBias,
+    this.user,
+    this.tools,
+    this.toolChoice,
+    this.parallelToolCalls,
+    this.responseFormat,
+    this.streamOptions,
+    this.seed,
+    this.reasoningEffort,
+    this.extraBody,
+  });
+
+  @override
+  int get hashCode =>
+      model.hashCode ^
+      messages.hashCode ^
+      temperature.hashCode ^
+      topP.hashCode ^
+      n.hashCode ^
+      stream.hashCode ^
+      stop.hashCode ^
+      maxTokens.hashCode ^
+      presencePenalty.hashCode ^
+      frequencyPenalty.hashCode ^
+      logitBias.hashCode ^
+      user.hashCode ^
+      tools.hashCode ^
+      toolChoice.hashCode ^
+      parallelToolCalls.hashCode ^
+      responseFormat.hashCode ^
+      streamOptions.hashCode ^
+      seed.hashCode ^
+      reasoningEffort.hashCode ^
+      extraBody.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ChatCompletionRequest &&
+          runtimeType == other.runtimeType &&
+          model == other.model &&
+          messages == other.messages &&
+          temperature == other.temperature &&
+          topP == other.topP &&
+          n == other.n &&
+          stream == other.stream &&
+          stop == other.stop &&
+          maxTokens == other.maxTokens &&
+          presencePenalty == other.presencePenalty &&
+          frequencyPenalty == other.frequencyPenalty &&
+          logitBias == other.logitBias &&
+          user == other.user &&
+          tools == other.tools &&
+          toolChoice == other.toolChoice &&
+          parallelToolCalls == other.parallelToolCalls &&
+          responseFormat == other.responseFormat &&
+          streamOptions == other.streamOptions &&
+          seed == other.seed &&
+          reasoningEffort == other.reasoningEffort &&
+          extraBody == other.extraBody;
+}
+
+class ChatCompletionResponse {
+  final String id;
+  final String object;
+  final PlatformInt64 created;
+  final String model;
+  final List<Choice> choices;
+  final Usage? usage;
+  final String? systemFingerprint;
+  final String? serviceTier;
+
+  const ChatCompletionResponse({
+    required this.id,
+    required this.object,
+    required this.created,
+    required this.model,
+    required this.choices,
+    this.usage,
+    this.systemFingerprint,
+    this.serviceTier,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      object.hashCode ^
+      created.hashCode ^
+      model.hashCode ^
+      choices.hashCode ^
+      usage.hashCode ^
+      systemFingerprint.hashCode ^
+      serviceTier.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ChatCompletionResponse &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          object == other.object &&
+          created == other.created &&
+          model == other.model &&
+          choices == other.choices &&
+          usage == other.usage &&
+          systemFingerprint == other.systemFingerprint &&
+          serviceTier == other.serviceTier;
+}
+
+class ChatCompletionTool {
+  final ToolType toolType;
+  final FunctionDefinition function;
+
+  const ChatCompletionTool({
+    required this.toolType,
+    required this.function,
+  });
+
+  @override
+  int get hashCode => toolType.hashCode ^ function.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ChatCompletionTool &&
+          runtimeType == other.runtimeType &&
+          toolType == other.toolType &&
+          function == other.function;
+}
+
+class Choice {
+  final PlatformInt64 index;
+  final AssistantMessage message;
+  final FinishReason? finishReason;
+
+  const Choice({
+    required this.index,
+    required this.message,
+    this.finishReason,
+  });
+
+  @override
+  int get hashCode => index.hashCode ^ message.hashCode ^ finishReason.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Choice &&
+          runtimeType == other.runtimeType &&
+          index == other.index &&
+          message == other.message &&
+          finishReason == other.finishReason;
+}
+
+@freezed
+sealed class ContentPart with _$ContentPart {
+  const ContentPart._();
+
+  const factory ContentPart.text({
+    required String text,
+  }) = ContentPart_Text;
+  const factory ContentPart.imageUrl({
+    required ImageUrl imageUrl,
+  }) = ContentPart_ImageUrl;
+  const factory ContentPart.document({
+    required DocumentContent document,
+  }) = ContentPart_Document;
+  const factory ContentPart.inputAudio({
+    required AudioContent inputAudio,
+  }) = ContentPart_InputAudio;
+}
+
+class CreateBatchRequest {
+  final String inputFileId;
+  final String endpoint;
+  final String completionWindow;
+  final String? metadata;
+
+  const CreateBatchRequest({
+    required this.inputFileId,
+    required this.endpoint,
+    required this.completionWindow,
+    this.metadata,
+  });
+
+  @override
+  int get hashCode =>
+      inputFileId.hashCode ^
+      endpoint.hashCode ^
+      completionWindow.hashCode ^
+      metadata.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CreateBatchRequest &&
+          runtimeType == other.runtimeType &&
+          inputFileId == other.inputFileId &&
+          endpoint == other.endpoint &&
+          completionWindow == other.completionWindow &&
+          metadata == other.metadata;
+}
+
+class CreateFileRequest {
+  final String file;
+  final FilePurpose purpose;
+  final String? filename;
+
+  const CreateFileRequest({
+    required this.file,
+    required this.purpose,
+    this.filename,
+  });
+
+  @override
+  int get hashCode => file.hashCode ^ purpose.hashCode ^ filename.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CreateFileRequest &&
+          runtimeType == other.runtimeType &&
+          file == other.file &&
+          purpose == other.purpose &&
+          filename == other.filename;
+}
+
+class CreateImageRequest {
+  final String prompt;
+  final String? model;
+  final PlatformInt64? n;
+  final String? size;
+  final String? quality;
+  final String? style;
+  final String? responseFormat;
+  final String? user;
+
+  const CreateImageRequest({
+    required this.prompt,
+    this.model,
+    this.n,
+    this.size,
+    this.quality,
+    this.style,
+    this.responseFormat,
+    this.user,
+  });
+
+  @override
+  int get hashCode =>
+      prompt.hashCode ^
+      model.hashCode ^
+      n.hashCode ^
+      size.hashCode ^
+      quality.hashCode ^
+      style.hashCode ^
+      responseFormat.hashCode ^
+      user.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CreateImageRequest &&
+          runtimeType == other.runtimeType &&
+          prompt == other.prompt &&
+          model == other.model &&
+          n == other.n &&
+          size == other.size &&
+          quality == other.quality &&
+          style == other.style &&
+          responseFormat == other.responseFormat &&
+          user == other.user;
+}
+
+class CreateResponseRequest {
+  final String model;
+  final String input;
+  final String? instructions;
+  final List<ResponseTool>? tools;
+  final double? temperature;
+  final PlatformInt64? maxOutputTokens;
+  final String? metadata;
+
+  const CreateResponseRequest({
+    required this.model,
+    required this.input,
+    this.instructions,
+    this.tools,
+    this.temperature,
+    this.maxOutputTokens,
+    this.metadata,
+  });
+
+  @override
+  int get hashCode =>
+      model.hashCode ^
+      input.hashCode ^
+      instructions.hashCode ^
+      tools.hashCode ^
+      temperature.hashCode ^
+      maxOutputTokens.hashCode ^
+      metadata.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CreateResponseRequest &&
+          runtimeType == other.runtimeType &&
+          model == other.model &&
+          input == other.input &&
+          instructions == other.instructions &&
+          tools == other.tools &&
+          temperature == other.temperature &&
+          maxOutputTokens == other.maxOutputTokens &&
+          metadata == other.metadata;
+}
+
+class CreateSpeechRequest {
+  final String model;
+  final String input;
+  final String voice;
+  final String? responseFormat;
+  final double? speed;
+
+  const CreateSpeechRequest({
+    required this.model,
+    required this.input,
+    required this.voice,
+    this.responseFormat,
+    this.speed,
+  });
+
+  @override
+  int get hashCode =>
+      model.hashCode ^
+      input.hashCode ^
+      voice.hashCode ^
+      responseFormat.hashCode ^
+      speed.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CreateSpeechRequest &&
+          runtimeType == other.runtimeType &&
+          model == other.model &&
+          input == other.input &&
+          voice == other.voice &&
+          responseFormat == other.responseFormat &&
+          speed == other.speed;
+}
+
+class CreateTranscriptionRequest {
+  final String model;
+  final String file;
+  final String? language;
+  final String? prompt;
+  final String? responseFormat;
+  final double? temperature;
+
+  const CreateTranscriptionRequest({
+    required this.model,
+    required this.file,
+    this.language,
+    this.prompt,
+    this.responseFormat,
+    this.temperature,
+  });
+
+  @override
+  int get hashCode =>
+      model.hashCode ^
+      file.hashCode ^
+      language.hashCode ^
+      prompt.hashCode ^
+      responseFormat.hashCode ^
+      temperature.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CreateTranscriptionRequest &&
+          runtimeType == other.runtimeType &&
+          model == other.model &&
+          file == other.file &&
+          language == other.language &&
+          prompt == other.prompt &&
+          responseFormat == other.responseFormat &&
+          temperature == other.temperature;
 }
 
 class CustomProviderConfig {
@@ -111,4 +1097,1613 @@ class CustomProviderConfig {
           baseUrl == other.baseUrl &&
           authHeader == other.authHeader &&
           modelPrefixes == other.modelPrefixes;
+}
+
+class DeleteResponse {
+  final String id;
+  final String object;
+  final bool deleted;
+
+  const DeleteResponse({
+    required this.id,
+    required this.object,
+    required this.deleted,
+  });
+
+  @override
+  int get hashCode => id.hashCode ^ object.hashCode ^ deleted.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DeleteResponse &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          object == other.object &&
+          deleted == other.deleted;
+}
+
+class DeveloperMessage {
+  final String content;
+  final String? name;
+
+  const DeveloperMessage({
+    required this.content,
+    this.name,
+  });
+
+  @override
+  int get hashCode => content.hashCode ^ name.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DeveloperMessage &&
+          runtimeType == other.runtimeType &&
+          content == other.content &&
+          name == other.name;
+}
+
+class DocumentContent {
+  final String data;
+  final String mediaType;
+
+  const DocumentContent({
+    required this.data,
+    required this.mediaType,
+  });
+
+  @override
+  int get hashCode => data.hashCode ^ mediaType.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DocumentContent &&
+          runtimeType == other.runtimeType &&
+          data == other.data &&
+          mediaType == other.mediaType;
+}
+
+enum EmbeddingFormat {
+  float,
+  base64,
+  ;
+}
+
+@freezed
+sealed class EmbeddingInput with _$EmbeddingInput {
+  const EmbeddingInput._();
+
+  const factory EmbeddingInput.single({
+    required String field0,
+  }) = EmbeddingInput_Single;
+  const factory EmbeddingInput.multiple({
+    required List<String> field0,
+  }) = EmbeddingInput_Multiple;
+}
+
+class EmbeddingObject {
+  final String object;
+  final Float64List embedding;
+  final PlatformInt64 index;
+
+  const EmbeddingObject({
+    required this.object,
+    required this.embedding,
+    required this.index,
+  });
+
+  @override
+  int get hashCode => object.hashCode ^ embedding.hashCode ^ index.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is EmbeddingObject &&
+          runtimeType == other.runtimeType &&
+          object == other.object &&
+          embedding == other.embedding &&
+          index == other.index;
+}
+
+class EmbeddingRequest {
+  final String model;
+  final EmbeddingInput input;
+  final EmbeddingFormat? encodingFormat;
+  final PlatformInt64? dimensions;
+  final String? user;
+
+  const EmbeddingRequest({
+    required this.model,
+    required this.input,
+    this.encodingFormat,
+    this.dimensions,
+    this.user,
+  });
+
+  @override
+  int get hashCode =>
+      model.hashCode ^
+      input.hashCode ^
+      encodingFormat.hashCode ^
+      dimensions.hashCode ^
+      user.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is EmbeddingRequest &&
+          runtimeType == other.runtimeType &&
+          model == other.model &&
+          input == other.input &&
+          encodingFormat == other.encodingFormat &&
+          dimensions == other.dimensions &&
+          user == other.user;
+}
+
+class EmbeddingResponse {
+  final String object;
+  final List<EmbeddingObject> data;
+  final String model;
+  final Usage? usage;
+
+  const EmbeddingResponse({
+    required this.object,
+    required this.data,
+    required this.model,
+    this.usage,
+  });
+
+  @override
+  int get hashCode =>
+      object.hashCode ^ data.hashCode ^ model.hashCode ^ usage.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is EmbeddingResponse &&
+          runtimeType == other.runtimeType &&
+          object == other.object &&
+          data == other.data &&
+          model == other.model &&
+          usage == other.usage;
+}
+
+class FileListQuery {
+  final String? purpose;
+  final PlatformInt64? limit;
+  final String? after;
+
+  const FileListQuery({
+    this.purpose,
+    this.limit,
+    this.after,
+  });
+
+  @override
+  int get hashCode => purpose.hashCode ^ limit.hashCode ^ after.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FileListQuery &&
+          runtimeType == other.runtimeType &&
+          purpose == other.purpose &&
+          limit == other.limit &&
+          after == other.after;
+}
+
+class FileListResponse {
+  final String object;
+  final List<FileObject> data;
+  final bool? hasMore;
+
+  const FileListResponse({
+    required this.object,
+    required this.data,
+    this.hasMore,
+  });
+
+  @override
+  int get hashCode => object.hashCode ^ data.hashCode ^ hasMore.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FileListResponse &&
+          runtimeType == other.runtimeType &&
+          object == other.object &&
+          data == other.data &&
+          hasMore == other.hasMore;
+}
+
+class FileObject {
+  final String id;
+  final String object;
+  final PlatformInt64 bytes;
+  final PlatformInt64 createdAt;
+  final String filename;
+  final String purpose;
+  final String? status;
+
+  const FileObject({
+    required this.id,
+    required this.object,
+    required this.bytes,
+    required this.createdAt,
+    required this.filename,
+    required this.purpose,
+    this.status,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      object.hashCode ^
+      bytes.hashCode ^
+      createdAt.hashCode ^
+      filename.hashCode ^
+      purpose.hashCode ^
+      status.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FileObject &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          object == other.object &&
+          bytes == other.bytes &&
+          createdAt == other.createdAt &&
+          filename == other.filename &&
+          purpose == other.purpose &&
+          status == other.status;
+}
+
+enum FilePurpose {
+  assistants,
+  batch,
+  fineTune,
+  vision,
+  ;
+}
+
+enum FinishReason {
+  stop,
+  length,
+  toolCalls,
+  contentFilter,
+  functionCall,
+  other,
+  ;
+}
+
+class FunctionCall {
+  final String name;
+  final String arguments;
+
+  const FunctionCall({
+    required this.name,
+    required this.arguments,
+  });
+
+  @override
+  int get hashCode => name.hashCode ^ arguments.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FunctionCall &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          arguments == other.arguments;
+}
+
+class FunctionDefinition {
+  final String name;
+  final String? description;
+  final String? parameters;
+  final bool? strict;
+
+  const FunctionDefinition({
+    required this.name,
+    this.description,
+    this.parameters,
+    this.strict,
+  });
+
+  @override
+  int get hashCode =>
+      name.hashCode ^
+      description.hashCode ^
+      parameters.hashCode ^
+      strict.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FunctionDefinition &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          description == other.description &&
+          parameters == other.parameters &&
+          strict == other.strict;
+}
+
+class FunctionMessage {
+  final String content;
+  final String name;
+
+  const FunctionMessage({
+    required this.content,
+    required this.name,
+  });
+
+  @override
+  int get hashCode => content.hashCode ^ name.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FunctionMessage &&
+          runtimeType == other.runtimeType &&
+          content == other.content &&
+          name == other.name;
+}
+
+class Image {
+  final String? url;
+  final String? b64Json;
+  final String? revisedPrompt;
+
+  const Image({
+    this.url,
+    this.b64Json,
+    this.revisedPrompt,
+  });
+
+  @override
+  int get hashCode => url.hashCode ^ b64Json.hashCode ^ revisedPrompt.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Image &&
+          runtimeType == other.runtimeType &&
+          url == other.url &&
+          b64Json == other.b64Json &&
+          revisedPrompt == other.revisedPrompt;
+}
+
+enum ImageDetail {
+  low,
+  high,
+  auto,
+  ;
+}
+
+class ImageUrl {
+  final String url;
+  final ImageDetail? detail;
+
+  const ImageUrl({
+    required this.url,
+    this.detail,
+  });
+
+  @override
+  int get hashCode => url.hashCode ^ detail.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ImageUrl &&
+          runtimeType == other.runtimeType &&
+          url == other.url &&
+          detail == other.detail;
+}
+
+class ImagesResponse {
+  final PlatformInt64 created;
+  final List<Image> data;
+
+  const ImagesResponse({
+    required this.created,
+    required this.data,
+  });
+
+  @override
+  int get hashCode => created.hashCode ^ data.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ImagesResponse &&
+          runtimeType == other.runtimeType &&
+          created == other.created &&
+          data == other.data;
+}
+
+class JsonSchemaFormat {
+  final String name;
+  final String? description;
+  final String schema;
+  final bool? strict;
+
+  const JsonSchemaFormat({
+    required this.name,
+    this.description,
+    required this.schema,
+    this.strict,
+  });
+
+  @override
+  int get hashCode =>
+      name.hashCode ^ description.hashCode ^ schema.hashCode ^ strict.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is JsonSchemaFormat &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          description == other.description &&
+          schema == other.schema &&
+          strict == other.strict;
+}
+
+@freezed
+sealed class Message with _$Message {
+  const Message._();
+
+  const factory Message.system({
+    required SystemMessage field0,
+  }) = Message_System;
+  const factory Message.user({
+    required UserMessage field0,
+  }) = Message_User;
+  const factory Message.assistant({
+    required AssistantMessage field0,
+  }) = Message_Assistant;
+  const factory Message.tool({
+    required ToolMessage field0,
+  }) = Message_Tool;
+  const factory Message.developer({
+    required DeveloperMessage field0,
+  }) = Message_Developer;
+  const factory Message.function({
+    required FunctionMessage field0,
+  }) = Message_Function;
+}
+
+class ModelObject {
+  final String id;
+  final String object;
+  final PlatformInt64 created;
+  final String ownedBy;
+
+  const ModelObject({
+    required this.id,
+    required this.object,
+    required this.created,
+    required this.ownedBy,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^ object.hashCode ^ created.hashCode ^ ownedBy.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ModelObject &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          object == other.object &&
+          created == other.created &&
+          ownedBy == other.ownedBy;
+}
+
+class ModelsListResponse {
+  final String object;
+  final List<ModelObject> data;
+
+  const ModelsListResponse({
+    required this.object,
+    required this.data,
+  });
+
+  @override
+  int get hashCode => object.hashCode ^ data.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ModelsListResponse &&
+          runtimeType == other.runtimeType &&
+          object == other.object &&
+          data == other.data;
+}
+
+class ModerationCategories {
+  final bool sexual;
+  final bool hate;
+  final bool harassment;
+  final bool selfHarm;
+  final bool sexualMinors;
+  final bool hateThreatening;
+  final bool violenceGraphic;
+  final bool selfHarmIntent;
+  final bool selfHarmInstructions;
+  final bool harassmentThreatening;
+  final bool violence;
+
+  const ModerationCategories({
+    required this.sexual,
+    required this.hate,
+    required this.harassment,
+    required this.selfHarm,
+    required this.sexualMinors,
+    required this.hateThreatening,
+    required this.violenceGraphic,
+    required this.selfHarmIntent,
+    required this.selfHarmInstructions,
+    required this.harassmentThreatening,
+    required this.violence,
+  });
+
+  @override
+  int get hashCode =>
+      sexual.hashCode ^
+      hate.hashCode ^
+      harassment.hashCode ^
+      selfHarm.hashCode ^
+      sexualMinors.hashCode ^
+      hateThreatening.hashCode ^
+      violenceGraphic.hashCode ^
+      selfHarmIntent.hashCode ^
+      selfHarmInstructions.hashCode ^
+      harassmentThreatening.hashCode ^
+      violence.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ModerationCategories &&
+          runtimeType == other.runtimeType &&
+          sexual == other.sexual &&
+          hate == other.hate &&
+          harassment == other.harassment &&
+          selfHarm == other.selfHarm &&
+          sexualMinors == other.sexualMinors &&
+          hateThreatening == other.hateThreatening &&
+          violenceGraphic == other.violenceGraphic &&
+          selfHarmIntent == other.selfHarmIntent &&
+          selfHarmInstructions == other.selfHarmInstructions &&
+          harassmentThreatening == other.harassmentThreatening &&
+          violence == other.violence;
+}
+
+class ModerationCategoryScores {
+  final double sexual;
+  final double hate;
+  final double harassment;
+  final double selfHarm;
+  final double sexualMinors;
+  final double hateThreatening;
+  final double violenceGraphic;
+  final double selfHarmIntent;
+  final double selfHarmInstructions;
+  final double harassmentThreatening;
+  final double violence;
+
+  const ModerationCategoryScores({
+    required this.sexual,
+    required this.hate,
+    required this.harassment,
+    required this.selfHarm,
+    required this.sexualMinors,
+    required this.hateThreatening,
+    required this.violenceGraphic,
+    required this.selfHarmIntent,
+    required this.selfHarmInstructions,
+    required this.harassmentThreatening,
+    required this.violence,
+  });
+
+  @override
+  int get hashCode =>
+      sexual.hashCode ^
+      hate.hashCode ^
+      harassment.hashCode ^
+      selfHarm.hashCode ^
+      sexualMinors.hashCode ^
+      hateThreatening.hashCode ^
+      violenceGraphic.hashCode ^
+      selfHarmIntent.hashCode ^
+      selfHarmInstructions.hashCode ^
+      harassmentThreatening.hashCode ^
+      violence.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ModerationCategoryScores &&
+          runtimeType == other.runtimeType &&
+          sexual == other.sexual &&
+          hate == other.hate &&
+          harassment == other.harassment &&
+          selfHarm == other.selfHarm &&
+          sexualMinors == other.sexualMinors &&
+          hateThreatening == other.hateThreatening &&
+          violenceGraphic == other.violenceGraphic &&
+          selfHarmIntent == other.selfHarmIntent &&
+          selfHarmInstructions == other.selfHarmInstructions &&
+          harassmentThreatening == other.harassmentThreatening &&
+          violence == other.violence;
+}
+
+@freezed
+sealed class ModerationInput with _$ModerationInput {
+  const ModerationInput._();
+
+  const factory ModerationInput.single({
+    required String field0,
+  }) = ModerationInput_Single;
+  const factory ModerationInput.multiple({
+    required List<String> field0,
+  }) = ModerationInput_Multiple;
+}
+
+class ModerationRequest {
+  final ModerationInput input;
+  final String? model;
+
+  const ModerationRequest({
+    required this.input,
+    this.model,
+  });
+
+  @override
+  int get hashCode => input.hashCode ^ model.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ModerationRequest &&
+          runtimeType == other.runtimeType &&
+          input == other.input &&
+          model == other.model;
+}
+
+class ModerationResponse {
+  final String id;
+  final String model;
+  final List<ModerationResult> results;
+
+  const ModerationResponse({
+    required this.id,
+    required this.model,
+    required this.results,
+  });
+
+  @override
+  int get hashCode => id.hashCode ^ model.hashCode ^ results.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ModerationResponse &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          model == other.model &&
+          results == other.results;
+}
+
+class ModerationResult {
+  final bool flagged;
+  final ModerationCategories categories;
+  final ModerationCategoryScores categoryScores;
+
+  const ModerationResult({
+    required this.flagged,
+    required this.categories,
+    required this.categoryScores,
+  });
+
+  @override
+  int get hashCode =>
+      flagged.hashCode ^ categories.hashCode ^ categoryScores.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ModerationResult &&
+          runtimeType == other.runtimeType &&
+          flagged == other.flagged &&
+          categories == other.categories &&
+          categoryScores == other.categoryScores;
+}
+
+@freezed
+sealed class OcrDocument with _$OcrDocument {
+  const OcrDocument._();
+
+  const factory OcrDocument.url({
+    required String url,
+  }) = OcrDocument_Url;
+  const factory OcrDocument.base64({
+    required String data,
+    required String mediaType,
+  }) = OcrDocument_Base64;
+}
+
+class OcrImage {
+  final String id;
+  final String? imageBase64;
+
+  const OcrImage({
+    required this.id,
+    this.imageBase64,
+  });
+
+  @override
+  int get hashCode => id.hashCode ^ imageBase64.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is OcrImage &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          imageBase64 == other.imageBase64;
+}
+
+class OcrPage {
+  final PlatformInt64 index;
+  final String markdown;
+  final List<OcrImage>? images;
+  final PageDimensions? dimensions;
+
+  const OcrPage({
+    required this.index,
+    required this.markdown,
+    this.images,
+    this.dimensions,
+  });
+
+  @override
+  int get hashCode =>
+      index.hashCode ^
+      markdown.hashCode ^
+      images.hashCode ^
+      dimensions.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is OcrPage &&
+          runtimeType == other.runtimeType &&
+          index == other.index &&
+          markdown == other.markdown &&
+          images == other.images &&
+          dimensions == other.dimensions;
+}
+
+class OcrRequest {
+  final String model;
+  final OcrDocument document;
+  final Int64List? pages;
+  final bool? includeImageBase64;
+
+  const OcrRequest({
+    required this.model,
+    required this.document,
+    this.pages,
+    this.includeImageBase64,
+  });
+
+  @override
+  int get hashCode =>
+      model.hashCode ^
+      document.hashCode ^
+      pages.hashCode ^
+      includeImageBase64.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is OcrRequest &&
+          runtimeType == other.runtimeType &&
+          model == other.model &&
+          document == other.document &&
+          pages == other.pages &&
+          includeImageBase64 == other.includeImageBase64;
+}
+
+class OcrResponse {
+  final List<OcrPage> pages;
+  final String model;
+  final Usage? usage;
+
+  const OcrResponse({
+    required this.pages,
+    required this.model,
+    this.usage,
+  });
+
+  @override
+  int get hashCode => pages.hashCode ^ model.hashCode ^ usage.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is OcrResponse &&
+          runtimeType == other.runtimeType &&
+          pages == other.pages &&
+          model == other.model &&
+          usage == other.usage;
+}
+
+class PageDimensions {
+  final PlatformInt64 width;
+  final PlatformInt64 height;
+
+  const PageDimensions({
+    required this.width,
+    required this.height,
+  });
+
+  @override
+  int get hashCode => width.hashCode ^ height.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PageDimensions &&
+          runtimeType == other.runtimeType &&
+          width == other.width &&
+          height == other.height;
+}
+
+class PromptTokensDetails {
+  final PlatformInt64 cachedTokens;
+  final PlatformInt64 audioTokens;
+
+  const PromptTokensDetails({
+    required this.cachedTokens,
+    required this.audioTokens,
+  });
+
+  @override
+  int get hashCode => cachedTokens.hashCode ^ audioTokens.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PromptTokensDetails &&
+          runtimeType == other.runtimeType &&
+          cachedTokens == other.cachedTokens &&
+          audioTokens == other.audioTokens;
+}
+
+enum ReasoningEffort {
+  low,
+  medium,
+  high,
+  ;
+}
+
+@freezed
+sealed class RerankDocument with _$RerankDocument {
+  const RerankDocument._();
+
+  const factory RerankDocument.text({
+    required String field0,
+  }) = RerankDocument_Text;
+  const factory RerankDocument.object({
+    required String text,
+  }) = RerankDocument_Object;
+}
+
+class RerankRequest {
+  final String model;
+  final String query;
+  final List<RerankDocument> documents;
+  final PlatformInt64? topN;
+  final bool? returnDocuments;
+
+  const RerankRequest({
+    required this.model,
+    required this.query,
+    required this.documents,
+    this.topN,
+    this.returnDocuments,
+  });
+
+  @override
+  int get hashCode =>
+      model.hashCode ^
+      query.hashCode ^
+      documents.hashCode ^
+      topN.hashCode ^
+      returnDocuments.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RerankRequest &&
+          runtimeType == other.runtimeType &&
+          model == other.model &&
+          query == other.query &&
+          documents == other.documents &&
+          topN == other.topN &&
+          returnDocuments == other.returnDocuments;
+}
+
+class RerankResponse {
+  final String? id;
+  final List<RerankResult> results;
+  final String? meta;
+
+  const RerankResponse({
+    this.id,
+    required this.results,
+    this.meta,
+  });
+
+  @override
+  int get hashCode => id.hashCode ^ results.hashCode ^ meta.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RerankResponse &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          results == other.results &&
+          meta == other.meta;
+}
+
+class RerankResult {
+  final PlatformInt64 index;
+  final double relevanceScore;
+  final RerankResultDocument? document;
+
+  const RerankResult({
+    required this.index,
+    required this.relevanceScore,
+    this.document,
+  });
+
+  @override
+  int get hashCode =>
+      index.hashCode ^ relevanceScore.hashCode ^ document.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RerankResult &&
+          runtimeType == other.runtimeType &&
+          index == other.index &&
+          relevanceScore == other.relevanceScore &&
+          document == other.document;
+}
+
+class RerankResultDocument {
+  final String text;
+
+  const RerankResultDocument({
+    required this.text,
+  });
+
+  @override
+  int get hashCode => text.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RerankResultDocument &&
+          runtimeType == other.runtimeType &&
+          text == other.text;
+}
+
+@freezed
+sealed class ResponseFormat with _$ResponseFormat {
+  const ResponseFormat._();
+
+  const factory ResponseFormat.text() = ResponseFormat_Text;
+  const factory ResponseFormat.jsonObject() = ResponseFormat_JsonObject;
+  const factory ResponseFormat.jsonSchema({
+    required JsonSchemaFormat jsonSchema,
+  }) = ResponseFormat_JsonSchema;
+}
+
+class ResponseObject {
+  final String id;
+  final String object;
+  final PlatformInt64 createdAt;
+  final String model;
+  final String status;
+  final List<ResponseOutputItem> output;
+  final ResponseUsage? usage;
+  final String? error;
+
+  const ResponseObject({
+    required this.id,
+    required this.object,
+    required this.createdAt,
+    required this.model,
+    required this.status,
+    required this.output,
+    this.usage,
+    this.error,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      object.hashCode ^
+      createdAt.hashCode ^
+      model.hashCode ^
+      status.hashCode ^
+      output.hashCode ^
+      usage.hashCode ^
+      error.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ResponseObject &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          object == other.object &&
+          createdAt == other.createdAt &&
+          model == other.model &&
+          status == other.status &&
+          output == other.output &&
+          usage == other.usage &&
+          error == other.error;
+}
+
+class ResponseOutputItem {
+  final String itemType;
+  final String content;
+
+  const ResponseOutputItem({
+    required this.itemType,
+    required this.content,
+  });
+
+  @override
+  int get hashCode => itemType.hashCode ^ content.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ResponseOutputItem &&
+          runtimeType == other.runtimeType &&
+          itemType == other.itemType &&
+          content == other.content;
+}
+
+class ResponseTool {
+  final String toolType;
+  final String config;
+
+  const ResponseTool({
+    required this.toolType,
+    required this.config,
+  });
+
+  @override
+  int get hashCode => toolType.hashCode ^ config.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ResponseTool &&
+          runtimeType == other.runtimeType &&
+          toolType == other.toolType &&
+          config == other.config;
+}
+
+class ResponseUsage {
+  final PlatformInt64 inputTokens;
+  final PlatformInt64 outputTokens;
+  final PlatformInt64 totalTokens;
+
+  const ResponseUsage({
+    required this.inputTokens,
+    required this.outputTokens,
+    required this.totalTokens,
+  });
+
+  @override
+  int get hashCode =>
+      inputTokens.hashCode ^ outputTokens.hashCode ^ totalTokens.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ResponseUsage &&
+          runtimeType == other.runtimeType &&
+          inputTokens == other.inputTokens &&
+          outputTokens == other.outputTokens &&
+          totalTokens == other.totalTokens;
+}
+
+class SearchRequest {
+  final String model;
+  final String query;
+  final PlatformInt64? maxResults;
+  final List<String>? searchDomainFilter;
+  final String? country;
+
+  const SearchRequest({
+    required this.model,
+    required this.query,
+    this.maxResults,
+    this.searchDomainFilter,
+    this.country,
+  });
+
+  @override
+  int get hashCode =>
+      model.hashCode ^
+      query.hashCode ^
+      maxResults.hashCode ^
+      searchDomainFilter.hashCode ^
+      country.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SearchRequest &&
+          runtimeType == other.runtimeType &&
+          model == other.model &&
+          query == other.query &&
+          maxResults == other.maxResults &&
+          searchDomainFilter == other.searchDomainFilter &&
+          country == other.country;
+}
+
+class SearchResponse {
+  final List<SearchResult> results;
+  final String model;
+
+  const SearchResponse({
+    required this.results,
+    required this.model,
+  });
+
+  @override
+  int get hashCode => results.hashCode ^ model.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SearchResponse &&
+          runtimeType == other.runtimeType &&
+          results == other.results &&
+          model == other.model;
+}
+
+class SearchResult {
+  final String title;
+  final String url;
+  final String snippet;
+  final String? date;
+
+  const SearchResult({
+    required this.title,
+    required this.url,
+    required this.snippet,
+    this.date,
+  });
+
+  @override
+  int get hashCode =>
+      title.hashCode ^ url.hashCode ^ snippet.hashCode ^ date.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SearchResult &&
+          runtimeType == other.runtimeType &&
+          title == other.title &&
+          url == other.url &&
+          snippet == other.snippet &&
+          date == other.date;
+}
+
+class SpecificFunction {
+  final String name;
+
+  const SpecificFunction({
+    required this.name,
+  });
+
+  @override
+  int get hashCode => name.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SpecificFunction &&
+          runtimeType == other.runtimeType &&
+          name == other.name;
+}
+
+class SpecificToolChoice {
+  final ToolType choiceType;
+  final SpecificFunction function;
+
+  const SpecificToolChoice({
+    required this.choiceType,
+    required this.function,
+  });
+
+  @override
+  int get hashCode => choiceType.hashCode ^ function.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SpecificToolChoice &&
+          runtimeType == other.runtimeType &&
+          choiceType == other.choiceType &&
+          function == other.function;
+}
+
+@freezed
+sealed class StopSequence with _$StopSequence {
+  const StopSequence._();
+
+  const factory StopSequence.single({
+    required String field0,
+  }) = StopSequence_Single;
+  const factory StopSequence.multiple({
+    required List<String> field0,
+  }) = StopSequence_Multiple;
+}
+
+class StreamChoice {
+  final PlatformInt64 index;
+  final StreamDelta delta;
+  final FinishReason? finishReason;
+
+  const StreamChoice({
+    required this.index,
+    required this.delta,
+    this.finishReason,
+  });
+
+  @override
+  int get hashCode => index.hashCode ^ delta.hashCode ^ finishReason.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StreamChoice &&
+          runtimeType == other.runtimeType &&
+          index == other.index &&
+          delta == other.delta &&
+          finishReason == other.finishReason;
+}
+
+class StreamDelta {
+  final String? role;
+  final String? content;
+  final List<StreamToolCall>? toolCalls;
+  final StreamFunctionCall? functionCall;
+  final String? refusal;
+
+  const StreamDelta({
+    this.role,
+    this.content,
+    this.toolCalls,
+    this.functionCall,
+    this.refusal,
+  });
+
+  @override
+  int get hashCode =>
+      role.hashCode ^
+      content.hashCode ^
+      toolCalls.hashCode ^
+      functionCall.hashCode ^
+      refusal.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StreamDelta &&
+          runtimeType == other.runtimeType &&
+          role == other.role &&
+          content == other.content &&
+          toolCalls == other.toolCalls &&
+          functionCall == other.functionCall &&
+          refusal == other.refusal;
+}
+
+class StreamFunctionCall {
+  final String? name;
+  final String? arguments;
+
+  const StreamFunctionCall({
+    this.name,
+    this.arguments,
+  });
+
+  @override
+  int get hashCode => name.hashCode ^ arguments.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StreamFunctionCall &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          arguments == other.arguments;
+}
+
+class StreamOptions {
+  final bool? includeUsage;
+
+  const StreamOptions({
+    this.includeUsage,
+  });
+
+  @override
+  int get hashCode => includeUsage.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StreamOptions &&
+          runtimeType == other.runtimeType &&
+          includeUsage == other.includeUsage;
+}
+
+class StreamToolCall {
+  final PlatformInt64 index;
+  final String? id;
+  final ToolType? callType;
+  final StreamFunctionCall? function;
+
+  const StreamToolCall({
+    required this.index,
+    this.id,
+    this.callType,
+    this.function,
+  });
+
+  @override
+  int get hashCode =>
+      index.hashCode ^ id.hashCode ^ callType.hashCode ^ function.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StreamToolCall &&
+          runtimeType == other.runtimeType &&
+          index == other.index &&
+          id == other.id &&
+          callType == other.callType &&
+          function == other.function;
+}
+
+class SystemMessage {
+  final String content;
+  final String? name;
+
+  const SystemMessage({
+    required this.content,
+    this.name,
+  });
+
+  @override
+  int get hashCode => content.hashCode ^ name.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SystemMessage &&
+          runtimeType == other.runtimeType &&
+          content == other.content &&
+          name == other.name;
+}
+
+class ToolCall {
+  final String id;
+  final ToolType callType;
+  final FunctionCall function;
+
+  const ToolCall({
+    required this.id,
+    required this.callType,
+    required this.function,
+  });
+
+  @override
+  int get hashCode => id.hashCode ^ callType.hashCode ^ function.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ToolCall &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          callType == other.callType &&
+          function == other.function;
+}
+
+@freezed
+sealed class ToolChoice with _$ToolChoice {
+  const ToolChoice._();
+
+  const factory ToolChoice.mode({
+    required ToolChoiceMode field0,
+  }) = ToolChoice_Mode;
+  const factory ToolChoice.specific({
+    required SpecificToolChoice field0,
+  }) = ToolChoice_Specific;
+}
+
+enum ToolChoiceMode {
+  auto,
+  required_,
+  none,
+  ;
+}
+
+class ToolMessage {
+  final String content;
+  final String toolCallId;
+  final String? name;
+
+  const ToolMessage({
+    required this.content,
+    required this.toolCallId,
+    this.name,
+  });
+
+  @override
+  int get hashCode => content.hashCode ^ toolCallId.hashCode ^ name.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ToolMessage &&
+          runtimeType == other.runtimeType &&
+          content == other.content &&
+          toolCallId == other.toolCallId &&
+          name == other.name;
+}
+
+enum ToolType {
+  function,
+  ;
+}
+
+class TranscriptionResponse {
+  final String text;
+  final String? language;
+  final double? duration;
+  final List<TranscriptionSegment>? segments;
+
+  const TranscriptionResponse({
+    required this.text,
+    this.language,
+    this.duration,
+    this.segments,
+  });
+
+  @override
+  int get hashCode =>
+      text.hashCode ^ language.hashCode ^ duration.hashCode ^ segments.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TranscriptionResponse &&
+          runtimeType == other.runtimeType &&
+          text == other.text &&
+          language == other.language &&
+          duration == other.duration &&
+          segments == other.segments;
+}
+
+class TranscriptionSegment {
+  final PlatformInt64 id;
+  final double start;
+  final double end;
+  final String text;
+
+  const TranscriptionSegment({
+    required this.id,
+    required this.start,
+    required this.end,
+    required this.text,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^ start.hashCode ^ end.hashCode ^ text.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TranscriptionSegment &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          start == other.start &&
+          end == other.end &&
+          text == other.text;
+}
+
+class Usage {
+  final PlatformInt64 promptTokens;
+  final PlatformInt64 completionTokens;
+  final PlatformInt64 totalTokens;
+  final PromptTokensDetails? promptTokensDetails;
+
+  const Usage({
+    required this.promptTokens,
+    required this.completionTokens,
+    required this.totalTokens,
+    this.promptTokensDetails,
+  });
+
+  @override
+  int get hashCode =>
+      promptTokens.hashCode ^
+      completionTokens.hashCode ^
+      totalTokens.hashCode ^
+      promptTokensDetails.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Usage &&
+          runtimeType == other.runtimeType &&
+          promptTokens == other.promptTokens &&
+          completionTokens == other.completionTokens &&
+          totalTokens == other.totalTokens &&
+          promptTokensDetails == other.promptTokensDetails;
+}
+
+@freezed
+sealed class UserContent with _$UserContent {
+  const UserContent._();
+
+  const factory UserContent.text({
+    required String field0,
+  }) = UserContent_Text;
+  const factory UserContent.parts({
+    required List<ContentPart> field0,
+  }) = UserContent_Parts;
+}
+
+class UserMessage {
+  final UserContent content;
+  final String? name;
+
+  const UserMessage({
+    required this.content,
+    this.name,
+  });
+
+  @override
+  int get hashCode => content.hashCode ^ name.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is UserMessage &&
+          runtimeType == other.runtimeType &&
+          content == other.content &&
+          name == other.name;
 }

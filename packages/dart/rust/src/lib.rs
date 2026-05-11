@@ -597,6 +597,196 @@ pub struct CustomProviderConfig {
     pub model_prefixes: Vec<String>,
 }
 
+#[allow(unused_imports)]
+use liter_llm::client::BatchClient;
+#[allow(unused_imports)]
+use liter_llm::client::FileClient;
+#[allow(unused_imports)]
+use liter_llm::client::LlmClient;
+#[allow(unused_imports)]
+use liter_llm::client::ResponseClient;
+impl DefaultClient {
+    #[frb]
+    pub async fn chat(&self, req: ChatCompletionRequest) -> Result<ChatCompletionResponse, String> {
+        self.inner
+            .chat(liter_llm::ChatCompletionRequest::from(req))
+            .await
+            .map(|v| ChatCompletionResponse::from(v))
+            .map_err(|e| e.to_string())
+    }
+    // Method `chat_stream` has a sanitized return type that cannot be bridged through FRB — skipped.
+    #[frb]
+    pub async fn embed(&self, req: EmbeddingRequest) -> Result<EmbeddingResponse, String> {
+        self.inner
+            .embed(liter_llm::EmbeddingRequest::from(req))
+            .await
+            .map(|v| EmbeddingResponse::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn list_models(&self) -> Result<ModelsListResponse, String> {
+        self.inner
+            .list_models()
+            .await
+            .map(|v| ModelsListResponse::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn image_generate(&self, req: CreateImageRequest) -> Result<ImagesResponse, String> {
+        self.inner
+            .image_generate(liter_llm::CreateImageRequest::from(req))
+            .await
+            .map(|v| ImagesResponse::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn speech(&self, req: CreateSpeechRequest) -> Result<Vec<u8>, String> {
+        self.inner
+            .speech(unsafe { ::std::mem::transmute::<CreateSpeechRequest, liter_llm::CreateSpeechRequest>(req) })
+            .await
+            .map(|v| v.to_vec())
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn transcribe(&self, req: CreateTranscriptionRequest) -> Result<TranscriptionResponse, String> {
+        self.inner
+            .transcribe(unsafe {
+                ::std::mem::transmute::<CreateTranscriptionRequest, liter_llm::CreateTranscriptionRequest>(req)
+            })
+            .await
+            .map(|v| TranscriptionResponse::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn moderate(&self, req: ModerationRequest) -> Result<ModerationResponse, String> {
+        self.inner
+            .moderate(unsafe { ::std::mem::transmute::<ModerationRequest, liter_llm::ModerationRequest>(req) })
+            .await
+            .map(|v| ModerationResponse::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn rerank(&self, req: RerankRequest) -> Result<RerankResponse, String> {
+        self.inner
+            .rerank(liter_llm::RerankRequest::from(req))
+            .await
+            .map(|v| RerankResponse::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn search(&self, req: SearchRequest) -> Result<SearchResponse, String> {
+        self.inner
+            .search(liter_llm::SearchRequest::from(req))
+            .await
+            .map(|v| SearchResponse::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn ocr(&self, req: OcrRequest) -> Result<OcrResponse, String> {
+        self.inner
+            .ocr(liter_llm::OcrRequest::from(req))
+            .await
+            .map(|v| OcrResponse::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn create_file(&self, req: CreateFileRequest) -> Result<FileObject, String> {
+        self.inner
+            .create_file(unsafe { ::std::mem::transmute::<CreateFileRequest, liter_llm::CreateFileRequest>(req) })
+            .await
+            .map(|v| FileObject::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn retrieve_file(&self, file_id: String) -> Result<FileObject, String> {
+        self.inner
+            .retrieve_file(&file_id)
+            .await
+            .map(|v| FileObject::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn delete_file(&self, file_id: String) -> Result<DeleteResponse, String> {
+        self.inner
+            .delete_file(&file_id)
+            .await
+            .map(|v| DeleteResponse::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn list_files(&self, query: Option<FileListQuery>) -> Result<FileListResponse, String> {
+        self.inner
+            .list_files(query.map(liter_llm::FileListQuery::from))
+            .await
+            .map(|v| FileListResponse::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn file_content(&self, file_id: String) -> Result<Vec<u8>, String> {
+        self.inner
+            .file_content(&file_id)
+            .await
+            .map(|v| v.to_vec())
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn create_batch(&self, req: CreateBatchRequest) -> Result<BatchObject, String> {
+        self.inner
+            .create_batch(liter_llm::CreateBatchRequest::from(req))
+            .await
+            .map(|v| BatchObject::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn retrieve_batch(&self, batch_id: String) -> Result<BatchObject, String> {
+        self.inner
+            .retrieve_batch(&batch_id)
+            .await
+            .map(|v| BatchObject::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn list_batches(&self, query: Option<BatchListQuery>) -> Result<BatchListResponse, String> {
+        self.inner
+            .list_batches(query.map(liter_llm::BatchListQuery::from))
+            .await
+            .map(|v| BatchListResponse::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn cancel_batch(&self, batch_id: String) -> Result<BatchObject, String> {
+        self.inner
+            .cancel_batch(&batch_id)
+            .await
+            .map(|v| BatchObject::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn create_response(&self, req: CreateResponseRequest) -> Result<ResponseObject, String> {
+        self.inner
+            .create_response(liter_llm::CreateResponseRequest::from(req))
+            .await
+            .map(|v| ResponseObject::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn retrieve_response(&self, id: String) -> Result<ResponseObject, String> {
+        self.inner
+            .retrieve_response(&id)
+            .await
+            .map(|v| ResponseObject::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn cancel_response(&self, id: String) -> Result<ResponseObject, String> {
+        self.inner
+            .cancel_response(&id)
+            .await
+            .map(|v| ResponseObject::from(v))
+            .map_err(|e| e.to_string())
+    }
+}
+
 #[frb(mirror(Message))]
 pub enum Message {
     System { field0: SystemMessage },
@@ -1768,6 +1958,462 @@ impl From<liter_llm::provider::custom::AuthHeaderFormat> for AuthHeaderFormat {
 // Used in bridge functions for types with sanitized fields, and by
 // nested conversions within those types.
 
+impl From<SystemMessage> for liter_llm::types::SystemMessage {
+    fn from(v: SystemMessage) -> Self {
+        liter_llm::types::SystemMessage {
+            content: v.content.into(),
+            name: v.name.map(Into::into),
+        }
+    }
+}
+
+impl From<UserMessage> for liter_llm::types::UserMessage {
+    fn from(v: UserMessage) -> Self {
+        liter_llm::types::UserMessage {
+            content: v.content.into(),
+            name: v.name.map(Into::into),
+        }
+    }
+}
+
+impl From<ImageUrl> for liter_llm::types::ImageUrl {
+    fn from(v: ImageUrl) -> Self {
+        liter_llm::types::ImageUrl {
+            url: v.url.into(),
+            detail: v.detail.map(Into::into),
+        }
+    }
+}
+
+impl From<DocumentContent> for liter_llm::types::DocumentContent {
+    fn from(v: DocumentContent) -> Self {
+        liter_llm::types::DocumentContent {
+            data: v.data.into(),
+            media_type: v.media_type.into(),
+        }
+    }
+}
+
+impl From<AudioContent> for liter_llm::types::AudioContent {
+    fn from(v: AudioContent) -> Self {
+        liter_llm::types::AudioContent {
+            data: v.data.into(),
+            format: v.format.into(),
+        }
+    }
+}
+
+impl From<AssistantMessage> for liter_llm::types::AssistantMessage {
+    fn from(v: AssistantMessage) -> Self {
+        liter_llm::types::AssistantMessage {
+            content: v.content.map(Into::into),
+            name: v.name.map(Into::into),
+            tool_calls: v.tool_calls.map(|vec| vec.into_iter().map(Into::into).collect()),
+            refusal: v.refusal.map(Into::into),
+            function_call: v.function_call.map(Into::into),
+        }
+    }
+}
+
+impl From<ToolMessage> for liter_llm::types::ToolMessage {
+    fn from(v: ToolMessage) -> Self {
+        liter_llm::types::ToolMessage {
+            content: v.content.into(),
+            tool_call_id: v.tool_call_id.into(),
+            name: v.name.map(Into::into),
+        }
+    }
+}
+
+impl From<DeveloperMessage> for liter_llm::types::DeveloperMessage {
+    fn from(v: DeveloperMessage) -> Self {
+        liter_llm::types::DeveloperMessage {
+            content: v.content.into(),
+            name: v.name.map(Into::into),
+        }
+    }
+}
+
+impl From<FunctionMessage> for liter_llm::types::FunctionMessage {
+    fn from(v: FunctionMessage) -> Self {
+        liter_llm::types::FunctionMessage {
+            content: v.content.into(),
+            name: v.name.into(),
+        }
+    }
+}
+
+impl From<ChatCompletionTool> for liter_llm::types::ChatCompletionTool {
+    fn from(v: ChatCompletionTool) -> Self {
+        liter_llm::types::ChatCompletionTool {
+            tool_type: v.tool_type.into(),
+            function: v.function.into(),
+        }
+    }
+}
+
+impl From<FunctionDefinition> for liter_llm::types::FunctionDefinition {
+    fn from(v: FunctionDefinition) -> Self {
+        liter_llm::types::FunctionDefinition {
+            name: v.name.into(),
+            description: v.description.map(Into::into),
+            parameters: v.parameters.as_deref().and_then(|s| serde_json::from_str(s).ok()),
+            strict: v.strict.map(|x| x as _),
+        }
+    }
+}
+
+impl From<ToolCall> for liter_llm::types::ToolCall {
+    fn from(v: ToolCall) -> Self {
+        liter_llm::types::ToolCall {
+            id: v.id.into(),
+            call_type: v.call_type.into(),
+            function: v.function.into(),
+        }
+    }
+}
+
+impl From<FunctionCall> for liter_llm::types::FunctionCall {
+    fn from(v: FunctionCall) -> Self {
+        liter_llm::types::FunctionCall {
+            name: v.name.into(),
+            arguments: v.arguments.into(),
+        }
+    }
+}
+
+impl From<SpecificToolChoice> for liter_llm::types::SpecificToolChoice {
+    fn from(v: SpecificToolChoice) -> Self {
+        liter_llm::types::SpecificToolChoice {
+            choice_type: v.choice_type.into(),
+            function: v.function.into(),
+        }
+    }
+}
+
+impl From<SpecificFunction> for liter_llm::types::SpecificFunction {
+    fn from(v: SpecificFunction) -> Self {
+        liter_llm::types::SpecificFunction { name: v.name.into() }
+    }
+}
+
+impl From<JsonSchemaFormat> for liter_llm::types::JsonSchemaFormat {
+    fn from(v: JsonSchemaFormat) -> Self {
+        liter_llm::types::JsonSchemaFormat {
+            name: v.name.into(),
+            description: v.description.map(Into::into),
+            schema: serde_json::from_str(&v.schema).unwrap_or_default(),
+            strict: v.strict.map(|x| x as _),
+        }
+    }
+}
+
+impl From<ChatCompletionRequest> for liter_llm::types::ChatCompletionRequest {
+    fn from(v: ChatCompletionRequest) -> Self {
+        liter_llm::types::ChatCompletionRequest {
+            model: v.model.into(),
+            messages: v.messages.into_iter().map(Into::into).collect(),
+            temperature: v.temperature.map(|x| x as _),
+            top_p: v.top_p.map(|x| x as _),
+            n: v.n.map(|x| x as _),
+            stream: v.stream.map(|x| x as _),
+            stop: v.stop.map(Into::into),
+            max_tokens: v.max_tokens.map(|x| x as _),
+            presence_penalty: v.presence_penalty.map(|x| x as _),
+            frequency_penalty: v.frequency_penalty.map(|x| x as _),
+            logit_bias: v
+                .logit_bias
+                .map(|m| m.into_iter().map(|(k, v)| (k.into(), v as _)).collect()),
+            user: v.user.map(Into::into),
+            tools: v.tools.map(|vec| vec.into_iter().map(Into::into).collect()),
+            tool_choice: v.tool_choice.map(Into::into),
+            parallel_tool_calls: v.parallel_tool_calls.map(|x| x as _),
+            response_format: v.response_format.map(Into::into),
+            stream_options: v.stream_options.map(Into::into),
+            seed: v.seed.map(|x| x as _),
+            reasoning_effort: v.reasoning_effort.map(Into::into),
+            extra_body: v.extra_body.as_deref().and_then(|s| serde_json::from_str(s).ok()),
+        }
+    }
+}
+
+impl From<StreamOptions> for liter_llm::types::StreamOptions {
+    fn from(v: StreamOptions) -> Self {
+        liter_llm::types::StreamOptions {
+            include_usage: v.include_usage.map(|x| x as _),
+        }
+    }
+}
+
+impl From<EmbeddingRequest> for liter_llm::types::EmbeddingRequest {
+    fn from(v: EmbeddingRequest) -> Self {
+        liter_llm::types::EmbeddingRequest {
+            model: v.model.into(),
+            input: v.input.into(),
+            encoding_format: v.encoding_format.map(Into::into),
+            dimensions: v.dimensions.map(|x| x as _),
+            user: v.user.map(Into::into),
+        }
+    }
+}
+
+impl From<CreateImageRequest> for liter_llm::types::CreateImageRequest {
+    fn from(v: CreateImageRequest) -> Self {
+        liter_llm::types::CreateImageRequest {
+            prompt: v.prompt.into(),
+            model: v.model.map(Into::into),
+            n: v.n.map(|x| x as _),
+            size: v.size.map(Into::into),
+            quality: v.quality.map(Into::into),
+            style: v.style.map(Into::into),
+            response_format: v.response_format.map(Into::into),
+            user: v.user.map(Into::into),
+        }
+    }
+}
+
+impl From<RerankRequest> for liter_llm::types::RerankRequest {
+    fn from(v: RerankRequest) -> Self {
+        liter_llm::types::RerankRequest {
+            model: v.model.into(),
+            query: v.query.into(),
+            documents: v.documents.into_iter().map(Into::into).collect(),
+            top_n: v.top_n.map(|x| x as _),
+            return_documents: v.return_documents.map(|x| x as _),
+        }
+    }
+}
+
+impl From<SearchRequest> for liter_llm::types::SearchRequest {
+    fn from(v: SearchRequest) -> Self {
+        liter_llm::types::SearchRequest {
+            model: v.model.into(),
+            query: v.query.into(),
+            max_results: v.max_results.map(|x| x as _),
+            search_domain_filter: v
+                .search_domain_filter
+                .map(|vec| vec.into_iter().map(Into::into).collect()),
+            country: v.country.map(Into::into),
+        }
+    }
+}
+
+impl From<OcrRequest> for liter_llm::types::OcrRequest {
+    fn from(v: OcrRequest) -> Self {
+        liter_llm::types::OcrRequest {
+            model: v.model.into(),
+            document: v.document.into(),
+            pages: v.pages.map(|vec| vec.into_iter().map(|x| x as _).collect()),
+            include_image_base64: v.include_image_base64.map(|x| x as _),
+        }
+    }
+}
+
+impl From<FileListQuery> for liter_llm::types::FileListQuery {
+    fn from(v: FileListQuery) -> Self {
+        liter_llm::types::FileListQuery {
+            purpose: v.purpose.map(Into::into),
+            limit: v.limit.map(|x| x as _),
+            after: v.after.map(Into::into),
+        }
+    }
+}
+
+impl From<CreateBatchRequest> for liter_llm::types::CreateBatchRequest {
+    fn from(v: CreateBatchRequest) -> Self {
+        liter_llm::types::CreateBatchRequest {
+            input_file_id: v.input_file_id.into(),
+            endpoint: v.endpoint.into(),
+            completion_window: v.completion_window.into(),
+            metadata: v.metadata.as_deref().and_then(|s| serde_json::from_str(s).ok()),
+        }
+    }
+}
+
+impl From<BatchListQuery> for liter_llm::types::BatchListQuery {
+    fn from(v: BatchListQuery) -> Self {
+        liter_llm::types::BatchListQuery {
+            limit: v.limit.map(|x| x as _),
+            after: v.after.map(Into::into),
+        }
+    }
+}
+
+impl From<CreateResponseRequest> for liter_llm::types::CreateResponseRequest {
+    fn from(v: CreateResponseRequest) -> Self {
+        liter_llm::types::CreateResponseRequest {
+            model: v.model.into(),
+            input: serde_json::from_str(&v.input).unwrap_or_default(),
+            instructions: v.instructions.map(Into::into),
+            tools: v.tools.map(|vec| vec.into_iter().map(Into::into).collect()),
+            temperature: v.temperature.map(|x| x as _),
+            max_output_tokens: v.max_output_tokens.map(|x| x as _),
+            metadata: v.metadata.as_deref().and_then(|s| serde_json::from_str(s).ok()),
+        }
+    }
+}
+
+impl From<ResponseTool> for liter_llm::types::ResponseTool {
+    fn from(v: ResponseTool) -> Self {
+        liter_llm::types::ResponseTool {
+            tool_type: v.tool_type.into(),
+            config: serde_json::from_str(&v.config).unwrap_or_default(),
+        }
+    }
+}
+
+impl From<Message> for liter_llm::types::Message {
+    fn from(v: Message) -> Self {
+        match v {
+            Message::System { field0 } => liter_llm::types::Message::System(field0.into()),
+            Message::User { field0 } => liter_llm::types::Message::User(field0.into()),
+            Message::Assistant { field0 } => liter_llm::types::Message::Assistant(field0.into()),
+            Message::Tool { field0 } => liter_llm::types::Message::Tool(field0.into()),
+            Message::Developer { field0 } => liter_llm::types::Message::Developer(field0.into()),
+            Message::Function { field0 } => liter_llm::types::Message::Function(field0.into()),
+        }
+    }
+}
+
+impl From<UserContent> for liter_llm::types::UserContent {
+    fn from(v: UserContent) -> Self {
+        match v {
+            UserContent::Text { field0 } => liter_llm::types::UserContent::Text(field0.into()),
+            UserContent::Parts { field0 } => {
+                liter_llm::types::UserContent::Parts(field0.into_iter().map(Into::into).collect())
+            }
+        }
+    }
+}
+
+impl From<ContentPart> for liter_llm::types::ContentPart {
+    fn from(v: ContentPart) -> Self {
+        match v {
+            ContentPart::Text { text } => liter_llm::types::ContentPart::Text { text: text.into() },
+            ContentPart::ImageUrl { image_url } => liter_llm::types::ContentPart::ImageUrl {
+                image_url: image_url.into(),
+            },
+            ContentPart::Document { document } => liter_llm::types::ContentPart::Document {
+                document: document.into(),
+            },
+            ContentPart::InputAudio { input_audio } => liter_llm::types::ContentPart::InputAudio {
+                input_audio: input_audio.into(),
+            },
+        }
+    }
+}
+
+impl From<ImageDetail> for liter_llm::types::ImageDetail {
+    fn from(v: ImageDetail) -> Self {
+        match v {
+            ImageDetail::Low => liter_llm::types::ImageDetail::Low,
+            ImageDetail::High => liter_llm::types::ImageDetail::High,
+            ImageDetail::Auto => liter_llm::types::ImageDetail::Auto,
+        }
+    }
+}
+
+impl From<ToolType> for liter_llm::types::ToolType {
+    fn from(v: ToolType) -> Self {
+        match v {
+            ToolType::Function => liter_llm::types::ToolType::Function,
+        }
+    }
+}
+
+impl From<ToolChoice> for liter_llm::types::ToolChoice {
+    fn from(v: ToolChoice) -> Self {
+        match v {
+            ToolChoice::Mode { field0 } => liter_llm::types::ToolChoice::Mode(field0.into()),
+            ToolChoice::Specific { field0 } => liter_llm::types::ToolChoice::Specific(field0.into()),
+        }
+    }
+}
+
+impl From<ToolChoiceMode> for liter_llm::types::ToolChoiceMode {
+    fn from(v: ToolChoiceMode) -> Self {
+        match v {
+            ToolChoiceMode::Auto => liter_llm::types::ToolChoiceMode::Auto,
+            ToolChoiceMode::Required => liter_llm::types::ToolChoiceMode::Required,
+            ToolChoiceMode::None => liter_llm::types::ToolChoiceMode::None,
+        }
+    }
+}
+
+impl From<ResponseFormat> for liter_llm::types::ResponseFormat {
+    fn from(v: ResponseFormat) -> Self {
+        match v {
+            ResponseFormat::Text => liter_llm::types::ResponseFormat::Text,
+            ResponseFormat::JsonObject => liter_llm::types::ResponseFormat::JsonObject,
+            ResponseFormat::JsonSchema { json_schema } => liter_llm::types::ResponseFormat::JsonSchema {
+                json_schema: json_schema.into(),
+            },
+        }
+    }
+}
+
+impl From<StopSequence> for liter_llm::types::StopSequence {
+    fn from(v: StopSequence) -> Self {
+        match v {
+            StopSequence::Single { field0 } => liter_llm::types::StopSequence::Single(field0.into()),
+            StopSequence::Multiple { field0 } => {
+                liter_llm::types::StopSequence::Multiple(field0.into_iter().map(|x| x as _).collect())
+            }
+        }
+    }
+}
+
+impl From<ReasoningEffort> for liter_llm::types::ReasoningEffort {
+    fn from(v: ReasoningEffort) -> Self {
+        match v {
+            ReasoningEffort::Low => liter_llm::types::ReasoningEffort::Low,
+            ReasoningEffort::Medium => liter_llm::types::ReasoningEffort::Medium,
+            ReasoningEffort::High => liter_llm::types::ReasoningEffort::High,
+        }
+    }
+}
+
+impl From<EmbeddingFormat> for liter_llm::types::EmbeddingFormat {
+    fn from(v: EmbeddingFormat) -> Self {
+        match v {
+            EmbeddingFormat::Float => liter_llm::types::EmbeddingFormat::Float,
+            EmbeddingFormat::Base64 => liter_llm::types::EmbeddingFormat::Base64,
+        }
+    }
+}
+
+impl From<EmbeddingInput> for liter_llm::types::EmbeddingInput {
+    fn from(v: EmbeddingInput) -> Self {
+        match v {
+            EmbeddingInput::Single { field0 } => liter_llm::types::EmbeddingInput::Single(field0.into()),
+            EmbeddingInput::Multiple { field0 } => {
+                liter_llm::types::EmbeddingInput::Multiple(field0.into_iter().map(|x| x as _).collect())
+            }
+        }
+    }
+}
+
+impl From<RerankDocument> for liter_llm::types::RerankDocument {
+    fn from(v: RerankDocument) -> Self {
+        match v {
+            RerankDocument::Text { field0 } => liter_llm::types::RerankDocument::Text(field0.into()),
+            RerankDocument::Object { text } => liter_llm::types::RerankDocument::Object { text: text.into() },
+        }
+    }
+}
+
+impl From<OcrDocument> for liter_llm::types::OcrDocument {
+    fn from(v: OcrDocument) -> Self {
+        match v {
+            OcrDocument::Url { url } => liter_llm::types::OcrDocument::Url { url: url.into() },
+            OcrDocument::Base64 { data, media_type } => liter_llm::types::OcrDocument::Base64 {
+                data: data.into(),
+                media_type: media_type.into(),
+            },
+        }
+    }
+}
+
 /// Create a new LLM client with simple scalar configuration.
 ///
 /// This is the primary binding entry-point. All parameters except `api_key`
@@ -1838,5 +2484,511 @@ pub fn register_custom_provider(config: CustomProviderConfig) -> Result<(), Stri
 pub fn unregister_custom_provider(name: String) -> Result<bool, String> {
     liter_llm::provider::custom::unregister_custom_provider(&name)
         .map(|v| v as bool)
+        .map_err(|e| e.to_string())
+}
+
+// `create_<Type>_from_json` helpers — deserialize a JSON string into a mirror type.
+
+#[frb]
+pub fn create_system_message_from_json(json: String) -> Result<SystemMessage, String> {
+    serde_json::from_str::<liter_llm::types::SystemMessage>(&json)
+        .map(SystemMessage::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_user_message_from_json(json: String) -> Result<UserMessage, String> {
+    serde_json::from_str::<liter_llm::types::UserMessage>(&json)
+        .map(UserMessage::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_image_url_from_json(json: String) -> Result<ImageUrl, String> {
+    serde_json::from_str::<liter_llm::types::ImageUrl>(&json)
+        .map(ImageUrl::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_document_content_from_json(json: String) -> Result<DocumentContent, String> {
+    serde_json::from_str::<liter_llm::types::DocumentContent>(&json)
+        .map(DocumentContent::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_audio_content_from_json(json: String) -> Result<AudioContent, String> {
+    serde_json::from_str::<liter_llm::types::AudioContent>(&json)
+        .map(AudioContent::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_assistant_message_from_json(json: String) -> Result<AssistantMessage, String> {
+    serde_json::from_str::<liter_llm::types::AssistantMessage>(&json)
+        .map(AssistantMessage::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_tool_message_from_json(json: String) -> Result<ToolMessage, String> {
+    serde_json::from_str::<liter_llm::types::ToolMessage>(&json)
+        .map(ToolMessage::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_developer_message_from_json(json: String) -> Result<DeveloperMessage, String> {
+    serde_json::from_str::<liter_llm::types::DeveloperMessage>(&json)
+        .map(DeveloperMessage::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_function_message_from_json(json: String) -> Result<FunctionMessage, String> {
+    serde_json::from_str::<liter_llm::types::FunctionMessage>(&json)
+        .map(FunctionMessage::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_chat_completion_tool_from_json(json: String) -> Result<ChatCompletionTool, String> {
+    serde_json::from_str::<liter_llm::types::ChatCompletionTool>(&json)
+        .map(ChatCompletionTool::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_function_definition_from_json(json: String) -> Result<FunctionDefinition, String> {
+    serde_json::from_str::<liter_llm::types::FunctionDefinition>(&json)
+        .map(FunctionDefinition::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_tool_call_from_json(json: String) -> Result<ToolCall, String> {
+    serde_json::from_str::<liter_llm::types::ToolCall>(&json)
+        .map(ToolCall::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_function_call_from_json(json: String) -> Result<FunctionCall, String> {
+    serde_json::from_str::<liter_llm::types::FunctionCall>(&json)
+        .map(FunctionCall::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_specific_tool_choice_from_json(json: String) -> Result<SpecificToolChoice, String> {
+    serde_json::from_str::<liter_llm::types::SpecificToolChoice>(&json)
+        .map(SpecificToolChoice::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_specific_function_from_json(json: String) -> Result<SpecificFunction, String> {
+    serde_json::from_str::<liter_llm::types::SpecificFunction>(&json)
+        .map(SpecificFunction::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_json_schema_format_from_json(json: String) -> Result<JsonSchemaFormat, String> {
+    serde_json::from_str::<liter_llm::types::JsonSchemaFormat>(&json)
+        .map(JsonSchemaFormat::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_usage_from_json(json: String) -> Result<Usage, String> {
+    serde_json::from_str::<liter_llm::types::Usage>(&json)
+        .map(Usage::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_prompt_tokens_details_from_json(json: String) -> Result<PromptTokensDetails, String> {
+    serde_json::from_str::<liter_llm::types::PromptTokensDetails>(&json)
+        .map(PromptTokensDetails::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_chat_completion_request_from_json(json: String) -> Result<ChatCompletionRequest, String> {
+    serde_json::from_str::<liter_llm::types::ChatCompletionRequest>(&json)
+        .map(ChatCompletionRequest::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_stream_options_from_json(json: String) -> Result<StreamOptions, String> {
+    serde_json::from_str::<liter_llm::types::StreamOptions>(&json)
+        .map(StreamOptions::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_chat_completion_response_from_json(json: String) -> Result<ChatCompletionResponse, String> {
+    serde_json::from_str::<liter_llm::types::ChatCompletionResponse>(&json)
+        .map(ChatCompletionResponse::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_choice_from_json(json: String) -> Result<Choice, String> {
+    serde_json::from_str::<liter_llm::types::Choice>(&json)
+        .map(Choice::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_chat_completion_chunk_from_json(json: String) -> Result<ChatCompletionChunk, String> {
+    serde_json::from_str::<liter_llm::types::ChatCompletionChunk>(&json)
+        .map(ChatCompletionChunk::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_stream_choice_from_json(json: String) -> Result<StreamChoice, String> {
+    serde_json::from_str::<liter_llm::types::StreamChoice>(&json)
+        .map(StreamChoice::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_stream_delta_from_json(json: String) -> Result<StreamDelta, String> {
+    serde_json::from_str::<liter_llm::types::StreamDelta>(&json)
+        .map(StreamDelta::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_stream_tool_call_from_json(json: String) -> Result<StreamToolCall, String> {
+    serde_json::from_str::<liter_llm::types::StreamToolCall>(&json)
+        .map(StreamToolCall::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_stream_function_call_from_json(json: String) -> Result<StreamFunctionCall, String> {
+    serde_json::from_str::<liter_llm::types::StreamFunctionCall>(&json)
+        .map(StreamFunctionCall::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_embedding_request_from_json(json: String) -> Result<EmbeddingRequest, String> {
+    serde_json::from_str::<liter_llm::types::EmbeddingRequest>(&json)
+        .map(EmbeddingRequest::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_embedding_response_from_json(json: String) -> Result<EmbeddingResponse, String> {
+    serde_json::from_str::<liter_llm::types::EmbeddingResponse>(&json)
+        .map(EmbeddingResponse::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_embedding_object_from_json(json: String) -> Result<EmbeddingObject, String> {
+    serde_json::from_str::<liter_llm::types::EmbeddingObject>(&json)
+        .map(EmbeddingObject::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_create_image_request_from_json(json: String) -> Result<CreateImageRequest, String> {
+    serde_json::from_str::<liter_llm::types::CreateImageRequest>(&json)
+        .map(CreateImageRequest::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_images_response_from_json(json: String) -> Result<ImagesResponse, String> {
+    serde_json::from_str::<liter_llm::types::ImagesResponse>(&json)
+        .map(ImagesResponse::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_image_from_json(json: String) -> Result<Image, String> {
+    serde_json::from_str::<liter_llm::types::Image>(&json)
+        .map(Image::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_create_speech_request_from_json(json: String) -> Result<CreateSpeechRequest, String> {
+    serde_json::from_str::<liter_llm::types::CreateSpeechRequest>(&json)
+        .map(CreateSpeechRequest::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_create_transcription_request_from_json(json: String) -> Result<CreateTranscriptionRequest, String> {
+    serde_json::from_str::<liter_llm::types::CreateTranscriptionRequest>(&json)
+        .map(CreateTranscriptionRequest::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_transcription_response_from_json(json: String) -> Result<TranscriptionResponse, String> {
+    serde_json::from_str::<liter_llm::types::TranscriptionResponse>(&json)
+        .map(TranscriptionResponse::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_transcription_segment_from_json(json: String) -> Result<TranscriptionSegment, String> {
+    serde_json::from_str::<liter_llm::types::TranscriptionSegment>(&json)
+        .map(TranscriptionSegment::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_moderation_request_from_json(json: String) -> Result<ModerationRequest, String> {
+    serde_json::from_str::<liter_llm::types::ModerationRequest>(&json)
+        .map(ModerationRequest::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_moderation_response_from_json(json: String) -> Result<ModerationResponse, String> {
+    serde_json::from_str::<liter_llm::types::ModerationResponse>(&json)
+        .map(ModerationResponse::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_moderation_result_from_json(json: String) -> Result<ModerationResult, String> {
+    serde_json::from_str::<liter_llm::types::ModerationResult>(&json)
+        .map(ModerationResult::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_moderation_categories_from_json(json: String) -> Result<ModerationCategories, String> {
+    serde_json::from_str::<liter_llm::types::ModerationCategories>(&json)
+        .map(ModerationCategories::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_moderation_category_scores_from_json(json: String) -> Result<ModerationCategoryScores, String> {
+    serde_json::from_str::<liter_llm::types::ModerationCategoryScores>(&json)
+        .map(ModerationCategoryScores::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_rerank_request_from_json(json: String) -> Result<RerankRequest, String> {
+    serde_json::from_str::<liter_llm::types::RerankRequest>(&json)
+        .map(RerankRequest::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_rerank_response_from_json(json: String) -> Result<RerankResponse, String> {
+    serde_json::from_str::<liter_llm::types::RerankResponse>(&json)
+        .map(RerankResponse::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_rerank_result_from_json(json: String) -> Result<RerankResult, String> {
+    serde_json::from_str::<liter_llm::types::RerankResult>(&json)
+        .map(RerankResult::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_rerank_result_document_from_json(json: String) -> Result<RerankResultDocument, String> {
+    serde_json::from_str::<liter_llm::types::RerankResultDocument>(&json)
+        .map(RerankResultDocument::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_search_request_from_json(json: String) -> Result<SearchRequest, String> {
+    serde_json::from_str::<liter_llm::types::SearchRequest>(&json)
+        .map(SearchRequest::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_search_response_from_json(json: String) -> Result<SearchResponse, String> {
+    serde_json::from_str::<liter_llm::types::SearchResponse>(&json)
+        .map(SearchResponse::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_search_result_from_json(json: String) -> Result<SearchResult, String> {
+    serde_json::from_str::<liter_llm::types::SearchResult>(&json)
+        .map(SearchResult::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_ocr_request_from_json(json: String) -> Result<OcrRequest, String> {
+    serde_json::from_str::<liter_llm::types::OcrRequest>(&json)
+        .map(OcrRequest::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_ocr_response_from_json(json: String) -> Result<OcrResponse, String> {
+    serde_json::from_str::<liter_llm::types::OcrResponse>(&json)
+        .map(OcrResponse::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_ocr_page_from_json(json: String) -> Result<OcrPage, String> {
+    serde_json::from_str::<liter_llm::types::OcrPage>(&json)
+        .map(OcrPage::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_ocr_image_from_json(json: String) -> Result<OcrImage, String> {
+    serde_json::from_str::<liter_llm::types::OcrImage>(&json)
+        .map(OcrImage::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_page_dimensions_from_json(json: String) -> Result<PageDimensions, String> {
+    serde_json::from_str::<liter_llm::types::PageDimensions>(&json)
+        .map(PageDimensions::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_models_list_response_from_json(json: String) -> Result<ModelsListResponse, String> {
+    serde_json::from_str::<liter_llm::types::ModelsListResponse>(&json)
+        .map(ModelsListResponse::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_model_object_from_json(json: String) -> Result<ModelObject, String> {
+    serde_json::from_str::<liter_llm::types::ModelObject>(&json)
+        .map(ModelObject::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_create_file_request_from_json(json: String) -> Result<CreateFileRequest, String> {
+    serde_json::from_str::<liter_llm::types::CreateFileRequest>(&json)
+        .map(CreateFileRequest::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_file_object_from_json(json: String) -> Result<FileObject, String> {
+    serde_json::from_str::<liter_llm::types::FileObject>(&json)
+        .map(FileObject::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_file_list_response_from_json(json: String) -> Result<FileListResponse, String> {
+    serde_json::from_str::<liter_llm::types::FileListResponse>(&json)
+        .map(FileListResponse::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_file_list_query_from_json(json: String) -> Result<FileListQuery, String> {
+    serde_json::from_str::<liter_llm::types::FileListQuery>(&json)
+        .map(FileListQuery::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_delete_response_from_json(json: String) -> Result<DeleteResponse, String> {
+    serde_json::from_str::<liter_llm::types::DeleteResponse>(&json)
+        .map(DeleteResponse::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_create_batch_request_from_json(json: String) -> Result<CreateBatchRequest, String> {
+    serde_json::from_str::<liter_llm::types::CreateBatchRequest>(&json)
+        .map(CreateBatchRequest::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_batch_object_from_json(json: String) -> Result<BatchObject, String> {
+    serde_json::from_str::<liter_llm::types::BatchObject>(&json)
+        .map(BatchObject::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_batch_request_counts_from_json(json: String) -> Result<BatchRequestCounts, String> {
+    serde_json::from_str::<liter_llm::types::BatchRequestCounts>(&json)
+        .map(BatchRequestCounts::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_batch_list_response_from_json(json: String) -> Result<BatchListResponse, String> {
+    serde_json::from_str::<liter_llm::types::BatchListResponse>(&json)
+        .map(BatchListResponse::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_batch_list_query_from_json(json: String) -> Result<BatchListQuery, String> {
+    serde_json::from_str::<liter_llm::types::BatchListQuery>(&json)
+        .map(BatchListQuery::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_create_response_request_from_json(json: String) -> Result<CreateResponseRequest, String> {
+    serde_json::from_str::<liter_llm::types::CreateResponseRequest>(&json)
+        .map(CreateResponseRequest::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_response_tool_from_json(json: String) -> Result<ResponseTool, String> {
+    serde_json::from_str::<liter_llm::types::ResponseTool>(&json)
+        .map(ResponseTool::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_response_object_from_json(json: String) -> Result<ResponseObject, String> {
+    serde_json::from_str::<liter_llm::types::ResponseObject>(&json)
+        .map(ResponseObject::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_response_output_item_from_json(json: String) -> Result<ResponseOutputItem, String> {
+    serde_json::from_str::<liter_llm::types::ResponseOutputItem>(&json)
+        .map(ResponseOutputItem::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_response_usage_from_json(json: String) -> Result<ResponseUsage, String> {
+    serde_json::from_str::<liter_llm::types::ResponseUsage>(&json)
+        .map(ResponseUsage::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String> {
+    serde_json::from_str::<liter_llm::provider::custom::CustomProviderConfig>(&json)
+        .map(CustomProviderConfig::from)
         .map_err(|e| e.to_string())
 }

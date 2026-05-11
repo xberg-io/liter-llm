@@ -29,6 +29,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   DefaultClient
+      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+          dynamic raw);
+
+  @protected
+  Map<String, double> dco_decode_Map_String_f_64_None(dynamic raw);
+
+  @protected
+  DefaultClient
       dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
           dynamic raw);
 
@@ -36,41 +44,622 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String dco_decode_String(dynamic raw);
 
   @protected
+  AssistantMessage dco_decode_assistant_message(dynamic raw);
+
+  @protected
+  AudioContent dco_decode_audio_content(dynamic raw);
+
+  @protected
   AuthHeaderFormat dco_decode_auth_header_format(dynamic raw);
 
   @protected
+  BatchListQuery dco_decode_batch_list_query(dynamic raw);
+
+  @protected
+  BatchListResponse dco_decode_batch_list_response(dynamic raw);
+
+  @protected
+  BatchObject dco_decode_batch_object(dynamic raw);
+
+  @protected
+  BatchRequestCounts dco_decode_batch_request_counts(dynamic raw);
+
+  @protected
+  BatchStatus dco_decode_batch_status(dynamic raw);
+
+  @protected
   bool dco_decode_bool(dynamic raw);
+
+  @protected
+  AssistantMessage dco_decode_box_autoadd_assistant_message(dynamic raw);
+
+  @protected
+  AudioContent dco_decode_box_autoadd_audio_content(dynamic raw);
+
+  @protected
+  BatchListQuery dco_decode_box_autoadd_batch_list_query(dynamic raw);
+
+  @protected
+  BatchRequestCounts dco_decode_box_autoadd_batch_request_counts(dynamic raw);
+
+  @protected
+  bool dco_decode_box_autoadd_bool(dynamic raw);
+
+  @protected
+  ChatCompletionRequest dco_decode_box_autoadd_chat_completion_request(
+      dynamic raw);
+
+  @protected
+  CreateBatchRequest dco_decode_box_autoadd_create_batch_request(dynamic raw);
+
+  @protected
+  CreateFileRequest dco_decode_box_autoadd_create_file_request(dynamic raw);
+
+  @protected
+  CreateImageRequest dco_decode_box_autoadd_create_image_request(dynamic raw);
+
+  @protected
+  CreateResponseRequest dco_decode_box_autoadd_create_response_request(
+      dynamic raw);
+
+  @protected
+  CreateSpeechRequest dco_decode_box_autoadd_create_speech_request(dynamic raw);
+
+  @protected
+  CreateTranscriptionRequest
+      dco_decode_box_autoadd_create_transcription_request(dynamic raw);
 
   @protected
   CustomProviderConfig dco_decode_box_autoadd_custom_provider_config(
       dynamic raw);
 
   @protected
+  DeveloperMessage dco_decode_box_autoadd_developer_message(dynamic raw);
+
+  @protected
+  DocumentContent dco_decode_box_autoadd_document_content(dynamic raw);
+
+  @protected
+  EmbeddingFormat dco_decode_box_autoadd_embedding_format(dynamic raw);
+
+  @protected
+  EmbeddingRequest dco_decode_box_autoadd_embedding_request(dynamic raw);
+
+  @protected
+  double dco_decode_box_autoadd_f_64(dynamic raw);
+
+  @protected
+  FileListQuery dco_decode_box_autoadd_file_list_query(dynamic raw);
+
+  @protected
+  FinishReason dco_decode_box_autoadd_finish_reason(dynamic raw);
+
+  @protected
+  FunctionCall dco_decode_box_autoadd_function_call(dynamic raw);
+
+  @protected
+  FunctionMessage dco_decode_box_autoadd_function_message(dynamic raw);
+
+  @protected
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
+
+  @protected
+  ImageDetail dco_decode_box_autoadd_image_detail(dynamic raw);
+
+  @protected
+  ImageUrl dco_decode_box_autoadd_image_url(dynamic raw);
+
+  @protected
+  JsonSchemaFormat dco_decode_box_autoadd_json_schema_format(dynamic raw);
+
+  @protected
+  ModerationRequest dco_decode_box_autoadd_moderation_request(dynamic raw);
+
+  @protected
+  OcrRequest dco_decode_box_autoadd_ocr_request(dynamic raw);
+
+  @protected
+  PageDimensions dco_decode_box_autoadd_page_dimensions(dynamic raw);
+
+  @protected
+  PromptTokensDetails dco_decode_box_autoadd_prompt_tokens_details(dynamic raw);
+
+  @protected
+  ReasoningEffort dco_decode_box_autoadd_reasoning_effort(dynamic raw);
+
+  @protected
+  RerankRequest dco_decode_box_autoadd_rerank_request(dynamic raw);
+
+  @protected
+  RerankResultDocument dco_decode_box_autoadd_rerank_result_document(
+      dynamic raw);
+
+  @protected
+  ResponseFormat dco_decode_box_autoadd_response_format(dynamic raw);
+
+  @protected
+  ResponseUsage dco_decode_box_autoadd_response_usage(dynamic raw);
+
+  @protected
+  SearchRequest dco_decode_box_autoadd_search_request(dynamic raw);
+
+  @protected
+  SpecificToolChoice dco_decode_box_autoadd_specific_tool_choice(dynamic raw);
+
+  @protected
+  StopSequence dco_decode_box_autoadd_stop_sequence(dynamic raw);
+
+  @protected
+  StreamFunctionCall dco_decode_box_autoadd_stream_function_call(dynamic raw);
+
+  @protected
+  StreamOptions dco_decode_box_autoadd_stream_options(dynamic raw);
+
+  @protected
+  SystemMessage dco_decode_box_autoadd_system_message(dynamic raw);
+
+  @protected
+  ToolChoice dco_decode_box_autoadd_tool_choice(dynamic raw);
+
+  @protected
+  ToolMessage dco_decode_box_autoadd_tool_message(dynamic raw);
+
+  @protected
+  ToolType dco_decode_box_autoadd_tool_type(dynamic raw);
+
+  @protected
+  Usage dco_decode_box_autoadd_usage(dynamic raw);
+
+  @protected
+  UserMessage dco_decode_box_autoadd_user_message(dynamic raw);
+
+  @protected
+  ChatCompletionChunk dco_decode_chat_completion_chunk(dynamic raw);
+
+  @protected
+  ChatCompletionRequest dco_decode_chat_completion_request(dynamic raw);
+
+  @protected
+  ChatCompletionResponse dco_decode_chat_completion_response(dynamic raw);
+
+  @protected
+  ChatCompletionTool dco_decode_chat_completion_tool(dynamic raw);
+
+  @protected
+  Choice dco_decode_choice(dynamic raw);
+
+  @protected
+  ContentPart dco_decode_content_part(dynamic raw);
+
+  @protected
+  CreateBatchRequest dco_decode_create_batch_request(dynamic raw);
+
+  @protected
+  CreateFileRequest dco_decode_create_file_request(dynamic raw);
+
+  @protected
+  CreateImageRequest dco_decode_create_image_request(dynamic raw);
+
+  @protected
+  CreateResponseRequest dco_decode_create_response_request(dynamic raw);
+
+  @protected
+  CreateSpeechRequest dco_decode_create_speech_request(dynamic raw);
+
+  @protected
+  CreateTranscriptionRequest dco_decode_create_transcription_request(
+      dynamic raw);
 
   @protected
   CustomProviderConfig dco_decode_custom_provider_config(dynamic raw);
 
   @protected
+  DeleteResponse dco_decode_delete_response(dynamic raw);
+
+  @protected
+  DeveloperMessage dco_decode_developer_message(dynamic raw);
+
+  @protected
+  DocumentContent dco_decode_document_content(dynamic raw);
+
+  @protected
+  EmbeddingFormat dco_decode_embedding_format(dynamic raw);
+
+  @protected
+  EmbeddingInput dco_decode_embedding_input(dynamic raw);
+
+  @protected
+  EmbeddingObject dco_decode_embedding_object(dynamic raw);
+
+  @protected
+  EmbeddingRequest dco_decode_embedding_request(dynamic raw);
+
+  @protected
+  EmbeddingResponse dco_decode_embedding_response(dynamic raw);
+
+  @protected
+  double dco_decode_f_64(dynamic raw);
+
+  @protected
+  FileListQuery dco_decode_file_list_query(dynamic raw);
+
+  @protected
+  FileListResponse dco_decode_file_list_response(dynamic raw);
+
+  @protected
+  FileObject dco_decode_file_object(dynamic raw);
+
+  @protected
+  FilePurpose dco_decode_file_purpose(dynamic raw);
+
+  @protected
+  FinishReason dco_decode_finish_reason(dynamic raw);
+
+  @protected
+  FunctionCall dco_decode_function_call(dynamic raw);
+
+  @protected
+  FunctionDefinition dco_decode_function_definition(dynamic raw);
+
+  @protected
+  FunctionMessage dco_decode_function_message(dynamic raw);
+
+  @protected
+  int dco_decode_i_32(dynamic raw);
+
+  @protected
   PlatformInt64 dco_decode_i_64(dynamic raw);
+
+  @protected
+  Image dco_decode_image(dynamic raw);
+
+  @protected
+  ImageDetail dco_decode_image_detail(dynamic raw);
+
+  @protected
+  ImageUrl dco_decode_image_url(dynamic raw);
+
+  @protected
+  ImagesResponse dco_decode_images_response(dynamic raw);
+
+  @protected
+  JsonSchemaFormat dco_decode_json_schema_format(dynamic raw);
 
   @protected
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
+  List<BatchObject> dco_decode_list_batch_object(dynamic raw);
+
+  @protected
+  List<ChatCompletionTool> dco_decode_list_chat_completion_tool(dynamic raw);
+
+  @protected
+  List<Choice> dco_decode_list_choice(dynamic raw);
+
+  @protected
+  List<ContentPart> dco_decode_list_content_part(dynamic raw);
+
+  @protected
+  List<EmbeddingObject> dco_decode_list_embedding_object(dynamic raw);
+
+  @protected
+  List<FileObject> dco_decode_list_file_object(dynamic raw);
+
+  @protected
+  List<Image> dco_decode_list_image(dynamic raw);
+
+  @protected
+  List<Message> dco_decode_list_message(dynamic raw);
+
+  @protected
+  List<ModelObject> dco_decode_list_model_object(dynamic raw);
+
+  @protected
+  List<ModerationResult> dco_decode_list_moderation_result(dynamic raw);
+
+  @protected
+  List<OcrImage> dco_decode_list_ocr_image(dynamic raw);
+
+  @protected
+  List<OcrPage> dco_decode_list_ocr_page(dynamic raw);
+
+  @protected
+  Float64List dco_decode_list_prim_f_64_strict(dynamic raw);
+
+  @protected
+  Int64List dco_decode_list_prim_i_64_strict(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  List<(String, double)> dco_decode_list_record_string_f_64(dynamic raw);
+
+  @protected
+  List<RerankDocument> dco_decode_list_rerank_document(dynamic raw);
+
+  @protected
+  List<RerankResult> dco_decode_list_rerank_result(dynamic raw);
+
+  @protected
+  List<ResponseOutputItem> dco_decode_list_response_output_item(dynamic raw);
+
+  @protected
+  List<ResponseTool> dco_decode_list_response_tool(dynamic raw);
+
+  @protected
+  List<SearchResult> dco_decode_list_search_result(dynamic raw);
+
+  @protected
+  List<StreamChoice> dco_decode_list_stream_choice(dynamic raw);
+
+  @protected
+  List<StreamToolCall> dco_decode_list_stream_tool_call(dynamic raw);
+
+  @protected
+  List<ToolCall> dco_decode_list_tool_call(dynamic raw);
+
+  @protected
+  List<TranscriptionSegment> dco_decode_list_transcription_segment(dynamic raw);
+
+  @protected
+  Message dco_decode_message(dynamic raw);
+
+  @protected
+  ModelObject dco_decode_model_object(dynamic raw);
+
+  @protected
+  ModelsListResponse dco_decode_models_list_response(dynamic raw);
+
+  @protected
+  ModerationCategories dco_decode_moderation_categories(dynamic raw);
+
+  @protected
+  ModerationCategoryScores dco_decode_moderation_category_scores(dynamic raw);
+
+  @protected
+  ModerationInput dco_decode_moderation_input(dynamic raw);
+
+  @protected
+  ModerationRequest dco_decode_moderation_request(dynamic raw);
+
+  @protected
+  ModerationResponse dco_decode_moderation_response(dynamic raw);
+
+  @protected
+  ModerationResult dco_decode_moderation_result(dynamic raw);
+
+  @protected
+  OcrDocument dco_decode_ocr_document(dynamic raw);
+
+  @protected
+  OcrImage dco_decode_ocr_image(dynamic raw);
+
+  @protected
+  OcrPage dco_decode_ocr_page(dynamic raw);
+
+  @protected
+  OcrRequest dco_decode_ocr_request(dynamic raw);
+
+  @protected
+  OcrResponse dco_decode_ocr_response(dynamic raw);
+
+  @protected
+  Map<String, double>? dco_decode_opt_Map_String_f_64_None(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
 
   @protected
+  BatchListQuery? dco_decode_opt_box_autoadd_batch_list_query(dynamic raw);
+
+  @protected
+  BatchRequestCounts? dco_decode_opt_box_autoadd_batch_request_counts(
+      dynamic raw);
+
+  @protected
+  bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
+
+  @protected
+  EmbeddingFormat? dco_decode_opt_box_autoadd_embedding_format(dynamic raw);
+
+  @protected
+  double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
+
+  @protected
+  FileListQuery? dco_decode_opt_box_autoadd_file_list_query(dynamic raw);
+
+  @protected
+  FinishReason? dco_decode_opt_box_autoadd_finish_reason(dynamic raw);
+
+  @protected
+  FunctionCall? dco_decode_opt_box_autoadd_function_call(dynamic raw);
+
+  @protected
   PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
+
+  @protected
+  ImageDetail? dco_decode_opt_box_autoadd_image_detail(dynamic raw);
+
+  @protected
+  PageDimensions? dco_decode_opt_box_autoadd_page_dimensions(dynamic raw);
+
+  @protected
+  PromptTokensDetails? dco_decode_opt_box_autoadd_prompt_tokens_details(
+      dynamic raw);
+
+  @protected
+  ReasoningEffort? dco_decode_opt_box_autoadd_reasoning_effort(dynamic raw);
+
+  @protected
+  RerankResultDocument? dco_decode_opt_box_autoadd_rerank_result_document(
+      dynamic raw);
+
+  @protected
+  ResponseFormat? dco_decode_opt_box_autoadd_response_format(dynamic raw);
+
+  @protected
+  ResponseUsage? dco_decode_opt_box_autoadd_response_usage(dynamic raw);
+
+  @protected
+  StopSequence? dco_decode_opt_box_autoadd_stop_sequence(dynamic raw);
+
+  @protected
+  StreamFunctionCall? dco_decode_opt_box_autoadd_stream_function_call(
+      dynamic raw);
+
+  @protected
+  StreamOptions? dco_decode_opt_box_autoadd_stream_options(dynamic raw);
+
+  @protected
+  ToolChoice? dco_decode_opt_box_autoadd_tool_choice(dynamic raw);
+
+  @protected
+  ToolType? dco_decode_opt_box_autoadd_tool_type(dynamic raw);
+
+  @protected
+  Usage? dco_decode_opt_box_autoadd_usage(dynamic raw);
+
+  @protected
+  List<String>? dco_decode_opt_list_String(dynamic raw);
+
+  @protected
+  List<ChatCompletionTool>? dco_decode_opt_list_chat_completion_tool(
+      dynamic raw);
+
+  @protected
+  List<OcrImage>? dco_decode_opt_list_ocr_image(dynamic raw);
+
+  @protected
+  Int64List? dco_decode_opt_list_prim_i_64_strict(dynamic raw);
+
+  @protected
+  List<ResponseTool>? dco_decode_opt_list_response_tool(dynamic raw);
+
+  @protected
+  List<StreamToolCall>? dco_decode_opt_list_stream_tool_call(dynamic raw);
+
+  @protected
+  List<ToolCall>? dco_decode_opt_list_tool_call(dynamic raw);
+
+  @protected
+  List<TranscriptionSegment>? dco_decode_opt_list_transcription_segment(
+      dynamic raw);
+
+  @protected
+  PageDimensions dco_decode_page_dimensions(dynamic raw);
+
+  @protected
+  PromptTokensDetails dco_decode_prompt_tokens_details(dynamic raw);
+
+  @protected
+  ReasoningEffort dco_decode_reasoning_effort(dynamic raw);
+
+  @protected
+  (String, double) dco_decode_record_string_f_64(dynamic raw);
+
+  @protected
+  RerankDocument dco_decode_rerank_document(dynamic raw);
+
+  @protected
+  RerankRequest dco_decode_rerank_request(dynamic raw);
+
+  @protected
+  RerankResponse dco_decode_rerank_response(dynamic raw);
+
+  @protected
+  RerankResult dco_decode_rerank_result(dynamic raw);
+
+  @protected
+  RerankResultDocument dco_decode_rerank_result_document(dynamic raw);
+
+  @protected
+  ResponseFormat dco_decode_response_format(dynamic raw);
+
+  @protected
+  ResponseObject dco_decode_response_object(dynamic raw);
+
+  @protected
+  ResponseOutputItem dco_decode_response_output_item(dynamic raw);
+
+  @protected
+  ResponseTool dco_decode_response_tool(dynamic raw);
+
+  @protected
+  ResponseUsage dco_decode_response_usage(dynamic raw);
+
+  @protected
+  SearchRequest dco_decode_search_request(dynamic raw);
+
+  @protected
+  SearchResponse dco_decode_search_response(dynamic raw);
+
+  @protected
+  SearchResult dco_decode_search_result(dynamic raw);
+
+  @protected
+  SpecificFunction dco_decode_specific_function(dynamic raw);
+
+  @protected
+  SpecificToolChoice dco_decode_specific_tool_choice(dynamic raw);
+
+  @protected
+  StopSequence dco_decode_stop_sequence(dynamic raw);
+
+  @protected
+  StreamChoice dco_decode_stream_choice(dynamic raw);
+
+  @protected
+  StreamDelta dco_decode_stream_delta(dynamic raw);
+
+  @protected
+  StreamFunctionCall dco_decode_stream_function_call(dynamic raw);
+
+  @protected
+  StreamOptions dco_decode_stream_options(dynamic raw);
+
+  @protected
+  StreamToolCall dco_decode_stream_tool_call(dynamic raw);
+
+  @protected
+  SystemMessage dco_decode_system_message(dynamic raw);
+
+  @protected
+  ToolCall dco_decode_tool_call(dynamic raw);
+
+  @protected
+  ToolChoice dco_decode_tool_choice(dynamic raw);
+
+  @protected
+  ToolChoiceMode dco_decode_tool_choice_mode(dynamic raw);
+
+  @protected
+  ToolMessage dco_decode_tool_message(dynamic raw);
+
+  @protected
+  ToolType dco_decode_tool_type(dynamic raw);
+
+  @protected
+  TranscriptionResponse dco_decode_transcription_response(dynamic raw);
+
+  @protected
+  TranscriptionSegment dco_decode_transcription_segment(dynamic raw);
 
   @protected
   int dco_decode_u_8(dynamic raw);
 
   @protected
   void dco_decode_unit(dynamic raw);
+
+  @protected
+  Usage dco_decode_usage(dynamic raw);
+
+  @protected
+  UserContent dco_decode_user_content(dynamic raw);
+
+  @protected
+  UserMessage dco_decode_user_message(dynamic raw);
 
   @protected
   BigInt dco_decode_usize(dynamic raw);
@@ -82,6 +671,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   DefaultClient
+      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+          SseDeserializer deserializer);
+
+  @protected
+  Map<String, double> sse_decode_Map_String_f_64_None(
+      SseDeserializer deserializer);
+
+  @protected
+  DefaultClient
       sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
           SseDeserializer deserializer);
 
@@ -89,36 +687,690 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
+  AssistantMessage sse_decode_assistant_message(SseDeserializer deserializer);
+
+  @protected
+  AudioContent sse_decode_audio_content(SseDeserializer deserializer);
+
+  @protected
   AuthHeaderFormat sse_decode_auth_header_format(SseDeserializer deserializer);
 
   @protected
+  BatchListQuery sse_decode_batch_list_query(SseDeserializer deserializer);
+
+  @protected
+  BatchListResponse sse_decode_batch_list_response(
+      SseDeserializer deserializer);
+
+  @protected
+  BatchObject sse_decode_batch_object(SseDeserializer deserializer);
+
+  @protected
+  BatchRequestCounts sse_decode_batch_request_counts(
+      SseDeserializer deserializer);
+
+  @protected
+  BatchStatus sse_decode_batch_status(SseDeserializer deserializer);
+
+  @protected
   bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
+  AssistantMessage sse_decode_box_autoadd_assistant_message(
+      SseDeserializer deserializer);
+
+  @protected
+  AudioContent sse_decode_box_autoadd_audio_content(
+      SseDeserializer deserializer);
+
+  @protected
+  BatchListQuery sse_decode_box_autoadd_batch_list_query(
+      SseDeserializer deserializer);
+
+  @protected
+  BatchRequestCounts sse_decode_box_autoadd_batch_request_counts(
+      SseDeserializer deserializer);
+
+  @protected
+  bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
+  ChatCompletionRequest sse_decode_box_autoadd_chat_completion_request(
+      SseDeserializer deserializer);
+
+  @protected
+  CreateBatchRequest sse_decode_box_autoadd_create_batch_request(
+      SseDeserializer deserializer);
+
+  @protected
+  CreateFileRequest sse_decode_box_autoadd_create_file_request(
+      SseDeserializer deserializer);
+
+  @protected
+  CreateImageRequest sse_decode_box_autoadd_create_image_request(
+      SseDeserializer deserializer);
+
+  @protected
+  CreateResponseRequest sse_decode_box_autoadd_create_response_request(
+      SseDeserializer deserializer);
+
+  @protected
+  CreateSpeechRequest sse_decode_box_autoadd_create_speech_request(
+      SseDeserializer deserializer);
+
+  @protected
+  CreateTranscriptionRequest
+      sse_decode_box_autoadd_create_transcription_request(
+          SseDeserializer deserializer);
 
   @protected
   CustomProviderConfig sse_decode_box_autoadd_custom_provider_config(
       SseDeserializer deserializer);
 
   @protected
+  DeveloperMessage sse_decode_box_autoadd_developer_message(
+      SseDeserializer deserializer);
+
+  @protected
+  DocumentContent sse_decode_box_autoadd_document_content(
+      SseDeserializer deserializer);
+
+  @protected
+  EmbeddingFormat sse_decode_box_autoadd_embedding_format(
+      SseDeserializer deserializer);
+
+  @protected
+  EmbeddingRequest sse_decode_box_autoadd_embedding_request(
+      SseDeserializer deserializer);
+
+  @protected
+  double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
+
+  @protected
+  FileListQuery sse_decode_box_autoadd_file_list_query(
+      SseDeserializer deserializer);
+
+  @protected
+  FinishReason sse_decode_box_autoadd_finish_reason(
+      SseDeserializer deserializer);
+
+  @protected
+  FunctionCall sse_decode_box_autoadd_function_call(
+      SseDeserializer deserializer);
+
+  @protected
+  FunctionMessage sse_decode_box_autoadd_function_message(
+      SseDeserializer deserializer);
+
+  @protected
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
+
+  @protected
+  ImageDetail sse_decode_box_autoadd_image_detail(SseDeserializer deserializer);
+
+  @protected
+  ImageUrl sse_decode_box_autoadd_image_url(SseDeserializer deserializer);
+
+  @protected
+  JsonSchemaFormat sse_decode_box_autoadd_json_schema_format(
+      SseDeserializer deserializer);
+
+  @protected
+  ModerationRequest sse_decode_box_autoadd_moderation_request(
+      SseDeserializer deserializer);
+
+  @protected
+  OcrRequest sse_decode_box_autoadd_ocr_request(SseDeserializer deserializer);
+
+  @protected
+  PageDimensions sse_decode_box_autoadd_page_dimensions(
+      SseDeserializer deserializer);
+
+  @protected
+  PromptTokensDetails sse_decode_box_autoadd_prompt_tokens_details(
+      SseDeserializer deserializer);
+
+  @protected
+  ReasoningEffort sse_decode_box_autoadd_reasoning_effort(
+      SseDeserializer deserializer);
+
+  @protected
+  RerankRequest sse_decode_box_autoadd_rerank_request(
+      SseDeserializer deserializer);
+
+  @protected
+  RerankResultDocument sse_decode_box_autoadd_rerank_result_document(
+      SseDeserializer deserializer);
+
+  @protected
+  ResponseFormat sse_decode_box_autoadd_response_format(
+      SseDeserializer deserializer);
+
+  @protected
+  ResponseUsage sse_decode_box_autoadd_response_usage(
+      SseDeserializer deserializer);
+
+  @protected
+  SearchRequest sse_decode_box_autoadd_search_request(
+      SseDeserializer deserializer);
+
+  @protected
+  SpecificToolChoice sse_decode_box_autoadd_specific_tool_choice(
+      SseDeserializer deserializer);
+
+  @protected
+  StopSequence sse_decode_box_autoadd_stop_sequence(
+      SseDeserializer deserializer);
+
+  @protected
+  StreamFunctionCall sse_decode_box_autoadd_stream_function_call(
+      SseDeserializer deserializer);
+
+  @protected
+  StreamOptions sse_decode_box_autoadd_stream_options(
+      SseDeserializer deserializer);
+
+  @protected
+  SystemMessage sse_decode_box_autoadd_system_message(
+      SseDeserializer deserializer);
+
+  @protected
+  ToolChoice sse_decode_box_autoadd_tool_choice(SseDeserializer deserializer);
+
+  @protected
+  ToolMessage sse_decode_box_autoadd_tool_message(SseDeserializer deserializer);
+
+  @protected
+  ToolType sse_decode_box_autoadd_tool_type(SseDeserializer deserializer);
+
+  @protected
+  Usage sse_decode_box_autoadd_usage(SseDeserializer deserializer);
+
+  @protected
+  UserMessage sse_decode_box_autoadd_user_message(SseDeserializer deserializer);
+
+  @protected
+  ChatCompletionChunk sse_decode_chat_completion_chunk(
+      SseDeserializer deserializer);
+
+  @protected
+  ChatCompletionRequest sse_decode_chat_completion_request(
+      SseDeserializer deserializer);
+
+  @protected
+  ChatCompletionResponse sse_decode_chat_completion_response(
+      SseDeserializer deserializer);
+
+  @protected
+  ChatCompletionTool sse_decode_chat_completion_tool(
+      SseDeserializer deserializer);
+
+  @protected
+  Choice sse_decode_choice(SseDeserializer deserializer);
+
+  @protected
+  ContentPart sse_decode_content_part(SseDeserializer deserializer);
+
+  @protected
+  CreateBatchRequest sse_decode_create_batch_request(
+      SseDeserializer deserializer);
+
+  @protected
+  CreateFileRequest sse_decode_create_file_request(
+      SseDeserializer deserializer);
+
+  @protected
+  CreateImageRequest sse_decode_create_image_request(
+      SseDeserializer deserializer);
+
+  @protected
+  CreateResponseRequest sse_decode_create_response_request(
+      SseDeserializer deserializer);
+
+  @protected
+  CreateSpeechRequest sse_decode_create_speech_request(
+      SseDeserializer deserializer);
+
+  @protected
+  CreateTranscriptionRequest sse_decode_create_transcription_request(
+      SseDeserializer deserializer);
 
   @protected
   CustomProviderConfig sse_decode_custom_provider_config(
       SseDeserializer deserializer);
 
   @protected
+  DeleteResponse sse_decode_delete_response(SseDeserializer deserializer);
+
+  @protected
+  DeveloperMessage sse_decode_developer_message(SseDeserializer deserializer);
+
+  @protected
+  DocumentContent sse_decode_document_content(SseDeserializer deserializer);
+
+  @protected
+  EmbeddingFormat sse_decode_embedding_format(SseDeserializer deserializer);
+
+  @protected
+  EmbeddingInput sse_decode_embedding_input(SseDeserializer deserializer);
+
+  @protected
+  EmbeddingObject sse_decode_embedding_object(SseDeserializer deserializer);
+
+  @protected
+  EmbeddingRequest sse_decode_embedding_request(SseDeserializer deserializer);
+
+  @protected
+  EmbeddingResponse sse_decode_embedding_response(SseDeserializer deserializer);
+
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer);
+
+  @protected
+  FileListQuery sse_decode_file_list_query(SseDeserializer deserializer);
+
+  @protected
+  FileListResponse sse_decode_file_list_response(SseDeserializer deserializer);
+
+  @protected
+  FileObject sse_decode_file_object(SseDeserializer deserializer);
+
+  @protected
+  FilePurpose sse_decode_file_purpose(SseDeserializer deserializer);
+
+  @protected
+  FinishReason sse_decode_finish_reason(SseDeserializer deserializer);
+
+  @protected
+  FunctionCall sse_decode_function_call(SseDeserializer deserializer);
+
+  @protected
+  FunctionDefinition sse_decode_function_definition(
+      SseDeserializer deserializer);
+
+  @protected
+  FunctionMessage sse_decode_function_message(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer);
+
+  @protected
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
+
+  @protected
+  Image sse_decode_image(SseDeserializer deserializer);
+
+  @protected
+  ImageDetail sse_decode_image_detail(SseDeserializer deserializer);
+
+  @protected
+  ImageUrl sse_decode_image_url(SseDeserializer deserializer);
+
+  @protected
+  ImagesResponse sse_decode_images_response(SseDeserializer deserializer);
+
+  @protected
+  JsonSchemaFormat sse_decode_json_schema_format(SseDeserializer deserializer);
 
   @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
+  List<BatchObject> sse_decode_list_batch_object(SseDeserializer deserializer);
+
+  @protected
+  List<ChatCompletionTool> sse_decode_list_chat_completion_tool(
+      SseDeserializer deserializer);
+
+  @protected
+  List<Choice> sse_decode_list_choice(SseDeserializer deserializer);
+
+  @protected
+  List<ContentPart> sse_decode_list_content_part(SseDeserializer deserializer);
+
+  @protected
+  List<EmbeddingObject> sse_decode_list_embedding_object(
+      SseDeserializer deserializer);
+
+  @protected
+  List<FileObject> sse_decode_list_file_object(SseDeserializer deserializer);
+
+  @protected
+  List<Image> sse_decode_list_image(SseDeserializer deserializer);
+
+  @protected
+  List<Message> sse_decode_list_message(SseDeserializer deserializer);
+
+  @protected
+  List<ModelObject> sse_decode_list_model_object(SseDeserializer deserializer);
+
+  @protected
+  List<ModerationResult> sse_decode_list_moderation_result(
+      SseDeserializer deserializer);
+
+  @protected
+  List<OcrImage> sse_decode_list_ocr_image(SseDeserializer deserializer);
+
+  @protected
+  List<OcrPage> sse_decode_list_ocr_page(SseDeserializer deserializer);
+
+  @protected
+  Float64List sse_decode_list_prim_f_64_strict(SseDeserializer deserializer);
+
+  @protected
+  Int64List sse_decode_list_prim_i_64_strict(SseDeserializer deserializer);
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  List<(String, double)> sse_decode_list_record_string_f_64(
+      SseDeserializer deserializer);
+
+  @protected
+  List<RerankDocument> sse_decode_list_rerank_document(
+      SseDeserializer deserializer);
+
+  @protected
+  List<RerankResult> sse_decode_list_rerank_result(
+      SseDeserializer deserializer);
+
+  @protected
+  List<ResponseOutputItem> sse_decode_list_response_output_item(
+      SseDeserializer deserializer);
+
+  @protected
+  List<ResponseTool> sse_decode_list_response_tool(
+      SseDeserializer deserializer);
+
+  @protected
+  List<SearchResult> sse_decode_list_search_result(
+      SseDeserializer deserializer);
+
+  @protected
+  List<StreamChoice> sse_decode_list_stream_choice(
+      SseDeserializer deserializer);
+
+  @protected
+  List<StreamToolCall> sse_decode_list_stream_tool_call(
+      SseDeserializer deserializer);
+
+  @protected
+  List<ToolCall> sse_decode_list_tool_call(SseDeserializer deserializer);
+
+  @protected
+  List<TranscriptionSegment> sse_decode_list_transcription_segment(
+      SseDeserializer deserializer);
+
+  @protected
+  Message sse_decode_message(SseDeserializer deserializer);
+
+  @protected
+  ModelObject sse_decode_model_object(SseDeserializer deserializer);
+
+  @protected
+  ModelsListResponse sse_decode_models_list_response(
+      SseDeserializer deserializer);
+
+  @protected
+  ModerationCategories sse_decode_moderation_categories(
+      SseDeserializer deserializer);
+
+  @protected
+  ModerationCategoryScores sse_decode_moderation_category_scores(
+      SseDeserializer deserializer);
+
+  @protected
+  ModerationInput sse_decode_moderation_input(SseDeserializer deserializer);
+
+  @protected
+  ModerationRequest sse_decode_moderation_request(SseDeserializer deserializer);
+
+  @protected
+  ModerationResponse sse_decode_moderation_response(
+      SseDeserializer deserializer);
+
+  @protected
+  ModerationResult sse_decode_moderation_result(SseDeserializer deserializer);
+
+  @protected
+  OcrDocument sse_decode_ocr_document(SseDeserializer deserializer);
+
+  @protected
+  OcrImage sse_decode_ocr_image(SseDeserializer deserializer);
+
+  @protected
+  OcrPage sse_decode_ocr_page(SseDeserializer deserializer);
+
+  @protected
+  OcrRequest sse_decode_ocr_request(SseDeserializer deserializer);
+
+  @protected
+  OcrResponse sse_decode_ocr_response(SseDeserializer deserializer);
+
+  @protected
+  Map<String, double>? sse_decode_opt_Map_String_f_64_None(
+      SseDeserializer deserializer);
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
+  BatchListQuery? sse_decode_opt_box_autoadd_batch_list_query(
+      SseDeserializer deserializer);
+
+  @protected
+  BatchRequestCounts? sse_decode_opt_box_autoadd_batch_request_counts(
+      SseDeserializer deserializer);
+
+  @protected
+  bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
+  EmbeddingFormat? sse_decode_opt_box_autoadd_embedding_format(
+      SseDeserializer deserializer);
+
+  @protected
+  double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
+
+  @protected
+  FileListQuery? sse_decode_opt_box_autoadd_file_list_query(
+      SseDeserializer deserializer);
+
+  @protected
+  FinishReason? sse_decode_opt_box_autoadd_finish_reason(
+      SseDeserializer deserializer);
+
+  @protected
+  FunctionCall? sse_decode_opt_box_autoadd_function_call(
+      SseDeserializer deserializer);
+
+  @protected
   PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
+
+  @protected
+  ImageDetail? sse_decode_opt_box_autoadd_image_detail(
+      SseDeserializer deserializer);
+
+  @protected
+  PageDimensions? sse_decode_opt_box_autoadd_page_dimensions(
+      SseDeserializer deserializer);
+
+  @protected
+  PromptTokensDetails? sse_decode_opt_box_autoadd_prompt_tokens_details(
+      SseDeserializer deserializer);
+
+  @protected
+  ReasoningEffort? sse_decode_opt_box_autoadd_reasoning_effort(
+      SseDeserializer deserializer);
+
+  @protected
+  RerankResultDocument? sse_decode_opt_box_autoadd_rerank_result_document(
+      SseDeserializer deserializer);
+
+  @protected
+  ResponseFormat? sse_decode_opt_box_autoadd_response_format(
+      SseDeserializer deserializer);
+
+  @protected
+  ResponseUsage? sse_decode_opt_box_autoadd_response_usage(
+      SseDeserializer deserializer);
+
+  @protected
+  StopSequence? sse_decode_opt_box_autoadd_stop_sequence(
+      SseDeserializer deserializer);
+
+  @protected
+  StreamFunctionCall? sse_decode_opt_box_autoadd_stream_function_call(
+      SseDeserializer deserializer);
+
+  @protected
+  StreamOptions? sse_decode_opt_box_autoadd_stream_options(
+      SseDeserializer deserializer);
+
+  @protected
+  ToolChoice? sse_decode_opt_box_autoadd_tool_choice(
+      SseDeserializer deserializer);
+
+  @protected
+  ToolType? sse_decode_opt_box_autoadd_tool_type(SseDeserializer deserializer);
+
+  @protected
+  Usage? sse_decode_opt_box_autoadd_usage(SseDeserializer deserializer);
+
+  @protected
+  List<String>? sse_decode_opt_list_String(SseDeserializer deserializer);
+
+  @protected
+  List<ChatCompletionTool>? sse_decode_opt_list_chat_completion_tool(
+      SseDeserializer deserializer);
+
+  @protected
+  List<OcrImage>? sse_decode_opt_list_ocr_image(SseDeserializer deserializer);
+
+  @protected
+  Int64List? sse_decode_opt_list_prim_i_64_strict(SseDeserializer deserializer);
+
+  @protected
+  List<ResponseTool>? sse_decode_opt_list_response_tool(
+      SseDeserializer deserializer);
+
+  @protected
+  List<StreamToolCall>? sse_decode_opt_list_stream_tool_call(
+      SseDeserializer deserializer);
+
+  @protected
+  List<ToolCall>? sse_decode_opt_list_tool_call(SseDeserializer deserializer);
+
+  @protected
+  List<TranscriptionSegment>? sse_decode_opt_list_transcription_segment(
+      SseDeserializer deserializer);
+
+  @protected
+  PageDimensions sse_decode_page_dimensions(SseDeserializer deserializer);
+
+  @protected
+  PromptTokensDetails sse_decode_prompt_tokens_details(
+      SseDeserializer deserializer);
+
+  @protected
+  ReasoningEffort sse_decode_reasoning_effort(SseDeserializer deserializer);
+
+  @protected
+  (String, double) sse_decode_record_string_f_64(SseDeserializer deserializer);
+
+  @protected
+  RerankDocument sse_decode_rerank_document(SseDeserializer deserializer);
+
+  @protected
+  RerankRequest sse_decode_rerank_request(SseDeserializer deserializer);
+
+  @protected
+  RerankResponse sse_decode_rerank_response(SseDeserializer deserializer);
+
+  @protected
+  RerankResult sse_decode_rerank_result(SseDeserializer deserializer);
+
+  @protected
+  RerankResultDocument sse_decode_rerank_result_document(
+      SseDeserializer deserializer);
+
+  @protected
+  ResponseFormat sse_decode_response_format(SseDeserializer deserializer);
+
+  @protected
+  ResponseObject sse_decode_response_object(SseDeserializer deserializer);
+
+  @protected
+  ResponseOutputItem sse_decode_response_output_item(
+      SseDeserializer deserializer);
+
+  @protected
+  ResponseTool sse_decode_response_tool(SseDeserializer deserializer);
+
+  @protected
+  ResponseUsage sse_decode_response_usage(SseDeserializer deserializer);
+
+  @protected
+  SearchRequest sse_decode_search_request(SseDeserializer deserializer);
+
+  @protected
+  SearchResponse sse_decode_search_response(SseDeserializer deserializer);
+
+  @protected
+  SearchResult sse_decode_search_result(SseDeserializer deserializer);
+
+  @protected
+  SpecificFunction sse_decode_specific_function(SseDeserializer deserializer);
+
+  @protected
+  SpecificToolChoice sse_decode_specific_tool_choice(
+      SseDeserializer deserializer);
+
+  @protected
+  StopSequence sse_decode_stop_sequence(SseDeserializer deserializer);
+
+  @protected
+  StreamChoice sse_decode_stream_choice(SseDeserializer deserializer);
+
+  @protected
+  StreamDelta sse_decode_stream_delta(SseDeserializer deserializer);
+
+  @protected
+  StreamFunctionCall sse_decode_stream_function_call(
+      SseDeserializer deserializer);
+
+  @protected
+  StreamOptions sse_decode_stream_options(SseDeserializer deserializer);
+
+  @protected
+  StreamToolCall sse_decode_stream_tool_call(SseDeserializer deserializer);
+
+  @protected
+  SystemMessage sse_decode_system_message(SseDeserializer deserializer);
+
+  @protected
+  ToolCall sse_decode_tool_call(SseDeserializer deserializer);
+
+  @protected
+  ToolChoice sse_decode_tool_choice(SseDeserializer deserializer);
+
+  @protected
+  ToolChoiceMode sse_decode_tool_choice_mode(SseDeserializer deserializer);
+
+  @protected
+  ToolMessage sse_decode_tool_message(SseDeserializer deserializer);
+
+  @protected
+  ToolType sse_decode_tool_type(SseDeserializer deserializer);
+
+  @protected
+  TranscriptionResponse sse_decode_transcription_response(
+      SseDeserializer deserializer);
+
+  @protected
+  TranscriptionSegment sse_decode_transcription_segment(
+      SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_8(SseDeserializer deserializer);
@@ -127,15 +1379,30 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_decode_unit(SseDeserializer deserializer);
 
   @protected
-  BigInt sse_decode_usize(SseDeserializer deserializer);
+  Usage sse_decode_usage(SseDeserializer deserializer);
 
   @protected
-  int sse_decode_i_32(SseDeserializer deserializer);
+  UserContent sse_decode_user_content(SseDeserializer deserializer);
+
+  @protected
+  UserMessage sse_decode_user_message(SseDeserializer deserializer);
+
+  @protected
+  BigInt sse_decode_usize(SseDeserializer deserializer);
 
   @protected
   void
       sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
           DefaultClient self, SseSerializer serializer);
+
+  @protected
+  void
+      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+          DefaultClient self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_Map_String_f_64_None(
+      Map<String, double> self, SseSerializer serializer);
 
   @protected
   void
@@ -146,40 +1413,738 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
+  void sse_encode_assistant_message(
+      AssistantMessage self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_audio_content(AudioContent self, SseSerializer serializer);
+
+  @protected
   void sse_encode_auth_header_format(
       AuthHeaderFormat self, SseSerializer serializer);
 
   @protected
+  void sse_encode_batch_list_query(
+      BatchListQuery self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_batch_list_response(
+      BatchListResponse self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_batch_object(BatchObject self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_batch_request_counts(
+      BatchRequestCounts self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_batch_status(BatchStatus self, SseSerializer serializer);
+
+  @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_assistant_message(
+      AssistantMessage self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_audio_content(
+      AudioContent self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_batch_list_query(
+      BatchListQuery self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_batch_request_counts(
+      BatchRequestCounts self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_chat_completion_request(
+      ChatCompletionRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_create_batch_request(
+      CreateBatchRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_create_file_request(
+      CreateFileRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_create_image_request(
+      CreateImageRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_create_response_request(
+      CreateResponseRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_create_speech_request(
+      CreateSpeechRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_create_transcription_request(
+      CreateTranscriptionRequest self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_custom_provider_config(
       CustomProviderConfig self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_developer_message(
+      DeveloperMessage self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_document_content(
+      DocumentContent self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_embedding_format(
+      EmbeddingFormat self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_embedding_request(
+      EmbeddingRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_file_list_query(
+      FileListQuery self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_finish_reason(
+      FinishReason self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_function_call(
+      FunctionCall self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_function_message(
+      FunctionMessage self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_i_64(
       PlatformInt64 self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_image_detail(
+      ImageDetail self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_image_url(
+      ImageUrl self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_json_schema_format(
+      JsonSchemaFormat self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_moderation_request(
+      ModerationRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_ocr_request(
+      OcrRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_page_dimensions(
+      PageDimensions self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_prompt_tokens_details(
+      PromptTokensDetails self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_reasoning_effort(
+      ReasoningEffort self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_rerank_request(
+      RerankRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_rerank_result_document(
+      RerankResultDocument self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_response_format(
+      ResponseFormat self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_response_usage(
+      ResponseUsage self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_search_request(
+      SearchRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_specific_tool_choice(
+      SpecificToolChoice self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_stop_sequence(
+      StopSequence self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_stream_function_call(
+      StreamFunctionCall self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_stream_options(
+      StreamOptions self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_system_message(
+      SystemMessage self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_tool_choice(
+      ToolChoice self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_tool_message(
+      ToolMessage self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_tool_type(
+      ToolType self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_usage(Usage self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_user_message(
+      UserMessage self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_chat_completion_chunk(
+      ChatCompletionChunk self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_chat_completion_request(
+      ChatCompletionRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_chat_completion_response(
+      ChatCompletionResponse self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_chat_completion_tool(
+      ChatCompletionTool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_choice(Choice self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_content_part(ContentPart self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_create_batch_request(
+      CreateBatchRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_create_file_request(
+      CreateFileRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_create_image_request(
+      CreateImageRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_create_response_request(
+      CreateResponseRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_create_speech_request(
+      CreateSpeechRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_create_transcription_request(
+      CreateTranscriptionRequest self, SseSerializer serializer);
 
   @protected
   void sse_encode_custom_provider_config(
       CustomProviderConfig self, SseSerializer serializer);
 
   @protected
+  void sse_encode_delete_response(
+      DeleteResponse self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_developer_message(
+      DeveloperMessage self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_document_content(
+      DocumentContent self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_embedding_format(
+      EmbeddingFormat self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_embedding_input(
+      EmbeddingInput self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_embedding_object(
+      EmbeddingObject self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_embedding_request(
+      EmbeddingRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_embedding_response(
+      EmbeddingResponse self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_file_list_query(FileListQuery self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_file_list_response(
+      FileListResponse self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_file_object(FileObject self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_file_purpose(FilePurpose self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_finish_reason(FinishReason self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_function_call(FunctionCall self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_function_definition(
+      FunctionDefinition self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_function_message(
+      FunctionMessage self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer);
+
+  @protected
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
 
   @protected
+  void sse_encode_image(Image self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_image_detail(ImageDetail self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_image_url(ImageUrl self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_images_response(
+      ImagesResponse self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_json_schema_format(
+      JsonSchemaFormat self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_batch_object(
+      List<BatchObject> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_chat_completion_tool(
+      List<ChatCompletionTool> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_choice(List<Choice> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_content_part(
+      List<ContentPart> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_embedding_object(
+      List<EmbeddingObject> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_file_object(
+      List<FileObject> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_image(List<Image> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_message(List<Message> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_model_object(
+      List<ModelObject> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_moderation_result(
+      List<ModerationResult> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_ocr_image(List<OcrImage> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_ocr_page(List<OcrPage> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_prim_f_64_strict(
+      Float64List self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_prim_i_64_strict(
+      Int64List self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_prim_u_8_strict(
       Uint8List self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_record_string_f_64(
+      List<(String, double)> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_rerank_document(
+      List<RerankDocument> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_rerank_result(
+      List<RerankResult> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_response_output_item(
+      List<ResponseOutputItem> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_response_tool(
+      List<ResponseTool> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_search_result(
+      List<SearchResult> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_stream_choice(
+      List<StreamChoice> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_stream_tool_call(
+      List<StreamToolCall> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_tool_call(List<ToolCall> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_transcription_segment(
+      List<TranscriptionSegment> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_message(Message self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_model_object(ModelObject self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_models_list_response(
+      ModelsListResponse self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_moderation_categories(
+      ModerationCategories self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_moderation_category_scores(
+      ModerationCategoryScores self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_moderation_input(
+      ModerationInput self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_moderation_request(
+      ModerationRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_moderation_response(
+      ModerationResponse self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_moderation_result(
+      ModerationResult self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ocr_document(OcrDocument self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ocr_image(OcrImage self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ocr_page(OcrPage self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ocr_request(OcrRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ocr_response(OcrResponse self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_Map_String_f_64_None(
+      Map<String, double>? self, SseSerializer serializer);
+
+  @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_batch_list_query(
+      BatchListQuery? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_batch_request_counts(
+      BatchRequestCounts? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_embedding_format(
+      EmbeddingFormat? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_file_list_query(
+      FileListQuery? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_finish_reason(
+      FinishReason? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_function_call(
+      FunctionCall? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_i_64(
       PlatformInt64? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_image_detail(
+      ImageDetail? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_page_dimensions(
+      PageDimensions? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_prompt_tokens_details(
+      PromptTokensDetails? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_reasoning_effort(
+      ReasoningEffort? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_rerank_result_document(
+      RerankResultDocument? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_response_format(
+      ResponseFormat? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_response_usage(
+      ResponseUsage? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_stop_sequence(
+      StopSequence? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_stream_function_call(
+      StreamFunctionCall? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_stream_options(
+      StreamOptions? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_tool_choice(
+      ToolChoice? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_tool_type(
+      ToolType? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_usage(Usage? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_String(List<String>? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_chat_completion_tool(
+      List<ChatCompletionTool>? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_ocr_image(
+      List<OcrImage>? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_prim_i_64_strict(
+      Int64List? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_response_tool(
+      List<ResponseTool>? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_stream_tool_call(
+      List<StreamToolCall>? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_tool_call(
+      List<ToolCall>? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_transcription_segment(
+      List<TranscriptionSegment>? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_page_dimensions(
+      PageDimensions self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_prompt_tokens_details(
+      PromptTokensDetails self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_reasoning_effort(
+      ReasoningEffort self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_record_string_f_64(
+      (String, double) self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_rerank_document(
+      RerankDocument self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_rerank_request(RerankRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_rerank_response(
+      RerankResponse self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_rerank_result(RerankResult self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_rerank_result_document(
+      RerankResultDocument self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_response_format(
+      ResponseFormat self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_response_object(
+      ResponseObject self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_response_output_item(
+      ResponseOutputItem self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_response_tool(ResponseTool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_response_usage(ResponseUsage self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_search_request(SearchRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_search_response(
+      SearchResponse self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_search_result(SearchResult self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_specific_function(
+      SpecificFunction self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_specific_tool_choice(
+      SpecificToolChoice self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_stop_sequence(StopSequence self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_stream_choice(StreamChoice self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_stream_delta(StreamDelta self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_stream_function_call(
+      StreamFunctionCall self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_stream_options(StreamOptions self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_stream_tool_call(
+      StreamToolCall self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_system_message(SystemMessage self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_tool_call(ToolCall self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_tool_choice(ToolChoice self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_tool_choice_mode(
+      ToolChoiceMode self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_tool_message(ToolMessage self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_tool_type(ToolType self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_transcription_response(
+      TranscriptionResponse self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_transcription_segment(
+      TranscriptionSegment self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_8(int self, SseSerializer serializer);
@@ -188,10 +2153,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_unit(void self, SseSerializer serializer);
 
   @protected
-  void sse_encode_usize(BigInt self, SseSerializer serializer);
+  void sse_encode_usage(Usage self, SseSerializer serializer);
 
   @protected
-  void sse_encode_i_32(int self, SseSerializer serializer);
+  void sse_encode_user_content(UserContent self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_user_message(UserMessage self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_usize(BigInt self, SseSerializer serializer);
 }
 
 // Section: wire_class
