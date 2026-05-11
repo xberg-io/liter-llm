@@ -592,11 +592,21 @@ impl DefaultClient {
 /// Resolve the provider to use for all requests on this client.
 ///
 /// Priority:
-/// 1. Explicit `base_url` in config -> custom OpenAI-compatible provider.
+/// 1. Explicit `base_url` in config:
+///    - If `model_hint` identifies a provider with a non-standard URL format
+///      (Azure embeds the deployment name and `?api-version=…`), construct
+///      that provider with the override (issue #83).
+///    - Otherwise, treat the override as a generic OpenAI-compatible endpoint
+///      (LM Studio, Ollama, vLLM, etc.).
 /// 2. `model_hint` -> auto-detect by model name prefix.
 /// 3. Default -> OpenAI.
 fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Arc<dyn Provider> {
     if let Some(ref base_url) = config.base_url {
+        if let Some(model) = model_hint
+            && model.starts_with("azure/")
+        {
+            return Arc::new(provider::azure::AzureProvider::with_base_url(base_url.clone()));
+        }
         return Arc::new(OpenAiCompatibleProvider {
             name: "custom".into(),
             base_url: base_url.clone(),
@@ -1621,5 +1631,52 @@ impl ResponseClient for DefaultClient {
                 .await?;
             serde_json::from_value::<ResponseObject>(raw).map_err(LiterLlmError::from)
         })
+    }
+}
+
+#[cfg(all(test, any(feature = "native-http", feature = "wasm-http")))]
+mod build_provider_tests {
+    use super::*;
+    use crate::client::config::ClientConfigBuilder;
+
+    #[test]
+    fn azure_model_with_per_model_base_url_uses_azure_provider() {
+        // Regression test for issue #83: when `[[models]]` pins a per-model
+        // `base_url` AND the provider_model is azure/..., the resolved
+        // provider must be Azure (which embeds the deployment name and
+        // ?api-version=… in the URL), NOT a naive OpenAI-compatible URL.
+        let config = ClientConfigBuilder::new("test-key")
+            .base_url("https://resourceA.cognitiveservices.azure.com")
+            .build();
+        let p = build_provider(&config, Some("azure/gpt-5-mini"));
+        assert_eq!(p.name(), "azure");
+        let url = p.build_url("/chat/completions", "gpt-5-mini");
+        assert!(
+            url.starts_with("https://resourceA.cognitiveservices.azure.com/openai/deployments/gpt-5-mini/chat/completions?api-version="),
+            "url = {url}"
+        );
+    }
+
+    #[test]
+    fn non_azure_model_with_base_url_uses_openai_compatible() {
+        // The Azure carve-out must not regress the LM Studio / Ollama / vLLM
+        // path, which legitimately uses the naive base_url + endpoint shape.
+        let config = ClientConfigBuilder::new("test-key")
+            .base_url("http://localhost:11434/v1")
+            .build();
+        let p = build_provider(&config, Some("llama3.1:8b"));
+        assert_eq!(p.name(), "custom");
+        let url = p.build_url("/chat/completions", "llama3.1:8b");
+        assert_eq!(url, "http://localhost:11434/v1/chat/completions");
+    }
+
+    #[test]
+    fn no_base_url_falls_through_to_detect_provider() {
+        let config = ClientConfigBuilder::new("test-key").build();
+        let p = build_provider(&config, Some("azure/gpt-4o"));
+        // Without an explicit per-model base_url, Azure provider is still
+        // detected — but base_url comes from env vars (likely empty in CI),
+        // so validate() would fail. We only assert the name here.
+        assert_eq!(p.name(), "azure");
     }
 }

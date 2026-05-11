@@ -60,8 +60,20 @@ impl AzureProvider {
             .trim_end_matches('/')
             .to_owned();
 
-        let api_version = std::env::var("AZURE_API_VERSION").unwrap_or_else(|_| "2025-02-01-preview".to_owned());
+        Self::with_base_url(base_url)
+    }
 
+    /// Construct an [`AzureProvider`] with an explicit `base_url`, bypassing
+    /// the `AZURE_OPENAI_ENDPOINT` / `AZURE_ENDPOINT` env-var lookup.
+    ///
+    /// Used when a `[[models]]` config entry pins a per-model Azure resource
+    /// URL — e.g. routing different deployments to resources in different
+    /// regions or subscriptions (see issue #83). Trailing slashes are stripped.
+    /// `AZURE_API_VERSION` is still honoured for the API version.
+    #[must_use]
+    pub fn with_base_url(base_url: impl Into<String>) -> Self {
+        let base_url = base_url.into().trim_end_matches('/').to_owned();
+        let api_version = std::env::var("AZURE_API_VERSION").unwrap_or_else(|_| "2025-02-01-preview".to_owned());
         Self { base_url, api_version }
     }
 }
@@ -575,5 +587,36 @@ mod tests {
         assert_eq!(message["role"], "assistant");
         assert!(message["content"].is_null());
         assert!(message["refusal"].as_str().unwrap().contains("Content filtered"));
+    }
+
+    #[test]
+    fn with_base_url_uses_supplied_url() {
+        let p = AzureProvider::with_base_url("https://resourceB-swedencentral.cognitiveservices.azure.com");
+        assert_eq!(
+            p.base_url(),
+            "https://resourceB-swedencentral.cognitiveservices.azure.com"
+        );
+        assert!(p.validate().is_ok());
+    }
+
+    #[test]
+    fn with_base_url_strips_trailing_slash() {
+        let p = AzureProvider::with_base_url("https://r.cognitiveservices.azure.com/");
+        assert_eq!(p.base_url(), "https://r.cognitiveservices.azure.com");
+    }
+
+    #[test]
+    fn with_base_url_build_url_routes_through_azure_deployment_format() {
+        // Regression test for issue #83 — per-model `base_url` must produce
+        // the Azure URL shape, not a naive concat used by generic OpenAI-
+        // compatible providers.
+        let p = AzureProvider::with_base_url("https://resourceA.cognitiveservices.azure.com");
+        let url = p.build_url("/chat/completions", "gpt-5-mini");
+        // Must embed deployment name AND ?api-version=… — both missing in the
+        // pre-fix behaviour where the override was treated as OpenAI-compatible.
+        assert!(
+            url.starts_with("https://resourceA.cognitiveservices.azure.com/openai/deployments/gpt-5-mini/chat/completions?api-version="),
+            "url = {url}"
+        );
     }
 }
