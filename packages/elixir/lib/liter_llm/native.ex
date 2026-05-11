@@ -9,8 +9,7 @@ defmodule LiterLlm.Native do
   use RustlerPrecompiled,
     otp_app: :liter_llm,
     crate: "liter_llm_nif",
-    base_url:
-      "https://github.com/kreuzberg-dev/liter-llm/releases/download/v#{Mix.Project.config()[:version]}",
+    base_url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v#{Mix.Project.config()[:version]}",
     version: Mix.Project.config()[:version],
     targets: ~w(aarch64-apple-darwin aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu x86_64-pc-windows-gnu),
     nif_versions: ["2.16", "2.17"],

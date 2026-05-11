@@ -9,7 +9,9 @@ using System.Text.Json.Serialization;
 namespace LiterLlm;
 
 public enum ImageDetail
-{[JsonPropertyName("low")]
-    Low,[JsonPropertyName("high")]
-    High,[JsonPropertyName("auto")]
-    Auto,}
+{
+    [JsonPropertyName("low")]
+    Low, [JsonPropertyName("high")]
+    High, [JsonPropertyName("auto")]
+    Auto,
+}

@@ -9,7 +9,9 @@ using System.Text.Json.Serialization;
 namespace LiterLlm;
 
 public enum ToolChoiceMode
-{[JsonPropertyName("auto")]
-    Auto,[JsonPropertyName("required")]
-    Required,[JsonPropertyName("none")]
-    None,}
+{
+    [JsonPropertyName("auto")]
+    Auto, [JsonPropertyName("required")]
+    Required, [JsonPropertyName("none")]
+    None,
+}

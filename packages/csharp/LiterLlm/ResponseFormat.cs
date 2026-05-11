@@ -12,7 +12,7 @@ using System.Text.Json.Serialization;
 
 namespace LiterLlm;
 
-    [JsonConverter(typeof(ResponseFormatJsonConverter))]
+[JsonConverter(typeof(ResponseFormatJsonConverter))]
 public abstract record ResponseFormat
 {
     public sealed record Text() : ResponseFormat;
@@ -98,7 +98,11 @@ public sealed class ResponseFormatJsonConverter : JsonConverter<ResponseFormat>
         var wrappedJson = msWrapped.ToArray();
 
         return tagValue switch
-        {            "text" => new ResponseFormat.Text(),            "json_object" => new ResponseFormat.JsonObject(),            "json_schema" => JsonSerializer.Deserialize<ResponseFormat.JsonSchema>(flatJson, options) ?? throw new JsonException("Failed to deserialize variant"),            _ => throw new JsonException($"Unknown ResponseFormat discriminator: {tagValue}")
+        {
+            "text" => new ResponseFormat.Text(),
+            "json_object" => new ResponseFormat.JsonObject(),
+            "json_schema" => JsonSerializer.Deserialize<ResponseFormat.JsonSchema>(flatJson, options) ?? throw new JsonException("Failed to deserialize variant"),
+            _ => throw new JsonException($"Unknown ResponseFormat discriminator: {tagValue}")
         };
     }
 
@@ -112,14 +116,18 @@ public sealed class ResponseFormatJsonConverter : JsonConverter<ResponseFormat>
         string tag;
         object? inner;
         switch (value)
-        {            case ResponseFormat.Text _:
+        {
+            case ResponseFormat.Text _:
                 tag = "text";
                 inner = null;
-                break;            case ResponseFormat.JsonObject _:
+                break;
+            case ResponseFormat.JsonObject _:
                 tag = "json_object";
                 inner = null;
-                break;            case ResponseFormat.JsonSchema v_jsonschema:
-                tag = "json_schema";                inner = v_jsonschema;                break;            default:
+                break;
+            case ResponseFormat.JsonSchema v_jsonschema:
+                tag = "json_schema"; inner = v_jsonschema; break;
+            default:
                 throw new JsonException($"Unknown ResponseFormat variant: {value.GetType().Name}");
         }
 

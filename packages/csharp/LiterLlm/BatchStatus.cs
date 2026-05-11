@@ -9,12 +9,14 @@ using System.Text.Json.Serialization;
 namespace LiterLlm;
 
 public enum BatchStatus
-{[JsonPropertyName("validating")]
-    Validating,[JsonPropertyName("failed")]
-    Failed,[JsonPropertyName("in_progress")]
-    InProgress,[JsonPropertyName("finalizing")]
-    Finalizing,[JsonPropertyName("completed")]
-    Completed,[JsonPropertyName("expired")]
-    Expired,[JsonPropertyName("cancelling")]
-    Cancelling,[JsonPropertyName("cancelled")]
-    Cancelled,}
+{
+    [JsonPropertyName("validating")]
+    Validating, [JsonPropertyName("failed")]
+    Failed, [JsonPropertyName("in_progress")]
+    InProgress, [JsonPropertyName("finalizing")]
+    Finalizing, [JsonPropertyName("completed")]
+    Completed, [JsonPropertyName("expired")]
+    Expired, [JsonPropertyName("cancelling")]
+    Cancelling, [JsonPropertyName("cancelled")]
+    Cancelled,
+}

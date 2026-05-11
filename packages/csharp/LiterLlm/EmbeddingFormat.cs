@@ -10,7 +10,8 @@ namespace LiterLlm;
 /// <summary>/// The format in which the embedding vectors are returned./// </summary>
 public enum EmbeddingFormat
 {/// <summary>    /// 32-bit floating-point numbers (default).    /// </summary>
-[JsonPropertyName("float")]
+    [JsonPropertyName("float")]
     Float,/// <summary>    /// Base64-encoded string representation of the floats.    /// </summary>
-[JsonPropertyName("base64")]
-    Base64,}
+    [JsonPropertyName("base64")]
+    Base64,
+}

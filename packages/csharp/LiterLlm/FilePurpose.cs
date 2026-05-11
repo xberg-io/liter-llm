@@ -10,11 +10,13 @@ namespace LiterLlm;
 
 [JsonConverter(typeof(FilePurposeJsonConverter))]
 public enum FilePurpose
-{[JsonPropertyName("assistants")]
-    Assistants,[JsonPropertyName("batch")]
-    Batch,[JsonPropertyName("fine-tune")]
-    FineTune,[JsonPropertyName("vision")]
-    Vision,}
+{
+    [JsonPropertyName("assistants")]
+    Assistants, [JsonPropertyName("batch")]
+    Batch, [JsonPropertyName("fine-tune")]
+    FineTune, [JsonPropertyName("vision")]
+    Vision,
+}
 
 
 /// <summary>Custom JSON converter for <see cref="FilePurpose"/> that respects explicit variant names.</summary>
@@ -24,14 +26,24 @@ internal sealed class FilePurposeJsonConverter : JsonConverter<FilePurpose>
     {
         var value = reader.GetString();
         return value switch
-        {            "assistants" => FilePurpose.Assistants,            "batch" => FilePurpose.Batch,            "fine-tune" => FilePurpose.FineTune,            "vision" => FilePurpose.Vision,            _ => throw new JsonException($"Unknown FilePurpose value: {value}")
+        {
+            "assistants" => FilePurpose.Assistants,
+            "batch" => FilePurpose.Batch,
+            "fine-tune" => FilePurpose.FineTune,
+            "vision" => FilePurpose.Vision,
+            _ => throw new JsonException($"Unknown FilePurpose value: {value}")
         };
     }
 
     public override void Write(Utf8JsonWriter writer, FilePurpose value, JsonSerializerOptions options)
     {
         var str = value switch
-        {            FilePurpose.Assistants => "assistants",            FilePurpose.Batch => "batch",            FilePurpose.FineTune => "fine-tune",            FilePurpose.Vision => "vision",            _ => throw new JsonException($"Unknown FilePurpose value: {value}")
+        {
+            FilePurpose.Assistants => "assistants",
+            FilePurpose.Batch => "batch",
+            FilePurpose.FineTune => "fine-tune",
+            FilePurpose.Vision => "vision",
+            _ => throw new JsonException($"Unknown FilePurpose value: {value}")
         };
         writer.WriteStringValue(str);
     }

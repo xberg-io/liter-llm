@@ -26,13 +26,15 @@ defmodule LiterLlm do
   end
 
   @doc "Create a new LLM client with simple scalar configuration."
-  @spec create_client(          String.t(),          String.t() | nil,          non_neg_integer() | nil,          non_neg_integer() | nil        ) :: {:ok, reference()} | {:error, String.t()}
+  @spec create_client(String.t(), String.t() | nil, non_neg_integer() | nil, non_neg_integer() | nil) ::
+          {:ok, reference()} | {:error, String.t()}
   def create_client(api_key, base_url, timeout_secs, max_retries) do
     LiterLlm.Native.create_client(api_key, base_url, timeout_secs, max_retries, nil)
   end
 
   @doc "Create a new LLM client with simple scalar configuration."
-  @spec create_client(          String.t(),          String.t() | nil,          non_neg_integer() | nil,          non_neg_integer() | nil,          String.t() | nil        ) :: {:ok, reference()} | {:error, String.t()}
+  @spec create_client(String.t(), String.t() | nil, non_neg_integer() | nil, non_neg_integer() | nil, String.t() | nil) ::
+          {:ok, reference()} | {:error, String.t()}
   def create_client(api_key, base_url, timeout_secs, max_retries, model_hint) do
     LiterLlm.Native.create_client(api_key, base_url, timeout_secs, max_retries, model_hint)
   end
@@ -226,7 +228,9 @@ defmodule LiterLlm do
               {:error, _} -> nil
             end
           end)
+
         {:ok, stream}
+
       {:error, reason} ->
         {:error, reason}
     end

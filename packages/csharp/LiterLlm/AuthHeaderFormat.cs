@@ -10,9 +10,10 @@ namespace LiterLlm;
 /// <summary>/// How the API key is sent in the HTTP request./// </summary>
 public enum AuthHeaderFormat
 {/// <summary>    /// Bearer token: `Authorization: Bearer <key>`    /// </summary>
-[JsonPropertyName("bearer")]
+    [JsonPropertyName("bearer")]
     Bearer,/// <summary>    /// Custom header: e.g., `X-Api-Key: <key>`    /// </summary>
-[JsonPropertyName("apikey")]
+    [JsonPropertyName("apikey")]
     ApiKey,/// <summary>    /// No authentication required.    /// </summary>
-[JsonPropertyName("none")]
-    None,}
+    [JsonPropertyName("none")]
+    None,
+}

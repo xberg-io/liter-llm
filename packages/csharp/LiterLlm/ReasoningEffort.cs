@@ -9,7 +9,9 @@ using System.Text.Json.Serialization;
 namespace LiterLlm;
 /// <summary>/// Controls how much reasoning effort the model should use./// </summary>
 public enum ReasoningEffort
-{[JsonPropertyName("low")]
-    Low,[JsonPropertyName("medium")]
-    Medium,[JsonPropertyName("high")]
-    High,}
+{
+    [JsonPropertyName("low")]
+    Low, [JsonPropertyName("medium")]
+    Medium, [JsonPropertyName("high")]
+    High,
+}

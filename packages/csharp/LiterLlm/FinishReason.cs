@@ -9,12 +9,14 @@ using System.Text.Json.Serialization;
 namespace LiterLlm;
 /// <summary>/// Why a choice stopped generating tokens./// </summary>
 public enum FinishReason
-{[JsonPropertyName("stop")]
-    Stop,[JsonPropertyName("length")]
-    Length,[JsonPropertyName("tool_calls")]
-    ToolCalls,[JsonPropertyName("content_filter")]
+{
+    [JsonPropertyName("stop")]
+    Stop, [JsonPropertyName("length")]
+    Length, [JsonPropertyName("tool_calls")]
+    ToolCalls, [JsonPropertyName("content_filter")]
     ContentFilter,/// <summary>    /// Deprecated legacy finish reason; retained for API compatibility.    /// </summary>
-[JsonPropertyName("function_call")]
+    [JsonPropertyName("function_call")]
     FunctionCall,/// <summary>    /// Catch-all for unknown finish reasons returned by non-OpenAI providers.    ///     /// Note: this intentionally does **not** carry the original string (e.g.    /// `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and    /// switching to `#[serde(untagged)]` would change deserialization semantics    /// for all variants.  The original value can be recovered by inspecting the    /// raw JSON if needed.    /// </summary>
-[JsonPropertyName("other")]
-    Other,}
+    [JsonPropertyName("other")]
+    Other,
+}
