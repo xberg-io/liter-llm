@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `fix(http/retry): avoid `SystemTime::now()` jitter on `wasm32-unknown-unknown`` — the retry-jitter calculation called `std::time::SystemTime::now()` which panics with `RuntimeError: unreachable` on the bare `wasm32-unknown-unknown` target (std time is not implemented). On `wasm32` the jitter step is skipped and the capped exponential delay is used as-is; native targets keep the existing `[0.5x, 1.0x]` jitter. This unblocks WASM e2e tests that exercise 429/5xx retry paths (`list_models_error_500`, `error_image_rate_limit`).
+
 ### Added
 
 - `feat(wasm-backend): emit chat_stream returning JS async iterator` — the WASM binding now exposes `WasmDefaultClient.chat_stream(req)` (alongside the existing `chat`, `embed`, etc.). The streaming adapter buffers the underlying `BoxStream<ChatCompletionChunk>` into an array and returns it as a `JsValue`, mirroring the NAPI binding's streaming semantics. Required regenerating `crates/liter-llm-wasm/src/lib.rs` once the backend's cfg-gate evaluator was fixed to honour `any(feature = "native-http", feature = "wasm-http")` (previously the binding silently dropped `DefaultClient` and every method on it).

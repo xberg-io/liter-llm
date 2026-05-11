@@ -1,4 +1,6 @@
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::Duration;
+#[cfg(not(target_arch = "wasm32"))]
+use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Determine whether to retry based on status code and attempt number.
 ///
@@ -34,15 +36,31 @@ pub fn should_retry(status: u16, attempt: u32, max_retries: u32, retry_after: Op
     let base_delay = Duration::from_secs(1u64.checked_shl(attempt).unwrap_or(u64::MAX));
     let capped = base_delay.min(Duration::from_secs(30));
 
-    // Apply jitter: scale to [0.5, 1.0] of the capped delay.
-    // Use nanosecond component of the system clock as a lightweight entropy source.
+    Some(jittered(capped))
+}
+
+/// Apply jitter to a retry delay.
+///
+/// Scales `delay` to a random value in `[0.5 * delay, 1.0 * delay]` using the
+/// low-order bits of the system clock as a lightweight entropy source.
+///
+/// On `wasm32-unknown-unknown` `SystemTime::now()` panics with `unreachable`
+/// (time is not implemented in the bare wasm target). On wasm we skip jitter
+/// and return the delay unchanged — a deterministic exponential backoff is
+/// acceptable for browser/SDK use.
+#[cfg(not(target_arch = "wasm32"))]
+fn jittered(delay: Duration) -> Duration {
     let nanos = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .subsec_nanos();
-    // jitter_factor in [0.5, 1.0]
     let jitter_factor = 0.5 + (f64::from(nanos % 1000) / 2000.0);
-    Some(capped.mul_f64(jitter_factor))
+    delay.mul_f64(jitter_factor)
+}
+
+#[cfg(target_arch = "wasm32")]
+fn jittered(delay: Duration) -> Duration {
+    delay
 }
 
 /// Parse the value of a `Retry-After` header into a `Duration`.
