@@ -17,7 +17,7 @@ class LiterLlmBridge {
   /// Returns [`LiterLlmError`] if the underlying HTTP client cannot be
   /// constructed, or if the resolved provider configuration is invalid.
   /// throws anyhow::Error on failure
-  static Future<DefaultClient> createClient(String apiKey, String? baseUrl, int? timeoutSecs, int? maxRetries, String? modelHint) async {
+  static Future<DefaultClient> createClient(String apiKey, {String? baseUrl, int? timeoutSecs, int? maxRetries, String? modelHint}) async {
     return await rust_bridge.createClient(apiKey: apiKey, baseUrl: baseUrl, timeoutSecs: timeoutSecs, maxRetries: maxRetries, modelHint: modelHint);
   }
 

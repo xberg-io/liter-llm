@@ -8,6 +8,8 @@ members = [
   "crates/liter-llm-proxy",
   "crates/liter-llm-py",
   "crates/liter-llm-wasm",
+  "packages/dart/rust",
+  "packages/swift/rust",
   "tools/snippet-runner",
 ]
 exclude = [

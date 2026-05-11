@@ -2,7 +2,7 @@ name: liter_llm
 description: Universal LLM API client with Rust-powered polyglot bindings.
 version: 1.4.0-rc.27
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.3.0 <4.0.0'
 dependencies:
   # FRB runtime is pure-Dart; works in both Flutter and server-Dart contexts.
   flutter_rust_bridge: '2.12.0'
