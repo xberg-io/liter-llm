@@ -17,6 +17,61 @@
   "env": {
     "api_key_var": "OPENAI_API_KEY"
   },
+  "mock_response": {
+    "status": 200,
+    "stream_chunks": [
+      {
+        "id": "chatcmpl-smoke-stream",
+        "object": "chat.completion.chunk",
+        "created": 1711000000,
+        "model": "gpt-4o-mini",
+        "choices": [{ "index": 0, "delta": { "role": "assistant", "content": "" }, "finish_reason": null }]
+      },
+      {
+        "id": "chatcmpl-smoke-stream",
+        "object": "chat.completion.chunk",
+        "created": 1711000000,
+        "model": "gpt-4o-mini",
+        "choices": [{ "index": 0, "delta": { "content": "1" }, "finish_reason": null }]
+      },
+      {
+        "id": "chatcmpl-smoke-stream",
+        "object": "chat.completion.chunk",
+        "created": 1711000000,
+        "model": "gpt-4o-mini",
+        "choices": [{ "index": 0, "delta": { "content": " 2" }, "finish_reason": null }]
+      },
+      {
+        "id": "chatcmpl-smoke-stream",
+        "object": "chat.completion.chunk",
+        "created": 1711000000,
+        "model": "gpt-4o-mini",
+        "choices": [{ "index": 0, "delta": { "content": " 3" }, "finish_reason": null }]
+      },
+      {
+        "id": "chatcmpl-smoke-stream",
+        "object": "chat.completion.chunk",
+        "created": 1711000000,
+        "model": "gpt-4o-mini",
+        "choices": [{ "index": 0, "delta": { "content": " 4" }, "finish_reason": null }]
+      },
+      {
+        "id": "chatcmpl-smoke-stream",
+        "object": "chat.completion.chunk",
+        "created": 1711000000,
+        "model": "gpt-4o-mini",
+        "choices": [{ "index": 0, "delta": { "content": " 5" }, "finish_reason": null }]
+      },
+      {
+        "id": "chatcmpl-smoke-stream",
+        "object": "chat.completion.chunk",
+        "created": 1711000000,
+        "model": "gpt-4o-mini",
+        "choices": [{ "index": 0, "delta": {}, "finish_reason": "stop" }]
+      }
+    ],
+    "stream_terminator": "[DONE]"
+  },
   "assertions": [
     {
       "type": "not_error"

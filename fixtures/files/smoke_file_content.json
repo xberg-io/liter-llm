@@ -4,8 +4,8 @@
   "category": "files",
   "tags": ["smoke", "files"],
   "skip": {
-    "languages": ["python", "wasm"],
-    "reason": "file_content returns raw bytes — Python: 'content' field assertion does not apply; WASM: codegen asserts .content on a Uint8Array return value, which is undefined and the binary mock response is not handled"
+    "languages": ["wasm"],
+    "reason": "WASM: codegen asserts .content on a Uint8Array return value, which is undefined and the binary mock response is not handled"
   },
   "call": "file_content",
   "input": {

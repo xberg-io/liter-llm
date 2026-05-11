@@ -11,6 +11,24 @@
   "env": {
     "api_key_var": "OPENAI_API_KEY"
   },
+  "mock_response": {
+    "status": 200,
+    "body": {
+      "object": "list",
+      "data": [
+        {
+          "object": "embedding",
+          "index": 0,
+          "embedding": [0.1, 0.2, 0.3, 0.4, 0.5]
+        }
+      ],
+      "model": "text-embedding-3-small",
+      "usage": {
+        "prompt_tokens": 2,
+        "total_tokens": 2
+      }
+    }
+  },
   "assertions": [
     {
       "type": "not_error"

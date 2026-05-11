@@ -17,6 +17,30 @@
   "env": {
     "api_key_var": "OPENAI_API_KEY"
   },
+  "mock_response": {
+    "status": 200,
+    "body": {
+      "id": "chatcmpl-smoke001",
+      "object": "chat.completion",
+      "created": 1711000000,
+      "model": "gpt-4o-mini",
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "Hello"
+          },
+          "finish_reason": "stop"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 12,
+        "completion_tokens": 1,
+        "total_tokens": 13
+      }
+    }
+  },
   "assertions": [
     {
       "type": "not_error"

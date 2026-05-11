@@ -9,7 +9,6 @@
   "skip": {
     "languages": [
       "rust",
-      "python",
       "node",
       "ruby",
       "php",
@@ -20,7 +19,7 @@
       "wasm",
       "c"
     ],
-    "reason": "Rust returns BoxStream \u2014 collecting usage from the final chunk requires consuming the stream, which is not supported by the generator; Python ChatStreamIterator does not expose a .usage attribute"
+    "reason": "Rust returns BoxStream \u2014 collecting usage from the final chunk requires consuming the stream, which is not supported by the generator"
   },
   "input": {
     "model": "gpt-4",
