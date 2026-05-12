@@ -1292,6 +1292,10 @@ result_is_bytes = true
 # file_content() returns Data in Swift — not a struct with fields.
 result_is_simple = true
 
+[crates.e2e.calls.file_content.overrides.dart]
+# file_content() returns Uint8List in dart — not a struct with a `content` accessor.
+result_is_simple = true
+
 [crates.e2e.calls.create_batch]
 function = "create_batch"
 path = "/batches"
