@@ -4,8 +4,8 @@
   "category": "files",
   "tags": ["error-handling", "files"],
   "skip": {
-    "languages": ["rust"],
-    "reason": "Rust's FilePurpose enum rejects invalid values at deserialization before reaching the HTTP layer"
+    "languages": ["rust", "python"],
+    "reason": "Rust/Python's FilePurpose enum rejects invalid values at deserialization before reaching the HTTP layer"
   },
   "call": "create_file",
   "input": {

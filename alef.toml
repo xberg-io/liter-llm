@@ -600,6 +600,10 @@ options_type = "ChatCompletionRequest"
 [crates.e2e.calls.chat_stream.overrides.elixir]
 function = "defaultclient_chat_stream"
 
+[crates.e2e.calls.chat_stream.overrides.go]
+client_factory = "CreateClient"
+options_type = "ChatCompletionRequest"
+
 [crates.e2e.calls.chat_stream.overrides.php]
 options_type = "ChatCompletionRequest"
 
@@ -1231,6 +1235,9 @@ extra_args = ["NULL"]
 [crates.e2e.calls.list_files.overrides.swift]
 extra_args = ["nil"]
 
+[crates.e2e.calls.list_files.overrides.zig]
+extra_args = ["null"]
+
 [crates.e2e.calls.file_content]
 function = "file_content"
 path = "/files"
@@ -1252,6 +1259,10 @@ type = "string"
 result_is_simple = true
 
 [crates.e2e.calls.file_content.overrides.node]
+result_is_simple = true
+
+[crates.e2e.calls.file_content.overrides.python]
+# file_content() returns `bytes` directly in Python — not a struct.
 result_is_simple = true
 
 [crates.e2e.calls.file_content.overrides.ruby]
@@ -1422,6 +1433,9 @@ extra_args = ["NULL"]
 
 [crates.e2e.calls.list_batches.overrides.swift]
 extra_args = ["nil"]
+
+[crates.e2e.calls.list_batches.overrides.zig]
+extra_args = ["null"]
 
 [crates.e2e.calls.cancel_batch]
 function = "cancel_batch"
