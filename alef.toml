@@ -833,6 +833,9 @@ result_is_simple = true
 [crates.e2e.calls.speech.overrides.dart]
 options_type = "CreateSpeechRequest"
 options_via = "from_json"
+# speech() returns Uint8List in dart (raw audio bytes), not a wrapper struct
+# with an `audio` accessor — treat the result as a bytes scalar.
+result_is_simple = true
 
 [crates.e2e.calls.speech.overrides.kotlin]
 options_type = "CreateSpeechRequest"
