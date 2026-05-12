@@ -968,78 +968,97 @@ mod ffi {
 
     extern "Rust" {
         type Message;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type UserContent;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type ContentPart;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type ImageDetail;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type ToolType;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type ToolChoice;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type ToolChoiceMode;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type ResponseFormat;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type StopSequence;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type FinishReason;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type ReasoningEffort;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type EmbeddingFormat;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type EmbeddingInput;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type ModerationInput;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type RerankDocument;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type OcrDocument;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type FilePurpose;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type BatchStatus;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type AuthHeaderFormat;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
@@ -4189,6 +4208,14 @@ impl From<liter_llm::types::Message> for Message {
     }
 }
 
+impl Message {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Unknown => "unknown".to_string(),
+        }
+    }
+}
+
 pub enum UserContent {
     /// Data variants not directly bridgeable — represented as Unknown.
     Unknown,
@@ -4202,6 +4229,14 @@ impl From<liter_llm::types::UserContent> for UserContent {
     }
 }
 
+impl UserContent {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Unknown => "unknown".to_string(),
+        }
+    }
+}
+
 pub enum ContentPart {
     /// Data variants not directly bridgeable — represented as Unknown.
     Unknown,
@@ -4211,6 +4246,14 @@ impl From<liter_llm::types::ContentPart> for ContentPart {
     fn from(val: liter_llm::types::ContentPart) -> Self {
         match val {
             _ => Self::Unknown,
+        }
+    }
+}
+
+impl ContentPart {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Unknown => "unknown".to_string(),
         }
     }
 }
@@ -4231,6 +4274,16 @@ impl From<liter_llm::types::ImageDetail> for ImageDetail {
     }
 }
 
+impl ImageDetail {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Low => "low".to_string(),
+            Self::High => "high".to_string(),
+            Self::Auto => "auto".to_string(),
+        }
+    }
+}
+
 pub enum ToolType {
     Function,
 }
@@ -4239,6 +4292,14 @@ impl From<liter_llm::types::ToolType> for ToolType {
     fn from(val: liter_llm::types::ToolType) -> Self {
         match val {
             liter_llm::types::ToolType::Function => Self::Function,
+        }
+    }
+}
+
+impl ToolType {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Function => "function".to_string(),
         }
     }
 }
@@ -4256,6 +4317,14 @@ impl From<liter_llm::types::ToolChoice> for ToolChoice {
     }
 }
 
+impl ToolChoice {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Unknown => "unknown".to_string(),
+        }
+    }
+}
+
 pub enum ToolChoiceMode {
     Auto,
     Required,
@@ -4268,6 +4337,16 @@ impl From<liter_llm::types::ToolChoiceMode> for ToolChoiceMode {
             liter_llm::types::ToolChoiceMode::Auto => Self::Auto,
             liter_llm::types::ToolChoiceMode::Required => Self::Required,
             liter_llm::types::ToolChoiceMode::None => Self::None,
+        }
+    }
+}
+
+impl ToolChoiceMode {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Auto => "auto".to_string(),
+            Self::Required => "required".to_string(),
+            Self::None => "none".to_string(),
         }
     }
 }
@@ -4289,6 +4368,16 @@ impl From<liter_llm::types::ResponseFormat> for ResponseFormat {
     }
 }
 
+impl ResponseFormat {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Text => "text".to_string(),
+            Self::JsonObject => "json_object".to_string(),
+            Self::Unknown => "unknown".to_string(),
+        }
+    }
+}
+
 pub enum StopSequence {
     /// Data variants not directly bridgeable — represented as Unknown.
     Unknown,
@@ -4298,6 +4387,14 @@ impl From<liter_llm::types::StopSequence> for StopSequence {
     fn from(val: liter_llm::types::StopSequence) -> Self {
         match val {
             _ => Self::Unknown,
+        }
+    }
+}
+
+impl StopSequence {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Unknown => "unknown".to_string(),
         }
     }
 }
@@ -4324,6 +4421,19 @@ impl From<liter_llm::types::FinishReason> for FinishReason {
     }
 }
 
+impl FinishReason {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Stop => "stop".to_string(),
+            Self::Length => "length".to_string(),
+            Self::ToolCalls => "tool_calls".to_string(),
+            Self::ContentFilter => "content_filter".to_string(),
+            Self::FunctionCall => "function_call".to_string(),
+            Self::Other => "other".to_string(),
+        }
+    }
+}
+
 pub enum ReasoningEffort {
     Low,
     Medium,
@@ -4336,6 +4446,16 @@ impl From<liter_llm::types::ReasoningEffort> for ReasoningEffort {
             liter_llm::types::ReasoningEffort::Low => Self::Low,
             liter_llm::types::ReasoningEffort::Medium => Self::Medium,
             liter_llm::types::ReasoningEffort::High => Self::High,
+        }
+    }
+}
+
+impl ReasoningEffort {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Low => "low".to_string(),
+            Self::Medium => "medium".to_string(),
+            Self::High => "high".to_string(),
         }
     }
 }
@@ -4354,6 +4474,15 @@ impl From<liter_llm::types::EmbeddingFormat> for EmbeddingFormat {
     }
 }
 
+impl EmbeddingFormat {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Float => "float".to_string(),
+            Self::Base64 => "base64".to_string(),
+        }
+    }
+}
+
 pub enum EmbeddingInput {
     /// Data variants not directly bridgeable — represented as Unknown.
     Unknown,
@@ -4363,6 +4492,14 @@ impl From<liter_llm::types::EmbeddingInput> for EmbeddingInput {
     fn from(val: liter_llm::types::EmbeddingInput) -> Self {
         match val {
             _ => Self::Unknown,
+        }
+    }
+}
+
+impl EmbeddingInput {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Unknown => "unknown".to_string(),
         }
     }
 }
@@ -4380,6 +4517,14 @@ impl From<liter_llm::types::ModerationInput> for ModerationInput {
     }
 }
 
+impl ModerationInput {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Unknown => "unknown".to_string(),
+        }
+    }
+}
+
 pub enum RerankDocument {
     /// Data variants not directly bridgeable — represented as Unknown.
     Unknown,
@@ -4393,6 +4538,14 @@ impl From<liter_llm::types::RerankDocument> for RerankDocument {
     }
 }
 
+impl RerankDocument {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Unknown => "unknown".to_string(),
+        }
+    }
+}
+
 pub enum OcrDocument {
     /// Data variants not directly bridgeable — represented as Unknown.
     Unknown,
@@ -4402,6 +4555,14 @@ impl From<liter_llm::types::OcrDocument> for OcrDocument {
     fn from(val: liter_llm::types::OcrDocument) -> Self {
         match val {
             _ => Self::Unknown,
+        }
+    }
+}
+
+impl OcrDocument {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Unknown => "unknown".to_string(),
         }
     }
 }
@@ -4420,6 +4581,17 @@ impl From<liter_llm::types::FilePurpose> for FilePurpose {
             liter_llm::types::FilePurpose::Batch => Self::Batch,
             liter_llm::types::FilePurpose::FineTune => Self::FineTune,
             liter_llm::types::FilePurpose::Vision => Self::Vision,
+        }
+    }
+}
+
+impl FilePurpose {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Assistants => "assistants".to_string(),
+            Self::Batch => "batch".to_string(),
+            Self::FineTune => "fine-tune".to_string(),
+            Self::Vision => "vision".to_string(),
         }
     }
 }
@@ -4450,6 +4622,21 @@ impl From<liter_llm::types::BatchStatus> for BatchStatus {
     }
 }
 
+impl BatchStatus {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Validating => "validating".to_string(),
+            Self::Failed => "failed".to_string(),
+            Self::InProgress => "in_progress".to_string(),
+            Self::Finalizing => "finalizing".to_string(),
+            Self::Completed => "completed".to_string(),
+            Self::Expired => "expired".to_string(),
+            Self::Cancelling => "cancelling".to_string(),
+            Self::Cancelled => "cancelled".to_string(),
+        }
+    }
+}
+
 pub enum AuthHeaderFormat {
     Bearer,
     None,
@@ -4463,6 +4650,16 @@ impl From<liter_llm::provider::custom::AuthHeaderFormat> for AuthHeaderFormat {
             liter_llm::provider::custom::AuthHeaderFormat::Bearer => Self::Bearer,
             liter_llm::provider::custom::AuthHeaderFormat::None => Self::None,
             _ => Self::Unknown,
+        }
+    }
+}
+
+impl AuthHeaderFormat {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Bearer => "Bearer".to_string(),
+            Self::None => "None".to_string(),
+            Self::Unknown => "unknown".to_string(),
         }
     }
 }

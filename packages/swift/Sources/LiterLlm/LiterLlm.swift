@@ -327,14 +327,19 @@ public enum AuthHeaderFormat {
 
 /// All errors that can occur when using `liter-llm`.
 public enum LiterLlmError: Error {
-    case authentication(message: String)
+    /// `status` preserves the exact HTTP status code received (401 or 403).
+    case authentication(message: String, status: UInt16)
     case rateLimited(message: String, retryAfter: Duration)
-    case badRequest(message: String)
+    /// `status` preserves the exact HTTP status code received (400, 405, 413, 422, …).
+    case badRequest(message: String, status: UInt16)
     case contextWindowExceeded(message: String)
     case contentPolicy(message: String)
     case notFound(message: String)
-    case serverError(message: String)
-    case serviceUnavailable(message: String)
+    /// `status` preserves the exact HTTP status code received (500, or other 5xx not covered
+    /// by `ServiceUnavailable`).
+    case serverError(message: String, status: UInt16)
+    /// `status` preserves the exact HTTP status code received (502, 503, or 504).
+    case serviceUnavailable(message: String, status: UInt16)
     case timeout
     /// A catch-all for errors that occur during streaming response processing.
     ///

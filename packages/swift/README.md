@@ -1,25 +1,25 @@
-# LiterLlm
+# liter-llm - Swift Bindings
 
 Universal LLM API client with Rust-powered polyglot bindings.
 
 ## Installation
 
-Add to your `Package.swift`:
+Add to `Package.swift`:
 
 ```swift
-.package(url = "https://github.com/example/LiterLlm.git", branch: "main"),
+.package(url: "<repo-url>", from: "liter-llm")
 ```
 
-## Building
+## Quick Start
 
-```sh
-cargo build -p liter-llm-swift
-# Copy generated sources (see BUILDING.md for details)
-swift build --package-path packages/swift
+```swift
+// Phase 2: Swift bindings via swift-bridge. Skeleton only.
 ```
 
-For detailed build instructions, see [BUILDING.md](BUILDING.md).
+## Documentation
+
+For full documentation, see the [liter-llm repository](https://github.com/kreuzberg-dev/liter-llm).
 
 ## License
 
-MIT
+See the [LICENSE](https://github.com/kreuzberg-dev/liter-llm/blob/main/LICENSE) file in the root repository.

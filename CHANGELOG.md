@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `iter21`: bump alef to `0.15.47`, regenerate all 15 language bindings + e2e suites. Skipped-assertion comments across e2e suites drop from 354 → 228 (~36%). Headline wins: swift `XCTSkipIf("swift: json_object …")` stubs 140 → 0 (alef-backend-swift FromJson generalization), dart `// skipped: unknown assertion type` 132 → 0 (dart renderer parity with rust/kotlin/go — all 24 fixture assertion types), kotlin `{f}` literal placeholder fixed, user-typed array indices `choices[0].message.content` now parse correctly in fixture field paths.
+
 ### Removed
 
 - `iter21/gleam`: drop the gleam binding (packages/gleam/, e2e/gleam/, test_apps/gleam/, .github/workflows/gleam.yml, docs/reference/api-gleam.md) and all gleam alef.toml config blocks (22 entries: `languages` list, `[crates.gleam]`, workspace.sync entry, 20 per-call override blocks). Reasoning: same BEAM VM as elixir → zero runtime/perf differentiation, ~15k devs vs elixir's ~200k, codegen DSL gaps in alef-e2e/gleam would require ongoing per-language work to close.

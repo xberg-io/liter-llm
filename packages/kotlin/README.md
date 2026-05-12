@@ -1,24 +1,29 @@
-# liter_llm
+# liter-llm - Kotlin Bindings
 
 Universal LLM API client with Rust-powered polyglot bindings.
 
 ## Installation
 
-Add to your `build.gradle.kts`:
+Add the generated package to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.github.kreuzberg_dev:your-lib-kt:1.4.0-rc.27")
+    implementation("com.github.kreuzberg_dev:liter_llm:VERSION")
 }
 ```
 
-## Building
+## Quick Start
 
-```sh
-gradle build
-gradle test
+```kotlin
+import com.github.kreuzberg_dev.LiterLlm
+
+// Call generated APIs through the LiterLlm object.
 ```
+
+## Documentation
+
+For full documentation, see the [liter-llm repository](https://github.com/kreuzberg-dev/liter-llm).
 
 ## License
 
-MIT
+See the [LICENSE](https://github.com/kreuzberg-dev/liter-llm/blob/main/LICENSE) file in the root repository.

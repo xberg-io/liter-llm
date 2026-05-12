@@ -1,36 +1,27 @@
-# liter_llm
+# liter-llm - Dart Bindings
 
 Universal LLM API client with Rust-powered polyglot bindings.
 
 ## Installation
 
-Add to your `pubspec.yaml`:
+Add to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  liter_llm: ^1.4.0-rc.27
+  liter_llm:
+    git: <repo-url>
 ```
 
-Then run:
+## Quick Start
 
-```sh
-dart pub get
+```dart
+// Phase 2: Dart bindings via flutter_rust_bridge. Skeleton only.
 ```
 
-## Building
+## Documentation
 
-From the repository root:
-
-```sh
-cargo build -p liter-llm-dart
-flutter_rust_bridge_codegen generate
-dart pub get
-dart analyze
-dart test
-```
-
-For detailed build instructions, see [BUILDING.md](BUILDING.md).
+For full documentation, see the [liter-llm repository](https://github.com/kreuzberg-dev/liter-llm).
 
 ## License
 
-MIT
+See the [LICENSE](https://github.com/kreuzberg-dev/liter-llm/blob/main/LICENSE) file in the root repository.
