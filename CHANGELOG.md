@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `iter22` (in flight, local alef): swift `{f}` literal placeholder fixed in alef-e2e/codegen/swift.rs (same class of double-brace escape bug iter21 Phase C fixed in kotlin). Generated swift streaming tests now show real field names instead of `'{f}'`. Skipped-assertion total drops 228 → 126.
+- `iter22/fixtures`: remove `equals` assertion with `value: null` from `fixtures/chat/finish_reason_content_filter.json` — the codegen can't model "expected null" cleanly and the remaining assertions (no error, 1 choice, finish_reason == 'content_filter') already cover the content-filter semantics.
 - `iter21`: bump alef to `0.15.47`, regenerate all 15 language bindings + e2e suites. Skipped-assertion comments across e2e suites drop from 354 → 228 (~36%). Headline wins: swift `XCTSkipIf("swift: json_object …")` stubs 140 → 0 (alef-backend-swift FromJson generalization), dart `// skipped: unknown assertion type` 132 → 0 (dart renderer parity with rust/kotlin/go — all 24 fixture assertion types), kotlin `{f}` literal placeholder fixed, user-typed array indices `choices[0].message.content` now parse correctly in fixture field paths.
 
 ### Removed
