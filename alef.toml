@@ -309,6 +309,10 @@ precondition = "command -v make >/dev/null 2>&1"
 before = "cargo build -p liter-llm-ffi --release && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 e2e = "cd e2e/c && make test"
 
+[crates.test.kotlin]
+precondition = "command -v gradle >/dev/null 2>&1"
+e2e = "cd e2e/kotlin && gradle test"
+
 [crates.publish]
 core_crate = "crates/liter-llm"
 
