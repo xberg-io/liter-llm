@@ -2,23 +2,10 @@
   "id": "stream_with_usage",
   "description": "Streaming chat completion that includes a usage summary in the final chunk",
   "category": "streaming",
-  "tags": [
-    "streaming"
-  ],
+  "tags": ["streaming"],
   "call": "chat_stream",
   "skip": {
-    "languages": [
-      "rust",
-      "node",
-      "ruby",
-      "php",
-      "go",
-      "java",
-      "csharp",
-      "elixir",
-      "wasm",
-      "c"
-    ],
+    "languages": ["rust", "node", "ruby", "php", "go", "java", "csharp", "elixir", "wasm", "c"],
     "reason": "Rust returns BoxStream \u2014 collecting usage from the final chunk requires consuming the stream, which is not supported by the generator"
   },
   "input": {

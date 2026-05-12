@@ -1,6 +1,21 @@
 [workspace]
 alef_version = "0.15.47"
-languages = ["python", "node", "ruby", "php", "ffi", "go", "java", "csharp", "elixir", "wasm", "zig", "dart", "swift", "kotlin"]
+languages = [
+  "python",
+  "node",
+  "ruby",
+  "php",
+  "ffi",
+  "go",
+  "java",
+  "csharp",
+  "elixir",
+  "wasm",
+  "zig",
+  "dart",
+  "swift",
+  "kotlin",
+]
 
 [workspace.sync]
 extra_paths = [
@@ -322,10 +337,7 @@ exclude_categories = ["cache", "proxy", "budget", "hooks"]
 # appear on. `status` / `purpose` are context-dependent (BatchStatus on BatchObject,
 # but plain String on ResponseObject/FileObject) so they are configured per-call via
 # `enum_fields = { "status" = "..." }` overrides, not globally.
-fields_enum = [
-  "choices[0].finish_reason",
-  "choices[0].message.role",
-]
+fields_enum = ["choices[0].finish_reason", "choices[0].message.role"]
 # Optional fields on result types — generator emits unwrap handling for these paths.
 fields_optional = [
   # ChatCompletionResponse

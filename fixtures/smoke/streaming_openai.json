@@ -25,7 +25,9 @@
         "object": "chat.completion.chunk",
         "created": 1711000000,
         "model": "gpt-4o-mini",
-        "choices": [{ "index": 0, "delta": { "role": "assistant", "content": "" }, "finish_reason": null }]
+        "choices": [
+          { "index": 0, "delta": { "role": "assistant", "content": "" }, "finish_reason": null }
+        ]
       },
       {
         "id": "chatcmpl-smoke-stream",

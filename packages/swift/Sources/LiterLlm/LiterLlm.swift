@@ -181,31 +181,31 @@ public typealias CustomProviderConfig = RustBridge.CustomProviderConfig
 
 /// A chat message in a conversation.
 public enum Message {
-    case system(field0: SystemMessage)
-    case user(field0: UserMessage)
-    case assistant(field0: AssistantMessage)
-    case tool(field0: ToolMessage)
-    case developer(field0: DeveloperMessage)
-    /// Deprecated legacy function-role message; retained for API compatibility.
-    case function(field0: FunctionMessage)
+  case system(field0: SystemMessage)
+  case user(field0: UserMessage)
+  case assistant(field0: AssistantMessage)
+  case tool(field0: ToolMessage)
+  case developer(field0: DeveloperMessage)
+  /// Deprecated legacy function-role message; retained for API compatibility.
+  case function(field0: FunctionMessage)
 }
 
 public enum UserContent {
-    case text(field0: String)
-    case parts(field0: [ContentPart])
+  case text(field0: String)
+  case parts(field0: [ContentPart])
 }
 
 public enum ContentPart {
-    case text(text: String)
-    case imageUrl(imageUrl: ImageUrl)
-    case document(document: DocumentContent)
-    case inputAudio(inputAudio: AudioContent)
+  case text(text: String)
+  case imageUrl(imageUrl: ImageUrl)
+  case document(document: DocumentContent)
+  case inputAudio(inputAudio: AudioContent)
 }
 
 public enum ImageDetail {
-    case low
-    case high
-    case auto
+  case low
+  case high
+  case auto
 }
 
 /// The type discriminator for tool/tool-call objects.
@@ -214,223 +214,223 @@ public enum ImageDetail {
 /// that constraint at the type level and rejects any other value on
 /// deserialization.
 public enum ToolType {
-    case function
+  case function
 }
 
 public enum ToolChoice {
-    case mode(field0: ToolChoiceMode)
-    case specific(field0: SpecificToolChoice)
+  case mode(field0: ToolChoiceMode)
+  case specific(field0: SpecificToolChoice)
 }
 
 public enum ToolChoiceMode {
-    case auto
-    case required
-    case none
+  case auto
+  case required
+  case none
 }
 
 public enum ResponseFormat {
-    case text
-    case jsonObject
-    case jsonSchema(jsonSchema: JsonSchemaFormat)
+  case text
+  case jsonObject
+  case jsonSchema(jsonSchema: JsonSchemaFormat)
 }
 
 public enum StopSequence {
-    case single(field0: String)
-    case multiple(field0: [String])
+  case single(field0: String)
+  case multiple(field0: [String])
 }
 
 /// Why a choice stopped generating tokens.
 public enum FinishReason {
-    case stop
-    case length
-    case toolCalls
-    case contentFilter
-    /// Deprecated legacy finish reason; retained for API compatibility.
-    case functionCall
-    /// Catch-all for unknown finish reasons returned by non-OpenAI providers.
-    ///
-    /// Note: this intentionally does **not** carry the original string (e.g.
-    /// `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and
-    /// switching to `#[serde(untagged)]` would change deserialization semantics
-    /// for all variants.  The original value can be recovered by inspecting the
-    /// raw JSON if needed.
-    case other
+  case stop
+  case length
+  case toolCalls
+  case contentFilter
+  /// Deprecated legacy finish reason; retained for API compatibility.
+  case functionCall
+  /// Catch-all for unknown finish reasons returned by non-OpenAI providers.
+  ///
+  /// Note: this intentionally does **not** carry the original string (e.g.
+  /// `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and
+  /// switching to `#[serde(untagged)]` would change deserialization semantics
+  /// for all variants.  The original value can be recovered by inspecting the
+  /// raw JSON if needed.
+  case other
 }
 
 /// Controls how much reasoning effort the model should use.
 public enum ReasoningEffort {
-    case low
-    case medium
-    case high
+  case low
+  case medium
+  case high
 }
 
 /// The format in which the embedding vectors are returned.
 public enum EmbeddingFormat {
-    /// 32-bit floating-point numbers (default).
-    case float
-    /// Base64-encoded string representation of the floats.
-    case base64
+  /// 32-bit floating-point numbers (default).
+  case float
+  /// Base64-encoded string representation of the floats.
+  case base64
 }
 
 public enum EmbeddingInput {
-    case single(field0: String)
-    case multiple(field0: [String])
+  case single(field0: String)
+  case multiple(field0: [String])
 }
 
 /// Input to the moderation endpoint — a single string or multiple strings.
 public enum ModerationInput {
-    case single(field0: String)
-    case multiple(field0: [String])
+  case single(field0: String)
+  case multiple(field0: [String])
 }
 
 /// A document to be reranked — either a plain string or an object with a text field.
 public enum RerankDocument {
-    case text(field0: String)
-    case object(text: String)
+  case text(field0: String)
+  case object(text: String)
 }
 
 /// Document input for OCR — either a URL or inline base64 data.
 public enum OcrDocument {
-    /// A publicly accessible document URL.
-    case url(url: String)
-    /// Inline base64-encoded document data.
-    case base64(data: String, mediaType: String)
+  /// A publicly accessible document URL.
+  case url(url: String)
+  /// Inline base64-encoded document data.
+  case base64(data: String, mediaType: String)
 }
 
 public enum FilePurpose {
-    case assistants
-    case batch
-    case fineTune
-    case vision
+  case assistants
+  case batch
+  case fineTune
+  case vision
 }
 
 public enum BatchStatus {
-    case validating
-    case failed
-    case inProgress
-    case finalizing
-    case completed
-    case expired
-    case cancelling
-    case cancelled
+  case validating
+  case failed
+  case inProgress
+  case finalizing
+  case completed
+  case expired
+  case cancelling
+  case cancelled
 }
 
 /// How the API key is sent in the HTTP request.
 public enum AuthHeaderFormat {
-    /// Bearer token: `Authorization: Bearer <key>`
-    case bearer
-    /// Custom header: e.g., `X-Api-Key: <key>`
-    case apiKey(field0: String)
-    /// No authentication required.
-    case none
+  /// Bearer token: `Authorization: Bearer <key>`
+  case bearer
+  /// Custom header: e.g., `X-Api-Key: <key>`
+  case apiKey(field0: String)
+  /// No authentication required.
+  case none
 }
 
 /// All errors that can occur when using `liter-llm`.
 public enum LiterLlmError: Error {
-    /// `status` preserves the exact HTTP status code received (401 or 403).
-    case authentication(message: String, status: UInt16)
-    case rateLimited(message: String, retryAfter: Duration)
-    /// `status` preserves the exact HTTP status code received (400, 405, 413, 422, …).
-    case badRequest(message: String, status: UInt16)
-    case contextWindowExceeded(message: String)
-    case contentPolicy(message: String)
-    case notFound(message: String)
-    /// `status` preserves the exact HTTP status code received (500, or other 5xx not covered
-    /// by `ServiceUnavailable`).
-    case serverError(message: String, status: UInt16)
-    /// `status` preserves the exact HTTP status code received (502, 503, or 504).
-    case serviceUnavailable(message: String, status: UInt16)
-    case timeout
-    /// A catch-all for errors that occur during streaming response processing.
-    ///
-    /// This variant covers multiple sub-conditions including UTF-8 decoding
-    /// failures, CRC/checksum mismatches (AWS EventStream), JSON parse errors
-    /// in individual SSE chunks, and buffer overflow conditions.  The `message`
-    /// field contains a human-readable description of the specific failure.
-    case streaming(message: String)
-    case endpointNotSupported(message: String, endpoint: String, provider: String)
-    case invalidHeader(message: String, name: String, reason: String)
-    case serialization(message: String, field0: String)
-    case budgetExceeded(message: String, model: String)
-    case hookRejected(message: String)
-    /// An internal logic error (e.g. unexpected Tower response variant).
-    ///
-    /// This should never surface in normal operation — if it does, it
-    /// indicates a bug in the library.
-    case internalError(message: String)
+  /// `status` preserves the exact HTTP status code received (401 or 403).
+  case authentication(message: String, status: UInt16)
+  case rateLimited(message: String, retryAfter: Duration)
+  /// `status` preserves the exact HTTP status code received (400, 405, 413, 422, …).
+  case badRequest(message: String, status: UInt16)
+  case contextWindowExceeded(message: String)
+  case contentPolicy(message: String)
+  case notFound(message: String)
+  /// `status` preserves the exact HTTP status code received (500, or other 5xx not covered
+  /// by `ServiceUnavailable`).
+  case serverError(message: String, status: UInt16)
+  /// `status` preserves the exact HTTP status code received (502, 503, or 504).
+  case serviceUnavailable(message: String, status: UInt16)
+  case timeout
+  /// A catch-all for errors that occur during streaming response processing.
+  ///
+  /// This variant covers multiple sub-conditions including UTF-8 decoding
+  /// failures, CRC/checksum mismatches (AWS EventStream), JSON parse errors
+  /// in individual SSE chunks, and buffer overflow conditions.  The `message`
+  /// field contains a human-readable description of the specific failure.
+  case streaming(message: String)
+  case endpointNotSupported(message: String, endpoint: String, provider: String)
+  case invalidHeader(message: String, name: String, reason: String)
+  case serialization(message: String, field0: String)
+  case budgetExceeded(message: String, model: String)
+  case hookRejected(message: String)
+  /// An internal logic error (e.g. unexpected Tower response variant).
+  ///
+  /// This should never surface in normal operation — if it does, it
+  /// indicates a bug in the library.
+  case internalError(message: String)
 }
 
 public final class DefaultClient {
-    private let inner: RustBridge.DefaultClient
-    public init(apiKey: String, baseUrl: String? = nil) throws {
-        self.inner = try RustBridge.createDefaultClient(apiKey, baseUrl)
-    }
-    public func chat(_ req: ChatCompletionRequest) async throws -> ChatCompletionResponse {
-        return try await RustBridge.defaultClientChat(self.inner, req)
-    }
-    public func embed(_ req: EmbeddingRequest) async throws -> EmbeddingResponse {
-        return try await RustBridge.defaultClientEmbed(self.inner, req)
-    }
-    public func listModels() async throws -> ModelsListResponse {
-        return try await RustBridge.defaultClientListModels(self.inner)
-    }
-    public func imageGenerate(_ req: CreateImageRequest) async throws -> ImagesResponse {
-        return try await RustBridge.defaultClientImageGenerate(self.inner, req)
-    }
-    public func speech(_ req: CreateSpeechRequest) async throws -> Data {
-        let _bytes = try await RustBridge.defaultClientSpeech(self.inner, req)
-        return Data(_bytes.map { $0 })
-    }
-    public func transcribe(_ req: CreateTranscriptionRequest) async throws -> TranscriptionResponse {
-        return try await RustBridge.defaultClientTranscribe(self.inner, req)
-    }
-    public func moderate(_ req: ModerationRequest) async throws -> ModerationResponse {
-        return try await RustBridge.defaultClientModerate(self.inner, req)
-    }
-    public func rerank(_ req: RerankRequest) async throws -> RerankResponse {
-        return try await RustBridge.defaultClientRerank(self.inner, req)
-    }
-    public func search(_ req: SearchRequest) async throws -> SearchResponse {
-        return try await RustBridge.defaultClientSearch(self.inner, req)
-    }
-    public func ocr(_ req: OcrRequest) async throws -> OcrResponse {
-        return try await RustBridge.defaultClientOcr(self.inner, req)
-    }
-    public func createFile(_ req: CreateFileRequest) async throws -> FileObject {
-        return try await RustBridge.defaultClientCreateFile(self.inner, req)
-    }
-    public func retrieveFile(_ fileId: String) async throws -> FileObject {
-        return try await RustBridge.defaultClientRetrieveFile(self.inner, fileId)
-    }
-    public func deleteFile(_ fileId: String) async throws -> DeleteResponse {
-        return try await RustBridge.defaultClientDeleteFile(self.inner, fileId)
-    }
-    public func listFiles(_ query: FileListQuery?) async throws -> FileListResponse {
-        return try await RustBridge.defaultClientListFiles(self.inner, query)
-    }
-    public func fileContent(_ fileId: String) async throws -> Data {
-        let _bytes = try await RustBridge.defaultClientFileContent(self.inner, fileId)
-        return Data(_bytes.map { $0 })
-    }
-    public func createBatch(_ req: CreateBatchRequest) async throws -> BatchObject {
-        return try await RustBridge.defaultClientCreateBatch(self.inner, req)
-    }
-    public func retrieveBatch(_ batchId: String) async throws -> BatchObject {
-        return try await RustBridge.defaultClientRetrieveBatch(self.inner, batchId)
-    }
-    public func listBatches(_ query: BatchListQuery?) async throws -> BatchListResponse {
-        return try await RustBridge.defaultClientListBatches(self.inner, query)
-    }
-    public func cancelBatch(_ batchId: String) async throws -> BatchObject {
-        return try await RustBridge.defaultClientCancelBatch(self.inner, batchId)
-    }
-    public func createResponse(_ req: CreateResponseRequest) async throws -> ResponseObject {
-        return try await RustBridge.defaultClientCreateResponse(self.inner, req)
-    }
-    public func retrieveResponse(_ id: String) async throws -> ResponseObject {
-        return try await RustBridge.defaultClientRetrieveResponse(self.inner, id)
-    }
-    public func cancelResponse(_ id: String) async throws -> ResponseObject {
-        return try await RustBridge.defaultClientCancelResponse(self.inner, id)
-    }
+  private let inner: RustBridge.DefaultClient
+  public init(apiKey: String, baseUrl: String? = nil) throws {
+    self.inner = try RustBridge.createDefaultClient(apiKey, baseUrl)
+  }
+  public func chat(_ req: ChatCompletionRequest) async throws -> ChatCompletionResponse {
+    return try await RustBridge.defaultClientChat(self.inner, req)
+  }
+  public func embed(_ req: EmbeddingRequest) async throws -> EmbeddingResponse {
+    return try await RustBridge.defaultClientEmbed(self.inner, req)
+  }
+  public func listModels() async throws -> ModelsListResponse {
+    return try await RustBridge.defaultClientListModels(self.inner)
+  }
+  public func imageGenerate(_ req: CreateImageRequest) async throws -> ImagesResponse {
+    return try await RustBridge.defaultClientImageGenerate(self.inner, req)
+  }
+  public func speech(_ req: CreateSpeechRequest) async throws -> Data {
+    let _bytes = try await RustBridge.defaultClientSpeech(self.inner, req)
+    return Data(_bytes.map { $0 })
+  }
+  public func transcribe(_ req: CreateTranscriptionRequest) async throws -> TranscriptionResponse {
+    return try await RustBridge.defaultClientTranscribe(self.inner, req)
+  }
+  public func moderate(_ req: ModerationRequest) async throws -> ModerationResponse {
+    return try await RustBridge.defaultClientModerate(self.inner, req)
+  }
+  public func rerank(_ req: RerankRequest) async throws -> RerankResponse {
+    return try await RustBridge.defaultClientRerank(self.inner, req)
+  }
+  public func search(_ req: SearchRequest) async throws -> SearchResponse {
+    return try await RustBridge.defaultClientSearch(self.inner, req)
+  }
+  public func ocr(_ req: OcrRequest) async throws -> OcrResponse {
+    return try await RustBridge.defaultClientOcr(self.inner, req)
+  }
+  public func createFile(_ req: CreateFileRequest) async throws -> FileObject {
+    return try await RustBridge.defaultClientCreateFile(self.inner, req)
+  }
+  public func retrieveFile(_ fileId: String) async throws -> FileObject {
+    return try await RustBridge.defaultClientRetrieveFile(self.inner, fileId)
+  }
+  public func deleteFile(_ fileId: String) async throws -> DeleteResponse {
+    return try await RustBridge.defaultClientDeleteFile(self.inner, fileId)
+  }
+  public func listFiles(_ query: FileListQuery?) async throws -> FileListResponse {
+    return try await RustBridge.defaultClientListFiles(self.inner, query)
+  }
+  public func fileContent(_ fileId: String) async throws -> Data {
+    let _bytes = try await RustBridge.defaultClientFileContent(self.inner, fileId)
+    return Data(_bytes.map { $0 })
+  }
+  public func createBatch(_ req: CreateBatchRequest) async throws -> BatchObject {
+    return try await RustBridge.defaultClientCreateBatch(self.inner, req)
+  }
+  public func retrieveBatch(_ batchId: String) async throws -> BatchObject {
+    return try await RustBridge.defaultClientRetrieveBatch(self.inner, batchId)
+  }
+  public func listBatches(_ query: BatchListQuery?) async throws -> BatchListResponse {
+    return try await RustBridge.defaultClientListBatches(self.inner, query)
+  }
+  public func cancelBatch(_ batchId: String) async throws -> BatchObject {
+    return try await RustBridge.defaultClientCancelBatch(self.inner, batchId)
+  }
+  public func createResponse(_ req: CreateResponseRequest) async throws -> ResponseObject {
+    return try await RustBridge.defaultClientCreateResponse(self.inner, req)
+  }
+  public func retrieveResponse(_ id: String) async throws -> ResponseObject {
+    return try await RustBridge.defaultClientRetrieveResponse(self.inner, id)
+  }
+  public func cancelResponse(_ id: String) async throws -> ResponseObject {
+    return try await RustBridge.defaultClientCancelResponse(self.inner, id)
+  }
 }

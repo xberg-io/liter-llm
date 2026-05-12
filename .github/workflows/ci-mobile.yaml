@@ -4,17 +4,17 @@ on:
   push:
     branches: [main]
     paths:
-      - 'crates/**'
-      - 'packages/dart/**'
-      - 'packages/swift/**'
-      - '.github/workflows/ci-mobile.yaml'
+      - "crates/**"
+      - "packages/dart/**"
+      - "packages/swift/**"
+      - ".github/workflows/ci-mobile.yaml"
   pull_request:
     branches: [main]
     paths:
-      - 'crates/**'
-      - 'packages/dart/**'
-      - 'packages/swift/**'
-      - '.github/workflows/ci-mobile.yaml'
+      - "crates/**"
+      - "packages/dart/**"
+      - "packages/swift/**"
+      - ".github/workflows/ci-mobile.yaml"
   workflow_dispatch:
 
 concurrency:

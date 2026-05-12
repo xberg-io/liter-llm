@@ -6,94 +6,54 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /** Coroutine-friendly wrapper around the Java `dev.kreuzberg.literllm.DefaultClient` facade. */
-class DefaultClient internal constructor(internal val inner: dev.kreuzberg.literllm.DefaultClient) : AutoCloseable {
-    suspend fun chat(req: ChatCompletionRequest): ChatCompletionResponse {
-        return withContext(Dispatchers.IO) { inner.chat(req) }
-    }
+class DefaultClient internal constructor(
+    internal val inner: dev.kreuzberg.literllm.DefaultClient,
+) : AutoCloseable {
+    suspend fun chat(req: ChatCompletionRequest): ChatCompletionResponse = withContext(Dispatchers.IO) { inner.chat(req) }
 
-    suspend fun embed(req: EmbeddingRequest): EmbeddingResponse {
-        return withContext(Dispatchers.IO) { inner.embed(req) }
-    }
+    suspend fun embed(req: EmbeddingRequest): EmbeddingResponse = withContext(Dispatchers.IO) { inner.embed(req) }
 
-    suspend fun listModels(): ModelsListResponse {
-        return withContext(Dispatchers.IO) { inner.listModels() }
-    }
+    suspend fun listModels(): ModelsListResponse = withContext(Dispatchers.IO) { inner.listModels() }
 
-    suspend fun imageGenerate(req: CreateImageRequest): ImagesResponse {
-        return withContext(Dispatchers.IO) { inner.imageGenerate(req) }
-    }
+    suspend fun imageGenerate(req: CreateImageRequest): ImagesResponse = withContext(Dispatchers.IO) { inner.imageGenerate(req) }
 
-    suspend fun speech(req: CreateSpeechRequest): ByteArray {
-        return withContext(Dispatchers.IO) { inner.speech(req) }
-    }
+    suspend fun speech(req: CreateSpeechRequest): ByteArray = withContext(Dispatchers.IO) { inner.speech(req) }
 
-    suspend fun transcribe(req: CreateTranscriptionRequest): TranscriptionResponse {
-        return withContext(Dispatchers.IO) { inner.transcribe(req) }
-    }
+    suspend fun transcribe(req: CreateTranscriptionRequest): TranscriptionResponse = withContext(Dispatchers.IO) { inner.transcribe(req) }
 
-    suspend fun moderate(req: ModerationRequest): ModerationResponse {
-        return withContext(Dispatchers.IO) { inner.moderate(req) }
-    }
+    suspend fun moderate(req: ModerationRequest): ModerationResponse = withContext(Dispatchers.IO) { inner.moderate(req) }
 
-    suspend fun rerank(req: RerankRequest): RerankResponse {
-        return withContext(Dispatchers.IO) { inner.rerank(req) }
-    }
+    suspend fun rerank(req: RerankRequest): RerankResponse = withContext(Dispatchers.IO) { inner.rerank(req) }
 
-    suspend fun search(req: SearchRequest): SearchResponse {
-        return withContext(Dispatchers.IO) { inner.search(req) }
-    }
+    suspend fun search(req: SearchRequest): SearchResponse = withContext(Dispatchers.IO) { inner.search(req) }
 
-    suspend fun ocr(req: OcrRequest): OcrResponse {
-        return withContext(Dispatchers.IO) { inner.ocr(req) }
-    }
+    suspend fun ocr(req: OcrRequest): OcrResponse = withContext(Dispatchers.IO) { inner.ocr(req) }
 
-    suspend fun createFile(req: CreateFileRequest): FileObject {
-        return withContext(Dispatchers.IO) { inner.createFile(req) }
-    }
+    suspend fun createFile(req: CreateFileRequest): FileObject = withContext(Dispatchers.IO) { inner.createFile(req) }
 
-    suspend fun retrieveFile(fileId: String): FileObject {
-        return withContext(Dispatchers.IO) { inner.retrieveFile(fileId) }
-    }
+    suspend fun retrieveFile(fileId: String): FileObject = withContext(Dispatchers.IO) { inner.retrieveFile(fileId) }
 
-    suspend fun deleteFile(fileId: String): DeleteResponse {
-        return withContext(Dispatchers.IO) { inner.deleteFile(fileId) }
-    }
+    suspend fun deleteFile(fileId: String): DeleteResponse = withContext(Dispatchers.IO) { inner.deleteFile(fileId) }
 
-    suspend fun listFiles(query: FileListQuery? = null): FileListResponse {
-        return withContext(Dispatchers.IO) { inner.listFiles(query) }
-    }
+    suspend fun listFiles(query: FileListQuery? = null): FileListResponse = withContext(Dispatchers.IO) { inner.listFiles(query) }
 
-    suspend fun fileContent(fileId: String): ByteArray {
-        return withContext(Dispatchers.IO) { inner.fileContent(fileId) }
-    }
+    suspend fun fileContent(fileId: String): ByteArray = withContext(Dispatchers.IO) { inner.fileContent(fileId) }
 
-    suspend fun createBatch(req: CreateBatchRequest): BatchObject {
-        return withContext(Dispatchers.IO) { inner.createBatch(req) }
-    }
+    suspend fun createBatch(req: CreateBatchRequest): BatchObject = withContext(Dispatchers.IO) { inner.createBatch(req) }
 
-    suspend fun retrieveBatch(batchId: String): BatchObject {
-        return withContext(Dispatchers.IO) { inner.retrieveBatch(batchId) }
-    }
+    suspend fun retrieveBatch(batchId: String): BatchObject = withContext(Dispatchers.IO) { inner.retrieveBatch(batchId) }
 
-    suspend fun listBatches(query: BatchListQuery? = null): BatchListResponse {
-        return withContext(Dispatchers.IO) { inner.listBatches(query) }
-    }
+    suspend fun listBatches(query: BatchListQuery? = null): BatchListResponse = withContext(Dispatchers.IO) { inner.listBatches(query) }
 
-    suspend fun cancelBatch(batchId: String): BatchObject {
-        return withContext(Dispatchers.IO) { inner.cancelBatch(batchId) }
-    }
+    suspend fun cancelBatch(batchId: String): BatchObject = withContext(Dispatchers.IO) { inner.cancelBatch(batchId) }
 
-    suspend fun createResponse(req: CreateResponseRequest): ResponseObject {
-        return withContext(Dispatchers.IO) { inner.createResponse(req) }
-    }
+    suspend fun createResponse(req: CreateResponseRequest): ResponseObject = withContext(Dispatchers.IO) { inner.createResponse(req) }
 
-    suspend fun retrieveResponse(id: String): ResponseObject {
-        return withContext(Dispatchers.IO) { inner.retrieveResponse(id) }
-    }
+    suspend fun retrieveResponse(id: String): ResponseObject = withContext(Dispatchers.IO) { inner.retrieveResponse(id) }
 
-    suspend fun cancelResponse(id: String): ResponseObject {
-        return withContext(Dispatchers.IO) { inner.cancelResponse(id) }
-    }
+    suspend fun cancelResponse(id: String): ResponseObject = withContext(Dispatchers.IO) { inner.cancelResponse(id) }
 
-    override fun close() { inner.close() }
+    override fun close() {
+        inner.close()
+    }
 }

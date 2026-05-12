@@ -2,11 +2,7 @@
   "id": "local_chat_ollama",
   "description": "Chat completion against local Ollama with qwen2:0.5b model",
   "category": "smoke",
-  "tags": [
-    "smoke",
-    "local",
-    "ollama"
-  ],
+  "tags": ["smoke", "local", "ollama"],
   "call": "chat",
   "input": {
     "model": "ollama/qwen2:0.5b",

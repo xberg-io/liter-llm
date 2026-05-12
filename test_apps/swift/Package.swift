@@ -5,6 +5,7 @@ let package = Package(
     name: "E2eSwift",
     platforms: [
         .macOS(.v13),
+        .iOS(.v14),
     ],
     dependencies: [
         .package(url: "https://github.com/kreuzberg-dev/liter-llm.git", from: "1.4.0-rc.27"),
