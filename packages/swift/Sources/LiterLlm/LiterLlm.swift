@@ -358,7 +358,7 @@ public enum LiterLlmError: Error {
 public final class DefaultClient {
     private let inner: RustBridge.DefaultClient
     public init(apiKey: String, baseUrl: String? = nil) throws {
-        self.inner = try RustBridge.createDefaultClient(apiKey: apiKey, baseUrl: baseUrl)
+        self.inner = try RustBridge.createDefaultClient(apiKey, baseUrl)
     }
     public func chat(_ req: ChatCompletionRequest) async throws -> ChatCompletionResponse {
         return try await RustBridge.defaultClientChat(self.inner, req)
@@ -373,7 +373,8 @@ public final class DefaultClient {
         return try await RustBridge.defaultClientImageGenerate(self.inner, req)
     }
     public func speech(_ req: CreateSpeechRequest) async throws -> Data {
-        return try await RustBridge.defaultClientSpeech(self.inner, req)
+        let _bytes = try await RustBridge.defaultClientSpeech(self.inner, req)
+        return Data(_bytes.map { $0 })
     }
     public func transcribe(_ req: CreateTranscriptionRequest) async throws -> TranscriptionResponse {
         return try await RustBridge.defaultClientTranscribe(self.inner, req)
@@ -403,7 +404,8 @@ public final class DefaultClient {
         return try await RustBridge.defaultClientListFiles(self.inner, query)
     }
     public func fileContent(_ fileId: String) async throws -> Data {
-        return try await RustBridge.defaultClientFileContent(self.inner, fileId)
+        let _bytes = try await RustBridge.defaultClientFileContent(self.inner, fileId)
+        return Data(_bytes.map { $0 })
     }
     public func createBatch(_ req: CreateBatchRequest) async throws -> BatchObject {
         return try await RustBridge.defaultClientCreateBatch(self.inner, req)

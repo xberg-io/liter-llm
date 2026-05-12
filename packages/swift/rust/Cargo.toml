@@ -9,7 +9,7 @@ license = "MIT"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-liter_llm = { path = "../../../crates/liter-llm", features = ["native-http", "full", "ocr-wasm"] }
+liter_llm = { path = "../../../crates/liter-llm", features = ["native-http", "full"], package = "liter-llm" }
 async-trait = "0.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

@@ -76,7 +76,6 @@ typealias ResponseTool = dev.kreuzberg.literllm.ResponseTool
 typealias ResponseObject = dev.kreuzberg.literllm.ResponseObject
 typealias ResponseOutputItem = dev.kreuzberg.literllm.ResponseOutputItem
 typealias ResponseUsage = dev.kreuzberg.literllm.ResponseUsage
-typealias DefaultClient = dev.kreuzberg.literllm.DefaultClient
 typealias CustomProviderConfig = dev.kreuzberg.literllm.CustomProviderConfig
 
 typealias Message = dev.kreuzberg.literllm.Message
@@ -115,10 +114,9 @@ object LiterLlm {
      * Returns `LiterLlmError` if the underlying HTTP client cannot be
      * constructed, or if the resolved provider configuration is invalid.
      */
-    fun createClient(apiKey: String, baseUrl: String?, timeoutSecs: Long?, maxRetries: Int?, modelHint: String?): DefaultClient {
+    fun createClient(apiKey: String, baseUrl: String? = null, timeoutSecs: Long? = null, maxRetries: Int? = null, modelHint: String? = null): DefaultClient {
 
-        return Bridge.createClient(apiKey, baseUrl, timeoutSecs, maxRetries, modelHint)
-
+        return DefaultClient(Bridge.createClient(apiKey, baseUrl, timeoutSecs, maxRetries, modelHint))
     }
 
     /**
@@ -133,8 +131,7 @@ object LiterLlm {
      */
     fun createClientFromJson(json: String): DefaultClient {
 
-        return Bridge.createClientFromJson(json)
-
+        return DefaultClient(Bridge.createClientFromJson(json))
     }
 
     /**

@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.15.39"
+alef_version = "0.15.45"
 languages = ["python", "node", "ruby", "php", "ffi", "go", "java", "csharp", "elixir", "wasm", "zig", "gleam", "dart", "swift", "kotlin"]
 
 [workspace.sync]
@@ -558,12 +558,23 @@ result_enum_fields = { "choices[0].finish_reason" = "WasmFinishReason" }
 options_type = "ChatCompletionRequest"
 options_via = "from_json"
 
+[crates.e2e.calls.chat.overrides.kotlin]
+options_type = "ChatCompletionRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.chat.overrides.gleam]
+options_type = "ChatCompletionRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.chat.overrides.swift]
+options_type = "ChatCompletionRequest"
+options_via = "from_json"
+
 [crates.e2e.calls.chat_stream]
 function = "chat_stream"
 path = "/chat/completions"
 module = "liter_llm"
 async = true
-skip_languages = ["go", "dart"]
 
 [[crates.e2e.calls.chat_stream.args]]
 name = "request"
@@ -603,6 +614,18 @@ enum_fields = { "choices[0].finish_reason" = "FinishReason", "choices[0].message
 options_type = "WasmChatCompletionRequest"
 
 [crates.e2e.calls.chat_stream.overrides.dart]
+options_type = "ChatCompletionRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.chat_stream.overrides.kotlin]
+options_type = "ChatCompletionRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.chat_stream.overrides.gleam]
+options_type = "ChatCompletionRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.chat_stream.overrides.swift]
 options_type = "ChatCompletionRequest"
 options_via = "from_json"
 
@@ -652,6 +675,18 @@ options_via = "from_json"
 options_type = "WasmEmbeddingRequest"
 
 [crates.e2e.calls.embed.overrides.dart]
+options_type = "EmbeddingRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.embed.overrides.kotlin]
+options_type = "EmbeddingRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.embed.overrides.gleam]
+options_type = "EmbeddingRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.embed.overrides.swift]
 options_type = "EmbeddingRequest"
 options_via = "from_json"
 
@@ -714,6 +749,18 @@ options_via = "from_json"
 options_type = "WasmCreateImageRequest"
 
 [crates.e2e.calls.image_generate.overrides.dart]
+options_type = "CreateImageRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.image_generate.overrides.kotlin]
+options_type = "CreateImageRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.image_generate.overrides.gleam]
+options_type = "CreateImageRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.image_generate.overrides.swift]
 options_type = "CreateImageRequest"
 options_via = "from_json"
 
@@ -787,6 +834,18 @@ result_is_simple = true
 options_type = "CreateSpeechRequest"
 options_via = "from_json"
 
+[crates.e2e.calls.speech.overrides.kotlin]
+options_type = "CreateSpeechRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.speech.overrides.gleam]
+options_type = "CreateSpeechRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.speech.overrides.swift]
+options_type = "CreateSpeechRequest"
+options_via = "from_json"
+
 [crates.e2e.calls.transcribe]
 function = "transcribe"
 path = "/audio/transcriptions"
@@ -836,6 +895,18 @@ options_type = "WasmCreateTranscriptionRequest"
 options_type = "CreateTranscriptionRequest"
 options_via = "from_json"
 
+[crates.e2e.calls.transcribe.overrides.kotlin]
+options_type = "CreateTranscriptionRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.transcribe.overrides.gleam]
+options_type = "CreateTranscriptionRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.transcribe.overrides.swift]
+options_type = "CreateTranscriptionRequest"
+options_via = "from_json"
+
 [crates.e2e.calls.moderate]
 function = "moderate"
 path = "/moderations"
@@ -877,6 +948,18 @@ options_type = "LiterLlm::ModerationRequest"
 options_type = "WasmModerationRequest"
 
 [crates.e2e.calls.moderate.overrides.dart]
+options_type = "ModerationRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.moderate.overrides.kotlin]
+options_type = "ModerationRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.moderate.overrides.gleam]
+options_type = "ModerationRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.moderate.overrides.swift]
 options_type = "ModerationRequest"
 options_via = "from_json"
 
@@ -924,6 +1007,18 @@ options_type = "WasmRerankRequest"
 options_type = "RerankRequest"
 options_via = "from_json"
 
+[crates.e2e.calls.rerank.overrides.kotlin]
+options_type = "RerankRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.rerank.overrides.gleam]
+options_type = "RerankRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.rerank.overrides.swift]
+options_type = "RerankRequest"
+options_via = "from_json"
+
 [crates.e2e.calls.search]
 function = "search"
 path = "/search"
@@ -965,6 +1060,18 @@ options_type = "LiterLlm::SearchRequest"
 options_type = "WasmSearchRequest"
 
 [crates.e2e.calls.search.overrides.dart]
+options_type = "SearchRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.search.overrides.kotlin]
+options_type = "SearchRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.search.overrides.gleam]
+options_type = "SearchRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.search.overrides.swift]
 options_type = "SearchRequest"
 options_via = "from_json"
 
@@ -1012,6 +1119,18 @@ options_type = "WasmOcrRequest"
 options_type = "OcrRequest"
 options_via = "from_json"
 
+[crates.e2e.calls.ocr.overrides.kotlin]
+options_type = "OcrRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.ocr.overrides.gleam]
+options_type = "OcrRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.ocr.overrides.swift]
+options_type = "OcrRequest"
+options_via = "from_json"
+
 [crates.e2e.calls.create_file]
 function = "create_file"
 path = "/files"
@@ -1053,6 +1172,18 @@ options_type = "LiterLlm::CreateFileRequest"
 options_type = "WasmCreateFileRequest"
 
 [crates.e2e.calls.create_file.overrides.dart]
+options_type = "CreateFileRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.create_file.overrides.kotlin]
+options_type = "CreateFileRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.create_file.overrides.gleam]
+options_type = "CreateFileRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.create_file.overrides.swift]
 options_type = "CreateFileRequest"
 options_via = "from_json"
 
@@ -1243,6 +1374,18 @@ result_enum_fields = { "status" = "WasmBatchStatus" }
 options_type = "CreateBatchRequest"
 options_via = "from_json"
 
+[crates.e2e.calls.create_batch.overrides.kotlin]
+options_type = "CreateBatchRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.create_batch.overrides.gleam]
+options_type = "CreateBatchRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.create_batch.overrides.swift]
+options_type = "CreateBatchRequest"
+options_via = "from_json"
+
 [crates.e2e.calls.retrieve_batch]
 function = "retrieve_batch"
 path = "/batches"
@@ -1414,6 +1557,18 @@ options_type = "WasmCreateResponseRequest"
 bigint_fields = ["maxOutputTokens"]
 
 [crates.e2e.calls.create_response.overrides.dart]
+options_type = "CreateResponseRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.create_response.overrides.kotlin]
+options_type = "CreateResponseRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.create_response.overrides.gleam]
+options_type = "CreateResponseRequest"
+options_via = "from_json"
+
+[crates.e2e.calls.create_response.overrides.swift]
 options_type = "CreateResponseRequest"
 options_via = "from_json"
 

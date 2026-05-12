@@ -13,7 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `iter20`: bump alef to `0.15.45`, regenerate 16 language bindings + e2e suites. Removes `chat_stream` skip for go (cgo channel bridge) and dart (FRB v2 `StreamSink<T>`). Adds `options_via = "from_json"` per-call overrides for kotlin, gleam, and swift across 13 json-object calls (`chat`, `chat_stream`, `embed`, `image_generate`, `speech`, `transcribe`, `moderate`, `rerank`, `search`, `ocr`, `create_file`, `create_batch`, `responses`).
+- `ci-mobile`: new `.github/workflows/ci-mobile.yaml` running `android-check` (ubuntu, `arm64-v8a` + `x86_64` via `cargo ndk`), `ios-check` (macos, `aarch64-apple-ios` + `aarch64-apple-ios-sim`), and `xcframework-build` (macos, SPM-ready XCFramework + SHA256 checksum). Uses shared composite actions from `kreuzberg-dev/actions@v1`.
+
 ### Fixed
+
+- `chore(readme/go): fix broken jinja substitution on the GoDoc link` — the markdown autolink wrapper `<...>` around the URL was confusing the template parser into seeing `{{>` as a tag opener and aborting `task alef:all`.
 
 - `fix(provider/azure): honour per-model base_url overrides for Azure deployments` — `[[models]]` entries that pinned a `base_url` for an `azure/...` `provider_model` were silently routed through the generic OpenAI-compatible URL builder (`{base_url}{path}`), bypassing Azure's required `{base_url}/openai/deployments/{model}{path}?api-version=…` shape and producing 404s. `build_provider` now detects azure-prefixed model hints with a `base_url` override and constructs an `AzureProvider` with the per-model URL via the new `AzureProvider::with_base_url(...)` constructor. Unblocks multi-resource Azure setups (e.g. different deployments in different regions/subscriptions per model). Closes #83.
 - `fix(http/retry): avoid `SystemTime::now()` jitter on `wasm32-unknown-unknown`` — the retry-jitter calculation called `std::time::SystemTime::now()` which panics with `RuntimeError: unreachable` on the bare `wasm32-unknown-unknown` target (std time is not implemented). On `wasm32` the jitter step is skipped and the capped exponential delay is used as-is; native targets keep the existing `[0.5x, 1.0x]` jitter. This unblocks WASM e2e tests that exercise 429/5xx retry paths (`list_models_error_500`, `error_image_rate_limit`).

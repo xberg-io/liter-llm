@@ -677,23 +677,6 @@ pub type ResponseUsage {
   )
 }
 
-/// Default client implementation backed by `reqwest`.
-///
-/// The provider is resolved at construction time from `model_hint` (or
-/// defaults to OpenAI). However, individual requests can override the
-/// provider when their model string contains a prefix that clearly
-/// identifies a different provider (e.g. `"anthropic/claude-3"` will
-/// route to Anthropic even if the client was built without a hint).
-///
-/// When the model prefix does not match any known provider, the
-/// construction-time provider is used as the fallback.
-///
-/// The provider is stored behind an `Arc` so it can be shared cheaply into
-/// async closures and streaming tasks that must be `'static`.
-pub type DefaultClient {
-  DefaultClient
-}
-
 /// Configuration for registering a custom LLM provider at runtime.
 pub type CustomProviderConfig {
   CustomProviderConfig(
@@ -987,6 +970,222 @@ pub fn register_custom_provider(config: CustomProviderConfig) -> Result(Nil, Lit
 /// Returns an error only if the internal lock is poisoned.
 @external(erlang, "Elixir.LiterLlm.Native", "unregister_custom_provider")
 pub fn unregister_custom_provider(name: String) -> Result(Bool, LiterLlmError)
+
+@external(erlang, "Elixir.LiterLlm.Native", "system_message_from_json")
+pub fn system_message_from_json(json: String) -> Result(SystemMessage, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "user_message_from_json")
+pub fn user_message_from_json(json: String) -> Result(UserMessage, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "image_url_from_json")
+pub fn image_url_from_json(json: String) -> Result(ImageUrl, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "document_content_from_json")
+pub fn document_content_from_json(json: String) -> Result(DocumentContent, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "audio_content_from_json")
+pub fn audio_content_from_json(json: String) -> Result(AudioContent, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "assistant_message_from_json")
+pub fn assistant_message_from_json(json: String) -> Result(AssistantMessage, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "tool_message_from_json")
+pub fn tool_message_from_json(json: String) -> Result(ToolMessage, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "developer_message_from_json")
+pub fn developer_message_from_json(json: String) -> Result(DeveloperMessage, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "function_message_from_json")
+pub fn function_message_from_json(json: String) -> Result(FunctionMessage, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "chat_completion_tool_from_json")
+pub fn chat_completion_tool_from_json(json: String) -> Result(ChatCompletionTool, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "function_definition_from_json")
+pub fn function_definition_from_json(json: String) -> Result(FunctionDefinition, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "tool_call_from_json")
+pub fn tool_call_from_json(json: String) -> Result(ToolCall, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "function_call_from_json")
+pub fn function_call_from_json(json: String) -> Result(FunctionCall, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "specific_tool_choice_from_json")
+pub fn specific_tool_choice_from_json(json: String) -> Result(SpecificToolChoice, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "specific_function_from_json")
+pub fn specific_function_from_json(json: String) -> Result(SpecificFunction, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "json_schema_format_from_json")
+pub fn json_schema_format_from_json(json: String) -> Result(JsonSchemaFormat, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "usage_from_json")
+pub fn usage_from_json(json: String) -> Result(Usage, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "prompt_tokens_details_from_json")
+pub fn prompt_tokens_details_from_json(json: String) -> Result(PromptTokensDetails, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "chat_completion_request_from_json")
+pub fn chat_completion_request_from_json(json: String) -> Result(ChatCompletionRequest, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "stream_options_from_json")
+pub fn stream_options_from_json(json: String) -> Result(StreamOptions, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "chat_completion_response_from_json")
+pub fn chat_completion_response_from_json(json: String) -> Result(ChatCompletionResponse, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "choice_from_json")
+pub fn choice_from_json(json: String) -> Result(Choice, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "chat_completion_chunk_from_json")
+pub fn chat_completion_chunk_from_json(json: String) -> Result(ChatCompletionChunk, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "stream_choice_from_json")
+pub fn stream_choice_from_json(json: String) -> Result(StreamChoice, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "stream_delta_from_json")
+pub fn stream_delta_from_json(json: String) -> Result(StreamDelta, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "stream_tool_call_from_json")
+pub fn stream_tool_call_from_json(json: String) -> Result(StreamToolCall, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "stream_function_call_from_json")
+pub fn stream_function_call_from_json(json: String) -> Result(StreamFunctionCall, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "embedding_request_from_json")
+pub fn embedding_request_from_json(json: String) -> Result(EmbeddingRequest, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "embedding_response_from_json")
+pub fn embedding_response_from_json(json: String) -> Result(EmbeddingResponse, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "embedding_object_from_json")
+pub fn embedding_object_from_json(json: String) -> Result(EmbeddingObject, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "create_image_request_from_json")
+pub fn create_image_request_from_json(json: String) -> Result(CreateImageRequest, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "images_response_from_json")
+pub fn images_response_from_json(json: String) -> Result(ImagesResponse, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "image_from_json")
+pub fn image_from_json(json: String) -> Result(Image, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "create_speech_request_from_json")
+pub fn create_speech_request_from_json(json: String) -> Result(CreateSpeechRequest, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "create_transcription_request_from_json")
+pub fn create_transcription_request_from_json(json: String) -> Result(CreateTranscriptionRequest, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "transcription_response_from_json")
+pub fn transcription_response_from_json(json: String) -> Result(TranscriptionResponse, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "transcription_segment_from_json")
+pub fn transcription_segment_from_json(json: String) -> Result(TranscriptionSegment, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "moderation_request_from_json")
+pub fn moderation_request_from_json(json: String) -> Result(ModerationRequest, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "moderation_response_from_json")
+pub fn moderation_response_from_json(json: String) -> Result(ModerationResponse, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "moderation_result_from_json")
+pub fn moderation_result_from_json(json: String) -> Result(ModerationResult, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "moderation_categories_from_json")
+pub fn moderation_categories_from_json(json: String) -> Result(ModerationCategories, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "moderation_category_scores_from_json")
+pub fn moderation_category_scores_from_json(json: String) -> Result(ModerationCategoryScores, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "rerank_request_from_json")
+pub fn rerank_request_from_json(json: String) -> Result(RerankRequest, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "rerank_response_from_json")
+pub fn rerank_response_from_json(json: String) -> Result(RerankResponse, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "rerank_result_from_json")
+pub fn rerank_result_from_json(json: String) -> Result(RerankResult, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "rerank_result_document_from_json")
+pub fn rerank_result_document_from_json(json: String) -> Result(RerankResultDocument, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "search_request_from_json")
+pub fn search_request_from_json(json: String) -> Result(SearchRequest, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "search_response_from_json")
+pub fn search_response_from_json(json: String) -> Result(SearchResponse, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "search_result_from_json")
+pub fn search_result_from_json(json: String) -> Result(SearchResult, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "ocr_request_from_json")
+pub fn ocr_request_from_json(json: String) -> Result(OcrRequest, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "ocr_response_from_json")
+pub fn ocr_response_from_json(json: String) -> Result(OcrResponse, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "ocr_page_from_json")
+pub fn ocr_page_from_json(json: String) -> Result(OcrPage, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "ocr_image_from_json")
+pub fn ocr_image_from_json(json: String) -> Result(OcrImage, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "page_dimensions_from_json")
+pub fn page_dimensions_from_json(json: String) -> Result(PageDimensions, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "models_list_response_from_json")
+pub fn models_list_response_from_json(json: String) -> Result(ModelsListResponse, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "model_object_from_json")
+pub fn model_object_from_json(json: String) -> Result(ModelObject, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "create_file_request_from_json")
+pub fn create_file_request_from_json(json: String) -> Result(CreateFileRequest, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "file_object_from_json")
+pub fn file_object_from_json(json: String) -> Result(FileObject, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "file_list_response_from_json")
+pub fn file_list_response_from_json(json: String) -> Result(FileListResponse, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "file_list_query_from_json")
+pub fn file_list_query_from_json(json: String) -> Result(FileListQuery, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "delete_response_from_json")
+pub fn delete_response_from_json(json: String) -> Result(DeleteResponse, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "create_batch_request_from_json")
+pub fn create_batch_request_from_json(json: String) -> Result(CreateBatchRequest, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "batch_object_from_json")
+pub fn batch_object_from_json(json: String) -> Result(BatchObject, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "batch_request_counts_from_json")
+pub fn batch_request_counts_from_json(json: String) -> Result(BatchRequestCounts, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "batch_list_response_from_json")
+pub fn batch_list_response_from_json(json: String) -> Result(BatchListResponse, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "batch_list_query_from_json")
+pub fn batch_list_query_from_json(json: String) -> Result(BatchListQuery, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "create_response_request_from_json")
+pub fn create_response_request_from_json(json: String) -> Result(CreateResponseRequest, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "response_tool_from_json")
+pub fn response_tool_from_json(json: String) -> Result(ResponseTool, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "response_object_from_json")
+pub fn response_object_from_json(json: String) -> Result(ResponseObject, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "response_output_item_from_json")
+pub fn response_output_item_from_json(json: String) -> Result(ResponseOutputItem, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "response_usage_from_json")
+pub fn response_usage_from_json(json: String) -> Result(ResponseUsage, String)
+
+@external(erlang, "Elixir.LiterLlm.Native", "custom_provider_config_from_json")
+pub fn custom_provider_config_from_json(json: String) -> Result(CustomProviderConfig, String)
 
 /// Default client implementation backed by `reqwest`.
 ///

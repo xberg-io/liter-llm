@@ -614,7 +614,32 @@ impl DefaultClient {
             .map(|v| ChatCompletionResponse::from(v))
             .map_err(|e| e.to_string())
     }
-    // Method `chat_stream` has a sanitized return type that cannot be bridged through FRB — skipped.
+    #[frb]
+    pub fn chat_stream(&self, req: ChatCompletionRequest, sink: crate::frb_generated::StreamSink<ChatCompletionChunk>) {
+        use futures_util::StreamExt;
+        let inner = self.inner.clone();
+        let core_req: liter_llm::ChatCompletionRequest = req.into();
+        flutter_rust_bridge::spawn(async move {
+            match inner.chat_stream(core_req).await {
+                Ok(mut stream) => {
+                    while let Some(item) = stream.next().await {
+                        match item {
+                            Ok(chunk) => {
+                                let _ = sink.add(ChatCompletionChunk::from(chunk));
+                            }
+                            Err(e) => {
+                                let _ = sink.add_error(e.to_string());
+                                break;
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    let _ = sink.add_error(e.to_string());
+                }
+            }
+        });
+    }
     #[frb]
     pub async fn embed(&self, req: EmbeddingRequest) -> Result<EmbeddingResponse, String> {
         self.inner

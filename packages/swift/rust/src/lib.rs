@@ -1058,6 +1058,40 @@ mod ffi {
         #[swift_bridge(swift_name = "unregisterCustomProvider")]
         fn unregister_custom_provider(name: String) -> Result<bool, String>;
     }
+
+    extern "Rust" {
+
+        #[swift_bridge(swift_name = "chatCompletionRequestFromJson")]
+        fn chat_completion_request_from_json(json: String) -> Result<ChatCompletionRequest, String>;
+        #[swift_bridge(swift_name = "embeddingRequestFromJson")]
+        fn embedding_request_from_json(json: String) -> Result<EmbeddingRequest, String>;
+        #[swift_bridge(swift_name = "createImageRequestFromJson")]
+        fn create_image_request_from_json(json: String) -> Result<CreateImageRequest, String>;
+        #[swift_bridge(swift_name = "createSpeechRequestFromJson")]
+        fn create_speech_request_from_json(json: String) -> Result<CreateSpeechRequest, String>;
+        #[swift_bridge(swift_name = "createTranscriptionRequestFromJson")]
+        fn create_transcription_request_from_json(json: String) -> Result<CreateTranscriptionRequest, String>;
+        #[swift_bridge(swift_name = "moderationRequestFromJson")]
+        fn moderation_request_from_json(json: String) -> Result<ModerationRequest, String>;
+        #[swift_bridge(swift_name = "rerankRequestFromJson")]
+        fn rerank_request_from_json(json: String) -> Result<RerankRequest, String>;
+        #[swift_bridge(swift_name = "searchRequestFromJson")]
+        fn search_request_from_json(json: String) -> Result<SearchRequest, String>;
+        #[swift_bridge(swift_name = "ocrRequestFromJson")]
+        fn ocr_request_from_json(json: String) -> Result<OcrRequest, String>;
+        #[swift_bridge(swift_name = "createFileRequestFromJson")]
+        fn create_file_request_from_json(json: String) -> Result<CreateFileRequest, String>;
+        #[swift_bridge(swift_name = "fileListQueryFromJson")]
+        fn file_list_query_from_json(json: String) -> Result<FileListQuery, String>;
+        #[swift_bridge(swift_name = "createBatchRequestFromJson")]
+        fn create_batch_request_from_json(json: String) -> Result<CreateBatchRequest, String>;
+        #[swift_bridge(swift_name = "batchListQueryFromJson")]
+        fn batch_list_query_from_json(json: String) -> Result<BatchListQuery, String>;
+        #[swift_bridge(swift_name = "createResponseRequestFromJson")]
+        fn create_response_request_from_json(json: String) -> Result<CreateResponseRequest, String>;
+        #[swift_bridge(swift_name = "customProviderConfigFromJson")]
+        fn custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String>;
+    }
 }
 
 pub struct SystemMessage(pub liter_llm::types::SystemMessage);
@@ -3785,10 +3819,23 @@ impl ResponseUsage {
 pub struct DefaultClient(pub liter_llm::client::DefaultClient);
 
 pub fn create_default_client(api_key: String, base_url: Option<String>) -> Result<DefaultClient, String> {
-    liter_llm::client::DefaultClient::new(api_key, base_url)
+    let mut config = liter_llm::ClientConfig::new(api_key);
+    if let Some(url) = base_url {
+        config.base_url = Some(url);
+    }
+    liter_llm::client::DefaultClient::new(config, None)
         .map_err(|e| e.to_string())
         .map(DefaultClient)
 }
+
+#[allow(unused_imports)]
+use liter_llm::client::BatchClient;
+#[allow(unused_imports)]
+use liter_llm::client::FileClient;
+#[allow(unused_imports)]
+use liter_llm::client::LlmClient;
+#[allow(unused_imports)]
+use liter_llm::client::ResponseClient;
 
 pub fn default_client_chat(
     client: &DefaultClient,
@@ -3857,7 +3904,14 @@ pub fn default_client_speech(client: &DefaultClient, req: CreateSpeechRequest) -
         .enable_all()
         .build()
         .expect("build tokio runtime")
-        .block_on(async { client.0.speech(req.0).await.map_err(|e| e.to_string()) })
+        .block_on(async {
+            client
+                .0
+                .speech(req.0)
+                .await
+                .map_err(|e| e.to_string())
+                .map(|b| b.to_vec())
+        })
 }
 pub fn default_client_transcribe(
     client: &DefaultClient,
@@ -3947,7 +4001,7 @@ pub fn default_client_retrieve_file(client: &DefaultClient, file_id: String) -> 
         .block_on(async {
             client
                 .0
-                .retrieve_file(file_id)
+                .retrieve_file(&file_id)
                 .await
                 .map_err(|e| e.to_string())
                 .map(FileObject)
@@ -3961,7 +4015,7 @@ pub fn default_client_delete_file(client: &DefaultClient, file_id: String) -> Re
         .block_on(async {
             client
                 .0
-                .delete_file(file_id)
+                .delete_file(&file_id)
                 .await
                 .map_err(|e| e.to_string())
                 .map(DeleteResponse)
@@ -3978,7 +4032,7 @@ pub fn default_client_list_files(
         .block_on(async {
             client
                 .0
-                .list_files(query.0)
+                .list_files(query.map(|v| v.0))
                 .await
                 .map_err(|e| e.to_string())
                 .map(FileListResponse)
@@ -3989,7 +4043,14 @@ pub fn default_client_file_content(client: &DefaultClient, file_id: String) -> R
         .enable_all()
         .build()
         .expect("build tokio runtime")
-        .block_on(async { client.0.file_content(file_id).await.map_err(|e| e.to_string()) })
+        .block_on(async {
+            client
+                .0
+                .file_content(&file_id)
+                .await
+                .map_err(|e| e.to_string())
+                .map(|b| b.to_vec())
+        })
 }
 pub fn default_client_create_batch(client: &DefaultClient, req: CreateBatchRequest) -> Result<BatchObject, String> {
     ::tokio::runtime::Builder::new_current_thread()
@@ -4013,7 +4074,7 @@ pub fn default_client_retrieve_batch(client: &DefaultClient, batch_id: String) -
         .block_on(async {
             client
                 .0
-                .retrieve_batch(batch_id)
+                .retrieve_batch(&batch_id)
                 .await
                 .map_err(|e| e.to_string())
                 .map(BatchObject)
@@ -4030,7 +4091,7 @@ pub fn default_client_list_batches(
         .block_on(async {
             client
                 .0
-                .list_batches(query.0)
+                .list_batches(query.map(|v| v.0))
                 .await
                 .map_err(|e| e.to_string())
                 .map(BatchListResponse)
@@ -4044,7 +4105,7 @@ pub fn default_client_cancel_batch(client: &DefaultClient, batch_id: String) -> 
         .block_on(async {
             client
                 .0
-                .cancel_batch(batch_id)
+                .cancel_batch(&batch_id)
                 .await
                 .map_err(|e| e.to_string())
                 .map(BatchObject)
@@ -4075,7 +4136,7 @@ pub fn default_client_retrieve_response(client: &DefaultClient, id: String) -> R
         .block_on(async {
             client
                 .0
-                .retrieve_response(id)
+                .retrieve_response(&id)
                 .await
                 .map_err(|e| e.to_string())
                 .map(ResponseObject)
@@ -4089,7 +4150,7 @@ pub fn default_client_cancel_response(client: &DefaultClient, id: String) -> Res
         .block_on(async {
             client
                 .0
-                .cancel_response(id)
+                .cancel_response(&id)
                 .await
                 .map_err(|e| e.to_string())
                 .map(ResponseObject)
@@ -4430,4 +4491,94 @@ pub fn register_custom_provider(config: CustomProviderConfig) -> Result<(), Stri
 
 pub fn unregister_custom_provider(name: String) -> Result<bool, String> {
     liter_llm::provider::custom::unregister_custom_provider(&name).map_err(|e| e.to_string())
+}
+
+pub fn chat_completion_request_from_json(json: String) -> Result<ChatCompletionRequest, String> {
+    serde_json::from_str::<liter_llm::types::ChatCompletionRequest>(&json)
+        .map(ChatCompletionRequest)
+        .map_err(|e| e.to_string())
+}
+
+pub fn embedding_request_from_json(json: String) -> Result<EmbeddingRequest, String> {
+    serde_json::from_str::<liter_llm::types::EmbeddingRequest>(&json)
+        .map(EmbeddingRequest)
+        .map_err(|e| e.to_string())
+}
+
+pub fn create_image_request_from_json(json: String) -> Result<CreateImageRequest, String> {
+    serde_json::from_str::<liter_llm::types::CreateImageRequest>(&json)
+        .map(CreateImageRequest)
+        .map_err(|e| e.to_string())
+}
+
+pub fn create_speech_request_from_json(json: String) -> Result<CreateSpeechRequest, String> {
+    serde_json::from_str::<liter_llm::types::CreateSpeechRequest>(&json)
+        .map(CreateSpeechRequest)
+        .map_err(|e| e.to_string())
+}
+
+pub fn create_transcription_request_from_json(json: String) -> Result<CreateTranscriptionRequest, String> {
+    serde_json::from_str::<liter_llm::types::CreateTranscriptionRequest>(&json)
+        .map(CreateTranscriptionRequest)
+        .map_err(|e| e.to_string())
+}
+
+pub fn moderation_request_from_json(json: String) -> Result<ModerationRequest, String> {
+    serde_json::from_str::<liter_llm::types::ModerationRequest>(&json)
+        .map(ModerationRequest)
+        .map_err(|e| e.to_string())
+}
+
+pub fn rerank_request_from_json(json: String) -> Result<RerankRequest, String> {
+    serde_json::from_str::<liter_llm::types::RerankRequest>(&json)
+        .map(RerankRequest)
+        .map_err(|e| e.to_string())
+}
+
+pub fn search_request_from_json(json: String) -> Result<SearchRequest, String> {
+    serde_json::from_str::<liter_llm::types::SearchRequest>(&json)
+        .map(SearchRequest)
+        .map_err(|e| e.to_string())
+}
+
+pub fn ocr_request_from_json(json: String) -> Result<OcrRequest, String> {
+    serde_json::from_str::<liter_llm::types::OcrRequest>(&json)
+        .map(OcrRequest)
+        .map_err(|e| e.to_string())
+}
+
+pub fn create_file_request_from_json(json: String) -> Result<CreateFileRequest, String> {
+    serde_json::from_str::<liter_llm::types::CreateFileRequest>(&json)
+        .map(CreateFileRequest)
+        .map_err(|e| e.to_string())
+}
+
+pub fn file_list_query_from_json(json: String) -> Result<FileListQuery, String> {
+    serde_json::from_str::<liter_llm::types::FileListQuery>(&json)
+        .map(FileListQuery)
+        .map_err(|e| e.to_string())
+}
+
+pub fn create_batch_request_from_json(json: String) -> Result<CreateBatchRequest, String> {
+    serde_json::from_str::<liter_llm::types::CreateBatchRequest>(&json)
+        .map(CreateBatchRequest)
+        .map_err(|e| e.to_string())
+}
+
+pub fn batch_list_query_from_json(json: String) -> Result<BatchListQuery, String> {
+    serde_json::from_str::<liter_llm::types::BatchListQuery>(&json)
+        .map(BatchListQuery)
+        .map_err(|e| e.to_string())
+}
+
+pub fn create_response_request_from_json(json: String) -> Result<CreateResponseRequest, String> {
+    serde_json::from_str::<liter_llm::types::CreateResponseRequest>(&json)
+        .map(CreateResponseRequest)
+        .map_err(|e| e.to_string())
+}
+
+pub fn custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String> {
+    serde_json::from_str::<liter_llm::provider::custom::CustomProviderConfig>(&json)
+        .map(CustomProviderConfig)
+        .map_err(|e| e.to_string())
 }

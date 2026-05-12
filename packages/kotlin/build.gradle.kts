@@ -35,16 +35,18 @@ java {
   targetCompatibility = JavaVersion.VERSION_25
 }
 
-// Include the alef-emitted Java facade (sibling package) so the Kotlin object
-// can call into the JNA-loaded native bridge. The Kotlin backend places its
-// generated files in a sub-package (`<group>.kt`) to avoid colliding with the
-// Java facade that uses the canonical `<group>` package.
+// liter-llm emits alef-generated sources at the package root (not the Maven
+// `src/main/java` layout) — see `[crates.output]` in `../../alef.toml`. The
+// Java facade lives directly under `../java/` and the Kotlin coroutine wrapper
+// + facade object live directly under this directory. Surface both roots to
+// gradle so the Kotlin module compiles against the same on-disk sources.
 sourceSets {
   main {
     java {
-      // Pull in the Java facade emitted by the alef Java backend so the
-      // Kotlin module compiles against the same on-disk sources.
-      srcDir("../java/src/main/java")
+      srcDir("../java")
+    }
+    kotlin {
+      srcDir(".")
     }
   }
 }
