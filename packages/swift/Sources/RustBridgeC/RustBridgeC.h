@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <stdbool.h> 
+#include <stdbool.h>
 typedef struct RustStr { uint8_t* const start; uintptr_t len; } RustStr;
 typedef struct __private__FfiSlice { void* const start; uintptr_t len; } __private__FfiSlice;
 void* __swift_bridge__null_pointer(void);
@@ -1644,5 +1644,3 @@ struct __swift_bridge__$ResultBoolAndString __swift_bridge__$unregister_custom_p
 typedef enum __swift_bridge__$ResultBoolAndString$Tag {__swift_bridge__$ResultBoolAndString$ResultOk, __swift_bridge__$ResultBoolAndString$ResultErr} __swift_bridge__$ResultBoolAndString$Tag;
 union __swift_bridge__$ResultBoolAndString$Fields {bool ok; void* err;};
 typedef struct __swift_bridge__$ResultBoolAndString{__swift_bridge__$ResultBoolAndString$Tag tag; union __swift_bridge__$ResultBoolAndString$Fields payload;} __swift_bridge__$ResultBoolAndString;
-
-

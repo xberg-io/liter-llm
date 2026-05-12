@@ -2473,6 +2473,7 @@ name = "liter-llm-dart"
 version = "1.4.0-rc.27"
 dependencies = [
  "flutter_rust_bridge",
+ "futures-util",
  "liter-llm",
  "serde_json",
 ]

@@ -586,7 +586,7 @@ pub struct ResponseUsage {
 
 #[frb(opaque)]
 pub struct DefaultClient {
-    pub(crate) inner: liter_llm::DefaultClient,
+    pub(crate) inner: liter_llm::client::DefaultClient,
 }
 
 #[frb(mirror(CustomProviderConfig))]

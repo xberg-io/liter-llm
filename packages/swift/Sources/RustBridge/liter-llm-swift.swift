@@ -8485,6 +8485,3 @@ extension AuthHeaderFormat: Vectorizable {
         __swift_bridge__$Vec_AuthHeaderFormat$len(vecPtr)
     }
 }
-
-
-

@@ -190,6 +190,7 @@ mod tests {
     async fn authentication_maps_to_401() {
         let err: ProxyError = LiterLlmError::Authentication {
             message: "bad key".into(),
+            status: 401,
         }
         .into();
         let (status, body) = extract(err).await;
@@ -212,6 +213,7 @@ mod tests {
     async fn bad_request_maps_to_400() {
         let err: ProxyError = LiterLlmError::BadRequest {
             message: "invalid".into(),
+            status: 400,
         }
         .into();
         let (status, _) = extract(err).await;
@@ -276,14 +278,22 @@ mod tests {
 
     #[tokio::test]
     async fn service_unavailable_maps_to_503() {
-        let err: ProxyError = LiterLlmError::ServiceUnavailable { message: "down".into() }.into();
+        let err: ProxyError = LiterLlmError::ServiceUnavailable {
+            message: "down".into(),
+            status: 503,
+        }
+        .into();
         let (status, _) = extract(err).await;
         assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
     }
 
     #[tokio::test]
     async fn server_error_maps_to_500() {
-        let err: ProxyError = LiterLlmError::ServerError { message: "boom".into() }.into();
+        let err: ProxyError = LiterLlmError::ServerError {
+            message: "boom".into(),
+            status: 500,
+        }
+        .into();
         let (status, _) = extract(err).await;
         assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
     }
@@ -341,6 +351,7 @@ mod tests {
     async fn into_response_produces_valid_json_with_correct_fields() {
         let err: ProxyError = LiterLlmError::Authentication {
             message: "invalid api key".into(),
+            status: 401,
         }
         .into();
         let (status, body) = extract(err).await;

@@ -1,10 +1,13 @@
 ---
 title: "Swift API Reference"
 ---
+
 ## Swift API Reference <span class="version-badge">v1.4.0-rc.27</span>
+
 ### Functions
 
 #### createClient()
+
 Create a new LLM client with simple scalar configuration.
 
 This is the primary binding entry-point. All parameters except `api_key`
@@ -21,6 +24,7 @@ constructed, or if the resolved provider configuration is invalid.
 ```swift
 // Phase 1: swift backend signature generation
 ```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -37,6 +41,7 @@ constructed, or if the resolved provider configuration is invalid.
 ---
 
 #### createClientFromJson()
+
 Create a new LLM client from a JSON string.
 
 The JSON object accepts the same fields as `liter-llm.toml` (snake_case).
@@ -51,6 +56,7 @@ contains unknown fields.
 ```swift
 // Phase 1: swift backend signature generation
 ```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -63,6 +69,7 @@ contains unknown fields.
 ---
 
 #### registerCustomProvider()
+
 Register a custom provider in the global runtime registry.
 
 The provider will be checked **before** all built-in providers during model
@@ -78,6 +85,7 @@ no model prefixes).
 ```swift
 // Phase 1: swift backend signature generation
 ```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -90,6 +98,7 @@ no model prefixes).
 ---
 
 #### unregisterCustomProvider()
+
 Remove a previously registered custom provider by name.
 
 Returns `true` if a provider with the given name was found and removed,
@@ -104,6 +113,7 @@ Returns an error only if the internal lock is poisoned.
 ```swift
 // Phase 1: swift backend signature generation
 ```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -118,6 +128,7 @@ Returns an error only if the internal lock is poisoned.
 ### Types
 
 #### AssistantMessage
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `content` | `String?` | `null` | The extracted text content |
@@ -130,6 +141,7 @@ Returns an error only if the internal lock is poisoned.
 ---
 
 #### AudioContent
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `data` | `String` | — | Base64-encoded audio data. |
@@ -139,6 +151,7 @@ Returns an error only if the internal lock is poisoned.
 ---
 
 #### BatchListQuery
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `limit` | `UInt32?` | `null` | Limit |
@@ -148,6 +161,7 @@ Returns an error only if the internal lock is poisoned.
 ---
 
 #### BatchListResponse
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `object` | `String` | — | Object |
@@ -160,6 +174,7 @@ Returns an error only if the internal lock is poisoned.
 ---
 
 #### BatchObject
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String` | — | Unique identifier |
@@ -181,6 +196,7 @@ Returns an error only if the internal lock is poisoned.
 ---
 
 #### BatchRequestCounts
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `total` | `UInt64` | — | Total |
@@ -191,6 +207,7 @@ Returns an error only if the internal lock is poisoned.
 ---
 
 #### ChatCompletionChunk
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String` | — | Unique identifier |
@@ -206,6 +223,7 @@ Returns an error only if the internal lock is poisoned.
 ---
 
 #### ChatCompletionRequest
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `model` | `String` | — | Model |
@@ -233,6 +251,7 @@ Returns an error only if the internal lock is poisoned.
 ---
 
 #### ChatCompletionResponse
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String` | — | Unique identifier |
@@ -248,6 +267,7 @@ Returns an error only if the internal lock is poisoned.
 ---
 
 #### ChatCompletionTool
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `toolType` | `ToolType` | — | Tool type (tool type) |
@@ -257,6 +277,7 @@ Returns an error only if the internal lock is poisoned.
 ---
 
 #### Choice
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `index` | `UInt32` | — | Index |
@@ -267,6 +288,7 @@ Returns an error only if the internal lock is poisoned.
 ---
 
 #### CreateBatchRequest
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `inputFileId` | `String` | — | Input file id |
@@ -278,6 +300,7 @@ Returns an error only if the internal lock is poisoned.
 ---
 
 #### CreateFileRequest
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `file` | `String` | — | Base64-encoded file data. |
@@ -288,6 +311,7 @@ Returns an error only if the internal lock is poisoned.
 ---
 
 #### CreateImageRequest
+
 Request to create images from a text prompt.
 
 | Field | Type | Default | Description |
@@ -305,6 +329,7 @@ Request to create images from a text prompt.
 ---
 
 #### CreateResponseRequest
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `model` | `String` | — | Model |
@@ -319,6 +344,7 @@ Request to create images from a text prompt.
 ---
 
 #### CreateSpeechRequest
+
 Request to generate speech audio from text.
 
 | Field | Type | Default | Description |
@@ -333,6 +359,7 @@ Request to generate speech audio from text.
 ---
 
 #### CreateTranscriptionRequest
+
 Request to transcribe audio into text.
 
 | Field | Type | Default | Description |
@@ -348,6 +375,7 @@ Request to transcribe audio into text.
 ---
 
 #### CustomProviderConfig
+
 Configuration for registering a custom LLM provider at runtime.
 
 | Field | Type | Default | Description |
@@ -361,6 +389,7 @@ Configuration for registering a custom LLM provider at runtime.
 ---
 
 #### DefaultClient
+
 Default client implementation backed by `reqwest`.
 
 The provider is resolved at construction time from `model_hint` (or
@@ -376,139 +405,185 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks that must be `'static`.
 
 ##### Methods
+
 ###### chat()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### chatStream()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### embed()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### listModels()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### imageGenerate()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### speech()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### transcribe()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### moderate()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### rerank()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### search()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### ocr()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### createFile()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### retrieveFile()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### deleteFile()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### listFiles()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### fileContent()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### createBatch()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### retrieveBatch()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### listBatches()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### cancelBatch()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### createResponse()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### retrieveResponse()
+
 **Signature:**
 
 ```swift
 // Phase 1: swift backend method signature generation
 ```
+
 ###### cancelResponse()
+
 **Signature:**
 
 ```swift
@@ -518,6 +593,7 @@ async closures and streaming tasks that must be `'static`.
 ---
 
 #### DeleteResponse
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String` | — | Unique identifier |
@@ -528,6 +604,7 @@ async closures and streaming tasks that must be `'static`.
 ---
 
 #### DeveloperMessage
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `content` | `String` | — | The extracted text content |
@@ -537,6 +614,7 @@ async closures and streaming tasks that must be `'static`.
 ---
 
 #### DocumentContent
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `data` | `String` | — | Base64-encoded document data or URL. |
@@ -546,6 +624,7 @@ async closures and streaming tasks that must be `'static`.
 ---
 
 #### EmbeddingObject
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `object` | `String` | — | Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
@@ -556,6 +635,7 @@ async closures and streaming tasks that must be `'static`.
 ---
 
 #### EmbeddingRequest
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `model` | `String` | — | Model |
@@ -568,6 +648,7 @@ async closures and streaming tasks that must be `'static`.
 ---
 
 #### EmbeddingResponse
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `object` | `String` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
@@ -579,6 +660,7 @@ async closures and streaming tasks that must be `'static`.
 ---
 
 #### FileListQuery
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `purpose` | `String?` | `null` | Purpose |
@@ -589,6 +671,7 @@ async closures and streaming tasks that must be `'static`.
 ---
 
 #### FileListResponse
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `object` | `String` | — | Object |
@@ -599,6 +682,7 @@ async closures and streaming tasks that must be `'static`.
 ---
 
 #### FileObject
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String` | — | Unique identifier |
@@ -613,6 +697,7 @@ async closures and streaming tasks that must be `'static`.
 ---
 
 #### FunctionCall
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | The name |
@@ -622,6 +707,7 @@ async closures and streaming tasks that must be `'static`.
 ---
 
 #### FunctionDefinition
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | The name |
@@ -633,6 +719,7 @@ async closures and streaming tasks that must be `'static`.
 ---
 
 #### FunctionMessage
+
 Deprecated legacy function-role message body.
 
 | Field | Type | Default | Description |
@@ -644,6 +731,7 @@ Deprecated legacy function-role message body.
 ---
 
 #### Image
+
 A single generated image, returned as either a URL or base64 data.
 
 | Field | Type | Default | Description |
@@ -656,6 +744,7 @@ A single generated image, returned as either a URL or base64 data.
 ---
 
 #### ImageUrl
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `url` | `String` | — | Url |
@@ -665,6 +754,7 @@ A single generated image, returned as either a URL or base64 data.
 ---
 
 #### ImagesResponse
+
 Response containing generated images.
 
 | Field | Type | Default | Description |
@@ -676,6 +766,7 @@ Response containing generated images.
 ---
 
 #### JsonSchemaFormat
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | The name |
@@ -687,6 +778,7 @@ Response containing generated images.
 ---
 
 #### ModelObject
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String` | — | Unique identifier |
@@ -698,6 +790,7 @@ Response containing generated images.
 ---
 
 #### ModelsListResponse
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `object` | `String` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
@@ -707,6 +800,7 @@ Response containing generated images.
 ---
 
 #### ModerationCategories
+
 Boolean flags for each moderation category.
 
 | Field | Type | Default | Description |
@@ -727,6 +821,7 @@ Boolean flags for each moderation category.
 ---
 
 #### ModerationCategoryScores
+
 Confidence scores for each moderation category.
 
 | Field | Type | Default | Description |
@@ -747,6 +842,7 @@ Confidence scores for each moderation category.
 ---
 
 #### ModerationRequest
+
 Request to classify content for policy violations.
 
 | Field | Type | Default | Description |
@@ -758,6 +854,7 @@ Request to classify content for policy violations.
 ---
 
 #### ModerationResponse
+
 Response from the moderation endpoint.
 
 | Field | Type | Default | Description |
@@ -770,6 +867,7 @@ Response from the moderation endpoint.
 ---
 
 #### ModerationResult
+
 A single moderation classification result.
 
 | Field | Type | Default | Description |
@@ -782,6 +880,7 @@ A single moderation classification result.
 ---
 
 #### OcrImage
+
 An image extracted from an OCR page.
 
 | Field | Type | Default | Description |
@@ -793,6 +892,7 @@ An image extracted from an OCR page.
 ---
 
 #### OcrPage
+
 A single page of OCR output.
 
 | Field | Type | Default | Description |
@@ -806,6 +906,7 @@ A single page of OCR output.
 ---
 
 #### OcrRequest
+
 An OCR request.
 
 | Field | Type | Default | Description |
@@ -819,6 +920,7 @@ An OCR request.
 ---
 
 #### OcrResponse
+
 An OCR response.
 
 | Field | Type | Default | Description |
@@ -831,6 +933,7 @@ An OCR response.
 ---
 
 #### PageDimensions
+
 Page dimensions in pixels.
 
 | Field | Type | Default | Description |
@@ -842,6 +945,7 @@ Page dimensions in pixels.
 ---
 
 #### PromptTokensDetails
+
 Breakdown of tokens used in the prompt portion of a request.
 
 `cached_tokens` is included in `Usage.prompt_tokens` — it is *not* an
@@ -858,6 +962,7 @@ discounted rate and the remainder at the regular input rate.
 ---
 
 #### RerankRequest
+
 Request to rerank documents by relevance to a query.
 
 | Field | Type | Default | Description |
@@ -872,6 +977,7 @@ Request to rerank documents by relevance to a query.
 ---
 
 #### RerankResponse
+
 Response from the rerank endpoint.
 
 | Field | Type | Default | Description |
@@ -884,6 +990,7 @@ Response from the rerank endpoint.
 ---
 
 #### RerankResult
+
 A single reranked document with its relevance score.
 
 | Field | Type | Default | Description |
@@ -896,6 +1003,7 @@ A single reranked document with its relevance score.
 ---
 
 #### RerankResultDocument
+
 The text content of a reranked document, returned when `return_documents` is true.
 
 | Field | Type | Default | Description |
@@ -906,6 +1014,7 @@ The text content of a reranked document, returned when `return_documents` is tru
 ---
 
 #### ResponseObject
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String` | — | Unique identifier |
@@ -921,6 +1030,7 @@ The text content of a reranked document, returned when `return_documents` is tru
 ---
 
 #### ResponseOutputItem
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `itemType` | `String` | — | Item type |
@@ -930,6 +1040,7 @@ The text content of a reranked document, returned when `return_documents` is tru
 ---
 
 #### ResponseTool
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `toolType` | `String` | — | Tool type |
@@ -939,6 +1050,7 @@ The text content of a reranked document, returned when `return_documents` is tru
 ---
 
 #### ResponseUsage
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `inputTokens` | `UInt64` | — | Input tokens |
@@ -949,6 +1061,7 @@ The text content of a reranked document, returned when `return_documents` is tru
 ---
 
 #### SearchRequest
+
 A search request.
 
 | Field | Type | Default | Description |
@@ -963,6 +1076,7 @@ A search request.
 ---
 
 #### SearchResponse
+
 A search response.
 
 | Field | Type | Default | Description |
@@ -974,6 +1088,7 @@ A search response.
 ---
 
 #### SearchResult
+
 An individual search result.
 
 | Field | Type | Default | Description |
@@ -987,6 +1102,7 @@ An individual search result.
 ---
 
 #### SpecificFunction
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | The name |
@@ -995,6 +1111,7 @@ An individual search result.
 ---
 
 #### SpecificToolChoice
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `choiceType` | `ToolType` | `ToolType.Function` | Choice type (tool type) |
@@ -1004,6 +1121,7 @@ An individual search result.
 ---
 
 #### StreamChoice
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `index` | `UInt32` | — | Index |
@@ -1014,6 +1132,7 @@ An individual search result.
 ---
 
 #### StreamDelta
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `role` | `String?` | `null` | Role |
@@ -1026,6 +1145,7 @@ An individual search result.
 ---
 
 #### StreamFunctionCall
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String?` | `null` | The name |
@@ -1035,6 +1155,7 @@ An individual search result.
 ---
 
 #### StreamOptions
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `includeUsage` | `Bool?` | `null` | Include usage |
@@ -1043,6 +1164,7 @@ An individual search result.
 ---
 
 #### StreamToolCall
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `index` | `UInt32` | — | Index |
@@ -1054,6 +1176,7 @@ An individual search result.
 ---
 
 #### SystemMessage
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `content` | `String` | — | The extracted text content |
@@ -1063,6 +1186,7 @@ An individual search result.
 ---
 
 #### ToolCall
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String` | — | Unique identifier |
@@ -1073,6 +1197,7 @@ An individual search result.
 ---
 
 #### ToolMessage
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `content` | `String` | — | The extracted text content |
@@ -1083,6 +1208,7 @@ An individual search result.
 ---
 
 #### TranscriptionResponse
+
 Response from a transcription request.
 
 | Field | Type | Default | Description |
@@ -1096,6 +1222,7 @@ Response from a transcription request.
 ---
 
 #### TranscriptionSegment
+
 A segment of transcribed audio with timing information.
 
 | Field | Type | Default | Description |
@@ -1109,6 +1236,7 @@ A segment of transcribed audio with timing information.
 ---
 
 #### Usage
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `promptTokens` | `UInt64` | — | Prompt tokens used. Defaults to 0 when absent (some providers omit this). |
@@ -1120,6 +1248,7 @@ A segment of transcribed audio with timing information.
 ---
 
 #### UserMessage
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `content` | `UserContent` | `UserContent.Text` | The extracted text content |
@@ -1131,6 +1260,7 @@ A segment of transcribed audio with timing information.
 ### Enums
 
 #### Message
+
 A chat message in a conversation.
 
 | Value | Description |
@@ -1146,6 +1276,7 @@ A chat message in a conversation.
 ---
 
 #### UserContent
+
 | Value | Description |
 |-------|-------------|
 | `Text` | Text format — Fields: `0`: `String` |
@@ -1155,6 +1286,7 @@ A chat message in a conversation.
 ---
 
 #### ContentPart
+
 | Value | Description |
 |-------|-------------|
 | `Text` | Text format — Fields: `text`: `String` |
@@ -1166,6 +1298,7 @@ A chat message in a conversation.
 ---
 
 #### ImageDetail
+
 | Value | Description |
 |-------|-------------|
 | `Low` | Low |
@@ -1176,6 +1309,7 @@ A chat message in a conversation.
 ---
 
 #### ToolType
+
 The type discriminator for tool/tool-call objects.
 
 Per the OpenAI spec this is always `"function"`. Using an enum enforces
@@ -1190,6 +1324,7 @@ deserialization.
 ---
 
 #### ToolChoice
+
 | Value | Description |
 |-------|-------------|
 | `Mode` | Mode — Fields: `0`: `ToolChoiceMode` |
@@ -1199,6 +1334,7 @@ deserialization.
 ---
 
 #### ToolChoiceMode
+
 | Value | Description |
 |-------|-------------|
 | `Auto` | Auto |
@@ -1209,6 +1345,7 @@ deserialization.
 ---
 
 #### ResponseFormat
+
 | Value | Description |
 |-------|-------------|
 | `Text` | Text format |
@@ -1219,6 +1356,7 @@ deserialization.
 ---
 
 #### StopSequence
+
 | Value | Description |
 |-------|-------------|
 | `Single` | Single — Fields: `0`: `String` |
@@ -1228,6 +1366,7 @@ deserialization.
 ---
 
 #### FinishReason
+
 Why a choice stopped generating tokens.
 
 | Value | Description |
@@ -1243,6 +1382,7 @@ Why a choice stopped generating tokens.
 ---
 
 #### ReasoningEffort
+
 Controls how much reasoning effort the model should use.
 
 | Value | Description |
@@ -1255,6 +1395,7 @@ Controls how much reasoning effort the model should use.
 ---
 
 #### EmbeddingFormat
+
 The format in which the embedding vectors are returned.
 
 | Value | Description |
@@ -1266,6 +1407,7 @@ The format in which the embedding vectors are returned.
 ---
 
 #### EmbeddingInput
+
 | Value | Description |
 |-------|-------------|
 | `Single` | Single — Fields: `0`: `String` |
@@ -1275,6 +1417,7 @@ The format in which the embedding vectors are returned.
 ---
 
 #### ModerationInput
+
 Input to the moderation endpoint — a single string or multiple strings.
 
 | Value | Description |
@@ -1286,6 +1429,7 @@ Input to the moderation endpoint — a single string or multiple strings.
 ---
 
 #### RerankDocument
+
 A document to be reranked — either a plain string or an object with a text field.
 
 | Value | Description |
@@ -1297,6 +1441,7 @@ A document to be reranked — either a plain string or an object with a text fie
 ---
 
 #### OcrDocument
+
 Document input for OCR — either a URL or inline base64 data.
 
 | Value | Description |
@@ -1308,6 +1453,7 @@ Document input for OCR — either a URL or inline base64 data.
 ---
 
 #### FilePurpose
+
 | Value | Description |
 |-------|-------------|
 | `Assistants` | Assistants |
@@ -1319,6 +1465,7 @@ Document input for OCR — either a URL or inline base64 data.
 ---
 
 #### BatchStatus
+
 | Value | Description |
 |-------|-------------|
 | `Validating` | Validating |
@@ -1334,6 +1481,7 @@ Document input for OCR — either a URL or inline base64 data.
 ---
 
 #### AuthHeaderFormat
+
 How the API key is sent in the HTTP request.
 
 | Value | Description |
@@ -1348,6 +1496,7 @@ How the API key is sent in the HTTP request.
 ### Errors
 
 #### LiterLlmError
+
 All errors that can occur when using `liter-llm`.
 
 | Variant | Description |
