@@ -1266,7 +1266,7 @@ mod error_tests {
             &format!(r#"{{"error":{{"message":"{}","type":"server_error"}}}}"#, msg),
             None,
         );
-        if let LiterLlmError::ServerError { message } = err {
+        if let LiterLlmError::ServerError { message, .. } = err {
             assert_eq!(message, msg);
         } else {
             panic!("expected ServerError");

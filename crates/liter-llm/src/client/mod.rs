@@ -379,6 +379,7 @@ impl DefaultClient {
                 _ => {
                     return Err(LiterLlmError::Authentication {
                         message: format!("no API key provided and environment variable {env_var_name} is not set"),
+                        status: 401,
                     });
                 }
             }
@@ -519,6 +520,7 @@ impl DefaultClient {
         if model.is_empty() {
             return Err(LiterLlmError::BadRequest {
                 message: "model must not be empty".into(),
+                status: 400,
             });
         }
 
@@ -1388,6 +1390,7 @@ impl FileClient for DefaultClient {
                 .decode(&req.file)
                 .map_err(|e| LiterLlmError::BadRequest {
                     message: format!("invalid base64 file data: {e}"),
+                    status: 400,
                 })?;
 
             let filename = req.filename.unwrap_or_else(|| "upload".to_owned());

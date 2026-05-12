@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.15.45"
+alef_version = "0.15.46"
 languages = ["python", "node", "ruby", "php", "ffi", "go", "java", "csharp", "elixir", "wasm", "zig", "dart", "swift", "kotlin"]
 
 [workspace.sync]
@@ -403,6 +403,15 @@ result_fields = [
   # Content
   "content",
 ]
+# Fields that are method calls (no property access) — the Rust codegen emits
+# `()` for these so that `err.status_code` becomes `err.status_code()`.
+fields_method_calls = ["status_code"]
+
+# Aliases for error-type field access.  When a fixture has
+# `field = "error.<sub>"` the Rust e2e generator resolves `<sub>` through this
+# map to the actual field/method name on the error type.
+[crates.e2e.error_field_aliases]
+status_code = "status_code"
 
 # C FFI primitive accessor return types — used by the C e2e codegen to emit
 # typed local variables (uint64_t/int32_t/double/...) instead of char* for

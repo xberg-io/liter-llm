@@ -52,10 +52,12 @@ impl LiterLlmErrorKind {
             },
             Self::ServiceUnavailable { message } => LiterLlmError::ServiceUnavailable {
                 message: message.clone(),
+                status: 503,
             },
             Self::Timeout => LiterLlmError::Timeout,
             Self::Authentication { message } => LiterLlmError::BadRequest {
                 message: message.clone(),
+                status: 400,
             },
         }
     }

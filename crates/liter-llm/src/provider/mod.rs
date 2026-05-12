@@ -44,6 +44,7 @@ static REGISTRY: LazyLock<std::result::Result<ProviderRegistry, String>> =
 fn registry() -> Result<&'static ProviderRegistry> {
     REGISTRY.as_ref().map_err(|e| LiterLlmError::ServerError {
         message: format!("embedded schemas/providers.json is invalid: {e}"),
+        status: 500,
     })
 }
 

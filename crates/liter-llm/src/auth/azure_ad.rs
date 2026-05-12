@@ -134,21 +134,25 @@ impl AzureAdCredentialProvider {
             .await
             .map_err(|e| LiterLlmError::Authentication {
                 message: format!("Azure AD token request failed: {e}"),
+                status: 401,
             })?;
 
         let status = resp.status();
         let body = resp.text().await.map_err(|e| LiterLlmError::Authentication {
             message: format!("Azure AD token response unreadable: {e}"),
+            status: 401,
         })?;
 
         if !status.is_success() {
             return Err(LiterLlmError::Authentication {
                 message: format!("Azure AD token request returned {status}: {body}"),
+                status: 401,
             });
         }
 
         let parsed: TokenResponse = serde_json::from_str(&body).map_err(|e| LiterLlmError::Authentication {
             message: format!("Azure AD token response parse error: {e}"),
+            status: 401,
         })?;
 
         Ok(CachedToken {
@@ -202,6 +206,7 @@ struct TokenResponse {
 fn env_var_required(name: &str) -> Result<String, LiterLlmError> {
     std::env::var(name).map_err(|_| LiterLlmError::Authentication {
         message: format!("missing required environment variable: {name}"),
+        status: 401,
     })
 }
 

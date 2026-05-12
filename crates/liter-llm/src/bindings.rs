@@ -54,6 +54,7 @@ pub fn create_client(
 pub fn create_client_from_json(json: &str) -> Result<DefaultClient> {
     let file_config: FileConfig = serde_json::from_str(json).map_err(|error| LiterLlmError::BadRequest {
         message: format!("invalid client config JSON: {error}"),
+        status: 400,
     })?;
 
     let model_hint = file_config.model_hint.clone();

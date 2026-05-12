@@ -80,12 +80,14 @@ impl LiterLlmErrorKind {
             },
             Self::ServiceUnavailable { message } => LiterLlmError::ServiceUnavailable {
                 message: message.clone(),
+                status: 503,
             },
             Self::Timeout => LiterLlmError::Timeout,
             // MockClient maps auth error to BadRequest (not Authentication) because
             // the mock's chat() doesn't distinguish — see MockClient::ok().
             Self::Authentication { message } => LiterLlmError::BadRequest {
                 message: message.clone(),
+                status: 400,
             },
         }
     }

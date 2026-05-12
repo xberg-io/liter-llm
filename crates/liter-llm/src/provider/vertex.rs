@@ -118,6 +118,7 @@ impl Provider for VertexAiProvider {
                           in the environment, or provide an explicit base_url in \
                           ClientConfig."
                     .into(),
+                status: 400,
             });
         }
         Ok(())

@@ -107,6 +107,7 @@ where
                                 "service is cooling down for {:.0}s after a transient error",
                                 duration.as_secs_f64()
                             ),
+                            status: 503,
                         });
                     }
                     // Cooldown has expired — we need to reset it.

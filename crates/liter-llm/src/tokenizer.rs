@@ -71,6 +71,7 @@ fn get_or_load_tokenizer(model: &str) -> Result<Arc<Tokenizer>> {
     {
         let cache = TOKENIZER_CACHE.read().map_err(|e| LiterLlmError::BadRequest {
             message: format!("tokenizer cache lock poisoned: {e}"),
+            status: 400,
         })?;
         if let Some(tok) = cache.get(tokenizer_id) {
             return Ok(Arc::clone(tok));
@@ -80,6 +81,7 @@ fn get_or_load_tokenizer(model: &str) -> Result<Arc<Tokenizer>> {
     // Slow path: write lock, double-check, initialize
     let mut cache = TOKENIZER_CACHE.write().map_err(|e| LiterLlmError::BadRequest {
         message: format!("tokenizer cache lock poisoned: {e}"),
+        status: 400,
     })?;
     if let Some(tok) = cache.get(tokenizer_id) {
         return Ok(Arc::clone(tok));
@@ -87,6 +89,7 @@ fn get_or_load_tokenizer(model: &str) -> Result<Arc<Tokenizer>> {
 
     let tokenizer = Tokenizer::from_pretrained(tokenizer_id, None).map_err(|e| LiterLlmError::BadRequest {
         message: format!("failed to load tokenizer '{tokenizer_id}': {e}"),
+        status: 400,
     })?;
 
     let arc = Arc::new(tokenizer);
@@ -108,6 +111,7 @@ pub fn count_tokens(model: &str, text: &str) -> Result<usize> {
     let tokenizer = get_or_load_tokenizer(model)?;
     let encoding = tokenizer.encode(text, false).map_err(|e| LiterLlmError::BadRequest {
         message: format!("tokenization failed: {e}"),
+        status: 400,
     })?;
     Ok(encoding.get_ids().len())
 }
@@ -148,6 +152,7 @@ pub fn count_request_tokens(model: &str, req: &ChatCompletionRequest) -> Result<
                         if let Some(text) = content_part_text(part) {
                             let encoding = tokenizer.encode(text, false).map_err(|e| LiterLlmError::BadRequest {
                                 message: format!("tokenization failed: {e}"),
+                                status: 400,
                             })?;
                             total += encoding.get_ids().len();
                         }
@@ -165,6 +170,7 @@ pub fn count_request_tokens(model: &str, req: &ChatCompletionRequest) -> Result<
                             let encoding = tokenizer.encode(call.function.arguments.as_str(), false).map_err(|e| {
                                 LiterLlmError::BadRequest {
                                     message: format!("tokenization failed: {e}"),
+                                    status: 400,
                                 }
                             })?;
                             total += encoding.get_ids().len();
@@ -180,6 +186,7 @@ pub fn count_request_tokens(model: &str, req: &ChatCompletionRequest) -> Result<
 
         let encoding = tokenizer.encode(text, false).map_err(|e| LiterLlmError::BadRequest {
             message: format!("tokenization failed: {e}"),
+            status: 400,
         })?;
         total += encoding.get_ids().len();
     }

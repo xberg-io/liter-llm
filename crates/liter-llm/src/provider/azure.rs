@@ -123,6 +123,7 @@ impl Provider for AzureProvider {
                           Set AZURE_OPENAI_ENDPOINT=https://{resource}.openai.azure.com \
                           (or AZURE_ENDPOINT as a fallback)."
                     .into(),
+                status: 400,
             });
         }
         Ok(())

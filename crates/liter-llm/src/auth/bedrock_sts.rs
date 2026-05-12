@@ -126,6 +126,7 @@ impl WebIdentityCredentialProvider {
                     "failed to read web identity token file {}: {e}",
                     self.token_file.display()
                 ),
+                status: 401,
             })?;
         let token = token.trim();
 
@@ -147,16 +148,19 @@ impl WebIdentityCredentialProvider {
             .await
             .map_err(|e| LiterLlmError::Authentication {
                 message: format!("STS AssumeRoleWithWebIdentity request failed: {e}"),
+                status: 401,
             })?;
 
         let status = resp.status();
         let body = resp.text().await.map_err(|e| LiterLlmError::Authentication {
             message: format!("STS response unreadable: {e}"),
+            status: 401,
         })?;
 
         if !status.is_success() {
             return Err(LiterLlmError::Authentication {
                 message: format!("STS AssumeRoleWithWebIdentity returned {status}: {body}"),
+                status: 401,
             });
         }
 
@@ -246,10 +250,12 @@ fn extract_xml_element(xml: &str, tag: &str) -> Result<String, LiterLlmError> {
 
     let start = xml.find(&open).ok_or_else(|| LiterLlmError::Authentication {
         message: format!("STS response missing <{tag}> element"),
+        status: 401,
     })? + open.len();
 
     let end = xml[start..].find(&close).ok_or_else(|| LiterLlmError::Authentication {
         message: format!("STS response missing </{tag}> element"),
+        status: 401,
     })? + start;
 
     Ok(xml[start..end].to_owned())
@@ -259,6 +265,7 @@ fn extract_xml_element(xml: &str, tag: &str) -> Result<String, LiterLlmError> {
 fn env_var_required(name: &str) -> Result<String, LiterLlmError> {
     std::env::var(name).map_err(|_| LiterLlmError::Authentication {
         message: format!("missing required environment variable: {name}"),
+        status: 401,
     })
 }
 

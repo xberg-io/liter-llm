@@ -151,6 +151,7 @@ impl Provider for AnthropicProvider {
         if messages.is_empty() {
             return Err(LiterLlmError::BadRequest {
                 message: "messages array must not be empty".to_owned(),
+                status: 400,
             });
         }
 

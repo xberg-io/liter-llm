@@ -62,6 +62,7 @@ pub fn register_custom_provider(config: CustomProviderConfig) -> Result<()> {
 
     let mut providers = CUSTOM_PROVIDERS.write().map_err(|e| LiterLlmError::ServerError {
         message: format!("custom provider registry lock poisoned: {e}"),
+        status: 500,
     })?;
 
     // Replace existing entry with the same name, or append.
@@ -85,6 +86,7 @@ pub fn register_custom_provider(config: CustomProviderConfig) -> Result<()> {
 pub fn unregister_custom_provider(name: &str) -> Result<bool> {
     let mut providers = CUSTOM_PROVIDERS.write().map_err(|e| LiterLlmError::ServerError {
         message: format!("custom provider registry lock poisoned: {e}"),
+        status: 500,
     })?;
 
     let before = providers.len();
@@ -128,22 +130,26 @@ fn validate_config(config: &CustomProviderConfig) -> Result<()> {
     if config.name.trim().is_empty() {
         return Err(LiterLlmError::BadRequest {
             message: "custom provider name must not be empty or whitespace-only".into(),
+            status: 400,
         });
     }
     if config.base_url.trim().is_empty() {
         return Err(LiterLlmError::BadRequest {
             message: "custom provider base_url must not be empty or whitespace-only".into(),
+            status: 400,
         });
     }
     if config.model_prefixes.is_empty() {
         return Err(LiterLlmError::BadRequest {
             message: "custom provider must have at least one model prefix".into(),
+            status: 400,
         });
     }
     for prefix in &config.model_prefixes {
         if prefix.is_empty() {
             return Err(LiterLlmError::BadRequest {
                 message: "custom provider model prefix must not be empty (would match all models)".into(),
+                status: 400,
             });
         }
     }

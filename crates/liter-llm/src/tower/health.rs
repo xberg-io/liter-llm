@@ -126,6 +126,7 @@ where
         if !self.healthy.load(Ordering::Acquire) {
             return Poll::Ready(Err(LiterLlmError::ServiceUnavailable {
                 message: "service is unhealthy (health check failed)".into(),
+                status: 503,
             }));
         }
         self.inner.poll_ready(cx)
@@ -136,6 +137,7 @@ where
             return Box::pin(async {
                 Err(LiterLlmError::ServiceUnavailable {
                     message: "service is unhealthy (health check failed)".into(),
+                    status: 503,
                 })
             });
         }

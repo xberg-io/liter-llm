@@ -91,6 +91,7 @@ impl VertexOAuthCredentialProvider {
             .and_then(serde_json::Value::as_str)
             .ok_or_else(|| LiterLlmError::Authentication {
                 message: "service account JSON missing 'client_email' field".into(),
+                status: 401,
             })?
             .to_owned();
 
@@ -99,6 +100,7 @@ impl VertexOAuthCredentialProvider {
             .and_then(serde_json::Value::as_str)
             .ok_or_else(|| LiterLlmError::Authentication {
                 message: "service account JSON missing 'private_key' field".into(),
+                status: 401,
             })?
             .to_owned();
 
@@ -121,10 +123,12 @@ impl VertexOAuthCredentialProvider {
     pub fn from_key_file(path: &Path) -> Result<Self, LiterLlmError> {
         let contents = std::fs::read_to_string(path).map_err(|e| LiterLlmError::Authentication {
             message: format!("failed to read service account key file {}: {e}", path.display()),
+            status: 401,
         })?;
 
         let json: serde_json::Value = serde_json::from_str(&contents).map_err(|e| LiterLlmError::Authentication {
             message: format!("failed to parse service account key file: {e}"),
+            status: 401,
         })?;
 
         Self::from_service_account_json(&json)
@@ -140,6 +144,7 @@ impl VertexOAuthCredentialProvider {
     pub fn from_env() -> Result<Self, LiterLlmError> {
         let path = std::env::var("GOOGLE_APPLICATION_CREDENTIALS").map_err(|_| LiterLlmError::Authentication {
             message: "missing required environment variable: GOOGLE_APPLICATION_CREDENTIALS".into(),
+            status: 401,
         })?;
 
         let mut provider = Self::from_key_file(Path::new(&path))?;
@@ -171,6 +176,7 @@ impl VertexOAuthCredentialProvider {
             .duration_since(UNIX_EPOCH)
             .map_err(|e| LiterLlmError::Authentication {
                 message: format!("system clock error: {e}"),
+                status: 401,
             })?
             .as_secs();
 
@@ -186,12 +192,14 @@ impl VertexOAuthCredentialProvider {
         let encoding_key = EncodingKey::from_rsa_pem(self.private_key_pem.expose_secret().as_bytes()).map_err(|e| {
             LiterLlmError::Authentication {
                 message: format!("invalid RSA private key: {e}"),
+                status: 401,
             }
         })?;
 
         let assertion =
             jsonwebtoken::encode(&header, &claims, &encoding_key).map_err(|e| LiterLlmError::Authentication {
                 message: format!("JWT signing failed: {e}"),
+                status: 401,
             })?;
 
         let resp = self
@@ -202,21 +210,25 @@ impl VertexOAuthCredentialProvider {
             .await
             .map_err(|e| LiterLlmError::Authentication {
                 message: format!("Vertex OAuth token request failed: {e}"),
+                status: 401,
             })?;
 
         let status = resp.status();
         let body = resp.text().await.map_err(|e| LiterLlmError::Authentication {
             message: format!("Vertex OAuth token response unreadable: {e}"),
+            status: 401,
         })?;
 
         if !status.is_success() {
             return Err(LiterLlmError::Authentication {
                 message: format!("Vertex OAuth token request returned {status}: {body}"),
+                status: 401,
             });
         }
 
         let parsed: TokenResponse = serde_json::from_str(&body).map_err(|e| LiterLlmError::Authentication {
             message: format!("Vertex OAuth token response parse error: {e}"),
+            status: 401,
         })?;
 
         Ok(CachedToken {

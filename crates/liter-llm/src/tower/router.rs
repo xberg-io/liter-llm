@@ -126,6 +126,7 @@ impl<S> Router<S> {
         if deployments.is_empty() {
             return Err(LiterLlmError::BadRequest {
                 message: "Router requires at least one deployment".into(),
+                status: 400,
             });
         }
         if let RoutingStrategy::WeightedRandom { ref weights } = strategy {
@@ -136,12 +137,14 @@ impl<S> Router<S> {
                         weights.len(),
                         deployments.len()
                     ),
+                    status: 400,
                 });
             }
             let total: f64 = weights.iter().sum();
             if total <= 0.0 {
                 return Err(LiterLlmError::BadRequest {
                     message: "WeightedRandom: total weight must be positive".into(),
+                    status: 400,
                 });
             }
         }
@@ -208,6 +211,7 @@ where
                     }
                     Err(last_err.unwrap_or(LiterLlmError::ServerError {
                         message: "all deployments failed".into(),
+                        status: 500,
                     }))
                 })
             }
@@ -284,6 +288,7 @@ where
                     }
                     Err(last_err.unwrap_or(LiterLlmError::ServerError {
                         message: "all deployments failed".into(),
+                        status: 500,
                     }))
                 })
             }

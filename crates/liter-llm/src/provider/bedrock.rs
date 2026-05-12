@@ -204,6 +204,7 @@ impl Provider for BedrockProvider {
                               Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY (and optionally \
                               AWS_SESSION_TOKEN) in the environment."
                         .into(),
+                    status: 400,
                 });
             }
         }
@@ -875,9 +876,11 @@ fn sigv4_sign(method: &str, url: &str, body: &[u8], region: &str) -> Result<Vec<
 
     let access_key = std::env::var("AWS_ACCESS_KEY_ID").map_err(|_| LiterLlmError::BadRequest {
         message: "AWS_ACCESS_KEY_ID environment variable is required for Bedrock requests".into(),
+        status: 400,
     })?;
     let secret_key = std::env::var("AWS_SECRET_ACCESS_KEY").map_err(|_| LiterLlmError::BadRequest {
         message: "AWS_SECRET_ACCESS_KEY environment variable is required for Bedrock requests".into(),
+        status: 400,
     })?;
     let session_token = std::env::var("AWS_SESSION_TOKEN").ok();
 
@@ -903,6 +906,7 @@ fn sigv4_sign(method: &str, url: &str, body: &[u8], region: &str) -> Result<Vec<
         .build()
         .map_err(|e| LiterLlmError::BadRequest {
             message: format!("failed to build SigV4 signing params: {e}"),
+            status: 400,
         })?;
 
     // Build a signable request from the method, URL, and body.
@@ -914,10 +918,12 @@ fn sigv4_sign(method: &str, url: &str, body: &[u8], region: &str) -> Result<Vec<
     )
     .map_err(|e| LiterLlmError::BadRequest {
         message: format!("failed to create signable request: {e}"),
+        status: 400,
     })?;
 
     let signing_output = sign(signable, &params.into()).map_err(|e| LiterLlmError::BadRequest {
         message: format!("SigV4 signing failed: {e}"),
+        status: 400,
     })?;
 
     let instructions = signing_output.output();

@@ -247,6 +247,7 @@ impl GithubCopilotCredentialProvider {
                 .await
                 .map_err(|e| LiterLlmError::Authentication {
                     message: format!("failed to create token directory {}: {e}", parent.display()),
+                    status: 401,
                 })?;
         }
         tokio::fs::write(&self.access_token_path, token.expose_secret())
@@ -256,6 +257,7 @@ impl GithubCopilotCredentialProvider {
                     "failed to write access token to {}: {e}",
                     self.access_token_path.display()
                 ),
+                status: 401,
             })
     }
 
@@ -279,22 +281,26 @@ impl GithubCopilotCredentialProvider {
             .await
             .map_err(|e| LiterLlmError::Authentication {
                 message: format!("GitHub device code request failed: {e}"),
+                status: 401,
             })?;
 
         let device_status = device_resp.status();
         let device_body = device_resp.text().await.map_err(|e| LiterLlmError::Authentication {
             message: format!("GitHub device code response unreadable: {e}"),
+            status: 401,
         })?;
 
         if !device_status.is_success() {
             return Err(LiterLlmError::Authentication {
                 message: format!("GitHub device code request returned {device_status}: {device_body}"),
+                status: 401,
             });
         }
 
         let device: DeviceCodeResponse =
             serde_json::from_str(&device_body).map_err(|e| LiterLlmError::Authentication {
                 message: format!("GitHub device code response parse error: {e}"),
+                status: 401,
             })?;
 
         // Step 2: prompt the user.
@@ -325,15 +331,18 @@ impl GithubCopilotCredentialProvider {
                 .await
                 .map_err(|e| LiterLlmError::Authentication {
                     message: format!("GitHub access token poll request failed: {e}"),
+                    status: 401,
                 })?;
 
             let poll_body = poll_resp.text().await.map_err(|e| LiterLlmError::Authentication {
                 message: format!("GitHub access token poll response unreadable: {e}"),
+                status: 401,
             })?;
 
             let parsed: AccessTokenResponse =
                 serde_json::from_str(&poll_body).map_err(|e| LiterLlmError::Authentication {
                     message: format!("GitHub access token poll parse error: {e}"),
+                    status: 401,
                 })?;
 
             if let Some(token) = parsed.access_token
@@ -350,6 +359,7 @@ impl GithubCopilotCredentialProvider {
                     other => {
                         return Err(LiterLlmError::Authentication {
                             message: format!("GitHub Device Flow error after attempt {attempt}: {other}"),
+                            status: 401,
                         });
                     }
                 }
@@ -362,6 +372,7 @@ impl GithubCopilotCredentialProvider {
                 DEVICE_FLOW_POLL_ATTEMPTS,
                 DEVICE_FLOW_POLL_ATTEMPTS * DEVICE_FLOW_POLL_INTERVAL.as_secs() as u32
             ),
+            status: 401,
         })
     }
 
@@ -391,21 +402,25 @@ impl GithubCopilotCredentialProvider {
             .await
             .map_err(|e| LiterLlmError::Authentication {
                 message: format!("Copilot API key request failed: {e}"),
+                status: 401,
             })?;
 
         let status = resp.status();
         let body = resp.text().await.map_err(|e| LiterLlmError::Authentication {
             message: format!("Copilot API key response unreadable: {e}"),
+            status: 401,
         })?;
 
         if !status.is_success() {
             return Err(LiterLlmError::Authentication {
                 message: format!("Copilot API key request returned {status}: {body}"),
+                status: 401,
             });
         }
 
         let parsed: ApiKeyResponse = serde_json::from_str(&body).map_err(|e| LiterLlmError::Authentication {
             message: format!("Copilot API key response parse error: {e}"),
+            status: 401,
         })?;
 
         // Persist to disk so `api_base()` can read it without holding a lock.

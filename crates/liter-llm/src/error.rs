@@ -20,8 +20,9 @@ pub(crate) struct ApiError {
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum LiterLlmError {
+    /// `status` preserves the exact HTTP status code received (401 or 403).
     #[error("authentication failed: {message}")]
-    Authentication { message: String },
+    Authentication { message: String, status: u16 },
 
     #[error("rate limited: {message}")]
     RateLimited {
@@ -29,8 +30,9 @@ pub enum LiterLlmError {
         retry_after: Option<Duration>,
     },
 
+    /// `status` preserves the exact HTTP status code received (400, 405, 413, 422, …).
     #[error("bad request: {message}")]
-    BadRequest { message: String },
+    BadRequest { message: String, status: u16 },
 
     #[error("context window exceeded: {message}")]
     ContextWindowExceeded { message: String },
@@ -41,11 +43,14 @@ pub enum LiterLlmError {
     #[error("not found: {message}")]
     NotFound { message: String },
 
+    /// `status` preserves the exact HTTP status code received (500, or other 5xx not covered
+    /// by `ServiceUnavailable`).
     #[error("server error: {message}")]
-    ServerError { message: String },
+    ServerError { message: String, status: u16 },
 
+    /// `status` preserves the exact HTTP status code received (502, 503, or 504).
     #[error("service unavailable: {message}")]
-    ServiceUnavailable { message: String },
+    ServiceUnavailable { message: String, status: u16 },
 
     #[error("request timeout")]
     Timeout,
@@ -87,6 +92,35 @@ pub enum LiterLlmError {
 }
 
 impl LiterLlmError {
+    /// Returns the canonical HTTP status code associated with this error.
+    ///
+    /// Maps error variants to their originating HTTP status code as set by
+    /// [`LiterLlmError::from_status`].  Used by e2e assertions that check
+    /// `error.status_code` against the expected HTTP status.
+    #[must_use]
+    pub fn status_code(&self) -> u16 {
+        match self {
+            Self::Authentication { status, .. } => *status,
+            Self::RateLimited { .. } => 429,
+            Self::BadRequest { status, .. } => *status,
+            Self::ContextWindowExceeded { .. } => 400,
+            Self::ContentPolicy { .. } => 400,
+            Self::NotFound { .. } => 404,
+            Self::ServerError { status, .. } => *status,
+            Self::ServiceUnavailable { status, .. } => *status,
+            Self::Timeout => 408,
+            #[cfg(any(feature = "native-http", feature = "wasm-http"))]
+            Self::Network(_) => 0,
+            Self::Streaming { .. } => 0,
+            Self::EndpointNotSupported { .. } => 400,
+            Self::InvalidHeader { .. } => 400,
+            Self::Serialization(_) => 0,
+            Self::BudgetExceeded { .. } => 0,
+            Self::HookRejected { .. } => 0,
+            Self::InternalError { .. } => 0,
+        }
+    }
+
     /// Returns `true` for errors that are worth retrying on a different service
     /// or deployment (transient failures).
     ///
@@ -145,7 +179,7 @@ impl LiterLlmError {
         let message = parsed.map(|r| r.error.message).unwrap_or_else(|| body.to_string());
 
         match status {
-            401 | 403 => Self::Authentication { message },
+            401 | 403 => Self::Authentication { message, status },
             429 => Self::RateLimited { message, retry_after },
             400 | 422 => {
                 // Check the structured `code` field first — it is more reliable
@@ -167,18 +201,18 @@ impl LiterLlmError {
                 } else if message.contains("content_policy") || message.contains("content_filter") {
                     Self::ContentPolicy { message }
                 } else {
-                    Self::BadRequest { message }
+                    Self::BadRequest { message, status }
                 }
             }
             404 => Self::NotFound { message },
-            405 | 413 => Self::BadRequest { message },
+            405 | 413 => Self::BadRequest { message, status },
             408 => Self::Timeout,
-            500 => Self::ServerError { message },
-            502..=504 => Self::ServiceUnavailable { message },
+            500 => Self::ServerError { message, status },
+            502..=504 => Self::ServiceUnavailable { message, status },
             // Map remaining 4xx codes to BadRequest (client errors) and
             // everything else (5xx, unknown) to ServerError.
-            400..=499 => Self::BadRequest { message },
-            _ => Self::ServerError { message },
+            400..=499 => Self::BadRequest { message, status },
+            _ => Self::ServerError { message, status },
         }
     }
 }
