@@ -434,3 +434,67 @@ public final class DefaultClient {
         return try await RustBridge.defaultClientCancelResponse(self.inner, id)
     }
 }
+
+// MARK: - From-JSON Helpers
+// Public wrappers forwarding RustBridge's swift_bridge-generated
+// `{TypeName}FromJson` helpers into this module's namespace.
+
+public func chatCompletionRequestFromJson(_ json: String) throws -> ChatCompletionRequest {
+    return try RustBridge.chatCompletionRequestFromJson(json)
+}
+
+public func embeddingRequestFromJson(_ json: String) throws -> EmbeddingRequest {
+    return try RustBridge.embeddingRequestFromJson(json)
+}
+
+public func createImageRequestFromJson(_ json: String) throws -> CreateImageRequest {
+    return try RustBridge.createImageRequestFromJson(json)
+}
+
+public func createSpeechRequestFromJson(_ json: String) throws -> CreateSpeechRequest {
+    return try RustBridge.createSpeechRequestFromJson(json)
+}
+
+public func createTranscriptionRequestFromJson(_ json: String) throws -> CreateTranscriptionRequest {
+    return try RustBridge.createTranscriptionRequestFromJson(json)
+}
+
+public func moderationRequestFromJson(_ json: String) throws -> ModerationRequest {
+    return try RustBridge.moderationRequestFromJson(json)
+}
+
+public func rerankRequestFromJson(_ json: String) throws -> RerankRequest {
+    return try RustBridge.rerankRequestFromJson(json)
+}
+
+public func searchRequestFromJson(_ json: String) throws -> SearchRequest {
+    return try RustBridge.searchRequestFromJson(json)
+}
+
+public func ocrRequestFromJson(_ json: String) throws -> OcrRequest {
+    return try RustBridge.ocrRequestFromJson(json)
+}
+
+public func createFileRequestFromJson(_ json: String) throws -> CreateFileRequest {
+    return try RustBridge.createFileRequestFromJson(json)
+}
+
+public func fileListQueryFromJson(_ json: String) throws -> FileListQuery {
+    return try RustBridge.fileListQueryFromJson(json)
+}
+
+public func createBatchRequestFromJson(_ json: String) throws -> CreateBatchRequest {
+    return try RustBridge.createBatchRequestFromJson(json)
+}
+
+public func batchListQueryFromJson(_ json: String) throws -> BatchListQuery {
+    return try RustBridge.batchListQueryFromJson(json)
+}
+
+public func createResponseRequestFromJson(_ json: String) throws -> CreateResponseRequest {
+    return try RustBridge.createResponseRequestFromJson(json)
+}
+
+public func customProviderConfigFromJson(_ json: String) throws -> CustomProviderConfig {
+    return try RustBridge.customProviderConfigFromJson(json)
+}

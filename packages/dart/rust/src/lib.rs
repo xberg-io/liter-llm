@@ -605,64 +605,6 @@ use liter_llm::client::FileClient;
 use liter_llm::client::LlmClient;
 #[allow(unused_imports)]
 use liter_llm::client::ResponseClient;
-#[allow(unused_imports)]
-use liter_llm::types::BatchListQuery;
-#[allow(unused_imports)]
-use liter_llm::types::BatchListResponse;
-#[allow(unused_imports)]
-use liter_llm::types::BatchObject;
-#[allow(unused_imports)]
-use liter_llm::types::ChatCompletionRequest;
-#[allow(unused_imports)]
-use liter_llm::types::ChatCompletionResponse;
-#[allow(unused_imports)]
-use liter_llm::types::CreateBatchRequest;
-#[allow(unused_imports)]
-use liter_llm::types::CreateFileRequest;
-#[allow(unused_imports)]
-use liter_llm::types::CreateImageRequest;
-#[allow(unused_imports)]
-use liter_llm::types::CreateResponseRequest;
-#[allow(unused_imports)]
-use liter_llm::types::CreateSpeechRequest;
-#[allow(unused_imports)]
-use liter_llm::types::CreateTranscriptionRequest;
-#[allow(unused_imports)]
-use liter_llm::types::DeleteResponse;
-#[allow(unused_imports)]
-use liter_llm::types::EmbeddingRequest;
-#[allow(unused_imports)]
-use liter_llm::types::EmbeddingResponse;
-#[allow(unused_imports)]
-use liter_llm::types::FileListQuery;
-#[allow(unused_imports)]
-use liter_llm::types::FileListResponse;
-#[allow(unused_imports)]
-use liter_llm::types::FileObject;
-#[allow(unused_imports)]
-use liter_llm::types::ImagesResponse;
-#[allow(unused_imports)]
-use liter_llm::types::ModelsListResponse;
-#[allow(unused_imports)]
-use liter_llm::types::ModerationRequest;
-#[allow(unused_imports)]
-use liter_llm::types::ModerationResponse;
-#[allow(unused_imports)]
-use liter_llm::types::OcrRequest;
-#[allow(unused_imports)]
-use liter_llm::types::OcrResponse;
-#[allow(unused_imports)]
-use liter_llm::types::RerankRequest;
-#[allow(unused_imports)]
-use liter_llm::types::RerankResponse;
-#[allow(unused_imports)]
-use liter_llm::types::ResponseObject;
-#[allow(unused_imports)]
-use liter_llm::types::SearchRequest;
-#[allow(unused_imports)]
-use liter_llm::types::SearchResponse;
-#[allow(unused_imports)]
-use liter_llm::types::TranscriptionResponse;
 impl DefaultClient {
     #[frb]
     pub async fn chat(&self, req: ChatCompletionRequest) -> Result<ChatCompletionResponse, String> {
