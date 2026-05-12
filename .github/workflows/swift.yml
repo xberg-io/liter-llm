@@ -19,7 +19,7 @@ jobs:
         run: cargo build -p liter-llm-swift
       - name: Copy swift-bridge generated sources
         run: |
-          OUT=$(ls -dt target/debug/build/liter-llm-swift-*/out 2>/dev/null | head -1)
+          OUT=$(find target/debug/build -maxdepth 2 -type d -name out -path '*/liter-llm-swift-*/out' -print0 2>/dev/null | xargs -0 ls -dt 2>/dev/null | head -1)
           cat "$OUT/SwiftBridgeCore.h" "$OUT/liter-llm-swift/liter-llm-swift.h" \
               > packages/swift/Sources/RustBridgeC/RustBridgeC.h
           { echo "import RustBridgeC"; cat "$OUT/SwiftBridgeCore.swift"; } \

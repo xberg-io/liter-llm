@@ -60,13 +60,7 @@ repos:
         args: ["--all"]
       - id: cargo-check
         name: cargo check (workspace)
-        args:
-          [
-            "--workspace",
-            "--exclude=liter-llm-php",
-            "--all-features",
-            "--all-targets",
-          ]
+        args: ["--workspace", "--exclude=liter-llm-php", "--all-features", "--all-targets"]
         files: ^(crates/|tools/|Cargo\.(toml|lock))
         types_or: [rust, toml]
       - id: cargo-clippy
@@ -108,6 +102,8 @@ repos:
           KREUZBERG_GO_MOD_DIRS: packages/go
       - id: govulncheck
         exclude: ^(e2e/|test_apps/)
+        env:
+          KREUZBERG_GO_MOD_DIRS: packages/go
       - id: rubocop
         files: ^packages/ruby/(?!ext/).*\.rb$
       - id: rubocop-lint
