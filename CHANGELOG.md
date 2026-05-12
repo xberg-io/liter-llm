@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- `iter21/gleam`: drop the gleam binding (packages/gleam/, e2e/gleam/, test_apps/gleam/, .github/workflows/gleam.yml, docs/reference/api-gleam.md) and all gleam alef.toml config blocks (22 entries: `languages` list, `[crates.gleam]`, workspace.sync entry, 20 per-call override blocks). Reasoning: same BEAM VM as elixir → zero runtime/perf differentiation, ~15k devs vs elixir's ~200k, codegen DSL gaps in alef-e2e/gleam would require ongoing per-language work to close.
+
 ### Added
 
 - `iter20`: bump alef to `0.15.45`, regenerate 16 language bindings + e2e suites. Removes `chat_stream` skip for go (cgo channel bridge) and dart (FRB v2 `StreamSink<T>`). Adds `options_via = "from_json"` per-call overrides for kotlin, gleam, and swift across 13 json-object calls (`chat`, `chat_stream`, `embed`, `image_generate`, `speech`, `transcribe`, `moderate`, `rerank`, `search`, `ocr`, `create_file`, `create_batch`, `responses`).
