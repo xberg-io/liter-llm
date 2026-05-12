@@ -21,8 +21,11 @@ wheelhouse/
 *.tsbuildinfo
 *.jar
 *.profraw
+*.o
+*.a
 __pycache__/
 _build/
+.zig-cache/
 
 # Python
 .venv/
