@@ -103,6 +103,7 @@ e2e/c/*.o
 e2e/c/*.dSYM/
 e2e/python/.venv/
 e2e/python/__pycache__/
+e2e/dart/.dart_tool/
 e2e/go/go.sum
 e2e/ruby/.bundle/
 e2e/ruby/vendor/
