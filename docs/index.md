@@ -1,17 +1,163 @@
 ---
-description: "liter-llm — Universal LLM API client. One Rust core, 11 native language bindings, 143 providers."
+title: liter-llm
+description: "liter-llm – Universal LLM API client. One Rust core, 14 native language bindings, 142 providers, an OpenAI-compatible proxy, and a built-in MCP server."
 ---
 
 # liter-llm
 
-liter-llm is an LLM API client written in Rust with native bindings for Python, TypeScript, Go, Java, C#, Ruby, PHP, Elixir, WebAssembly, C, and Rust. One API surface across 143 providers. No Python runtime, no dependency chain surprises. It ships as a compiled binary with Tower middleware, an OpenAI-compatible proxy server, and an MCP server built in.
+A universal LLM API client with a Rust core and native bindings for 14 languages. One surface across 142 providers — chat, streaming, embeddings, rerank, image generation, speech, transcription, OCR, search, files, batches, moderation — plus an OpenAI-compatible proxy server and a Model Context Protocol server, both shipped in the same binary.
 
 <div class="hero-badges" markdown>
 
 [:material-lightning-bolt: Quick Start](getting-started/installation.md){ .md-button .md-button--primary }
 [:material-package-variant: Installation](getting-started/installation.md){ .md-button }
-[:fontawesome-brands-github: GitHub](https://github.com/kreuzberg-dev/liter-llm){ .md-button }
-[:fontawesome-brands-discord: Community](https://discord.gg/xt9WY3GnKR){ .md-button }
+[:material-feature-search-outline: Providers](providers.md){ .md-button }
+[:fontawesome-brands-discord: Join our Community](https://discord.gg/xt9WY3GnKR){ .md-button }
+
+</div>
+
+---
+
+## Why liter-llm
+
+<div class="grid cards" markdown>
+
+- :material-router-network:{ .lg .middle } **142 Providers**
+
+    OpenAI, Anthropic, Google, Bedrock, Vertex, Azure, Mistral, Cohere, GitHub Copilot, and 134 more — one client, one model-prefix routing scheme.
+
+- :material-translate:{ .lg .middle } **14 Native Bindings**
+
+    Rust, Python, TypeScript, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, WebAssembly — plus a C FFI surface for everything else.
+
+- :material-chat-processing:{ .lg .middle } **Full Endpoint Coverage**
+
+    Chat, streaming, tools, structured outputs, embeddings, rerank, images, speech, transcription, OCR, search, files, batches, moderation — all behind a single `LlmClient` trait.
+
+- :material-server:{ .lg .middle } **Proxy & MCP Server**
+
+    Drop-in OpenAI-compatible proxy with virtual keys, budgets, fallbacks, and observability. Same binary exposes a Model Context Protocol server for AI agents.
+
+- :material-shield-key:{ .lg .middle } **Cloud-Native Auth**
+
+    Azure AD, AWS Bedrock SigV4 with STS/IRSA, Vertex AI service-account OAuth2, GitHub Copilot — automatic token caching, refresh, and rotation.
+
+- :material-shuffle-variant:{ .lg .middle } **Routing & Fallback**
+
+    Round-robin, weighted, latency-based, cost-based, and ordered-fallback strategies. Per-request override or proxy-level config.
+
+</div>
+
+---
+
+## Language Support
+
+| Language                | Package                                                                  | Docs                                         |
+| :---------------------- | :----------------------------------------------------------------------- | :------------------------------------------- |
+| **Rust**                | `cargo add liter-llm`                                                    | [API Reference](reference/api-rust.md)       |
+| **Python**              | `pip install liter-llm`                                                  | [API Reference](reference/api-python.md)     |
+| **TypeScript / Node**   | `npm install @kreuzberg/liter-llm-node`                                  | [API Reference](reference/api-typescript.md) |
+| **WebAssembly**         | `npm install @kreuzberg/liter-llm-node-wasm`                             | [API Reference](reference/api-wasm.md)       |
+| **Go**                  | `go get github.com/kreuzberg-dev/liter-llm/packages/go`                  | [API Reference](reference/api-go.md)         |
+| **Java**                | Maven Central `dev.kreuzberg.literllm:liter-llm`                         | [API Reference](reference/api-java.md)       |
+| **Kotlin**              | Maven `com.github.kreuzberg_dev:liter-llm-kotlin`                        | [API Reference](reference/api-kotlin.md)     |
+| **C#**                  | `dotnet add package LiterLlm`                                            | [API Reference](reference/api-csharp.md)     |
+| **Ruby**                | `gem install liter_llm`                                                  | [API Reference](reference/api-ruby.md)       |
+| **PHP**                 | `composer require kreuzberg/liter-llm`                                   | [API Reference](reference/api-php.md)        |
+| **Elixir**              | `{:liter_llm, "~> 1.4.0-rc.27"}`                                         | [API Reference](reference/api-elixir.md)     |
+| **Dart / Flutter**      | `dart pub add liter_llm`                                                 | [API Reference](reference/api-dart.md)       |
+| **Swift**               | Swift Package Manager                                                    | [API Reference](reference/api-swift.md)      |
+| **Zig**                 | `zig fetch --save` from GitHub                                           | [API Reference](reference/api-zig.md)        |
+| **C (FFI)**             | Shared library + header                                                  | [API Reference](reference/api-c.md)          |
+| **CLI**                 | `cargo install liter-llm-cli`                                            | [Proxy Server](server/proxy-server.md)       |
+| **Docker**              | `ghcr.io/kreuzberg-dev/liter-llm`                                        | [Proxy Server](server/proxy-server.md)       |
+
+---
+
+## Quick Example
+
+=== "Rust"
+
+    ```rust title="src/main.rs"
+    use liter_llm::{ChatCompletionRequest, ClientConfigBuilder, DefaultClient, LlmClient, Message};
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        let config = ClientConfigBuilder::new(std::env::var("OPENAI_API_KEY")?).build();
+        let client = DefaultClient::new(config, None)?;
+
+        let request = ChatCompletionRequest::builder("openai/gpt-4o-mini")
+            .add_user_message("Summarize liter-llm in one sentence.")
+            .build()?;
+
+        let response = client.chat(request).await?;
+        println!("{}", response.choices[0].message.content_text().unwrap_or(""));
+        Ok(())
+    }
+    ```
+
+=== "Python"
+
+    ```python title="main.py"
+    import asyncio
+    import os
+    from liter_llm import create_client
+
+    async def main():
+        client = create_client(api_key=os.environ["OPENAI_API_KEY"])
+        response = await client.chat({
+            "model": "openai/gpt-4o-mini",
+            "messages": [{"role": "user", "content": "Summarize liter-llm in one sentence."}],
+        })
+        print(response["choices"][0]["message"]["content"])
+
+    asyncio.run(main())
+    ```
+
+=== "TypeScript"
+
+    ```typescript title="index.ts"
+    import { createClient } from "@kreuzberg/liter-llm-node";
+
+    const client = createClient(process.env.OPENAI_API_KEY!);
+
+    const response = await client.chat({
+      model: "openai/gpt-4o-mini",
+      messages: [{ role: "user", content: "Summarize liter-llm in one sentence." }],
+    });
+
+    console.log(response.choices[0].message.content);
+    ```
+
+---
+
+## Part of kreuzberg.dev
+
+<div class="grid cards" markdown>
+
+- :material-file-document-multiple:{ .lg .middle } **[Kreuzberg](https://docs.kreuzberg.dev)**
+
+    Document intelligence — text, tables, and metadata from 91+ file formats with optional OCR.
+
+- :material-cloud:{ .lg .middle } **[Kreuzberg Cloud](https://docs.kreuzberg.cloud)**
+
+    Managed document-extraction API with SDKs, dashboards, and observability built in.
+
+- :material-spider-web:{ .lg .middle } **[Kreuzcrawl](https://docs.kreuzcrawl.kreuzberg.dev)**
+
+    High-performance web crawling and scraping with always-on HTML→Markdown and headless-Chrome fallback.
+
+- :material-language-html5:{ .lg .middle } **[html-to-markdown](https://docs.html-to-markdown.kreuzberg.dev)**
+
+    Fast, lossless HTML→Markdown engine — Rust core, the same conversion used by Kreuzcrawl.
+
+- :material-code-tags:{ .lg .middle } **[tree-sitter-language-pack](https://docs.tree-sitter-language-pack.kreuzberg.dev)**
+
+    306 tree-sitter grammars and code-intelligence primitives.
+
+- :fontawesome-brands-discord:{ .lg .middle } **[Discord](https://discord.gg/xt9WY3GnKR)**
+
+    Join the Kreuzberg community for help, roadmap discussion, and announcements.
 
 </div>
 
@@ -19,85 +165,43 @@ liter-llm is an LLM API client written in Rust with native bindings for Python, 
 
 ## Explore the Docs
 
-<!-- markdownlint-disable MD030 MD035 -->
 <div class="grid cards" markdown>
 
-- :material-rocket-launch:{ .lg .middle } **Getting Started**
+- :material-rocket-launch:{ .lg .middle } **Get Started**
 
-  ***
+    Install liter-llm for your language, set an API key, and make your first call.
 
-  Install the package for your language and make your first API call.
+    [:octicons-arrow-right-24: Installation](getting-started/installation.md)
 
-  [:octicons-arrow-right-24: Installation](getting-started/installation.md)
+- :material-book-open-variant:{ .lg .middle } **Guides**
 
-- :material-chat:{ .lg .middle } **Chat & Streaming**
+    Chat, embeddings, media, search, fallback routing, authentication, and the proxy/MCP servers.
 
-  ***
+    [:octicons-arrow-right-24: Chat & Streaming](usage/chat.md)
 
-  Single-turn and multi-turn chat, streaming, tool calling, structured outputs.
+- :material-puzzle-outline:{ .lg .middle } **Concepts**
 
-  [:octicons-arrow-right-24: Chat Guide](usage/chat.md)
+    Architecture, feature flags, tokenizer model, and cost-estimation pipeline.
 
-- :material-server:{ .lg .middle } **Proxy Server**
+    [:octicons-arrow-right-24: Architecture](concepts/architecture.md)
 
-  ***
+- :material-api:{ .lg .middle } **Reference**
 
-  OpenAI-compatible proxy with virtual keys, budget enforcement, and TOML config.
+    Per-language API docs, the configuration schema, type catalogue, and error matrix.
 
-  [:octicons-arrow-right-24: Proxy Server](server/proxy-server.md)
+    [:octicons-arrow-right-24: References](reference/api-rust.md)
 
-- :material-routes:{ .lg .middle } **Fallback & Routing**
+- :material-router-network:{ .lg .middle } **Providers**
 
-  ***
+    Browse all 142 supported providers, model prefixes, auth modes, and endpoint coverage.
 
-  Round-robin, latency-based, cost-based, weighted-random, and ordered-fallback strategies.
+    [:octicons-arrow-right-24: Provider Registry](providers.md)
 
-  [:octicons-arrow-right-24: Routing Guide](usage/fallback-routing.md)
+- :material-server-network:{ .lg .middle } **Proxy & MCP**
 
-- :material-key-variant:{ .lg .middle } **Authentication**
+    Run the OpenAI-compatible proxy and the Model Context Protocol server from one binary.
 
-  ***
-
-  Azure AD, AWS Bedrock STS/IRSA, Vertex AI OAuth2 with automatic token caching.
-
-  [:octicons-arrow-right-24: Auth Guide](usage/authentication.md)
-
-- :material-code-braces:{ .lg .middle } **API Reference**
-
-  ***
-
-  Full reference for Python, TypeScript, Rust, Go, Java, C#, Ruby, Elixir, PHP, WASM, C FFI.
-
-  [:octicons-arrow-right-24: Python](reference/api-python.md)
-
-</div>
-<!-- markdownlint-enable MD030 MD035 -->
-
----
-
-## Part of kreuzberg.dev
-
-liter-llm is built by the [kreuzberg.dev](https://kreuzberg.dev) team, the same people behind a family of Rust-core, polyglot-bindings libraries.
-
-<div class="home-family" markdown>
-
-<a class="home-family__card" href="https://docs.kreuzberg.dev" target="_blank" markdown>
-:material-file-document-multiple:{ .home-family__icon }
-**Kreuzberg**
-<span>Document extraction for 91+ formats — PDF, Office, images, HTML, and more.</span>
-</a>
-
-<a class="home-family__card" href="https://github.com/kreuzberg-dev/tree-sitter-language-pack" target="_blank" markdown>
-:material-code-tags:{ .home-family__icon }
-**tree-sitter-language-pack**
-<span>All Tree-sitter grammars in one package, across every language binding.</span>
-</a>
-
-<a class="home-family__card" href="https://github.com/kreuzberg-dev/html-to-markdown" target="_blank" markdown>
-:material-language-markdown:{ .home-family__icon }
-**html-to-markdown**
-<span>Fast, lossless HTML to Markdown conversion with a Rust core.</span>
-</a>
+    [:octicons-arrow-right-24: Proxy Server](server/proxy-server.md)
 
 </div>
 
@@ -105,6 +209,6 @@ liter-llm is built by the [kreuzberg.dev](https://kreuzberg.dev) team, the same 
 
 ## Getting Help
 
-- **Bugs & feature requests** -- [Open an issue on GitHub](https://github.com/kreuzberg-dev/liter-llm/issues)
-- **Community chat** -- [Join the Discord](https://discord.gg/xt9WY3GnKR)
-- **Contributing** -- [Read the contributor guide](contributing.md)
+- **Bugs & feature requests** — [Open an issue on GitHub](https://github.com/kreuzberg-dev/liter-llm/issues)
+- **Community chat** — [Join the Discord](https://discord.gg/xt9WY3GnKR)
+- **Contributing** — [Read the contributor guide](contributing.md)

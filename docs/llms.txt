@@ -1,43 +1,75 @@
 # liter-llm
 
-> Universal LLM API client for 142+ providers with native bindings for 11 languages.
+> Universal LLM API client. One Rust core, 14 native language bindings, 142 providers, an OpenAI-compatible proxy, and a built-in MCP server.
 
-liter-llm provides unified access to 142+ LLM providers through a single API. Built in Rust with native bindings for Python, TypeScript, Go, Java, Ruby, PHP, C#, Elixir, WebAssembly, and C/FFI. Features include chat completions, streaming, embeddings, tool calling, image generation, audio, moderation, search, OCR, and an OpenAI-compatible proxy server.
+liter-llm gives a single client surface — chat, streaming, tools, structured outputs, embeddings, rerank, images, speech, transcription, OCR, search, files, batches, moderation — across 142 LLM providers. It ships as a compiled Rust core with native bindings for Rust, Python, TypeScript, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, and WebAssembly, plus a C FFI surface and a CLI binary that exposes an OpenAI-compatible proxy server and a Model Context Protocol server.
 
-## Getting Started
+## Get Started
 
-- [Installation](https://docs.liter-llm.kreuzberg.dev/getting-started/installation): Install liter-llm for your language and platform
-- [Configuration](https://docs.liter-llm.kreuzberg.dev/usage/configuration): Set API keys and configure client options
+- [Installation](https://docs.liter-llm.kreuzberg.dev/getting-started/installation/): Install for any of the 14 supported languages or pull the Docker image
+- [Configuration](https://docs.liter-llm.kreuzberg.dev/usage/configuration/): API keys, timeouts, retries, base-URL overrides
 
-## Usage
+## Guides — Core
 
-- [Chat & Streaming](https://docs.liter-llm.kreuzberg.dev/usage/chat): Chat completions with streaming support
-- [Embeddings & Rerank](https://docs.liter-llm.kreuzberg.dev/usage/embeddings): Generate text embeddings and rerank results
-- [Media (Images, Speech, Transcription)](https://docs.liter-llm.kreuzberg.dev/usage/media): Image generation, text-to-speech, speech-to-text
-- [Search & OCR](https://docs.liter-llm.kreuzberg.dev/usage/search-ocr): Web search and optical character recognition
-- [Files & Batches](https://docs.liter-llm.kreuzberg.dev/usage/files): File uploads, batch processing, and async operations
-- [Local LLMs](https://docs.liter-llm.kreuzberg.dev/usage/local-llms): Run local models with Ollama and other runtimes
-- [MCP & IDE Integration](https://docs.liter-llm.kreuzberg.dev/usage/mcp-integration): Model Context Protocol support and IDE plugins
+- [Chat & Streaming](https://docs.liter-llm.kreuzberg.dev/usage/chat/): Chat completions, streaming, tool calls, structured outputs
+- [Embeddings & Rerank](https://docs.liter-llm.kreuzberg.dev/usage/embeddings/): Embedding generation and result reranking
+- [Media](https://docs.liter-llm.kreuzberg.dev/usage/media/): Image generation, text-to-speech, transcription
+- [Search & OCR](https://docs.liter-llm.kreuzberg.dev/usage/search-ocr/): Web search and document OCR endpoints
+- [Files & Batches](https://docs.liter-llm.kreuzberg.dev/usage/files/): File uploads, batch jobs, async exchanges
 
-## API Reference
+## Guides — Advanced
 
-- [Python](https://docs.liter-llm.kreuzberg.dev/api/python): Python bindings and API reference
-- [TypeScript / Node.js](https://docs.liter-llm.kreuzberg.dev/api/typescript): TypeScript/JavaScript API reference
-- [Rust](https://docs.liter-llm.kreuzberg.dev/api/rust): Rust API reference and core library
-- [Go](https://docs.liter-llm.kreuzberg.dev/api/go): Go module bindings
-- [Java](https://docs.liter-llm.kreuzberg.dev/api/java): Java wrapper API reference
-- [C# / .NET](https://docs.liter-llm.kreuzberg.dev/api/csharp): .NET binding API reference
-- [Ruby](https://docs.liter-llm.kreuzberg.dev/api/ruby): Ruby gem API reference
-- [Elixir](https://docs.liter-llm.kreuzberg.dev/api/elixir): Elixir package API reference
-- [PHP](https://docs.liter-llm.kreuzberg.dev/api/php): PHP extension API reference
-- [WebAssembly](https://docs.liter-llm.kreuzberg.dev/api/wasm): WebAssembly bindings for JavaScript
-- [C / FFI](https://docs.liter-llm.kreuzberg.dev/api/c-ffi): C FFI layer and headers
+- [Authentication](https://docs.liter-llm.kreuzberg.dev/usage/authentication/): Azure AD, AWS Bedrock SigV4 + STS/IRSA, Vertex AI service-accounts, GitHub Copilot
+- [Fallback & Routing](https://docs.liter-llm.kreuzberg.dev/usage/fallback-routing/): Round-robin, weighted, latency-based, cost-based, ordered-fallback
+- [Local LLMs](https://docs.liter-llm.kreuzberg.dev/usage/local-llms/): Ollama, llama.cpp, and other OpenAI-compatible local runtimes
+- [Error Handling](https://docs.liter-llm.kreuzberg.dev/usage/error-handling/): Error taxonomy, retries, and recovery patterns
+- [Observability](https://docs.liter-llm.kreuzberg.dev/usage/observability/): Tracing, OpenTelemetry, cost tracking
 
-## Providers
+## Deployment
 
-- [Provider Registry](https://docs.liter-llm.kreuzberg.dev/providers): Full list of 142+ supported providers and model prefixes
+- [Proxy Server](https://docs.liter-llm.kreuzberg.dev/server/proxy-server/): OpenAI-compatible HTTP gateway with virtual keys and budgets
+- [Proxy Configuration](https://docs.liter-llm.kreuzberg.dev/server/proxy-configuration/): TOML schema for routes, fallbacks, rate limits
+- [MCP Server](https://docs.liter-llm.kreuzberg.dev/server/mcp-server/): Model Context Protocol tool server
+- [MCP & IDE Integration](https://docs.liter-llm.kreuzberg.dev/usage/mcp-integration/): VS Code, Claude Desktop, Cursor, Zed
 
-## Additional Resources
+## Concepts
 
-- [Changelog](https://docs.liter-llm.kreuzberg.dev/CHANGELOG): Release notes and version history
-- [Contributing](https://docs.liter-llm.kreuzberg.dev/contributing): Contribution guidelines and development setup
+- [Architecture](https://docs.liter-llm.kreuzberg.dev/concepts/architecture/): Rust core, Tower middleware, binding layer, proxy server
+- [Feature Flags](https://docs.liter-llm.kreuzberg.dev/concepts/feature-flags/): Cargo features (`native-http`, `wasm-http`, `tower`, `otel`, `tokenizer`, etc.)
+- [Tokenizer](https://docs.liter-llm.kreuzberg.dev/concepts/tokenizer/): Token counting model
+- [Cost Estimation](https://docs.liter-llm.kreuzberg.dev/concepts/cost-estimation/): Pre-call and post-call cost computation
+
+## Reference
+
+- [Rust API](https://docs.liter-llm.kreuzberg.dev/reference/api-rust/)
+- [Python API](https://docs.liter-llm.kreuzberg.dev/reference/api-python/)
+- [TypeScript / Node API](https://docs.liter-llm.kreuzberg.dev/reference/api-typescript/)
+- [Go API](https://docs.liter-llm.kreuzberg.dev/reference/api-go/)
+- [Java API](https://docs.liter-llm.kreuzberg.dev/reference/api-java/)
+- [Kotlin API](https://docs.liter-llm.kreuzberg.dev/reference/api-kotlin/)
+- [C# API](https://docs.liter-llm.kreuzberg.dev/reference/api-csharp/)
+- [Ruby API](https://docs.liter-llm.kreuzberg.dev/reference/api-ruby/)
+- [PHP API](https://docs.liter-llm.kreuzberg.dev/reference/api-php/)
+- [Elixir API](https://docs.liter-llm.kreuzberg.dev/reference/api-elixir/)
+- [Dart API](https://docs.liter-llm.kreuzberg.dev/reference/api-dart/)
+- [Swift API](https://docs.liter-llm.kreuzberg.dev/reference/api-swift/)
+- [Zig API](https://docs.liter-llm.kreuzberg.dev/reference/api-zig/)
+- [WebAssembly API](https://docs.liter-llm.kreuzberg.dev/reference/api-wasm/)
+- [C / FFI](https://docs.liter-llm.kreuzberg.dev/reference/api-c/)
+- [Providers](https://docs.liter-llm.kreuzberg.dev/providers/): All 142 supported providers with model prefixes
+- [Configuration](https://docs.liter-llm.kreuzberg.dev/reference/configuration/)
+- [Types](https://docs.liter-llm.kreuzberg.dev/reference/types/)
+- [Errors](https://docs.liter-llm.kreuzberg.dev/reference/errors/)
+
+## Ecosystem
+
+- [Kreuzberg](https://docs.kreuzberg.dev): Document intelligence — text, tables, metadata, OCR over 91+ formats
+- [Kreuzberg Cloud](https://docs.kreuzberg.cloud): Managed document-extraction API
+- [Kreuzcrawl](https://docs.kreuzcrawl.kreuzberg.dev): Web crawling with HTML→Markdown and headless-Chrome fallback
+- [html-to-markdown](https://docs.html-to-markdown.kreuzberg.dev): Standalone HTML→Markdown engine
+- [tree-sitter-language-pack](https://docs.tree-sitter-language-pack.kreuzberg.dev): 306 tree-sitter grammars and code-intelligence primitives
+
+## More
+
+- [Contributing](https://docs.liter-llm.kreuzberg.dev/contributing/): Contribution guidelines and development setup
+- [Changelog](https://docs.liter-llm.kreuzberg.dev/CHANGELOG/): Release notes and version history
