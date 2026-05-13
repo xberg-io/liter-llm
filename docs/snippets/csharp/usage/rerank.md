@@ -3,18 +3,21 @@
 ```csharp
 using LiterLlm;
 
-await using var client = new LlmClient(
-    apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!);
+using var client = LiterLlmLib.CreateClient(
+    apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!,
+    baseUrl: null, timeoutSecs: null, maxRetries: null, modelHint: null);
 
-var response = await client.RerankAsync(new RerankRequest(
-    Model: "cohere/rerank-v3.5",
-    Query: "What is the capital of France?",
-    Documents: [
-        "Paris is the capital of France.",
-        "Berlin is the capital of Germany.",
-        "London is the capital of England.",
+var response = await client.Rerank(new RerankRequest
+{
+    Model = "cohere/rerank-v3.5",
+    Query = "What is the capital of France?",
+    Documents =
+    [
+        RerankDocument.Of("Paris is the capital of France."),
+        RerankDocument.Of("Berlin is the capital of Germany."),
+        RerankDocument.Of("London is the capital of England."),
     ]
-));
+});
 
 foreach (var result in response.Results)
 {

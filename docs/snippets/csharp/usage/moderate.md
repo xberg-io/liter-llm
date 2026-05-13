@@ -3,21 +3,21 @@
 ```csharp
 using LiterLlm;
 
-await using var client = new LlmClient(
-    apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!);
+using var client = LiterLlmLib.CreateClient(
+    apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!,
+    baseUrl: null, timeoutSecs: null, maxRetries: null, modelHint: null);
 
-var response = await client.ModerateAsync(new CreateModerationRequest(
-    Model: "openai/omni-moderation-latest",
-    Input: "This is a test message."
-));
+var response = await client.Moderate(new ModerationRequest
+{
+    Model = "openai/omni-moderation-latest",
+    Input = ModerationInput.Of("This is a test message.")
+});
 
 var result = response.Results[0];
+var cats = result.Categories;
 Console.WriteLine($"Flagged: {result.Flagged}");
-foreach (var (category, flagged) in result.Categories)
-{
-    if (flagged)
-    {
-        Console.WriteLine($"  {category}: {result.CategoryScores[category]:F4}");
-    }
-}
+// ModerationCategories is a typed class with bool fields (Sexual, Hate,
+// Harassment, SelfHarm, Violence, ...); access them directly.
+if (cats.Hate) Console.WriteLine("  hate flagged");
+if (cats.Harassment) Console.WriteLine("  harassment flagged");
 ```

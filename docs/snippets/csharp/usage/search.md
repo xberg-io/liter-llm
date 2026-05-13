@@ -3,14 +3,16 @@
 ```csharp
 using LiterLlm;
 
-await using var client = new LlmClient(
-    apiKey: Environment.GetEnvironmentVariable("BRAVE_API_KEY")!);
+using var client = LiterLlmLib.CreateClient(
+    apiKey: Environment.GetEnvironmentVariable("BRAVE_API_KEY")!,
+    baseUrl: null, timeoutSecs: null, maxRetries: null, modelHint: null);
 
-var response = await client.SearchAsync(new SearchRequest(
-    Model: "brave/web-search",
-    Query: "What is Rust programming language?",
-    MaxResults: 5
-));
+var response = await client.Search(new SearchRequest
+{
+    Model = "brave/web-search",
+    Query = "What is Rust programming language?",
+    MaxResults = 5
+});
 
 foreach (var result in response.Results)
 {

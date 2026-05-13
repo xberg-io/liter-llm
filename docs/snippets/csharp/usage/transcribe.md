@@ -3,14 +3,15 @@
 ```csharp
 using LiterLlm;
 
-await using var client = new LlmClient(
-    apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!);
+using var client = LiterLlmLib.CreateClient(
+    apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!,
+    baseUrl: null, timeoutSecs: null, maxRetries: null, modelHint: null);
 
 var audioBytes = await File.ReadAllBytesAsync("audio.mp3");
-var response = await client.TranscribeAsync(new CreateTranscriptionRequest(
-    Model: "openai/whisper-1",
-    File: audioBytes,
-    Filename: "audio.mp3"
-));
+var response = await client.Transcribe(new CreateTranscriptionRequest
+{
+    Model = "openai/whisper-1",
+    File = Convert.ToBase64String(audioBytes)
+});
 Console.WriteLine(response.Text);
 ```

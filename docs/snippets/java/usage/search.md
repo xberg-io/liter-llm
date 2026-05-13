@@ -1,19 +1,17 @@
 <!-- snippet:compile-only -->
 
 ```java
-import dev.kreuzberg.literllm.LlmClient;
-import dev.kreuzberg.literllm.Types.*;
+import dev.kreuzberg.literllm.*;
+import java.util.Optional;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        try (var client = LlmClient.builder()
-                .apiKey(System.getenv("BRAVE_API_KEY"))
-                .build()) {
-            var response = client.search(new SearchRequest(
-                "brave/web-search",
-                "What is Rust programming language?",
-                5
-            ));
+        try (var client = LiterLlm.createClient(System.getenv("BRAVE_API_KEY"))) {
+            var response = client.search(SearchRequest.builder()
+                .withModel("brave/web-search")
+                .withQuery("What is Rust programming language?")
+                .withMaxResults(Optional.of(5))
+                .build());
             for (var result : response.results()) {
                 System.out.printf("%s: %s%n", result.title(), result.url());
             }

@@ -1,19 +1,16 @@
 <!-- snippet:compile-only -->
 
 ```java
-import dev.kreuzberg.literllm.LlmClient;
-import dev.kreuzberg.literllm.Types.*;
+import dev.kreuzberg.literllm.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        try (var client = LlmClient.builder()
-                .apiKey(System.getenv("OPENAI_API_KEY"))
-                .build()) {
-            var response = client.createBatch(new CreateBatchRequest(
-                "file-abc123",
-                "/v1/chat/completions",
-                "24h"
-            ));
+        try (var client = LiterLlm.createClient(System.getenv("OPENAI_API_KEY"))) {
+            var response = client.createBatch(CreateBatchRequest.builder()
+                .withInputFileId("file-abc123")
+                .withEndpoint("/v1/chat/completions")
+                .withCompletionWindow("24h")
+                .build());
             System.out.println("Batch ID: " + response.id());
             System.out.println("Status: " + response.status());
         }

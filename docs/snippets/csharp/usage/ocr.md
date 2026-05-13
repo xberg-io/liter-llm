@@ -3,16 +3,19 @@
 ```csharp
 using LiterLlm;
 
-await using var client = new LlmClient(
-    apiKey: Environment.GetEnvironmentVariable("MISTRAL_API_KEY")!);
+using var client = LiterLlmLib.CreateClient(
+    apiKey: Environment.GetEnvironmentVariable("MISTRAL_API_KEY")!,
+    baseUrl: null, timeoutSecs: null, maxRetries: null, modelHint: null);
 
-var response = await client.OcrAsync(new OcrRequest(
-    Model: "mistral/mistral-ocr-latest",
-    Document: new DocumentInput(Type: "document_url", Url: "https://example.com/invoice.pdf")
-));
+var response = await client.Ocr(new OcrRequest
+{
+    Model = "mistral/mistral-ocr-latest",
+    Document = new OcrDocument.Url("https://example.com/invoice.pdf")
+});
 
 foreach (var page in response.Pages)
 {
-    Console.WriteLine($"Page {page.Index}: {page.Markdown[..100]}...");
+    var preview = page.Markdown.Length > 100 ? page.Markdown[..100] : page.Markdown;
+    Console.WriteLine($"Page {page.Index}: {preview}...");
 }
 ```

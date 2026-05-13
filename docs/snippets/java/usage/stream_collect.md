@@ -1,24 +1,26 @@
 ```java
-import dev.kreuzberg.literllm.LlmClient;
-import dev.kreuzberg.literllm.Types.*;
+import dev.kreuzberg.literllm.*;
 import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        try (var client = LlmClient.builder()
-                .apiKey(System.getenv("OPENAI_API_KEY"))
-                .build()) {
+        try (var client = LiterLlm.createClient(System.getenv("OPENAI_API_KEY"))) {
+            var request = ChatCompletionRequest.builder()
+                .withModel("openai/gpt-4o")
+                .withMessages(List.of(
+                    new Message.User(new UserMessage(UserContent.of("Explain quantum computing briefly"), null))
+                ))
+                .build();
             var sb = new StringBuilder();
-            client.chatStream(new ChatCompletionRequest(
-                "openai/gpt-4o",
-                List.of(new UserMessage("Explain quantum computing briefly"))
-            ), chunk -> {
+            var stream = client.chatStream(request);
+            while (stream.hasNext()) {
+                var chunk = stream.next();
                 var delta = chunk.choices().getFirst().delta().content();
                 if (delta != null) {
                     sb.append(delta);
                     System.out.print(delta);
                 }
-            });
+            }
             System.out.println();
             System.out.printf("%nFull response length: %d characters%n", sb.length());
         }

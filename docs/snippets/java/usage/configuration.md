@@ -1,21 +1,24 @@
 ```java
-import dev.kreuzberg.literllm.LlmClient;
-import dev.kreuzberg.literllm.Types.*;
+import dev.kreuzberg.literllm.*;
 import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        try (var client = LlmClient.builder()
-                .apiKey("sk-...")                           // or System.getenv("OPENAI_API_KEY")
-                .baseUrl("https://api.openai.com/v1")       // override provider base URL
-                .modelHint("openai")                        // pre-resolve provider at construction
-                .maxRetries(3)                              // retry on transient failures
-                .timeoutSecs(60)                            // request timeout in seconds
-                .build()) {
-            var response = client.chat(new ChatCompletionRequest(
-                "openai/gpt-4o",
-                List.of(new UserMessage("Hello!"))
-            ));
+        // Positional args: apiKey, baseUrl, timeoutSecs, maxRetries, modelHint.
+        // Pass null for any optional value to use the built-in default.
+        try (var client = LiterLlm.createClient(
+                "sk-...",                          // or System.getenv("OPENAI_API_KEY")
+                "https://api.openai.com/v1",       // override provider base URL
+                60L,                                // request timeout in seconds
+                3,                                  // retry on transient failures
+                "openai"                            // pre-resolve provider at construction
+        )) {
+            var response = client.chat(ChatCompletionRequest.builder()
+                .withModel("openai/gpt-4o")
+                .withMessages(List.of(
+                    new Message.User(new UserMessage(UserContent.of("Hello!"), null))
+                ))
+                .build());
             System.out.println(response.choices().getFirst().message().content());
         }
     }

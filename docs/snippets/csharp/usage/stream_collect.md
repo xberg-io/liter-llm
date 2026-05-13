@@ -2,18 +2,20 @@
 using System.Text;
 using LiterLlm;
 
-await using var client = new LlmClient(
-    apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!);
+using var client = LiterLlmLib.CreateClient(
+    apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!,
+    baseUrl: null, timeoutSecs: null, maxRetries: null, modelHint: null);
 
-var request = new ChatCompletionRequest(
-    Model: "openai/gpt-4o",
-    Messages: [new UserMessage("Explain quantum computing briefly")]
-);
+var request = new ChatCompletionRequest
+{
+    Model = "openai/gpt-4o",
+    Messages = [new Message.User(new UserMessage { Content = UserContent.Of("Explain quantum computing briefly") })]
+};
 
 var sb = new StringBuilder();
-await foreach (var chunk in client.ChatStreamAsync(request))
+await foreach (var chunk in client.ChatStream(request))
 {
-    var delta = chunk.Choices?[0]?.Delta?.Content;
+    var delta = chunk.Choices.Count > 0 ? chunk.Choices[0].Delta.Content : null;
     if (delta is not null)
     {
         sb.Append(delta);

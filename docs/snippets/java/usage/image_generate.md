@@ -1,20 +1,18 @@
 <!-- snippet:compile-only -->
 
 ```java
-import dev.kreuzberg.literllm.LlmClient;
-import dev.kreuzberg.literllm.Types.*;
+import dev.kreuzberg.literllm.*;
+import java.util.Optional;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        try (var client = LlmClient.builder()
-                .apiKey(System.getenv("OPENAI_API_KEY"))
-                .build()) {
-            var response = client.imageGenerate(new CreateImageRequest(
-                "openai/dall-e-3",
-                "A sunset over mountains",
-                1,
-                "1024x1024"
-            ));
+        try (var client = LiterLlm.createClient(System.getenv("OPENAI_API_KEY"))) {
+            var response = client.imageGenerate(CreateImageRequest.builder()
+                .withPrompt("A sunset over mountains")
+                .withModel(Optional.of("openai/dall-e-3"))
+                .withN(Optional.of(1))
+                .withSize(Optional.of("1024x1024"))
+                .build());
             System.out.println(response.data().getFirst().url());
         }
     }

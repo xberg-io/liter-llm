@@ -1,17 +1,23 @@
 ```java
-import dev.kreuzberg.literllm.LlmClient;
-import dev.kreuzberg.literllm.Types.*;
+import dev.kreuzberg.literllm.*;
 import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        try (var client = LlmClient.builder()
-                .apiKey(System.getenv("OPENAI_API_KEY"))
-                .build()) {
-            client.chatStream(new ChatCompletionRequest(
-                "openai/gpt-4o-mini",
-                List.of(new UserMessage("Hello"))
-            ), chunk -> System.out.println(chunk));
+        try (var client = LiterLlm.createClient(System.getenv("OPENAI_API_KEY"))) {
+            var request = ChatCompletionRequest.builder()
+                .withModel("openai/gpt-4o-mini")
+                .withMessages(List.of(
+                    new Message.User(new UserMessage(UserContent.of("Hello"), null))
+                ))
+                .build();
+            var stream = client.chatStream(request);
+            while (stream.hasNext()) {
+                var chunk = stream.next();
+                var delta = chunk.choices().getFirst().delta().content();
+                if (delta != null) System.out.print(delta);
+            }
+            System.out.println();
         }
     }
 }

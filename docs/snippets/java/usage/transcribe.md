@@ -1,22 +1,20 @@
 <!-- snippet:compile-only -->
 
 ```java
-import dev.kreuzberg.literllm.LlmClient;
-import dev.kreuzberg.literllm.Types.*;
+import dev.kreuzberg.literllm.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        try (var client = LlmClient.builder()
-                .apiKey(System.getenv("OPENAI_API_KEY"))
-                .build()) {
+        try (var client = LiterLlm.createClient(System.getenv("OPENAI_API_KEY"))) {
             byte[] audioBytes = Files.readAllBytes(Path.of("audio.mp3"));
-            var response = client.transcribe(new CreateTranscriptionRequest(
-                "openai/whisper-1",
-                audioBytes,
-                "audio.mp3"
-            ));
+            String audioBase64 = Base64.getEncoder().encodeToString(audioBytes);
+            var response = client.transcribe(CreateTranscriptionRequest.builder()
+                .withModel("openai/whisper-1")
+                .withFile(audioBase64)
+                .build());
             System.out.println(response.text());
         }
     }

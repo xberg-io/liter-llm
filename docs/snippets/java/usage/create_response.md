@@ -1,18 +1,15 @@
 <!-- snippet:compile-only -->
 
 ```java
-import dev.kreuzberg.literllm.LlmClient;
-import dev.kreuzberg.literllm.Types.*;
+import dev.kreuzberg.literllm.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        try (var client = LlmClient.builder()
-                .apiKey(System.getenv("OPENAI_API_KEY"))
-                .build()) {
-            var response = client.createResponse(new CreateResponseRequest(
-                "openai/gpt-4o",
-                "Explain quantum computing in one sentence."
-            ));
+        try (var client = LiterLlm.createClient(System.getenv("OPENAI_API_KEY"))) {
+            var response = client.createResponse(CreateResponseRequest.builder()
+                .withModel("openai/gpt-4o")
+                .withInput("Explain quantum computing in one sentence.")
+                .build());
             System.out.println(response);
         }
     }
