@@ -1,7 +1,7 @@
 ```rust
 use liter_llm::{
-    ChatCompletionRequest, ClientConfigBuilder, DefaultClient, FunctionDefinition,
-    LlmClient, Message, Tool, UserContent, UserMessage,
+    ChatCompletionRequest, ChatCompletionTool, ClientConfigBuilder, DefaultClient,
+    FunctionDefinition, LlmClient, Message, ToolType, UserContent, UserMessage,
 };
 use serde_json::json;
 
@@ -11,8 +11,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .build();
     let client = DefaultClient::new(config, Some("openai/gpt-4o"))?;
 
-    let tools = vec![Tool {
-        r#type: "function".into(),
+    let tools = vec![ChatCompletionTool {
+        tool_type: ToolType::Function,
         function: FunctionDefinition {
             name: "get_weather".into(),
             description: Some("Get the current weather for a location".into()),
@@ -23,6 +23,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 },
                 "required": ["location"]
             })),
+            strict: None,
         },
     }];
 

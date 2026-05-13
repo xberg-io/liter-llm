@@ -7,7 +7,7 @@ use liter_llm::{
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = ClientConfigBuilder::new(std::env::var("OPENAI_API_KEY")?).build();
-    let client = DefaultClient::new(config);
+    let client = DefaultClient::new(config, None)?;
 
     let request = ChatCompletionRequest {
         model: "openai/gpt-4o".to_owned(),

@@ -1,6 +1,7 @@
 <!-- snippet:compile-only -->
 
 ```rust
+use base64::Engine;
 use liter_llm::{ClientConfigBuilder, CreateTranscriptionRequest, DefaultClient, LlmClient};
 use tokio::fs;
 
@@ -14,8 +15,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let response = client
         .transcribe(CreateTranscriptionRequest {
             model: "openai/whisper-1".into(),
-            file: audio_bytes,
-            filename: "audio.mp3".into(),
+            file: base64::engine::general_purpose::STANDARD.encode(&audio_bytes),
             ..Default::default()
         })
         .await?;

@@ -1,7 +1,7 @@
 <!-- snippet:compile-only -->
 
 ```rust
-use liter_llm::{ClientConfigBuilder, CreateModerationRequest, DefaultClient, LlmClient};
+use liter_llm::{ClientConfigBuilder, DefaultClient, LlmClient, ModerationInput, ModerationRequest};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -10,20 +10,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = DefaultClient::new(config, Some("openai/omni-moderation-latest"))?;
 
     let response = client
-        .moderate(CreateModerationRequest {
+        .moderate(ModerationRequest {
             model: Some("openai/omni-moderation-latest".into()),
-            input: "This is a test message.".into(),
+            input: ModerationInput::Single("This is a test message.".into()),
         })
         .await?;
 
     let result = &response.results[0];
     println!("Flagged: {}", result.flagged);
-    for (category, &flagged) in &result.categories {
-        if flagged {
-            if let Some(&score) = result.category_scores.get(category) {
-                println!("  {category}: {score:.4}");
-            }
-        }
+    if result.categories.sexual {
+        println!("  sexual: {:.4}", result.category_scores.sexual);
+    }
+    if result.categories.hate {
+        println!("  hate: {:.4}", result.category_scores.hate);
+    }
+    if result.categories.self_harm {
+        println!("  self-harm: {:.4}", result.category_scores.self_harm);
+    }
+    if result.categories.violence {
+        println!("  violence: {:.4}", result.category_scores.violence);
     }
     Ok(())
 }

@@ -1,7 +1,8 @@
 <!-- snippet:compile-only -->
 
 ```rust
-use liter_llm::{ClientConfigBuilder, CreateFileRequest, DefaultClient, LlmClient};
+use base64::Engine;
+use liter_llm::{ClientConfigBuilder, CreateFileRequest, DefaultClient, FileClient, FilePurpose};
 use tokio::fs;
 
 #[tokio::main]
@@ -10,12 +11,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .build();
     let client = DefaultClient::new(config, Some("openai/gpt-4o"))?;
 
-    let file_bytes = fs::read("data.jsonl").await?;
+    let bytes = fs::read("data.jsonl").await?;
     let response = client
         .create_file(CreateFileRequest {
-            file: file_bytes,
-            filename: "data.jsonl".into(),
-            purpose: "batch".into(),
+            file: base64::engine::general_purpose::STANDARD.encode(&bytes),
+            filename: Some("data.jsonl".into()),
+            purpose: FilePurpose::Batch,
         })
         .await?;
 

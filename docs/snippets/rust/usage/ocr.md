@@ -1,7 +1,7 @@
 <!-- snippet:compile-only -->
 
 ```rust
-use liter_llm::{ClientConfigBuilder, DefaultClient, LlmClient, OcrRequest, DocumentInput};
+use liter_llm::{ClientConfigBuilder, DefaultClient, LlmClient, OcrDocument, OcrRequest};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -12,7 +12,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let response = client
         .ocr(OcrRequest {
             model: "mistral/mistral-ocr-latest".into(),
-            document: DocumentInput::Url {
+            document: OcrDocument::Url {
                 url: "https://example.com/invoice.pdf".into(),
             },
             ..Default::default()
