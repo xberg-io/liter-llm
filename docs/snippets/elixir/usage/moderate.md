@@ -1,20 +1,15 @@
 <!-- snippet:compile-only -->
 
 ```elixir
-{:ok, response} =
-  LiterLlm.moderate(
-    %{
-      model: "openai/omni-moderation-latest",
-      input: "This is a test message."
-    },
-    api_key: System.fetch_env!("OPENAI_API_KEY")
-  )
+{:ok, client} = LiterLlm.create_client(System.get_env("OPENAI_API_KEY"))
 
-result = hd(response["results"])
-IO.puts("Flagged: #{result["flagged"]}")
+request =
+  Jason.encode!(%{
+    model: "openai/omni-moderation-latest",
+    input: "This is a test message."
+  })
 
-for {category, true} <- result["categories"] do
-  score = result["category_scores"][category]
-  IO.puts("  #{category}: #{Float.round(score, 4)}")
-end
+{:ok, result} = LiterLlm.defaultclient_moderate_async(client, request)
+first = Enum.at(result.results, 0)
+IO.puts("Flagged: #{first.flagged}")
 ```

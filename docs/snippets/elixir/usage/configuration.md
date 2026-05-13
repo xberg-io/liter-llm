@@ -1,16 +1,21 @@
 ```elixir
-{:ok, response} =
-  LiterLlm.chat(
-    %{
-      model: "openai/gpt-4o",
-      messages: [%{role: "user", content: "Hello!"}]
-    },
-    api_key: "sk-...",                          # or System.fetch_env!("OPENAI_API_KEY")
-    base_url: "https://api.openai.com/v1",      # override provider base URL
-    model_hint: "openai",                       # pre-resolve provider at construction
-    max_retries: 3,                             # retry on transient failures
-    timeout: 60                                 # request timeout in seconds
+# LiterLlm.create_client(api_key, base_url \\ nil, timeout_secs \\ nil,
+#                        max_retries \\ nil, model_hint \\ nil)
+{:ok, client} =
+  LiterLlm.create_client(
+    System.get_env("OPENAI_API_KEY"),
+    nil,        # base_url — override provider base URL
+    60,         # timeout_secs
+    3,          # max_retries
+    "openai"    # model_hint — pre-resolve provider
   )
 
-IO.puts(hd(response["choices"])["message"]["content"])
+request =
+  Jason.encode!(%{
+    model: "openai/gpt-4o-mini",
+    messages: [%{role: "user", content: "Hello!"}]
+  })
+
+{:ok, result} = LiterLlm.defaultclient_chat_async(client, request)
+IO.puts(Enum.at(result.choices, 0).message.content)
 ```

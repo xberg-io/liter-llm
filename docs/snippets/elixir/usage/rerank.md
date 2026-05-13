@@ -1,21 +1,22 @@
 <!-- snippet:compile-only -->
 
 ```elixir
-{:ok, response} =
-  LiterLlm.rerank(
-    %{
-      model: "cohere/rerank-v3.5",
-      query: "What is the capital of France?",
-      documents: [
-        "Paris is the capital of France.",
-        "Berlin is the capital of Germany.",
-        "London is the capital of England."
-      ]
-    },
-    api_key: System.fetch_env!("OPENAI_API_KEY")
-  )
+{:ok, client} = LiterLlm.create_client(System.get_env("COHERE_API_KEY"))
 
-for result <- response["results"] do
-  IO.puts("Index: #{result["index"]}, Score: #{Float.round(result["relevance_score"], 4)}")
+request =
+  Jason.encode!(%{
+    model: "cohere/rerank-v3.5",
+    query: "What is the capital of France?",
+    documents: [
+      "Paris is the capital of France.",
+      "Berlin is the capital of Germany.",
+      "London is the capital of England."
+    ]
+  })
+
+{:ok, result} = LiterLlm.defaultclient_rerank_async(client, request)
+
+for r <- result.results do
+  IO.puts("Index: #{r.index}, Score: #{Float.round(r.relevance_score, 4)}")
 end
 ```

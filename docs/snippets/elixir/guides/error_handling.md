@@ -1,34 +1,32 @@
 ```elixir
-client =
-  LiterLlm.Client.new(
-    api_key: System.fetch_env!("OPENAI_API_KEY")
-  )
+{:ok, client} = LiterLlm.create_client(System.get_env("OPENAI_API_KEY"))
 
-request = %{
-  model: "openai/gpt-4o",
-  messages: [%{role: "user", content: "Hello"}]
-}
+request =
+  Jason.encode!(%{
+    model: "openai/gpt-4o-mini",
+    messages: [%{role: "user", content: "Hello"}]
+  })
 
-case LiterLlm.Client.chat(client, request) do
-  {:ok, response} ->
-    IO.puts(response["choices"] |> hd() |> get_in(["message", "content"]))
+# Errors come back as `{:error, String.t()}` — the NIF returns the Rust
+# error's Display string verbatim. Match on the prefix to identify the
+# category.
+case LiterLlm.defaultclient_chat_async(client, request) do
+  {:ok, result} ->
+    IO.puts(Enum.at(result.choices, 0).message.content)
 
-  # 401/403 — rotate the key.
-  {:error, %LiterLlm.Error{kind: :authentication, message: message}} ->
-    IO.warn("auth failed: #{message}")
+  {:error, "authentication failed:" <> _ = reason} ->
+    IO.warn("auth failed: #{reason}")
 
-  # 429 — transient, back off and retry or fall back.
-  {:error, %LiterLlm.Error{kind: :rate_limit, message: message}} ->
-    IO.warn("rate limited: #{message}")
+  {:error, "rate limited:" <> _ = reason} ->
+    IO.warn("rate limited: #{reason}")
 
-  {:error, %LiterLlm.Error{kind: :budget_exceeded, message: message}} ->
-    IO.warn("budget exceeded: #{message}")
+  {:error, "context window exceeded:" <> _ = reason} ->
+    IO.warn("prompt too long: #{reason}")
 
-  # 5xx — inspect http_status when present.
-  {:error, %LiterLlm.Error{kind: :provider_error, http_status: status, message: message}} ->
-    IO.warn("provider #{status}: #{message}")
+  {:error, "service unavailable:" <> _ = reason} ->
+    IO.warn("provider unavailable: #{reason}")
 
-  {:error, %LiterLlm.Error{kind: kind, message: message}} ->
-    IO.warn("llm error (#{kind}): #{message}")
+  {:error, reason} ->
+    IO.warn("llm error: #{reason}")
 end
 ```

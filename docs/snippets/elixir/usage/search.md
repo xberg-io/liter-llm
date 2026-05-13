@@ -1,17 +1,18 @@
 <!-- snippet:compile-only -->
 
 ```elixir
-{:ok, response} =
-  LiterLlm.search(
-    %{
-      model: "brave/web-search",
-      query: "What is Rust programming language?",
-      max_results: 5
-    },
-    api_key: System.fetch_env!("BRAVE_API_KEY")
-  )
+{:ok, client} = LiterLlm.create_client(System.get_env("BRAVE_API_KEY"))
 
-for result <- response["results"] do
-  IO.puts("#{result["title"]}: #{result["url"]}")
+request =
+  Jason.encode!(%{
+    model: "brave/web-search",
+    query: "What is Rust programming language?",
+    max_results: 5
+  })
+
+{:ok, result} = LiterLlm.defaultclient_search_async(client, request)
+
+for r <- result.results do
+  IO.puts("#{r.title}: #{r.url}")
 end
 ```

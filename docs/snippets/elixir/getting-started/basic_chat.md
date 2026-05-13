@@ -1,12 +1,12 @@
 ```elixir
-{:ok, response} =
-  LiterLlm.chat(
-    %{
-      model: "openai/gpt-4o",
-      messages: [%{role: "user", content: "Hello!"}]
-    },
-    api_key: System.fetch_env!("OPENAI_API_KEY")
-  )
+{:ok, client} = LiterLlm.create_client(System.get_env("OPENAI_API_KEY"))
 
-IO.puts(hd(response["choices"])["message"]["content"])
+request =
+  Jason.encode!(%{
+    model: "openai/gpt-4o-mini",
+    messages: [%{role: "user", content: "Hello!"}]
+  })
+
+{:ok, result} = LiterLlm.defaultclient_chat_async(client, request)
+IO.puts(Enum.at(result.choices, 0).message.content)
 ```

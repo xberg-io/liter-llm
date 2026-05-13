@@ -1,17 +1,14 @@
 <!-- snippet:compile-only -->
 
 ```elixir
-audio_bytes = File.read!("audio.mp3")
+{:ok, client} = LiterLlm.create_client(System.get_env("OPENAI_API_KEY"))
 
-{:ok, response} =
-  LiterLlm.transcribe(
-    %{
-      model: "openai/whisper-1",
-      file: audio_bytes,
-      filename: "audio.mp3"
-    },
-    api_key: System.fetch_env!("OPENAI_API_KEY")
-  )
+request =
+  Jason.encode!(%{
+    model: "openai/whisper-1",
+    file: Base.encode64(File.read!("audio.mp3"))
+  })
 
-IO.puts(response["text"])
+{:ok, result} = LiterLlm.defaultclient_transcribe_async(client, request)
+IO.puts(result.text)
 ```

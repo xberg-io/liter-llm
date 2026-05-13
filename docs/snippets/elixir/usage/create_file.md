@@ -1,18 +1,16 @@
 <!-- snippet:compile-only -->
 
 ```elixir
-file_bytes = File.read!("data.jsonl")
+{:ok, client} = LiterLlm.create_client(System.get_env("OPENAI_API_KEY"))
 
-{:ok, response} =
-  LiterLlm.create_file(
-    %{
-      file: file_bytes,
-      filename: "data.jsonl",
-      purpose: "batch"
-    },
-    api_key: System.fetch_env!("OPENAI_API_KEY")
-  )
+request =
+  Jason.encode!(%{
+    file: Base.encode64(File.read!("data.jsonl")),
+    filename: "data.jsonl",
+    purpose: "batch"
+  })
 
-IO.puts("File ID: #{response["id"]}")
-IO.puts("Size: #{response["bytes"]} bytes")
+{:ok, result} = LiterLlm.defaultclient_create_file_async(client, request)
+IO.puts("File ID: #{result.id}")
+IO.puts("Size: #{result.bytes} bytes")
 ```

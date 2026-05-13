@@ -1,16 +1,17 @@
 <!-- snippet:compile-only -->
 
 ```elixir
-{:ok, response} =
-  LiterLlm.ocr(
-    %{
-      model: "mistral/mistral-ocr-latest",
-      document: %{type: "document_url", url: "https://example.com/invoice.pdf"}
-    },
-    api_key: System.fetch_env!("MISTRAL_API_KEY")
-  )
+{:ok, client} = LiterLlm.create_client(System.get_env("MISTRAL_API_KEY"))
 
-for page <- response["pages"] do
-  IO.puts("Page #{page["index"]}: #{String.slice(page["markdown"], 0, 100)}...")
+request =
+  Jason.encode!(%{
+    model: "mistral/mistral-ocr-latest",
+    document: %{type: "document_url", url: "https://example.com/invoice.pdf"}
+  })
+
+{:ok, result} = LiterLlm.defaultclient_ocr_async(client, request)
+
+for page <- result.pages do
+  IO.puts("Page #{page.index}: #{String.slice(page.markdown, 0, 100)}...")
 end
 ```

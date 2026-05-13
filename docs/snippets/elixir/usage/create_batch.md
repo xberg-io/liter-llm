@@ -1,16 +1,16 @@
 <!-- snippet:compile-only -->
 
 ```elixir
-{:ok, response} =
-  LiterLlm.create_batch(
-    %{
-      input_file_id: "file-abc123",
-      endpoint: "/v1/chat/completions",
-      completion_window: "24h"
-    },
-    api_key: System.fetch_env!("OPENAI_API_KEY")
-  )
+{:ok, client} = LiterLlm.create_client(System.get_env("OPENAI_API_KEY"))
 
-IO.puts("Batch ID: #{response["id"]}")
-IO.puts("Status: #{response["status"]}")
+request =
+  Jason.encode!(%{
+    input_file_id: "file-abc123",
+    endpoint: "/v1/chat/completions",
+    completion_window: "24h"
+  })
+
+{:ok, result} = LiterLlm.defaultclient_create_batch_async(client, request)
+IO.puts("Batch ID: #{result.id}")
+IO.puts("Status: #{result.status}")
 ```
