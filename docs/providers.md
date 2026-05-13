@@ -1,10 +1,10 @@
 ---
-description: "Complete list of 143 supported LLM providers"
+description: "Complete list of the 142 supported LLM providers"
 ---
 
 # Supported Providers
 
-Liter-LLM supports **143 providers** out of the box. Route requests to any provider using the `provider/model` prefix convention -- for example, `openai/gpt-4o` routes to OpenAI and `anthropic/claude-3-opus` routes to Anthropic. No extra configuration is needed beyond setting the provider's API key.
+liter-llm supports **142 providers** out of the box. Route requests to any provider using the `provider/model` prefix convention — for example, `openai/gpt-4o` routes to OpenAI and `anthropic/claude-3-opus` routes to Anthropic. No extra configuration is needed beyond setting the provider's API key.
 
 | Provider                       | Prefix                       |        Chat        |     Embeddings     |       Image        |       Audio        |     Moderation     |
 | ------------------------------ | ---------------------------- | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: |
@@ -152,47 +152,53 @@ Liter-LLM supports **143 providers** out of the box. Route requests to any provi
 | Xinference                     | `xinference/`                |         --         | :white_check_mark: |         --         |         --         |         --         |
 | Z.AI                           | `zai/`                       | :white_check_mark: |         --         |         --         |         --         |         --         |
 
-_143 providers total._
+_142 providers total._
 
 ## Usage
 
-Use any provider by prefixing the model name with the provider's routing prefix:
+Use any provider by prefixing the model name with its routing prefix. The first segment of the model string selects the adapter, the base URL, and the auth mode:
 
 ```python
-from liter_llm import LiterLLM
+import os
+from liter_llm import create_client
 
-client = LiterLLM()
+client = create_client(api_key=os.environ["OPENAI_API_KEY"])
 
 # OpenAI
-response = await client.chat("openai/gpt-4o", messages=[
-    {"role": "user", "content": "Hello!"}
-])
+response = await client.chat({
+    "model": "openai/gpt-4o",
+    "messages": [{"role": "user", "content": "Hello!"}],
+})
 
 # Anthropic
-response = await client.chat("anthropic/claude-3-opus", messages=[
-    {"role": "user", "content": "Hello!"}
-])
+response = await client.chat({
+    "model": "anthropic/claude-3-opus",
+    "messages": [{"role": "user", "content": "Hello!"}],
+})
 
 # Groq
-response = await client.chat("groq/llama3-70b", messages=[
-    {"role": "user", "content": "Hello!"}
-])
+response = await client.chat({
+    "model": "groq/llama3-70b",
+    "messages": [{"role": "user", "content": "Hello!"}],
+})
 ```
 
 ## Custom Providers
 
-Any OpenAI-compatible API can be used as a custom provider by setting the base URL and API key directly:
+Any OpenAI-compatible API can be registered as a custom provider via `register_custom_provider`, then addressed by the registered prefix:
 
 ```python
-response = await client.chat("custom/my-model",
+from liter_llm import CustomProviderConfig, register_custom_provider
+
+register_custom_provider(CustomProviderConfig(
+    name="my-provider",
     base_url="https://my-api.example.com/v1",
-    api_key="my-key",
-    messages=[
-        {"role": "user", "content": "Hello!"}
-    ]
-)
+    model_prefixes=["my-provider/"],
+))
 ```
+
+See the [Rust API reference](reference/api-rust.md) for the full `CustomProviderConfig` field set (auth header format, headers, secret env vars, etc.).
 
 ## Provider Registry
 
-The full provider registry with base URLs, auth configuration, and model mappings is available at [schemas/providers.json](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json).
+The full provider registry is embedded at compile time from [`crates/liter-llm/schemas/providers.json`](https://github.com/kreuzberg-dev/liter-llm/blob/main/crates/liter-llm/schemas/providers.json).
