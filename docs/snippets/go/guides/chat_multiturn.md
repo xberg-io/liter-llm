@@ -2,53 +2,55 @@
 package main
 
 import (
- "context"
- "fmt"
- "os"
+	"encoding/json"
+	"fmt"
+	"os"
 
- llm "github.com/kreuzberg-dev/liter-llm/packages/go"
+	llm "github.com/kreuzberg-dev/liter-llm/packages/go"
 )
 
 func main() {
- client := llm.NewClient(llm.WithAPIKey(os.Getenv("OPENAI_API_KEY")))
- messages := []llm.Message{
-  llm.NewTextMessage(llm.RoleSystem, "You are a helpful assistant."),
-  llm.NewTextMessage(llm.RoleUser, "What is the capital of France?"),
- }
+	client, err := llm.CreateClient(os.Getenv("OPENAI_API_KEY"), nil, nil, nil, nil)
+	if err != nil {
+		panic(err)
+	}
 
- resp, err := client.Chat(context.Background(), &llm.ChatCompletionRequest{
-  Model:    "openai/gpt-4o",
-  Messages: messages,
- })
- if err != nil {
-  panic(err)
- }
- content := ""
- if len(resp.Choices) > 0 && resp.Choices[0].Message.Content != nil {
-  content = *resp.Choices[0].Message.Content
- }
- fmt.Printf("Assistant: %s\n", content)
+	body := map[string]any{
+		"model": "openai/gpt-4o-mini",
+		"messages": []map[string]string{
+			{"role": "system", "content": "You are a helpful assistant."},
+			{"role": "user", "content": "What is the capital of France?"},
+		},
+	}
 
- // Continue the conversation
- messages = append(messages,
-  llm.NewTextMessage(llm.RoleAssistant, content),
-  llm.NewTextMessage(llm.RoleUser, "What about Germany?"),
- )
+	var req llm.ChatCompletionRequest
+	raw, _ := json.Marshal(body)
+	_ = json.Unmarshal(raw, &req)
+	resp, err := client.Chat(req)
+	if err != nil {
+		panic(err)
+	}
+	answer := ""
+	if len(resp.Choices) > 0 && resp.Choices[0].Message.Content != nil {
+		answer = *resp.Choices[0].Message.Content
+	}
+	fmt.Printf("Assistant: %s\n", answer)
 
- resp, err = client.Chat(context.Background(), &llm.ChatCompletionRequest{
-  Model:    "openai/gpt-4o",
-  Messages: messages,
- })
- if err != nil {
-  panic(err)
- }
- if len(resp.Choices) > 0 && resp.Choices[0].Message.Content != nil {
-  fmt.Printf("Assistant: %s\n", *resp.Choices[0].Message.Content)
- }
-
- // Token usage
- if resp.Usage != nil {
-  fmt.Printf("Tokens: %d in, %d out\n", resp.Usage.PromptTokens, resp.Usage.CompletionTokens)
- }
+	body["messages"] = append(body["messages"].([]map[string]string),
+		map[string]string{"role": "assistant", "content": answer},
+		map[string]string{"role": "user", "content": "What about Germany?"},
+	)
+	raw, _ = json.Marshal(body)
+	_ = json.Unmarshal(raw, &req)
+	resp, err = client.Chat(req)
+	if err != nil {
+		panic(err)
+	}
+	if len(resp.Choices) > 0 && resp.Choices[0].Message.Content != nil {
+		fmt.Printf("Assistant: %s\n", *resp.Choices[0].Message.Content)
+	}
+	if resp.Usage != nil {
+		fmt.Printf("Tokens: %d in, %d out\n", resp.Usage.PromptTokens, resp.Usage.CompletionTokens)
+	}
 }
 ```

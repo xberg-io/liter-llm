@@ -4,27 +4,33 @@
 package main
 
 import (
- "context"
- "fmt"
- "os"
+	"encoding/json"
+	"fmt"
+	"os"
 
- llm "github.com/kreuzberg-dev/liter-llm/packages/go"
+	llm "github.com/kreuzberg-dev/liter-llm/packages/go"
 )
 
 func main() {
- client := llm.NewClient(llm.WithAPIKey(os.Getenv("MISTRAL_API_KEY")))
- resp, err := client.OCR(context.Background(), &llm.OCRRequest{
-  Model: "mistral/mistral-ocr-latest",
-  Document: llm.DocumentInput{
-   Type: "document_url",
-   URL:  "https://example.com/invoice.pdf",
-  },
- })
- if err != nil {
-  panic(err)
- }
- for _, page := range resp.Pages {
-  fmt.Printf("Page %d: %.100s...\n", page.Index, page.Markdown)
- }
+	client, err := llm.CreateClient(os.Getenv("MISTRAL_API_KEY"), nil, nil, nil, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	var req llm.OcrRequest
+	if err := json.Unmarshal([]byte(`{
+		"model": "mistral/mistral-ocr-latest",
+		"document": {"type": "document_url", "url": "https://example.com/invoice.pdf"}
+	}`), &req); err != nil {
+		panic(err)
+	}
+
+	resp, err := client.Ocr(req)
+	if err != nil {
+		panic(err)
+	}
+	for _, page := range resp.Pages {
+		fmt.Printf("Page %d: %.100s...\n", page.Index, page.Markdown)
+	}
 }
 ```

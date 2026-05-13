@@ -4,24 +4,35 @@
 package main
 
 import (
- "context"
- "fmt"
- "os"
+	"encoding/json"
+	"fmt"
+	"os"
 
- llm "github.com/kreuzberg-dev/liter-llm/packages/go"
+	llm "github.com/kreuzberg-dev/liter-llm/packages/go"
 )
 
 func main() {
- client := llm.NewClient(llm.WithAPIKey(os.Getenv("OPENAI_API_KEY")))
- resp, err := client.ImageGenerate(context.Background(), &llm.CreateImageRequest{
-  Model:  "openai/dall-e-3",
-  Prompt: "A sunset over mountains",
-  N:      1,
-  Size:   "1024x1024",
- })
- if err != nil {
-  panic(err)
- }
- fmt.Println(resp.Data[0].URL)
+	client, err := llm.CreateClient(os.Getenv("OPENAI_API_KEY"), nil, nil, nil, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	var req llm.CreateImageRequest
+	if err := json.Unmarshal([]byte(`{
+		"model": "openai/dall-e-3",
+		"prompt": "A sunset over mountains",
+		"n": 1,
+		"size": "1024x1024"
+	}`), &req); err != nil {
+		panic(err)
+	}
+
+	resp, err := client.ImageGenerate(req)
+	if err != nil {
+		panic(err)
+	}
+	if len(resp.Data) > 0 && resp.Data[0].URL != nil {
+		fmt.Println(*resp.Data[0].URL)
+	}
 }
 ```

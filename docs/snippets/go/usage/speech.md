@@ -4,26 +4,35 @@
 package main
 
 import (
- "context"
- "fmt"
- "os"
+	"encoding/json"
+	"fmt"
+	"os"
 
- llm "github.com/kreuzberg-dev/liter-llm/packages/go"
+	llm "github.com/kreuzberg-dev/liter-llm/packages/go"
 )
 
 func main() {
- client := llm.NewClient(llm.WithAPIKey(os.Getenv("OPENAI_API_KEY")))
- audioBytes, err := client.Speech(context.Background(), &llm.CreateSpeechRequest{
-  Model: "openai/tts-1",
-  Input: "Hello, world!",
-  Voice: "alloy",
- })
- if err != nil {
-  panic(err)
- }
- if err := os.WriteFile("output.mp3", audioBytes, 0644); err != nil {
-  panic(err)
- }
- fmt.Printf("Wrote %d bytes to output.mp3\n", len(audioBytes))
+	client, err := llm.CreateClient(os.Getenv("OPENAI_API_KEY"), nil, nil, nil, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	var req llm.CreateSpeechRequest
+	if err := json.Unmarshal([]byte(`{
+		"model": "openai/tts-1",
+		"input": "Hello, world!",
+		"voice": "alloy"
+	}`), &req); err != nil {
+		panic(err)
+	}
+
+	audio, err := client.Speech(req)
+	if err != nil {
+		panic(err)
+	}
+	if err := os.WriteFile("output.mp3", audio, 0o644); err != nil {
+		panic(err)
+	}
+	fmt.Printf("Wrote %d bytes to output.mp3\n", len(audio))
 }
 ```

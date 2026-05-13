@@ -2,24 +2,30 @@
 package main
 
 import (
-	"context"
+	"encoding/json"
 	"fmt"
 
 	llm "github.com/kreuzberg-dev/liter-llm/packages/go"
 )
 
 func main() {
-	// No API key needed for local providers
-	client := llm.NewClient(
-		llm.WithAPIKey(""),
-		llm.WithBaseURL("http://localhost:11434/v1"),
-	)
-	resp, err := client.Chat(context.Background(), &llm.ChatCompletionRequest{
-		Model: "ollama/qwen2:0.5b",
-		Messages: []llm.Message{
-			llm.NewTextMessage(llm.RoleUser, "Hello!"),
-		},
-	})
+	// Local providers (Ollama, LM Studio, ...) don't require an API key,
+	// but a placeholder value is still required by the binding.
+	baseURL := "http://localhost:11434/v1"
+	client, err := llm.CreateClient("not-needed", &baseURL, nil, nil, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	var req llm.ChatCompletionRequest
+	if err := json.Unmarshal([]byte(`{
+		"model": "ollama/qwen2:0.5b",
+		"messages": [{"role": "user", "content": "Hello!"}]
+	}`), &req); err != nil {
+		panic(err)
+	}
+
+	resp, err := client.Chat(req)
 	if err != nil {
 		panic(err)
 	}

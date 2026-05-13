@@ -4,7 +4,7 @@
 package main
 
 import (
-	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -12,14 +12,24 @@ import (
 )
 
 func main() {
-	client := llm.NewClient(llm.WithAPIKey(os.Getenv("OPENAI_API_KEY")))
-	resp, err := client.CreateResponse(context.Background(), &llm.CreateResponseRequest{
-		Model: "openai/gpt-4o",
-		Input: "Explain quantum computing in one sentence.",
-	})
+	client, err := llm.CreateClient(os.Getenv("OPENAI_API_KEY"), nil, nil, nil, nil)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(resp)
+
+	req := llm.CreateResponseRequest{
+		Model: "openai/gpt-4o",
+		Input: json.RawMessage(`"Explain quantum computing in one sentence."`),
+	}
+
+	resp, err := client.CreateResponse(req)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Response ID: %s\n", resp.ID)
+	fmt.Printf("Status: %s\n", resp.Status)
+	for _, item := range resp.Output {
+		fmt.Println(string(item.Content))
+	}
 }
 ```

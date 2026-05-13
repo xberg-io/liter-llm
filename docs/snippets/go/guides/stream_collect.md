@@ -2,34 +2,43 @@
 package main
 
 import (
- "context"
- "fmt"
- "os"
- "strings"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strings"
 
- llm "github.com/kreuzberg-dev/liter-llm/packages/go"
+	llm "github.com/kreuzberg-dev/liter-llm/packages/go"
 )
 
 func main() {
- client := llm.NewClient(llm.WithAPIKey(os.Getenv("OPENAI_API_KEY")))
- var sb strings.Builder
- err := client.ChatStream(context.Background(), &llm.ChatCompletionRequest{
-  Model: "openai/gpt-4o",
-  Messages: []llm.Message{
-   llm.NewTextMessage(llm.RoleUser, "Explain quantum computing briefly"),
-  },
- }, func(chunk *llm.ChatCompletionChunk) error {
-  if len(chunk.Choices) > 0 && chunk.Choices[0].Delta.Content != nil {
-   delta := *chunk.Choices[0].Delta.Content
-   sb.WriteString(delta)
-   fmt.Print(delta)
-  }
-  return nil
- })
- if err != nil {
-  panic(err)
- }
- fmt.Println()
- fmt.Printf("\nFull response length: %d characters\n", sb.Len())
+	client, err := llm.CreateClient(os.Getenv("OPENAI_API_KEY"), nil, nil, nil, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	var req llm.ChatCompletionRequest
+	if err := json.Unmarshal([]byte(`{
+		"model": "openai/gpt-4o-mini",
+		"messages": [{"role": "user", "content": "Explain quantum computing briefly"}],
+		"stream": true
+	}`), &req); err != nil {
+		panic(err)
+	}
+
+	stream, err := client.ChatStream(req)
+	if err != nil {
+		panic(err)
+	}
+
+	var sb strings.Builder
+	for chunk := range stream {
+		if len(chunk.Choices) > 0 && chunk.Choices[0].Delta.Content != nil {
+			delta := *chunk.Choices[0].Delta.Content
+			sb.WriteString(delta)
+			fmt.Print(delta)
+		}
+	}
+	fmt.Println()
+	fmt.Printf("Full response length: %d characters\n", sb.Len())
 }
 ```

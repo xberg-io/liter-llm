@@ -2,47 +2,48 @@
 package main
 
 import (
-    "context"
-    "errors"
-    "fmt"
-    "os"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strings"
 
-    literllm "github.com/kreuzberg-dev/liter-llm/packages/go"
+	llm "github.com/kreuzberg-dev/liter-llm/packages/go"
 )
 
 func main() {
-    client := literllm.NewClient(
-        literllm.WithAPIKey(os.Getenv("OPENAI_API_KEY")),
-    )
+	client, err := llm.CreateClient(os.Getenv("OPENAI_API_KEY"), nil, nil, nil, nil)
+	if err != nil {
+		panic(err)
+	}
 
-    _, err := client.Chat(context.Background(), &literllm.ChatCompletionRequest{
-        Model:    "openai/gpt-4o",
-        Messages: []literllm.Message{literllm.NewTextMessage(literllm.RoleUser, "Hello")},
-    })
-    if err == nil {
-        return
-    }
+	var req llm.ChatCompletionRequest
+	if err := json.Unmarshal([]byte(`{
+		"model": "openai/gpt-4o-mini",
+		"messages": [{"role": "user", "content": "Hello"}]
+	}`), &req); err != nil {
+		panic(err)
+	}
 
-    switch {
-    case errors.Is(err, literllm.ErrAuthentication):
-        // 401/403 — rotate the key.
-        fmt.Println("auth failed:", err)
-    case errors.Is(err, literllm.ErrRateLimit):
-        // 429 — transient, back off and retry.
-        fmt.Println("rate limited:", err)
-    case errors.Is(err, literllm.ErrBudgetExceeded):
-        fmt.Println("budget exceeded:", err)
-    case errors.Is(err, literllm.ErrProviderError):
-        // 5xx — transient on the proxy, terminal from the caller's view.
-        fmt.Println("provider error:", err)
-    default:
-        // Inspect the underlying HTTP status when present.
-        var apiErr *literllm.APIError
-        if errors.As(err, &apiErr) {
-            fmt.Printf("HTTP %d: %s\n", apiErr.StatusCode, apiErr.Message)
-            return
-        }
-        fmt.Println("llm error:", err)
-    }
+	_, err = client.Chat(req)
+	if err == nil {
+		return
+	}
+
+	// Errors from the Go binding are plain `error` values formatted as
+	// "[<code>] <message>". Match on the message text to identify the
+	// category until a structured error type is exposed.
+	msg := err.Error()
+	switch {
+	case strings.Contains(msg, "authentication"):
+		fmt.Println("auth failed:", err)
+	case strings.Contains(msg, "rate limit"):
+		fmt.Println("rate limited:", err)
+	case strings.Contains(msg, "context window"):
+		fmt.Println("prompt too long:", err)
+	case strings.Contains(msg, "service unavailable"):
+		fmt.Println("provider unavailable:", err)
+	default:
+		fmt.Println("llm error:", err)
+	}
 }
 ```

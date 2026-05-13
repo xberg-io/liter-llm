@@ -2,33 +2,37 @@
 package main
 
 import (
- "context"
- "fmt"
- "os"
+	"encoding/json"
+	"fmt"
+	"os"
 
- llm "github.com/kreuzberg-dev/liter-llm/packages/go"
+	llm "github.com/kreuzberg-dev/liter-llm/packages/go"
 )
 
 func main() {
- client := llm.NewClient(llm.WithAPIKey(os.Getenv("OPENAI_API_KEY")))
- err := client.ChatStream(
-  context.Background(),
-  &llm.ChatCompletionRequest{
-   Model: "openai/gpt-4o",
-   Messages: []llm.Message{
-    llm.NewTextMessage(llm.RoleUser, "Tell me a story"),
-   },
-  },
-  func(chunk *llm.ChatCompletionChunk) error {
-   if len(chunk.Choices) > 0 && chunk.Choices[0].Delta.Content != nil {
-    fmt.Print(*chunk.Choices[0].Delta.Content)
-   }
-   return nil
-  },
- )
- if err != nil {
-  panic(err)
- }
- fmt.Println()
+	client, err := llm.CreateClient(os.Getenv("OPENAI_API_KEY"), nil, nil, nil, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	var req llm.ChatCompletionRequest
+	if err := json.Unmarshal([]byte(`{
+		"model": "openai/gpt-4o-mini",
+		"messages": [{"role": "user", "content": "Count from 1 to 5."}],
+		"stream": true
+	}`), &req); err != nil {
+		panic(err)
+	}
+
+	stream, err := client.ChatStream(req)
+	if err != nil {
+		panic(err)
+	}
+	for chunk := range stream {
+		if len(chunk.Choices) > 0 && chunk.Choices[0].Delta.Content != nil {
+			fmt.Print(*chunk.Choices[0].Delta.Content)
+		}
+	}
+	fmt.Println()
 }
 ```
