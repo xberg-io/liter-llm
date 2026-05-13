@@ -1,15 +1,17 @@
 <!-- snippet:compile-only -->
 
 ```typescript
-import init, { LlmClient } from "@kreuzberg/liter-llm-wasm";
+import init, { createClient, WasmCreateSpeechRequest } from "@kreuzberg/liter-llm-wasm";
 
 await init();
 
-const client = new LlmClient({ apiKey: process.env.OPENAI_API_KEY! });
-const audioBuffer = await client.speech({
-  model: "openai/tts-1",
-  input: "Hello, world!",
-  voice: "alloy",
-});
-console.log(`Generated ${audioBuffer.byteLength} bytes of audio`);
+const client = createClient(process.env.OPENAI_API_KEY!);
+
+const request = WasmCreateSpeechRequest.default();
+request.model = "openai/tts-1";
+request.input = "Hello, world!";
+request.voice = "alloy";
+
+const audio = await client.speech(request);
+console.log(`Generated ${audio.byteLength} bytes of audio`);
 ```

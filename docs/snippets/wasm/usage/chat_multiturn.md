@@ -1,24 +1,27 @@
 ```typescript
-import init, { LlmClient } from "@kreuzberg/liter-llm-wasm";
+import init, { createClient, WasmChatCompletionRequest } from "@kreuzberg/liter-llm-wasm";
 
 await init();
 
-const client = new LlmClient({ apiKey: process.env.OPENAI_API_KEY! });
+const client = createClient(process.env.OPENAI_API_KEY!);
 const messages: Array<{ role: string; content: string }> = [
   { role: "system", content: "You are a helpful assistant." },
   { role: "user", content: "What is the capital of France?" },
 ];
 
-let response = await client.chat({ model: "openai/gpt-4o", messages });
+const first = WasmChatCompletionRequest.default();
+first.model = "openai/gpt-4o";
+first.messages = messages;
+let response = await client.chat(first);
 console.log(`Assistant: ${response.choices[0].message.content}`);
 
-// Continue the conversation
 messages.push({ role: "assistant", content: response.choices[0].message.content! });
 messages.push({ role: "user", content: "What about Germany?" });
 
-response = await client.chat({ model: "openai/gpt-4o", messages });
+const second = WasmChatCompletionRequest.default();
+second.model = "openai/gpt-4o";
+second.messages = messages;
+response = await client.chat(second);
 console.log(`Assistant: ${response.choices[0].message.content}`);
-
-// Token usage
 console.log(`Tokens: ${response.usage?.promptTokens} in, ${response.usage?.completionTokens} out`);
 ```

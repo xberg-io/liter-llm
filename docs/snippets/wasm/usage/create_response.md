@@ -1,15 +1,19 @@
 <!-- snippet:compile-only -->
 
 ```typescript
-import init, { LlmClient } from "@kreuzberg/liter-llm-wasm";
+import init, { createClient, WasmCreateResponseRequest } from "@kreuzberg/liter-llm-wasm";
 
 await init();
 
-const client = new LlmClient({ apiKey: "sk-..." });
-const response = await client.createResponse({
-  model: "openai/gpt-4o",
-  input: "Explain quantum computing in one sentence.",
-});
+const client = createClient(process.env.OPENAI_API_KEY!);
 
-console.log(response);
+const request = WasmCreateResponseRequest.default();
+request.model = "openai/gpt-4o";
+request.input = "Explain quantum computing in one sentence.";
+
+const response = await client.createResponse(request);
+console.log(`Status: ${response.status}`);
+for (const item of response.output ?? []) {
+  console.log(item.content);
+}
 ```

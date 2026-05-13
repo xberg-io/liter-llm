@@ -1,19 +1,21 @@
 ```typescript
-import init, { LlmClient } from "@kreuzberg/liter-llm-wasm";
+import init, { createClient, WasmChatCompletionRequest } from "@kreuzberg/liter-llm-wasm";
 
 await init();
 
-const client = new LlmClient({
-  apiKey: "sk-...", // or from environment
-  baseUrl: undefined, // override provider base URL
-  modelHint: "openai", // pre-resolve provider at construction
-  maxRetries: 3, // retry on transient failures
-  timeoutSecs: 60, // request timeout in seconds
-});
+// Positional args: apiKey, baseUrl?, timeoutSecs?, maxRetries?, modelHint?
+const client = createClient(
+  process.env.OPENAI_API_KEY!,
+  undefined, // override provider base URL
+  60n,       // request timeout in seconds (u64 -> bigint)
+  3,         // retry on transient failures
+  "openai",  // pre-resolve provider at construction
+);
 
-const response = await client.chat({
-  model: "openai/gpt-4o",
-  messages: [{ role: "user", content: "Hello!" }],
-});
+const request = WasmChatCompletionRequest.default();
+request.model = "openai/gpt-4o";
+request.messages = [{ role: "user", content: "Hello!" }];
+
+const response = await client.chat(request);
 console.log(response.choices[0].message.content);
 ```

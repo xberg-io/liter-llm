@@ -1,16 +1,18 @@
 <!-- snippet:compile-only -->
 
 ```typescript
-import init, { LlmClient } from "@kreuzberg/liter-llm-wasm";
+import init, { createClient, WasmCreateImageRequest } from "@kreuzberg/liter-llm-wasm";
 
 await init();
 
-const client = new LlmClient({ apiKey: process.env.OPENAI_API_KEY! });
-const response = await client.imageGenerate({
-  model: "openai/dall-e-3",
-  prompt: "A sunset over mountains",
-  n: 1,
-  size: "1024x1024",
-});
-console.log(response.data[0].url);
+const client = createClient(process.env.OPENAI_API_KEY!);
+
+const request = WasmCreateImageRequest.default();
+request.model = "openai/dall-e-3";
+request.prompt = "A sunset over mountains";
+request.n = 1;
+request.size = "1024x1024";
+
+const response = await client.imageGenerate(request);
+console.log(response.data?.[0]?.url);
 ```

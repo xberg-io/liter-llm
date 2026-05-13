@@ -1,16 +1,23 @@
 <!-- snippet:compile-only -->
 
 ```typescript
-import init, { LlmClient } from "@kreuzberg/liter-llm-wasm";
+import init, {
+  createClient,
+  WasmCreateTranscriptionRequest,
+} from "@kreuzberg/liter-llm-wasm";
 
 await init();
 
-const client = new LlmClient({ apiKey: process.env.OPENAI_API_KEY! });
-const audioBuffer = new Uint8Array(/* audio file bytes */);
-const response = await client.transcribe({
-  model: "openai/whisper-1",
-  file: audioBuffer,
-  filename: "audio.mp3",
-});
+const client = createClient(process.env.OPENAI_API_KEY!);
+
+// `file` is a base64-encoded string, not raw bytes.
+const audioBytes = new Uint8Array(/* read your audio file */);
+const fileBase64 = btoa(String.fromCharCode(...audioBytes));
+
+const request = WasmCreateTranscriptionRequest.default();
+request.model = "openai/whisper-1";
+request.file = fileBase64;
+
+const response = await client.transcribe(request);
 console.log(response.text);
 ```

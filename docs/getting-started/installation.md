@@ -196,7 +196,7 @@ liter-llm mcp --transport stdio
 === "WebAssembly"
 
     ```bash
-    pnpm add @kreuzberg/liter-llm-node-wasm
+    pnpm add @kreuzberg/liter-llm-wasm
     ```
 
 === "C / FFI"

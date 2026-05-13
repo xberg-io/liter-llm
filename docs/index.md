@@ -57,7 +57,7 @@ A universal LLM API client with a Rust core and native bindings for 14 languages
 | **Rust**                | `cargo add liter-llm`                                                    | [API Reference](reference/api-rust.md)       |
 | **Python**              | `pip install liter-llm`                                                  | [API Reference](reference/api-python.md)     |
 | **TypeScript / Node**   | `npm install @kreuzberg/liter-llm-node`                                  | [API Reference](reference/api-typescript.md) |
-| **WebAssembly**         | `npm install @kreuzberg/liter-llm-node-wasm`                             | [API Reference](reference/api-wasm.md)       |
+| **WebAssembly**         | `npm install @kreuzberg/liter-llm-wasm`                                  | [API Reference](reference/api-wasm.md)       |
 | **Go**                  | `go get github.com/kreuzberg-dev/liter-llm/packages/go`                  | [API Reference](reference/api-go.md)         |
 | **Java**                | Maven Central `dev.kreuzberg.literllm:liter-llm`                         | [API Reference](reference/api-java.md)       |
 | **Kotlin**              | Maven `com.github.kreuzberg_dev:liter-llm-kotlin`                        | [API Reference](reference/api-kotlin.md)     |
