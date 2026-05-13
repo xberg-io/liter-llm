@@ -5,20 +5,17 @@
 
 declare(strict_types=1);
 
-use LiterLlm\LlmClient;
+use Liter\Llm\LiterLlm;
+use Liter\Llm\ModerationRequest;
 
-$client = new LlmClient(apiKey: getenv('OPENAI_API_KEY') ?: '');
+$client = LiterLlm::createClient(getenv('OPENAI_API_KEY') ?: '');
 
-$response = json_decode($client->moderate(json_encode([
+$request = ModerationRequest::from_json(json_encode([
     'model' => 'openai/omni-moderation-latest',
     'input' => 'This is a test message.',
-])), true);
+]));
 
-$result = $response['results'][0];
-echo "Flagged: " . ($result['flagged'] ? 'true' : 'false') . PHP_EOL;
-foreach ($result['categories'] as $category => $flagged) {
-    if ($flagged) {
-        echo "  {$category}: " . number_format($result['category_scores'][$category], 4) . PHP_EOL;
-    }
-}
+$result = $client->moderateAsync($request);
+$first = $result->results[0];
+echo 'Flagged: ' . ($first->flagged ? 'true' : 'false') . PHP_EOL;
 ```

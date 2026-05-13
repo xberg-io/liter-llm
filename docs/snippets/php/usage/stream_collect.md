@@ -3,17 +3,18 @@
 
 declare(strict_types=1);
 
-use LiterLlm\LlmClient;
+use Liter\Llm\LiterLlm;
+use Liter\Llm\ChatCompletionRequest;
 
-$client = new LlmClient(apiKey: getenv('OPENAI_API_KEY') ?: '');
+$client = LiterLlm::createClient(getenv('OPENAI_API_KEY') ?: '');
 
-$chunks = json_decode($client->chatStream(json_encode([
-    'model' => 'openai/gpt-4o',
-    'messages' => [
-        ['role' => 'user', 'content' => 'Explain quantum computing briefly'],
-    ],
-])), true);
+$request = ChatCompletionRequest::from_json(json_encode([
+    'model' => 'openai/gpt-4o-mini',
+    'messages' => [['role' => 'user', 'content' => 'Explain quantum computing briefly']],
+    'stream' => true,
+]));
 
+$chunks = json_decode($client->chatStreamAsync($request), true);
 $fullText = '';
 foreach ($chunks as $chunk) {
     $delta = $chunk['choices'][0]['delta']['content'] ?? null;
@@ -23,5 +24,5 @@ foreach ($chunks as $chunk) {
     }
 }
 echo PHP_EOL;
-echo "\nFull response length: " . strlen($fullText) . " characters" . PHP_EOL;
+echo 'Full response length: ' . strlen($fullText) . ' characters' . PHP_EOL;
 ```

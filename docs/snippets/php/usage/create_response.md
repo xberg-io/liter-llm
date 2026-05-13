@@ -5,14 +5,20 @@
 
 declare(strict_types=1);
 
-use LiterLlm\LlmClient;
+use Liter\Llm\LiterLlm;
+use Liter\Llm\CreateResponseRequest;
 
-$client = new LlmClient(apiKey: getenv('OPENAI_API_KEY') ?: '');
+$client = LiterLlm::createClient(getenv('OPENAI_API_KEY') ?: '');
 
-$response = json_decode($client->createResponse(json_encode([
+$request = CreateResponseRequest::from_json(json_encode([
     'model' => 'openai/gpt-4o',
     'input' => 'Explain quantum computing in one sentence.',
-])), true);
+]));
 
-print_r($response);
+$result = $client->createResponseAsync($request);
+echo "Response ID: {$result->id}" . PHP_EOL;
+echo "Status: {$result->status}" . PHP_EOL;
+foreach ($result->output as $item) {
+    echo $item->content . PHP_EOL;
+}
 ```

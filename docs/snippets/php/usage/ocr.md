@@ -5,19 +5,18 @@
 
 declare(strict_types=1);
 
-use LiterLlm\LlmClient;
+use Liter\Llm\LiterLlm;
+use Liter\Llm\OcrRequest;
 
-$client = new LlmClient(apiKey: getenv('MISTRAL_API_KEY') ?: '');
+$client = LiterLlm::createClient(getenv('MISTRAL_API_KEY') ?: '');
 
-$response = json_decode($client->ocr(json_encode([
+$request = OcrRequest::from_json(json_encode([
     'model' => 'mistral/mistral-ocr-latest',
-    'document' => [
-        'type' => 'document_url',
-        'url' => 'https://example.com/invoice.pdf',
-    ],
-])), true);
+    'document' => ['type' => 'document_url', 'url' => 'https://example.com/invoice.pdf'],
+]));
 
-foreach ($response['pages'] as $page) {
-    echo "Page {$page['index']}: " . substr($page['markdown'], 0, 100) . "..." . PHP_EOL;
+$result = $client->ocrAsync($request);
+foreach ($result->pages as $page) {
+    echo "Page {$page->index}: " . substr($page->markdown, 0, 100) . '...' . PHP_EOL;
 }
 ```

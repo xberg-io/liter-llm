@@ -5,16 +5,17 @@
 
 declare(strict_types=1);
 
-use LiterLlm\LlmClient;
+use Liter\Llm\LiterLlm;
+use Liter\Llm\CreateFileRequest;
 
-$client = new LlmClient(apiKey: getenv('OPENAI_API_KEY') ?: '');
+$client = LiterLlm::createClient(getenv('OPENAI_API_KEY') ?: '');
 
-$fileBytes = file_get_contents('data.jsonl');
-$response = json_decode($client->createFile(json_encode([
-    'filename' => 'data.jsonl',
-    'purpose' => 'batch',
-]), $fileBytes), true);
+$result = $client->createFileAsync(new CreateFileRequest(
+    file: base64_encode(file_get_contents('data.jsonl')),
+    purpose: 'batch',
+    filename: 'data.jsonl',
+));
 
-echo "File ID: {$response['id']}" . PHP_EOL;
-echo "Size: {$response['bytes']} bytes" . PHP_EOL;
+echo "File ID: {$result->id}" . PHP_EOL;
+echo "Size: {$result->bytes} bytes" . PHP_EOL;
 ```

@@ -3,22 +3,26 @@
 
 declare(strict_types=1);
 
-use LiterLlm\LlmClient;
+use Liter\Llm\LiterLlm;
+use Liter\Llm\ChatCompletionRequest;
 
-$client = new LlmClient(
-    apiKey: 'sk-...',                                 // or getenv('OPENAI_API_KEY')
-    baseUrl: 'https://api.openai.com/v1',             // override provider base URL
-    modelHint: 'openai',                              // pre-resolve provider at construction
-    maxRetries: 3,                                    // retry on transient failures
-    timeoutSecs: 60                                   // request timeout in seconds
+// createClient signature:
+// LiterLlm::createClient(string $apiKey, ?string $baseUrl = null,
+//                       ?int $timeoutSecs = null, ?int $maxRetries = null,
+//                       ?string $modelHint = null): DefaultClient
+$client = LiterLlm::createClient(
+    getenv('OPENAI_API_KEY') ?: '',
+    null,        // baseUrl — override provider base URL
+    60,          // timeoutSecs
+    3,           // maxRetries
+    'openai',    // modelHint — pre-resolve provider
 );
 
-$response = json_decode($client->chat(json_encode([
-    'model' => 'openai/gpt-4o',
-    'messages' => [
-        ['role' => 'user', 'content' => 'Hello!'],
-    ],
-])), true);
+$request = ChatCompletionRequest::from_json(json_encode([
+    'model' => 'openai/gpt-4o-mini',
+    'messages' => [['role' => 'user', 'content' => 'Hello!']],
+]));
 
-echo $response['choices'][0]['message']['content'] . PHP_EOL;
+$result = $client->chatAsync($request);
+echo $result->choices[0]->message->content . PHP_EOL;
 ```

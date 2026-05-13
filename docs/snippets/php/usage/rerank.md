@@ -5,11 +5,12 @@
 
 declare(strict_types=1);
 
-use LiterLlm\LlmClient;
+use Liter\Llm\LiterLlm;
+use Liter\Llm\RerankRequest;
 
-$client = new LlmClient(apiKey: getenv('OPENAI_API_KEY') ?: '');
+$client = LiterLlm::createClient(getenv('COHERE_API_KEY') ?: '');
 
-$response = json_decode($client->rerank(json_encode([
+$request = RerankRequest::from_json(json_encode([
     'model' => 'cohere/rerank-v3.5',
     'query' => 'What is the capital of France?',
     'documents' => [
@@ -17,9 +18,10 @@ $response = json_decode($client->rerank(json_encode([
         'Berlin is the capital of Germany.',
         'London is the capital of England.',
     ],
-])), true);
+]));
 
-foreach ($response['results'] as $result) {
-    echo "Index: {$result['index']}, Score: " . number_format($result['relevance_score'], 4) . PHP_EOL;
+$result = $client->rerankAsync($request);
+foreach ($result->results as $r) {
+    echo "Index: {$r->index}, Score: " . number_format($r->relevanceScore, 4) . PHP_EOL;
 }
 ```

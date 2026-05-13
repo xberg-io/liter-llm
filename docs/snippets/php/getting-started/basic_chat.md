@@ -3,16 +3,16 @@
 
 declare(strict_types=1);
 
-use LiterLlm\LlmClient;
+use Liter\Llm\LiterLlm;
+use Liter\Llm\ChatCompletionRequest;
 
-$client = new LlmClient(apiKey: getenv('OPENAI_API_KEY') ?: '');
+$client = LiterLlm::createClient(getenv('OPENAI_API_KEY') ?: '');
 
-$response = json_decode($client->chat(json_encode([
-    'model' => 'openai/gpt-4o',
-    'messages' => [
-        ['role' => 'user', 'content' => 'Hello!'],
-    ],
-])), true);
+$request = ChatCompletionRequest::from_json(json_encode([
+    'model' => 'openai/gpt-4o-mini',
+    'messages' => [['role' => 'user', 'content' => 'Hello!']],
+]));
 
-echo $response['choices'][0]['message']['content'] . PHP_EOL;
+$result = $client->chatAsync($request);
+echo $result->choices[0]->message->content . PHP_EOL;
 ```

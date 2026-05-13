@@ -5,16 +5,17 @@
 
 declare(strict_types=1);
 
-use LiterLlm\LlmClient;
+use Liter\Llm\LiterLlm;
+use Liter\Llm\CreateImageRequest;
 
-$client = new LlmClient(apiKey: getenv('OPENAI_API_KEY') ?: '');
+$client = LiterLlm::createClient(getenv('OPENAI_API_KEY') ?: '');
 
-$response = json_decode($client->imageGenerate(json_encode([
-    'model' => 'openai/dall-e-3',
-    'prompt' => 'A sunset over mountains',
-    'n' => 1,
-    'size' => '1024x1024',
-])), true);
+$result = $client->imageGenerateAsync(new CreateImageRequest(
+    prompt: 'A sunset over mountains',
+    model: 'openai/dall-e-3',
+    n: 1,
+    size: '1024x1024',
+));
 
-echo $response['data'][0]['url'] . PHP_EOL;
+echo $result->data[0]->url . PHP_EOL;
 ```

@@ -5,15 +5,15 @@
 
 declare(strict_types=1);
 
-use LiterLlm\LlmClient;
+use Liter\Llm\LiterLlm;
+use Liter\Llm\CreateTranscriptionRequest;
 
-$client = new LlmClient(apiKey: getenv('OPENAI_API_KEY') ?: '');
+$client = LiterLlm::createClient(getenv('OPENAI_API_KEY') ?: '');
 
-$audioBytes = file_get_contents('audio.mp3');
-$response = json_decode($client->transcribe(json_encode([
-    'model' => 'openai/whisper-1',
-    'filename' => 'audio.mp3',
-]), $audioBytes), true);
+$result = $client->transcribeAsync(new CreateTranscriptionRequest(
+    model: 'openai/whisper-1',
+    file: base64_encode(file_get_contents('audio.mp3')),
+));
 
-echo $response['text'] . PHP_EOL;
+echo $result->text . PHP_EOL;
 ```

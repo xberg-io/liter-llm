@@ -3,36 +3,33 @@
 
 declare(strict_types=1);
 
-use LiterLlm\LlmClient;
+use Liter\Llm\LiterLlm;
+use Liter\Llm\ChatCompletionRequest;
 
-$client = new LlmClient(apiKey: getenv('OPENAI_API_KEY') ?: '');
+$client = LiterLlm::createClient(getenv('OPENAI_API_KEY') ?: '');
 
-$tools = [
-    [
-        'type' => 'function',
-        'function' => [
-            'name' => 'get_weather',
-            'description' => 'Get the current weather for a location',
-            'parameters' => [
-                'type' => 'object',
-                'properties' => [
-                    'location' => ['type' => 'string', 'description' => 'City name'],
-                ],
-                'required' => ['location'],
-            ],
+$tools = [[
+    'type' => 'function',
+    'function' => [
+        'name' => 'get_weather',
+        'description' => 'Get the current weather for a location',
+        'parameters' => [
+            'type' => 'object',
+            'properties' => ['location' => ['type' => 'string', 'description' => 'City name']],
+            'required' => ['location'],
         ],
     ],
-];
+]];
 
-$response = json_decode($client->chat(json_encode([
-    'model' => 'openai/gpt-4o',
-    'messages' => [
-        ['role' => 'user', 'content' => 'What is the weather in Berlin?'],
-    ],
+$request = ChatCompletionRequest::from_json(json_encode([
+    'model' => 'openai/gpt-4o-mini',
+    'messages' => [['role' => 'user', 'content' => 'What is the weather in Berlin?']],
     'tools' => $tools,
-])), true);
+    'tool_choice' => 'auto',
+]));
 
-foreach ($response['choices'][0]['message']['tool_calls'] ?? [] as $call) {
-    echo "Tool: {$call['function']['name']}, Args: {$call['function']['arguments']}" . PHP_EOL;
+$result = $client->chatAsync($request);
+foreach ($result->choices[0]->message->toolCalls ?? [] as $call) {
+    echo "Tool: {$call->function->name}, Args: {$call->function->arguments}" . PHP_EOL;
 }
 ```

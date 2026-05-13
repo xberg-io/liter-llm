@@ -5,16 +5,17 @@
 
 declare(strict_types=1);
 
-use LiterLlm\LlmClient;
+use Liter\Llm\LiterLlm;
+use Liter\Llm\CreateBatchRequest;
 
-$client = new LlmClient(apiKey: getenv('OPENAI_API_KEY') ?: '');
+$client = LiterLlm::createClient(getenv('OPENAI_API_KEY') ?: '');
 
-$response = json_decode($client->createBatch(json_encode([
-    'input_file_id' => 'file-abc123',
-    'endpoint' => '/v1/chat/completions',
-    'completion_window' => '24h',
-])), true);
+$result = $client->createBatchAsync(new CreateBatchRequest(
+    inputFileId: 'file-abc123',
+    endpoint: '/v1/chat/completions',
+    completionWindow: '24h',
+));
 
-echo "Batch ID: {$response['id']}" . PHP_EOL;
-echo "Status: {$response['status']}" . PHP_EOL;
+echo "Batch ID: {$result->id}" . PHP_EOL;
+echo "Status: {$result->status}" . PHP_EOL;
 ```
