@@ -1,7 +1,7 @@
 ```typescript
-import { LlmClient } from "@kreuzberg/liter-llm";
+import { createClient } from "@kreuzberg/liter-llm-node";
 
-const client = new LlmClient({ apiKey: process.env.OPENAI_API_KEY! });
+const client = createClient(process.env.OPENAI_API_KEY!);
 const response = await client.chat({
   model: "openai/gpt-4o",
   messages: [{ role: "user", content: "Hello!" }],

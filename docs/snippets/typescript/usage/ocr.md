@@ -1,9 +1,9 @@
 <!-- snippet:compile-only -->
 
 ```typescript
-import { LlmClient } from "@kreuzberg/liter-llm";
+import { createClient } from "@kreuzberg/liter-llm-node";
 
-const client = new LlmClient({ apiKey: process.env.MISTRAL_API_KEY! });
+const client = createClient(process.env.MISTRAL_API_KEY!);
 const response = await client.ocr({
   model: "mistral/mistral-ocr-latest",
   document: { type: "document_url", url: "https://example.com/invoice.pdf" },

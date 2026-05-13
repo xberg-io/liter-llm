@@ -1,10 +1,11 @@
 ```typescript
-import { LlmClient } from "@kreuzberg/liter-llm";
+import { createClient } from "@kreuzberg/liter-llm-node";
 
-const client = new LlmClient({ apiKey: process.env.OPENAI_API_KEY! });
+const client = createClient(process.env.OPENAI_API_KEY!);
 const chunks = await client.chatStream({
   model: "openai/gpt-4o",
   messages: [{ role: "user", content: "Explain quantum computing briefly" }],
+  stream: true,
 });
 
 let fullText = "";
@@ -16,5 +17,5 @@ for (const chunk of chunks) {
   }
 }
 console.log();
-console.log(`\nFull response length: ${fullText.length} characters`);
+console.log(`Full response length: ${fullText.length} characters`);
 ```

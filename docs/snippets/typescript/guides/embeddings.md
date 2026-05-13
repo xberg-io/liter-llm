@@ -1,7 +1,7 @@
 ```typescript
-import { LlmClient } from "@kreuzberg/liter-llm";
+import { createClient } from "@kreuzberg/liter-llm-node";
 
-const client = new LlmClient({ apiKey: process.env.OPENAI_API_KEY! });
+const client = createClient(process.env.OPENAI_API_KEY!);
 const response = await client.embed({
   model: "openai/text-embedding-3-small",
   input: ["The quick brown fox jumps over the lazy dog"],

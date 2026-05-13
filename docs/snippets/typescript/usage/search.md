@@ -1,9 +1,9 @@
 <!-- snippet:compile-only -->
 
 ```typescript
-import { LlmClient } from "@kreuzberg/liter-llm";
+import { createClient } from "@kreuzberg/liter-llm-node";
 
-const client = new LlmClient({ apiKey: process.env.BRAVE_API_KEY! });
+const client = createClient(process.env.BRAVE_API_KEY!);
 const response = await client.search({
   model: "brave/web-search",
   query: "What is Rust programming language?",

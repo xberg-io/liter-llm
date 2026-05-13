@@ -1,9 +1,9 @@
 <!-- snippet:compile-only -->
 
 ```typescript
-import { LlmClient } from "@kreuzberg/liter-llm";
+import { createClient } from "@kreuzberg/liter-llm-node";
 
-const client = new LlmClient({ apiKey: process.env.OPENAI_API_KEY! });
+const client = createClient(process.env.COHERE_API_KEY!);
 const response = await client.rerank({
   model: "cohere/rerank-v3.5",
   query: "What is the capital of France?",

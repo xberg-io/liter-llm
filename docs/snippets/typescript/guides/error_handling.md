@@ -1,7 +1,7 @@
 ```typescript
-import { LlmClient } from "liter-llm";
+import { createClient } from "@kreuzberg/liter-llm-node";
 
-const client = new LlmClient({ apiKey: process.env.OPENAI_API_KEY! });
+const client = createClient(process.env.OPENAI_API_KEY!);
 
 try {
   const response = await client.chat({
@@ -10,16 +10,18 @@ try {
   });
   console.log(response.choices[0].message.content);
 } catch (err) {
-  // All liter-llm errors surface as JavaScript Error objects. The message
-  // carries a bracketed category label: "[RateLimited] Too many requests".
+  // Errors surface as plain JS Error objects -- the message is the Rust
+  // error's Display form (e.g. "Authentication failed: invalid api key").
+  // Match by substring or rely on the upstream HTTP status text.
   if (err instanceof Error) {
-    if (err.message.startsWith("[Authentication]")) {
-      // 401/403 – rotate the key.
+    const msg = err.message.toLowerCase();
+    if (msg.includes("authentication")) {
+      // 401/403 -- rotate the key.
       console.error("auth failed:", err.message);
-    } else if (err.message.startsWith("[RateLimited]")) {
-      // 429 – transient, retry or fall back.
+    } else if (msg.includes("rate") || msg.includes("429")) {
+      // 429 -- transient, retry or fall back.
       console.error("rate limited:", err.message);
-    } else if (err.message.startsWith("[BudgetExceeded]")) {
+    } else if (msg.includes("budget")) {
       console.error("budget exceeded:", err.message);
     } else {
       console.error("llm error:", err.message);

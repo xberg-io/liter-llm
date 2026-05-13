@@ -1,9 +1,9 @@
 <!-- snippet:compile-only -->
 
 ```typescript
-import { LlmClient } from "@kreuzberg/liter-llm";
+import { createClient } from "@kreuzberg/liter-llm-node";
 
-const client = new LlmClient({ apiKey: process.env.OPENAI_API_KEY! });
+const client = createClient(process.env.OPENAI_API_KEY!);
 const response = await client.createBatch({
   inputFileId: "file-abc123",
   endpoint: "/v1/chat/completions",
