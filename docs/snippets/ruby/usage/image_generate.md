@@ -3,17 +3,18 @@
 ```ruby
 # frozen_string_literal: true
 
-require "liter_llm"
-require "json"
+require 'liter_llm'
 
-client = LiterLlm::LlmClient.new(ENV.fetch("OPENAI_API_KEY"), {})
+client = LiterLlm.create_client(ENV.fetch('OPENAI_API_KEY'))
 
-response = JSON.parse(client.image_generate(JSON.generate(
-  model: "openai/dall-e-3",
-  prompt: "A sunset over mountains",
-  n: 1,
-  size: "1024x1024"
-)))
+result = client.image_generate_async(
+  LiterLlm::CreateImageRequest.new(
+    model: 'openai/dall-e-3',
+    prompt: 'A sunset over mountains',
+    n: 1,
+    size: '1024x1024'
+  )
+)
 
-puts response.dig("data", 0, "url")
+puts result.data[0].url
 ```

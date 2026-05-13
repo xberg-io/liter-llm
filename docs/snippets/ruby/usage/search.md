@@ -3,18 +3,19 @@
 ```ruby
 # frozen_string_literal: true
 
-require "liter_llm"
-require "json"
+require 'liter_llm'
 
-client = LiterLlm::LlmClient.new(ENV.fetch("BRAVE_API_KEY"), {})
+client = LiterLlm.create_client(ENV.fetch('BRAVE_API_KEY'))
 
-response = JSON.parse(client.search(JSON.generate(
-  model: "brave/web-search",
-  query: "What is Rust programming language?",
-  max_results: 5
-)))
+result = client.search_async(
+  LiterLlm::SearchRequest.new(
+    model: 'brave/web-search',
+    query: 'What is Rust programming language?',
+    max_results: 5
+  )
+)
 
-response["results"].each do |result|
-  puts "#{result["title"]}: #{result["url"]}"
+result.results.each do |r|
+  puts "#{r.title}: #{r.url}"
 end
 ```

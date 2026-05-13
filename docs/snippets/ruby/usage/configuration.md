@@ -1,22 +1,22 @@
 ```ruby
 # frozen_string_literal: true
 
-require "liter_llm"
-require "json"
+require 'liter_llm'
 
-client = LiterLlm::LlmClient.new(
-  "sk-...",                     # or ENV.fetch("OPENAI_API_KEY")
-  {
-    "base_url" => nil,          # override provider base URL
-    "model_hint" => "openai",   # pre-resolve provider at construction
-    "max_retries" => 3,         # retry on transient failures
-    "timeout" => 60             # request timeout in seconds
-  }
+# Positional args: (api_key, base_url=nil, timeout_secs=nil, max_retries=nil, model_hint=nil)
+client = LiterLlm.create_client(
+  ENV.fetch('OPENAI_API_KEY'),
+  nil,        # base_url — override provider base URL
+  60,         # timeout_secs
+  3,          # max_retries
+  'openai'    # model_hint — pre-resolve provider
 )
 
-response = JSON.parse(client.chat(JSON.generate(
-  model: "openai/gpt-4o",
-  messages: [{ role: "user", content: "Hello!" }]
-)))
-puts response.dig("choices", 0, "message", "content")
+result = client.chat_async(
+  LiterLlm::ChatCompletionRequest.new(
+    model: 'openai/gpt-4o-mini',
+    messages: [{ 'role' => 'user', 'content' => 'Hello!' }]
+  )
+)
+puts result.choices[0].message.content
 ```

@@ -3,15 +3,18 @@
 ```ruby
 # frozen_string_literal: true
 
-require "liter_llm"
-require "json"
+require 'liter_llm'
 
-client = LiterLlm::LlmClient.new(ENV.fetch("OPENAI_API_KEY"), {})
+client = LiterLlm.create_client(ENV.fetch('OPENAI_API_KEY'))
 
-response = JSON.parse(client.create_response(JSON.generate(
-  model: "openai/gpt-4o",
-  input: "Explain quantum computing in one sentence."
-)))
+result = client.create_response_async(
+  LiterLlm::CreateResponseRequest.new(
+    model: 'openai/gpt-4o',
+    input: 'Explain quantum computing in one sentence.'
+  )
+)
 
-puts response
+puts "Response ID: #{result.id}"
+puts "Status: #{result.status}"
+result.output.each { |item| puts item.content }
 ```

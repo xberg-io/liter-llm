@@ -1,36 +1,29 @@
 ```ruby
 # frozen_string_literal: true
 
-require "liter_llm"
-require "json"
+require 'liter_llm'
 
-client = LiterLlm::LlmClient.new(ENV.fetch("OPENAI_API_KEY"), {})
+client = LiterLlm.create_client(ENV.fetch('OPENAI_API_KEY'))
 
 messages = [
-  { role: "system", content: "You are a helpful assistant." },
-  { role: "user", content: "What is the capital of France?" }
+  { 'role' => 'system', 'content' => 'You are a helpful assistant.' },
+  { 'role' => 'user', 'content' => 'What is the capital of France?' }
 ]
 
-response = JSON.parse(client.chat(JSON.generate(
-  model: "openai/gpt-4o",
-  messages: messages
-)))
-content = response.dig("choices", 0, "message", "content")
-puts "Assistant: #{content}"
+result = client.chat_async(
+  LiterLlm::ChatCompletionRequest.new(model: 'openai/gpt-4o-mini', messages: messages)
+)
+answer = result.choices[0].message.content
+puts "Assistant: #{answer}"
 
-# Continue the conversation
-messages << { role: "assistant", content: content }
-messages << { role: "user", content: "What about Germany?" }
+messages << { 'role' => 'assistant', 'content' => answer }
+messages << { 'role' => 'user', 'content' => 'What about Germany?' }
 
-response = JSON.parse(client.chat(JSON.generate(
-  model: "openai/gpt-4o",
-  messages: messages
-)))
-puts "Assistant: #{response.dig("choices", 0, "message", "content")}"
+result = client.chat_async(
+  LiterLlm::ChatCompletionRequest.new(model: 'openai/gpt-4o-mini', messages: messages)
+)
+puts "Assistant: #{result.choices[0].message.content}"
 
-# Token usage
-usage = response["usage"]
-if usage
-  puts "Tokens: #{usage["prompt_tokens"]} in, #{usage["completion_tokens"]} out"
-end
+usage = result.usage
+puts "Tokens: #{usage.prompt_tokens} in, #{usage.completion_tokens} out" if usage
 ```

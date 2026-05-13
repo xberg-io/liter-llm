@@ -1,15 +1,16 @@
 ```ruby
 # frozen_string_literal: true
 
-require "liter_llm"
-require "json"
+require 'liter_llm'
 
-client = LiterLlm::LlmClient.new(ENV.fetch("OPENAI_API_KEY"), {})
+client = LiterLlm.create_client(ENV.fetch('OPENAI_API_KEY'))
 
-response = JSON.parse(client.chat(JSON.generate(
-  model: "openai/gpt-4o",
-  messages: [{ role: "user", content: "Hello!" }]
-)))
+result = client.chat_async(
+  LiterLlm::ChatCompletionRequest.new(
+    model: 'openai/gpt-4o-mini',
+    messages: [{ 'role' => 'user', 'content' => 'Hello!' }]
+  )
+)
 
-puts response.dig("choices", 0, "message", "content")
+puts result.choices[0].message.content
 ```

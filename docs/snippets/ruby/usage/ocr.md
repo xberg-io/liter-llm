@@ -3,17 +3,19 @@
 ```ruby
 # frozen_string_literal: true
 
-require "liter_llm"
-require "json"
+require 'liter_llm'
 
-client = LiterLlm::LlmClient.new(ENV.fetch("MISTRAL_API_KEY"), {})
+client = LiterLlm.create_client(ENV.fetch('MISTRAL_API_KEY'))
 
-response = JSON.parse(client.ocr(JSON.generate(
-  model: "mistral/mistral-ocr-latest",
-  document: { type: "document_url", url: "https://example.com/invoice.pdf" }
-)))
+result = client.ocr_async(
+  LiterLlm::OcrRequest.new(
+    model: 'mistral/mistral-ocr-latest',
+    document: { 'type' => 'document_url', 'url' => 'https://example.com/invoice.pdf' }
+  )
+)
 
-response["pages"].each do |page|
-  puts "Page #{page["index"]}: #{page["markdown"][0, 100]}..."
+result.pages.each do |page|
+  preview = page.markdown[0, 100] || ''
+  puts "Page #{page.index}: #{preview}..."
 end
 ```
