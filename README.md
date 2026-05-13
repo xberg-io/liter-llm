@@ -308,7 +308,7 @@ All bindings expose a unified `chat()` function:
 | WebAssembly          | [crates/liter-llm-wasm](crates/liter-llm-wasm/README.md) | wasm-bindgen |
 | C/C++ (FFI)          | [crates/liter-llm-ffi](crates/liter-llm-ffi)             | C ABI        |
 
-## Part of Kreuzberg, Inc.
+## Part of Kreuzberg.dev
 
 - [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
 - [Kreuzberg Cloud](https://github.com/kreuzberg-dev/kreuzberg-cloud) — managed extraction API with SDKs, dashboards, and observability.
