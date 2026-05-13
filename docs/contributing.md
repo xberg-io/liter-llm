@@ -263,7 +263,7 @@ task --list-all
 
 ### Pre-commit Hooks
 
-The project uses [prek](https://github.com/Goldziher/gitfluff) for pre-commit hooks:
+The project uses [prek](https://github.com/j178/prek) for pre-commit hooks:
 
 ```bash
 # Install hooks

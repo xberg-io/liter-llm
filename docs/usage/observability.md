@@ -39,87 +39,26 @@ Each request creates a `gen_ai` span. The following attributes are populated acc
 | `gen_ai.usage.cost`              | float  | Set by `CostTrackingLayer` when the model appears in the pricing registry. Value is USD.                                                                  |
 | `error.type`                     | string | On error. Set to the `LiterLlmError` variant name (e.g. `"RateLimited"`, `"Timeout"`).                                                                    |
 
-## Enabling tracing on the client
+## Enabling tracing
 
-Pass `tracing=True` (or the equivalent for your language) when constructing the client. The client then applies `TracingLayer` and `CostTrackingLayer` to the inner Tower service.
+`TracingLayer` runs inside the Tower middleware stack. In Rust, build the stack via `ManagedClient` with a `ClientConfig` that turns tracing on; the proxy server enables tracing through its `[general] tracing = true` flag. The current language bindings do not expose Tower-stack toggles directly — to use tracing from a binding, run requests through the proxy.
 
-=== "Python"
+```rust
+use liter_llm::{ClientConfigBuilder, ManagedClient};
 
-    ```python
-    client = LlmClient(api_key="sk-...", tracing=True)
-    ```
+let config = ClientConfigBuilder::new(std::env::var("OPENAI_API_KEY")?)
+    .tracing(true)
+    .build();
 
-=== "TypeScript"
+let client = ManagedClient::new(config, None)?;
+```
 
-    ```typescript
-    const client = new LlmClient({ apiKey: "sk-...", tracing: true });
-    ```
+For the proxy, set the flag in `liter-llm-proxy.toml`:
 
-=== "Rust"
-
-    ```rust
-    let config = ClientConfigBuilder::new("sk-...")
-        .tracing(true)
-        .build();
-    ```
-
-=== "Go"
-
-    ```go
-    client := llm.NewClient(
-        llm.WithAPIKey(os.Getenv("OPENAI_API_KEY")),
-        llm.WithTracing(),
-    )
-    ```
-
-=== "Java"
-
-    ```java
-    var client = LlmClient.builder()
-            .apiKey(System.getenv("OPENAI_API_KEY"))
-            .tracing(true)
-            .build();
-    ```
-
-=== "C#"
-
-    ```csharp
-    var client = new LlmClient(
-        apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!,
-        tracing: true);
-    ```
-
-=== "Ruby"
-
-    ```ruby
-    client = LiterLlm::LlmClient.new(ENV.fetch("OPENAI_API_KEY"),
-      tracing: true
-    )
-    ```
-
-=== "PHP"
-
-    ```php
-    $client = new LlmClient(
-        apiKey: getenv('OPENAI_API_KEY') ?: '',
-        tracing: true,
-    );
-    ```
-
-=== "Elixir"
-
-    ```elixir
-    client = LiterLlm.Client.new(
-      api_key: System.fetch_env!("OPENAI_API_KEY"),
-      tracing: true
-    )
-    ```
-
-=== "WASM"
-
-    ```typescript
-    const client = new LlmClient({ apiKey: "sk-...", tracing: true });
-    ```
+```toml
+[general]
+tracing = true
+```
 
 ## Exporting spans with OpenTelemetry (Rust)
 
@@ -160,31 +99,17 @@ Any OTEL-compatible backend accepts these spans: Jaeger, Tempo, Honeycomb, Datad
 
 `CostTrackingLayer` records estimated USD cost as `gen_ai.usage.cost` on the active tracing span after each successful response. It looks up pricing from the embedded pricing registry (`crates/liter-llm/schemas/pricing.json`). Models not in the registry produce no attribute.
 
-Enable cost tracking independently of tracing:
+Enable cost tracking independently of tracing by composing the layer manually in Rust, or by setting `cost_tracking = true` in the proxy `[general]` section:
 
-=== "Python"
+```rust
+use liter_llm::tower::{cost::CostTrackingLayer, service::LlmService};
+use tower::ServiceBuilder;
 
-    ```python
-    client = LlmClient(api_key="sk-...", cost_tracking=True)
-    ```
-
-=== "TypeScript"
-
-    ```typescript
-    const client = new LlmClient({ apiKey: "sk-...", costTracking: true });
-    ```
-
-=== "Rust"
-
-    ```rust
-    use liter_llm::tower::{CostTrackingLayer, LlmService};
-    use tower::ServiceBuilder;
-
-    let inner = LlmService::new(client);
-    let service = ServiceBuilder::new()
-        .layer(CostTrackingLayer)
-        .service(inner);
-    ```
+let inner = LlmService::new(client);
+let service = ServiceBuilder::new()
+    .layer(CostTrackingLayer)
+    .service(inner);
+```
 
 The cost value is also accessible directly on successful response objects via `estimated_cost()`:
 

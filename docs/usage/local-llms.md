@@ -1,37 +1,23 @@
 ---
-description: "Run LLMs locally with Ollama, LM Studio, vLLM, llama.cpp, LocalAI, and llamafile -- no API key required."
+description: "Run LLMs locally with Ollama, LM Studio, vLLM, and llamafile — no API key required."
 ---
 
 # Local LLMs
 
-liter-llm supports local inference engines that expose an OpenAI-compatible API. Run models on your own hardware with zero cloud dependencies and no API key.
+liter-llm routes to any local inference engine that exposes an OpenAI-compatible API. Run models on your own hardware with zero cloud dependencies and no API key.
 
 ## Supported Providers
 
-| Provider                                               | Default URL                 | Prefix                      | Notes                        |
-| ------------------------------------------------------ | --------------------------- | --------------------------- | ---------------------------- |
-| [Ollama](https://ollama.ai)                            | `http://localhost:11434/v1` | `ollama/`                   | Most popular, easy setup     |
-| [LM Studio](https://lmstudio.ai)                       | `http://localhost:1234/v1`  | `lm_studio/` or `lmstudio/` | GUI-based, beginner-friendly |
-| [vLLM](https://docs.vllm.ai)                           | `http://localhost:8000/v1`  | `vllm/`                     | High-throughput serving      |
-| [llama.cpp](https://github.com/ggerganov/llama.cpp)    | `http://localhost:8080/v1`  | `llamacpp/`                 | Lightweight C++ inference    |
-| [LocalAI](https://localai.io)                          | `http://localhost:8080/v1`  | `localai/`                  | Drop-in OpenAI replacement   |
-| [llamafile](https://github.com/Mozilla-Ocho/llamafile) | `http://localhost:8080/v1`  | `llamafile/`                | Single-file executable       |
+| Provider                                               | Default URL                 | Prefix         | Notes                        |
+| ------------------------------------------------------ | --------------------------- | -------------- | ---------------------------- |
+| [Ollama](https://ollama.ai)                            | `http://localhost:11434/v1` | `ollama/`      | Most popular, easy setup. Use `ollama_chat/` for chat-tuned routing. |
+| [LM Studio](https://lmstudio.ai)                       | `http://localhost:1234/v1`  | `lm_studio/`   | GUI-based, beginner-friendly |
+| [vLLM](https://docs.vllm.ai)                           | `http://localhost:8000/v1`  | `vllm/` or `hosted_vllm/` | High-throughput serving |
+| [llamafile](https://github.com/Mozilla-Ocho/llamafile) | `http://localhost:8080/v1`  | `llamafile/`   | Single-file executable       |
 
-All of these providers are registered in the [provider registry](../providers.md) with their default base URLs. liter-llm routes requests automatically based on the model prefix.
+All of these providers are registered in the [provider registry](../providers.md). For any other OpenAI-compatible server (LocalAI, llama.cpp `--api-server`, etc.), use a [custom provider](../usage/configuration.md#custom-providers) — register the prefix and base URL once, then route to it like any other provider.
 
-## Supported Capabilities
-
-| Provider  |        Chat        |    Completions     |     Embeddings     |       Rerank       |       Audio        |       Images       |
-| --------- | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: |
-| Ollama    | :white_check_mark: | :white_check_mark: | :white_check_mark: |         —          |         —          |         —          |
-| LM Studio | :white_check_mark: | :white_check_mark: | :white_check_mark: |         —          |         —          |         —          |
-| vLLM      | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |         —          |         —          |
-| llama.cpp | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |         —          |         —          |
-| LocalAI   | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| llamafile | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |         —          |         —          |
-
-All providers also support streaming via SSE and model listing via `/v1/models`.
-Tool calling and vision/multimodal are supported through the chat endpoint where the underlying model supports it.
+All listed engines also support streaming via SSE and model listing via `/v1/models`. Tool calling, vision, and multimodal inputs work through the chat endpoint where the underlying model supports them.
 
 ## Quick Start with Ollama
 
@@ -81,9 +67,7 @@ ollama/llama3.2          -> Ollama running Llama 3.2
 ollama/qwen2:0.5b        -> Ollama running Qwen2 0.5B
 lm_studio/my-model       -> LM Studio
 vllm/meta-llama/Llama-3  -> vLLM
-llamacpp/my-model         -> llama.cpp server
-localai/gpt-3.5-turbo    -> LocalAI
-llamafile/my-model        -> llamafile
+llamafile/my-model       -> llamafile
 ```
 
 The prefix determines which base URL and configuration to use. The model name after the `/` is forwarded to the local server as-is.
@@ -250,38 +234,33 @@ model_prefixes = ["llamafile/"]
 
 ## Custom Base URL
 
-If your local provider runs on a non-default port or remote host, override the base URL:
+If your local provider runs on a non-default port or remote host, override the base URL when constructing the client:
 
 === "Python"
 
     ```python
-    client = LlmClient(api_key="", base_url="http://192.168.1.100:9000/v1")
+    from liter_llm import create_client
+
+    client = create_client(api_key="", base_url="http://192.168.1.100:9000/v1")
     ```
 
 === "TypeScript"
 
     ```typescript
-    const client = new LlmClient({
-      apiKey: "",
-      baseUrl: "http://192.168.1.100:9000/v1",
-    });
+    import { createClient } from "@kreuzberg/liter-llm-node";
+
+    const client = createClient("", "http://192.168.1.100:9000/v1");
     ```
 
 === "Rust"
 
     ```rust
+    use liter_llm::{ClientConfigBuilder, DefaultClient};
+
     let config = ClientConfigBuilder::new("")
         .base_url("http://192.168.1.100:9000/v1")
         .build();
-    ```
-
-=== "Go"
-
-    ```go
-    client := llm.NewClient(
-        llm.WithAPIKey(""),
-        llm.WithBaseURL("http://192.168.1.100:9000/v1"),
-    )
+    let client = DefaultClient::new(config, None)?;
     ```
 
 Or in `liter-llm.toml`:

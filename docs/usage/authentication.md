@@ -82,14 +82,15 @@ let provider = AzureAdCredentialProvider::new(tenant, client_id, secret)
 Set the provider on the client config and point `base_url` at your Azure OpenAI deployment endpoint:
 
 ```rust
-use liter_llm::{ClientConfig, client::DefaultClient};
+use liter_llm::{ClientConfigBuilder, DefaultClient};
+use std::sync::Arc;
 
-let config = ClientConfig::builder()
+let azure_config = ClientConfigBuilder::new("placeholder")
     .base_url("https://<resource>.openai.azure.com/openai/deployments/<deployment>")
-    .credential_provider(provider)
-    .build()?;
+    .credential_provider(Arc::new(provider))
+    .build();
 
-let client = DefaultClient::new(config, None)?;
+let azure_client = DefaultClient::new(azure_config, None)?;
 ```
 
 ## AWS Bedrock (STS web identity)
@@ -129,14 +130,15 @@ let provider = WebIdentityCredentialProvider::new(
 ```
 
 ```rust
-use liter_llm::{ClientConfig, client::DefaultClient};
+use liter_llm::{ClientConfigBuilder, DefaultClient};
+use std::sync::Arc;
 
-let config = ClientConfig::builder()
+let bedrock_config = ClientConfigBuilder::new("placeholder")
     .base_url("https://bedrock-runtime.us-east-1.amazonaws.com")
-    .credential_provider(provider)
-    .build()?;
+    .credential_provider(Arc::new(provider))
+    .build();
 
-let client = DefaultClient::new(config, None)?;
+let bedrock_client = DefaultClient::new(bedrock_config, None)?;
 ```
 
 ## Google Vertex AI (service-account JWT)
@@ -172,14 +174,15 @@ let provider = VertexOAuthCredentialProvider::from_service_account_json(&json)?;
 ```
 
 ```rust
-use liter_llm::{ClientConfig, client::DefaultClient};
+use liter_llm::{ClientConfigBuilder, DefaultClient};
+use std::sync::Arc;
 
-let config = ClientConfig::builder()
+let vertex_config = ClientConfigBuilder::new("placeholder")
     .base_url("https://us-central1-aiplatform.googleapis.com/v1/projects/my-project/locations/us-central1/publishers/google")
-    .credential_provider(provider)
-    .build()?;
+    .credential_provider(Arc::new(provider))
+    .build();
 
-let client = DefaultClient::new(config, None)?;
+let vertex_client = DefaultClient::new(vertex_config, None)?;
 ```
 
 ## Static token provider

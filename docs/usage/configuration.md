@@ -1,12 +1,20 @@
 ---
-description: "Client configuration: API keys, timeouts, retries, cache, budget, hooks, and custom providers."
+description: "Client configuration: sources, TOML schema, construction, options, cache, budget, rate limits, hooks, and custom providers."
 ---
 
 # Configuration
 
-## Configuration File
+liter-llm reads configuration from three sources, applied in priority order (lower numbers win):
 
-Create a `liter-llm.toml` file in your project directory. liter-llm auto-discovers it by searching the current directory and parent directories.
+1. **Constructor arguments** — passed directly to the client factory (`create_client(...)` / `ClientConfigBuilder`).
+2. **JSON string** — `create_client_from_json(json)` for bindings without a builder.
+3. **TOML file** — `liter-llm.toml`, auto-discovered by walking up from the current working directory.
+
+The Rust core exposes the same surface to every language binding via the C FFI. Methods like `chat`, `embed`, etc. are called on the *client instance* returned by the factory; there is no top-level `LlmClient` class to subclass or pre-configure in the bindings.
+
+## TOML file
+
+Place a `liter-llm.toml` file in your project directory. `FileConfig::discover()` (Rust) and the proxy server walk up the directory tree looking for it.
 
 ```toml
 api_key = "sk-..."
@@ -14,10 +22,15 @@ base_url = "https://api.openai.com/v1"
 model_hint = "openai"
 timeout_secs = 120
 max_retries = 5
+cooldown_secs = 30
+health_check_secs = 60
+cost_tracking = true
+tracing = true
 
 [cache]
 max_entries = 512
 ttl_seconds = 600
+backend = "memory"
 
 [budget]
 global_limit = 50.0
@@ -29,121 +42,156 @@ enforcement = "hard"
 [rate_limit]
 rpm = 60
 tpm = 100000
-
-cooldown_secs = 30
-health_check_secs = 60
-cost_tracking = true
-tracing = true
+window_seconds = 60
 
 [[providers]]
 name = "my-provider"
 base_url = "https://my-llm.example.com/v1"
+auth_header = "Bearer"
 model_prefixes = ["my-provider/"]
 ```
 
-Load it in code:
+### Top-level fields
+
+| Field               | Type    | Description                                                          |
+| ------------------- | ------- | -------------------------------------------------------------------- |
+| `api_key`           | string  | Provider API key. Wrapped in `SecretString` internally.              |
+| `base_url`          | string  | Override the provider's base URL.                                    |
+| `model_hint`        | string  | Pre-resolve a provider (e.g. `"openai"`); skips prefix lookup.       |
+| `timeout_secs`      | int     | Per-request timeout in seconds (default: 60).                        |
+| `max_retries`       | int     | Retries on 429/5xx with exponential backoff (default: 3).            |
+| `cooldown_secs`     | int     | Circuit-breaker cooldown after transient errors.                     |
+| `health_check_secs` | int     | Interval for background health checks.                               |
+| `cost_tracking`     | bool    | Enable per-request cost calculation.                                 |
+| `tracing`           | bool    | Emit `tracing` spans for each request (see [Observability](./observability.md)). |
+| `extra_headers`     | map     | Additional headers attached to every outgoing request.               |
+
+### `[cache]`
+
+| Field            | Type    | Description                                                              |
+| ---------------- | ------- | ------------------------------------------------------------------------ |
+| `max_entries`    | int     | Maximum cached responses (default: 256).                                 |
+| `ttl_seconds`    | int     | Time-to-live for each entry in seconds (default: 300).                   |
+| `backend`        | string  | `"memory"` (default) or an OpenDAL scheme (`"redis"`, `"s3"`, `"fs"`, `"gcs"`, ...). |
+| `backend_config` | map     | OpenDAL backend-specific key-value config.                               |
+
+The `backend` and `backend_config` fields are only honored when liter-llm is compiled with the `opendal-cache` feature.
+
+### `[budget]`
+
+| Field          | Type    | Description                                                              |
+| -------------- | ------- | ------------------------------------------------------------------------ |
+| `global_limit` | float   | Maximum total spend in USD across all models.                            |
+| `model_limits` | map     | Per-model spend limits (model name → USD).                               |
+| `enforcement`  | string  | `"hard"` (reject over-budget) or `"soft"` (warn only).                   |
+
+### `[rate_limit]`
+
+| Field            | Type | Description                                                  |
+| ---------------- | ---- | ------------------------------------------------------------ |
+| `rpm`            | int  | Maximum requests per window.                                 |
+| `tpm`            | int  | Maximum tokens per window.                                   |
+| `window_seconds` | int  | Window duration in seconds (default: 60).                    |
+
+### `[[providers]]`
+
+Array of custom provider definitions. Each entry contains:
+
+| Field            | Type        | Description                                              |
+| ---------------- | ----------- | -------------------------------------------------------- |
+| `name`           | string      | Unique provider name.                                    |
+| `base_url`       | string      | Provider's API base URL.                                 |
+| `auth_header`    | string      | Auth scheme (optional).                                  |
+| `model_prefixes` | string[]    | Model name prefixes that route to this provider.         |
+
+## Construction
+
+The constructors below match the actual binding surface. Other bindings (Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, WebAssembly) expose the same scalar arguments through their generated wrappers — see each language's [API reference](../reference/api-rust.md) for the exact signature.
+
+=== "Rust"
+
+    ```rust
+    use liter_llm::{ClientConfigBuilder, DefaultClient};
+    use std::time::Duration;
+
+    let config = ClientConfigBuilder::new("sk-...")
+        .base_url("https://api.openai.com/v1")
+        .timeout(Duration::from_secs(120))
+        .max_retries(5)
+        .build();
+
+    let client = DefaultClient::new(config, Some("openai"))?;
+    ```
+
+    Load from a `liter-llm.toml`:
+
+    ```rust
+    use liter_llm::{FileConfig, DefaultClient};
+
+    if let Some(file) = FileConfig::discover()? {
+        let config = file.into_builder().build();
+        let client = DefaultClient::new(config, None)?;
+    }
+    ```
+
+    `ManagedClient::new(config, model_hint)` is available with the `tower` feature and wires the full middleware stack (cache, budget, rate limit, cooldown, health, hooks, tracing) from the same `ClientConfig`.
 
 === "Python"
 
     ```python
-    # Auto-discover liter-llm.toml
-    from liter_llm import LlmClient
-    client = LlmClient.from_config()  # discovers liter-llm.toml
-    # Or explicit path
-    client = LlmClient.from_config("path/to/config.toml")
+    from liter_llm import create_client
+
+    client = create_client(
+        api_key="sk-...",
+        base_url="https://api.openai.com/v1",
+        timeout_secs=120,
+        max_retries=5,
+        model_hint="openai",
+    )
+
+    response = await client.chat(...)
+    ```
+
+    For richer configuration (cache, budget, hooks), use `create_client_from_json` with a serialized `ClientConfig`:
+
+    ```python
+    from liter_llm import create_client_from_json
+    import json
+
+    client = create_client_from_json(json.dumps({
+        "api_key": "sk-...",
+        "timeout_secs": 120,
+    }))
     ```
 
 === "TypeScript"
 
     ```typescript
-    import { LlmClient } from "@kreuzberg/liter-llm";
+    import { createClient } from "@kreuzberg/liter-llm-node";
 
-    // Auto-discover liter-llm.toml
-    const client = await LlmClient.fromConfig();
-    // Or explicit path
-    const client2 = await LlmClient.fromConfig("path/to/config.toml");
+    const client = createClient(
+      process.env.OPENAI_API_KEY!,
+      "https://api.openai.com/v1",
+      120,    // timeoutSecs
+      5,      // maxRetries
+      "openai", // modelHint
+    );
+
+    const response = await client.chat({ /* ... */ });
     ```
 
-=== "Rust"
-
-    ```rust
-    use liter_llm::{FileConfig, ManagedClient};
-
-    // Auto-discover
-    if let Some(config) = FileConfig::discover()? {
-        let client = ManagedClient::new(config.into_builder().build(), None)?;
-    }
-    // Or explicit path
-    let config = FileConfig::from_toml_file("liter-llm.toml")?;
-    let client = ManagedClient::new(config.into_builder().build(), None)?;
-    ```
-
-=== "Go"
-
-    ```go
-    // Auto-discover liter-llm.toml
-    client, err := llm.NewClientFromConfig()
-    // Or explicit path
-    client, err = llm.NewClientFromConfigFile("path/to/config.toml")
-    ```
-
-=== "Java"
-
-    ```java
-    // Auto-discover liter-llm.toml
-    var client = LlmClient.fromConfig();
-    // Or explicit path
-    var client = LlmClient.fromConfig("path/to/config.toml");
-    ```
-
-=== "C#"
-
-    ```csharp
-    // Auto-discover liter-llm.toml
-    var client = LlmClient.FromConfig();
-    // Or explicit path
-    var client = LlmClient.FromConfig("path/to/config.toml");
-    ```
-
-=== "Ruby"
-
-    ```ruby
-    # Auto-discover liter-llm.toml
-    client = LiterLlm::LlmClient.from_config
-    # Or explicit path
-    client = LiterLlm::LlmClient.from_config("path/to/config.toml")
-    ```
-
-=== "PHP"
-
-    ```php
-    // Auto-discover liter-llm.toml
-    $client = LlmClient::fromConfig();
-    // Or explicit path
-    $client = LlmClient::fromConfig('path/to/config.toml');
-    ```
-
-=== "Elixir"
-
-    ```elixir
-    # Auto-discover liter-llm.toml
-    client = LiterLlm.Client.from_config()
-    # Or explicit path
-    client = LiterLlm.Client.from_config("path/to/config.toml")
-    ```
-
-=== "WASM"
+    For richer configuration, serialize a `ClientConfig` and pass it to `createClientFromJson`:
 
     ```typescript
-    import init, { LlmClient } from "@kreuzberg/liter-llm-wasm";
-    await init();
+    import { createClientFromJson } from "@kreuzberg/liter-llm-node";
 
-    // From TOML string (WASM cannot access the filesystem)
-    const toml = `api_key = "sk-..."`;
-    const client = LlmClient.fromConfigStr(toml);
+    const client = createClientFromJson(JSON.stringify({
+      api_key: process.env.OPENAI_API_KEY,
+      timeout_secs: 120,
+    }));
     ```
 
-## Client Construction
+### Per-language snippets
 
 === "Python"
 
@@ -185,21 +233,21 @@ Load it in code:
 
     --8<-- "snippets/wasm/usage/configuration.md"
 
-## Options
+## Scalar options
 
-| Option        | Type     | Default       | Description                                               |
-| ------------- | -------- | ------------- | --------------------------------------------------------- |
-| `api_key`     | string   | **required**  | Provider API key. Wrapped in `SecretString` internally.   |
-| `base_url`    | string   | from registry | Override the provider's base URL.                         |
-| `model_hint`  | string   | none          | Pre-resolve a provider at construction (e.g. `"openai"`). |
-| `timeout`     | duration | 60s           | Request timeout.                                          |
-| `max_retries` | int      | 3             | Retries on 429/5xx responses with exponential backoff.    |
+| Option         | Type    | Default       | Description                                               |
+| -------------- | ------- | ------------- | --------------------------------------------------------- |
+| `api_key`      | string  | **required**  | Provider API key. Wrapped in `SecretString` internally.   |
+| `base_url`     | string  | from registry | Override the provider's base URL.                         |
+| `model_hint`   | string  | none          | Pre-resolve a provider at construction (e.g. `"openai"`). |
+| `timeout_secs` | int     | 60            | Request timeout in seconds.                               |
+| `max_retries`  | int     | 3             | Retries on 429/5xx responses with exponential backoff.    |
 
-## API Key Management
+## API key environment variables
 
-Read the standard environment variable for your provider:
+API keys passed to the constructor are wrapped in `secrecy::SecretString`. They are never logged, serialized, or included in error messages. If the constructor is given an empty `api_key`, the builder reads the standard environment variable for the active provider:
 
-| Provider        | Environment Variable                          |
+| Provider        | Environment variable                          |
 | --------------- | --------------------------------------------- |
 | OpenAI          | `OPENAI_API_KEY`                              |
 | Anthropic       | `ANTHROPIC_API_KEY`                           |
@@ -209,1010 +257,247 @@ Read the standard environment variable for your provider:
 | Cohere          | `CO_API_KEY`                                  |
 | AWS Bedrock     | `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY` |
 
-API keys passed to the constructor are wrapped in `secrecy::SecretString`. They are never logged, serialized, or included in error messages.
+## Custom base URLs
 
-## Model Hints
+Override `base_url` to point at a local inference server or a corporate proxy:
 
-The `model_hint` parameter pre-resolves a provider at construction time. All requests use that provider without prefix lookup:
-
-```python
-# All requests use OpenAI -- no "openai/" prefix needed
-client = LlmClient(api_key="sk-...", model_hint="openai")
-response = await client.chat(model="gpt-4o", messages=[...])
+```toml
+# Ollama running locally
+base_url = "http://localhost:11434/v1"
 ```
 
-## Custom Base URLs
-
-Override `base_url` to point at a local inference server or proxy:
-
-```python
-# Ollama running locally
-client = LlmClient(api_key="unused", base_url="http://localhost:11434/v1")
-
-# Corporate proxy
-client = LlmClient(api_key="sk-...", base_url="https://llm-proxy.internal.company.com/v1")
+```rust
+let config = ClientConfigBuilder::new("unused")
+    .base_url("http://localhost:11434/v1")
+    .build();
 ```
 
 ## Cache
 
-Enable response caching to avoid repeated identical requests:
+The response cache is wired through the Tower middleware stack. In Rust, attach `CacheLayer` directly; in other languages, configure it via TOML (and use `ManagedClient` indirectly through the bindings' high-level clients).
 
-=== "Python"
+=== "TOML"
 
-    ```python
-    from liter_llm import LlmClient
-
-    client = LlmClient(
-        api_key="sk-...",
-        cache={"max_entries": 256, "ttl_seconds": 300},
-    )
-    ```
-
-=== "TypeScript"
-
-    ```typescript
-    import { LlmClient } from "@kreuzberg/liter-llm";
-
-    const client = new LlmClient({
-      apiKey: process.env.OPENAI_API_KEY!,
-      cache: { maxEntries: 256, ttlSeconds: 300 },
-    });
+    ```toml
+    [cache]
+    max_entries = 256
+    ttl_seconds = 300
+    backend = "memory"
     ```
 
 === "Rust"
 
     ```rust
-    use liter_llm::{ClientConfigBuilder, CacheConfig};
+    use std::time::Duration;
+    use liter_llm::tower::cache::{CacheLayer, CacheConfig, CacheBackend};
 
-    let config = ClientConfigBuilder::new("sk-...")
-        .cache(CacheConfig { max_entries: 256, ttl_seconds: 300 })
-        .build();
+    let config = CacheConfig {
+        max_entries: 256,
+        ttl: Duration::from_secs(300),
+        backend: CacheBackend::Memory,
+    };
+    let layer = CacheLayer::new(config);
     ```
 
-=== "Go"
+### OpenDAL-backed cache
 
-    ```go
-    client := llm.NewClient(
-        llm.WithAPIKey(os.Getenv("OPENAI_API_KEY")),
-        llm.WithCache(llm.CacheConfig{MaxEntries: 256, TTLSeconds: 300}),
-    )
+With the `opendal-cache` feature, the cache backend can be any [OpenDAL service](https://opendal.apache.org/docs/category/services) — Redis, S3, GCS, Azure Blob, local filesystem, and more.
+
+=== "TOML"
+
+    ```toml
+    [cache]
+    ttl_seconds = 3600
+    backend = "redis"
+
+    [cache.backend_config]
+    endpoint = "redis://localhost:6379"
     ```
 
-=== "Java"
+=== "Rust"
 
-    ```java
-    var client = LlmClient.builder()
-            .apiKey(System.getenv("OPENAI_API_KEY"))
-            .cacheConfig(new CacheConfig(256, 300))
-            .build();
+    ```rust
+    use std::collections::HashMap;
+    use std::time::Duration;
+    use liter_llm::tower::cache::{CacheConfig, CacheBackend};
+
+    let mut backend_config = HashMap::new();
+    backend_config.insert("endpoint".into(), "redis://localhost:6379".into());
+
+    let config = CacheConfig {
+        max_entries: 1024,
+        ttl: Duration::from_secs(3600),
+        backend: CacheBackend::OpenDal {
+            scheme: "redis".into(),
+            config: backend_config,
+        },
+    };
     ```
-
-=== "C#"
-
-    ```csharp
-    var client = new LlmClient(
-        apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!,
-        cacheConfig: new CacheConfig(MaxEntries: 256, TtlSeconds: 300));
-    ```
-
-=== "Ruby"
-
-    ```ruby
-    client = LiterLlm::LlmClient.new(ENV.fetch("OPENAI_API_KEY"), {
-      cache: { max_entries: 256, ttl_seconds: 300 }
-    })
-    ```
-
-=== "PHP"
-
-    ```php
-    $client = new LlmClient(
-        apiKey: getenv('OPENAI_API_KEY') ?: '',
-        cacheConfig: ['max_entries' => 256, 'ttl_seconds' => 300],
-    );
-    ```
-
-=== "Elixir"
-
-    ```elixir
-    client = LiterLlm.Client.new(
-      api_key: System.fetch_env!("OPENAI_API_KEY"),
-      cache: [max_entries: 256, ttl_seconds: 300]
-    )
-    ```
-
-=== "WASM"
-
-    ```typescript
-    import init, { LlmClient } from "@kreuzberg/liter-llm-wasm";
-    await init();
-
-    const client = new LlmClient({
-      apiKey: "sk-...",
-      cache: { maxEntries: 256, ttlSeconds: 300 },
-    });
-    ```
-
-| Option        | Type | Default | Description              |
-| ------------- | ---- | ------- | ------------------------ |
-| `max_entries` | int  | 256     | Maximum cached responses |
-| `ttl_seconds` | int  | 300     | Time-to-live in seconds  |
 
 ## Budget
 
-Track and enforce spending limits:
+Track and enforce spending limits per model and globally. Costs are recomputed after every successful response using `liter_llm::cost::completion_cost`.
 
-=== "Python"
+=== "TOML"
 
-    ```python
-    from liter_llm import LlmClient
+    ```toml
+    [budget]
+    global_limit = 10.0
+    enforcement = "hard"
 
-    client = LlmClient(
-        api_key="sk-...",
-        budget={"global_limit": 10.0, "model_limits": {"openai/gpt-4o": 5.0}, "enforcement": "hard"},
-    )
-    print(f"Budget used: ${client.budget_used:.2f}")
-    ```
-
-=== "TypeScript"
-
-    ```typescript
-    import { LlmClient } from "@kreuzberg/liter-llm";
-
-    const client = new LlmClient({
-      apiKey: process.env.OPENAI_API_KEY!,
-      budget: { globalLimit: 10.0, modelLimits: { "openai/gpt-4o": 5.0 }, enforcement: "hard" },
-    });
-    console.log(`Budget used: $${client.budgetUsed.toFixed(2)}`);
+    [budget.model_limits]
+    "openai/gpt-4o" = 5.0
     ```
 
 === "Rust"
 
     ```rust
-    use liter_llm::{ClientConfigBuilder, BudgetConfig};
+    use std::collections::HashMap;
+    use std::sync::Arc;
+    use liter_llm::tower::budget::{BudgetLayer, BudgetConfig, BudgetState, Enforcement};
 
-    let config = ClientConfigBuilder::new("sk-...")
-        .budget(BudgetConfig {
-            global_limit: Some(10.0),
-            model_limits: Default::default(),
-            enforcement: "hard".into(),
-        })
-        .build();
+    let mut model_limits = HashMap::new();
+    model_limits.insert("openai/gpt-4o".into(), 5.0);
+
+    let config = BudgetConfig {
+        global_limit: Some(10.0),
+        model_limits,
+        enforcement: Enforcement::Hard,
+    };
+    let state = Arc::new(BudgetState::new());
+    let layer = BudgetLayer::new(config, state);
     ```
 
-=== "Go"
+`Enforcement::Hard` rejects requests with `LiterLlmError::BudgetExceeded` once the limit is reached. `Enforcement::Soft` emits a `tracing::warn!` but allows the request through.
 
-    ```go
-    client := llm.NewClient(
-        llm.WithAPIKey(os.Getenv("OPENAI_API_KEY")),
-        llm.WithBudget(llm.BudgetConfig{
-            GlobalLimit: 10.0,
-            ModelLimits: map[string]float64{"openai/gpt-4o": 5.0},
-            Enforcement: "hard",
-        }),
-    )
-    fmt.Printf("Budget used: $%.2f\n", client.BudgetUsed())
+## Rate limiting
+
+Per-model RPM (requests per minute) and TPM (tokens per minute) limits using a fixed window.
+
+=== "TOML"
+
+    ```toml
+    [rate_limit]
+    rpm = 60
+    tpm = 100000
+    window_seconds = 60
     ```
 
-=== "Java"
+=== "Rust"
 
-    ```java
-    var client = LlmClient.builder()
-            .apiKey(System.getenv("OPENAI_API_KEY"))
-            .budgetConfig(new BudgetConfig(10.0, Map.of("openai/gpt-4o", 5.0), "hard"))
-            .build();
-    System.out.printf("Budget used: $%.2f%n", client.getBudgetUsed());
+    ```rust
+    use std::time::Duration;
+    use liter_llm::tower::rate_limit::{ModelRateLimitLayer, RateLimitConfig};
+
+    let config = RateLimitConfig {
+        rpm: Some(60),
+        tpm: Some(100_000),
+        window: Duration::from_secs(60),
+    };
+    let layer = ModelRateLimitLayer::new(config);
     ```
-
-=== "C#"
-
-    ```csharp
-    var client = new LlmClient(
-        apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!,
-        budgetConfig: new BudgetConfig(
-            GlobalLimit: 10.0,
-            ModelLimits: new() { ["openai/gpt-4o"] = 5.0 },
-            Enforcement: "hard"));
-    Console.WriteLine($"Budget used: ${client.BudgetUsed:F2}");
-    ```
-
-=== "Ruby"
-
-    ```ruby
-    client = LiterLlm::LlmClient.new(ENV.fetch("OPENAI_API_KEY"), {
-      budget: { global_limit: 10.0, model_limits: {}, enforcement: "hard" }
-    })
-    puts "Budget used: $#{client.budget_used}"
-    ```
-
-=== "PHP"
-
-    ```php
-    $client = new LlmClient(
-        apiKey: getenv('OPENAI_API_KEY') ?: '',
-        budgetConfig: ['global_limit' => 10.0, 'enforcement' => 'hard'],
-    );
-    echo "Budget used: $" . $client->getBudgetUsed() . PHP_EOL;
-    ```
-
-=== "Elixir"
-
-    ```elixir
-    client = LiterLlm.Client.new(
-      api_key: System.fetch_env!("OPENAI_API_KEY"),
-      budget: [global_limit: 10.0, enforcement: "hard"]
-    )
-    IO.puts("Budget used: $#{LiterLlm.Client.budget_used(client)}")
-    ```
-
-=== "WASM"
-
-    ```typescript
-    import init, { LlmClient } from "@kreuzberg/liter-llm-wasm";
-    await init();
-
-    const client = new LlmClient({
-      apiKey: "sk-...",
-      budget: { globalLimit: 10.0, enforcement: "hard" },
-    });
-    console.log(`Budget used: $${client.budgetUsed.toFixed(2)}`);
-    ```
-
-| Option         | Type   | Description                                           |
-| -------------- | ------ | ----------------------------------------------------- |
-| `global_limit` | float  | Maximum total spend in USD                            |
-| `model_limits` | map    | Per-model spend limits                                |
-| `enforcement`  | string | `"hard"` (reject over-budget) or `"soft"` (warn only) |
 
 ## Hooks
 
-Register lifecycle hooks for request/response/error events:
+Hooks are implemented via the Rust `LlmHook` trait and are wired into the Tower stack through `HooksLayer`. They are not currently exposed through the language bindings.
 
-=== "Python"
+```rust
+use std::future::Future;
+use std::pin::Pin;
+use std::sync::Arc;
+use liter_llm::error::{LiterLlmError, Result};
+use liter_llm::tower::hooks::{HooksLayer, LlmHook};
+use liter_llm::tower::types::{LlmRequest, LlmResponse};
 
-    ```python
-    from liter_llm import LlmClient
+struct LoggingHook;
 
-    class LoggingHook:
-        def on_request(self, request):
-            print(f"Sending request to {request['model']}")
-
-        def on_response(self, request, response):
-            print(f"Got response: {response.usage.total_tokens} tokens")
-
-        def on_error(self, request, error):
-            print(f"Error: {error}")
-
-    client = LlmClient(api_key="sk-...")
-    client.add_hook(LoggingHook())
-    ```
-
-=== "TypeScript"
-
-    ```typescript
-    import { LlmClient } from "@kreuzberg/liter-llm";
-
-    const client = new LlmClient({ apiKey: process.env.OPENAI_API_KEY! });
-    client.addHook({
-      onRequest(req) { console.log(`Sending: ${req.model}`); },
-      onResponse(req, res) { console.log(`Tokens: ${res.usage?.totalTokens}`); },
-      onError(req, err) { console.error(`Error: ${err}`); },
-    });
-    ```
-
-=== "Rust"
-
-    ```rust
-    use liter_llm::LlmHook;
-
-    struct LoggingHook;
-    impl LlmHook for LoggingHook {
-        fn on_request(&self, req: &ChatCompletionRequest) -> Result<()> {
-            println!("Sending: {}", req.model);
-            Ok(())
-        }
-        fn on_response(&self, _req: &ChatCompletionRequest, resp: &ChatCompletionResponse) {
-            if let Some(u) = &resp.usage { println!("Tokens: {}", u.total_tokens); }
-        }
-        fn on_error(&self, _req: &ChatCompletionRequest, err: &LiterLlmError) {
-            eprintln!("Error: {err}");
-        }
-    }
-    ```
-
-=== "Go"
-
-    ```go
-    type loggingHook struct{}
-    func (h *loggingHook) OnRequest(req *llm.ChatCompletionRequest) error {
-        fmt.Printf("Sending: %s\n", req.Model)
-        return nil
-    }
-    func (h *loggingHook) OnResponse(req *llm.ChatCompletionRequest, resp *llm.ChatCompletionResponse) {
-        if resp.Usage != nil { fmt.Printf("Tokens: %d\n", resp.Usage.TotalTokens) }
-    }
-    func (h *loggingHook) OnError(req *llm.ChatCompletionRequest, err error) {
-        fmt.Printf("Error: %v\n", err)
-    }
-
-    client := llm.NewClient(
-        llm.WithAPIKey(os.Getenv("OPENAI_API_KEY")),
-        llm.WithHook(&loggingHook{}),
-    )
-    ```
-
-=== "Java"
-
-    ```java
-    client.addHook(new LlmHook() {
-        @Override public void onRequest(ChatCompletionRequest req) {
-            System.out.println("Sending: " + req.model());
-        }
-        @Override public void onResponse(ChatCompletionRequest req, ChatCompletionResponse resp) {
-            System.out.println("Tokens: " + resp.usage().totalTokens());
-        }
-        @Override public void onError(ChatCompletionRequest req, LlmException err) {
-            System.err.println("Error: " + err.getMessage());
-        }
-    });
-    ```
-
-=== "C#"
-
-    ```csharp
-    client.AddHook(new LoggingHook());
-
-    class LoggingHook : ILlmHook
+impl LlmHook for LoggingHook {
+    fn on_request(&self, _req: &LlmRequest)
+        -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>
     {
-        public Task OnRequestAsync(ChatCompletionRequest req) {
-            Console.WriteLine($"Sending: {req.Model}");
-            return Task.CompletedTask;
-        }
-        public Task OnResponseAsync(ChatCompletionRequest req, ChatCompletionResponse resp) {
-            Console.WriteLine($"Tokens: {resp.Usage?.TotalTokens}");
-            return Task.CompletedTask;
-        }
-        public Task OnErrorAsync(ChatCompletionRequest req, Exception err) {
-            Console.Error.WriteLine($"Error: {err.Message}");
-            return Task.CompletedTask;
-        }
+        Box::pin(async {
+            tracing::info!("dispatching request");
+            Ok(())
+        })
     }
-    ```
 
-=== "Ruby"
-
-    ```ruby
-    hook = {
-      on_request: ->(req) { puts "Sending: #{JSON.parse(req)['model']}" },
-      on_response: ->(req, resp) { puts "Response received" },
-      on_error: ->(req, err) { puts "Error: #{err}" }
+    fn on_response(&self, _req: &LlmRequest, _resp: &LlmResponse)
+        -> Pin<Box<dyn Future<Output = ()> + Send + '_>>
+    {
+        Box::pin(async {
+            tracing::info!("response received");
+        })
     }
-    client.add_hook(hook)
-    ```
 
-=== "PHP"
+    fn on_error(&self, _req: &LlmRequest, err: &LiterLlmError)
+        -> Pin<Box<dyn Future<Output = ()> + Send + '_>>
+    {
+        let message = err.to_string();
+        Box::pin(async move {
+            tracing::error!(error = %message, "request failed");
+        })
+    }
+}
 
-    ```php
-    $client->addHook(new class {
-        public function onRequest(string $requestJson): void {
-            $req = json_decode($requestJson, true);
-            echo "Sending: {$req['model']}" . PHP_EOL;
-        }
-        public function onResponse(string $requestJson, string $responseJson): void {
-            echo "Response received" . PHP_EOL;
-        }
-        public function onError(string $requestJson, string $errorMessage): void {
-            echo "Error: {$errorMessage}" . PHP_EOL;
-        }
-    });
-    ```
+let hooks: Vec<Arc<dyn LlmHook>> = vec![Arc::new(LoggingHook)];
+let layer = HooksLayer::new(hooks);
+```
 
-=== "Elixir"
+Returning `Err` from `on_request` short-circuits the service chain, so hooks can implement guardrails (content filtering, budget gating, etc.).
 
-    ```elixir
-    defmodule LoggingHook do
-      @behaviour LiterLlm.Hook
+## Custom providers
 
-      def on_request(request), do: IO.puts("Sending: #{request["model"]}")
-      def on_response(_request, _response), do: IO.puts("Response received")
-      def on_error(_request, error), do: IO.puts("Error: #{inspect(error)}")
-    end
-
-    client = LiterLlm.Client.new(api_key: "sk-...") |> LiterLlm.Client.add_hook(LoggingHook)
-    ```
-
-=== "WASM"
-
-    ```typescript
-    import init, { LlmClient } from "@kreuzberg/liter-llm-wasm";
-    await init();
-
-    const client = new LlmClient({ apiKey: "sk-..." });
-    client.addHook({
-      onRequest(req) { console.log(`Sending: ${req.model}`); },
-      onResponse(req, res) { console.log(`Tokens: ${res.usage?.totalTokens}`); },
-      onError(req, err) { console.error(`Error: ${err}`); },
-    });
-    ```
-
-## Custom Providers
-
-Register custom providers for self-hosted or unsupported LLM endpoints:
-
-=== "Python"
-
-    ```python
-    from liter_llm import LlmClient
-
-    client = LlmClient(api_key="sk-...")
-    client.register_provider({
-        "name": "my-provider",
-        "base_url": "https://my-llm.example.com/v1",
-        "auth_header": "Authorization",
-        "model_prefixes": ["my-provider/"],
-    })
-    ```
-
-=== "TypeScript"
-
-    ```typescript
-    import { LlmClient } from "@kreuzberg/liter-llm";
-
-    const client = new LlmClient({ apiKey: process.env.OPENAI_API_KEY! });
-    client.registerProvider({
-      name: "my-provider",
-      baseUrl: "https://my-llm.example.com/v1",
-      authHeader: "Authorization",
-      modelPrefixes: ["my-provider/"],
-    });
-    ```
+Custom providers are registered in a process-wide global registry. Once registered, any request whose model name matches one of the provider's `model_prefixes` is routed there.
 
 === "Rust"
 
     ```rust
-    use liter_llm::{register_custom_provider, CustomProviderConfig};
+    use liter_llm::{register_custom_provider, CustomProviderConfig, AuthHeaderFormat};
 
     register_custom_provider(CustomProviderConfig {
         name: "my-provider".into(),
         base_url: "https://my-llm.example.com/v1".into(),
-        auth_header: "Authorization".into(),
+        auth_header: AuthHeaderFormat::Bearer,
         model_prefixes: vec!["my-provider/".into()],
     })?;
     ```
 
-=== "Go"
+    Unregister with `unregister_custom_provider("my-provider")` (returns `bool`).
 
-    ```go
-    client.RegisterProvider(llm.ProviderConfig{
-        Name:          "my-provider",
-        BaseURL:       "https://my-llm.example.com/v1",
-        AuthHeader:    "Authorization",
-        ModelPrefixes: []string{"my-provider/"},
-    })
-    ```
+=== "Python"
 
-=== "Java"
+    ```python
+    from liter_llm import (
+        register_custom_provider,
+        unregister_custom_provider,
+        CustomProviderConfig,
+    )
+    from liter_llm._internal_bindings import AuthHeaderFormat
 
-    ```java
-    client.registerProvider(new ProviderConfig(
-        "my-provider",
-        "https://my-llm.example.com/v1",
-        "Authorization",
-        List.of("my-provider/")));
-    ```
-
-=== "C#"
-
-    ```csharp
-    client.RegisterProvider(new ProviderConfig(
-        Name: "my-provider",
-        BaseUrl: "https://my-llm.example.com/v1",
-        AuthHeader: "Authorization",
-        ModelPrefixes: ["my-provider/"]));
-    ```
-
-=== "Ruby"
-
-    ```ruby
-    client.register_provider(JSON.generate(
-      name: "my-provider",
-      base_url: "https://my-llm.example.com/v1",
-      auth_header: "Authorization",
-      model_prefixes: ["my-provider/"]
+    register_custom_provider(CustomProviderConfig(
+        name="my-provider",
+        base_url="https://my-llm.example.com/v1",
+        auth_header=AuthHeaderFormat.Bearer,
+        model_prefixes=["my-provider/"],
     ))
+
+    unregister_custom_provider("my-provider")
     ```
 
-=== "PHP"
+=== "TOML"
 
-    ```php
-    $client->registerProvider(json_encode([
-        'name' => 'my-provider',
-        'base_url' => 'https://my-llm.example.com/v1',
-        'auth_header' => 'Authorization',
-        'model_prefixes' => ['my-provider/'],
-    ]));
+    Custom providers declared in `liter-llm.toml` are registered automatically when a `ClientConfigBuilder` is constructed from the file:
+
+    ```toml
+    [[providers]]
+    name = "my-provider"
+    base_url = "https://my-llm.example.com/v1"
+    auth_header = "Bearer"
+    model_prefixes = ["my-provider/"]
     ```
 
-=== "Elixir"
-
-    ```elixir
-    LiterLlm.register_provider(%{
-      name: "my-provider",
-      base_url: "https://my-llm.example.com/v1",
-      auth_header: "Authorization",
-      model_prefixes: ["my-provider/"]
-    })
-    ```
-
-=== "WASM"
-
-    ```typescript
-    import init, { LlmClient } from "@kreuzberg/liter-llm-wasm";
-    await init();
-
-    const client = new LlmClient({ apiKey: "sk-..." });
-    client.registerProvider({
-      name: "my-provider",
-      baseUrl: "https://my-llm.example.com/v1",
-      authHeader: "Authorization",
-      modelPrefixes: ["my-provider/"],
-    });
-    ```
-
-## Cache Backends
-
-Configure OpenDAL-backed cache backends (Redis, S3, filesystem, and 40+ more via Apache OpenDAL):
-
-=== "Python"
-
-    ```python
-    from liter_llm import LlmClient
-
-    client = LlmClient(
-        api_key="sk-...",
-        cache={"backend": "redis", "backend_config": {"connection_string": "redis://localhost"}, "ttl_seconds": 3600},
-    )
-    ```
-
-=== "TypeScript"
-
-    ```typescript
-    import { LlmClient } from "@kreuzberg/liter-llm";
-
-    const client = new LlmClient({
-      apiKey: process.env.OPENAI_API_KEY!,
-      cache: { backend: "redis", backendConfig: { connectionString: "redis://localhost" }, ttlSeconds: 3600 },
-    });
-    ```
-
-=== "Rust"
-
-    ```rust
-    use liter_llm::{ClientConfigBuilder, CacheConfig, CacheBackend};
-
-    let config = ClientConfigBuilder::new("sk-...")
-        .cache(CacheConfig {
-            backend: CacheBackend::Redis { connection_string: "redis://localhost".into() },
-            ttl_seconds: 3600,
-        })
-        .build();
-    ```
-
-=== "Go"
-
-    ```go
-    client := llm.NewClient(
-        llm.WithAPIKey(os.Getenv("OPENAI_API_KEY")),
-        llm.WithCache(llm.CacheConfig{
-            Backend:       "redis",
-            BackendConfig: map[string]string{"connection_string": "redis://localhost"},
-            TTLSeconds:    3600,
-        }),
-    )
-    ```
-
-=== "Java"
-
-    ```java
-    var client = LlmClient.builder()
-            .apiKey(System.getenv("OPENAI_API_KEY"))
-            .cacheConfig(new CacheConfig("redis", Map.of("connection_string", "redis://localhost"), 3600))
-            .build();
-    ```
-
-=== "C#"
-
-    ```csharp
-    var client = new LlmClient(
-        apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!,
-        cacheConfig: new CacheConfig(
-            Backend: "redis",
-            BackendConfig: new() { ["connection_string"] = "redis://localhost" },
-            TtlSeconds: 3600));
-    ```
-
-=== "Ruby"
-
-    ```ruby
-    client = LiterLlm::LlmClient.new(ENV.fetch("OPENAI_API_KEY"),
-      cache: { backend: "redis", backend_config: { connection_string: "redis://localhost" }, ttl_seconds: 3600 }
-    )
-    ```
-
-=== "PHP"
-
-    ```php
-    $client = new LlmClient(
-        apiKey: getenv('OPENAI_API_KEY') ?: '',
-        cacheConfig: [
-            'backend' => 'redis',
-            'backend_config' => ['connection_string' => 'redis://localhost'],
-            'ttl_seconds' => 3600,
-        ],
-    );
-    ```
-
-=== "Elixir"
-
-    ```elixir
-    client = LiterLlm.Client.new(
-      api_key: System.fetch_env!("OPENAI_API_KEY"),
-      cache: [backend: "redis", backend_config: %{connection_string: "redis://localhost"}, ttl_seconds: 3600]
-    )
-    ```
-
-=== "WASM"
-
-    ```typescript
-    import init, { LlmClient } from "@kreuzberg/liter-llm-wasm";
-    await init();
-
-    const client = new LlmClient({
-      apiKey: "sk-...",
-      cache: { backend: "redis", backendConfig: { connectionString: "redis://localhost" }, ttlSeconds: 3600 },
-    });
-    ```
-
-| Option           | Type   | Description                                                        |
-| ---------------- | ------ | ------------------------------------------------------------------ |
-| `backend`        | string | Backend type: `"redis"`, `"s3"`, `"fs"`, `"gcs"`, `"memory"`, etc. |
-| `backend_config` | map    | Backend-specific config (connection strings, bucket names, paths)  |
-| `ttl_seconds`    | int    | Time-to-live in seconds for cache entries                          |
-
-## Cooldown
-
-Enable a cooldown (circuit breaker) period after transient errors:
-
-=== "Python"
-
-    ```python
-    client = LlmClient(api_key="sk-...", cooldown_secs=30)
-    ```
-
-=== "TypeScript"
-
-    ```typescript
-    const client = new LlmClient({ apiKey: "sk-...", cooldown: 30 });
-    ```
-
-=== "Rust"
-
-    ```rust
-    let config = ClientConfigBuilder::new("sk-...")
-        .cooldown(Duration::from_secs(30))
-        .build();
-    ```
-
-=== "Go"
-
-    ```go
-    client := llm.NewClient(
-        llm.WithAPIKey(os.Getenv("OPENAI_API_KEY")),
-        llm.WithCooldown(30 * time.Second),
-    )
-    ```
-
-=== "Java"
-
-    ```java
-    var client = LlmClient.builder()
-            .apiKey(System.getenv("OPENAI_API_KEY"))
-            .cooldownSecs(30)
-            .build();
-    ```
-
-=== "C#"
-
-    ```csharp
-    var client = new LlmClient(
-        apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!,
-        cooldownSecs: 30);
-    ```
-
-=== "Ruby"
-
-    ```ruby
-    client = LiterLlm::LlmClient.new(ENV.fetch("OPENAI_API_KEY"),
-      cooldown_secs: 30
-    )
-    ```
-
-=== "PHP"
-
-    ```php
-    $client = new LlmClient(
-        apiKey: getenv('OPENAI_API_KEY') ?: '',
-        cooldownSecs: 30,
-    );
-    ```
-
-=== "Elixir"
-
-    ```elixir
-    client = LiterLlm.Client.new(
-      api_key: System.fetch_env!("OPENAI_API_KEY"),
-      cooldown_secs: 30
-    )
-    ```
-
-=== "WASM"
-
-    ```typescript
-    const client = new LlmClient({ apiKey: "sk-...", cooldown: 30 });
-    ```
-
-## Rate Limiting
-
-Configure per-model rate limits (requests per minute and tokens per minute):
-
-=== "Python"
-
-    ```python
-    client = LlmClient(api_key="sk-...", rate_limit={"rpm": 60, "tpm": 100000})
-    ```
-
-=== "TypeScript"
-
-    ```typescript
-    const client = new LlmClient({ apiKey: "sk-...", rateLimit: { rpm: 60, tpm: 100000 } });
-    ```
-
-=== "Rust"
-
-    ```rust
-    let config = ClientConfigBuilder::new("sk-...")
-        .rate_limit(RateLimitConfig { rpm: Some(60), tpm: Some(100_000) })
-        .build();
-    ```
-
-=== "Go"
-
-    ```go
-    client := llm.NewClient(
-        llm.WithAPIKey(os.Getenv("OPENAI_API_KEY")),
-        llm.WithRateLimit(llm.RateLimitConfig{RPM: 60, TPM: 100000}),
-    )
-    ```
-
-=== "Java"
-
-    ```java
-    var client = LlmClient.builder()
-            .apiKey(System.getenv("OPENAI_API_KEY"))
-            .rateLimitConfig(new RateLimitConfig(60, 100000))
-            .build();
-    ```
-
-=== "C#"
-
-    ```csharp
-    var client = new LlmClient(
-        apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!,
-        rateLimit: new RateLimitConfig(Rpm: 60, Tpm: 100000));
-    ```
-
-=== "Ruby"
-
-    ```ruby
-    client = LiterLlm::LlmClient.new(ENV.fetch("OPENAI_API_KEY"),
-      rate_limit: { rpm: 60, tpm: 100000 }
-    )
-    ```
-
-=== "PHP"
-
-    ```php
-    $client = new LlmClient(
-        apiKey: getenv('OPENAI_API_KEY') ?: '',
-        rateLimit: ['rpm' => 60, 'tpm' => 100000],
-    );
-    ```
-
-=== "Elixir"
-
-    ```elixir
-    client = LiterLlm.Client.new(
-      api_key: System.fetch_env!("OPENAI_API_KEY"),
-      rate_limit: [rpm: 60, tpm: 100_000]
-    )
-    ```
-
-=== "WASM"
-
-    ```typescript
-    const client = new LlmClient({ apiKey: "sk-...", rateLimit: { rpm: 60, tpm: 100000 } });
-    ```
-
-| Option | Type | Description                 |
-| ------ | ---- | --------------------------- |
-| `rpm`  | int  | Maximum requests per minute |
-| `tpm`  | int  | Maximum tokens per minute   |
-
-## Health Checks
-
-Enable background health checks to proactively detect provider availability:
-
-=== "Python"
-
-    ```python
-    client = LlmClient(api_key="sk-...", health_check_secs=60)
-    ```
-
-=== "TypeScript"
-
-    ```typescript
-    const client = new LlmClient({ apiKey: "sk-...", healthCheck: 60 });
-    ```
-
-=== "Rust"
-
-    ```rust
-    let config = ClientConfigBuilder::new("sk-...")
-        .health_check(Duration::from_secs(60))
-        .build();
-    ```
-
-=== "Go"
-
-    ```go
-    client := llm.NewClient(
-        llm.WithAPIKey(os.Getenv("OPENAI_API_KEY")),
-        llm.WithHealthCheck(60 * time.Second),
-    )
-    ```
-
-=== "Java"
-
-    ```java
-    var client = LlmClient.builder()
-            .apiKey(System.getenv("OPENAI_API_KEY"))
-            .healthCheckSecs(60)
-            .build();
-    ```
-
-=== "C#"
-
-    ```csharp
-    var client = new LlmClient(
-        apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!,
-        healthCheckSecs: 60);
-    ```
-
-=== "Ruby"
-
-    ```ruby
-    client = LiterLlm::LlmClient.new(ENV.fetch("OPENAI_API_KEY"),
-      health_check_secs: 60
-    )
-    ```
-
-=== "PHP"
-
-    ```php
-    $client = new LlmClient(
-        apiKey: getenv('OPENAI_API_KEY') ?: '',
-        healthCheckSecs: 60,
-    );
-    ```
-
-=== "Elixir"
-
-    ```elixir
-    client = LiterLlm.Client.new(
-      api_key: System.fetch_env!("OPENAI_API_KEY"),
-      health_check_secs: 60
-    )
-    ```
-
-=== "WASM"
-
-    ```typescript
-    const client = new LlmClient({ apiKey: "sk-...", healthCheck: 60 });
-    ```
-
-## Cost Tracking
-
-Enable per-request cost tracking to monitor spend in real time:
-
-=== "Python"
-
-    ```python
-    client = LlmClient(api_key="sk-...", cost_tracking=True)
-    ```
-
-=== "TypeScript"
-
-    ```typescript
-    const client = new LlmClient({ apiKey: "sk-...", costTracking: true });
-    ```
-
-=== "Rust"
-
-    ```rust
-    let config = ClientConfigBuilder::new("sk-...")
-        .cost_tracking(true)
-        .build();
-    ```
-
-=== "Go"
-
-    ```go
-    client := llm.NewClient(
-        llm.WithAPIKey(os.Getenv("OPENAI_API_KEY")),
-        llm.WithCostTracking(),
-    )
-    ```
-
-=== "Java"
-
-    ```java
-    var client = LlmClient.builder()
-            .apiKey(System.getenv("OPENAI_API_KEY"))
-            .costTracking(true)
-            .build();
-    ```
-
-=== "C#"
-
-    ```csharp
-    var client = new LlmClient(
-        apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!,
-        costTracking: true);
-    ```
-
-=== "Ruby"
-
-    ```ruby
-    client = LiterLlm::LlmClient.new(ENV.fetch("OPENAI_API_KEY"),
-      cost_tracking: true
-    )
-    ```
-
-=== "PHP"
-
-    ```php
-    $client = new LlmClient(
-        apiKey: getenv('OPENAI_API_KEY') ?: '',
-        costTracking: true,
-    );
-    ```
-
-=== "Elixir"
-
-    ```elixir
-    client = LiterLlm.Client.new(
-      api_key: System.fetch_env!("OPENAI_API_KEY"),
-      cost_tracking: true
-    )
-    ```
-
-=== "WASM"
-
-    ```typescript
-    const client = new LlmClient({ apiKey: "sk-...", costTracking: true });
-    ```
+`AuthHeaderFormat` has three variants: `Bearer` (sends `Authorization: Bearer <key>`), `ApiKey(header_name)` (sends a custom header), and `None` (no auth header).
 
 ## Tracing
 
-!!! note
 The tracing reference has moved to [Observability](./observability.md). That page covers span attributes, OTEL exporter setup, cost tracking, and Tower layer composition.

@@ -300,10 +300,12 @@ OpenAI o-series models and Anthropic extended-thinking models accept a `reasonin
 === "Rust"
 
     ```rust
+    use liter_llm::types::ReasoningEffort;
+
     let req = ChatCompletionRequest {
         model: "openai/o3-mini".into(),
         messages: vec![/* ... */],
-        reasoning_effort: Some("high".into()),
+        reasoning_effort: Some(ReasoningEffort::High),
         ..Default::default()
     };
     ```
@@ -507,14 +509,14 @@ Send audio inline in a user message using the `input_audio` content part type. T
 
     ```rust
     use base64::{Engine, engine::general_purpose::STANDARD};
-    use liter_llm::types::{ContentPart, InputAudio};
+    use liter_llm::types::{AudioContent, ContentPart};
 
     let audio_bytes = std::fs::read("audio.wav")?;
     let audio_b64 = STANDARD.encode(&audio_bytes);
 
     let content = vec![
         ContentPart::InputAudio {
-            input_audio: InputAudio {
+            input_audio: AudioContent {
                 data: audio_b64,
                 format: "wav".into(),
             },
