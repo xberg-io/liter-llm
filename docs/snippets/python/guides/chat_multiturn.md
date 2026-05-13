@@ -1,29 +1,35 @@
 ```python
 import asyncio
+import json
 import os
-from liter_llm import LlmClient
+
+from liter_llm import create_client
+from liter_llm._internal_bindings import ChatCompletionRequest
+
 
 async def main() -> None:
-    client = LlmClient(api_key=os.environ["OPENAI_API_KEY"])
+    client = create_client(api_key=os.environ["OPENAI_API_KEY"])
     messages = [
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "What is the capital of France?"},
     ]
 
-    response = await client.chat(model="openai/gpt-4o", messages=messages)
-    content = response.choices[0].message.content
-    print(f"Assistant: {content}")
+    first = await client.chat(
+        ChatCompletionRequest.from_json(json.dumps({"model": "openai/gpt-4o", "messages": messages}))
+    )
+    reply = first.choices[0].message.content
+    print(f"Assistant: {reply}")
 
-    # Continue the conversation
-    messages.append({"role": "assistant", "content": content})
+    messages.append({"role": "assistant", "content": reply})
     messages.append({"role": "user", "content": "What about Germany?"})
 
-    response = await client.chat(model="openai/gpt-4o", messages=messages)
-    print(f"Assistant: {response.choices[0].message.content}")
+    second = await client.chat(
+        ChatCompletionRequest.from_json(json.dumps({"model": "openai/gpt-4o", "messages": messages}))
+    )
+    print(f"Assistant: {second.choices[0].message.content}")
+    if second.usage:
+        print(f"Tokens: {second.usage.prompt_tokens} in, {second.usage.completion_tokens} out")
 
-    # Token usage
-    if response.usage:
-        print(f"Tokens: {response.usage.prompt_tokens} in, {response.usage.completion_tokens} out")
 
 asyncio.run(main())
 ```

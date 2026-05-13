@@ -2,19 +2,24 @@
 
 ```python
 import asyncio
+import base64
+import json
 import os
-from liter_llm import LlmClient
+from pathlib import Path
+
+from liter_llm import create_client
+from liter_llm._internal_bindings import CreateTranscriptionRequest
+
 
 async def main() -> None:
-    client = LlmClient(api_key=os.environ["OPENAI_API_KEY"])
-    with open("audio.mp3", "rb") as f:
-        audio_bytes = f.read()
-    response = await client.transcribe(
-        model="openai/whisper-1",
-        file=audio_bytes,
-        filename="audio.mp3",
+    client = create_client(api_key=os.environ["OPENAI_API_KEY"])
+    encoded = base64.b64encode(Path("audio.mp3").read_bytes()).decode("ascii")
+    request = CreateTranscriptionRequest.from_json(
+        json.dumps({"model": "openai/whisper-1", "file": encoded})
     )
+    response = await client.transcribe(request)
     print(response.text)
+
 
 asyncio.run(main())
 ```
