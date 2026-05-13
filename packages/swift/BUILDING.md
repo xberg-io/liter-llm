@@ -75,3 +75,46 @@ swift build --package-path packages/swift --configuration release
   `Sources/RustBridge/` are **generated artifacts** — overwritten by the copy step.
 - `Sources/RustBridge/RustBridge.swift` is a placeholder and is overwritten.
 - `target/` is in `.gitignore`; regenerate after every `cargo clean`.
+
+## Toolchain / SDK alignment
+
+The Swift package and its E2E suite link against the host macOS SDK and pick up
+the Swift toolchain that `xcode-select` resolves to. When the active toolchain
+and the active SDK come from different Xcode majors, `swift build` / `swift test`
+can fail at link time with `ld: framework 'SwiftUICore' not found` (or similar
+missing-framework errors against `swiftCompatibility*` libraries). LiterLlm
+itself does not depend on SwiftUI/SwiftUICore — these come in transitively
+when the linker is asked to satisfy a stdlib referenced by a mismatched SDK.
+
+### Known-good configuration
+
+- Xcode and its bundled toolchain match (do **not** select a sideloaded
+  swift.org toolchain via `TOOLCHAINS=…` unless its version matches the Xcode
+  SDK exactly).
+- `xcode-select -p` points at a single Xcode install whose `Contents/Developer/Toolchains/XcodeDefault.xctoolchain` ships the Swift used by `swift --version`.
+
+Verify with:
+
+```sh
+xcode-select -p
+xcodebuild -version
+swift --version
+xcrun --show-sdk-path --sdk macosx
+```
+
+The four outputs should agree on the major version (e.g. all pointing at
+Xcode 26.x with the matching MacOSX26.x.sdk).
+
+### If `swift test` fails with a missing-framework linker error
+
+1. Unset any `TOOLCHAINS` env var.
+2. Switch the active developer dir to the Xcode that owns the SDK you want:
+   `sudo xcode-select -s /Applications/Xcode.app`.
+3. Clean SwiftPM caches: `swift package --package-path packages/swift clean`.
+4. Re-run from a fresh shell to drop stale environment.
+
+Upstream context:
+
+- Swift forums — Xcode 26 toolchain/SDK mismatches: <https://forums.swift.org/t/xcode-26-4-beta-1-swift-version-mismatch/84807>
+- Swift forums — sideloaded toolchain SDK incompatibility: <https://forums.swift.org/t/unable-to-use-swiftui-with-latest-swift-6-0-1-compiler-due-to-toolchain-sdk-mismatch/74972>
+- `swiftCompatibility*` removal symptom (Tauri tracker): <https://github.com/tauri-apps/tauri/issues/15066>
