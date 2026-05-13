@@ -192,11 +192,12 @@ fmt.Println(resp.Content)
 
 ## Part of Kreuzberg, Inc.
 
-- [Kreuzberg](https://docs.kreuzberg.dev) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
-- [Kreuzberg Cloud](https://docs.kreuzberg.cloud) — managed extraction API with SDKs, dashboards, and observability.
-- [kreuzcrawl](https://docs.kreuzcrawl.kreuzberg.dev) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
-- [html-to-markdown](https://docs.html-to-markdown.kreuzberg.dev) — fast, lossless HTML→Markdown engine.
-- [tree-sitter-language-pack](https://docs.tree-sitter-language-pack.kreuzberg.dev) — tree-sitter grammars and code-intelligence primitives.
+- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Kreuzberg Cloud](https://github.com/kreuzberg-dev/kreuzberg-cloud) — managed extraction API with SDKs, dashboards, and observability.
+- [kreuzcrawl](https://github.com/kreuzberg-dev/kreuzcrawl) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
+- [html-to-markdown](https://github.com/kreuzberg-dev/html-to-markdown) — fast, lossless HTML→Markdown engine.
+- [tree-sitter-language-pack](https://github.com/kreuzberg-dev/tree-sitter-language-pack) — tree-sitter grammars and code-intelligence primitives.
+- [alef](https://github.com/kreuzberg-dev/alef) — the polyglot binding generator that produces this README and all per-language bindings.
 - [Discord](https://discord.gg/xt9WY3GnKR) — community, roadmap, announcements.
 
 ## Troubleshooting
