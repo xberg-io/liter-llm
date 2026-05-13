@@ -5,17 +5,29 @@ version = "1.4.0-rc.27"
 edition = "2024"
 license = "MIT"
 
+# `async-trait` and `serde` are conditionally referenced by alef-emitted
+# code: only when the umbrella crate declares trait bridges (inbound
+# plugins) or `Serialize`/`Deserialize`-derived response types. They are
+# listed unconditionally in `[dependencies]` so the manifest is stable
+# across regens, and ignored here so cargo-machete does not flag the
+# downstream (no-adapters, no-derives) case as unused.
+[package.metadata.cargo-machete]
+ignored = ["async-trait", "serde"]
+
 [lib]
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-liter_llm = { path = "../../../crates/liter-llm", features = ["native-http", "full"], package = "liter-llm" }
 async-trait = "0.1"
+futures-util = "0.3"
+liter_llm = { path = "../../../crates/liter-llm", features = [
+    "native-http",
+    "full",
+], package = "liter-llm" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tokio = { version = "1", features = ["rt", "macros"] }
-futures-util = "0.3"
 swift-bridge = "0.1.59"
+tokio = { version = "1", features = ["rt", "macros"] }
 
 [build-dependencies]
 swift-bridge-build = "0.1.59"

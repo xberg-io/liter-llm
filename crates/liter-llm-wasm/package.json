@@ -9,13 +9,13 @@
     "url": "https://github.com/kreuzberg-dev/liter-llm",
     "directory": "crates/liter-llm-wasm"
   },
-  "type": "module",
   "files": [
     "pkg",
     "*.wasm",
     "*.d.ts",
     "README.md"
   ],
+  "type": "module",
   "main": "pkg/nodejs/liter-llm_wasm.js",
   "module": "pkg/web/liter-llm_wasm.js",
   "types": "pkg/nodejs/liter-llm_wasm.d.ts",

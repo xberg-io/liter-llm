@@ -11,13 +11,13 @@ categories = ["text-processing"]
 [lib]
 crate-type = ["cdylib"]
 
+[features]
+extension-module = []
+
 [dependencies]
-liter-llm = { path = "../liter-llm", features = ["native-http", "full"] }
 ext-php-rs = "0.15"
+futures-util = "0.3"
+liter-llm = { path = "../liter-llm", features = ["native-http", "full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
-futures-util = "0.3"
-
-[features]
-extension-module = []

@@ -54,16 +54,16 @@ crates/liter-llm/schemas/
 
 The core crate re-exports a curated set of symbols at its root:
 
-| Surface             | Items                                                                          |
-| ------------------- | ------------------------------------------------------------------------------ |
-| Client traits       | `LlmClient`, `LlmClientRaw`, `BatchClient`, `FileClient`, `ResponseClient`     |
-| Default impl        | `DefaultClient`, `ManagedClient` (with `tower` feature)                        |
-| Constructors        | `create_client(...)`, `create_client_from_json(...)`                           |
-| Config              | `ClientConfig`, `ClientConfigBuilder`, `FileConfig`                            |
-| Custom providers    | `register_custom_provider`, `unregister_custom_provider`, `CustomProviderConfig`, `AuthHeaderFormat` |
-| Provider registry   | `ProviderConfig`, `all_providers()`, `complex_provider_names()`                |
-| Errors              | `LiterLlmError`, `Result<T>`                                                   |
-| Types               | All `types::*` submodules — `chat`, `embedding`, `image`, `audio`, `files`, `batch`, `responses`, `rerank`, `search`, `ocr`, `moderation`, `models`, `raw`, `common` |
+| Surface           | Items                                                                                                                                                                |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Client traits     | `LlmClient`, `LlmClientRaw`, `BatchClient`, `FileClient`, `ResponseClient`                                                                                           |
+| Default impl      | `DefaultClient`, `ManagedClient` (with `tower` feature)                                                                                                              |
+| Constructors      | `create_client(...)`, `create_client_from_json(...)`                                                                                                                 |
+| Config            | `ClientConfig`, `ClientConfigBuilder`, `FileConfig`                                                                                                                  |
+| Custom providers  | `register_custom_provider`, `unregister_custom_provider`, `CustomProviderConfig`, `AuthHeaderFormat`                                                                 |
+| Provider registry | `ProviderConfig`, `all_providers()`, `complex_provider_names()`                                                                                                      |
+| Errors            | `LiterLlmError`, `Result<T>`                                                                                                                                         |
+| Types             | All `types::*` submodules — `chat`, `embedding`, `image`, `audio`, `files`, `batch`, `responses`, `rerank`, `search`, `ocr`, `moderation`, `models`, `raw`, `common` |
 
 Internal modules (`http`) are `pub(crate)` and not part of the public API.
 
@@ -95,19 +95,19 @@ graph LR
 
 Layers run outermost to innermost. `CacheLayer` short-circuits the stack on a hit (before traffic control). `BudgetLayer` rejects a request before it reaches the network if it would exceed the configured spend cap.
 
-| Layer                  | File                  | Purpose                                            |
-| ---------------------- | --------------------- | -------------------------------------------------- |
-| `TracingLayer`         | `tower/tracing.rs`    | Emits OpenTelemetry `gen_ai` spans                 |
-| `CostTrackingLayer`    | `tower/cost.rs`       | Records `gen_ai.usage.cost` on the span            |
-| `CacheLayer`           | `tower/cache.rs`      | In-memory response cache (LRU, configurable TTL)   |
-| `BudgetLayer`          | `tower/budget.rs`     | Hard/soft spend caps per key                       |
-| `ModelRateLimitLayer`  | `tower/rate_limit.rs` | RPM / TPM sliding-window limits                    |
-| `CooldownLayer`        | `tower/cooldown.rs`   | Per-provider backoff after transient errors        |
-| `HealthCheckLayer`     | `tower/health.rs`     | Marks providers unhealthy after failure threshold  |
-| `HooksLayer`           | `tower/hooks.rs`      | Pre/post-request hook execution                    |
-| `FallbackLayer`        | `tower/fallback.rs`   | Primary-plus-backup failover on transient errors   |
-| `Router`               | `tower/router.rs`     | Multi-deployment load distribution                 |
-| `LlmService`           | `tower/service.rs`    | Bridges `LlmClient` into the Tower `Service` trait |
+| Layer                 | File                  | Purpose                                            |
+| --------------------- | --------------------- | -------------------------------------------------- |
+| `TracingLayer`        | `tower/tracing.rs`    | Emits OpenTelemetry `gen_ai` spans                 |
+| `CostTrackingLayer`   | `tower/cost.rs`       | Records `gen_ai.usage.cost` on the span            |
+| `CacheLayer`          | `tower/cache.rs`      | In-memory response cache (LRU, configurable TTL)   |
+| `BudgetLayer`         | `tower/budget.rs`     | Hard/soft spend caps per key                       |
+| `ModelRateLimitLayer` | `tower/rate_limit.rs` | RPM / TPM sliding-window limits                    |
+| `CooldownLayer`       | `tower/cooldown.rs`   | Per-provider backoff after transient errors        |
+| `HealthCheckLayer`    | `tower/health.rs`     | Marks providers unhealthy after failure threshold  |
+| `HooksLayer`          | `tower/hooks.rs`      | Pre/post-request hook execution                    |
+| `FallbackLayer`       | `tower/fallback.rs`   | Primary-plus-backup failover on transient errors   |
+| `Router`              | `tower/router.rs`     | Multi-deployment load distribution                 |
+| `LlmService`          | `tower/service.rs`    | Bridges `LlmClient` into the Tower `Service` trait |
 
 The optional `opendal-cache` feature swaps the in-memory cache for an OpenDAL-backed store (S3, GCS, Azure Blob, Redis, filesystem) via `OpenDalCacheStore`.
 
@@ -133,13 +133,13 @@ On a transient provider error, `FallbackLayer` replays the request on the config
 
 All 14 bindings share the same Rust core. Four native-extension crates and one C FFI crate cover the binding surface:
 
-| Approach          | Crate              | Used by                                                |
-| ----------------- | ------------------ | ------------------------------------------------------ |
-| PyO3              | `liter-llm-py`     | Python                                                 |
-| napi-rs           | `liter-llm-node`   | TypeScript / Node.js                                   |
-| wasm-bindgen      | `liter-llm-wasm`   | WebAssembly (browsers, Cloudflare Workers, Deno, Bun)  |
-| ext-php-rs        | `liter-llm-php`    | PHP                                                    |
-| C ABI shared lib  | `liter-llm-ffi`    | Go, Java, Kotlin, C#, Ruby, Elixir, Dart, Swift, Zig   |
+| Approach         | Crate            | Used by                                               |
+| ---------------- | ---------------- | ----------------------------------------------------- |
+| PyO3             | `liter-llm-py`   | Python                                                |
+| napi-rs          | `liter-llm-node` | TypeScript / Node.js                                  |
+| wasm-bindgen     | `liter-llm-wasm` | WebAssembly (browsers, Cloudflare Workers, Deno, Bun) |
+| ext-php-rs       | `liter-llm-php`  | PHP                                                   |
+| C ABI shared lib | `liter-llm-ffi`  | Go, Java, Kotlin, C#, Ruby, Elixir, Dart, Swift, Zig  |
 
 The C FFI surface is the only one that exposes Rust types as opaque handles. All FFI-consuming bindings use their language-native FFI mechanism — cgo, Panama FFM, P/Invoke, Fiddle, NIF, `dart:ffi`, Swift's C interop, Zig's `@cImport` — to call the shared library. Error context (variant label, numeric code, message) is preserved across the boundary so each binding can throw a typed exception.
 

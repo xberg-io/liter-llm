@@ -228,7 +228,7 @@ export AWS_SECRET_ACCESS_KEY="..."
 ```
 
 !!! tip "You only need one key"
-    liter-llm resolves the provider from the model prefix (`openai/gpt-4o`, `anthropic/claude-...`) and picks the matching environment variable automatically.
+liter-llm resolves the provider from the model prefix (`openai/gpt-4o`, `anthropic/claude-...`) and picks the matching environment variable automatically.
 
 Or pass the key at client construction:
 
@@ -258,7 +258,7 @@ Or pass the key at client construction:
     ```
 
 !!! warning "Don't hard-code keys in source files"
-    Use environment variables or a secret manager. The Rust core wraps keys in `secrecy::SecretString` so they never appear in `Debug` output or logs.
+Use environment variables or a secret manager. The Rust core wraps keys in `secrecy::SecretString` so they never appear in `Debug` output or logs.
 
 ---
 

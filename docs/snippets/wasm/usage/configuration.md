@@ -7,9 +7,9 @@ await init();
 const client = createClient(
   process.env.OPENAI_API_KEY!,
   undefined, // override provider base URL
-  60n,       // request timeout in seconds (u64 -> bigint)
-  3,         // retry on transient failures
-  "openai",  // pre-resolve provider at construction
+  60n, // request timeout in seconds (u64 -> bigint)
+  3, // retry on transient failures
+  "openai", // pre-resolve provider at construction
 );
 
 const request = WasmChatCompletionRequest.default();

@@ -28,7 +28,15 @@
     "extension-name": "liter_llm",
     "support-zts": true,
     "support-nts": true,
-    "download-url-method": ["pre-packaged-binary", "composer-default"]
+    "download-url-method": [
+      "pre-packaged-binary",
+      "composer-default"
+    ]
   },
-  "keywords": ["llm", "api-client", "openai", "anthropic"]
+  "keywords": [
+    "llm",
+    "api-client",
+    "openai",
+    "anthropic"
+  ]
 }

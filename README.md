@@ -82,36 +82,36 @@ We give credit to [litellm](https://github.com/BerriAI/litellm) for proving the 
 
 An honest look at where things stand. We're newer and leaner -- litellm has breadth we haven't matched yet, and we have depth they can't easily retrofit.
 
-|                        | liter-llm                                                                      | litellm                                                            |
-| ---------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
-| **Language**           | Rust (compiled, memory-safe)                                                   | Python                                                             |
+|                        | liter-llm                                                                                             | litellm                                                            |
+| ---------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| **Language**           | Rust (compiled, memory-safe)                                                                          | Python                                                             |
 | **Bindings**           | 14 native (Rust, Python, TS, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, WASM) + C/FFI | Python (+ OpenAI-compatible proxy)                                 |
-| **Providers**          | 143 (compiled at build time)                                                   | 100+ (runtime resolution)                                          |
-| **Streaming**          | SSE + AWS EventStream binary protocol                                          | SSE + AWS EventStream                                              |
-| **Observability**      | Built-in OpenTelemetry (GenAI semconv)                                         | 40+ callback integrations                                          |
-| **API key safety**     | `secrecy::SecretString` (zeroed, redacted)                                     | Plain strings                                                      |
-| **Middleware**         | Composable Tower stack                                                         | Built-in callback system                                           |
-| **Proxy / Gateway**    | Yes (22 OpenAI-compatible endpoints, 35MB Docker)                              | Yes                                                                |
-| **Guardrails**         | --                                                                             | 10+ integrations, 4 execution modes (advanced: enterprise)         |
-| **Semantic caching**   | --                                                                             | Redis + Qdrant backends                                            |
-| **Virtual key mgmt**   | Yes (per-key model restrictions, RPM/TPM, budgets)                             | Yes (key rotation: enterprise)                                     |
-| **Management API**     | Config-driven (REST admin API planned)                                         | Multi-tenant (teams, budgets, keys; tiers + reporting: enterprise) |
-| **Fine-tuning API**    | --                                                                             | Enterprise only                                                    |
-| **Load balancer**      | Fallback + round-robin via Tower router                                        | Full router with strategies                                        |
-| **Cost tracking**      | Embedded pricing + OTEL spans                                                  | Per-key/team/model budgets                                         |
-| **Rate limiting**      | Per-model RPM/TPM (Tower layer)                                                | Per-key/user/team/model                                            |
-| **Caching**            | In-memory LRU + 40+ backends via OpenDAL (S3, Redis, GCS, DynamoDB, disk, ...) | 7 backends (Redis, S3, GCS, disk, Qdrant)                          |
-| **Tool calling**       | Parallel tools, structured output, JSON schema                                 | Full support                                                       |
-| **Embeddings**         | Yes                                                                            | Yes                                                                |
-| **Batch API**          | Yes                                                                            | Yes                                                                |
-| **Audio / Speech**     | Yes                                                                            | Yes                                                                |
-| **Lifecycle hooks**    | onRequest/onResponse/onError per-client                                        | Callback integrations                                              |
-| **Budget enforcement** | Per-model + global limits, hard/soft modes                                     | Per-key/team budgets                                               |
-| **Health checks**      | Automatic provider probes + cooldown                                           | --                                                                 |
-| **Custom providers**   | Runtime API + TOML config file                                                 | Config + code-based                                                |
-| **Config files**       | TOML with auto-discovery (`liter-llm.toml`)                                    | YAML proxy config                                                  |
-| **Search / OCR**       | 12 search + 4 OCR providers                                                    | Yes                                                                |
-| **Image generation**   | Yes                                                                            | Yes                                                                |
+| **Providers**          | 143 (compiled at build time)                                                                          | 100+ (runtime resolution)                                          |
+| **Streaming**          | SSE + AWS EventStream binary protocol                                                                 | SSE + AWS EventStream                                              |
+| **Observability**      | Built-in OpenTelemetry (GenAI semconv)                                                                | 40+ callback integrations                                          |
+| **API key safety**     | `secrecy::SecretString` (zeroed, redacted)                                                            | Plain strings                                                      |
+| **Middleware**         | Composable Tower stack                                                                                | Built-in callback system                                           |
+| **Proxy / Gateway**    | Yes (22 OpenAI-compatible endpoints, 35MB Docker)                                                     | Yes                                                                |
+| **Guardrails**         | --                                                                                                    | 10+ integrations, 4 execution modes (advanced: enterprise)         |
+| **Semantic caching**   | --                                                                                                    | Redis + Qdrant backends                                            |
+| **Virtual key mgmt**   | Yes (per-key model restrictions, RPM/TPM, budgets)                                                    | Yes (key rotation: enterprise)                                     |
+| **Management API**     | Config-driven (REST admin API planned)                                                                | Multi-tenant (teams, budgets, keys; tiers + reporting: enterprise) |
+| **Fine-tuning API**    | --                                                                                                    | Enterprise only                                                    |
+| **Load balancer**      | Fallback + round-robin via Tower router                                                               | Full router with strategies                                        |
+| **Cost tracking**      | Embedded pricing + OTEL spans                                                                         | Per-key/team/model budgets                                         |
+| **Rate limiting**      | Per-model RPM/TPM (Tower layer)                                                                       | Per-key/user/team/model                                            |
+| **Caching**            | In-memory LRU + 40+ backends via OpenDAL (S3, Redis, GCS, DynamoDB, disk, ...)                        | 7 backends (Redis, S3, GCS, disk, Qdrant)                          |
+| **Tool calling**       | Parallel tools, structured output, JSON schema                                                        | Full support                                                       |
+| **Embeddings**         | Yes                                                                                                   | Yes                                                                |
+| **Batch API**          | Yes                                                                                                   | Yes                                                                |
+| **Audio / Speech**     | Yes                                                                                                   | Yes                                                                |
+| **Lifecycle hooks**    | onRequest/onResponse/onError per-client                                                               | Callback integrations                                              |
+| **Budget enforcement** | Per-model + global limits, hard/soft modes                                                            | Per-key/team budgets                                               |
+| **Health checks**      | Automatic provider probes + cooldown                                                                  | --                                                                 |
+| **Custom providers**   | Runtime API + TOML config file                                                                        | Config + code-based                                                |
+| **Config files**       | TOML with auto-discovery (`liter-llm.toml`)                                                           | YAML proxy config                                                  |
+| **Search / OCR**       | 12 search + 4 OCR providers                                                                           | Yes                                                                |
+| **Image generation**   | Yes                                                                                                   | Yes                                                                |
 
 ## Key Features
 

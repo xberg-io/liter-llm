@@ -1,10 +1,7 @@
 <!-- snippet:compile-only -->
 
 ```typescript
-import init, {
-  createClient,
-  WasmCreateTranscriptionRequest,
-} from "@kreuzberg/liter-llm-wasm";
+import init, { createClient, WasmCreateTranscriptionRequest } from "@kreuzberg/liter-llm-wasm";
 
 await init();
 

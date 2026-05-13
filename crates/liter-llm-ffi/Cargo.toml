@@ -17,14 +17,14 @@ ignored = ["tokio"]
 [lib]
 crate-type = ["cdylib", "staticlib"]
 
-[dependencies]
-liter-llm = { path = "../liter-llm", features = ["native-http", "full"] }
-futures-util = "0.3"
-serde_json = "1"
-tokio = { version = "1", features = ["full"] }
-
 [features]
 default = []
+
+[dependencies]
+futures-util = "0.3"
+liter-llm = { path = "../liter-llm", features = ["native-http", "full"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
 
 [build-dependencies]
 cbindgen = "0.29"

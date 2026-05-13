@@ -5,7 +5,7 @@ description: "Client configuration: sources, TOML schema, construction, options,
 # Configuration
 
 !!! tip "Snippets marked `compile-only`"
-    Snippets with the `<!-- snippet:compile-only -->` HTML comment are extracted from CI test fixtures, kept in sync with the API at every build, and may include test scaffolding (assertions, fixture setup). Strip the scaffolding when copying into your application.
+Snippets with the `<!-- snippet:compile-only -->` HTML comment are extracted from CI test fixtures, kept in sync with the API at every build, and may include test scaffolding (assertions, fixture setup). Strip the scaffolding when copying into your application.
 
 liter-llm reads configuration from three sources, applied in priority order (lower numbers win):
 
@@ -13,7 +13,7 @@ liter-llm reads configuration from three sources, applied in priority order (low
 2. **JSON string** — `create_client_from_json(json)` for bindings without a builder.
 3. **TOML file** — `liter-llm.toml`, auto-discovered by walking up from the current working directory.
 
-The Rust core exposes the same surface to every language binding via the C FFI. Methods like `chat`, `embed`, etc. are called on the *client instance* returned by the factory; there is no top-level `LlmClient` class to subclass or pre-configure in the bindings.
+The Rust core exposes the same surface to every language binding via the C FFI. Methods like `chat`, `embed`, etc. are called on the _client instance_ returned by the factory; there is no top-level `LlmClient` class to subclass or pre-configure in the bindings.
 
 ## TOML file
 
@@ -56,56 +56,56 @@ model_prefixes = ["my-provider/"]
 
 ### Top-level fields
 
-| Field               | Type    | Description                                                          |
-| ------------------- | ------- | -------------------------------------------------------------------- |
-| `api_key`           | string  | Provider API key. Wrapped in `SecretString` internally.              |
-| `base_url`          | string  | Override the provider's base URL.                                    |
-| `model_hint`        | string  | Pre-resolve a provider (e.g. `"openai"`); skips prefix lookup.       |
-| `timeout_secs`      | int     | Per-request timeout in seconds (default: 60).                        |
-| `max_retries`       | int     | Retries on 429/5xx with exponential backoff (default: 3).            |
-| `cooldown_secs`     | int     | Circuit-breaker cooldown after transient errors.                     |
-| `health_check_secs` | int     | Interval for background health checks.                               |
-| `cost_tracking`     | bool    | Enable per-request cost calculation.                                 |
-| `tracing`           | bool    | Emit `tracing` spans for each request (see [Observability](./observability.md)). |
-| `extra_headers`     | map     | Additional headers attached to every outgoing request.               |
+| Field               | Type   | Description                                                                      |
+| ------------------- | ------ | -------------------------------------------------------------------------------- |
+| `api_key`           | string | Provider API key. Wrapped in `SecretString` internally.                          |
+| `base_url`          | string | Override the provider's base URL.                                                |
+| `model_hint`        | string | Pre-resolve a provider (e.g. `"openai"`); skips prefix lookup.                   |
+| `timeout_secs`      | int    | Per-request timeout in seconds (default: 60).                                    |
+| `max_retries`       | int    | Retries on 429/5xx with exponential backoff (default: 3).                        |
+| `cooldown_secs`     | int    | Circuit-breaker cooldown after transient errors.                                 |
+| `health_check_secs` | int    | Interval for background health checks.                                           |
+| `cost_tracking`     | bool   | Enable per-request cost calculation.                                             |
+| `tracing`           | bool   | Emit `tracing` spans for each request (see [Observability](./observability.md)). |
+| `extra_headers`     | map    | Additional headers attached to every outgoing request.                           |
 
 ### `[cache]`
 
-| Field            | Type    | Description                                                              |
-| ---------------- | ------- | ------------------------------------------------------------------------ |
-| `max_entries`    | int     | Maximum cached responses (default: 256).                                 |
-| `ttl_seconds`    | int     | Time-to-live for each entry in seconds (default: 300).                   |
-| `backend`        | string  | `"memory"` (default) or an OpenDAL scheme (`"redis"`, `"s3"`, `"fs"`, `"gcs"`, ...). |
-| `backend_config` | map     | OpenDAL backend-specific key-value config.                               |
+| Field            | Type   | Description                                                                          |
+| ---------------- | ------ | ------------------------------------------------------------------------------------ |
+| `max_entries`    | int    | Maximum cached responses (default: 256).                                             |
+| `ttl_seconds`    | int    | Time-to-live for each entry in seconds (default: 300).                               |
+| `backend`        | string | `"memory"` (default) or an OpenDAL scheme (`"redis"`, `"s3"`, `"fs"`, `"gcs"`, ...). |
+| `backend_config` | map    | OpenDAL backend-specific key-value config.                                           |
 
 The `backend` and `backend_config` fields are only honored when liter-llm is compiled with the `opendal-cache` feature.
 
 ### `[budget]`
 
-| Field          | Type    | Description                                                              |
-| -------------- | ------- | ------------------------------------------------------------------------ |
-| `global_limit` | float   | Maximum total spend in USD across all models.                            |
-| `model_limits` | map     | Per-model spend limits (model name → USD).                               |
-| `enforcement`  | string  | `"hard"` (reject over-budget) or `"soft"` (warn only).                   |
+| Field          | Type   | Description                                            |
+| -------------- | ------ | ------------------------------------------------------ |
+| `global_limit` | float  | Maximum total spend in USD across all models.          |
+| `model_limits` | map    | Per-model spend limits (model name → USD).             |
+| `enforcement`  | string | `"hard"` (reject over-budget) or `"soft"` (warn only). |
 
 ### `[rate_limit]`
 
-| Field            | Type | Description                                                  |
-| ---------------- | ---- | ------------------------------------------------------------ |
-| `rpm`            | int  | Maximum requests per window.                                 |
-| `tpm`            | int  | Maximum tokens per window.                                   |
-| `window_seconds` | int  | Window duration in seconds (default: 60).                    |
+| Field            | Type | Description                               |
+| ---------------- | ---- | ----------------------------------------- |
+| `rpm`            | int  | Maximum requests per window.              |
+| `tpm`            | int  | Maximum tokens per window.                |
+| `window_seconds` | int  | Window duration in seconds (default: 60). |
 
 ### `[[providers]]`
 
 Array of custom provider definitions. Each entry contains:
 
-| Field            | Type        | Description                                              |
-| ---------------- | ----------- | -------------------------------------------------------- |
-| `name`           | string      | Unique provider name.                                    |
-| `base_url`       | string      | Provider's API base URL.                                 |
-| `auth_header`    | string      | Auth scheme (optional).                                  |
-| `model_prefixes` | string[]    | Model name prefixes that route to this provider.         |
+| Field            | Type     | Description                                      |
+| ---------------- | -------- | ------------------------------------------------ |
+| `name`           | string   | Unique provider name.                            |
+| `base_url`       | string   | Provider's API base URL.                         |
+| `auth_header`    | string   | Auth scheme (optional).                          |
+| `model_prefixes` | string[] | Model name prefixes that route to this provider. |
 
 ## Construction
 
@@ -238,13 +238,13 @@ The constructors below match the actual binding surface. Other bindings (Go, Jav
 
 ## Scalar options
 
-| Option         | Type    | Default       | Description                                               |
-| -------------- | ------- | ------------- | --------------------------------------------------------- |
-| `api_key`      | string  | **required**  | Provider API key. Wrapped in `SecretString` internally.   |
-| `base_url`     | string  | from registry | Override the provider's base URL.                         |
-| `model_hint`   | string  | none          | Pre-resolve a provider at construction (e.g. `"openai"`). |
-| `timeout_secs` | int     | 60            | Request timeout in seconds.                               |
-| `max_retries`  | int     | 3             | Retries on 429/5xx responses with exponential backoff.    |
+| Option         | Type   | Default       | Description                                               |
+| -------------- | ------ | ------------- | --------------------------------------------------------- |
+| `api_key`      | string | **required**  | Provider API key. Wrapped in `SecretString` internally.   |
+| `base_url`     | string | from registry | Override the provider's base URL.                         |
+| `model_hint`   | string | none          | Pre-resolve a provider at construction (e.g. `"openai"`). |
+| `timeout_secs` | int    | 60            | Request timeout in seconds.                               |
+| `max_retries`  | int    | 3             | Retries on 429/5xx responses with exponential backoff.    |
 
 ## API key environment variables
 

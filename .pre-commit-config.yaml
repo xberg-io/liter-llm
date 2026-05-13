@@ -25,6 +25,7 @@ repos:
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
+        exclude: ^(packages/python/liter_llm/py\.typed|packages/java/checkstyle\.properties)$
       - id: check-merge-conflict
       - id: check-added-large-files
         args: ["--maxkb=500"]
@@ -41,6 +42,7 @@ repos:
     rev: "v2.21.2"
     hooks:
       - id: pyproject-fmt
+        exclude: ^packages/python/pyproject\.toml$
 
   # Markdown: linting
   - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -48,7 +50,9 @@ repos:
     hooks:
       - id: ruff
         args: [--fix]
+        exclude: ^packages/python/liter_llm/(__init__\.py|api\.py|exceptions\.py|options\.py|_internal_bindings\.pyi)$
       - id: ruff-format
+        exclude: ^packages/python/liter_llm/(__init__\.py|api\.py|exceptions\.py|options\.py|_internal_bindings\.pyi)$
 
   # Node/TS/WASM: oxlint
   - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
@@ -56,6 +60,7 @@ repos:
     hooks:
       - id: cargo-sort
         args: [-w]
+        exclude: ^(crates/liter-llm-(ffi|node|php|py|wasm|swift|dart|rb)/Cargo\.toml|packages/(dart|swift|elixir/native/liter_llm_nif|ruby/ext/liter_llm_rb/native)/Cargo\.toml|packages/(go|java|csharp|python|elixir|php|kotlin|zig|wasm|typescript|swift|dart|ruby)/.*/Cargo\.toml|e2e/rust/Cargo\.toml)$
       - id: cargo-fmt
         args: ["--all"]
       - id: cargo-check
@@ -72,6 +77,8 @@ repos:
             "--allow-staged",
             "--workspace",
             "--exclude=liter-llm-php",
+            "--exclude=liter-llm-swift",
+            "--exclude=liter-llm-dart",
             "--all-features",
             "--all-targets",
             "--",
@@ -106,8 +113,10 @@ repos:
           KREUZBERG_GO_MOD_DIRS: packages/go
       - id: rubocop
         files: ^packages/ruby/(?!ext/).*\.rb$
+        exclude: ^packages/ruby/lib/liter_llm/native\.rb$
       - id: rubocop-lint
         files: ^packages/ruby/(?!ext/).*\.(rb|rbs)$
+        exclude: ^packages/ruby/lib/liter_llm/native\.rb$
       - id: steep
         files: ^packages/ruby/.*\.(rb|rbs)$
       - id: dotnet-format
@@ -116,12 +125,14 @@ repos:
         files: ^packages/csharp/.*\.cs$
       - id: php-cs-fixer
         files: ^packages/php/.*\.php$
+        exclude: ^packages/php/(src/(DefaultClient|LiterLlm)\.php|stubs/liter_llm_extension\.php)$
         args: ["fix", "--config=packages/php/.php-cs-fixer.dist.php"]
       - id: phpstan
         files: ^packages/php/.*\.php$
         exclude: ^packages/php/(\.?php-cs-fixer(\.dist)?\.php|vendor/)
       - id: mix-format
         files: ^packages/elixir/
+        exclude: ^packages/elixir/lib/liter_llm\.ex$
       - id: mix-credo
         files: ^packages/elixir/
       - id: java-verify
@@ -129,8 +140,10 @@ repos:
 
       - id: oxlint
         require_serial: true
+        exclude: ^(crates/liter-llm-node/index\.d\.ts|packages/(typescript|wasm)/src/index\.ts)$
       - id: oxfmt
         require_serial: true
+        exclude: ^(crates/liter-llm-node/index\.d\.ts|packages/(typescript|wasm)/src/index\.ts)$
       - id: cppcheck
         args: ["--suppress=unusedStructMember"]
         require_serial: true
@@ -151,6 +164,7 @@ repos:
     rev: v1.7.12
     hooks:
       - id: actionlint
+        exclude: ^\.github/workflows/swift\.yml$
 
   # Spelling: fast Rust-based spell checker
   - repo: https://github.com/crate-ci/typos

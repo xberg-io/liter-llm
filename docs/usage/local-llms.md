@@ -8,12 +8,12 @@ liter-llm routes to any local inference engine that exposes an OpenAI-compatible
 
 ## Supported Providers
 
-| Provider                                               | Default URL                 | Prefix         | Notes                        |
-| ------------------------------------------------------ | --------------------------- | -------------- | ---------------------------- |
-| [Ollama](https://ollama.ai)                            | `http://localhost:11434/v1` | `ollama/`      | Most popular, easy setup. Use `ollama_chat/` for chat-tuned routing. |
-| [LM Studio](https://lmstudio.ai)                       | `http://localhost:1234/v1`  | `lm_studio/`   | GUI-based, beginner-friendly |
-| [vLLM](https://docs.vllm.ai)                           | `http://localhost:8000/v1`  | `vllm/` or `hosted_vllm/` | High-throughput serving |
-| [llamafile](https://github.com/Mozilla-Ocho/llamafile) | `http://localhost:8080/v1`  | `llamafile/`   | Single-file executable       |
+| Provider                                               | Default URL                 | Prefix                    | Notes                                                                |
+| ------------------------------------------------------ | --------------------------- | ------------------------- | -------------------------------------------------------------------- |
+| [Ollama](https://ollama.ai)                            | `http://localhost:11434/v1` | `ollama/`                 | Most popular, easy setup. Use `ollama_chat/` for chat-tuned routing. |
+| [LM Studio](https://lmstudio.ai)                       | `http://localhost:1234/v1`  | `lm_studio/`              | GUI-based, beginner-friendly                                         |
+| [vLLM](https://docs.vllm.ai)                           | `http://localhost:8000/v1`  | `vllm/` or `hosted_vllm/` | High-throughput serving                                              |
+| [llamafile](https://github.com/Mozilla-Ocho/llamafile) | `http://localhost:8080/v1`  | `llamafile/`              | Single-file executable                                               |
 
 All of these providers are registered in the [provider registry](../providers.md). For any other OpenAI-compatible server (LocalAI, llama.cpp `--api-server`, etc.), use a [custom provider](../usage/configuration.md#custom-providers) — register the prefix and base URL once, then route to it like any other provider.
 

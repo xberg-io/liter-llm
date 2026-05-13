@@ -5,7 +5,19 @@
   "tags": ["streaming"],
   "call": "chat_stream",
   "skip": {
-    "languages": ["rust", "node", "ruby", "php", "go", "java", "csharp", "elixir", "wasm", "c", "python"],
+    "languages": [
+      "rust",
+      "node",
+      "ruby",
+      "php",
+      "go",
+      "java",
+      "csharp",
+      "elixir",
+      "wasm",
+      "c",
+      "python"
+    ],
     "reason": "Rust returns BoxStream \u2014 collecting usage from the final chunk requires consuming the stream, which is not supported by the generator. Python deferred until streaming-virtual usage path can disambiguate from non-streaming response.usage."
   },
   "input": {

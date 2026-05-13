@@ -62,20 +62,20 @@ Search the web or documents across 12 providers (Brave, Tavily, Google PSE, etc.
 
 The registry ships 12 search providers. Browse the full [Providers](../providers.md) capability matrix; the most common are:
 
-| Provider     | Prefix         |
-| ------------ | -------------- |
-| Brave        | `brave/`       |
-| Tavily       | `tavily/`      |
-| Google PSE   | `google_pse/`  |
-| Serper       | `serper/`      |
-| DuckDuckGo   | `duckduckgo/`  |
-| Exa          | `exa_ai/`      |
-| Firecrawl    | `firecrawl/`   |
-| Linkup       | `linkup/`      |
-| Parallel AI  | `parallel_ai/` |
-| Perplexity   | `perplexity/`  |
-| SearXNG      | `searxng/`     |
-| DataForSEO   | `dataforseo/`  |
+| Provider    | Prefix         |
+| ----------- | -------------- |
+| Brave       | `brave/`       |
+| Tavily      | `tavily/`      |
+| Google PSE  | `google_pse/`  |
+| Serper      | `serper/`      |
+| DuckDuckGo  | `duckduckgo/`  |
+| Exa         | `exa_ai/`      |
+| Firecrawl   | `firecrawl/`   |
+| Linkup      | `linkup/`      |
+| Parallel AI | `parallel_ai/` |
+| Perplexity  | `perplexity/`  |
+| SearXNG     | `searxng/`     |
+| DataForSEO  | `dataforseo/`  |
 
 ## OCR
 

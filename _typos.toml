@@ -14,6 +14,10 @@ extend-exclude = [
   # Auto-generated Java bindings include Jackson imports like
   # `com.fasterxml.jackson.databind.ser.std.*` whose "ser" segment trips typos.
   "packages/java/",
+  # Alef-emitted Swift test sources use hash-suffixed local variable names
+  # (e.g. `_vec_choices_equals_7ba7bc0e`) where random hex digit pairs match
+  # English typo patterns like `ba` -> `by`/`be`.
+  "packages/swift/Tests/",
 ]
 
 [default.extend-words]

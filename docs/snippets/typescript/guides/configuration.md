@@ -5,9 +5,9 @@ import { createClient } from "@kreuzberg/liter-llm-node";
 const client = createClient(
   process.env.OPENAI_API_KEY!,
   undefined, // override provider base URL
-  60,        // request timeout in seconds
-  3,         // retry on transient failures
-  "openai",  // pre-resolve provider at construction
+  60, // request timeout in seconds
+  3, // retry on transient failures
+  "openai", // pre-resolve provider at construction
 );
 
 const response = await client.chat({
