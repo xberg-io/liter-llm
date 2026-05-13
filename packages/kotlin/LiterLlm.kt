@@ -164,7 +164,6 @@ object LiterLlm {
     fun unregisterCustomProvider(name: String): Boolean {
 
         return Bridge.unregisterCustomProvider(name)
-
     }
 
 }

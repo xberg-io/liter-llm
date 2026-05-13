@@ -433,6 +433,9 @@ public final class DefaultClient {
     public func cancelResponse(_ id: String) async throws -> ResponseObject {
         return try await RustBridge.defaultClientCancelResponse(self.inner, id)
     }
+    public func chatStream(_ req: ChatCompletionRequest) async throws {
+        try await RustBridge.defaultClientChatStream(self.inner, req)
+    }
 }
 
 // MARK: - From-JSON Helpers

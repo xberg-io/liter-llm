@@ -4,13 +4,13 @@ description: "MCP & IDE Integration — set up the liter-llm MCP server with VS 
 
 # MCP & IDE Integration
 
-The liter-llm MCP server exposes 22 tools for unified access to 142+ LLM providers, embeddings, files, batches, and more. Integrate it with VS Code, GitHub Copilot, Claude Desktop, Cursor, and other MCP-compatible IDEs and applications.
+The liter-llm MCP server exposes 22 tools for unified access to 143+ LLM providers, embeddings, files, batches, and more. Integrate it with VS Code, GitHub Copilot, Claude Desktop, Cursor, and other MCP-compatible IDEs and applications.
 
 ## What is MCP?
 
 The [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) is an open standard for connecting AI applications to context sources. The liter-llm MCP server provides tools that allow AI assistants to call LLM APIs, generate embeddings, search documents, and manage files — all through a unified, provider-agnostic interface.
 
-Instead of hard-coding integrations for each provider (OpenAI, Anthropic, Google, Groq, etc.), MCP lets your IDE or application call any of 142+ providers via a single interface.
+Instead of hard-coding integrations for each provider (OpenAI, Anthropic, Google, Groq, etc.), MCP lets your IDE or application call any of 143+ providers via a single interface.
 
 ## Available MCP Tools
 
@@ -409,5 +409,5 @@ Use `0.0.0.0` to allow remote connections. For local development, `127.0.0.1` is
 ## Next Steps
 
 - [Chat & Streaming](./chat.md) — Learn the chat API and streaming patterns
-- [Provider Registry](../providers.md) — Browse all 142+ supported providers
+- [Provider Registry](../providers.md) — Browse all 143+ supported providers
 - [Configuration](./configuration.md) — Timeouts, retries, and custom endpoints

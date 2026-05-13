@@ -135,19 +135,19 @@ implementation 'dev.kreuzberg:liter-llm:1.4.0-rc.27'
 Send a message to any provider using the `provider/model` prefix:
 
 ```java
-import dev.kreuzberg.literllm.LlmClient;
-import dev.kreuzberg.literllm.Types.*;
+import dev.kreuzberg.literllm.*;
 import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        try (var client = LlmClient.builder()
-                .apiKey(System.getenv("OPENAI_API_KEY"))
-                .build()) {
-            var response = client.chat(new ChatCompletionRequest(
-                "openai/gpt-4o",
-                List.of(new UserMessage("Hello!"))
-            ));
+        try (var client = LiterLlm.createClient(System.getenv("OPENAI_API_KEY"))) {
+            var request = ChatCompletionRequest.builder()
+                .withModel("openai/gpt-4o")
+                .withMessages(List.of(
+                    new Message.User(new UserMessage(UserContent.of("Hello!"), null))
+                ))
+                .build();
+            var response = client.chat(request);
             System.out.println(response.choices().getFirst().message().content());
         }
     }
@@ -162,19 +162,25 @@ public class Main {
 Stream tokens in real time:
 
 ```java
-import dev.kreuzberg.literllm.LlmClient;
-import dev.kreuzberg.literllm.Types.*;
+import dev.kreuzberg.literllm.*;
 import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        try (var client = LlmClient.builder()
-                .apiKey(System.getenv("OPENAI_API_KEY"))
-                .build()) {
-            client.chatStream(new ChatCompletionRequest(
-                "openai/gpt-4o-mini",
-                List.of(new UserMessage("Hello"))
-            ), chunk -> System.out.println(chunk));
+        try (var client = LiterLlm.createClient(System.getenv("OPENAI_API_KEY"))) {
+            var request = ChatCompletionRequest.builder()
+                .withModel("openai/gpt-4o-mini")
+                .withMessages(List.of(
+                    new Message.User(new UserMessage(UserContent.of("Hello"), null))
+                ))
+                .build();
+            var stream = client.chatStream(request);
+            while (stream.hasNext()) {
+                var chunk = stream.next();
+                var delta = chunk.choices().getFirst().delta().content();
+                if (delta != null) System.out.print(delta);
+            }
+            System.out.println();
         }
     }
 }
@@ -263,7 +269,14 @@ See the [proxy server documentation](https://docs.liter-llm.kreuzberg.dev/server
 - **[GitHub Repository](https://github.com/kreuzberg-dev/liter-llm)** -- Source, issues, and discussions
 - **[Provider Registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)** -- 143 supported providers
 
-Part of [kreuzberg.dev](https://kreuzberg.dev).
+## Part of Kreuzberg, Inc.
+
+- [Kreuzberg](https://docs.kreuzberg.dev) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Kreuzberg Cloud](https://docs.kreuzberg.cloud) — managed extraction API with SDKs, dashboards, and observability.
+- [kreuzcrawl](https://docs.kreuzcrawl.kreuzberg.dev) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
+- [html-to-markdown](https://docs.html-to-markdown.kreuzberg.dev) — fast, lossless HTML→Markdown engine.
+- [tree-sitter-language-pack](https://docs.tree-sitter-language-pack.kreuzberg.dev) — tree-sitter grammars and code-intelligence primitives.
+- [Discord](https://discord.gg/xt9WY3GnKR) — community, roadmap, announcements.
 
 ## Contributing
 

@@ -47,7 +47,7 @@ crates/liter-llm/src/
   types/             # Request and response types (OpenAI wire format)
 
 crates/liter-llm/schemas/
-  providers.json     # 142 provider configurations (+ 4 complex provider entries)
+  providers.json     # 143 provider configurations (+ 4 complex provider entries)
 ```
 
 ## Public surface

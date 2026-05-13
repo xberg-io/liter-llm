@@ -96,15 +96,12 @@ features = [
   "navigation.tabs.sticky",
   "navigation.tracking",
   "navigation.top",
-  "navigation.footer",
   "search.highlight",
   "search.share",
   "search.suggest",
   "toc.follow",
   "toc.integrate",
   "announce.dismiss",
-  "content.action.edit",
-  "content.action.view",
 ]
 
 [project.theme.font]
@@ -185,14 +182,6 @@ custom_checkbox = true
 # Plugins
 
 [project.plugins.search]
-
-[project.plugins.social]
-cards = false
-
-[project.plugins.tags]
-
-[project.plugins.minify]
-minify_html = true
 
 # Extra
 

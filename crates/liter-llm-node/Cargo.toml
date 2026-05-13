@@ -1,28 +1,26 @@
 [package]
 name = "liter-llm-node"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
-authors.workspace = true
-description = "Node.js native bindings for liter-llm — universal LLM API client with 142+ providers. Rust-powered."
-keywords = ["nodejs", "napi", "llm", "api-client", "bindings"]
-categories = ["api-bindings"]
+version = "1.4.0-rc.27"
+edition = "2024"
+license = "MIT"
+description = "Universal LLM API client with Rust-powered polyglot bindings."
+readme = false
+keywords = ["llm", "api-client", "openai", "anthropic"]
+categories = ["text-processing"]
+
+[package.metadata.cargo-machete]
+ignored = ["serde"]
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
-futures-util = { workspace = true }
-liter-llm = { path = "../liter-llm", version = "1.4.0-rc.1", features = ["full"] }
-napi = { workspace = true }
-napi-derive = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
+futures-util = "0.3"
+liter-llm = { path = "../liter-llm", features = ["native-http", "full"] }
+napi = { version = "3", features = ["async", "serde-json"] }
+napi-derive = "3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 
 [build-dependencies]
-napi-build = { workspace = true }
-
-[lints]
-workspace = true
+napi-build = "2"

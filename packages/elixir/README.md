@@ -131,16 +131,16 @@ mix deps.get
 Send a message to any provider using the `provider/model` prefix:
 
 ```elixir
-{:ok, response} =
-  LiterLlm.chat(
-    %{
-      model: "openai/gpt-4o",
-      messages: [%{role: "user", content: "Hello!"}]
-    },
-    api_key: System.fetch_env!("OPENAI_API_KEY")
-  )
+{:ok, client} = LiterLlm.create_client(System.get_env("OPENAI_API_KEY"))
 
-IO.puts(hd(response["choices"])["message"]["content"])
+request =
+  Jason.encode!(%{
+    model: "openai/gpt-4o-mini",
+    messages: [%{role: "user", content: "Hello!"}]
+  })
+
+{:ok, result} = LiterLlm.defaultclient_chat_async(client, request)
+IO.puts(Enum.at(result.choices, 0).message.content)
 ```
 
 ### Common Use Cases
@@ -151,13 +151,23 @@ IO.puts(hd(response["choices"])["message"]["content"])
 Stream tokens in real time:
 
 ```elixir
-{:ok, chunks} =
-  LiterLlm.Client.chat_stream(client, %{
+{:ok, client} = LiterLlm.create_client(System.get_env("OPENAI_API_KEY"))
+
+request =
+  Jason.encode!(%{
     model: "openai/gpt-4o-mini",
-    messages: [%{role: "user", content: "Hello"}]
+    messages: [%{role: "user", content: "Count from 1 to 5."}],
+    stream: true
   })
 
-for chunk <- chunks, do: IO.inspect(chunk)
+{:ok, stream} = LiterLlm.defaultclient_chat_stream(client, request)
+
+Enum.each(stream, fn chunk ->
+  content = get_in(chunk, [:choices, Access.at(0), :delta, :content])
+  if content, do: IO.write(content)
+end)
+
+IO.puts("")
 ```
 
 
@@ -243,7 +253,14 @@ See the [proxy server documentation](https://docs.liter-llm.kreuzberg.dev/server
 - **[GitHub Repository](https://github.com/kreuzberg-dev/liter-llm)** -- Source, issues, and discussions
 - **[Provider Registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)** -- 143 supported providers
 
-Part of [kreuzberg.dev](https://kreuzberg.dev).
+## Part of Kreuzberg, Inc.
+
+- [Kreuzberg](https://docs.kreuzberg.dev) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Kreuzberg Cloud](https://docs.kreuzberg.cloud) — managed extraction API with SDKs, dashboards, and observability.
+- [kreuzcrawl](https://docs.kreuzcrawl.kreuzberg.dev) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
+- [html-to-markdown](https://docs.html-to-markdown.kreuzberg.dev) — fast, lossless HTML→Markdown engine.
+- [tree-sitter-language-pack](https://docs.tree-sitter-language-pack.kreuzberg.dev) — tree-sitter grammars and code-intelligence primitives.
+- [Discord](https://discord.gg/xt9WY3GnKR) — community, roadmap, announcements.
 
 ## Contributing
 

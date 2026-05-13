@@ -123,15 +123,19 @@ Send a message to any provider using the `provider/model` prefix:
 ```python
 import asyncio
 import os
-from liter_llm import LlmClient
+
+from liter_llm import create_client
+from liter_llm._internal_bindings import ChatCompletionRequest
+
 
 async def main() -> None:
-    client = LlmClient(api_key=os.environ["OPENAI_API_KEY"])
-    response = await client.chat(
-        model="openai/gpt-4o",
-        messages=[{"role": "user", "content": "Hello!"}],
+    client = create_client(api_key=os.environ["OPENAI_API_KEY"])
+    request = ChatCompletionRequest.from_json(
+        '{"model":"openai/gpt-4o","messages":[{"role":"user","content":"Hello!"}]}'
     )
+    response = await client.chat(request)
     print(response.choices[0].message.content)
+
 
 asyncio.run(main())
 ```
@@ -146,17 +150,21 @@ Stream tokens in real time:
 ```python
 import asyncio
 import os
-from liter_llm import LlmClient
+
+from liter_llm import create_client
+from liter_llm._internal_bindings import ChatCompletionRequest
+
 
 async def main() -> None:
-    client = LlmClient(api_key=os.environ["OPENAI_API_KEY"])
-    async for chunk in await client.chat_stream(
-        model="openai/gpt-4o",
-        messages=[{"role": "user", "content": "Tell me a story"}],
-    ):
+    client = create_client(api_key=os.environ["OPENAI_API_KEY"])
+    request = ChatCompletionRequest.from_json(
+        '{"model":"openai/gpt-4o","messages":[{"role":"user","content":"Tell me a story"}],"stream":true}'
+    )
+    async for chunk in client.chat_stream(request):
         if chunk.choices and chunk.choices[0].delta.content:
             print(chunk.choices[0].delta.content, end="", flush=True)
     print()
+
 
 asyncio.run(main())
 ```
@@ -168,13 +176,16 @@ Define and invoke tools:
 
 ```python
 import asyncio
+import json
 import os
-from liter_llm import LlmClient
 
-async def main() -> None:
-    client = LlmClient(api_key=os.environ["OPENAI_API_KEY"])
+from liter_llm import create_client
+from liter_llm._internal_bindings import ChatCompletionRequest
 
-    tools = [
+REQUEST = {
+    "model": "openai/gpt-4o",
+    "messages": [{"role": "user", "content": "What is the weather in Berlin?"}],
+    "tools": [
         {
             "type": "function",
             "function": {
@@ -182,25 +193,23 @@ async def main() -> None:
                 "description": "Get the current weather for a location",
                 "parameters": {
                     "type": "object",
-                    "properties": {
-                        "location": {"type": "string", "description": "City name"},
-                    },
+                    "properties": {"location": {"type": "string"}},
                     "required": ["location"],
                 },
             },
         }
-    ]
+    ],
+    "tool_choice": "auto",
+}
 
-    response = await client.chat(
-        model="openai/gpt-4o",
-        messages=[{"role": "user", "content": "What is the weather in Berlin?"}],
-        tools=tools,
-    )
 
-    choice = response.choices[0]
-    if choice.message.tool_calls:
-        for call in choice.message.tool_calls:
-            print(f"Tool: {call.function.name}, Args: {call.function.arguments}")
+async def main() -> None:
+    client = create_client(api_key=os.environ["OPENAI_API_KEY"])
+    request = ChatCompletionRequest.from_json(json.dumps(REQUEST))
+    response = await client.chat(request)
+    for call in response.choices[0].message.tool_calls or []:
+        print(f"Tool: {call.function.name}, Args: {call.function.arguments}")
+
 
 asyncio.run(main())
 ```
@@ -288,7 +297,14 @@ See the [proxy server documentation](https://docs.liter-llm.kreuzberg.dev/server
 - **[GitHub Repository](https://github.com/kreuzberg-dev/liter-llm)** -- Source, issues, and discussions
 - **[Provider Registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)** -- 143 supported providers
 
-Part of [kreuzberg.dev](https://kreuzberg.dev).
+## Part of Kreuzberg, Inc.
+
+- [Kreuzberg](https://docs.kreuzberg.dev) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Kreuzberg Cloud](https://docs.kreuzberg.cloud) — managed extraction API with SDKs, dashboards, and observability.
+- [kreuzcrawl](https://docs.kreuzcrawl.kreuzberg.dev) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
+- [html-to-markdown](https://docs.html-to-markdown.kreuzberg.dev) — fast, lossless HTML→Markdown engine.
+- [tree-sitter-language-pack](https://docs.tree-sitter-language-pack.kreuzberg.dev) — tree-sitter grammars and code-intelligence primitives.
+- [Discord](https://discord.gg/xt9WY3GnKR) — community, roadmap, announcements.
 
 ## Contributing
 

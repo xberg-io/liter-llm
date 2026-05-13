@@ -1,10 +1,10 @@
 ---
-description: "Complete list of the 142 supported LLM providers"
+description: "Complete list of the 143 supported LLM providers"
 ---
 
 # Supported Providers
 
-liter-llm supports **142 providers** out of the box. Route requests to any provider using the `provider/model` prefix convention — for example, `openai/gpt-4o` routes to OpenAI and `anthropic/claude-3-opus` routes to Anthropic. No extra configuration is needed beyond setting the provider's API key.
+liter-llm supports **143 providers** out of the box. Route requests to any provider using the `provider/model` prefix convention — for example, `openai/gpt-4o` routes to OpenAI and `anthropic/claude-3-opus` routes to Anthropic. No extra configuration is needed beyond setting the provider's API key.
 
 | Provider                       | Prefix                       |        Chat        |     Embeddings     |       Image        |       Audio        |     Moderation     |
 | ------------------------------ | ---------------------------- | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: |
@@ -152,7 +152,7 @@ liter-llm supports **142 providers** out of the box. Route requests to any provi
 | Xinference                     | `xinference/`                |         --         | :white_check_mark: |         --         |         --         |         --         |
 | Z.AI                           | `zai/`                       | :white_check_mark: |         --         |         --         |         --         |         --         |
 
-_142 providers total._
+_143 providers total._
 
 ## Usage
 

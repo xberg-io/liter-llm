@@ -35,17 +35,24 @@ java {
   targetCompatibility = JavaVersion.VERSION_25
 }
 
-// liter-llm emits alef-generated sources at the package root (not the Maven
-// `src/main/java` layout) — see `[crates.output]` in `../../alef.toml`. The
-// Java facade lives directly under `../java/` and the Kotlin coroutine wrapper
-// + facade object live directly under this directory. Surface both roots to
-// gradle so the Kotlin module compiles against the same on-disk sources.
+// Include the alef-emitted Java facade (sibling package) so the Kotlin object
+// can call into the JNA-loaded native bridge. The Kotlin backend places its
+// generated files in a sub-package (`<group>.kt`) to avoid colliding with the
+// Java facade that uses the canonical `<group>` package.
 sourceSets {
   main {
     java {
+      // Pull in the Java facade emitted by the alef Java backend so the
+      // Kotlin module compiles against the same on-disk sources. The alef
+      // Java backend writes to `packages/java/` (package-root layout), not
+      // the Maven `src/main/java/` convention.
       srcDir("../java")
     }
     kotlin {
+      // The alef Kotlin backend emits LiterLlm.kt and DefaultClient.kt at the
+      // project root (`packages/kotlin/`) rather than the Maven
+      // `src/main/kotlin/` convention. Pull them in explicitly so they end up
+      // in the compiled jar alongside any standard-layout sources.
       srcDir(".")
     }
   }
@@ -71,6 +78,14 @@ ktlint {
     exclude("**/build/**")
     exclude("**/generated/**")
   }
+}
+
+// Gradle 9.x flags an output-overlap validation error between
+// :ktlintKotlinScriptCheck / :ktlintMainSourceSetCheck and :compileKotlin.
+// Declare the explicit dependency so Gradle accepts the task graph.
+tasks.matching { it.name == "compileKotlin" }.configureEach {
+  mustRunAfter("ktlintKotlinScriptCheck")
+  mustRunAfter("ktlintMainSourceSetCheck")
 }
 
 // JNA needs the native lib on java.library.path; default to the workspace

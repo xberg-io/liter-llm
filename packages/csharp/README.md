@@ -129,13 +129,15 @@ Send a message to any provider using the `provider/model` prefix:
 ```csharp
 using LiterLlm;
 
-await using var client = new LlmClient(
-    apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!);
+using var client = LiterLlmLib.CreateClient(
+    apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!,
+    baseUrl: null, timeoutSecs: null, maxRetries: null, modelHint: null);
 
-var response = await client.ChatAsync(new ChatCompletionRequest(
-    Model: "openai/gpt-4o",
-    Messages: [new UserMessage("Hello!")]
-));
+var response = await client.Chat(new ChatCompletionRequest
+{
+    Model = "openai/gpt-4o",
+    Messages = [new Message.User(new UserMessage { Content = UserContent.Of("Hello!") })]
+});
 Console.WriteLine(response.Choices[0].Message.Content);
 ```
 
@@ -149,18 +151,22 @@ Stream tokens in real time:
 ```csharp
 using LiterLlm;
 
-await using var client = new LlmClient(
-    apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!);
+using var client = LiterLlmLib.CreateClient(
+    apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!,
+    baseUrl: null, timeoutSecs: null, maxRetries: null, modelHint: null);
 
-var request = new ChatCompletionRequest(
-    Model: "openai/gpt-4o-mini",
-    Messages: [new UserMessage("Hello")]
-);
-
-await foreach (var chunk in client.ChatStreamAsync(request))
+var request = new ChatCompletionRequest
 {
-    Console.WriteLine(chunk);
+    Model = "openai/gpt-4o-mini",
+    Messages = [new Message.User(new UserMessage { Content = UserContent.Of("Hello") })]
+};
+
+await foreach (var chunk in client.ChatStream(request))
+{
+    var delta = chunk.Choices.Count > 0 ? chunk.Choices[0].Delta.Content : null;
+    if (delta is not null) Console.Write(delta);
 }
+Console.WriteLine();
 ```
 
 
@@ -246,7 +252,14 @@ See the [proxy server documentation](https://docs.liter-llm.kreuzberg.dev/server
 - **[GitHub Repository](https://github.com/kreuzberg-dev/liter-llm)** -- Source, issues, and discussions
 - **[Provider Registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)** -- 143 supported providers
 
-Part of [kreuzberg.dev](https://kreuzberg.dev).
+## Part of Kreuzberg, Inc.
+
+- [Kreuzberg](https://docs.kreuzberg.dev) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Kreuzberg Cloud](https://docs.kreuzberg.cloud) — managed extraction API with SDKs, dashboards, and observability.
+- [kreuzcrawl](https://docs.kreuzcrawl.kreuzberg.dev) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
+- [html-to-markdown](https://docs.html-to-markdown.kreuzberg.dev) — fast, lossless HTML→Markdown engine.
+- [tree-sitter-language-pack](https://docs.tree-sitter-language-pack.kreuzberg.dev) — tree-sitter grammars and code-intelligence primitives.
+- [Discord](https://discord.gg/xt9WY3GnKR) — community, roadmap, announcements.
 
 ## Contributing
 

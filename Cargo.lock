@@ -2486,6 +2486,7 @@ dependencies = [
  "futures-util",
  "liter-llm",
  "serde_json",
+ "tempfile",
  "tokio",
 ]
 
@@ -2560,6 +2561,7 @@ name = "liter-llm-swift"
 version = "1.4.0-rc.27"
 dependencies = [
  "async-trait",
+ "futures-util",
  "liter-llm",
  "serde",
  "serde_json",
@@ -3239,7 +3241,6 @@ version = "0.28.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "91fd8e38a3b50ed1167fb981cd6fd60147e091784c427b8f7183a7ee32c31c12"
 dependencies = [
- "inventory",
  "libc",
  "once_cell",
  "portable-atomic",

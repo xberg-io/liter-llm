@@ -269,7 +269,7 @@ dev = [
     { name = "typing-extensions" },
     { name = "uv-bump" },
 ]
-doc = [
+docs = [
     { name = "zensical" },
 ]
 
@@ -288,7 +288,7 @@ dev = [
     { name = "typing-extensions", specifier = ">=4" },
     { name = "uv-bump", git = "https://github.com/Goldziher/uv-bump" },
 ]
-doc = [{ name = "zensical" }]
+docs = [{ name = "zensical" }]
 
 [[package]]
 name = "markdown"

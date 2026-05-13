@@ -1,56 +1,26 @@
 {
   "name": "@kreuzberg/liter-llm-node",
   "version": "1.4.0-rc.27",
-  "description": "Native NAPI-RS bindings for liter-llm — high-performance LLM client powered by Rust",
-  "keywords": [
-    "anthropic",
-    "llm",
-    "llm-client",
-    "napi",
-    "native",
-    "openai",
-    "rust",
-    "streaming",
-    "tool-calling"
-  ],
-  "homepage": "https://github.com/kreuzberg-dev/liter-llm",
-  "bugs": {
-    "url": "https://github.com/kreuzberg-dev/liter-llm/issues"
-  },
+  "description": "Universal LLM API client with Rust-powered polyglot bindings.",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/kreuzberg-dev/liter-llm.git"
-  },
-  "files": [
-    "index.js",
-    "index.d.ts",
-    "*.node"
-  ],
   "main": "index.js",
   "types": "index.d.ts",
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
-  },
-  "scripts": {
-    "artifacts": "napi artifacts",
-    "build": "napi build --platform --release",
-    "prepublishOnly": "napi prepublish -t npm --skip-optional-publish"
-  },
-  "devDependencies": {
-    "@napi-rs/cli": "^3.6.2"
-  },
+  "files": ["index.js", "index.d.ts", "*.node"],
   "napi": {
     "binaryName": "liter-llm-node",
     "targets": [
-      "aarch64-apple-darwin",
       "x86_64-unknown-linux-gnu",
       "aarch64-unknown-linux-gnu",
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin",
       "x86_64-pc-windows-msvc"
     ]
   },
-  "engines": {
-    "node": ">= 22"
-  }
+  "scripts": {
+    "build": "napi build --platform --release",
+    "artifacts": "napi artifacts",
+    "prepublishOnly": "napi prepublish -t npm --skip-optional-publish"
+  },
+  "engines": { "node": ">= 18" },
+  "devDependencies": { "@napi-rs/cli": "^3.6.2" }
 }

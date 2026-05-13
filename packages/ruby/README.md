@@ -133,17 +133,18 @@ Send a message to any provider using the `provider/model` prefix:
 ```ruby
 # frozen_string_literal: true
 
-require "liter_llm"
-require "json"
+require 'liter_llm'
 
-client = LiterLlm::LlmClient.new(ENV.fetch("OPENAI_API_KEY"), {})
+client = LiterLlm.create_client(ENV.fetch('OPENAI_API_KEY'))
 
-response = JSON.parse(client.chat(JSON.generate(
-  model: "openai/gpt-4o",
-  messages: [{ role: "user", content: "Hello!" }]
-)))
+result = client.chat_async(
+  LiterLlm::ChatCompletionRequest.new(
+    model: 'openai/gpt-4o-mini',
+    messages: [{ 'role' => 'user', 'content' => 'Hello!' }]
+  )
+)
 
-puts response.dig("choices", 0, "message", "content")
+puts result.choices[0].message.content
 ```
 
 ### Common Use Cases
@@ -156,17 +157,21 @@ Stream tokens in real time:
 ```ruby
 # frozen_string_literal: true
 
-require "liter_llm"
-require "json"
+require 'liter_llm'
 
-client = LiterLlm::LlmClient.new(ENV.fetch("OPENAI_API_KEY"), {})
+client = LiterLlm.create_client(ENV.fetch('OPENAI_API_KEY'))
 
-chunks = JSON.parse(client.chat_stream(JSON.generate(
-  model: "openai/gpt-4o-mini",
-  messages: [{ role: "user", content: "Hello" }]
-)))
-
-chunks.each { |chunk| puts chunk }
+client.chat_stream(
+  LiterLlm::ChatCompletionRequest.new(
+    model: 'openai/gpt-4o-mini',
+    messages: [{ 'role' => 'user', 'content' => 'Count from 1 to 5.' }],
+    stream: true
+  )
+) do |chunk|
+  delta = chunk.choices && chunk.choices[0] && chunk.choices[0].delta
+  print delta.content if delta && delta.content
+end
+puts
 ```
 
 
@@ -252,7 +257,14 @@ See the [proxy server documentation](https://docs.liter-llm.kreuzberg.dev/server
 - **[GitHub Repository](https://github.com/kreuzberg-dev/liter-llm)** -- Source, issues, and discussions
 - **[Provider Registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)** -- 143 supported providers
 
-Part of [kreuzberg.dev](https://kreuzberg.dev).
+## Part of Kreuzberg, Inc.
+
+- [Kreuzberg](https://docs.kreuzberg.dev) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Kreuzberg Cloud](https://docs.kreuzberg.cloud) — managed extraction API with SDKs, dashboards, and observability.
+- [kreuzcrawl](https://docs.kreuzcrawl.kreuzberg.dev) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
+- [html-to-markdown](https://docs.html-to-markdown.kreuzberg.dev) — fast, lossless HTML→Markdown engine.
+- [tree-sitter-language-pack](https://docs.tree-sitter-language-pack.kreuzberg.dev) — tree-sitter grammars and code-intelligence primitives.
+- [Discord](https://discord.gg/xt9WY3GnKR) — community, roadmap, announcements.
 
 ## Contributing
 

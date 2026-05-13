@@ -2021,3 +2021,52 @@ body:has(.full-width-iframe) article {
   display: block;
   border-radius: 12px;
 }
+
+/* Homepage bottom cloud banner */
+.cloud-banner {
+  margin: 2.5rem -0.8rem 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.cloud-banner p {
+  margin: 0;
+}
+
+.cloud-banner a {
+  display: block;
+  line-height: 0;
+  text-decoration: none;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.cloud-banner a:focus-visible {
+  outline: 2px solid var(--md-accent-fg-color);
+  outline-offset: 3px;
+}
+
+.cloud-banner img {
+  width: 100%;
+  display: block;
+  border-radius: 12px;
+}
+
+/*
+ * Light mode: Material sets link color via --md-typeset-a-color from the palette after :root
+ * custom props, so prose links can stay on the theme default unless we reassert here.
+ */
+[data-md-color-scheme="default"] {
+  --md-typeset-a-color: #4c24ab !important;
+  --md-accent-fg-color: #4c24ab !important;
+}
+
+[data-md-color-scheme="default"] .md-typeset a,
+[data-md-color-scheme="default"] .md-content a,
+[data-md-color-scheme="default"] .md-typeset .md-content a {
+  color: #4c24ab !important;
+}
+
+[data-md-color-scheme="default"] .md-typeset a code {
+  color: #4c24ab !important;
+}

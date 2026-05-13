@@ -138,16 +138,17 @@ yarn add @kreuzberg/liter-llm-wasm
 Send a message to any provider using the `provider/model` prefix:
 
 ```typescript
-import init, { LlmClient } from "@kreuzberg/liter-llm-wasm";
+import init, { createClient, WasmChatCompletionRequest } from "@kreuzberg/liter-llm-wasm";
 
 await init();
 
-const client = new LlmClient({ apiKey: "sk-..." });
-const response = await client.chat({
-  model: "openai/gpt-4o",
-  messages: [{ role: "user", content: "Hello!" }],
-});
+const client = createClient(process.env.OPENAI_API_KEY!);
 
+const request = WasmChatCompletionRequest.default();
+request.model = "openai/gpt-4o";
+request.messages = [{ role: "user", content: "Hello!" }];
+
+const response = await client.chat(request);
 console.log(response.choices[0].message.content);
 ```
 
@@ -159,16 +160,23 @@ console.log(response.choices[0].message.content);
 Stream tokens in real time:
 
 ```typescript
-import init, { LlmClient } from "@kreuzberg/liter-llm-wasm";
+import init, { createClient, WasmChatCompletionRequest } from "@kreuzberg/liter-llm-wasm";
 
 await init();
 
-const client = new LlmClient({ apiKey: "sk-..." });
-const stream = await client.chatStream({
-  model: "openai/gpt-4o-mini",
-  messages: [{ role: "user", content: "Hello" }],
-});
-// stream is a ReadableStream
+const client = createClient(process.env.OPENAI_API_KEY!);
+
+const request = WasmChatCompletionRequest.default();
+request.model = "openai/gpt-4o";
+request.messages = [{ role: "user", content: "Tell me a story" }];
+request.stream = true;
+
+// chatStream resolves to an array of chunks materialised by the WASM binding.
+const chunks = await client.chatStream(request);
+for (const chunk of chunks) {
+  process.stdout.write(chunk.choices?.[0]?.delta?.content ?? "");
+}
+console.log();
 ```
 
 
@@ -254,7 +262,14 @@ See the [proxy server documentation](https://docs.liter-llm.kreuzberg.dev/server
 - **[GitHub Repository](https://github.com/kreuzberg-dev/liter-llm)** -- Source, issues, and discussions
 - **[Provider Registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)** -- 143 supported providers
 
-Part of [kreuzberg.dev](https://kreuzberg.dev).
+## Part of Kreuzberg, Inc.
+
+- [Kreuzberg](https://docs.kreuzberg.dev) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Kreuzberg Cloud](https://docs.kreuzberg.cloud) — managed extraction API with SDKs, dashboards, and observability.
+- [kreuzcrawl](https://docs.kreuzcrawl.kreuzberg.dev) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
+- [html-to-markdown](https://docs.html-to-markdown.kreuzberg.dev) — fast, lossless HTML→Markdown engine.
+- [tree-sitter-language-pack](https://docs.tree-sitter-language-pack.kreuzberg.dev) — tree-sitter grammars and code-intelligence primitives.
+- [Discord](https://discord.gg/xt9WY3GnKR) — community, roadmap, announcements.
 
 ## Contributing
 

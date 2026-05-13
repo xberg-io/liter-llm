@@ -125,18 +125,18 @@ Send a message to any provider using the `provider/model` prefix:
 
 declare(strict_types=1);
 
-use LiterLlm\LlmClient;
+use Liter\Llm\LiterLlm;
+use Liter\Llm\ChatCompletionRequest;
 
-$client = new LlmClient(apiKey: getenv('OPENAI_API_KEY') ?: '');
+$client = LiterLlm::createClient(getenv('OPENAI_API_KEY') ?: '');
 
-$response = json_decode($client->chat(json_encode([
-    'model' => 'openai/gpt-4o',
-    'messages' => [
-        ['role' => 'user', 'content' => 'Hello!'],
-    ],
-])), true);
+$request = ChatCompletionRequest::from_json(json_encode([
+    'model' => 'openai/gpt-4o-mini',
+    'messages' => [['role' => 'user', 'content' => 'Hello!']],
+]));
 
-echo $response['choices'][0]['message']['content'] . PHP_EOL;
+$result = $client->chatAsync($request);
+echo $result->choices[0]->message->content . PHP_EOL;
 ```
 
 ### Common Use Cases
@@ -222,7 +222,14 @@ See the [proxy server documentation](https://docs.liter-llm.kreuzberg.dev/server
 - **[GitHub Repository](https://github.com/kreuzberg-dev/liter-llm)** -- Source, issues, and discussions
 - **[Provider Registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)** -- 143 supported providers
 
-Part of [kreuzberg.dev](https://kreuzberg.dev).
+## Part of Kreuzberg, Inc.
+
+- [Kreuzberg](https://docs.kreuzberg.dev) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Kreuzberg Cloud](https://docs.kreuzberg.cloud) — managed extraction API with SDKs, dashboards, and observability.
+- [kreuzcrawl](https://docs.kreuzcrawl.kreuzberg.dev) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
+- [html-to-markdown](https://docs.html-to-markdown.kreuzberg.dev) — fast, lossless HTML→Markdown engine.
+- [tree-sitter-language-pack](https://docs.tree-sitter-language-pack.kreuzberg.dev) — tree-sitter grammars and code-intelligence primitives.
+- [Discord](https://discord.gg/xt9WY3GnKR) — community, roadmap, announcements.
 
 ## Contributing
 

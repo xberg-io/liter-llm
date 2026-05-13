@@ -1,14 +1,12 @@
 [build-system]
+requires = ["maturin>=1.0,<2.0"]
 build-backend = "maturin"
-requires = [ "maturin>=1,<2" ]
 
 [project]
 name = "liter-llm"
 version = "1.4.0rc27"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
-keywords = [ "anthropic", "api-client", "llm", "openai" ]
 license = "MIT"
-authors = [ { name = "Na'aman Hirschfeld" } ]
 requires-python = ">=3.10"
 classifiers = [
   "Programming Language :: Python :: 3 :: Only",
@@ -18,54 +16,54 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
 ]
-urls.repository = "https://github.com/kreuzberg-dev/liter-llm"
-
-[dependency-groups]
-dev = [ "mypy>=2", "ruff>=0.14.8" ]
+authors = [
+    { name = "Na'aman Hirschfeld" }
+]
+keywords = ["llm", "api-client", "openai", "anthropic"]
+[project.urls]
+repository = "https://github.com/kreuzberg-dev/liter-llm"
 
 [tool.maturin]
 module-name = "liter_llm._internal_bindings"
 manifest-path = "../../crates/liter-llm-py/Cargo.toml"
-features = [ "pyo3/extension-module" ]
-python-packages = [ "liter_llm" ]
+# abi3-py310 produces a single wheel per platform that loads on Python 3.10+,
+# avoiding a per-Python-version build matrix.
+features = ["pyo3/extension-module", "pyo3/abi3-py310"]
+python-packages = ["liter_llm"]
+
+[dependency-groups]
+dev = ["ruff>=0.14.8", "mypy>=1.19.0"]
 
 [tool.ruff]
 target-version = "py310"
 line-length = 120
-format.docstring-code-line-length = 120
-format.docstring-code-format = true
-lint.select = [ "ALL" ]
-lint.ignore = [
-  "ANN401",
-  "ASYNC109",
-  "ASYNC110",
-  "BLE001",
-  "COM812",
-  "D100",
-  "D104",
-  "D107",
-  "D205",
-  "E501",
-  "EM",
-  "FBT",
-  "FIX",
-  "ISC001",
-  "PD011",
-  "PGH003",
-  "PLR2004",
-  "PLW0603",
-  "S104",
-  "S110",
-  "S603",
-  "TD",
-  "TRY",
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "ANN401", "ASYNC109", "ASYNC110", "BLE001", "COM812",
+  "D100", "D104", "D107", "D205", "E501", "EM",
+  "FBT", "FIX", "ISC001", "PD011", "PGH003", "PLR2004",
+  "PLW0603", "S104", "S110", "S603", "TD", "TRY",
 ]
-lint.per-file-ignores."tests/**" = [ "ANN", "D103", "PLR2004", "S101" ]
-lint.mccabe.max-complexity = 15
-lint.pydocstyle.convention = "google"
-lint.pylint.max-args = 10
-lint.pylint.max-branches = 15
-lint.pylint.max-returns = 10
+
+[tool.ruff.lint.mccabe]
+max-complexity = 15
+
+[tool.ruff.lint.pylint]
+max-args = 10
+max-branches = 15
+max-returns = 10
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "D103", "ANN", "PLR2004"]
+
+[tool.ruff.format]
+docstring-code-line-length = 120
+docstring-code-format = true
 
 [tool.mypy]
 python_version = "3.10"

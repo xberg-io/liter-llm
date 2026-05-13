@@ -146,9 +146,9 @@ Pre-built binaries available for:
 Send a message to any provider using the `provider/model` prefix:
 
 ```typescript
-import { LlmClient } from "@kreuzberg/liter-llm";
+import { createClient } from "@kreuzberg/liter-llm-node";
 
-const client = new LlmClient({ apiKey: process.env.OPENAI_API_KEY! });
+const client = createClient(process.env.OPENAI_API_KEY!);
 const response = await client.chat({
   model: "openai/gpt-4o",
   messages: [{ role: "user", content: "Hello!" }],
@@ -164,16 +164,17 @@ console.log(response.choices[0].message.content);
 Stream tokens in real time:
 
 ```typescript
-import { LlmClient } from "@kreuzberg/liter-llm";
+import { createClient } from "@kreuzberg/liter-llm-node";
 
-const client = new LlmClient({ apiKey: process.env.OPENAI_API_KEY! });
+const client = createClient(process.env.OPENAI_API_KEY!);
 const chunks = await client.chatStream({
   model: "openai/gpt-4o",
   messages: [{ role: "user", content: "Tell me a story" }],
+  stream: true,
 });
 
 for (const chunk of chunks) {
-  process.stdout.write(chunk.choices[0]?.delta?.content ?? "");
+  process.stdout.write(chunk.choices?.[0]?.delta?.content ?? "");
 }
 console.log();
 ```
@@ -184,31 +185,28 @@ console.log();
 Define and invoke tools:
 
 ```typescript
-import { LlmClient } from "@kreuzberg/liter-llm";
+import { createClient } from "@kreuzberg/liter-llm-node";
 
-const client = new LlmClient({ apiKey: process.env.OPENAI_API_KEY! });
-
-const tools = [
-  {
-    type: "function" as const,
-    function: {
-      name: "get_weather",
-      description: "Get the current weather for a location",
-      parameters: {
-        type: "object",
-        properties: {
-          location: { type: "string", description: "City name" },
-        },
-        required: ["location"],
-      },
-    },
-  },
-];
+const client = createClient(process.env.OPENAI_API_KEY!);
 
 const response = await client.chat({
   model: "openai/gpt-4o",
   messages: [{ role: "user", content: "What is the weather in Berlin?" }],
-  tools,
+  toolChoice: "auto",
+  tools: [
+    {
+      type: "function",
+      function: {
+        name: "get_weather",
+        description: "Get the current weather for a location",
+        parameters: {
+          type: "object",
+          properties: { location: { type: "string" } },
+          required: ["location"],
+        },
+      },
+    },
+  ],
 });
 
 for (const call of response.choices[0]?.message?.toolCalls ?? []) {
@@ -323,7 +321,14 @@ See the [proxy server documentation](https://docs.liter-llm.kreuzberg.dev/server
 - **[GitHub Repository](https://github.com/kreuzberg-dev/liter-llm)** -- Source, issues, and discussions
 - **[Provider Registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)** -- 143 supported providers
 
-Part of [kreuzberg.dev](https://kreuzberg.dev).
+## Part of Kreuzberg, Inc.
+
+- [Kreuzberg](https://docs.kreuzberg.dev) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Kreuzberg Cloud](https://docs.kreuzberg.cloud) — managed extraction API with SDKs, dashboards, and observability.
+- [kreuzcrawl](https://docs.kreuzcrawl.kreuzberg.dev) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
+- [html-to-markdown](https://docs.html-to-markdown.kreuzberg.dev) — fast, lossless HTML→Markdown engine.
+- [tree-sitter-language-pack](https://docs.tree-sitter-language-pack.kreuzberg.dev) — tree-sitter grammars and code-intelligence primitives.
+- [Discord](https://discord.gg/xt9WY3GnKR) — community, roadmap, announcements.
 
 ## Contributing
 

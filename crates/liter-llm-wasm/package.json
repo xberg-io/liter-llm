@@ -1,40 +1,35 @@
 {
-  "name": "@kreuzberg/liter-llm-wasm",
+  "name": "@kreuzberg/liter-llm-node-wasm",
   "version": "1.4.0-rc.27",
-  "description": "WebAssembly bindings for liter-llm — high-performance LLM client powered by Rust",
-  "keywords": [
-    "api-client",
-    "llm",
-    "rust",
-    "wasm",
-    "webassembly"
-  ],
-  "homepage": "https://github.com/kreuzberg-dev/liter-llm",
-  "bugs": {
-    "url": "https://github.com/kreuzberg-dev/liter-llm/issues"
-  },
+  "private": false,
+  "description": "Universal LLM API client with Rust-powered polyglot bindings.",
   "license": "MIT",
-  "author": {
-    "name": "Na'aman Hirschfeld",
-    "email": "naaman@kreuzberg.dev",
-    "url": "https://github.com/kreuzberg-dev/liter-llm"
-  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/kreuzberg-dev/liter-llm.git"
+    "url": "https://github.com/kreuzberg-dev/liter-llm",
+    "directory": "crates/liter-llm-wasm"
   },
-  "files": [
-    "pkg/"
-  ],
   "type": "module",
-  "main": "pkg/liter_llm_wasm.js",
-  "types": "pkg/liter_llm_wasm.d.ts",
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
-  },
+  "files": [
+    "pkg",
+    "*.wasm",
+    "*.d.ts",
+    "README.md"
+  ],
+  "main": "pkg/nodejs/liter-llm_wasm.js",
+  "module": "pkg/web/liter-llm_wasm.js",
+  "types": "pkg/nodejs/liter-llm_wasm.d.ts",
   "scripts": {
-    "build": "wasm-pack build --target web --release",
-    "build:nodejs": "wasm-pack build --target nodejs --release"
+    "build": "wasm-pack build --target nodejs --out-dir pkg/nodejs",
+    "build:ci": "wasm-pack build --release --target nodejs --out-dir pkg/nodejs",
+    "build:wasm:web": "wasm-pack build --release --target web --out-dir pkg/web",
+    "build:wasm:bundler": "wasm-pack build --release --target bundler --out-dir pkg/bundler",
+    "build:wasm:nodejs": "wasm-pack build --release --target nodejs --out-dir pkg/nodejs",
+    "build:wasm:deno": "wasm-pack build --release --target deno --out-dir pkg/deno",
+    "build:all": "npm run build:wasm:web && npm run build:wasm:bundler && npm run build:wasm:nodejs && npm run build:wasm:deno && find pkg -name .gitignore -delete",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rm -rf pkg dist"
   }
 }

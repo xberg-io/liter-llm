@@ -1,29 +1,33 @@
 [package]
 name = "liter-llm-ffi"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
-authors.workspace = true
-description = "C FFI bindings for liter-llm — universal LLM API client with 142+ providers. Rust-powered."
-keywords = ["ffi", "bindings", "llm", "api-client", "ai"]
-categories = ["development-tools::ffi", "api-bindings"]
+version = "1.4.0-rc.27"
+edition = "2021"
+license = "MIT"
+description = "Universal LLM API client with Rust-powered polyglot bindings."
+readme = false
+keywords = ["llm", "api-client", "openai", "anthropic"]
+categories = ["text-processing"]
+repository = "https://github.com/kreuzberg-dev/liter-llm"
+
+[package.metadata.cargo-machete]
+# tokio is pulled in for its runtime/macros at link time but the generated
+# FFI source never `use`s it directly — cargo-machete would otherwise flag it.
+ignored = ["tokio"]
 
 [lib]
-crate-type = ["cdylib", "staticlib", "rlib"]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+liter-llm = { path = "../liter-llm", features = ["native-http", "full"] }
+futures-util = "0.3"
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
 
 [features]
 default = []
 
-[dependencies]
-futures-util = { workspace = true }
-liter-llm = { path = "../liter-llm", version = "1.4.0-rc.1", features = ["full"] }
-serde_json.workspace = true
-tokio.workspace = true
-
 [build-dependencies]
 cbindgen = "0.29"
 
-[lints]
-workspace = true
+[dev-dependencies]
+tempfile = "3"

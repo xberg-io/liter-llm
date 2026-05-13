@@ -32,7 +32,8 @@
       "csharp",
       "elixir",
       "wasm",
-      "c"
+      "c",
+      "kotlin"
     ],
     "reason": "requires local Ollama service; skipped in standard CI environments"
   }

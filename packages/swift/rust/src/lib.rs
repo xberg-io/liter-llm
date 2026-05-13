@@ -28,7 +28,7 @@ mod ffi {
         type UserMessage;
         #[swift_bridge(init)]
         fn new(content: UserContent, name: Option<String>) -> UserMessage;
-        fn content(&self) -> UserContent;
+        fn content(&self) -> String;
         fn name(&self) -> Option<String>;
     }
 
@@ -37,7 +37,7 @@ mod ffi {
         #[swift_bridge(init)]
         fn new(url: String, detail: Option<ImageDetail>) -> ImageUrl;
         fn url(&self) -> String;
-        fn detail(&self) -> Option<ImageDetail>;
+        fn detail(&self) -> Option<String>;
     }
 
     extern "Rust" {
@@ -100,7 +100,7 @@ mod ffi {
 
     extern "Rust" {
         type ChatCompletionTool;
-        fn tool_type(&self) -> ToolType;
+        fn tool_type(&self) -> String;
         fn function(&self) -> FunctionDefinition;
     }
 
@@ -115,7 +115,7 @@ mod ffi {
     extern "Rust" {
         type ToolCall;
         fn id(&self) -> String;
-        fn call_type(&self) -> ToolType;
+        fn call_type(&self) -> String;
         fn function(&self) -> FunctionCall;
     }
 
@@ -129,7 +129,7 @@ mod ffi {
         type SpecificToolChoice;
         #[swift_bridge(init)]
         fn new(choice_type: ToolType, function: SpecificFunction) -> SpecificToolChoice;
-        fn choice_type(&self) -> ToolType;
+        fn choice_type(&self) -> String;
         fn function(&self) -> SpecificFunction;
     }
 
@@ -199,24 +199,24 @@ mod ffi {
             extra_body: Option<String>,
         ) -> ChatCompletionRequest;
         fn model(&self) -> String;
-        fn messages(&self) -> Vec<Message>;
+        fn messages(&self) -> Vec<String>;
         fn temperature(&self) -> Option<f64>;
         fn top_p(&self) -> Option<f64>;
         fn n(&self) -> Option<u32>;
         fn stream(&self) -> Option<bool>;
-        fn stop(&self) -> Option<StopSequence>;
+        fn stop(&self) -> Option<String>;
         fn max_tokens(&self) -> Option<u64>;
         fn presence_penalty(&self) -> Option<f64>;
         fn frequency_penalty(&self) -> Option<f64>;
         fn logit_bias(&self) -> String;
         fn user(&self) -> Option<String>;
         fn tools(&self) -> Option<Vec<ChatCompletionTool>>;
-        fn tool_choice(&self) -> Option<ToolChoice>;
+        fn tool_choice(&self) -> Option<String>;
         fn parallel_tool_calls(&self) -> Option<bool>;
-        fn response_format(&self) -> Option<ResponseFormat>;
+        fn response_format(&self) -> Option<String>;
         fn stream_options(&self) -> Option<StreamOptions>;
         fn seed(&self) -> Option<i64>;
-        fn reasoning_effort(&self) -> Option<ReasoningEffort>;
+        fn reasoning_effort(&self) -> Option<String>;
         fn extra_body(&self) -> Option<String>;
     }
 
@@ -256,7 +256,7 @@ mod ffi {
         fn new(index: u32, message: AssistantMessage, finish_reason: Option<FinishReason>) -> Choice;
         fn index(&self) -> u32;
         fn message(&self) -> AssistantMessage;
-        fn finish_reason(&self) -> Option<FinishReason>;
+        fn finish_reason(&self) -> Option<String>;
     }
 
     extern "Rust" {
@@ -288,7 +288,7 @@ mod ffi {
         fn new(index: u32, delta: StreamDelta, finish_reason: Option<FinishReason>) -> StreamChoice;
         fn index(&self) -> u32;
         fn delta(&self) -> StreamDelta;
-        fn finish_reason(&self) -> Option<FinishReason>;
+        fn finish_reason(&self) -> Option<String>;
     }
 
     extern "Rust" {
@@ -319,7 +319,7 @@ mod ffi {
         ) -> StreamToolCall;
         fn index(&self) -> u32;
         fn id(&self) -> Option<String>;
-        fn call_type(&self) -> Option<ToolType>;
+        fn call_type(&self) -> Option<String>;
         fn function(&self) -> Option<StreamFunctionCall>;
     }
 
@@ -342,8 +342,8 @@ mod ffi {
             user: Option<String>,
         ) -> EmbeddingRequest;
         fn model(&self) -> String;
-        fn input(&self) -> EmbeddingInput;
-        fn encoding_format(&self) -> Option<EmbeddingFormat>;
+        fn input(&self) -> String;
+        fn encoding_format(&self) -> Option<String>;
         fn dimensions(&self) -> Option<u32>;
         fn user(&self) -> Option<String>;
     }
@@ -468,7 +468,7 @@ mod ffi {
         type ModerationRequest;
         #[swift_bridge(init)]
         fn new(input: ModerationInput, model: Option<String>) -> ModerationRequest;
-        fn input(&self) -> ModerationInput;
+        fn input(&self) -> String;
         fn model(&self) -> Option<String>;
     }
 
@@ -556,7 +556,7 @@ mod ffi {
         ) -> RerankRequest;
         fn model(&self) -> String;
         fn query(&self) -> String;
-        fn documents(&self) -> Vec<RerankDocument>;
+        fn documents(&self) -> Vec<String>;
         fn top_n(&self) -> Option<u32>;
         fn return_documents(&self) -> Option<bool>;
     }
@@ -621,7 +621,7 @@ mod ffi {
             include_image_base64: Option<bool>,
         ) -> OcrRequest;
         fn model(&self) -> String;
-        fn document(&self) -> OcrDocument;
+        fn document(&self) -> String;
         fn pages(&self) -> Option<Vec<u32>>;
         fn include_image_base64(&self) -> Option<bool>;
     }
@@ -676,7 +676,7 @@ mod ffi {
         #[swift_bridge(init)]
         fn new(file: String, purpose: FilePurpose, filename: Option<String>) -> CreateFileRequest;
         fn file(&self) -> String;
-        fn purpose(&self) -> FilePurpose;
+        fn purpose(&self) -> String;
         fn filename(&self) -> Option<String>;
     }
 
@@ -767,7 +767,7 @@ mod ffi {
         fn endpoint(&self) -> String;
         fn input_file_id(&self) -> String;
         fn completion_window(&self) -> String;
-        fn status(&self) -> BatchStatus;
+        fn status(&self) -> String;
         fn output_file_id(&self) -> Option<String>;
         fn error_file_id(&self) -> Option<String>;
         fn created_at(&self) -> u64;
@@ -962,7 +962,7 @@ mod ffi {
         type CustomProviderConfig;
         fn name(&self) -> String;
         fn base_url(&self) -> String;
-        fn auth_header(&self) -> AuthHeaderFormat;
+        fn auth_header(&self) -> String;
         fn model_prefixes(&self) -> Vec<String>;
     }
 
@@ -1079,6 +1079,11 @@ mod ffi {
     }
 
     extern "Rust" {
+        #[swift_bridge(swift_name = "defaultClientChatStream")]
+        fn default_client_chat_stream(client: &DefaultClient, req: ChatCompletionRequest) -> Result<(), String>;
+    }
+
+    extern "Rust" {
 
         #[swift_bridge(swift_name = "chatCompletionRequestFromJson")]
         fn chat_completion_request_from_json(json: String) -> Result<ChatCompletionRequest, String>;
@@ -1153,8 +1158,8 @@ impl UserMessage {
         }
         UserMessage(__target)
     }
-    pub fn content(&self) -> UserContent {
-        UserContent::from(self.0.content.clone())
+    pub fn content(&self) -> String {
+        UserContent::from(self.0.content.clone()).to_string()
     }
     pub fn name(&self) -> Option<String> {
         self.0.name.clone()
@@ -1176,8 +1181,8 @@ impl ImageUrl {
     pub fn url(&self) -> String {
         self.0.url.clone()
     }
-    pub fn detail(&self) -> Option<ImageDetail> {
-        self.0.detail.clone().map(ImageDetail::from)
+    pub fn detail(&self) -> Option<String> {
+        self.0.detail.clone().map(|w| ImageDetail::from(w).to_string())
     }
 }
 
@@ -1374,8 +1379,8 @@ impl FunctionMessage {
 
 pub struct ChatCompletionTool(pub liter_llm::types::ChatCompletionTool);
 impl ChatCompletionTool {
-    pub fn tool_type(&self) -> ToolType {
-        ToolType::from(self.0.tool_type.clone())
+    pub fn tool_type(&self) -> String {
+        ToolType::from(self.0.tool_type.clone()).to_string()
     }
     pub fn function(&self) -> FunctionDefinition {
         FunctionDefinition(self.0.function.clone())
@@ -1407,8 +1412,8 @@ impl ToolCall {
     pub fn id(&self) -> String {
         self.0.id.clone()
     }
-    pub fn call_type(&self) -> ToolType {
-        ToolType::from(self.0.call_type.clone())
+    pub fn call_type(&self) -> String {
+        ToolType::from(self.0.call_type.clone()).to_string()
     }
     pub fn function(&self) -> FunctionCall {
         FunctionCall(self.0.function.clone())
@@ -1433,8 +1438,8 @@ impl SpecificToolChoice {
         __target.function = function.0;
         SpecificToolChoice(__target)
     }
-    pub fn choice_type(&self) -> ToolType {
-        ToolType::from(self.0.choice_type.clone())
+    pub fn choice_type(&self) -> String {
+        ToolType::from(self.0.choice_type.clone()).to_string()
     }
     pub fn function(&self) -> SpecificFunction {
         SpecificFunction(self.0.function.clone())
@@ -1635,8 +1640,12 @@ impl ChatCompletionRequest {
     pub fn model(&self) -> String {
         self.0.model.clone()
     }
-    pub fn messages(&self) -> Vec<Message> {
-        self.0.messages.iter().map(|elem| Message::from(elem.clone())).collect()
+    pub fn messages(&self) -> Vec<String> {
+        self.0
+            .messages
+            .iter()
+            .map(|elem| Message::from(elem.clone()).to_string())
+            .collect()
     }
     pub fn temperature(&self) -> Option<f64> {
         self.0.temperature.as_ref().and_then(|v| {
@@ -1666,8 +1675,8 @@ impl ChatCompletionRequest {
                 .and_then(|j| ::serde_json::from_value(j).ok())
         })
     }
-    pub fn stop(&self) -> Option<StopSequence> {
-        self.0.stop.clone().map(StopSequence::from)
+    pub fn stop(&self) -> Option<String> {
+        self.0.stop.clone().map(|w| StopSequence::from(w).to_string())
     }
     pub fn max_tokens(&self) -> Option<u64> {
         self.0.max_tokens.as_ref().and_then(|v| {
@@ -1702,8 +1711,8 @@ impl ChatCompletionRequest {
             .as_ref()
             .map(|v| v.iter().map(|elem| ChatCompletionTool(elem.clone())).collect())
     }
-    pub fn tool_choice(&self) -> Option<ToolChoice> {
-        self.0.tool_choice.clone().map(ToolChoice::from)
+    pub fn tool_choice(&self) -> Option<String> {
+        self.0.tool_choice.clone().map(|w| ToolChoice::from(w).to_string())
     }
     pub fn parallel_tool_calls(&self) -> Option<bool> {
         self.0.parallel_tool_calls.as_ref().and_then(|v| {
@@ -1712,8 +1721,11 @@ impl ChatCompletionRequest {
                 .and_then(|j| ::serde_json::from_value(j).ok())
         })
     }
-    pub fn response_format(&self) -> Option<ResponseFormat> {
-        self.0.response_format.clone().map(ResponseFormat::from)
+    pub fn response_format(&self) -> Option<String> {
+        self.0
+            .response_format
+            .clone()
+            .map(|w| ResponseFormat::from(w).to_string())
     }
     pub fn stream_options(&self) -> Option<StreamOptions> {
         self.0.stream_options.clone().map(StreamOptions)
@@ -1725,8 +1737,11 @@ impl ChatCompletionRequest {
                 .and_then(|j| ::serde_json::from_value(j).ok())
         })
     }
-    pub fn reasoning_effort(&self) -> Option<ReasoningEffort> {
-        self.0.reasoning_effort.clone().map(ReasoningEffort::from)
+    pub fn reasoning_effort(&self) -> Option<String> {
+        self.0
+            .reasoning_effort
+            .clone()
+            .map(|w| ReasoningEffort::from(w).to_string())
     }
     pub fn extra_body(&self) -> Option<String> {
         self.0.extra_body.as_ref().and_then(|v| serde_json::to_string(v).ok())
@@ -1845,8 +1860,8 @@ impl Choice {
     pub fn message(&self) -> AssistantMessage {
         AssistantMessage(self.0.message.clone())
     }
-    pub fn finish_reason(&self) -> Option<FinishReason> {
-        self.0.finish_reason.clone().map(FinishReason::from)
+    pub fn finish_reason(&self) -> Option<String> {
+        self.0.finish_reason.clone().map(|w| FinishReason::from(w).to_string())
     }
 }
 
@@ -1946,8 +1961,8 @@ impl StreamChoice {
     pub fn delta(&self) -> StreamDelta {
         StreamDelta(self.0.delta.clone())
     }
-    pub fn finish_reason(&self) -> Option<FinishReason> {
-        self.0.finish_reason.clone().map(FinishReason::from)
+    pub fn finish_reason(&self) -> Option<String> {
+        self.0.finish_reason.clone().map(|w| FinishReason::from(w).to_string())
     }
 }
 
@@ -2042,8 +2057,8 @@ impl StreamToolCall {
     pub fn id(&self) -> Option<String> {
         self.0.id.clone()
     }
-    pub fn call_type(&self) -> Option<ToolType> {
-        self.0.call_type.clone().map(ToolType::from)
+    pub fn call_type(&self) -> Option<String> {
+        self.0.call_type.clone().map(|w| ToolType::from(w).to_string())
     }
     pub fn function(&self) -> Option<StreamFunctionCall> {
         self.0.function.clone().map(StreamFunctionCall)
@@ -2108,11 +2123,14 @@ impl EmbeddingRequest {
     pub fn model(&self) -> String {
         self.0.model.clone()
     }
-    pub fn input(&self) -> EmbeddingInput {
-        EmbeddingInput::from(self.0.input.clone())
+    pub fn input(&self) -> String {
+        EmbeddingInput::from(self.0.input.clone()).to_string()
     }
-    pub fn encoding_format(&self) -> Option<EmbeddingFormat> {
-        self.0.encoding_format.clone().map(EmbeddingFormat::from)
+    pub fn encoding_format(&self) -> Option<String> {
+        self.0
+            .encoding_format
+            .clone()
+            .map(|w| EmbeddingFormat::from(w).to_string())
     }
     pub fn dimensions(&self) -> Option<u32> {
         self.0.dimensions.as_ref().and_then(|v| {
@@ -2535,8 +2553,8 @@ impl ModerationRequest {
         }
         ModerationRequest(__target)
     }
-    pub fn input(&self) -> ModerationInput {
-        ModerationInput::from(self.0.input.clone())
+    pub fn input(&self) -> String {
+        ModerationInput::from(self.0.input.clone()).to_string()
     }
     pub fn model(&self) -> Option<String> {
         self.0.model.clone()
@@ -2801,11 +2819,11 @@ impl RerankRequest {
     pub fn query(&self) -> String {
         self.0.query.clone()
     }
-    pub fn documents(&self) -> Vec<RerankDocument> {
+    pub fn documents(&self) -> Vec<String> {
         self.0
             .documents
             .iter()
-            .map(|elem| RerankDocument::from(elem.clone()))
+            .map(|elem| RerankDocument::from(elem.clone()).to_string())
             .collect()
     }
     pub fn top_n(&self) -> Option<u32> {
@@ -2975,8 +2993,8 @@ impl OcrRequest {
     pub fn model(&self) -> String {
         self.0.model.clone()
     }
-    pub fn document(&self) -> OcrDocument {
-        OcrDocument::from(self.0.document.clone())
+    pub fn document(&self) -> String {
+        OcrDocument::from(self.0.document.clone()).to_string()
     }
     pub fn pages(&self) -> Option<Vec<u32>> {
         self.0.pages.as_ref().and_then(|v| {
@@ -3136,8 +3154,8 @@ impl CreateFileRequest {
     pub fn file(&self) -> String {
         self.0.file.clone()
     }
-    pub fn purpose(&self) -> FilePurpose {
-        FilePurpose::from(self.0.purpose.clone())
+    pub fn purpose(&self) -> String {
+        FilePurpose::from(self.0.purpose.clone()).to_string()
     }
     pub fn filename(&self) -> Option<String> {
         self.0.filename.clone()
@@ -3448,8 +3466,8 @@ impl BatchObject {
     pub fn completion_window(&self) -> String {
         self.0.completion_window.clone()
     }
-    pub fn status(&self) -> BatchStatus {
-        BatchStatus::from(self.0.status.clone())
+    pub fn status(&self) -> String {
+        BatchStatus::from(self.0.status.clone()).to_string()
     }
     pub fn output_file_id(&self) -> Option<String> {
         self.0.output_file_id.clone()
@@ -4184,8 +4202,8 @@ impl CustomProviderConfig {
     pub fn base_url(&self) -> String {
         self.0.base_url.clone()
     }
-    pub fn auth_header(&self) -> AuthHeaderFormat {
-        AuthHeaderFormat::from(self.0.auth_header.clone())
+    pub fn auth_header(&self) -> String {
+        AuthHeaderFormat::from(self.0.auth_header.clone()).to_string()
     }
     pub fn model_prefixes(&self) -> Vec<String> {
         ::serde_json::to_value(&self.0.model_prefixes)
@@ -4690,6 +4708,20 @@ pub fn unregister_custom_provider(name: String) -> Result<bool, String> {
     liter_llm::provider::custom::unregister_custom_provider(&name).map_err(|e| e.to_string())
 }
 
+pub fn default_client_chat_stream(client: &DefaultClient, req: ChatCompletionRequest) -> Result<(), String> {
+    use ::futures_util::StreamExt;
+    ::tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("build tokio runtime")
+        .block_on(async {
+            let mut stream = client.0.chat_stream(req.0).await.map_err(|e| e.to_string())?;
+            while let Some(item) = stream.next().await {
+                let _ = item.map_err(|e| e.to_string())?;
+            }
+            Ok::<(), String>(())
+        })
+}
 pub fn chat_completion_request_from_json(json: String) -> Result<ChatCompletionRequest, String> {
     serde_json::from_str::<liter_llm::types::ChatCompletionRequest>(&json)
         .map(ChatCompletionRequest)

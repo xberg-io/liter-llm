@@ -95,5 +95,9 @@ class DefaultClient internal constructor(internal val inner: dev.kreuzberg.liter
         return withContext(Dispatchers.IO) { inner.cancelResponse(id) }
     }
 
+    fun chatStream(req: ChatCompletionRequest): Iterator<ChatCompletionChunk> {
+        return inner.chatStream(req)
+    }
+
     override fun close() { inner.close() }
 }
