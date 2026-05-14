@@ -148,6 +148,7 @@ repos:
         args: ["--suppress=unusedStructMember"]
         require_serial: true
       - id: rumdl-fmt
+        exclude: ^docs/providers\.md$
       - id: cpd
   # Alef: multi-language formatting, linting, type checking, and version sync.
   # The script entry prefers a locally-installed `alef` binary whose --version
