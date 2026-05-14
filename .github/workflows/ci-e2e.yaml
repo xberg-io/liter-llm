@@ -503,10 +503,14 @@ jobs:
         with:
           crate-name: liter-llm-swift
           build-profile: release
-      - uses: kreuzberg-dev/actions/install-task@v1
-      - uses: kreuzberg-dev/actions/install-alef@v1
+      # Swift e2e tests live in packages/swift/Tests/ (not e2e/swift/Tests/)
+      # because SwiftPM 6.0 forbids local-path deps between sibling packages
+      # in the same repo; alef sidesteps the restriction by placing the
+      # generated e2e tests inside the swift package's own Tests directory.
+      # See alef/crates/alef-e2e/src/codegen/swift.rs:97-110 for context.
       - name: Run swift e2e
-        run: alef test --lang swift --e2e
+        working-directory: packages/swift
+        run: swift test
         shell: bash
         continue-on-error: true
 
