@@ -164,7 +164,6 @@ repos:
     rev: v1.7.12
     hooks:
       - id: actionlint
-        exclude: ^\.github/workflows/swift\.yml$
 
   # Spelling: fast Rust-based spell checker
   - repo: https://github.com/crate-ci/typos
