@@ -91,10 +91,6 @@ jobs:
       - name: Install alef CLI
         uses: kreuzberg-dev/actions/install-alef@v1
 
-      - name: Run alef setup
-        run: alef setup
-        shell: bash
-
       - name: Verify alef-generated code is up-to-date
         run: alef verify --exit-code
         shell: bash
