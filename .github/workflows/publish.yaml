@@ -27,7 +27,7 @@ on:
         type: boolean
         default: false
       targets:
-        description: "Comma-separated targets to publish (empty = all). Values: crates python node wasm ruby go java elixir csharp php homebrew kotlin-android"
+        description: "Comma-separated targets to publish (empty = all). Values: crates python node wasm ruby go java elixir csharp php homebrew"
         required: false
         default: ""
         type: string
@@ -92,7 +92,7 @@ jobs:
         id: meta
         uses: kreuzberg-dev/actions/prepare-release-metadata@v1
         with:
-          available-targets: "crates,python,node,wasm,ruby,go,java,elixir,csharp,php,homebrew,kotlin-android"
+          available-targets: "crates,python,node,wasm,ruby,go,java,elixir,csharp,php,homebrew"
 
   # ─────────────────────────────────────────────────────────────────────────
   # Phase 2 — Validate version consistency
@@ -839,6 +839,8 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
       - name: Assemble Android library aar
         working-directory: packages/kotlin-android
         env:

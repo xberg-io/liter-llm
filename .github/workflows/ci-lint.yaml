@@ -95,14 +95,13 @@ jobs:
         run: alef verify --exit-code
         shell: bash
 
-      # SKIP mix-format + mix-credo: alef-generated Elixir streaming code uses
-      # case branches mix-format wants to expand, and mix-credo needs `mix deps.get`
-      # in packages/elixir which we don't run here. alef-verify above already
-      # gates generator freshness, which is the stronger invariant.
+      - name: Fetch Elixir deps (needed by mix-format + mix-credo)
+        working-directory: packages/elixir
+        run: mix deps.get
+        shell: bash
+
       - name: Run prek hooks
         uses: j178/prek-action@v2
-        env:
-          SKIP: mix-format,mix-credo
         with:
           cache: false
           extra-args: --all-files
