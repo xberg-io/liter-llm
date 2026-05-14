@@ -4,15 +4,15 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - 'README.md'
-      - 'CHANGELOG.md'
-      - 'LICENSE*'
+      - "README.md"
+      - "CHANGELOG.md"
+      - "LICENSE*"
   pull_request:
     branches: [main]
     paths-ignore:
-      - 'README.md'
-      - 'CHANGELOG.md'
-      - 'LICENSE*'
+      - "README.md"
+      - "CHANGELOG.md"
+      - "LICENSE*"
   workflow_dispatch:
 
 concurrency:

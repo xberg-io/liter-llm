@@ -11,7 +11,9 @@
     clippy::unnecessary_cast,
     clippy::manual_flatten,
     clippy::match_single_binding,
-    clippy::redundant_closure
+    clippy::redundant_closure,
+    clippy::useless_conversion,
+    clippy::inherent_to_string
 )]
 
 #[swift_bridge::bridge]

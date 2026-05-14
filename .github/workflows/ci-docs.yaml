@@ -4,21 +4,21 @@ on:
   push:
     branches: [main]
     paths:
-      - 'docs/**'
-      - 'pyproject.toml'
-      - 'uv.lock'
-      - 'zensical.toml'
-      - '.lychee.toml'
-      - '.github/workflows/ci-docs.yaml'
+      - "docs/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "zensical.toml"
+      - ".lychee.toml"
+      - ".github/workflows/ci-docs.yaml"
   pull_request:
     branches: [main]
     paths:
-      - 'docs/**'
-      - 'pyproject.toml'
-      - 'uv.lock'
-      - 'zensical.toml'
-      - '.lychee.toml'
-      - '.github/workflows/ci-docs.yaml'
+      - "docs/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "zensical.toml"
+      - ".lychee.toml"
+      - ".github/workflows/ci-docs.yaml"
   workflow_dispatch:
 
 env:

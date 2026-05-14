@@ -1,4 +1,4 @@
-name: Publish
+name: Publish Release
 
 on:
   workflow_dispatch:
@@ -6,6 +6,10 @@ on:
       tag:
         description: "Git tag to publish (e.g. v1.0.0-rc.1)"
         required: true
+        type: string
+      ref:
+        description: "Git ref (branch, tag, or commit) to build; defaults to the tag"
+        required: false
         type: string
       dry_run:
         description: "Dry run — build everything but skip registry publishes"
@@ -23,7 +27,7 @@ on:
         type: boolean
         default: false
       targets:
-        description: "Comma-separated targets to publish (empty = all). Values: crates python node wasm ruby go java elixir csharp php homebrew"
+        description: "Comma-separated targets to publish (empty = all). Values: crates python node wasm ruby go java elixir csharp php homebrew kotlin-android"
         required: false
         default: ""
         type: string
@@ -70,11 +74,13 @@ jobs:
       release_csharp: ${{ steps.meta.outputs.release_csharp }}
       release_php: ${{ steps.meta.outputs.release_php }}
       release_homebrew: ${{ steps.meta.outputs.release_homebrew }}
+      release_kotlin_android: ${{ steps.meta.outputs.release_kotlin_android }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          ref: ${{ inputs.ref || inputs.tag || github.event.client_payload.tag || github.ref }}
 
       - name: Retag for republish
         if: ${{ inputs.republish == true || github.event.client_payload.republish == true }}
@@ -86,7 +92,7 @@ jobs:
         id: meta
         uses: kreuzberg-dev/actions/prepare-release-metadata@v1
         with:
-          available-targets: "crates,python,node,wasm,ruby,go,java,elixir,csharp,php,homebrew"
+          available-targets: "crates,python,node,wasm,ruby,go,java,elixir,csharp,php,homebrew,kotlin-android"
 
   # ─────────────────────────────────────────────────────────────────────────
   # Phase 2 — Validate version consistency
@@ -795,6 +801,55 @@ jobs:
           path: nuget-output/*.nupkg
           retention-days: 14
 
+  # ── Kotlin Android natives (.aar) ──────────────────────────────────────────
+  build-kotlin-android-natives:
+    name: Build Kotlin Android natives (${{ matrix.abi }})
+    needs: [prepare, registry-results]
+    if: |
+      always() &&
+      needs.prepare.outputs.release_kotlin_android == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: [arm64-v8a, x86_64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.tag }}
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          cache-key-prefix: publish-android-${{ matrix.abi }}
+      - uses: kreuzberg-dev/actions/setup-android-ndk@v1
+      - name: Build liter-llm-ffi for ${{ matrix.abi }}
+        run: cargo ndk --target ${{ matrix.abi }} --platform 21 -- build -p liter-llm-ffi --release
+      - name: Stage jniLibs
+        shell: bash
+        run: |
+          mkdir -p packages/kotlin-android/src/main/jniLibs/${{ matrix.abi }}
+          case "${{ matrix.abi }}" in
+            arm64-v8a) RUST_TGT=aarch64-linux-android ;;
+            x86_64)    RUST_TGT=x86_64-linux-android ;;
+          esac
+          cp "target/${RUST_TGT}/release/libliter_llm_ffi.so" \
+             "packages/kotlin-android/src/main/jniLibs/${{ matrix.abi }}/"
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Assemble Android library aar
+        working-directory: packages/kotlin-android
+        env:
+          PROJECT_VERSION: ${{ needs.prepare.outputs.version }}
+        run: gradle "assembleRelease" "-Pversion=${PROJECT_VERSION}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: kotlin-android-${{ matrix.abi }}
+          path: packages/kotlin-android/build/outputs/aar/*.aar
+          retention-days: 14
+
   # ─────────────────────────────────────────────────────────────────────────
   # Phase 5 — Upload release assets (Go FFI, C FFI, Elixir NIFs)
   # ─────────────────────────────────────────────────────────────────────────
@@ -890,6 +945,35 @@ jobs:
             dist/php-package/php_*.tgz.sha256
             dist/php-package/php_*.zip
             dist/php-package/php_*.zip.sha256
+          fail-if-empty: "false"
+
+  upload-kotlin-android-aars:
+    name: Upload Kotlin Android aars
+    needs: [prepare, build-kotlin-android-natives]
+    if: always() && needs.prepare.outputs.release_kotlin_android == 'true' && needs.build-kotlin-android-natives.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.tag }}
+      - name: Ensure GitHub release exists
+        uses: kreuzberg-dev/actions/publish-github-release@v1
+        with:
+          tag: ${{ needs.prepare.outputs.tag }}
+          draft: "true"
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: kotlin-android-*
+          path: kotlin-android-aars
+          merge-multiple: true
+      - name: Upload aar bundles
+        uses: kreuzberg-dev/actions/upload-release-assets@v1
+        with:
+          tag: ${{ needs.prepare.outputs.tag }}
+          assets: kotlin-android-aars/*.aar
           fail-if-empty: "false"
 
   # ─────────────────────────────────────────────────────────────────────────

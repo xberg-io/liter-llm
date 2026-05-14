@@ -7,6 +7,7 @@ on:
       - "crates/**"
       - "packages/dart/**"
       - "packages/swift/**"
+      - "packages/kotlin-android/**"
       - ".github/workflows/ci-mobile.yaml"
   pull_request:
     branches: [main]
@@ -14,6 +15,7 @@ on:
       - "crates/**"
       - "packages/dart/**"
       - "packages/swift/**"
+      - "packages/kotlin-android/**"
       - ".github/workflows/ci-mobile.yaml"
   workflow_dispatch:
 
@@ -83,3 +85,39 @@ jobs:
         with:
           crate-name: liter-llm-swift
           build-profile: release
+
+  kotlin-android-build:
+    name: Build Kotlin Android (${{ matrix.abi }})
+    if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: [arm64-v8a, x86_64]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          cache-key-prefix: ci-mobile-android-${{ matrix.abi }}
+      - uses: kreuzberg-dev/actions/setup-android-ndk@v1
+      - name: Build liter-llm-ffi for ${{ matrix.abi }}
+        run: cargo ndk --target ${{ matrix.abi }} --platform 21 -- build -p liter-llm-ffi --release
+      - name: Stage jniLibs
+        shell: bash
+        run: |
+          mkdir -p packages/kotlin-android/src/main/jniLibs/${{ matrix.abi }}
+          case "${{ matrix.abi }}" in
+            arm64-v8a) RUST_TGT=aarch64-linux-android ;;
+            x86_64)    RUST_TGT=x86_64-linux-android ;;
+          esac
+          cp "target/${RUST_TGT}/release/libliter_llm_ffi.so" \
+             "packages/kotlin-android/src/main/jniLibs/${{ matrix.abi }}/"
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Assemble Android library aar
+        working-directory: packages/kotlin-android
+        run: gradle assembleRelease
