@@ -3,7 +3,7 @@ import PackageDescription
 
 // NOTE: Run `cargo build -p liter-llm-swift` before `swift build`.
 // The build step generates Swift + C bridge sources; copy them into Sources/RustBridge
-// and Sources/RustBridgeC before building. See BUILDING.md for the full workflow.
+// and Sources/RustBridgeC before building. See README.md for the full workflow.
 let package = Package(
     name: "LiterLlm",
     platforms: [

@@ -170,9 +170,6 @@ jobs:
           - lang: dart
             dart-version: "stable"
             test-cmd: "alef test --lang dart --e2e"
-          - lang: kotlin
-            java-version: "25"
-            test-cmd: "cd packages/kotlin && gradle build -x test && cd ../.. && alef test --lang kotlin --e2e"
           - lang: swift
             # SwiftPM 6.0 derives package identity from path basename; e2e/swift
             # and packages/swift collide on identity "swift". Run from a temp
@@ -282,12 +279,6 @@ jobs:
           distribution: temurin
           java-version: ${{ matrix.java-version }}
 
-      - name: Setup Gradle
-        if: matrix.lang == 'kotlin'
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "9.5.1"
-
       - name: Setup .NET
         if: matrix.dotnet-version
         uses: actions/setup-dotnet@v5
@@ -342,8 +333,7 @@ jobs:
         if: |
           matrix.lang == 'go' || matrix.lang == 'java' ||
           matrix.lang == 'csharp' || matrix.lang == 'elixir' ||
-          matrix.lang == 'kotlin' || matrix.lang == 'zig' ||
-          matrix.lang == 'c'
+          matrix.lang == 'zig' || matrix.lang == 'c'
         shell: bash
         run: |
           echo "PKG_CONFIG_PATH=${PWD}/crates/liter-llm-ffi:${PKG_CONFIG_PATH:-}" >> "$GITHUB_ENV"

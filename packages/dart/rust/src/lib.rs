@@ -948,7 +948,7 @@ pub enum AuthHeaderFormat {
     None,
 }
 
-// From<kreuzberg::T> conversions for bridge return types.
+// From<SourceT> conversions for bridge return types.
 
 impl From<liter_llm::types::SystemMessage> for SystemMessage {
     fn from(v: liter_llm::types::SystemMessage) -> Self {
@@ -1979,7 +1979,7 @@ impl From<liter_llm::provider::custom::AuthHeaderFormat> for AuthHeaderFormat {
     }
 }
 
-// From<T> for kreuzberg::T conversions (mirror-to-core direction).
+// From<T> for SourceT conversions (mirror-to-core direction).
 // Used in bridge functions for types with sanitized fields, and by
 // nested conversions within those types.
 

@@ -11,6 +11,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("../../packages/zig/src/liter_llm.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     liter_llm_module.addLibraryPath(.{ .cwd_relative = ffi_path });
     liter_llm_module.addIncludePath(.{ .cwd_relative = ffi_include });
@@ -20,6 +21,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/batches_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     batches_module.addImport("liter_llm", liter_llm_module);
     const batches_tests = b.addTest(.{
@@ -33,6 +35,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/chat_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     chat_module.addImport("liter_llm", liter_llm_module);
     const chat_tests = b.addTest(.{
@@ -46,6 +49,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/configuration_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     configuration_module.addImport("liter_llm", liter_llm_module);
     const configuration_tests = b.addTest(.{
@@ -59,6 +63,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/contract_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     contract_module.addImport("liter_llm", liter_llm_module);
     const contract_tests = b.addTest(.{
@@ -72,6 +77,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/custom_provider_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     custom_provider_module.addImport("liter_llm", liter_llm_module);
     const custom_provider_tests = b.addTest(.{
@@ -85,6 +91,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/embed_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     embed_module.addImport("liter_llm", liter_llm_module);
     const embed_tests = b.addTest(.{
@@ -98,6 +105,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/error_handling_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     error_handling_module.addImport("liter_llm", liter_llm_module);
     const error_handling_tests = b.addTest(.{
@@ -111,6 +119,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/files_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     files_module.addImport("liter_llm", liter_llm_module);
     const files_tests = b.addTest(.{
@@ -124,6 +133,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/image_generate_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     image_generate_module.addImport("liter_llm", liter_llm_module);
     const image_generate_tests = b.addTest(.{
@@ -137,6 +147,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/list_models_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     list_models_module.addImport("liter_llm", liter_llm_module);
     const list_models_tests = b.addTest(.{
@@ -150,6 +161,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/moderate_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     moderate_module.addImport("liter_llm", liter_llm_module);
     const moderate_tests = b.addTest(.{
@@ -163,6 +175,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/ocr_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     ocr_module.addImport("liter_llm", liter_llm_module);
     const ocr_tests = b.addTest(.{
@@ -176,6 +189,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/parity_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     parity_module.addImport("liter_llm", liter_llm_module);
     const parity_tests = b.addTest(.{
@@ -189,6 +203,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/rerank_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     rerank_module.addImport("liter_llm", liter_llm_module);
     const rerank_tests = b.addTest(.{
@@ -202,6 +217,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/responses_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     responses_module.addImport("liter_llm", liter_llm_module);
     const responses_tests = b.addTest(.{
@@ -215,6 +231,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/search_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     search_module.addImport("liter_llm", liter_llm_module);
     const search_tests = b.addTest(.{
@@ -228,6 +245,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/smoke_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     smoke_module.addImport("liter_llm", liter_llm_module);
     const smoke_tests = b.addTest(.{
@@ -241,6 +259,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/speech_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     speech_module.addImport("liter_llm", liter_llm_module);
     const speech_tests = b.addTest(.{
@@ -254,6 +273,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/streaming_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     streaming_module.addImport("liter_llm", liter_llm_module);
     const streaming_tests = b.addTest(.{
@@ -267,6 +287,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/tool_calling_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     tool_calling_module.addImport("liter_llm", liter_llm_module);
     const tool_calling_tests = b.addTest(.{
@@ -280,6 +301,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/transcribe_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     transcribe_module.addImport("liter_llm", liter_llm_module);
     const transcribe_tests = b.addTest(.{
@@ -293,6 +315,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/types_test.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     types_module.addImport("liter_llm", liter_llm_module);
     const types_tests = b.addTest(.{

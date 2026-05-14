@@ -433,8 +433,36 @@ public final class DefaultClient {
   public func cancelResponse(_ id: String) async throws -> ResponseObject {
     return try await RustBridge.defaultClientCancelResponse(self.inner, id)
   }
-  public func chatStream(_ req: ChatCompletionRequest) async throws {
-    try await RustBridge.defaultClientChatStream(self.inner, req)
+  public func chatStream(_ req: ChatCompletionRequest) async throws -> AsyncThrowingStream<
+    ChatCompletionChunk, Error
+  > {
+    let inner = self.inner
+    let handle = try await Task.detached(priority: .userInitiated) {
+      try RustBridge.defaultClientChatStreamStart(inner, req)
+    }.value
+
+    return AsyncThrowingStream<ChatCompletionChunk, Error> { continuation in
+      let task = Task.detached(priority: .userInitiated) {
+        let decoder = JSONDecoder()
+        do {
+          while !Task.isCancelled {
+            let json = try handle.next().toString()
+            if json.isEmpty { break }
+            guard let data = json.data(using: .utf8) else {
+              throw NSError(
+                domain: "chatStream", code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "chunk JSON is not UTF-8"])
+            }
+            let chunk = try decoder.decode(ChatCompletionChunk.self, from: data)
+            continuation.yield(chunk)
+          }
+          continuation.finish()
+        } catch {
+          continuation.finish(throwing: error)
+        }
+      }
+      continuation.onTermination = { _ in task.cancel() }
+    }
   }
 }
 

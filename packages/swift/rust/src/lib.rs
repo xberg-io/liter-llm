@@ -1081,8 +1081,14 @@ mod ffi {
     }
 
     extern "Rust" {
-        #[swift_bridge(swift_name = "defaultClientChatStream")]
-        fn default_client_chat_stream(client: &DefaultClient, req: ChatCompletionRequest) -> Result<(), String>;
+        type DefaultClientChatStreamStreamHandle;
+
+        #[swift_bridge(swift_name = "defaultClientChatStreamStart")]
+        fn default_client_chat_stream_start(
+            client: &DefaultClient,
+            req: &ChatCompletionRequest,
+        ) -> Result<DefaultClientChatStreamStreamHandle, String>;
+        fn next(self: &mut DefaultClientChatStreamStreamHandle) -> Result<String, String>;
     }
 
     extern "Rust" {
@@ -4710,20 +4716,80 @@ pub fn unregister_custom_provider(name: String) -> Result<bool, String> {
     liter_llm::provider::custom::unregister_custom_provider(&name).map_err(|e| e.to_string())
 }
 
-pub fn default_client_chat_stream(client: &DefaultClient, req: ChatCompletionRequest) -> Result<(), String> {
+/// Opaque handle owning a tokio runtime and a boxed `ChatCompletionChunk` stream.
+///
+/// Created by `default_client_chat_stream_start`, advanced via `next()`. Drop runs when the
+/// Swift handle goes out of scope (swift-bridge generates the matching
+/// `deinit`), so explicit cleanup from Swift is unnecessary.
+///
+/// Items are JSON-encoded at the bridge boundary because swift-bridge's
+/// `Option<OpaqueRust>` support varies across versions, while `Result<String,
+/// String>` is well-tested. An empty string `""` is the EOF sentinel —
+/// no valid JSON value is the empty string.
+pub struct DefaultClientChatStreamStreamHandle {
+    rt: ::tokio::runtime::Runtime,
+    stream: ::std::sync::Mutex<
+        Option<
+            ::futures_util::stream::BoxStream<
+                'static,
+                Result<liter_llm::ChatCompletionChunk, Box<dyn ::std::error::Error + Send + Sync + 'static>>,
+            >,
+        >,
+    >,
+}
+
+/// Start a streaming `DefaultClient::chat_stream` request.
+///
+/// Returns a fresh `DefaultClientChatStreamStreamHandle` whose ownership transfers to the
+/// Swift caller (swift-bridge boxes the handle internally).
+pub fn default_client_chat_stream_start(
+    client: &DefaultClient,
+    req: &ChatCompletionRequest,
+) -> Result<DefaultClientChatStreamStreamHandle, String> {
     use ::futures_util::StreamExt;
-    ::tokio::runtime::Builder::new_current_thread()
+    let rt = ::tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(1)
         .enable_all()
         .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            let mut stream = client.0.chat_stream(req.0).await.map_err(|e| e.to_string())?;
-            while let Some(item) = stream.next().await {
-                let _ = item.map_err(|e| e.to_string())?;
-            }
-            Ok::<(), String>(())
-        })
+        .map_err(|e| format!("build tokio runtime: {e}"))?;
+    let raw = rt.block_on(async { client.0.chat_stream(req.0.clone()).await.map_err(|e| e.to_string()) })?;
+    let erased: ::futures_util::stream::BoxStream<
+        'static,
+        Result<liter_llm::ChatCompletionChunk, Box<dyn ::std::error::Error + Send + Sync + 'static>>,
+    > = Box::pin(raw.map(|r| r.map_err(|e| Box::new(e) as Box<dyn ::std::error::Error + Send + Sync + 'static>)));
+    Ok(DefaultClientChatStreamStreamHandle {
+        rt,
+        stream: ::std::sync::Mutex::new(Some(erased)),
+    })
 }
+
+impl DefaultClientChatStreamStreamHandle {
+    /// Advance the stream and return the next chunk JSON, or `""` on clean
+    /// end-of-stream. Returns `Err(message)` on a stream-level error.
+    pub fn next(&mut self) -> Result<String, String> {
+        let mut guard = self
+            .stream
+            .lock()
+            .map_err(|_| "DefaultClientChatStreamStreamHandle::next: stream mutex poisoned".to_string())?;
+        let stream = match guard.as_mut() {
+            Some(s) => s,
+            None => return Ok(String::new()),
+        };
+        use ::futures_util::StreamExt;
+        match self.rt.block_on(stream.next()) {
+            Some(Ok(item)) => ::serde_json::to_string(&item).map_err(|e| e.to_string()),
+            Some(Err(e)) => {
+                *guard = None;
+                Err(e.to_string())
+            }
+            None => {
+                *guard = None;
+                Ok(String::new())
+            }
+        }
+    }
+}
+
 pub fn chat_completion_request_from_json(json: String) -> Result<ChatCompletionRequest, String> {
     serde_json::from_str::<liter_llm::types::ChatCompletionRequest>(&json)
         .map(ChatCompletionRequest)

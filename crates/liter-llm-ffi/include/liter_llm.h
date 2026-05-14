@@ -116,7 +116,7 @@ typedef struct LITERLLMLiterllmDefaultClientChatStreamStreamHandle LITERLLMLiter
  * Callback invoked for each streamed chunk.
  * `chunk_json` is a JSON-encoded chunk; `user_data` is forwarded from the caller.
  */
-typedef void (*LITERLLMLiterLlmStreamCallback)(const char *chunk_json,
+typedef void (*LITERLLMLiterllmStreamCallback)(const char *chunk_json,
                                                void *user_data);
 
 /**
@@ -3867,7 +3867,7 @@ LITERLLMChatCompletionResponse *literllm_default_client_chat(const LITERLLMDefau
  */
 int32_t literllm_default_client_chat_stream(const LITERLLMDefaultClient *client,
                                             const char *request_json,
-                                            LITERLLMLiterLlmStreamCallback callback,
+                                            LITERLLMLiterllmStreamCallback callback,
                                             void *user_data);
 
 /**

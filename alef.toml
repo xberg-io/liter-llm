@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.15.69"
+alef_version = "0.16.0"
 languages = [
   "python",
   "node",
@@ -14,7 +14,6 @@ languages = [
   "zig",
   "dart",
   "swift",
-  "kotlin",
 ]
 
 [workspace.sync]
@@ -112,9 +111,6 @@ DefaultClient = """    let mut config = liter_llm::ClientConfig::new(api_key);
         .map_err(|e| e.to_string())
         .map(DefaultClient)"""
 
-[crates.kotlin]
-package_name = "dev.kreuzberg.literllm"
-
 [crates.output]
 python = "crates/liter-llm-py/src/"
 node = "crates/liter-llm-node/src/"
@@ -129,7 +125,6 @@ csharp = "packages/csharp/"
 zig = "packages/zig/src/"
 dart = "packages/dart/"
 swift = "packages/swift/Sources/LiterLlm/"
-kotlin = "packages/kotlin/"
 
 [crates.exclude]
 types = [
@@ -308,10 +303,6 @@ e2e = ["cd e2e/wasm && pnpm install", "cd e2e/wasm && pnpm vitest run"]
 precondition = "command -v make >/dev/null 2>&1"
 before = "cargo build -p liter-llm-ffi --release && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 e2e = "cd e2e/c && make test"
-
-[crates.test.kotlin]
-precondition = "command -v gradle >/dev/null 2>&1"
-e2e = "cd e2e/kotlin && gradle test"
 
 [crates.publish]
 core_crate = "crates/liter-llm"
@@ -514,9 +505,6 @@ client_factory = "create_client"
 [crates.e2e.call.overrides.swift]
 client_factory = "createClient"
 
-[crates.e2e.call.overrides.kotlin]
-client_factory = "createClient"
-
 [crates.e2e.call.overrides.dart]
 client_factory = "createClient"
 
@@ -571,10 +559,6 @@ options_type = "WasmChatCompletionRequest"
 result_enum_fields = { "choices[0].finish_reason" = "WasmFinishReason" }
 
 [crates.e2e.calls.chat.overrides.dart]
-options_type = "ChatCompletionRequest"
-options_via = "from_json"
-
-[crates.e2e.calls.chat.overrides.kotlin]
 options_type = "ChatCompletionRequest"
 options_via = "from_json"
 
@@ -633,10 +617,6 @@ options_type = "WasmChatCompletionRequest"
 options_type = "ChatCompletionRequest"
 options_via = "from_json"
 
-[crates.e2e.calls.chat_stream.overrides.kotlin]
-options_type = "ChatCompletionRequest"
-options_via = "from_json"
-
 [crates.e2e.calls.chat_stream.overrides.swift]
 options_type = "ChatCompletionRequest"
 options_via = "from_json"
@@ -687,10 +667,6 @@ options_via = "from_json"
 options_type = "WasmEmbeddingRequest"
 
 [crates.e2e.calls.embed.overrides.dart]
-options_type = "EmbeddingRequest"
-options_via = "from_json"
-
-[crates.e2e.calls.embed.overrides.kotlin]
 options_type = "EmbeddingRequest"
 options_via = "from_json"
 
@@ -757,10 +733,6 @@ options_via = "from_json"
 options_type = "WasmCreateImageRequest"
 
 [crates.e2e.calls.image_generate.overrides.dart]
-options_type = "CreateImageRequest"
-options_via = "from_json"
-
-[crates.e2e.calls.image_generate.overrides.kotlin]
 options_type = "CreateImageRequest"
 options_via = "from_json"
 
@@ -841,10 +813,6 @@ options_via = "from_json"
 # with an `audio` accessor — treat the result as a bytes scalar.
 result_is_simple = true
 
-[crates.e2e.calls.speech.overrides.kotlin]
-options_type = "CreateSpeechRequest"
-options_via = "from_json"
-
 [crates.e2e.calls.speech.overrides.swift]
 options_type = "CreateSpeechRequest"
 options_via = "from_json"
@@ -898,10 +866,6 @@ options_type = "WasmCreateTranscriptionRequest"
 options_type = "CreateTranscriptionRequest"
 options_via = "from_json"
 
-[crates.e2e.calls.transcribe.overrides.kotlin]
-options_type = "CreateTranscriptionRequest"
-options_via = "from_json"
-
 [crates.e2e.calls.transcribe.overrides.swift]
 options_type = "CreateTranscriptionRequest"
 options_via = "from_json"
@@ -947,10 +911,6 @@ options_type = "LiterLlm::ModerationRequest"
 options_type = "WasmModerationRequest"
 
 [crates.e2e.calls.moderate.overrides.dart]
-options_type = "ModerationRequest"
-options_via = "from_json"
-
-[crates.e2e.calls.moderate.overrides.kotlin]
 options_type = "ModerationRequest"
 options_via = "from_json"
 
@@ -1002,10 +962,6 @@ options_type = "WasmRerankRequest"
 options_type = "RerankRequest"
 options_via = "from_json"
 
-[crates.e2e.calls.rerank.overrides.kotlin]
-options_type = "RerankRequest"
-options_via = "from_json"
-
 [crates.e2e.calls.rerank.overrides.swift]
 options_type = "RerankRequest"
 options_via = "from_json"
@@ -1051,10 +1007,6 @@ options_type = "LiterLlm::SearchRequest"
 options_type = "WasmSearchRequest"
 
 [crates.e2e.calls.search.overrides.dart]
-options_type = "SearchRequest"
-options_via = "from_json"
-
-[crates.e2e.calls.search.overrides.kotlin]
 options_type = "SearchRequest"
 options_via = "from_json"
 
@@ -1106,10 +1058,6 @@ options_type = "WasmOcrRequest"
 options_type = "OcrRequest"
 options_via = "from_json"
 
-[crates.e2e.calls.ocr.overrides.kotlin]
-options_type = "OcrRequest"
-options_via = "from_json"
-
 [crates.e2e.calls.ocr.overrides.swift]
 options_type = "OcrRequest"
 options_via = "from_json"
@@ -1155,10 +1103,6 @@ options_type = "LiterLlm::CreateFileRequest"
 options_type = "WasmCreateFileRequest"
 
 [crates.e2e.calls.create_file.overrides.dart]
-options_type = "CreateFileRequest"
-options_via = "from_json"
-
-[crates.e2e.calls.create_file.overrides.kotlin]
 options_type = "CreateFileRequest"
 options_via = "from_json"
 
@@ -1357,10 +1301,6 @@ result_enum_fields = { "status" = "WasmBatchStatus" }
 options_type = "CreateBatchRequest"
 options_via = "from_json"
 
-[crates.e2e.calls.create_batch.overrides.kotlin]
-options_type = "CreateBatchRequest"
-options_via = "from_json"
-
 [crates.e2e.calls.create_batch.overrides.swift]
 options_type = "CreateBatchRequest"
 options_via = "from_json"
@@ -1530,10 +1470,6 @@ options_type = "WasmCreateResponseRequest"
 bigint_fields = ["maxOutputTokens"]
 
 [crates.e2e.calls.create_response.overrides.dart]
-options_type = "CreateResponseRequest"
-options_via = "from_json"
-
-[crates.e2e.calls.create_response.overrides.kotlin]
 options_type = "CreateResponseRequest"
 options_via = "from_json"
 

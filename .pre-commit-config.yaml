@@ -56,11 +56,11 @@ repos:
 
   # Node/TS/WASM: oxlint
   - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
-    rev: v1.0.5
+    rev: v1.0.7
     hooks:
       - id: cargo-sort
         args: [-w]
-        exclude: ^(crates/liter-llm-(ffi|node|php|py|wasm|swift|dart|rb)/Cargo\.toml|packages/(dart|swift|elixir/native/liter_llm_nif|ruby/ext/liter_llm_rb/native)/Cargo\.toml|packages/(go|java|csharp|python|elixir|php|kotlin|zig|wasm|typescript|swift|dart|ruby)/.*/Cargo\.toml|e2e/rust/Cargo\.toml)$
+        exclude: ^(crates/liter-llm-(ffi|node|php|py|wasm|swift|dart|rb)/Cargo\.toml|packages/(dart|swift|elixir/native/liter_llm_nif|ruby/ext/liter_llm_rb/native)/Cargo\.toml|packages/(go|java|csharp|python|elixir|php|zig|wasm|typescript|swift|dart|ruby)/.*/Cargo\.toml|e2e/rust/Cargo\.toml)$
       - id: cargo-fmt
         args: ["--all"]
       - id: cargo-check
@@ -138,6 +138,11 @@ repos:
       - id: java-verify
         files: ^packages/java/
 
+      - id: ktfmt
+        files: ^packages/kotlin-android/.*\.kts?$
+      - id: detekt
+        files: ^packages/kotlin-android/.*\.kts?$
+
       - id: oxlint
         require_serial: true
         exclude: ^(crates/liter-llm-node/index\.d\.ts|packages/(typescript|wasm)/src/index\.ts)$
@@ -155,7 +160,7 @@ repos:
   # matches the pinned alef.toml version, falling back to a sha256-verified
   # release-tarball download. Do not override `entry:` here.
   - repo: https://github.com/kreuzberg-dev/alef
-    rev: v0.15.69
+    rev: v0.15.71
     hooks:
       - id: alef-verify
       - id: alef-sync-versions
