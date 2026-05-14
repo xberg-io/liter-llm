@@ -12,7 +12,7 @@ let package = Package(
     ],
     targets: [
         .testTarget(
-            name: "KreuzbergE2ETests",
+            name: "LiterLlmE2ETests",
             dependencies: [.product(name: "LiterLlm", package: "LiterLlm")]
         ),
     ]
