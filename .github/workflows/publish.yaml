@@ -58,6 +58,7 @@ jobs:
       contents: write
     outputs:
       tag: ${{ steps.meta.outputs.tag }}
+      checkout_ref: ${{ steps.meta.outputs.checkout_ref }}
       version: ${{ steps.meta.outputs.version }}
       npm_tag: ${{ steps.meta.outputs.npm_tag }}
       dry_run: ${{ steps.meta.outputs.dry_run }}
@@ -80,7 +81,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          ref: ${{ inputs.ref || inputs.tag || github.event.client_payload.tag || github.ref }}
+          ref: ${{ (inputs.republish == true && (inputs.ref || github.event.repository.default_branch)) || inputs.ref || inputs.tag || github.ref }}
 
       - name: Retag for republish
         if: ${{ inputs.republish == true || github.event.client_payload.republish == true }}
@@ -105,7 +106,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
 
       - name: Check version consistency
         uses: kreuzberg-dev/actions/validate-versions@v1
@@ -214,7 +215,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/build-python-wheels@v1
         with:
           package-dir: packages/python
@@ -240,7 +241,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
       - run: pip install maturin
         shell: bash
@@ -283,7 +284,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           target: ${{ matrix.napi_target }}
@@ -315,7 +316,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           target: wasm32-unknown-unknown
@@ -379,7 +380,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
 
       - name: Setup Rust
@@ -493,7 +494,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           target: ${{ matrix.target }}
@@ -568,7 +569,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6 # v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
 
       - name: Ensure target commit
@@ -676,7 +677,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Setup Rust
         uses: kreuzberg-dev/actions/setup-rust@v1
         with:
@@ -730,7 +731,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: actions/download-artifact@v7
         with:
           pattern: ffi-*
@@ -775,7 +776,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: actions/download-artifact@v7
         with:
           pattern: ffi-*
@@ -817,7 +818,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           cache-key-prefix: publish-android-${{ matrix.abi }}
@@ -871,7 +872,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Ensure GitHub release exists
         uses: kreuzberg-dev/actions/publish-github-release@v1
         with:
@@ -899,7 +900,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Ensure GitHub release exists
         uses: kreuzberg-dev/actions/publish-github-release@v1
         with:
@@ -927,7 +928,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Ensure GitHub release exists
         uses: kreuzberg-dev/actions/publish-github-release@v1
         with:
@@ -960,7 +961,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Ensure GitHub release exists
         uses: kreuzberg-dev/actions/publish-github-release@v1
         with:
@@ -998,7 +999,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
       - uses: kreuzberg-dev/actions/publish-crates@v1
         with:
@@ -1069,7 +1070,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -1276,7 +1277,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
 
       - name: Download Ruby gem artifacts
@@ -1380,7 +1381,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: actions/download-artifact@v7
         with:
           name: maven-packages
@@ -1445,7 +1446,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
 
       - name: Generate checksums from GitHub release
@@ -1574,7 +1575,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           target: ${{ matrix.target }}
@@ -1721,7 +1722,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           cache-key-prefix: publish-homebrew-${{ matrix.bottle_tag }}
@@ -1781,7 +1782,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: actions/download-artifact@v7
         with:
           pattern: homebrew-bottle-*
@@ -1825,7 +1826,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Install uv (consumer toolchain)
         uses: astral-sh/setup-uv@v7
         with:
@@ -1878,7 +1879,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.tag }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
 
       - name: Finalize release
         if: needs.prepare.outputs.dry_run != 'true'
