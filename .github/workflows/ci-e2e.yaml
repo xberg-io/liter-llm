@@ -172,9 +172,26 @@ jobs:
             test-cmd: "alef test --lang dart --e2e"
           - lang: kotlin
             java-version: "25"
-            test-cmd: "alef test --lang kotlin --e2e"
+            test-cmd: "cd packages/kotlin && gradle build -x test && cd ../.. && alef test --lang kotlin --e2e"
           - lang: swift
-            test-cmd: "cd e2e/swift && swift test"
+            # SwiftPM 6.0 derives package identity from path basename; e2e/swift
+            # and packages/swift collide on identity "swift". Run from a temp
+            # directory with a distinct basename so product lookup resolves.
+            test-cmd: |
+              SWIFT_E2E_DIR="$RUNNER_TEMP/swift-e2e-tests"
+              rm -rf "$SWIFT_E2E_DIR" && mkdir -p "$SWIFT_E2E_DIR"
+              cp -R "$GITHUB_WORKSPACE/e2e/swift/Tests" "$SWIFT_E2E_DIR/"
+              cat > "$SWIFT_E2E_DIR/Package.swift" <<EOF
+              // swift-tools-version: 6.0
+              import PackageDescription
+              let package = Package(
+                  name: "E2eSwift",
+                  platforms: [.macOS(.v13), .iOS(.v16)],
+                  dependencies: [.package(path: "$GITHUB_WORKSPACE/packages/swift")],
+                  targets: [.testTarget(name: "LiterLlmE2ETests", dependencies: [.product(name: "LiterLlm", package: "swift")])]
+              )
+              EOF
+              cd "$SWIFT_E2E_DIR" && swift test
           - lang: zig
             zig-version: "0.16.0"
             test-cmd: "alef test --lang zig --e2e"
