@@ -136,7 +136,7 @@ jobs:
       matrix:
         include:
           - lang: rust
-            test-cmd: "task rust:e2e:test"
+            test-cmd: "RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' task rust:e2e:test"
           - lang: python
             python-version: "3.13"
             test-cmd: "cd packages/python && uv sync && uvx maturin develop --release && cd ../.. && task python:e2e:test"
@@ -145,7 +145,7 @@ jobs:
             test-cmd: "task node:build && task node:e2e:test"
           - lang: wasm
             node-version: "24"
-            test-cmd: "task wasm:build && task wasm:e2e:test"
+            test-cmd: "RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' task wasm:build && RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' task wasm:e2e:test"
           - lang: go
             go-version: "1.26"
             test-cmd: "task go:e2e:test"
@@ -197,11 +197,27 @@ jobs:
         if: matrix.lang != 'swift'
         shell: bash
         run: |
-          mkdir -p target/release
-          cp -r ffi-artifacts/* target/release/ 2>/dev/null || true
+          # upload-artifact preserves source paths, so the artifact mirrors:
+          #   target/release/{libliter_llm_ffi.*, liter_llm_ffi.*, liter-llm, liter-llm.exe}
+          #   crates/liter-llm-ffi/include/*.h
+          #   e2e/rust/target/release/mock-server
+          # Restore that structure under the workspace root.
+          mkdir -p target/release target/debug crates/liter-llm-ffi/include e2e/rust/target/release
+          if [ -d ffi-artifacts/target/release ]; then
+            cp -a ffi-artifacts/target/release/. target/release/
+          fi
+          if [ -d ffi-artifacts/crates/liter-llm-ffi/include ]; then
+            cp -a ffi-artifacts/crates/liter-llm-ffi/include/. crates/liter-llm-ffi/include/
+          fi
+          if [ -d ffi-artifacts/e2e/rust/target/release ]; then
+            cp -a ffi-artifacts/e2e/rust/target/release/. e2e/rust/target/release/
+          fi
+          # Mirror release → debug so bindings (zig) that default to target/debug resolve.
+          cp -a target/release/. target/debug/ 2>/dev/null || true
           chmod +x target/release/libliter_llm_ffi.so 2>/dev/null || true
+          chmod +x target/debug/libliter_llm_ffi.so 2>/dev/null || true
           chmod +x target/release/liter-llm 2>/dev/null || true
-          chmod +x target/release/mock-server 2>/dev/null || true
+          chmod +x e2e/rust/target/release/mock-server 2>/dev/null || true
 
       - name: Create WASM pkg stub
         if: matrix.node-version || matrix.lang == 'wasm'

@@ -8,12 +8,12 @@ let package = Package(
         .iOS(.v14),
     ],
     dependencies: [
-        .package(name: "LiterLlm", path: "../../packages/swift"),
+        .package(path: "../../packages/swift"),
     ],
     targets: [
         .testTarget(
             name: "LiterLlmE2ETests",
-            dependencies: [.product(name: "LiterLlm", package: "LiterLlm")]
+            dependencies: [.product(name: "LiterLlm", package: "swift")]
         ),
     ]
 )
