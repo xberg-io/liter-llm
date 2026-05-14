@@ -13,9 +13,9 @@ jobs:
       run:
         working-directory: packages/zig
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@v6
+      - name: Setup Rust
+        uses: kreuzberg-dev/actions/setup-rust@v1
       - name: Build liter-llm-ffi
         working-directory: ${{ github.workspace }}
         run: cargo build -p liter-llm-ffi

@@ -13,7 +13,7 @@ jobs:
       run:
         working-directory: packages/dart
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up Dart
         uses: dart-lang/setup-dart@v1
         with:

@@ -1,0 +1,106 @@
+name: CI Lint
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - 'LICENSE*'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - 'LICENSE*'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-lint-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      CARGO_TERM_COLOR: always
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          cache-key-prefix: lint
+          components: rustfmt, clippy
+
+      - name: Setup Python
+        uses: kreuzberg-dev/actions/setup-python-env@v1
+        with:
+          python-version: "3.13"
+          cache-prefix: lint-py
+
+      - name: Setup Node
+        uses: kreuzberg-dev/actions/setup-node-workspace@v1
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.26"
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Setup Elixir
+        uses: kreuzberg-dev/actions/setup-elixir@v1
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+          working-directory: packages/ruby
+
+      - name: Setup PHP
+        uses: kreuzberg-dev/actions/setup-php@v1
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Setup C/C++ Tools
+        uses: kreuzberg-dev/actions/setup-c-cpp-tools@v1
+
+      - name: Install Task
+        uses: kreuzberg-dev/actions/install-task@v1
+
+      - name: Install alef CLI
+        uses: kreuzberg-dev/actions/install-alef@v1
+
+      - name: Run alef setup
+        run: alef setup
+        shell: bash
+
+      - name: Verify alef-generated code is up-to-date
+        run: alef verify --exit-code
+        shell: bash
+
+      - name: Run prek hooks
+        uses: j178/prek-action@v2
+        with:
+          cache: false
+          extra-args: --all-files
+
+      - name: Validate Providers Doc
+        run: task generate:providers-doc:check
+        shell: bash

@@ -1,0 +1,110 @@
+name: CI Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'zensical.toml'
+      - '.lychee.toml'
+      - '.github/workflows/ci-docs.yaml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'zensical.toml'
+      - '.lychee.toml'
+      - '.github/workflows/ci-docs.yaml'
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+concurrency:
+  group: ci-docs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: kreuzberg-dev/actions/setup-python-env@v1
+        with:
+          python-version: "3.13"
+          cache-prefix: docs-build
+          install-command: "uv sync --group docs --no-editable --no-install-project --no-install-workspace"
+
+      - name: Build docs
+        run: uv run --no-sync zensical build --clean
+        shell: bash
+
+      - name: Upload site artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: docs-site
+          path: site/
+          retention-days: 1
+
+  lint-links:
+    name: Lint Links
+    if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
+    needs: [build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download site artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: docs-site
+          path: site/
+
+      - name: Check links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: "--config .lychee.toml site/"
+          fail: true
+
+  deploy:
+    name: Deploy
+    needs: [build, lint-links]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && github.repository == 'kreuzberg-dev/liter-llm'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download site artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: docs-site
+          path: site/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

@@ -10,22 +10,13 @@ jobs:
   test:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@v6
+      - uses: kreuzberg-dev/actions/setup-rust@v1
       - name: Show Swift version
         run: swift --version
-      - name: Build liter-llm-swift Rust crate
-        run: cargo build -p liter-llm-swift
-      - name: Copy swift-bridge generated sources
-        run: |
-          OUT=$(ls -dt target/debug/build/liter-llm-swift-*/out 2>/dev/null | head -1)
-          cat "$OUT/SwiftBridgeCore.h" "$OUT/liter-llm-swift/liter-llm-swift.h" \
-              > packages/swift/Sources/RustBridgeC/RustBridgeC.h
-          { echo "import RustBridgeC"; cat "$OUT/SwiftBridgeCore.swift"; } \
-              > packages/swift/Sources/RustBridge/SwiftBridgeCore.swift
-          { echo "import RustBridgeC"; cat "$OUT/liter-llm-swift/liter-llm-swift.swift"; } \
-              > packages/swift/Sources/RustBridge/liter-llm-swift.swift
+      - uses: kreuzberg-dev/actions/build-swift-package@v1
+        with:
+          build-profile: release
       - name: Build Swift package
         working-directory: packages/swift
         run: swift build

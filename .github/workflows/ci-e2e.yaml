@@ -1,0 +1,297 @@
+name: CI E2E
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - crates/**
+      - packages/**
+      - e2e/**
+      - fixtures/**
+      - schemas/**
+      - Cargo.toml
+      - Cargo.lock
+      - alef.toml
+      - pyproject.toml
+      - uv.lock
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - Gemfile
+      - Gemfile.lock
+      - composer.json
+      - composer.lock
+      - go.mod
+      - go.sum
+      - .task/**
+      - Taskfile.yml
+      - .github/workflows/ci-e2e.yaml
+  pull_request:
+    branches: [main]
+    paths:
+      - crates/**
+      - packages/**
+      - e2e/**
+      - fixtures/**
+      - schemas/**
+      - Cargo.toml
+      - Cargo.lock
+      - alef.toml
+      - pyproject.toml
+      - uv.lock
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - Gemfile
+      - Gemfile.lock
+      - composer.json
+      - composer.lock
+      - go.mod
+      - go.sum
+      - .task/**
+      - Taskfile.yml
+      - .github/workflows/ci-e2e.yaml
+  workflow_dispatch:
+
+concurrency:
+  group: ci-e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
+  RUST_BACKTRACE: short
+  BUILD_PROFILE: ci
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+permissions:
+  contents: read
+
+jobs:
+  build-ffi:
+    name: Build FFI (${{ matrix.target }})
+    if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: aarch64-apple-darwin
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          cache-key-prefix: build-ffi-${{ matrix.target }}
+          target: ${{ matrix.target }}
+
+      - name: Build FFI library
+        uses: kreuzberg-dev/actions/build-rust-ffi@v1
+        with:
+          crate-name: liter-llm-ffi
+
+      - name: Build CLI
+        uses: kreuzberg-dev/actions/build-rust-cli@v1
+        with:
+          package-name: liter-llm-cli
+          binary-name: liter-llm
+
+      - name: Upload FFI artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: ffi-${{ matrix.target }}
+          path: |
+            target/release/libliter_llm_ffi.*
+            target/release/liter_llm_ffi.*
+            crates/liter-llm-ffi/include/*.h
+            target/release/liter-llm
+            target/release/liter-llm.exe
+          retention-days: 7
+          if-no-files-found: warn
+
+  e2e-tests:
+    name: E2E (${{ matrix.lang }})
+    if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
+    needs: [build-ffi]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - lang: rust
+            test-cmd: "task rust:e2e:test"
+          - lang: python
+            python-version: "3.13"
+            test-cmd: "task python:e2e:test"
+          - lang: node
+            node-version: "24"
+            test-cmd: "task node:e2e:test"
+          - lang: wasm
+            node-version: "24"
+            test-cmd: "task wasm:e2e:test"
+          - lang: go
+            go-version: "1.26"
+            test-cmd: "task go:e2e:test"
+          - lang: ruby
+            ruby-version: "3.4"
+            test-cmd: "task ruby:e2e:test"
+          - lang: java
+            java-version: "25"
+            test-cmd: "task java:e2e:test"
+          - lang: csharp
+            dotnet-version: "10.0.x"
+            test-cmd: "task csharp:e2e:test"
+          - lang: php
+            php-version: "8.4"
+            test-cmd: "task php:e2e:test"
+          - lang: elixir
+            elixir-version: "1.19"
+            otp-version: "28"
+            test-cmd: "task elixir:e2e:test"
+          - lang: c
+            test-cmd: "task c:e2e:test"
+          - lang: dart
+            dart-version: "stable"
+            test-cmd: "alef test --lang dart --e2e"
+          - lang: kotlin
+            java-version: "25"
+            test-cmd: "alef test --lang kotlin --e2e"
+          - lang: swift
+            test-cmd: "alef test --lang swift --e2e"
+          - lang: zig
+            zig-version: "0.16.0"
+            test-cmd: "alef test --lang zig --e2e"
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          cache-key-prefix: e2e-${{ matrix.lang }}
+
+      - name: Download FFI artifacts
+        uses: actions/download-artifact@v7
+        with:
+          name: ffi-aarch64-unknown-linux-gnu
+          path: ffi-artifacts
+
+      - name: Stage FFI artifacts
+        shell: bash
+        run: |
+          mkdir -p target/release
+          cp -r ffi-artifacts/* target/release/ 2>/dev/null || true
+          chmod +x target/release/libliter_llm_ffi.so 2>/dev/null || true
+          chmod +x target/release/liter-llm 2>/dev/null || true
+
+      - name: Setup Python
+        if: matrix.python-version
+        uses: kreuzberg-dev/actions/setup-python-env@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache-prefix: e2e-py-${{ matrix.python-version }}
+
+      - name: Setup Node
+        if: matrix.node-version
+        uses: kreuzberg-dev/actions/setup-node-workspace@v1
+
+      - name: Setup Go
+        if: matrix.go-version
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Setup Ruby
+        if: matrix.ruby-version
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
+          working-directory: packages/ruby
+
+      - name: Setup Java
+        if: matrix.java-version
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java-version }}
+
+      - name: Setup .NET
+        if: matrix.dotnet-version
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+
+      - name: Setup PHP
+        if: matrix.php-version
+        uses: kreuzberg-dev/actions/setup-php@v1
+        with:
+          php-version: ${{ matrix.php-version }}
+          tools: composer
+
+      - name: Setup Elixir
+        if: matrix.elixir-version
+        uses: kreuzberg-dev/actions/setup-elixir@v1
+        with:
+          elixir-version: ${{ matrix.elixir-version }}
+          otp-version: ${{ matrix.otp-version }}
+
+      - name: Setup Dart
+        if: matrix.dart-version
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ matrix.dart-version }}
+
+      - name: Setup Zig
+        if: matrix.zig-version
+        uses: kreuzberg-dev/actions/setup-zig@v1
+        with:
+          version: ${{ matrix.zig-version }}
+
+      - name: Setup C/C++ Tools
+        if: matrix.lang == 'c'
+        uses: kreuzberg-dev/actions/setup-c-cpp-tools@v1
+
+      - name: Setup Go CGO env
+        if: matrix.lang == 'go'
+        uses: kreuzberg-dev/actions/setup-go-cgo-env@v1
+        with:
+          ffi-crate-dir: crates/liter-llm-ffi
+          ffi-lib-name: liter_llm_ffi
+
+      - name: Setup library paths for FFI bindings
+        if: |
+          matrix.lang == 'go' || matrix.lang == 'java' ||
+          matrix.lang == 'csharp' || matrix.lang == 'elixir' ||
+          matrix.lang == 'kotlin' || matrix.lang == 'swift' ||
+          matrix.lang == 'zig' || matrix.lang == 'c'
+        shell: bash
+        run: |
+          echo "PKG_CONFIG_PATH=${PWD}/crates/liter-llm-ffi:${PKG_CONFIG_PATH:-}" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=${PWD}/target/release:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
+
+      - name: Install Task
+        uses: kreuzberg-dev/actions/install-task@v1
+
+      - name: Install alef CLI
+        uses: kreuzberg-dev/actions/install-alef@v1
+
+      - name: Build mock server
+        run: cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release
+        shell: bash
+
+      - name: Run E2E tests
+        run: ${{ matrix.test-cmd }}
+        shell: bash
+        env:
+          PKG_CONFIG_PATH: ${{ env.PKG_CONFIG_PATH }}
+          LD_LIBRARY_PATH: ${{ env.LD_LIBRARY_PATH }}
+          RUST_BACKTRACE: full
