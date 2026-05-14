@@ -34,13 +34,13 @@ tasks:
     desc: Auto-fix Rust code linting (cargo fmt + clippy)
     cmds:
       - cargo fmt --all
-      - cargo clippy --workspace --exclude liter-llm-wasm --fix --allow-dirty --allow-staged -- -D warnings
+      - cargo clippy --workspace --exclude liter-llm-wasm --exclude liter-llm-swift --exclude liter-llm-dart --fix --allow-dirty --allow-staged -- -D warnings
 
   lint:check:
     desc: Check Rust code linting without modifications
     cmds:
       - cargo fmt --all -- --check
-      - cargo clippy --workspace --exclude liter-llm-wasm -- -D warnings
+      - cargo clippy --workspace --exclude liter-llm-wasm --exclude liter-llm-swift --exclude liter-llm-dart -- -D warnings
 
   format:
     desc: Format all Rust code

@@ -1,61 +1,16 @@
 name: CI E2E
 
+# Run the 15-language e2e matrix on-demand only. Each language binding
+# needs its own build setup (wasm-pack, rake compile, mvn, maturin, etc.)
+# which makes the full matrix unsuitable for every PR — match kreuzberg's
+# ci-e2e.yaml pattern (workflow_dispatch only). The per-language smoke
+# workflows (dart.yml, kotlin.yml, swift.yml, zig.yml) still gate every push.
 on:
-  push:
-    branches: [main]
-    paths:
-      - crates/**
-      - packages/**
-      - e2e/**
-      - fixtures/**
-      - schemas/**
-      - Cargo.toml
-      - Cargo.lock
-      - alef.toml
-      - pyproject.toml
-      - uv.lock
-      - package.json
-      - pnpm-lock.yaml
-      - pnpm-workspace.yaml
-      - Gemfile
-      - Gemfile.lock
-      - composer.json
-      - composer.lock
-      - go.mod
-      - go.sum
-      - .task/**
-      - Taskfile.yml
-      - .github/workflows/ci-e2e.yaml
-  pull_request:
-    branches: [main]
-    paths:
-      - crates/**
-      - packages/**
-      - e2e/**
-      - fixtures/**
-      - schemas/**
-      - Cargo.toml
-      - Cargo.lock
-      - alef.toml
-      - pyproject.toml
-      - uv.lock
-      - package.json
-      - pnpm-lock.yaml
-      - pnpm-workspace.yaml
-      - Gemfile
-      - Gemfile.lock
-      - composer.json
-      - composer.lock
-      - go.mod
-      - go.sum
-      - .task/**
-      - Taskfile.yml
-      - .github/workflows/ci-e2e.yaml
   workflow_dispatch:
 
 concurrency:
-  group: ci-e2e-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: ci-e2e-${{ github.run_id }}
+  cancel-in-progress: false
 
 env:
   CARGO_TERM_COLOR: always
