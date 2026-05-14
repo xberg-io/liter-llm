@@ -1429,3 +1429,26 @@ mod sse_tests {
         assert!(parse_sse_line("data:[DONE]").is_none());
     }
 }
+
+#[cfg(test)]
+mod config_tests {
+    use crate::client::ClientConfigBuilder;
+
+    #[test]
+    fn base_url_sanitization() {
+        // Test trailing slash removal
+        let builder = ClientConfigBuilder::new("key").base_url("https://api.example.com/");
+        let config = builder.build();
+        assert_eq!(config.base_url.unwrap(), "https://api.example.com");
+
+        // Test multiple trailing slashes
+        let builder = ClientConfigBuilder::new("key").base_url("https://api.example.com///");
+        let config = builder.build();
+        assert_eq!(config.base_url.unwrap(), "https://api.example.com");
+
+        // Test no trailing slash (remains unchanged)
+        let builder = ClientConfigBuilder::new("key").base_url("https://api.example.com");
+        let config = builder.build();
+        assert_eq!(config.base_url.unwrap(), "https://api.example.com");
+    }
+}

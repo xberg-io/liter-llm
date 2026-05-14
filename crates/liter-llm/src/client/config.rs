@@ -222,8 +222,12 @@ impl ClientConfigBuilder {
     }
 
     /// Override the provider base URL for all requests.
+    ///
+    /// The URL is automatically sanitized to remove any trailing slashes to
+    /// ensure correct request path construction.
     pub fn base_url(mut self, url: impl Into<String>) -> Self {
-        self.config.base_url = Some(url.into());
+        let url = url.into();
+        self.config.base_url = Some(url.trim_end_matches('/').to_string());
         self
     }
 
