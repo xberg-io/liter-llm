@@ -145,7 +145,7 @@ jobs:
             test-cmd: "task node:build && task node:e2e:test"
           - lang: wasm
             node-version: "24"
-            test-cmd: "RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' task wasm:build && RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' task wasm:e2e:test"
+            test-cmd: "RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' task wasm:build:node && RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' task wasm:e2e:test"
           - lang: go
             go-version: "1.26"
             test-cmd: "task go:e2e:test"
@@ -268,6 +268,8 @@ jobs:
       - name: Setup Gradle
         if: matrix.lang == 'kotlin'
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.5.1"
 
       - name: Setup .NET
         if: matrix.dotnet-version

@@ -107,6 +107,7 @@ pub(crate) enum AuthType {
 pub(crate) struct AuthConfig {
     #[serde(rename = "type")]
     pub(crate) auth_type: AuthType,
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     pub(crate) env_var: Option<String>,
 }
 
@@ -134,6 +135,7 @@ pub(crate) trait Provider: Send + Sync {
     ///
     /// Used by [`DefaultClient::new`] to auto-load the API key from the
     /// environment when `load_env` is enabled and no explicit key was provided.
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     fn env_var(&self) -> Option<&str> {
         None
     }
@@ -402,6 +404,7 @@ pub(crate) struct OpenAiCompatibleProvider {
     pub name: String,
     pub base_url: String,
     /// Environment variable name for the API key, if known.
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     pub env_var: Option<&'static str>,
     pub model_prefixes: Vec<String>,
 }
