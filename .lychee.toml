@@ -42,6 +42,9 @@ exclude = [
 
   # Discord invite links (require auth)
   "discord\\.gg/",
+
+  # OpenDAL service-list docs page (URL keeps churning across versions)
+  "opendal\\.apache\\.org/docs/category/services",
 ]
 
 # Accept these HTTP status codes as valid

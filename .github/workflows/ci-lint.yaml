@@ -40,6 +40,10 @@ jobs:
           cache-key-prefix: lint
           components: rustfmt, clippy
 
+      - name: Create WASM pkg stub
+        run: mkdir -p crates/liter-llm-wasm/pkg && echo '{"name":"liter_llm","version":"0.0.0"}' > crates/liter-llm-wasm/pkg/package.json
+        shell: bash
+
       - name: Setup Python
         uses: kreuzberg-dev/actions/setup-python-env@v1
         with:

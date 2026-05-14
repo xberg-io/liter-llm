@@ -16,6 +16,7 @@ jobs:
         run: swift --version
       - uses: kreuzberg-dev/actions/build-swift-package@v1
         with:
+          crate-name: liter-llm-swift
           build-profile: release
       - name: Build Swift package
         working-directory: packages/swift

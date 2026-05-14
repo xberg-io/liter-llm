@@ -199,6 +199,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache-prefix: e2e-py-${{ matrix.python-version }}
 
+      - name: Create WASM pkg stub
+        if: matrix.node-version
+        run: mkdir -p crates/liter-llm-wasm/pkg && echo '{"name":"liter_llm","version":"0.0.0"}' > crates/liter-llm-wasm/pkg/package.json
+        shell: bash
+
       - name: Setup Node
         if: matrix.node-version
         uses: kreuzberg-dev/actions/setup-node-workspace@v1

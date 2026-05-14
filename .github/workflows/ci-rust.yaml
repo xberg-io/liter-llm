@@ -67,6 +67,9 @@ jobs:
           use-sccache: "true"
           components: rustfmt, clippy, llvm-tools-preview
 
+      - name: Setup PHP (required by ext-php-rs build script)
+        uses: kreuzberg-dev/actions/setup-php@v1
+
       - name: Install Task
         uses: kreuzberg-dev/actions/install-task@v1
 
