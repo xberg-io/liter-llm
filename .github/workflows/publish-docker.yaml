@@ -105,6 +105,50 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Build test image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: liter-llm-test:${{ needs.prepare.outputs.tag }}
+          cache-from: type=gha
+
+      - name: Functional smoke test
+        run: |
+          # Start the container in the background
+          docker run --detach --name liter-llm-smoke --publish 4000:4000 liter-llm-test:${{ needs.prepare.outputs.tag }}
+
+          # Wait for the API to be ready (up to 30 seconds)
+          for i in {1..30}; do
+            if curl -s http://localhost:4000/health > /dev/null 2>&1; then
+              echo "API is ready"
+              break
+            fi
+            echo "Waiting for API to be ready... ($i/30)"
+            sleep 1
+          done
+
+          # Verify the API responds
+          response=$(curl -s http://localhost:4000/health)
+          echo "API response: $response"
+
+          # Check response is valid JSON
+          if echo "$response" | jq . > /dev/null 2>&1; then
+            echo "Smoke test passed: API is functional"
+          else
+            echo "Smoke test failed: API returned invalid response"
+            docker logs liter-llm-smoke
+            exit 1
+          fi
+
+          # Clean up
+          docker stop liter-llm-smoke
+          docker rm liter-llm-smoke
+        shell: bash
+
       - name: Build and push
         uses: docker/build-push-action@v7
         with:
