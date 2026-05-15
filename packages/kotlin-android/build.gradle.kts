@@ -14,16 +14,15 @@ android {
         consumerProguardFiles("consumer-rules.pro")
     }
 
-    sourceSets {
-        getByName("main") {
-            jniLibs.srcDirs("src/main/jniLibs")
-        }
-    }
+    sourceSets { getByName("main") { jniLibs.srcDirs("src/main/jniLibs") } }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 
@@ -32,9 +31,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+    kotlinOptions { jvmTarget = "17" }
 }
 
 publishing {
@@ -44,9 +41,7 @@ publishing {
             artifactId = "liter-llm-android"
             version = project.findProperty("version")?.toString() ?: "0.0.1"
 
-            afterEvaluate {
-                from(components["release"])
-            }
+            afterEvaluate { from(components["release"]) }
 
             pom {
                 name.set("liter-llm-android")

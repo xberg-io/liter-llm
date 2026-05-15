@@ -25,6 +25,7 @@ pub fn build(b: *std.Build) void {
     });
     batches_module.addImport("liter_llm", liter_llm_module);
     const batches_tests = b.addTest(.{
+        .name = "batches_test",
         .root_module = batches_module,
     });
     const batches_run = b.addRunArtifact(batches_tests);
@@ -39,6 +40,7 @@ pub fn build(b: *std.Build) void {
     });
     chat_module.addImport("liter_llm", liter_llm_module);
     const chat_tests = b.addTest(.{
+        .name = "chat_test",
         .root_module = chat_module,
     });
     const chat_run = b.addRunArtifact(chat_tests);
@@ -53,6 +55,7 @@ pub fn build(b: *std.Build) void {
     });
     configuration_module.addImport("liter_llm", liter_llm_module);
     const configuration_tests = b.addTest(.{
+        .name = "configuration_test",
         .root_module = configuration_module,
     });
     const configuration_run = b.addRunArtifact(configuration_tests);
@@ -67,6 +70,7 @@ pub fn build(b: *std.Build) void {
     });
     contract_module.addImport("liter_llm", liter_llm_module);
     const contract_tests = b.addTest(.{
+        .name = "contract_test",
         .root_module = contract_module,
     });
     const contract_run = b.addRunArtifact(contract_tests);
@@ -81,6 +85,7 @@ pub fn build(b: *std.Build) void {
     });
     custom_provider_module.addImport("liter_llm", liter_llm_module);
     const custom_provider_tests = b.addTest(.{
+        .name = "custom_provider_test",
         .root_module = custom_provider_module,
     });
     const custom_provider_run = b.addRunArtifact(custom_provider_tests);
@@ -95,6 +100,7 @@ pub fn build(b: *std.Build) void {
     });
     embed_module.addImport("liter_llm", liter_llm_module);
     const embed_tests = b.addTest(.{
+        .name = "embed_test",
         .root_module = embed_module,
     });
     const embed_run = b.addRunArtifact(embed_tests);
@@ -109,6 +115,7 @@ pub fn build(b: *std.Build) void {
     });
     error_handling_module.addImport("liter_llm", liter_llm_module);
     const error_handling_tests = b.addTest(.{
+        .name = "error_handling_test",
         .root_module = error_handling_module,
     });
     const error_handling_run = b.addRunArtifact(error_handling_tests);
@@ -123,6 +130,7 @@ pub fn build(b: *std.Build) void {
     });
     files_module.addImport("liter_llm", liter_llm_module);
     const files_tests = b.addTest(.{
+        .name = "files_test",
         .root_module = files_module,
     });
     const files_run = b.addRunArtifact(files_tests);
@@ -137,6 +145,7 @@ pub fn build(b: *std.Build) void {
     });
     image_generate_module.addImport("liter_llm", liter_llm_module);
     const image_generate_tests = b.addTest(.{
+        .name = "image_generate_test",
         .root_module = image_generate_module,
     });
     const image_generate_run = b.addRunArtifact(image_generate_tests);
@@ -151,6 +160,7 @@ pub fn build(b: *std.Build) void {
     });
     list_models_module.addImport("liter_llm", liter_llm_module);
     const list_models_tests = b.addTest(.{
+        .name = "list_models_test",
         .root_module = list_models_module,
     });
     const list_models_run = b.addRunArtifact(list_models_tests);
@@ -165,6 +175,7 @@ pub fn build(b: *std.Build) void {
     });
     moderate_module.addImport("liter_llm", liter_llm_module);
     const moderate_tests = b.addTest(.{
+        .name = "moderate_test",
         .root_module = moderate_module,
     });
     const moderate_run = b.addRunArtifact(moderate_tests);
@@ -179,6 +190,7 @@ pub fn build(b: *std.Build) void {
     });
     ocr_module.addImport("liter_llm", liter_llm_module);
     const ocr_tests = b.addTest(.{
+        .name = "ocr_test",
         .root_module = ocr_module,
     });
     const ocr_run = b.addRunArtifact(ocr_tests);
@@ -193,6 +205,7 @@ pub fn build(b: *std.Build) void {
     });
     parity_module.addImport("liter_llm", liter_llm_module);
     const parity_tests = b.addTest(.{
+        .name = "parity_test",
         .root_module = parity_module,
     });
     const parity_run = b.addRunArtifact(parity_tests);
@@ -207,6 +220,7 @@ pub fn build(b: *std.Build) void {
     });
     rerank_module.addImport("liter_llm", liter_llm_module);
     const rerank_tests = b.addTest(.{
+        .name = "rerank_test",
         .root_module = rerank_module,
     });
     const rerank_run = b.addRunArtifact(rerank_tests);
@@ -221,6 +235,7 @@ pub fn build(b: *std.Build) void {
     });
     responses_module.addImport("liter_llm", liter_llm_module);
     const responses_tests = b.addTest(.{
+        .name = "responses_test",
         .root_module = responses_module,
     });
     const responses_run = b.addRunArtifact(responses_tests);
@@ -235,6 +250,7 @@ pub fn build(b: *std.Build) void {
     });
     search_module.addImport("liter_llm", liter_llm_module);
     const search_tests = b.addTest(.{
+        .name = "search_test",
         .root_module = search_module,
     });
     const search_run = b.addRunArtifact(search_tests);
@@ -249,6 +265,7 @@ pub fn build(b: *std.Build) void {
     });
     smoke_module.addImport("liter_llm", liter_llm_module);
     const smoke_tests = b.addTest(.{
+        .name = "smoke_test",
         .root_module = smoke_module,
     });
     const smoke_run = b.addRunArtifact(smoke_tests);
@@ -263,6 +280,7 @@ pub fn build(b: *std.Build) void {
     });
     speech_module.addImport("liter_llm", liter_llm_module);
     const speech_tests = b.addTest(.{
+        .name = "speech_test",
         .root_module = speech_module,
     });
     const speech_run = b.addRunArtifact(speech_tests);
@@ -277,6 +295,7 @@ pub fn build(b: *std.Build) void {
     });
     streaming_module.addImport("liter_llm", liter_llm_module);
     const streaming_tests = b.addTest(.{
+        .name = "streaming_test",
         .root_module = streaming_module,
     });
     const streaming_run = b.addRunArtifact(streaming_tests);
@@ -291,6 +310,7 @@ pub fn build(b: *std.Build) void {
     });
     tool_calling_module.addImport("liter_llm", liter_llm_module);
     const tool_calling_tests = b.addTest(.{
+        .name = "tool_calling_test",
         .root_module = tool_calling_module,
     });
     const tool_calling_run = b.addRunArtifact(tool_calling_tests);
@@ -305,6 +325,7 @@ pub fn build(b: *std.Build) void {
     });
     transcribe_module.addImport("liter_llm", liter_llm_module);
     const transcribe_tests = b.addTest(.{
+        .name = "transcribe_test",
         .root_module = transcribe_module,
     });
     const transcribe_run = b.addRunArtifact(transcribe_tests);
@@ -319,6 +340,7 @@ pub fn build(b: *std.Build) void {
     });
     types_module.addImport("liter_llm", liter_llm_module);
     const types_tests = b.addTest(.{
+        .name = "types_test",
         .root_module = types_module,
     });
     const types_run = b.addRunArtifact(types_tests);

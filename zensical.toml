@@ -9,71 +9,71 @@ edit_uri = "edit/main/docs/"
 copyright = "Copyright &copy; 2024-2026 Kreuzberg.dev"
 extra_css = ["css/extra.css"]
 nav = [
-  { "Home" = "index.md" },
+    { "Home" = "index.md" },
 
-  { "Get Started" = [
-    { "Installation" = "getting-started/installation.md" },
-  ] },
-
-  { "Guides" = [
-    { "Core" = [
-      { "Chat & Streaming" = "usage/chat.md" },
-      { "Embeddings & Rerank" = "usage/embeddings.md" },
-      { "Media (Images, Speech, Transcription)" = "usage/media.md" },
-      { "Search & OCR" = "usage/search-ocr.md" },
-      { "Files & Batches" = "usage/files.md" },
-      { "Configuration" = "usage/configuration.md" },
+    { "Get Started" = [
+        { "Installation" = "getting-started/installation.md" },
     ] },
-    { "Advanced" = [
-      { "Authentication" = "usage/authentication.md" },
-      { "Fallback & Routing" = "usage/fallback-routing.md" },
-      { "Local LLMs" = "usage/local-llms.md" },
-      { "Error Handling" = "usage/error-handling.md" },
-      { "Observability" = "usage/observability.md" },
-    ] },
-    { "Deployment" = [
-      { "Proxy Server" = "server/proxy-server.md" },
-      { "Proxy Configuration" = "server/proxy-configuration.md" },
-      { "MCP Server" = "server/mcp-server.md" },
-      { "MCP & IDE Integration" = "usage/mcp-integration.md" },
-    ] },
-  ] },
 
-  { "Concepts" = [
-    { "Architecture" = "concepts/architecture.md" },
-    { "Feature Flags" = "concepts/feature-flags.md" },
-    { "Tokenizer" = "concepts/tokenizer.md" },
-    { "Cost Estimation" = "concepts/cost-estimation.md" },
-  ] },
-
-  { "Reference" = [
-    { "API" = [
-      { "Rust" = "reference/api-rust.md" },
-      { "Python" = "reference/api-python.md" },
-      { "TypeScript / Node.js" = "reference/api-typescript.md" },
-      { "Go" = "reference/api-go.md" },
-      { "Java" = "reference/api-java.md" },
-      { "Kotlin" = "reference/api-kotlin.md" },
-      { "C#" = "reference/api-csharp.md" },
-      { "Ruby" = "reference/api-ruby.md" },
-      { "PHP" = "reference/api-php.md" },
-      { "Elixir" = "reference/api-elixir.md" },
-      { "Dart" = "reference/api-dart.md" },
-      { "Swift" = "reference/api-swift.md" },
-      { "Zig" = "reference/api-zig.md" },
-      { "WebAssembly" = "reference/api-wasm.md" },
-      { "C / FFI" = "reference/api-c.md" },
+    { "Guides" = [
+        { "Core" = [
+            { "Chat & Streaming" = "usage/chat.md" },
+            { "Embeddings & Rerank" = "usage/embeddings.md" },
+            { "Media (Images, Speech, Transcription)" = "usage/media.md" },
+            { "Search & OCR" = "usage/search-ocr.md" },
+            { "Files & Batches" = "usage/files.md" },
+            { "Configuration" = "usage/configuration.md" },
+        ] },
+        { "Advanced" = [
+            { "Authentication" = "usage/authentication.md" },
+            { "Fallback & Routing" = "usage/fallback-routing.md" },
+            { "Local LLMs" = "usage/local-llms.md" },
+            { "Error Handling" = "usage/error-handling.md" },
+            { "Observability" = "usage/observability.md" },
+        ] },
+        { "Deployment" = [
+            { "Proxy Server" = "server/proxy-server.md" },
+            { "Proxy Configuration" = "server/proxy-configuration.md" },
+            { "MCP Server" = "server/mcp-server.md" },
+            { "MCP & IDE Integration" = "usage/mcp-integration.md" },
+        ] },
     ] },
-    { "Providers" = "providers.md" },
-    { "Configuration" = "reference/configuration.md" },
-    { "Types" = "reference/types.md" },
-    { "Errors" = "reference/errors.md" },
-  ] },
 
-  { "More" = [
-    { "Contributing" = "contributing.md" },
-    { "Changelog" = "CHANGELOG.md" },
-  ] },
+    { "Concepts" = [
+        { "Architecture" = "concepts/architecture.md" },
+        { "Feature Flags" = "concepts/feature-flags.md" },
+        { "Tokenizer" = "concepts/tokenizer.md" },
+        { "Cost Estimation" = "concepts/cost-estimation.md" },
+    ] },
+
+    { "Reference" = [
+        { "API" = [
+            { "Rust" = "reference/api-rust.md" },
+            { "Python" = "reference/api-python.md" },
+            { "TypeScript / Node.js" = "reference/api-typescript.md" },
+            { "Go" = "reference/api-go.md" },
+            { "Java" = "reference/api-java.md" },
+            { "Kotlin" = "reference/api-kotlin.md" },
+            { "C#" = "reference/api-csharp.md" },
+            { "Ruby" = "reference/api-ruby.md" },
+            { "PHP" = "reference/api-php.md" },
+            { "Elixir" = "reference/api-elixir.md" },
+            { "Dart" = "reference/api-dart.md" },
+            { "Swift" = "reference/api-swift.md" },
+            { "Zig" = "reference/api-zig.md" },
+            { "WebAssembly" = "reference/api-wasm.md" },
+            { "C / FFI" = "reference/api-c.md" },
+        ] },
+        { "Providers" = "providers.md" },
+        { "Configuration" = "reference/configuration.md" },
+        { "Types" = "reference/types.md" },
+        { "Errors" = "reference/errors.md" },
+    ] },
+
+    { "More" = [
+        { "Contributing" = "contributing.md" },
+        { "Changelog" = "CHANGELOG.md" },
+    ] },
 ]
 
 [project.theme]
@@ -83,25 +83,25 @@ logo = "assets/logo.svg"
 favicon = "assets/favicon.ico"
 language = "en"
 features = [
-  "content.code.copy",
-  "content.code.annotate",
-  "content.tabs.link",
-  "navigation.instant",
-  "navigation.instant.progress",
-  "navigation.path",
-  "navigation.prune",
-  "navigation.indexes",
-  "navigation.sections",
-  "navigation.tabs",
-  "navigation.tabs.sticky",
-  "navigation.tracking",
-  "navigation.top",
-  "search.highlight",
-  "search.share",
-  "search.suggest",
-  "toc.follow",
-  "toc.integrate",
-  "announce.dismiss",
+    "content.code.copy",
+    "content.code.annotate",
+    "content.tabs.link",
+    "navigation.instant",
+    "navigation.instant.progress",
+    "navigation.path",
+    "navigation.prune",
+    "navigation.indexes",
+    "navigation.sections",
+    "navigation.tabs",
+    "navigation.tabs.sticky",
+    "navigation.tracking",
+    "navigation.top",
+    "search.highlight",
+    "search.share",
+    "search.suggest",
+    "toc.follow",
+    "toc.integrate",
+    "announce.dismiss",
 ]
 
 [project.theme.font]
@@ -166,7 +166,7 @@ check_paths = true
 
 [project.markdown_extensions.pymdownx.superfences]
 custom_fences = [
-  { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
+    { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
 ]
 
 [project.markdown_extensions.pymdownx.tabbed]

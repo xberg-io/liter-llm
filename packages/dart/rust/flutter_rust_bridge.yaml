@@ -1,3 +1,4 @@
 rust_root: .
 rust_input: crate
 dart_output: ../lib/src/liter_llm_bridge_generated
+add_mod_to_lib: false

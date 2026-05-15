@@ -27,13 +27,13 @@ def create_client(api_key: str, base_url: str = None, timeout_secs: int = None, 
 
 **Parameters:**
 
-| Name           | Type  | Required | Description |
-| -------------- | ----- | -------- | ----------- |
-| `api_key`      | `str` | Yes      | The api key |
-| `base_url`     | `str  | None`    | No          | The base url     |
-| `timeout_secs` | `int  | None`    | No          | The timeout secs |
-| `max_retries`  | `int  | None`    | No          | The max retries  |
-| `model_hint`   | `str  | None`    | No          | The model hint   |
+| Name           | Type          | Required | Description      |
+| -------------- | ------------- | -------- | ---------------- |
+| `api_key`      | `str`         | Yes      | The api key      |
+| `base_url`     | `str \| None` | No       | The base url     |
+| `timeout_secs` | `int \| None` | No       | The timeout secs |
+| `max_retries`  | `int \| None` | No       | The max retries  |
+| `model_hint`   | `str \| None` | No       | The model hint   |
 
 **Returns:** `DefaultClient`
 **Errors:** Raises `Error`.
@@ -129,13 +129,13 @@ def unregister_custom_provider(name: str) -> bool
 
 #### AssistantMessage
 
-| Field           | Type            | Default | Description |
-| --------------- | --------------- | ------- | ----------- |
-| `content`       | `str            | None`   | `None`      | The extracted text content                                             |
-| `name`          | `str            | None`   | `None`      | The name                                                               |
-| `tool_calls`    | `list[ToolCall] | None`   | `[]`        | Tool calls                                                             |
-| `refusal`       | `str            | None`   | `None`      | Refusal                                                                |
-| `function_call` | `FunctionCall   | None`   | `None`      | Deprecated legacy function_call field; retained for API compatibility. |
+| Field           | Type                     | Default | Description                                                            |
+| --------------- | ------------------------ | ------- | ---------------------------------------------------------------------- |
+| `content`       | `str \| None`            | `None`  | The extracted text content                                             |
+| `name`          | `str \| None`            | `None`  | The name                                                               |
+| `tool_calls`    | `list[ToolCall] \| None` | `[]`    | Tool calls                                                             |
+| `refusal`       | `str \| None`            | `None`  | Refusal                                                                |
+| `function_call` | `FunctionCall \| None`   | `None`  | Deprecated legacy function_call field; retained for API compatibility. |
 
 ---
 
@@ -150,43 +150,43 @@ def unregister_custom_provider(name: str) -> bool
 
 #### BatchListQuery
 
-| Field   | Type | Default | Description |
-| ------- | ---- | ------- | ----------- |
-| `limit` | `int | None`   | `None`      | Limit |
-| `after` | `str | None`   | `None`      | After |
+| Field   | Type          | Default | Description |
+| ------- | ------------- | ------- | ----------- |
+| `limit` | `int \| None` | `None`  | Limit       |
+| `after` | `str \| None` | `None`  | After       |
 
 ---
 
 #### BatchListResponse
 
-| Field      | Type                | Default | Description |
-| ---------- | ------------------- | ------- | ----------- |
-| `object`   | `str`               | —       | Object      |
-| `data`     | `list[BatchObject]` | `[]`    | Data        |
-| `has_more` | `bool               | None`   | `None`      | Whether more |
-| `first_id` | `str                | None`   | `None`      | First id     |
-| `last_id`  | `str                | None`   | `None`      | Last id      |
+| Field      | Type                | Default | Description  |
+| ---------- | ------------------- | ------- | ------------ |
+| `object`   | `str`               | —       | Object       |
+| `data`     | `list[BatchObject]` | `[]`    | Data         |
+| `has_more` | `bool \| None`      | `None`  | Whether more |
+| `first_id` | `str \| None`       | `None`  | First id     |
+| `last_id`  | `str \| None`       | `None`  | Last id      |
 
 ---
 
 #### BatchObject
 
-| Field               | Type                | Default                  | Description           |
-| ------------------- | ------------------- | ------------------------ | --------------------- |
-| `id`                | `str`               | —                        | Unique identifier     |
-| `object`            | `str`               | —                        | Object                |
-| `endpoint`          | `str`               | —                        | Endpoint              |
-| `input_file_id`     | `str`               | —                        | Input file id         |
-| `completion_window` | `str`               | —                        | Completion window     |
-| `status`            | `BatchStatus`       | `BatchStatus.VALIDATING` | Status (batch status) |
-| `output_file_id`    | `str                | None`                    | `None`                | Output file id                        |
-| `error_file_id`     | `str                | None`                    | `None`                | Error file id                         |
-| `created_at`        | `int`               | —                        | Created at            |
-| `completed_at`      | `int                | None`                    | `None`                | Completed at                          |
-| `failed_at`         | `int                | None`                    | `None`                | Failed at                             |
-| `expired_at`        | `int                | None`                    | `None`                | Expired at                            |
-| `request_counts`    | `BatchRequestCounts | None`                    | `None`                | Request counts (batch request counts) |
-| `metadata`          | `dict[str, Any]     | None`                    | `None`                | Document metadata                     |
+| Field               | Type                         | Default                  | Description                           |
+| ------------------- | ---------------------------- | ------------------------ | ------------------------------------- |
+| `id`                | `str`                        | —                        | Unique identifier                     |
+| `object`            | `str`                        | —                        | Object                                |
+| `endpoint`          | `str`                        | —                        | Endpoint                              |
+| `input_file_id`     | `str`                        | —                        | Input file id                         |
+| `completion_window` | `str`                        | —                        | Completion window                     |
+| `status`            | `BatchStatus`                | `BatchStatus.VALIDATING` | Status (batch status)                 |
+| `output_file_id`    | `str \| None`                | `None`                   | Output file id                        |
+| `error_file_id`     | `str \| None`                | `None`                   | Error file id                         |
+| `created_at`        | `int`                        | —                        | Created at                            |
+| `completed_at`      | `int \| None`                | `None`                   | Completed at                          |
+| `failed_at`         | `int \| None`                | `None`                   | Failed at                             |
+| `expired_at`        | `int \| None`                | `None`                   | Expired at                            |
+| `request_counts`    | `BatchRequestCounts \| None` | `None`                   | Request counts (batch request counts) |
+| `metadata`          | `dict[str, Any] \| None`     | `None`                   | Document metadata                     |
 
 ---
 
@@ -209,51 +209,51 @@ def unregister_custom_provider(name: str) -> bool
 | `created`            | `int`                | —       | Created                                                                                                                                       |
 | `model`              | `str`                | —       | Model                                                                                                                                         |
 | `choices`            | `list[StreamChoice]` | `[]`    | Choices                                                                                                                                       |
-| `usage`              | `Usage               | None`   | `None`                                                                                                                                        | Usage (usage)      |
-| `system_fingerprint` | `str                 | None`   | `None`                                                                                                                                        | System fingerprint |
-| `service_tier`       | `str                 | None`   | `None`                                                                                                                                        | Service tier       |
+| `usage`              | `Usage \| None`      | `None`  | Usage (usage)                                                                                                                                 |
+| `system_fingerprint` | `str \| None`        | `None`  | System fingerprint                                                                                                                            |
+| `service_tier`       | `str \| None`        | `None`  | Service tier                                                                                                                                  |
 
 ---
 
 #### ChatCompletionRequest
 
-| Field                 | Type                      | Default | Description |
-| --------------------- | ------------------------- | ------- | ----------- |
-| `model`               | `str`                     | —       | Model       |
-| `messages`            | `list[Message]`           | `[]`    | Messages    |
-| `temperature`         | `float                    | None`   | `None`      | Temperature                                                                                                                       |
-| `top_p`               | `float                    | None`   | `None`      | Top p                                                                                                                             |
-| `n`                   | `int                      | None`   | `None`      | N                                                                                                                                 |
-| `stream`              | `bool                     | None`   | `None`      | Whether to stream the response. Managed by the client layer — do not set directly.                                                |
-| `stop`                | `StopSequence             | None`   | `None`      | Stop (stop sequence)                                                                                                              |
-| `max_tokens`          | `int                      | None`   | `None`      | Maximum tokens                                                                                                                    |
-| `presence_penalty`    | `float                    | None`   | `None`      | Presence penalty                                                                                                                  |
-| `frequency_penalty`   | `float                    | None`   | `None`      | Frequency penalty                                                                                                                 |
-| `logit_bias`          | `dict[str, float]         | None`   | `{}`        | Token bias map. Uses `BTreeMap` (sorted keys) for deterministic serialization order — important when hashing or signing requests. |
-| `user`                | `str                      | None`   | `None`      | User                                                                                                                              |
-| `tools`               | `list[ChatCompletionTool] | None`   | `[]`        | Tools                                                                                                                             |
-| `tool_choice`         | `ToolChoice               | None`   | `None`      | Tool choice (tool choice)                                                                                                         |
-| `parallel_tool_calls` | `bool                     | None`   | `None`      | Parallel tool calls                                                                                                               |
-| `response_format`     | `ResponseFormat           | None`   | `None`      | Response format (response format)                                                                                                 |
-| `stream_options`      | `StreamOptions            | None`   | `None`      | Stream options (stream options)                                                                                                   |
-| `seed`                | `int                      | None`   | `None`      | Seed                                                                                                                              |
-| `reasoning_effort`    | `ReasoningEffort          | None`   | `None`      | Reasoning effort (reasoning effort)                                                                                               |
-| `extra_body`          | `dict[str, Any]           | None`   | `None`      | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc.      |
+| Field                 | Type                               | Default | Description                                                                                                                       |
+| --------------------- | ---------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `model`               | `str`                              | —       | Model                                                                                                                             |
+| `messages`            | `list[Message]`                    | `[]`    | Messages                                                                                                                          |
+| `temperature`         | `float \| None`                    | `None`  | Temperature                                                                                                                       |
+| `top_p`               | `float \| None`                    | `None`  | Top p                                                                                                                             |
+| `n`                   | `int \| None`                      | `None`  | N                                                                                                                                 |
+| `stream`              | `bool \| None`                     | `None`  | Whether to stream the response. Managed by the client layer — do not set directly.                                                |
+| `stop`                | `StopSequence \| None`             | `None`  | Stop (stop sequence)                                                                                                              |
+| `max_tokens`          | `int \| None`                      | `None`  | Maximum tokens                                                                                                                    |
+| `presence_penalty`    | `float \| None`                    | `None`  | Presence penalty                                                                                                                  |
+| `frequency_penalty`   | `float \| None`                    | `None`  | Frequency penalty                                                                                                                 |
+| `logit_bias`          | `dict[str, float] \| None`         | `{}`    | Token bias map. Uses `BTreeMap` (sorted keys) for deterministic serialization order — important when hashing or signing requests. |
+| `user`                | `str \| None`                      | `None`  | User                                                                                                                              |
+| `tools`               | `list[ChatCompletionTool] \| None` | `[]`    | Tools                                                                                                                             |
+| `tool_choice`         | `ToolChoice \| None`               | `None`  | Tool choice (tool choice)                                                                                                         |
+| `parallel_tool_calls` | `bool \| None`                     | `None`  | Parallel tool calls                                                                                                               |
+| `response_format`     | `ResponseFormat \| None`           | `None`  | Response format (response format)                                                                                                 |
+| `stream_options`      | `StreamOptions \| None`            | `None`  | Stream options (stream options)                                                                                                   |
+| `seed`                | `int \| None`                      | `None`  | Seed                                                                                                                              |
+| `reasoning_effort`    | `ReasoningEffort \| None`          | `None`  | Reasoning effort (reasoning effort)                                                                                               |
+| `extra_body`          | `dict[str, Any] \| None`           | `None`  | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc.      |
 
 ---
 
 #### ChatCompletionResponse
 
-| Field                | Type           | Default | Description                                                                                                                                      |
-| -------------------- | -------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `id`                 | `str`          | —       | Unique identifier                                                                                                                                |
-| `object`             | `str`          | —       | Always `"chat.completion"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `created`            | `int`          | —       | Created                                                                                                                                          |
-| `model`              | `str`          | —       | Model                                                                                                                                            |
-| `choices`            | `list[Choice]` | `[]`    | Choices                                                                                                                                          |
-| `usage`              | `Usage         | None`   | `None`                                                                                                                                           | Usage (usage)      |
-| `system_fingerprint` | `str           | None`   | `None`                                                                                                                                           | System fingerprint |
-| `service_tier`       | `str           | None`   | `None`                                                                                                                                           | Service tier       |
+| Field                | Type            | Default | Description                                                                                                                                      |
+| -------------------- | --------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`                 | `str`           | —       | Unique identifier                                                                                                                                |
+| `object`             | `str`           | —       | Always `"chat.completion"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
+| `created`            | `int`           | —       | Created                                                                                                                                          |
+| `model`              | `str`           | —       | Model                                                                                                                                            |
+| `choices`            | `list[Choice]`  | `[]`    | Choices                                                                                                                                          |
+| `usage`              | `Usage \| None` | `None`  | Usage (usage)                                                                                                                                    |
+| `system_fingerprint` | `str \| None`   | `None`  | System fingerprint                                                                                                                               |
+| `service_tier`       | `str \| None`   | `None`  | Service tier                                                                                                                                     |
 
 ---
 
@@ -268,22 +268,22 @@ def unregister_custom_provider(name: str) -> bool
 
 #### Choice
 
-| Field           | Type               | Default | Description                 |
-| --------------- | ------------------ | ------- | --------------------------- |
-| `index`         | `int`              | —       | Index                       |
-| `message`       | `AssistantMessage` | —       | Message (assistant message) |
-| `finish_reason` | `FinishReason      | None`   | `None`                      | Finish reason (finish reason) |
+| Field           | Type                   | Default | Description                   |
+| --------------- | ---------------------- | ------- | ----------------------------- |
+| `index`         | `int`                  | —       | Index                         |
+| `message`       | `AssistantMessage`     | —       | Message (assistant message)   |
+| `finish_reason` | `FinishReason \| None` | `None`  | Finish reason (finish reason) |
 
 ---
 
 #### CreateBatchRequest
 
-| Field               | Type            | Default | Description       |
-| ------------------- | --------------- | ------- | ----------------- |
-| `input_file_id`     | `str`           | —       | Input file id     |
-| `endpoint`          | `str`           | —       | Endpoint          |
-| `completion_window` | `str`           | —       | Completion window |
-| `metadata`          | `dict[str, Any] | None`   | `None`            | Document metadata |
+| Field               | Type                     | Default | Description       |
+| ------------------- | ------------------------ | ------- | ----------------- |
+| `input_file_id`     | `str`                    | —       | Input file id     |
+| `endpoint`          | `str`                    | —       | Endpoint          |
+| `completion_window` | `str`                    | —       | Completion window |
+| `metadata`          | `dict[str, Any] \| None` | `None`  | Document metadata |
 
 ---
 
@@ -293,7 +293,7 @@ def unregister_custom_provider(name: str) -> bool
 | ---------- | ------------- | ------------------------ | ------------------------- |
 | `file`     | `str`         | —                        | Base64-encoded file data. |
 | `purpose`  | `FilePurpose` | `FilePurpose.ASSISTANTS` | Purpose (file purpose)    |
-| `filename` | `str          | None`                    | `None`                    | Filename |
+| `filename` | `str \| None` | `None`                   | Filename                  |
 
 ---
 
@@ -301,30 +301,30 @@ def unregister_custom_provider(name: str) -> bool
 
 Request to create images from a text prompt.
 
-| Field             | Type  | Default | Description |
-| ----------------- | ----- | ------- | ----------- |
-| `prompt`          | `str` | —       | Prompt      |
-| `model`           | `str  | None`   | `None`      | Model           |
-| `n`               | `int  | None`   | `None`      | N               |
-| `size`            | `str  | None`   | `None`      | Size in bytes   |
-| `quality`         | `str  | None`   | `None`      | Quality         |
-| `style`           | `str  | None`   | `None`      | Style           |
-| `response_format` | `str  | None`   | `None`      | Response format |
-| `user`            | `str  | None`   | `None`      | User            |
+| Field             | Type          | Default | Description     |
+| ----------------- | ------------- | ------- | --------------- |
+| `prompt`          | `str`         | —       | Prompt          |
+| `model`           | `str \| None` | `None`  | Model           |
+| `n`               | `int \| None` | `None`  | N               |
+| `size`            | `str \| None` | `None`  | Size in bytes   |
+| `quality`         | `str \| None` | `None`  | Quality         |
+| `style`           | `str \| None` | `None`  | Style           |
+| `response_format` | `str \| None` | `None`  | Response format |
+| `user`            | `str \| None` | `None`  | User            |
 
 ---
 
 #### CreateResponseRequest
 
-| Field               | Type                | Default | Description |
-| ------------------- | ------------------- | ------- | ----------- |
-| `model`             | `str`               | —       | Model       |
-| `input`             | `dict[str, Any]`    | —       | Input       |
-| `instructions`      | `str                | None`   | `None`      | Instructions          |
-| `tools`             | `list[ResponseTool] | None`   | `[]`        | Tools                 |
-| `temperature`       | `float              | None`   | `None`      | Temperature           |
-| `max_output_tokens` | `int                | None`   | `None`      | Maximum output tokens |
-| `metadata`          | `dict[str, Any]     | None`   | `None`      | Document metadata     |
+| Field               | Type                         | Default | Description           |
+| ------------------- | ---------------------------- | ------- | --------------------- |
+| `model`             | `str`                        | —       | Model                 |
+| `input`             | `dict[str, Any]`             | —       | Input                 |
+| `instructions`      | `str \| None`                | `None`  | Instructions          |
+| `tools`             | `list[ResponseTool] \| None` | `[]`    | Tools                 |
+| `temperature`       | `float \| None`              | `None`  | Temperature           |
+| `max_output_tokens` | `int \| None`                | `None`  | Maximum output tokens |
+| `metadata`          | `dict[str, Any] \| None`     | `None`  | Document metadata     |
 
 ---
 
@@ -332,13 +332,13 @@ Request to create images from a text prompt.
 
 Request to generate speech audio from text.
 
-| Field             | Type   | Default | Description |
-| ----------------- | ------ | ------- | ----------- |
-| `model`           | `str`  | —       | Model       |
-| `input`           | `str`  | —       | Input       |
-| `voice`           | `str`  | —       | Voice       |
-| `response_format` | `str   | None`   | `None`      | Response format |
-| `speed`           | `float | None`   | `None`      | Speed           |
+| Field             | Type            | Default | Description     |
+| ----------------- | --------------- | ------- | --------------- |
+| `model`           | `str`           | —       | Model           |
+| `input`           | `str`           | —       | Input           |
+| `voice`           | `str`           | —       | Voice           |
+| `response_format` | `str \| None`   | `None`  | Response format |
+| `speed`           | `float \| None` | `None`  | Speed           |
 
 ---
 
@@ -346,14 +346,14 @@ Request to generate speech audio from text.
 
 Request to transcribe audio into text.
 
-| Field             | Type   | Default | Description                     |
-| ----------------- | ------ | ------- | ------------------------------- |
-| `model`           | `str`  | —       | Model                           |
-| `file`            | `str`  | —       | Base64-encoded audio file data. |
-| `language`        | `str   | None`   | `None`                          | Language        |
-| `prompt`          | `str   | None`   | `None`                          | Prompt          |
-| `response_format` | `str   | None`   | `None`                          | Response format |
-| `temperature`     | `float | None`   | `None`                          | Temperature     |
+| Field             | Type            | Default | Description                     |
+| ----------------- | --------------- | ------- | ------------------------------- |
+| `model`           | `str`           | —       | Model                           |
+| `file`            | `str`           | —       | Base64-encoded audio file data. |
+| `language`        | `str \| None`   | `None`  | Language                        |
+| `prompt`          | `str \| None`   | `None`  | Prompt                          |
+| `response_format` | `str \| None`   | `None`  | Response format                 |
+| `temperature`     | `float \| None` | `None`  | Temperature                     |
 
 ---
 
@@ -586,10 +586,10 @@ def cancel_response(self, id: str) -> ResponseObject
 
 #### DeveloperMessage
 
-| Field     | Type  | Default | Description                |
-| --------- | ----- | ------- | -------------------------- |
-| `content` | `str` | —       | The extracted text content |
-| `name`    | `str  | None`   | `None`                     | The name |
+| Field     | Type          | Default | Description                |
+| --------- | ------------- | ------- | -------------------------- |
+| `content` | `str`         | —       | The extracted text content |
+| `name`    | `str \| None` | `None`  | The name                   |
 
 ---
 
@@ -614,13 +614,13 @@ def cancel_response(self, id: str) -> ResponseObject
 
 #### EmbeddingRequest
 
-| Field             | Type             | Default                 | Description             |
-| ----------------- | ---------------- | ----------------------- | ----------------------- |
-| `model`           | `str`            | —                       | Model                   |
-| `input`           | `EmbeddingInput` | `EmbeddingInput.SINGLE` | Input (embedding input) |
-| `encoding_format` | `EmbeddingFormat | None`                   | `None`                  | Encoding format (embedding format) |
-| `dimensions`      | `int             | None`                   | `None`                  | Dimensions                         |
-| `user`            | `str             | None`                   | `None`                  | User                               |
+| Field             | Type                      | Default                 | Description                        |
+| ----------------- | ------------------------- | ----------------------- | ---------------------------------- |
+| `model`           | `str`                     | —                       | Model                              |
+| `input`           | `EmbeddingInput`          | `EmbeddingInput.SINGLE` | Input (embedding input)            |
+| `encoding_format` | `EmbeddingFormat \| None` | `None`                  | Encoding format (embedding format) |
+| `dimensions`      | `int \| None`             | `None`                  | Dimensions                         |
+| `user`            | `str \| None`             | `None`                  | User                               |
 
 ---
 
@@ -631,41 +631,41 @@ def cancel_response(self, id: str) -> ResponseObject
 | `object` | `str`                   | —       | Always `"list"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `data`   | `list[EmbeddingObject]` | —       | Data                                                                                                                                  |
 | `model`  | `str`                   | —       | Model                                                                                                                                 |
-| `usage`  | `Usage                  | None`   | `None`                                                                                                                                | Usage (usage) |
+| `usage`  | `Usage \| None`         | `None`  | Usage (usage)                                                                                                                         |
 
 ---
 
 #### FileListQuery
 
-| Field     | Type | Default | Description |
-| --------- | ---- | ------- | ----------- |
-| `purpose` | `str | None`   | `None`      | Purpose |
-| `limit`   | `int | None`   | `None`      | Limit   |
-| `after`   | `str | None`   | `None`      | After   |
+| Field     | Type          | Default | Description |
+| --------- | ------------- | ------- | ----------- |
+| `purpose` | `str \| None` | `None`  | Purpose     |
+| `limit`   | `int \| None` | `None`  | Limit       |
+| `after`   | `str \| None` | `None`  | After       |
 
 ---
 
 #### FileListResponse
 
-| Field      | Type               | Default | Description |
-| ---------- | ------------------ | ------- | ----------- |
-| `object`   | `str`              | —       | Object      |
-| `data`     | `list[FileObject]` | `[]`    | Data        |
-| `has_more` | `bool              | None`   | `None`      | Whether more |
+| Field      | Type               | Default | Description  |
+| ---------- | ------------------ | ------- | ------------ |
+| `object`   | `str`              | —       | Object       |
+| `data`     | `list[FileObject]` | `[]`    | Data         |
+| `has_more` | `bool \| None`     | `None`  | Whether more |
 
 ---
 
 #### FileObject
 
-| Field        | Type  | Default | Description       |
-| ------------ | ----- | ------- | ----------------- |
-| `id`         | `str` | —       | Unique identifier |
-| `object`     | `str` | —       | Object            |
-| `bytes`      | `int` | —       | Bytes             |
-| `created_at` | `int` | —       | Created at        |
-| `filename`   | `str` | —       | Filename          |
-| `purpose`    | `str` | —       | Purpose           |
-| `status`     | `str  | None`   | `None`            | Status |
+| Field        | Type          | Default | Description       |
+| ------------ | ------------- | ------- | ----------------- |
+| `id`         | `str`         | —       | Unique identifier |
+| `object`     | `str`         | —       | Object            |
+| `bytes`      | `int`         | —       | Bytes             |
+| `created_at` | `int`         | —       | Created at        |
+| `filename`   | `str`         | —       | Filename          |
+| `purpose`    | `str`         | —       | Purpose           |
+| `status`     | `str \| None` | `None`  | Status            |
 
 ---
 
@@ -680,12 +680,12 @@ def cancel_response(self, id: str) -> ResponseObject
 
 #### FunctionDefinition
 
-| Field         | Type            | Default | Description |
-| ------------- | --------------- | ------- | ----------- |
-| `name`        | `str`           | —       | The name    |
-| `description` | `str            | None`   | `None`      | Human-readable description |
-| `parameters`  | `dict[str, Any] | None`   | `None`      | Parameters                 |
-| `strict`      | `bool           | None`   | `None`      | Strict                     |
+| Field         | Type                     | Default | Description                |
+| ------------- | ------------------------ | ------- | -------------------------- |
+| `name`        | `str`                    | —       | The name                   |
+| `description` | `str \| None`            | `None`  | Human-readable description |
+| `parameters`  | `dict[str, Any] \| None` | `None`  | Parameters                 |
+| `strict`      | `bool \| None`           | `None`  | Strict                     |
 
 ---
 
@@ -704,20 +704,20 @@ Deprecated legacy function-role message body.
 
 A single generated image, returned as either a URL or base64 data.
 
-| Field            | Type | Default | Description |
-| ---------------- | ---- | ------- | ----------- |
-| `url`            | `str | None`   | `None`      | Url            |
-| `b64_json`       | `str | None`   | `None`      | B64 json       |
-| `revised_prompt` | `str | None`   | `None`      | Revised prompt |
+| Field            | Type          | Default | Description    |
+| ---------------- | ------------- | ------- | -------------- |
+| `url`            | `str \| None` | `None`  | Url            |
+| `b64_json`       | `str \| None` | `None`  | B64 json       |
+| `revised_prompt` | `str \| None` | `None`  | Revised prompt |
 
 ---
 
 #### ImageUrl
 
-| Field    | Type         | Default | Description |
-| -------- | ------------ | ------- | ----------- |
-| `url`    | `str`        | —       | Url         |
-| `detail` | `ImageDetail | None`   | `None`      | Detail (image detail) |
+| Field    | Type                  | Default | Description           |
+| -------- | --------------------- | ------- | --------------------- |
+| `url`    | `str`                 | —       | Url                   |
+| `detail` | `ImageDetail \| None` | `None`  | Detail (image detail) |
 
 ---
 
@@ -734,12 +734,12 @@ Response containing generated images.
 
 #### JsonSchemaFormat
 
-| Field         | Type             | Default | Description |
-| ------------- | ---------------- | ------- | ----------- |
-| `name`        | `str`            | —       | The name    |
-| `description` | `str             | None`   | `None`      | Human-readable description |
-| `schema`      | `dict[str, Any]` | —       | Schema      |
-| `strict`      | `bool            | None`   | `None`      | Strict                     |
+| Field         | Type             | Default | Description                |
+| ------------- | ---------------- | ------- | -------------------------- |
+| `name`        | `str`            | —       | The name                   |
+| `description` | `str \| None`    | `None`  | Human-readable description |
+| `schema`      | `dict[str, Any]` | —       | Schema                     |
+| `strict`      | `bool \| None`   | `None`  | Strict                     |
 
 ---
 
@@ -810,7 +810,7 @@ Request to classify content for policy violations.
 | Field   | Type              | Default                  | Description              |
 | ------- | ----------------- | ------------------------ | ------------------------ |
 | `input` | `ModerationInput` | `ModerationInput.SINGLE` | Input (moderation input) |
-| `model` | `str              | None`                    | `None`                   | Model |
+| `model` | `str \| None`     | `None`                   | Model                    |
 
 ---
 
@@ -842,10 +842,10 @@ A single moderation classification result.
 
 An image extracted from an OCR page.
 
-| Field          | Type  | Default | Description              |
-| -------------- | ----- | ------- | ------------------------ |
-| `id`           | `str` | —       | Unique image identifier. |
-| `image_base64` | `str  | None`   | `None`                   | Base64-encoded image data. |
+| Field          | Type          | Default | Description                |
+| -------------- | ------------- | ------- | -------------------------- |
+| `id`           | `str`         | —       | Unique image identifier.   |
+| `image_base64` | `str \| None` | `None`  | Base64-encoded image data. |
 
 ---
 
@@ -853,12 +853,12 @@ An image extracted from an OCR page.
 
 A single page of OCR output.
 
-| Field        | Type            | Default | Description                    |
-| ------------ | --------------- | ------- | ------------------------------ |
-| `index`      | `int`           | —       | Page index (0-based).          |
-| `markdown`   | `str`           | —       | Extracted content as Markdown. |
-| `images`     | `list[OcrImage] | None`   | `None`                         | Extracted images, if `include_image_base64` was set. |
-| `dimensions` | `PageDimensions | None`   | `None`                         | Page dimensions in pixels, if available.             |
+| Field        | Type                     | Default | Description                                          |
+| ------------ | ------------------------ | ------- | ---------------------------------------------------- |
+| `index`      | `int`                    | —       | Page index (0-based).                                |
+| `markdown`   | `str`                    | —       | Extracted content as Markdown.                       |
+| `images`     | `list[OcrImage] \| None` | `None`  | Extracted images, if `include_image_base64` was set. |
+| `dimensions` | `PageDimensions \| None` | `None`  | Page dimensions in pixels, if available.             |
 
 ---
 
@@ -866,12 +866,12 @@ A single page of OCR output.
 
 An OCR request.
 
-| Field                  | Type          | Default           | Description                                                      |
-| ---------------------- | ------------- | ----------------- | ---------------------------------------------------------------- |
-| `model`                | `str`         | —                 | The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). |
-| `document`             | `OcrDocument` | `OcrDocument.URL` | The document to process.                                         |
-| `pages`                | `list[int]    | None`             | `[]`                                                             | Specific pages to process (1-indexed). `None` means all pages. |
-| `include_image_base64` | `bool         | None`             | `None`                                                           | Whether to include base64-encoded images of each page.         |
+| Field                  | Type                | Default           | Description                                                      |
+| ---------------------- | ------------------- | ----------------- | ---------------------------------------------------------------- |
+| `model`                | `str`               | —                 | The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). |
+| `document`             | `OcrDocument`       | `OcrDocument.URL` | The document to process.                                         |
+| `pages`                | `list[int] \| None` | `[]`              | Specific pages to process (1-indexed). `None` means all pages.   |
+| `include_image_base64` | `bool \| None`      | `None`            | Whether to include base64-encoded images of each page.           |
 
 ---
 
@@ -879,11 +879,11 @@ An OCR request.
 
 An OCR response.
 
-| Field   | Type            | Default | Description      |
-| ------- | --------------- | ------- | ---------------- |
-| `pages` | `list[OcrPage]` | —       | Extracted pages. |
-| `model` | `str`           | —       | The model used.  |
-| `usage` | `Usage          | None`   | `None`           | Token usage, if reported by the provider. |
+| Field   | Type            | Default | Description                               |
+| ------- | --------------- | ------- | ----------------------------------------- |
+| `pages` | `list[OcrPage]` | —       | Extracted pages.                          |
+| `model` | `str`           | —       | The model used.                           |
+| `usage` | `Usage \| None` | `None`  | Token usage, if reported by the provider. |
 
 ---
 
@@ -918,13 +918,13 @@ discounted rate and the remainder at the regular input rate.
 
 Request to rerank documents by relevance to a query.
 
-| Field              | Type                   | Default | Description |
-| ------------------ | ---------------------- | ------- | ----------- |
-| `model`            | `str`                  | —       | Model       |
-| `query`            | `str`                  | —       | Query       |
-| `documents`        | `list[RerankDocument]` | `[]`    | Documents   |
-| `top_n`            | `int                   | None`   | `None`      | Top n            |
-| `return_documents` | `bool                  | None`   | `None`      | Return documents |
+| Field              | Type                   | Default | Description      |
+| ------------------ | ---------------------- | ------- | ---------------- |
+| `model`            | `str`                  | —       | Model            |
+| `query`            | `str`                  | —       | Query            |
+| `documents`        | `list[RerankDocument]` | `[]`    | Documents        |
+| `top_n`            | `int \| None`          | `None`  | Top n            |
+| `return_documents` | `bool \| None`         | `None`  | Return documents |
 
 ---
 
@@ -932,11 +932,11 @@ Request to rerank documents by relevance to a query.
 
 Response from the rerank endpoint.
 
-| Field     | Type                 | Default | Description |
-| --------- | -------------------- | ------- | ----------- |
-| `id`      | `str                 | None`   | `None`      | Unique identifier |
-| `results` | `list[RerankResult]` | —       | Results     |
-| `meta`    | `dict[str, Any]      | None`   | `None`      | Meta              |
+| Field     | Type                     | Default | Description       |
+| --------- | ------------------------ | ------- | ----------------- |
+| `id`      | `str \| None`            | `None`  | Unique identifier |
+| `results` | `list[RerankResult]`     | —       | Results           |
+| `meta`    | `dict[str, Any] \| None` | `None`  | Meta              |
 
 ---
 
@@ -944,11 +944,11 @@ Response from the rerank endpoint.
 
 A single reranked document with its relevance score.
 
-| Field             | Type                  | Default | Description     |
-| ----------------- | --------------------- | ------- | --------------- |
-| `index`           | `int`                 | —       | Index           |
-| `relevance_score` | `float`               | —       | Relevance score |
-| `document`        | `RerankResultDocument | None`   | `None`          | Document (rerank result document) |
+| Field             | Type                           | Default | Description                       |
+| ----------------- | ------------------------------ | ------- | --------------------------------- |
+| `index`           | `int`                          | —       | Index                             |
+| `relevance_score` | `float`                        | —       | Relevance score                   |
+| `document`        | `RerankResultDocument \| None` | `None`  | Document (rerank result document) |
 
 ---
 
@@ -964,16 +964,16 @@ The text content of a reranked document, returned when `return_documents` is tru
 
 #### ResponseObject
 
-| Field        | Type                       | Default | Description       |
-| ------------ | -------------------------- | ------- | ----------------- |
-| `id`         | `str`                      | —       | Unique identifier |
-| `object`     | `str`                      | —       | Object            |
-| `created_at` | `int`                      | —       | Created at        |
-| `model`      | `str`                      | —       | Model             |
-| `status`     | `str`                      | —       | Status            |
-| `output`     | `list[ResponseOutputItem]` | `[]`    | Output            |
-| `usage`      | `ResponseUsage             | None`   | `None`            | Usage (response usage) |
-| `error`      | `dict[str, Any]            | None`   | `None`            | Error                  |
+| Field        | Type                       | Default | Description            |
+| ------------ | -------------------------- | ------- | ---------------------- |
+| `id`         | `str`                      | —       | Unique identifier      |
+| `object`     | `str`                      | —       | Object                 |
+| `created_at` | `int`                      | —       | Created at             |
+| `model`      | `str`                      | —       | Model                  |
+| `status`     | `str`                      | —       | Status                 |
+| `output`     | `list[ResponseOutputItem]` | `[]`    | Output                 |
+| `usage`      | `ResponseUsage \| None`    | `None`  | Usage (response usage) |
+| `error`      | `dict[str, Any] \| None`   | `None`  | Error                  |
 
 ---
 
@@ -1009,13 +1009,13 @@ The text content of a reranked document, returned when `return_documents` is tru
 
 A search request.
 
-| Field                  | Type       | Default | Description                                                               |
-| ---------------------- | ---------- | ------- | ------------------------------------------------------------------------- |
-| `model`                | `str`      | —       | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). |
-| `query`                | `str`      | —       | The search query.                                                         |
-| `max_results`          | `int       | None`   | `None`                                                                    | Maximum number of results to return.                     |
-| `search_domain_filter` | `list[str] | None`   | `[]`                                                                      | Domain filter — restrict results to specific domains.    |
-| `country`              | `str       | None`   | `None`                                                                    | Country code for localized results (ISO 3166-1 alpha-2). |
+| Field                  | Type                | Default | Description                                                               |
+| ---------------------- | ------------------- | ------- | ------------------------------------------------------------------------- |
+| `model`                | `str`               | —       | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). |
+| `query`                | `str`               | —       | The search query.                                                         |
+| `max_results`          | `int \| None`       | `None`  | Maximum number of results to return.                                      |
+| `search_domain_filter` | `list[str] \| None` | `[]`    | Domain filter — restrict results to specific domains.                     |
+| `country`              | `str \| None`       | `None`  | Country code for localized results (ISO 3166-1 alpha-2).                  |
 
 ---
 
@@ -1034,12 +1034,12 @@ A search response.
 
 An individual search result.
 
-| Field     | Type  | Default | Description             |
-| --------- | ----- | ------- | ----------------------- |
-| `title`   | `str` | —       | Title of the result.    |
-| `url`     | `str` | —       | URL of the result.      |
-| `snippet` | `str` | —       | Text snippet / excerpt. |
-| `date`    | `str  | None`   | `None`                  | Publication or last-updated date, if available. |
+| Field     | Type          | Default | Description                                     |
+| --------- | ------------- | ------- | ----------------------------------------------- |
+| `title`   | `str`         | —       | Title of the result.                            |
+| `url`     | `str`         | —       | URL of the result.                              |
+| `snippet` | `str`         | —       | Text snippet / excerpt.                         |
+| `date`    | `str \| None` | `None`  | Publication or last-updated date, if available. |
 
 ---
 
@@ -1062,60 +1062,60 @@ An individual search result.
 
 #### StreamChoice
 
-| Field           | Type          | Default | Description          |
-| --------------- | ------------- | ------- | -------------------- |
-| `index`         | `int`         | —       | Index                |
-| `delta`         | `StreamDelta` | —       | Delta (stream delta) |
-| `finish_reason` | `FinishReason | None`   | `None`               | Finish reason (finish reason) |
+| Field           | Type                   | Default | Description                   |
+| --------------- | ---------------------- | ------- | ----------------------------- |
+| `index`         | `int`                  | —       | Index                         |
+| `delta`         | `StreamDelta`          | —       | Delta (stream delta)          |
+| `finish_reason` | `FinishReason \| None` | `None`  | Finish reason (finish reason) |
 
 ---
 
 #### StreamDelta
 
-| Field           | Type                  | Default | Description |
-| --------------- | --------------------- | ------- | ----------- |
-| `role`          | `str                  | None`   | `None`      | Role                                                                   |
-| `content`       | `str                  | None`   | `None`      | The extracted text content                                             |
-| `tool_calls`    | `list[StreamToolCall] | None`   | `[]`        | Tool calls                                                             |
-| `function_call` | `StreamFunctionCall   | None`   | `None`      | Deprecated legacy function_call delta; retained for API compatibility. |
-| `refusal`       | `str                  | None`   | `None`      | Refusal                                                                |
+| Field           | Type                           | Default | Description                                                            |
+| --------------- | ------------------------------ | ------- | ---------------------------------------------------------------------- |
+| `role`          | `str \| None`                  | `None`  | Role                                                                   |
+| `content`       | `str \| None`                  | `None`  | The extracted text content                                             |
+| `tool_calls`    | `list[StreamToolCall] \| None` | `[]`    | Tool calls                                                             |
+| `function_call` | `StreamFunctionCall \| None`   | `None`  | Deprecated legacy function_call delta; retained for API compatibility. |
+| `refusal`       | `str \| None`                  | `None`  | Refusal                                                                |
 
 ---
 
 #### StreamFunctionCall
 
-| Field       | Type | Default | Description |
-| ----------- | ---- | ------- | ----------- |
-| `name`      | `str | None`   | `None`      | The name  |
-| `arguments` | `str | None`   | `None`      | Arguments |
+| Field       | Type          | Default | Description |
+| ----------- | ------------- | ------- | ----------- |
+| `name`      | `str \| None` | `None`  | The name    |
+| `arguments` | `str \| None` | `None`  | Arguments   |
 
 ---
 
 #### StreamOptions
 
-| Field           | Type  | Default | Description |
-| --------------- | ----- | ------- | ----------- |
-| `include_usage` | `bool | None`   | `None`      | Include usage |
+| Field           | Type           | Default | Description   |
+| --------------- | -------------- | ------- | ------------- |
+| `include_usage` | `bool \| None` | `None`  | Include usage |
 
 ---
 
 #### StreamToolCall
 
-| Field       | Type                | Default | Description |
-| ----------- | ------------------- | ------- | ----------- |
-| `index`     | `int`               | —       | Index       |
-| `id`        | `str                | None`   | `None`      | Unique identifier               |
-| `call_type` | `ToolType           | None`   | `None`      | Call type (tool type)           |
-| `function`  | `StreamFunctionCall | None`   | `None`      | Function (stream function call) |
+| Field       | Type                         | Default | Description                     |
+| ----------- | ---------------------------- | ------- | ------------------------------- |
+| `index`     | `int`                        | —       | Index                           |
+| `id`        | `str \| None`                | `None`  | Unique identifier               |
+| `call_type` | `ToolType \| None`           | `None`  | Call type (tool type)           |
+| `function`  | `StreamFunctionCall \| None` | `None`  | Function (stream function call) |
 
 ---
 
 #### SystemMessage
 
-| Field     | Type  | Default | Description                |
-| --------- | ----- | ------- | -------------------------- |
-| `content` | `str` | —       | The extracted text content |
-| `name`    | `str  | None`   | `None`                     | The name |
+| Field     | Type          | Default | Description                |
+| --------- | ------------- | ------- | -------------------------- |
+| `content` | `str`         | —       | The extracted text content |
+| `name`    | `str \| None` | `None`  | The name                   |
 
 ---
 
@@ -1131,11 +1131,11 @@ An individual search result.
 
 #### ToolMessage
 
-| Field          | Type  | Default | Description                |
-| -------------- | ----- | ------- | -------------------------- |
-| `content`      | `str` | —       | The extracted text content |
-| `tool_call_id` | `str` | —       | Tool call id               |
-| `name`         | `str  | None`   | `None`                     | The name |
+| Field          | Type          | Default | Description                |
+| -------------- | ------------- | ------- | -------------------------- |
+| `content`      | `str`         | —       | The extracted text content |
+| `tool_call_id` | `str`         | —       | Tool call id               |
+| `name`         | `str \| None` | `None`  | The name                   |
 
 ---
 
@@ -1143,12 +1143,12 @@ An individual search result.
 
 Response from a transcription request.
 
-| Field      | Type                        | Default | Description |
-| ---------- | --------------------------- | ------- | ----------- |
-| `text`     | `str`                       | —       | Text        |
-| `language` | `str                        | None`   | `None`      | Language |
-| `duration` | `float                      | None`   | `None`      | Duration |
-| `segments` | `list[TranscriptionSegment] | None`   | `[]`        | Segments |
+| Field      | Type                                 | Default | Description |
+| ---------- | ------------------------------------ | ------- | ----------- |
+| `text`     | `str`                                | —       | Text        |
+| `language` | `str \| None`                        | `None`  | Language    |
+| `duration` | `float \| None`                      | `None`  | Duration    |
+| `segments` | `list[TranscriptionSegment] \| None` | `[]`    | Segments    |
 
 ---
 
@@ -1167,12 +1167,12 @@ A segment of transcribed audio with timing information.
 
 #### Usage
 
-| Field                   | Type                 | Default | Description                                                                   |
-| ----------------------- | -------------------- | ------- | ----------------------------------------------------------------------------- |
-| `prompt_tokens`         | `int`                | —       | Prompt tokens used. Defaults to 0 when absent (some providers omit this).     |
-| `completion_tokens`     | `int`                | —       | Completion tokens used. Defaults to 0 when absent (e.g. embedding responses). |
-| `total_tokens`          | `int`                | —       | Total tokens used. Defaults to 0 when absent (some providers omit this).      |
-| `prompt_tokens_details` | `PromptTokensDetails | None`   | `None`                                                                        | Breakdown of tokens used in the prompt, including cached tokens served at the provider's discounted cache-read rate. Absent when the provider does not return prompt-token details. |
+| Field                   | Type                          | Default | Description                                                                                                                                                                         |
+| ----------------------- | ----------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `prompt_tokens`         | `int`                         | —       | Prompt tokens used. Defaults to 0 when absent (some providers omit this).                                                                                                           |
+| `completion_tokens`     | `int`                         | —       | Completion tokens used. Defaults to 0 when absent (e.g. embedding responses).                                                                                                       |
+| `total_tokens`          | `int`                         | —       | Total tokens used. Defaults to 0 when absent (some providers omit this).                                                                                                            |
+| `prompt_tokens_details` | `PromptTokensDetails \| None` | `None`  | Breakdown of tokens used in the prompt, including cached tokens served at the provider's discounted cache-read rate. Absent when the provider does not return prompt-token details. |
 
 ---
 
@@ -1181,7 +1181,7 @@ A segment of transcribed audio with timing information.
 | Field     | Type          | Default            | Description                |
 | --------- | ------------- | ------------------ | -------------------------- |
 | `content` | `UserContent` | `UserContent.TEXT` | The extracted text content |
-| `name`    | `str          | None`              | `None`                     | The name |
+| `name`    | `str \| None` | `None`             | The name                   |
 
 ---
 

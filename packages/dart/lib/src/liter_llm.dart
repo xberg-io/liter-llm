@@ -17,17 +17,20 @@ class LiterLlmBridge {
   /// Returns [`LiterLlmError`] if the underlying HTTP client cannot be
   /// constructed, or if the resolved provider configuration is invalid.
   /// throws anyhow::Error on failure
-  static Future<DefaultClient> createClient(String apiKey,
-      {String? baseUrl,
-      int? timeoutSecs,
-      int? maxRetries,
-      String? modelHint}) async {
+  static Future<DefaultClient> createClient(
+    String apiKey, {
+    String? baseUrl,
+    int? timeoutSecs,
+    int? maxRetries,
+    String? modelHint,
+  }) async {
     return await rust_bridge.createClient(
-        apiKey: apiKey,
-        baseUrl: baseUrl,
-        timeoutSecs: timeoutSecs,
-        maxRetries: maxRetries,
-        modelHint: modelHint);
+      apiKey: apiKey,
+      baseUrl: baseUrl,
+      timeoutSecs: timeoutSecs,
+      maxRetries: maxRetries,
+      modelHint: modelHint,
+    );
   }
 
   /// Create a new LLM client from a JSON string.
@@ -54,7 +57,8 @@ class LiterLlmBridge {
   /// no model prefixes).
   /// throws anyhow::Error on failure
   static Future<void> registerCustomProvider(
-      CustomProviderConfig config) async {
+    CustomProviderConfig config,
+  ) async {
     return await rust_bridge.registerCustomProvider(config: config);
   }
 

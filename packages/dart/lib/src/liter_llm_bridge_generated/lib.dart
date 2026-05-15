@@ -8,7 +8,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Create a new LLM client with simple scalar configuration.
 ///
@@ -20,18 +20,19 @@ part 'lib.freezed.dart';
 ///
 /// Returns `LiterLlmError` if the underlying HTTP client cannot be
 /// constructed, or if the resolved provider configuration is invalid.
-Future<DefaultClient> createClient(
-        {required String apiKey,
-        String? baseUrl,
-        PlatformInt64? timeoutSecs,
-        PlatformInt64? maxRetries,
-        String? modelHint}) =>
-    RustLib.instance.api.crateCreateClient(
-        apiKey: apiKey,
-        baseUrl: baseUrl,
-        timeoutSecs: timeoutSecs,
-        maxRetries: maxRetries,
-        modelHint: modelHint);
+Future<DefaultClient> createClient({
+  required String apiKey,
+  String? baseUrl,
+  PlatformInt64? timeoutSecs,
+  PlatformInt64? maxRetries,
+  String? modelHint,
+}) => RustLib.instance.api.crateCreateClient(
+  apiKey: apiKey,
+  baseUrl: baseUrl,
+  timeoutSecs: timeoutSecs,
+  maxRetries: maxRetries,
+  modelHint: modelHint,
+);
 
 /// Create a new LLM client from a JSON string.
 ///
@@ -82,27 +83,27 @@ Future<DocumentContent> createDocumentContentFromJson({required String json}) =>
 Future<AudioContent> createAudioContentFromJson({required String json}) =>
     RustLib.instance.api.crateCreateAudioContentFromJson(json: json);
 
-Future<AssistantMessage> createAssistantMessageFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateAssistantMessageFromJson(json: json);
+Future<AssistantMessage> createAssistantMessageFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateAssistantMessageFromJson(json: json);
 
 Future<ToolMessage> createToolMessageFromJson({required String json}) =>
     RustLib.instance.api.crateCreateToolMessageFromJson(json: json);
 
-Future<DeveloperMessage> createDeveloperMessageFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateDeveloperMessageFromJson(json: json);
+Future<DeveloperMessage> createDeveloperMessageFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateDeveloperMessageFromJson(json: json);
 
 Future<FunctionMessage> createFunctionMessageFromJson({required String json}) =>
     RustLib.instance.api.crateCreateFunctionMessageFromJson(json: json);
 
-Future<ChatCompletionTool> createChatCompletionToolFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateChatCompletionToolFromJson(json: json);
+Future<ChatCompletionTool> createChatCompletionToolFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateChatCompletionToolFromJson(json: json);
 
-Future<FunctionDefinition> createFunctionDefinitionFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateFunctionDefinitionFromJson(json: json);
+Future<FunctionDefinition> createFunctionDefinitionFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateFunctionDefinitionFromJson(json: json);
 
 Future<ToolCall> createToolCallFromJson({required String json}) =>
     RustLib.instance.api.crateCreateToolCallFromJson(json: json);
@@ -110,42 +111,43 @@ Future<ToolCall> createToolCallFromJson({required String json}) =>
 Future<FunctionCall> createFunctionCallFromJson({required String json}) =>
     RustLib.instance.api.crateCreateFunctionCallFromJson(json: json);
 
-Future<SpecificToolChoice> createSpecificToolChoiceFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateSpecificToolChoiceFromJson(json: json);
+Future<SpecificToolChoice> createSpecificToolChoiceFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateSpecificToolChoiceFromJson(json: json);
 
-Future<SpecificFunction> createSpecificFunctionFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateSpecificFunctionFromJson(json: json);
+Future<SpecificFunction> createSpecificFunctionFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateSpecificFunctionFromJson(json: json);
 
-Future<JsonSchemaFormat> createJsonSchemaFormatFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateJsonSchemaFormatFromJson(json: json);
+Future<JsonSchemaFormat> createJsonSchemaFormatFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateJsonSchemaFormatFromJson(json: json);
 
 Future<Usage> createUsageFromJson({required String json}) =>
     RustLib.instance.api.crateCreateUsageFromJson(json: json);
 
-Future<PromptTokensDetails> createPromptTokensDetailsFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreatePromptTokensDetailsFromJson(json: json);
+Future<PromptTokensDetails> createPromptTokensDetailsFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreatePromptTokensDetailsFromJson(json: json);
 
-Future<ChatCompletionRequest> createChatCompletionRequestFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateChatCompletionRequestFromJson(json: json);
+Future<ChatCompletionRequest> createChatCompletionRequestFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateChatCompletionRequestFromJson(json: json);
 
 Future<StreamOptions> createStreamOptionsFromJson({required String json}) =>
     RustLib.instance.api.crateCreateStreamOptionsFromJson(json: json);
 
-Future<ChatCompletionResponse> createChatCompletionResponseFromJson(
-        {required String json}) =>
+Future<ChatCompletionResponse> createChatCompletionResponseFromJson({
+  required String json,
+}) =>
     RustLib.instance.api.crateCreateChatCompletionResponseFromJson(json: json);
 
 Future<Choice> createChoiceFromJson({required String json}) =>
     RustLib.instance.api.crateCreateChoiceFromJson(json: json);
 
-Future<ChatCompletionChunk> createChatCompletionChunkFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateChatCompletionChunkFromJson(json: json);
+Future<ChatCompletionChunk> createChatCompletionChunkFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateChatCompletionChunkFromJson(json: json);
 
 Future<StreamChoice> createStreamChoiceFromJson({required String json}) =>
     RustLib.instance.api.crateCreateStreamChoiceFromJson(json: json);
@@ -156,24 +158,24 @@ Future<StreamDelta> createStreamDeltaFromJson({required String json}) =>
 Future<StreamToolCall> createStreamToolCallFromJson({required String json}) =>
     RustLib.instance.api.crateCreateStreamToolCallFromJson(json: json);
 
-Future<StreamFunctionCall> createStreamFunctionCallFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateStreamFunctionCallFromJson(json: json);
+Future<StreamFunctionCall> createStreamFunctionCallFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateStreamFunctionCallFromJson(json: json);
 
-Future<EmbeddingRequest> createEmbeddingRequestFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateEmbeddingRequestFromJson(json: json);
+Future<EmbeddingRequest> createEmbeddingRequestFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateEmbeddingRequestFromJson(json: json);
 
-Future<EmbeddingResponse> createEmbeddingResponseFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateEmbeddingResponseFromJson(json: json);
+Future<EmbeddingResponse> createEmbeddingResponseFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateEmbeddingResponseFromJson(json: json);
 
 Future<EmbeddingObject> createEmbeddingObjectFromJson({required String json}) =>
     RustLib.instance.api.crateCreateEmbeddingObjectFromJson(json: json);
 
-Future<CreateImageRequest> createCreateImageRequestFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateCreateImageRequestFromJson(json: json);
+Future<CreateImageRequest> createCreateImageRequestFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateCreateImageRequestFromJson(json: json);
 
 Future<ImagesResponse> createImagesResponseFromJson({required String json}) =>
     RustLib.instance.api.crateCreateImagesResponseFromJson(json: json);
@@ -181,43 +183,45 @@ Future<ImagesResponse> createImagesResponseFromJson({required String json}) =>
 Future<Image> createImageFromJson({required String json}) =>
     RustLib.instance.api.crateCreateImageFromJson(json: json);
 
-Future<CreateSpeechRequest> createCreateSpeechRequestFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateCreateSpeechRequestFromJson(json: json);
+Future<CreateSpeechRequest> createCreateSpeechRequestFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateCreateSpeechRequestFromJson(json: json);
 
-Future<CreateTranscriptionRequest> createCreateTranscriptionRequestFromJson(
-        {required String json}) =>
-    RustLib.instance.api
-        .crateCreateCreateTranscriptionRequestFromJson(json: json);
+Future<CreateTranscriptionRequest> createCreateTranscriptionRequestFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateCreateTranscriptionRequestFromJson(
+  json: json,
+);
 
-Future<TranscriptionResponse> createTranscriptionResponseFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateTranscriptionResponseFromJson(json: json);
+Future<TranscriptionResponse> createTranscriptionResponseFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateTranscriptionResponseFromJson(json: json);
 
-Future<TranscriptionSegment> createTranscriptionSegmentFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateTranscriptionSegmentFromJson(json: json);
+Future<TranscriptionSegment> createTranscriptionSegmentFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateTranscriptionSegmentFromJson(json: json);
 
-Future<ModerationRequest> createModerationRequestFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateModerationRequestFromJson(json: json);
+Future<ModerationRequest> createModerationRequestFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateModerationRequestFromJson(json: json);
 
-Future<ModerationResponse> createModerationResponseFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateModerationResponseFromJson(json: json);
+Future<ModerationResponse> createModerationResponseFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateModerationResponseFromJson(json: json);
 
-Future<ModerationResult> createModerationResultFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateModerationResultFromJson(json: json);
+Future<ModerationResult> createModerationResultFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateModerationResultFromJson(json: json);
 
-Future<ModerationCategories> createModerationCategoriesFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateModerationCategoriesFromJson(json: json);
+Future<ModerationCategories> createModerationCategoriesFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateModerationCategoriesFromJson(json: json);
 
-Future<ModerationCategoryScores> createModerationCategoryScoresFromJson(
-        {required String json}) =>
-    RustLib.instance.api
-        .crateCreateModerationCategoryScoresFromJson(json: json);
+Future<ModerationCategoryScores> createModerationCategoryScoresFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateModerationCategoryScoresFromJson(
+  json: json,
+);
 
 Future<RerankRequest> createRerankRequestFromJson({required String json}) =>
     RustLib.instance.api.crateCreateRerankRequestFromJson(json: json);
@@ -228,9 +232,9 @@ Future<RerankResponse> createRerankResponseFromJson({required String json}) =>
 Future<RerankResult> createRerankResultFromJson({required String json}) =>
     RustLib.instance.api.crateCreateRerankResultFromJson(json: json);
 
-Future<RerankResultDocument> createRerankResultDocumentFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateRerankResultDocumentFromJson(json: json);
+Future<RerankResultDocument> createRerankResultDocumentFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateRerankResultDocumentFromJson(json: json);
 
 Future<SearchRequest> createSearchRequestFromJson({required String json}) =>
     RustLib.instance.api.crateCreateSearchRequestFromJson(json: json);
@@ -256,23 +260,23 @@ Future<OcrImage> createOcrImageFromJson({required String json}) =>
 Future<PageDimensions> createPageDimensionsFromJson({required String json}) =>
     RustLib.instance.api.crateCreatePageDimensionsFromJson(json: json);
 
-Future<ModelsListResponse> createModelsListResponseFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateModelsListResponseFromJson(json: json);
+Future<ModelsListResponse> createModelsListResponseFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateModelsListResponseFromJson(json: json);
 
 Future<ModelObject> createModelObjectFromJson({required String json}) =>
     RustLib.instance.api.crateCreateModelObjectFromJson(json: json);
 
-Future<CreateFileRequest> createCreateFileRequestFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateCreateFileRequestFromJson(json: json);
+Future<CreateFileRequest> createCreateFileRequestFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateCreateFileRequestFromJson(json: json);
 
 Future<FileObject> createFileObjectFromJson({required String json}) =>
     RustLib.instance.api.crateCreateFileObjectFromJson(json: json);
 
-Future<FileListResponse> createFileListResponseFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateFileListResponseFromJson(json: json);
+Future<FileListResponse> createFileListResponseFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateFileListResponseFromJson(json: json);
 
 Future<FileListQuery> createFileListQueryFromJson({required String json}) =>
     RustLib.instance.api.crateCreateFileListQueryFromJson(json: json);
@@ -280,27 +284,27 @@ Future<FileListQuery> createFileListQueryFromJson({required String json}) =>
 Future<DeleteResponse> createDeleteResponseFromJson({required String json}) =>
     RustLib.instance.api.crateCreateDeleteResponseFromJson(json: json);
 
-Future<CreateBatchRequest> createCreateBatchRequestFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateCreateBatchRequestFromJson(json: json);
+Future<CreateBatchRequest> createCreateBatchRequestFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateCreateBatchRequestFromJson(json: json);
 
 Future<BatchObject> createBatchObjectFromJson({required String json}) =>
     RustLib.instance.api.crateCreateBatchObjectFromJson(json: json);
 
-Future<BatchRequestCounts> createBatchRequestCountsFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateBatchRequestCountsFromJson(json: json);
+Future<BatchRequestCounts> createBatchRequestCountsFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateBatchRequestCountsFromJson(json: json);
 
-Future<BatchListResponse> createBatchListResponseFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateBatchListResponseFromJson(json: json);
+Future<BatchListResponse> createBatchListResponseFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateBatchListResponseFromJson(json: json);
 
 Future<BatchListQuery> createBatchListQueryFromJson({required String json}) =>
     RustLib.instance.api.crateCreateBatchListQueryFromJson(json: json);
 
-Future<CreateResponseRequest> createCreateResponseRequestFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateCreateResponseRequestFromJson(json: json);
+Future<CreateResponseRequest> createCreateResponseRequestFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateCreateResponseRequestFromJson(json: json);
 
 Future<ResponseTool> createResponseToolFromJson({required String json}) =>
     RustLib.instance.api.crateCreateResponseToolFromJson(json: json);
@@ -308,16 +312,16 @@ Future<ResponseTool> createResponseToolFromJson({required String json}) =>
 Future<ResponseObject> createResponseObjectFromJson({required String json}) =>
     RustLib.instance.api.crateCreateResponseObjectFromJson(json: json);
 
-Future<ResponseOutputItem> createResponseOutputItemFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateResponseOutputItemFromJson(json: json);
+Future<ResponseOutputItem> createResponseOutputItemFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateResponseOutputItemFromJson(json: json);
 
 Future<ResponseUsage> createResponseUsageFromJson({required String json}) =>
     RustLib.instance.api.crateCreateResponseUsageFromJson(json: json);
 
-Future<CustomProviderConfig> createCustomProviderConfigFromJson(
-        {required String json}) =>
-    RustLib.instance.api.crateCreateCustomProviderConfigFromJson(json: json);
+Future<CustomProviderConfig> createCustomProviderConfigFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateCustomProviderConfigFromJson(json: json);
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DefaultClient>>
 abstract class DefaultClient implements RustOpaqueInterface {
@@ -326,6 +330,8 @@ abstract class DefaultClient implements RustOpaqueInterface {
   Future<ResponseObject> cancelResponse({required String id});
 
   Future<ChatCompletionResponse> chat({required ChatCompletionRequest req});
+
+  Stream<ChatCompletionChunk> chatStream({required ChatCompletionRequest req});
 
   Future<BatchObject> createBatch({required CreateBatchRequest req});
 
@@ -363,8 +369,9 @@ abstract class DefaultClient implements RustOpaqueInterface {
 
   Future<Uint8List> speech({required CreateSpeechRequest req});
 
-  Future<TranscriptionResponse> transcribe(
-      {required CreateTranscriptionRequest req});
+  Future<TranscriptionResponse> transcribe({
+    required CreateTranscriptionRequest req,
+  });
 }
 
 class AssistantMessage {
@@ -406,10 +413,7 @@ class AudioContent {
   final String data;
   final String format;
 
-  const AudioContent({
-    required this.data,
-    required this.format,
-  });
+  const AudioContent({required this.data, required this.format});
 
   @override
   int get hashCode => data.hashCode ^ format.hashCode;
@@ -428,9 +432,8 @@ sealed class AuthHeaderFormat with _$AuthHeaderFormat {
   const AuthHeaderFormat._();
 
   const factory AuthHeaderFormat.bearer() = AuthHeaderFormat_Bearer;
-  const factory AuthHeaderFormat.apiKey({
-    required String field0,
-  }) = AuthHeaderFormat_ApiKey;
+  const factory AuthHeaderFormat.apiKey({required String field0}) =
+      AuthHeaderFormat_ApiKey;
   const factory AuthHeaderFormat.none() = AuthHeaderFormat_None;
 }
 
@@ -438,10 +441,7 @@ class BatchListQuery {
   final PlatformInt64? limit;
   final String? after;
 
-  const BatchListQuery({
-    this.limit,
-    this.after,
-  });
+  const BatchListQuery({this.limit, this.after});
 
   @override
   int get hashCode => limit.hashCode ^ after.hashCode;
@@ -594,7 +594,6 @@ enum BatchStatus {
   expired,
   cancelling,
   cancelled,
-  ;
 }
 
 class ChatCompletionChunk {
@@ -790,10 +789,7 @@ class ChatCompletionTool {
   final ToolType toolType;
   final FunctionDefinition function;
 
-  const ChatCompletionTool({
-    required this.toolType,
-    required this.function,
-  });
+  const ChatCompletionTool({required this.toolType, required this.function});
 
   @override
   int get hashCode => toolType.hashCode ^ function.hashCode;
@@ -812,11 +808,7 @@ class Choice {
   final AssistantMessage message;
   final FinishReason? finishReason;
 
-  const Choice({
-    required this.index,
-    required this.message,
-    this.finishReason,
-  });
+  const Choice({required this.index, required this.message, this.finishReason});
 
   @override
   int get hashCode => index.hashCode ^ message.hashCode ^ finishReason.hashCode;
@@ -835,18 +827,13 @@ class Choice {
 sealed class ContentPart with _$ContentPart {
   const ContentPart._();
 
-  const factory ContentPart.text({
-    required String text,
-  }) = ContentPart_Text;
-  const factory ContentPart.imageUrl({
-    required ImageUrl imageUrl,
-  }) = ContentPart_ImageUrl;
-  const factory ContentPart.document({
-    required DocumentContent document,
-  }) = ContentPart_Document;
-  const factory ContentPart.inputAudio({
-    required AudioContent inputAudio,
-  }) = ContentPart_InputAudio;
+  const factory ContentPart.text({required String text}) = ContentPart_Text;
+  const factory ContentPart.imageUrl({required ImageUrl imageUrl}) =
+      ContentPart_ImageUrl;
+  const factory ContentPart.document({required DocumentContent document}) =
+      ContentPart_Document;
+  const factory ContentPart.inputAudio({required AudioContent inputAudio}) =
+      ContentPart_InputAudio;
 }
 
 class CreateBatchRequest {
@@ -1127,10 +1114,7 @@ class DeveloperMessage {
   final String content;
   final String? name;
 
-  const DeveloperMessage({
-    required this.content,
-    this.name,
-  });
+  const DeveloperMessage({required this.content, this.name});
 
   @override
   int get hashCode => content.hashCode ^ name.hashCode;
@@ -1148,10 +1132,7 @@ class DocumentContent {
   final String data;
   final String mediaType;
 
-  const DocumentContent({
-    required this.data,
-    required this.mediaType,
-  });
+  const DocumentContent({required this.data, required this.mediaType});
 
   @override
   int get hashCode => data.hashCode ^ mediaType.hashCode;
@@ -1165,22 +1146,16 @@ class DocumentContent {
           mediaType == other.mediaType;
 }
 
-enum EmbeddingFormat {
-  float,
-  base64,
-  ;
-}
+enum EmbeddingFormat { float, base64 }
 
 @freezed
 sealed class EmbeddingInput with _$EmbeddingInput {
   const EmbeddingInput._();
 
-  const factory EmbeddingInput.single({
-    required String field0,
-  }) = EmbeddingInput_Single;
-  const factory EmbeddingInput.multiple({
-    required List<String> field0,
-  }) = EmbeddingInput_Multiple;
+  const factory EmbeddingInput.single({required String field0}) =
+      EmbeddingInput_Single;
+  const factory EmbeddingInput.multiple({required List<String> field0}) =
+      EmbeddingInput_Multiple;
 }
 
 class EmbeddingObject {
@@ -1275,11 +1250,7 @@ class FileListQuery {
   final PlatformInt64? limit;
   final String? after;
 
-  const FileListQuery({
-    this.purpose,
-    this.limit,
-    this.after,
-  });
+  const FileListQuery({this.purpose, this.limit, this.after});
 
   @override
   int get hashCode => purpose.hashCode ^ limit.hashCode ^ after.hashCode;
@@ -1361,13 +1332,7 @@ class FileObject {
           status == other.status;
 }
 
-enum FilePurpose {
-  assistants,
-  batch,
-  fineTune,
-  vision,
-  ;
-}
+enum FilePurpose { assistants, batch, fineTune, vision }
 
 enum FinishReason {
   stop,
@@ -1376,17 +1341,13 @@ enum FinishReason {
   contentFilter,
   functionCall,
   other,
-  ;
 }
 
 class FunctionCall {
   final String name;
   final String arguments;
 
-  const FunctionCall({
-    required this.name,
-    required this.arguments,
-  });
+  const FunctionCall({required this.name, required this.arguments});
 
   @override
   int get hashCode => name.hashCode ^ arguments.hashCode;
@@ -1435,10 +1396,7 @@ class FunctionMessage {
   final String content;
   final String name;
 
-  const FunctionMessage({
-    required this.content,
-    required this.name,
-  });
+  const FunctionMessage({required this.content, required this.name});
 
   @override
   int get hashCode => content.hashCode ^ name.hashCode;
@@ -1457,11 +1415,7 @@ class Image {
   final String? b64Json;
   final String? revisedPrompt;
 
-  const Image({
-    this.url,
-    this.b64Json,
-    this.revisedPrompt,
-  });
+  const Image({this.url, this.b64Json, this.revisedPrompt});
 
   @override
   int get hashCode => url.hashCode ^ b64Json.hashCode ^ revisedPrompt.hashCode;
@@ -1476,21 +1430,13 @@ class Image {
           revisedPrompt == other.revisedPrompt;
 }
 
-enum ImageDetail {
-  low,
-  high,
-  auto,
-  ;
-}
+enum ImageDetail { low, high, auto }
 
 class ImageUrl {
   final String url;
   final ImageDetail? detail;
 
-  const ImageUrl({
-    required this.url,
-    this.detail,
-  });
+  const ImageUrl({required this.url, this.detail});
 
   @override
   int get hashCode => url.hashCode ^ detail.hashCode;
@@ -1508,10 +1454,7 @@ class ImagesResponse {
   final PlatformInt64 created;
   final List<Image> data;
 
-  const ImagesResponse({
-    required this.created,
-    required this.data,
-  });
+  const ImagesResponse({required this.created, required this.data});
 
   @override
   int get hashCode => created.hashCode ^ data.hashCode;
@@ -1557,24 +1500,16 @@ class JsonSchemaFormat {
 sealed class Message with _$Message {
   const Message._();
 
-  const factory Message.system({
-    required SystemMessage field0,
-  }) = Message_System;
-  const factory Message.user({
-    required UserMessage field0,
-  }) = Message_User;
-  const factory Message.assistant({
-    required AssistantMessage field0,
-  }) = Message_Assistant;
-  const factory Message.tool({
-    required ToolMessage field0,
-  }) = Message_Tool;
-  const factory Message.developer({
-    required DeveloperMessage field0,
-  }) = Message_Developer;
-  const factory Message.function({
-    required FunctionMessage field0,
-  }) = Message_Function;
+  const factory Message.system({required SystemMessage field0}) =
+      Message_System;
+  const factory Message.user({required UserMessage field0}) = Message_User;
+  const factory Message.assistant({required AssistantMessage field0}) =
+      Message_Assistant;
+  const factory Message.tool({required ToolMessage field0}) = Message_Tool;
+  const factory Message.developer({required DeveloperMessage field0}) =
+      Message_Developer;
+  const factory Message.function({required FunctionMessage field0}) =
+      Message_Function;
 }
 
 class ModelObject {
@@ -1609,10 +1544,7 @@ class ModelsListResponse {
   final String object;
   final List<ModelObject> data;
 
-  const ModelsListResponse({
-    required this.object,
-    required this.data,
-  });
+  const ModelsListResponse({required this.object, required this.data});
 
   @override
   int get hashCode => object.hashCode ^ data.hashCode;
@@ -1748,22 +1680,17 @@ class ModerationCategoryScores {
 sealed class ModerationInput with _$ModerationInput {
   const ModerationInput._();
 
-  const factory ModerationInput.single({
-    required String field0,
-  }) = ModerationInput_Single;
-  const factory ModerationInput.multiple({
-    required List<String> field0,
-  }) = ModerationInput_Multiple;
+  const factory ModerationInput.single({required String field0}) =
+      ModerationInput_Single;
+  const factory ModerationInput.multiple({required List<String> field0}) =
+      ModerationInput_Multiple;
 }
 
 class ModerationRequest {
   final ModerationInput input;
   final String? model;
 
-  const ModerationRequest({
-    required this.input,
-    this.model,
-  });
+  const ModerationRequest({required this.input, this.model});
 
   @override
   int get hashCode => input.hashCode ^ model.hashCode;
@@ -1830,9 +1757,7 @@ class ModerationResult {
 sealed class OcrDocument with _$OcrDocument {
   const OcrDocument._();
 
-  const factory OcrDocument.url({
-    required String url,
-  }) = OcrDocument_Url;
+  const factory OcrDocument.url({required String url}) = OcrDocument_Url;
   const factory OcrDocument.base64({
     required String data,
     required String mediaType,
@@ -1843,10 +1768,7 @@ class OcrImage {
   final String id;
   final String? imageBase64;
 
-  const OcrImage({
-    required this.id,
-    this.imageBase64,
-  });
+  const OcrImage({required this.id, this.imageBase64});
 
   @override
   int get hashCode => id.hashCode ^ imageBase64.hashCode;
@@ -1927,11 +1849,7 @@ class OcrResponse {
   final String model;
   final Usage? usage;
 
-  const OcrResponse({
-    required this.pages,
-    required this.model,
-    this.usage,
-  });
+  const OcrResponse({required this.pages, required this.model, this.usage});
 
   @override
   int get hashCode => pages.hashCode ^ model.hashCode ^ usage.hashCode;
@@ -1950,10 +1868,7 @@ class PageDimensions {
   final PlatformInt64 width;
   final PlatformInt64 height;
 
-  const PageDimensions({
-    required this.width,
-    required this.height,
-  });
+  const PageDimensions({required this.width, required this.height});
 
   @override
   int get hashCode => width.hashCode ^ height.hashCode;
@@ -1988,23 +1903,16 @@ class PromptTokensDetails {
           audioTokens == other.audioTokens;
 }
 
-enum ReasoningEffort {
-  low,
-  medium,
-  high,
-  ;
-}
+enum ReasoningEffort { low, medium, high }
 
 @freezed
 sealed class RerankDocument with _$RerankDocument {
   const RerankDocument._();
 
-  const factory RerankDocument.text({
-    required String field0,
-  }) = RerankDocument_Text;
-  const factory RerankDocument.object({
-    required String text,
-  }) = RerankDocument_Object;
+  const factory RerankDocument.text({required String field0}) =
+      RerankDocument_Text;
+  const factory RerankDocument.object({required String text}) =
+      RerankDocument_Object;
 }
 
 class RerankRequest {
@@ -2047,11 +1955,7 @@ class RerankResponse {
   final List<RerankResult> results;
   final String? meta;
 
-  const RerankResponse({
-    this.id,
-    required this.results,
-    this.meta,
-  });
+  const RerankResponse({this.id, required this.results, this.meta});
 
   @override
   int get hashCode => id.hashCode ^ results.hashCode ^ meta.hashCode;
@@ -2094,9 +1998,7 @@ class RerankResult {
 class RerankResultDocument {
   final String text;
 
-  const RerankResultDocument({
-    required this.text,
-  });
+  const RerankResultDocument({required this.text});
 
   @override
   int get hashCode => text.hashCode;
@@ -2171,10 +2073,7 @@ class ResponseOutputItem {
   final String itemType;
   final String content;
 
-  const ResponseOutputItem({
-    required this.itemType,
-    required this.content,
-  });
+  const ResponseOutputItem({required this.itemType, required this.content});
 
   @override
   int get hashCode => itemType.hashCode ^ content.hashCode;
@@ -2192,10 +2091,7 @@ class ResponseTool {
   final String toolType;
   final String config;
 
-  const ResponseTool({
-    required this.toolType,
-    required this.config,
-  });
+  const ResponseTool({required this.toolType, required this.config});
 
   @override
   int get hashCode => toolType.hashCode ^ config.hashCode;
@@ -2273,10 +2169,7 @@ class SearchResponse {
   final List<SearchResult> results;
   final String model;
 
-  const SearchResponse({
-    required this.results,
-    required this.model,
-  });
+  const SearchResponse({required this.results, required this.model});
 
   @override
   int get hashCode => results.hashCode ^ model.hashCode;
@@ -2321,9 +2214,7 @@ class SearchResult {
 class SpecificFunction {
   final String name;
 
-  const SpecificFunction({
-    required this.name,
-  });
+  const SpecificFunction({required this.name});
 
   @override
   int get hashCode => name.hashCode;
@@ -2340,10 +2231,7 @@ class SpecificToolChoice {
   final ToolType choiceType;
   final SpecificFunction function;
 
-  const SpecificToolChoice({
-    required this.choiceType,
-    required this.function,
-  });
+  const SpecificToolChoice({required this.choiceType, required this.function});
 
   @override
   int get hashCode => choiceType.hashCode ^ function.hashCode;
@@ -2361,12 +2249,10 @@ class SpecificToolChoice {
 sealed class StopSequence with _$StopSequence {
   const StopSequence._();
 
-  const factory StopSequence.single({
-    required String field0,
-  }) = StopSequence_Single;
-  const factory StopSequence.multiple({
-    required List<String> field0,
-  }) = StopSequence_Multiple;
+  const factory StopSequence.single({required String field0}) =
+      StopSequence_Single;
+  const factory StopSequence.multiple({required List<String> field0}) =
+      StopSequence_Multiple;
 }
 
 class StreamChoice {
@@ -2432,10 +2318,7 @@ class StreamFunctionCall {
   final String? name;
   final String? arguments;
 
-  const StreamFunctionCall({
-    this.name,
-    this.arguments,
-  });
+  const StreamFunctionCall({this.name, this.arguments});
 
   @override
   int get hashCode => name.hashCode ^ arguments.hashCode;
@@ -2452,9 +2335,7 @@ class StreamFunctionCall {
 class StreamOptions {
   final bool? includeUsage;
 
-  const StreamOptions({
-    this.includeUsage,
-  });
+  const StreamOptions({this.includeUsage});
 
   @override
   int get hashCode => includeUsage.hashCode;
@@ -2499,10 +2380,7 @@ class SystemMessage {
   final String content;
   final String? name;
 
-  const SystemMessage({
-    required this.content,
-    this.name,
-  });
+  const SystemMessage({required this.content, this.name});
 
   @override
   int get hashCode => content.hashCode ^ name.hashCode;
@@ -2544,20 +2422,13 @@ class ToolCall {
 sealed class ToolChoice with _$ToolChoice {
   const ToolChoice._();
 
-  const factory ToolChoice.mode({
-    required ToolChoiceMode field0,
-  }) = ToolChoice_Mode;
-  const factory ToolChoice.specific({
-    required SpecificToolChoice field0,
-  }) = ToolChoice_Specific;
+  const factory ToolChoice.mode({required ToolChoiceMode field0}) =
+      ToolChoice_Mode;
+  const factory ToolChoice.specific({required SpecificToolChoice field0}) =
+      ToolChoice_Specific;
 }
 
-enum ToolChoiceMode {
-  auto,
-  required_,
-  none,
-  ;
-}
+enum ToolChoiceMode { auto, required_, none }
 
 class ToolMessage {
   final String content;
@@ -2583,10 +2454,7 @@ class ToolMessage {
           name == other.name;
 }
 
-enum ToolType {
-  function,
-  ;
-}
+enum ToolType { function }
 
 class TranscriptionResponse {
   final String text;
@@ -2679,22 +2547,16 @@ class Usage {
 sealed class UserContent with _$UserContent {
   const UserContent._();
 
-  const factory UserContent.text({
-    required String field0,
-  }) = UserContent_Text;
-  const factory UserContent.parts({
-    required List<ContentPart> field0,
-  }) = UserContent_Parts;
+  const factory UserContent.text({required String field0}) = UserContent_Text;
+  const factory UserContent.parts({required List<ContentPart> field0}) =
+      UserContent_Parts;
 }
 
 class UserMessage {
   final UserContent content;
   final String? name;
 
-  const UserMessage({
-    required this.content,
-    this.name,
-  });
+  const UserMessage({required this.content, this.name});
 
   @override
   int get hashCode => content.hashCode ^ name.hashCode;

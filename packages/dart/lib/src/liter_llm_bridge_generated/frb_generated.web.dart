@@ -21,26 +21,36 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   });
 
   CrossPlatformFinalizerArg
-      get rust_arc_decrement_strong_count_DefaultClientPtr => wire
-          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient;
+  get rust_arc_decrement_strong_count_DefaultClientPtr => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient;
+
+  @protected
+  AnyhowException dco_decode_AnyhowException(dynamic raw);
 
   @protected
   DefaultClient
-      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
-          dynamic raw);
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+    dynamic raw,
+  );
 
   @protected
   DefaultClient
-      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
-          dynamic raw);
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+    dynamic raw,
+  );
 
   @protected
   Map<String, double> dco_decode_Map_String_f_64_None(dynamic raw);
 
   @protected
   DefaultClient
-      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
-          dynamic raw);
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+    dynamic raw,
+  );
+
+  @protected
+  RustStreamSink<ChatCompletionChunk>
+  dco_decode_StreamSink_chat_completion_chunk_Sse(dynamic raw);
 
   @protected
   String dco_decode_String(dynamic raw);
@@ -89,7 +99,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ChatCompletionRequest dco_decode_box_autoadd_chat_completion_request(
-      dynamic raw);
+    dynamic raw,
+  );
 
   @protected
   CreateBatchRequest dco_decode_box_autoadd_create_batch_request(dynamic raw);
@@ -102,18 +113,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CreateResponseRequest dco_decode_box_autoadd_create_response_request(
-      dynamic raw);
+    dynamic raw,
+  );
 
   @protected
   CreateSpeechRequest dco_decode_box_autoadd_create_speech_request(dynamic raw);
 
   @protected
   CreateTranscriptionRequest
-      dco_decode_box_autoadd_create_transcription_request(dynamic raw);
+  dco_decode_box_autoadd_create_transcription_request(dynamic raw);
 
   @protected
   CustomProviderConfig dco_decode_box_autoadd_custom_provider_config(
-      dynamic raw);
+    dynamic raw,
+  );
 
   @protected
   DeveloperMessage dco_decode_box_autoadd_developer_message(dynamic raw);
@@ -174,7 +187,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RerankResultDocument dco_decode_box_autoadd_rerank_result_document(
-      dynamic raw);
+    dynamic raw,
+  );
 
   @protected
   ResponseFormat dco_decode_box_autoadd_response_format(dynamic raw);
@@ -250,7 +264,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CreateTranscriptionRequest dco_decode_create_transcription_request(
-      dynamic raw);
+    dynamic raw,
+  );
 
   @protected
   CustomProviderConfig dco_decode_custom_provider_config(dynamic raw);
@@ -458,7 +473,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BatchRequestCounts? dco_decode_opt_box_autoadd_batch_request_counts(
-      dynamic raw);
+    dynamic raw,
+  );
 
   @protected
   bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
@@ -489,14 +505,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PromptTokensDetails? dco_decode_opt_box_autoadd_prompt_tokens_details(
-      dynamic raw);
+    dynamic raw,
+  );
 
   @protected
   ReasoningEffort? dco_decode_opt_box_autoadd_reasoning_effort(dynamic raw);
 
   @protected
   RerankResultDocument? dco_decode_opt_box_autoadd_rerank_result_document(
-      dynamic raw);
+    dynamic raw,
+  );
 
   @protected
   ResponseFormat? dco_decode_opt_box_autoadd_response_format(dynamic raw);
@@ -509,7 +527,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   StreamFunctionCall? dco_decode_opt_box_autoadd_stream_function_call(
-      dynamic raw);
+    dynamic raw,
+  );
 
   @protected
   StreamOptions? dco_decode_opt_box_autoadd_stream_options(dynamic raw);
@@ -528,7 +547,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ChatCompletionTool>? dco_decode_opt_list_chat_completion_tool(
-      dynamic raw);
+    dynamic raw,
+  );
 
   @protected
   List<OcrImage>? dco_decode_opt_list_ocr_image(dynamic raw);
@@ -547,7 +567,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<TranscriptionSegment>? dco_decode_opt_list_transcription_segment(
-      dynamic raw);
+    dynamic raw,
+  );
 
   @protected
   PageDimensions dco_decode_page_dimensions(dynamic raw);
@@ -667,23 +688,34 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt dco_decode_usize(dynamic raw);
 
   @protected
-  DefaultClient
-      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
-          SseDeserializer deserializer);
+  AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
 
   @protected
   DefaultClient
-      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
-          SseDeserializer deserializer);
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  DefaultClient
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+    SseDeserializer deserializer,
+  );
 
   @protected
   Map<String, double> sse_decode_Map_String_f_64_None(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   DefaultClient
-      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
-          SseDeserializer deserializer);
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RustStreamSink<ChatCompletionChunk>
+  sse_decode_StreamSink_chat_completion_chunk_Sse(SseDeserializer deserializer);
 
   @protected
   String sse_decode_String(SseDeserializer deserializer);
@@ -702,14 +734,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BatchListResponse sse_decode_batch_list_response(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   BatchObject sse_decode_batch_object(SseDeserializer deserializer);
 
   @protected
   BatchRequestCounts sse_decode_batch_request_counts(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   BatchStatus sse_decode_batch_status(SseDeserializer deserializer);
@@ -719,90 +753,110 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AssistantMessage sse_decode_box_autoadd_assistant_message(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   AudioContent sse_decode_box_autoadd_audio_content(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   BatchListQuery sse_decode_box_autoadd_batch_list_query(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   BatchRequestCounts sse_decode_box_autoadd_batch_request_counts(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
 
   @protected
   ChatCompletionRequest sse_decode_box_autoadd_chat_completion_request(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   CreateBatchRequest sse_decode_box_autoadd_create_batch_request(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   CreateFileRequest sse_decode_box_autoadd_create_file_request(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   CreateImageRequest sse_decode_box_autoadd_create_image_request(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   CreateResponseRequest sse_decode_box_autoadd_create_response_request(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   CreateSpeechRequest sse_decode_box_autoadd_create_speech_request(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   CreateTranscriptionRequest
-      sse_decode_box_autoadd_create_transcription_request(
-          SseDeserializer deserializer);
+  sse_decode_box_autoadd_create_transcription_request(
+    SseDeserializer deserializer,
+  );
 
   @protected
   CustomProviderConfig sse_decode_box_autoadd_custom_provider_config(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   DeveloperMessage sse_decode_box_autoadd_developer_message(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   DocumentContent sse_decode_box_autoadd_document_content(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   EmbeddingFormat sse_decode_box_autoadd_embedding_format(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   EmbeddingRequest sse_decode_box_autoadd_embedding_request(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
   FileListQuery sse_decode_box_autoadd_file_list_query(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   FinishReason sse_decode_box_autoadd_finish_reason(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   FunctionCall sse_decode_box_autoadd_function_call(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   FunctionMessage sse_decode_box_autoadd_function_message(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
@@ -815,66 +869,81 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   JsonSchemaFormat sse_decode_box_autoadd_json_schema_format(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ModerationRequest sse_decode_box_autoadd_moderation_request(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   OcrRequest sse_decode_box_autoadd_ocr_request(SseDeserializer deserializer);
 
   @protected
   PageDimensions sse_decode_box_autoadd_page_dimensions(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   PromptTokensDetails sse_decode_box_autoadd_prompt_tokens_details(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ReasoningEffort sse_decode_box_autoadd_reasoning_effort(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   RerankRequest sse_decode_box_autoadd_rerank_request(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   RerankResultDocument sse_decode_box_autoadd_rerank_result_document(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ResponseFormat sse_decode_box_autoadd_response_format(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ResponseUsage sse_decode_box_autoadd_response_usage(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   SearchRequest sse_decode_box_autoadd_search_request(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   SpecificToolChoice sse_decode_box_autoadd_specific_tool_choice(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   StopSequence sse_decode_box_autoadd_stop_sequence(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   StreamFunctionCall sse_decode_box_autoadd_stream_function_call(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   StreamOptions sse_decode_box_autoadd_stream_options(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   SystemMessage sse_decode_box_autoadd_system_message(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ToolChoice sse_decode_box_autoadd_tool_choice(SseDeserializer deserializer);
@@ -893,19 +962,23 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ChatCompletionChunk sse_decode_chat_completion_chunk(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ChatCompletionRequest sse_decode_chat_completion_request(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ChatCompletionResponse sse_decode_chat_completion_response(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ChatCompletionTool sse_decode_chat_completion_tool(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   Choice sse_decode_choice(SseDeserializer deserializer);
@@ -915,31 +988,38 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CreateBatchRequest sse_decode_create_batch_request(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   CreateFileRequest sse_decode_create_file_request(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   CreateImageRequest sse_decode_create_image_request(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   CreateResponseRequest sse_decode_create_response_request(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   CreateSpeechRequest sse_decode_create_speech_request(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   CreateTranscriptionRequest sse_decode_create_transcription_request(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   CustomProviderConfig sse_decode_custom_provider_config(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   DeleteResponse sse_decode_delete_response(SseDeserializer deserializer);
@@ -988,7 +1068,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   FunctionDefinition sse_decode_function_definition(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   FunctionMessage sse_decode_function_message(SseDeserializer deserializer);
@@ -1022,7 +1103,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ChatCompletionTool> sse_decode_list_chat_completion_tool(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<Choice> sse_decode_list_choice(SseDeserializer deserializer);
@@ -1032,7 +1114,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<EmbeddingObject> sse_decode_list_embedding_object(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<FileObject> sse_decode_list_file_object(SseDeserializer deserializer);
@@ -1048,7 +1131,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ModerationResult> sse_decode_list_moderation_result(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<OcrImage> sse_decode_list_ocr_image(SseDeserializer deserializer);
@@ -1067,42 +1151,51 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<(String, double)> sse_decode_list_record_string_f_64(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<RerankDocument> sse_decode_list_rerank_document(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<RerankResult> sse_decode_list_rerank_result(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<ResponseOutputItem> sse_decode_list_response_output_item(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<ResponseTool> sse_decode_list_response_tool(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<SearchResult> sse_decode_list_search_result(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<StreamChoice> sse_decode_list_stream_choice(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<StreamToolCall> sse_decode_list_stream_tool_call(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<ToolCall> sse_decode_list_tool_call(SseDeserializer deserializer);
 
   @protected
   List<TranscriptionSegment> sse_decode_list_transcription_segment(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   Message sse_decode_message(SseDeserializer deserializer);
@@ -1112,15 +1205,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ModelsListResponse sse_decode_models_list_response(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ModerationCategories sse_decode_moderation_categories(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ModerationCategoryScores sse_decode_moderation_category_scores(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ModerationInput sse_decode_moderation_input(SseDeserializer deserializer);
@@ -1130,7 +1226,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ModerationResponse sse_decode_moderation_response(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ModerationResult sse_decode_moderation_result(SseDeserializer deserializer);
@@ -1152,87 +1249,105 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Map<String, double>? sse_decode_opt_Map_String_f_64_None(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
   BatchListQuery? sse_decode_opt_box_autoadd_batch_list_query(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   BatchRequestCounts? sse_decode_opt_box_autoadd_batch_request_counts(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
 
   @protected
   EmbeddingFormat? sse_decode_opt_box_autoadd_embedding_format(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
   FileListQuery? sse_decode_opt_box_autoadd_file_list_query(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   FinishReason? sse_decode_opt_box_autoadd_finish_reason(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   FunctionCall? sse_decode_opt_box_autoadd_function_call(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
 
   @protected
   ImageDetail? sse_decode_opt_box_autoadd_image_detail(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   PageDimensions? sse_decode_opt_box_autoadd_page_dimensions(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   PromptTokensDetails? sse_decode_opt_box_autoadd_prompt_tokens_details(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ReasoningEffort? sse_decode_opt_box_autoadd_reasoning_effort(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   RerankResultDocument? sse_decode_opt_box_autoadd_rerank_result_document(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ResponseFormat? sse_decode_opt_box_autoadd_response_format(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ResponseUsage? sse_decode_opt_box_autoadd_response_usage(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   StopSequence? sse_decode_opt_box_autoadd_stop_sequence(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   StreamFunctionCall? sse_decode_opt_box_autoadd_stream_function_call(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   StreamOptions? sse_decode_opt_box_autoadd_stream_options(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ToolChoice? sse_decode_opt_box_autoadd_tool_choice(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ToolType? sse_decode_opt_box_autoadd_tool_type(SseDeserializer deserializer);
@@ -1245,7 +1360,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ChatCompletionTool>? sse_decode_opt_list_chat_completion_tool(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<OcrImage>? sse_decode_opt_list_ocr_image(SseDeserializer deserializer);
@@ -1255,25 +1371,29 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ResponseTool>? sse_decode_opt_list_response_tool(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<StreamToolCall>? sse_decode_opt_list_stream_tool_call(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<ToolCall>? sse_decode_opt_list_tool_call(SseDeserializer deserializer);
 
   @protected
   List<TranscriptionSegment>? sse_decode_opt_list_transcription_segment(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   PageDimensions sse_decode_page_dimensions(SseDeserializer deserializer);
 
   @protected
   PromptTokensDetails sse_decode_prompt_tokens_details(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ReasoningEffort sse_decode_reasoning_effort(SseDeserializer deserializer);
@@ -1295,7 +1415,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RerankResultDocument sse_decode_rerank_result_document(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ResponseFormat sse_decode_response_format(SseDeserializer deserializer);
@@ -1305,7 +1426,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ResponseOutputItem sse_decode_response_output_item(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   ResponseTool sse_decode_response_tool(SseDeserializer deserializer);
@@ -1327,7 +1449,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SpecificToolChoice sse_decode_specific_tool_choice(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   StopSequence sse_decode_stop_sequence(SseDeserializer deserializer);
@@ -1340,7 +1463,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   StreamFunctionCall sse_decode_stream_function_call(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   StreamOptions sse_decode_stream_options(SseDeserializer deserializer);
@@ -1368,11 +1492,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   TranscriptionResponse sse_decode_transcription_response(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   TranscriptionSegment sse_decode_transcription_segment(
-      SseDeserializer deserializer);
+    SseDeserializer deserializer,
+  );
 
   @protected
   int sse_decode_u_8(SseDeserializer deserializer);
@@ -1393,52 +1519,82 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt sse_decode_usize(SseDeserializer deserializer);
 
   @protected
-  void
-      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
-          DefaultClient self, SseSerializer serializer);
+  void sse_encode_AnyhowException(
+    AnyhowException self,
+    SseSerializer serializer,
+  );
 
   @protected
   void
-      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
-          DefaultClient self, SseSerializer serializer);
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+    DefaultClient self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+    DefaultClient self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_Map_String_f_64_None(
-      Map<String, double> self, SseSerializer serializer);
+    Map<String, double> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void
-      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
-          DefaultClient self, SseSerializer serializer);
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+    DefaultClient self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_chat_completion_chunk_Sse(
+    RustStreamSink<ChatCompletionChunk> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
   void sse_encode_assistant_message(
-      AssistantMessage self, SseSerializer serializer);
+    AssistantMessage self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_audio_content(AudioContent self, SseSerializer serializer);
 
   @protected
   void sse_encode_auth_header_format(
-      AuthHeaderFormat self, SseSerializer serializer);
+    AuthHeaderFormat self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_batch_list_query(
-      BatchListQuery self, SseSerializer serializer);
+    BatchListQuery self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_batch_list_response(
-      BatchListResponse self, SseSerializer serializer);
+    BatchListResponse self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_batch_object(BatchObject self, SseSerializer serializer);
 
   @protected
   void sse_encode_batch_request_counts(
-      BatchRequestCounts self, SseSerializer serializer);
+    BatchRequestCounts self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_batch_status(BatchStatus self, SseSerializer serializer);
@@ -1448,200 +1604,294 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_box_autoadd_assistant_message(
-      AssistantMessage self, SseSerializer serializer);
+    AssistantMessage self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_audio_content(
-      AudioContent self, SseSerializer serializer);
+    AudioContent self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_batch_list_query(
-      BatchListQuery self, SseSerializer serializer);
+    BatchListQuery self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_batch_request_counts(
-      BatchRequestCounts self, SseSerializer serializer);
+    BatchRequestCounts self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_chat_completion_request(
-      ChatCompletionRequest self, SseSerializer serializer);
+    ChatCompletionRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_create_batch_request(
-      CreateBatchRequest self, SseSerializer serializer);
+    CreateBatchRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_create_file_request(
-      CreateFileRequest self, SseSerializer serializer);
+    CreateFileRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_create_image_request(
-      CreateImageRequest self, SseSerializer serializer);
+    CreateImageRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_create_response_request(
-      CreateResponseRequest self, SseSerializer serializer);
+    CreateResponseRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_create_speech_request(
-      CreateSpeechRequest self, SseSerializer serializer);
+    CreateSpeechRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_create_transcription_request(
-      CreateTranscriptionRequest self, SseSerializer serializer);
+    CreateTranscriptionRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_custom_provider_config(
-      CustomProviderConfig self, SseSerializer serializer);
+    CustomProviderConfig self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_developer_message(
-      DeveloperMessage self, SseSerializer serializer);
+    DeveloperMessage self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_document_content(
-      DocumentContent self, SseSerializer serializer);
+    DocumentContent self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_embedding_format(
-      EmbeddingFormat self, SseSerializer serializer);
+    EmbeddingFormat self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_embedding_request(
-      EmbeddingRequest self, SseSerializer serializer);
+    EmbeddingRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_file_list_query(
-      FileListQuery self, SseSerializer serializer);
+    FileListQuery self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_finish_reason(
-      FinishReason self, SseSerializer serializer);
+    FinishReason self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_function_call(
-      FunctionCall self, SseSerializer serializer);
+    FunctionCall self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_function_message(
-      FunctionMessage self, SseSerializer serializer);
+    FunctionMessage self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_i_64(
-      PlatformInt64 self, SseSerializer serializer);
+    PlatformInt64 self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_image_detail(
-      ImageDetail self, SseSerializer serializer);
+    ImageDetail self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_image_url(
-      ImageUrl self, SseSerializer serializer);
+    ImageUrl self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_json_schema_format(
-      JsonSchemaFormat self, SseSerializer serializer);
+    JsonSchemaFormat self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_moderation_request(
-      ModerationRequest self, SseSerializer serializer);
+    ModerationRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_ocr_request(
-      OcrRequest self, SseSerializer serializer);
+    OcrRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_page_dimensions(
-      PageDimensions self, SseSerializer serializer);
+    PageDimensions self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_prompt_tokens_details(
-      PromptTokensDetails self, SseSerializer serializer);
+    PromptTokensDetails self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_reasoning_effort(
-      ReasoningEffort self, SseSerializer serializer);
+    ReasoningEffort self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_rerank_request(
-      RerankRequest self, SseSerializer serializer);
+    RerankRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_rerank_result_document(
-      RerankResultDocument self, SseSerializer serializer);
+    RerankResultDocument self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_response_format(
-      ResponseFormat self, SseSerializer serializer);
+    ResponseFormat self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_response_usage(
-      ResponseUsage self, SseSerializer serializer);
+    ResponseUsage self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_search_request(
-      SearchRequest self, SseSerializer serializer);
+    SearchRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_specific_tool_choice(
-      SpecificToolChoice self, SseSerializer serializer);
+    SpecificToolChoice self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_stop_sequence(
-      StopSequence self, SseSerializer serializer);
+    StopSequence self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_stream_function_call(
-      StreamFunctionCall self, SseSerializer serializer);
+    StreamFunctionCall self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_stream_options(
-      StreamOptions self, SseSerializer serializer);
+    StreamOptions self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_system_message(
-      SystemMessage self, SseSerializer serializer);
+    SystemMessage self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_tool_choice(
-      ToolChoice self, SseSerializer serializer);
+    ToolChoice self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_tool_message(
-      ToolMessage self, SseSerializer serializer);
+    ToolMessage self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_tool_type(
-      ToolType self, SseSerializer serializer);
+    ToolType self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_usage(Usage self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_user_message(
-      UserMessage self, SseSerializer serializer);
+    UserMessage self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_chat_completion_chunk(
-      ChatCompletionChunk self, SseSerializer serializer);
+    ChatCompletionChunk self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_chat_completion_request(
-      ChatCompletionRequest self, SseSerializer serializer);
+    ChatCompletionRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_chat_completion_response(
-      ChatCompletionResponse self, SseSerializer serializer);
+    ChatCompletionResponse self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_chat_completion_tool(
-      ChatCompletionTool self, SseSerializer serializer);
+    ChatCompletionTool self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_choice(Choice self, SseSerializer serializer);
@@ -1651,63 +1901,93 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_create_batch_request(
-      CreateBatchRequest self, SseSerializer serializer);
+    CreateBatchRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_create_file_request(
-      CreateFileRequest self, SseSerializer serializer);
+    CreateFileRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_create_image_request(
-      CreateImageRequest self, SseSerializer serializer);
+    CreateImageRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_create_response_request(
-      CreateResponseRequest self, SseSerializer serializer);
+    CreateResponseRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_create_speech_request(
-      CreateSpeechRequest self, SseSerializer serializer);
+    CreateSpeechRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_create_transcription_request(
-      CreateTranscriptionRequest self, SseSerializer serializer);
+    CreateTranscriptionRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_custom_provider_config(
-      CustomProviderConfig self, SseSerializer serializer);
+    CustomProviderConfig self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_delete_response(
-      DeleteResponse self, SseSerializer serializer);
+    DeleteResponse self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_developer_message(
-      DeveloperMessage self, SseSerializer serializer);
+    DeveloperMessage self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_document_content(
-      DocumentContent self, SseSerializer serializer);
+    DocumentContent self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_embedding_format(
-      EmbeddingFormat self, SseSerializer serializer);
+    EmbeddingFormat self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_embedding_input(
-      EmbeddingInput self, SseSerializer serializer);
+    EmbeddingInput self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_embedding_object(
-      EmbeddingObject self, SseSerializer serializer);
+    EmbeddingObject self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_embedding_request(
-      EmbeddingRequest self, SseSerializer serializer);
+    EmbeddingRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_embedding_response(
-      EmbeddingResponse self, SseSerializer serializer);
+    EmbeddingResponse self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
@@ -1717,7 +1997,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_file_list_response(
-      FileListResponse self, SseSerializer serializer);
+    FileListResponse self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_file_object(FileObject self, SseSerializer serializer);
@@ -1733,11 +2015,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_function_definition(
-      FunctionDefinition self, SseSerializer serializer);
+    FunctionDefinition self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_function_message(
-      FunctionMessage self, SseSerializer serializer);
+    FunctionMessage self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
@@ -1756,37 +2042,51 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_images_response(
-      ImagesResponse self, SseSerializer serializer);
+    ImagesResponse self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_json_schema_format(
-      JsonSchemaFormat self, SseSerializer serializer);
+    JsonSchemaFormat self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_batch_object(
-      List<BatchObject> self, SseSerializer serializer);
+    List<BatchObject> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_chat_completion_tool(
-      List<ChatCompletionTool> self, SseSerializer serializer);
+    List<ChatCompletionTool> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_choice(List<Choice> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_content_part(
-      List<ContentPart> self, SseSerializer serializer);
+    List<ContentPart> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_embedding_object(
-      List<EmbeddingObject> self, SseSerializer serializer);
+    List<EmbeddingObject> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_file_object(
-      List<FileObject> self, SseSerializer serializer);
+    List<FileObject> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_image(List<Image> self, SseSerializer serializer);
@@ -1796,11 +2096,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_model_object(
-      List<ModelObject> self, SseSerializer serializer);
+    List<ModelObject> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_moderation_result(
-      List<ModerationResult> self, SseSerializer serializer);
+    List<ModerationResult> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_ocr_image(List<OcrImage> self, SseSerializer serializer);
@@ -1810,54 +2114,78 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_prim_f_64_strict(
-      Float64List self, SseSerializer serializer);
+    Float64List self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_prim_i_64_strict(
-      Int64List self, SseSerializer serializer);
+    Int64List self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_prim_u_8_strict(
-      Uint8List self, SseSerializer serializer);
+    Uint8List self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_record_string_f_64(
-      List<(String, double)> self, SseSerializer serializer);
+    List<(String, double)> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_rerank_document(
-      List<RerankDocument> self, SseSerializer serializer);
+    List<RerankDocument> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_rerank_result(
-      List<RerankResult> self, SseSerializer serializer);
+    List<RerankResult> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_response_output_item(
-      List<ResponseOutputItem> self, SseSerializer serializer);
+    List<ResponseOutputItem> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_response_tool(
-      List<ResponseTool> self, SseSerializer serializer);
+    List<ResponseTool> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_search_result(
-      List<SearchResult> self, SseSerializer serializer);
+    List<SearchResult> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_stream_choice(
-      List<StreamChoice> self, SseSerializer serializer);
+    List<StreamChoice> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_stream_tool_call(
-      List<StreamToolCall> self, SseSerializer serializer);
+    List<StreamToolCall> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_tool_call(List<ToolCall> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_transcription_segment(
-      List<TranscriptionSegment> self, SseSerializer serializer);
+    List<TranscriptionSegment> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_message(Message self, SseSerializer serializer);
@@ -1867,31 +2195,45 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_models_list_response(
-      ModelsListResponse self, SseSerializer serializer);
+    ModelsListResponse self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_moderation_categories(
-      ModerationCategories self, SseSerializer serializer);
+    ModerationCategories self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_moderation_category_scores(
-      ModerationCategoryScores self, SseSerializer serializer);
+    ModerationCategoryScores self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_moderation_input(
-      ModerationInput self, SseSerializer serializer);
+    ModerationInput self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_moderation_request(
-      ModerationRequest self, SseSerializer serializer);
+    ModerationRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_moderation_response(
-      ModerationResponse self, SseSerializer serializer);
+    ModerationResponse self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_moderation_result(
-      ModerationResult self, SseSerializer serializer);
+    ModerationResult self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_ocr_document(OcrDocument self, SseSerializer serializer);
@@ -1910,92 +2252,132 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_Map_String_f_64_None(
-      Map<String, double>? self, SseSerializer serializer);
+    Map<String, double>? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_batch_list_query(
-      BatchListQuery? self, SseSerializer serializer);
+    BatchListQuery? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_batch_request_counts(
-      BatchRequestCounts? self, SseSerializer serializer);
+    BatchRequestCounts? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_embedding_format(
-      EmbeddingFormat? self, SseSerializer serializer);
+    EmbeddingFormat? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_file_list_query(
-      FileListQuery? self, SseSerializer serializer);
+    FileListQuery? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_finish_reason(
-      FinishReason? self, SseSerializer serializer);
+    FinishReason? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_function_call(
-      FunctionCall? self, SseSerializer serializer);
+    FunctionCall? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_i_64(
-      PlatformInt64? self, SseSerializer serializer);
+    PlatformInt64? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_image_detail(
-      ImageDetail? self, SseSerializer serializer);
+    ImageDetail? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_page_dimensions(
-      PageDimensions? self, SseSerializer serializer);
+    PageDimensions? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_prompt_tokens_details(
-      PromptTokensDetails? self, SseSerializer serializer);
+    PromptTokensDetails? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_reasoning_effort(
-      ReasoningEffort? self, SseSerializer serializer);
+    ReasoningEffort? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_rerank_result_document(
-      RerankResultDocument? self, SseSerializer serializer);
+    RerankResultDocument? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_response_format(
-      ResponseFormat? self, SseSerializer serializer);
+    ResponseFormat? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_response_usage(
-      ResponseUsage? self, SseSerializer serializer);
+    ResponseUsage? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_stop_sequence(
-      StopSequence? self, SseSerializer serializer);
+    StopSequence? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_stream_function_call(
-      StreamFunctionCall? self, SseSerializer serializer);
+    StreamFunctionCall? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_stream_options(
-      StreamOptions? self, SseSerializer serializer);
+    StreamOptions? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_tool_choice(
-      ToolChoice? self, SseSerializer serializer);
+    ToolChoice? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_tool_type(
-      ToolType? self, SseSerializer serializer);
+    ToolType? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_usage(Usage? self, SseSerializer serializer);
@@ -2005,77 +2387,111 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_list_chat_completion_tool(
-      List<ChatCompletionTool>? self, SseSerializer serializer);
+    List<ChatCompletionTool>? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_list_ocr_image(
-      List<OcrImage>? self, SseSerializer serializer);
+    List<OcrImage>? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_list_prim_i_64_strict(
-      Int64List? self, SseSerializer serializer);
+    Int64List? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_list_response_tool(
-      List<ResponseTool>? self, SseSerializer serializer);
+    List<ResponseTool>? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_list_stream_tool_call(
-      List<StreamToolCall>? self, SseSerializer serializer);
+    List<StreamToolCall>? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_list_tool_call(
-      List<ToolCall>? self, SseSerializer serializer);
+    List<ToolCall>? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_list_transcription_segment(
-      List<TranscriptionSegment>? self, SseSerializer serializer);
+    List<TranscriptionSegment>? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_page_dimensions(
-      PageDimensions self, SseSerializer serializer);
+    PageDimensions self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_prompt_tokens_details(
-      PromptTokensDetails self, SseSerializer serializer);
+    PromptTokensDetails self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_reasoning_effort(
-      ReasoningEffort self, SseSerializer serializer);
+    ReasoningEffort self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_record_string_f_64(
-      (String, double) self, SseSerializer serializer);
+    (String, double) self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_rerank_document(
-      RerankDocument self, SseSerializer serializer);
+    RerankDocument self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_rerank_request(RerankRequest self, SseSerializer serializer);
 
   @protected
   void sse_encode_rerank_response(
-      RerankResponse self, SseSerializer serializer);
+    RerankResponse self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_rerank_result(RerankResult self, SseSerializer serializer);
 
   @protected
   void sse_encode_rerank_result_document(
-      RerankResultDocument self, SseSerializer serializer);
+    RerankResultDocument self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_response_format(
-      ResponseFormat self, SseSerializer serializer);
+    ResponseFormat self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_response_object(
-      ResponseObject self, SseSerializer serializer);
+    ResponseObject self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_response_output_item(
-      ResponseOutputItem self, SseSerializer serializer);
+    ResponseOutputItem self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_response_tool(ResponseTool self, SseSerializer serializer);
@@ -2088,18 +2504,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_search_response(
-      SearchResponse self, SseSerializer serializer);
+    SearchResponse self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_search_result(SearchResult self, SseSerializer serializer);
 
   @protected
   void sse_encode_specific_function(
-      SpecificFunction self, SseSerializer serializer);
+    SpecificFunction self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_specific_tool_choice(
-      SpecificToolChoice self, SseSerializer serializer);
+    SpecificToolChoice self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_stop_sequence(StopSequence self, SseSerializer serializer);
@@ -2112,14 +2534,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_stream_function_call(
-      StreamFunctionCall self, SseSerializer serializer);
+    StreamFunctionCall self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_stream_options(StreamOptions self, SseSerializer serializer);
 
   @protected
   void sse_encode_stream_tool_call(
-      StreamToolCall self, SseSerializer serializer);
+    StreamToolCall self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_system_message(SystemMessage self, SseSerializer serializer);
@@ -2132,7 +2558,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_tool_choice_mode(
-      ToolChoiceMode self, SseSerializer serializer);
+    ToolChoiceMode self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_tool_message(ToolMessage self, SseSerializer serializer);
@@ -2142,11 +2570,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_transcription_response(
-      TranscriptionResponse self, SseSerializer serializer);
+    TranscriptionResponse self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_transcription_segment(
-      TranscriptionSegment self, SseSerializer serializer);
+    TranscriptionSegment self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_u_8(int self, SseSerializer serializer);
@@ -2172,17 +2604,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 class RustLibWire implements BaseWire {
   RustLibWire.fromExternalLibrary(ExternalLibrary lib);
 
-  void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
-          int ptr) =>
-      wasmModule
-          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
-              ptr);
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+        ptr,
+      );
 
-  void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
-          int ptr) =>
-      wasmModule
-          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
-              ptr);
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+        ptr,
+      );
 }
 
 @JS('wasm_bindgen')
@@ -2192,10 +2628,12 @@ external RustLibWasmModule get wasmModule;
 @anonymous
 extension type RustLibWasmModule._(JSObject _) implements JSObject {
   external void
-      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
-          int ptr);
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+    int ptr,
+  );
 
   external void
-      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
-          int ptr);
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+    int ptr,
+  );
 }

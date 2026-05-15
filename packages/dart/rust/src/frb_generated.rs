@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 493932018;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 145493259;
 
 // Section: executor
 
@@ -181,6 +181,55 @@ fn wire__crate__DefaultClient_chat_impl(
                     })()
                     .await,
                 )
+            }
+        },
+    )
+}
+fn wire__crate__DefaultClient_chat_stream_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "DefaultClient_chat_stream",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
+            };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that =
+                <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DefaultClient>>>::sse_decode(
+                    &mut deserializer,
+                );
+            let api_req = <crate::ChatCompletionRequest>::sse_decode(&mut deserializer);
+            let api_sink =
+                <StreamSink<crate::ChatCompletionChunk, flutter_rust_bridge::for_generated::SseCodec>>::sse_decode(
+                    &mut deserializer,
+                );
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let mut api_that_guard = None;
+                    let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(&api_that, 0, false),
+                    ]);
+                    for i in decode_indices_ {
+                        match i {
+                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                            _ => unreachable!(),
+                        }
+                    }
+                    let api_that_guard = api_that_guard.unwrap();
+                    let output_ok = Result::<_, ()>::Ok({
+                        crate::DefaultClient::chat_stream(&*api_that_guard, api_req, api_sink);
+                    })?;
+                    Ok(output_ok)
+                })())
             }
         },
     )
@@ -3823,6 +3872,14 @@ flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
 
 // Section: dart2rust
 
+impl SseDecode for flutter_rust_bridge::for_generated::anyhow::Error {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <String>::sse_decode(deserializer);
+        return flutter_rust_bridge::for_generated::anyhow::anyhow!("{}", inner);
+    }
+}
+
 impl SseDecode for DefaultClient {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3847,6 +3904,14 @@ impl SseDecode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpa
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
         return decode_rust_opaque_moi(inner);
+    }
+}
+
+impl SseDecode for StreamSink<crate::ChatCompletionChunk, flutter_rust_bridge::for_generated::SseCodec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <String>::sse_decode(deserializer);
+        return StreamSink::deserialize(inner);
     }
 }
 
@@ -6112,101 +6177,102 @@ fn pde_ffi_dispatcher_primary_impl(
         1 => wire__crate__DefaultClient_cancel_batch_impl(port, ptr, rust_vec_len, data_len),
         2 => wire__crate__DefaultClient_cancel_response_impl(port, ptr, rust_vec_len, data_len),
         3 => wire__crate__DefaultClient_chat_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__DefaultClient_create_batch_impl(port, ptr, rust_vec_len, data_len),
-        5 => wire__crate__DefaultClient_create_file_impl(port, ptr, rust_vec_len, data_len),
-        6 => wire__crate__DefaultClient_create_response_impl(port, ptr, rust_vec_len, data_len),
-        7 => wire__crate__DefaultClient_delete_file_impl(port, ptr, rust_vec_len, data_len),
-        8 => wire__crate__DefaultClient_embed_impl(port, ptr, rust_vec_len, data_len),
-        9 => wire__crate__DefaultClient_file_content_impl(port, ptr, rust_vec_len, data_len),
-        10 => wire__crate__DefaultClient_image_generate_impl(port, ptr, rust_vec_len, data_len),
-        11 => wire__crate__DefaultClient_list_batches_impl(port, ptr, rust_vec_len, data_len),
-        12 => wire__crate__DefaultClient_list_files_impl(port, ptr, rust_vec_len, data_len),
-        13 => wire__crate__DefaultClient_list_models_impl(port, ptr, rust_vec_len, data_len),
-        14 => wire__crate__DefaultClient_moderate_impl(port, ptr, rust_vec_len, data_len),
-        15 => wire__crate__DefaultClient_ocr_impl(port, ptr, rust_vec_len, data_len),
-        16 => wire__crate__DefaultClient_rerank_impl(port, ptr, rust_vec_len, data_len),
-        17 => wire__crate__DefaultClient_retrieve_batch_impl(port, ptr, rust_vec_len, data_len),
-        18 => wire__crate__DefaultClient_retrieve_file_impl(port, ptr, rust_vec_len, data_len),
-        19 => wire__crate__DefaultClient_retrieve_response_impl(port, ptr, rust_vec_len, data_len),
-        20 => wire__crate__DefaultClient_search_impl(port, ptr, rust_vec_len, data_len),
-        21 => wire__crate__DefaultClient_speech_impl(port, ptr, rust_vec_len, data_len),
-        22 => wire__crate__DefaultClient_transcribe_impl(port, ptr, rust_vec_len, data_len),
-        23 => wire__crate__create_assistant_message_from_json_impl(port, ptr, rust_vec_len, data_len),
-        24 => wire__crate__create_audio_content_from_json_impl(port, ptr, rust_vec_len, data_len),
-        25 => wire__crate__create_batch_list_query_from_json_impl(port, ptr, rust_vec_len, data_len),
-        26 => wire__crate__create_batch_list_response_from_json_impl(port, ptr, rust_vec_len, data_len),
-        27 => wire__crate__create_batch_object_from_json_impl(port, ptr, rust_vec_len, data_len),
-        28 => wire__crate__create_batch_request_counts_from_json_impl(port, ptr, rust_vec_len, data_len),
-        29 => wire__crate__create_chat_completion_chunk_from_json_impl(port, ptr, rust_vec_len, data_len),
-        30 => wire__crate__create_chat_completion_request_from_json_impl(port, ptr, rust_vec_len, data_len),
-        31 => wire__crate__create_chat_completion_response_from_json_impl(port, ptr, rust_vec_len, data_len),
-        32 => wire__crate__create_chat_completion_tool_from_json_impl(port, ptr, rust_vec_len, data_len),
-        33 => wire__crate__create_choice_from_json_impl(port, ptr, rust_vec_len, data_len),
-        34 => wire__crate__create_client_impl(port, ptr, rust_vec_len, data_len),
-        35 => wire__crate__create_client_from_json_impl(port, ptr, rust_vec_len, data_len),
-        36 => wire__crate__create_create_batch_request_from_json_impl(port, ptr, rust_vec_len, data_len),
-        37 => wire__crate__create_create_file_request_from_json_impl(port, ptr, rust_vec_len, data_len),
-        38 => wire__crate__create_create_image_request_from_json_impl(port, ptr, rust_vec_len, data_len),
-        39 => wire__crate__create_create_response_request_from_json_impl(port, ptr, rust_vec_len, data_len),
-        40 => wire__crate__create_create_speech_request_from_json_impl(port, ptr, rust_vec_len, data_len),
-        41 => wire__crate__create_create_transcription_request_from_json_impl(port, ptr, rust_vec_len, data_len),
-        42 => wire__crate__create_custom_provider_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        43 => wire__crate__create_delete_response_from_json_impl(port, ptr, rust_vec_len, data_len),
-        44 => wire__crate__create_developer_message_from_json_impl(port, ptr, rust_vec_len, data_len),
-        45 => wire__crate__create_document_content_from_json_impl(port, ptr, rust_vec_len, data_len),
-        46 => wire__crate__create_embedding_object_from_json_impl(port, ptr, rust_vec_len, data_len),
-        47 => wire__crate__create_embedding_request_from_json_impl(port, ptr, rust_vec_len, data_len),
-        48 => wire__crate__create_embedding_response_from_json_impl(port, ptr, rust_vec_len, data_len),
-        49 => wire__crate__create_file_list_query_from_json_impl(port, ptr, rust_vec_len, data_len),
-        50 => wire__crate__create_file_list_response_from_json_impl(port, ptr, rust_vec_len, data_len),
-        51 => wire__crate__create_file_object_from_json_impl(port, ptr, rust_vec_len, data_len),
-        52 => wire__crate__create_function_call_from_json_impl(port, ptr, rust_vec_len, data_len),
-        53 => wire__crate__create_function_definition_from_json_impl(port, ptr, rust_vec_len, data_len),
-        54 => wire__crate__create_function_message_from_json_impl(port, ptr, rust_vec_len, data_len),
-        55 => wire__crate__create_image_from_json_impl(port, ptr, rust_vec_len, data_len),
-        56 => wire__crate__create_image_url_from_json_impl(port, ptr, rust_vec_len, data_len),
-        57 => wire__crate__create_images_response_from_json_impl(port, ptr, rust_vec_len, data_len),
-        58 => wire__crate__create_json_schema_format_from_json_impl(port, ptr, rust_vec_len, data_len),
-        59 => wire__crate__create_model_object_from_json_impl(port, ptr, rust_vec_len, data_len),
-        60 => wire__crate__create_models_list_response_from_json_impl(port, ptr, rust_vec_len, data_len),
-        61 => wire__crate__create_moderation_categories_from_json_impl(port, ptr, rust_vec_len, data_len),
-        62 => wire__crate__create_moderation_category_scores_from_json_impl(port, ptr, rust_vec_len, data_len),
-        63 => wire__crate__create_moderation_request_from_json_impl(port, ptr, rust_vec_len, data_len),
-        64 => wire__crate__create_moderation_response_from_json_impl(port, ptr, rust_vec_len, data_len),
-        65 => wire__crate__create_moderation_result_from_json_impl(port, ptr, rust_vec_len, data_len),
-        66 => wire__crate__create_ocr_image_from_json_impl(port, ptr, rust_vec_len, data_len),
-        67 => wire__crate__create_ocr_page_from_json_impl(port, ptr, rust_vec_len, data_len),
-        68 => wire__crate__create_ocr_request_from_json_impl(port, ptr, rust_vec_len, data_len),
-        69 => wire__crate__create_ocr_response_from_json_impl(port, ptr, rust_vec_len, data_len),
-        70 => wire__crate__create_page_dimensions_from_json_impl(port, ptr, rust_vec_len, data_len),
-        71 => wire__crate__create_prompt_tokens_details_from_json_impl(port, ptr, rust_vec_len, data_len),
-        72 => wire__crate__create_rerank_request_from_json_impl(port, ptr, rust_vec_len, data_len),
-        73 => wire__crate__create_rerank_response_from_json_impl(port, ptr, rust_vec_len, data_len),
-        74 => wire__crate__create_rerank_result_document_from_json_impl(port, ptr, rust_vec_len, data_len),
-        75 => wire__crate__create_rerank_result_from_json_impl(port, ptr, rust_vec_len, data_len),
-        76 => wire__crate__create_response_object_from_json_impl(port, ptr, rust_vec_len, data_len),
-        77 => wire__crate__create_response_output_item_from_json_impl(port, ptr, rust_vec_len, data_len),
-        78 => wire__crate__create_response_tool_from_json_impl(port, ptr, rust_vec_len, data_len),
-        79 => wire__crate__create_response_usage_from_json_impl(port, ptr, rust_vec_len, data_len),
-        80 => wire__crate__create_search_request_from_json_impl(port, ptr, rust_vec_len, data_len),
-        81 => wire__crate__create_search_response_from_json_impl(port, ptr, rust_vec_len, data_len),
-        82 => wire__crate__create_search_result_from_json_impl(port, ptr, rust_vec_len, data_len),
-        83 => wire__crate__create_specific_function_from_json_impl(port, ptr, rust_vec_len, data_len),
-        84 => wire__crate__create_specific_tool_choice_from_json_impl(port, ptr, rust_vec_len, data_len),
-        85 => wire__crate__create_stream_choice_from_json_impl(port, ptr, rust_vec_len, data_len),
-        86 => wire__crate__create_stream_delta_from_json_impl(port, ptr, rust_vec_len, data_len),
-        87 => wire__crate__create_stream_function_call_from_json_impl(port, ptr, rust_vec_len, data_len),
-        88 => wire__crate__create_stream_options_from_json_impl(port, ptr, rust_vec_len, data_len),
-        89 => wire__crate__create_stream_tool_call_from_json_impl(port, ptr, rust_vec_len, data_len),
-        90 => wire__crate__create_system_message_from_json_impl(port, ptr, rust_vec_len, data_len),
-        91 => wire__crate__create_tool_call_from_json_impl(port, ptr, rust_vec_len, data_len),
-        92 => wire__crate__create_tool_message_from_json_impl(port, ptr, rust_vec_len, data_len),
-        93 => wire__crate__create_transcription_response_from_json_impl(port, ptr, rust_vec_len, data_len),
-        94 => wire__crate__create_transcription_segment_from_json_impl(port, ptr, rust_vec_len, data_len),
-        95 => wire__crate__create_usage_from_json_impl(port, ptr, rust_vec_len, data_len),
-        96 => wire__crate__create_user_message_from_json_impl(port, ptr, rust_vec_len, data_len),
-        97 => wire__crate__register_custom_provider_impl(port, ptr, rust_vec_len, data_len),
-        98 => wire__crate__unregister_custom_provider_impl(port, ptr, rust_vec_len, data_len),
+        4 => wire__crate__DefaultClient_chat_stream_impl(port, ptr, rust_vec_len, data_len),
+        5 => wire__crate__DefaultClient_create_batch_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__DefaultClient_create_file_impl(port, ptr, rust_vec_len, data_len),
+        7 => wire__crate__DefaultClient_create_response_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crate__DefaultClient_delete_file_impl(port, ptr, rust_vec_len, data_len),
+        9 => wire__crate__DefaultClient_embed_impl(port, ptr, rust_vec_len, data_len),
+        10 => wire__crate__DefaultClient_file_content_impl(port, ptr, rust_vec_len, data_len),
+        11 => wire__crate__DefaultClient_image_generate_impl(port, ptr, rust_vec_len, data_len),
+        12 => wire__crate__DefaultClient_list_batches_impl(port, ptr, rust_vec_len, data_len),
+        13 => wire__crate__DefaultClient_list_files_impl(port, ptr, rust_vec_len, data_len),
+        14 => wire__crate__DefaultClient_list_models_impl(port, ptr, rust_vec_len, data_len),
+        15 => wire__crate__DefaultClient_moderate_impl(port, ptr, rust_vec_len, data_len),
+        16 => wire__crate__DefaultClient_ocr_impl(port, ptr, rust_vec_len, data_len),
+        17 => wire__crate__DefaultClient_rerank_impl(port, ptr, rust_vec_len, data_len),
+        18 => wire__crate__DefaultClient_retrieve_batch_impl(port, ptr, rust_vec_len, data_len),
+        19 => wire__crate__DefaultClient_retrieve_file_impl(port, ptr, rust_vec_len, data_len),
+        20 => wire__crate__DefaultClient_retrieve_response_impl(port, ptr, rust_vec_len, data_len),
+        21 => wire__crate__DefaultClient_search_impl(port, ptr, rust_vec_len, data_len),
+        22 => wire__crate__DefaultClient_speech_impl(port, ptr, rust_vec_len, data_len),
+        23 => wire__crate__DefaultClient_transcribe_impl(port, ptr, rust_vec_len, data_len),
+        24 => wire__crate__create_assistant_message_from_json_impl(port, ptr, rust_vec_len, data_len),
+        25 => wire__crate__create_audio_content_from_json_impl(port, ptr, rust_vec_len, data_len),
+        26 => wire__crate__create_batch_list_query_from_json_impl(port, ptr, rust_vec_len, data_len),
+        27 => wire__crate__create_batch_list_response_from_json_impl(port, ptr, rust_vec_len, data_len),
+        28 => wire__crate__create_batch_object_from_json_impl(port, ptr, rust_vec_len, data_len),
+        29 => wire__crate__create_batch_request_counts_from_json_impl(port, ptr, rust_vec_len, data_len),
+        30 => wire__crate__create_chat_completion_chunk_from_json_impl(port, ptr, rust_vec_len, data_len),
+        31 => wire__crate__create_chat_completion_request_from_json_impl(port, ptr, rust_vec_len, data_len),
+        32 => wire__crate__create_chat_completion_response_from_json_impl(port, ptr, rust_vec_len, data_len),
+        33 => wire__crate__create_chat_completion_tool_from_json_impl(port, ptr, rust_vec_len, data_len),
+        34 => wire__crate__create_choice_from_json_impl(port, ptr, rust_vec_len, data_len),
+        35 => wire__crate__create_client_impl(port, ptr, rust_vec_len, data_len),
+        36 => wire__crate__create_client_from_json_impl(port, ptr, rust_vec_len, data_len),
+        37 => wire__crate__create_create_batch_request_from_json_impl(port, ptr, rust_vec_len, data_len),
+        38 => wire__crate__create_create_file_request_from_json_impl(port, ptr, rust_vec_len, data_len),
+        39 => wire__crate__create_create_image_request_from_json_impl(port, ptr, rust_vec_len, data_len),
+        40 => wire__crate__create_create_response_request_from_json_impl(port, ptr, rust_vec_len, data_len),
+        41 => wire__crate__create_create_speech_request_from_json_impl(port, ptr, rust_vec_len, data_len),
+        42 => wire__crate__create_create_transcription_request_from_json_impl(port, ptr, rust_vec_len, data_len),
+        43 => wire__crate__create_custom_provider_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        44 => wire__crate__create_delete_response_from_json_impl(port, ptr, rust_vec_len, data_len),
+        45 => wire__crate__create_developer_message_from_json_impl(port, ptr, rust_vec_len, data_len),
+        46 => wire__crate__create_document_content_from_json_impl(port, ptr, rust_vec_len, data_len),
+        47 => wire__crate__create_embedding_object_from_json_impl(port, ptr, rust_vec_len, data_len),
+        48 => wire__crate__create_embedding_request_from_json_impl(port, ptr, rust_vec_len, data_len),
+        49 => wire__crate__create_embedding_response_from_json_impl(port, ptr, rust_vec_len, data_len),
+        50 => wire__crate__create_file_list_query_from_json_impl(port, ptr, rust_vec_len, data_len),
+        51 => wire__crate__create_file_list_response_from_json_impl(port, ptr, rust_vec_len, data_len),
+        52 => wire__crate__create_file_object_from_json_impl(port, ptr, rust_vec_len, data_len),
+        53 => wire__crate__create_function_call_from_json_impl(port, ptr, rust_vec_len, data_len),
+        54 => wire__crate__create_function_definition_from_json_impl(port, ptr, rust_vec_len, data_len),
+        55 => wire__crate__create_function_message_from_json_impl(port, ptr, rust_vec_len, data_len),
+        56 => wire__crate__create_image_from_json_impl(port, ptr, rust_vec_len, data_len),
+        57 => wire__crate__create_image_url_from_json_impl(port, ptr, rust_vec_len, data_len),
+        58 => wire__crate__create_images_response_from_json_impl(port, ptr, rust_vec_len, data_len),
+        59 => wire__crate__create_json_schema_format_from_json_impl(port, ptr, rust_vec_len, data_len),
+        60 => wire__crate__create_model_object_from_json_impl(port, ptr, rust_vec_len, data_len),
+        61 => wire__crate__create_models_list_response_from_json_impl(port, ptr, rust_vec_len, data_len),
+        62 => wire__crate__create_moderation_categories_from_json_impl(port, ptr, rust_vec_len, data_len),
+        63 => wire__crate__create_moderation_category_scores_from_json_impl(port, ptr, rust_vec_len, data_len),
+        64 => wire__crate__create_moderation_request_from_json_impl(port, ptr, rust_vec_len, data_len),
+        65 => wire__crate__create_moderation_response_from_json_impl(port, ptr, rust_vec_len, data_len),
+        66 => wire__crate__create_moderation_result_from_json_impl(port, ptr, rust_vec_len, data_len),
+        67 => wire__crate__create_ocr_image_from_json_impl(port, ptr, rust_vec_len, data_len),
+        68 => wire__crate__create_ocr_page_from_json_impl(port, ptr, rust_vec_len, data_len),
+        69 => wire__crate__create_ocr_request_from_json_impl(port, ptr, rust_vec_len, data_len),
+        70 => wire__crate__create_ocr_response_from_json_impl(port, ptr, rust_vec_len, data_len),
+        71 => wire__crate__create_page_dimensions_from_json_impl(port, ptr, rust_vec_len, data_len),
+        72 => wire__crate__create_prompt_tokens_details_from_json_impl(port, ptr, rust_vec_len, data_len),
+        73 => wire__crate__create_rerank_request_from_json_impl(port, ptr, rust_vec_len, data_len),
+        74 => wire__crate__create_rerank_response_from_json_impl(port, ptr, rust_vec_len, data_len),
+        75 => wire__crate__create_rerank_result_document_from_json_impl(port, ptr, rust_vec_len, data_len),
+        76 => wire__crate__create_rerank_result_from_json_impl(port, ptr, rust_vec_len, data_len),
+        77 => wire__crate__create_response_object_from_json_impl(port, ptr, rust_vec_len, data_len),
+        78 => wire__crate__create_response_output_item_from_json_impl(port, ptr, rust_vec_len, data_len),
+        79 => wire__crate__create_response_tool_from_json_impl(port, ptr, rust_vec_len, data_len),
+        80 => wire__crate__create_response_usage_from_json_impl(port, ptr, rust_vec_len, data_len),
+        81 => wire__crate__create_search_request_from_json_impl(port, ptr, rust_vec_len, data_len),
+        82 => wire__crate__create_search_response_from_json_impl(port, ptr, rust_vec_len, data_len),
+        83 => wire__crate__create_search_result_from_json_impl(port, ptr, rust_vec_len, data_len),
+        84 => wire__crate__create_specific_function_from_json_impl(port, ptr, rust_vec_len, data_len),
+        85 => wire__crate__create_specific_tool_choice_from_json_impl(port, ptr, rust_vec_len, data_len),
+        86 => wire__crate__create_stream_choice_from_json_impl(port, ptr, rust_vec_len, data_len),
+        87 => wire__crate__create_stream_delta_from_json_impl(port, ptr, rust_vec_len, data_len),
+        88 => wire__crate__create_stream_function_call_from_json_impl(port, ptr, rust_vec_len, data_len),
+        89 => wire__crate__create_stream_options_from_json_impl(port, ptr, rust_vec_len, data_len),
+        90 => wire__crate__create_stream_tool_call_from_json_impl(port, ptr, rust_vec_len, data_len),
+        91 => wire__crate__create_system_message_from_json_impl(port, ptr, rust_vec_len, data_len),
+        92 => wire__crate__create_tool_call_from_json_impl(port, ptr, rust_vec_len, data_len),
+        93 => wire__crate__create_tool_message_from_json_impl(port, ptr, rust_vec_len, data_len),
+        94 => wire__crate__create_transcription_response_from_json_impl(port, ptr, rust_vec_len, data_len),
+        95 => wire__crate__create_transcription_segment_from_json_impl(port, ptr, rust_vec_len, data_len),
+        96 => wire__crate__create_usage_from_json_impl(port, ptr, rust_vec_len, data_len),
+        97 => wire__crate__create_user_message_from_json_impl(port, ptr, rust_vec_len, data_len),
+        98 => wire__crate__register_custom_provider_impl(port, ptr, rust_vec_len, data_len),
+        99 => wire__crate__unregister_custom_provider_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -7907,6 +7973,13 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::UserMessage>> for crate
     }
 }
 
+impl SseEncode for flutter_rust_bridge::for_generated::anyhow::Error {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(format!("{:?}", self), serializer);
+    }
+}
+
 impl SseEncode for DefaultClient {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7930,6 +8003,13 @@ impl SseEncode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpa
         let (ptr, size) = self.sse_encode_raw();
         <usize>::sse_encode(ptr, serializer);
         <i32>::sse_encode(size, serializer);
+    }
+}
+
+impl SseEncode for StreamSink<crate::ChatCompletionChunk, flutter_rust_bridge::for_generated::SseCodec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        unimplemented!("")
     }
 }
 
