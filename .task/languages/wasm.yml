@@ -34,13 +34,13 @@ tasks:
       - wasm-pack build "{{.WASM_DIR}}" --target bundler --release
 
   build:node:
-    desc: Build WASM package (Node.js target)
+    desc: Build WASM package (Node.js target → pkg/nodejs/)
     env:
       PROJECT_ROOT: "{{.PROJECT_ROOT}}"
       CC_wasm32_unknown_unknown: "{{.WASM_CC}}"
       WASI_SYSROOT: "{{.WASM_SYSROOT}}"
     cmds:
-      - wasm-pack build "{{.WASM_DIR}}" --target nodejs --release
+      - wasm-pack build "{{.WASM_DIR}}" --target nodejs --release --out-dir pkg/nodejs
 
   build:nodejs:
     desc: Alias for build:node — produces a Node.js (CJS, self-initializing) pkg/ artifact
