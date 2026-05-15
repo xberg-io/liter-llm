@@ -9,127 +9,257 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 
 /** JNI-backed wrapper holding a native `DefaultClient` handle. */
+@Suppress("TooManyFunctions")
 class DefaultClient internal constructor(internal val handle: Long) : AutoCloseable {
+    companion object {
+        private val MAPPER =
+            com.fasterxml.jackson.databind
+                .ObjectMapper()
+                .registerModule(com.fasterxml.jackson.datatype.jdk8.Jdk8Module())
+                .findAndRegisterModules()
+                .setPropertyNamingStrategy(
+                    com.fasterxml.jackson.databind.PropertyNamingStrategies.SNAKE_CASE
+                )
+    }
+
     suspend fun chat(req: ChatCompletionRequest): ChatCompletionResponse {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientChat(handle, req) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientChat(handle, MAPPER.writeValueAsString(req))
+            MAPPER.readValue(responseJson, ChatCompletionResponse::class.java)
+        }
     }
 
     suspend fun embed(req: EmbeddingRequest): EmbeddingResponse {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientEmbed(handle, req) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientEmbed(handle, MAPPER.writeValueAsString(req))
+            MAPPER.readValue(responseJson, EmbeddingResponse::class.java)
+        }
     }
 
     suspend fun listModels(): ModelsListResponse {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientListModels(handle) }
+        return withContext(Dispatchers.IO) {
+            val responseJson = LiterLlmBridge.nativeDefaultClientListModels(handle)
+            MAPPER.readValue(responseJson, ModelsListResponse::class.java)
+        }
     }
 
     suspend fun imageGenerate(req: CreateImageRequest): ImagesResponse {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientImageGenerate(handle, req) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientImageGenerate(
+                    handle,
+                    MAPPER.writeValueAsString(req),
+                )
+            MAPPER.readValue(responseJson, ImagesResponse::class.java)
+        }
     }
 
     suspend fun speech(req: CreateSpeechRequest): ByteArray {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientSpeech(handle, req) }
+        return withContext(Dispatchers.IO) {
+            LiterLlmBridge.nativeDefaultClientSpeech(handle, MAPPER.writeValueAsString(req))
+        }
     }
 
     suspend fun transcribe(req: CreateTranscriptionRequest): TranscriptionResponse {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientTranscribe(handle, req) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientTranscribe(handle, MAPPER.writeValueAsString(req))
+            MAPPER.readValue(responseJson, TranscriptionResponse::class.java)
+        }
     }
 
     suspend fun moderate(req: ModerationRequest): ModerationResponse {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientModerate(handle, req) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientModerate(handle, MAPPER.writeValueAsString(req))
+            MAPPER.readValue(responseJson, ModerationResponse::class.java)
+        }
     }
 
     suspend fun rerank(req: RerankRequest): RerankResponse {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientRerank(handle, req) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientRerank(handle, MAPPER.writeValueAsString(req))
+            MAPPER.readValue(responseJson, RerankResponse::class.java)
+        }
     }
 
     suspend fun search(req: SearchRequest): SearchResponse {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientSearch(handle, req) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientSearch(handle, MAPPER.writeValueAsString(req))
+            MAPPER.readValue(responseJson, SearchResponse::class.java)
+        }
     }
 
     suspend fun ocr(req: OcrRequest): OcrResponse {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientOcr(handle, req) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientOcr(handle, MAPPER.writeValueAsString(req))
+            MAPPER.readValue(responseJson, OcrResponse::class.java)
+        }
     }
 
     suspend fun createFile(req: CreateFileRequest): FileObject {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientCreateFile(handle, req) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientCreateFile(handle, MAPPER.writeValueAsString(req))
+            MAPPER.readValue(responseJson, FileObject::class.java)
+        }
     }
 
     suspend fun retrieveFile(fileId: String): FileObject {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientRetrieveFile(handle, fileId) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientRetrieveFile(
+                    handle,
+                    MAPPER.writeValueAsString(fileId),
+                )
+            MAPPER.readValue(responseJson, FileObject::class.java)
+        }
     }
 
     suspend fun deleteFile(fileId: String): DeleteResponse {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientDeleteFile(handle, fileId) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientDeleteFile(
+                    handle,
+                    MAPPER.writeValueAsString(fileId),
+                )
+            MAPPER.readValue(responseJson, DeleteResponse::class.java)
+        }
     }
 
     suspend fun listFiles(query: FileListQuery? = null): FileListResponse {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientListFiles(handle, query) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientListFiles(
+                    handle,
+                    MAPPER.writeValueAsString(query),
+                )
+            MAPPER.readValue(responseJson, FileListResponse::class.java)
+        }
     }
 
     suspend fun fileContent(fileId: String): ByteArray {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientFileContent(handle, fileId) }
+        return withContext(Dispatchers.IO) {
+            LiterLlmBridge.nativeDefaultClientFileContent(handle, MAPPER.writeValueAsString(fileId))
+        }
     }
 
     suspend fun createBatch(req: CreateBatchRequest): BatchObject {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientCreateBatch(handle, req) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientCreateBatch(
+                    handle,
+                    MAPPER.writeValueAsString(req),
+                )
+            MAPPER.readValue(responseJson, BatchObject::class.java)
+        }
     }
 
     suspend fun retrieveBatch(batchId: String): BatchObject {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientRetrieveBatch(handle, batchId) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientRetrieveBatch(
+                    handle,
+                    MAPPER.writeValueAsString(batchId),
+                )
+            MAPPER.readValue(responseJson, BatchObject::class.java)
+        }
     }
 
     suspend fun listBatches(query: BatchListQuery? = null): BatchListResponse {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientListBatches(handle, query) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientListBatches(
+                    handle,
+                    MAPPER.writeValueAsString(query),
+                )
+            MAPPER.readValue(responseJson, BatchListResponse::class.java)
+        }
     }
 
     suspend fun cancelBatch(batchId: String): BatchObject {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientCancelBatch(handle, batchId) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientCancelBatch(
+                    handle,
+                    MAPPER.writeValueAsString(batchId),
+                )
+            MAPPER.readValue(responseJson, BatchObject::class.java)
+        }
     }
 
     suspend fun createResponse(req: CreateResponseRequest): ResponseObject {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientCreateResponse(handle, req) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientCreateResponse(
+                    handle,
+                    MAPPER.writeValueAsString(req),
+                )
+            MAPPER.readValue(responseJson, ResponseObject::class.java)
+        }
     }
 
     suspend fun retrieveResponse(id: String): ResponseObject {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientRetrieveResponse(handle, id) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientRetrieveResponse(
+                    handle,
+                    MAPPER.writeValueAsString(id),
+                )
+            MAPPER.readValue(responseJson, ResponseObject::class.java)
+        }
     }
 
     suspend fun cancelResponse(id: String): ResponseObject {
-        return withContext(Dispatchers.IO) { LiterLlmBridge.nativeDefaultClientCancelResponse(handle, id) }
+        return withContext(Dispatchers.IO) {
+            val responseJson =
+                LiterLlmBridge.nativeDefaultClientCancelResponse(
+                    handle,
+                    MAPPER.writeValueAsString(id),
+                )
+            MAPPER.readValue(responseJson, ResponseObject::class.java)
+        }
     }
 
+    @Suppress("TooGenericExceptionCaught")
     fun chatStream(req: ChatCompletionRequest): kotlinx.coroutines.flow.Flow<ChatCompletionChunk> =
         kotlinx.coroutines.flow.callbackFlow {
-        val mapper =
-            com.fasterxml.jackson.databind
-                .ObjectMapper()
-            .registerModule(
-                com.fasterxml.jackson.datatype.jdk8
-                .Jdk8Module(),
-                    ).findAndRegisterModules()
-            .setPropertyNamingStrategy(com.fasterxml.jackson.databind.PropertyNamingStrategies.SNAKE_CASE)
-        val streamHandle: Long =
-            withContext(Dispatchers.IO) {
-            LiterLlmBridge.nativeDefaultClientChatStreamStart(handle, mapper.writeValueAsString(req))
-        }
-        try {
-            while (true) {
-                val chunkJson: String? =
-                    withContext(Dispatchers.IO) {
-                    LiterLlmBridge.nativeDefaultClientChatStreamNext(streamHandle)
+            val mapper =
+                com.fasterxml.jackson.databind
+                    .ObjectMapper()
+                    .registerModule(com.fasterxml.jackson.datatype.jdk8.Jdk8Module())
+                    .findAndRegisterModules()
+                    .setPropertyNamingStrategy(
+                        com.fasterxml.jackson.databind.PropertyNamingStrategies.SNAKE_CASE
+                    )
+            val streamHandle: Long =
+                withContext(Dispatchers.IO) {
+                    LiterLlmBridge.nativeDefaultClientChatStreamStart(
+                        handle,
+                        mapper.writeValueAsString(req),
+                    )
                 }
-                if (chunkJson == null) break
-                val chunk = mapper.readValue(chunkJson, ChatCompletionChunk::class.java)
-                send(chunk)
+            try {
+                while (true) {
+                    val chunkJson: String? =
+                        withContext(Dispatchers.IO) {
+                            LiterLlmBridge.nativeDefaultClientChatStreamNext(streamHandle)
+                        }
+                    if (chunkJson == null) break
+                    val chunk = mapper.readValue(chunkJson, ChatCompletionChunk::class.java)
+                    send(chunk)
+                }
+                close()
+            } catch (e: Throwable) {
+                close(e)
             }
-            close()
-        } catch (e: Throwable) {
-            close(e)
+            awaitClose { LiterLlmBridge.nativeDefaultClientChatStreamFree(streamHandle) }
         }
-        awaitClose {
-            LiterLlmBridge.nativeDefaultClientChatStreamFree(streamHandle)
-        }
-    }
 
     override fun close() {
         LiterLlmBridge.nativeFreeDefaultClient(handle)

@@ -20,28 +20,16 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
-    sourceSets {
-        getByName("main") {
-            jniLibs.srcDirs("src/main/jniLibs")
-        }
-    }
+    sourceSets { getByName("main") { jniLibs.srcDirs("src/main/jniLibs") } }
 
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-        }
-    }
+    publishing { singleVariant("release") { withSourcesJar() } }
 }
 
-kotlin {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_11)
-    }
-}
+kotlin { compilerOptions { jvmTarget.set(JvmTarget.JVM_17) } }
 
 ktlint {
     version.set("1.8.0")
@@ -54,6 +42,11 @@ dependencies {
     // Generated Kotlin facade uses suspend functions and Flow wrappers, both of
     // which require kotlinx-coroutines-android (transitively pulls -core).
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
+    // Generated sealed-class DTOs use Jackson @JsonDeserialize for polymorphic
+    // serde-tagged unions; jackson-module-kotlin is required for Kotlin
+    // data-class deserialization (handles nullable, default values, etc.).
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.3")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.21.3")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
@@ -62,9 +55,7 @@ dependencies {
 publishing {
     publications {
         register<MavenPublication>("release") {
-            afterEvaluate {
-                from(components["release"])
-            }
+            afterEvaluate { from(components["release"]) }
             groupId = "dev.kreuzberg"
             artifactId = "liter-llm-android"
             version = "0.0.0"

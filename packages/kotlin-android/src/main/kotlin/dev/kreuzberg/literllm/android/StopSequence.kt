@@ -2,12 +2,63 @@
 
 package dev.kreuzberg.literllm.android
 
+@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = StopSequenceDeserializer::class)
+@com.fasterxml.jackson.databind.annotation.JsonSerialize(using = StopSequenceSerializer::class)
 sealed class StopSequence {
-    data class Single(
-        val field0: String,
-    ) : StopSequence()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize
+    data class Single(val field0: String) : StopSequence()
 
-    data class Multiple(
-        val field0: List<String>,
-    ) : StopSequence()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize
+    data class Multiple(val field0: List<String>) : StopSequence()
+}
+
+private class StopSequenceDeserializer :
+    com.fasterxml.jackson.databind.deser.std.StdDeserializer<StopSequence>(
+        StopSequence::class.java
+    ) {
+    @Suppress("LongMethod")
+    override fun deserialize(
+        parser: com.fasterxml.jackson.core.JsonParser,
+        ctx: com.fasterxml.jackson.databind.DeserializationContext,
+    ): StopSequence {
+        val node = parser.codec.readTree<com.fasterxml.jackson.databind.JsonNode>(parser)
+        if (node.isTextual) return StopSequence.Single(node.asText())
+        if (node.isArray) {
+            return run {
+                val javaType =
+                    ctx.typeFactory.constructCollectionType(List::class.java, String::class.java)
+                @Suppress("UNCHECKED_CAST")
+                StopSequence.Multiple(
+                    ctx.readTreeAsValue<List<String>>(node, javaType) as List<String>
+                )
+            }
+        }
+        throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
+            parser,
+            "Cannot deserialize StopSequence: no matching variant for JSON shape",
+            null,
+            StopSequence::class.java,
+        )
+    }
+}
+
+private class StopSequenceSerializer :
+    com.fasterxml.jackson.databind.ser.std.StdSerializer<StopSequence>(StopSequence::class.java) {
+    @Suppress("LongMethod")
+    override fun serialize(
+        value: StopSequence,
+        gen: com.fasterxml.jackson.core.JsonGenerator,
+        provider: com.fasterxml.jackson.databind.SerializerProvider,
+    ) {
+        @Suppress("UNCHECKED_CAST")
+        val mapper =
+            (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper)
+                ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
+        when (value) {
+            is StopSequence.Single -> mapper.writeValue(gen, value.field0)
+            is StopSequence.Multiple -> mapper.writeValue(gen, value.field0)
+        }
+    }
 }

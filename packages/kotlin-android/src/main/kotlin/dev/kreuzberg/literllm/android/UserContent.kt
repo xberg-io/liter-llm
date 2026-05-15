@@ -2,12 +2,64 @@
 
 package dev.kreuzberg.literllm.android
 
+@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = UserContentDeserializer::class)
+@com.fasterxml.jackson.databind.annotation.JsonSerialize(using = UserContentSerializer::class)
 sealed class UserContent {
-    data class Text(
-        val field0: String,
-    ) : UserContent()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize
+    data class Text(val field0: String) : UserContent()
 
-    data class Parts(
-        val field0: List<ContentPart>,
-    ) : UserContent()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize
+    data class Parts(val field0: List<ContentPart>) : UserContent()
+}
+
+private class UserContentDeserializer :
+    com.fasterxml.jackson.databind.deser.std.StdDeserializer<UserContent>(UserContent::class.java) {
+    @Suppress("LongMethod")
+    override fun deserialize(
+        parser: com.fasterxml.jackson.core.JsonParser,
+        ctx: com.fasterxml.jackson.databind.DeserializationContext,
+    ): UserContent {
+        val node = parser.codec.readTree<com.fasterxml.jackson.databind.JsonNode>(parser)
+        if (node.isTextual) return UserContent.Text(node.asText())
+        if (node.isArray) {
+            return run {
+                val javaType =
+                    ctx.typeFactory.constructCollectionType(
+                        List::class.java,
+                        ContentPart::class.java,
+                    )
+                @Suppress("UNCHECKED_CAST")
+                UserContent.Parts(
+                    ctx.readTreeAsValue<List<ContentPart>>(node, javaType) as List<ContentPart>
+                )
+            }
+        }
+        throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
+            parser,
+            "Cannot deserialize UserContent: no matching variant for JSON shape",
+            null,
+            UserContent::class.java,
+        )
+    }
+}
+
+private class UserContentSerializer :
+    com.fasterxml.jackson.databind.ser.std.StdSerializer<UserContent>(UserContent::class.java) {
+    @Suppress("LongMethod")
+    override fun serialize(
+        value: UserContent,
+        gen: com.fasterxml.jackson.core.JsonGenerator,
+        provider: com.fasterxml.jackson.databind.SerializerProvider,
+    ) {
+        @Suppress("UNCHECKED_CAST")
+        val mapper =
+            (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper)
+                ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
+        when (value) {
+            is UserContent.Text -> mapper.writeValue(gen, value.field0)
+            is UserContent.Parts -> mapper.writeValue(gen, value.field0)
+        }
+    }
 }

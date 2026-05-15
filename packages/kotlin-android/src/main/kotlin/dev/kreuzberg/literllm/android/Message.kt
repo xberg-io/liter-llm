@@ -2,31 +2,162 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * A chat message in a conversation.
- */
+/** A chat message in a conversation. */
+@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = MessageDeserializer::class)
+@com.fasterxml.jackson.databind.annotation.JsonSerialize(using = MessageSerializer::class)
 sealed class Message {
-    data class System(
-        val field0: SystemMessage,
-    ) : Message()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize
+    data class System(val field0: SystemMessage) : Message()
 
-    data class User(
-        val field0: UserMessage,
-    ) : Message()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize
+    data class User(val field0: UserMessage) : Message()
 
-    data class Assistant(
-        val field0: AssistantMessage,
-    ) : Message()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize
+    data class Assistant(val field0: AssistantMessage) : Message()
 
-    data class Tool(
-        val field0: ToolMessage,
-    ) : Message()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize
+    data class Tool(val field0: ToolMessage) : Message()
 
-    data class Developer(
-        val field0: DeveloperMessage,
-    ) : Message()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize
+    data class Developer(val field0: DeveloperMessage) : Message()
 
-    data class Function(
-        val field0: FunctionMessage,
-    ) : Message()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize
+    data class Function(val field0: FunctionMessage) : Message()
+}
+
+private class MessageDeserializer :
+    com.fasterxml.jackson.databind.deser.std.StdDeserializer<Message>(Message::class.java) {
+    @Suppress("LongMethod")
+    override fun deserialize(
+        parser: com.fasterxml.jackson.core.JsonParser,
+        ctx: com.fasterxml.jackson.databind.DeserializationContext,
+    ): Message {
+        val node = parser.codec.readTree<com.fasterxml.jackson.databind.node.ObjectNode>(parser)
+        val tag = node.get("role")?.asText()
+
+        @Suppress("UNCHECKED_CAST")
+        val payload =
+            (node.deepCopy() as com.fasterxml.jackson.databind.node.ObjectNode).apply {
+                remove("role")
+            }
+        return when (tag) {
+            "system" ->
+                Message.System(
+                    ctx.readTreeAsValue<SystemMessage>(payload, SystemMessage::class.java)
+                )
+
+            "user" ->
+                Message.User(ctx.readTreeAsValue<UserMessage>(payload, UserMessage::class.java))
+
+            "assistant" ->
+                Message.Assistant(
+                    ctx.readTreeAsValue<AssistantMessage>(payload, AssistantMessage::class.java)
+                )
+
+            "tool" ->
+                Message.Tool(ctx.readTreeAsValue<ToolMessage>(payload, ToolMessage::class.java))
+
+            "developer" ->
+                Message.Developer(
+                    ctx.readTreeAsValue<DeveloperMessage>(payload, DeveloperMessage::class.java)
+                )
+
+            "function" ->
+                Message.Function(
+                    ctx.readTreeAsValue<FunctionMessage>(payload, FunctionMessage::class.java)
+                )
+
+            else ->
+                throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
+                    parser,
+                    "Unknown Message tag",
+                    tag,
+                    Message::class.java,
+                )
+        }
+    }
+}
+
+private class MessageSerializer :
+    com.fasterxml.jackson.databind.ser.std.StdSerializer<Message>(Message::class.java) {
+    @Suppress("LongMethod")
+    override fun serialize(
+        value: Message,
+        gen: com.fasterxml.jackson.core.JsonGenerator,
+        provider: com.fasterxml.jackson.databind.SerializerProvider,
+    ) {
+        @Suppress("UNCHECKED_CAST")
+        val mapper =
+            (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper)
+                ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
+        val node: com.fasterxml.jackson.databind.node.ObjectNode =
+            when (value) {
+                is Message.System -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value.field0
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("role", "system")
+                    n
+                }
+
+                is Message.User -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value.field0
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("role", "user")
+                    n
+                }
+
+                is Message.Assistant -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value.field0
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("role", "assistant")
+                    n
+                }
+
+                is Message.Tool -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value.field0
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("role", "tool")
+                    n
+                }
+
+                is Message.Developer -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value.field0
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("role", "developer")
+                    n
+                }
+
+                is Message.Function -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value.field0
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("role", "function")
+                    n
+                }
+            }
+        mapper.writeTree(gen, node)
+    }
 }

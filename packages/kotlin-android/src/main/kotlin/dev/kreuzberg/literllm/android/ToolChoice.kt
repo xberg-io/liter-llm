@@ -2,12 +2,54 @@
 
 package dev.kreuzberg.literllm.android
 
+@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = ToolChoiceDeserializer::class)
+@com.fasterxml.jackson.databind.annotation.JsonSerialize(using = ToolChoiceSerializer::class)
 sealed class ToolChoice {
-    data class Mode(
-        val field0: ToolChoiceMode,
-    ) : ToolChoice()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize
+    data class Mode(val field0: ToolChoiceMode) : ToolChoice()
 
-    data class Specific(
-        val field0: SpecificToolChoice,
-    ) : ToolChoice()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize
+    data class Specific(val field0: SpecificToolChoice) : ToolChoice()
+}
+
+private class ToolChoiceDeserializer :
+    com.fasterxml.jackson.databind.deser.std.StdDeserializer<ToolChoice>(ToolChoice::class.java) {
+    @Suppress("LongMethod")
+    override fun deserialize(
+        parser: com.fasterxml.jackson.core.JsonParser,
+        ctx: com.fasterxml.jackson.databind.DeserializationContext,
+    ): ToolChoice {
+        val node = parser.codec.readTree<com.fasterxml.jackson.databind.JsonNode>(parser)
+        if (node.isObject)
+            return ToolChoice.Mode(ctx.readTreeAsValue(node, ToolChoiceMode::class.java))
+        if (node.isObject)
+            return ToolChoice.Specific(ctx.readTreeAsValue(node, SpecificToolChoice::class.java))
+        throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
+            parser,
+            "Cannot deserialize ToolChoice: no matching variant for JSON shape",
+            null,
+            ToolChoice::class.java,
+        )
+    }
+}
+
+private class ToolChoiceSerializer :
+    com.fasterxml.jackson.databind.ser.std.StdSerializer<ToolChoice>(ToolChoice::class.java) {
+    @Suppress("LongMethod")
+    override fun serialize(
+        value: ToolChoice,
+        gen: com.fasterxml.jackson.core.JsonGenerator,
+        provider: com.fasterxml.jackson.databind.SerializerProvider,
+    ) {
+        @Suppress("UNCHECKED_CAST")
+        val mapper =
+            (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper)
+                ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
+        when (value) {
+            is ToolChoice.Mode -> mapper.writeValue(gen, value.field0)
+            is ToolChoice.Specific -> mapper.writeValue(gen, value.field0)
+        }
+    }
 }

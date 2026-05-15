@@ -9,13 +9,13 @@ group = "dev.kreuzberg.literllm.android"
 version = "0.1.0"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 kotlin {
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_11)
+        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 
@@ -40,6 +40,11 @@ dependencies {
     testImplementation("com.fasterxml.jackson.core:jackson-annotations:2.18.2")
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")
     testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.18.2")
+
+    // jackson-module-kotlin registers constructors/properties for Kotlin data
+    // classes, which have no default constructor and cannot be deserialized by
+    // plain Jackson without this module.
+    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.2")
 
     // jspecify for null-safety annotations on wrapped types
     testImplementation("org.jspecify:jspecify:1.0.0")

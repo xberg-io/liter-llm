@@ -2,18 +2,72 @@
 
 package dev.kreuzberg.literllm.android
 
+@Suppress("TooManyFunctions")
 object LiterLlmBridge {
     init {
         System.loadLibrary("literllm_jni")
     }
 
-    external fun nativeCreateClient(apiKey: String, baseUrl: String, timeoutSecs: Long, maxRetries: Int, modelHint: String): String
+    external fun nativeCreateClient(
+        apiKey: String,
+        baseUrl: String,
+        timeoutSecs: Long,
+        maxRetries: Int,
+        modelHint: String,
+    ): Long
 
-    external fun nativeCreateClientFromJson(json: String): String
+    external fun nativeCreateClientFromJson(json: String): Long
 
     external fun nativeRegisterCustomProvider(config: String): Unit
 
     external fun nativeUnregisterCustomProvider(name: String): Boolean
+
+    // JNI external funs for client instance methods.
+    external fun nativeDefaultClientChat(handle: Long, requestJson: String): String
+
+    external fun nativeDefaultClientEmbed(handle: Long, requestJson: String): String
+
+    external fun nativeDefaultClientListModels(handle: Long): String
+
+    external fun nativeDefaultClientImageGenerate(handle: Long, requestJson: String): String
+
+    external fun nativeDefaultClientSpeech(handle: Long, requestJson: String): ByteArray
+
+    external fun nativeDefaultClientTranscribe(handle: Long, requestJson: String): String
+
+    external fun nativeDefaultClientModerate(handle: Long, requestJson: String): String
+
+    external fun nativeDefaultClientRerank(handle: Long, requestJson: String): String
+
+    external fun nativeDefaultClientSearch(handle: Long, requestJson: String): String
+
+    external fun nativeDefaultClientOcr(handle: Long, requestJson: String): String
+
+    external fun nativeDefaultClientCreateFile(handle: Long, requestJson: String): String
+
+    external fun nativeDefaultClientRetrieveFile(handle: Long, requestJson: String): String
+
+    external fun nativeDefaultClientDeleteFile(handle: Long, requestJson: String): String
+
+    external fun nativeDefaultClientListFiles(handle: Long, requestJson: String): String
+
+    external fun nativeDefaultClientFileContent(handle: Long, requestJson: String): ByteArray
+
+    external fun nativeDefaultClientCreateBatch(handle: Long, requestJson: String): String
+
+    external fun nativeDefaultClientRetrieveBatch(handle: Long, requestJson: String): String
+
+    external fun nativeDefaultClientListBatches(handle: Long, requestJson: String): String
+
+    external fun nativeDefaultClientCancelBatch(handle: Long, requestJson: String): String
+
+    external fun nativeDefaultClientCreateResponse(handle: Long, requestJson: String): String
+
+    external fun nativeDefaultClientRetrieveResponse(handle: Long, requestJson: String): String
+
+    external fun nativeDefaultClientCancelResponse(handle: Long, requestJson: String): String
+
+    external fun nativeFreeDefaultClient(handle: Long)
 
     // JNI streaming external funs — implementations are Rust JNI shims.
 
