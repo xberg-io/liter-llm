@@ -58,7 +58,10 @@ jobs:
       contents: write
     outputs:
       tag: ${{ steps.meta.outputs.tag }}
-      checkout_ref: ${{ steps.meta.outputs.checkout_ref }}
+      # In dry-run dispatches, the tag from alef's release-metadata
+      # (e.g. refs/tags/v0.0.0-dryrun) doesn't exist as a real git ref,
+      # so downstream checkouts would 404. Fall back to the dispatch ref.
+      checkout_ref: ${{ steps.meta.outputs.dry_run == 'true' && (inputs.ref || github.ref) || steps.meta.outputs.checkout_ref }}
       version: ${{ steps.meta.outputs.version }}
       npm_tag: ${{ steps.meta.outputs.npm_tag }}
       dry_run: ${{ steps.meta.outputs.dry_run }}
