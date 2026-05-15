@@ -28,8 +28,8 @@ importers:
   e2e/wasm:
     devDependencies:
       liter_llm:
-        specifier: file:../../crates/liter-llm-wasm/pkg
-        version: liter-llm-wasm@file:crates/liter-llm-wasm/pkg
+        specifier: file:../../crates/liter-llm-wasm/pkg/nodejs
+        version: file:crates/liter-llm-wasm/pkg/nodejs
       rollup:
         specifier: ^4.53.3
         version: 4.60.2
@@ -1086,8 +1086,8 @@ packages:
   json-with-bigint@3.5.8:
     resolution: {integrity: sha512-eq/4KP6K34kwa7TcFdtvnftvHCD9KvHOGGICWwMFc4dOOKF5t4iYqnfLK8otCRCRv06FXOzGGyqE8h8ElMvvdw==}
 
-  liter-llm-wasm@file:crates/liter-llm-wasm/pkg:
-    resolution: {directory: crates/liter-llm-wasm/pkg, type: directory}
+  liter_llm@file:crates/liter-llm-wasm/pkg/nodejs:
+    resolution: {directory: crates/liter-llm-wasm/pkg/nodejs, type: directory}
 
   loupe@3.2.1:
     resolution: {integrity: sha512-CdzqowRJCeLU72bHvWqwRBBlLcMEtIvGrlvef74kMnV2AolS9Y8xUv1I0U/MNAWMhBlKIoyuEgoJ0t/bbwHbLQ==}
@@ -2131,7 +2131,7 @@ snapshots:
 
   json-with-bigint@3.5.8: {}
 
-  liter-llm-wasm@file:crates/liter-llm-wasm/pkg: {}
+  liter_llm@file:crates/liter-llm-wasm/pkg/nodejs: {}
 
   loupe@3.2.1: {}
 

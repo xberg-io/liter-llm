@@ -236,7 +236,7 @@ jobs:
       - name: Create WASM pkg stub
         if: matrix.node-version || matrix.lang == 'wasm'
         shell: bash
-        run: mkdir -p crates/liter-llm-wasm/pkg && echo '{"name":"liter_llm","version":"0.0.0"}' > crates/liter-llm-wasm/pkg/package.json
+        run: mkdir -p crates/liter-llm-wasm/pkg/nodejs && echo '{"name":"liter_llm","version":"0.0.0"}' > crates/liter-llm-wasm/pkg/nodejs/package.json
 
       - name: Setup Python
         if: matrix.python-version
