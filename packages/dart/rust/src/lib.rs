@@ -7,7 +7,8 @@
     clippy::manual_flatten,
     clippy::too_many_arguments,
     clippy::unit_arg,
-    clippy::type_complexity
+    clippy::type_complexity,
+    clippy::useless_conversion
 )]
 mod frb_generated;
 pub use flutter_rust_bridge::DartFnFuture;
@@ -965,8 +966,8 @@ pub enum AuthHeaderFormat {
 impl From<liter_llm::types::SystemMessage> for SystemMessage {
     fn from(v: liter_llm::types::SystemMessage) -> Self {
         SystemMessage {
-            content: v.content,
-            name: v.name,
+            content: v.content.into(),
+            name: v.name.map(|s| s.into()),
         }
     }
 }
@@ -975,7 +976,7 @@ impl From<liter_llm::types::UserMessage> for UserMessage {
     fn from(v: liter_llm::types::UserMessage) -> Self {
         UserMessage {
             content: UserContent::from(v.content),
-            name: v.name,
+            name: v.name.map(|s| s.into()),
         }
     }
 }
@@ -983,7 +984,7 @@ impl From<liter_llm::types::UserMessage> for UserMessage {
 impl From<liter_llm::types::ImageUrl> for ImageUrl {
     fn from(v: liter_llm::types::ImageUrl) -> Self {
         ImageUrl {
-            url: v.url,
+            url: v.url.into(),
             detail: v.detail.map(ImageDetail::from),
         }
     }
@@ -992,8 +993,8 @@ impl From<liter_llm::types::ImageUrl> for ImageUrl {
 impl From<liter_llm::types::DocumentContent> for DocumentContent {
     fn from(v: liter_llm::types::DocumentContent) -> Self {
         DocumentContent {
-            data: v.data,
-            media_type: v.media_type,
+            data: v.data.into(),
+            media_type: v.media_type.into(),
         }
     }
 }
@@ -1001,8 +1002,8 @@ impl From<liter_llm::types::DocumentContent> for DocumentContent {
 impl From<liter_llm::types::AudioContent> for AudioContent {
     fn from(v: liter_llm::types::AudioContent) -> Self {
         AudioContent {
-            data: v.data,
-            format: v.format,
+            data: v.data.into(),
+            format: v.format.into(),
         }
     }
 }
@@ -1010,10 +1011,10 @@ impl From<liter_llm::types::AudioContent> for AudioContent {
 impl From<liter_llm::types::AssistantMessage> for AssistantMessage {
     fn from(v: liter_llm::types::AssistantMessage) -> Self {
         AssistantMessage {
-            content: v.content,
-            name: v.name,
+            content: v.content.map(|s| s.into()),
+            name: v.name.map(|s| s.into()),
             tool_calls: v.tool_calls.map(|vec| vec.into_iter().map(ToolCall::from).collect()),
-            refusal: v.refusal,
+            refusal: v.refusal.map(|s| s.into()),
             function_call: v.function_call.map(FunctionCall::from),
         }
     }
@@ -1022,9 +1023,9 @@ impl From<liter_llm::types::AssistantMessage> for AssistantMessage {
 impl From<liter_llm::types::ToolMessage> for ToolMessage {
     fn from(v: liter_llm::types::ToolMessage) -> Self {
         ToolMessage {
-            content: v.content,
-            tool_call_id: v.tool_call_id,
-            name: v.name,
+            content: v.content.into(),
+            tool_call_id: v.tool_call_id.into(),
+            name: v.name.map(|s| s.into()),
         }
     }
 }
@@ -1032,8 +1033,8 @@ impl From<liter_llm::types::ToolMessage> for ToolMessage {
 impl From<liter_llm::types::DeveloperMessage> for DeveloperMessage {
     fn from(v: liter_llm::types::DeveloperMessage) -> Self {
         DeveloperMessage {
-            content: v.content,
-            name: v.name,
+            content: v.content.into(),
+            name: v.name.map(|s| s.into()),
         }
     }
 }
@@ -1041,8 +1042,8 @@ impl From<liter_llm::types::DeveloperMessage> for DeveloperMessage {
 impl From<liter_llm::types::FunctionMessage> for FunctionMessage {
     fn from(v: liter_llm::types::FunctionMessage) -> Self {
         FunctionMessage {
-            content: v.content,
-            name: v.name,
+            content: v.content.into(),
+            name: v.name.into(),
         }
     }
 }
@@ -1059,8 +1060,8 @@ impl From<liter_llm::types::ChatCompletionTool> for ChatCompletionTool {
 impl From<liter_llm::types::FunctionDefinition> for FunctionDefinition {
     fn from(v: liter_llm::types::FunctionDefinition) -> Self {
         FunctionDefinition {
-            name: v.name,
-            description: v.description,
+            name: v.name.into(),
+            description: v.description.map(|s| s.into()),
             parameters: v.parameters.map(|j| serde_json::to_string(&j).unwrap_or_default()),
             strict: v.strict.map(|x| x as _),
         }
@@ -1070,7 +1071,7 @@ impl From<liter_llm::types::FunctionDefinition> for FunctionDefinition {
 impl From<liter_llm::types::ToolCall> for ToolCall {
     fn from(v: liter_llm::types::ToolCall) -> Self {
         ToolCall {
-            id: v.id,
+            id: v.id.into(),
             call_type: ToolType::from(v.call_type),
             function: FunctionCall::from(v.function),
         }
@@ -1080,8 +1081,8 @@ impl From<liter_llm::types::ToolCall> for ToolCall {
 impl From<liter_llm::types::FunctionCall> for FunctionCall {
     fn from(v: liter_llm::types::FunctionCall) -> Self {
         FunctionCall {
-            name: v.name,
-            arguments: v.arguments,
+            name: v.name.into(),
+            arguments: v.arguments.into(),
         }
     }
 }
@@ -1097,15 +1098,15 @@ impl From<liter_llm::types::SpecificToolChoice> for SpecificToolChoice {
 
 impl From<liter_llm::types::SpecificFunction> for SpecificFunction {
     fn from(v: liter_llm::types::SpecificFunction) -> Self {
-        SpecificFunction { name: v.name }
+        SpecificFunction { name: v.name.into() }
     }
 }
 
 impl From<liter_llm::types::JsonSchemaFormat> for JsonSchemaFormat {
     fn from(v: liter_llm::types::JsonSchemaFormat) -> Self {
         JsonSchemaFormat {
-            name: v.name,
-            description: v.description,
+            name: v.name.into(),
+            description: v.description.map(|s| s.into()),
             schema: serde_json::to_string(&v.schema).unwrap_or_default(),
             strict: v.strict.map(|x| x as _),
         }
@@ -1135,7 +1136,7 @@ impl From<liter_llm::types::PromptTokensDetails> for PromptTokensDetails {
 impl From<liter_llm::types::ChatCompletionRequest> for ChatCompletionRequest {
     fn from(v: liter_llm::types::ChatCompletionRequest) -> Self {
         ChatCompletionRequest {
-            model: v.model,
+            model: v.model.into(),
             messages: v.messages.into_iter().map(Message::from).collect(),
             temperature: v.temperature.map(|x| x as _),
             top_p: v.top_p.map(|x| x as _),
@@ -1145,8 +1146,10 @@ impl From<liter_llm::types::ChatCompletionRequest> for ChatCompletionRequest {
             max_tokens: v.max_tokens.map(|x| x as _),
             presence_penalty: v.presence_penalty.map(|x| x as _),
             frequency_penalty: v.frequency_penalty.map(|x| x as _),
-            logit_bias: v.logit_bias.map(|m| m.into_iter().map(|(k, v)| (k, v as _)).collect()),
-            user: v.user,
+            logit_bias: v
+                .logit_bias
+                .map(|m| m.into_iter().map(|(k, v)| (k.into(), v as _)).collect()),
+            user: v.user.map(|s| s.into()),
             tools: v
                 .tools
                 .map(|vec| vec.into_iter().map(ChatCompletionTool::from).collect()),
@@ -1172,14 +1175,14 @@ impl From<liter_llm::types::StreamOptions> for StreamOptions {
 impl From<liter_llm::types::ChatCompletionResponse> for ChatCompletionResponse {
     fn from(v: liter_llm::types::ChatCompletionResponse) -> Self {
         ChatCompletionResponse {
-            id: v.id,
-            object: v.object,
+            id: v.id.into(),
+            object: v.object.into(),
             created: v.created as _,
-            model: v.model,
+            model: v.model.into(),
             choices: v.choices.into_iter().map(Choice::from).collect(),
             usage: v.usage.map(Usage::from),
-            system_fingerprint: v.system_fingerprint,
-            service_tier: v.service_tier,
+            system_fingerprint: v.system_fingerprint.map(|s| s.into()),
+            service_tier: v.service_tier.map(|s| s.into()),
         }
     }
 }
@@ -1197,14 +1200,14 @@ impl From<liter_llm::types::Choice> for Choice {
 impl From<liter_llm::types::ChatCompletionChunk> for ChatCompletionChunk {
     fn from(v: liter_llm::types::ChatCompletionChunk) -> Self {
         ChatCompletionChunk {
-            id: v.id,
-            object: v.object,
+            id: v.id.into(),
+            object: v.object.into(),
             created: v.created as _,
-            model: v.model,
+            model: v.model.into(),
             choices: v.choices.into_iter().map(StreamChoice::from).collect(),
             usage: v.usage.map(Usage::from),
-            system_fingerprint: v.system_fingerprint,
-            service_tier: v.service_tier,
+            system_fingerprint: v.system_fingerprint.map(|s| s.into()),
+            service_tier: v.service_tier.map(|s| s.into()),
         }
     }
 }
@@ -1222,13 +1225,13 @@ impl From<liter_llm::types::StreamChoice> for StreamChoice {
 impl From<liter_llm::types::StreamDelta> for StreamDelta {
     fn from(v: liter_llm::types::StreamDelta) -> Self {
         StreamDelta {
-            role: v.role,
-            content: v.content,
+            role: v.role.map(|s| s.into()),
+            content: v.content.map(|s| s.into()),
             tool_calls: v
                 .tool_calls
                 .map(|vec| vec.into_iter().map(StreamToolCall::from).collect()),
             function_call: v.function_call.map(StreamFunctionCall::from),
-            refusal: v.refusal,
+            refusal: v.refusal.map(|s| s.into()),
         }
     }
 }
@@ -1237,7 +1240,7 @@ impl From<liter_llm::types::StreamToolCall> for StreamToolCall {
     fn from(v: liter_llm::types::StreamToolCall) -> Self {
         StreamToolCall {
             index: v.index as _,
-            id: v.id,
+            id: v.id.map(|s| s.into()),
             call_type: v.call_type.map(ToolType::from),
             function: v.function.map(StreamFunctionCall::from),
         }
@@ -1247,8 +1250,8 @@ impl From<liter_llm::types::StreamToolCall> for StreamToolCall {
 impl From<liter_llm::types::StreamFunctionCall> for StreamFunctionCall {
     fn from(v: liter_llm::types::StreamFunctionCall) -> Self {
         StreamFunctionCall {
-            name: v.name,
-            arguments: v.arguments,
+            name: v.name.map(|s| s.into()),
+            arguments: v.arguments.map(|s| s.into()),
         }
     }
 }
@@ -1256,11 +1259,11 @@ impl From<liter_llm::types::StreamFunctionCall> for StreamFunctionCall {
 impl From<liter_llm::types::EmbeddingRequest> for EmbeddingRequest {
     fn from(v: liter_llm::types::EmbeddingRequest) -> Self {
         EmbeddingRequest {
-            model: v.model,
+            model: v.model.into(),
             input: EmbeddingInput::from(v.input),
             encoding_format: v.encoding_format.map(EmbeddingFormat::from),
             dimensions: v.dimensions.map(|x| x as _),
-            user: v.user,
+            user: v.user.map(|s| s.into()),
         }
     }
 }
@@ -1268,9 +1271,9 @@ impl From<liter_llm::types::EmbeddingRequest> for EmbeddingRequest {
 impl From<liter_llm::types::EmbeddingResponse> for EmbeddingResponse {
     fn from(v: liter_llm::types::EmbeddingResponse) -> Self {
         EmbeddingResponse {
-            object: v.object,
+            object: v.object.into(),
             data: v.data.into_iter().map(EmbeddingObject::from).collect(),
-            model: v.model,
+            model: v.model.into(),
             usage: v.usage.map(Usage::from),
         }
     }
@@ -1279,7 +1282,7 @@ impl From<liter_llm::types::EmbeddingResponse> for EmbeddingResponse {
 impl From<liter_llm::types::EmbeddingObject> for EmbeddingObject {
     fn from(v: liter_llm::types::EmbeddingObject) -> Self {
         EmbeddingObject {
-            object: v.object,
+            object: v.object.into(),
             embedding: v.embedding.into_iter().map(|x| x as _).collect(),
             index: v.index as _,
         }
@@ -1289,14 +1292,14 @@ impl From<liter_llm::types::EmbeddingObject> for EmbeddingObject {
 impl From<liter_llm::types::CreateImageRequest> for CreateImageRequest {
     fn from(v: liter_llm::types::CreateImageRequest) -> Self {
         CreateImageRequest {
-            prompt: v.prompt,
-            model: v.model,
+            prompt: v.prompt.into(),
+            model: v.model.map(|s| s.into()),
             n: v.n.map(|x| x as _),
-            size: v.size,
-            quality: v.quality,
-            style: v.style,
-            response_format: v.response_format,
-            user: v.user,
+            size: v.size.map(|s| s.into()),
+            quality: v.quality.map(|s| s.into()),
+            style: v.style.map(|s| s.into()),
+            response_format: v.response_format.map(|s| s.into()),
+            user: v.user.map(|s| s.into()),
         }
     }
 }
@@ -1313,9 +1316,9 @@ impl From<liter_llm::types::ImagesResponse> for ImagesResponse {
 impl From<liter_llm::types::Image> for Image {
     fn from(v: liter_llm::types::Image) -> Self {
         Image {
-            url: v.url,
-            b64_json: v.b64_json,
-            revised_prompt: v.revised_prompt,
+            url: v.url.map(|s| s.into()),
+            b64_json: v.b64_json.map(|s| s.into()),
+            revised_prompt: v.revised_prompt.map(|s| s.into()),
         }
     }
 }
@@ -1323,10 +1326,10 @@ impl From<liter_llm::types::Image> for Image {
 impl From<liter_llm::types::CreateSpeechRequest> for CreateSpeechRequest {
     fn from(v: liter_llm::types::CreateSpeechRequest) -> Self {
         CreateSpeechRequest {
-            model: v.model,
-            input: v.input,
-            voice: v.voice,
-            response_format: v.response_format,
+            model: v.model.into(),
+            input: v.input.into(),
+            voice: v.voice.into(),
+            response_format: v.response_format.map(|s| s.into()),
             speed: v.speed.map(|x| x as _),
         }
     }
@@ -1335,11 +1338,11 @@ impl From<liter_llm::types::CreateSpeechRequest> for CreateSpeechRequest {
 impl From<liter_llm::types::CreateTranscriptionRequest> for CreateTranscriptionRequest {
     fn from(v: liter_llm::types::CreateTranscriptionRequest) -> Self {
         CreateTranscriptionRequest {
-            model: v.model,
-            file: v.file,
-            language: v.language,
-            prompt: v.prompt,
-            response_format: v.response_format,
+            model: v.model.into(),
+            file: v.file.into(),
+            language: v.language.map(|s| s.into()),
+            prompt: v.prompt.map(|s| s.into()),
+            response_format: v.response_format.map(|s| s.into()),
             temperature: v.temperature.map(|x| x as _),
         }
     }
@@ -1348,8 +1351,8 @@ impl From<liter_llm::types::CreateTranscriptionRequest> for CreateTranscriptionR
 impl From<liter_llm::types::TranscriptionResponse> for TranscriptionResponse {
     fn from(v: liter_llm::types::TranscriptionResponse) -> Self {
         TranscriptionResponse {
-            text: v.text,
-            language: v.language,
+            text: v.text.into(),
+            language: v.language.map(|s| s.into()),
             duration: v.duration.map(|x| x as _),
             segments: v
                 .segments
@@ -1364,7 +1367,7 @@ impl From<liter_llm::types::TranscriptionSegment> for TranscriptionSegment {
             id: v.id as _,
             start: v.start as _,
             end: v.end as _,
-            text: v.text,
+            text: v.text.into(),
         }
     }
 }
@@ -1373,7 +1376,7 @@ impl From<liter_llm::types::ModerationRequest> for ModerationRequest {
     fn from(v: liter_llm::types::ModerationRequest) -> Self {
         ModerationRequest {
             input: ModerationInput::from(v.input),
-            model: v.model,
+            model: v.model.map(|s| s.into()),
         }
     }
 }
@@ -1381,8 +1384,8 @@ impl From<liter_llm::types::ModerationRequest> for ModerationRequest {
 impl From<liter_llm::types::ModerationResponse> for ModerationResponse {
     fn from(v: liter_llm::types::ModerationResponse) -> Self {
         ModerationResponse {
-            id: v.id,
-            model: v.model,
+            id: v.id.into(),
+            model: v.model.into(),
             results: v.results.into_iter().map(ModerationResult::from).collect(),
         }
     }
@@ -1437,8 +1440,8 @@ impl From<liter_llm::types::ModerationCategoryScores> for ModerationCategoryScor
 impl From<liter_llm::types::RerankRequest> for RerankRequest {
     fn from(v: liter_llm::types::RerankRequest) -> Self {
         RerankRequest {
-            model: v.model,
-            query: v.query,
+            model: v.model.into(),
+            query: v.query.into(),
             documents: v.documents.into_iter().map(RerankDocument::from).collect(),
             top_n: v.top_n.map(|x| x as _),
             return_documents: v.return_documents.map(|x| x as _),
@@ -1449,7 +1452,7 @@ impl From<liter_llm::types::RerankRequest> for RerankRequest {
 impl From<liter_llm::types::RerankResponse> for RerankResponse {
     fn from(v: liter_llm::types::RerankResponse) -> Self {
         RerankResponse {
-            id: v.id,
+            id: v.id.map(|s| s.into()),
             results: v.results.into_iter().map(RerankResult::from).collect(),
             meta: v.meta.map(|j| serde_json::to_string(&j).unwrap_or_default()),
         }
@@ -1468,18 +1471,20 @@ impl From<liter_llm::types::RerankResult> for RerankResult {
 
 impl From<liter_llm::types::RerankResultDocument> for RerankResultDocument {
     fn from(v: liter_llm::types::RerankResultDocument) -> Self {
-        RerankResultDocument { text: v.text }
+        RerankResultDocument { text: v.text.into() }
     }
 }
 
 impl From<liter_llm::types::SearchRequest> for SearchRequest {
     fn from(v: liter_llm::types::SearchRequest) -> Self {
         SearchRequest {
-            model: v.model,
-            query: v.query,
+            model: v.model.into(),
+            query: v.query.into(),
             max_results: v.max_results.map(|x| x as _),
-            search_domain_filter: v.search_domain_filter,
-            country: v.country,
+            search_domain_filter: v
+                .search_domain_filter
+                .map(|vec| vec.into_iter().map(|s| s.into()).collect()),
+            country: v.country.map(|s| s.into()),
         }
     }
 }
@@ -1488,7 +1493,7 @@ impl From<liter_llm::types::SearchResponse> for SearchResponse {
     fn from(v: liter_llm::types::SearchResponse) -> Self {
         SearchResponse {
             results: v.results.into_iter().map(SearchResult::from).collect(),
-            model: v.model,
+            model: v.model.into(),
         }
     }
 }
@@ -1496,10 +1501,10 @@ impl From<liter_llm::types::SearchResponse> for SearchResponse {
 impl From<liter_llm::types::SearchResult> for SearchResult {
     fn from(v: liter_llm::types::SearchResult) -> Self {
         SearchResult {
-            title: v.title,
-            url: v.url,
-            snippet: v.snippet,
-            date: v.date,
+            title: v.title.into(),
+            url: v.url.into(),
+            snippet: v.snippet.into(),
+            date: v.date.map(|s| s.into()),
         }
     }
 }
@@ -1507,7 +1512,7 @@ impl From<liter_llm::types::SearchResult> for SearchResult {
 impl From<liter_llm::types::OcrRequest> for OcrRequest {
     fn from(v: liter_llm::types::OcrRequest) -> Self {
         OcrRequest {
-            model: v.model,
+            model: v.model.into(),
             document: OcrDocument::from(v.document),
             pages: v.pages.map(|vec| vec.into_iter().map(|x| x as _).collect()),
             include_image_base64: v.include_image_base64.map(|x| x as _),
@@ -1519,7 +1524,7 @@ impl From<liter_llm::types::OcrResponse> for OcrResponse {
     fn from(v: liter_llm::types::OcrResponse) -> Self {
         OcrResponse {
             pages: v.pages.into_iter().map(OcrPage::from).collect(),
-            model: v.model,
+            model: v.model.into(),
             usage: v.usage.map(Usage::from),
         }
     }
@@ -1529,7 +1534,7 @@ impl From<liter_llm::types::OcrPage> for OcrPage {
     fn from(v: liter_llm::types::OcrPage) -> Self {
         OcrPage {
             index: v.index as _,
-            markdown: v.markdown,
+            markdown: v.markdown.into(),
             images: v.images.map(|vec| vec.into_iter().map(OcrImage::from).collect()),
             dimensions: v.dimensions.map(PageDimensions::from),
         }
@@ -1539,8 +1544,8 @@ impl From<liter_llm::types::OcrPage> for OcrPage {
 impl From<liter_llm::types::OcrImage> for OcrImage {
     fn from(v: liter_llm::types::OcrImage) -> Self {
         OcrImage {
-            id: v.id,
-            image_base64: v.image_base64,
+            id: v.id.into(),
+            image_base64: v.image_base64.map(|s| s.into()),
         }
     }
 }
@@ -1557,7 +1562,7 @@ impl From<liter_llm::types::PageDimensions> for PageDimensions {
 impl From<liter_llm::types::ModelsListResponse> for ModelsListResponse {
     fn from(v: liter_llm::types::ModelsListResponse) -> Self {
         ModelsListResponse {
-            object: v.object,
+            object: v.object.into(),
             data: v.data.into_iter().map(ModelObject::from).collect(),
         }
     }
@@ -1566,10 +1571,10 @@ impl From<liter_llm::types::ModelsListResponse> for ModelsListResponse {
 impl From<liter_llm::types::ModelObject> for ModelObject {
     fn from(v: liter_llm::types::ModelObject) -> Self {
         ModelObject {
-            id: v.id,
-            object: v.object,
+            id: v.id.into(),
+            object: v.object.into(),
             created: v.created as _,
-            owned_by: v.owned_by,
+            owned_by: v.owned_by.into(),
         }
     }
 }
@@ -1577,9 +1582,9 @@ impl From<liter_llm::types::ModelObject> for ModelObject {
 impl From<liter_llm::types::CreateFileRequest> for CreateFileRequest {
     fn from(v: liter_llm::types::CreateFileRequest) -> Self {
         CreateFileRequest {
-            file: v.file,
+            file: v.file.into(),
             purpose: FilePurpose::from(v.purpose),
-            filename: v.filename,
+            filename: v.filename.map(|s| s.into()),
         }
     }
 }
@@ -1587,13 +1592,13 @@ impl From<liter_llm::types::CreateFileRequest> for CreateFileRequest {
 impl From<liter_llm::types::FileObject> for FileObject {
     fn from(v: liter_llm::types::FileObject) -> Self {
         FileObject {
-            id: v.id,
-            object: v.object,
+            id: v.id.into(),
+            object: v.object.into(),
             bytes: v.bytes as _,
             created_at: v.created_at as _,
-            filename: v.filename,
-            purpose: v.purpose,
-            status: v.status,
+            filename: v.filename.into(),
+            purpose: v.purpose.into(),
+            status: v.status.map(|s| s.into()),
         }
     }
 }
@@ -1601,7 +1606,7 @@ impl From<liter_llm::types::FileObject> for FileObject {
 impl From<liter_llm::types::FileListResponse> for FileListResponse {
     fn from(v: liter_llm::types::FileListResponse) -> Self {
         FileListResponse {
-            object: v.object,
+            object: v.object.into(),
             data: v.data.into_iter().map(FileObject::from).collect(),
             has_more: v.has_more.map(|x| x as _),
         }
@@ -1611,9 +1616,9 @@ impl From<liter_llm::types::FileListResponse> for FileListResponse {
 impl From<liter_llm::types::FileListQuery> for FileListQuery {
     fn from(v: liter_llm::types::FileListQuery) -> Self {
         FileListQuery {
-            purpose: v.purpose,
+            purpose: v.purpose.map(|s| s.into()),
             limit: v.limit.map(|x| x as _),
-            after: v.after,
+            after: v.after.map(|s| s.into()),
         }
     }
 }
@@ -1621,8 +1626,8 @@ impl From<liter_llm::types::FileListQuery> for FileListQuery {
 impl From<liter_llm::types::DeleteResponse> for DeleteResponse {
     fn from(v: liter_llm::types::DeleteResponse) -> Self {
         DeleteResponse {
-            id: v.id,
-            object: v.object,
+            id: v.id.into(),
+            object: v.object.into(),
             deleted: v.deleted as _,
         }
     }
@@ -1631,9 +1636,9 @@ impl From<liter_llm::types::DeleteResponse> for DeleteResponse {
 impl From<liter_llm::types::CreateBatchRequest> for CreateBatchRequest {
     fn from(v: liter_llm::types::CreateBatchRequest) -> Self {
         CreateBatchRequest {
-            input_file_id: v.input_file_id,
-            endpoint: v.endpoint,
-            completion_window: v.completion_window,
+            input_file_id: v.input_file_id.into(),
+            endpoint: v.endpoint.into(),
+            completion_window: v.completion_window.into(),
             metadata: v.metadata.map(|j| serde_json::to_string(&j).unwrap_or_default()),
         }
     }
@@ -1642,14 +1647,14 @@ impl From<liter_llm::types::CreateBatchRequest> for CreateBatchRequest {
 impl From<liter_llm::types::BatchObject> for BatchObject {
     fn from(v: liter_llm::types::BatchObject) -> Self {
         BatchObject {
-            id: v.id,
-            object: v.object,
-            endpoint: v.endpoint,
-            input_file_id: v.input_file_id,
-            completion_window: v.completion_window,
+            id: v.id.into(),
+            object: v.object.into(),
+            endpoint: v.endpoint.into(),
+            input_file_id: v.input_file_id.into(),
+            completion_window: v.completion_window.into(),
             status: BatchStatus::from(v.status),
-            output_file_id: v.output_file_id,
-            error_file_id: v.error_file_id,
+            output_file_id: v.output_file_id.map(|s| s.into()),
+            error_file_id: v.error_file_id.map(|s| s.into()),
             created_at: v.created_at as _,
             completed_at: v.completed_at.map(|x| x as _),
             failed_at: v.failed_at.map(|x| x as _),
@@ -1673,11 +1678,11 @@ impl From<liter_llm::types::BatchRequestCounts> for BatchRequestCounts {
 impl From<liter_llm::types::BatchListResponse> for BatchListResponse {
     fn from(v: liter_llm::types::BatchListResponse) -> Self {
         BatchListResponse {
-            object: v.object,
+            object: v.object.into(),
             data: v.data.into_iter().map(BatchObject::from).collect(),
             has_more: v.has_more.map(|x| x as _),
-            first_id: v.first_id,
-            last_id: v.last_id,
+            first_id: v.first_id.map(|s| s.into()),
+            last_id: v.last_id.map(|s| s.into()),
         }
     }
 }
@@ -1686,7 +1691,7 @@ impl From<liter_llm::types::BatchListQuery> for BatchListQuery {
     fn from(v: liter_llm::types::BatchListQuery) -> Self {
         BatchListQuery {
             limit: v.limit.map(|x| x as _),
-            after: v.after,
+            after: v.after.map(|s| s.into()),
         }
     }
 }
@@ -1694,9 +1699,9 @@ impl From<liter_llm::types::BatchListQuery> for BatchListQuery {
 impl From<liter_llm::types::CreateResponseRequest> for CreateResponseRequest {
     fn from(v: liter_llm::types::CreateResponseRequest) -> Self {
         CreateResponseRequest {
-            model: v.model,
+            model: v.model.into(),
             input: serde_json::to_string(&v.input).unwrap_or_default(),
-            instructions: v.instructions,
+            instructions: v.instructions.map(|s| s.into()),
             tools: v.tools.map(|vec| vec.into_iter().map(ResponseTool::from).collect()),
             temperature: v.temperature.map(|x| x as _),
             max_output_tokens: v.max_output_tokens.map(|x| x as _),
@@ -1708,7 +1713,7 @@ impl From<liter_llm::types::CreateResponseRequest> for CreateResponseRequest {
 impl From<liter_llm::types::ResponseTool> for ResponseTool {
     fn from(v: liter_llm::types::ResponseTool) -> Self {
         ResponseTool {
-            tool_type: v.tool_type,
+            tool_type: v.tool_type.into(),
             config: serde_json::to_string(&v.config).unwrap_or_default(),
         }
     }
@@ -1717,11 +1722,11 @@ impl From<liter_llm::types::ResponseTool> for ResponseTool {
 impl From<liter_llm::types::ResponseObject> for ResponseObject {
     fn from(v: liter_llm::types::ResponseObject) -> Self {
         ResponseObject {
-            id: v.id,
-            object: v.object,
+            id: v.id.into(),
+            object: v.object.into(),
             created_at: v.created_at as _,
-            model: v.model,
-            status: v.status,
+            model: v.model.into(),
+            status: v.status.into(),
             output: v.output.into_iter().map(ResponseOutputItem::from).collect(),
             usage: v.usage.map(ResponseUsage::from),
             error: v.error.map(|j| serde_json::to_string(&j).unwrap_or_default()),
@@ -1732,7 +1737,7 @@ impl From<liter_llm::types::ResponseObject> for ResponseObject {
 impl From<liter_llm::types::ResponseOutputItem> for ResponseOutputItem {
     fn from(v: liter_llm::types::ResponseOutputItem) -> Self {
         ResponseOutputItem {
-            item_type: v.item_type,
+            item_type: v.item_type.into(),
             content: serde_json::to_string(&v.content).unwrap_or_default(),
         }
     }
@@ -1751,10 +1756,10 @@ impl From<liter_llm::types::ResponseUsage> for ResponseUsage {
 impl From<liter_llm::provider::custom::CustomProviderConfig> for CustomProviderConfig {
     fn from(v: liter_llm::provider::custom::CustomProviderConfig) -> Self {
         CustomProviderConfig {
-            name: v.name,
-            base_url: v.base_url,
+            name: v.name.into(),
+            base_url: v.base_url.into(),
             auth_header: AuthHeaderFormat::from(v.auth_header),
-            model_prefixes: v.model_prefixes,
+            model_prefixes: v.model_prefixes.into_iter().map(|s| s.into()).collect(),
         }
     }
 }
@@ -1985,8 +1990,8 @@ impl From<liter_llm::provider::custom::AuthHeaderFormat> for AuthHeaderFormat {
 impl From<SystemMessage> for liter_llm::types::SystemMessage {
     fn from(v: SystemMessage) -> Self {
         liter_llm::types::SystemMessage {
-            content: v.content,
-            name: v.name,
+            content: v.content.into(),
+            name: v.name.map(Into::into),
         }
     }
 }
@@ -1995,7 +2000,7 @@ impl From<UserMessage> for liter_llm::types::UserMessage {
     fn from(v: UserMessage) -> Self {
         liter_llm::types::UserMessage {
             content: v.content.into(),
-            name: v.name,
+            name: v.name.map(Into::into),
         }
     }
 }
@@ -2003,7 +2008,7 @@ impl From<UserMessage> for liter_llm::types::UserMessage {
 impl From<ImageUrl> for liter_llm::types::ImageUrl {
     fn from(v: ImageUrl) -> Self {
         liter_llm::types::ImageUrl {
-            url: v.url,
+            url: v.url.into(),
             detail: v.detail.map(Into::into),
         }
     }
@@ -2012,8 +2017,8 @@ impl From<ImageUrl> for liter_llm::types::ImageUrl {
 impl From<DocumentContent> for liter_llm::types::DocumentContent {
     fn from(v: DocumentContent) -> Self {
         liter_llm::types::DocumentContent {
-            data: v.data,
-            media_type: v.media_type,
+            data: v.data.into(),
+            media_type: v.media_type.into(),
         }
     }
 }
@@ -2021,8 +2026,8 @@ impl From<DocumentContent> for liter_llm::types::DocumentContent {
 impl From<AudioContent> for liter_llm::types::AudioContent {
     fn from(v: AudioContent) -> Self {
         liter_llm::types::AudioContent {
-            data: v.data,
-            format: v.format,
+            data: v.data.into(),
+            format: v.format.into(),
         }
     }
 }
@@ -2030,10 +2035,10 @@ impl From<AudioContent> for liter_llm::types::AudioContent {
 impl From<AssistantMessage> for liter_llm::types::AssistantMessage {
     fn from(v: AssistantMessage) -> Self {
         liter_llm::types::AssistantMessage {
-            content: v.content,
-            name: v.name,
+            content: v.content.map(Into::into),
+            name: v.name.map(Into::into),
             tool_calls: v.tool_calls.map(|vec| vec.into_iter().map(Into::into).collect()),
-            refusal: v.refusal,
+            refusal: v.refusal.map(Into::into),
             function_call: v.function_call.map(Into::into),
         }
     }
@@ -2042,9 +2047,9 @@ impl From<AssistantMessage> for liter_llm::types::AssistantMessage {
 impl From<ToolMessage> for liter_llm::types::ToolMessage {
     fn from(v: ToolMessage) -> Self {
         liter_llm::types::ToolMessage {
-            content: v.content,
-            tool_call_id: v.tool_call_id,
-            name: v.name,
+            content: v.content.into(),
+            tool_call_id: v.tool_call_id.into(),
+            name: v.name.map(Into::into),
         }
     }
 }
@@ -2052,8 +2057,8 @@ impl From<ToolMessage> for liter_llm::types::ToolMessage {
 impl From<DeveloperMessage> for liter_llm::types::DeveloperMessage {
     fn from(v: DeveloperMessage) -> Self {
         liter_llm::types::DeveloperMessage {
-            content: v.content,
-            name: v.name,
+            content: v.content.into(),
+            name: v.name.map(Into::into),
         }
     }
 }
@@ -2061,8 +2066,8 @@ impl From<DeveloperMessage> for liter_llm::types::DeveloperMessage {
 impl From<FunctionMessage> for liter_llm::types::FunctionMessage {
     fn from(v: FunctionMessage) -> Self {
         liter_llm::types::FunctionMessage {
-            content: v.content,
-            name: v.name,
+            content: v.content.into(),
+            name: v.name.into(),
         }
     }
 }
@@ -2079,8 +2084,8 @@ impl From<ChatCompletionTool> for liter_llm::types::ChatCompletionTool {
 impl From<FunctionDefinition> for liter_llm::types::FunctionDefinition {
     fn from(v: FunctionDefinition) -> Self {
         liter_llm::types::FunctionDefinition {
-            name: v.name,
-            description: v.description,
+            name: v.name.into(),
+            description: v.description.map(Into::into),
             parameters: v.parameters.as_deref().and_then(|s| serde_json::from_str(s).ok()),
             strict: v.strict.map(|x| x as _),
         }
@@ -2090,7 +2095,7 @@ impl From<FunctionDefinition> for liter_llm::types::FunctionDefinition {
 impl From<ToolCall> for liter_llm::types::ToolCall {
     fn from(v: ToolCall) -> Self {
         liter_llm::types::ToolCall {
-            id: v.id,
+            id: v.id.into(),
             call_type: v.call_type.into(),
             function: v.function.into(),
         }
@@ -2100,8 +2105,8 @@ impl From<ToolCall> for liter_llm::types::ToolCall {
 impl From<FunctionCall> for liter_llm::types::FunctionCall {
     fn from(v: FunctionCall) -> Self {
         liter_llm::types::FunctionCall {
-            name: v.name,
-            arguments: v.arguments,
+            name: v.name.into(),
+            arguments: v.arguments.into(),
         }
     }
 }
@@ -2117,15 +2122,15 @@ impl From<SpecificToolChoice> for liter_llm::types::SpecificToolChoice {
 
 impl From<SpecificFunction> for liter_llm::types::SpecificFunction {
     fn from(v: SpecificFunction) -> Self {
-        liter_llm::types::SpecificFunction { name: v.name }
+        liter_llm::types::SpecificFunction { name: v.name.into() }
     }
 }
 
 impl From<JsonSchemaFormat> for liter_llm::types::JsonSchemaFormat {
     fn from(v: JsonSchemaFormat) -> Self {
         liter_llm::types::JsonSchemaFormat {
-            name: v.name,
-            description: v.description,
+            name: v.name.into(),
+            description: v.description.map(Into::into),
             schema: serde_json::from_str(&v.schema).unwrap_or_default(),
             strict: v.strict.map(|x| x as _),
         }
@@ -2135,7 +2140,7 @@ impl From<JsonSchemaFormat> for liter_llm::types::JsonSchemaFormat {
 impl From<ChatCompletionRequest> for liter_llm::types::ChatCompletionRequest {
     fn from(v: ChatCompletionRequest) -> Self {
         liter_llm::types::ChatCompletionRequest {
-            model: v.model,
+            model: v.model.into(),
             messages: v.messages.into_iter().map(Into::into).collect(),
             temperature: v.temperature.map(|x| x as _),
             top_p: v.top_p.map(|x| x as _),
@@ -2145,8 +2150,10 @@ impl From<ChatCompletionRequest> for liter_llm::types::ChatCompletionRequest {
             max_tokens: v.max_tokens.map(|x| x as _),
             presence_penalty: v.presence_penalty.map(|x| x as _),
             frequency_penalty: v.frequency_penalty.map(|x| x as _),
-            logit_bias: v.logit_bias.map(|m| m.into_iter().map(|(k, v)| (k, v as _)).collect()),
-            user: v.user,
+            logit_bias: v
+                .logit_bias
+                .map(|m| m.into_iter().map(|(k, v)| (k.into(), v as _)).collect()),
+            user: v.user.map(Into::into),
             tools: v.tools.map(|vec| vec.into_iter().map(Into::into).collect()),
             tool_choice: v.tool_choice.map(Into::into),
             parallel_tool_calls: v.parallel_tool_calls.map(|x| x as _),
@@ -2170,11 +2177,11 @@ impl From<StreamOptions> for liter_llm::types::StreamOptions {
 impl From<EmbeddingRequest> for liter_llm::types::EmbeddingRequest {
     fn from(v: EmbeddingRequest) -> Self {
         liter_llm::types::EmbeddingRequest {
-            model: v.model,
+            model: v.model.into(),
             input: v.input.into(),
             encoding_format: v.encoding_format.map(Into::into),
             dimensions: v.dimensions.map(|x| x as _),
-            user: v.user,
+            user: v.user.map(Into::into),
         }
     }
 }
@@ -2182,14 +2189,14 @@ impl From<EmbeddingRequest> for liter_llm::types::EmbeddingRequest {
 impl From<CreateImageRequest> for liter_llm::types::CreateImageRequest {
     fn from(v: CreateImageRequest) -> Self {
         liter_llm::types::CreateImageRequest {
-            prompt: v.prompt,
-            model: v.model,
+            prompt: v.prompt.into(),
+            model: v.model.map(Into::into),
             n: v.n.map(|x| x as _),
-            size: v.size,
-            quality: v.quality,
-            style: v.style,
-            response_format: v.response_format,
-            user: v.user,
+            size: v.size.map(Into::into),
+            quality: v.quality.map(Into::into),
+            style: v.style.map(Into::into),
+            response_format: v.response_format.map(Into::into),
+            user: v.user.map(Into::into),
         }
     }
 }
@@ -2197,8 +2204,8 @@ impl From<CreateImageRequest> for liter_llm::types::CreateImageRequest {
 impl From<RerankRequest> for liter_llm::types::RerankRequest {
     fn from(v: RerankRequest) -> Self {
         liter_llm::types::RerankRequest {
-            model: v.model,
-            query: v.query,
+            model: v.model.into(),
+            query: v.query.into(),
             documents: v.documents.into_iter().map(Into::into).collect(),
             top_n: v.top_n.map(|x| x as _),
             return_documents: v.return_documents.map(|x| x as _),
@@ -2209,11 +2216,13 @@ impl From<RerankRequest> for liter_llm::types::RerankRequest {
 impl From<SearchRequest> for liter_llm::types::SearchRequest {
     fn from(v: SearchRequest) -> Self {
         liter_llm::types::SearchRequest {
-            model: v.model,
-            query: v.query,
+            model: v.model.into(),
+            query: v.query.into(),
             max_results: v.max_results.map(|x| x as _),
-            search_domain_filter: v.search_domain_filter,
-            country: v.country,
+            search_domain_filter: v
+                .search_domain_filter
+                .map(|vec| vec.into_iter().map(Into::into).collect()),
+            country: v.country.map(Into::into),
         }
     }
 }
@@ -2221,7 +2230,7 @@ impl From<SearchRequest> for liter_llm::types::SearchRequest {
 impl From<OcrRequest> for liter_llm::types::OcrRequest {
     fn from(v: OcrRequest) -> Self {
         liter_llm::types::OcrRequest {
-            model: v.model,
+            model: v.model.into(),
             document: v.document.into(),
             pages: v.pages.map(|vec| vec.into_iter().map(|x| x as _).collect()),
             include_image_base64: v.include_image_base64.map(|x| x as _),
@@ -2232,9 +2241,9 @@ impl From<OcrRequest> for liter_llm::types::OcrRequest {
 impl From<FileListQuery> for liter_llm::types::FileListQuery {
     fn from(v: FileListQuery) -> Self {
         liter_llm::types::FileListQuery {
-            purpose: v.purpose,
+            purpose: v.purpose.map(Into::into),
             limit: v.limit.map(|x| x as _),
-            after: v.after,
+            after: v.after.map(Into::into),
         }
     }
 }
@@ -2242,9 +2251,9 @@ impl From<FileListQuery> for liter_llm::types::FileListQuery {
 impl From<CreateBatchRequest> for liter_llm::types::CreateBatchRequest {
     fn from(v: CreateBatchRequest) -> Self {
         liter_llm::types::CreateBatchRequest {
-            input_file_id: v.input_file_id,
-            endpoint: v.endpoint,
-            completion_window: v.completion_window,
+            input_file_id: v.input_file_id.into(),
+            endpoint: v.endpoint.into(),
+            completion_window: v.completion_window.into(),
             metadata: v.metadata.as_deref().and_then(|s| serde_json::from_str(s).ok()),
         }
     }
@@ -2254,7 +2263,7 @@ impl From<BatchListQuery> for liter_llm::types::BatchListQuery {
     fn from(v: BatchListQuery) -> Self {
         liter_llm::types::BatchListQuery {
             limit: v.limit.map(|x| x as _),
-            after: v.after,
+            after: v.after.map(Into::into),
         }
     }
 }
@@ -2262,9 +2271,9 @@ impl From<BatchListQuery> for liter_llm::types::BatchListQuery {
 impl From<CreateResponseRequest> for liter_llm::types::CreateResponseRequest {
     fn from(v: CreateResponseRequest) -> Self {
         liter_llm::types::CreateResponseRequest {
-            model: v.model,
+            model: v.model.into(),
             input: serde_json::from_str(&v.input).unwrap_or_default(),
-            instructions: v.instructions,
+            instructions: v.instructions.map(Into::into),
             tools: v.tools.map(|vec| vec.into_iter().map(Into::into).collect()),
             temperature: v.temperature.map(|x| x as _),
             max_output_tokens: v.max_output_tokens.map(|x| x as _),
@@ -2276,7 +2285,7 @@ impl From<CreateResponseRequest> for liter_llm::types::CreateResponseRequest {
 impl From<ResponseTool> for liter_llm::types::ResponseTool {
     fn from(v: ResponseTool) -> Self {
         liter_llm::types::ResponseTool {
-            tool_type: v.tool_type,
+            tool_type: v.tool_type.into(),
             config: serde_json::from_str(&v.config).unwrap_or_default(),
         }
     }

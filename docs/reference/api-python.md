@@ -1409,7 +1409,6 @@ How the API key is sent in the HTTP request.
 All errors that can occur when using `liter-llm`.
 
 **Base class:** `LiterLlmError(Exception)`
-
 | Exception | Description |
 |-----------|-------------|
 | `Authentication(LiterLlmError)` | `status` preserves the exact HTTP status code received (401 or 403). |

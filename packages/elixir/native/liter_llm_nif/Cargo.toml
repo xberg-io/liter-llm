@@ -10,6 +10,7 @@ categories = ["text-processing"]
 
 [lib]
 name = "liter_llm_nif"
+
 crate-type = ["cdylib"]
 
 [dependencies]

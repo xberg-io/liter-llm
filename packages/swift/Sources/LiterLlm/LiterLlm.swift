@@ -54,8 +54,6 @@ public typealias ChatCompletionResponse = RustBridge.ChatCompletionResponse
 
 public typealias Choice = RustBridge.Choice
 
-public typealias ChatCompletionChunk = RustBridge.ChatCompletionChunk
-
 public typealias StreamChoice = RustBridge.StreamChoice
 
 public typealias StreamDelta = RustBridge.StreamDelta
@@ -178,6 +176,17 @@ public typealias ResponseUsage = RustBridge.ResponseUsage
 
 /// Configuration for registering a custom LLM provider at runtime.
 public typealias CustomProviderConfig = RustBridge.CustomProviderConfig
+
+public struct ChatCompletionChunk: Codable {
+  public var id: String
+  public var object: String
+  public var created: UInt64
+  public var model: String
+  public var choices: [StreamChoice]
+  public var usage: Usage?
+  public var systemFingerprint: String?
+  public var serviceTier: String?
+}
 
 /// A chat message in a conversation.
 public enum Message {
@@ -466,6 +475,11 @@ public final class DefaultClient {
   }
 }
 
+// MARK: - Sendable conformance for DefaultClientChatStreamStreamHandle
+// swift-bridge opaque types are not automatically Sendable.  The Rust
+// side uses Mutex<stream> + tokio Runtime — both Send + Sync — so
+// @unchecked is correct: thread-safety is enforced by Rust.
+extension RustBridge.DefaultClientChatStreamStreamHandle: @unchecked Sendable {}
 // MARK: - From-JSON Helpers
 // Public wrappers forwarding RustBridge's swift_bridge-generated
 // `{TypeName}FromJson` helpers into this module's namespace.

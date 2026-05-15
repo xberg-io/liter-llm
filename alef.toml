@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.16.1"
+alef_version = "0.16.4"
 languages = [
     "python",
     "node",
@@ -14,6 +14,7 @@ languages = [
     "zig",
     "dart",
     "swift",
+    "kotlin_android",
 ]
 
 [workspace.sync]
@@ -111,6 +112,17 @@ DefaultClient = """    let mut config = liter_llm::ClientConfig::new(api_key);
         .map_err(|e| e.to_string())
         .map(DefaultClient)"""
 
+[crates.kotlin_android]
+# Android AAR — Kotlin/JVM consumers use the Java package directly (Kotlin/Java
+# interop is total). Panama FFM is unavailable on Android (max JDK 17), which is
+# why Android needs its own JNI-based package with bundled .so files.
+# Emitted by alef-backend-kotlin-android (alef >= 0.16).
+package = "dev.kreuzberg.literllm.android"
+namespace = "dev.kreuzberg.literllm.android"
+artifact_id = "liter-llm-android"
+group_id = "dev.kreuzberg"
+abis = ["arm64-v8a", "x86_64"]
+
 [crates.output]
 python = "crates/liter-llm-py/src/"
 node = "crates/liter-llm-node/src/"
@@ -125,6 +137,7 @@ csharp = "packages/csharp/"
 zig = "packages/zig/src/"
 dart = "packages/dart/"
 swift = "packages/swift/Sources/LiterLlm/"
+kotlin_android = "packages/kotlin-android/src/main/kotlin/dev/kreuzberg/literllm/android/"
 
 [crates.exclude]
 types = [
@@ -246,6 +259,11 @@ before = "cargo build --release -p liter-llm-ffi"
 [crates.lint.ffi]
 precondition = "test -d crates/liter-llm-ffi/src"
 
+[crates.lint.kotlin_android]
+precondition = "command -v gradle >/dev/null 2>&1"
+format = "cd packages/kotlin-android && gradle ktlintFormat --no-daemon"
+check = "cd packages/kotlin-android && gradle ktlintCheck --no-daemon"
+
 [crates.test.rust]
 precondition = "command -v cargo >/dev/null 2>&1"
 e2e = "cargo test --manifest-path e2e/rust/Cargo.toml"
@@ -303,6 +321,12 @@ e2e = ["cd e2e/wasm && pnpm install", "cd e2e/wasm && pnpm vitest run"]
 precondition = "command -v make >/dev/null 2>&1"
 before = "cargo build -p liter-llm-ffi --release && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 e2e = "cd e2e/c && make test"
+
+[crates.test.kotlin_android]
+# Android-only AAR — tests require an emulator runner (out of scope until a
+# kreuzberg-dev/actions/setup-android-emulator action exists). E2E excluded.
+precondition = "command -v gradle >/dev/null 2>&1"
+before = "cargo build --release -p liter-llm-ffi"
 
 [crates.publish]
 core_crate = "crates/liter-llm"
@@ -1522,6 +1546,10 @@ name = "liter-llm"
 name = "liter_llm"
 path = "../../packages/elixir"
 
+[crates.e2e.packages.kotlin_android]
+module = "dev.kreuzberg.literllm.android"
+path = "../../packages/kotlin-android"
+
 [crates.e2e.registry]
 output = "test_apps"
 
@@ -1873,6 +1901,31 @@ caching = true
 [crates.readme.languages.wasm.snippets]
 basic_chat = "getting-started/basic_chat.md"
 streaming = "getting-started/streaming.md"
+
+[crates.readme.languages.kotlin_android]
+name = "Kotlin (Android)"
+template = "language_package.md"
+output_path = "packages/kotlin-android/README.md"
+package_manager = ["gradle", "maven"]
+package_name = "dev.kreuzberg:liter-llm-android"
+install_command = """
+implementation("dev.kreuzberg:liter-llm-android:{{ version }}")"""
+description = """
+Universal LLM API client for Android, packaged as an AAR with bundled JNI libraries for `arm64-v8a` and `x86_64`.
+Server-side Kotlin/JVM consumers should use the `dev.kreuzberg.literllm:liter-llm` Java package directly — Panama FFM is unavailable on Android, which is why Android ships as its own artifact.
+"""
+
+[crates.readme.languages.kotlin_android.features]
+streaming = false
+async = true
+tool_calling = true
+provider_routing = true
+cost_tracking = true
+search = true
+ocr = true
+
+[crates.readme.languages.kotlin_android.snippets]
+basic_chat = "getting-started/basic_chat.md"
 
 [[crates.adapters]]
 name = "chat"
