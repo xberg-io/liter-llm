@@ -147,6 +147,7 @@ impl ChatCompletionResponse {
     ///     println!("Request cost: ${usd:.6}");
     /// }
     /// ```
+    #[cfg_attr(alef, alef(skip))]
     #[must_use]
     pub fn estimated_cost(&self) -> Option<f64> {
         let usage = self.usage.as_ref()?;

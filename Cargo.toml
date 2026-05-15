@@ -3,6 +3,7 @@ members = [
     "crates/liter-llm",
     "crates/liter-llm-cli",
     "crates/liter-llm-ffi",
+    "crates/liter-llm-jni",
     "crates/liter-llm-node",
     "crates/liter-llm-php",
     "crates/liter-llm-proxy",
@@ -22,6 +23,7 @@ resolver = "2"
 [workspace.lints.clippy]
 
 [workspace.lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(alef)'] }
 
 [workspace.package]
 version = "1.4.0-rc.27"

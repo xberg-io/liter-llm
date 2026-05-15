@@ -106,6 +106,7 @@ Universal LLM API client for .NET. Access 143+ LLM providers through a single ty
 
 ### Package Installation
 
+
 Install via NuGet:
 
 ```bash
@@ -118,10 +119,13 @@ Or via NuGet Package Manager:
 Install-Package LiterLlm
 ```
 
+
 ### System Requirements
+
 
 - **.NET 8.0+** required
 - API keys via environment variables (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
+
 
 ## Quick Start
 
@@ -145,6 +149,7 @@ Console.WriteLine(response.Choices[0].Message.Content);
 ```
 
 ### Common Use Cases
+
 
 #### Streaming Responses
 
@@ -171,10 +176,12 @@ await foreach (var chunk in client.ChatStream(request))
 Console.WriteLine();
 ```
 
+
 ### Next Steps
 
 - **[Provider Registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)** - Full list of supported providers
 - **[GitHub Repository](https://github.com/kreuzberg-dev/liter-llm)** - Source, issues, and discussions
+
 
 ## Features
 
@@ -204,6 +211,7 @@ Route to any provider using the `provider/model` prefix convention:
 
 - **Streaming** -- Real-time token streaming via `chat_stream`
 
+
 - **Tool Calling** -- Function calling and tool use across all supporting providers
 
 - **Type Safe** -- Schema-driven types compiled from JSON schemas
@@ -220,6 +228,7 @@ Built on a compiled Rust core for speed and safety:
 - **Zero-copy streaming** with SSE and AWS EventStream support
 - **API keys** wrapped in secure memory, zeroed on drop
 
+
 ## Provider Routing
 
 Route to 143+ providers using the `provider/model` prefix convention:
@@ -232,6 +241,7 @@ mistral/mistral-large-latest
 ```
 
 See the [provider registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json) for the full list.
+
 
 ## Proxy Server
 

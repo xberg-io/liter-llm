@@ -217,4 +217,5 @@ impl LiterLlmError {
     }
 }
 
+#[cfg_attr(alef, alef(skip))]
 pub type Result<T> = std::result::Result<T, LiterLlmError>;

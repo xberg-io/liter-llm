@@ -483,16 +483,16 @@ public func unregisterCustomProvider<GenericIntoRustString: IntoRustString>(
     }
   }()
 }
-public func defaultClientChatStream(_ client: DefaultClientRef, _ req: ChatCompletionRequest) throws
-{
+public func defaultClientChatStreamStart(
+  _ client: DefaultClientRef, _ req: ChatCompletionRequestRef
+) throws -> DefaultClientChatStreamStreamHandle {
   try {
-    let val = __swift_bridge__$default_client_chat_stream(
-      client.ptr,
-      {
-        req.isOwned = false
-        return req.ptr
-      }())
-    if val != nil { throw RustString(ptr: val!) } else { return }
+    let val = __swift_bridge__$default_client_chat_stream_start(client.ptr, req.ptr)
+    if val.is_ok {
+      return DefaultClientChatStreamStreamHandle(ptr: val.ok_or_err!)
+    } else {
+      throw RustString(ptr: val.ok_or_err!)
+    }
   }()
 }
 public func chatCompletionRequestFromJson<GenericIntoRustString: IntoRustString>(
@@ -745,6 +745,23 @@ public func customProviderConfigFromJson<GenericIntoRustString: IntoRustString>(
       }())
     if val.is_ok {
       return CustomProviderConfig(ptr: val.ok_or_err!)
+    } else {
+      throw RustString(ptr: val.ok_or_err!)
+    }
+  }()
+}
+public func chatCompletionChunkFromJson<GenericIntoRustString: IntoRustString>(
+  _ json: GenericIntoRustString
+) throws -> ChatCompletionChunk {
+  try {
+    let val = __swift_bridge__$chat_completion_chunk_from_json(
+      {
+        let rustString = json.intoRustString()
+        rustString.isOwned = false
+        return rustString.ptr
+      }())
+    if val.is_ok {
+      return ChatCompletionChunk(ptr: val.ok_or_err!)
     } else {
       throw RustString(ptr: val.ok_or_err!)
     }
@@ -11634,5 +11651,105 @@ extension AuthHeaderFormat: Vectorizable {
 
   public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
     __swift_bridge__$Vec_AuthHeaderFormat$len(vecPtr)
+  }
+}
+
+public class DefaultClientChatStreamStreamHandle: DefaultClientChatStreamStreamHandleRefMut {
+  var isOwned: Bool = true
+
+  public override init(ptr: UnsafeMutableRawPointer) {
+    super.init(ptr: ptr)
+  }
+
+  deinit {
+    if isOwned {
+      __swift_bridge__$DefaultClientChatStreamStreamHandle$_free(ptr)
+    }
+  }
+}
+public class DefaultClientChatStreamStreamHandleRefMut: DefaultClientChatStreamStreamHandleRef {
+  public override init(ptr: UnsafeMutableRawPointer) {
+    super.init(ptr: ptr)
+  }
+}
+extension DefaultClientChatStreamStreamHandleRefMut {
+  public func next() throws -> RustString {
+    try {
+      let val = __swift_bridge__$DefaultClientChatStreamStreamHandle$next(ptr)
+      if val.is_ok {
+        return RustString(ptr: val.ok_or_err!)
+      } else {
+        throw RustString(ptr: val.ok_or_err!)
+      }
+    }()
+  }
+}
+public class DefaultClientChatStreamStreamHandleRef {
+  var ptr: UnsafeMutableRawPointer
+
+  public init(ptr: UnsafeMutableRawPointer) {
+    self.ptr = ptr
+  }
+}
+extension DefaultClientChatStreamStreamHandle: Vectorizable {
+  public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+    __swift_bridge__$Vec_DefaultClientChatStreamStreamHandle$new()
+  }
+
+  public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+    __swift_bridge__$Vec_DefaultClientChatStreamStreamHandle$drop(vecPtr)
+  }
+
+  public static func vecOfSelfPush(
+    vecPtr: UnsafeMutableRawPointer, value: DefaultClientChatStreamStreamHandle
+  ) {
+    __swift_bridge__$Vec_DefaultClientChatStreamStreamHandle$push(
+      vecPtr,
+      {
+        value.isOwned = false
+        return value.ptr
+      }())
+  }
+
+  public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Self? {
+    let pointer = __swift_bridge__$Vec_DefaultClientChatStreamStreamHandle$pop(vecPtr)
+    if pointer == nil {
+      return nil
+    } else {
+      return (DefaultClientChatStreamStreamHandle(ptr: pointer!) as! Self)
+    }
+  }
+
+  public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt)
+    -> DefaultClientChatStreamStreamHandleRef?
+  {
+    let pointer = __swift_bridge__$Vec_DefaultClientChatStreamStreamHandle$get(vecPtr, index)
+    if pointer == nil {
+      return nil
+    } else {
+      return DefaultClientChatStreamStreamHandleRef(ptr: pointer!)
+    }
+  }
+
+  public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt)
+    -> DefaultClientChatStreamStreamHandleRefMut?
+  {
+    let pointer = __swift_bridge__$Vec_DefaultClientChatStreamStreamHandle$get_mut(vecPtr, index)
+    if pointer == nil {
+      return nil
+    } else {
+      return DefaultClientChatStreamStreamHandleRefMut(ptr: pointer!)
+    }
+  }
+
+  public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<
+    DefaultClientChatStreamStreamHandleRef
+  > {
+    UnsafePointer<DefaultClientChatStreamStreamHandleRef>(
+      OpaquePointer(__swift_bridge__$Vec_DefaultClientChatStreamStreamHandle$as_ptr(vecPtr)))
+  }
+
+  public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+    __swift_bridge__$Vec_DefaultClientChatStreamStreamHandle$len(vecPtr)
   }
 }

@@ -3,6 +3,7 @@ target/
 build/
 dist/
 wheelhouse/
+.gradle/
 
 # Language-specific build artifacts
 *.so

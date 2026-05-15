@@ -171,27 +171,20 @@ jobs:
             dart-version: "stable"
             test-cmd: "alef test --lang dart --e2e"
           - lang: swift
-            # SwiftPM 6.0 derives package identity from path basename; e2e/swift
-            # and packages/swift collide on identity "swift". Run from a temp
-            # directory with a distinct basename so product lookup resolves.
-            test-cmd: |
-              SWIFT_E2E_DIR="$RUNNER_TEMP/swift-e2e-tests"
-              rm -rf "$SWIFT_E2E_DIR" && mkdir -p "$SWIFT_E2E_DIR"
-              cp -R "$GITHUB_WORKSPACE/e2e/swift/Tests" "$SWIFT_E2E_DIR/"
-              cat > "$SWIFT_E2E_DIR/Package.swift" <<EOF
-              // swift-tools-version: 6.0
-              import PackageDescription
-              let package = Package(
-                  name: "E2eSwift",
-                  platforms: [.macOS(.v13), .iOS(.v16)],
-                  dependencies: [.package(path: "$GITHUB_WORKSPACE/packages/swift")],
-                  targets: [.testTarget(name: "LiterLlmE2ETests", dependencies: [.product(name: "LiterLlm", package: "swift")])]
-              )
-              EOF
-              cd "$SWIFT_E2E_DIR" && swift test
+            # alef emits e2e/swift_e2e/ (non-colliding SwiftPM basename) so we run
+            # the suite directly without the prior temp-dir copy workaround.
+            test-cmd: "cd e2e/swift_e2e && swift test"
           - lang: zig
             zig-version: "0.16.0"
             test-cmd: "alef test --lang zig --e2e"
+          - lang: kotlin_android
+            java-version: "21"
+            test-cmd: |
+              cargo build -p liter-llm-jni --release
+              mkdir -p target/release-jni-lib
+              cp target/release/libliterllm_jni.so target/release-jni-lib/
+              LD_LIBRARY_PATH="$PWD/target/release-jni-lib:$LD_LIBRARY_PATH" \
+                bash -c 'cd e2e/kotlin_android && gradle test'
     steps:
       - uses: actions/checkout@v6
 
@@ -201,14 +194,14 @@ jobs:
           cache-key-prefix: e2e-${{ matrix.lang }}
 
       - name: Download FFI artifacts
-        if: matrix.lang != 'swift'
+        if: matrix.lang != 'swift' && matrix.lang != 'kotlin_android'
         uses: actions/download-artifact@v7
         with:
           name: ffi-aarch64-unknown-linux-gnu
           path: ffi-artifacts
 
       - name: Stage FFI artifacts
-        if: matrix.lang != 'swift'
+        if: matrix.lang != 'swift' && matrix.lang != 'kotlin_android'
         shell: bash
         run: |
           # upload-artifact preserves source paths, so the artifact mirrors:
@@ -279,6 +272,12 @@ jobs:
           distribution: temurin
           java-version: ${{ matrix.java-version }}
 
+      - name: Setup Gradle
+        if: matrix.lang == 'kotlin_android'
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
       - name: Setup .NET
         if: matrix.dotnet-version
         uses: actions/setup-dotnet@v5
@@ -348,11 +347,5 @@ jobs:
       - name: Run E2E tests
         run: ${{ matrix.test-cmd }}
         shell: bash
-        # Swift streaming bindings emitted by alef v0.16.1 lack Sendable
-        # conformance on the stream-handle classes and Decodable on
-        # ChatCompletionChunk; tracked for fix in alef v0.16.2. Run the
-        # suite for signal, but don't fail the gate until the codegen
-        # fix lands.
-        continue-on-error: ${{ matrix.lang == 'swift' }}
         env:
           RUST_BACKTRACE: full

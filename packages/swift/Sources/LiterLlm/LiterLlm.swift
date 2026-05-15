@@ -54,6 +54,8 @@ public typealias ChatCompletionResponse = RustBridge.ChatCompletionResponse
 
 public typealias Choice = RustBridge.Choice
 
+public typealias ChatCompletionChunk = RustBridge.ChatCompletionChunk
+
 public typealias StreamChoice = RustBridge.StreamChoice
 
 public typealias StreamDelta = RustBridge.StreamDelta
@@ -176,17 +178,6 @@ public typealias ResponseUsage = RustBridge.ResponseUsage
 
 /// Configuration for registering a custom LLM provider at runtime.
 public typealias CustomProviderConfig = RustBridge.CustomProviderConfig
-
-public struct ChatCompletionChunk: Codable {
-  public var id: String
-  public var object: String
-  public var created: UInt64
-  public var model: String
-  public var choices: [StreamChoice]
-  public var usage: Usage?
-  public var systemFingerprint: String?
-  public var serviceTier: String?
-}
 
 /// A chat message in a conversation.
 public enum Message {
@@ -335,7 +326,7 @@ public enum AuthHeaderFormat {
 }
 
 /// All errors that can occur when using `liter-llm`.
-public enum LiterLlmError: Error {
+public enum LiterLlmError: Swift.Error {
   /// `status` preserves the exact HTTP status code received (401 or 403).
   case authentication(message: String, status: UInt16)
   case rateLimited(message: String, retryAfter: Duration)
@@ -452,17 +443,11 @@ public final class DefaultClient {
 
     return AsyncThrowingStream<ChatCompletionChunk, Error> { continuation in
       let task = Task.detached(priority: .userInitiated) {
-        let decoder = JSONDecoder()
         do {
           while !Task.isCancelled {
             let json = try handle.next().toString()
             if json.isEmpty { break }
-            guard let data = json.data(using: .utf8) else {
-              throw NSError(
-                domain: "chatStream", code: -1,
-                userInfo: [NSLocalizedDescriptionKey: "chunk JSON is not UTF-8"])
-            }
-            let chunk = try decoder.decode(ChatCompletionChunk.self, from: data)
+            let chunk = try RustBridge.chatCompletionChunkFromJson(json)
             continuation.yield(chunk)
           }
           continuation.finish()
@@ -475,11 +460,19 @@ public final class DefaultClient {
   }
 }
 
+// MARK: - Sendable conformance for DefaultClient (streaming client inner)
+// swift-bridge opaque types are not automatically Sendable.
+// Captured by Task.detached in streaming methods — Rust type is Send + Sync.
+extension RustBridge.DefaultClient: @unchecked Sendable {}
 // MARK: - Sendable conformance for DefaultClientChatStreamStreamHandle
 // swift-bridge opaque types are not automatically Sendable.  The Rust
 // side uses Mutex<stream> + tokio Runtime — both Send + Sync — so
 // @unchecked is correct: thread-safety is enforced by Rust.
 extension RustBridge.DefaultClientChatStreamStreamHandle: @unchecked Sendable {}
+// MARK: - Sendable conformance for ChatCompletionRequest (streaming request param)
+// swift-bridge opaque types are not automatically Sendable.
+// Passed into Task.detached for streaming — Rust type is Send + Sync.
+extension RustBridge.ChatCompletionRequest: @unchecked Sendable {}
 // MARK: - From-JSON Helpers
 // Public wrappers forwarding RustBridge's swift_bridge-generated
 // `{TypeName}FromJson` helpers into this module's namespace.

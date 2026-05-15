@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.16.4"
+alef_version = "0.16.12"
 languages = [
     "python",
     "node",
@@ -15,6 +15,7 @@ languages = [
     "dart",
     "swift",
     "kotlin_android",
+    "jni",
 ]
 
 [workspace.sync]

@@ -101,8 +101,8 @@ jobs:
         with:
           cache-key-prefix: ci-mobile-android-${{ matrix.abi }}
       - uses: kreuzberg-dev/actions/setup-android-ndk@v1
-      - name: Build liter-llm-ffi for ${{ matrix.abi }}
-        run: cargo ndk --target ${{ matrix.abi }} --platform 21 -- build -p liter-llm-ffi --release
+      - name: Build liter-llm-jni for ${{ matrix.abi }}
+        run: cargo ndk --target ${{ matrix.abi }} --platform 21 -- build -p liter-llm-jni --release
       - name: Stage jniLibs
         shell: bash
         run: |
@@ -111,7 +111,7 @@ jobs:
             arm64-v8a) RUST_TGT=aarch64-linux-android ;;
             x86_64)    RUST_TGT=x86_64-linux-android ;;
           esac
-          cp "target/${RUST_TGT}/release/libliter_llm_ffi.so" \
+          cp "target/${RUST_TGT}/release/libliterllm_jni.so" \
              "packages/kotlin-android/src/main/jniLibs/${{ matrix.abi }}/"
       - uses: actions/setup-java@v5
         with:

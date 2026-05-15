@@ -1124,6 +1124,11 @@ mod ffi {
         #[swift_bridge(swift_name = "customProviderConfigFromJson")]
         fn custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String>;
     }
+    extern "Rust" {
+
+        #[swift_bridge(swift_name = "chatCompletionChunkFromJson")]
+        fn chat_completion_chunk_from_json(json: String) -> Result<ChatCompletionChunk, String>;
+    }
 }
 
 pub struct SystemMessage(pub liter_llm::types::SystemMessage);
@@ -4877,5 +4882,11 @@ pub fn create_response_request_from_json(json: String) -> Result<CreateResponseR
 pub fn custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String> {
     serde_json::from_str::<liter_llm::provider::custom::CustomProviderConfig>(&json)
         .map(CustomProviderConfig)
+        .map_err(|e| e.to_string())
+}
+
+pub fn chat_completion_chunk_from_json(json: String) -> Result<ChatCompletionChunk, String> {
+    serde_json::from_str::<liter_llm::types::ChatCompletionChunk>(&json)
+        .map(ChatCompletionChunk)
         .map_err(|e| e.to_string())
 }

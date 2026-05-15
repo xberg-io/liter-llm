@@ -2497,6 +2497,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "liter-llm-jni"
+version = "1.4.0-rc.27"
+dependencies = [
+ "futures-util",
+ "jni",
+ "liter-llm",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "liter-llm-node"
 version = "1.4.0-rc.27"
 dependencies = [

@@ -734,15 +734,15 @@ pub const AuthHeaderFormat = union(enum) {
 /// constructed, or if the resolved provider configuration is invalid.
 pub fn create_client(api_key: []const u8, base_url: ?[]const u8, timeout_secs: ?u64, max_retries: ?u32, model_hint: ?[]const u8) (LiterLlmError || error{OutOfMemory})!DefaultClient {
     const api_key_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{api_key}, 0);
+    defer std.heap.c_allocator.free(api_key_z);
     const base_url_z: ?[:0]u8 = if (base_url) |v| try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{v}, 0) else null;
+    defer if (base_url_z) |z| std.heap.c_allocator.free(z);
     const model_hint_z: ?[:0]u8 = if (model_hint) |v| try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{v}, 0) else null;
+    defer if (model_hint_z) |z| std.heap.c_allocator.free(z);
     const _result = c.literllm_create_client(api_key_z, if (base_url_z) |z| z.ptr else null, if (timeout_secs) |v| v else std.math.maxInt(u64), if (max_retries) |v| v else std.math.maxInt(u32), if (model_hint_z) |z| z.ptr else null);
     if (c.literllm_last_error_code() != 0) {
         return _first_error(LiterLlmError);
     }
-    std.heap.c_allocator.free(api_key_z);
-    if (base_url_z) |z| std.heap.c_allocator.free(z);
-    if (model_hint_z) |z| std.heap.c_allocator.free(z);
     return DefaultClient{ ._handle = _result.? };
 }
 
@@ -756,11 +756,11 @@ pub fn create_client(api_key: []const u8, base_url: ?[]const u8, timeout_secs: ?
 /// contains unknown fields.
 pub fn create_client_from_json(json: []const u8) (LiterLlmError || error{OutOfMemory})!DefaultClient {
     const json_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{json}, 0);
+    defer std.heap.c_allocator.free(json_z);
     const _result = c.literllm_create_client_from_json(json_z);
     if (c.literllm_last_error_code() != 0) {
         return _first_error(LiterLlmError);
     }
-    std.heap.c_allocator.free(json_z);
     return DefaultClient{ ._handle = _result.? };
 }
 
@@ -775,12 +775,12 @@ pub fn create_client_from_json(json: []const u8) (LiterLlmError || error{OutOfMe
 /// no model prefixes).
 pub fn register_custom_provider(config: []const u8) (LiterLlmError || error{OutOfMemory})!void {
     const config_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{config}, 0);
+    defer std.heap.c_allocator.free(config_z);
     const config_handle = c.literllm_custom_provider_config_from_json(config_z);
     _ = c.literllm_register_custom_provider(config_handle);
     if (c.literllm_last_error_code() != 0) {
         return _first_error(LiterLlmError);
     }
-    std.heap.c_allocator.free(config_z);
     if (config_handle) |h| c.literllm_custom_provider_config_free(h);
     return;
 }
@@ -795,12 +795,12 @@ pub fn register_custom_provider(config: []const u8) (LiterLlmError || error{OutO
 /// Returns an error only if the internal lock is poisoned.
 pub fn unregister_custom_provider(name: []const u8) (LiterLlmError || error{OutOfMemory})!bool {
     const name_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{name}, 0);
+    defer std.heap.c_allocator.free(name_z);
     const _result = c.literllm_unregister_custom_provider(name_z);
     if (c.literllm_last_error_code() != 0) {
         return _first_error(LiterLlmError);
     }
-    std.heap.c_allocator.free(name_z);
-    return _result;
+    return _result != 0;
 }
 
 /// Default client implementation backed by `reqwest`.
@@ -821,12 +821,12 @@ pub const DefaultClient = struct {
 
     pub fn chat(self: *DefaultClient, req: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_chat_completion_request_from_json(req_z.ptr);
         const _result = c.literllm_default_client_chat(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(req_z);
         c.literllm_chat_completion_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_chat_completion_response_to_json(_result);
@@ -868,12 +868,12 @@ pub const DefaultClient = struct {
 
     pub fn embed(self: *DefaultClient, req: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_embedding_request_from_json(req_z.ptr);
         const _result = c.literllm_default_client_embed(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(req_z);
         c.literllm_embedding_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_embedding_response_to_json(_result);
@@ -902,12 +902,12 @@ pub const DefaultClient = struct {
 
     pub fn image_generate(self: *DefaultClient, req: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_create_image_request_from_json(req_z.ptr);
         const _result = c.literllm_default_client_image_generate(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(req_z);
         c.literllm_create_image_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_images_response_to_json(_result);
@@ -921,6 +921,7 @@ pub const DefaultClient = struct {
 
     pub fn speech(self: *DefaultClient, req: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_create_speech_request_from_json(req_z.ptr);
         var _out_ptr: [*c]u8 = undefined;
         var _out_len: usize = 0;
@@ -929,7 +930,6 @@ pub const DefaultClient = struct {
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(req_z);
         c.literllm_create_speech_request_free(req_handle);
         const _owned = try std.heap.c_allocator.dupe(u8, _out_ptr[0.._out_len]);
         c.literllm_free_bytes(_out_ptr, _out_len, _out_cap);
@@ -938,12 +938,12 @@ pub const DefaultClient = struct {
 
     pub fn transcribe(self: *DefaultClient, req: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_create_transcription_request_from_json(req_z.ptr);
         const _result = c.literllm_default_client_transcribe(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(req_z);
         c.literllm_create_transcription_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_transcription_response_to_json(_result);
@@ -957,12 +957,12 @@ pub const DefaultClient = struct {
 
     pub fn moderate(self: *DefaultClient, req: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_moderation_request_from_json(req_z.ptr);
         const _result = c.literllm_default_client_moderate(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(req_z);
         c.literllm_moderation_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_moderation_response_to_json(_result);
@@ -976,12 +976,12 @@ pub const DefaultClient = struct {
 
     pub fn rerank(self: *DefaultClient, req: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_rerank_request_from_json(req_z.ptr);
         const _result = c.literllm_default_client_rerank(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(req_z);
         c.literllm_rerank_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_rerank_response_to_json(_result);
@@ -995,12 +995,12 @@ pub const DefaultClient = struct {
 
     pub fn search(self: *DefaultClient, req: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_search_request_from_json(req_z.ptr);
         const _result = c.literllm_default_client_search(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(req_z);
         c.literllm_search_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_search_response_to_json(_result);
@@ -1014,12 +1014,12 @@ pub const DefaultClient = struct {
 
     pub fn ocr(self: *DefaultClient, req: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_ocr_request_from_json(req_z.ptr);
         const _result = c.literllm_default_client_ocr(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(req_z);
         c.literllm_ocr_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_ocr_response_to_json(_result);
@@ -1033,12 +1033,12 @@ pub const DefaultClient = struct {
 
     pub fn create_file(self: *DefaultClient, req: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_create_file_request_from_json(req_z.ptr);
         const _result = c.literllm_default_client_create_file(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(req_z);
         c.literllm_create_file_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_file_object_to_json(_result);
@@ -1052,11 +1052,11 @@ pub const DefaultClient = struct {
 
     pub fn retrieve_file(self: *DefaultClient, file_id: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const file_id_z = try std.heap.c_allocator.dupeZ(u8, file_id);
+        defer std.heap.c_allocator.free(file_id_z);
         const _result = c.literllm_default_client_retrieve_file(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), file_id_z);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(file_id_z);
         return blk: {
             const _json_ptr = c.literllm_file_object_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);
@@ -1069,11 +1069,11 @@ pub const DefaultClient = struct {
 
     pub fn delete_file(self: *DefaultClient, file_id: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const file_id_z = try std.heap.c_allocator.dupeZ(u8, file_id);
+        defer std.heap.c_allocator.free(file_id_z);
         const _result = c.literllm_default_client_delete_file(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), file_id_z);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(file_id_z);
         return blk: {
             const _json_ptr = c.literllm_delete_response_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);
@@ -1086,12 +1086,12 @@ pub const DefaultClient = struct {
 
     pub fn list_files(self: *DefaultClient, query: ?[]const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const query_z: ?[:0]u8 = if (query) |v| try std.heap.c_allocator.dupeZ(u8, v) else null;
+        defer if (query_z) |z| std.heap.c_allocator.free(z);
         const query_handle = if (query_z) |z| c.literllm_file_list_query_from_json(z.ptr) else null;
         const _result = c.literllm_default_client_list_files(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), query_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        if (query_z) |z| std.heap.c_allocator.free(z);
         if (query_handle != null) c.literllm_file_list_query_free(query_handle);
         return blk: {
             const _json_ptr = c.literllm_file_list_response_to_json(_result);
@@ -1105,6 +1105,7 @@ pub const DefaultClient = struct {
 
     pub fn file_content(self: *DefaultClient, file_id: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const file_id_z = try std.heap.c_allocator.dupeZ(u8, file_id);
+        defer std.heap.c_allocator.free(file_id_z);
         var _out_ptr: [*c]u8 = undefined;
         var _out_len: usize = 0;
         var _out_cap: usize = 0;
@@ -1112,7 +1113,6 @@ pub const DefaultClient = struct {
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(file_id_z);
         const _owned = try std.heap.c_allocator.dupe(u8, _out_ptr[0.._out_len]);
         c.literllm_free_bytes(_out_ptr, _out_len, _out_cap);
         return _owned;
@@ -1120,12 +1120,12 @@ pub const DefaultClient = struct {
 
     pub fn create_batch(self: *DefaultClient, req: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_create_batch_request_from_json(req_z.ptr);
         const _result = c.literllm_default_client_create_batch(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(req_z);
         c.literllm_create_batch_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_batch_object_to_json(_result);
@@ -1139,11 +1139,11 @@ pub const DefaultClient = struct {
 
     pub fn retrieve_batch(self: *DefaultClient, batch_id: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const batch_id_z = try std.heap.c_allocator.dupeZ(u8, batch_id);
+        defer std.heap.c_allocator.free(batch_id_z);
         const _result = c.literllm_default_client_retrieve_batch(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), batch_id_z);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(batch_id_z);
         return blk: {
             const _json_ptr = c.literllm_batch_object_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);
@@ -1156,12 +1156,12 @@ pub const DefaultClient = struct {
 
     pub fn list_batches(self: *DefaultClient, query: ?[]const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const query_z: ?[:0]u8 = if (query) |v| try std.heap.c_allocator.dupeZ(u8, v) else null;
+        defer if (query_z) |z| std.heap.c_allocator.free(z);
         const query_handle = if (query_z) |z| c.literllm_batch_list_query_from_json(z.ptr) else null;
         const _result = c.literllm_default_client_list_batches(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), query_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        if (query_z) |z| std.heap.c_allocator.free(z);
         if (query_handle != null) c.literllm_batch_list_query_free(query_handle);
         return blk: {
             const _json_ptr = c.literllm_batch_list_response_to_json(_result);
@@ -1175,11 +1175,11 @@ pub const DefaultClient = struct {
 
     pub fn cancel_batch(self: *DefaultClient, batch_id: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const batch_id_z = try std.heap.c_allocator.dupeZ(u8, batch_id);
+        defer std.heap.c_allocator.free(batch_id_z);
         const _result = c.literllm_default_client_cancel_batch(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), batch_id_z);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(batch_id_z);
         return blk: {
             const _json_ptr = c.literllm_batch_object_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);
@@ -1192,12 +1192,12 @@ pub const DefaultClient = struct {
 
     pub fn create_response(self: *DefaultClient, req: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
+        defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_create_response_request_from_json(req_z.ptr);
         const _result = c.literllm_default_client_create_response(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(req_z);
         c.literllm_create_response_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_response_object_to_json(_result);
@@ -1211,11 +1211,11 @@ pub const DefaultClient = struct {
 
     pub fn retrieve_response(self: *DefaultClient, id: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const id_z = try std.heap.c_allocator.dupeZ(u8, id);
+        defer std.heap.c_allocator.free(id_z);
         const _result = c.literllm_default_client_retrieve_response(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), id_z);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(id_z);
         return blk: {
             const _json_ptr = c.literllm_response_object_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);
@@ -1228,11 +1228,11 @@ pub const DefaultClient = struct {
 
     pub fn cancel_response(self: *DefaultClient, id: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
         const id_z = try std.heap.c_allocator.dupeZ(u8, id);
+        defer std.heap.c_allocator.free(id_z);
         const _result = c.literllm_default_client_cancel_response(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), id_z);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        std.heap.c_allocator.free(id_z);
         return blk: {
             const _json_ptr = c.literllm_response_object_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);

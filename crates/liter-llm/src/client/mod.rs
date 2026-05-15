@@ -43,18 +43,22 @@ pub use config_file::FileConfig;
 
 /// A boxed future returning `T`.
 #[cfg(not(target_arch = "wasm32"))]
+#[cfg_attr(alef, alef(skip))]
 pub type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
 
 /// A boxed future returning `T` (WASM variant — not `Send` because JS is single-threaded).
 #[cfg(target_arch = "wasm32")]
+#[cfg_attr(alef, alef(skip))]
 pub type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + 'a>>;
 
 /// A boxed stream of `T`.
 #[cfg(not(target_arch = "wasm32"))]
+#[cfg_attr(alef, alef(skip))]
 pub type BoxStream<'a, T> = Pin<Box<dyn Stream<Item = T> + Send + 'a>>;
 
 /// A boxed stream of `T` (WASM variant — not `Send` because JS is single-threaded).
 #[cfg(target_arch = "wasm32")]
+#[cfg_attr(alef, alef(skip))]
 pub type BoxStream<'a, T> = Pin<Box<dyn Stream<Item = T> + 'a>>;
 
 /// Result of [`DefaultClient::prepare_request`].
@@ -89,6 +93,7 @@ fn str_pair(pair: &(String, String)) -> (&str, &str) {
 
 /// Core LLM client trait.
 #[cfg(not(target_arch = "wasm32"))]
+#[cfg_attr(alef, alef(skip))]
 pub trait LlmClient: Send + Sync {
     /// Send a chat completion request.
     fn chat(&self, req: ChatCompletionRequest) -> BoxFuture<'_, Result<ChatCompletionResponse>>;
@@ -129,6 +134,7 @@ pub trait LlmClient: Send + Sync {
 
 /// Core LLM client trait (WASM variant — no `Send + Sync` because JS is single-threaded).
 #[cfg(target_arch = "wasm32")]
+#[cfg_attr(alef, alef(skip))]
 pub trait LlmClient {
     /// Send a chat completion request.
     fn chat(&self, req: ChatCompletionRequest) -> BoxFuture<'_, Result<ChatCompletionResponse>>;
@@ -175,6 +181,7 @@ pub trait LlmClient {
 /// `transform_request`) and the raw provider response (before
 /// `transform_response`). This is useful for debugging provider-specific
 /// transformations, capturing wire-level data, or implementing custom parsing.
+#[cfg_attr(alef, alef(skip))]
 pub trait LlmClientRaw: LlmClient {
     /// Send a chat completion request and return the raw exchange.
     ///
@@ -219,6 +226,7 @@ pub trait LlmClientRaw: LlmClient {
 
 /// File management operations (upload, list, retrieve, delete).
 #[cfg(not(target_arch = "wasm32"))]
+#[cfg_attr(alef, alef(skip))]
 pub trait FileClient: Send + Sync {
     /// Upload a file.
     fn create_file(&self, req: CreateFileRequest) -> BoxFuture<'_, Result<FileObject>>;
@@ -238,6 +246,7 @@ pub trait FileClient: Send + Sync {
 
 /// File management operations (upload, list, retrieve, delete) (WASM variant).
 #[cfg(target_arch = "wasm32")]
+#[cfg_attr(alef, alef(skip))]
 pub trait FileClient {
     /// Upload a file.
     fn create_file(&self, req: CreateFileRequest) -> BoxFuture<'_, Result<FileObject>>;
@@ -257,6 +266,7 @@ pub trait FileClient {
 
 /// Batch processing operations (create, list, retrieve, cancel).
 #[cfg(not(target_arch = "wasm32"))]
+#[cfg_attr(alef, alef(skip))]
 pub trait BatchClient: Send + Sync {
     /// Create a new batch job.
     fn create_batch(&self, req: CreateBatchRequest) -> BoxFuture<'_, Result<BatchObject>>;
@@ -273,6 +283,7 @@ pub trait BatchClient: Send + Sync {
 
 /// Batch processing operations (create, list, retrieve, cancel) (WASM variant).
 #[cfg(target_arch = "wasm32")]
+#[cfg_attr(alef, alef(skip))]
 pub trait BatchClient {
     /// Create a new batch job.
     fn create_batch(&self, req: CreateBatchRequest) -> BoxFuture<'_, Result<BatchObject>>;
@@ -289,6 +300,7 @@ pub trait BatchClient {
 
 /// Responses API operations (create, retrieve, cancel).
 #[cfg(not(target_arch = "wasm32"))]
+#[cfg_attr(alef, alef(skip))]
 pub trait ResponseClient: Send + Sync {
     /// Create a new response.
     fn create_response(&self, req: CreateResponseRequest) -> BoxFuture<'_, Result<ResponseObject>>;
@@ -302,6 +314,7 @@ pub trait ResponseClient: Send + Sync {
 
 /// Responses API operations (create, retrieve, cancel) (WASM variant).
 #[cfg(target_arch = "wasm32")]
+#[cfg_attr(alef, alef(skip))]
 pub trait ResponseClient {
     /// Create a new response.
     fn create_response(&self, req: CreateResponseRequest) -> BoxFuture<'_, Result<ResponseObject>>;
