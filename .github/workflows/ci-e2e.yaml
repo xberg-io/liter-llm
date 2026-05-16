@@ -226,6 +226,57 @@ jobs:
           chmod +x target/release/liter-llm 2>/dev/null || true
           chmod +x e2e/rust/target/release/mock-server 2>/dev/null || true
 
+      # kotlin_android runs on ubuntu-24.04-arm: download the pre-built linux-arm64
+      # mock-server from the build-ffi artifact and start it before gradle test.
+      - name: Download FFI artifacts (kotlin_android)
+        if: matrix.lang == 'kotlin_android'
+        uses: actions/download-artifact@v7
+        with:
+          name: ffi-aarch64-unknown-linux-gnu
+          path: ffi-artifacts
+
+      - name: Start mock-server (kotlin_android)
+        if: matrix.lang == 'kotlin_android'
+        shell: bash
+        run: |
+          mkdir -p e2e/rust/target/release
+          cp ffi-artifacts/e2e/rust/target/release/mock-server e2e/rust/target/release/mock-server
+          chmod +x e2e/rust/target/release/mock-server
+          # Start mock-server in background; capture its URL announcement from stdout.
+          MOCK_URL_FILE=$(mktemp)
+          e2e/rust/target/release/mock-server > "$MOCK_URL_FILE" 2>/dev/null &
+          # Wait until the server prints its URL (up to 10 s).
+          n=0
+          until grep -q "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" 2>/dev/null || [ "$n" -ge 100 ]; do
+            sleep 0.1
+            n=$((n + 1))
+          done
+          MOCK_SERVER_URL=$(grep "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" | head -1 | cut -d= -f2-)
+          echo "MOCK_SERVER_URL=${MOCK_SERVER_URL}" >> "$GITHUB_ENV"
+
+      # swift runs on macos-latest: the linux-arm64 binary cannot run here, so build
+      # mock-server from source before swift test.
+      - name: Build mock-server (swift)
+        if: matrix.lang == 'swift'
+        shell: bash
+        run: cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release
+
+      - name: Start mock-server (swift)
+        if: matrix.lang == 'swift'
+        shell: bash
+        run: |
+          # Start mock-server in background; capture its URL announcement from stdout.
+          MOCK_URL_FILE=$(mktemp)
+          e2e/rust/target/release/mock-server > "$MOCK_URL_FILE" 2>/dev/null &
+          # Wait until the server prints its URL (up to 10 s).
+          n=0
+          until grep -q "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" 2>/dev/null || [ "$n" -ge 100 ]; do
+            sleep 0.1
+            n=$((n + 1))
+          done
+          MOCK_SERVER_URL=$(grep "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" | head -1 | cut -d= -f2-)
+          echo "MOCK_SERVER_URL=${MOCK_SERVER_URL}" >> "$GITHUB_ENV"
+
       - name: Create WASM pkg stub
         if: matrix.node-version || matrix.lang == 'wasm'
         shell: bash
