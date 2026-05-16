@@ -994,19 +994,13 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
     }
 }
 
+type DefaultClientChatStreamStreamHandleItem =
+    std::result::Result<core_crate::ChatCompletionChunk, Box<dyn std::error::Error + Send + Sync + 'static>>;
+type DefaultClientChatStreamStreamHandleStream = BoxStream<'static, DefaultClientChatStreamStreamHandleItem>;
+
 struct DefaultClientChatStreamStreamHandle {
     rt: &'static Runtime,
-    stream: Mutex<
-        Option<
-            BoxStream<
-                'static,
-                std::result::Result<
-                    core_crate::ChatCompletionChunk,
-                    Box<dyn std::error::Error + Send + Sync + 'static>,
-                >,
-            >,
-        >,
-    >,
+    stream: Mutex<Option<DefaultClientChatStreamStreamHandleStream>>,
 }
 
 #[unsafe(no_mangle)]
