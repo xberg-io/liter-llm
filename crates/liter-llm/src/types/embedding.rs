@@ -37,6 +37,7 @@ pub enum EmbeddingInput {
     Multiple(Vec<String>),
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl Default for EmbeddingInput {
     fn default() -> Self {
         Self::Single(String::new())

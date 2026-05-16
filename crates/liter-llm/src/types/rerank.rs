@@ -21,6 +21,7 @@ pub enum RerankDocument {
     Object { text: String },
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl Default for RerankDocument {
     fn default() -> Self {
         Self::Text(String::new())

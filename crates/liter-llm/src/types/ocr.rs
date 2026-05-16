@@ -40,6 +40,7 @@ pub enum OcrDocument {
     },
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl Default for OcrDocument {
     fn default() -> Self {
         Self::Url { url: String::new() }

@@ -24,6 +24,7 @@ pub enum BatchStatus {
     Cancelled,
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl std::fmt::Display for BatchStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = serde_json::to_value(self)

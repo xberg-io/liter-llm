@@ -103,6 +103,7 @@ pub struct ClientConfig {
     pub load_env: bool,
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl ClientConfig {
     /// Create a config with the given API key and sensible defaults.
     pub fn new(api_key: impl Into<String>) -> Self {
@@ -186,10 +187,12 @@ impl std::fmt::Debug for ClientConfig {
 /// customise the configuration, then call [`ClientConfigBuilder::build`] to
 /// obtain a [`ClientConfig`].
 #[must_use]
+#[cfg_attr(alef, alef(skip))]
 pub struct ClientConfigBuilder {
     pub(crate) config: ClientConfig,
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl ClientConfigBuilder {
     /// Create a new builder with the given API key and sensible defaults.
     pub fn new(api_key: impl Into<String>) -> Self {

@@ -59,6 +59,7 @@ pub use types::*;
 /// WASM builds are exempt — the WASM target uses the browser/Node.js fetch
 /// API instead of rustls, so no crypto provider is needed.
 #[cfg(feature = "native-http")]
+#[cfg_attr(alef, alef(skip))]
 pub fn ensure_crypto_provider() {
     use std::sync::Once;
     static INIT: Once = Once::new();

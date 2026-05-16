@@ -21,6 +21,7 @@ pub enum Message {
     Function(FunctionMessage),
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl Default for Message {
     fn default() -> Self {
         Self::Assistant(AssistantMessage::default())
@@ -48,6 +49,7 @@ pub enum UserContent {
     Parts(Vec<ContentPart>),
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl Default for UserContent {
     fn default() -> Self {
         Self::Text(String::new())
@@ -67,6 +69,7 @@ pub enum ContentPart {
     InputAudio { input_audio: AudioContent },
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl Default for ContentPart {
     fn default() -> Self {
         Self::Text { text: String::new() }
@@ -201,6 +204,7 @@ pub enum ToolChoice {
     Specific(SpecificToolChoice),
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl Default for ToolChoice {
     fn default() -> Self {
         Self::Mode(ToolChoiceMode::default())
@@ -298,6 +302,7 @@ pub enum StopSequence {
     Multiple(Vec<String>),
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl Default for StopSequence {
     fn default() -> Self {
         Self::Single(String::new())

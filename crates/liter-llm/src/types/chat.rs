@@ -32,6 +32,7 @@ pub enum FinishReason {
     Other,
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl std::fmt::Display for FinishReason {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = serde_json::to_value(self)

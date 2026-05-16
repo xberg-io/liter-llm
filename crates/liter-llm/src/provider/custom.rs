@@ -57,6 +57,7 @@ pub enum AuthHeaderFormat {
 ///
 /// Returns an error if the config is invalid (empty name, empty base_url, or
 /// no model prefixes).
+#[cfg_attr(alef, alef(skip))]
 pub fn register_custom_provider(config: CustomProviderConfig) -> Result<()> {
     validate_config(&config)?;
 
@@ -83,6 +84,7 @@ pub fn register_custom_provider(config: CustomProviderConfig) -> Result<()> {
 /// # Errors
 ///
 /// Returns an error only if the internal lock is poisoned.
+#[cfg_attr(alef, alef(skip))]
 pub fn unregister_custom_provider(name: &str) -> Result<bool> {
     let mut providers = CUSTOM_PROVIDERS.write().map_err(|e| LiterLlmError::ServerError {
         message: format!("custom provider registry lock poisoned: {e}"),
