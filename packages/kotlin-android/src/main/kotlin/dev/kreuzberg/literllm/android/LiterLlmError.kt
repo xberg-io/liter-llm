@@ -31,9 +31,7 @@ sealed class LiterLlmError(message: String) : Exception(message) {
         override val message: String,
     ) : LiterLlmError("content policy violation: {message}")
 
-    data class NotFound(
-        override val message: String,
-    ) : LiterLlmError("not found: {message}")
+    data class NotFound(override val message: String) : LiterLlmError("not found: {message}")
 
     data class ServerError(
         override val message: String,
@@ -47,9 +45,7 @@ sealed class LiterLlmError(message: String) : Exception(message) {
 
     object Timeout : LiterLlmError("request timeout")
 
-    data class Streaming(
-        override val message: String,
-    ) : LiterLlmError("streaming error: {message}")
+    data class Streaming(override val message: String) : LiterLlmError("streaming error: {message}")
 
     data class EndpointNotSupported(
         val endpoint: String,
@@ -61,9 +57,7 @@ sealed class LiterLlmError(message: String) : Exception(message) {
         val reason: String,
     ) : LiterLlmError("invalid header {name:?}: {reason}")
 
-    data class Serialization(
-        val field0: String,
-    ) : LiterLlmError("serialization error: $field0")
+    data class Serialization(val field0: String) : LiterLlmError("serialization error: $field0")
 
     data class BudgetExceeded(
         override val message: String,

@@ -8,11 +8,20 @@ data class ChatCompletionRequest(
     val temperature: Double?,
     val topP: Double?,
     val n: Int?,
+    /**
+     * Whether to stream the response.
+     *
+     * Managed by the client layer — do not set directly.
+     */
     val stream: Boolean?,
     val stop: StopSequence?,
     val maxTokens: Long?,
     val presencePenalty: Double?,
     val frequencyPenalty: Double?,
+    /**
+     * Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic
+     * serialization order — important when hashing or signing requests.
+     */
     val logitBias: Map<String, Double>?,
     val user: String?,
     val tools: List<ChatCompletionTool>?,
@@ -22,5 +31,9 @@ data class ChatCompletionRequest(
     val streamOptions: StreamOptions?,
     val seed: Long?,
     val reasoningEffort: ReasoningEffort?,
+    /**
+     * Provider-specific extra parameters merged into the request body.
+     * Use for guardrails, safety settings, grounding config, etc.
+     */
     val extraBody: String?,
 )

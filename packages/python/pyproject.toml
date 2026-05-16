@@ -9,12 +9,12 @@ description = "Universal LLM API client with Rust-powered polyglot bindings."
 license = "MIT"
 requires-python = ">=3.10"
 classifiers = [
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 authors = [{ name = "Na'aman Hirschfeld" }]
 keywords = ["llm", "api-client", "openai", "anthropic"]
@@ -39,29 +39,29 @@ line-length = 120
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-    "ANN401",
-    "ASYNC109",
-    "ASYNC110",
-    "BLE001",
-    "COM812",
-    "D100",
-    "D104",
-    "D107",
-    "D205",
-    "E501",
-    "EM",
-    "FBT",
-    "FIX",
-    "ISC001",
-    "PD011",
-    "PGH003",
-    "PLR2004",
-    "PLW0603",
-    "S104",
-    "S110",
-    "S603",
-    "TD",
-    "TRY",
+  "ANN401",
+  "ASYNC109",
+  "ASYNC110",
+  "BLE001",
+  "COM812",
+  "D100",
+  "D104",
+  "D107",
+  "D205",
+  "E501",
+  "EM",
+  "FBT",
+  "FIX",
+  "ISC001",
+  "PD011",
+  "PGH003",
+  "PLR2004",
+  "PLW0603",
+  "S104",
+  "S110",
+  "S603",
+  "TD",
+  "TRY",
 ]
 
 [tool.ruff.lint.mccabe]

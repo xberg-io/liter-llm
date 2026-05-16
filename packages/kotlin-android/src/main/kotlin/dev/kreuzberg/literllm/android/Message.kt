@@ -38,6 +38,9 @@ sealed class Message {
         val message: DeveloperMessage,
     ) : Message()
 
+    /**
+     * Deprecated legacy function-role message; retained for API compatibility.
+     */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Function(

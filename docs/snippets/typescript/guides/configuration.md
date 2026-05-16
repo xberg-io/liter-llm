@@ -1,3 +1,5 @@
+<!-- snippet:compile-only -->
+
 ```typescript
 import { createClient } from "@kreuzberg/liter-llm-node";
 

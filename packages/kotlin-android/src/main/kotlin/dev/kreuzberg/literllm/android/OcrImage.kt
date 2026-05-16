@@ -6,6 +6,12 @@ package dev.kreuzberg.literllm.android
  * An image extracted from an OCR page.
  */
 data class OcrImage(
+    /**
+     * Unique image identifier.
+     */
     val id: String,
+    /**
+     * Base64-encoded image data.
+     */
     val imageBase64: String?,
 )

@@ -257,7 +257,7 @@ curl http://localhost:3001/chat \
 
     In Claude, ask a question and it will use the `chat` tool:
 
-    ```
+    ```text
     Call the liter-llm chat tool with model "openai/gpt-4o" to summarize this document: [paste text]
     ```
 

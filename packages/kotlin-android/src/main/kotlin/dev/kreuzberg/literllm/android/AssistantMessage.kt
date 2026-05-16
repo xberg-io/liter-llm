@@ -7,5 +7,8 @@ data class AssistantMessage(
     val name: String?,
     val toolCalls: List<ToolCall>?,
     val refusal: String?,
+    /**
+     * Deprecated legacy function_call field; retained for API compatibility.
+     */
     val functionCall: FunctionCall?,
 )

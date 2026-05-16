@@ -1,3 +1,5 @@
+<!-- snippet:compile-only -->
+
 ```csharp
 using System.Text;
 using LiterLlm;

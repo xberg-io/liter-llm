@@ -6,8 +6,20 @@ package dev.kreuzberg.literllm.android
  * An individual search result.
  */
 data class SearchResult(
+    /**
+     * Title of the result.
+     */
     val title: String,
+    /**
+     * URL of the result.
+     */
     val url: String,
+    /**
+     * Text snippet / excerpt.
+     */
     val snippet: String,
+    /**
+     * Publication or last-updated date, if available.
+     */
     val date: String?,
 )

@@ -1,52 +1,52 @@
 [workspace]
-alef_version = "0.16.17"
+alef_version = "0.16.23"
 languages = [
-    "python",
-    "node",
-    "ruby",
-    "php",
-    "ffi",
-    "go",
-    "java",
-    "csharp",
-    "elixir",
-    "wasm",
-    "zig",
-    "dart",
-    "swift",
-    "kotlin_android",
-    "jni",
+  "python",
+  "node",
+  "ruby",
+  "php",
+  "ffi",
+  "go",
+  "java",
+  "csharp",
+  "elixir",
+  "wasm",
+  "zig",
+  "dart",
+  "swift",
+  "kotlin_android",
+  "jni",
 ]
 
 [workspace.sync]
 extra_paths = [
-    "package.json",
-    "crates/liter-llm-node/package.json",
-    "crates/liter-llm-node/npm/*/package.json",
-    "packages/node/package.json",
+  "package.json",
+  "crates/liter-llm-node/package.json",
+  "crates/liter-llm-node/npm/*/package.json",
+  "packages/node/package.json",
 ]
 
 [[crates]]
 name = "liter-llm"
 core_import = "liter_llm"
 sources = [
-    "crates/liter-llm/src/error.rs",
-    "crates/liter-llm/src/bindings.rs",
-    "crates/liter-llm/src/types/common.rs",
-    "crates/liter-llm/src/types/chat.rs",
-    "crates/liter-llm/src/types/embedding.rs",
-    "crates/liter-llm/src/types/image.rs",
-    "crates/liter-llm/src/types/audio.rs",
-    "crates/liter-llm/src/types/moderation.rs",
-    "crates/liter-llm/src/types/rerank.rs",
-    "crates/liter-llm/src/types/search.rs",
-    "crates/liter-llm/src/types/ocr.rs",
-    "crates/liter-llm/src/types/models.rs",
-    "crates/liter-llm/src/types/files.rs",
-    "crates/liter-llm/src/types/batch.rs",
-    "crates/liter-llm/src/types/responses.rs",
-    "crates/liter-llm/src/client/mod.rs",
-    "crates/liter-llm/src/provider/custom.rs",
+  "crates/liter-llm/src/error.rs",
+  "crates/liter-llm/src/bindings.rs",
+  "crates/liter-llm/src/types/common.rs",
+  "crates/liter-llm/src/types/chat.rs",
+  "crates/liter-llm/src/types/embedding.rs",
+  "crates/liter-llm/src/types/image.rs",
+  "crates/liter-llm/src/types/audio.rs",
+  "crates/liter-llm/src/types/moderation.rs",
+  "crates/liter-llm/src/types/rerank.rs",
+  "crates/liter-llm/src/types/search.rs",
+  "crates/liter-llm/src/types/ocr.rs",
+  "crates/liter-llm/src/types/models.rs",
+  "crates/liter-llm/src/types/files.rs",
+  "crates/liter-llm/src/types/batch.rs",
+  "crates/liter-llm/src/types/responses.rs",
+  "crates/liter-llm/src/client/mod.rs",
+  "crates/liter-llm/src/provider/custom.rs",
 ]
 version_from = "Cargo.toml"
 workspace_root = "."
@@ -142,95 +142,95 @@ kotlin_android = "packages/kotlin-android/src/main/kotlin/dev/kreuzberg/literllm
 
 [crates.exclude]
 types = [
-    # Traits (can't cross FFI)
-    "LlmClient",
-    "LlmClientRaw",
-    "BatchClient",
-    "FileClient",
-    "ResponseClient",
-    # Opaque async types
-    "BoxFuture",
-    "BoxStream",
-    # Types with Arc<dyn Trait> / generics
-    "ClientConfig",
-    "ClientConfigBuilder",
-    "PreparedRequest",
-    "RawExchange",
-    "RawStreamExchange",
-    # Internal error types
-    "ErrorResponse",
-    "ApiError",
-    # Tower-internal Service request/response enums (externally tagged, contain BoxStream/Bytes)
-    "LlmRequest",
-    "LlmResponse",
-    "CachedResponse",
-    # Tower middleware (feature-gated, generic Service types)
-    "BudgetConfig",
-    "BudgetState",
-    "BudgetLayer",
-    "CacheConfig",
-    "CacheStore",
-    "InMemoryStore",
-    "CacheLayer",
-    "OpenDalCacheStore",
-    "CooldownLayer",
-    "CostTrackingLayer",
-    "HealthCheckLayer",
-    "HealthCheckService",
-    "LlmHook",
-    "HooksLayer",
-    "RateLimitConfig",
-    "ModelRateLimitLayer",
-    "RouterState",
-    "Router",
-    "LlmService",
-    "TracingLayer",
-    # Auth credential providers (Arc<dyn>, async trait methods)
-    "AzureAdCredentialProvider",
-    "WebIdentityCredentialProvider",
-    "GithubCopilotCredentialProvider",
-    "VertexOAuthCredentialProvider",
-    "CredentialProvider",
-    "StaticTokenProvider",
-    # File config (has provider Vec, enum fields)
-    "FileConfig",
-    "FileCacheConfig",
-    "FileBudgetConfig",
-    "FileRateLimitConfig",
-    "FileProviderConfig",
-    # Managed client (Tower-dependent)
-    "ManagedClient",
-    # Internal provider
-    "ModelPricing",
+  # Traits (can't cross FFI)
+  "LlmClient",
+  "LlmClientRaw",
+  "BatchClient",
+  "FileClient",
+  "ResponseClient",
+  # Opaque async types
+  "BoxFuture",
+  "BoxStream",
+  # Types with Arc<dyn Trait> / generics
+  "ClientConfig",
+  "ClientConfigBuilder",
+  "PreparedRequest",
+  "RawExchange",
+  "RawStreamExchange",
+  # Internal error types
+  "ErrorResponse",
+  "ApiError",
+  # Tower-internal Service request/response enums (externally tagged, contain BoxStream/Bytes)
+  "LlmRequest",
+  "LlmResponse",
+  "CachedResponse",
+  # Tower middleware (feature-gated, generic Service types)
+  "BudgetConfig",
+  "BudgetState",
+  "BudgetLayer",
+  "CacheConfig",
+  "CacheStore",
+  "InMemoryStore",
+  "CacheLayer",
+  "OpenDalCacheStore",
+  "CooldownLayer",
+  "CostTrackingLayer",
+  "HealthCheckLayer",
+  "HealthCheckService",
+  "LlmHook",
+  "HooksLayer",
+  "RateLimitConfig",
+  "ModelRateLimitLayer",
+  "RouterState",
+  "Router",
+  "LlmService",
+  "TracingLayer",
+  # Auth credential providers (Arc<dyn>, async trait methods)
+  "AzureAdCredentialProvider",
+  "WebIdentityCredentialProvider",
+  "GithubCopilotCredentialProvider",
+  "VertexOAuthCredentialProvider",
+  "CredentialProvider",
+  "StaticTokenProvider",
+  # File config (has provider Vec, enum fields)
+  "FileConfig",
+  "FileCacheConfig",
+  "FileBudgetConfig",
+  "FileRateLimitConfig",
+  "FileProviderConfig",
+  # Managed client (Tower-dependent)
+  "ManagedClient",
+  # Internal provider
+  "ModelPricing",
 ]
 methods = [
-    # Raw methods on DefaultClient
-    "DefaultClient.chat_raw",
-    "DefaultClient.chat_stream_raw",
-    "DefaultClient.embed_raw",
-    "DefaultClient.image_generate_raw",
-    "DefaultClient.transcribe_raw",
-    "DefaultClient.moderate_raw",
-    "DefaultClient.rerank_raw",
-    "DefaultClient.search_raw",
-    "DefaultClient.ocr_raw",
-    # Constructor takes ClientConfig (excluded type) — use create_client() instead
-    "DefaultClient.new",
-    # Internal provider methods
-    "DefaultClient.resolve_provider_for_model",
-    "DefaultClient.resolve_auth_header",
-    "DefaultClient.resolve_auth_header_for_provider",
-    "DefaultClient.all_headers",
-    "DefaultClient.all_headers_for_provider",
-    "DefaultClient.prepare_request",
-    # Error internal methods
-    "LiterLlmError.from_status",
-    # Methods that require binding→core From on output types (not yet supported)
-    "ChatCompletionResponse.estimated_cost",
-    "EmbeddingResponse.estimated_cost",
-    # Internal error methods
-    "LiterLlmError.is_transient",
-    "LiterLlmError.error_type",
+  # Raw methods on DefaultClient
+  "DefaultClient.chat_raw",
+  "DefaultClient.chat_stream_raw",
+  "DefaultClient.embed_raw",
+  "DefaultClient.image_generate_raw",
+  "DefaultClient.transcribe_raw",
+  "DefaultClient.moderate_raw",
+  "DefaultClient.rerank_raw",
+  "DefaultClient.search_raw",
+  "DefaultClient.ocr_raw",
+  # Constructor takes ClientConfig (excluded type) — use create_client() instead
+  "DefaultClient.new",
+  # Internal provider methods
+  "DefaultClient.resolve_provider_for_model",
+  "DefaultClient.resolve_auth_header",
+  "DefaultClient.resolve_auth_header_for_provider",
+  "DefaultClient.all_headers",
+  "DefaultClient.all_headers_for_provider",
+  "DefaultClient.prepare_request",
+  # Error internal methods
+  "LiterLlmError.from_status",
+  # Methods that require binding→core From on output types (not yet supported)
+  "ChatCompletionResponse.estimated_cost",
+  "EmbeddingResponse.estimated_cost",
+  # Internal error methods
+  "LiterLlmError.is_transient",
+  "LiterLlmError.error_type",
 ]
 functions = ["str_pair", "build_provider"]
 
@@ -276,8 +276,8 @@ e2e = ["cd e2e/python && uv sync", "cd e2e/python && uv run pytest tests/ -q"]
 [crates.test.node]
 precondition = "command -v pnpm >/dev/null 2>&1"
 e2e = [
-    "pnpm -r --filter=\"./crates/liter-llm-node\" run build",
-    "cd e2e/node && pnpm install && pnpm dlx vitest run",
+  "pnpm -r --filter=\"./crates/liter-llm-node\" run build",
+  "cd e2e/node && pnpm install && pnpm dlx vitest run",
 ]
 
 [crates.test.go]
@@ -302,16 +302,16 @@ e2e = ["cd e2e/ruby && bundle install", "cd e2e/ruby && bundle exec rspec"]
 [crates.test.php]
 precondition = "command -v php >/dev/null 2>&1 && command -v composer >/dev/null 2>&1"
 e2e = [
-    "cd e2e/php && bash ../../scripts/ci/php/create-ci-php-ini.sh",
-    "cd e2e/php && composer install --no-progress --prefer-dist",
-    "cd e2e/php && php -c php-liter-llm.ini vendor/bin/phpunit",
+  "cd e2e/php && bash ../../scripts/ci/php/create-ci-php-ini.sh",
+  "cd e2e/php && composer install --no-progress --prefer-dist",
+  "cd e2e/php && php -c php-liter-llm.ini vendor/bin/phpunit",
 ]
 
 [crates.test.elixir]
 precondition = "command -v mix >/dev/null 2>&1"
 e2e = [
-    "cd e2e/elixir && LITER_LLM_BUILD=1 MIX_ENV=test mix deps.get",
-    "cd e2e/elixir && LITER_LLM_BUILD=1 MIX_ENV=test mix test",
+  "cd e2e/elixir && LITER_LLM_BUILD=1 MIX_ENV=test mix deps.get",
+  "cd e2e/elixir && LITER_LLM_BUILD=1 MIX_ENV=test mix test",
 ]
 
 [crates.test.wasm]
@@ -360,20 +360,20 @@ exclude_categories = ["cache", "proxy", "budget", "hooks"]
 fields_enum = ["choices[0].finish_reason", "choices[0].message.role"]
 # Optional fields on result types — generator emits unwrap handling for these paths.
 fields_optional = [
-    # ChatCompletionResponse
-    "usage",
-    "choices[0].message.content",
-    "choices[0].finish_reason",
-    "system_fingerprint",
-    # AssistantMessage.tool_calls is Option<Vec<ToolCall>>
-    "choices[0].message.tool_calls",
-    # ImageData optional fields
-    "data[0].url",
-    "data[0].b64_json",
-    # RerankResult.document is Option<RerankResultDocument>
-    "results[0].document",
-    # TranscriptionResponse.segments is Option<Vec<TranscriptionSegment>>
-    "segments",
+  # ChatCompletionResponse
+  "usage",
+  "choices[0].message.content",
+  "choices[0].finish_reason",
+  "system_fingerprint",
+  # AssistantMessage.tool_calls is Option<Vec<ToolCall>>
+  "choices[0].message.tool_calls",
+  # ImageData optional fields
+  "data[0].url",
+  "data[0].b64_json",
+  # RerankResult.document is Option<RerankResultDocument>
+  "results[0].document",
+  # TranscriptionResponse.segments is Option<Vec<TranscriptionSegment>>
+  "segments",
 ]
 # Fields that are Vec/array types — used with fields_optional to emit is_some_and checks.
 fields_array = ["choices[0].message.tool_calls", "segments"]
@@ -382,58 +382,58 @@ fields_array = ["choices[0].message.tool_calls", "segments"]
 # Excludes streaming-specific fields (stream_content, chunks, stream_complete),
 # middleware-only fields (cache_hit, cache_bypassed), and error pseudo-fields.
 result_fields = [
-    # Chat/embedding/moderation/rerank shared
-    "id",
-    "model",
-    "usage",
-    "object",
-    "created",
-    # Chat
-    "choices",
-    "system_fingerprint",
-    # Embedding
-    "data",
-    # Models
-    "models",
-    # Transcription
-    "text",
-    "language",
-    "duration",
-    "words",
-    "segments",
-    "task",
-    "audio",
-    # Image generation
-    "images",
-    # Moderation
-    "results",
-    "flagged",
-    # Rerank
-    "results_count",
-    # Search
-    "query",
-    # OCR
-    "pages",
-    # Files
-    "bytes",
-    "filename",
-    "purpose",
-    "status",
-    "has_more",
-    # Files/Batches delete
-    "deleted",
-    # Batch
-    "endpoint",
-    "errors",
-    "input_file_id",
-    "completion_window",
-    "request_counts",
-    # Responses API
-    "output",
-    "instructions",
-    "tools",
-    # Content
-    "content",
+  # Chat/embedding/moderation/rerank shared
+  "id",
+  "model",
+  "usage",
+  "object",
+  "created",
+  # Chat
+  "choices",
+  "system_fingerprint",
+  # Embedding
+  "data",
+  # Models
+  "models",
+  # Transcription
+  "text",
+  "language",
+  "duration",
+  "words",
+  "segments",
+  "task",
+  "audio",
+  # Image generation
+  "images",
+  # Moderation
+  "results",
+  "flagged",
+  # Rerank
+  "results_count",
+  # Search
+  "query",
+  # OCR
+  "pages",
+  # Files
+  "bytes",
+  "filename",
+  "purpose",
+  "status",
+  "has_more",
+  # Files/Batches delete
+  "deleted",
+  # Batch
+  "endpoint",
+  "errors",
+  "input_file_id",
+  "completion_window",
+  "request_counts",
+  # Responses API
+  "output",
+  "instructions",
+  "tools",
+  # Content
+  "content",
 ]
 # Fields that are method calls (no property access) — the Rust codegen emits
 # `()` for these so that `err.status_code` becomes `err.status_code()`.

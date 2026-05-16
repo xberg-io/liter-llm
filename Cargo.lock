@@ -2592,7 +2592,7 @@ name = "liter-llm-wasm"
 version = "1.4.0-rc.27"
 dependencies = [
  "futures-util",
- "getrandom 0.3.4",
+ "getrandom 0.4.2",
  "js-sys",
  "liter-llm",
  "serde-wasm-bindgen",
@@ -4237,21 +4237,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03"
 
 [[package]]
-name = "snippet-runner"
-version = "1.4.0-rc.27"
-dependencies = [
- "clap",
- "rayon",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.18",
- "toml 1.1.2+spec-1.1.0",
- "walkdir",
- "which",
-]
-
-[[package]]
 name = "socket2"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5267,15 +5252,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52f5ee44c96cf55f1b349600768e3ece3a8f26010c05265ab73f945bb1a2eb9d"
 dependencies = [
  "rustls-pki-types",
-]
-
-[[package]]
-name = "which"
-version = "8.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81995fafaaaf6ae47a7d0cc83c67caf92aeb7e5331650ae6ff856f7c0c60c459"
-dependencies = [
- "libc",
 ]
 
 [[package]]

@@ -1,15 +1,16 @@
+<!-- snippet:compile-only -->
+
 ```typescript
-import { createClient } from "@kreuzberg/liter-llm-node";
+import { createClient, ToolType } from "@kreuzberg/liter-llm-node";
 
 const client = createClient(process.env.OPENAI_API_KEY!);
 
 const response = await client.chat({
   model: "openai/gpt-4o",
   messages: [{ role: "user", content: "What is the weather in Berlin?" }],
-  toolChoice: "auto",
   tools: [
     {
-      type: "function",
+      toolType: ToolType.Function,
       function: {
         name: "get_weather",
         description: "Get the current weather for a location",

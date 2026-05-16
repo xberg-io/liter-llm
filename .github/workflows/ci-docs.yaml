@@ -10,6 +10,7 @@ on:
       - "zensical.toml"
       - ".lychee.toml"
       - ".github/workflows/ci-docs.yaml"
+      - "alef.toml"
   pull_request:
     branches: [main]
     paths:
@@ -19,6 +20,7 @@ on:
       - "zensical.toml"
       - ".lychee.toml"
       - ".github/workflows/ci-docs.yaml"
+      - "alef.toml"
   workflow_dispatch:
 
 env:
@@ -81,9 +83,81 @@ jobs:
           args: "--config .lychee.toml site/"
           fail: true
 
+  validate-snippets:
+    name: Validate Snippets
+    if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          install-llvm-cov: "false"
+          cache-key-prefix: ci-docs-snippets
+
+      - name: Install alef-snippets
+        run: cargo install --git https://github.com/kreuzberg-dev/alef alef-snippets --features cli --locked
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.24"
+
+      - name: Setup Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+
+      - name: Setup Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: "27"
+          elixir-version: "1.17"
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: "0.14.0"
+
+      - name: Run snippet audit
+        run: alef-snippets audit --snippets docs/snippets --docs docs
+
+      - name: Validate snippets (syntax level)
+        run: alef-snippets validate --snippets docs/snippets --level syntax
+
   deploy:
     name: Deploy
-    needs: [build, lint-links]
+    needs: [build, lint-links, validate-snippets]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push' && github.repository == 'kreuzberg-dev/liter-llm'
     permissions:
       contents: read

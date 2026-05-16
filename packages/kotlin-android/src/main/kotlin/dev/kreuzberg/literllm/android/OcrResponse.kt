@@ -6,7 +6,16 @@ package dev.kreuzberg.literllm.android
  * An OCR response.
  */
 data class OcrResponse(
+    /**
+     * Extracted pages.
+     */
     val pages: List<OcrPage>,
+    /**
+     * The model used.
+     */
     val model: String,
+    /**
+     * Token usage, if reported by the provider.
+     */
     val usage: Usage?,
 )

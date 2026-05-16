@@ -1,3 +1,5 @@
+<!-- snippet:compile-only -->
+
 ```typescript
 import init, {
   createClient,
@@ -11,7 +13,7 @@ await init();
 const client = createClient(process.env.OPENAI_API_KEY!);
 
 const tool = WasmChatCompletionTool.default();
-tool.type = "function";
+tool.toolType = "function";
 const fn = WasmFunctionDefinition.default();
 fn.name = "get_weather";
 fn.description = "Get the current weather for a location";

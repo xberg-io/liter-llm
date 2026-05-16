@@ -2,7 +2,4 @@
 
 package dev.kreuzberg.literllm.android
 
-data class UserMessage(
-    val content: UserContent,
-    val name: String?,
-)
+data class UserMessage(val content: UserContent, val name: String?)

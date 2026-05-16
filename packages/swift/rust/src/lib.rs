@@ -651,6 +651,8 @@ mod ffi {
 
     extern "Rust" {
         type PageDimensions;
+        #[swift_bridge(init)]
+        fn new(width: u32, height: u32) -> PageDimensions;
         fn width(&self) -> u32;
         fn height(&self) -> u32;
     }
@@ -1123,6 +1125,43 @@ mod ffi {
         #[swift_bridge(swift_name = "chatCompletionChunkFromJson")]
         fn chat_completion_chunk_from_json(json: String) -> Result<ChatCompletionChunk, String>;
     }
+    extern "Rust" {
+
+        #[swift_bridge(swift_name = "chatCompletionToolFromJson")]
+        fn chat_completion_tool_from_json(json: String) -> Result<ChatCompletionTool, String>;
+        #[swift_bridge(swift_name = "functionDefinitionFromJson")]
+        fn function_definition_from_json(json: String) -> Result<FunctionDefinition, String>;
+        #[swift_bridge(swift_name = "toolCallFromJson")]
+        fn tool_call_from_json(json: String) -> Result<ToolCall, String>;
+        #[swift_bridge(swift_name = "functionCallFromJson")]
+        fn function_call_from_json(json: String) -> Result<FunctionCall, String>;
+        #[swift_bridge(swift_name = "embeddingResponseFromJson")]
+        fn embedding_response_from_json(json: String) -> Result<EmbeddingResponse, String>;
+        #[swift_bridge(swift_name = "embeddingObjectFromJson")]
+        fn embedding_object_from_json(json: String) -> Result<EmbeddingObject, String>;
+        #[swift_bridge(swift_name = "moderationResponseFromJson")]
+        fn moderation_response_from_json(json: String) -> Result<ModerationResponse, String>;
+        #[swift_bridge(swift_name = "moderationResultFromJson")]
+        fn moderation_result_from_json(json: String) -> Result<ModerationResult, String>;
+        #[swift_bridge(swift_name = "rerankResponseFromJson")]
+        fn rerank_response_from_json(json: String) -> Result<RerankResponse, String>;
+        #[swift_bridge(swift_name = "rerankResultFromJson")]
+        fn rerank_result_from_json(json: String) -> Result<RerankResult, String>;
+        #[swift_bridge(swift_name = "rerankResultDocumentFromJson")]
+        fn rerank_result_document_from_json(json: String) -> Result<RerankResultDocument, String>;
+        #[swift_bridge(swift_name = "searchResponseFromJson")]
+        fn search_response_from_json(json: String) -> Result<SearchResponse, String>;
+        #[swift_bridge(swift_name = "searchResultFromJson")]
+        fn search_result_from_json(json: String) -> Result<SearchResult, String>;
+        #[swift_bridge(swift_name = "ocrResponseFromJson")]
+        fn ocr_response_from_json(json: String) -> Result<OcrResponse, String>;
+        #[swift_bridge(swift_name = "ocrPageFromJson")]
+        fn ocr_page_from_json(json: String) -> Result<OcrPage, String>;
+        #[swift_bridge(swift_name = "ocrImageFromJson")]
+        fn ocr_image_from_json(json: String) -> Result<OcrImage, String>;
+        #[swift_bridge(swift_name = "customProviderConfigFromJson")]
+        fn custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String>;
+    }
 }
 
 pub struct SystemMessage(pub liter_llm::types::SystemMessage);
@@ -1554,10 +1593,10 @@ impl Usage {
 pub struct PromptTokensDetails(pub liter_llm::types::PromptTokensDetails);
 impl PromptTokensDetails {
     pub fn new(cached_tokens: u64, audio_tokens: u64) -> PromptTokensDetails {
-        let mut __target: liter_llm::types::PromptTokensDetails = ::std::default::Default::default();
-        __target.cached_tokens = cached_tokens;
-        __target.audio_tokens = audio_tokens;
-        PromptTokensDetails(__target)
+        PromptTokensDetails(liter_llm::types::PromptTokensDetails {
+            cached_tokens,
+            audio_tokens,
+        })
     }
     pub fn cached_tokens(&self) -> u64 {
         ::serde_json::to_value(&self.0.cached_tokens)
@@ -1758,9 +1797,7 @@ impl ChatCompletionRequest {
 pub struct StreamOptions(pub liter_llm::types::StreamOptions);
 impl StreamOptions {
     pub fn new(include_usage: Option<bool>) -> StreamOptions {
-        let mut __target: liter_llm::types::StreamOptions = ::std::default::Default::default();
-        __target.include_usage = include_usage;
-        StreamOptions(__target)
+        StreamOptions(liter_llm::types::StreamOptions { include_usage })
     }
     pub fn include_usage(&self) -> Option<bool> {
         self.0.include_usage.as_ref().and_then(|v| {
@@ -2616,19 +2653,19 @@ impl ModerationCategories {
         harassment_threatening: bool,
         violence: bool,
     ) -> ModerationCategories {
-        let mut __target: liter_llm::types::ModerationCategories = ::std::default::Default::default();
-        __target.sexual = sexual;
-        __target.hate = hate;
-        __target.harassment = harassment;
-        __target.self_harm = self_harm;
-        __target.sexual_minors = sexual_minors;
-        __target.hate_threatening = hate_threatening;
-        __target.violence_graphic = violence_graphic;
-        __target.self_harm_intent = self_harm_intent;
-        __target.self_harm_instructions = self_harm_instructions;
-        __target.harassment_threatening = harassment_threatening;
-        __target.violence = violence;
-        ModerationCategories(__target)
+        ModerationCategories(liter_llm::types::ModerationCategories {
+            sexual,
+            hate,
+            harassment,
+            self_harm,
+            sexual_minors,
+            hate_threatening,
+            violence_graphic,
+            self_harm_intent,
+            self_harm_instructions,
+            harassment_threatening,
+            violence,
+        })
     }
     pub fn sexual(&self) -> bool {
         ::serde_json::to_value(&self.0.sexual)
@@ -2713,19 +2750,19 @@ impl ModerationCategoryScores {
         harassment_threatening: f64,
         violence: f64,
     ) -> ModerationCategoryScores {
-        let mut __target: liter_llm::types::ModerationCategoryScores = ::std::default::Default::default();
-        __target.sexual = sexual;
-        __target.hate = hate;
-        __target.harassment = harassment;
-        __target.self_harm = self_harm;
-        __target.sexual_minors = sexual_minors;
-        __target.hate_threatening = hate_threatening;
-        __target.violence_graphic = violence_graphic;
-        __target.self_harm_intent = self_harm_intent;
-        __target.self_harm_instructions = self_harm_instructions;
-        __target.harassment_threatening = harassment_threatening;
-        __target.violence = violence;
-        ModerationCategoryScores(__target)
+        ModerationCategoryScores(liter_llm::types::ModerationCategoryScores {
+            sexual,
+            hate,
+            harassment,
+            self_harm,
+            sexual_minors,
+            hate_threatening,
+            violence_graphic,
+            self_harm_intent,
+            self_harm_instructions,
+            harassment_threatening,
+            violence,
+        })
     }
     pub fn sexual(&self) -> f64 {
         ::serde_json::to_value(&self.0.sexual)
@@ -3066,6 +3103,9 @@ impl OcrImage {
 
 pub struct PageDimensions(pub liter_llm::types::PageDimensions);
 impl PageDimensions {
+    pub fn new(width: u32, height: u32) -> PageDimensions {
+        PageDimensions(liter_llm::types::PageDimensions { width, height })
+    }
     pub fn width(&self) -> u32 {
         ::serde_json::to_value(&self.0.width)
             .ok()
@@ -3520,11 +3560,11 @@ impl BatchObject {
 pub struct BatchRequestCounts(pub liter_llm::types::BatchRequestCounts);
 impl BatchRequestCounts {
     pub fn new(total: u64, completed: u64, failed: u64) -> BatchRequestCounts {
-        let mut __target: liter_llm::types::BatchRequestCounts = ::std::default::Default::default();
-        __target.total = total;
-        __target.completed = completed;
-        __target.failed = failed;
-        BatchRequestCounts(__target)
+        BatchRequestCounts(liter_llm::types::BatchRequestCounts {
+            total,
+            completed,
+            failed,
+        })
     }
     pub fn total(&self) -> u64 {
         ::serde_json::to_value(&self.0.total)
@@ -3834,11 +3874,11 @@ impl ResponseOutputItem {
 pub struct ResponseUsage(pub liter_llm::types::ResponseUsage);
 impl ResponseUsage {
     pub fn new(input_tokens: u64, output_tokens: u64, total_tokens: u64) -> ResponseUsage {
-        let mut __target: liter_llm::types::ResponseUsage = ::std::default::Default::default();
-        __target.input_tokens = input_tokens;
-        __target.output_tokens = output_tokens;
-        __target.total_tokens = total_tokens;
-        ResponseUsage(__target)
+        ResponseUsage(liter_llm::types::ResponseUsage {
+            input_tokens,
+            output_tokens,
+            total_tokens,
+        })
     }
     pub fn input_tokens(&self) -> u64 {
         ::serde_json::to_value(&self.0.input_tokens)
@@ -4868,5 +4908,107 @@ pub fn create_response_request_from_json(json: String) -> Result<CreateResponseR
 pub fn chat_completion_chunk_from_json(json: String) -> Result<ChatCompletionChunk, String> {
     serde_json::from_str::<liter_llm::types::ChatCompletionChunk>(&json)
         .map(ChatCompletionChunk)
+        .map_err(|e| e.to_string())
+}
+
+pub fn chat_completion_tool_from_json(json: String) -> Result<ChatCompletionTool, String> {
+    serde_json::from_str::<liter_llm::types::ChatCompletionTool>(&json)
+        .map(ChatCompletionTool)
+        .map_err(|e| e.to_string())
+}
+
+pub fn function_definition_from_json(json: String) -> Result<FunctionDefinition, String> {
+    serde_json::from_str::<liter_llm::types::FunctionDefinition>(&json)
+        .map(FunctionDefinition)
+        .map_err(|e| e.to_string())
+}
+
+pub fn tool_call_from_json(json: String) -> Result<ToolCall, String> {
+    serde_json::from_str::<liter_llm::types::ToolCall>(&json)
+        .map(ToolCall)
+        .map_err(|e| e.to_string())
+}
+
+pub fn function_call_from_json(json: String) -> Result<FunctionCall, String> {
+    serde_json::from_str::<liter_llm::types::FunctionCall>(&json)
+        .map(FunctionCall)
+        .map_err(|e| e.to_string())
+}
+
+pub fn embedding_response_from_json(json: String) -> Result<EmbeddingResponse, String> {
+    serde_json::from_str::<liter_llm::types::EmbeddingResponse>(&json)
+        .map(EmbeddingResponse)
+        .map_err(|e| e.to_string())
+}
+
+pub fn embedding_object_from_json(json: String) -> Result<EmbeddingObject, String> {
+    serde_json::from_str::<liter_llm::types::EmbeddingObject>(&json)
+        .map(EmbeddingObject)
+        .map_err(|e| e.to_string())
+}
+
+pub fn moderation_response_from_json(json: String) -> Result<ModerationResponse, String> {
+    serde_json::from_str::<liter_llm::types::ModerationResponse>(&json)
+        .map(ModerationResponse)
+        .map_err(|e| e.to_string())
+}
+
+pub fn moderation_result_from_json(json: String) -> Result<ModerationResult, String> {
+    serde_json::from_str::<liter_llm::types::ModerationResult>(&json)
+        .map(ModerationResult)
+        .map_err(|e| e.to_string())
+}
+
+pub fn rerank_response_from_json(json: String) -> Result<RerankResponse, String> {
+    serde_json::from_str::<liter_llm::types::RerankResponse>(&json)
+        .map(RerankResponse)
+        .map_err(|e| e.to_string())
+}
+
+pub fn rerank_result_from_json(json: String) -> Result<RerankResult, String> {
+    serde_json::from_str::<liter_llm::types::RerankResult>(&json)
+        .map(RerankResult)
+        .map_err(|e| e.to_string())
+}
+
+pub fn rerank_result_document_from_json(json: String) -> Result<RerankResultDocument, String> {
+    serde_json::from_str::<liter_llm::types::RerankResultDocument>(&json)
+        .map(RerankResultDocument)
+        .map_err(|e| e.to_string())
+}
+
+pub fn search_response_from_json(json: String) -> Result<SearchResponse, String> {
+    serde_json::from_str::<liter_llm::types::SearchResponse>(&json)
+        .map(SearchResponse)
+        .map_err(|e| e.to_string())
+}
+
+pub fn search_result_from_json(json: String) -> Result<SearchResult, String> {
+    serde_json::from_str::<liter_llm::types::SearchResult>(&json)
+        .map(SearchResult)
+        .map_err(|e| e.to_string())
+}
+
+pub fn ocr_response_from_json(json: String) -> Result<OcrResponse, String> {
+    serde_json::from_str::<liter_llm::types::OcrResponse>(&json)
+        .map(OcrResponse)
+        .map_err(|e| e.to_string())
+}
+
+pub fn ocr_page_from_json(json: String) -> Result<OcrPage, String> {
+    serde_json::from_str::<liter_llm::types::OcrPage>(&json)
+        .map(OcrPage)
+        .map_err(|e| e.to_string())
+}
+
+pub fn ocr_image_from_json(json: String) -> Result<OcrImage, String> {
+    serde_json::from_str::<liter_llm::types::OcrImage>(&json)
+        .map(OcrImage)
+        .map_err(|e| e.to_string())
+}
+
+pub fn custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String> {
+    serde_json::from_str::<liter_llm::provider::custom::CustomProviderConfig>(&json)
+        .map(CustomProviderConfig)
         .map_err(|e| e.to_string())
 }

@@ -3,6 +3,10 @@
 package dev.kreuzberg.literllm.android
 
 data class EmbeddingResponse(
+    /**
+     * Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
+     * `String` so non-standard provider values do not break deserialization.
+     */
     val `object`: String,
     val data: List<EmbeddingObject>,
     val model: String,

@@ -2,7 +2,4 @@
 
 package dev.kreuzberg.literllm.android
 
-data class ChatCompletionTool(
-    val toolType: ToolType,
-    val function: FunctionDefinition,
-)
+data class ChatCompletionTool(val toolType: ToolType, val function: FunctionDefinition)

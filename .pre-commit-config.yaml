@@ -171,8 +171,6 @@ repos:
         files: ^packages/zig/.*\.zig$
       - id: zig-build-check
         files: ^packages/zig/.*\.zig$
-      - id: ktfmt
-        files: ^packages/kotlin-android/.*\.kts?$
       - id: detekt
         files: ^packages/kotlin-android/.*\.kts?$
       - id: ktlint
@@ -208,6 +206,27 @@ repos:
     hooks:
       - id: alef-verify
       - id: alef-sync-versions
+
+  # Documentation snippets: validate every fenced code block under docs/snippets/
+  # against the language's toolchain via alef-snippets. The runner returns
+  # Unavailable (not Fail) when a toolchain is missing on the local machine, so
+  # hooks stay non-flaky across contributors with different toolchain coverage.
+  - repo: local
+    hooks:
+      - id: alef-snippets-audit
+        name: alef-snippets audit (snippet structural integrity)
+        entry: alef-snippets audit --snippets docs/snippets
+        language: system
+        files: ^docs/snippets/
+        pass_filenames: false
+        require_serial: true
+      - id: alef-snippets-validate-syntax
+        name: alef-snippets validate --level syntax
+        entry: alef-snippets validate --snippets docs/snippets --level syntax
+        language: system
+        files: ^docs/snippets/
+        pass_filenames: false
+        require_serial: true
 
   # GitHub Actions: linting
   - repo: https://github.com/rhysd/actionlint

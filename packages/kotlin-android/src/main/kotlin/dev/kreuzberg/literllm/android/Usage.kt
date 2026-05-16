@@ -3,8 +3,22 @@
 package dev.kreuzberg.literllm.android
 
 data class Usage(
+    /**
+     * Prompt tokens used. Defaults to 0 when absent (some providers omit this).
+     */
     val promptTokens: Long,
+    /**
+     * Completion tokens used. Defaults to 0 when absent (e.g. embedding responses).
+     */
     val completionTokens: Long,
+    /**
+     * Total tokens used. Defaults to 0 when absent (some providers omit this).
+     */
     val totalTokens: Long,
+    /**
+     * Breakdown of tokens used in the prompt, including cached tokens served
+     * at the provider's discounted cache-read rate. Absent when the provider
+     * does not return prompt-token details.
+     */
     val promptTokensDetails: PromptTokensDetails?,
 )

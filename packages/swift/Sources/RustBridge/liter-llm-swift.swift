@@ -456,33 +456,6 @@ public func createClientFromJson<GenericIntoRustString: IntoRustString>(
     }
   }()
 }
-public func registerCustomProvider(_ config: CustomProviderConfig) throws {
-  try {
-    let val = __swift_bridge__$register_custom_provider(
-      {
-        config.isOwned = false
-        return config.ptr
-      }())
-    if val != nil { throw RustString(ptr: val!) } else { return }
-  }()
-}
-public func unregisterCustomProvider<GenericIntoRustString: IntoRustString>(
-  _ name: GenericIntoRustString
-) throws -> Bool {
-  try {
-    let val = __swift_bridge__$unregister_custom_provider(
-      {
-        let rustString = name.intoRustString()
-        rustString.isOwned = false
-        return rustString.ptr
-      }())
-    switch val.tag {
-    case __swift_bridge__$ResultBoolAndString$ResultOk: return val.payload.ok
-    case __swift_bridge__$ResultBoolAndString$ResultErr: throw RustString(ptr: val.payload.err)
-    default: fatalError()
-    }
-  }()
-}
 public func defaultClientChatStreamStart(
   _ client: DefaultClientRef, _ req: ChatCompletionRequestRef
 ) throws -> DefaultClientChatStreamStreamHandle {
@@ -728,23 +701,6 @@ public func createResponseRequestFromJson<GenericIntoRustString: IntoRustString>
       }())
     if val.is_ok {
       return CreateResponseRequest(ptr: val.ok_or_err!)
-    } else {
-      throw RustString(ptr: val.ok_or_err!)
-    }
-  }()
-}
-public func customProviderConfigFromJson<GenericIntoRustString: IntoRustString>(
-  _ json: GenericIntoRustString
-) throws -> CustomProviderConfig {
-  try {
-    let val = __swift_bridge__$custom_provider_config_from_json(
-      {
-        let rustString = json.intoRustString()
-        rustString.isOwned = false
-        return rustString.ptr
-      }())
-    if val.is_ok {
-      return CustomProviderConfig(ptr: val.ok_or_err!)
     } else {
       throw RustString(ptr: val.ok_or_err!)
     }

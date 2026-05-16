@@ -6,6 +6,12 @@ package dev.kreuzberg.literllm.android
  * Page dimensions in pixels.
  */
 data class PageDimensions(
+    /**
+     * Width in pixels.
+     */
     val width: Int,
+    /**
+     * Height in pixels.
+     */
     val height: Int,
 )

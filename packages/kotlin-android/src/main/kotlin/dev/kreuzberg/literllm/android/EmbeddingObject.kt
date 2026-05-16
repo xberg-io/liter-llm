@@ -3,6 +3,10 @@
 package dev.kreuzberg.literllm.android
 
 data class EmbeddingObject(
+    /**
+     * Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain
+     * `String` so non-standard provider values do not break deserialization.
+     */
     val `object`: String,
     val embedding: List<Double>,
     val index: Int,

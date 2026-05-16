@@ -6,6 +6,9 @@ data class StreamDelta(
     val role: String?,
     val content: String?,
     val toolCalls: List<StreamToolCall>?,
+    /**
+     * Deprecated legacy function_call delta; retained for API compatibility.
+     */
     val functionCall: StreamFunctionCall?,
     val refusal: String?,
 )

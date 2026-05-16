@@ -1,3 +1,5 @@
+<!-- snippet:compile-only -->
+
 ```typescript
 import { createClient } from "@kreuzberg/liter-llm-node";
 
@@ -5,7 +7,6 @@ const client = createClient(process.env.OPENAI_API_KEY!);
 const chunks = await client.chatStream({
   model: "openai/gpt-4o",
   messages: [{ role: "user", content: "Explain quantum computing briefly" }],
-  stream: true,
 });
 
 let fullText = "";

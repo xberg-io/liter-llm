@@ -6,8 +6,20 @@ package dev.kreuzberg.literllm.android
  * Configuration for registering a custom LLM provider at runtime.
  */
 data class CustomProviderConfig(
+    /**
+     * Unique name for this provider (e.g., "my-provider").
+     */
     val name: String,
+    /**
+     * Base URL for the provider's API (e.g., "https://api.my-provider.com/v1").
+     */
     val baseUrl: String,
+    /**
+     * Authentication header format.
+     */
     val authHeader: AuthHeaderFormat,
+    /**
+     * Model name prefixes that route to this provider (e.g., ["my-"]).
+     */
     val modelPrefixes: List<String>,
 )

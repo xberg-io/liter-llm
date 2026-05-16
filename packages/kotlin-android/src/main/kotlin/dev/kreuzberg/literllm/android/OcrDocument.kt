@@ -8,12 +8,18 @@ package dev.kreuzberg.literllm.android
 @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = OcrDocumentDeserializer::class)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = OcrDocumentSerializer::class)
 sealed class OcrDocument {
+    /**
+     * A publicly accessible document URL.
+     */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Url(
         val url: String,
     ) : OcrDocument()
 
+    /**
+     * Inline base64-encoded document data.
+     */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Base64(

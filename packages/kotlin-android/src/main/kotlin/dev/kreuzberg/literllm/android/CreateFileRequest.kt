@@ -3,6 +3,9 @@
 package dev.kreuzberg.literllm.android
 
 data class CreateFileRequest(
+    /**
+     * Base64-encoded file data.
+     */
     val file: String,
     val purpose: FilePurpose,
     val filename: String?,

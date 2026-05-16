@@ -2,7 +2,4 @@
 
 package dev.kreuzberg.literllm.android
 
-data class ResponseOutputItem(
-    val itemType: String,
-    val content: String,
-)
+data class ResponseOutputItem(val itemType: String, val content: String)

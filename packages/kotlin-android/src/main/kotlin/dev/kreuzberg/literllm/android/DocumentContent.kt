@@ -3,6 +3,12 @@
 package dev.kreuzberg.literllm.android
 
 data class DocumentContent(
+    /**
+     * Base64-encoded document data or URL.
+     */
     val data: String,
+    /**
+     * MIME type (e.g., "application/pdf", "text/csv").
+     */
     val mediaType: String,
 )

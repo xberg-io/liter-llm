@@ -6,6 +6,12 @@ package dev.kreuzberg.literllm.android
  * A search response.
  */
 data class SearchResponse(
+    /**
+     * The search results.
+     */
     val results: List<SearchResult>,
+    /**
+     * The model used.
+     */
     val model: String,
 )

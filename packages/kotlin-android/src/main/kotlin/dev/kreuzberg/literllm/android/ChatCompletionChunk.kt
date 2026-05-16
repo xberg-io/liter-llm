@@ -4,6 +4,10 @@ package dev.kreuzberg.literllm.android
 
 data class ChatCompletionChunk(
     val id: String,
+    /**
+     * Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored
+     * as a plain `String` so non-standard provider values do not fail parsing.
+     */
     val `object`: String,
     val created: Long,
     val model: String,

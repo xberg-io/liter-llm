@@ -67,12 +67,16 @@ pub const ImageUrl = struct {
 };
 
 pub const DocumentContent = struct {
+    /// Base64-encoded document data or URL.
     data: []const u8,
+    /// MIME type (e.g., "application/pdf", "text/csv").
     media_type: []const u8,
 };
 
 pub const AudioContent = struct {
+    /// Base64-encoded audio data.
     data: []const u8,
+    /// Audio format (e.g., "wav", "mp3", "ogg").
     format: []const u8,
 };
 
@@ -81,6 +85,7 @@ pub const AssistantMessage = struct {
     name: ?[]const u8,
     tool_calls: ?[]const ToolCall,
     refusal: ?[]const u8,
+    /// Deprecated legacy function_call field; retained for API compatibility.
     function_call: ?FunctionCall,
 };
 
@@ -141,9 +146,15 @@ pub const JsonSchemaFormat = struct {
 };
 
 pub const Usage = struct {
+    /// Prompt tokens used. Defaults to 0 when absent (some providers omit this).
     prompt_tokens: u64,
+    /// Completion tokens used. Defaults to 0 when absent (e.g. embedding responses).
     completion_tokens: u64,
+    /// Total tokens used. Defaults to 0 when absent (some providers omit this).
     total_tokens: u64,
+    /// Breakdown of tokens used in the prompt, including cached tokens served
+    /// at the provider's discounted cache-read rate. Absent when the provider
+    /// does not return prompt-token details.
     prompt_tokens_details: ?PromptTokensDetails,
 };
 
@@ -154,7 +165,9 @@ pub const Usage = struct {
 /// a `cache_read_input_token_cost`, the cached portion is billed at the
 /// discounted rate and the remainder at the regular input rate.
 pub const PromptTokensDetails = struct {
+    /// Cached tokens present in the prompt. Defaults to 0 when absent.
     cached_tokens: u64,
+    /// Audio input tokens present in the prompt. Defaults to 0 when absent.
     audio_tokens: u64,
 };
 
@@ -164,11 +177,16 @@ pub const ChatCompletionRequest = struct {
     temperature: ?f64,
     top_p: ?f64,
     n: ?u32,
+    /// Whether to stream the response.
+    ///
+    /// Managed by the client layer — do not set directly.
     stream: ?bool,
     stop: ?StopSequence,
     max_tokens: ?u64,
     presence_penalty: ?f64,
     frequency_penalty: ?f64,
+    /// Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic
+    /// serialization order — important when hashing or signing requests.
     logit_bias: ?std.StringHashMap(f64),
     user: ?[]const u8,
     tools: ?[]const ChatCompletionTool,
@@ -178,6 +196,8 @@ pub const ChatCompletionRequest = struct {
     stream_options: ?StreamOptions,
     seed: ?i64,
     reasoning_effort: ?ReasoningEffort,
+    /// Provider-specific extra parameters merged into the request body.
+    /// Use for guardrails, safety settings, grounding config, etc.
     extra_body: ?[]const u8,
 };
 
@@ -187,6 +207,8 @@ pub const StreamOptions = struct {
 
 pub const ChatCompletionResponse = struct {
     id: []const u8,
+    /// Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a
+    /// plain `String` so non-standard provider values do not break deserialization.
     object: []const u8,
     created: u64,
     model: []const u8,
@@ -204,6 +226,8 @@ pub const Choice = struct {
 
 pub const ChatCompletionChunk = struct {
     id: []const u8,
+    /// Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored
+    /// as a plain `String` so non-standard provider values do not fail parsing.
     object: []const u8,
     created: u64,
     model: []const u8,
@@ -223,6 +247,7 @@ pub const StreamDelta = struct {
     role: ?[]const u8,
     content: ?[]const u8,
     tool_calls: ?[]const StreamToolCall,
+    /// Deprecated legacy function_call delta; retained for API compatibility.
     function_call: ?StreamFunctionCall,
     refusal: ?[]const u8,
 };
@@ -248,6 +273,8 @@ pub const EmbeddingRequest = struct {
 };
 
 pub const EmbeddingResponse = struct {
+    /// Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
+    /// `String` so non-standard provider values do not break deserialization.
     object: []const u8,
     data: []const EmbeddingObject,
     model: []const u8,
@@ -255,6 +282,8 @@ pub const EmbeddingResponse = struct {
 };
 
 pub const EmbeddingObject = struct {
+    /// Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain
+    /// `String` so non-standard provider values do not break deserialization.
     object: []const u8,
     embedding: []const f64,
     index: u32,
@@ -297,6 +326,7 @@ pub const CreateSpeechRequest = struct {
 /// Request to transcribe audio into text.
 pub const CreateTranscriptionRequest = struct {
     model: []const u8,
+    /// Base64-encoded audio file data.
     file: []const u8,
     language: ?[]const u8,
     prompt: ?[]const u8,
@@ -400,75 +430,106 @@ pub const RerankResultDocument = struct {
 
 /// A search request.
 pub const SearchRequest = struct {
+    /// The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`).
     model: []const u8,
+    /// The search query.
     query: []const u8,
+    /// Maximum number of results to return.
     max_results: ?u32,
+    /// Domain filter — restrict results to specific domains.
     search_domain_filter: ?[]const []const u8,
+    /// Country code for localized results (ISO 3166-1 alpha-2).
     country: ?[]const u8,
 };
 
 /// A search response.
 pub const SearchResponse = struct {
+    /// The search results.
     results: []const SearchResult,
+    /// The model used.
     model: []const u8,
 };
 
 /// An individual search result.
 pub const SearchResult = struct {
+    /// Title of the result.
     title: []const u8,
+    /// URL of the result.
     url: []const u8,
+    /// Text snippet / excerpt.
     snippet: []const u8,
+    /// Publication or last-updated date, if available.
     date: ?[]const u8,
 };
 
 /// An OCR request.
 pub const OcrRequest = struct {
+    /// The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`).
     model: []const u8,
+    /// The document to process.
     document: OcrDocument,
+    /// Specific pages to process (1-indexed). `null` means all pages.
     pages: ?[]const u32,
+    /// Whether to include base64-encoded images of each page.
     include_image_base64: ?bool,
 };
 
 /// An OCR response.
 pub const OcrResponse = struct {
+    /// Extracted pages.
     pages: []const OcrPage,
+    /// The model used.
     model: []const u8,
+    /// Token usage, if reported by the provider.
     usage: ?Usage,
 };
 
 /// A single page of OCR output.
 pub const OcrPage = struct {
+    /// Page index (0-based).
     index: u32,
+    /// Extracted content as Markdown.
     markdown: []const u8,
+    /// Extracted images, if `include_image_base64` was set.
     images: ?[]const OcrImage,
+    /// Page dimensions in pixels, if available.
     dimensions: ?PageDimensions,
 };
 
 /// An image extracted from an OCR page.
 pub const OcrImage = struct {
+    /// Unique image identifier.
     id: []const u8,
+    /// Base64-encoded image data.
     image_base64: ?[]const u8,
 };
 
 /// Page dimensions in pixels.
 pub const PageDimensions = struct {
+    /// Width in pixels.
     width: u32,
+    /// Height in pixels.
     height: u32,
 };
 
 pub const ModelsListResponse = struct {
+    /// Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
+    /// `String` so non-standard provider values do not break deserialization.
     object: []const u8,
     data: []const ModelObject,
 };
 
 pub const ModelObject = struct {
     id: []const u8,
+    /// Always `"model"` from OpenAI-compatible APIs.  Stored as a plain
+    /// `String` so non-standard provider values do not break deserialization.
     object: []const u8,
     created: u64,
     owned_by: []const u8,
 };
 
 pub const CreateFileRequest = struct {
+    /// Base64-encoded file data.
     file: []const u8,
     purpose: FilePurpose,
     filename: ?[]const u8,
@@ -584,9 +645,13 @@ pub const ResponseUsage = struct {
 
 /// Configuration for registering a custom LLM provider at runtime.
 pub const CustomProviderConfig = struct {
+    /// Unique name for this provider (e.g., "my-provider").
     name: []const u8,
+    /// Base URL for the provider's API (e.g., "https://api.my-provider.com/v1").
     base_url: []const u8,
+    /// Authentication header format.
     auth_header: AuthHeaderFormat,
+    /// Model name prefixes that route to this provider (e.g., ["my-"]).
     model_prefixes: []const []const u8,
 };
 
@@ -597,6 +662,7 @@ pub const Message = union(enum) {
     assistant: AssistantMessage,
     tool: ToolMessage,
     developer: DeveloperMessage,
+    /// Deprecated legacy function-role message; retained for API compatibility.
     function: FunctionMessage,
 };
 
@@ -655,7 +721,15 @@ pub const FinishReason = enum {
     length,
     tool_calls,
     content_filter,
+    /// Deprecated legacy finish reason; retained for API compatibility.
     function_call,
+    /// Catch-all for unknown finish reasons returned by non-OpenAI providers.
+    ///
+    /// Note: this intentionally does **not** carry the original string (e.g.
+    /// `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and
+    /// switching to `#[serde(untagged)]` would change deserialization semantics
+    /// for all variants.  The original value can be recovered by inspecting the
+    /// raw JSON if needed.
     other,
 };
 
@@ -668,7 +742,9 @@ pub const ReasoningEffort = enum {
 
 /// The format in which the embedding vectors are returned.
 pub const EmbeddingFormat = enum {
+    /// 32-bit floating-point numbers (default).
     float,
+    /// Base64-encoded string representation of the floats.
     base64,
 };
 
@@ -691,7 +767,9 @@ pub const RerankDocument = union(enum) {
 
 /// Document input for OCR — either a URL or inline base64 data.
 pub const OcrDocument = union(enum) {
+    /// A publicly accessible document URL.
     document_url: []const u8,
+    /// Inline base64-encoded document data.
     base64: struct {
         data: []const u8,
         media_type: []const u8,
@@ -718,8 +796,11 @@ pub const BatchStatus = enum {
 
 /// How the API key is sent in the HTTP request.
 pub const AuthHeaderFormat = union(enum) {
+    /// Bearer token: `Authorization: Bearer <key>`
     bearer: void,
+    /// Custom header: e.g., `X-Api-Key: <key>`
     api_key: []const u8,
+    /// No authentication required.
     none: void,
 };
 
@@ -767,17 +848,19 @@ pub fn create_client_from_json(json: []const u8) LiterLlmError!DefaultClient {
 
 /// Default client implementation backed by `reqwest`.
 ///
-/// The provider is resolved at construction time from `model_hint` (or
-/// defaults to OpenAI). However, individual requests can override the
-/// provider when their model string contains a prefix that clearly
-/// identifies a different provider (e.g. `"anthropic/claude-3"` will
-/// route to Anthropic even if the client was built without a hint).
+/// Sends requests to 140+ LLM providers with automatic provider detection
+/// and per-request routing. The provider is resolved at construction time
+/// from `model_hint` (or defaults to OpenAI), but individual requests can
+/// override the provider via model name prefix (e.g. `"anthropic/claude-3-5-sonnet"`
+/// routes to Anthropic regardless of construction-time setting).
 ///
-/// When the model prefix does not match any known provider, the
-/// construction-time provider is used as the fallback.
+/// When the model prefix does not match any known provider, the construction-time
+/// provider is used as the fallback. This enables seamless migration between
+/// providers by changing only the model name.
 ///
 /// The provider is stored behind an `Arc` so it can be shared cheaply into
-/// async closures and streaming tasks that must be `'static`.
+/// async closures and streaming tasks. Pre-computed auth headers and extra
+/// headers are cached at construction to avoid redundant encoding on every request.
 pub const DefaultClient = struct {
     _handle: *anyopaque,
 

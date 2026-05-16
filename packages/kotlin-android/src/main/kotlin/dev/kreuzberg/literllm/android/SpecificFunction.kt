@@ -2,6 +2,4 @@
 
 package dev.kreuzberg.literllm.android
 
-data class SpecificFunction(
-    val name: String,
-)
+data class SpecificFunction(val name: String)

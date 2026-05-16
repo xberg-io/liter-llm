@@ -25,3 +25,28 @@ tasks:
     desc: Lint prose with textlint
     cmds:
       - npx textlint 'docs/**/*.md'
+
+  snippets:list:
+    desc: List all documentation snippets discovered under docs/snippets
+    cmds:
+      - alef-snippets list --snippets docs/snippets
+
+  snippets:gaps:
+    desc: Report snippet coverage gaps (missing variants, unreferenced files, etc.)
+    cmds:
+      - alef-snippets gaps --snippets docs/snippets --docs docs --required-languages rust,python,typescript,go,ruby,php,java,csharp,elixir,c,swift,dart,kotlin,zig
+
+  snippets:audit:
+    desc: Run structural audit (frontmatter, fences, includes)
+    cmds:
+      - alef-snippets audit --snippets docs/snippets --docs docs
+
+  snippets:validate:syntax:
+    desc: Validate every snippet at syntax level
+    cmds:
+      - alef-snippets validate --snippets docs/snippets --level syntax
+
+  snippets:validate:compile:
+    desc: Validate every snippet at compile level
+    cmds:
+      - alef-snippets validate --snippets docs/snippets --level compile

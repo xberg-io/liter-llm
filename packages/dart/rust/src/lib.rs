@@ -34,13 +34,17 @@ pub struct ImageUrl {
 
 #[frb(mirror(DocumentContent))]
 pub struct DocumentContent {
+    /// Base64-encoded document data or URL.
     pub data: String,
+    /// MIME type (e.g., "application/pdf", "text/csv").
     pub media_type: String,
 }
 
 #[frb(mirror(AudioContent))]
 pub struct AudioContent {
+    /// Base64-encoded audio data.
     pub data: String,
+    /// Audio format (e.g., "wav", "mp3", "ogg").
     pub format: String,
 }
 
@@ -50,6 +54,7 @@ pub struct AssistantMessage {
     pub name: Option<String>,
     pub tool_calls: Option<Vec<ToolCall>>,
     pub refusal: Option<String>,
+    /// Deprecated legacy function_call field; retained for API compatibility.
     pub function_call: Option<FunctionCall>,
 }
 
@@ -66,6 +71,7 @@ pub struct DeveloperMessage {
     pub name: Option<String>,
 }
 
+/// Deprecated legacy function-role message body.
 #[frb(mirror(FunctionMessage))]
 pub struct FunctionMessage {
     pub content: String,
@@ -120,15 +126,29 @@ pub struct JsonSchemaFormat {
 
 #[frb(mirror(Usage))]
 pub struct Usage {
+    /// Prompt tokens used. Defaults to 0 when absent (some providers omit this).
     pub prompt_tokens: i64,
+    /// Completion tokens used. Defaults to 0 when absent (e.g. embedding responses).
     pub completion_tokens: i64,
+    /// Total tokens used. Defaults to 0 when absent (some providers omit this).
     pub total_tokens: i64,
+    /// Breakdown of tokens used in the prompt, including cached tokens served
+    /// at the provider's discounted cache-read rate. Absent when the provider
+    /// does not return prompt-token details.
     pub prompt_tokens_details: Option<PromptTokensDetails>,
 }
 
+/// Breakdown of tokens used in the prompt portion of a request.
+///
+/// `cached_tokens` is included in `Usage::prompt_tokens` — it is *not* an
+/// additional charge on top of the prompt token count. When pricing supports
+/// a `cache_read_input_token_cost`, the cached portion is billed at the
+/// discounted rate and the remainder at the regular input rate.
 #[frb(mirror(PromptTokensDetails))]
 pub struct PromptTokensDetails {
+    /// Cached tokens present in the prompt. Defaults to 0 when absent.
     pub cached_tokens: i64,
+    /// Audio input tokens present in the prompt. Defaults to 0 when absent.
     pub audio_tokens: i64,
 }
 
@@ -139,11 +159,16 @@ pub struct ChatCompletionRequest {
     pub temperature: Option<f64>,
     pub top_p: Option<f64>,
     pub n: Option<i64>,
+    /// Whether to stream the response.
+    ///
+    /// Managed by the client layer — do not set directly.
     pub stream: Option<bool>,
     pub stop: Option<StopSequence>,
     pub max_tokens: Option<i64>,
     pub presence_penalty: Option<f64>,
     pub frequency_penalty: Option<f64>,
+    /// Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic
+    /// serialization order — important when hashing or signing requests.
     pub logit_bias: Option<std::collections::HashMap<String, f64>>,
     pub user: Option<String>,
     pub tools: Option<Vec<ChatCompletionTool>>,
@@ -153,6 +178,8 @@ pub struct ChatCompletionRequest {
     pub stream_options: Option<StreamOptions>,
     pub seed: Option<i64>,
     pub reasoning_effort: Option<ReasoningEffort>,
+    /// Provider-specific extra parameters merged into the request body.
+    /// Use for guardrails, safety settings, grounding config, etc.
     pub extra_body: Option<String>,
 }
 
@@ -164,6 +191,8 @@ pub struct StreamOptions {
 #[frb(mirror(ChatCompletionResponse))]
 pub struct ChatCompletionResponse {
     pub id: String,
+    /// Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a
+    /// plain `String` so non-standard provider values do not break deserialization.
     pub object: String,
     pub created: i64,
     pub model: String,
@@ -183,6 +212,8 @@ pub struct Choice {
 #[frb(mirror(ChatCompletionChunk))]
 pub struct ChatCompletionChunk {
     pub id: String,
+    /// Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored
+    /// as a plain `String` so non-standard provider values do not fail parsing.
     pub object: String,
     pub created: i64,
     pub model: String,
@@ -204,6 +235,7 @@ pub struct StreamDelta {
     pub role: Option<String>,
     pub content: Option<String>,
     pub tool_calls: Option<Vec<StreamToolCall>>,
+    /// Deprecated legacy function_call delta; retained for API compatibility.
     pub function_call: Option<StreamFunctionCall>,
     pub refusal: Option<String>,
 }
@@ -233,6 +265,8 @@ pub struct EmbeddingRequest {
 
 #[frb(mirror(EmbeddingResponse))]
 pub struct EmbeddingResponse {
+    /// Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
+    /// `String` so non-standard provider values do not break deserialization.
     pub object: String,
     pub data: Vec<EmbeddingObject>,
     pub model: String,
@@ -241,11 +275,14 @@ pub struct EmbeddingResponse {
 
 #[frb(mirror(EmbeddingObject))]
 pub struct EmbeddingObject {
+    /// Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain
+    /// `String` so non-standard provider values do not break deserialization.
     pub object: String,
     pub embedding: Vec<f64>,
     pub index: i64,
 }
 
+/// Request to create images from a text prompt.
 #[frb(mirror(CreateImageRequest))]
 pub struct CreateImageRequest {
     pub prompt: String,
@@ -258,12 +295,14 @@ pub struct CreateImageRequest {
     pub user: Option<String>,
 }
 
+/// Response containing generated images.
 #[frb(mirror(ImagesResponse))]
 pub struct ImagesResponse {
     pub created: i64,
     pub data: Vec<Image>,
 }
 
+/// A single generated image, returned as either a URL or base64 data.
 #[frb(mirror(Image))]
 pub struct Image {
     pub url: Option<String>,
@@ -271,6 +310,7 @@ pub struct Image {
     pub revised_prompt: Option<String>,
 }
 
+/// Request to generate speech audio from text.
 #[frb(mirror(CreateSpeechRequest))]
 pub struct CreateSpeechRequest {
     pub model: String,
@@ -280,9 +320,11 @@ pub struct CreateSpeechRequest {
     pub speed: Option<f64>,
 }
 
+/// Request to transcribe audio into text.
 #[frb(mirror(CreateTranscriptionRequest))]
 pub struct CreateTranscriptionRequest {
     pub model: String,
+    /// Base64-encoded audio file data.
     pub file: String,
     pub language: Option<String>,
     pub prompt: Option<String>,
@@ -290,6 +332,7 @@ pub struct CreateTranscriptionRequest {
     pub temperature: Option<f64>,
 }
 
+/// Response from a transcription request.
 #[frb(mirror(TranscriptionResponse))]
 pub struct TranscriptionResponse {
     pub text: String,
@@ -298,6 +341,7 @@ pub struct TranscriptionResponse {
     pub segments: Option<Vec<TranscriptionSegment>>,
 }
 
+/// A segment of transcribed audio with timing information.
 #[frb(mirror(TranscriptionSegment))]
 pub struct TranscriptionSegment {
     pub id: i64,
@@ -306,12 +350,14 @@ pub struct TranscriptionSegment {
     pub text: String,
 }
 
+/// Request to classify content for policy violations.
 #[frb(mirror(ModerationRequest))]
 pub struct ModerationRequest {
     pub input: ModerationInput,
     pub model: Option<String>,
 }
 
+/// Response from the moderation endpoint.
 #[frb(mirror(ModerationResponse))]
 pub struct ModerationResponse {
     pub id: String,
@@ -319,6 +365,7 @@ pub struct ModerationResponse {
     pub results: Vec<ModerationResult>,
 }
 
+/// A single moderation classification result.
 #[frb(mirror(ModerationResult))]
 pub struct ModerationResult {
     pub flagged: bool,
@@ -326,6 +373,7 @@ pub struct ModerationResult {
     pub category_scores: ModerationCategoryScores,
 }
 
+/// Boolean flags for each moderation category.
 #[frb(mirror(ModerationCategories))]
 pub struct ModerationCategories {
     pub sexual: bool,
@@ -341,6 +389,7 @@ pub struct ModerationCategories {
     pub violence: bool,
 }
 
+/// Confidence scores for each moderation category.
 #[frb(mirror(ModerationCategoryScores))]
 pub struct ModerationCategoryScores {
     pub sexual: f64,
@@ -356,6 +405,7 @@ pub struct ModerationCategoryScores {
     pub violence: f64,
 }
 
+/// Request to rerank documents by relevance to a query.
 #[frb(mirror(RerankRequest))]
 pub struct RerankRequest {
     pub model: String,
@@ -365,6 +415,7 @@ pub struct RerankRequest {
     pub return_documents: Option<bool>,
 }
 
+/// Response from the rerank endpoint.
 #[frb(mirror(RerankResponse))]
 pub struct RerankResponse {
     pub id: Option<String>,
@@ -372,6 +423,7 @@ pub struct RerankResponse {
     pub meta: Option<String>,
 }
 
+/// A single reranked document with its relevance score.
 #[frb(mirror(RerankResult))]
 pub struct RerankResult {
     pub index: i64,
@@ -379,71 +431,108 @@ pub struct RerankResult {
     pub document: Option<RerankResultDocument>,
 }
 
+/// The text content of a reranked document, returned when `return_documents` is true.
 #[frb(mirror(RerankResultDocument))]
 pub struct RerankResultDocument {
     pub text: String,
 }
 
+/// A search request.
 #[frb(mirror(SearchRequest))]
 pub struct SearchRequest {
+    /// The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`).
     pub model: String,
+    /// The search query.
     pub query: String,
+    /// Maximum number of results to return.
     pub max_results: Option<i64>,
+    /// Domain filter — restrict results to specific domains.
     pub search_domain_filter: Option<Vec<String>>,
+    /// Country code for localized results (ISO 3166-1 alpha-2).
     pub country: Option<String>,
 }
 
+/// A search response.
 #[frb(mirror(SearchResponse))]
 pub struct SearchResponse {
+    /// The search results.
     pub results: Vec<SearchResult>,
+    /// The model used.
     pub model: String,
 }
 
+/// An individual search result.
 #[frb(mirror(SearchResult))]
 pub struct SearchResult {
+    /// Title of the result.
     pub title: String,
+    /// URL of the result.
     pub url: String,
+    /// Text snippet / excerpt.
     pub snippet: String,
+    /// Publication or last-updated date, if available.
     pub date: Option<String>,
 }
 
+/// An OCR request.
 #[frb(mirror(OcrRequest))]
 pub struct OcrRequest {
+    /// The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`).
     pub model: String,
+    /// The document to process.
     pub document: OcrDocument,
+    /// Specific pages to process (1-indexed). `None` means all pages.
     pub pages: Option<Vec<i64>>,
+    /// Whether to include base64-encoded images of each page.
     pub include_image_base64: Option<bool>,
 }
 
+/// An OCR response.
 #[frb(mirror(OcrResponse))]
 pub struct OcrResponse {
+    /// Extracted pages.
     pub pages: Vec<OcrPage>,
+    /// The model used.
     pub model: String,
+    /// Token usage, if reported by the provider.
     pub usage: Option<Usage>,
 }
 
+/// A single page of OCR output.
 #[frb(mirror(OcrPage))]
 pub struct OcrPage {
+    /// Page index (0-based).
     pub index: i64,
+    /// Extracted content as Markdown.
     pub markdown: String,
+    /// Extracted images, if `include_image_base64` was set.
     pub images: Option<Vec<OcrImage>>,
+    /// Page dimensions in pixels, if available.
     pub dimensions: Option<PageDimensions>,
 }
 
+/// An image extracted from an OCR page.
 #[frb(mirror(OcrImage))]
 pub struct OcrImage {
+    /// Unique image identifier.
     pub id: String,
+    /// Base64-encoded image data.
     pub image_base64: Option<String>,
 }
 
+/// Page dimensions in pixels.
 #[frb(mirror(PageDimensions))]
 pub struct PageDimensions {
+    /// Width in pixels.
     pub width: i64,
+    /// Height in pixels.
     pub height: i64,
 }
 
 #[frb(mirror(ModelsListResponse))]
 pub struct ModelsListResponse {
+    /// Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
+    /// `String` so non-standard provider values do not break deserialization.
     pub object: String,
     pub data: Vec<ModelObject>,
 }
@@ -451,6 +540,8 @@ pub struct ModelsListResponse {
 #[frb(mirror(ModelObject))]
 pub struct ModelObject {
     pub id: String,
+    /// Always `"model"` from OpenAI-compatible APIs.  Stored as a plain
+    /// `String` so non-standard provider values do not break deserialization.
     pub object: String,
     pub created: i64,
     pub owned_by: String,
@@ -458,6 +549,7 @@ pub struct ModelObject {
 
 #[frb(mirror(CreateFileRequest))]
 pub struct CreateFileRequest {
+    /// Base64-encoded file data.
     pub file: String,
     pub purpose: FilePurpose,
     pub filename: Option<String>,
@@ -585,6 +677,21 @@ pub struct ResponseUsage {
     pub total_tokens: i64,
 }
 
+/// Default client implementation backed by `reqwest`.
+///
+/// Sends requests to 140+ LLM providers with automatic provider detection
+/// and per-request routing. The provider is resolved at construction time
+/// from `model_hint` (or defaults to OpenAI), but individual requests can
+/// override the provider via model name prefix (e.g. `"anthropic/claude-3-5-sonnet"`
+/// routes to Anthropic regardless of construction-time setting).
+///
+/// When the model prefix does not match any known provider, the construction-time
+/// provider is used as the fallback. This enables seamless migration between
+/// providers by changing only the model name.
+///
+/// The provider is stored behind an [`Arc`] so it can be shared cheaply into
+/// async closures and streaming tasks. Pre-computed auth headers and extra
+/// headers are cached at construction to avoid redundant encoding on every request.
 #[frb(opaque)]
 pub struct DefaultClient {
     pub(crate) inner: liter_llm::client::DefaultClient,
@@ -602,11 +709,16 @@ impl From<DefaultClient> for liter_llm::client::DefaultClient {
     }
 }
 
+/// Configuration for registering a custom LLM provider at runtime.
 #[frb(mirror(CustomProviderConfig))]
 pub struct CustomProviderConfig {
+    /// Unique name for this provider (e.g., "my-provider").
     pub name: String,
+    /// Base URL for the provider's API (e.g., "https://api.my-provider.com/v1").
     pub base_url: String,
+    /// Authentication header format.
     pub auth_header: AuthHeaderFormat,
+    /// Model name prefixes that route to this provider (e.g., ["my-"]).
     pub model_prefixes: Vec<String>,
 }
 
@@ -825,14 +937,28 @@ impl DefaultClient {
     }
 }
 
+/// A chat message in a conversation.
 #[frb(mirror(Message))]
 pub enum Message {
-    System { field0: SystemMessage },
-    User { field0: UserMessage },
-    Assistant { field0: AssistantMessage },
-    Tool { field0: ToolMessage },
-    Developer { field0: DeveloperMessage },
-    Function { field0: FunctionMessage },
+    System {
+        field0: SystemMessage,
+    },
+    User {
+        field0: UserMessage,
+    },
+    Assistant {
+        field0: AssistantMessage,
+    },
+    Tool {
+        field0: ToolMessage,
+    },
+    Developer {
+        field0: DeveloperMessage,
+    },
+    /// Deprecated legacy function-role message; retained for API compatibility.
+    Function {
+        field0: FunctionMessage,
+    },
 }
 
 #[frb(mirror(UserContent))]
@@ -856,6 +982,11 @@ pub enum ImageDetail {
     Auto,
 }
 
+/// The type discriminator for tool/tool-call objects.
+///
+/// Per the OpenAI spec this is always `"function"`. Using an enum enforces
+/// that constraint at the type level and rejects any other value on
+/// deserialization.
 #[frb(mirror(ToolType))]
 pub enum ToolType {
     Function,
@@ -887,16 +1018,26 @@ pub enum StopSequence {
     Multiple { field0: Vec<String> },
 }
 
+/// Why a choice stopped generating tokens.
 #[frb(mirror(FinishReason))]
 pub enum FinishReason {
     Stop,
     Length,
     ToolCalls,
     ContentFilter,
+    /// Deprecated legacy finish reason; retained for API compatibility.
     FunctionCall,
+    /// Catch-all for unknown finish reasons returned by non-OpenAI providers.
+    ///
+    /// Note: this intentionally does **not** carry the original string (e.g.
+    /// `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and
+    /// switching to `#[serde(untagged)]` would change deserialization semantics
+    /// for all variants.  The original value can be recovered by inspecting the
+    /// raw JSON if needed.
     Other,
 }
 
+/// Controls how much reasoning effort the model should use.
 #[frb(mirror(ReasoningEffort))]
 pub enum ReasoningEffort {
     Low,
@@ -904,9 +1045,12 @@ pub enum ReasoningEffort {
     High,
 }
 
+/// The format in which the embedding vectors are returned.
 #[frb(mirror(EmbeddingFormat))]
 pub enum EmbeddingFormat {
+    /// 32-bit floating-point numbers (default).
     Float,
+    /// Base64-encoded string representation of the floats.
     Base64,
 }
 
@@ -916,22 +1060,35 @@ pub enum EmbeddingInput {
     Multiple { field0: Vec<String> },
 }
 
+/// Input to the moderation endpoint — a single string or multiple strings.
 #[frb(mirror(ModerationInput))]
 pub enum ModerationInput {
     Single { field0: String },
     Multiple { field0: Vec<String> },
 }
 
+/// A document to be reranked — either a plain string or an object with a text field.
 #[frb(mirror(RerankDocument))]
 pub enum RerankDocument {
     Text { field0: String },
     Object { text: String },
 }
 
+/// Document input for OCR — either a URL or inline base64 data.
 #[frb(mirror(OcrDocument))]
 pub enum OcrDocument {
-    Url { url: String },
-    Base64 { data: String, media_type: String },
+    /// A publicly accessible document URL.
+    Url {
+        /// The document URL.
+        url: String,
+    },
+    /// Inline base64-encoded document data.
+    Base64 {
+        /// Base64-encoded document content.
+        data: String,
+        /// MIME type (e.g. `"application/pdf"`, `"image/png"`).
+        media_type: String,
+    },
 }
 
 #[frb(mirror(FilePurpose))]
@@ -954,10 +1111,14 @@ pub enum BatchStatus {
     Cancelled,
 }
 
+/// How the API key is sent in the HTTP request.
 #[frb(mirror(AuthHeaderFormat))]
 pub enum AuthHeaderFormat {
+    /// Bearer token: `Authorization: Bearer <key>`
     Bearer,
+    /// Custom header: e.g., `X-Api-Key: <key>`
     ApiKey { field0: String },
+    /// No authentication required.
     None,
 }
 

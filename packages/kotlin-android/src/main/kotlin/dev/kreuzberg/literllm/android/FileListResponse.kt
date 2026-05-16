@@ -2,8 +2,4 @@
 
 package dev.kreuzberg.literllm.android
 
-data class FileListResponse(
-    val `object`: String,
-    val data: List<FileObject>,
-    val hasMore: Boolean?,
-)
+data class FileListResponse(val `object`: String, val data: List<FileObject>, val hasMore: Boolean?)

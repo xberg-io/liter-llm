@@ -2,7 +2,4 @@
 
 package dev.kreuzberg.literllm.android
 
-data class ResponseTool(
-    val toolType: String,
-    val config: String,
-)
+data class ResponseTool(val toolType: String, val config: String)

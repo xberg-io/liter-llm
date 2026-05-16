@@ -1,3 +1,5 @@
+<!-- snippet:compile-only -->
+
 ```typescript
 import init, { createClient, WasmEmbeddingRequest } from "@kreuzberg/liter-llm-wasm";
 

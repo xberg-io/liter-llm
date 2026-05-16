@@ -1,3 +1,5 @@
+<!-- snippet:compile-only -->
+
 ```java
 import dev.kreuzberg.literllm.*;
 import java.util.List;

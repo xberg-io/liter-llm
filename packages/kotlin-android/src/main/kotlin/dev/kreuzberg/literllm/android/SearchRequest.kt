@@ -6,9 +6,24 @@ package dev.kreuzberg.literllm.android
  * A search request.
  */
 data class SearchRequest(
+    /**
+     * The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`).
+     */
     val model: String,
+    /**
+     * The search query.
+     */
     val query: String,
+    /**
+     * Maximum number of results to return.
+     */
     val maxResults: Int?,
+    /**
+     * Domain filter — restrict results to specific domains.
+     */
     val searchDomainFilter: List<String>?,
+    /**
+     * Country code for localized results (ISO 3166-1 alpha-2).
+     */
     val country: String?,
 )

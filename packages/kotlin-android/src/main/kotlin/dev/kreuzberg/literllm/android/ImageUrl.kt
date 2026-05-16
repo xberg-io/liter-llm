@@ -2,7 +2,4 @@
 
 package dev.kreuzberg.literllm.android
 
-data class ImageUrl(
-    val url: String,
-    val detail: ImageDetail?,
-)
+data class ImageUrl(val url: String, val detail: ImageDetail?)

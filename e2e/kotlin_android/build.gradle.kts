@@ -2,39 +2,61 @@ import com.android.build.api.dsl.ManagedVirtualDevice
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("jvm") version "2.3.21"
-    java
+    id("com.android.library") version "8.7.3"
+    kotlin("android") version "2.3.21"
 }
 
 group = "dev.kreuzberg.literllm.android"
 version = "0.1.0"
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
+android {
+    namespace = "dev.kreuzberg.literllm.android.e2e"
+    compileSdk = 35
 
-kotlin {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
+    defaultConfig {
+        minSdk = 21
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    sourceSets {
+        getByName("test") {
+            // Include the AAR-bundled Java facade as test sources
+            java.srcDir("../../packages/kotlin-android/src/main/java")
+            // Include the AAR-bundled Kotlin wrapper as test sources
+            kotlin.srcDir("../../packages/kotlin-android/src/main/kotlin")
+        }
+    }
+
+    testOptions {
+        // Gradle Managed Virtual Devices for on-device instrumented tests.
+        // Run: ./gradlew pixel6api34DebugAndroidTest
+        managedDevices {
+            devices {
+                create<ManagedVirtualDevice>("pixel6api34") {
+                    device = "Pixel 6"
+                    apiLevel = 34
+                    systemImageSource = "aosp"
+                }
+            }
+        }
     }
 }
 
 repositories {
     mavenCentral()
-}
-
-sourceSets {
-    test {
-        // Include the AAR-bundled Java facade as test sources
-        java.srcDir("../../packages/kotlin-android/src/main/java")
-        // Include the AAR-bundled Kotlin wrapper as test sources
-        kotlin.srcDir("../../packages/kotlin-android/src/main/kotlin")
-    }
+    google()
 }
 
 dependencies {
-    // JNA for loading libkreuzberg_ffi from java.library.path
+    // JNA for loading the native library from java.library.path
     testImplementation("net.java.dev.jna:jna:5.18.1")
 
     // Jackson for JSON assertion helpers
@@ -62,30 +84,14 @@ dependencies {
     testImplementation(kotlin("test"))
 }
 
-tasks.test {
+tasks.withType<Test> {
     useJUnitPlatform()
 
-    // Resolve libkreuzberg_ffi location (e.g., ../../target/release)
+    // Resolve the native library location (e.g., ../../target/release)
     val libPath = System.getProperty("kb.lib.path") ?: "${rootDir}/../../target/release"
     systemProperty("java.library.path", libPath)
     systemProperty("jna.library.path", libPath)
 
     // Resolve fixture paths (e.g. "docx/fake.docx") against test_documents/
     workingDir = file("${rootDir}/../../test_documents")
-}
-
-// Gradle Managed Virtual Devices for on-device instrumented tests.
-// Run: ./gradlew pixel6api34DebugAndroidTest
-android {
-    testOptions {
-        managedDevices {
-            devices {
-                create<ManagedVirtualDevice>("pixel6api34") {
-                    device = "Pixel 6"
-                    apiLevel = 34
-                    systemImageSource = "aosp"
-                }
-            }
-        }
-    }
 }

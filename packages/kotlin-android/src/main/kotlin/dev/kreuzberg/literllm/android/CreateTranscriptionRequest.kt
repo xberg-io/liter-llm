@@ -7,6 +7,9 @@ package dev.kreuzberg.literllm.android
  */
 data class CreateTranscriptionRequest(
     val model: String,
+    /**
+     * Base64-encoded audio file data.
+     */
     val file: String,
     val language: String?,
     val prompt: String?,
