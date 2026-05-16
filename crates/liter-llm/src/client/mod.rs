@@ -92,43 +92,137 @@ fn str_pair(pair: &(String, String)) -> (&str, &str) {
 }
 
 /// Core LLM client trait.
+///
+/// Provides unified access to LLM and multimodal APIs across 140+ providers.
+/// Requests are routed to the correct provider based on the model name prefix
+/// (e.g. `anthropic/claude-3-5-sonnet` routes to Anthropic) or via explicit
+/// `base_url` override.
 #[cfg(not(target_arch = "wasm32"))]
 #[cfg_attr(alef, alef(skip))]
 pub trait LlmClient: Send + Sync {
     /// Send a chat completion request.
+    ///
+    /// Routes the request to the detected provider based on the model prefix
+    /// in the `ChatCompletionRequest`. Provider-specific transformations
+    /// (request normalization, header signing) are applied automatically.
+    ///
+    /// # Errors
+    ///
+    /// Returns `LiterLlmError::BadRequest` if the model is empty.
+    /// Returns `LiterLlmError::Authentication` if credentials are missing or invalid.
+    /// Returns `LiterLlmError::Http` for network or HTTP-level errors.
+    /// Returns `LiterLlmError::ProviderError` if the provider rejects the request.
     fn chat(&self, req: ChatCompletionRequest) -> BoxFuture<'_, Result<ChatCompletionResponse>>;
 
     /// Send a streaming chat completion request.
+    ///
+    /// Returns a stream of `ChatCompletionChunk` items, each representing a
+    /// single token delta from the provider. The stream terminates when the
+    /// model reaches `stop_reason = "stop"` or `"length"`.
+    ///
+    /// # Errors
+    ///
+    /// Returns the same errors as [`chat`](Self::chat).
+    /// Stream errors are returned as `Err` items in the stream itself.
+    ///
+    /// # Notes
+    ///
+    /// Chunks are yielded as soon as they arrive; the stream is not buffered.
     fn chat_stream(
         &self,
         req: ChatCompletionRequest,
     ) -> BoxFuture<'_, Result<BoxStream<'static, Result<ChatCompletionChunk>>>>;
 
     /// Send an embedding request.
+    ///
+    /// Computes dense vector representations for semantic search, clustering, or similarity.
+    ///
+    /// # Errors
+    ///
+    /// Returns `LiterLlmError::BadRequest` if input is empty.
+    /// Returns `LiterLlmError::Http` for network errors.
     fn embed(&self, req: EmbeddingRequest) -> BoxFuture<'_, Result<EmbeddingResponse>>;
 
     /// List available models.
+    ///
+    /// Queries the provider's model list endpoint.
+    ///
+    /// # Errors
+    ///
+    /// Returns `LiterLlmError::Http` for network errors.
+    /// Returns `LiterLlmError::Authentication` if the API key lacks list permissions.
     fn list_models(&self) -> BoxFuture<'_, Result<ModelsListResponse>>;
 
     /// Generate an image.
+    ///
+    /// Creates one or more images based on a text prompt.
+    ///
+    /// # Errors
+    ///
+    /// Returns `LiterLlmError::BadRequest` if the prompt is empty.
+    /// Returns `LiterLlmError::Http` for network errors.
+    /// Returns `LiterLlmError::ProviderError` if the prompt violates content policy.
     fn image_generate(&self, req: CreateImageRequest) -> BoxFuture<'_, Result<ImagesResponse>>;
 
     /// Generate speech audio from text.
+    ///
+    /// Converts text to speech (TTS) using the specified voice model.
+    /// Returns raw audio bytes in the requested format.
+    ///
+    /// # Errors
+    ///
+    /// Returns `LiterLlmError::BadRequest` if text is empty.
+    /// Returns `LiterLlmError::Http` for network errors.
     fn speech(&self, req: CreateSpeechRequest) -> BoxFuture<'_, Result<bytes::Bytes>>;
 
     /// Transcribe audio to text.
+    ///
+    /// Converts audio files to text using automatic speech recognition (ASR).
+    ///
+    /// # Errors
+    ///
+    /// Returns `LiterLlmError::BadRequest` if the audio file is missing.
+    /// Returns `LiterLlmError::Http` for network errors.
     fn transcribe(&self, req: CreateTranscriptionRequest) -> BoxFuture<'_, Result<TranscriptionResponse>>;
 
     /// Check content against moderation policies.
+    ///
+    /// Evaluates text or images for potentially harmful content.
+    ///
+    /// # Errors
+    ///
+    /// Returns `LiterLlmError::BadRequest` if input is empty.
+    /// Returns `LiterLlmError::Http` for network errors.
     fn moderate(&self, req: ModerationRequest) -> BoxFuture<'_, Result<ModerationResponse>>;
 
     /// Rerank documents by relevance to a query.
+    ///
+    /// Orders a list of documents by their relevance to a search query.
+    ///
+    /// # Errors
+    ///
+    /// Returns `LiterLlmError::BadRequest` if query or documents are empty.
+    /// Returns `LiterLlmError::Http` for network errors.
     fn rerank(&self, req: RerankRequest) -> BoxFuture<'_, Result<RerankResponse>>;
 
     /// Perform a web/document search.
+    ///
+    /// Searches the web or a provider's document index for results matching the query.
+    ///
+    /// # Errors
+    ///
+    /// Returns `LiterLlmError::BadRequest` if the query is empty.
+    /// Returns `LiterLlmError::Http` for network errors.
     fn search(&self, req: SearchRequest) -> BoxFuture<'_, Result<SearchResponse>>;
 
     /// Extract text from a document via OCR.
+    ///
+    /// Performs optical character recognition (OCR) on images or scanned PDFs.
+    ///
+    /// # Errors
+    ///
+    /// Returns `LiterLlmError::BadRequest` if the document is missing.
+    /// Returns `LiterLlmError::Http` for network errors.
     fn ocr(&self, req: OcrRequest) -> BoxFuture<'_, Result<OcrResponse>>;
 }
 
@@ -328,17 +422,19 @@ pub trait ResponseClient {
 
 /// Default client implementation backed by `reqwest`.
 ///
-/// The provider is resolved at construction time from `model_hint` (or
-/// defaults to OpenAI). However, individual requests can override the
-/// provider when their model string contains a prefix that clearly
-/// identifies a different provider (e.g. `"anthropic/claude-3"` will
-/// route to Anthropic even if the client was built without a hint).
+/// Sends requests to 140+ LLM providers with automatic provider detection
+/// and per-request routing. The provider is resolved at construction time
+/// from `model_hint` (or defaults to OpenAI), but individual requests can
+/// override the provider via model name prefix (e.g. `"anthropic/claude-3-5-sonnet"`
+/// routes to Anthropic regardless of construction-time setting).
 ///
-/// When the model prefix does not match any known provider, the
-/// construction-time provider is used as the fallback.
+/// When the model prefix does not match any known provider, the construction-time
+/// provider is used as the fallback. This enables seamless migration between
+/// providers by changing only the model name.
 ///
 /// The provider is stored behind an [`Arc`] so it can be shared cheaply into
-/// async closures and streaming tasks that must be `'static`.
+/// async closures and streaming tasks. Pre-computed auth headers and extra
+/// headers are cached at construction to avoid redundant encoding on every request.
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 #[derive(Clone)]
 pub struct DefaultClient {
@@ -359,16 +455,24 @@ pub struct DefaultClient {
 impl DefaultClient {
     /// Build a client.
     ///
-    /// `model_hint` guides provider auto-detection when no explicit
-    /// `base_url` override is present in the config.  For example, passing
-    /// `Some("groq/llama3-70b")` selects the Groq provider.  Pass `None` to
-    /// default to OpenAI.
+    /// Constructs an HTTP client with the given configuration and provider hint.
+    /// If `model_hint` is provided, its prefix determines the default provider
+    /// (e.g. `"groq/llama3-70b"` selects Groq; `"claude-3-5-sonnet"` defaults to OpenAI).
+    /// Pass `None` to use OpenAI as the default. The hint does not constrain
+    /// per-request routing — individual requests can override the provider via
+    /// their own model prefix.
+    ///
+    /// When `config.load_env` is true (the default), and no API key was provided,
+    /// the client reads the provider's designated environment variable
+    /// (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) at construction time.
     ///
     /// # Errors
     ///
-    /// Returns a wrapped [`reqwest::Error`] if the underlying HTTP client
-    /// cannot be constructed.  Header names and values are pre-validated by
-    /// [`ClientConfigBuilder::header`], so they are inserted directly here.
+    /// Returns `LiterLlmError::Authentication` if `load_env` is enabled, no explicit
+    /// API key was provided, and the provider's environment variable is unset or empty.
+    /// Returns `LiterLlmError::InvalidHeader` if pre-validated headers somehow
+    /// become invalid during client construction (extremely rare; indicates a bug).
+    /// Returns `LiterLlmError::Http` if the underlying HTTP client cannot be constructed.
     pub fn new(config: ClientConfig, model_hint: Option<&str>) -> Result<Self> {
         let provider = build_provider(&config, model_hint);
         // Validate configuration eagerly so callers get a clear error at
