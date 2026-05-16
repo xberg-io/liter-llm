@@ -46,7 +46,7 @@ repos:
 
   # Markdown: linting
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.12
+    rev: v0.15.13
     hooks:
       - id: ruff
         args: [--fix]
@@ -56,7 +56,7 @@ repos:
 
   # Node/TS/WASM: oxlint
   - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
-    rev: v1.0.10
+    rev: v1.1.2
     hooks:
       - id: cargo-sort
         args: [-w]
@@ -89,8 +89,34 @@ repos:
         types_or: [rust, toml]
       - id: cargo-machete
         args: [crates/]
+        exclude: ^(e2e/|test_apps/)
       - id: cargo-deny
         args: ["check"]
+      - id: rustdoc-lint
+        files: ^crates/liter-llm/src/.*\.rs$
+        exclude: /tests/
+        args: ["-p", "liter-llm"]
+      - id: pydocstyle
+        files: ^packages/python/.*\.py$
+        exclude: ^packages/python/(tests/|.*_native\.py$)
+      - id: alef-docs-fresh
+      - id: roxygen2-check
+        files: ^packages/r/R/.*\.R$
+      - id: javadoc-lint
+        files: ^packages/java/src/main/.*\.java$
+      - id: cs-xmldoc-lint
+        files: ^packages/csharp/LiterLlm/.*\.cs$
+      - id: phpdoc-lint
+        files: ^packages/php/src/.*\.php$
+      - id: dart-doc-lint
+        files: ^packages/dart/lib/.*\.dart$
+        exclude: ^packages/dart/lib/src/rust/
+      - id: swift-doc-coverage
+        files: ^packages/swift/Sources/LiterLlm/.*\.swift$
+      - id: swift-format
+        files: ^packages/swift/.*\.swift$
+      - id: swiftlint
+        files: ^packages/swift/.*\.swift$
       - id: shfmt
         args: ["-w", "-i", "2"]
       - id: shellcheck
@@ -137,11 +163,29 @@ repos:
         files: ^packages/elixir/
       - id: java-verify
         files: ^packages/java/
-
+      - id: dart-format
+        files: ^packages/dart/.*\.dart$
+      - id: dart-analyze
+        files: ^packages/dart/.*\.dart$
+      - id: zig-fmt
+        files: ^packages/zig/.*\.zig$
+      - id: zig-build-check
+        files: ^packages/zig/.*\.zig$
       - id: ktfmt
         files: ^packages/kotlin-android/.*\.kts?$
       - id: detekt
         files: ^packages/kotlin-android/.*\.kts?$
+      - id: ktlint
+        files: ^packages/kotlin-android/.*\.kts?$
+      - id: clang-format
+        args: ["--style=file"]
+        files: ^crates/liter-llm-ffi/tests/c/
+      - id: clang-tidy
+        files: ^crates/liter-llm-ffi/tests/c/
+      - id: textlint
+        files: ^docs/.*\.md$
+        exclude: ^docs/(reference/|api-|snippets/|migration/)
+        args: ["--fix", "--config", ".textlintrc.json"]
 
       - id: oxlint
         require_serial: true
@@ -160,7 +204,7 @@ repos:
   # matches the pinned alef.toml version, falling back to a sha256-verified
   # release-tarball download. Do not override `entry:` here.
   - repo: https://github.com/kreuzberg-dev/alef
-    rev: v0.16.12
+    rev: v0.16.20
     hooks:
       - id: alef-verify
       - id: alef-sync-versions
