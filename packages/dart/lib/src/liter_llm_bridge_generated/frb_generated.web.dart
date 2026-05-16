@@ -124,11 +124,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_box_autoadd_create_transcription_request(dynamic raw);
 
   @protected
-  CustomProviderConfig dco_decode_box_autoadd_custom_provider_config(
-    dynamic raw,
-  );
-
-  @protected
   DeveloperMessage dco_decode_box_autoadd_developer_message(dynamic raw);
 
   @protected
@@ -807,11 +802,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   CreateTranscriptionRequest
   sse_decode_box_autoadd_create_transcription_request(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  CustomProviderConfig sse_decode_box_autoadd_custom_provider_config(
     SseDeserializer deserializer,
   );
 
@@ -1668,12 +1658,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_create_transcription_request(
     CreateTranscriptionRequest self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_custom_provider_config(
-    CustomProviderConfig self,
     SseSerializer serializer,
   );
 

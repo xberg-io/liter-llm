@@ -71,6 +71,7 @@ where
 
 /// Static configuration for a single provider entry in providers.json.
 #[derive(Debug, Clone, Deserialize)]
+#[cfg_attr(alef, alef(skip))]
 pub struct ProviderConfig {
     pub name: String,
     pub display_name: Option<String>,
@@ -635,6 +636,7 @@ pub(crate) fn detect_provider(model: &str) -> Option<Box<dyn Provider>> {
 /// Return all provider configs from the registry.
 ///
 /// Useful for tooling, documentation generation, or runtime enumeration.
+#[cfg_attr(alef, alef(skip))]
 pub fn all_providers() -> Result<&'static [ProviderConfig]> {
     Ok(&registry()?.providers)
 }
@@ -645,6 +647,7 @@ pub fn all_providers() -> Result<&'static [ProviderConfig]> {
 /// tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
 ///
 /// The returned reference points into the static registry — no allocation.
+#[cfg_attr(alef, alef(skip))]
 pub fn complex_provider_names() -> Result<&'static HashSet<String>> {
     Ok(&registry()?.complex_providers)
 }

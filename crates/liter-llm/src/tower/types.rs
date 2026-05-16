@@ -17,6 +17,7 @@ use crate::types::{
 ///
 /// Each variant corresponds to one method on [`crate::client::LlmClient`].
 #[derive(Debug, Clone, Serialize)]
+#[cfg_attr(alef, alef(skip))]
 pub enum LlmRequest {
     /// Non-streaming chat completion.
     Chat(ChatCompletionRequest),
@@ -42,6 +43,7 @@ pub enum LlmRequest {
     Ocr(OcrRequest),
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl LlmRequest {
     /// OpenTelemetry GenAI `gen_ai.operation.name` value for this request.
     ///
@@ -101,6 +103,7 @@ impl LlmRequest {
 }
 
 /// The response variant returned through the tower `Service` stack.
+#[cfg_attr(alef, alef(skip))]
 pub enum LlmResponse {
     /// Non-streaming chat completion.
     Chat(ChatCompletionResponse),
@@ -126,6 +129,7 @@ pub enum LlmResponse {
     Ocr(OcrResponse),
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl LlmResponse {
     /// Return the usage data from the response, if present.
     ///

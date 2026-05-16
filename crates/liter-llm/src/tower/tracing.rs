@@ -29,6 +29,7 @@ use crate::types::FinishReason;
 ///   all choices (e.g. `"stop"`).
 /// - `error.type` — set to the error variant name if the inner service returns
 ///   an error.
+#[cfg_attr(alef, alef(skip))]
 pub struct TracingLayer;
 
 impl<S> Layer<S> for TracingLayer {
@@ -40,6 +41,7 @@ impl<S> Layer<S> for TracingLayer {
 }
 
 /// Tower service produced by [`TracingLayer`].
+#[cfg_attr(alef, alef(skip))]
 pub struct TracingService<S> {
     inner: S,
 }

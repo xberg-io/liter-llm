@@ -45,29 +45,6 @@ Future<DefaultClient> createClient({
 Future<DefaultClient> createClientFromJson({required String json}) =>
     RustLib.instance.api.crateCreateClientFromJson(json: json);
 
-/// Register a custom provider in the global runtime registry.
-///
-/// The provider will be checked **before** all built-in providers during model
-/// detection. If a provider with the same `name` already exists it is replaced.
-///
-/// **Errors:**
-///
-/// Returns an error if the config is invalid (empty name, empty base_url, or
-/// no model prefixes).
-Future<void> registerCustomProvider({required CustomProviderConfig config}) =>
-    RustLib.instance.api.crateRegisterCustomProvider(config: config);
-
-/// Remove a previously registered custom provider by name.
-///
-/// Returns `true` if a provider with the given name was found and removed,
-/// `false` if no such provider existed.
-///
-/// **Errors:**
-///
-/// Returns an error only if the internal lock is poisoned.
-Future<bool> unregisterCustomProvider({required String name}) =>
-    RustLib.instance.api.crateUnregisterCustomProvider(name: name);
-
 Future<SystemMessage> createSystemMessageFromJson({required String json}) =>
     RustLib.instance.api.crateCreateSystemMessageFromJson(json: json);
 

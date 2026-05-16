@@ -29,6 +29,7 @@ use crate::types::ChatCompletionChunk;
 ///
 /// If you need incremental, unbuffered streaming, use [`LlmClient`] directly
 /// instead of wrapping it in `LlmService`.
+#[cfg_attr(alef, alef(skip))]
 pub struct LlmService<C> {
     inner: Arc<C>,
 }

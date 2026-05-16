@@ -28,6 +28,7 @@ struct CooldownState {
 // ---- Layer -----------------------------------------------------------------
 
 /// Tower [`Layer`] that applies a cooldown period after transient errors.
+#[cfg_attr(alef, alef(skip))]
 pub struct CooldownLayer {
     duration: Duration,
 }
@@ -58,6 +59,7 @@ impl<S> Layer<S> for CooldownLayer {
 // ---- Service ---------------------------------------------------------------
 
 /// Tower service produced by [`CooldownLayer`].
+#[cfg_attr(alef, alef(skip))]
 pub struct CooldownService<S> {
     inner: S,
     duration: Duration,

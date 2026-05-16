@@ -44,6 +44,7 @@ use crate::error::{LiterLlmError, Result};
 ///
 /// All methods have default no-op implementations, so consumers only need to
 /// override the lifecycle points they care about.
+#[cfg_attr(alef, alef(skip))]
 pub trait LlmHook: Send + Sync + 'static {
     /// Called before the request is sent to the inner service.
     ///
@@ -71,6 +72,7 @@ pub trait LlmHook: Send + Sync + 'static {
 /// Hooks are stored behind `Arc` so that the layer and all services it
 /// produces share the same hook instances without cloning them.
 #[derive(Clone)]
+#[cfg_attr(alef, alef(skip))]
 pub struct HooksLayer {
     hooks: Arc<Vec<Arc<dyn LlmHook>>>,
 }
@@ -105,6 +107,7 @@ impl<S> Layer<S> for HooksLayer {
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 /// Tower service produced by [`HooksLayer`].
+#[cfg_attr(alef, alef(skip))]
 pub struct HooksService<S> {
     inner: S,
     hooks: Arc<Vec<Arc<dyn LlmHook>>>,

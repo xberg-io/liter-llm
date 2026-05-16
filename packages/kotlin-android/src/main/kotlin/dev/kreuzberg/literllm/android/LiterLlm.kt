@@ -5,10 +5,10 @@ package dev.kreuzberg.literllm.android
 object LiterLlm {
     fun createClient(
         apiKey: String,
-        baseUrl: String = "",
-        timeoutSecs: Long = 0L,
-        maxRetries: Int = 0,
-        modelHint: String = "",
+        baseUrl: String? = null,
+        timeoutSecs: Long? = null,
+        maxRetries: Int? = null,
+        modelHint: String? = null,
     ): DefaultClient =
         DefaultClient(
             LiterLlmBridge.nativeCreateClient(apiKey, baseUrl, timeoutSecs, maxRetries, modelHint)
@@ -16,10 +16,4 @@ object LiterLlm {
 
     fun createClientFromJson(json: String): DefaultClient =
         DefaultClient(LiterLlmBridge.nativeCreateClientFromJson(json))
-
-    fun registerCustomProvider(config: String): Unit =
-        LiterLlmBridge.nativeRegisterCustomProvider(config)
-
-    fun unregisterCustomProvider(name: String): Boolean =
-        LiterLlmBridge.nativeUnregisterCustomProvider(name)
 }

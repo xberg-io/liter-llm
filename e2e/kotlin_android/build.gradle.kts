@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.ManagedVirtualDevice
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -71,4 +72,20 @@ tasks.test {
 
     // Resolve fixture paths (e.g. "docx/fake.docx") against test_documents/
     workingDir = file("${rootDir}/../../test_documents")
+}
+
+// Gradle Managed Virtual Devices for on-device instrumented tests.
+// Run: ./gradlew pixel6api34DebugAndroidTest
+android {
+    testOptions {
+        managedDevices {
+            devices {
+                create<ManagedVirtualDevice>("pixel6api34") {
+                    device = "Pixel 6"
+                    apiLevel = 34
+                    systemImageSource = "aosp"
+                }
+            }
+        }
+    }
 }

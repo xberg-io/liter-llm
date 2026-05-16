@@ -6,7 +6,7 @@ package dev.kreuzberg.literllm.android
 sealed class AuthHeaderFormat {
     object Bearer : AuthHeaderFormat()
 
-    data class ApiKey(val field0: String) : AuthHeaderFormat()
+    data class ApiKey(val value: String) : AuthHeaderFormat()
 
     object None : AuthHeaderFormat()
 }

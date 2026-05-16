@@ -16,6 +16,7 @@ use crate::error::{LiterLlmError, Result};
 /// Authentication or bad-request errors are propagated directly without
 /// consulting the fallback because retrying on a different service would
 /// produce the same result.
+#[cfg_attr(alef, alef(skip))]
 pub struct FallbackLayer<F> {
     fallback: F,
 }
@@ -44,6 +45,7 @@ where
 }
 
 /// Tower service produced by [`FallbackLayer`].
+#[cfg_attr(alef, alef(skip))]
 pub struct FallbackService<S, F> {
     primary: S,
     fallback: F,

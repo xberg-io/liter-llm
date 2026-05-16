@@ -9,11 +9,11 @@ package dev.kreuzberg.literllm.android
 sealed class EmbeddingInput {
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Single(val field0: String) : EmbeddingInput()
+    data class Single(val value: String) : EmbeddingInput()
 
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Multiple(val field0: List<String>) : EmbeddingInput()
+    data class Multiple(val value: List<String>) : EmbeddingInput()
 }
 
 private class EmbeddingInputDeserializer :

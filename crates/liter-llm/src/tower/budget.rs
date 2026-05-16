@@ -75,6 +75,7 @@ pub struct BudgetConfig {
     pub enforcement: Enforcement,
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl Default for BudgetConfig {
     fn default() -> Self {
         Self {
@@ -142,6 +143,7 @@ impl BudgetState {
     }
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl Default for BudgetState {
     fn default() -> Self {
         Self::new()
@@ -165,11 +167,13 @@ fn microcents_to_usd(mc: u64) -> f64 {
 // ---- Layer -----------------------------------------------------------------
 
 /// Tower [`Layer`] that enforces spending budgets.
+#[cfg_attr(alef, alef(skip))]
 pub struct BudgetLayer {
     config: BudgetConfig,
     state: Arc<BudgetState>,
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl BudgetLayer {
     /// Create a new budget layer with the given configuration and shared state.
     ///
@@ -196,6 +200,7 @@ impl<S> Layer<S> for BudgetLayer {
 // ---- Service ---------------------------------------------------------------
 
 /// Tower service produced by [`BudgetLayer`].
+#[cfg_attr(alef, alef(skip))]
 pub struct BudgetService<S> {
     inner: S,
     config: BudgetConfig,

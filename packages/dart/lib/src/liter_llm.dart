@@ -45,33 +45,4 @@ class LiterLlmBridge {
   static Future<DefaultClient> createClientFromJson(String json) async {
     return await rust_bridge.createClientFromJson(json: json);
   }
-
-  /// Register a custom provider in the global runtime registry.
-  ///
-  /// The provider will be checked **before** all built-in providers during model
-  /// detection. If a provider with the same `name` already exists it is replaced.
-  ///
-  /// # Errors
-  ///
-  /// Returns an error if the config is invalid (empty name, empty base_url, or
-  /// no model prefixes).
-  /// throws anyhow::Error on failure
-  static Future<void> registerCustomProvider(
-    CustomProviderConfig config,
-  ) async {
-    return await rust_bridge.registerCustomProvider(config: config);
-  }
-
-  /// Remove a previously registered custom provider by name.
-  ///
-  /// Returns `true` if a provider with the given name was found and removed,
-  /// `false` if no such provider existed.
-  ///
-  /// # Errors
-  ///
-  /// Returns an error only if the internal lock is poisoned.
-  /// throws anyhow::Error on failure
-  static Future<bool> unregisterCustomProvider(String name) async {
-    return await rust_bridge.unregisterCustomProvider(name: name);
-  }
 }

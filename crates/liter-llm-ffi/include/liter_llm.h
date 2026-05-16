@@ -4790,35 +4790,4 @@ LITERLLMDefaultClient *literllm_create_client(const char *api_key,
  */
 LITERLLMDefaultClient *literllm_create_client_from_json(const char *json);
 
-/**
- * Register a custom provider in the global runtime registry.
- *
- * The provider will be checked **before** all built-in providers during model
- * detection. If a provider with the same `name` already exists it is replaced.
- *
- * # Errors
- *
- * Returns an error if the config is invalid (empty name, empty base_url, or
- * no model prefixes).
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
- */
-int32_t literllm_register_custom_provider(const LITERLLMCustomProviderConfig *config);
-
-/**
- * Remove a previously registered custom provider by name.
- *
- * Returns `true` if a provider with the given name was found and removed,
- * `false` if no such provider existed.
- *
- * # Errors
- *
- * Returns an error only if the internal lock is poisoned.
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
- */
-int32_t literllm_unregister_custom_provider(const char *name);
-
 #endif  /* LITERLLM_H */

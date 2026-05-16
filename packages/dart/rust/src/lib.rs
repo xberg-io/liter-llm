@@ -2478,37 +2478,6 @@ pub fn create_client_from_json(json: String) -> Result<DefaultClient, String> {
         .map_err(|e| e.to_string())
 }
 
-/// Register a custom provider in the global runtime registry.
-///
-/// The provider will be checked **before** all built-in providers during model
-/// detection. If a provider with the same `name` already exists it is replaced.
-///
-/// **Errors:**
-///
-/// Returns an error if the config is invalid (empty name, empty base_url, or
-/// no model prefixes).
-pub fn register_custom_provider(config: CustomProviderConfig) -> Result<(), String> {
-    liter_llm::provider::custom::register_custom_provider(unsafe {
-        std::mem::transmute::<CustomProviderConfig, liter_llm::provider::custom::CustomProviderConfig>(config)
-    })
-    .map(|v| v)
-    .map_err(|e| e.to_string())
-}
-
-/// Remove a previously registered custom provider by name.
-///
-/// Returns `true` if a provider with the given name was found and removed,
-/// `false` if no such provider existed.
-///
-/// **Errors:**
-///
-/// Returns an error only if the internal lock is poisoned.
-pub fn unregister_custom_provider(name: String) -> Result<bool, String> {
-    liter_llm::provider::custom::unregister_custom_provider(&name)
-        .map(|v| v as bool)
-        .map_err(|e| e.to_string())
-}
-
 // `create_<Type>_from_json` helpers — deserialize a JSON string into a mirror type.
 
 #[frb]

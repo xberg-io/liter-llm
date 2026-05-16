@@ -1074,10 +1074,6 @@ mod ffi {
         ) -> Result<DefaultClient, String>;
         #[swift_bridge(swift_name = "createClientFromJson")]
         fn create_client_from_json(json: String) -> Result<DefaultClient, String>;
-        #[swift_bridge(swift_name = "registerCustomProvider")]
-        fn register_custom_provider(config: CustomProviderConfig) -> Result<(), String>;
-        #[swift_bridge(swift_name = "unregisterCustomProvider")]
-        fn unregister_custom_provider(name: String) -> Result<bool, String>;
     }
 
     extern "Rust" {
@@ -1121,8 +1117,6 @@ mod ffi {
         fn batch_list_query_from_json(json: String) -> Result<BatchListQuery, String>;
         #[swift_bridge(swift_name = "createResponseRequestFromJson")]
         fn create_response_request_from_json(json: String) -> Result<CreateResponseRequest, String>;
-        #[swift_bridge(swift_name = "customProviderConfigFromJson")]
-        fn custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String>;
     }
     extern "Rust" {
 
@@ -4713,14 +4707,6 @@ pub fn create_client_from_json(json: String) -> Result<DefaultClient, String> {
         .map(DefaultClient)
 }
 
-pub fn register_custom_provider(config: CustomProviderConfig) -> Result<(), String> {
-    liter_llm::provider::custom::register_custom_provider(config.0).map_err(|e| e.to_string())
-}
-
-pub fn unregister_custom_provider(name: String) -> Result<bool, String> {
-    liter_llm::provider::custom::unregister_custom_provider(&name).map_err(|e| e.to_string())
-}
-
 /// Opaque handle owning a tokio runtime and a boxed `ChatCompletionChunk` stream.
 ///
 /// Created by `default_client_chat_stream_start`, advanced via `next()`. Drop runs when the
@@ -4876,12 +4862,6 @@ pub fn batch_list_query_from_json(json: String) -> Result<BatchListQuery, String
 pub fn create_response_request_from_json(json: String) -> Result<CreateResponseRequest, String> {
     serde_json::from_str::<liter_llm::types::CreateResponseRequest>(&json)
         .map(CreateResponseRequest)
-        .map_err(|e| e.to_string())
-}
-
-pub fn custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String> {
-    serde_json::from_str::<liter_llm::provider::custom::CustomProviderConfig>(&json)
-        .map(CustomProviderConfig)
         .map_err(|e| e.to_string())
 }
 

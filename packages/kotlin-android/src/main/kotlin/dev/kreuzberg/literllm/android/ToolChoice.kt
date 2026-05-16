@@ -7,11 +7,11 @@ package dev.kreuzberg.literllm.android
 sealed class ToolChoice {
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Mode(val field0: ToolChoiceMode) : ToolChoice()
+    data class Mode(val value: ToolChoiceMode) : ToolChoice()
 
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Specific(val field0: SpecificToolChoice) : ToolChoice()
+    data class Specific(val toolChoice: SpecificToolChoice) : ToolChoice()
 }
 
 private class ToolChoiceDeserializer :

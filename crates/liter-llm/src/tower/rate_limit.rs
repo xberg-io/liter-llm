@@ -25,6 +25,7 @@ use crate::error::{LiterLlmError, Result};
 
 /// Configuration for per-model rate limits.
 #[derive(Debug, Clone)]
+#[cfg_attr(alef, alef(skip))]
 pub struct RateLimitConfig {
     /// Maximum requests per window.  `None` means unlimited.
     pub rpm: Option<u32>,
@@ -34,6 +35,7 @@ pub struct RateLimitConfig {
     pub window: Duration,
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl Default for RateLimitConfig {
     fn default() -> Self {
         Self {
@@ -75,6 +77,7 @@ impl ModelRateState {
 // ---- Layer -----------------------------------------------------------------
 
 /// Tower [`Layer`] that enforces per-model rate limits.
+#[cfg_attr(alef, alef(skip))]
 pub struct ModelRateLimitLayer {
     config: RateLimitConfig,
     state: Arc<DashMap<String, ModelRateState>>,
@@ -106,6 +109,7 @@ impl<S> Layer<S> for ModelRateLimitLayer {
 // ---- Service ---------------------------------------------------------------
 
 /// Tower service produced by [`ModelRateLimitLayer`].
+#[cfg_attr(alef, alef(skip))]
 pub struct ModelRateLimitService<S> {
     inner: S,
     config: RateLimitConfig,

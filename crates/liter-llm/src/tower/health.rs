@@ -27,6 +27,7 @@ use crate::error::{LiterLlmError, Result};
 /// The background health-check task is spawned when the layer wraps a service
 /// (i.e. when [`Layer::layer`] is called).  The task runs until the
 /// [`HealthCheckService`] (and all its clones) are dropped.
+#[cfg_attr(alef, alef(skip))]
 pub struct HealthCheckLayer {
     interval: Duration,
 }
@@ -91,6 +92,7 @@ where
 // ---- Service ---------------------------------------------------------------
 
 /// Tower service produced by [`HealthCheckLayer`].
+#[cfg_attr(alef, alef(skip))]
 pub struct HealthCheckService<S> {
     inner: S,
     healthy: Arc<AtomicBool>,

@@ -40,6 +40,7 @@ use crate::error::{LiterLlmError, Result};
 /// ```
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
+#[cfg_attr(alef, alef(skip))]
 pub struct FileConfig {
     pub api_key: Option<String>,
     pub base_url: Option<String>,
@@ -59,6 +60,7 @@ pub struct FileConfig {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
+#[cfg_attr(alef, alef(skip))]
 pub struct FileCacheConfig {
     pub max_entries: Option<usize>,
     pub ttl_seconds: Option<u64>,
@@ -68,6 +70,7 @@ pub struct FileCacheConfig {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
+#[cfg_attr(alef, alef(skip))]
 pub struct FileBudgetConfig {
     pub global_limit: Option<f64>,
     pub model_limits: Option<HashMap<String, f64>>,
@@ -76,6 +79,7 @@ pub struct FileBudgetConfig {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
+#[cfg_attr(alef, alef(skip))]
 pub struct FileRateLimitConfig {
     pub rpm: Option<u32>,
     pub tpm: Option<u64>,
@@ -84,6 +88,7 @@ pub struct FileRateLimitConfig {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
+#[cfg_attr(alef, alef(skip))]
 pub struct FileProviderConfig {
     pub name: String,
     pub base_url: String,
@@ -91,6 +96,7 @@ pub struct FileProviderConfig {
     pub model_prefixes: Vec<String>,
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl FileConfig {
     /// Load from a TOML file path.
     pub fn from_toml_file(path: impl AsRef<Path>) -> Result<Self> {

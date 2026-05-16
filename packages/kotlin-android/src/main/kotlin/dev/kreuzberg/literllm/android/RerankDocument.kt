@@ -10,7 +10,7 @@ package dev.kreuzberg.literllm.android
 sealed class RerankDocument {
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Text(val field0: String) : RerankDocument()
+    data class Text(val value: String) : RerankDocument()
 
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize

@@ -48,6 +48,7 @@ pub const LiterLlmError = error{
     BudgetExceeded,
     HookRejected,
     InternalError,
+    OutOfMemory,
 };
 
 pub const SystemMessage = struct {
@@ -690,7 +691,7 @@ pub const RerankDocument = union(enum) {
 
 /// Document input for OCR — either a URL or inline base64 data.
 pub const OcrDocument = union(enum) {
-    url: [:0]const u8,
+    document_url: [:0]const u8,
     base64: struct {
         data: [:0]const u8,
         media_type: [:0]const u8,
@@ -732,7 +733,7 @@ pub const AuthHeaderFormat = union(enum) {
 ///
 /// Returns `LiterLlmError` if the underlying HTTP client cannot be
 /// constructed, or if the resolved provider configuration is invalid.
-pub fn create_client(api_key: []const u8, base_url: ?[]const u8, timeout_secs: ?u64, max_retries: ?u32, model_hint: ?[]const u8) (LiterLlmError || error{OutOfMemory})!DefaultClient {
+pub fn create_client(api_key: []const u8, base_url: ?[]const u8, timeout_secs: ?u64, max_retries: ?u32, model_hint: ?[]const u8) LiterLlmError!DefaultClient {
     const api_key_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{api_key}, 0);
     defer std.heap.c_allocator.free(api_key_z);
     const base_url_z: ?[:0]u8 = if (base_url) |v| try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{v}, 0) else null;
@@ -754,7 +755,7 @@ pub fn create_client(api_key: []const u8, base_url: ?[]const u8, timeout_secs: ?
 ///
 /// Returns `LiterLlmError.BadRequest` if `json` is not valid JSON or
 /// contains unknown fields.
-pub fn create_client_from_json(json: []const u8) (LiterLlmError || error{OutOfMemory})!DefaultClient {
+pub fn create_client_from_json(json: []const u8) LiterLlmError!DefaultClient {
     const json_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{json}, 0);
     defer std.heap.c_allocator.free(json_z);
     const _result = c.literllm_create_client_from_json(json_z);
@@ -762,45 +763,6 @@ pub fn create_client_from_json(json: []const u8) (LiterLlmError || error{OutOfMe
         return _first_error(LiterLlmError);
     }
     return DefaultClient{ ._handle = _result.? };
-}
-
-/// Register a custom provider in the global runtime registry.
-///
-/// The provider will be checked **before** all built-in providers during model
-/// detection. If a provider with the same `name` already exists it is replaced.
-///
-/// **Errors:**
-///
-/// Returns an error if the config is invalid (empty name, empty base_url, or
-/// no model prefixes).
-pub fn register_custom_provider(config: []const u8) (LiterLlmError || error{OutOfMemory})!void {
-    const config_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{config}, 0);
-    defer std.heap.c_allocator.free(config_z);
-    const config_handle = c.literllm_custom_provider_config_from_json(config_z);
-    _ = c.literllm_register_custom_provider(config_handle);
-    if (c.literllm_last_error_code() != 0) {
-        return _first_error(LiterLlmError);
-    }
-    if (config_handle) |h| c.literllm_custom_provider_config_free(h);
-    return;
-}
-
-/// Remove a previously registered custom provider by name.
-///
-/// Returns `true` if a provider with the given name was found and removed,
-/// `false` if no such provider existed.
-///
-/// **Errors:**
-///
-/// Returns an error only if the internal lock is poisoned.
-pub fn unregister_custom_provider(name: []const u8) (LiterLlmError || error{OutOfMemory})!bool {
-    const name_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{name}, 0);
-    defer std.heap.c_allocator.free(name_z);
-    const _result = c.literllm_unregister_custom_provider(name_z);
-    if (c.literllm_last_error_code() != 0) {
-        return _first_error(LiterLlmError);
-    }
-    return _result != 0;
 }
 
 /// Default client implementation backed by `reqwest`.

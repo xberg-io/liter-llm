@@ -7,11 +7,11 @@ package dev.kreuzberg.literllm.android
 sealed class UserContent {
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Text(val field0: String) : UserContent()
+    data class Text(val value: String) : UserContent()
 
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Parts(val field0: List<ContentPart>) : UserContent()
+    data class Parts(val value: List<ContentPart>) : UserContent()
 }
 
 private class UserContentDeserializer :

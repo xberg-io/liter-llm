@@ -14,6 +14,7 @@ use crate::error::{LiterLlmError, Result};
 
 /// Routing strategy for selecting among multiple deployments.
 #[derive(Debug, Clone)]
+#[cfg_attr(alef, alef(skip))]
 pub enum RoutingStrategy {
     /// Round-robin across all deployments in order.
     RoundRobin,
@@ -72,6 +73,7 @@ impl DeploymentMetrics {
 }
 
 /// Shared state tracking per-deployment metrics, keyed by deployment index.
+#[cfg_attr(alef, alef(skip))]
 pub struct RouterState {
     metrics: Arc<DashMap<usize, DeploymentMetrics>>,
 }
@@ -102,6 +104,7 @@ impl Clone for RouterState {
 /// deployment type when wrapping a [`crate::client::LlmClient`].
 ///
 /// [`LlmService`]: super::service::LlmService
+#[cfg_attr(alef, alef(skip))]
 pub struct Router<S> {
     deployments: Vec<S>,
     strategy: RoutingStrategy,

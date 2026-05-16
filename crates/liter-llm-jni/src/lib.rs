@@ -46,6 +46,24 @@ fn throw_jni_error(env: &mut JNIEnv, msg: &str) {
     let _ = env.throw_new(ERROR_CLASS, msg);
 }
 
+fn run_or_throw<T, F>(env: &mut JNIEnv, f: F) -> Option<T>
+where
+    F: FnOnce() -> T + std::panic::UnwindSafe,
+{
+    match std::panic::catch_unwind(f) {
+        Ok(v) => Some(v),
+        Err(payload) => {
+            let msg = payload
+                .downcast_ref::<String>()
+                .cloned()
+                .or_else(|| payload.downcast_ref::<&str>().map(|s| (*s).to_string()))
+                .unwrap_or_else(|| "panic in native code".to_string());
+            throw_jni_error(env, &format!("native panic: {msg}"));
+            None
+        }
+    }
+}
+
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeCreateClient(
     mut env: JNIEnv,
@@ -117,62 +135,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeRegisterCustomProvider(
-    mut env: JNIEnv,
-    _class: JClass,
-    config: JString,
-) -> jstring {
-    let config_str = match jstring_to_string(&mut env, config) {
-        Ok(s) => s,
-        Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
-            return std::ptr::null_mut();
-        }
-    };
-    let config: core_crate::CustomProviderConfig = match serde_json::from_str(&config_str) {
-        Ok(v) => v,
-        Err(e) => {
-            throw_jni_error(&mut env, &format!("deserialize: {e}"));
-            return std::ptr::null_mut();
-        }
-    };
-    let result = core_crate::register_custom_provider(config);
-    match result {
-        Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
-            std::ptr::null_mut()
-        }
-        Ok(v) => string_to_jstring(&mut env, "null"),
-    }
-}
-
-#[unsafe(no_mangle)]
-pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeUnregisterCustomProvider(
-    mut env: JNIEnv,
-    _class: JClass,
-    name: JString,
-) -> jstring {
-    let name = match jstring_to_string(&mut env, name) {
-        Ok(s) => s,
-        Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
-            return std::ptr::null_mut();
-        }
-    };
-    let result = core_crate::unregister_custom_provider(&name);
-    match result {
-        Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
-            std::ptr::null_mut()
-        }
-        Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
-            string_to_jstring(&mut env, &s)
-        }
-    }
-}
-
-#[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientChat(
     mut env: JNIEnv,
     _class: JClass,
@@ -197,14 +159,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let result = runtime().block_on(client.chat(req));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.chat(req))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -235,14 +208,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let result = runtime().block_on(client.embed(req));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.embed(req))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -258,14 +242,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let result = runtime().block_on(client.list_models());
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.list_models())),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -296,14 +291,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let result = runtime().block_on(client.image_generate(req));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.image_generate(req))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -334,7 +340,12 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let result = runtime().block_on(client.speech(req));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.speech(req))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
@@ -375,14 +386,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let result = runtime().block_on(client.transcribe(req));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.transcribe(req))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -413,14 +435,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let result = runtime().block_on(client.moderate(req));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.moderate(req))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -451,14 +484,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let result = runtime().block_on(client.rerank(req));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.rerank(req))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -489,14 +533,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let result = runtime().block_on(client.search(req));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.search(req))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -527,14 +582,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let result = runtime().block_on(client.ocr(req));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.ocr(req))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -565,14 +631,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let result = runtime().block_on(client.create_file(req));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.create_file(req))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -600,14 +677,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         Ok(s) => s,
         Err(_) => req_str,
     };
-    let result = runtime().block_on(client.retrieve_file(&file_id));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.retrieve_file(&file_id))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -635,14 +723,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         Ok(s) => s,
         Err(_) => req_str,
     };
-    let result = runtime().block_on(client.delete_file(&file_id));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.delete_file(&file_id))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -673,14 +772,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let result = runtime().block_on(client.list_files(Some(query)));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.list_files(Some(query)))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -708,7 +818,12 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         Ok(s) => s,
         Err(_) => req_str,
     };
-    let result = runtime().block_on(client.file_content(&file_id));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.file_content(&file_id))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
@@ -749,14 +864,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let result = runtime().block_on(client.create_batch(req));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.create_batch(req))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -784,14 +910,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         Ok(s) => s,
         Err(_) => req_str,
     };
-    let result = runtime().block_on(client.retrieve_batch(&batch_id));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.retrieve_batch(&batch_id))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -822,14 +959,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let result = runtime().block_on(client.list_batches(Some(query)));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.list_batches(Some(query)))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -857,14 +1005,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         Ok(s) => s,
         Err(_) => req_str,
     };
-    let result = runtime().block_on(client.cancel_batch(&batch_id));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.cancel_batch(&batch_id))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -895,14 +1054,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let result = runtime().block_on(client.create_response(req));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.create_response(req))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -930,14 +1100,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         Ok(s) => s,
         Err(_) => req_str,
     };
-    let result = runtime().block_on(client.retrieve_response(&id));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.retrieve_response(&id))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -965,14 +1146,25 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         Ok(s) => s,
         Err(_) => req_str,
     };
-    let result = runtime().block_on(client.cancel_response(&id));
+    let Some(result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.cancel_response(&id))),
+    ) else {
+        return std::ptr::null_mut();
+    };
     match result {
         Err(e) => {
             throw_jni_error(&mut env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
-            let s = serde_json::to_string(&v).unwrap_or_default();
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }
@@ -1026,7 +1218,12 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return 0;
         }
     };
-    let stream_result = runtime().block_on(async { client.chat_stream(request).await });
+    let Some(stream_result) = run_or_throw(
+        &mut env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(async { client.chat_stream(request).await })),
+    ) else {
+        return 0;
+    };
     let stream = match stream_result {
         Ok(s) => s,
         Err(e) => {
@@ -1065,7 +1262,9 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
     let Some(stream) = guard.as_mut() else {
         return std::ptr::null_mut();
     };
-    let next = h.rt.block_on(stream.next());
+    let Some(next) = run_or_throw(&mut env, std::panic::AssertUnwindSafe(|| h.rt.block_on(stream.next()))) else {
+        return std::ptr::null_mut();
+    };
     match next {
         None => std::ptr::null_mut(),
         Some(Err(e)) => {
@@ -1073,7 +1272,13 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             std::ptr::null_mut()
         }
         Some(Ok(chunk)) => {
-            let s = serde_json::to_string(&chunk).unwrap_or_default();
+            let s = match serde_json::to_string(&chunk) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
             string_to_jstring(&mut env, &s)
         }
     }

@@ -38,6 +38,7 @@ use crate::error::{LiterLlmError, Result};
 /// records the result as `gen_ai.usage.cost` using
 /// [`tracing::Span::record`].  If the model is not in the pricing registry the
 /// attribute is simply omitted.
+#[cfg_attr(alef, alef(skip))]
 pub struct CostTrackingLayer;
 
 impl<S> Layer<S> for CostTrackingLayer {
@@ -51,6 +52,7 @@ impl<S> Layer<S> for CostTrackingLayer {
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 /// Tower service produced by [`CostTrackingLayer`].
+#[cfg_attr(alef, alef(skip))]
 pub struct CostTrackingService<S> {
     inner: S,
 }

@@ -50,6 +50,7 @@ struct PricingRegistry {
 
 /// Per-token pricing for a single model (USD per token).
 #[derive(Debug, Clone, Default, Deserialize)]
+#[cfg_attr(alef, alef(skip))]
 pub struct ModelPricing {
     /// Cost in USD per input (prompt) token.
     pub input_cost_per_token: f64,
@@ -135,6 +136,7 @@ pub fn completion_cost_with_cache(
 /// are tried by stripping from the last `-` or `.` separator.  For example,
 /// `gpt-4-0613` will try `gpt-4-0613`, then `gpt-4`, then `gpt`.  The first
 /// match wins.
+#[cfg_attr(alef, alef(skip))]
 #[must_use]
 pub fn model_pricing(model: &str) -> Option<&'static ModelPricing> {
     let models = &pricing()?.models;

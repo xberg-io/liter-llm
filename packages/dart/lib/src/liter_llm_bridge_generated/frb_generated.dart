@@ -64,7 +64,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 145493259;
+  int get rustContentHash => 342869879;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -444,12 +444,6 @@ abstract class RustLibApi extends BaseApi {
   Future<Usage> crateCreateUsageFromJson({required String json});
 
   Future<UserMessage> crateCreateUserMessageFromJson({required String json});
-
-  Future<void> crateRegisterCustomProvider({
-    required CustomProviderConfig config,
-  });
-
-  Future<bool> crateUnregisterCustomProvider({required String name});
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_DefaultClient;
@@ -3740,70 +3734,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argNames: ["json"],
       );
 
-  @override
-  Future<void> crateRegisterCustomProvider({
-    required CustomProviderConfig config,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_box_autoadd_custom_provider_config(config, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 98,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: sse_decode_String,
-        ),
-        constMeta: kCrateRegisterCustomProviderConstMeta,
-        argValues: [config],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateRegisterCustomProviderConstMeta =>
-      const TaskConstMeta(
-        debugName: "register_custom_provider",
-        argNames: ["config"],
-      );
-
-  @override
-  Future<bool> crateUnregisterCustomProvider({required String name}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_String(name, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 99,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_bool,
-          decodeErrorData: sse_decode_String,
-        ),
-        constMeta: kCrateUnregisterCustomProviderConstMeta,
-        argValues: [name],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateUnregisterCustomProviderConstMeta =>
-      const TaskConstMeta(
-        debugName: "unregister_custom_provider",
-        argNames: ["name"],
-      );
-
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_DefaultClient => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient;
@@ -4061,14 +3991,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   dco_decode_box_autoadd_create_transcription_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_create_transcription_request(raw);
-  }
-
-  @protected
-  CustomProviderConfig dco_decode_box_autoadd_custom_provider_config(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_custom_provider_config(raw);
   }
 
   @protected
@@ -6118,14 +6040,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_create_transcription_request(deserializer));
-  }
-
-  @protected
-  CustomProviderConfig sse_decode_box_autoadd_custom_provider_config(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_custom_provider_config(deserializer));
   }
 
   @protected
@@ -8658,15 +8572,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_create_transcription_request(self, serializer);
-  }
-
-  @protected
-  void sse_encode_box_autoadd_custom_provider_config(
-    CustomProviderConfig self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_custom_provider_config(self, serializer);
   }
 
   @protected

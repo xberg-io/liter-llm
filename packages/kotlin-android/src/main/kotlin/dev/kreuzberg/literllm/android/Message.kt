@@ -8,27 +8,27 @@ package dev.kreuzberg.literllm.android
 sealed class Message {
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class System(val field0: SystemMessage) : Message()
+    data class System(val message: SystemMessage) : Message()
 
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class User(val field0: UserMessage) : Message()
+    data class User(val message: UserMessage) : Message()
 
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Assistant(val field0: AssistantMessage) : Message()
+    data class Assistant(val message: AssistantMessage) : Message()
 
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Tool(val field0: ToolMessage) : Message()
+    data class Tool(val message: ToolMessage) : Message()
 
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Developer(val field0: DeveloperMessage) : Message()
+    data class Developer(val message: DeveloperMessage) : Message()
 
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Function(val field0: FunctionMessage) : Message()
+    data class Function(val message: FunctionMessage) : Message()
 }
 
 private class MessageDeserializer :
@@ -102,7 +102,7 @@ private class MessageSerializer :
                     @Suppress("UNCHECKED_CAST")
                     val n =
                         mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
-                            value.field0
+                            value.message
                         ) as com.fasterxml.jackson.databind.node.ObjectNode
                     n.put("role", "system")
                     n
@@ -112,7 +112,7 @@ private class MessageSerializer :
                     @Suppress("UNCHECKED_CAST")
                     val n =
                         mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
-                            value.field0
+                            value.message
                         ) as com.fasterxml.jackson.databind.node.ObjectNode
                     n.put("role", "user")
                     n
@@ -122,7 +122,7 @@ private class MessageSerializer :
                     @Suppress("UNCHECKED_CAST")
                     val n =
                         mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
-                            value.field0
+                            value.message
                         ) as com.fasterxml.jackson.databind.node.ObjectNode
                     n.put("role", "assistant")
                     n
@@ -132,7 +132,7 @@ private class MessageSerializer :
                     @Suppress("UNCHECKED_CAST")
                     val n =
                         mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
-                            value.field0
+                            value.message
                         ) as com.fasterxml.jackson.databind.node.ObjectNode
                     n.put("role", "tool")
                     n
@@ -142,7 +142,7 @@ private class MessageSerializer :
                     @Suppress("UNCHECKED_CAST")
                     val n =
                         mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
-                            value.field0
+                            value.message
                         ) as com.fasterxml.jackson.databind.node.ObjectNode
                     n.put("role", "developer")
                     n
@@ -152,7 +152,7 @@ private class MessageSerializer :
                     @Suppress("UNCHECKED_CAST")
                     val n =
                         mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
-                            value.field0
+                            value.message
                         ) as com.fasterxml.jackson.databind.node.ObjectNode
                     n.put("role", "function")
                     n

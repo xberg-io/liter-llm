@@ -10,11 +10,11 @@ package dev.kreuzberg.literllm.android
 sealed class ModerationInput {
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Single(val field0: String) : ModerationInput()
+    data class Single(val value: String) : ModerationInput()
 
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Multiple(val field0: List<String>) : ModerationInput()
+    data class Multiple(val value: List<String>) : ModerationInput()
 }
 
 private class ModerationInputDeserializer :

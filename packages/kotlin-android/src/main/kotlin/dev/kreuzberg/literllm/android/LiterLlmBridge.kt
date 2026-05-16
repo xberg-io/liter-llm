@@ -18,10 +18,6 @@ object LiterLlmBridge {
 
     external fun nativeCreateClientFromJson(json: String): Long
 
-    external fun nativeRegisterCustomProvider(config: String): Unit
-
-    external fun nativeUnregisterCustomProvider(name: String): Boolean
-
     // JNI external funs for client instance methods.
     external fun nativeDefaultClientChat(handle: Long, requestJson: String): String
 

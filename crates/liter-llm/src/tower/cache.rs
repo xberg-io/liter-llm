@@ -30,6 +30,7 @@ use crate::types::{ChatCompletionResponse, EmbeddingResponse};
 
 /// Storage backend for the response cache.
 #[derive(Debug, Clone, Default)]
+#[cfg_attr(alef, alef(skip))]
 pub enum CacheBackend {
     /// In-memory LRU cache (default). No external dependencies.
     #[default]
@@ -46,6 +47,7 @@ pub enum CacheBackend {
 
 /// Configuration for the response cache.
 #[derive(Debug, Clone)]
+#[cfg_attr(alef, alef(skip))]
 pub struct CacheConfig {
     /// Maximum number of cached entries.
     pub max_entries: usize,
@@ -55,6 +57,7 @@ pub struct CacheConfig {
     pub backend: CacheBackend,
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl Default for CacheConfig {
     fn default() -> Self {
         Self {
@@ -84,6 +87,7 @@ impl Default for CacheConfig {
 /// and would not benefit external store implementations (Redis, DynamoDB)
 /// that must serialise on every read anyway.
 #[derive(Clone, Serialize, Deserialize)]
+#[cfg_attr(alef, alef(skip))]
 pub enum CachedResponse {
     /// A cached chat completion response.
     Chat(ChatCompletionResponse),
@@ -110,6 +114,7 @@ impl CachedResponse {
 ///
 /// All methods return pinned, boxed futures so the trait is object-safe and
 /// can be used behind `Arc<dyn CacheStore>`.
+#[cfg_attr(alef, alef(skip))]
 pub trait CacheStore: Send + Sync + 'static {
     /// Look up a cached response by its hash key.
     ///
@@ -224,6 +229,7 @@ impl InnerCache {
 ///
 /// This is the default [`CacheStore`] backend used by [`CacheLayer::new`].
 /// It uses a [`HashMap`] with a [`VecDeque`] for LRU eviction order.
+#[cfg_attr(alef, alef(skip))]
 pub struct InMemoryStore {
     inner: RwLock<InnerCache>,
 }
@@ -278,6 +284,7 @@ impl CacheStore for InMemoryStore {
 // ---- Layer -----------------------------------------------------------------
 
 /// Tower [`Layer`] that caches non-streaming LLM responses.
+#[cfg_attr(alef, alef(skip))]
 pub struct CacheLayer {
     store: Arc<dyn CacheStore>,
 }
@@ -314,6 +321,7 @@ impl<S> Layer<S> for CacheLayer {
 // ---- Service ---------------------------------------------------------------
 
 /// Tower service produced by [`CacheLayer`].
+#[cfg_attr(alef, alef(skip))]
 pub struct CacheService<S> {
     inner: S,
     store: Arc<dyn CacheStore>,

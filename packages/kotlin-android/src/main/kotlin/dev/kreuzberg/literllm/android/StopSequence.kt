@@ -7,11 +7,11 @@ package dev.kreuzberg.literllm.android
 sealed class StopSequence {
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Single(val field0: String) : StopSequence()
+    data class Single(val value: String) : StopSequence()
 
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Multiple(val field0: List<String>) : StopSequence()
+    data class Multiple(val value: List<String>) : StopSequence()
 }
 
 private class StopSequenceDeserializer :

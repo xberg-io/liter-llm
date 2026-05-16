@@ -20,6 +20,7 @@ use crate::error::Result;
 /// Implementations handle caching, refresh, and expiry internally.
 /// The client calls `resolve()` before each request when a credential
 /// provider is configured.
+#[cfg_attr(alef, alef(skip))]
 pub trait CredentialProvider: Send + Sync {
     /// Retrieve a valid credential.
     ///
@@ -39,6 +40,7 @@ impl CredentialProvider for Arc<dyn CredentialProvider> {
 
 /// A resolved credential ready for use in request authentication.
 #[derive(Debug, Clone)]
+#[cfg_attr(alef, alef(skip))]
 pub enum Credential {
     /// Bearer token (Azure AD, Vertex OAuth2, generic OIDC).
     BearerToken(SecretString),
@@ -52,6 +54,7 @@ pub enum Credential {
 
 /// A static credential provider that always returns the same bearer token.
 /// Useful for testing or when tokens are managed externally.
+#[cfg_attr(alef, alef(skip))]
 pub struct StaticTokenProvider {
     token: SecretString,
 }
