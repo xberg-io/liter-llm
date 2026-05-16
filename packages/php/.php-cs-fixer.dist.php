@@ -15,6 +15,7 @@ $finder = (new PhpCsFixer\Finder())
     ->notPath('stubs');
 
 return (new PhpCsFixer\Config())
+    ->setUnsupportedPhpVersionAllowed(true)
     ->setRules([
         '@PSR12' => true,
         '@PHP82Migration' => true,

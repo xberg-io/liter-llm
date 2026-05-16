@@ -2,4 +2,9 @@
 
 package dev.kreuzberg.literllm.android
 
-data class ModelObject(val id: String, val `object`: String, val created: Long, val ownedBy: String)
+data class ModelObject(
+    val id: String,
+    val `object`: String,
+    val created: Long,
+    val ownedBy: String,
+)

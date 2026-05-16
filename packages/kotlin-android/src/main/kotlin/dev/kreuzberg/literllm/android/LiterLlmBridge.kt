@@ -8,13 +8,7 @@ object LiterLlmBridge {
         System.loadLibrary("literllm_jni")
     }
 
-    external fun nativeCreateClient(
-        apiKey: String,
-        baseUrl: String,
-        timeoutSecs: Long,
-        maxRetries: Int,
-        modelHint: String,
-    ): Long
+    external fun nativeCreateClient(apiKey: String, baseUrl: String, timeoutSecs: Long, maxRetries: Int, modelHint: String): Long
 
     external fun nativeCreateClientFromJson(json: String): Long
 

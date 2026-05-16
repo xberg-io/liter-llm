@@ -2,7 +2,9 @@
 
 package dev.kreuzberg.literllm.android
 
-/** Why a choice stopped generating tokens. */
+/**
+ * Why a choice stopped generating tokens.
+ */
 enum class FinishReason {
     STOP,
     LENGTH,

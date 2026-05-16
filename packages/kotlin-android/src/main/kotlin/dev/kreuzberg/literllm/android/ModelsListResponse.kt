@@ -2,4 +2,7 @@
 
 package dev.kreuzberg.literllm.android
 
-data class ModelsListResponse(val `object`: String, val data: List<ModelObject>)
+data class ModelsListResponse(
+    val `object`: String,
+    val data: List<ModelObject>,
+)

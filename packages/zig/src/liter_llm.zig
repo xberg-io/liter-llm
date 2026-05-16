@@ -52,53 +52,53 @@ pub const LiterLlmError = error{
 };
 
 pub const SystemMessage = struct {
-    content: [:0]const u8,
-    name: ?[:0]const u8,
+    content: []const u8,
+    name: ?[]const u8,
 };
 
 pub const UserMessage = struct {
     content: UserContent,
-    name: ?[:0]const u8,
+    name: ?[]const u8,
 };
 
 pub const ImageUrl = struct {
-    url: [:0]const u8,
+    url: []const u8,
     detail: ?ImageDetail,
 };
 
 pub const DocumentContent = struct {
-    data: [:0]const u8,
-    media_type: [:0]const u8,
+    data: []const u8,
+    media_type: []const u8,
 };
 
 pub const AudioContent = struct {
-    data: [:0]const u8,
-    format: [:0]const u8,
+    data: []const u8,
+    format: []const u8,
 };
 
 pub const AssistantMessage = struct {
-    content: ?[:0]const u8,
-    name: ?[:0]const u8,
+    content: ?[]const u8,
+    name: ?[]const u8,
     tool_calls: ?[]const ToolCall,
-    refusal: ?[:0]const u8,
+    refusal: ?[]const u8,
     function_call: ?FunctionCall,
 };
 
 pub const ToolMessage = struct {
-    content: [:0]const u8,
-    tool_call_id: [:0]const u8,
-    name: ?[:0]const u8,
+    content: []const u8,
+    tool_call_id: []const u8,
+    name: ?[]const u8,
 };
 
 pub const DeveloperMessage = struct {
-    content: [:0]const u8,
-    name: ?[:0]const u8,
+    content: []const u8,
+    name: ?[]const u8,
 };
 
 /// Deprecated legacy function-role message body.
 pub const FunctionMessage = struct {
-    content: [:0]const u8,
-    name: [:0]const u8,
+    content: []const u8,
+    name: []const u8,
 };
 
 pub const ChatCompletionTool = struct {
@@ -107,21 +107,21 @@ pub const ChatCompletionTool = struct {
 };
 
 pub const FunctionDefinition = struct {
-    name: [:0]const u8,
-    description: ?[:0]const u8,
-    parameters: ?[:0]const u8,
+    name: []const u8,
+    description: ?[]const u8,
+    parameters: ?[]const u8,
     strict: ?bool,
 };
 
 pub const ToolCall = struct {
-    id: [:0]const u8,
+    id: []const u8,
     call_type: ToolType,
     function: FunctionCall,
 };
 
 pub const FunctionCall = struct {
-    name: [:0]const u8,
-    arguments: [:0]const u8,
+    name: []const u8,
+    arguments: []const u8,
 };
 
 pub const SpecificToolChoice = struct {
@@ -130,13 +130,13 @@ pub const SpecificToolChoice = struct {
 };
 
 pub const SpecificFunction = struct {
-    name: [:0]const u8,
+    name: []const u8,
 };
 
 pub const JsonSchemaFormat = struct {
-    name: [:0]const u8,
-    description: ?[:0]const u8,
-    schema: [:0]const u8,
+    name: []const u8,
+    description: ?[]const u8,
+    schema: []const u8,
     strict: ?bool,
 };
 
@@ -159,7 +159,7 @@ pub const PromptTokensDetails = struct {
 };
 
 pub const ChatCompletionRequest = struct {
-    model: [:0]const u8,
+    model: []const u8,
     messages: []const Message,
     temperature: ?f64,
     top_p: ?f64,
@@ -170,7 +170,7 @@ pub const ChatCompletionRequest = struct {
     presence_penalty: ?f64,
     frequency_penalty: ?f64,
     logit_bias: ?std.StringHashMap(f64),
-    user: ?[:0]const u8,
+    user: ?[]const u8,
     tools: ?[]const ChatCompletionTool,
     tool_choice: ?ToolChoice,
     parallel_tool_calls: ?bool,
@@ -178,7 +178,7 @@ pub const ChatCompletionRequest = struct {
     stream_options: ?StreamOptions,
     seed: ?i64,
     reasoning_effort: ?ReasoningEffort,
-    extra_body: ?[:0]const u8,
+    extra_body: ?[]const u8,
 };
 
 pub const StreamOptions = struct {
@@ -186,14 +186,14 @@ pub const StreamOptions = struct {
 };
 
 pub const ChatCompletionResponse = struct {
-    id: [:0]const u8,
-    object: [:0]const u8,
+    id: []const u8,
+    object: []const u8,
     created: u64,
-    model: [:0]const u8,
+    model: []const u8,
     choices: []const Choice,
     usage: ?Usage,
-    system_fingerprint: ?[:0]const u8,
-    service_tier: ?[:0]const u8,
+    system_fingerprint: ?[]const u8,
+    service_tier: ?[]const u8,
 };
 
 pub const Choice = struct {
@@ -203,14 +203,14 @@ pub const Choice = struct {
 };
 
 pub const ChatCompletionChunk = struct {
-    id: [:0]const u8,
-    object: [:0]const u8,
+    id: []const u8,
+    object: []const u8,
     created: u64,
-    model: [:0]const u8,
+    model: []const u8,
     choices: []const StreamChoice,
     usage: ?Usage,
-    system_fingerprint: ?[:0]const u8,
-    service_tier: ?[:0]const u8,
+    system_fingerprint: ?[]const u8,
+    service_tier: ?[]const u8,
 };
 
 pub const StreamChoice = struct {
@@ -220,56 +220,56 @@ pub const StreamChoice = struct {
 };
 
 pub const StreamDelta = struct {
-    role: ?[:0]const u8,
-    content: ?[:0]const u8,
+    role: ?[]const u8,
+    content: ?[]const u8,
     tool_calls: ?[]const StreamToolCall,
     function_call: ?StreamFunctionCall,
-    refusal: ?[:0]const u8,
+    refusal: ?[]const u8,
 };
 
 pub const StreamToolCall = struct {
     index: u32,
-    id: ?[:0]const u8,
+    id: ?[]const u8,
     call_type: ?ToolType,
     function: ?StreamFunctionCall,
 };
 
 pub const StreamFunctionCall = struct {
-    name: ?[:0]const u8,
-    arguments: ?[:0]const u8,
+    name: ?[]const u8,
+    arguments: ?[]const u8,
 };
 
 pub const EmbeddingRequest = struct {
-    model: [:0]const u8,
+    model: []const u8,
     input: EmbeddingInput,
     encoding_format: ?EmbeddingFormat,
     dimensions: ?u32,
-    user: ?[:0]const u8,
+    user: ?[]const u8,
 };
 
 pub const EmbeddingResponse = struct {
-    object: [:0]const u8,
+    object: []const u8,
     data: []const EmbeddingObject,
-    model: [:0]const u8,
+    model: []const u8,
     usage: ?Usage,
 };
 
 pub const EmbeddingObject = struct {
-    object: [:0]const u8,
+    object: []const u8,
     embedding: []const f64,
     index: u32,
 };
 
 /// Request to create images from a text prompt.
 pub const CreateImageRequest = struct {
-    prompt: [:0]const u8,
-    model: ?[:0]const u8,
+    prompt: []const u8,
+    model: ?[]const u8,
     n: ?u32,
-    size: ?[:0]const u8,
-    quality: ?[:0]const u8,
-    style: ?[:0]const u8,
-    response_format: ?[:0]const u8,
-    user: ?[:0]const u8,
+    size: ?[]const u8,
+    quality: ?[]const u8,
+    style: ?[]const u8,
+    response_format: ?[]const u8,
+    user: ?[]const u8,
 };
 
 /// Response containing generated images.
@@ -280,34 +280,34 @@ pub const ImagesResponse = struct {
 
 /// A single generated image, returned as either a URL or base64 data.
 pub const Image = struct {
-    url: ?[:0]const u8,
-    b64_json: ?[:0]const u8,
-    revised_prompt: ?[:0]const u8,
+    url: ?[]const u8,
+    b64_json: ?[]const u8,
+    revised_prompt: ?[]const u8,
 };
 
 /// Request to generate speech audio from text.
 pub const CreateSpeechRequest = struct {
-    model: [:0]const u8,
-    input: [:0]const u8,
-    voice: [:0]const u8,
-    response_format: ?[:0]const u8,
+    model: []const u8,
+    input: []const u8,
+    voice: []const u8,
+    response_format: ?[]const u8,
     speed: ?f64,
 };
 
 /// Request to transcribe audio into text.
 pub const CreateTranscriptionRequest = struct {
-    model: [:0]const u8,
-    file: [:0]const u8,
-    language: ?[:0]const u8,
-    prompt: ?[:0]const u8,
-    response_format: ?[:0]const u8,
+    model: []const u8,
+    file: []const u8,
+    language: ?[]const u8,
+    prompt: ?[]const u8,
+    response_format: ?[]const u8,
     temperature: ?f64,
 };
 
 /// Response from a transcription request.
 pub const TranscriptionResponse = struct {
-    text: [:0]const u8,
-    language: ?[:0]const u8,
+    text: []const u8,
+    language: ?[]const u8,
     duration: ?f64,
     segments: ?[]const TranscriptionSegment,
 };
@@ -317,19 +317,19 @@ pub const TranscriptionSegment = struct {
     id: u32,
     start: f64,
     end: f64,
-    text: [:0]const u8,
+    text: []const u8,
 };
 
 /// Request to classify content for policy violations.
 pub const ModerationRequest = struct {
     input: ModerationInput,
-    model: ?[:0]const u8,
+    model: ?[]const u8,
 };
 
 /// Response from the moderation endpoint.
 pub const ModerationResponse = struct {
-    id: [:0]const u8,
-    model: [:0]const u8,
+    id: []const u8,
+    model: []const u8,
     results: []const ModerationResult,
 };
 
@@ -372,8 +372,8 @@ pub const ModerationCategoryScores = struct {
 
 /// Request to rerank documents by relevance to a query.
 pub const RerankRequest = struct {
-    model: [:0]const u8,
-    query: [:0]const u8,
+    model: []const u8,
+    query: []const u8,
     documents: []const RerankDocument,
     top_n: ?u32,
     return_documents: ?bool,
@@ -381,9 +381,9 @@ pub const RerankRequest = struct {
 
 /// Response from the rerank endpoint.
 pub const RerankResponse = struct {
-    id: ?[:0]const u8,
+    id: ?[]const u8,
     results: []const RerankResult,
-    meta: ?[:0]const u8,
+    meta: ?[]const u8,
 };
 
 /// A single reranked document with its relevance score.
@@ -395,35 +395,35 @@ pub const RerankResult = struct {
 
 /// The text content of a reranked document, returned when `return_documents` is true.
 pub const RerankResultDocument = struct {
-    text: [:0]const u8,
+    text: []const u8,
 };
 
 /// A search request.
 pub const SearchRequest = struct {
-    model: [:0]const u8,
-    query: [:0]const u8,
+    model: []const u8,
+    query: []const u8,
     max_results: ?u32,
-    search_domain_filter: ?[]const [:0]const u8,
-    country: ?[:0]const u8,
+    search_domain_filter: ?[]const []const u8,
+    country: ?[]const u8,
 };
 
 /// A search response.
 pub const SearchResponse = struct {
     results: []const SearchResult,
-    model: [:0]const u8,
+    model: []const u8,
 };
 
 /// An individual search result.
 pub const SearchResult = struct {
-    title: [:0]const u8,
-    url: [:0]const u8,
-    snippet: [:0]const u8,
-    date: ?[:0]const u8,
+    title: []const u8,
+    url: []const u8,
+    snippet: []const u8,
+    date: ?[]const u8,
 };
 
 /// An OCR request.
 pub const OcrRequest = struct {
-    model: [:0]const u8,
+    model: []const u8,
     document: OcrDocument,
     pages: ?[]const u32,
     include_image_base64: ?bool,
@@ -432,22 +432,22 @@ pub const OcrRequest = struct {
 /// An OCR response.
 pub const OcrResponse = struct {
     pages: []const OcrPage,
-    model: [:0]const u8,
+    model: []const u8,
     usage: ?Usage,
 };
 
 /// A single page of OCR output.
 pub const OcrPage = struct {
     index: u32,
-    markdown: [:0]const u8,
+    markdown: []const u8,
     images: ?[]const OcrImage,
     dimensions: ?PageDimensions,
 };
 
 /// An image extracted from an OCR page.
 pub const OcrImage = struct {
-    id: [:0]const u8,
-    image_base64: ?[:0]const u8,
+    id: []const u8,
+    image_base64: ?[]const u8,
 };
 
 /// Page dimensions in pixels.
@@ -457,73 +457,73 @@ pub const PageDimensions = struct {
 };
 
 pub const ModelsListResponse = struct {
-    object: [:0]const u8,
+    object: []const u8,
     data: []const ModelObject,
 };
 
 pub const ModelObject = struct {
-    id: [:0]const u8,
-    object: [:0]const u8,
+    id: []const u8,
+    object: []const u8,
     created: u64,
-    owned_by: [:0]const u8,
+    owned_by: []const u8,
 };
 
 pub const CreateFileRequest = struct {
-    file: [:0]const u8,
+    file: []const u8,
     purpose: FilePurpose,
-    filename: ?[:0]const u8,
+    filename: ?[]const u8,
 };
 
 pub const FileObject = struct {
-    id: [:0]const u8,
-    object: [:0]const u8,
+    id: []const u8,
+    object: []const u8,
     bytes: u64,
     created_at: u64,
-    filename: [:0]const u8,
-    purpose: [:0]const u8,
-    status: ?[:0]const u8,
+    filename: []const u8,
+    purpose: []const u8,
+    status: ?[]const u8,
 };
 
 pub const FileListResponse = struct {
-    object: [:0]const u8,
+    object: []const u8,
     data: []const FileObject,
     has_more: ?bool,
 };
 
 pub const FileListQuery = struct {
-    purpose: ?[:0]const u8,
+    purpose: ?[]const u8,
     limit: ?u32,
-    after: ?[:0]const u8,
+    after: ?[]const u8,
 };
 
 pub const DeleteResponse = struct {
-    id: [:0]const u8,
-    object: [:0]const u8,
+    id: []const u8,
+    object: []const u8,
     deleted: bool,
 };
 
 pub const CreateBatchRequest = struct {
-    input_file_id: [:0]const u8,
-    endpoint: [:0]const u8,
-    completion_window: [:0]const u8,
-    metadata: ?[:0]const u8,
+    input_file_id: []const u8,
+    endpoint: []const u8,
+    completion_window: []const u8,
+    metadata: ?[]const u8,
 };
 
 pub const BatchObject = struct {
-    id: [:0]const u8,
-    object: [:0]const u8,
-    endpoint: [:0]const u8,
-    input_file_id: [:0]const u8,
-    completion_window: [:0]const u8,
+    id: []const u8,
+    object: []const u8,
+    endpoint: []const u8,
+    input_file_id: []const u8,
+    completion_window: []const u8,
     status: BatchStatus,
-    output_file_id: ?[:0]const u8,
-    error_file_id: ?[:0]const u8,
+    output_file_id: ?[]const u8,
+    error_file_id: ?[]const u8,
     created_at: u64,
     completed_at: ?u64,
     failed_at: ?u64,
     expired_at: ?u64,
     request_counts: ?BatchRequestCounts,
-    metadata: ?[:0]const u8,
+    metadata: ?[]const u8,
 };
 
 pub const BatchRequestCounts = struct {
@@ -533,47 +533,47 @@ pub const BatchRequestCounts = struct {
 };
 
 pub const BatchListResponse = struct {
-    object: [:0]const u8,
+    object: []const u8,
     data: []const BatchObject,
     has_more: ?bool,
-    first_id: ?[:0]const u8,
-    last_id: ?[:0]const u8,
+    first_id: ?[]const u8,
+    last_id: ?[]const u8,
 };
 
 pub const BatchListQuery = struct {
     limit: ?u32,
-    after: ?[:0]const u8,
+    after: ?[]const u8,
 };
 
 pub const CreateResponseRequest = struct {
-    model: [:0]const u8,
-    input: [:0]const u8,
-    instructions: ?[:0]const u8,
+    model: []const u8,
+    input: []const u8,
+    instructions: ?[]const u8,
     tools: ?[]const ResponseTool,
     temperature: ?f64,
     max_output_tokens: ?u64,
-    metadata: ?[:0]const u8,
+    metadata: ?[]const u8,
 };
 
 pub const ResponseTool = struct {
-    tool_type: [:0]const u8,
-    config: [:0]const u8,
+    tool_type: []const u8,
+    config: []const u8,
 };
 
 pub const ResponseObject = struct {
-    id: [:0]const u8,
-    object: [:0]const u8,
+    id: []const u8,
+    object: []const u8,
     created_at: u64,
-    model: [:0]const u8,
-    status: [:0]const u8,
+    model: []const u8,
+    status: []const u8,
     output: []const ResponseOutputItem,
     usage: ?ResponseUsage,
-    error_: ?[:0]const u8,
+    error_: ?[]const u8,
 };
 
 pub const ResponseOutputItem = struct {
-    item_type: [:0]const u8,
-    content: [:0]const u8,
+    item_type: []const u8,
+    content: []const u8,
 };
 
 pub const ResponseUsage = struct {
@@ -584,10 +584,10 @@ pub const ResponseUsage = struct {
 
 /// Configuration for registering a custom LLM provider at runtime.
 pub const CustomProviderConfig = struct {
-    name: [:0]const u8,
-    base_url: [:0]const u8,
+    name: []const u8,
+    base_url: []const u8,
     auth_header: AuthHeaderFormat,
-    model_prefixes: []const [:0]const u8,
+    model_prefixes: []const []const u8,
 };
 
 /// A chat message in a conversation.
@@ -601,12 +601,12 @@ pub const Message = union(enum) {
 };
 
 pub const UserContent = union(enum) {
-    text: [:0]const u8,
+    text: []const u8,
     parts: []const ContentPart,
 };
 
 pub const ContentPart = union(enum) {
-    text: [:0]const u8,
+    text: []const u8,
     image_url: ImageUrl,
     document: DocumentContent,
     input_audio: AudioContent,
@@ -645,8 +645,8 @@ pub const ResponseFormat = union(enum) {
 };
 
 pub const StopSequence = union(enum) {
-    single: [:0]const u8,
-    multiple: []const [:0]const u8,
+    single: []const u8,
+    multiple: []const []const u8,
 };
 
 /// Why a choice stopped generating tokens.
@@ -673,28 +673,28 @@ pub const EmbeddingFormat = enum {
 };
 
 pub const EmbeddingInput = union(enum) {
-    single: [:0]const u8,
-    multiple: []const [:0]const u8,
+    single: []const u8,
+    multiple: []const []const u8,
 };
 
 /// Input to the moderation endpoint — a single string or multiple strings.
 pub const ModerationInput = union(enum) {
-    single: [:0]const u8,
-    multiple: []const [:0]const u8,
+    single: []const u8,
+    multiple: []const []const u8,
 };
 
 /// A document to be reranked — either a plain string or an object with a text field.
 pub const RerankDocument = union(enum) {
-    text: [:0]const u8,
-    object: [:0]const u8,
+    text: []const u8,
+    object: []const u8,
 };
 
 /// Document input for OCR — either a URL or inline base64 data.
 pub const OcrDocument = union(enum) {
-    document_url: [:0]const u8,
+    document_url: []const u8,
     base64: struct {
-        data: [:0]const u8,
-        media_type: [:0]const u8,
+        data: []const u8,
+        media_type: []const u8,
     },
 };
 
@@ -719,7 +719,7 @@ pub const BatchStatus = enum {
 /// How the API key is sent in the HTTP request.
 pub const AuthHeaderFormat = union(enum) {
     bearer: void,
-    api_key: [:0]const u8,
+    api_key: []const u8,
     none: void,
 };
 

@@ -2,7 +2,9 @@
 
 package dev.kreuzberg.literllm.android
 
-/** The format in which the embedding vectors are returned. */
+/**
+ * The format in which the embedding vectors are returned.
+ */
 enum class EmbeddingFormat {
     FLOAT,
     BASE64,

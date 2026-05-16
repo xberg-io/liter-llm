@@ -2,7 +2,9 @@
 
 package dev.kreuzberg.literllm.android
 
-/** Boolean flags for each moderation category. */
+/**
+ * Boolean flags for each moderation category.
+ */
 data class ModerationCategories(
     val sexual: Boolean,
     val hate: Boolean,

@@ -2,5 +2,10 @@
 
 package dev.kreuzberg.literllm.android
 
-/** A search response. */
-data class SearchResponse(val results: List<SearchResult>, val model: String)
+/**
+ * A search response.
+ */
+data class SearchResponse(
+    val results: List<SearchResult>,
+    val model: String,
+)

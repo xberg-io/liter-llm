@@ -22,7 +22,7 @@ constructed, or if the resolved provider configuration is invalid.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend signature generation
+DefaultClient createClient(String apiKey, [String? baseUrl, int? timeoutSecs, int? maxRetries, String? modelHint])
 ```
 
 **Parameters:**
@@ -54,7 +54,7 @@ contains unknown fields.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend signature generation
+DefaultClient createClientFromJson(String json)
 ```
 
 **Parameters:**
@@ -336,7 +336,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ChatCompletionResponse chat(ChatCompletionRequest req)
 ```
 
 ###### chatStream()
@@ -344,7 +344,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+String chatStream(ChatCompletionRequest req)
 ```
 
 ###### embed()
@@ -352,7 +352,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+EmbeddingResponse embed(EmbeddingRequest req)
 ```
 
 ###### listModels()
@@ -360,7 +360,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ModelsListResponse listModels()
 ```
 
 ###### imageGenerate()
@@ -368,7 +368,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ImagesResponse imageGenerate(CreateImageRequest req)
 ```
 
 ###### speech()
@@ -376,7 +376,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+Uint8List speech(CreateSpeechRequest req)
 ```
 
 ###### transcribe()
@@ -384,7 +384,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+TranscriptionResponse transcribe(CreateTranscriptionRequest req)
 ```
 
 ###### moderate()
@@ -392,7 +392,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ModerationResponse moderate(ModerationRequest req)
 ```
 
 ###### rerank()
@@ -400,7 +400,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+RerankResponse rerank(RerankRequest req)
 ```
 
 ###### search()
@@ -408,7 +408,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+SearchResponse search(SearchRequest req)
 ```
 
 ###### ocr()
@@ -416,7 +416,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+OcrResponse ocr(OcrRequest req)
 ```
 
 ###### createFile()
@@ -424,7 +424,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+FileObject createFile(CreateFileRequest req)
 ```
 
 ###### retrieveFile()
@@ -432,7 +432,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+FileObject retrieveFile(String fileId)
 ```
 
 ###### deleteFile()
@@ -440,7 +440,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+DeleteResponse deleteFile(String fileId)
 ```
 
 ###### listFiles()
@@ -448,7 +448,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+FileListResponse listFiles([FileListQuery? query])
 ```
 
 ###### fileContent()
@@ -456,7 +456,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+Uint8List fileContent(String fileId)
 ```
 
 ###### createBatch()
@@ -464,7 +464,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+BatchObject createBatch(CreateBatchRequest req)
 ```
 
 ###### retrieveBatch()
@@ -472,7 +472,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+BatchObject retrieveBatch(String batchId)
 ```
 
 ###### listBatches()
@@ -480,7 +480,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+BatchListResponse listBatches([BatchListQuery? query])
 ```
 
 ###### cancelBatch()
@@ -488,7 +488,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+BatchObject cancelBatch(String batchId)
 ```
 
 ###### createResponse()
@@ -496,7 +496,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ResponseObject createResponse(CreateResponseRequest req)
 ```
 
 ###### retrieveResponse()
@@ -504,7 +504,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ResponseObject retrieveResponse(String id)
 ```
 
 ###### cancelResponse()
@@ -512,7 +512,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ResponseObject cancelResponse(String id)
 ```
 
 ---

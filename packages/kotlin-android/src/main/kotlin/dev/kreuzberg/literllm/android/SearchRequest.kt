@@ -2,7 +2,9 @@
 
 package dev.kreuzberg.literllm.android
 
-/** A search request. */
+/**
+ * A search request.
+ */
 data class SearchRequest(
     val model: String,
     val query: String,

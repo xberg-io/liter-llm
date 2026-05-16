@@ -3,6 +3,18 @@
 package dev.kreuzberg.literllm.android
 
 object LiterLlm {
+    /**
+     * Create a new LLM client with simple scalar configuration.
+     *
+     * This is the primary binding entry-point. All parameters except `api_key`
+     * are optional — omitting them uses the same defaults as
+     * `ClientConfigBuilder`.
+     *
+     * **Errors:**
+     *
+     * Returns `LiterLlmError` if the underlying HTTP client cannot be
+     * constructed, or if the resolved provider configuration is invalid.
+     */
     fun createClient(
         apiKey: String,
         baseUrl: String? = null,
@@ -11,9 +23,24 @@ object LiterLlm {
         modelHint: String? = null,
     ): DefaultClient =
         DefaultClient(
-            LiterLlmBridge.nativeCreateClient(apiKey, baseUrl, timeoutSecs, maxRetries, modelHint)
-        )
+            LiterLlmBridge.nativeCreateClient(
+                apiKey,
+        baseUrl ?: "",
+                timeoutSecs ?: 0L,
+                maxRetries ?: 0,
+                modelHint ?: "",
+            ),
+                )
 
-    fun createClientFromJson(json: String): DefaultClient =
-        DefaultClient(LiterLlmBridge.nativeCreateClientFromJson(json))
+    /**
+     * Create a new LLM client from a JSON string.
+     *
+     * The JSON object accepts the same fields as `liter-llm.toml` (snake_case).
+     *
+     * **Errors:**
+     *
+     * Returns `LiterLlmError.BadRequest` if `json` is not valid JSON or
+     * contains unknown fields.
+     */
+    fun createClientFromJson(json: String): DefaultClient = DefaultClient(LiterLlmBridge.nativeCreateClientFromJson(json))
 }

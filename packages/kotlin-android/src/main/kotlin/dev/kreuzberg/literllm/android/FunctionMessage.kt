@@ -2,5 +2,10 @@
 
 package dev.kreuzberg.literllm.android
 
-/** Deprecated legacy function-role message body. */
-data class FunctionMessage(val content: String, val name: String)
+/**
+ * Deprecated legacy function-role message body.
+ */
+data class FunctionMessage(
+    val content: String,
+    val name: String,
+)

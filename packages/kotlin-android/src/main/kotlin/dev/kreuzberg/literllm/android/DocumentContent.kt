@@ -2,4 +2,7 @@
 
 package dev.kreuzberg.literllm.android
 
-data class DocumentContent(val data: String, val mediaType: String)
+data class DocumentContent(
+    val data: String,
+    val mediaType: String,
+)

@@ -2,4 +2,8 @@
 
 package dev.kreuzberg.literllm.android
 
-data class StreamChoice(val index: Int, val delta: StreamDelta, val finishReason: FinishReason?)
+data class StreamChoice(
+    val index: Int,
+    val delta: StreamDelta,
+    val finishReason: FinishReason?,
+)

@@ -2,4 +2,7 @@
 
 package dev.kreuzberg.literllm.android
 
-data class BatchListQuery(val limit: Int?, val after: String?)
+data class BatchListQuery(
+    val limit: Int?,
+    val after: String?,
+)

@@ -2,4 +2,8 @@
 
 package dev.kreuzberg.literllm.android
 
-data class Choice(val index: Int, val message: AssistantMessage, val finishReason: FinishReason?)
+data class Choice(
+    val index: Int,
+    val message: AssistantMessage,
+    val finishReason: FinishReason?,
+)

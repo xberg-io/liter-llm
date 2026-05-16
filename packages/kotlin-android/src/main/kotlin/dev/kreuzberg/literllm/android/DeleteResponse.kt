@@ -2,4 +2,8 @@
 
 package dev.kreuzberg.literllm.android
 
-data class DeleteResponse(val id: String, val `object`: String, val deleted: Boolean)
+data class DeleteResponse(
+    val id: String,
+    val `object`: String,
+    val deleted: Boolean,
+)

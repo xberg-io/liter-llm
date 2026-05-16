@@ -2,7 +2,9 @@
 
 package dev.kreuzberg.literllm.android
 
-/** Request to generate speech audio from text. */
+/**
+ * Request to generate speech audio from text.
+ */
 data class CreateSpeechRequest(
     val model: String,
     val input: String,

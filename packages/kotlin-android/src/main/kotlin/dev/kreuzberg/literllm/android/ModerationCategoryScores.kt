@@ -2,7 +2,9 @@
 
 package dev.kreuzberg.literllm.android
 
-/** Confidence scores for each moderation category. */
+/**
+ * Confidence scores for each moderation category.
+ */
 data class ModerationCategoryScores(
     val sexual: Double,
     val hate: Double,

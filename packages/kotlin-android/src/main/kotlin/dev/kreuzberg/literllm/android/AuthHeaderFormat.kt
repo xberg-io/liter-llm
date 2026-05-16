@@ -2,11 +2,15 @@
 
 package dev.kreuzberg.literllm.android
 
-/** How the API key is sent in the HTTP request. */
+/**
+ * How the API key is sent in the HTTP request.
+ */
 sealed class AuthHeaderFormat {
     object Bearer : AuthHeaderFormat()
 
-    data class ApiKey(val value: String) : AuthHeaderFormat()
+    data class ApiKey(
+        val value: String,
+    ) : AuthHeaderFormat()
 
     object None : AuthHeaderFormat()
 }

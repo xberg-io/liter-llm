@@ -2,7 +2,9 @@
 
 package dev.kreuzberg.literllm.android
 
-/** Response from the moderation endpoint. */
+/**
+ * Response from the moderation endpoint.
+ */
 data class ModerationResponse(
     val id: String,
     val model: String,

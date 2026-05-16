@@ -2,5 +2,10 @@
 
 package dev.kreuzberg.literllm.android
 
-/** Request to classify content for policy violations. */
-data class ModerationRequest(val input: ModerationInput, val model: String?)
+/**
+ * Request to classify content for policy violations.
+ */
+data class ModerationRequest(
+    val input: ModerationInput,
+    val model: String?,
+)

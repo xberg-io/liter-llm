@@ -2,4 +2,8 @@
 
 package dev.kreuzberg.literllm.android
 
-data class FileListQuery(val purpose: String?, val limit: Int?, val after: String?)
+data class FileListQuery(
+    val purpose: String?,
+    val limit: Int?,
+    val after: String?,
+)

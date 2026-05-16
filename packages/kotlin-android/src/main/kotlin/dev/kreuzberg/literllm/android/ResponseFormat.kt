@@ -2,9 +2,7 @@
 
 package dev.kreuzberg.literllm.android
 
-@com.fasterxml.jackson.databind.annotation.JsonDeserialize(
-    using = ResponseFormatDeserializer::class
-)
+@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = ResponseFormatDeserializer::class)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = ResponseFormatSerializer::class)
 sealed class ResponseFormat {
     object Text : ResponseFormat()
@@ -13,13 +11,14 @@ sealed class ResponseFormat {
 
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class JsonSchema(val jsonSchema: JsonSchemaFormat) : ResponseFormat()
+    data class JsonSchema(
+        val jsonSchema: JsonSchemaFormat,
+    ) : ResponseFormat()
 }
 
-private class ResponseFormatDeserializer :
-    com.fasterxml.jackson.databind.deser.std.StdDeserializer<ResponseFormat>(
-        ResponseFormat::class.java
-    ) {
+private class ResponseFormatDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<ResponseFormat>(
+    ResponseFormat::class.java,
+) {
     @Suppress("LongMethod")
     override fun deserialize(
         parser: com.fasterxml.jackson.core.JsonParser,
@@ -29,36 +28,25 @@ private class ResponseFormatDeserializer :
         val tag = node.get("type")?.asText()
 
         @Suppress("UNCHECKED_CAST")
-        val payload =
-            (node.deepCopy() as com.fasterxml.jackson.databind.node.ObjectNode).apply {
-                remove("type")
-            }
+        val payload = (node.deepCopy() as com.fasterxml.jackson.databind.node.ObjectNode).apply { remove("type") }
         return when (tag) {
             "text" -> ResponseFormat.Text
 
             "json_object" -> ResponseFormat.JsonObject
 
-            "json_schema" ->
-                ctx.readTreeAsValue<ResponseFormat.JsonSchema>(
-                    payload,
-                    ResponseFormat.JsonSchema::class.java,
-                )
+            "json_schema" -> ctx.readTreeAsValue<ResponseFormat.JsonSchema>(payload, ResponseFormat.JsonSchema::class.java)
 
-            else ->
-                throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
-                    parser,
-                    "Unknown ResponseFormat tag",
-                    tag,
-                    ResponseFormat::class.java,
-                )
+            else -> throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
+                parser,
+                "Unknown ResponseFormat tag",
+                tag,
+                ResponseFormat::class.java,
+            )
         }
     }
 }
 
-private class ResponseFormatSerializer :
-    com.fasterxml.jackson.databind.ser.std.StdSerializer<ResponseFormat>(
-        ResponseFormat::class.java
-    ) {
+private class ResponseFormatSerializer : com.fasterxml.jackson.databind.ser.std.StdSerializer<ResponseFormat>(ResponseFormat::class.java) {
     @Suppress("LongMethod")
     override fun serialize(
         value: ResponseFormat,
@@ -68,31 +56,33 @@ private class ResponseFormatSerializer :
         @Suppress("UNCHECKED_CAST")
         val mapper =
             (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper)
-                ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
+                ?: com.fasterxml.jackson.databind
+                    .ObjectMapper()
+                    .findAndRegisterModules()
         val node: com.fasterxml.jackson.databind.node.ObjectNode =
             when (value) {
-                is ResponseFormat.Text -> {
-                    val n = mapper.createObjectNode()
-                    n.put("type", "text")
-                    n
-                }
-
-                is ResponseFormat.JsonObject -> {
-                    val n = mapper.createObjectNode()
-                    n.put("type", "json_object")
-                    n
-                }
-
-                is ResponseFormat.JsonSchema -> {
-                    @Suppress("UNCHECKED_CAST")
-                    val n =
-                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
-                            value as ResponseFormat.JsonSchema
-                        ) as com.fasterxml.jackson.databind.node.ObjectNode
-                    n.put("type", "json_schema")
-                    n
-                }
+            is ResponseFormat.Text -> {
+                val n = mapper.createObjectNode()
+                n.put("type", "text")
+                n
             }
+
+            is ResponseFormat.JsonObject -> {
+                val n = mapper.createObjectNode()
+                n.put("type", "json_object")
+                n
+            }
+
+            is ResponseFormat.JsonSchema -> {
+                @Suppress("UNCHECKED_CAST")
+                val n =
+                    mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                    value as ResponseFormat.JsonSchema,
+                ) as com.fasterxml.jackson.databind.node.ObjectNode
+                n.put("type", "json_schema")
+                n
+            }
+        }
         mapper.writeTree(gen, node)
     }
 }

@@ -22,7 +22,7 @@ constructed, or if the resolved provider configuration is invalid.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend signature generation
+public static func createClient(apiKey: String, baseUrl: String? = nil, timeoutSecs: UInt64? = nil, maxRetries: UInt32? = nil, modelHint: String? = nil) throws -> DefaultClient
 ```
 
 **Parameters:**
@@ -54,7 +54,7 @@ contains unknown fields.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend signature generation
+public static func createClientFromJson(json: String) throws -> DefaultClient
 ```
 
 **Parameters:**
@@ -336,7 +336,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func chat(req: ChatCompletionRequest) throws -> ChatCompletionResponse
 ```
 
 ###### chatStream()
@@ -344,7 +344,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func chatStream(req: ChatCompletionRequest) throws -> String
 ```
 
 ###### embed()
@@ -352,7 +352,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func embed(req: EmbeddingRequest) throws -> EmbeddingResponse
 ```
 
 ###### listModels()
@@ -360,7 +360,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func listModels() throws -> ModelsListResponse
 ```
 
 ###### imageGenerate()
@@ -368,7 +368,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func imageGenerate(req: CreateImageRequest) throws -> ImagesResponse
 ```
 
 ###### speech()
@@ -376,7 +376,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func speech(req: CreateSpeechRequest) throws -> Data
 ```
 
 ###### transcribe()
@@ -384,7 +384,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func transcribe(req: CreateTranscriptionRequest) throws -> TranscriptionResponse
 ```
 
 ###### moderate()
@@ -392,7 +392,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func moderate(req: ModerationRequest) throws -> ModerationResponse
 ```
 
 ###### rerank()
@@ -400,7 +400,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func rerank(req: RerankRequest) throws -> RerankResponse
 ```
 
 ###### search()
@@ -408,7 +408,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func search(req: SearchRequest) throws -> SearchResponse
 ```
 
 ###### ocr()
@@ -416,7 +416,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func ocr(req: OcrRequest) throws -> OcrResponse
 ```
 
 ###### createFile()
@@ -424,7 +424,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func createFile(req: CreateFileRequest) throws -> FileObject
 ```
 
 ###### retrieveFile()
@@ -432,7 +432,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func retrieveFile(fileId: String) throws -> FileObject
 ```
 
 ###### deleteFile()
@@ -440,7 +440,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func deleteFile(fileId: String) throws -> DeleteResponse
 ```
 
 ###### listFiles()
@@ -448,7 +448,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func listFiles(query: FileListQuery? = nil) throws -> FileListResponse
 ```
 
 ###### fileContent()
@@ -456,7 +456,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func fileContent(fileId: String) throws -> Data
 ```
 
 ###### createBatch()
@@ -464,7 +464,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func createBatch(req: CreateBatchRequest) throws -> BatchObject
 ```
 
 ###### retrieveBatch()
@@ -472,7 +472,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func retrieveBatch(batchId: String) throws -> BatchObject
 ```
 
 ###### listBatches()
@@ -480,7 +480,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func listBatches(query: BatchListQuery? = nil) throws -> BatchListResponse
 ```
 
 ###### cancelBatch()
@@ -488,7 +488,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func cancelBatch(batchId: String) throws -> BatchObject
 ```
 
 ###### createResponse()
@@ -496,7 +496,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func createResponse(req: CreateResponseRequest) throws -> ResponseObject
 ```
 
 ###### retrieveResponse()
@@ -504,7 +504,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func retrieveResponse(id: String) throws -> ResponseObject
 ```
 
 ###### cancelResponse()
@@ -512,7 +512,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```swift
-// Phase 1: swift backend method signature generation
+public func cancelResponse(id: String) throws -> ResponseObject
 ```
 
 ---

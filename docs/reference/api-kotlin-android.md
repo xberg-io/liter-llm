@@ -22,7 +22,8 @@ constructed, or if the resolved provider configuration is invalid.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend signature generation
+@Throws(Error::class)
+fun createClient(apiKey: String, baseUrl: String? = null, timeoutSecs: Long? = null, maxRetries: Int? = null, modelHint: String? = null): DefaultClient
 ```
 
 **Parameters:**
@@ -54,7 +55,8 @@ contains unknown fields.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend signature generation
+@Throws(Error::class)
+fun createClientFromJson(json: String): DefaultClient
 ```
 
 **Parameters:**
@@ -336,7 +338,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun chat(req: ChatCompletionRequest): ChatCompletionResponse
 ```
 
 ###### chatStream()
@@ -344,7 +347,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun chatStream(req: ChatCompletionRequest): String
 ```
 
 ###### embed()
@@ -352,7 +356,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun embed(req: EmbeddingRequest): EmbeddingResponse
 ```
 
 ###### listModels()
@@ -360,7 +365,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun listModels(): ModelsListResponse
 ```
 
 ###### imageGenerate()
@@ -368,7 +374,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun imageGenerate(req: CreateImageRequest): ImagesResponse
 ```
 
 ###### speech()
@@ -376,7 +383,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun speech(req: CreateSpeechRequest): ByteArray
 ```
 
 ###### transcribe()
@@ -384,7 +392,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun transcribe(req: CreateTranscriptionRequest): TranscriptionResponse
 ```
 
 ###### moderate()
@@ -392,7 +401,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun moderate(req: ModerationRequest): ModerationResponse
 ```
 
 ###### rerank()
@@ -400,7 +410,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun rerank(req: RerankRequest): RerankResponse
 ```
 
 ###### search()
@@ -408,7 +419,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun search(req: SearchRequest): SearchResponse
 ```
 
 ###### ocr()
@@ -416,7 +428,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun ocr(req: OcrRequest): OcrResponse
 ```
 
 ###### createFile()
@@ -424,7 +437,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun createFile(req: CreateFileRequest): FileObject
 ```
 
 ###### retrieveFile()
@@ -432,7 +446,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun retrieveFile(fileId: String): FileObject
 ```
 
 ###### deleteFile()
@@ -440,7 +455,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun deleteFile(fileId: String): DeleteResponse
 ```
 
 ###### listFiles()
@@ -448,7 +464,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun listFiles(query: FileListQuery? = null): FileListResponse
 ```
 
 ###### fileContent()
@@ -456,7 +473,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun fileContent(fileId: String): ByteArray
 ```
 
 ###### createBatch()
@@ -464,7 +482,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun createBatch(req: CreateBatchRequest): BatchObject
 ```
 
 ###### retrieveBatch()
@@ -472,7 +491,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun retrieveBatch(batchId: String): BatchObject
 ```
 
 ###### listBatches()
@@ -480,7 +500,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun listBatches(query: BatchListQuery? = null): BatchListResponse
 ```
 
 ###### cancelBatch()
@@ -488,7 +509,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun cancelBatch(batchId: String): BatchObject
 ```
 
 ###### createResponse()
@@ -496,7 +518,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun createResponse(req: CreateResponseRequest): ResponseObject
 ```
 
 ###### retrieveResponse()
@@ -504,7 +527,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun retrieveResponse(id: String): ResponseObject
 ```
 
 ###### cancelResponse()
@@ -512,7 +536,8 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin_android backend method signature generation
+@Throws(Error::class)
+fun cancelResponse(id: String): ResponseObject
 ```
 
 ---

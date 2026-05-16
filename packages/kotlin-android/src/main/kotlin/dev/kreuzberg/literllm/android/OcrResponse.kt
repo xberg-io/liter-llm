@@ -2,5 +2,11 @@
 
 package dev.kreuzberg.literllm.android
 
-/** An OCR response. */
-data class OcrResponse(val pages: List<OcrPage>, val model: String, val usage: Usage?)
+/**
+ * An OCR response.
+ */
+data class OcrResponse(
+    val pages: List<OcrPage>,
+    val model: String,
+    val usage: Usage?,
+)

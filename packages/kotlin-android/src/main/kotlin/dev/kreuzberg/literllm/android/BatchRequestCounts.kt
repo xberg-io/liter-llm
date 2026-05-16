@@ -2,4 +2,8 @@
 
 package dev.kreuzberg.literllm.android
 
-data class BatchRequestCounts(val total: Long, val completed: Long, val failed: Long)
+data class BatchRequestCounts(
+    val total: Long,
+    val completed: Long,
+    val failed: Long,
+)

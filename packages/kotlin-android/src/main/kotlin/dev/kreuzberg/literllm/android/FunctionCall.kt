@@ -2,4 +2,7 @@
 
 package dev.kreuzberg.literllm.android
 
-data class FunctionCall(val name: String, val arguments: String)
+data class FunctionCall(
+    val name: String,
+    val arguments: String,
+)

@@ -2,5 +2,12 @@
 
 package dev.kreuzberg.literllm.android
 
-/** An individual search result. */
-data class SearchResult(val title: String, val url: String, val snippet: String, val date: String?)
+/**
+ * An individual search result.
+ */
+data class SearchResult(
+    val title: String,
+    val url: String,
+    val snippet: String,
+    val date: String?,
+)

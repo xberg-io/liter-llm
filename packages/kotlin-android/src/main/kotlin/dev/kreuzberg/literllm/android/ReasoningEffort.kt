@@ -2,7 +2,9 @@
 
 package dev.kreuzberg.literllm.android
 
-/** Controls how much reasoning effort the model should use. */
+/**
+ * Controls how much reasoning effort the model should use.
+ */
 enum class ReasoningEffort {
     LOW,
     MEDIUM,

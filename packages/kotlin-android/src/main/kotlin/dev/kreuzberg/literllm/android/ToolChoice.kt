@@ -7,25 +7,26 @@ package dev.kreuzberg.literllm.android
 sealed class ToolChoice {
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Mode(val value: ToolChoiceMode) : ToolChoice()
+    data class Mode(
+        val value: ToolChoiceMode,
+    ) : ToolChoice()
 
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Specific(val toolChoice: SpecificToolChoice) : ToolChoice()
+    data class Specific(
+        val toolChoice: SpecificToolChoice,
+    ) : ToolChoice()
 }
 
-private class ToolChoiceDeserializer :
-    com.fasterxml.jackson.databind.deser.std.StdDeserializer<ToolChoice>(ToolChoice::class.java) {
+private class ToolChoiceDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<ToolChoice>(ToolChoice::class.java) {
     @Suppress("LongMethod")
     override fun deserialize(
         parser: com.fasterxml.jackson.core.JsonParser,
         ctx: com.fasterxml.jackson.databind.DeserializationContext,
     ): ToolChoice {
         val node = parser.codec.readTree<com.fasterxml.jackson.databind.JsonNode>(parser)
-        if (node.isObject)
-            return ToolChoice.Mode(ctx.readTreeAsValue(node, ToolChoiceMode::class.java))
-        if (node.isObject)
-            return ToolChoice.Specific(ctx.readTreeAsValue(node, SpecificToolChoice::class.java))
+        if (node.isObject) return ToolChoice.Mode(ctx.readTreeAsValue(node, ToolChoiceMode::class.java))
+        if (node.isObject) return ToolChoice.Specific(ctx.readTreeAsValue(node, SpecificToolChoice::class.java))
         throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
             parser,
             "Cannot deserialize ToolChoice: no matching variant for JSON shape",
@@ -35,8 +36,7 @@ private class ToolChoiceDeserializer :
     }
 }
 
-private class ToolChoiceSerializer :
-    com.fasterxml.jackson.databind.ser.std.StdSerializer<ToolChoice>(ToolChoice::class.java) {
+private class ToolChoiceSerializer : com.fasterxml.jackson.databind.ser.std.StdSerializer<ToolChoice>(ToolChoice::class.java) {
     @Suppress("LongMethod")
     override fun serialize(
         value: ToolChoice,
@@ -46,10 +46,12 @@ private class ToolChoiceSerializer :
         @Suppress("UNCHECKED_CAST")
         val mapper =
             (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper)
-                ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
+                ?: com.fasterxml.jackson.databind
+                    .ObjectMapper()
+                    .findAndRegisterModules()
         when (value) {
-            is ToolChoice.Mode -> mapper.writeValue(gen, value.field0)
-            is ToolChoice.Specific -> mapper.writeValue(gen, value.field0)
+            is ToolChoice.Mode -> mapper.writeValue(gen, value.value)
+            is ToolChoice.Specific -> mapper.writeValue(gen, value.toolChoice)
         }
     }
 }

@@ -2,7 +2,9 @@
 
 package dev.kreuzberg.literllm.android
 
-/** Configuration for registering a custom LLM provider at runtime. */
+/**
+ * Configuration for registering a custom LLM provider at runtime.
+ */
 data class CustomProviderConfig(
     val name: String,
     val baseUrl: String,

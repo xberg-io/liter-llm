@@ -22,7 +22,7 @@ constructed, or if the resolved provider configuration is invalid.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend signature generation
+pub fn create_client(api_key: [:0]const u8, base_url: ?[:0]const u8, timeout_secs: ?u64, max_retries: ?u32, model_hint: ?[:0]const u8) Error!DefaultClient
 ```
 
 **Parameters:**
@@ -54,7 +54,7 @@ contains unknown fields.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend signature generation
+pub fn create_client_from_json(json: [:0]const u8) Error!DefaultClient
 ```
 
 **Parameters:**
@@ -336,7 +336,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn chat(self: *const DefaultClient, req: ChatCompletionRequest) Error!ChatCompletionResponse
 ```
 
 ###### chatStream()
@@ -344,7 +344,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn chatStream(self: *const DefaultClient, req: ChatCompletionRequest) Error![:0]const u8
 ```
 
 ###### embed()
@@ -352,7 +352,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn embed(self: *const DefaultClient, req: EmbeddingRequest) Error!EmbeddingResponse
 ```
 
 ###### listModels()
@@ -360,7 +360,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn listModels(self: *const DefaultClient) Error!ModelsListResponse
 ```
 
 ###### imageGenerate()
@@ -368,7 +368,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn imageGenerate(self: *const DefaultClient, req: CreateImageRequest) Error!ImagesResponse
 ```
 
 ###### speech()
@@ -376,7 +376,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn speech(self: *const DefaultClient, req: CreateSpeechRequest) Error![]const u8
 ```
 
 ###### transcribe()
@@ -384,7 +384,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn transcribe(self: *const DefaultClient, req: CreateTranscriptionRequest) Error!TranscriptionResponse
 ```
 
 ###### moderate()
@@ -392,7 +392,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn moderate(self: *const DefaultClient, req: ModerationRequest) Error!ModerationResponse
 ```
 
 ###### rerank()
@@ -400,7 +400,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn rerank(self: *const DefaultClient, req: RerankRequest) Error!RerankResponse
 ```
 
 ###### search()
@@ -408,7 +408,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn search(self: *const DefaultClient, req: SearchRequest) Error!SearchResponse
 ```
 
 ###### ocr()
@@ -416,7 +416,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn ocr(self: *const DefaultClient, req: OcrRequest) Error!OcrResponse
 ```
 
 ###### createFile()
@@ -424,7 +424,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn createFile(self: *const DefaultClient, req: CreateFileRequest) Error!FileObject
 ```
 
 ###### retrieveFile()
@@ -432,7 +432,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn retrieveFile(self: *const DefaultClient, file_id: [:0]const u8) Error!FileObject
 ```
 
 ###### deleteFile()
@@ -440,7 +440,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn deleteFile(self: *const DefaultClient, file_id: [:0]const u8) Error!DeleteResponse
 ```
 
 ###### listFiles()
@@ -448,7 +448,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn listFiles(self: *const DefaultClient, query: ?FileListQuery) Error!FileListResponse
 ```
 
 ###### fileContent()
@@ -456,7 +456,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn fileContent(self: *const DefaultClient, file_id: [:0]const u8) Error![]const u8
 ```
 
 ###### createBatch()
@@ -464,7 +464,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn createBatch(self: *const DefaultClient, req: CreateBatchRequest) Error!BatchObject
 ```
 
 ###### retrieveBatch()
@@ -472,7 +472,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn retrieveBatch(self: *const DefaultClient, batch_id: [:0]const u8) Error!BatchObject
 ```
 
 ###### listBatches()
@@ -480,7 +480,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn listBatches(self: *const DefaultClient, query: ?BatchListQuery) Error!BatchListResponse
 ```
 
 ###### cancelBatch()
@@ -488,7 +488,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn cancelBatch(self: *const DefaultClient, batch_id: [:0]const u8) Error!BatchObject
 ```
 
 ###### createResponse()
@@ -496,7 +496,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn createResponse(self: *const DefaultClient, req: CreateResponseRequest) Error!ResponseObject
 ```
 
 ###### retrieveResponse()
@@ -504,7 +504,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn retrieveResponse(self: *const DefaultClient, id: [:0]const u8) Error!ResponseObject
 ```
 
 ###### cancelResponse()
@@ -512,7 +512,7 @@ async closures and streaming tasks that must be `'static`.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn cancelResponse(self: *const DefaultClient, id: [:0]const u8) Error!ResponseObject
 ```
 
 ---

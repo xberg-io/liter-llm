@@ -2,5 +2,11 @@
 
 package dev.kreuzberg.literllm.android
 
-/** Response from the rerank endpoint. */
-data class RerankResponse(val id: String?, val results: List<RerankResult>, val meta: String?)
+/**
+ * Response from the rerank endpoint.
+ */
+data class RerankResponse(
+    val id: String?,
+    val results: List<RerankResult>,
+    val meta: String?,
+)

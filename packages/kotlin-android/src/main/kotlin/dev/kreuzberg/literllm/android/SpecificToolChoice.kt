@@ -2,4 +2,7 @@
 
 package dev.kreuzberg.literllm.android
 
-data class SpecificToolChoice(val choiceType: ToolType, val function: SpecificFunction)
+data class SpecificToolChoice(
+    val choiceType: ToolType,
+    val function: SpecificFunction,
+)

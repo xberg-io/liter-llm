@@ -2,4 +2,8 @@
 
 package dev.kreuzberg.literllm.android
 
-data class EmbeddingObject(val `object`: String, val embedding: List<Double>, val index: Int)
+data class EmbeddingObject(
+    val `object`: String,
+    val embedding: List<Double>,
+    val index: Int,
+)

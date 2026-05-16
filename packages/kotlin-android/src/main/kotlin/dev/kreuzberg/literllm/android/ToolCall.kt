@@ -2,4 +2,8 @@
 
 package dev.kreuzberg.literllm.android
 
-data class ToolCall(val id: String, val callType: ToolType, val function: FunctionCall)
+data class ToolCall(
+    val id: String,
+    val callType: ToolType,
+    val function: FunctionCall,
+)
