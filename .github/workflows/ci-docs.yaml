@@ -11,6 +11,7 @@ on:
       - ".lychee.toml"
       - ".github/workflows/ci-docs.yaml"
       - "alef.toml"
+      - ".task/tools/docs.yml"
   pull_request:
     branches: [main]
     paths:
@@ -21,6 +22,7 @@ on:
       - ".lychee.toml"
       - ".github/workflows/ci-docs.yaml"
       - "alef.toml"
+      - ".task/tools/docs.yml"
   workflow_dispatch:
 
 env:
@@ -44,16 +46,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Python
-        uses: kreuzberg-dev/actions/setup-python-env@v1
+      - name: Install Task
+        uses: arduino/setup-task@v2
         with:
-          python-version: "3.13"
-          cache-prefix: docs-build
-          install-command: "uv sync --group docs --no-editable --no-install-project --no-install-workspace"
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build docs
-        run: uv run --no-sync zensical build --clean
-        shell: bash
+      - name: Build documentation
+        uses: kreuzberg-dev/actions/build-docs@v1
+        with:
+          strict: "true"
 
       - name: Upload site artifact
         uses: actions/upload-artifact@v7
@@ -62,52 +64,29 @@ jobs:
           path: site/
           retention-days: 1
 
-  lint-links:
-    name: Lint Links
-    if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
-    needs: [build]
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Download site artifact
-        uses: actions/download-artifact@v7
-        with:
-          name: docs-site
-          path: site/
-
-      - name: Check links
-        uses: lycheeverse/lychee-action@v2
-        with:
-          args: "--config .lychee.toml site/"
-          fail: true
-
-  validate-snippets:
-    name: Validate Snippets
+  lint:
+    name: Lint
     if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v6
 
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           install-llvm-cov: "false"
           cache-key-prefix: ci-docs-snippets
 
-      - name: Install alef-snippets
-        run: cargo install --git https://github.com/kreuzberg-dev/alef alef-snippets --features cli --locked
-
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.13"
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: "22"
 
       - name: Setup Go
         uses: actions/setup-go@v6
@@ -149,15 +128,16 @@ jobs:
         with:
           version: "0.14.0"
 
-      - name: Run snippet audit
-        run: alef-snippets audit --snippets docs/snippets --docs docs
-
-      - name: Validate snippets (syntax level)
-        run: alef-snippets validate --snippets docs/snippets --level syntax
+      - name: Lint documentation
+        uses: kreuzberg-dev/actions/lint-docs@v1
+        with:
+          strict: "false"
+          validate-snippets: "true"
+          alef-ref: "main"
 
   deploy:
     name: Deploy
-    needs: [build, lint-links, validate-snippets]
+    needs: [build, lint]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push' && github.repository == 'kreuzberg-dev/liter-llm'
     permissions:
       contents: read
