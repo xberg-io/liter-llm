@@ -2,9 +2,7 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * An OCR request.
- */
+/** An OCR request. */
 data class OcrRequest(
     val model: String,
     val document: OcrDocument,

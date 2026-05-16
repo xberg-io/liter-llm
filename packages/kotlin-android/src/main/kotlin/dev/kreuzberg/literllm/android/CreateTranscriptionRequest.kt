@@ -2,9 +2,7 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Request to transcribe audio into text.
- */
+/** Request to transcribe audio into text. */
 data class CreateTranscriptionRequest(
     val model: String,
     val file: String,

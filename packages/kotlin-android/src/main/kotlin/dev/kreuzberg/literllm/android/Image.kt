@@ -2,11 +2,5 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * A single generated image, returned as either a URL or base64 data.
- */
-data class Image(
-    val url: String?,
-    val b64Json: String?,
-    val revisedPrompt: String?,
-)
+/** A single generated image, returned as either a URL or base64 data. */
+data class Image(val url: String?, val b64Json: String?, val revisedPrompt: String?)

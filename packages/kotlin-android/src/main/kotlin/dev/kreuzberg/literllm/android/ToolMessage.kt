@@ -2,8 +2,4 @@
 
 package dev.kreuzberg.literllm.android
 
-data class ToolMessage(
-    val content: String,
-    val toolCallId: String,
-    val name: String?,
-)
+data class ToolMessage(val content: String, val toolCallId: String, val name: String?)

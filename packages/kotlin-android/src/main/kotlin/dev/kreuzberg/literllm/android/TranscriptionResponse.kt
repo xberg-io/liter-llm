@@ -2,9 +2,7 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Response from a transcription request.
- */
+/** Response from a transcription request. */
 data class TranscriptionResponse(
     val text: String,
     val language: String?,

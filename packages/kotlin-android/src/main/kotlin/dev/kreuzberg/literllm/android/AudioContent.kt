@@ -2,7 +2,4 @@
 
 package dev.kreuzberg.literllm.android
 
-data class AudioContent(
-    val data: String,
-    val format: String,
-)
+data class AudioContent(val data: String, val format: String)

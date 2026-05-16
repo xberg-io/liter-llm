@@ -2,9 +2,7 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * A single page of OCR output.
- */
+/** A single page of OCR output. */
 data class OcrPage(
     val index: Int,
     val markdown: String,

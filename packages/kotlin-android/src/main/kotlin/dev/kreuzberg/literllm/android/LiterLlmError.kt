@@ -4,77 +4,49 @@ package dev.kreuzberg.literllm.android
 
 import kotlin.time.Duration
 
-/**
- * All errors that can occur when using `liter-llm`.
- */
+/** All errors that can occur when using `liter-llm`. */
 sealed class LiterLlmError(message: String) : Exception(message) {
-    data class Authentication(
-        override val message: String,
-        val status: Short,
-    ) : LiterLlmError("authentication failed: {message}")
+    data class Authentication(override val message: String, val status: Short) :
+        LiterLlmError("authentication failed: {message}")
 
-    data class RateLimited(
-        override val message: String,
-        val retryAfter: Duration?,
-    ) : LiterLlmError("rate limited: {message}")
+    data class RateLimited(override val message: String, val retryAfter: Duration?) :
+        LiterLlmError("rate limited: {message}")
 
-    data class BadRequest(
-        override val message: String,
-        val status: Short,
-    ) : LiterLlmError("bad request: {message}")
+    data class BadRequest(override val message: String, val status: Short) :
+        LiterLlmError("bad request: {message}")
 
-    data class ContextWindowExceeded(
-        override val message: String,
-    ) : LiterLlmError("context window exceeded: {message}")
+    data class ContextWindowExceeded(override val message: String) :
+        LiterLlmError("context window exceeded: {message}")
 
-    data class ContentPolicy(
-        override val message: String,
-    ) : LiterLlmError("content policy violation: {message}")
+    data class ContentPolicy(override val message: String) :
+        LiterLlmError("content policy violation: {message}")
 
-    data class NotFound(
-        override val message: String,
-    ) : LiterLlmError("not found: {message}")
+    data class NotFound(override val message: String) : LiterLlmError("not found: {message}")
 
-    data class ServerError(
-        override val message: String,
-        val status: Short,
-    ) : LiterLlmError("server error: {message}")
+    data class ServerError(override val message: String, val status: Short) :
+        LiterLlmError("server error: {message}")
 
-    data class ServiceUnavailable(
-        override val message: String,
-        val status: Short,
-    ) : LiterLlmError("service unavailable: {message}")
+    data class ServiceUnavailable(override val message: String, val status: Short) :
+        LiterLlmError("service unavailable: {message}")
 
     object Timeout : LiterLlmError("request timeout")
 
-    data class Streaming(
-        override val message: String,
-    ) : LiterLlmError("streaming error: {message}")
+    data class Streaming(override val message: String) : LiterLlmError("streaming error: {message}")
 
-    data class EndpointNotSupported(
-        val endpoint: String,
-        val provider: String,
-    ) : LiterLlmError("provider {provider} does not support {endpoint}")
+    data class EndpointNotSupported(val endpoint: String, val provider: String) :
+        LiterLlmError("provider {provider} does not support {endpoint}")
 
-    data class InvalidHeader(
-        val name: String,
-        val reason: String,
-    ) : LiterLlmError("invalid header {name:?}: {reason}")
+    data class InvalidHeader(val name: String, val reason: String) :
+        LiterLlmError("invalid header {name:?}: {reason}")
 
-    data class Serialization(
-        val field0: String,
-    ) : LiterLlmError("serialization error: {0}")
+    data class Serialization(val field0: String) : LiterLlmError("serialization error: {0}")
 
-    data class BudgetExceeded(
-        override val message: String,
-        val model: String?,
-    ) : LiterLlmError("budget exceeded: {message}")
+    data class BudgetExceeded(override val message: String, val model: String?) :
+        LiterLlmError("budget exceeded: {message}")
 
-    data class HookRejected(
-        override val message: String,
-    ) : LiterLlmError("hook rejected: {message}")
+    data class HookRejected(override val message: String) :
+        LiterLlmError("hook rejected: {message}")
 
-    data class InternalError(
-        override val message: String,
-    ) : LiterLlmError("internal error: {message}")
+    data class InternalError(override val message: String) :
+        LiterLlmError("internal error: {message}")
 }

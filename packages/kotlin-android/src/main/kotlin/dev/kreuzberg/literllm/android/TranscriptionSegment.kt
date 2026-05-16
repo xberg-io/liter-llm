@@ -2,12 +2,5 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * A segment of transcribed audio with timing information.
- */
-data class TranscriptionSegment(
-    val id: Int,
-    val start: Double,
-    val end: Double,
-    val text: String,
-)
+/** A segment of transcribed audio with timing information. */
+data class TranscriptionSegment(val id: Int, val start: Double, val end: Double, val text: String)

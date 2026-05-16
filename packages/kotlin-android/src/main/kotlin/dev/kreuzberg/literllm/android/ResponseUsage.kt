@@ -2,8 +2,4 @@
 
 package dev.kreuzberg.literllm.android
 
-data class ResponseUsage(
-    val inputTokens: Long,
-    val outputTokens: Long,
-    val totalTokens: Long,
-)
+data class ResponseUsage(val inputTokens: Long, val outputTokens: Long, val totalTokens: Long)

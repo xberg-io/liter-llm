@@ -2,6 +2,4 @@
 
 package dev.kreuzberg.literllm.android
 
-data class StreamOptions(
-    val includeUsage: Boolean?,
-)
+data class StreamOptions(val includeUsage: Boolean?)

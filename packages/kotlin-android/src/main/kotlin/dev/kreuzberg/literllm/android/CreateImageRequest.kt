@@ -2,9 +2,7 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Request to create images from a text prompt.
- */
+/** Request to create images from a text prompt. */
 data class CreateImageRequest(
     val prompt: String,
     val model: String?,

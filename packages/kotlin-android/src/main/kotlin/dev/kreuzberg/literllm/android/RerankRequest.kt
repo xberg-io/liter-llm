@@ -2,9 +2,7 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Request to rerank documents by relevance to a query.
- */
+/** Request to rerank documents by relevance to a query. */
 data class RerankRequest(
     val model: String,
     val query: String,

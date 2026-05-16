@@ -2,9 +2,5 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * The text content of a reranked document, returned when `return_documents` is true.
- */
-data class RerankResultDocument(
-    val text: String,
-)
+/** The text content of a reranked document, returned when `return_documents` is true. */
+data class RerankResultDocument(val text: String)

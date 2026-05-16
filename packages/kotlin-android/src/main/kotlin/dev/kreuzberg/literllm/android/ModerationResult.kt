@@ -2,9 +2,7 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * A single moderation classification result.
- */
+/** A single moderation classification result. */
 data class ModerationResult(
     val flagged: Boolean,
     val categories: ModerationCategories,

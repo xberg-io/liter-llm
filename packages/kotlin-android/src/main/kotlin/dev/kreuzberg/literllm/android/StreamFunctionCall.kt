@@ -2,7 +2,4 @@
 
 package dev.kreuzberg.literllm.android
 
-data class StreamFunctionCall(
-    val name: String?,
-    val arguments: String?,
-)
+data class StreamFunctionCall(val name: String?, val arguments: String?)

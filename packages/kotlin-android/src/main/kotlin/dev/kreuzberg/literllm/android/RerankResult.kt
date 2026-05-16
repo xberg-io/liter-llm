@@ -2,9 +2,7 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * A single reranked document with its relevance score.
- */
+/** A single reranked document with its relevance score. */
 data class RerankResult(
     val index: Int,
     val relevanceScore: Double,
