@@ -26,6 +26,20 @@ extra_paths = [
   "packages/node/package.json",
 ]
 
+[workspace.citation]
+title = "liter-llm"
+abstract = "Universal LLM API client with native bindings for 14 languages and 143 providers."
+repository-code = "https://github.com/kreuzberg-dev/liter-llm"
+url = "https://kreuzberg.dev"
+license = "MIT"
+date-released = "2026-05-17"
+
+[[workspace.citation.authors]]
+family-names = "Hirschfeld"
+given-names = "Na'aman"
+email = "naaman@kreuzberg.dev"
+orcid = "https://orcid.org/0009-0000-2247-5072"
+
 [[crates]]
 name = "liter-llm"
 core_import = "liter_llm"
