@@ -4,7 +4,7 @@ description: "Per-request cost estimation using the embedded pricing registry in
 
 # Cost Estimation
 
-liter-llm embeds a pricing registry at compile time (`crates/liter-llm/schemas/pricing.json`) and exposes two functions for estimating USD cost from token counts. No network access or external service is required.
+Liter-llm embeds a pricing registry at compile time (`crates/liter-llm/schemas/pricing.json`) and exposes two functions for estimating USD cost from token counts. No network access or external service is required.
 
 Pricing data is derived from the [litellm](https://github.com/BerriAI/litellm) project (MIT License, Copyright 2023 Berri AI) and covers the most widely used models across major providers.
 

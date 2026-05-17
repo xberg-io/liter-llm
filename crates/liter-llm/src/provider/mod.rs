@@ -73,11 +73,16 @@ where
 #[derive(Debug, Clone, Deserialize)]
 #[cfg_attr(alef, alef(skip))]
 pub struct ProviderConfig {
+    /// Provider identifier (matches the entry key in providers.json).
     pub name: String,
+    /// Human-readable provider name shown in UIs.
     pub display_name: Option<String>,
+    /// Base URL used as the default for this provider's HTTP client.
     pub base_url: Option<String>,
     pub(crate) auth: Option<AuthConfig>,
+    /// Supported endpoint kinds (e.g. `chat`, `embeddings`).
     pub endpoints: Option<Vec<String>>,
+    /// Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`).
     pub model_prefixes: Option<Vec<String>>,
     /// Parameter key renaming for this provider.
     ///

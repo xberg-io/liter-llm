@@ -356,6 +356,8 @@ class AssistantMessage {
   final String? name;
   final List<ToolCall>? toolCalls;
   final String? refusal;
+
+  /// Deprecated legacy function_call field; retained for API compatibility.
   final FunctionCall? functionCall;
 
   const AssistantMessage({
@@ -387,7 +389,10 @@ class AssistantMessage {
 }
 
 class AudioContent {
+  /// Base64-encoded audio data.
   final String data;
+
+  /// Audio format (e.g., "wav", "mp3", "ogg").
   final String format;
 
   const AudioContent({required this.data, required this.format});
@@ -408,9 +413,14 @@ class AudioContent {
 sealed class AuthHeaderFormat with _$AuthHeaderFormat {
   const AuthHeaderFormat._();
 
+  /// Bearer token: `Authorization: Bearer <key>`
   const factory AuthHeaderFormat.bearer() = AuthHeaderFormat_Bearer;
+
+  /// Custom header: e.g., `X-Api-Key: <key>`
   const factory AuthHeaderFormat.apiKey({required String field0}) =
       AuthHeaderFormat_ApiKey;
+
+  /// No authentication required.
   const factory AuthHeaderFormat.none() = AuthHeaderFormat_None;
 }
 
@@ -575,6 +585,9 @@ enum BatchStatus {
 
 class ChatCompletionChunk {
   final String id;
+
+  /// Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored
+  /// as a plain `String` so non-standard provider values do not fail parsing.
   final String object;
   final PlatformInt64 created;
   final String model;
@@ -626,11 +639,18 @@ class ChatCompletionRequest {
   final double? temperature;
   final double? topP;
   final PlatformInt64? n;
+
+  /// Whether to stream the response.
+  ///
+  /// Managed by the client layer — do not set directly.
   final bool? stream;
   final StopSequence? stop;
   final PlatformInt64? maxTokens;
   final double? presencePenalty;
   final double? frequencyPenalty;
+
+  /// Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic
+  /// serialization order — important when hashing or signing requests.
   final Map<String, double>? logitBias;
   final String? user;
   final List<ChatCompletionTool>? tools;
@@ -640,6 +660,9 @@ class ChatCompletionRequest {
   final StreamOptions? streamOptions;
   final PlatformInt64? seed;
   final ReasoningEffort? reasoningEffort;
+
+  /// Provider-specific extra parameters merged into the request body.
+  /// Use for guardrails, safety settings, grounding config, etc.
   final String? extraBody;
 
   const ChatCompletionRequest({
@@ -717,6 +740,9 @@ class ChatCompletionRequest {
 
 class ChatCompletionResponse {
   final String id;
+
+  /// Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a
+  /// plain `String` so non-standard provider values do not break deserialization.
   final String object;
   final PlatformInt64 created;
   final String model;
@@ -845,6 +871,7 @@ class CreateBatchRequest {
 }
 
 class CreateFileRequest {
+  /// Base64-encoded file data.
   final String file;
   final FilePurpose purpose;
   final String? filename;
@@ -868,6 +895,7 @@ class CreateFileRequest {
           filename == other.filename;
 }
 
+/// Request to create images from a text prompt.
 class CreateImageRequest {
   final String prompt;
   final String? model;
@@ -958,6 +986,7 @@ class CreateResponseRequest {
           metadata == other.metadata;
 }
 
+/// Request to generate speech audio from text.
 class CreateSpeechRequest {
   final String model;
   final String input;
@@ -993,8 +1022,11 @@ class CreateSpeechRequest {
           speed == other.speed;
 }
 
+/// Request to transcribe audio into text.
 class CreateTranscriptionRequest {
   final String model;
+
+  /// Base64-encoded audio file data.
   final String file;
   final String? language;
   final String? prompt;
@@ -1032,10 +1064,18 @@ class CreateTranscriptionRequest {
           temperature == other.temperature;
 }
 
+/// Configuration for registering a custom LLM provider at runtime.
 class CustomProviderConfig {
+  /// Unique name for this provider (e.g., "my-provider").
   final String name;
+
+  /// Base URL for the provider's API (e.g., "https://api.my-provider.com/v1").
   final String baseUrl;
+
+  /// Authentication header format.
   final AuthHeaderFormat authHeader;
+
+  /// Model name prefixes that route to this provider (e.g., ["my-"]).
   final List<String> modelPrefixes;
 
   const CustomProviderConfig({
@@ -1106,7 +1146,10 @@ class DeveloperMessage {
 }
 
 class DocumentContent {
+  /// Base64-encoded document data or URL.
   final String data;
+
+  /// MIME type (e.g., "application/pdf", "text/csv").
   final String mediaType;
 
   const DocumentContent({required this.data, required this.mediaType});
@@ -1123,7 +1166,14 @@ class DocumentContent {
           mediaType == other.mediaType;
 }
 
-enum EmbeddingFormat { float, base64 }
+/// The format in which the embedding vectors are returned.
+enum EmbeddingFormat {
+  /// 32-bit floating-point numbers (default).
+  float,
+
+  /// Base64-encoded string representation of the floats.
+  base64,
+}
 
 @freezed
 sealed class EmbeddingInput with _$EmbeddingInput {
@@ -1136,6 +1186,8 @@ sealed class EmbeddingInput with _$EmbeddingInput {
 }
 
 class EmbeddingObject {
+  /// Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain
+  /// `String` so non-standard provider values do not break deserialization.
   final String object;
   final Float64List embedding;
   final PlatformInt64 index;
@@ -1195,6 +1247,8 @@ class EmbeddingRequest {
 }
 
 class EmbeddingResponse {
+  /// Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
+  /// `String` so non-standard provider values do not break deserialization.
   final String object;
   final List<EmbeddingObject> data;
   final String model;
@@ -1311,12 +1365,23 @@ class FileObject {
 
 enum FilePurpose { assistants, batch, fineTune, vision }
 
+/// Why a choice stopped generating tokens.
 enum FinishReason {
   stop,
   length,
   toolCalls,
   contentFilter,
+
+  /// Deprecated legacy finish reason; retained for API compatibility.
   functionCall,
+
+  /// Catch-all for unknown finish reasons returned by non-OpenAI providers.
+  ///
+  /// Note: this intentionally does **not** carry the original string (e.g.
+  /// `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and
+  /// switching to `#[serde(untagged)]` would change deserialization semantics
+  /// for all variants.  The original value can be recovered by inspecting the
+  /// raw JSON if needed.
   other,
 }
 
@@ -1369,6 +1434,7 @@ class FunctionDefinition {
           strict == other.strict;
 }
 
+/// Deprecated legacy function-role message body.
 class FunctionMessage {
   final String content;
   final String name;
@@ -1387,6 +1453,7 @@ class FunctionMessage {
           name == other.name;
 }
 
+/// A single generated image, returned as either a URL or base64 data.
 class Image {
   final String? url;
   final String? b64Json;
@@ -1427,6 +1494,7 @@ class ImageUrl {
           detail == other.detail;
 }
 
+/// Response containing generated images.
 class ImagesResponse {
   final PlatformInt64 created;
   final List<Image> data;
@@ -1485,12 +1553,17 @@ sealed class Message with _$Message {
   const factory Message.tool({required ToolMessage field0}) = Message_Tool;
   const factory Message.developer({required DeveloperMessage field0}) =
       Message_Developer;
+
+  /// Deprecated legacy function-role message; retained for API compatibility.
   const factory Message.function({required FunctionMessage field0}) =
       Message_Function;
 }
 
 class ModelObject {
   final String id;
+
+  /// Always `"model"` from OpenAI-compatible APIs.  Stored as a plain
+  /// `String` so non-standard provider values do not break deserialization.
   final String object;
   final PlatformInt64 created;
   final String ownedBy;
@@ -1518,6 +1591,8 @@ class ModelObject {
 }
 
 class ModelsListResponse {
+  /// Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
+  /// `String` so non-standard provider values do not break deserialization.
   final String object;
   final List<ModelObject> data;
 
@@ -1535,6 +1610,7 @@ class ModelsListResponse {
           data == other.data;
 }
 
+/// Boolean flags for each moderation category.
 class ModerationCategories {
   final bool sexual;
   final bool hate;
@@ -1594,6 +1670,7 @@ class ModerationCategories {
           violence == other.violence;
 }
 
+/// Confidence scores for each moderation category.
 class ModerationCategoryScores {
   final double sexual;
   final double hate;
@@ -1663,6 +1740,7 @@ sealed class ModerationInput with _$ModerationInput {
       ModerationInput_Multiple;
 }
 
+/// Request to classify content for policy violations.
 class ModerationRequest {
   final ModerationInput input;
   final String? model;
@@ -1681,6 +1759,7 @@ class ModerationRequest {
           model == other.model;
 }
 
+/// Response from the moderation endpoint.
 class ModerationResponse {
   final String id;
   final String model;
@@ -1705,6 +1784,7 @@ class ModerationResponse {
           results == other.results;
 }
 
+/// A single moderation classification result.
 class ModerationResult {
   final bool flagged;
   final ModerationCategories categories;
@@ -1734,15 +1814,28 @@ class ModerationResult {
 sealed class OcrDocument with _$OcrDocument {
   const OcrDocument._();
 
-  const factory OcrDocument.url({required String url}) = OcrDocument_Url;
+  /// A publicly accessible document URL.
+  const factory OcrDocument.url({
+    /// The document URL.
+    required String url,
+  }) = OcrDocument_Url;
+
+  /// Inline base64-encoded document data.
   const factory OcrDocument.base64({
+    /// Base64-encoded document content.
     required String data,
+
+    /// MIME type (e.g. `"application/pdf"`, `"image/png"`).
     required String mediaType,
   }) = OcrDocument_Base64;
 }
 
+/// An image extracted from an OCR page.
 class OcrImage {
+  /// Unique image identifier.
   final String id;
+
+  /// Base64-encoded image data.
   final String? imageBase64;
 
   const OcrImage({required this.id, this.imageBase64});
@@ -1759,10 +1852,18 @@ class OcrImage {
           imageBase64 == other.imageBase64;
 }
 
+/// A single page of OCR output.
 class OcrPage {
+  /// Page index (0-based).
   final PlatformInt64 index;
+
+  /// Extracted content as Markdown.
   final String markdown;
+
+  /// Extracted images, if `include_image_base64` was set.
   final List<OcrImage>? images;
+
+  /// Page dimensions in pixels, if available.
   final PageDimensions? dimensions;
 
   const OcrPage({
@@ -1790,10 +1891,18 @@ class OcrPage {
           dimensions == other.dimensions;
 }
 
+/// An OCR request.
 class OcrRequest {
+  /// The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`).
   final String model;
+
+  /// The document to process.
   final OcrDocument document;
+
+  /// Specific pages to process (1-indexed). `None` means all pages.
   final Int64List? pages;
+
+  /// Whether to include base64-encoded images of each page.
   final bool? includeImageBase64;
 
   const OcrRequest({
@@ -1821,9 +1930,15 @@ class OcrRequest {
           includeImageBase64 == other.includeImageBase64;
 }
 
+/// An OCR response.
 class OcrResponse {
+  /// Extracted pages.
   final List<OcrPage> pages;
+
+  /// The model used.
   final String model;
+
+  /// Token usage, if reported by the provider.
   final Usage? usage;
 
   const OcrResponse({required this.pages, required this.model, this.usage});
@@ -1841,8 +1956,12 @@ class OcrResponse {
           usage == other.usage;
 }
 
+/// Page dimensions in pixels.
 class PageDimensions {
+  /// Width in pixels.
   final PlatformInt64 width;
+
+  /// Height in pixels.
   final PlatformInt64 height;
 
   const PageDimensions({required this.width, required this.height});
@@ -1859,8 +1978,17 @@ class PageDimensions {
           height == other.height;
 }
 
+/// Breakdown of tokens used in the prompt portion of a request.
+///
+/// `cached_tokens` is included in `Usage::prompt_tokens` — it is *not* an
+/// additional charge on top of the prompt token count. When pricing supports
+/// a `cache_read_input_token_cost`, the cached portion is billed at the
+/// discounted rate and the remainder at the regular input rate.
 class PromptTokensDetails {
+  /// Cached tokens present in the prompt. Defaults to 0 when absent.
   final PlatformInt64 cachedTokens;
+
+  /// Audio input tokens present in the prompt. Defaults to 0 when absent.
   final PlatformInt64 audioTokens;
 
   const PromptTokensDetails({
@@ -1880,6 +2008,7 @@ class PromptTokensDetails {
           audioTokens == other.audioTokens;
 }
 
+/// Controls how much reasoning effort the model should use.
 enum ReasoningEffort { low, medium, high }
 
 @freezed
@@ -1892,6 +2021,7 @@ sealed class RerankDocument with _$RerankDocument {
       RerankDocument_Object;
 }
 
+/// Request to rerank documents by relevance to a query.
 class RerankRequest {
   final String model;
   final String query;
@@ -1927,6 +2057,7 @@ class RerankRequest {
           returnDocuments == other.returnDocuments;
 }
 
+/// Response from the rerank endpoint.
 class RerankResponse {
   final String? id;
   final List<RerankResult> results;
@@ -1947,6 +2078,7 @@ class RerankResponse {
           meta == other.meta;
 }
 
+/// A single reranked document with its relevance score.
 class RerankResult {
   final PlatformInt64 index;
   final double relevanceScore;
@@ -1972,6 +2104,7 @@ class RerankResult {
           document == other.document;
 }
 
+/// The text content of a reranked document, returned when `return_documents` is true.
 class RerankResultDocument {
   final String text;
 
@@ -2107,11 +2240,21 @@ class ResponseUsage {
           totalTokens == other.totalTokens;
 }
 
+/// A search request.
 class SearchRequest {
+  /// The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`).
   final String model;
+
+  /// The search query.
   final String query;
+
+  /// Maximum number of results to return.
   final PlatformInt64? maxResults;
+
+  /// Domain filter — restrict results to specific domains.
   final List<String>? searchDomainFilter;
+
+  /// Country code for localized results (ISO 3166-1 alpha-2).
   final String? country;
 
   const SearchRequest({
@@ -2142,8 +2285,12 @@ class SearchRequest {
           country == other.country;
 }
 
+/// A search response.
 class SearchResponse {
+  /// The search results.
   final List<SearchResult> results;
+
+  /// The model used.
   final String model;
 
   const SearchResponse({required this.results, required this.model});
@@ -2160,10 +2307,18 @@ class SearchResponse {
           model == other.model;
 }
 
+/// An individual search result.
 class SearchResult {
+  /// Title of the result.
   final String title;
+
+  /// URL of the result.
   final String url;
+
+  /// Text snippet / excerpt.
   final String snippet;
+
+  /// Publication or last-updated date, if available.
   final String? date;
 
   const SearchResult({
@@ -2260,6 +2415,8 @@ class StreamDelta {
   final String? role;
   final String? content;
   final List<StreamToolCall>? toolCalls;
+
+  /// Deprecated legacy function_call delta; retained for API compatibility.
   final StreamFunctionCall? functionCall;
   final String? refusal;
 
@@ -2431,8 +2588,14 @@ class ToolMessage {
           name == other.name;
 }
 
+/// The type discriminator for tool/tool-call objects.
+///
+/// Per the OpenAI spec this is always `"function"`. Using an enum enforces
+/// that constraint at the type level and rejects any other value on
+/// deserialization.
 enum ToolType { function }
 
+/// Response from a transcription request.
 class TranscriptionResponse {
   final String text;
   final String? language;
@@ -2461,6 +2624,7 @@ class TranscriptionResponse {
           segments == other.segments;
 }
 
+/// A segment of transcribed audio with timing information.
 class TranscriptionSegment {
   final PlatformInt64 id;
   final double start;
@@ -2490,9 +2654,18 @@ class TranscriptionSegment {
 }
 
 class Usage {
+  /// Prompt tokens used. Defaults to 0 when absent (some providers omit this).
   final PlatformInt64 promptTokens;
+
+  /// Completion tokens used. Defaults to 0 when absent (e.g. embedding responses).
   final PlatformInt64 completionTokens;
+
+  /// Total tokens used. Defaults to 0 when absent (some providers omit this).
   final PlatformInt64 totalTokens;
+
+  /// Breakdown of tokens used in the prompt, including cached tokens served
+  /// at the provider's discounted cache-read rate. Absent when the provider
+  /// does not return prompt-token details.
   final PromptTokensDetails? promptTokensDetails;
 
   const Usage({

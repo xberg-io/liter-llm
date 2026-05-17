@@ -210,23 +210,23 @@ liter-llm/
 
 Install in your language of choice:
 
-| Language         | Install                                                    |
-| ---------------- | ---------------------------------------------------------- |
-| Python           | `pip install liter-llm`                                    |
-| Node.js          | `pnpm add @kreuzberg/liter-llm`                            |
-| Rust             | `cargo add liter-llm`                                      |
-| Go               | `go get github.com/kreuzberg-dev/liter-llm/packages/go`    |
-| Java             | `dev.kreuzberg:liter-llm` (Maven/Gradle)                   |
-| Ruby             | `gem install liter_llm`                                    |
-| PHP              | `composer require kreuzberg/liter-llm`                     |
-| C#               | `dotnet add package LiterLlm`                              |
-| Elixir           | `{:liter_llm, "~> 1.4.0-rc.27"}` in mix.exs                |
-| Dart / Flutter   | `dart pub add liter_llm`                                   |
+| Language         | Install                                                                      |
+| ---------------- | ---------------------------------------------------------------------------- |
+| Python           | `pip install liter-llm`                                                      |
+| Node.js          | `pnpm add @kreuzberg/liter-llm`                                              |
+| Rust             | `cargo add liter-llm`                                                        |
+| Go               | `go get github.com/kreuzberg-dev/liter-llm/packages/go`                      |
+| Java             | `dev.kreuzberg:liter-llm` (Maven/Gradle)                                     |
+| Ruby             | `gem install liter_llm`                                                      |
+| PHP              | `composer require kreuzberg/liter-llm`                                       |
+| C#               | `dotnet add package LiterLlm`                                                |
+| Elixir           | `{:liter_llm, "~> 1.4.0-rc.27"}` in mix.exs                                  |
+| Dart / Flutter   | `dart pub add liter_llm`                                                     |
 | Swift            | `.package(url: "https://github.com/kreuzberg-dev/liter-llm", from: "1.4.0")` |
-| Kotlin (Android) | `dev.kreuzberg:liter-llm-android` (Maven Central)          |
-| Zig              | See [Zig package](packages/zig/README.md)                  |
-| WASM             | `pnpm add @kreuzberg/liter-llm-wasm`                       |
-| C/FFI            | Build from source -- see [FFI crate](crates/liter-llm-ffi) |
+| Kotlin (Android) | `dev.kreuzberg:liter-llm-android` (Maven Central)                            |
+| Zig              | See [Zig package](packages/zig/README.md)                                    |
+| WASM             | `pnpm add @kreuzberg/liter-llm-wasm`                                         |
+| C/FFI            | Build from source -- see [FFI crate](crates/liter-llm-ffi)                   |
 
 ### Usage
 

@@ -50,7 +50,7 @@ Send a message and get a response:
 
 ## Provider Routing
 
-liter-llm uses a `provider/model` prefix convention. The prefix determines which API endpoint, auth header, and parameter mappings to use:
+Liter-llm uses a `provider/model` prefix convention. The prefix determines which API endpoint, auth header, and parameter mappings to use:
 
 ```text
 openai/gpt-4o            -> OpenAI
@@ -408,7 +408,7 @@ Pass a JSON Schema to `response_format` to constrain the model output to a speci
 
 Structured output availability depends on provider support. OpenAI `gpt-4o` and later support `json_schema`. Providers that do not support it fall back to `json_object` or return `EndpointNotSupported`.
 
-## extra_body
+## Extra_body
 
 Pass provider-specific parameters that liter-llm does not model natively via `extra_body`. Fields in `extra_body` are merged into the top-level request JSON before it is sent to the provider.
 
@@ -529,7 +529,7 @@ Supported formats depend on the provider. OpenAI `gpt-4o-audio-preview` accepts 
 
 ## AWS EventStream Streaming
 
-When routing to Bedrock providers, responses arrive in AWS EventStream framing rather than SSE. liter-llm handles the framing transparently. `chat_stream` works the same way regardless of provider.
+When routing to Bedrock providers, responses arrive in AWS EventStream framing rather than SSE. Liter-llm handles the framing transparently. `chat_stream` works the same way regardless of provider.
 
 === "Rust"
 
@@ -562,5 +562,5 @@ When routing to Bedrock providers, responses arrive in AWS EventStream framing r
         print(chunk["choices"][0]["delta"].get("content", ""), end="", flush=True)
     ```
 
-!!! warning "Tower streaming buffer"
+!!! Warning "Tower streaming buffer"
 When Bedrock streaming is routed through the Tower middleware stack (`LlmService`), the entire stream is buffered in memory before chunks are yielded. This is a Tower `Service` trait constraint. For unbuffered Bedrock streaming, call `LlmClient::chat_stream()` directly, bypassing the Tower stack. See [Architecture](../concepts/architecture.md) for details.

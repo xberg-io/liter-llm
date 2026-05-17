@@ -1,5 +1,9 @@
+/// Client builder configuration ([`ClientConfig`] and related helpers).
 pub mod config;
+/// On-disk client configuration schema (TOML / JSON / YAML).
+#[allow(missing_docs)]
 pub mod config_file;
+/// Tower-backed managed client wired with rate limit, cache, routing, etc.
 #[cfg(all(feature = "native-http", feature = "tower"))]
 pub mod managed;
 

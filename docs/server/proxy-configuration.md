@@ -168,7 +168,7 @@ Any `${VAR_NAME}` pattern inside a string value is replaced with the environment
 
 --8<-- "snippets/toml/server/env_interpolation.md"
 
-!!! note "Unclosed braces are treated as literals"
+!!! Note "Unclosed braces are treated as literals"
 If a `${` is missing its closing `}`, the proxy leaves the text as-is rather than silently truncating. That makes typos easy to spot in logs.
 
 ## Validation

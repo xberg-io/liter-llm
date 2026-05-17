@@ -4,7 +4,7 @@ description: "Complete list of 143 supported LLM providers"
 
 # Supported Providers
 
-Liter-LLM supports **143 providers** out of the box. Route requests to any provider using the `provider/model` prefix convention -- for example, `openai/gpt-4o` routes to OpenAI and `anthropic/claude-3-opus` routes to Anthropic. No extra configuration is needed beyond setting the provider's API key.
+Liter-llm supports **143 providers** out of the box. Route requests to any provider using the `provider/model` prefix convention -- for example, `openai/gpt-4o` routes to OpenAI and `anthropic/claude-3-opus` routes to Anthropic. No extra configuration is needed beyond setting the provider's API key.
 
 | Provider                       | Prefix                       |        Chat        |     Embeddings     |       Image        |       Audio        |     Moderation     |
 | ------------------------------ | ---------------------------- | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: |

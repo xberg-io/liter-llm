@@ -46,8 +46,11 @@ pub enum Credential {
     BearerToken(SecretString),
     /// AWS credentials for SigV4 signing.
     AwsCredentials {
+        /// Access key ID half of the SigV4 credential pair.
         access_key_id: SecretString,
+        /// Secret access key half of the SigV4 credential pair.
         secret_access_key: SecretString,
+        /// Optional session token for STS-issued temporary credentials.
         session_token: Option<SecretString>,
     },
 }
@@ -60,6 +63,7 @@ pub struct StaticTokenProvider {
 }
 
 impl StaticTokenProvider {
+    /// Build a [`StaticTokenProvider`] that always resolves to `token`.
     #[must_use]
     pub fn new(token: SecretString) -> Self {
         Self { token }

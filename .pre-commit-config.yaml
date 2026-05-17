@@ -56,7 +56,7 @@ repos:
 
   # Node/TS/WASM: oxlint
   - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
-    rev: v1.1.2
+    rev: v1.1.10
     hooks:
       - id: cargo-sort
         args: [-w]
@@ -236,7 +236,7 @@ repos:
 
   # Spelling: fast Rust-based spell checker
   - repo: https://github.com/crate-ci/typos
-    rev: v1.46.1
+    rev: v1.46.2
     hooks:
       - id: typos
         args: [--force-exclude]

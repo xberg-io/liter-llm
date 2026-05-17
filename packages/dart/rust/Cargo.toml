@@ -13,7 +13,7 @@ ignored = ["liter_llm"]
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-flutter_rust_bridge = "2.12.0"
+flutter_rust_bridge = "=2.12.0"
 futures-util = "0.3"
 liter_llm = { path = "../../../crates/liter-llm", package = "liter-llm", features = [
   "native-http",

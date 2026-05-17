@@ -4,7 +4,7 @@ description: "Installing liter-llm for Rust, Python, TypeScript, Go, Java, Kotli
 
 # Installation
 
-liter-llm ships prebuilt packages for every supported language plus a CLI and Docker image for the proxy + MCP server. Pick your stack, run one command, and start calling models.
+Liter-llm ships prebuilt packages for every supported language plus a CLI and Docker image for the proxy + MCP server. Pick your stack, run one command, and start calling models.
 
 Prebuilt binaries cover Linux (x86_64 / aarch64), macOS (Apple Silicon), and Windows. The Rust toolchain is only needed when building from source.
 
@@ -227,7 +227,7 @@ export AWS_ACCESS_KEY_ID="..."
 export AWS_SECRET_ACCESS_KEY="..."
 ```
 
-!!! tip "You only need one key"
+!!! Tip "You only need one key"
 liter-llm resolves the provider from the model prefix (`openai/gpt-4o`, `anthropic/claude-...`) and picks the matching environment variable automatically.
 
 Or pass the key at client construction:
@@ -257,7 +257,7 @@ Or pass the key at client construction:
     let client = DefaultClient::new(config, None)?;
     ```
 
-!!! warning "Don't hard-code keys in source files"
+!!! Warning "Don't hard-code keys in source files"
 Use environment variables or a secret manager. The Rust core wraps keys in `secrecy::SecretString` so they never appear in `Debug` output or logs.
 
 ---

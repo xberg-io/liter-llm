@@ -4,7 +4,7 @@ description: "Crate graph, Tower middleware stack, and language binding strategy
 
 # Architecture
 
-liter-llm is a Rust-first polyglot library. A small core crate provides the client surface and all provider adapters; a proxy crate and a CLI layer on top; 14 language bindings wrap the core via native extensions or the C FFI shared library.
+Liter-llm is a Rust-first polyglot library. A small core crate provides the client surface and all provider adapters; a proxy crate and a CLI layer on top; 14 language bindings wrap the core via native extensions or the C FFI shared library.
 
 ## Crate graph
 

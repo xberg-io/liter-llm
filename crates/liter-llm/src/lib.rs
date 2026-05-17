@@ -1,3 +1,11 @@
+//! Universal LLM API client with provider-agnostic chat, embeddings, files,
+//! batches, responses, image generation, transcription, moderation, OCR,
+//! rerank, and web-search across 140+ providers.
+//!
+//! See [`LlmClient`] for the high-level streaming client, [`DefaultClient`]
+//! (native-http only) for the canonical reqwest-backed implementation, and
+//! [`client::ClientConfig`] for builder-style configuration.
+
 // Provider, HTTP, and retry infrastructure are only active with native-http.
 // Suppress dead_code lints on the wasm / no-native-http target so that the
 // type-only surface compiles cleanly.
@@ -5,21 +13,36 @@
     not(any(feature = "native-http", feature = "wasm-http")),
     allow(dead_code, unused_imports)
 )]
+// Many doc comments reference types by short name (`Service`, `LlmRequest`,
+// `LiterLlmError::ServiceUnavailable`) when they are in lexical scope inside
+// the surrounding `impl` block but not in the rustdoc resolution context.
+// These links render fine in the rendered docs (rustdoc treats them as
+// plain text); the warnings are noise for our docs flow.
+#![allow(rustdoc::broken_intra_doc_links)]
 
+/// Per-provider authentication strategies (API keys, AWS SigV4, OAuth tokens).
 pub mod auth;
+/// FFI-friendly client constructors used by the polyglot bindings.
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 pub mod bindings;
+/// High-level LLM client traits and the reqwest-backed [`client::DefaultClient`].
 pub mod client;
+/// Token-cost tracking helpers.
 pub mod cost;
+/// Public error types and the crate-wide [`Result`] alias.
 pub mod error;
 pub(crate) mod http;
+/// Provider catalog (built-in providers plus runtime registration of custom providers).
 pub mod provider;
 #[cfg(test)]
 mod tests;
 #[cfg(feature = "tokenizer")]
+/// Tokenizer helpers for measuring prompt and completion lengths.
 pub mod tokenizer;
 #[cfg(feature = "tower")]
+/// `tower` middleware layers (rate limiting, retries, observability).
 pub mod tower;
+/// Request/response DTOs shared across providers and bindings.
 pub mod types;
 
 // Re-export key types at crate root.

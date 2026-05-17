@@ -143,7 +143,7 @@ liter-llm mcp --transport http --host 0.0.0.0 --port 3001
 
 The HTTP endpoint is `POST /mcp`. Each request opens a short-lived session managed by `rmcp`'s `LocalSessionManager`. There is no authentication on the MCP HTTP transport itself, so bind to loopback or put it behind an authenticated reverse proxy.
 
-!!! warning "HTTP transport has no built-in auth"
+!!! Warning "HTTP transport has no built-in auth"
 Unlike the REST proxy, `liter-llm mcp --transport http` does not check Bearer tokens. Do not expose it to the public internet without a reverse proxy that handles authentication.
 
 ## Shared configuration

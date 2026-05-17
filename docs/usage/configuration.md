@@ -4,10 +4,10 @@ description: "Client configuration: sources, TOML schema, construction, options,
 
 # Configuration
 
-!!! tip "Snippets marked `compile-only`"
+!!! Tip "Snippets marked `compile-only`"
 Snippets with the `<!-- snippet:compile-only -->` HTML comment are extracted from CI test fixtures, kept in sync with the API at every build, and may include test scaffolding (assertions, fixture setup). Strip the scaffolding when copying into your application.
 
-liter-llm reads configuration from three sources, applied in priority order (lower numbers win):
+Liter-llm reads configuration from three sources, applied in priority order (lower numbers win):
 
 1. **Constructor arguments** — passed directly to the client factory (`create_client(...)` / `ClientConfigBuilder`).
 2. **JSON string** — `create_client_from_json(json)` for bindings without a builder.
