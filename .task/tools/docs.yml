@@ -19,7 +19,7 @@ tasks:
   lint:links:
     desc: Check links with lychee
     cmds:
-      - lychee --offline docs/ README.md
+      - lychee --offline --root-dir docs docs/ README.md
 
   lint:prose:
     desc: Lint prose with textlint
@@ -29,17 +29,17 @@ tasks:
   snippets:list:
     desc: List all documentation snippets discovered under docs/snippets
     cmds:
-      - alef-snippets list --snippets docs/snippets
+      - alef snippets list --snippets docs/snippets
 
   snippets:gaps:
     desc: Report snippet coverage gaps (missing variants, unreferenced files, etc.)
     cmds:
-      - alef-snippets gaps --snippets docs/snippets --docs docs --required-languages rust,python,typescript,go,ruby,php,java,csharp,elixir,c,swift,dart,kotlin,zig
+      - alef snippets gaps --snippets docs/snippets --docs docs --required-languages rust,python,typescript,go,ruby,php,java,csharp,elixir,c,swift,dart,kotlin,zig
 
   snippets:audit:
     desc: Run structural audit (frontmatter, fences, includes)
     cmds:
-      - alef-snippets audit --snippets docs/snippets --docs docs
+      - alef snippets audit --snippets docs/snippets --docs docs
 
   snippets:validate:
     desc: Validate every snippet at syntax level (alias of snippets:validate:syntax for ../actions/lint-docs)
@@ -49,9 +49,9 @@ tasks:
   snippets:validate:syntax:
     desc: Validate every snippet at syntax level
     cmds:
-      - alef-snippets validate --snippets docs/snippets --level syntax
+      - alef snippets validate --snippets docs/snippets --level syntax
 
   snippets:validate:compile:
     desc: Validate every snippet at compile level
     cmds:
-      - alef-snippets validate --snippets docs/snippets --level compile
+      - alef snippets validate --snippets docs/snippets --level compile
