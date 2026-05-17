@@ -881,6 +881,7 @@ jobs:
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           draft: "true"
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
       - uses: actions/download-artifact@v7
         with:
           pattern: go-ffi-*
@@ -891,6 +892,7 @@ jobs:
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           assets: go-ffi-release/*.tar.gz
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   upload-elixir-nifs:
     name: Upload Elixir NIF assets
@@ -909,6 +911,7 @@ jobs:
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           draft: "true"
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
       - uses: actions/download-artifact@v7
         with:
           pattern: elixir-nifs-*
@@ -919,6 +922,7 @@ jobs:
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           assets: elixir-nifs/*.tar.gz
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   upload-php-extensions:
     name: Upload PHP extension assets
@@ -937,6 +941,7 @@ jobs:
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           draft: "true"
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
       - uses: actions/download-artifact@v7
         with:
           pattern: php-package-*
@@ -952,6 +957,7 @@ jobs:
             dist/php-package/php_*.zip
             dist/php-package/php_*.zip.sha256
           fail-if-empty: "false"
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   upload-kotlin-android-aars:
     name: Upload Kotlin Android aars
@@ -970,6 +976,7 @@ jobs:
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           draft: "true"
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
       - uses: actions/download-artifact@v7
         with:
           pattern: kotlin-android-*
@@ -981,6 +988,7 @@ jobs:
           tag: ${{ needs.prepare.outputs.tag }}
           assets: kotlin-android-aars/*.aar
           fail-if-empty: "false"
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   # ─────────────────────────────────────────────────────────────────────────
   # Phase 6 — Publish jobs (conditional on check + build results)
