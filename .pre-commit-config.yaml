@@ -214,15 +214,15 @@ repos:
   - repo: local
     hooks:
       - id: alef-snippets-audit
-        name: alef-snippets audit (snippet structural integrity)
-        entry: alef-snippets audit --snippets docs/snippets
+        name: alef snippets audit (snippet structural integrity)
+        entry: alef snippets audit --snippets docs/snippets
         language: system
         files: ^docs/snippets/
         pass_filenames: false
         require_serial: true
       - id: alef-snippets-validate-syntax
-        name: alef-snippets validate --level syntax
-        entry: alef-snippets validate --snippets docs/snippets --level syntax
+        name: alef snippets validate --level syntax
+        entry: alef snippets validate --snippets docs/snippets --level syntax
         language: system
         files: ^docs/snippets/
         pass_filenames: false
