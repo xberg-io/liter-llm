@@ -30,7 +30,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const batches_run = b.addRunArtifact(batches_tests);
-    batches_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&batches_run.step);
 
     const chat_module = b.createModule(.{
@@ -46,7 +45,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const chat_run = b.addRunArtifact(chat_tests);
-    chat_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&chat_run.step);
 
     const configuration_module = b.createModule(.{
@@ -62,7 +60,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const configuration_run = b.addRunArtifact(configuration_tests);
-    configuration_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&configuration_run.step);
 
     const contract_module = b.createModule(.{
@@ -78,7 +75,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const contract_run = b.addRunArtifact(contract_tests);
-    contract_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&contract_run.step);
 
     const custom_provider_module = b.createModule(.{
@@ -94,7 +90,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const custom_provider_run = b.addRunArtifact(custom_provider_tests);
-    custom_provider_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&custom_provider_run.step);
 
     const embed_module = b.createModule(.{
@@ -110,7 +105,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const embed_run = b.addRunArtifact(embed_tests);
-    embed_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&embed_run.step);
 
     const error_handling_module = b.createModule(.{
@@ -126,7 +120,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const error_handling_run = b.addRunArtifact(error_handling_tests);
-    error_handling_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&error_handling_run.step);
 
     const files_module = b.createModule(.{
@@ -142,7 +135,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const files_run = b.addRunArtifact(files_tests);
-    files_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&files_run.step);
 
     const image_generate_module = b.createModule(.{
@@ -158,7 +150,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const image_generate_run = b.addRunArtifact(image_generate_tests);
-    image_generate_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&image_generate_run.step);
 
     const list_models_module = b.createModule(.{
@@ -174,7 +165,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const list_models_run = b.addRunArtifact(list_models_tests);
-    list_models_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&list_models_run.step);
 
     const moderate_module = b.createModule(.{
@@ -190,7 +180,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const moderate_run = b.addRunArtifact(moderate_tests);
-    moderate_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&moderate_run.step);
 
     const ocr_module = b.createModule(.{
@@ -206,7 +195,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const ocr_run = b.addRunArtifact(ocr_tests);
-    ocr_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&ocr_run.step);
 
     const parity_module = b.createModule(.{
@@ -222,7 +210,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const parity_run = b.addRunArtifact(parity_tests);
-    parity_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&parity_run.step);
 
     const rerank_module = b.createModule(.{
@@ -238,7 +225,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const rerank_run = b.addRunArtifact(rerank_tests);
-    rerank_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&rerank_run.step);
 
     const responses_module = b.createModule(.{
@@ -254,7 +240,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const responses_run = b.addRunArtifact(responses_tests);
-    responses_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&responses_run.step);
 
     const search_module = b.createModule(.{
@@ -270,7 +255,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const search_run = b.addRunArtifact(search_tests);
-    search_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&search_run.step);
 
     const smoke_module = b.createModule(.{
@@ -286,7 +270,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const smoke_run = b.addRunArtifact(smoke_tests);
-    smoke_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&smoke_run.step);
 
     const speech_module = b.createModule(.{
@@ -302,7 +285,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const speech_run = b.addRunArtifact(speech_tests);
-    speech_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&speech_run.step);
 
     const streaming_module = b.createModule(.{
@@ -318,7 +300,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const streaming_run = b.addRunArtifact(streaming_tests);
-    streaming_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&streaming_run.step);
 
     const tool_calling_module = b.createModule(.{
@@ -334,7 +315,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const tool_calling_run = b.addRunArtifact(tool_calling_tests);
-    tool_calling_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&tool_calling_run.step);
 
     const transcribe_module = b.createModule(.{
@@ -350,7 +330,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const transcribe_run = b.addRunArtifact(transcribe_tests);
-    transcribe_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&transcribe_run.step);
 
     const types_module = b.createModule(.{
@@ -366,7 +345,6 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const types_run = b.addRunArtifact(types_tests);
-    types_run.setCwd(b.path("../../test_documents"));
     test_step.dependOn(&types_run.step);
 
 }
