@@ -29,13 +29,10 @@ importers:
     devDependencies:
       liter_llm:
         specifier: file:../../crates/liter-llm-wasm/pkg/nodejs
-        version: file:crates/liter-llm-wasm/pkg/nodejs
+        version: liter-llm-wasm@file:crates/liter-llm-wasm/pkg/nodejs
       rollup:
         specifier: ^4.53.3
         version: 4.60.2
-      vite-plugin-wasm:
-        specifier: ^3.4.0
-        version: 3.6.0(vite@7.3.2)
       vitest:
         specifier: ^4.1.5
         version: 4.1.5(vite@7.3.2)
@@ -1086,7 +1083,7 @@ packages:
   json-with-bigint@3.5.8:
     resolution: {integrity: sha512-eq/4KP6K34kwa7TcFdtvnftvHCD9KvHOGGICWwMFc4dOOKF5t4iYqnfLK8otCRCRv06FXOzGGyqE8h8ElMvvdw==}
 
-  liter_llm@file:crates/liter-llm-wasm/pkg/nodejs:
+  liter-llm-wasm@file:crates/liter-llm-wasm/pkg/nodejs:
     resolution: {directory: crates/liter-llm-wasm/pkg/nodejs, type: directory}
 
   loupe@3.2.1:
@@ -1207,11 +1204,6 @@ packages:
     resolution: {integrity: sha512-EbKSKh+bh1E1IFxeO0pg1n4dvoOTt0UDiXMd/qn++r98+jPO1xtJilvXldeuQ8giIB5IkpjCgMleHMNEsGH6pg==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
-
-  vite-plugin-wasm@3.6.0:
-    resolution: {integrity: sha512-mL/QPziiIA4RAA6DkaZZzOstdwbW5jO4Vz7Zenj0wieKWBlNvIvX5L5ljum9lcUX0ShNfBgCNLKTjNkRVVqcsw==}
-    peerDependencies:
-      vite: ^2 || ^3 || ^4 || ^5 || ^6 || ^7 || ^8
 
   vite@7.3.2:
     resolution: {integrity: sha512-Bby3NOsna2jsjfLVOHKes8sGwgl4TT0E6vvpYgnAYDIF/tie7MRaFthmKuHx1NSXjiTueXH3do80FMQgvEktRg==}
@@ -2131,7 +2123,7 @@ snapshots:
 
   json-with-bigint@3.5.8: {}
 
-  liter_llm@file:crates/liter-llm-wasm/pkg/nodejs: {}
+  liter-llm-wasm@file:crates/liter-llm-wasm/pkg/nodejs: {}
 
   loupe@3.2.1: {}
 
@@ -2258,10 +2250,6 @@ snapshots:
       - terser
       - tsx
       - yaml
-
-  vite-plugin-wasm@3.6.0(vite@7.3.2):
-    dependencies:
-      vite: 7.3.2
 
   vite@7.3.2:
     dependencies:
