@@ -1192,21 +1192,9 @@ jobs:
           version: ${{ needs.prepare.outputs.version }}
           max-attempts: "25"
 
-      - name: Build and publish @kreuzberg/liter-llm (TypeScript)
-        if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck.outputs.exists != 'true' }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TAG: ${{ needs.prepare.outputs.npm_tag }}
-        run: |
-          pnpm install
-          pnpm --filter @kreuzberg/liter-llm build
-          npm publish --tag "$NPM_TAG" --access public --provenance
-        working-directory: packages/typescript
-        shell: bash
-
       - name: npm already published summary
         if: ${{ steps.recheck.outputs.exists == 'true' }}
-        run: echo "Node package @kreuzberg/liter-llm@${{ needs.prepare.outputs.version }} already published on npm — skipped." >> "$GITHUB_STEP_SUMMARY"
+        run: echo "Node package @kreuzberg/liter-llm-node@${{ needs.prepare.outputs.version }} already published on npm — skipped." >> "$GITHUB_STEP_SUMMARY"
 
   publish-wasm:
     name: Publish WASM package

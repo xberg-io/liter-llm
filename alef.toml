@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.16.25"
+alef_version = "0.16.32"
 languages = [
   "python",
   "node",
@@ -1940,6 +1940,75 @@ search = true
 ocr = true
 
 [crates.readme.languages.kotlin_android.snippets]
+basic_chat = "getting-started/basic_chat.md"
+
+[crates.readme.languages.swift]
+template = "language_package.md"
+name = "Swift"
+package_name = "LiterLlm"
+package_manager = ["swift_package_manager"]
+install_command = """
+.package(url: \"https://github.com/kreuzberg-dev/liter-llm.git\", from: \"{{ version }}\")"""
+description = """
+Universal LLM API client for Swift. Access 143+ LLM providers through a single Swift Concurrency-native interface (async/await, AsyncSequence streaming) with Codable request/response types.
+"""
+
+[crates.readme.languages.swift.features]
+streaming = true
+async = true
+tool_calling = true
+provider_routing = true
+cost_tracking = true
+search = true
+ocr = true
+
+[crates.readme.languages.swift.snippets]
+basic_chat = "getting-started/basic_chat.md"
+
+[crates.readme.languages.dart]
+template = "language_package.md"
+name = "Dart"
+package_name = "liter_llm"
+package_manager = ["pub"]
+install_command = """
+dart pub add liter_llm:{{ version }}"""
+description = """
+Universal LLM API client for Dart/Flutter. Access 143+ LLM providers through a Dart-idiomatic Future/Stream API with `json_serializable`-friendly types.
+"""
+
+[crates.readme.languages.dart.features]
+streaming = true
+async = true
+tool_calling = true
+provider_routing = true
+cost_tracking = true
+search = true
+ocr = true
+
+[crates.readme.languages.dart.snippets]
+basic_chat = "getting-started/basic_chat.md"
+
+[crates.readme.languages.zig]
+template = "language_package.md"
+name = "Zig"
+package_name = "liter_llm"
+package_manager = ["zig"]
+install_command = """
+zig fetch --save https://github.com/kreuzberg-dev/liter-llm/archive/refs/tags/v{{ version }}.tar.gz"""
+description = """
+Universal LLM API client for Zig. Access 143+ LLM providers through Zig's allocator-aware sync API with explicit error sets — no hidden allocations, no exceptions, deterministic resource lifetimes.
+"""
+
+[crates.readme.languages.zig.features]
+streaming = false
+async = false
+tool_calling = true
+provider_routing = true
+cost_tracking = true
+search = true
+ocr = true
+
+[crates.readme.languages.zig.snippets]
 basic_chat = "getting-started/basic_chat.md"
 
 [[crates.adapters]]
