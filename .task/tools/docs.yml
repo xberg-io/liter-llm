@@ -49,9 +49,9 @@ tasks:
   snippets:validate:syntax:
     desc: Validate every snippet at syntax level
     cmds:
-      - alef snippets validate --snippets docs/snippets --level syntax
+      - alef snippets validate --snippets docs/snippets --level syntax --timeout 120
 
   snippets:validate:compile:
     desc: Validate every snippet at compile level
     cmds:
-      - alef snippets validate --snippets docs/snippets --level compile
+      - alef snippets validate --snippets docs/snippets --level compile --timeout 300

@@ -66,7 +66,7 @@ def generate_markdown(providers: list[dict[str, Any]]) -> str:
     lines.append("# Supported Providers")
     lines.append("")
     lines.append(
-        f"Liter-LLM supports **{count} providers** out of the box. "
+        f"Liter-llm supports **{count} providers** out of the box. "
         "Route requests to any provider using the `provider/model` prefix convention "
         "-- for example, `openai/gpt-4o` routes to OpenAI and `anthropic/claude-3-opus` "
         "routes to Anthropic. No extra configuration is needed beyond setting the "
