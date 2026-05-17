@@ -39,15 +39,24 @@ defmodule LiterLlm.DefaultClient do
         stream =
           Stream.unfold(handle, fn h ->
             case Native.defaultclient_chat_stream_next(h) do
-              {:ok, nil} -> nil
+              {:ok, nil} ->
+                nil
+
               {:ok, chunk_json} when is_binary(chunk_json) ->
                 {Jason.decode!(chunk_json, keys: :atoms), h}
-              {:ok, chunk} -> {chunk, h}
-              {:error, _} -> nil
+
+              {:ok, chunk} ->
+                {chunk, h}
+
+              {:error, _} ->
+                nil
             end
           end)
+
         {:ok, stream}
-      {:error, reason} -> {:error, reason}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

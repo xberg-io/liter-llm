@@ -8,16 +8,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
+
 from ._internal_bindings import (
-    BatchStatus,  # noqa: TC001
-    EmbeddingFormat,  # noqa: TC001
-    FilePurpose,  # noqa: TC001
-    FinishReason,  # noqa: TC001
-    ImageDetail,  # noqa: TC001
-    ReasoningEffort,  # noqa: TC001
-    ToolChoiceMode,  # noqa: TC001
-    ToolType,  # noqa: TC001
+    BatchStatus,
+    EmbeddingFormat,
+    FilePurpose,
+    FinishReason,
+    ImageDetail,
+    ReasoningEffort,
+    ToolChoiceMode,
+    ToolType,
 )
 
 if TYPE_CHECKING:
@@ -30,7 +31,6 @@ if TYPE_CHECKING:
 
 @dataclass
 class SystemMessage:
-
     """System message."""
     content: str = ""
 
@@ -39,7 +39,6 @@ class SystemMessage:
 
 @dataclass
 class UserMessage:
-
     """User message."""
     content: UserContent | None = None
 
@@ -48,7 +47,6 @@ class UserMessage:
 
 @dataclass
 class ImageUrl:
-
     """Image url."""
     url: str = ""
 
@@ -57,7 +55,6 @@ class ImageUrl:
 
 @dataclass
 class DocumentContent:
-
     """Document content."""
     data: str = ""
 
@@ -71,7 +68,6 @@ class DocumentContent:
 
 @dataclass
 class AudioContent:
-
     """Audio content."""
     data: str = ""
 
@@ -85,7 +81,6 @@ class AudioContent:
 
 @dataclass
 class AssistantMessage:
-
     """Assistant message."""
     content: str | None = None
 
@@ -102,7 +97,6 @@ class AssistantMessage:
 
 @dataclass
 class ToolMessage:
-
     """Tool message."""
     content: str = ""
 
@@ -113,7 +107,6 @@ class ToolMessage:
 
 @dataclass
 class DeveloperMessage:
-
     """Developer message."""
     content: str = ""
 
@@ -122,7 +115,6 @@ class DeveloperMessage:
 
 @dataclass
 class FunctionMessage:
-
     """Deprecated legacy function-role message body."""
     content: str = ""
 
@@ -131,7 +123,6 @@ class FunctionMessage:
 
 @dataclass
 class SpecificToolChoice:
-
     """Specific tool choice."""
     choice_type: ToolType | str = "function"
 
@@ -140,14 +131,12 @@ class SpecificToolChoice:
 
 @dataclass
 class SpecificFunction:
-
     """Specific function."""
     name: str = ""
 
 
 @dataclass
 class JsonSchemaFormat:
-
     """Json schema format."""
     name: str = ""
 
@@ -160,7 +149,6 @@ class JsonSchemaFormat:
 
 @dataclass
 class Usage:
-
     """Usage."""
     prompt_tokens: int = 0
 
@@ -184,7 +172,6 @@ class Usage:
 
 @dataclass
 class PromptTokensDetails:
-
     """Breakdown of tokens used in the prompt portion of a request."""
     cached_tokens: int = 0
 
@@ -198,7 +185,6 @@ class PromptTokensDetails:
 
 @dataclass
 class ChatCompletionRequest:
-
     """Chat completion request."""
     model: str = ""
 
@@ -251,14 +237,12 @@ class ChatCompletionRequest:
 
 @dataclass
 class StreamOptions:
-
     """Stream options."""
     include_usage: bool | None = None
 
 
 @dataclass
 class ChatCompletionResponse:
-
     """Chat completion response."""
     id: str = ""
 
@@ -282,7 +266,6 @@ class ChatCompletionResponse:
 
 @dataclass
 class Choice:
-
     """Choice."""
     index: int = 0
 
@@ -293,7 +276,6 @@ class Choice:
 
 @dataclass
 class ChatCompletionChunk:
-
     """Chat completion chunk."""
     id: str = ""
 
@@ -317,7 +299,6 @@ class ChatCompletionChunk:
 
 @dataclass
 class StreamChoice:
-
     """Stream choice."""
     index: int = 0
 
@@ -328,7 +309,6 @@ class StreamChoice:
 
 @dataclass
 class StreamDelta:
-
     """Stream delta."""
     role: str | None = None
 
@@ -346,7 +326,6 @@ class StreamDelta:
 
 @dataclass
 class StreamToolCall:
-
     """Stream tool call."""
     index: int = 0
 
@@ -359,7 +338,6 @@ class StreamToolCall:
 
 @dataclass
 class StreamFunctionCall:
-
     """Stream function call."""
     name: str | None = None
 
@@ -368,7 +346,6 @@ class StreamFunctionCall:
 
 @dataclass
 class EmbeddingRequest:
-
     """Embedding request."""
     model: str = ""
 
@@ -383,7 +360,6 @@ class EmbeddingRequest:
 
 @dataclass
 class CreateImageRequest:
-
     """Request to create images from a text prompt."""
     prompt: str = ""
 
@@ -404,7 +380,6 @@ class CreateImageRequest:
 
 @dataclass
 class ImagesResponse:
-
     """Response containing generated images."""
     created: int = 0
 
@@ -413,7 +388,6 @@ class ImagesResponse:
 
 @dataclass
 class Image:
-
     """A single generated image, returned as either a URL or base64 data."""
     url: str | None = None
 
@@ -424,7 +398,6 @@ class Image:
 
 @dataclass
 class CreateSpeechRequest:
-
     """Request to generate speech audio from text."""
     model: str = ""
 
@@ -439,7 +412,6 @@ class CreateSpeechRequest:
 
 @dataclass
 class CreateTranscriptionRequest:
-
     """Request to transcribe audio into text."""
     model: str = ""
 
@@ -459,7 +431,6 @@ class CreateTranscriptionRequest:
 
 @dataclass
 class TranscriptionResponse:
-
     """Response from a transcription request."""
     text: str = ""
 
@@ -472,7 +443,6 @@ class TranscriptionResponse:
 
 @dataclass
 class TranscriptionSegment:
-
     """A segment of transcribed audio with timing information."""
     id: int = 0
 
@@ -485,7 +455,6 @@ class TranscriptionSegment:
 
 @dataclass
 class ModerationRequest:
-
     """Request to classify content for policy violations."""
     input: ModerationInput | None = None
 
@@ -494,7 +463,6 @@ class ModerationRequest:
 
 @dataclass
 class ModerationCategories:
-
     """Boolean flags for each moderation category."""
     sexual: bool = False
 
@@ -521,7 +489,6 @@ class ModerationCategories:
 
 @dataclass
 class ModerationCategoryScores:
-
     """Confidence scores for each moderation category."""
     sexual: float = 0.0
 
@@ -548,7 +515,6 @@ class ModerationCategoryScores:
 
 @dataclass
 class RerankRequest:
-
     """Request to rerank documents by relevance to a query."""
     model: str = ""
 
@@ -563,7 +529,6 @@ class RerankRequest:
 
 @dataclass
 class SearchRequest:
-
     """A search request."""
     model: str = ""
 
@@ -592,7 +557,6 @@ class SearchRequest:
 
 @dataclass
 class OcrRequest:
-
     """An OCR request."""
     model: str = ""
 
@@ -616,7 +580,6 @@ class OcrRequest:
 
 @dataclass
 class ModelsListResponse:
-
     """Models list response."""
     object: str = ""
 
@@ -628,7 +591,6 @@ class ModelsListResponse:
 
 @dataclass
 class ModelObject:
-
     """Model object."""
     id: str = ""
 
@@ -644,7 +606,6 @@ class ModelObject:
 
 @dataclass
 class CreateFileRequest:
-
     """Create file request."""
     file: str = ""
 
@@ -658,7 +619,6 @@ class CreateFileRequest:
 
 @dataclass
 class FileObject:
-
     """File object."""
     id: str = ""
 
@@ -677,7 +637,6 @@ class FileObject:
 
 @dataclass
 class FileListResponse:
-
     """File list response."""
     object: str = ""
 
@@ -688,7 +647,6 @@ class FileListResponse:
 
 @dataclass
 class FileListQuery:
-
     """File list query."""
     purpose: str | None = None
 
@@ -699,7 +657,6 @@ class FileListQuery:
 
 @dataclass
 class DeleteResponse:
-
     """Delete response."""
     id: str = ""
 
@@ -710,7 +667,6 @@ class DeleteResponse:
 
 @dataclass
 class CreateBatchRequest:
-
     """Create batch request."""
     input_file_id: str = ""
 
@@ -723,7 +679,6 @@ class CreateBatchRequest:
 
 @dataclass
 class BatchObject:
-
     """Batch object."""
     id: str = ""
 
@@ -756,7 +711,6 @@ class BatchObject:
 
 @dataclass
 class BatchRequestCounts:
-
     """Batch request counts."""
     total: int = 0
 
@@ -767,7 +721,6 @@ class BatchRequestCounts:
 
 @dataclass
 class BatchListResponse:
-
     """Batch list response."""
     object: str = ""
 
@@ -782,7 +735,6 @@ class BatchListResponse:
 
 @dataclass
 class BatchListQuery:
-
     """Batch list query."""
     limit: int | None = None
 
@@ -791,7 +743,6 @@ class BatchListQuery:
 
 @dataclass
 class CreateResponseRequest:
-
     """Create response request."""
     model: str = ""
 
@@ -810,7 +761,6 @@ class CreateResponseRequest:
 
 @dataclass
 class ResponseTool:
-
     """Response tool."""
     tool_type: str = ""
 
@@ -819,7 +769,6 @@ class ResponseTool:
 
 @dataclass
 class ResponseObject:
-
     """Response object."""
     id: str = ""
 
@@ -840,7 +789,6 @@ class ResponseObject:
 
 @dataclass
 class ResponseOutputItem:
-
     """Response output item."""
     item_type: str = ""
 
@@ -849,7 +797,6 @@ class ResponseOutputItem:
 
 @dataclass
 class ResponseUsage:
-
     """Response usage."""
     input_tokens: int = 0
 

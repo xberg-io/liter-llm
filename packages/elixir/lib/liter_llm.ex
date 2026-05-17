@@ -177,10 +177,12 @@ defmodule LiterLlm do
   def defaultclient_chat_stream_start(client, req) do
     LiterLlm.Native.defaultclient_chat_stream_start(client, req)
   end
+
   @doc "Pull the next chunk JSON from a streaming handle, or `:nil` at end-of-stream."
   def defaultclient_chat_stream_next(handle) do
     LiterLlm.Native.defaultclient_chat_stream_next(handle)
   end
+
   @doc "Streaming `chat_stream` — returns an `Enumerable` of decoded chunk maps."
   def defaultclient_chat_stream(client, req) do
     case LiterLlm.Native.defaultclient_chat_stream_start(client, req) do
