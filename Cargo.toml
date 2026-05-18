@@ -55,13 +55,13 @@ memchr = "2"
 napi = { version = "3", features = ["napi4", "serde-json", "async"] }
 napi-build = "2"
 napi-derive = "3"
-opendal = { version = "0.55", default-features = false, features = [
+opendal = { version = "0.56", default-features = false, features = [
   "services-memory",
   "services-redis",
   "services-fs",
   "services-s3",
 ] }
-opentelemetry = "0.31"
+opentelemetry = "0.32"
 pin-project-lite = "0.2"
 pyo3 = { version = "0.28", features = ["abi3-py310", "multiple-pymethods"] }
 pyo3-async-runtimes = { version = "0.28", features = ["tokio-runtime"] }
@@ -102,7 +102,7 @@ tempfile = "3"
 
 # Error handling
 thiserror = "2"
-tokenizers = { version = "0.22", default-features = false, features = ["http", "fancy-regex"] }
+tokenizers = { version = "0.23", default-features = false, features = ["http", "fancy-regex"] }
 tokio = { version = "1", features = ["full"] }
 toml = "1.1"
 tower = { version = "0.5", features = [
@@ -130,7 +130,7 @@ tower-service = "0.3"
 tracing = "0.1"
 tracing-opentelemetry = "0.32"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
-utoipa = { version = "5.4", features = ["axum_extras"] }
+utoipa = { version = "5.5", features = ["axum_extras"] }
 walkdir = "2.5"
 wasm-bindgen = "0.2"
 wasm-bindgen-test = "0.3"

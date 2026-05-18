@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use bytes::Bytes;
 use opendal::Operator;
 
@@ -26,10 +24,10 @@ impl FileStore {
     /// Returns an error string if the scheme is unknown or the operator
     /// cannot be constructed.
     pub fn from_config(config: &FileStorageConfig) -> Result<Self, String> {
-        let scheme = opendal::Scheme::from_str(&config.backend)
-            .map_err(|e| format!("unknown storage backend '{}': {e}", config.backend))?;
-
-        let operator = Operator::via_iter(scheme, config.backend_config.clone())
+        // opendal 0.56 takes the backend scheme as a string directly; the
+        // typed `Scheme` enum is no longer exported. `via_iter` validates the
+        // scheme name against the registered services list.
+        let operator = Operator::via_iter(&config.backend, config.backend_config.clone())
             .map_err(|e| format!("failed to build storage operator for '{}': {e}", config.backend))?;
 
         Ok(Self {

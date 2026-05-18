@@ -4,7 +4,7 @@
 /// `main`, so every test binary gets the provider installed before any
 /// `reqwest::Client` is constructed.
 #[cfg(feature = "native-http")]
-#[ctor::ctor]
+#[ctor::ctor(unsafe)]
 fn init_crypto() {
     liter_llm::ensure_crypto_provider();
 }

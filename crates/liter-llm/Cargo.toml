@@ -94,7 +94,7 @@ tracing = { workspace = true, optional = true }
 tracing-opentelemetry = { workspace = true, optional = true }
 
 [dev-dependencies]
-ctor = "0.2"
+ctor = "1.0"
 futures-util = { workspace = true }
 jsonschema = { workspace = true }
 serial_test = { workspace = true }

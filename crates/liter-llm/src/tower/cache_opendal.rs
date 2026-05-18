@@ -6,7 +6,6 @@
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
-use std::str::FromStr;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use opendal::Operator;
@@ -59,14 +58,13 @@ impl OpenDalCacheStore {
         prefix: impl Into<String>,
         ttl: Duration,
     ) -> crate::error::Result<Self> {
-        let parsed_scheme =
-            opendal::Scheme::from_str(scheme).map_err(|e| crate::error::LiterLlmError::InternalError {
-                message: format!("unknown OpenDAL scheme '{scheme}': {e}"),
-            })?;
-        let operator =
-            Operator::via_iter(parsed_scheme, config).map_err(|e| crate::error::LiterLlmError::InternalError {
-                message: format!("failed to build OpenDAL operator for '{scheme}': {e}"),
-            })?;
+        // opendal 0.56 takes the scheme as a string directly; the typed `Scheme`
+        // enum is no longer exported. `via_iter` validates the scheme name
+        // against the registered services list and returns an error for
+        // unknown values.
+        let operator = Operator::via_iter(scheme, config).map_err(|e| crate::error::LiterLlmError::InternalError {
+            message: format!("failed to build OpenDAL operator for '{scheme}': {e}"),
+        })?;
         Ok(Self::new(operator, prefix, ttl))
     }
 
@@ -152,7 +150,7 @@ mod tests {
     use crate::types::{AssistantMessage, ChatCompletionResponse, Choice, FinishReason};
 
     fn memory_store(ttl_secs: u64) -> OpenDalCacheStore {
-        let op = Operator::via_iter(opendal::Scheme::Memory, std::iter::empty::<(String, String)>())
+        let op = Operator::via_iter("memory", std::iter::empty::<(String, String)>())
             .expect("memory backend should always build");
         OpenDalCacheStore::new(op, "test/", Duration::from_secs(ttl_secs))
     }

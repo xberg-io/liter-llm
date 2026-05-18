@@ -10,7 +10,7 @@ pub mod state;
 pub mod streaming;
 
 #[cfg(test)]
-#[ctor::ctor]
+#[ctor::ctor(unsafe)]
 fn init_crypto_for_unit_tests() {
     liter_llm::ensure_crypto_provider();
 }

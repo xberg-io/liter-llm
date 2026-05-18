@@ -1,5 +1,5 @@
 #[cfg(all(test, feature = "native-http"))]
-#[ctor::ctor]
+#[ctor::ctor(unsafe)]
 fn init_crypto_for_unit_tests() {
     crate::ensure_crypto_provider();
 }
