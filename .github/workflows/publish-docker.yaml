@@ -43,7 +43,7 @@ jobs:
       tag: ${{ steps.version.outputs.tag }}
       should_publish: ${{ steps.check.outputs.should_publish }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
 
@@ -87,7 +87,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
 
@@ -99,14 +99,14 @@ jobs:
 
       - name: Log in to GHCR
         if: ${{ !inputs.dry_run }}
-        uses: docker/login-action@v4
+        uses: docker/login-action@v4.1.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build test image
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@v7.1.0
         with:
           context: .
           file: docker/Dockerfile
@@ -150,7 +150,7 @@ jobs:
         shell: bash
 
       - name: Build and push
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@v7.1.0
         with:
           context: .
           file: docker/Dockerfile
