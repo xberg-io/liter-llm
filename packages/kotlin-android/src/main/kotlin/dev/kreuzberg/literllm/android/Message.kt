@@ -6,9 +6,12 @@
     "ktlint:standard:spacing-between-declarations-with-annotations",
     "ktlint:standard:when-entry-bracing",
     "ktlint:standard:blank-line-between-when-conditions",
+    "ktlint:standard:blank-line-before-declaration",
     "ktlint:standard:chain-method-continuation",
     "ktlint:standard:annotation",
     "ktlint:standard:max-line-length",
+    "ktlint:standard:no-semi",
+    "ktlint:standard:statement-wrapping",
     "MaxLineLength",
     "TooManyFunctions",
     "FunctionParameterNaming",
@@ -29,31 +32,26 @@ sealed class Message {
     data class System(
         val message: SystemMessage
     ) : Message()
-
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class User(
         val message: UserMessage
     ) : Message()
-
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Assistant(
         val message: AssistantMessage
     ) : Message()
-
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Tool(
         val message: ToolMessage
     ) : Message()
-
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Developer(
         val message: DeveloperMessage
     ) : Message()
-
     /**
      * Deprecated legacy function-role message; retained for API compatibility.
      */

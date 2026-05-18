@@ -56,7 +56,7 @@ repos:
 
   # Node/TS/WASM: oxlint
   - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
-    rev: v1.1.10
+    rev: v1.1.11
     hooks:
       - id: cargo-sort
         args: [-w]
@@ -202,7 +202,7 @@ repos:
   # matches the pinned alef.toml version, falling back to a sha256-verified
   # release-tarball download. Do not override `entry:` here.
   - repo: https://github.com/kreuzberg-dev/alef
-    rev: v0.16.39
+    rev: v0.16.43
     hooks:
       - id: alef-verify
       - id: alef-sync-versions
@@ -236,7 +236,7 @@ repos:
 
   # GitHub Actions: pin maintenance
   - repo: https://github.com/Goldziher/gh-actions-updater
-    rev: v0.1.1
+    rev: v0.1.2
     hooks:
       - id: gh-actions-updater
 

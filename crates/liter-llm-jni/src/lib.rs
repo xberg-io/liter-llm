@@ -12,6 +12,7 @@
 #![allow(dead_code)]
 #![allow(clippy::let_unit_value)]
 #![allow(clippy::unused_unit)]
+#![allow(clippy::let_and_return)]
 
 use futures_util::StreamExt;
 use futures_util::stream::BoxStream;

@@ -171,7 +171,7 @@ jobs:
             dart-version: "stable"
             test-cmd: "alef test --lang dart --e2e"
           - lang: swift
-            test-cmd: "cd e2e/swift && swift test"
+            test-cmd: "cd e2e/swift_e2e && swift test"
           - lang: zig
             zig-version: "0.16.0"
             test-cmd: "alef test --lang zig --e2e"
