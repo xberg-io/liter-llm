@@ -87,6 +87,17 @@ package_name = "@kreuzberg/liter-llm-node"
 
 [crates.ruby]
 gem_name = "liter_llm"
+# TODO(alef): Magnus codegen has a known limitation around `Map<K, V>` fields inside
+# enum variants — `field_type_for_serde_inner` collapses them to `String` at the binding
+# struct level, but the shared conversion-arm codegen still emits
+# `.into_iter().map(...).collect()` for the core→binding direction, which fails to
+# type-check against a `String` field. Excluding `CacheBackend` (which has Map-in-variant)
+# also forces `CacheConfig` out of the Ruby surface because `CacheConfig.backend: CacheBackend`
+# still references the excluded type from a non-excluded struct context.
+# Track the proper Magnus codegen fix as part of the broader "expose everything in all
+# bindings" effort. Until then, Ruby ships with the other Tower configs (BudgetConfig,
+# RateLimitConfig, Enforcement) plus all the request/response DTOs.
+exclude_types = ["CacheBackend", "CacheConfig"]
 
 [crates.ruby.stubs]
 output = "packages/ruby/sig/"
@@ -99,6 +110,17 @@ futures-util = "0.3"
 
 [crates.wasm]
 features = ["wasm-http"]
+# Tower middleware config DTOs are exposed in every other binding, but the WASM
+# build uses the `wasm-http` feature which excludes `tower`. The configs aren't
+# reachable through `liter_llm::*` in that build, so skip them in the WASM
+# binding to avoid E0433 "cannot find `tower`" / "cannot find `BudgetConfig`" etc.
+exclude_types = [
+  "BudgetConfig",
+  "CacheConfig",
+  "CacheBackend",
+  "RateLimitConfig",
+  "Enforcement",
+]
 
 [crates.ffi]
 prefix = "literllm"
