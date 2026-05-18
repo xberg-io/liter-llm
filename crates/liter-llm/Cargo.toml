@@ -42,6 +42,9 @@ azure-auth = ["native-http"]
 copilot-auth = ["native-http"]
 # Google Vertex AI OAuth2 credential provider (service-account JWT flow).
 vertex-auth = ["native-http", "dep:jsonwebtoken"]
+# Google Vertex AI ADC credential provider (metadata server + gcp_auth fallback).
+# Preferred for GKE / Workload Identity deployments — no service-account key file needed.
+vertex-adc = ["native-http", "dep:gcp_auth"]
 # AWS STS Web Identity credential provider (EKS / IRSA token exchange).
 bedrock-auth = ["native-http"]
 # Full feature set: native HTTP + tower + tracing + otel + bedrock.
@@ -60,6 +63,7 @@ full = [
     "azure-auth",
     "copilot-auth",
     "vertex-auth",
+    "vertex-adc",
     "bedrock-auth",
     "opendal-cache",
 ]
@@ -73,6 +77,7 @@ bytes = { workspace = true }
 dashmap = { workspace = true, optional = true }
 futures-core = { workspace = true }
 futures-util = { workspace = true, optional = true }
+gcp_auth = { workspace = true, optional = true }
 gloo-timers = { version = "0.4", features = ["futures"], optional = true }
 jsonwebtoken = { workspace = true, optional = true }
 memchr = { workspace = true, optional = true }
