@@ -1052,10 +1052,10 @@ public final class DefaultClient {
         self.inner = try RustBridge.createDefaultClient(apiKey, baseUrl)
     }
     public func chat(_ req: ChatCompletionRequest) async throws -> ChatCompletionResponse {
-        return try await RustBridge.defaultClientChat(self.inner, try req.intoRust())
+        return try await RustBridge.defaultClientChat(self.inner, req)
     }
     public func embed(_ req: EmbeddingRequest) async throws -> EmbeddingResponse {
-        return try await RustBridge.defaultClientEmbed(self.inner, try req.intoRust())
+        return try await RustBridge.defaultClientEmbed(self.inner, req)
     }
     public func listModels() async throws -> ModelsListResponse {
         return try await RustBridge.defaultClientListModels(self.inner)
@@ -1071,19 +1071,19 @@ public final class DefaultClient {
         return try await RustBridge.defaultClientTranscribe(self.inner, try req.intoRust())
     }
     public func moderate(_ req: ModerationRequest) async throws -> ModerationResponse {
-        return try await RustBridge.defaultClientModerate(self.inner, try req.intoRust())
+        return try await RustBridge.defaultClientModerate(self.inner, req)
     }
     public func rerank(_ req: RerankRequest) async throws -> RerankResponse {
-        return try await RustBridge.defaultClientRerank(self.inner, try req.intoRust())
+        return try await RustBridge.defaultClientRerank(self.inner, req)
     }
     public func search(_ req: SearchRequest) async throws -> SearchResponse {
-        return try await RustBridge.defaultClientSearch(self.inner, try req.intoRust())
+        return try await RustBridge.defaultClientSearch(self.inner, req)
     }
     public func ocr(_ req: OcrRequest) async throws -> OcrResponse {
-        return try await RustBridge.defaultClientOcr(self.inner, try req.intoRust())
+        return try await RustBridge.defaultClientOcr(self.inner, req)
     }
     public func createFile(_ req: CreateFileRequest) async throws -> FileObject {
-        return try await RustBridge.defaultClientCreateFile(self.inner, try req.intoRust())
+        return try await RustBridge.defaultClientCreateFile(self.inner, req)
     }
     public func retrieveFile(_ fileId: String) async throws -> FileObject {
         return try await RustBridge.defaultClientRetrieveFile(self.inner, fileId)
@@ -1092,26 +1092,26 @@ public final class DefaultClient {
         return try await RustBridge.defaultClientDeleteFile(self.inner, fileId)
     }
     public func listFiles(_ query: FileListQuery?) async throws -> FileListResponse {
-        return try await RustBridge.defaultClientListFiles(self.inner, try query.intoRust())
+        return try await RustBridge.defaultClientListFiles(self.inner, try query?.intoRust())
     }
     public func fileContent(_ fileId: String) async throws -> Data {
         let _bytes = try await RustBridge.defaultClientFileContent(self.inner, fileId)
         return Data(_bytes.map { $0 })
     }
     public func createBatch(_ req: CreateBatchRequest) async throws -> BatchObject {
-        return try await RustBridge.defaultClientCreateBatch(self.inner, try req.intoRust())
+        return try await RustBridge.defaultClientCreateBatch(self.inner, req)
     }
     public func retrieveBatch(_ batchId: String) async throws -> BatchObject {
         return try await RustBridge.defaultClientRetrieveBatch(self.inner, batchId)
     }
     public func listBatches(_ query: BatchListQuery?) async throws -> BatchListResponse {
-        return try await RustBridge.defaultClientListBatches(self.inner, try query.intoRust())
+        return try await RustBridge.defaultClientListBatches(self.inner, try query?.intoRust())
     }
     public func cancelBatch(_ batchId: String) async throws -> BatchObject {
         return try await RustBridge.defaultClientCancelBatch(self.inner, batchId)
     }
     public func createResponse(_ req: CreateResponseRequest) async throws -> ResponseObject {
-        return try await RustBridge.defaultClientCreateResponse(self.inner, try req.intoRust())
+        return try await RustBridge.defaultClientCreateResponse(self.inner, req)
     }
     public func retrieveResponse(_ id: String) async throws -> ResponseObject {
         return try await RustBridge.defaultClientRetrieveResponse(self.inner, id)
@@ -1131,8 +1131,7 @@ public final class DefaultClient {
                     while !Task.isCancelled {
                         let json = try handle.next().toString()
                         if json.isEmpty { break }
-                        let chunkData = json.data(using: .utf8) ?? Data()
-                        let chunk = try JSONDecoder().decode(ChatCompletionChunk.self, from: chunkData)
+                        let chunk = try RustBridge.chatCompletionChunkFromJson(json)
                         continuation.yield(chunk)
                     }
                     continuation.finish()
