@@ -171,18 +171,15 @@ types = [
   "PreparedRequest",
   "RawExchange",
   "RawStreamExchange",
-  # Internal error types
-  "ErrorResponse",
-  "ApiError",
   # Tower-internal Service request/response enums (externally tagged, contain BoxStream/Bytes)
   "LlmRequest",
   "LlmResponse",
   "CachedResponse",
-  # Tower middleware (feature-gated, generic Service types)
-  "BudgetConfig",
+  # Tower middleware Layer/Service/State wrappers (Rust-only middleware composition).
+  # Public config DTOs (BudgetConfig, CacheConfig, RateLimitConfig, CacheBackend,
+  # Enforcement) are intentionally NOT excluded — they are exposed across all bindings.
   "BudgetState",
   "BudgetLayer",
-  "CacheConfig",
   "CacheStore",
   "InMemoryStore",
   "CacheLayer",
@@ -193,7 +190,6 @@ types = [
   "HealthCheckService",
   "LlmHook",
   "HooksLayer",
-  "RateLimitConfig",
   "ModelRateLimitLayer",
   "RouterState",
   "Router",
@@ -237,14 +233,11 @@ methods = [
   "DefaultClient.all_headers",
   "DefaultClient.all_headers_for_provider",
   "DefaultClient.prepare_request",
-  # Error internal methods
+  # Error internal HTTP-status parser (private helper)
   "LiterLlmError.from_status",
   # Methods that require binding→core From on output types (not yet supported)
   "ChatCompletionResponse.estimated_cost",
   "EmbeddingResponse.estimated_cost",
-  # Internal error methods
-  "LiterLlmError.is_transient",
-  "LiterLlmError.error_type",
 ]
 functions = ["str_pair", "build_provider"]
 

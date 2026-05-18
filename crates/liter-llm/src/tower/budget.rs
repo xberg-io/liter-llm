@@ -75,7 +75,6 @@ pub struct BudgetConfig {
     pub enforcement: Enforcement,
 }
 
-#[cfg_attr(alef, alef(skip))]
 impl Default for BudgetConfig {
     fn default() -> Self {
         Self {

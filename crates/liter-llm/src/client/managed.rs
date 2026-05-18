@@ -88,6 +88,7 @@ impl SyncService {
 ///
 /// `ManagedClient` implements [`LlmClient`] and can be used everywhere a
 /// `DefaultClient` is expected.
+#[cfg_attr(alef, alef(skip))]
 pub struct ManagedClient {
     /// The raw client — used directly when no middleware is configured, and
     /// also wrapped by the Tower service when middleware *is* configured.
