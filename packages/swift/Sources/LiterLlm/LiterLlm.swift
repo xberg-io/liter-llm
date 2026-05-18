@@ -33,6 +33,7 @@ public typealias UserMessage = RustBridge.UserMessage
 /// An image URL reference with optional detail level for processing.
 public typealias ImageUrl = RustBridge.ImageUrl
 
+/// PDF/document content part for vision-capable models.
 public struct DocumentContent: Codable, Sendable, Hashable {
     /// Base64-encoded document data or URL.
     public let data: String
@@ -59,6 +60,7 @@ internal extension DocumentContent {
     }
 }
 
+/// Audio content part for speech-capable models.
 public struct AudioContent: Codable, Sendable, Hashable {
     /// Base64-encoded audio data.
     public let data: String
@@ -197,6 +199,7 @@ internal extension SpecificFunction {
 /// JSON Schema specification for constrained output.
 public typealias JsonSchemaFormat = RustBridge.JsonSchemaFormat
 
+/// Token-usage accounting returned by the provider on each completion / embedding call.
 public typealias Usage = RustBridge.Usage
 
 /// Breakdown of tokens used in the prompt portion of a request.

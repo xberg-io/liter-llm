@@ -41,6 +41,7 @@ pub struct ImageUrl {
     pub detail: Option<ImageDetail>,
 }
 
+/// PDF/document content part for vision-capable models.
 #[frb(mirror(DocumentContent))]
 pub struct DocumentContent {
     /// Base64-encoded document data or URL.
@@ -49,6 +50,7 @@ pub struct DocumentContent {
     pub media_type: String,
 }
 
+/// Audio content part for speech-capable models.
 #[frb(mirror(AudioContent))]
 pub struct AudioContent {
     /// Base64-encoded audio data.
@@ -170,6 +172,7 @@ pub struct JsonSchemaFormat {
     pub strict: Option<bool>,
 }
 
+/// Token-usage accounting returned by the provider on each completion / embedding call.
 #[frb(mirror(Usage))]
 pub struct Usage {
     /// Prompt tokens used. Defaults to 0 when absent (some providers omit this).

@@ -14,6 +14,9 @@
  * Assistant's response to a user message.
  */
 typedef struct LITERLLMAssistantMessage LITERLLMAssistantMessage;
+/**
+ * Audio content part for speech-capable models.
+ */
 typedef struct LITERLLMAudioContent LITERLLMAudioContent;
 /**
  * How the API key is sent in the HTTP request.
@@ -129,6 +132,9 @@ typedef struct LITERLLMDeleteResponse LITERLLMDeleteResponse;
  * Developer message (system-like message for Claude models).
  */
 typedef struct LITERLLMDeveloperMessage LITERLLMDeveloperMessage;
+/**
+ * PDF/document content part for vision-capable models.
+ */
 typedef struct LITERLLMDocumentContent LITERLLMDocumentContent;
 /**
  * The format in which the embedding vectors are returned.
@@ -403,6 +409,9 @@ typedef struct LITERLLMTranscriptionResponse LITERLLMTranscriptionResponse;
  * A segment of transcribed audio with timing information.
  */
 typedef struct LITERLLMTranscriptionSegment LITERLLMTranscriptionSegment;
+/**
+ * Token-usage accounting returned by the provider on each completion / embedding call.
+ */
 typedef struct LITERLLMUsage LITERLLMUsage;
 /**
  * User message content as either plain text or a list of multimodal parts.

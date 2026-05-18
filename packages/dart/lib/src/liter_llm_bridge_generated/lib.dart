@@ -405,6 +405,7 @@ class AssistantMessage {
           functionCall == other.functionCall;
 }
 
+/// Audio content part for speech-capable models.
 class AudioContent {
   /// Base64-encoded audio data.
   final String data;
@@ -1454,6 +1455,7 @@ class DeveloperMessage {
           name == other.name;
 }
 
+/// PDF/document content part for vision-capable models.
 class DocumentContent {
   /// Base64-encoded document data or URL.
   final String data;
@@ -3310,6 +3312,7 @@ class TranscriptionSegment {
           text == other.text;
 }
 
+/// Token-usage accounting returned by the provider on each completion / embedding call.
 class Usage {
   /// Prompt tokens used. Defaults to 0 when absent (some providers omit this).
   final PlatformInt64 promptTokens;

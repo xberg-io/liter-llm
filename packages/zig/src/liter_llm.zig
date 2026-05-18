@@ -75,6 +75,7 @@ pub const ImageUrl = struct {
     detail: ?ImageDetail,
 };
 
+/// PDF/document content part for vision-capable models.
 pub const DocumentContent = struct {
     /// Base64-encoded document data or URL.
     data: []const u8,
@@ -82,6 +83,7 @@ pub const DocumentContent = struct {
     media_type: []const u8,
 };
 
+/// Audio content part for speech-capable models.
 pub const AudioContent = struct {
     /// Base64-encoded audio data.
     data: []const u8,
@@ -191,6 +193,7 @@ pub const JsonSchemaFormat = struct {
     strict: ?bool,
 };
 
+/// Token-usage accounting returned by the provider on each completion / embedding call.
 pub const Usage = struct {
     /// Prompt tokens used. Defaults to 0 when absent (some providers omit this).
     prompt_tokens: u64,

@@ -21,6 +21,9 @@
 
 package dev.kreuzberg.literllm.android
 
+/**
+ * Audio content part for speech-capable models.
+ */
 data class AudioContent(
     /**
      * Base64-encoded audio data.

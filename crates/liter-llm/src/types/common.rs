@@ -113,6 +113,7 @@ pub enum ImageDetail {
     Auto,
 }
 
+/// PDF/document content part for vision-capable models.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct DocumentContent {
@@ -122,6 +123,7 @@ pub struct DocumentContent {
     pub media_type: String,
 }
 
+/// Audio content part for speech-capable models.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AudioContent {
@@ -328,6 +330,7 @@ pub struct JsonSchemaFormat {
 
 // ─── Usage ───────────────────────────────────────────────────────────────────
 
+/// Token-usage accounting returned by the provider on each completion / embedding call.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Usage {
     /// Prompt tokens used. Defaults to 0 when absent (some providers omit this).

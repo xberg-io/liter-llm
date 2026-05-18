@@ -21,6 +21,9 @@
 
 package dev.kreuzberg.literllm.android
 
+/**
+ * Token-usage accounting returned by the provider on each completion / embedding call.
+ */
 data class Usage(
     /**
      * Prompt tokens used. Defaults to 0 when absent (some providers omit this).

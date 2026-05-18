@@ -21,6 +21,9 @@
 
 package dev.kreuzberg.literllm.android
 
+/**
+ * PDF/document content part for vision-capable models.
+ */
 data class DocumentContent(
     /**
      * Base64-encoded document data or URL.
