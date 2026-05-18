@@ -10212,6 +10212,333 @@ extension CustomProviderConfig: Vectorizable {
   }
 }
 
+public class BudgetConfig: BudgetConfigRefMut {
+  var isOwned: Bool = true
+
+  public override init(ptr: UnsafeMutableRawPointer) {
+    super.init(ptr: ptr)
+  }
+
+  deinit {
+    if isOwned {
+      __swift_bridge__$BudgetConfig$_free(ptr)
+    }
+  }
+}
+extension BudgetConfig {
+  public convenience init<GenericIntoRustString: IntoRustString>(
+    _ global_limit: Double?, _ model_limits: GenericIntoRustString, _ enforcement: Enforcement
+  ) {
+    self.init(
+      ptr: __swift_bridge__$BudgetConfig$new(
+        global_limit.intoFfiRepr(),
+        {
+          let rustString = model_limits.intoRustString()
+          rustString.isOwned = false
+          return rustString.ptr
+        }(),
+        {
+          enforcement.isOwned = false
+          return enforcement.ptr
+        }()))
+  }
+}
+public class BudgetConfigRefMut: BudgetConfigRef {
+  public override init(ptr: UnsafeMutableRawPointer) {
+    super.init(ptr: ptr)
+  }
+}
+public class BudgetConfigRef {
+  var ptr: UnsafeMutableRawPointer
+
+  public init(ptr: UnsafeMutableRawPointer) {
+    self.ptr = ptr
+  }
+}
+extension BudgetConfigRef {
+  public func global_limit() -> Double? {
+    __swift_bridge__$BudgetConfig$global_limit(ptr).intoSwiftRepr()
+  }
+
+  public func model_limits() -> RustString {
+    RustString(ptr: __swift_bridge__$BudgetConfig$model_limits(ptr))
+  }
+
+  public func enforcement() -> RustString {
+    RustString(ptr: __swift_bridge__$BudgetConfig$enforcement(ptr))
+  }
+}
+extension BudgetConfig: Vectorizable {
+  public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+    __swift_bridge__$Vec_BudgetConfig$new()
+  }
+
+  public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+    __swift_bridge__$Vec_BudgetConfig$drop(vecPtr)
+  }
+
+  public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: BudgetConfig) {
+    __swift_bridge__$Vec_BudgetConfig$push(
+      vecPtr,
+      {
+        value.isOwned = false
+        return value.ptr
+      }())
+  }
+
+  public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Self? {
+    let pointer = __swift_bridge__$Vec_BudgetConfig$pop(vecPtr)
+    if pointer == nil {
+      return nil
+    } else {
+      return (BudgetConfig(ptr: pointer!) as! Self)
+    }
+  }
+
+  public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> BudgetConfigRef?
+  {
+    let pointer = __swift_bridge__$Vec_BudgetConfig$get(vecPtr, index)
+    if pointer == nil {
+      return nil
+    } else {
+      return BudgetConfigRef(ptr: pointer!)
+    }
+  }
+
+  public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt)
+    -> BudgetConfigRefMut?
+  {
+    let pointer = __swift_bridge__$Vec_BudgetConfig$get_mut(vecPtr, index)
+    if pointer == nil {
+      return nil
+    } else {
+      return BudgetConfigRefMut(ptr: pointer!)
+    }
+  }
+
+  public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<
+    BudgetConfigRef
+  > {
+    UnsafePointer<BudgetConfigRef>(OpaquePointer(__swift_bridge__$Vec_BudgetConfig$as_ptr(vecPtr)))
+  }
+
+  public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+    __swift_bridge__$Vec_BudgetConfig$len(vecPtr)
+  }
+}
+
+public class CacheConfig: CacheConfigRefMut {
+  var isOwned: Bool = true
+
+  public override init(ptr: UnsafeMutableRawPointer) {
+    super.init(ptr: ptr)
+  }
+
+  deinit {
+    if isOwned {
+      __swift_bridge__$CacheConfig$_free(ptr)
+    }
+  }
+}
+extension CacheConfig {
+  public convenience init(_ max_entries: UInt, _ ttl: UInt64, _ backend: CacheBackend) {
+    self.init(
+      ptr: __swift_bridge__$CacheConfig$new(
+        max_entries, ttl,
+        {
+          backend.isOwned = false
+          return backend.ptr
+        }()))
+  }
+}
+public class CacheConfigRefMut: CacheConfigRef {
+  public override init(ptr: UnsafeMutableRawPointer) {
+    super.init(ptr: ptr)
+  }
+}
+public class CacheConfigRef {
+  var ptr: UnsafeMutableRawPointer
+
+  public init(ptr: UnsafeMutableRawPointer) {
+    self.ptr = ptr
+  }
+}
+extension CacheConfigRef {
+  public func max_entries() -> UInt {
+    __swift_bridge__$CacheConfig$max_entries(ptr)
+  }
+
+  public func ttl() -> UInt64 {
+    __swift_bridge__$CacheConfig$ttl(ptr)
+  }
+
+  public func backend() -> RustString {
+    RustString(ptr: __swift_bridge__$CacheConfig$backend(ptr))
+  }
+}
+extension CacheConfig: Vectorizable {
+  public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+    __swift_bridge__$Vec_CacheConfig$new()
+  }
+
+  public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+    __swift_bridge__$Vec_CacheConfig$drop(vecPtr)
+  }
+
+  public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: CacheConfig) {
+    __swift_bridge__$Vec_CacheConfig$push(
+      vecPtr,
+      {
+        value.isOwned = false
+        return value.ptr
+      }())
+  }
+
+  public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Self? {
+    let pointer = __swift_bridge__$Vec_CacheConfig$pop(vecPtr)
+    if pointer == nil {
+      return nil
+    } else {
+      return (CacheConfig(ptr: pointer!) as! Self)
+    }
+  }
+
+  public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> CacheConfigRef? {
+    let pointer = __swift_bridge__$Vec_CacheConfig$get(vecPtr, index)
+    if pointer == nil {
+      return nil
+    } else {
+      return CacheConfigRef(ptr: pointer!)
+    }
+  }
+
+  public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt)
+    -> CacheConfigRefMut?
+  {
+    let pointer = __swift_bridge__$Vec_CacheConfig$get_mut(vecPtr, index)
+    if pointer == nil {
+      return nil
+    } else {
+      return CacheConfigRefMut(ptr: pointer!)
+    }
+  }
+
+  public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<
+    CacheConfigRef
+  > {
+    UnsafePointer<CacheConfigRef>(OpaquePointer(__swift_bridge__$Vec_CacheConfig$as_ptr(vecPtr)))
+  }
+
+  public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+    __swift_bridge__$Vec_CacheConfig$len(vecPtr)
+  }
+}
+
+public class RateLimitConfig: RateLimitConfigRefMut {
+  var isOwned: Bool = true
+
+  public override init(ptr: UnsafeMutableRawPointer) {
+    super.init(ptr: ptr)
+  }
+
+  deinit {
+    if isOwned {
+      __swift_bridge__$RateLimitConfig$_free(ptr)
+    }
+  }
+}
+extension RateLimitConfig {
+  public convenience init(_ rpm: UInt32?, _ tpm: UInt64?, _ window: UInt64) {
+    self.init(
+      ptr: __swift_bridge__$RateLimitConfig$new(rpm.intoFfiRepr(), tpm.intoFfiRepr(), window))
+  }
+}
+public class RateLimitConfigRefMut: RateLimitConfigRef {
+  public override init(ptr: UnsafeMutableRawPointer) {
+    super.init(ptr: ptr)
+  }
+}
+public class RateLimitConfigRef {
+  var ptr: UnsafeMutableRawPointer
+
+  public init(ptr: UnsafeMutableRawPointer) {
+    self.ptr = ptr
+  }
+}
+extension RateLimitConfigRef {
+  public func rpm() -> UInt32? {
+    __swift_bridge__$RateLimitConfig$rpm(ptr).intoSwiftRepr()
+  }
+
+  public func tpm() -> UInt64? {
+    __swift_bridge__$RateLimitConfig$tpm(ptr).intoSwiftRepr()
+  }
+
+  public func window() -> UInt64 {
+    __swift_bridge__$RateLimitConfig$window(ptr)
+  }
+}
+extension RateLimitConfig: Vectorizable {
+  public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+    __swift_bridge__$Vec_RateLimitConfig$new()
+  }
+
+  public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+    __swift_bridge__$Vec_RateLimitConfig$drop(vecPtr)
+  }
+
+  public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: RateLimitConfig) {
+    __swift_bridge__$Vec_RateLimitConfig$push(
+      vecPtr,
+      {
+        value.isOwned = false
+        return value.ptr
+      }())
+  }
+
+  public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Self? {
+    let pointer = __swift_bridge__$Vec_RateLimitConfig$pop(vecPtr)
+    if pointer == nil {
+      return nil
+    } else {
+      return (RateLimitConfig(ptr: pointer!) as! Self)
+    }
+  }
+
+  public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt)
+    -> RateLimitConfigRef?
+  {
+    let pointer = __swift_bridge__$Vec_RateLimitConfig$get(vecPtr, index)
+    if pointer == nil {
+      return nil
+    } else {
+      return RateLimitConfigRef(ptr: pointer!)
+    }
+  }
+
+  public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt)
+    -> RateLimitConfigRefMut?
+  {
+    let pointer = __swift_bridge__$Vec_RateLimitConfig$get_mut(vecPtr, index)
+    if pointer == nil {
+      return nil
+    } else {
+      return RateLimitConfigRefMut(ptr: pointer!)
+    }
+  }
+
+  public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<
+    RateLimitConfigRef
+  > {
+    UnsafePointer<RateLimitConfigRef>(
+      OpaquePointer(__swift_bridge__$Vec_RateLimitConfig$as_ptr(vecPtr)))
+  }
+
+  public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+    __swift_bridge__$Vec_RateLimitConfig$len(vecPtr)
+  }
+}
+
 public class Message: MessageRefMut {
   var isOwned: Bool = true
 
@@ -11901,6 +12228,183 @@ extension AuthHeaderFormat: Vectorizable {
 
   public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
     __swift_bridge__$Vec_AuthHeaderFormat$len(vecPtr)
+  }
+}
+
+public class Enforcement: EnforcementRefMut {
+  var isOwned: Bool = true
+
+  public override init(ptr: UnsafeMutableRawPointer) {
+    super.init(ptr: ptr)
+  }
+
+  deinit {
+    if isOwned {
+      __swift_bridge__$Enforcement$_free(ptr)
+    }
+  }
+}
+public class EnforcementRefMut: EnforcementRef {
+  public override init(ptr: UnsafeMutableRawPointer) {
+    super.init(ptr: ptr)
+  }
+}
+public class EnforcementRef {
+  var ptr: UnsafeMutableRawPointer
+
+  public init(ptr: UnsafeMutableRawPointer) {
+    self.ptr = ptr
+  }
+}
+extension EnforcementRef {
+  public func to_string() -> RustString {
+    RustString(ptr: __swift_bridge__$Enforcement$to_string(ptr))
+  }
+}
+extension Enforcement: Vectorizable {
+  public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+    __swift_bridge__$Vec_Enforcement$new()
+  }
+
+  public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+    __swift_bridge__$Vec_Enforcement$drop(vecPtr)
+  }
+
+  public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: Enforcement) {
+    __swift_bridge__$Vec_Enforcement$push(
+      vecPtr,
+      {
+        value.isOwned = false
+        return value.ptr
+      }())
+  }
+
+  public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Self? {
+    let pointer = __swift_bridge__$Vec_Enforcement$pop(vecPtr)
+    if pointer == nil {
+      return nil
+    } else {
+      return (Enforcement(ptr: pointer!) as! Self)
+    }
+  }
+
+  public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> EnforcementRef? {
+    let pointer = __swift_bridge__$Vec_Enforcement$get(vecPtr, index)
+    if pointer == nil {
+      return nil
+    } else {
+      return EnforcementRef(ptr: pointer!)
+    }
+  }
+
+  public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt)
+    -> EnforcementRefMut?
+  {
+    let pointer = __swift_bridge__$Vec_Enforcement$get_mut(vecPtr, index)
+    if pointer == nil {
+      return nil
+    } else {
+      return EnforcementRefMut(ptr: pointer!)
+    }
+  }
+
+  public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<
+    EnforcementRef
+  > {
+    UnsafePointer<EnforcementRef>(OpaquePointer(__swift_bridge__$Vec_Enforcement$as_ptr(vecPtr)))
+  }
+
+  public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+    __swift_bridge__$Vec_Enforcement$len(vecPtr)
+  }
+}
+
+public class CacheBackend: CacheBackendRefMut {
+  var isOwned: Bool = true
+
+  public override init(ptr: UnsafeMutableRawPointer) {
+    super.init(ptr: ptr)
+  }
+
+  deinit {
+    if isOwned {
+      __swift_bridge__$CacheBackend$_free(ptr)
+    }
+  }
+}
+public class CacheBackendRefMut: CacheBackendRef {
+  public override init(ptr: UnsafeMutableRawPointer) {
+    super.init(ptr: ptr)
+  }
+}
+public class CacheBackendRef {
+  var ptr: UnsafeMutableRawPointer
+
+  public init(ptr: UnsafeMutableRawPointer) {
+    self.ptr = ptr
+  }
+}
+extension CacheBackendRef {
+  public func to_string() -> RustString {
+    RustString(ptr: __swift_bridge__$CacheBackend$to_string(ptr))
+  }
+}
+extension CacheBackend: Vectorizable {
+  public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+    __swift_bridge__$Vec_CacheBackend$new()
+  }
+
+  public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+    __swift_bridge__$Vec_CacheBackend$drop(vecPtr)
+  }
+
+  public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: CacheBackend) {
+    __swift_bridge__$Vec_CacheBackend$push(
+      vecPtr,
+      {
+        value.isOwned = false
+        return value.ptr
+      }())
+  }
+
+  public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Self? {
+    let pointer = __swift_bridge__$Vec_CacheBackend$pop(vecPtr)
+    if pointer == nil {
+      return nil
+    } else {
+      return (CacheBackend(ptr: pointer!) as! Self)
+    }
+  }
+
+  public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> CacheBackendRef?
+  {
+    let pointer = __swift_bridge__$Vec_CacheBackend$get(vecPtr, index)
+    if pointer == nil {
+      return nil
+    } else {
+      return CacheBackendRef(ptr: pointer!)
+    }
+  }
+
+  public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt)
+    -> CacheBackendRefMut?
+  {
+    let pointer = __swift_bridge__$Vec_CacheBackend$get_mut(vecPtr, index)
+    if pointer == nil {
+      return nil
+    } else {
+      return CacheBackendRefMut(ptr: pointer!)
+    }
+  }
+
+  public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<
+    CacheBackendRef
+  > {
+    UnsafePointer<CacheBackendRef>(OpaquePointer(__swift_bridge__$Vec_CacheBackend$as_ptr(vecPtr)))
+  }
+
+  public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+    __swift_bridge__$Vec_CacheBackend$len(vecPtr)
   }
 }
 

@@ -308,6 +308,275 @@ String toString() {
 
 
 /// @nodoc
+mixin _$CacheBackend {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CacheBackend);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'CacheBackend()';
+}
+
+
+}
+
+/// @nodoc
+class $CacheBackendCopyWith<$Res>  {
+$CacheBackendCopyWith(CacheBackend _, $Res Function(CacheBackend) __);
+}
+
+
+/// Adds pattern-matching-related methods to [CacheBackend].
+extension CacheBackendPatterns on CacheBackend {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( CacheBackend_Memory value)?  memory,TResult Function( CacheBackend_OpenDal value)?  openDal,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case CacheBackend_Memory() when memory != null:
+return memory(_that);case CacheBackend_OpenDal() when openDal != null:
+return openDal(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( CacheBackend_Memory value)  memory,required TResult Function( CacheBackend_OpenDal value)  openDal,}){
+final _that = this;
+switch (_that) {
+case CacheBackend_Memory():
+return memory(_that);case CacheBackend_OpenDal():
+return openDal(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( CacheBackend_Memory value)?  memory,TResult? Function( CacheBackend_OpenDal value)?  openDal,}){
+final _that = this;
+switch (_that) {
+case CacheBackend_Memory() when memory != null:
+return memory(_that);case CacheBackend_OpenDal() when openDal != null:
+return openDal(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  memory,TResult Function( String scheme,  Map<String, String> config)?  openDal,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case CacheBackend_Memory() when memory != null:
+return memory();case CacheBackend_OpenDal() when openDal != null:
+return openDal(_that.scheme,_that.config);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  memory,required TResult Function( String scheme,  Map<String, String> config)  openDal,}) {final _that = this;
+switch (_that) {
+case CacheBackend_Memory():
+return memory();case CacheBackend_OpenDal():
+return openDal(_that.scheme,_that.config);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  memory,TResult? Function( String scheme,  Map<String, String> config)?  openDal,}) {final _that = this;
+switch (_that) {
+case CacheBackend_Memory() when memory != null:
+return memory();case CacheBackend_OpenDal() when openDal != null:
+return openDal(_that.scheme,_that.config);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class CacheBackend_Memory extends CacheBackend {
+  const CacheBackend_Memory(): super._();
+
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CacheBackend_Memory);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'CacheBackend.memory()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class CacheBackend_OpenDal extends CacheBackend {
+  const CacheBackend_OpenDal({required this.scheme, required final  Map<String, String> config}): _config = config,super._();
+
+
+/// OpenDAL scheme name (e.g. "s3", "redis", "fs", "gcs", "azblob").
+ final  String scheme;
+/// Backend-specific configuration as key-value pairs passed to OpenDAL.
+ final  Map<String, String> _config;
+/// Backend-specific configuration as key-value pairs passed to OpenDAL.
+ Map<String, String> get config {
+  if (_config is EqualUnmodifiableMapView) return _config;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_config);
+}
+
+
+/// Create a copy of CacheBackend
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CacheBackend_OpenDalCopyWith<CacheBackend_OpenDal> get copyWith => _$CacheBackend_OpenDalCopyWithImpl<CacheBackend_OpenDal>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CacheBackend_OpenDal&&(identical(other.scheme, scheme) || other.scheme == scheme)&&const DeepCollectionEquality().equals(other._config, _config));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,scheme,const DeepCollectionEquality().hash(_config));
+
+@override
+String toString() {
+  return 'CacheBackend.openDal(scheme: $scheme, config: $config)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CacheBackend_OpenDalCopyWith<$Res> implements $CacheBackendCopyWith<$Res> {
+  factory $CacheBackend_OpenDalCopyWith(CacheBackend_OpenDal value, $Res Function(CacheBackend_OpenDal) _then) = _$CacheBackend_OpenDalCopyWithImpl;
+@useResult
+$Res call({
+ String scheme, Map<String, String> config
+});
+
+
+
+
+}
+/// @nodoc
+class _$CacheBackend_OpenDalCopyWithImpl<$Res>
+    implements $CacheBackend_OpenDalCopyWith<$Res> {
+  _$CacheBackend_OpenDalCopyWithImpl(this._self, this._then);
+
+  final CacheBackend_OpenDal _self;
+  final $Res Function(CacheBackend_OpenDal) _then;
+
+/// Create a copy of CacheBackend
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? scheme = null,Object? config = null,}) {
+  return _then(CacheBackend_OpenDal(
+scheme: null == scheme ? _self.scheme : scheme // ignore: cast_nullable_to_non_nullable
+as String,config: null == config ? _self._config : config // ignore: cast_nullable_to_non_nullable
+as Map<String, String>,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$ContentPart {
 
 

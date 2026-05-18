@@ -60,6 +60,11 @@ pub use bindings::{create_client, create_client_from_json};
 #[cfg(all(feature = "native-http", feature = "tower"))]
 pub use client::managed::ManagedClient;
 pub use error::{LiterLlmError, Result};
+// Tower middleware public config DTOs (only the configs — Layer/Service/State
+// types stay inside the `tower` module since middleware composition is a Rust
+// pattern that does not cross FFI cleanly).
+#[cfg(feature = "tower")]
+pub use tower::{BudgetConfig, CacheBackend, CacheConfig, Enforcement, RateLimitConfig};
 // Re-export the public provider helper functions that are part of the crate's
 // public API even though the `provider` module itself is pub(crate).
 pub use provider::custom::{

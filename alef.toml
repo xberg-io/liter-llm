@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.16.50"
+alef_version = "0.16.52"
 languages = [
   "python",
   "node",
@@ -61,6 +61,14 @@ sources = [
   "crates/liter-llm/src/types/responses.rs",
   "crates/liter-llm/src/client/mod.rs",
   "crates/liter-llm/src/provider/custom.rs",
+  # Tower middleware: expose public config DTOs (BudgetConfig, CacheConfig,
+  # RateLimitConfig + their enums Enforcement, CacheBackend). The accompanying
+  # Layer/Service/State types in these files are kept out of bindings via the
+  # [crates.exclude] list above per the locked decision (middleware composition
+  # remains a Rust pattern).
+  "crates/liter-llm/src/tower/budget.rs",
+  "crates/liter-llm/src/tower/cache.rs",
+  "crates/liter-llm/src/tower/rate_limit.rs",
 ]
 version_from = "Cargo.toml"
 workspace_root = "."

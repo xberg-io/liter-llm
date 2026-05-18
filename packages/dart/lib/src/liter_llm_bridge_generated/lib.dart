@@ -8,7 +8,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Create a new LLM client with simple scalar configuration.
 ///
@@ -300,6 +300,15 @@ Future<CustomProviderConfig> createCustomProviderConfigFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateCustomProviderConfigFromJson(json: json);
 
+Future<BudgetConfig> createBudgetConfigFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateBudgetConfigFromJson(json: json);
+
+Future<CacheConfig> createCacheConfigFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateCacheConfigFromJson(json: json);
+
+Future<RateLimitConfig> createRateLimitConfigFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateRateLimitConfigFromJson(json: json);
+
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DefaultClient>>
 abstract class DefaultClient implements RustOpaqueInterface {
   Future<BatchObject> cancelBatch({required String batchId});
@@ -581,6 +590,85 @@ enum BatchStatus {
   expired,
   cancelling,
   cancelled,
+}
+
+/// Configuration for budget enforcement.
+class BudgetConfig {
+  /// Maximum total spend across all models, in USD.  `None` means unlimited.
+  final double? globalLimit;
+
+  /// Per-model spending limits in USD.  Models not listed here are only
+  /// constrained by `global_limit`.
+  final Map<String, double> modelLimits;
+
+  /// Whether to reject requests or merely warn when a limit is exceeded.
+  final Enforcement enforcement;
+
+  const BudgetConfig({
+    this.globalLimit,
+    required this.modelLimits,
+    required this.enforcement,
+  });
+
+  @override
+  int get hashCode =>
+      globalLimit.hashCode ^ modelLimits.hashCode ^ enforcement.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BudgetConfig &&
+          runtimeType == other.runtimeType &&
+          globalLimit == other.globalLimit &&
+          modelLimits == other.modelLimits &&
+          enforcement == other.enforcement;
+}
+
+@freezed
+sealed class CacheBackend with _$CacheBackend {
+  const CacheBackend._();
+
+  /// In-memory LRU cache (default). No external dependencies.
+  const factory CacheBackend.memory() = CacheBackend_Memory;
+
+  /// OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.).
+  const factory CacheBackend.openDal({
+    /// OpenDAL scheme name (e.g. "s3", "redis", "fs", "gcs", "azblob").
+    required String scheme,
+
+    /// Backend-specific configuration as key-value pairs passed to OpenDAL.
+    required Map<String, String> config,
+  }) = CacheBackend_OpenDal;
+}
+
+/// Configuration for the response cache.
+class CacheConfig {
+  /// Maximum number of cached entries.
+  final PlatformInt64 maxEntries;
+
+  /// Time-to-live for each cached entry.
+  final PlatformInt64 ttl;
+
+  /// Storage backend to use.
+  final CacheBackend backend;
+
+  const CacheConfig({
+    required this.maxEntries,
+    required this.ttl,
+    required this.backend,
+  });
+
+  @override
+  int get hashCode => maxEntries.hashCode ^ ttl.hashCode ^ backend.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CacheConfig &&
+          runtimeType == other.runtimeType &&
+          maxEntries == other.maxEntries &&
+          ttl == other.ttl &&
+          backend == other.backend;
 }
 
 class ChatCompletionChunk {
@@ -1274,6 +1362,17 @@ class EmbeddingResponse {
           data == other.data &&
           model == other.model &&
           usage == other.usage;
+}
+
+/// How budget limits are enforced.
+enum Enforcement {
+  /// Reject requests that would exceed the budget with
+  /// [`LiterLlmError::BudgetExceeded`].
+  hard,
+
+  /// Allow requests through but emit a `tracing::warn!` when the budget is
+  /// exceeded.
+  soft,
 }
 
 class FileListQuery {
@@ -2006,6 +2105,32 @@ class PromptTokensDetails {
           runtimeType == other.runtimeType &&
           cachedTokens == other.cachedTokens &&
           audioTokens == other.audioTokens;
+}
+
+/// Configuration for per-model rate limits.
+class RateLimitConfig {
+  /// Maximum requests per window.  `None` means unlimited.
+  final PlatformInt64? rpm;
+
+  /// Maximum tokens per window.  `None` means unlimited.
+  final PlatformInt64? tpm;
+
+  /// Fixed window duration (defaults to 60 s).
+  final PlatformInt64 window;
+
+  const RateLimitConfig({this.rpm, this.tpm, required this.window});
+
+  @override
+  int get hashCode => rpm.hashCode ^ tpm.hashCode ^ window.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RateLimitConfig &&
+          runtimeType == other.runtimeType &&
+          rpm == other.rpm &&
+          tpm == other.tpm &&
+          window == other.window;
 }
 
 /// Controls how much reasoning effort the model should use.

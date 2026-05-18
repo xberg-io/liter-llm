@@ -1049,6 +1049,42 @@ void* __swift_bridge__$Vec_CustomProviderConfig$get_mut(void* vec_ptr, uintptr_t
 uintptr_t __swift_bridge__$Vec_CustomProviderConfig$len(void* vec_ptr);
 void* __swift_bridge__$Vec_CustomProviderConfig$as_ptr(void* vec_ptr);
 
+typedef struct BudgetConfig BudgetConfig;
+void __swift_bridge__$BudgetConfig$_free(void* self);
+
+void* __swift_bridge__$Vec_BudgetConfig$new(void);
+void __swift_bridge__$Vec_BudgetConfig$drop(void* vec_ptr);
+void __swift_bridge__$Vec_BudgetConfig$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_BudgetConfig$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_BudgetConfig$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_BudgetConfig$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_BudgetConfig$len(void* vec_ptr);
+void* __swift_bridge__$Vec_BudgetConfig$as_ptr(void* vec_ptr);
+
+typedef struct CacheConfig CacheConfig;
+void __swift_bridge__$CacheConfig$_free(void* self);
+
+void* __swift_bridge__$Vec_CacheConfig$new(void);
+void __swift_bridge__$Vec_CacheConfig$drop(void* vec_ptr);
+void __swift_bridge__$Vec_CacheConfig$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_CacheConfig$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_CacheConfig$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_CacheConfig$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_CacheConfig$len(void* vec_ptr);
+void* __swift_bridge__$Vec_CacheConfig$as_ptr(void* vec_ptr);
+
+typedef struct RateLimitConfig RateLimitConfig;
+void __swift_bridge__$RateLimitConfig$_free(void* self);
+
+void* __swift_bridge__$Vec_RateLimitConfig$new(void);
+void __swift_bridge__$Vec_RateLimitConfig$drop(void* vec_ptr);
+void __swift_bridge__$Vec_RateLimitConfig$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_RateLimitConfig$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_RateLimitConfig$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_RateLimitConfig$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_RateLimitConfig$len(void* vec_ptr);
+void* __swift_bridge__$Vec_RateLimitConfig$as_ptr(void* vec_ptr);
+
 typedef struct Message Message;
 void __swift_bridge__$Message$_free(void* self);
 
@@ -1276,6 +1312,30 @@ void* __swift_bridge__$Vec_AuthHeaderFormat$get(void* vec_ptr, uintptr_t index);
 void* __swift_bridge__$Vec_AuthHeaderFormat$get_mut(void* vec_ptr, uintptr_t index);
 uintptr_t __swift_bridge__$Vec_AuthHeaderFormat$len(void* vec_ptr);
 void* __swift_bridge__$Vec_AuthHeaderFormat$as_ptr(void* vec_ptr);
+
+typedef struct Enforcement Enforcement;
+void __swift_bridge__$Enforcement$_free(void* self);
+
+void* __swift_bridge__$Vec_Enforcement$new(void);
+void __swift_bridge__$Vec_Enforcement$drop(void* vec_ptr);
+void __swift_bridge__$Vec_Enforcement$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_Enforcement$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_Enforcement$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_Enforcement$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_Enforcement$len(void* vec_ptr);
+void* __swift_bridge__$Vec_Enforcement$as_ptr(void* vec_ptr);
+
+typedef struct CacheBackend CacheBackend;
+void __swift_bridge__$CacheBackend$_free(void* self);
+
+void* __swift_bridge__$Vec_CacheBackend$new(void);
+void __swift_bridge__$Vec_CacheBackend$drop(void* vec_ptr);
+void __swift_bridge__$Vec_CacheBackend$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_CacheBackend$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_CacheBackend$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_CacheBackend$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_CacheBackend$len(void* vec_ptr);
+void* __swift_bridge__$Vec_CacheBackend$as_ptr(void* vec_ptr);
 
 typedef struct DefaultClientChatStreamStreamHandle DefaultClientChatStreamStreamHandle;
 void __swift_bridge__$DefaultClientChatStreamStreamHandle$_free(void* self);
@@ -1658,6 +1718,18 @@ void* __swift_bridge__$CustomProviderConfig$name(void* self);
 void* __swift_bridge__$CustomProviderConfig$base_url(void* self);
 void* __swift_bridge__$CustomProviderConfig$auth_header(void* self);
 void* __swift_bridge__$CustomProviderConfig$model_prefixes(void* self);
+void* __swift_bridge__$BudgetConfig$new(struct __private__OptionF64 global_limit, void* model_limits, void* enforcement);
+struct __private__OptionF64 __swift_bridge__$BudgetConfig$global_limit(void* self);
+void* __swift_bridge__$BudgetConfig$model_limits(void* self);
+void* __swift_bridge__$BudgetConfig$enforcement(void* self);
+void* __swift_bridge__$CacheConfig$new(uintptr_t max_entries, uint64_t ttl, void* backend);
+uintptr_t __swift_bridge__$CacheConfig$max_entries(void* self);
+uint64_t __swift_bridge__$CacheConfig$ttl(void* self);
+void* __swift_bridge__$CacheConfig$backend(void* self);
+void* __swift_bridge__$RateLimitConfig$new(struct __private__OptionU32 rpm, struct __private__OptionU64 tpm, uint64_t window);
+struct __private__OptionU32 __swift_bridge__$RateLimitConfig$rpm(void* self);
+struct __private__OptionU64 __swift_bridge__$RateLimitConfig$tpm(void* self);
+uint64_t __swift_bridge__$RateLimitConfig$window(void* self);
 void* __swift_bridge__$Message$to_string(void* self);
 void* __swift_bridge__$UserContent$to_string(void* self);
 void* __swift_bridge__$ContentPart$to_string(void* self);
@@ -1677,6 +1749,8 @@ void* __swift_bridge__$OcrDocument$to_string(void* self);
 void* __swift_bridge__$FilePurpose$to_string(void* self);
 void* __swift_bridge__$BatchStatus$to_string(void* self);
 void* __swift_bridge__$AuthHeaderFormat$to_string(void* self);
+void* __swift_bridge__$Enforcement$to_string(void* self);
+void* __swift_bridge__$CacheBackend$to_string(void* self);
 struct __private__ResultPtrAndPtr __swift_bridge__$create_client(void* api_key, void* base_url, struct __private__OptionU64 timeout_secs, struct __private__OptionU32 max_retries, void* model_hint);
 struct __private__ResultPtrAndPtr __swift_bridge__$create_client_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$default_client_chat_stream_start(void* client, void* req);

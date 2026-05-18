@@ -38,6 +38,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  Map<String, String> dco_decode_Map_String_String_None(dynamic raw);
+
+  @protected
   Map<String, double> dco_decode_Map_String_f_64_None(dynamic raw);
 
   @protected
@@ -223,6 +226,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   UserMessage dco_decode_box_autoadd_user_message(dynamic raw);
 
   @protected
+  BudgetConfig dco_decode_budget_config(dynamic raw);
+
+  @protected
+  CacheBackend dco_decode_cache_backend(dynamic raw);
+
+  @protected
+  CacheConfig dco_decode_cache_config(dynamic raw);
+
+  @protected
   ChatCompletionChunk dco_decode_chat_completion_chunk(dynamic raw);
 
   @protected
@@ -286,6 +298,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   EmbeddingResponse dco_decode_embedding_response(dynamic raw);
+
+  @protected
+  Enforcement dco_decode_enforcement(dynamic raw);
 
   @protected
   double dco_decode_f_64(dynamic raw);
@@ -385,6 +400,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<(String, double)> dco_decode_list_record_string_f_64(dynamic raw);
+
+  @protected
+  List<(String, String)> dco_decode_list_record_string_string(dynamic raw);
 
   @protected
   List<RerankDocument> dco_decode_list_rerank_document(dynamic raw);
@@ -570,10 +588,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PromptTokensDetails dco_decode_prompt_tokens_details(dynamic raw);
 
   @protected
+  RateLimitConfig dco_decode_rate_limit_config(dynamic raw);
+
+  @protected
   ReasoningEffort dco_decode_reasoning_effort(dynamic raw);
 
   @protected
   (String, double) dco_decode_record_string_f_64(dynamic raw);
+
+  @protected
+  (String, String) dco_decode_record_string_string(dynamic raw);
 
   @protected
   RerankDocument dco_decode_rerank_document(dynamic raw);
@@ -692,6 +716,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   DefaultClient
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  Map<String, String> sse_decode_Map_String_String_None(
     SseDeserializer deserializer,
   );
 
@@ -949,6 +978,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   UserMessage sse_decode_box_autoadd_user_message(SseDeserializer deserializer);
 
   @protected
+  BudgetConfig sse_decode_budget_config(SseDeserializer deserializer);
+
+  @protected
+  CacheBackend sse_decode_cache_backend(SseDeserializer deserializer);
+
+  @protected
+  CacheConfig sse_decode_cache_config(SseDeserializer deserializer);
+
+  @protected
   ChatCompletionChunk sse_decode_chat_completion_chunk(
     SseDeserializer deserializer,
   );
@@ -1032,6 +1070,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   EmbeddingResponse sse_decode_embedding_response(SseDeserializer deserializer);
+
+  @protected
+  Enforcement sse_decode_enforcement(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_64(SseDeserializer deserializer);
@@ -1139,6 +1180,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<(String, double)> sse_decode_list_record_string_f_64(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<(String, String)> sse_decode_list_record_string_string(
     SseDeserializer deserializer,
   );
 
@@ -1384,10 +1430,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RateLimitConfig sse_decode_rate_limit_config(SseDeserializer deserializer);
+
+  @protected
   ReasoningEffort sse_decode_reasoning_effort(SseDeserializer deserializer);
 
   @protected
   (String, double) sse_decode_record_string_f_64(SseDeserializer deserializer);
+
+  @protected
+  (String, String) sse_decode_record_string_string(
+    SseDeserializer deserializer,
+  );
 
   @protected
   RerankDocument sse_decode_rerank_document(SseDeserializer deserializer);
@@ -1523,6 +1577,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient(
     DefaultClient self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_Map_String_String_None(
+    Map<String, String> self,
     SseSerializer serializer,
   );
 
@@ -1852,6 +1912,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_budget_config(BudgetConfig self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_cache_backend(CacheBackend self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_cache_config(CacheConfig self, SseSerializer serializer);
+
+  @protected
   void sse_encode_chat_completion_chunk(
     ChatCompletionChunk self,
     SseSerializer serializer,
@@ -1970,6 +2039,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     EmbeddingResponse self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_enforcement(Enforcement self, SseSerializer serializer);
 
   @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
@@ -2115,6 +2187,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_record_string_f_64(
     List<(String, double)> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_record_string_string(
+    List<(String, String)> self,
     SseSerializer serializer,
   );
 
@@ -2422,6 +2500,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_rate_limit_config(
+    RateLimitConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_reasoning_effort(
     ReasoningEffort self,
     SseSerializer serializer,
@@ -2430,6 +2514,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_record_string_f_64(
     (String, double) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_record_string_string(
+    (String, String) self,
     SseSerializer serializer,
   );
 

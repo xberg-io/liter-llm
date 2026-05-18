@@ -971,6 +971,33 @@ mod ffi {
     }
 
     extern "Rust" {
+        type BudgetConfig;
+        #[swift_bridge(init)]
+        fn new(global_limit: Option<f64>, model_limits: String, enforcement: Enforcement) -> BudgetConfig;
+        fn global_limit(&self) -> Option<f64>;
+        fn model_limits(&self) -> String;
+        fn enforcement(&self) -> String;
+    }
+
+    extern "Rust" {
+        type CacheConfig;
+        #[swift_bridge(init)]
+        fn new(max_entries: usize, ttl: u64, backend: CacheBackend) -> CacheConfig;
+        fn max_entries(&self) -> usize;
+        fn ttl(&self) -> u64;
+        fn backend(&self) -> String;
+    }
+
+    extern "Rust" {
+        type RateLimitConfig;
+        #[swift_bridge(init)]
+        fn new(rpm: Option<u32>, tpm: Option<u64>, window: u64) -> RateLimitConfig;
+        fn rpm(&self) -> Option<u32>;
+        fn tpm(&self) -> Option<u64>;
+        fn window(&self) -> u64;
+    }
+
+    extern "Rust" {
         type Message;
         fn to_string(&self) -> String;
     }
@@ -1062,6 +1089,16 @@ mod ffi {
 
     extern "Rust" {
         type AuthHeaderFormat;
+        fn to_string(&self) -> String;
+    }
+
+    extern "Rust" {
+        type Enforcement;
+        fn to_string(&self) -> String;
+    }
+
+    extern "Rust" {
+        type CacheBackend;
         fn to_string(&self) -> String;
     }
 
@@ -4260,6 +4297,85 @@ impl CustomProviderConfig {
     }
 }
 
+pub struct BudgetConfig(pub liter_llm::tower::BudgetConfig);
+impl BudgetConfig {
+    pub fn new(global_limit: Option<f64>, model_limits: String, enforcement: Enforcement) -> BudgetConfig {
+        let mut __target: liter_llm::tower::BudgetConfig = ::std::default::Default::default();
+        __target.global_limit = global_limit;
+        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&model_limits) {
+            if let Ok(t) = ::serde_json::from_value(v) {
+                __target.model_limits = t;
+            }
+        }
+        // alef: enforcement (Enforcement) is an enum; reverse From not generated — left at default
+        BudgetConfig(__target)
+    }
+    pub fn global_limit(&self) -> Option<f64> {
+        self.0.global_limit.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+    pub fn model_limits(&self) -> String {
+        serde_json::to_string(&self.0.model_limits).expect("serializable model_limits")
+    }
+    pub fn enforcement(&self) -> String {
+        Enforcement::from(self.0.enforcement.clone()).to_string()
+    }
+}
+
+pub struct CacheConfig(pub liter_llm::tower::CacheConfig);
+impl CacheConfig {
+    pub fn new(max_entries: usize, ttl: u64, backend: CacheBackend) -> CacheConfig {
+        let mut __target: liter_llm::tower::CacheConfig = ::std::default::Default::default();
+        __target.max_entries = max_entries;
+        __target.ttl = std::time::Duration::from_millis(ttl);
+        // alef: backend (CacheBackend) is an enum; reverse From not generated — left at default
+        CacheConfig(__target)
+    }
+    pub fn max_entries(&self) -> usize {
+        ::serde_json::to_value(&self.0.max_entries)
+            .ok()
+            .and_then(|j| ::serde_json::from_value(j).ok())
+            .unwrap_or_default()
+    }
+    pub fn ttl(&self) -> u64 {
+        self.0.ttl.as_millis() as u64
+    }
+    pub fn backend(&self) -> String {
+        CacheBackend::from(self.0.backend.clone()).to_string()
+    }
+}
+
+pub struct RateLimitConfig(pub liter_llm::tower::RateLimitConfig);
+impl RateLimitConfig {
+    pub fn new(rpm: Option<u32>, tpm: Option<u64>, window: u64) -> RateLimitConfig {
+        let mut __target: liter_llm::tower::RateLimitConfig = ::std::default::Default::default();
+        __target.rpm = rpm;
+        __target.tpm = tpm;
+        __target.window = std::time::Duration::from_millis(window);
+        RateLimitConfig(__target)
+    }
+    pub fn rpm(&self) -> Option<u32> {
+        self.0.rpm.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+    pub fn tpm(&self) -> Option<u64> {
+        self.0.tpm.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+    pub fn window(&self) -> u64 {
+        self.0.window.as_millis() as u64
+    }
+}
+
 pub enum Message {
     /// Data variants not directly bridgeable — represented as Unknown.
     Unknown,
@@ -4724,6 +4840,53 @@ impl AuthHeaderFormat {
         match self {
             Self::Bearer => "Bearer".to_string(),
             Self::None => "None".to_string(),
+            Self::Unknown => "unknown".to_string(),
+        }
+    }
+}
+
+pub enum Enforcement {
+    Hard,
+    Soft,
+}
+
+impl From<liter_llm::tower::Enforcement> for Enforcement {
+    fn from(val: liter_llm::tower::Enforcement) -> Self {
+        match val {
+            liter_llm::tower::Enforcement::Hard => Self::Hard,
+            liter_llm::tower::Enforcement::Soft => Self::Soft,
+        }
+    }
+}
+
+impl Enforcement {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Hard => "Hard".to_string(),
+            Self::Soft => "Soft".to_string(),
+        }
+    }
+}
+
+pub enum CacheBackend {
+    Memory,
+    /// Data variants not directly bridgeable — represented as Unknown.
+    Unknown,
+}
+
+impl From<liter_llm::tower::CacheBackend> for CacheBackend {
+    fn from(val: liter_llm::tower::CacheBackend) -> Self {
+        match val {
+            liter_llm::tower::CacheBackend::Memory => Self::Memory,
+            _ => Self::Unknown,
+        }
+    }
+}
+
+impl CacheBackend {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Memory => "memory".to_string(),
             Self::Unknown => "unknown".to_string(),
         }
     }

@@ -722,6 +722,40 @@ pub struct CustomProviderConfig {
     pub model_prefixes: Vec<String>,
 }
 
+/// Configuration for budget enforcement.
+#[frb(mirror(BudgetConfig))]
+pub struct BudgetConfig {
+    /// Maximum total spend across all models, in USD.  `None` means unlimited.
+    pub global_limit: Option<f64>,
+    /// Per-model spending limits in USD.  Models not listed here are only
+    /// constrained by `global_limit`.
+    pub model_limits: std::collections::HashMap<String, f64>,
+    /// Whether to reject requests or merely warn when a limit is exceeded.
+    pub enforcement: Enforcement,
+}
+
+/// Configuration for the response cache.
+#[frb(mirror(CacheConfig))]
+pub struct CacheConfig {
+    /// Maximum number of cached entries.
+    pub max_entries: i64,
+    /// Time-to-live for each cached entry.
+    pub ttl: i64,
+    /// Storage backend to use.
+    pub backend: CacheBackend,
+}
+
+/// Configuration for per-model rate limits.
+#[frb(mirror(RateLimitConfig))]
+pub struct RateLimitConfig {
+    /// Maximum requests per window.  `None` means unlimited.
+    pub rpm: Option<i64>,
+    /// Maximum tokens per window.  `None` means unlimited.
+    pub tpm: Option<i64>,
+    /// Fixed window duration (defaults to 60 s).
+    pub window: i64,
+}
+
 #[allow(unused_imports)]
 use liter_llm::client::BatchClient;
 #[allow(unused_imports)]
@@ -1120,6 +1154,31 @@ pub enum AuthHeaderFormat {
     ApiKey { field0: String },
     /// No authentication required.
     None,
+}
+
+/// How budget limits are enforced.
+#[frb(mirror(Enforcement))]
+pub enum Enforcement {
+    /// Reject requests that would exceed the budget with
+    /// [`LiterLlmError::BudgetExceeded`].
+    Hard,
+    /// Allow requests through but emit a `tracing::warn!` when the budget is
+    /// exceeded.
+    Soft,
+}
+
+/// Storage backend for the response cache.
+#[frb(mirror(CacheBackend))]
+pub enum CacheBackend {
+    /// In-memory LRU cache (default). No external dependencies.
+    Memory,
+    /// OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.).
+    OpenDal {
+        /// OpenDAL scheme name (e.g. "s3", "redis", "fs", "gcs", "azblob").
+        scheme: String,
+        /// Backend-specific configuration as key-value pairs passed to OpenDAL.
+        config: std::collections::HashMap<String, String>,
+    },
 }
 
 // From<SourceT> conversions for bridge return types.
@@ -1925,6 +1984,36 @@ impl From<liter_llm::provider::custom::CustomProviderConfig> for CustomProviderC
     }
 }
 
+impl From<liter_llm::tower::BudgetConfig> for BudgetConfig {
+    fn from(v: liter_llm::tower::BudgetConfig) -> Self {
+        BudgetConfig {
+            global_limit: v.global_limit.map(|x| x as _),
+            model_limits: v.model_limits.into_iter().map(|(k, v)| (k.into(), v as _)).collect(),
+            enforcement: Enforcement::from(v.enforcement),
+        }
+    }
+}
+
+impl From<liter_llm::tower::CacheConfig> for CacheConfig {
+    fn from(v: liter_llm::tower::CacheConfig) -> Self {
+        CacheConfig {
+            max_entries: v.max_entries as _,
+            ttl: v.ttl.as_millis() as i64,
+            backend: CacheBackend::from(v.backend),
+        }
+    }
+}
+
+impl From<liter_llm::tower::RateLimitConfig> for RateLimitConfig {
+    fn from(v: liter_llm::tower::RateLimitConfig) -> Self {
+        RateLimitConfig {
+            rpm: v.rpm.map(|x| x as _),
+            tpm: v.tpm.map(|x| x as _),
+            window: v.window.as_millis() as i64,
+        }
+    }
+}
+
 impl From<liter_llm::types::Message> for Message {
     fn from(v: liter_llm::types::Message) -> Self {
         match v {
@@ -2140,6 +2229,27 @@ impl From<liter_llm::provider::custom::AuthHeaderFormat> for AuthHeaderFormat {
             liter_llm::provider::custom::AuthHeaderFormat::Bearer => AuthHeaderFormat::Bearer,
             liter_llm::provider::custom::AuthHeaderFormat::ApiKey(f0) => AuthHeaderFormat::ApiKey { field0: f0 },
             liter_llm::provider::custom::AuthHeaderFormat::None => AuthHeaderFormat::None,
+        }
+    }
+}
+
+impl From<liter_llm::tower::Enforcement> for Enforcement {
+    fn from(v: liter_llm::tower::Enforcement) -> Self {
+        match v {
+            liter_llm::tower::Enforcement::Hard => Enforcement::Hard,
+            liter_llm::tower::Enforcement::Soft => Enforcement::Soft,
+        }
+    }
+}
+
+impl From<liter_llm::tower::CacheBackend> for CacheBackend {
+    fn from(v: liter_llm::tower::CacheBackend) -> Self {
+        match v {
+            liter_llm::tower::CacheBackend::Memory => CacheBackend::Memory,
+            liter_llm::tower::CacheBackend::OpenDal { scheme, config } => CacheBackend::OpenDal {
+                scheme,
+                config: config.into_iter().map(|(k, v)| (k.into(), v.into())).collect(),
+            },
         }
     }
 }
@@ -3142,5 +3252,26 @@ pub fn create_response_usage_from_json(json: String) -> Result<ResponseUsage, St
 pub fn create_custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String> {
     serde_json::from_str::<liter_llm::provider::custom::CustomProviderConfig>(&json)
         .map(CustomProviderConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_budget_config_from_json(json: String) -> Result<BudgetConfig, String> {
+    serde_json::from_str::<liter_llm::tower::BudgetConfig>(&json)
+        .map(BudgetConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_cache_config_from_json(json: String) -> Result<CacheConfig, String> {
+    serde_json::from_str::<liter_llm::tower::CacheConfig>(&json)
+        .map(CacheConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_rate_limit_config_from_json(json: String) -> Result<RateLimitConfig, String> {
+    serde_json::from_str::<liter_llm::tower::RateLimitConfig>(&json)
+        .map(RateLimitConfig::from)
         .map_err(|e| e.to_string())
 }

@@ -865,6 +865,15 @@ internal extension ResponseUsage {
 /// Configuration for registering a custom LLM provider at runtime.
 public typealias CustomProviderConfig = RustBridge.CustomProviderConfig
 
+/// Configuration for budget enforcement.
+public typealias BudgetConfig = RustBridge.BudgetConfig
+
+/// Configuration for the response cache.
+public typealias CacheConfig = RustBridge.CacheConfig
+
+/// Configuration for per-model rate limits.
+public typealias RateLimitConfig = RustBridge.RateLimitConfig
+
 /// A chat message in a conversation.
 public enum Message {
     case system(field0: SystemMessage)
@@ -1009,6 +1018,24 @@ public enum AuthHeaderFormat {
     case apiKey(field0: String)
     /// No authentication required.
     case none
+}
+
+/// How budget limits are enforced.
+public enum Enforcement {
+    /// Reject requests that would exceed the budget with
+    /// [`LiterLlmError::BudgetExceeded`].
+    case hard
+    /// Allow requests through but emit a `tracing::warn!` when the budget is
+    /// exceeded.
+    case soft
+}
+
+/// Storage backend for the response cache.
+public enum CacheBackend {
+    /// In-memory LRU cache (default). No external dependencies.
+    case memory
+    /// OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.).
+    case openDal(scheme: String, config: [String: String])
 }
 
 /// All errors that can occur when using `liter-llm`.

@@ -655,6 +655,37 @@ pub const CustomProviderConfig = struct {
     model_prefixes: []const []const u8,
 };
 
+/// Configuration for budget enforcement.
+pub const BudgetConfig = struct {
+    /// Maximum total spend across all models, in USD.  `null` means unlimited.
+    global_limit: ?f64,
+    /// Per-model spending limits in USD.  Models not listed here are only
+    /// constrained by `global_limit`.
+    model_limits: std.StringHashMap(f64),
+    /// Whether to reject requests or merely warn when a limit is exceeded.
+    enforcement: Enforcement,
+};
+
+/// Configuration for the response cache.
+pub const CacheConfig = struct {
+    /// Maximum number of cached entries.
+    max_entries: u64,
+    /// Time-to-live for each cached entry.
+    ttl: i64,
+    /// Storage backend to use.
+    backend: CacheBackend,
+};
+
+/// Configuration for per-model rate limits.
+pub const RateLimitConfig = struct {
+    /// Maximum requests per window.  `null` means unlimited.
+    rpm: ?u32,
+    /// Maximum tokens per window.  `null` means unlimited.
+    tpm: ?u64,
+    /// Fixed window duration (defaults to 60 s).
+    window: i64,
+};
+
 /// A chat message in a conversation.
 pub const Message = union(enum) {
     system: SystemMessage,
@@ -802,6 +833,27 @@ pub const AuthHeaderFormat = union(enum) {
     api_key: []const u8,
     /// No authentication required.
     none: void,
+};
+
+/// How budget limits are enforced.
+pub const Enforcement = enum {
+    /// Reject requests that would exceed the budget with
+    /// `LiterLlmError.BudgetExceeded`.
+    hard,
+    /// Allow requests through but emit a `tracing.warn!` when the budget is
+    /// exceeded.
+    soft,
+};
+
+/// Storage backend for the response cache.
+pub const CacheBackend = union(enum) {
+    /// In-memory LRU cache (default). No external dependencies.
+    memory: void,
+    /// OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.).
+    open_dal: struct {
+        scheme: []const u8,
+        config: std.StringHashMap([]const u8),
+    },
 };
 
 /// Create a new LLM client with simple scalar configuration.
