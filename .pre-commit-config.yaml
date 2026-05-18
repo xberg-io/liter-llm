@@ -202,7 +202,7 @@ repos:
   # matches the pinned alef.toml version, falling back to a sha256-verified
   # release-tarball download. Do not override `entry:` here.
   - repo: https://github.com/kreuzberg-dev/alef
-    rev: v0.16.44
+    rev: v0.16.45
     hooks:
       - id: alef-verify
       - id: alef-sync-versions
