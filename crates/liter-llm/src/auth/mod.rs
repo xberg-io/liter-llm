@@ -4,7 +4,7 @@ pub mod azure_ad;
 pub mod bedrock_sts;
 #[cfg(feature = "copilot-auth")]
 pub mod github_copilot;
-#[cfg(feature = "vertex-adc")]
+#[cfg(feature = "native-http")]
 pub mod vertex_adc;
 #[cfg(feature = "vertex-auth")]
 pub mod vertex_oauth;

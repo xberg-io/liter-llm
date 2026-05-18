@@ -30,9 +30,26 @@ static TOOL_CALL_COUNTER: AtomicU64 = AtomicU64::new(0);
 ///
 /// # Token management
 ///
-/// Supply a pre-obtained access token as the `api_key` parameter.
-/// Token refresh is the caller's responsibility.  A future release will add
-/// ADC / service-account-based automatic refresh.
+/// Three options, listed by preference:
+///
+/// 1. **Automatic ADC** (recommended for GKE / Cloud Run / Compute Engine).
+///    Construct the client with no `api_key` and no `credential_provider`;
+///    `DefaultClient::new` will auto-install [`VertexAdcCredentialProvider`]
+///    which obtains short-lived OAuth2 tokens from the metadata server, with
+///    a `gcp_auth` ADC discovery fallback for local development.
+///
+/// 2. **Explicit credential provider.** Supply your own
+///    [`CredentialProvider`] (e.g. [`VertexOAuthCredentialProvider`] for the
+///    service-account JWT flow) via
+///    `ClientConfigBuilder::credential_provider`. The client calls
+///    `resolve()` before each request and uses the returned bearer token.
+///
+/// 3. **Pre-obtained access token.** Supply a token as the `api_key`
+///    parameter. The caller is responsible for refresh before expiry.
+///
+/// [`VertexAdcCredentialProvider`]: crate::auth::vertex_adc::VertexAdcCredentialProvider
+/// [`VertexOAuthCredentialProvider`]: crate::auth::vertex_oauth::VertexOAuthCredentialProvider
+/// [`CredentialProvider`]: crate::auth::CredentialProvider
 ///
 /// # Environment variables
 ///
@@ -42,13 +59,17 @@ static TOOL_CALL_COUNTER: AtomicU64 = AtomicU64::new(0);
 /// # Configuration
 ///
 /// ```rust,ignore
-/// // Option 1: Use environment variables (recommended).
+/// // Option 1: GKE Workload Identity / ADC — empty api_key, no credential_provider.
 /// // export VERTEXAI_PROJECT=my-project
 /// // export VERTEXAI_LOCATION=us-central1
+/// let config = ClientConfigBuilder::new("").build();
+/// let client = DefaultClient::new(config, Some("vertex_ai/gemini-2.5-flash-lite"))?;
+///
+/// // Option 2: Pre-obtained token.
 /// let config = ClientConfigBuilder::new("ya29.your-access-token").build();
 /// let client = DefaultClient::new(config, Some("vertex_ai/gemini-2.0-flash"))?;
 ///
-/// // Option 2: Explicit base_url override (bypasses env var resolution).
+/// // Option 3: Explicit base_url override (bypasses env var resolution).
 /// let config = ClientConfigBuilder::new("ya29.your-access-token")
 ///     .base_url(
 ///         "https://us-central1-aiplatform.googleapis.com/v1/\

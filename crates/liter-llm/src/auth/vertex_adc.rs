@@ -352,6 +352,7 @@ mod tests {
     // ── Constructor and scope override ────────────────────────────────────────
 
     #[test]
+    #[serial_test::serial(vertex_adc_env)]
     fn default_scope_is_cloud_platform() {
         // Temporarily unset the env var to test the hard-coded default.
         let _guard = EnvGuard::new("VERTEX_AI_SCOPE", None);
@@ -360,6 +361,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial(vertex_adc_env)]
     fn scope_override_via_env_var() {
         let _guard = EnvGuard::new("VERTEX_AI_SCOPE", Some("https://custom.scope/"));
         let provider = VertexAdcCredentialProvider::new();
@@ -367,6 +369,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial(vertex_adc_env)]
     fn with_scope_overrides_scope() {
         let _guard = EnvGuard::new("VERTEX_AI_SCOPE", None);
         let provider = VertexAdcCredentialProvider::new().with_scope("https://my.scope/");
@@ -374,6 +377,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial(vertex_adc_env)]
     fn default_impl_equals_new() {
         let _guard = EnvGuard::new("VERTEX_AI_SCOPE", None);
         let provider: VertexAdcCredentialProvider = Default::default();
@@ -381,6 +385,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial(vertex_adc_env)]
     fn with_metadata_url_appends_token_path() {
         let _guard = EnvGuard::new("VERTEX_AI_SCOPE", None);
         let provider = VertexAdcCredentialProvider::with_metadata_url("http://127.0.0.1:12345");
@@ -391,6 +396,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial(vertex_adc_env)]
     fn with_metadata_url_trailing_slash_is_normalised() {
         let _guard = EnvGuard::new("VERTEX_AI_SCOPE", None);
         let provider = VertexAdcCredentialProvider::with_metadata_url("http://127.0.0.1:12345/");

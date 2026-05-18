@@ -14,7 +14,7 @@ fn init_crypto() {
     liter_llm::ensure_crypto_provider();
 }
 
-#[cfg(feature = "vertex-adc")]
+#[cfg(feature = "native-http")]
 mod adc_tests {
     use std::io::{BufRead, BufReader, Write};
     use std::net::TcpListener;
