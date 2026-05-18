@@ -102,13 +102,17 @@
 
 Universal LLM API client for Zig. Access 143+ LLM providers through Zig's allocator-aware sync API with explicit error sets — no hidden allocations, no exceptions, deterministic resource lifetimes.
 
+
 ## Installation
 
 ### Package Installation
 
+
 ### System Requirements
 
+
 - See [Installation Guide](https://github.com/kreuzberg-dev/liter-llm#installation) for requirements
+
 
 ## Quick Start
 
@@ -133,10 +137,12 @@ pub fn main() !void {
 
 ### Common Use Cases
 
+
 ### Next Steps
 
 - **[Provider Registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)** - Full list of supported providers
 - **[GitHub Repository](https://github.com/kreuzberg-dev/liter-llm)** - Source, issues, and discussions
+
 
 ## Features
 
@@ -164,6 +170,7 @@ Route to any provider using the `provider/model` prefix convention:
 - **Local LLMs** — Connect to locally-hosted models via Ollama, LM Studio, vLLM, llama.cpp, and other local inference servers
 - **Unified API** -- Consistent `chat`, `chat_stream`, `embeddings`, `list_models` interface
 
+
 - **Tool Calling** -- Function calling and tool use across all supporting providers
 
 - **Type Safe** -- Schema-driven types compiled from JSON schemas
@@ -180,6 +187,7 @@ Built on a compiled Rust core for speed and safety:
 - **Zero-copy streaming** with SSE and AWS EventStream support
 - **API keys** wrapped in secure memory, zeroed on drop
 
+
 ## Provider Routing
 
 Route to 143+ providers using the `provider/model` prefix convention:
@@ -192,6 +200,7 @@ mistral/mistral-large-latest
 ```
 
 See the [provider registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json) for the full list.
+
 
 ## Proxy Server
 
