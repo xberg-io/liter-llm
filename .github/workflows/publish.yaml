@@ -81,7 +81,7 @@ jobs:
       release_kotlin_android: ${{ steps.meta.outputs.release_kotlin_android }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
           ref: ${{ (inputs.republish == true && (inputs.ref || github.event.repository.default_branch)) || inputs.ref || github.ref }}
@@ -107,7 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
 
@@ -216,7 +216,7 @@ jobs:
           - label: windows-x86_64
             runner: windows-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/build-python-wheels@v1
@@ -242,7 +242,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
@@ -252,7 +252,7 @@ jobs:
         run: maturin sdist --out dist
         working-directory: packages/python
         shell: bash
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: python-sdist
           path: packages/python/dist/*.tar.gz
@@ -285,13 +285,13 @@ jobs:
             runner: windows-latest
             napi_target: x86_64-pc-windows-msvc
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           target: ${{ matrix.napi_target }}
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v6.4.0
         with:
           node-version: 22
       - run: npm install -g @napi-rs/cli
@@ -300,7 +300,7 @@ jobs:
         run: napi build --release --platform --target ${{ matrix.napi_target }}
         working-directory: crates/liter-llm-node
         shell: bash
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: node-native-${{ matrix.label }}
           path: crates/liter-llm-node/*.node
@@ -317,7 +317,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
@@ -349,7 +349,7 @@ jobs:
             json.dump(pkg, f, indent=2)
           EOF
         shell: bash
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: wasm-pkg
           path: crates/liter-llm-wasm/pkg/
@@ -381,7 +381,7 @@ jobs:
     env:
       RB_SYS_CARGO_PROFILE: release
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -457,7 +457,7 @@ jobs:
           echo "Platform gem built successfully:"
           ls -lh pkg/*.gem
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: rubygems-${{ matrix.label }}
           path: packages/ruby/pkg/*.gem
@@ -495,7 +495,7 @@ jobs:
             target: x86_64-pc-windows-gnu
             lib_ext: dll
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
@@ -534,7 +534,7 @@ jobs:
             echo "Created: $TARBALL"
           done
         shell: bash
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: elixir-nifs-${{ matrix.label }}
           path: nif-tarballs/*.tar.gz
@@ -570,7 +570,7 @@ jobs:
             target: x86_64-pc-windows-msvc
     steps:
       - name: Checkout
-        uses: actions/checkout@v6 # v6
+        uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -583,21 +583,21 @@ jobs:
         shell: bash
 
       - name: Setup PHP
-        uses: kreuzberg-dev/actions/setup-php@v1 # v1
+        uses: kreuzberg-dev/actions/setup-php@v1
         with:
           php-version: ${{ matrix.php }}
 
       - name: Setup Rust
-        uses: kreuzberg-dev/actions/setup-rust@v1 # v1
+        uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           cache-key-prefix: publish-php-${{ matrix.platform.label }}-php${{ matrix.php }}
           toolchain: stable
 
       - name: Install alef
-        uses: kreuzberg-dev/actions/install-alef@v1 # v1
+        uses: kreuzberg-dev/actions/install-alef@v1
 
       - name: Build PHP extension
-        uses: kreuzberg-dev/actions/build-php-extension@v1 # v1
+        uses: kreuzberg-dev/actions/build-php-extension@v1
         with:
           crate-name: liter-llm-php
           lib-name: liter_llm_php
@@ -619,7 +619,7 @@ jobs:
           "compiler=$compiler" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Package PIE archive
-        uses: kreuzberg-dev/actions/package-php-pie@v1 # v1
+        uses: kreuzberg-dev/actions/package-php-pie@v1
         with:
           php-version: ${{ matrix.php }}
           php-ts: nts
@@ -629,7 +629,7 @@ jobs:
           output-dir: dist/php-package
 
       - name: Upload PHP PIE package artifact
-        uses: actions/upload-artifact@v7 # v7
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: php-package-${{ matrix.platform.label }}-php${{ matrix.php }}
           path: |
@@ -678,7 +678,7 @@ jobs:
             target: x86_64-pc-windows-msvc
             rid: win-x64
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Setup Rust
@@ -709,12 +709,12 @@ jobs:
             cp crates/liter-llm-ffi/liter_llm.h ffi-staging/include/
           fi
         shell: bash
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: ffi-${{ matrix.label }}
           path: ffi-staging/
           retention-days: 14
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: go-ffi-${{ matrix.label }}
           path: go-ffi-dist/
@@ -732,7 +732,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: actions/download-artifact@v7
@@ -748,7 +748,7 @@ jobs:
             find "ffi-artifacts/${rid}" -type f -print0 | xargs -0 -I{} cp {} "$dest/"
           done
         shell: bash
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v5.2.0
         with:
           java-version: "25"
           distribution: temurin
@@ -759,7 +759,7 @@ jobs:
         run: mvn clean package -DskipTests -q
         working-directory: packages/java
         shell: bash
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: maven-packages
           path: packages/java/target/*.jar
@@ -777,7 +777,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: actions/download-artifact@v7
@@ -793,13 +793,13 @@ jobs:
             find "ffi-artifacts/${rid}" -type f -print0 | xargs -0 -I{} cp {} "$dest/"
           done
         shell: bash
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/setup-dotnet@v5.2.0
         with:
           dotnet-version: "10.0.x"
       - name: Pack NuGet package
         run: dotnet pack packages/csharp/LiterLlm/LiterLlm.csproj -c Release -o nuget-output
         shell: bash
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: nuget-packages
           path: nuget-output/*.nupkg
@@ -819,7 +819,7 @@ jobs:
       matrix:
         abi: [arm64-v8a, x86_64]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
@@ -838,11 +838,11 @@ jobs:
           esac
           cp "target/${RUST_TGT}/release/libliterllm_jni.so" \
              "packages/kotlin-android/src/main/jniLibs/${{ matrix.abi }}/"
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v5.2.0
         with:
           distribution: temurin
           java-version: "17"
-      - uses: gradle/actions/setup-gradle@v6
+      - uses: gradle/actions/setup-gradle@v6.1.0
         with:
           gradle-version: "8.9"
       - name: Assemble Android library aar
@@ -850,7 +850,7 @@ jobs:
         env:
           PROJECT_VERSION: ${{ needs.prepare.outputs.version }}
         run: gradle "assembleRelease" "-Pversion=${PROJECT_VERSION}"
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: kotlin-android-${{ matrix.abi }}
           path: packages/kotlin-android/build/outputs/aar/*.aar
@@ -873,7 +873,7 @@ jobs:
       contents: write
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Ensure GitHub release exists
@@ -903,7 +903,7 @@ jobs:
       contents: write
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Ensure GitHub release exists
@@ -933,7 +933,7 @@ jobs:
       contents: write
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Ensure GitHub release exists
@@ -968,7 +968,7 @@ jobs:
       contents: write
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Ensure GitHub release exists
@@ -1008,7 +1008,7 @@ jobs:
       id-token: write
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
@@ -1079,12 +1079,12 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v6.0.8
         with:
           package_json_file: package.json
 
@@ -1096,7 +1096,7 @@ jobs:
           merge-multiple: true
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v6.4.0
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org/
@@ -1218,7 +1218,7 @@ jobs:
           path: dist
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v6.4.0
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org/
@@ -1274,7 +1274,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -1378,7 +1378,7 @@ jobs:
       contents: read
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: actions/download-artifact@v7
@@ -1391,7 +1391,7 @@ jobs:
           MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v5.2.0
         with:
           distribution: temurin
           java-version: "25"
@@ -1443,7 +1443,7 @@ jobs:
       id-token: write
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -1473,7 +1473,7 @@ jobs:
           fi
         shell: bash
 
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@v1.24
         with:
           elixir-version: "1.17"
           otp-version: "27"
@@ -1573,7 +1573,7 @@ jobs:
             target: x86_64-pc-windows-msvc
             archive: zip
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
@@ -1622,7 +1622,7 @@ jobs:
             shasum -a 256 "${archive_name}" > "${archive_name}.sha256"
           fi
           echo "archive=${archive_name}" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: cli-binary-${{ matrix.label }}
           path: |
@@ -1650,7 +1650,7 @@ jobs:
       contents: write
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - uses: actions/download-artifact@v7
         with:
           pattern: cli-binary-*
@@ -1720,7 +1720,7 @@ jobs:
           - runner: ubuntu-24.04-arm
             bottle_tag: arm64_linux
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
@@ -1736,7 +1736,7 @@ jobs:
           formula-name: liter-llm
           version: ${{ needs.prepare.outputs.version }}
           bottle-tag: ${{ matrix.bottle_tag }}
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: homebrew-bottle-${{ matrix.bottle_tag }}
           path: ${{ steps.bottle.outputs.filename }}
@@ -1754,7 +1754,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - uses: actions/download-artifact@v7
         with:
           pattern: homebrew-bottle-*
@@ -1781,7 +1781,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: actions/download-artifact@v7
@@ -1830,11 +1830,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Install uv (consumer toolchain)
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v7.6
         with:
           version: "latest"
       - name: Wait for PyPI indexing
@@ -1875,7 +1875,7 @@ jobs:
       contents: write
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
 
