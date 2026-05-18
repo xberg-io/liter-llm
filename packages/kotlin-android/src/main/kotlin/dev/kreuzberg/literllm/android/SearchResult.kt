@@ -26,15 +26,15 @@ package dev.kreuzberg.literllm.android
  */
 data class SearchResult(
     /**
-     * Title of the result.
+     * Result title.
      */
     val title: String,
     /**
-     * URL of the result.
+     * Result URL.
      */
     val url: String,
     /**
-     * Text snippet / excerpt.
+     * Text snippet or excerpt from the page.
      */
     val snippet: String,
     /**

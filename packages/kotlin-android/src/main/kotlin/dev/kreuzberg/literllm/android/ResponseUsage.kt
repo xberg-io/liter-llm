@@ -21,4 +21,20 @@
 
 package dev.kreuzberg.literllm.android
 
-data class ResponseUsage(val inputTokens: Long, val outputTokens: Long, val totalTokens: Long)
+/**
+ * Token usage for a response.
+ */
+data class ResponseUsage(
+    /**
+     * Input tokens used.
+     */
+    val inputTokens: Long,
+    /**
+     * Output tokens used.
+     */
+    val outputTokens: Long,
+    /**
+     * Total tokens used.
+     */
+    val totalTokens: Long
+)

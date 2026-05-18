@@ -51,18 +51,27 @@ pub const LiterLlmError = error{
     OutOfMemory,
 };
 
+/// System message guiding model behavior for the entire conversation.
 pub const SystemMessage = struct {
+    /// Instructions or context that apply throughout the conversation.
     content: []const u8,
+    /// Optional name for the system message source.
     name: ?[]const u8,
 };
 
+/// User message in the conversation.
 pub const UserMessage = struct {
+    /// Message content as plain text or array of content parts (text, images, documents, audio).
     content: UserContent,
+    /// Optional name for the user.
     name: ?[]const u8,
 };
 
+/// An image URL reference with optional detail level for processing.
 pub const ImageUrl = struct {
+    /// URL of the image (data URI or HTTP/HTTPS URL).
     url: []const u8,
+    /// Detail level: low (512x512), high (2x2 tiles), or auto (model-selected).
     detail: ?ImageDetail,
 };
 
@@ -80,23 +89,35 @@ pub const AudioContent = struct {
     format: []const u8,
 };
 
+/// Assistant's response to a user message.
 pub const AssistantMessage = struct {
+    /// The assistant's text response. Absent if tool calls are returned instead.
     content: ?[]const u8,
+    /// Optional name for the assistant.
     name: ?[]const u8,
+    /// Tool calls the model wants to execute, if any.
     tool_calls: ?[]const ToolCall,
+    /// Refusal reason, if the model declined to respond per safety policies.
     refusal: ?[]const u8,
     /// Deprecated legacy function_call field; retained for API compatibility.
     function_call: ?FunctionCall,
 };
 
+/// Tool execution result returned to the model.
 pub const ToolMessage = struct {
+    /// Result of the tool execution.
     content: []const u8,
+    /// ID of the tool call this result responds to.
     tool_call_id: []const u8,
+    /// Optional tool/function name.
     name: ?[]const u8,
 };
 
+/// Developer message (system-like message for Claude models).
 pub const DeveloperMessage = struct {
+    /// Developer-specific instructions or context.
     content: []const u8,
+    /// Optional name for the developer message source.
     name: ?[]const u8,
 };
 
@@ -106,42 +127,67 @@ pub const FunctionMessage = struct {
     name: []const u8,
 };
 
+/// A tool the model can invoke (currently, all tools are functions).
 pub const ChatCompletionTool = struct {
+    /// Tool type (always "function" in OpenAI spec).
     tool_type: ToolType,
+    /// Function definition with name, description, and JSON schema parameters.
     function: FunctionDefinition,
 };
 
+/// Function definition exposed to the model.
 pub const FunctionDefinition = struct {
+    /// Name of the function. Required and must be alphanumeric + underscores.
     name: []const u8,
+    /// Human-readable description explaining what the function does.
     description: ?[]const u8,
+    /// JSON Schema defining the function's parameters.
     parameters: ?[]const u8,
+    /// If true, enforce strict JSON schema validation for arguments.
     strict: ?bool,
 };
 
+/// A tool call the model wants to execute.
 pub const ToolCall = struct {
+    /// Unique ID for this call, used to reference in tool result messages.
     id: []const u8,
+    /// Tool type (always "function").
     call_type: ToolType,
+    /// Function name and arguments.
     function: FunctionCall,
 };
 
+/// Function call details.
 pub const FunctionCall = struct {
+    /// Function name.
     name: []const u8,
+    /// Arguments as a JSON string (parse with serde_json.from_str).
     arguments: []const u8,
 };
 
+/// Directive to call a specific tool.
 pub const SpecificToolChoice = struct {
+    /// Tool type (always "function").
     choice_type: ToolType,
+    /// The specific function to invoke.
     function: SpecificFunction,
 };
 
+/// Name of the specific function to invoke.
 pub const SpecificFunction = struct {
+    /// Function name.
     name: []const u8,
 };
 
+/// JSON Schema specification for constrained output.
 pub const JsonSchemaFormat = struct {
+    /// Name of the schema (must be unique in the request).
     name: []const u8,
+    /// Description of what the schema represents.
     description: ?[]const u8,
+    /// JSON Schema object defining the output structure.
     schema: []const u8,
+    /// If true, enforce strict schema validation.
     strict: ?bool,
 };
 
@@ -171,260 +217,403 @@ pub const PromptTokensDetails = struct {
     audio_tokens: u64,
 };
 
+/// Chat completion request (compatible with OpenAI and similar APIs).
 pub const ChatCompletionRequest = struct {
+    /// Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`).
     model: []const u8,
+    /// Conversation history from oldest to newest.
     messages: []const Message,
+    /// Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0.
     temperature: ?f64,
+    /// Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused.
     top_p: ?f64,
+    /// Number of chat completions to generate. Defaults to 1.
     n: ?u32,
     /// Whether to stream the response.
     ///
     /// Managed by the client layer — do not set directly.
     stream: ?bool,
+    /// Stop sequence(s) that halt token generation.
     stop: ?StopSequence,
+    /// Max output tokens. Different from max_completion_tokens in some providers.
     max_tokens: ?u64,
+    /// Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics.
     presence_penalty: ?f64,
+    /// Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens.
     frequency_penalty: ?f64,
     /// Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic
     /// serialization order — important when hashing or signing requests.
     logit_bias: ?std.StringHashMap(f64),
+    /// User identifier for request tracking and abuse detection.
     user: ?[]const u8,
+    /// Tools the model can invoke.
     tools: ?[]const ChatCompletionTool,
+    /// Tool usage mode (auto, required, none, or specific tool).
     tool_choice: ?ToolChoice,
+    /// Whether the model can call multiple tools in parallel. Defaults to true.
     parallel_tool_calls: ?bool,
+    /// Output format constraint (text, JSON, JSON schema).
     response_format: ?ResponseFormat,
+    /// Streaming options (e.g., include_usage).
     stream_options: ?StreamOptions,
+    /// Random seed for reproducible outputs. Provider support varies.
     seed: ?i64,
+    /// Reasoning effort level (low, medium, high) for extended-thinking models.
     reasoning_effort: ?ReasoningEffort,
     /// Provider-specific extra parameters merged into the request body.
     /// Use for guardrails, safety settings, grounding config, etc.
     extra_body: ?[]const u8,
 };
 
+/// Options for streaming responses.
 pub const StreamOptions = struct {
+    /// If true, include token usage in the final stream chunk.
     include_usage: ?bool,
 };
 
+/// Chat completion response from the API.
 pub const ChatCompletionResponse = struct {
+    /// Unique identifier for this response.
     id: []const u8,
     /// Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a
     /// plain `String` so non-standard provider values do not break deserialization.
     object: []const u8,
+    /// Unix timestamp of response creation.
     created: u64,
+    /// Model used to generate the response.
     model: []const u8,
+    /// List of completion choices.
     choices: []const Choice,
+    /// Token usage statistics.
     usage: ?Usage,
+    /// Fingerprint of the system configuration (OpenAI-specific).
     system_fingerprint: ?[]const u8,
+    /// Service tier used (OpenAI-specific).
     service_tier: ?[]const u8,
 };
 
+/// A single completion choice.
 pub const Choice = struct {
+    /// Index of this choice in the choices array.
     index: u32,
+    /// The assistant's message response.
     message: AssistantMessage,
+    /// Why the model stopped generating (stop, length, tool_calls, content_filter, etc.).
     finish_reason: ?FinishReason,
 };
 
+/// A streamed chunk of a chat completion response.
 pub const ChatCompletionChunk = struct {
+    /// Unique identifier for this stream.
     id: []const u8,
     /// Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored
     /// as a plain `String` so non-standard provider values do not fail parsing.
     object: []const u8,
+    /// Unix timestamp of chunk creation.
     created: u64,
+    /// Model used to generate the chunk.
     model: []const u8,
+    /// Streaming choices (delta updates).
     choices: []const StreamChoice,
+    /// Token usage (typically only in the final chunk).
     usage: ?Usage,
+    /// Fingerprint of the system configuration (OpenAI-specific).
     system_fingerprint: ?[]const u8,
+    /// Service tier used (OpenAI-specific).
     service_tier: ?[]const u8,
 };
 
+/// A streaming choice with incremental delta.
 pub const StreamChoice = struct {
+    /// Index of this choice in the choices array.
     index: u32,
+    /// Incremental update to the message (content, tool calls, etc.).
     delta: StreamDelta,
+    /// Why the stream ended (present only in final chunk).
     finish_reason: ?FinishReason,
 };
 
+/// Incremental delta in a stream chunk.
 pub const StreamDelta = struct {
+    /// Role (typically present only in the first chunk).
     role: ?[]const u8,
+    /// Partial content chunk (e.g., a few words of the response).
     content: ?[]const u8,
+    /// Partial tool calls being streamed.
     tool_calls: ?[]const StreamToolCall,
     /// Deprecated legacy function_call delta; retained for API compatibility.
     function_call: ?StreamFunctionCall,
+    /// Partial refusal message.
     refusal: ?[]const u8,
 };
 
+/// A streaming tool call being built incrementally.
 pub const StreamToolCall = struct {
+    /// Index of this tool call in the tool_calls array.
     index: u32,
+    /// Tool call ID (typically in the first chunk for this call).
     id: ?[]const u8,
+    /// Tool type (typically "function").
     call_type: ?ToolType,
+    /// Partial function name and arguments.
     function: ?StreamFunctionCall,
 };
 
+/// Partial function call details in a stream.
 pub const StreamFunctionCall = struct {
+    /// Function name (typically in the first chunk).
     name: ?[]const u8,
+    /// Partial JSON arguments chunk.
     arguments: ?[]const u8,
 };
 
+/// Embedding request.
 pub const EmbeddingRequest = struct {
+    /// Model ID (e.g., `"text-embedding-3-small"`).
     model: []const u8,
+    /// Text or texts to embed.
     input: EmbeddingInput,
+    /// Output format: float (native) or base64.
     encoding_format: ?EmbeddingFormat,
+    /// Requested embedding dimensions (if supported by the model).
     dimensions: ?u32,
+    /// User identifier for request tracking.
     user: ?[]const u8,
 };
 
+/// Embedding response.
 pub const EmbeddingResponse = struct {
     /// Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
     /// `String` so non-standard provider values do not break deserialization.
     object: []const u8,
+    /// List of embeddings.
     data: []const EmbeddingObject,
+    /// Model used to generate embeddings.
     model: []const u8,
+    /// Token usage (input tokens only; embeddings have zero output tokens).
     usage: ?Usage,
 };
 
+/// A single embedding vector.
 pub const EmbeddingObject = struct {
     /// Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain
     /// `String` so non-standard provider values do not break deserialization.
     object: []const u8,
+    /// The embedding vector.
     embedding: []const f64,
+    /// Index in the batch (corresponds to input order).
     index: u32,
 };
 
 /// Request to create images from a text prompt.
 pub const CreateImageRequest = struct {
+    /// Text description of the image to generate.
     prompt: []const u8,
+    /// Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset.
     model: ?[]const u8,
+    /// Number of images to generate. Defaults to 1.
     n: ?u32,
+    /// Image size (e.g., `"1024x1024"`, `"1792x1024"`).
     size: ?[]const u8,
+    /// Image quality: `"standard"` or `"hd"`.
     quality: ?[]const u8,
+    /// Style: `"natural"` or `"vivid"` (DALL-E 3 only).
     style: ?[]const u8,
+    /// Response format: `"url"` or `"b64_json"`.
     response_format: ?[]const u8,
+    /// User identifier for request tracking.
     user: ?[]const u8,
 };
 
 /// Response containing generated images.
 pub const ImagesResponse = struct {
+    /// Unix timestamp of image creation.
     created: u64,
+    /// List of generated images.
     data: []const Image,
 };
 
 /// A single generated image, returned as either a URL or base64 data.
 pub const Image = struct {
+    /// Image URL (if response_format was "url").
     url: ?[]const u8,
+    /// Base64-encoded image data (if response_format was "b64_json").
     b64_json: ?[]const u8,
+    /// The final prompt used to generate the image (DALL-E 3).
     revised_prompt: ?[]const u8,
 };
 
 /// Request to generate speech audio from text.
 pub const CreateSpeechRequest = struct {
+    /// Model ID (e.g., `"tts-1"`, `"tts-1-hd"`).
     model: []const u8,
+    /// Text to synthesize into speech.
     input: []const u8,
+    /// Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`).
     voice: []const u8,
+    /// Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`).
     response_format: ?[]const u8,
+    /// Playback speed in `[0.25, 4.0]`. Defaults to 1.0.
     speed: ?f64,
 };
 
 /// Request to transcribe audio into text.
 pub const CreateTranscriptionRequest = struct {
+    /// Model ID (e.g., `"whisper-1"`).
     model: []const u8,
     /// Base64-encoded audio file data.
     file: []const u8,
+    /// Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects.
     language: ?[]const u8,
+    /// Optional text to guide the model (improves accuracy for domain-specific terms).
     prompt: ?[]const u8,
+    /// Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`).
     response_format: ?[]const u8,
+    /// Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0.
     temperature: ?f64,
 };
 
 /// Response from a transcription request.
 pub const TranscriptionResponse = struct {
+    /// The transcribed text.
     text: []const u8,
+    /// Detected language (ISO-639-1 code).
     language: ?[]const u8,
+    /// Total audio duration in seconds.
     duration: ?f64,
+    /// Detailed segment-level transcription (if response_format is "verbose_json").
     segments: ?[]const TranscriptionSegment,
 };
 
 /// A segment of transcribed audio with timing information.
 pub const TranscriptionSegment = struct {
+    /// Segment index (0-based).
     id: u32,
+    /// Start time in seconds.
     start: f64,
+    /// End time in seconds.
     end: f64,
+    /// Transcribed text for this segment.
     text: []const u8,
 };
 
 /// Request to classify content for policy violations.
 pub const ModerationRequest = struct {
+    /// Text or texts to check.
     input: ModerationInput,
+    /// Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset.
     model: ?[]const u8,
 };
 
 /// Response from the moderation endpoint.
 pub const ModerationResponse = struct {
+    /// Unique identifier for this moderation request.
     id: []const u8,
+    /// Model used for classification.
     model: []const u8,
+    /// Results for each input string.
     results: []const ModerationResult,
 };
 
 /// A single moderation classification result.
 pub const ModerationResult = struct {
+    /// True if any category was flagged.
     flagged: bool,
+    /// Boolean flags for each moderation category.
     categories: ModerationCategories,
+    /// Confidence scores for each category.
     category_scores: ModerationCategoryScores,
 };
 
 /// Boolean flags for each moderation category.
 pub const ModerationCategories = struct {
+    /// Sexual content.
     sexual: bool,
+    /// Hate speech.
     hate: bool,
+    /// Harassment.
     harassment: bool,
+    /// Self-harm content.
     self_harm: bool,
+    /// Sexual content involving minors.
     sexual_minors: bool,
+    /// Hate speech that threatens violence.
     hate_threatening: bool,
+    /// Graphic violence.
     violence_graphic: bool,
+    /// Intent to self-harm.
     self_harm_intent: bool,
+    /// Instructions for self-harm.
     self_harm_instructions: bool,
+    /// Harassment that threatens violence.
     harassment_threatening: bool,
+    /// Non-graphic violence.
     violence: bool,
 };
 
 /// Confidence scores for each moderation category.
 pub const ModerationCategoryScores = struct {
+    /// Sexual content score.
     sexual: f64,
+    /// Hate speech score.
     hate: f64,
+    /// Harassment score.
     harassment: f64,
+    /// Self-harm content score.
     self_harm: f64,
+    /// Sexual content involving minors score.
     sexual_minors: f64,
+    /// Hate speech that threatens violence score.
     hate_threatening: f64,
+    /// Graphic violence score.
     violence_graphic: f64,
+    /// Intent to self-harm score.
     self_harm_intent: f64,
+    /// Instructions for self-harm score.
     self_harm_instructions: f64,
+    /// Harassment that threatens violence score.
     harassment_threatening: f64,
+    /// Non-graphic violence score.
     violence: f64,
 };
 
 /// Request to rerank documents by relevance to a query.
 pub const RerankRequest = struct {
+    /// Model ID (e.g., `"cohere/rerank-english-v3.0"`).
     model: []const u8,
+    /// The search query.
     query: []const u8,
+    /// Documents to rerank.
     documents: []const RerankDocument,
+    /// Return only the top N results. Optional.
     top_n: ?u32,
+    /// Include the document content in results. Defaults to false.
     return_documents: ?bool,
 };
 
 /// Response from the rerank endpoint.
 pub const RerankResponse = struct {
+    /// Unique identifier for this rerank request.
     id: ?[]const u8,
+    /// Reranked documents in order of relevance.
     results: []const RerankResult,
+    /// Optional metadata about the reranking operation.
     meta: ?[]const u8,
 };
 
 /// A single reranked document with its relevance score.
 pub const RerankResult = struct {
+    /// Original document index in the input list.
     index: u32,
+    /// Relevance score in `[0, 1]`. Higher indicates more relevant.
     relevance_score: f64,
+    /// Original document content (if `return_documents` was true).
     document: ?RerankResultDocument,
 };
 
 /// The text content of a reranked document, returned when `return_documents` is true.
 pub const RerankResultDocument = struct {
+    /// Document text.
     text: []const u8,
 };
 
@@ -432,31 +621,31 @@ pub const RerankResultDocument = struct {
 pub const SearchRequest = struct {
     /// The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`).
     model: []const u8,
-    /// The search query.
+    /// The search query string.
     query: []const u8,
     /// Maximum number of results to return.
     max_results: ?u32,
     /// Domain filter — restrict results to specific domains.
     search_domain_filter: ?[]const []const u8,
-    /// Country code for localized results (ISO 3166-1 alpha-2).
+    /// Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`).
     country: ?[]const u8,
 };
 
 /// A search response.
 pub const SearchResponse = struct {
-    /// The search results.
+    /// List of search results.
     results: []const SearchResult,
-    /// The model used.
+    /// Model/provider that performed the search.
     model: []const u8,
 };
 
 /// An individual search result.
 pub const SearchResult = struct {
-    /// Title of the result.
+    /// Result title.
     title: []const u8,
-    /// URL of the result.
+    /// Result URL.
     url: []const u8,
-    /// Text snippet / excerpt.
+    /// Text snippet or excerpt from the page.
     snippet: []const u8,
     /// Publication or last-updated date, if available.
     date: ?[]const u8,
@@ -466,19 +655,19 @@ pub const SearchResult = struct {
 pub const OcrRequest = struct {
     /// The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`).
     model: []const u8,
-    /// The document to process.
+    /// The document to process (URL or base64).
     document: OcrDocument,
     /// Specific pages to process (1-indexed). `null` means all pages.
     pages: ?[]const u32,
-    /// Whether to include base64-encoded images of each page.
+    /// Whether to include base64-encoded images of each processed page.
     include_image_base64: ?bool,
 };
 
 /// An OCR response.
 pub const OcrResponse = struct {
-    /// Extracted pages.
+    /// Extracted pages in order.
     pages: []const OcrPage,
-    /// The model used.
+    /// Model/provider used for OCR.
     model: []const u8,
     /// Token usage, if reported by the provider.
     usage: ?Usage,
@@ -488,9 +677,9 @@ pub const OcrResponse = struct {
 pub const OcrPage = struct {
     /// Page index (0-based).
     index: u32,
-    /// Extracted content as Markdown.
+    /// Extracted page content as Markdown.
     markdown: []const u8,
-    /// Extracted images, if `include_image_base64` was set.
+    /// Embedded images extracted from the page (if `include_image_base64` was true).
     images: ?[]const OcrImage,
     /// Page dimensions in pixels, if available.
     dimensions: ?PageDimensions,
@@ -498,9 +687,9 @@ pub const OcrPage = struct {
 
 /// An image extracted from an OCR page.
 pub const OcrImage = struct {
-    /// Unique image identifier.
+    /// Unique image identifier within the document.
     id: []const u8,
-    /// Base64-encoded image data.
+    /// Base64-encoded image data (if `include_image_base64` was true).
     image_base64: ?[]const u8,
 };
 
@@ -512,134 +701,223 @@ pub const PageDimensions = struct {
     height: u32,
 };
 
+/// Response listing available models.
 pub const ModelsListResponse = struct {
     /// Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
     /// `String` so non-standard provider values do not break deserialization.
     object: []const u8,
+    /// List of available models.
     data: []const ModelObject,
 };
 
+/// A model available from the API.
 pub const ModelObject = struct {
+    /// Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`).
     id: []const u8,
     /// Always `"model"` from OpenAI-compatible APIs.  Stored as a plain
     /// `String` so non-standard provider values do not break deserialization.
     object: []const u8,
+    /// Unix timestamp of model creation (or release date).
     created: u64,
+    /// Organization or entity that owns the model.
     owned_by: []const u8,
 };
 
+/// Request to upload a file.
 pub const CreateFileRequest = struct {
     /// Base64-encoded file data.
     file: []const u8,
+    /// Purpose for the file.
     purpose: FilePurpose,
+    /// Optional filename to associate with the upload.
     filename: ?[]const u8,
 };
 
+/// An uploaded file object.
 pub const FileObject = struct {
+    /// Unique file ID.
     id: []const u8,
+    /// Object type (always `"file"`).
     object: []const u8,
+    /// File size in bytes.
     bytes: u64,
+    /// Unix timestamp of file creation.
     created_at: u64,
+    /// Filename.
     filename: []const u8,
+    /// File purpose.
     purpose: []const u8,
+    /// Processing status (e.g., `"uploaded"`, `"processed"`).
     status: ?[]const u8,
 };
 
+/// Response from listing files.
 pub const FileListResponse = struct {
+    /// Object type (always `"list"`).
     object: []const u8,
+    /// List of file objects.
     data: []const FileObject,
+    /// Whether more results are available.
     has_more: ?bool,
 };
 
+/// Query parameters for listing files.
 pub const FileListQuery = struct {
+    /// Filter by file purpose (e.g., `"batch"`, `"fine-tune"`).
     purpose: ?[]const u8,
+    /// Maximum number of results to return. Defaults to 20.
     limit: ?u32,
+    /// Pagination cursor: return results after this file ID.
     after: ?[]const u8,
 };
 
+/// Response from a delete operation.
 pub const DeleteResponse = struct {
+    /// ID of the deleted resource.
     id: []const u8,
+    /// Object type.
     object: []const u8,
+    /// Confirmation that the resource was deleted.
     deleted: bool,
 };
 
+/// Request to create a batch job.
 pub const CreateBatchRequest = struct {
+    /// ID of the uploaded input file (JSONL format).
     input_file_id: []const u8,
+    /// API endpoint (e.g., `"/v1/chat/completions"`).
     endpoint: []const u8,
+    /// Completion window (e.g., `"24h"`).
     completion_window: []const u8,
+    /// Optional metadata to attach to the batch.
     metadata: ?[]const u8,
 };
 
+/// A batch job object.
 pub const BatchObject = struct {
+    /// Unique batch ID.
     id: []const u8,
+    /// Object type (always `"batch"`).
     object: []const u8,
+    /// API endpoint (e.g., `"/v1/chat/completions"`).
     endpoint: []const u8,
+    /// ID of the input file.
     input_file_id: []const u8,
+    /// Completion window (e.g., `"24h"`).
     completion_window: []const u8,
+    /// Current job status.
     status: BatchStatus,
+    /// ID of the output file (present when completed).
     output_file_id: ?[]const u8,
+    /// ID of the error file (present if some requests failed).
     error_file_id: ?[]const u8,
+    /// Unix timestamp of batch creation.
     created_at: u64,
+    /// Unix timestamp of completion (if completed).
     completed_at: ?u64,
+    /// Unix timestamp of failure (if failed).
     failed_at: ?u64,
+    /// Unix timestamp of expiration (if expired).
     expired_at: ?u64,
+    /// Request processing counts.
     request_counts: ?BatchRequestCounts,
+    /// Metadata attached to the batch.
     metadata: ?[]const u8,
 };
 
+/// Request processing counts for a batch.
 pub const BatchRequestCounts = struct {
+    /// Total requests in the batch.
     total: u64,
+    /// Completed requests.
     completed: u64,
+    /// Failed requests.
     failed: u64,
 };
 
+/// Response from listing batches.
 pub const BatchListResponse = struct {
+    /// Object type (always `"list"`).
     object: []const u8,
+    /// List of batch objects.
     data: []const BatchObject,
+    /// Whether more results are available.
     has_more: ?bool,
+    /// First batch ID in the result set (for pagination).
     first_id: ?[]const u8,
+    /// Last batch ID in the result set (for pagination).
     last_id: ?[]const u8,
 };
 
+/// Query parameters for listing batches.
 pub const BatchListQuery = struct {
+    /// Maximum number of results to return. Defaults to 20.
     limit: ?u32,
+    /// Pagination cursor: return results after this batch ID.
     after: ?[]const u8,
 };
 
+/// Request to create a structured response.
 pub const CreateResponseRequest = struct {
+    /// Model ID.
     model: []const u8,
+    /// Input data to process (e.g., a document to extract from).
     input: []const u8,
+    /// Instructions for processing the input.
     instructions: ?[]const u8,
+    /// Available tools the model can use.
     tools: ?[]const ResponseTool,
+    /// Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0.
     temperature: ?f64,
+    /// Maximum output tokens.
     max_output_tokens: ?u64,
+    /// Optional metadata.
     metadata: ?[]const u8,
 };
 
+/// A tool available for the response request.
 pub const ResponseTool = struct {
+    /// Tool type (e.g., "extractor", "search").
     tool_type: []const u8,
+    /// Tool configuration (flattened into the object).
     config: []const u8,
 };
 
+/// Response from a structured response request.
 pub const ResponseObject = struct {
+    /// Unique response ID.
     id: []const u8,
+    /// Object type (e.g., `"response"`).
     object: []const u8,
+    /// Unix timestamp of response creation.
     created_at: u64,
+    /// Model used to generate the response.
     model: []const u8,
+    /// Status (e.g., `"succeeded"`, `"failed"`).
     status: []const u8,
+    /// Output items from the response.
     output: []const ResponseOutputItem,
+    /// Token usage.
     usage: ?ResponseUsage,
+    /// Error details (if status is "failed").
     error_: ?[]const u8,
 };
 
+/// A single output item from the response.
 pub const ResponseOutputItem = struct {
+    /// Output type (e.g., `"text"`, `"object"`, `"error"`).
     item_type: []const u8,
+    /// Output content (flattened into the object).
     content: []const u8,
 };
 
+/// Token usage for a response.
 pub const ResponseUsage = struct {
+    /// Input tokens used.
     input_tokens: u64,
+    /// Output tokens used.
     output_tokens: u64,
+    /// Total tokens used.
     total_tokens: u64,
 };
 
@@ -697,21 +975,33 @@ pub const Message = union(enum) {
     function: FunctionMessage,
 };
 
+/// User message content as either plain text or a list of multimodal parts.
 pub const UserContent = union(enum) {
+    /// Plain text content.
     text: []const u8,
+    /// Array of content parts (text, images, documents, audio).
     parts: []const ContentPart,
 };
 
+/// A single content part in a user message — text, image, document, or audio.
 pub const ContentPart = union(enum) {
+    /// Plain text.
     text: []const u8,
+    /// Image identified by URL (with optional detail level).
     image_url: ImageUrl,
+    /// Document file (PDF, CSV, etc.) as base64 or URL.
     document: DocumentContent,
+    /// Audio input as base64.
     input_audio: AudioContent,
 };
 
+/// Image detail level controlling token cost and processing.
 pub const ImageDetail = enum {
+    /// Low detail: scales image to 512x512, uses fewer tokens.
     low,
+    /// High detail: processes up to 2x2 grid of tiles, higher token cost.
     high,
+    /// Auto: model chooses low or high based on image dimensions.
     auto,
 };
 
@@ -724,25 +1014,39 @@ pub const ToolType = enum {
     function,
 };
 
+/// Tool usage mode or a specific tool to call.
 pub const ToolChoice = union(enum) {
+    /// Predefined mode: auto, required, or none.
     mode: ToolChoiceMode,
+    /// Force a specific tool to be called.
     specific: SpecificToolChoice,
 };
 
+/// Tool choice mode.
 pub const ToolChoiceMode = enum {
+    /// Model may or may not call tools; default behavior.
     auto,
+    /// Model must call at least one tool.
     required,
+    /// Model must not call any tools.
     none,
 };
 
+/// Response format constraint.
 pub const ResponseFormat = union(enum) {
+    /// Plain text output (default).
     text: void,
+    /// Output must be valid JSON object (no schema validation).
     json_object: void,
+    /// Output must conform to the specified JSON schema.
     json_schema: JsonSchemaFormat,
 };
 
+/// Stop sequence(s) that cause the model to stop generating.
 pub const StopSequence = union(enum) {
+    /// Single stop sequence.
     single: []const u8,
+    /// Multiple stop sequences.
     multiple: []const []const u8,
 };
 
@@ -779,20 +1083,27 @@ pub const EmbeddingFormat = enum {
     base64,
 };
 
+/// Text or texts to embed.
 pub const EmbeddingInput = union(enum) {
+    /// Single text string.
     single: []const u8,
+    /// Multiple text strings (batch embedding).
     multiple: []const []const u8,
 };
 
 /// Input to the moderation endpoint — a single string or multiple strings.
 pub const ModerationInput = union(enum) {
+    /// Single text string.
     single: []const u8,
+    /// Multiple text strings (batch moderation).
     multiple: []const []const u8,
 };
 
 /// A document to be reranked — either a plain string or an object with a text field.
 pub const RerankDocument = union(enum) {
+    /// Plain text document content.
     text: []const u8,
+    /// Document with explicit text field (may include metadata).
     object: []const u8,
 };
 
@@ -807,21 +1118,35 @@ pub const OcrDocument = union(enum) {
     },
 };
 
+/// Purpose of an uploaded file.
 pub const FilePurpose = enum {
+    /// File for use with Assistants API.
     assistants,
+    /// File for batch processing.
     batch,
+    /// File for fine-tuning.
     fine_tune,
+    /// File for vision/image tasks.
     vision,
 };
 
+/// Status of a batch job.
 pub const BatchStatus = enum {
+    /// Validating the input file.
     validating,
+    /// Job failed.
     failed,
+    /// Job is running.
     in_progress,
+    /// Finalizing results.
     finalizing,
+    /// Job completed successfully.
     completed,
+    /// Job expired before completion.
     expired,
+    /// Job is being cancelled.
     cancelling,
+    /// Job has been cancelled.
     cancelled,
 };
 

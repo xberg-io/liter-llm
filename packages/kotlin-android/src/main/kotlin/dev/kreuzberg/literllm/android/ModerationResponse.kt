@@ -25,7 +25,16 @@ package dev.kreuzberg.literllm.android
  * Response from the moderation endpoint.
  */
 data class ModerationResponse(
+    /**
+     * Unique identifier for this moderation request.
+     */
     val id: String,
+    /**
+     * Model used for classification.
+     */
     val model: String,
+    /**
+     * Results for each input string.
+     */
     val results: List<ModerationResult>
 )

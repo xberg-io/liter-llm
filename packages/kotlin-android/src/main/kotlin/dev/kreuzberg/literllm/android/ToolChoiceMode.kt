@@ -21,8 +21,20 @@
 
 package dev.kreuzberg.literllm.android
 
+/**
+ * Tool choice mode.
+ */
 enum class ToolChoiceMode {
+    /**
+     * Model may or may not call tools; default behavior.
+     */
     AUTO,
+    /**
+     * Model must call at least one tool.
+     */
     REQUIRED,
+    /**
+     * Model must not call any tools.
+     */
     NONE;
 }

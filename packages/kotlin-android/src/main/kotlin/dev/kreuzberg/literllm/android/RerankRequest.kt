@@ -25,9 +25,24 @@ package dev.kreuzberg.literllm.android
  * Request to rerank documents by relevance to a query.
  */
 data class RerankRequest(
+    /**
+     * Model ID (e.g., `"cohere/rerank-english-v3.0"`).
+     */
     val model: String,
+    /**
+     * The search query.
+     */
     val query: String,
+    /**
+     * Documents to rerank.
+     */
     val documents: List<RerankDocument>,
+    /**
+     * Return only the top N results. Optional.
+     */
     val topN: Int?,
+    /**
+     * Include the document content in results. Defaults to false.
+     */
     val returnDocuments: Boolean?
 )

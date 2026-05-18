@@ -2355,7 +2355,7 @@ class OcrDocument_Url extends OcrDocument {
   const OcrDocument_Url({required this.url}): super._();
 
 
-/// The document URL.
+/// The document URL (HTTP/HTTPS).
  final  String url;
 
 /// Create a copy of OcrDocument
@@ -2424,7 +2424,7 @@ class OcrDocument_Base64 extends OcrDocument {
 
 /// Base64-encoded document content.
  final  String data;
-/// MIME type (e.g. `"application/pdf"`, `"image/png"`).
+/// MIME type (e.g. `"application/pdf"`, `"image/png"`, `"image/jpeg"`).
  final  String mediaType;
 
 /// Create a copy of OcrDocument

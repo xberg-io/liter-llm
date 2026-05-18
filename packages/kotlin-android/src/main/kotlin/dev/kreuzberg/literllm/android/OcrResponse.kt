@@ -26,11 +26,11 @@ package dev.kreuzberg.literllm.android
  */
 data class OcrResponse(
     /**
-     * Extracted pages.
+     * Extracted pages in order.
      */
     val pages: List<OcrPage>,
     /**
-     * The model used.
+     * Model/provider used for OCR.
      */
     val model: String,
     /**

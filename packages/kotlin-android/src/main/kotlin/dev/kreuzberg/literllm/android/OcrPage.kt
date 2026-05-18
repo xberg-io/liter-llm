@@ -30,11 +30,11 @@ data class OcrPage(
      */
     val index: Int,
     /**
-     * Extracted content as Markdown.
+     * Extracted page content as Markdown.
      */
     val markdown: String,
     /**
-     * Extracted images, if `include_image_base64` was set.
+     * Embedded images extracted from the page (if `include_image_base64` was true).
      */
     val images: List<OcrImage>?,
     /**

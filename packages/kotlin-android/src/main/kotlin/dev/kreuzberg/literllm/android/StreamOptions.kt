@@ -21,4 +21,12 @@
 
 package dev.kreuzberg.literllm.android
 
-data class StreamOptions(val includeUsage: Boolean?)
+/**
+ * Options for streaming responses.
+ */
+data class StreamOptions(
+    /**
+     * If true, include token usage in the final stream chunk.
+     */
+    val includeUsage: Boolean?
+)

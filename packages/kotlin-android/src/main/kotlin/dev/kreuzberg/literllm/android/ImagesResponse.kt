@@ -24,4 +24,13 @@ package dev.kreuzberg.literllm.android
 /**
  * Response containing generated images.
  */
-data class ImagesResponse(val created: Long, val data: List<Image>)
+data class ImagesResponse(
+    /**
+     * Unix timestamp of image creation.
+     */
+    val created: Long,
+    /**
+     * List of generated images.
+     */
+    val data: List<Image>
+)

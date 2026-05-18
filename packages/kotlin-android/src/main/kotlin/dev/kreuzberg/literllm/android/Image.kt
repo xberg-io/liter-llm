@@ -24,4 +24,17 @@ package dev.kreuzberg.literllm.android
 /**
  * A single generated image, returned as either a URL or base64 data.
  */
-data class Image(val url: String?, val b64Json: String?, val revisedPrompt: String?)
+data class Image(
+    /**
+     * Image URL (if response_format was "url").
+     */
+    val url: String?,
+    /**
+     * Base64-encoded image data (if response_format was "b64_json").
+     */
+    val b64Json: String?,
+    /**
+     * The final prompt used to generate the image (DALL-E 3).
+     */
+    val revisedPrompt: String?
+)

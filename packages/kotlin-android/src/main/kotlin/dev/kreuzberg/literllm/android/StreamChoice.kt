@@ -21,4 +21,20 @@
 
 package dev.kreuzberg.literllm.android
 
-data class StreamChoice(val index: Int, val delta: StreamDelta, val finishReason: FinishReason?)
+/**
+ * A streaming choice with incremental delta.
+ */
+data class StreamChoice(
+    /**
+     * Index of this choice in the choices array.
+     */
+    val index: Int,
+    /**
+     * Incremental update to the message (content, tool calls, etc.).
+     */
+    val delta: StreamDelta,
+    /**
+     * Why the stream ended (present only in final chunk).
+     */
+    val finishReason: FinishReason?
+)

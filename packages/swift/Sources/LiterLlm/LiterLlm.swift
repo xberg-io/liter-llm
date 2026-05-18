@@ -4,8 +4,11 @@
 import Foundation
 import RustBridge
 
+/// System message guiding model behavior for the entire conversation.
 public struct SystemMessage: Codable, Sendable, Hashable {
+    /// Instructions or context that apply throughout the conversation.
     public let content: String
+    /// Optional name for the system message source.
     public let name: String?
     public init(content: String, name: String? = nil) {
         self.content = content
@@ -24,8 +27,10 @@ internal extension SystemMessage {
     }
 }
 
+/// User message in the conversation.
 public typealias UserMessage = RustBridge.UserMessage
 
+/// An image URL reference with optional detail level for processing.
 public typealias ImageUrl = RustBridge.ImageUrl
 
 public struct DocumentContent: Codable, Sendable, Hashable {
@@ -76,11 +81,16 @@ internal extension AudioContent {
     }
 }
 
+/// Assistant's response to a user message.
 public typealias AssistantMessage = RustBridge.AssistantMessage
 
+/// Tool execution result returned to the model.
 public struct ToolMessage: Codable, Sendable, Hashable {
+    /// Result of the tool execution.
     public let content: String
+    /// ID of the tool call this result responds to.
     public let toolCallId: String
+    /// Optional tool/function name.
     public let name: String?
     public init(content: String, toolCallId: String, name: String? = nil) {
         self.content = content
@@ -106,8 +116,11 @@ internal extension ToolMessage {
     }
 }
 
+/// Developer message (system-like message for Claude models).
 public struct DeveloperMessage: Codable, Sendable, Hashable {
+    /// Developer-specific instructions or context.
     public let content: String
+    /// Optional name for the developer message source.
     public let name: String?
     public init(content: String, name: String? = nil) {
         self.content = content
@@ -147,17 +160,24 @@ internal extension FunctionMessage {
     }
 }
 
+/// A tool the model can invoke (currently, all tools are functions).
 public typealias ChatCompletionTool = RustBridge.ChatCompletionTool
 
+/// Function definition exposed to the model.
 public typealias FunctionDefinition = RustBridge.FunctionDefinition
 
+/// A tool call the model wants to execute.
 public typealias ToolCall = RustBridge.ToolCall
 
+/// Function call details.
 public typealias FunctionCall = RustBridge.FunctionCall
 
+/// Directive to call a specific tool.
 public typealias SpecificToolChoice = RustBridge.SpecificToolChoice
 
+/// Name of the specific function to invoke.
 public struct SpecificFunction: Codable, Sendable, Hashable {
+    /// Function name.
     public let name: String
     public init(name: String) {
         self.name = name
@@ -174,6 +194,7 @@ internal extension SpecificFunction {
     }
 }
 
+/// JSON Schema specification for constrained output.
 public typealias JsonSchemaFormat = RustBridge.JsonSchemaFormat
 
 public typealias Usage = RustBridge.Usage
@@ -210,9 +231,12 @@ internal extension PromptTokensDetails {
     }
 }
 
+/// Chat completion request (compatible with OpenAI and similar APIs).
 public typealias ChatCompletionRequest = RustBridge.ChatCompletionRequest
 
+/// Options for streaming responses.
 public struct StreamOptions: Codable, Sendable, Hashable {
+    /// If true, include token usage in the final stream chunk.
     public let includeUsage: Bool?
     public init(includeUsage: Bool? = nil) {
         self.includeUsage = includeUsage
@@ -232,20 +256,29 @@ internal extension StreamOptions {
     }
 }
 
+/// Chat completion response from the API.
 public typealias ChatCompletionResponse = RustBridge.ChatCompletionResponse
 
+/// A single completion choice.
 public typealias Choice = RustBridge.Choice
 
+/// A streamed chunk of a chat completion response.
 public typealias ChatCompletionChunk = RustBridge.ChatCompletionChunk
 
+/// A streaming choice with incremental delta.
 public typealias StreamChoice = RustBridge.StreamChoice
 
+/// Incremental delta in a stream chunk.
 public typealias StreamDelta = RustBridge.StreamDelta
 
+/// A streaming tool call being built incrementally.
 public typealias StreamToolCall = RustBridge.StreamToolCall
 
+/// Partial function call details in a stream.
 public struct StreamFunctionCall: Codable, Sendable, Hashable {
+    /// Function name (typically in the first chunk).
     public let name: String?
+    /// Partial JSON arguments chunk.
     public let arguments: String?
     public init(name: String? = nil, arguments: String? = nil) {
         self.name = name
@@ -264,21 +297,32 @@ internal extension StreamFunctionCall {
     }
 }
 
+/// Embedding request.
 public typealias EmbeddingRequest = RustBridge.EmbeddingRequest
 
+/// Embedding response.
 public typealias EmbeddingResponse = RustBridge.EmbeddingResponse
 
+/// A single embedding vector.
 public typealias EmbeddingObject = RustBridge.EmbeddingObject
 
 /// Request to create images from a text prompt.
 public struct CreateImageRequest: Codable, Sendable, Hashable {
+    /// Text description of the image to generate.
     public let prompt: String
+    /// Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset.
     public let model: String?
+    /// Number of images to generate. Defaults to 1.
     public let n: UInt32?
+    /// Image size (e.g., `"1024x1024"`, `"1792x1024"`).
     public let size: String?
+    /// Image quality: `"standard"` or `"hd"`.
     public let quality: String?
+    /// Style: `"natural"` or `"vivid"` (DALL-E 3 only).
     public let style: String?
+    /// Response format: `"url"` or `"b64_json"`.
     public let responseFormat: String?
+    /// User identifier for request tracking.
     public let user: String?
     public init(prompt: String, model: String? = nil, n: UInt32? = nil, size: String? = nil, quality: String? = nil, style: String? = nil, responseFormat: String? = nil, user: String? = nil) {
         self.prompt = prompt
@@ -324,8 +368,11 @@ public typealias ImagesResponse = RustBridge.ImagesResponse
 
 /// A single generated image, returned as either a URL or base64 data.
 public struct Image: Codable, Sendable, Hashable {
+    /// Image URL (if response_format was "url").
     public let url: String?
+    /// Base64-encoded image data (if response_format was "b64_json").
     public let b64Json: String?
+    /// The final prompt used to generate the image (DALL-E 3).
     public let revisedPrompt: String?
     public init(url: String? = nil, b64Json: String? = nil, revisedPrompt: String? = nil) {
         self.url = url
@@ -353,10 +400,15 @@ internal extension Image {
 
 /// Request to generate speech audio from text.
 public struct CreateSpeechRequest: Codable, Sendable, Hashable {
+    /// Model ID (e.g., `"tts-1"`, `"tts-1-hd"`).
     public let model: String
+    /// Text to synthesize into speech.
     public let input: String
+    /// Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`).
     public let voice: String
+    /// Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`).
     public let responseFormat: String?
+    /// Playback speed in `[0.25, 4.0]`. Defaults to 1.0.
     public let speed: Double?
     public init(model: String, input: String, voice: String, responseFormat: String? = nil, speed: Double? = nil) {
         self.model = model
@@ -390,12 +442,17 @@ internal extension CreateSpeechRequest {
 
 /// Request to transcribe audio into text.
 public struct CreateTranscriptionRequest: Codable, Sendable, Hashable {
+    /// Model ID (e.g., `"whisper-1"`).
     public let model: String
     /// Base64-encoded audio file data.
     public let file: String
+    /// Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects.
     public let language: String?
+    /// Optional text to guide the model (improves accuracy for domain-specific terms).
     public let prompt: String?
+    /// Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`).
     public let responseFormat: String?
+    /// Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0.
     public let temperature: Double?
     public init(model: String, file: String, language: String? = nil, prompt: String? = nil, responseFormat: String? = nil, temperature: Double? = nil) {
         self.model = model
@@ -435,9 +492,13 @@ public typealias TranscriptionResponse = RustBridge.TranscriptionResponse
 
 /// A segment of transcribed audio with timing information.
 public struct TranscriptionSegment: Codable, Sendable, Hashable {
+    /// Segment index (0-based).
     public let id: UInt32
+    /// Start time in seconds.
     public let start: Double
+    /// End time in seconds.
     public let end: Double
+    /// Transcribed text for this segment.
     public let text: String
     public init(id: UInt32, start: Double, end: Double, text: String) {
         self.id = id
@@ -471,16 +532,27 @@ public typealias ModerationResult = RustBridge.ModerationResult
 
 /// Boolean flags for each moderation category.
 public struct ModerationCategories: Codable, Sendable, Hashable {
+    /// Sexual content.
     public let sexual: Bool
+    /// Hate speech.
     public let hate: Bool
+    /// Harassment.
     public let harassment: Bool
+    /// Self-harm content.
     public let selfHarm: Bool
+    /// Sexual content involving minors.
     public let sexualMinors: Bool
+    /// Hate speech that threatens violence.
     public let hateThreatening: Bool
+    /// Graphic violence.
     public let violenceGraphic: Bool
+    /// Intent to self-harm.
     public let selfHarmIntent: Bool
+    /// Instructions for self-harm.
     public let selfHarmInstructions: Bool
+    /// Harassment that threatens violence.
     public let harassmentThreatening: Bool
+    /// Non-graphic violence.
     public let violence: Bool
     public init(sexual: Bool, hate: Bool, harassment: Bool, selfHarm: Bool, sexualMinors: Bool, hateThreatening: Bool, violenceGraphic: Bool, selfHarmIntent: Bool, selfHarmInstructions: Bool, harassmentThreatening: Bool, violence: Bool) {
         self.sexual = sexual
@@ -532,16 +604,27 @@ internal extension ModerationCategories {
 
 /// Confidence scores for each moderation category.
 public struct ModerationCategoryScores: Codable, Sendable, Hashable {
+    /// Sexual content score.
     public let sexual: Double
+    /// Hate speech score.
     public let hate: Double
+    /// Harassment score.
     public let harassment: Double
+    /// Self-harm content score.
     public let selfHarm: Double
+    /// Sexual content involving minors score.
     public let sexualMinors: Double
+    /// Hate speech that threatens violence score.
     public let hateThreatening: Double
+    /// Graphic violence score.
     public let violenceGraphic: Double
+    /// Intent to self-harm score.
     public let selfHarmIntent: Double
+    /// Instructions for self-harm score.
     public let selfHarmInstructions: Double
+    /// Harassment that threatens violence score.
     public let harassmentThreatening: Double
+    /// Non-graphic violence score.
     public let violence: Double
     public init(sexual: Double, hate: Double, harassment: Double, selfHarm: Double, sexualMinors: Double, hateThreatening: Double, violenceGraphic: Double, selfHarmIntent: Double, selfHarmInstructions: Double, harassmentThreatening: Double, violence: Double) {
         self.sexual = sexual
@@ -647,14 +730,19 @@ internal extension PageDimensions {
     }
 }
 
+/// Response listing available models.
 public typealias ModelsListResponse = RustBridge.ModelsListResponse
 
+/// A model available from the API.
 public struct ModelObject: Codable, Sendable, Hashable {
+    /// Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`).
     public let id: String
     /// Always `"model"` from OpenAI-compatible APIs.  Stored as a plain
     /// `String` so non-standard provider values do not break deserialization.
     public let object: String
+    /// Unix timestamp of model creation (or release date).
     public let created: UInt64
+    /// Organization or entity that owns the model.
     public let ownedBy: String
     public init(id: String, object: String, created: UInt64, ownedBy: String) {
         self.id = id
@@ -683,15 +771,24 @@ internal extension ModelObject {
     }
 }
 
+/// Request to upload a file.
 public typealias CreateFileRequest = RustBridge.CreateFileRequest
 
+/// An uploaded file object.
 public struct FileObject: Codable, Sendable, Hashable {
+    /// Unique file ID.
     public let id: String
+    /// Object type (always `"file"`).
     public let object: String
+    /// File size in bytes.
     public let bytes: UInt64
+    /// Unix timestamp of file creation.
     public let createdAt: UInt64
+    /// Filename.
     public let filename: String
+    /// File purpose.
     public let purpose: String
+    /// Processing status (e.g., `"uploaded"`, `"processed"`).
     public let status: String?
     public init(id: String, object: String, bytes: UInt64, createdAt: UInt64, filename: String, purpose: String, status: String? = nil) {
         self.id = id
@@ -729,11 +826,16 @@ internal extension FileObject {
     }
 }
 
+/// Response from listing files.
 public typealias FileListResponse = RustBridge.FileListResponse
 
+/// Query parameters for listing files.
 public struct FileListQuery: Codable, Sendable, Hashable {
+    /// Filter by file purpose (e.g., `"batch"`, `"fine-tune"`).
     public let purpose: String?
+    /// Maximum number of results to return. Defaults to 20.
     public let limit: UInt32?
+    /// Pagination cursor: return results after this file ID.
     public let after: String?
     public init(purpose: String? = nil, limit: UInt32? = nil, after: String? = nil) {
         self.purpose = purpose
@@ -754,9 +856,13 @@ internal extension FileListQuery {
     }
 }
 
+/// Response from a delete operation.
 public struct DeleteResponse: Codable, Sendable, Hashable {
+    /// ID of the deleted resource.
     public let id: String
+    /// Object type.
     public let object: String
+    /// Confirmation that the resource was deleted.
     public let deleted: Bool
     public init(id: String, object: String, deleted: Bool) {
         self.id = id
@@ -777,13 +883,19 @@ internal extension DeleteResponse {
     }
 }
 
+/// Request to create a batch job.
 public typealias CreateBatchRequest = RustBridge.CreateBatchRequest
 
+/// A batch job object.
 public typealias BatchObject = RustBridge.BatchObject
 
+/// Request processing counts for a batch.
 public struct BatchRequestCounts: Codable, Sendable, Hashable {
+    /// Total requests in the batch.
     public let total: UInt64
+    /// Completed requests.
     public let completed: UInt64
+    /// Failed requests.
     public let failed: UInt64
     public init(total: UInt64, completed: UInt64, failed: UInt64) {
         self.total = total
@@ -804,10 +916,14 @@ internal extension BatchRequestCounts {
     }
 }
 
+/// Response from listing batches.
 public typealias BatchListResponse = RustBridge.BatchListResponse
 
+/// Query parameters for listing batches.
 public struct BatchListQuery: Codable, Sendable, Hashable {
+    /// Maximum number of results to return. Defaults to 20.
     public let limit: UInt32?
+    /// Pagination cursor: return results after this batch ID.
     public let after: String?
     public init(limit: UInt32? = nil, after: String? = nil) {
         self.limit = limit
@@ -826,17 +942,25 @@ internal extension BatchListQuery {
     }
 }
 
+/// Request to create a structured response.
 public typealias CreateResponseRequest = RustBridge.CreateResponseRequest
 
+/// A tool available for the response request.
 public typealias ResponseTool = RustBridge.ResponseTool
 
+/// Response from a structured response request.
 public typealias ResponseObject = RustBridge.ResponseObject
 
+/// A single output item from the response.
 public typealias ResponseOutputItem = RustBridge.ResponseOutputItem
 
+/// Token usage for a response.
 public struct ResponseUsage: Codable, Sendable, Hashable {
+    /// Input tokens used.
     public let inputTokens: UInt64
+    /// Output tokens used.
     public let outputTokens: UInt64
+    /// Total tokens used.
     public let totalTokens: UInt64
     public init(inputTokens: UInt64, outputTokens: UInt64, totalTokens: UInt64) {
         self.inputTokens = inputTokens
@@ -885,21 +1009,33 @@ public enum Message {
     case function(field0: FunctionMessage)
 }
 
+/// User message content as either plain text or a list of multimodal parts.
 public enum UserContent {
+    /// Plain text content.
     case text(field0: String)
+    /// Array of content parts (text, images, documents, audio).
     case parts(field0: [ContentPart])
 }
 
+/// A single content part in a user message — text, image, document, or audio.
 public enum ContentPart {
+    /// Plain text.
     case text(text: String)
+    /// Image identified by URL (with optional detail level).
     case imageUrl(imageUrl: ImageUrl)
+    /// Document file (PDF, CSV, etc.) as base64 or URL.
     case document(document: DocumentContent)
+    /// Audio input as base64.
     case inputAudio(inputAudio: AudioContent)
 }
 
+/// Image detail level controlling token cost and processing.
 public enum ImageDetail {
+    /// Low detail: scales image to 512x512, uses fewer tokens.
     case low
+    /// High detail: processes up to 2x2 grid of tiles, higher token cost.
     case high
+    /// Auto: model chooses low or high based on image dimensions.
     case auto
 }
 
@@ -912,25 +1048,39 @@ public enum ToolType {
     case function
 }
 
+/// Tool usage mode or a specific tool to call.
 public enum ToolChoice {
+    /// Predefined mode: auto, required, or none.
     case mode(field0: ToolChoiceMode)
+    /// Force a specific tool to be called.
     case specific(field0: SpecificToolChoice)
 }
 
+/// Tool choice mode.
 public enum ToolChoiceMode {
+    /// Model may or may not call tools; default behavior.
     case auto
+    /// Model must call at least one tool.
     case required
+    /// Model must not call any tools.
     case none
 }
 
+/// Response format constraint.
 public enum ResponseFormat {
+    /// Plain text output (default).
     case text
+    /// Output must be valid JSON object (no schema validation).
     case jsonObject
+    /// Output must conform to the specified JSON schema.
     case jsonSchema(jsonSchema: JsonSchemaFormat)
 }
 
+/// Stop sequence(s) that cause the model to stop generating.
 public enum StopSequence {
+    /// Single stop sequence.
     case single(field0: String)
+    /// Multiple stop sequences.
     case multiple(field0: [String])
 }
 
@@ -967,20 +1117,27 @@ public enum EmbeddingFormat {
     case base64
 }
 
+/// Text or texts to embed.
 public enum EmbeddingInput {
+    /// Single text string.
     case single(field0: String)
+    /// Multiple text strings (batch embedding).
     case multiple(field0: [String])
 }
 
 /// Input to the moderation endpoint — a single string or multiple strings.
 public enum ModerationInput {
+    /// Single text string.
     case single(field0: String)
+    /// Multiple text strings (batch moderation).
     case multiple(field0: [String])
 }
 
 /// A document to be reranked — either a plain string or an object with a text field.
 public enum RerankDocument {
+    /// Plain text document content.
     case text(field0: String)
+    /// Document with explicit text field (may include metadata).
     case object(text: String)
 }
 
@@ -992,21 +1149,35 @@ public enum OcrDocument {
     case base64(data: String, mediaType: String)
 }
 
+/// Purpose of an uploaded file.
 public enum FilePurpose {
+    /// File for use with Assistants API.
     case assistants
+    /// File for batch processing.
     case batch
+    /// File for fine-tuning.
     case fineTune
+    /// File for vision/image tasks.
     case vision
 }
 
+/// Status of a batch job.
 public enum BatchStatus {
+    /// Validating the input file.
     case validating
+    /// Job failed.
     case failed
+    /// Job is running.
     case inProgress
+    /// Finalizing results.
     case finalizing
+    /// Job completed successfully.
     case completed
+    /// Job expired before completion.
     case expired
+    /// Job is being cancelled.
     case cancelling
+    /// Job has been cancelled.
     case cancelled
 }
 

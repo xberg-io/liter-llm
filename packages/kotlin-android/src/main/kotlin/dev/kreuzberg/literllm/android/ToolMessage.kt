@@ -21,4 +21,20 @@
 
 package dev.kreuzberg.literllm.android
 
-data class ToolMessage(val content: String, val toolCallId: String, val name: String?)
+/**
+ * Tool execution result returned to the model.
+ */
+data class ToolMessage(
+    /**
+     * Result of the tool execution.
+     */
+    val content: String,
+    /**
+     * ID of the tool call this result responds to.
+     */
+    val toolCallId: String,
+    /**
+     * Optional tool/function name.
+     */
+    val name: String?
+)

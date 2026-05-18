@@ -25,7 +25,16 @@ package dev.kreuzberg.literllm.android
  * A single moderation classification result.
  */
 data class ModerationResult(
+    /**
+     * True if any category was flagged.
+     */
     val flagged: Boolean,
+    /**
+     * Boolean flags for each moderation category.
+     */
     val categories: ModerationCategories,
+    /**
+     * Confidence scores for each category.
+     */
     val categoryScores: ModerationCategoryScores
 )

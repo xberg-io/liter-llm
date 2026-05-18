@@ -21,12 +21,36 @@
 
 package dev.kreuzberg.literllm.android
 
+/**
+ * Request to create a structured response.
+ */
 data class CreateResponseRequest(
+    /**
+     * Model ID.
+     */
     val model: String,
+    /**
+     * Input data to process (e.g., a document to extract from).
+     */
     val input: String,
+    /**
+     * Instructions for processing the input.
+     */
     val instructions: String?,
+    /**
+     * Available tools the model can use.
+     */
     val tools: List<ResponseTool>?,
+    /**
+     * Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0.
+     */
     val temperature: Double?,
+    /**
+     * Maximum output tokens.
+     */
     val maxOutputTokens: Long?,
+    /**
+     * Optional metadata.
+     */
     val metadata: String?
 )

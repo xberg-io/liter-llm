@@ -360,10 +360,18 @@ abstract class DefaultClient implements RustOpaqueInterface {
   });
 }
 
+/// Assistant's response to a user message.
 class AssistantMessage {
+  /// The assistant's text response. Absent if tool calls are returned instead.
   final String? content;
+
+  /// Optional name for the assistant.
   final String? name;
+
+  /// Tool calls the model wants to execute, if any.
   final List<ToolCall>? toolCalls;
+
+  /// Refusal reason, if the model declined to respond per safety policies.
   final String? refusal;
 
   /// Deprecated legacy function_call field; retained for API compatibility.
@@ -433,8 +441,12 @@ sealed class AuthHeaderFormat with _$AuthHeaderFormat {
   const factory AuthHeaderFormat.none() = AuthHeaderFormat_None;
 }
 
+/// Query parameters for listing batches.
 class BatchListQuery {
+  /// Maximum number of results to return. Defaults to 20.
   final PlatformInt64? limit;
+
+  /// Pagination cursor: return results after this batch ID.
   final String? after;
 
   const BatchListQuery({this.limit, this.after});
@@ -451,11 +463,21 @@ class BatchListQuery {
           after == other.after;
 }
 
+/// Response from listing batches.
 class BatchListResponse {
+  /// Object type (always `"list"`).
   final String object;
+
+  /// List of batch objects.
   final List<BatchObject> data;
+
+  /// Whether more results are available.
   final bool? hasMore;
+
+  /// First batch ID in the result set (for pagination).
   final String? firstId;
+
+  /// Last batch ID in the result set (for pagination).
   final String? lastId;
 
   const BatchListResponse({
@@ -486,20 +508,48 @@ class BatchListResponse {
           lastId == other.lastId;
 }
 
+/// A batch job object.
 class BatchObject {
+  /// Unique batch ID.
   final String id;
+
+  /// Object type (always `"batch"`).
   final String object;
+
+  /// API endpoint (e.g., `"/v1/chat/completions"`).
   final String endpoint;
+
+  /// ID of the input file.
   final String inputFileId;
+
+  /// Completion window (e.g., `"24h"`).
   final String completionWindow;
+
+  /// Current job status.
   final BatchStatus status;
+
+  /// ID of the output file (present when completed).
   final String? outputFileId;
+
+  /// ID of the error file (present if some requests failed).
   final String? errorFileId;
+
+  /// Unix timestamp of batch creation.
   final PlatformInt64 createdAt;
+
+  /// Unix timestamp of completion (if completed).
   final PlatformInt64? completedAt;
+
+  /// Unix timestamp of failure (if failed).
   final PlatformInt64? failedAt;
+
+  /// Unix timestamp of expiration (if expired).
   final PlatformInt64? expiredAt;
+
+  /// Request processing counts.
   final BatchRequestCounts? requestCounts;
+
+  /// Metadata attached to the batch.
   final String? metadata;
 
   const BatchObject({
@@ -557,9 +607,15 @@ class BatchObject {
           metadata == other.metadata;
 }
 
+/// Request processing counts for a batch.
 class BatchRequestCounts {
+  /// Total requests in the batch.
   final PlatformInt64 total;
+
+  /// Completed requests.
   final PlatformInt64 completed;
+
+  /// Failed requests.
   final PlatformInt64 failed;
 
   const BatchRequestCounts({
@@ -581,14 +637,30 @@ class BatchRequestCounts {
           failed == other.failed;
 }
 
+/// Status of a batch job.
 enum BatchStatus {
+  /// Validating the input file.
   validating,
+
+  /// Job failed.
   failed,
+
+  /// Job is running.
   inProgress,
+
+  /// Finalizing results.
   finalizing,
+
+  /// Job completed successfully.
   completed,
+
+  /// Job expired before completion.
   expired,
+
+  /// Job is being cancelled.
   cancelling,
+
+  /// Job has been cancelled.
   cancelled,
 }
 
@@ -671,17 +743,31 @@ class CacheConfig {
           backend == other.backend;
 }
 
+/// A streamed chunk of a chat completion response.
 class ChatCompletionChunk {
+  /// Unique identifier for this stream.
   final String id;
 
   /// Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored
   /// as a plain `String` so non-standard provider values do not fail parsing.
   final String object;
+
+  /// Unix timestamp of chunk creation.
   final PlatformInt64 created;
+
+  /// Model used to generate the chunk.
   final String model;
+
+  /// Streaming choices (delta updates).
   final List<StreamChoice> choices;
+
+  /// Token usage (typically only in the final chunk).
   final Usage? usage;
+
+  /// Fingerprint of the system configuration (OpenAI-specific).
   final String? systemFingerprint;
+
+  /// Service tier used (OpenAI-specific).
   final String? serviceTier;
 
   const ChatCompletionChunk({
@@ -721,32 +807,66 @@ class ChatCompletionChunk {
           serviceTier == other.serviceTier;
 }
 
+/// Chat completion request (compatible with OpenAI and similar APIs).
 class ChatCompletionRequest {
+  /// Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`).
   final String model;
+
+  /// Conversation history from oldest to newest.
   final List<Message> messages;
+
+  /// Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0.
   final double? temperature;
+
+  /// Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused.
   final double? topP;
+
+  /// Number of chat completions to generate. Defaults to 1.
   final PlatformInt64? n;
 
   /// Whether to stream the response.
   ///
   /// Managed by the client layer — do not set directly.
   final bool? stream;
+
+  /// Stop sequence(s) that halt token generation.
   final StopSequence? stop;
+
+  /// Max output tokens. Different from max_completion_tokens in some providers.
   final PlatformInt64? maxTokens;
+
+  /// Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics.
   final double? presencePenalty;
+
+  /// Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens.
   final double? frequencyPenalty;
 
   /// Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic
   /// serialization order — important when hashing or signing requests.
   final Map<String, double>? logitBias;
+
+  /// User identifier for request tracking and abuse detection.
   final String? user;
+
+  /// Tools the model can invoke.
   final List<ChatCompletionTool>? tools;
+
+  /// Tool usage mode (auto, required, none, or specific tool).
   final ToolChoice? toolChoice;
+
+  /// Whether the model can call multiple tools in parallel. Defaults to true.
   final bool? parallelToolCalls;
+
+  /// Output format constraint (text, JSON, JSON schema).
   final ResponseFormat? responseFormat;
+
+  /// Streaming options (e.g., include_usage).
   final StreamOptions? streamOptions;
+
+  /// Random seed for reproducible outputs. Provider support varies.
   final PlatformInt64? seed;
+
+  /// Reasoning effort level (low, medium, high) for extended-thinking models.
   final ReasoningEffort? reasoningEffort;
 
   /// Provider-specific extra parameters merged into the request body.
@@ -826,17 +946,31 @@ class ChatCompletionRequest {
           extraBody == other.extraBody;
 }
 
+/// Chat completion response from the API.
 class ChatCompletionResponse {
+  /// Unique identifier for this response.
   final String id;
 
   /// Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a
   /// plain `String` so non-standard provider values do not break deserialization.
   final String object;
+
+  /// Unix timestamp of response creation.
   final PlatformInt64 created;
+
+  /// Model used to generate the response.
   final String model;
+
+  /// List of completion choices.
   final List<Choice> choices;
+
+  /// Token usage statistics.
   final Usage? usage;
+
+  /// Fingerprint of the system configuration (OpenAI-specific).
   final String? systemFingerprint;
+
+  /// Service tier used (OpenAI-specific).
   final String? serviceTier;
 
   const ChatCompletionResponse({
@@ -876,8 +1010,12 @@ class ChatCompletionResponse {
           serviceTier == other.serviceTier;
 }
 
+/// A tool the model can invoke (currently, all tools are functions).
 class ChatCompletionTool {
+  /// Tool type (always "function" in OpenAI spec).
   final ToolType toolType;
+
+  /// Function definition with name, description, and JSON schema parameters.
   final FunctionDefinition function;
 
   const ChatCompletionTool({required this.toolType, required this.function});
@@ -894,9 +1032,15 @@ class ChatCompletionTool {
           function == other.function;
 }
 
+/// A single completion choice.
 class Choice {
+  /// Index of this choice in the choices array.
   final PlatformInt64 index;
+
+  /// The assistant's message response.
   final AssistantMessage message;
+
+  /// Why the model stopped generating (stop, length, tool_calls, content_filter, etc.).
   final FinishReason? finishReason;
 
   const Choice({required this.index, required this.message, this.finishReason});
@@ -918,19 +1062,34 @@ class Choice {
 sealed class ContentPart with _$ContentPart {
   const ContentPart._();
 
+  /// Plain text.
   const factory ContentPart.text({required String text}) = ContentPart_Text;
+
+  /// Image identified by URL (with optional detail level).
   const factory ContentPart.imageUrl({required ImageUrl imageUrl}) =
       ContentPart_ImageUrl;
+
+  /// Document file (PDF, CSV, etc.) as base64 or URL.
   const factory ContentPart.document({required DocumentContent document}) =
       ContentPart_Document;
+
+  /// Audio input as base64.
   const factory ContentPart.inputAudio({required AudioContent inputAudio}) =
       ContentPart_InputAudio;
 }
 
+/// Request to create a batch job.
 class CreateBatchRequest {
+  /// ID of the uploaded input file (JSONL format).
   final String inputFileId;
+
+  /// API endpoint (e.g., `"/v1/chat/completions"`).
   final String endpoint;
+
+  /// Completion window (e.g., `"24h"`).
   final String completionWindow;
+
+  /// Optional metadata to attach to the batch.
   final String? metadata;
 
   const CreateBatchRequest({
@@ -958,10 +1117,15 @@ class CreateBatchRequest {
           metadata == other.metadata;
 }
 
+/// Request to upload a file.
 class CreateFileRequest {
   /// Base64-encoded file data.
   final String file;
+
+  /// Purpose for the file.
   final FilePurpose purpose;
+
+  /// Optional filename to associate with the upload.
   final String? filename;
 
   const CreateFileRequest({
@@ -985,13 +1149,28 @@ class CreateFileRequest {
 
 /// Request to create images from a text prompt.
 class CreateImageRequest {
+  /// Text description of the image to generate.
   final String prompt;
+
+  /// Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset.
   final String? model;
+
+  /// Number of images to generate. Defaults to 1.
   final PlatformInt64? n;
+
+  /// Image size (e.g., `"1024x1024"`, `"1792x1024"`).
   final String? size;
+
+  /// Image quality: `"standard"` or `"hd"`.
   final String? quality;
+
+  /// Style: `"natural"` or `"vivid"` (DALL-E 3 only).
   final String? style;
+
+  /// Response format: `"url"` or `"b64_json"`.
   final String? responseFormat;
+
+  /// User identifier for request tracking.
   final String? user;
 
   const CreateImageRequest({
@@ -1031,13 +1210,27 @@ class CreateImageRequest {
           user == other.user;
 }
 
+/// Request to create a structured response.
 class CreateResponseRequest {
+  /// Model ID.
   final String model;
+
+  /// Input data to process (e.g., a document to extract from).
   final String input;
+
+  /// Instructions for processing the input.
   final String? instructions;
+
+  /// Available tools the model can use.
   final List<ResponseTool>? tools;
+
+  /// Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0.
   final double? temperature;
+
+  /// Maximum output tokens.
   final PlatformInt64? maxOutputTokens;
+
+  /// Optional metadata.
   final String? metadata;
 
   const CreateResponseRequest({
@@ -1076,10 +1269,19 @@ class CreateResponseRequest {
 
 /// Request to generate speech audio from text.
 class CreateSpeechRequest {
+  /// Model ID (e.g., `"tts-1"`, `"tts-1-hd"`).
   final String model;
+
+  /// Text to synthesize into speech.
   final String input;
+
+  /// Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`).
   final String voice;
+
+  /// Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`).
   final String? responseFormat;
+
+  /// Playback speed in `[0.25, 4.0]`. Defaults to 1.0.
   final double? speed;
 
   const CreateSpeechRequest({
@@ -1112,13 +1314,22 @@ class CreateSpeechRequest {
 
 /// Request to transcribe audio into text.
 class CreateTranscriptionRequest {
+  /// Model ID (e.g., `"whisper-1"`).
   final String model;
 
   /// Base64-encoded audio file data.
   final String file;
+
+  /// Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects.
   final String? language;
+
+  /// Optional text to guide the model (improves accuracy for domain-specific terms).
   final String? prompt;
+
+  /// Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`).
   final String? responseFormat;
+
+  /// Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0.
   final double? temperature;
 
   const CreateTranscriptionRequest({
@@ -1191,9 +1402,15 @@ class CustomProviderConfig {
           modelPrefixes == other.modelPrefixes;
 }
 
+/// Response from a delete operation.
 class DeleteResponse {
+  /// ID of the deleted resource.
   final String id;
+
+  /// Object type.
   final String object;
+
+  /// Confirmation that the resource was deleted.
   final bool deleted;
 
   const DeleteResponse({
@@ -1215,8 +1432,12 @@ class DeleteResponse {
           deleted == other.deleted;
 }
 
+/// Developer message (system-like message for Claude models).
 class DeveloperMessage {
+  /// Developer-specific instructions or context.
   final String content;
+
+  /// Optional name for the developer message source.
   final String? name;
 
   const DeveloperMessage({required this.content, this.name});
@@ -1267,17 +1488,25 @@ enum EmbeddingFormat {
 sealed class EmbeddingInput with _$EmbeddingInput {
   const EmbeddingInput._();
 
+  /// Single text string.
   const factory EmbeddingInput.single({required String field0}) =
       EmbeddingInput_Single;
+
+  /// Multiple text strings (batch embedding).
   const factory EmbeddingInput.multiple({required List<String> field0}) =
       EmbeddingInput_Multiple;
 }
 
+/// A single embedding vector.
 class EmbeddingObject {
   /// Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain
   /// `String` so non-standard provider values do not break deserialization.
   final String object;
+
+  /// The embedding vector.
   final Float64List embedding;
+
+  /// Index in the batch (corresponds to input order).
   final PlatformInt64 index;
 
   const EmbeddingObject({
@@ -1299,11 +1528,21 @@ class EmbeddingObject {
           index == other.index;
 }
 
+/// Embedding request.
 class EmbeddingRequest {
+  /// Model ID (e.g., `"text-embedding-3-small"`).
   final String model;
+
+  /// Text or texts to embed.
   final EmbeddingInput input;
+
+  /// Output format: float (native) or base64.
   final EmbeddingFormat? encodingFormat;
+
+  /// Requested embedding dimensions (if supported by the model).
   final PlatformInt64? dimensions;
+
+  /// User identifier for request tracking.
   final String? user;
 
   const EmbeddingRequest({
@@ -1334,12 +1573,19 @@ class EmbeddingRequest {
           user == other.user;
 }
 
+/// Embedding response.
 class EmbeddingResponse {
   /// Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
   /// `String` so non-standard provider values do not break deserialization.
   final String object;
+
+  /// List of embeddings.
   final List<EmbeddingObject> data;
+
+  /// Model used to generate embeddings.
   final String model;
+
+  /// Token usage (input tokens only; embeddings have zero output tokens).
   final Usage? usage;
 
   const EmbeddingResponse({
@@ -1375,9 +1621,15 @@ enum Enforcement {
   soft,
 }
 
+/// Query parameters for listing files.
 class FileListQuery {
+  /// Filter by file purpose (e.g., `"batch"`, `"fine-tune"`).
   final String? purpose;
+
+  /// Maximum number of results to return. Defaults to 20.
   final PlatformInt64? limit;
+
+  /// Pagination cursor: return results after this file ID.
   final String? after;
 
   const FileListQuery({this.purpose, this.limit, this.after});
@@ -1395,9 +1647,15 @@ class FileListQuery {
           after == other.after;
 }
 
+/// Response from listing files.
 class FileListResponse {
+  /// Object type (always `"list"`).
   final String object;
+
+  /// List of file objects.
   final List<FileObject> data;
+
+  /// Whether more results are available.
   final bool? hasMore;
 
   const FileListResponse({
@@ -1419,13 +1677,27 @@ class FileListResponse {
           hasMore == other.hasMore;
 }
 
+/// An uploaded file object.
 class FileObject {
+  /// Unique file ID.
   final String id;
+
+  /// Object type (always `"file"`).
   final String object;
+
+  /// File size in bytes.
   final PlatformInt64 bytes;
+
+  /// Unix timestamp of file creation.
   final PlatformInt64 createdAt;
+
+  /// Filename.
   final String filename;
+
+  /// File purpose.
   final String purpose;
+
+  /// Processing status (e.g., `"uploaded"`, `"processed"`).
   final String? status;
 
   const FileObject({
@@ -1462,7 +1734,20 @@ class FileObject {
           status == other.status;
 }
 
-enum FilePurpose { assistants, batch, fineTune, vision }
+/// Purpose of an uploaded file.
+enum FilePurpose {
+  /// File for use with Assistants API.
+  assistants,
+
+  /// File for batch processing.
+  batch,
+
+  /// File for fine-tuning.
+  fineTune,
+
+  /// File for vision/image tasks.
+  vision,
+}
 
 /// Why a choice stopped generating tokens.
 enum FinishReason {
@@ -1484,8 +1769,12 @@ enum FinishReason {
   other,
 }
 
+/// Function call details.
 class FunctionCall {
+  /// Function name.
   final String name;
+
+  /// Arguments as a JSON string (parse with serde_json::from_str).
   final String arguments;
 
   const FunctionCall({required this.name, required this.arguments});
@@ -1502,10 +1791,18 @@ class FunctionCall {
           arguments == other.arguments;
 }
 
+/// Function definition exposed to the model.
 class FunctionDefinition {
+  /// Name of the function. Required and must be alphanumeric + underscores.
   final String name;
+
+  /// Human-readable description explaining what the function does.
   final String? description;
+
+  /// JSON Schema defining the function's parameters.
   final String? parameters;
+
+  /// If true, enforce strict JSON schema validation for arguments.
   final bool? strict;
 
   const FunctionDefinition({
@@ -1554,8 +1851,13 @@ class FunctionMessage {
 
 /// A single generated image, returned as either a URL or base64 data.
 class Image {
+  /// Image URL (if response_format was "url").
   final String? url;
+
+  /// Base64-encoded image data (if response_format was "b64_json").
   final String? b64Json;
+
+  /// The final prompt used to generate the image (DALL-E 3).
   final String? revisedPrompt;
 
   const Image({this.url, this.b64Json, this.revisedPrompt});
@@ -1573,10 +1875,24 @@ class Image {
           revisedPrompt == other.revisedPrompt;
 }
 
-enum ImageDetail { low, high, auto }
+/// Image detail level controlling token cost and processing.
+enum ImageDetail {
+  /// Low detail: scales image to 512x512, uses fewer tokens.
+  low,
 
+  /// High detail: processes up to 2x2 grid of tiles, higher token cost.
+  high,
+
+  /// Auto: model chooses low or high based on image dimensions.
+  auto,
+}
+
+/// An image URL reference with optional detail level for processing.
 class ImageUrl {
+  /// URL of the image (data URI or HTTP/HTTPS URL).
   final String url;
+
+  /// Detail level: low (512x512), high (2x2 tiles), or auto (model-selected).
   final ImageDetail? detail;
 
   const ImageUrl({required this.url, this.detail});
@@ -1595,7 +1911,10 @@ class ImageUrl {
 
 /// Response containing generated images.
 class ImagesResponse {
+  /// Unix timestamp of image creation.
   final PlatformInt64 created;
+
+  /// List of generated images.
   final List<Image> data;
 
   const ImagesResponse({required this.created, required this.data});
@@ -1612,10 +1931,18 @@ class ImagesResponse {
           data == other.data;
 }
 
+/// JSON Schema specification for constrained output.
 class JsonSchemaFormat {
+  /// Name of the schema (must be unique in the request).
   final String name;
+
+  /// Description of what the schema represents.
   final String? description;
+
+  /// JSON Schema object defining the output structure.
   final String schema;
+
+  /// If true, enforce strict schema validation.
   final bool? strict;
 
   const JsonSchemaFormat({
@@ -1658,13 +1985,19 @@ sealed class Message with _$Message {
       Message_Function;
 }
 
+/// A model available from the API.
 class ModelObject {
+  /// Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`).
   final String id;
 
   /// Always `"model"` from OpenAI-compatible APIs.  Stored as a plain
   /// `String` so non-standard provider values do not break deserialization.
   final String object;
+
+  /// Unix timestamp of model creation (or release date).
   final PlatformInt64 created;
+
+  /// Organization or entity that owns the model.
   final String ownedBy;
 
   const ModelObject({
@@ -1689,10 +2022,13 @@ class ModelObject {
           ownedBy == other.ownedBy;
 }
 
+/// Response listing available models.
 class ModelsListResponse {
   /// Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
   /// `String` so non-standard provider values do not break deserialization.
   final String object;
+
+  /// List of available models.
   final List<ModelObject> data;
 
   const ModelsListResponse({required this.object, required this.data});
@@ -1711,16 +2047,37 @@ class ModelsListResponse {
 
 /// Boolean flags for each moderation category.
 class ModerationCategories {
+  /// Sexual content.
   final bool sexual;
+
+  /// Hate speech.
   final bool hate;
+
+  /// Harassment.
   final bool harassment;
+
+  /// Self-harm content.
   final bool selfHarm;
+
+  /// Sexual content involving minors.
   final bool sexualMinors;
+
+  /// Hate speech that threatens violence.
   final bool hateThreatening;
+
+  /// Graphic violence.
   final bool violenceGraphic;
+
+  /// Intent to self-harm.
   final bool selfHarmIntent;
+
+  /// Instructions for self-harm.
   final bool selfHarmInstructions;
+
+  /// Harassment that threatens violence.
   final bool harassmentThreatening;
+
+  /// Non-graphic violence.
   final bool violence;
 
   const ModerationCategories({
@@ -1771,16 +2128,37 @@ class ModerationCategories {
 
 /// Confidence scores for each moderation category.
 class ModerationCategoryScores {
+  /// Sexual content score.
   final double sexual;
+
+  /// Hate speech score.
   final double hate;
+
+  /// Harassment score.
   final double harassment;
+
+  /// Self-harm content score.
   final double selfHarm;
+
+  /// Sexual content involving minors score.
   final double sexualMinors;
+
+  /// Hate speech that threatens violence score.
   final double hateThreatening;
+
+  /// Graphic violence score.
   final double violenceGraphic;
+
+  /// Intent to self-harm score.
   final double selfHarmIntent;
+
+  /// Instructions for self-harm score.
   final double selfHarmInstructions;
+
+  /// Harassment that threatens violence score.
   final double harassmentThreatening;
+
+  /// Non-graphic violence score.
   final double violence;
 
   const ModerationCategoryScores({
@@ -1833,15 +2211,21 @@ class ModerationCategoryScores {
 sealed class ModerationInput with _$ModerationInput {
   const ModerationInput._();
 
+  /// Single text string.
   const factory ModerationInput.single({required String field0}) =
       ModerationInput_Single;
+
+  /// Multiple text strings (batch moderation).
   const factory ModerationInput.multiple({required List<String> field0}) =
       ModerationInput_Multiple;
 }
 
 /// Request to classify content for policy violations.
 class ModerationRequest {
+  /// Text or texts to check.
   final ModerationInput input;
+
+  /// Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset.
   final String? model;
 
   const ModerationRequest({required this.input, this.model});
@@ -1860,8 +2244,13 @@ class ModerationRequest {
 
 /// Response from the moderation endpoint.
 class ModerationResponse {
+  /// Unique identifier for this moderation request.
   final String id;
+
+  /// Model used for classification.
   final String model;
+
+  /// Results for each input string.
   final List<ModerationResult> results;
 
   const ModerationResponse({
@@ -1885,8 +2274,13 @@ class ModerationResponse {
 
 /// A single moderation classification result.
 class ModerationResult {
+  /// True if any category was flagged.
   final bool flagged;
+
+  /// Boolean flags for each moderation category.
   final ModerationCategories categories;
+
+  /// Confidence scores for each category.
   final ModerationCategoryScores categoryScores;
 
   const ModerationResult({
@@ -1915,7 +2309,7 @@ sealed class OcrDocument with _$OcrDocument {
 
   /// A publicly accessible document URL.
   const factory OcrDocument.url({
-    /// The document URL.
+    /// The document URL (HTTP/HTTPS).
     required String url,
   }) = OcrDocument_Url;
 
@@ -1924,17 +2318,17 @@ sealed class OcrDocument with _$OcrDocument {
     /// Base64-encoded document content.
     required String data,
 
-    /// MIME type (e.g. `"application/pdf"`, `"image/png"`).
+    /// MIME type (e.g. `"application/pdf"`, `"image/png"`, `"image/jpeg"`).
     required String mediaType,
   }) = OcrDocument_Base64;
 }
 
 /// An image extracted from an OCR page.
 class OcrImage {
-  /// Unique image identifier.
+  /// Unique image identifier within the document.
   final String id;
 
-  /// Base64-encoded image data.
+  /// Base64-encoded image data (if `include_image_base64` was true).
   final String? imageBase64;
 
   const OcrImage({required this.id, this.imageBase64});
@@ -1956,10 +2350,10 @@ class OcrPage {
   /// Page index (0-based).
   final PlatformInt64 index;
 
-  /// Extracted content as Markdown.
+  /// Extracted page content as Markdown.
   final String markdown;
 
-  /// Extracted images, if `include_image_base64` was set.
+  /// Embedded images extracted from the page (if `include_image_base64` was true).
   final List<OcrImage>? images;
 
   /// Page dimensions in pixels, if available.
@@ -1995,13 +2389,13 @@ class OcrRequest {
   /// The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`).
   final String model;
 
-  /// The document to process.
+  /// The document to process (URL or base64).
   final OcrDocument document;
 
   /// Specific pages to process (1-indexed). `None` means all pages.
   final Int64List? pages;
 
-  /// Whether to include base64-encoded images of each page.
+  /// Whether to include base64-encoded images of each processed page.
   final bool? includeImageBase64;
 
   const OcrRequest({
@@ -2031,10 +2425,10 @@ class OcrRequest {
 
 /// An OCR response.
 class OcrResponse {
-  /// Extracted pages.
+  /// Extracted pages in order.
   final List<OcrPage> pages;
 
-  /// The model used.
+  /// Model/provider used for OCR.
   final String model;
 
   /// Token usage, if reported by the provider.
@@ -2140,18 +2534,30 @@ enum ReasoningEffort { low, medium, high }
 sealed class RerankDocument with _$RerankDocument {
   const RerankDocument._();
 
+  /// Plain text document content.
   const factory RerankDocument.text({required String field0}) =
       RerankDocument_Text;
+
+  /// Document with explicit text field (may include metadata).
   const factory RerankDocument.object({required String text}) =
       RerankDocument_Object;
 }
 
 /// Request to rerank documents by relevance to a query.
 class RerankRequest {
+  /// Model ID (e.g., `"cohere/rerank-english-v3.0"`).
   final String model;
+
+  /// The search query.
   final String query;
+
+  /// Documents to rerank.
   final List<RerankDocument> documents;
+
+  /// Return only the top N results. Optional.
   final PlatformInt64? topN;
+
+  /// Include the document content in results. Defaults to false.
   final bool? returnDocuments;
 
   const RerankRequest({
@@ -2184,8 +2590,13 @@ class RerankRequest {
 
 /// Response from the rerank endpoint.
 class RerankResponse {
+  /// Unique identifier for this rerank request.
   final String? id;
+
+  /// Reranked documents in order of relevance.
   final List<RerankResult> results;
+
+  /// Optional metadata about the reranking operation.
   final String? meta;
 
   const RerankResponse({this.id, required this.results, this.meta});
@@ -2205,8 +2616,13 @@ class RerankResponse {
 
 /// A single reranked document with its relevance score.
 class RerankResult {
+  /// Original document index in the input list.
   final PlatformInt64 index;
+
+  /// Relevance score in `[0, 1]`. Higher indicates more relevant.
   final double relevanceScore;
+
+  /// Original document content (if `return_documents` was true).
   final RerankResultDocument? document;
 
   const RerankResult({
@@ -2231,6 +2647,7 @@ class RerankResult {
 
 /// The text content of a reranked document, returned when `return_documents` is true.
 class RerankResultDocument {
+  /// Document text.
   final String text;
 
   const RerankResultDocument({required this.text});
@@ -2250,21 +2667,42 @@ class RerankResultDocument {
 sealed class ResponseFormat with _$ResponseFormat {
   const ResponseFormat._();
 
+  /// Plain text output (default).
   const factory ResponseFormat.text() = ResponseFormat_Text;
+
+  /// Output must be valid JSON object (no schema validation).
   const factory ResponseFormat.jsonObject() = ResponseFormat_JsonObject;
+
+  /// Output must conform to the specified JSON schema.
   const factory ResponseFormat.jsonSchema({
     required JsonSchemaFormat jsonSchema,
   }) = ResponseFormat_JsonSchema;
 }
 
+/// Response from a structured response request.
 class ResponseObject {
+  /// Unique response ID.
   final String id;
+
+  /// Object type (e.g., `"response"`).
   final String object;
+
+  /// Unix timestamp of response creation.
   final PlatformInt64 createdAt;
+
+  /// Model used to generate the response.
   final String model;
+
+  /// Status (e.g., `"succeeded"`, `"failed"`).
   final String status;
+
+  /// Output items from the response.
   final List<ResponseOutputItem> output;
+
+  /// Token usage.
   final ResponseUsage? usage;
+
+  /// Error details (if status is "failed").
   final String? error;
 
   const ResponseObject({
@@ -2304,8 +2742,12 @@ class ResponseObject {
           error == other.error;
 }
 
+/// A single output item from the response.
 class ResponseOutputItem {
+  /// Output type (e.g., `"text"`, `"object"`, `"error"`).
   final String itemType;
+
+  /// Output content (flattened into the object).
   final String content;
 
   const ResponseOutputItem({required this.itemType, required this.content});
@@ -2322,8 +2764,12 @@ class ResponseOutputItem {
           content == other.content;
 }
 
+/// A tool available for the response request.
 class ResponseTool {
+  /// Tool type (e.g., "extractor", "search").
   final String toolType;
+
+  /// Tool configuration (flattened into the object).
   final String config;
 
   const ResponseTool({required this.toolType, required this.config});
@@ -2340,9 +2786,15 @@ class ResponseTool {
           config == other.config;
 }
 
+/// Token usage for a response.
 class ResponseUsage {
+  /// Input tokens used.
   final PlatformInt64 inputTokens;
+
+  /// Output tokens used.
   final PlatformInt64 outputTokens;
+
+  /// Total tokens used.
   final PlatformInt64 totalTokens;
 
   const ResponseUsage({
@@ -2370,7 +2822,7 @@ class SearchRequest {
   /// The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`).
   final String model;
 
-  /// The search query.
+  /// The search query string.
   final String query;
 
   /// Maximum number of results to return.
@@ -2379,7 +2831,7 @@ class SearchRequest {
   /// Domain filter — restrict results to specific domains.
   final List<String>? searchDomainFilter;
 
-  /// Country code for localized results (ISO 3166-1 alpha-2).
+  /// Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`).
   final String? country;
 
   const SearchRequest({
@@ -2412,10 +2864,10 @@ class SearchRequest {
 
 /// A search response.
 class SearchResponse {
-  /// The search results.
+  /// List of search results.
   final List<SearchResult> results;
 
-  /// The model used.
+  /// Model/provider that performed the search.
   final String model;
 
   const SearchResponse({required this.results, required this.model});
@@ -2434,13 +2886,13 @@ class SearchResponse {
 
 /// An individual search result.
 class SearchResult {
-  /// Title of the result.
+  /// Result title.
   final String title;
 
-  /// URL of the result.
+  /// Result URL.
   final String url;
 
-  /// Text snippet / excerpt.
+  /// Text snippet or excerpt from the page.
   final String snippet;
 
   /// Publication or last-updated date, if available.
@@ -2468,7 +2920,9 @@ class SearchResult {
           date == other.date;
 }
 
+/// Name of the specific function to invoke.
 class SpecificFunction {
+  /// Function name.
   final String name;
 
   const SpecificFunction({required this.name});
@@ -2484,8 +2938,12 @@ class SpecificFunction {
           name == other.name;
 }
 
+/// Directive to call a specific tool.
 class SpecificToolChoice {
+  /// Tool type (always "function").
   final ToolType choiceType;
+
+  /// The specific function to invoke.
   final SpecificFunction function;
 
   const SpecificToolChoice({required this.choiceType, required this.function});
@@ -2506,15 +2964,24 @@ class SpecificToolChoice {
 sealed class StopSequence with _$StopSequence {
   const StopSequence._();
 
+  /// Single stop sequence.
   const factory StopSequence.single({required String field0}) =
       StopSequence_Single;
+
+  /// Multiple stop sequences.
   const factory StopSequence.multiple({required List<String> field0}) =
       StopSequence_Multiple;
 }
 
+/// A streaming choice with incremental delta.
 class StreamChoice {
+  /// Index of this choice in the choices array.
   final PlatformInt64 index;
+
+  /// Incremental update to the message (content, tool calls, etc.).
   final StreamDelta delta;
+
+  /// Why the stream ended (present only in final chunk).
   final FinishReason? finishReason;
 
   const StreamChoice({
@@ -2536,13 +3003,21 @@ class StreamChoice {
           finishReason == other.finishReason;
 }
 
+/// Incremental delta in a stream chunk.
 class StreamDelta {
+  /// Role (typically present only in the first chunk).
   final String? role;
+
+  /// Partial content chunk (e.g., a few words of the response).
   final String? content;
+
+  /// Partial tool calls being streamed.
   final List<StreamToolCall>? toolCalls;
 
   /// Deprecated legacy function_call delta; retained for API compatibility.
   final StreamFunctionCall? functionCall;
+
+  /// Partial refusal message.
   final String? refusal;
 
   const StreamDelta({
@@ -2573,8 +3048,12 @@ class StreamDelta {
           refusal == other.refusal;
 }
 
+/// Partial function call details in a stream.
 class StreamFunctionCall {
+  /// Function name (typically in the first chunk).
   final String? name;
+
+  /// Partial JSON arguments chunk.
   final String? arguments;
 
   const StreamFunctionCall({this.name, this.arguments});
@@ -2591,7 +3070,9 @@ class StreamFunctionCall {
           arguments == other.arguments;
 }
 
+/// Options for streaming responses.
 class StreamOptions {
+  /// If true, include token usage in the final stream chunk.
   final bool? includeUsage;
 
   const StreamOptions({this.includeUsage});
@@ -2607,10 +3088,18 @@ class StreamOptions {
           includeUsage == other.includeUsage;
 }
 
+/// A streaming tool call being built incrementally.
 class StreamToolCall {
+  /// Index of this tool call in the tool_calls array.
   final PlatformInt64 index;
+
+  /// Tool call ID (typically in the first chunk for this call).
   final String? id;
+
+  /// Tool type (typically "function").
   final ToolType? callType;
+
+  /// Partial function name and arguments.
   final StreamFunctionCall? function;
 
   const StreamToolCall({
@@ -2635,8 +3124,12 @@ class StreamToolCall {
           function == other.function;
 }
 
+/// System message guiding model behavior for the entire conversation.
 class SystemMessage {
+  /// Instructions or context that apply throughout the conversation.
   final String content;
+
+  /// Optional name for the system message source.
   final String? name;
 
   const SystemMessage({required this.content, this.name});
@@ -2653,9 +3146,15 @@ class SystemMessage {
           name == other.name;
 }
 
+/// A tool call the model wants to execute.
 class ToolCall {
+  /// Unique ID for this call, used to reference in tool result messages.
   final String id;
+
+  /// Tool type (always "function").
   final ToolType callType;
+
+  /// Function name and arguments.
   final FunctionCall function;
 
   const ToolCall({
@@ -2681,17 +3180,36 @@ class ToolCall {
 sealed class ToolChoice with _$ToolChoice {
   const ToolChoice._();
 
+  /// Predefined mode: auto, required, or none.
   const factory ToolChoice.mode({required ToolChoiceMode field0}) =
       ToolChoice_Mode;
+
+  /// Force a specific tool to be called.
   const factory ToolChoice.specific({required SpecificToolChoice field0}) =
       ToolChoice_Specific;
 }
 
-enum ToolChoiceMode { auto, required_, none }
+/// Tool choice mode.
+enum ToolChoiceMode {
+  /// Model may or may not call tools; default behavior.
+  auto,
 
+  /// Model must call at least one tool.
+  required_,
+
+  /// Model must not call any tools.
+  none,
+}
+
+/// Tool execution result returned to the model.
 class ToolMessage {
+  /// Result of the tool execution.
   final String content;
+
+  /// ID of the tool call this result responds to.
   final String toolCallId;
+
+  /// Optional tool/function name.
   final String? name;
 
   const ToolMessage({
@@ -2722,9 +3240,16 @@ enum ToolType { function }
 
 /// Response from a transcription request.
 class TranscriptionResponse {
+  /// The transcribed text.
   final String text;
+
+  /// Detected language (ISO-639-1 code).
   final String? language;
+
+  /// Total audio duration in seconds.
   final double? duration;
+
+  /// Detailed segment-level transcription (if response_format is "verbose_json").
   final List<TranscriptionSegment>? segments;
 
   const TranscriptionResponse({
@@ -2751,9 +3276,16 @@ class TranscriptionResponse {
 
 /// A segment of transcribed audio with timing information.
 class TranscriptionSegment {
+  /// Segment index (0-based).
   final PlatformInt64 id;
+
+  /// Start time in seconds.
   final double start;
+
+  /// End time in seconds.
   final double end;
+
+  /// Transcribed text for this segment.
   final String text;
 
   const TranscriptionSegment({
@@ -2822,13 +3354,20 @@ class Usage {
 sealed class UserContent with _$UserContent {
   const UserContent._();
 
+  /// Plain text content.
   const factory UserContent.text({required String field0}) = UserContent_Text;
+
+  /// Array of content parts (text, images, documents, audio).
   const factory UserContent.parts({required List<ContentPart> field0}) =
       UserContent_Parts;
 }
 
+/// User message in the conversation.
 class UserMessage {
+  /// Message content as plain text or array of content parts (text, images, documents, audio).
   final UserContent content;
+
+  /// Optional name for the user.
   final String? name;
 
   const UserMessage({required this.content, this.name});

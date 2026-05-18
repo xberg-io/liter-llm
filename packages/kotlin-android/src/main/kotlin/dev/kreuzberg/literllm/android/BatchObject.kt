@@ -21,19 +21,64 @@
 
 package dev.kreuzberg.literllm.android
 
+/**
+ * A batch job object.
+ */
 data class BatchObject(
+    /**
+     * Unique batch ID.
+     */
     val id: String,
+    /**
+     * Object type (always `"batch"`).
+     */
     val `object`: String,
+    /**
+     * API endpoint (e.g., `"/v1/chat/completions"`).
+     */
     val endpoint: String,
+    /**
+     * ID of the input file.
+     */
     val inputFileId: String,
+    /**
+     * Completion window (e.g., `"24h"`).
+     */
     val completionWindow: String,
+    /**
+     * Current job status.
+     */
     val status: BatchStatus,
+    /**
+     * ID of the output file (present when completed).
+     */
     val outputFileId: String?,
+    /**
+     * ID of the error file (present if some requests failed).
+     */
     val errorFileId: String?,
+    /**
+     * Unix timestamp of batch creation.
+     */
     val createdAt: Long,
+    /**
+     * Unix timestamp of completion (if completed).
+     */
     val completedAt: Long?,
+    /**
+     * Unix timestamp of failure (if failed).
+     */
     val failedAt: Long?,
+    /**
+     * Unix timestamp of expiration (if expired).
+     */
     val expiredAt: Long?,
+    /**
+     * Request processing counts.
+     */
     val requestCounts: BatchRequestCounts?,
+    /**
+     * Metadata attached to the batch.
+     */
     val metadata: String?
 )

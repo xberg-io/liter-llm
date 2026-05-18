@@ -21,13 +21,40 @@
 
 package dev.kreuzberg.literllm.android
 
+/**
+ * Response from a structured response request.
+ */
 data class ResponseObject(
+    /**
+     * Unique response ID.
+     */
     val id: String,
+    /**
+     * Object type (e.g., `"response"`).
+     */
     val `object`: String,
+    /**
+     * Unix timestamp of response creation.
+     */
     val createdAt: Long,
+    /**
+     * Model used to generate the response.
+     */
     val model: String,
+    /**
+     * Status (e.g., `"succeeded"`, `"failed"`).
+     */
     val status: String,
+    /**
+     * Output items from the response.
+     */
     val output: List<ResponseOutputItem>,
+    /**
+     * Token usage.
+     */
     val usage: ResponseUsage?,
+    /**
+     * Error details (if status is "failed").
+     */
     val error: String?
 )

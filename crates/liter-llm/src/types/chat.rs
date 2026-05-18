@@ -57,15 +57,21 @@ pub enum ReasoningEffort {
 
 // ─── Request ─────────────────────────────────────────────────────────────────
 
+/// Chat completion request (compatible with OpenAI and similar APIs).
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ChatCompletionRequest {
+    /// Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`).
     pub model: String,
+    /// Conversation history from oldest to newest.
     pub messages: Vec<Message>,
+    /// Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub temperature: Option<f64>,
+    /// Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub top_p: Option<f64>,
+    /// Number of chat completions to generate. Defaults to 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub n: Option<u32>,
     /// Whether to stream the response.
@@ -73,32 +79,44 @@ pub struct ChatCompletionRequest {
     /// Managed by the client layer — do not set directly.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stream: Option<bool>,
+    /// Stop sequence(s) that halt token generation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stop: Option<StopSequence>,
+    /// Max output tokens. Different from max_completion_tokens in some providers.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_tokens: Option<u64>,
+    /// Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub presence_penalty: Option<f64>,
+    /// Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub frequency_penalty: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     /// Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic
     /// serialization order — important when hashing or signing requests.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub logit_bias: Option<BTreeMap<String, f64>>,
+    /// User identifier for request tracking and abuse detection.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub user: Option<String>,
+    /// Tools the model can invoke.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tools: Option<Vec<ChatCompletionTool>>,
+    /// Tool usage mode (auto, required, none, or specific tool).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tool_choice: Option<ToolChoice>,
+    /// Whether the model can call multiple tools in parallel. Defaults to true.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parallel_tool_calls: Option<bool>,
+    /// Output format constraint (text, JSON, JSON schema).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub response_format: Option<ResponseFormat>,
+    /// Streaming options (e.g., include_usage).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stream_options: Option<StreamOptions>,
+    /// Random seed for reproducible outputs. Provider support varies.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub seed: Option<i64>,
+    /// Reasoning effort level (low, medium, high) for extended-thinking models.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reasoning_effort: Option<ReasoningEffort>,
     /// Provider-specific extra parameters merged into the request body.
@@ -107,28 +125,38 @@ pub struct ChatCompletionRequest {
     pub extra_body: Option<serde_json::Value>,
 }
 
+/// Options for streaming responses.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct StreamOptions {
+    /// If true, include token usage in the final stream chunk.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub include_usage: Option<bool>,
 }
 
 // ─── Response ────────────────────────────────────────────────────────────────
 
+/// Chat completion response from the API.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ChatCompletionResponse {
+    /// Unique identifier for this response.
     pub id: String,
     /// Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a
     /// plain `String` so non-standard provider values do not break deserialization.
     pub object: String,
+    /// Unix timestamp of response creation.
     pub created: u64,
+    /// Model used to generate the response.
     pub model: String,
+    /// List of completion choices.
     pub choices: Vec<Choice>,
+    /// Token usage statistics.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub usage: Option<Usage>,
+    /// Fingerprint of the system configuration (OpenAI-specific).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub system_fingerprint: Option<String>,
+    /// Service tier used (OpenAI-specific).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub service_tier: Option<String>,
 }
@@ -157,69 +185,98 @@ impl ChatCompletionResponse {
     }
 }
 
+/// A single completion choice.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct Choice {
+    /// Index of this choice in the choices array.
     pub index: u32,
+    /// The assistant's message response.
     pub message: AssistantMessage,
+    /// Why the model stopped generating (stop, length, tool_calls, content_filter, etc.).
     pub finish_reason: Option<FinishReason>,
 }
 
 // ─── Stream Chunk ────────────────────────────────────────────────────────────
 
+/// A streamed chunk of a chat completion response.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ChatCompletionChunk {
+    /// Unique identifier for this stream.
     pub id: String,
     /// Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored
     /// as a plain `String` so non-standard provider values do not fail parsing.
     pub object: String,
+    /// Unix timestamp of chunk creation.
     pub created: u64,
+    /// Model used to generate the chunk.
     pub model: String,
+    /// Streaming choices (delta updates).
     pub choices: Vec<StreamChoice>,
+    /// Token usage (typically only in the final chunk).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub usage: Option<Usage>,
+    /// Fingerprint of the system configuration (OpenAI-specific).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub system_fingerprint: Option<String>,
+    /// Service tier used (OpenAI-specific).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub service_tier: Option<String>,
 }
 
+/// A streaming choice with incremental delta.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct StreamChoice {
+    /// Index of this choice in the choices array.
     pub index: u32,
+    /// Incremental update to the message (content, tool calls, etc.).
     pub delta: StreamDelta,
+    /// Why the stream ended (present only in final chunk).
     pub finish_reason: Option<FinishReason>,
 }
 
+/// Incremental delta in a stream chunk.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct StreamDelta {
+    /// Role (typically present only in the first chunk).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub role: Option<String>,
+    /// Partial content chunk (e.g., a few words of the response).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub content: Option<String>,
+    /// Partial tool calls being streamed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tool_calls: Option<Vec<StreamToolCall>>,
     /// Deprecated legacy function_call delta; retained for API compatibility.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub function_call: Option<StreamFunctionCall>,
+    /// Partial refusal message.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub refusal: Option<String>,
 }
 
+/// A streaming tool call being built incrementally.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct StreamToolCall {
+    /// Index of this tool call in the tool_calls array.
     pub index: u32,
+    /// Tool call ID (typically in the first chunk for this call).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
+    /// Tool type (typically "function").
     #[serde(default, skip_serializing_if = "Option::is_none", rename = "type")]
     pub call_type: Option<ToolType>,
+    /// Partial function name and arguments.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub function: Option<StreamFunctionCall>,
 }
 
+/// Partial function call details in a stream.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct StreamFunctionCall {
+    /// Function name (typically in the first chunk).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    /// Partial JSON arguments chunk.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub arguments: Option<String>,
 }

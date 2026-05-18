@@ -24,4 +24,17 @@ package dev.kreuzberg.literllm.android
 /**
  * Response from the rerank endpoint.
  */
-data class RerankResponse(val id: String?, val results: List<RerankResult>, val meta: String?)
+data class RerankResponse(
+    /**
+     * Unique identifier for this rerank request.
+     */
+    val id: String?,
+    /**
+     * Reranked documents in order of relevance.
+     */
+    val results: List<RerankResult>,
+    /**
+     * Optional metadata about the reranking operation.
+     */
+    val meta: String?
+)

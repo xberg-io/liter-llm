@@ -21,17 +21,41 @@
 
 package dev.kreuzberg.literllm.android
 
+/**
+ * Chat completion response from the API.
+ */
 data class ChatCompletionResponse(
+    /**
+     * Unique identifier for this response.
+     */
     val id: String,
     /**
      * Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a
      * plain `String` so non-standard provider values do not break deserialization.
      */
     val `object`: String,
+    /**
+     * Unix timestamp of response creation.
+     */
     val created: Long,
+    /**
+     * Model used to generate the response.
+     */
     val model: String,
+    /**
+     * List of completion choices.
+     */
     val choices: List<Choice>,
+    /**
+     * Token usage statistics.
+     */
     val usage: Usage?,
+    /**
+     * Fingerprint of the system configuration (OpenAI-specific).
+     */
     val systemFingerprint: String?,
+    /**
+     * Service tier used (OpenAI-specific).
+     */
     val serviceTier: String?
 )

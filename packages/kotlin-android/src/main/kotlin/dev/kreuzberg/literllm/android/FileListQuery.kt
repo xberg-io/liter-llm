@@ -21,4 +21,20 @@
 
 package dev.kreuzberg.literllm.android
 
-data class FileListQuery(val purpose: String?, val limit: Int?, val after: String?)
+/**
+ * Query parameters for listing files.
+ */
+data class FileListQuery(
+    /**
+     * Filter by file purpose (e.g., `"batch"`, `"fine-tune"`).
+     */
+    val purpose: String?,
+    /**
+     * Maximum number of results to return. Defaults to 20.
+     */
+    val limit: Int?,
+    /**
+     * Pagination cursor: return results after this file ID.
+     */
+    val after: String?
+)

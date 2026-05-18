@@ -26,11 +26,11 @@ package dev.kreuzberg.literllm.android
  */
 data class OcrImage(
     /**
-     * Unique image identifier.
+     * Unique image identifier within the document.
      */
     val id: String,
     /**
-     * Base64-encoded image data.
+     * Base64-encoded image data (if `include_image_base64` was true).
      */
     val imageBase64: String?
 )

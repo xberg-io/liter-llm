@@ -30,7 +30,7 @@ data class OcrRequest(
      */
     val model: String,
     /**
-     * The document to process.
+     * The document to process (URL or base64).
      */
     val document: OcrDocument,
     /**
@@ -38,7 +38,7 @@ data class OcrRequest(
      */
     val pages: List<Int>?,
     /**
-     * Whether to include base64-encoded images of each page.
+     * Whether to include base64-encoded images of each processed page.
      */
     val includeImageBase64: Boolean?
 )

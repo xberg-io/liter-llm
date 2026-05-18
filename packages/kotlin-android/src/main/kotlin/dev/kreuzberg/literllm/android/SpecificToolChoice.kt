@@ -21,4 +21,16 @@
 
 package dev.kreuzberg.literllm.android
 
-data class SpecificToolChoice(val choiceType: ToolType, val function: SpecificFunction)
+/**
+ * Directive to call a specific tool.
+ */
+data class SpecificToolChoice(
+    /**
+     * Tool type (always "function").
+     */
+    val choiceType: ToolType,
+    /**
+     * The specific function to invoke.
+     */
+    val function: SpecificFunction
+)

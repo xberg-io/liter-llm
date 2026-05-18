@@ -21,4 +21,16 @@
 
 package dev.kreuzberg.literllm.android
 
-data class ResponseOutputItem(val itemType: String, val content: String)
+/**
+ * A single output item from the response.
+ */
+data class ResponseOutputItem(
+    /**
+     * Output type (e.g., `"text"`, `"object"`, `"error"`).
+     */
+    val itemType: String,
+    /**
+     * Output content (flattened into the object).
+     */
+    val content: String
+)

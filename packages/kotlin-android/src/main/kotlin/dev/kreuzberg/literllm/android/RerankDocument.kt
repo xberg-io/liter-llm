@@ -27,11 +27,17 @@ package dev.kreuzberg.literllm.android
 @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = RerankDocumentDeserializer::class)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = RerankDocumentSerializer::class)
 sealed class RerankDocument {
+    /**
+     * Plain text document content.
+     */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Text(
         val value: String
     ) : RerankDocument()
+    /**
+     * Document with explicit text field (may include metadata).
+     */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Object(

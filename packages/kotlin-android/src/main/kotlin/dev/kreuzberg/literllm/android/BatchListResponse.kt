@@ -21,10 +21,28 @@
 
 package dev.kreuzberg.literllm.android
 
+/**
+ * Response from listing batches.
+ */
 data class BatchListResponse(
+    /**
+     * Object type (always `"list"`).
+     */
     val `object`: String,
+    /**
+     * List of batch objects.
+     */
     val data: List<BatchObject>,
+    /**
+     * Whether more results are available.
+     */
     val hasMore: Boolean?,
+    /**
+     * First batch ID in the result set (for pagination).
+     */
     val firstId: String?,
+    /**
+     * Last batch ID in the result set (for pagination).
+     */
     val lastId: String?
 )

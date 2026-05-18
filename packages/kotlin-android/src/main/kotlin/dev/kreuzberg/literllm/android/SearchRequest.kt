@@ -30,7 +30,7 @@ data class SearchRequest(
      */
     val model: String,
     /**
-     * The search query.
+     * The search query string.
      */
     val query: String,
     /**
@@ -42,7 +42,7 @@ data class SearchRequest(
      */
     val searchDomainFilter: List<String>?,
     /**
-     * Country code for localized results (ISO 3166-1 alpha-2).
+     * Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`).
      */
     val country: String?
 )

@@ -21,9 +21,24 @@
 
 package dev.kreuzberg.literllm.android
 
+/**
+ * Function definition exposed to the model.
+ */
 data class FunctionDefinition(
+    /**
+     * Name of the function. Required and must be alphanumeric + underscores.
+     */
     val name: String,
+    /**
+     * Human-readable description explaining what the function does.
+     */
     val description: String?,
+    /**
+     * JSON Schema defining the function's parameters.
+     */
     val parameters: String?,
+    /**
+     * If true, enforce strict JSON schema validation for arguments.
+     */
     val strict: Boolean?
 )

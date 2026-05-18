@@ -21,4 +21,16 @@
 
 package dev.kreuzberg.literllm.android
 
-data class UserMessage(val content: UserContent, val name: String?)
+/**
+ * User message in the conversation.
+ */
+data class UserMessage(
+    /**
+     * Message content as plain text or array of content parts (text, images, documents, audio).
+     */
+    val content: UserContent,
+    /**
+     * Optional name for the user.
+     */
+    val name: String?
+)

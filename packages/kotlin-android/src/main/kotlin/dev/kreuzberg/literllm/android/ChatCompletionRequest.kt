@@ -21,11 +21,29 @@
 
 package dev.kreuzberg.literllm.android
 
+/**
+ * Chat completion request (compatible with OpenAI and similar APIs).
+ */
 data class ChatCompletionRequest(
+    /**
+     * Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`).
+     */
     val model: String,
+    /**
+     * Conversation history from oldest to newest.
+     */
     val messages: List<Message>,
+    /**
+     * Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0.
+     */
     val temperature: Double?,
+    /**
+     * Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused.
+     */
     val topP: Double?,
+    /**
+     * Number of chat completions to generate. Defaults to 1.
+     */
     val n: Int?,
     /**
      * Whether to stream the response.
@@ -33,22 +51,58 @@ data class ChatCompletionRequest(
      * Managed by the client layer — do not set directly.
      */
     val stream: Boolean?,
+    /**
+     * Stop sequence(s) that halt token generation.
+     */
     val stop: StopSequence?,
+    /**
+     * Max output tokens. Different from max_completion_tokens in some providers.
+     */
     val maxTokens: Long?,
+    /**
+     * Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics.
+     */
     val presencePenalty: Double?,
+    /**
+     * Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens.
+     */
     val frequencyPenalty: Double?,
     /**
      * Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic
      * serialization order — important when hashing or signing requests.
      */
     val logitBias: Map<String, Double>?,
+    /**
+     * User identifier for request tracking and abuse detection.
+     */
     val user: String?,
+    /**
+     * Tools the model can invoke.
+     */
     val tools: List<ChatCompletionTool>?,
+    /**
+     * Tool usage mode (auto, required, none, or specific tool).
+     */
     val toolChoice: ToolChoice?,
+    /**
+     * Whether the model can call multiple tools in parallel. Defaults to true.
+     */
     val parallelToolCalls: Boolean?,
+    /**
+     * Output format constraint (text, JSON, JSON schema).
+     */
     val responseFormat: ResponseFormat?,
+    /**
+     * Streaming options (e.g., include_usage).
+     */
     val streamOptions: StreamOptions?,
+    /**
+     * Random seed for reproducible outputs. Provider support varies.
+     */
     val seed: Long?,
+    /**
+     * Reasoning effort level (low, medium, high) for extended-thinking models.
+     */
     val reasoningEffort: ReasoningEffort?,
     /**
      * Provider-specific extra parameters merged into the request body.

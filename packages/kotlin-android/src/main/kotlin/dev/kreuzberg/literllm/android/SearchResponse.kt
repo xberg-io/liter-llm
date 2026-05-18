@@ -26,11 +26,11 @@ package dev.kreuzberg.literllm.android
  */
 data class SearchResponse(
     /**
-     * The search results.
+     * List of search results.
      */
     val results: List<SearchResult>,
     /**
-     * The model used.
+     * Model/provider that performed the search.
      */
     val model: String
 )
