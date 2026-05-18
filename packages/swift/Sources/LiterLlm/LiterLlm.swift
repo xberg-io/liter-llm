@@ -1083,13 +1083,13 @@ public final class DefaultClient {
         return try await RustBridge.defaultClientOcr(self.inner, req)
     }
     public func createFile(_ req: CreateFileRequest) async throws -> FileObject {
-        return try await RustBridge.defaultClientCreateFile(self.inner, req)
+        return try FileObject(try await RustBridge.defaultClientCreateFile(self.inner, req))
     }
     public func retrieveFile(_ fileId: String) async throws -> FileObject {
-        return try await RustBridge.defaultClientRetrieveFile(self.inner, fileId)
+        return try FileObject(try await RustBridge.defaultClientRetrieveFile(self.inner, fileId))
     }
     public func deleteFile(_ fileId: String) async throws -> DeleteResponse {
-        return try await RustBridge.defaultClientDeleteFile(self.inner, fileId)
+        return try DeleteResponse(try await RustBridge.defaultClientDeleteFile(self.inner, fileId))
     }
     public func listFiles(_ query: FileListQuery?) async throws -> FileListResponse {
         return try await RustBridge.defaultClientListFiles(self.inner, try query?.intoRust())
