@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.16.55"
+alef_version = "0.16.56"
 languages = [
   "python",
   "node",
@@ -114,13 +114,7 @@ features = ["wasm-http"]
 # build uses the `wasm-http` feature which excludes `tower`. The configs aren't
 # reachable through `liter_llm::*` in that build, so skip them in the WASM
 # binding to avoid E0433 "cannot find `tower`" / "cannot find `BudgetConfig`" etc.
-exclude_types = [
-  "BudgetConfig",
-  "CacheConfig",
-  "CacheBackend",
-  "RateLimitConfig",
-  "Enforcement",
-]
+exclude_types = ["BudgetConfig", "CacheConfig", "CacheBackend", "RateLimitConfig", "Enforcement"]
 
 [crates.ffi]
 prefix = "literllm"
