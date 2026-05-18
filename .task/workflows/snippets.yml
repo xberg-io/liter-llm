@@ -3,7 +3,7 @@ version: "3"
 vars:
   RUNNER: "alef snippets"
   SNIPPETS_DIR: "docs/snippets"
-  ALEF_VERSION: "0.16.53"
+  ALEF_VERSION: "0.16.54"
 
 tasks:
   install:
