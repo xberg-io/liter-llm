@@ -16,8 +16,8 @@ crate-type = ["cdylib", "staticlib"]
 flutter_rust_bridge = "=2.12.0"
 futures-util = "0.3"
 liter_llm = { path = "../../../crates/liter-llm", package = "liter-llm", features = [
-    "native-http",
-    "full",
+  "native-http",
+  "full",
 ] }
 serde_json = "1"
 

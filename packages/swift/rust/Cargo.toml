@@ -26,16 +26,16 @@ doctest = false
 bench = false
 
 [dependencies]
-async-trait = "0.1"
-futures-util = "0.3"
 liter_llm = { path = "../../../crates/liter-llm", features = [
-    "native-http",
-    "full",
+  "native-http",
+  "full",
 ], package = "liter-llm" }
+async-trait = "0.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
+futures-util = "0.3"
 swift-bridge = "0.1.59"
-tokio = { version = "1", features = ["rt", "macros"] }
 
 [build-dependencies]
 swift-bridge-build = "0.1.59"
