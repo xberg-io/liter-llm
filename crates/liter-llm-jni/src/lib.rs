@@ -151,6 +151,74 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
 }
 
 #[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeRegisterCustomProvider(
+    mut env: EnvUnowned,
+    _class: JClass,
+    config: JString,
+) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
+    let config_str = match jstring_to_string(env, config) {
+        Ok(s) => s,
+        Err(e) => {
+            throw_jni_error(env, &format!("{e}"));
+            return std::ptr::null_mut();
+        }
+    };
+    let config: core_crate::CustomProviderConfig = match serde_json::from_str(&config_str) {
+        Ok(v) => v,
+        Err(e) => {
+            throw_jni_error(env, &format!("deserialize: {e}"));
+            return std::ptr::null_mut();
+        }
+    };
+    let result = core_crate::register_custom_provider(config);
+    match result {
+        Err(e) => {
+            throw_jni_error(env, &format!("{e}"));
+            std::ptr::null_mut()
+        }
+        Ok(v) => string_to_jstring(env, "null"),
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeUnregisterCustomProvider(
+    mut env: EnvUnowned,
+    _class: JClass,
+    name: JString,
+) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
+    let name = match jstring_to_string(env, name) {
+        Ok(s) => s,
+        Err(e) => {
+            throw_jni_error(env, &format!("{e}"));
+            return std::ptr::null_mut();
+        }
+    };
+    let result = core_crate::unregister_custom_provider(&name);
+    match result {
+        Err(e) => {
+            throw_jni_error(env, &format!("{e}"));
+            std::ptr::null_mut()
+        }
+        Ok(v) => {
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
+            string_to_jstring(env, &s)
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientChat(
     mut env: EnvUnowned,
     _class: JClass,

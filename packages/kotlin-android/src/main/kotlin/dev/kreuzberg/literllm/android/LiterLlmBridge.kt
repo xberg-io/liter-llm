@@ -23,6 +23,12 @@ object LiterLlmBridge {
     @Throws(LiterLlmBridgeException::class)
     external fun nativeCreateClientFromJson(json: String): Long
 
+    @Throws(LiterLlmBridgeException::class)
+    external fun nativeRegisterCustomProvider(config: String)
+
+    @Throws(LiterLlmBridgeException::class)
+    external fun nativeUnregisterCustomProvider(name: String): Boolean
+
     // JNI external funs for client instance methods.
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientChat(handle: Long, requestJson: String): String

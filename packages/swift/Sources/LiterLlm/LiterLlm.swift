@@ -1423,3 +1423,7 @@ public func batchListQueryFromJson(_ json: String) throws -> BatchListQuery {
 public func createResponseRequestFromJson(_ json: String) throws -> CreateResponseRequest {
     return try RustBridge.createResponseRequestFromJson(json)
 }
+
+public func customProviderConfigFromJson(_ json: String) throws -> CustomProviderConfig {
+    return try RustBridge.customProviderConfigFromJson(json)
+}

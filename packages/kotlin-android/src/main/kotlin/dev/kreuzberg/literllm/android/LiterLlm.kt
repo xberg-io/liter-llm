@@ -21,7 +21,13 @@
 
 package dev.kreuzberg.literllm.android
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
 object LiterLlm {
+    private val mapper = jacksonObjectMapper()
+
     /**
      * Create a new LLM client with simple scalar configuration.
      *
@@ -61,4 +67,29 @@ object LiterLlm {
      * contains unknown fields.
      */
     fun createClientFromJson(json: String): DefaultClient = DefaultClient(LiterLlmBridge.nativeCreateClientFromJson(json))
+    /**
+     * Register a custom provider in the global runtime registry.
+     *
+     * The provider will be checked **before** all built-in providers during model
+     * detection. If a provider with the same `name` already exists it is replaced.
+     *
+     * **Errors:**
+     *
+     * Returns an error if the config is invalid (empty name, empty base_url, or
+     * no model prefixes).
+     */
+    fun registerCustomProvider(
+        config: CustomProviderConfig
+    ): Unit = LiterLlmBridge.nativeRegisterCustomProvider(mapper.writeValueAsString(config))
+    /**
+     * Remove a previously registered custom provider by name.
+     *
+     * Returns `true` if a provider with the given name was found and removed,
+     * `false` if no such provider existed.
+     *
+     * **Errors:**
+     *
+     * Returns an error only if the internal lock is poisoned.
+     */
+    fun unregisterCustomProvider(name: String): Boolean = LiterLlmBridge.nativeUnregisterCustomProvider(name)
 }

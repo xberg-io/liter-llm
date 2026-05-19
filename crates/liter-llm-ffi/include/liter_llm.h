@@ -401,6 +401,7 @@ typedef struct LITERLLMToolMessage LITERLLMToolMessage;
  * deserialization.
  */
 typedef struct LITERLLMToolType LITERLLMToolType;
+typedef struct LITERLLMTowerCachedResponse LITERLLMTowerCachedResponse;
 /**
  * Response from a transcription request.
  */
@@ -4492,6 +4493,20 @@ LITERLLMCacheBackend *literllm_cache_config_backend(const LITERLLMCacheConfig *p
 LITERLLMCacheConfig *literllm_cache_config_default(void);
 
 /**
+ * Free a `TowerCachedResponse` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_tower_cached_response_free(LITERLLMCachedResponse *ptr);
+
+/**
+ * Convert this cached response back into the full [`LlmResponse`] enum.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+char *literllm_tower_cached_response_into_llm_response(LITERLLMCachedResponse *_this);
+
+/**
  * Create a `RateLimitConfig` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -5308,5 +5323,28 @@ LITERLLMDefaultClient *literllm_create_client(const char *api_key,
  * freed with the appropriate free function.
  */
 LITERLLMDefaultClient *literllm_create_client_from_json(const char *json);
+
+/**
+ * Register a custom provider in the global runtime registry.
+ *
+ * The provider will be checked **before** all built-in providers during model
+ * detection. If a provider with the same `name` already exists it is replaced.
+ * \note Returns an error if the config is invalid (empty name, empty base_url, or
+ * no model prefixes).
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+int32_t literllm_register_custom_provider(const LITERLLMCustomProviderConfig *config);
+
+/**
+ * Remove a previously registered custom provider by name.
+ *
+ * Returns `true` if a provider with the given name was found and removed,
+ * `false` if no such provider existed.
+ * \note Returns an error only if the internal lock is poisoned.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+int32_t literllm_unregister_custom_provider(const char *name);
 
 #endif  /* LITERLLM_H */

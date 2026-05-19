@@ -1226,6 +1226,45 @@ pub fn create_client_from_json(json: []const u8) LiterLlmError!DefaultClient {
     return DefaultClient{ ._handle = _result.? };
 }
 
+/// Register a custom provider in the global runtime registry.
+///
+/// The provider will be checked **before** all built-in providers during model
+/// detection. If a provider with the same `name` already exists it is replaced.
+///
+/// **Errors:**
+///
+/// Returns an error if the config is invalid (empty name, empty base_url, or
+/// no model prefixes).
+pub fn register_custom_provider(config: []const u8) LiterLlmError!void {
+    const config_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{config}, 0);
+    defer std.heap.c_allocator.free(config_z);
+    const config_handle = c.literllm_custom_provider_config_from_json(config_z);
+    _ = c.literllm_register_custom_provider(config_handle);
+    if (c.literllm_last_error_code() != 0) {
+        return _first_error(LiterLlmError);
+    }
+    if (config_handle) |h| c.literllm_custom_provider_config_free(h);
+    return;
+}
+
+/// Remove a previously registered custom provider by name.
+///
+/// Returns `true` if a provider with the given name was found and removed,
+/// `false` if no such provider existed.
+///
+/// **Errors:**
+///
+/// Returns an error only if the internal lock is poisoned.
+pub fn unregister_custom_provider(name: []const u8) LiterLlmError!bool {
+    const name_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{name}, 0);
+    defer std.heap.c_allocator.free(name_z);
+    const _result = c.literllm_unregister_custom_provider(name_z);
+    if (c.literllm_last_error_code() != 0) {
+        return _first_error(LiterLlmError);
+    }
+    return _result != 0;
+}
+
 /// Default client implementation backed by `reqwest`.
 ///
 /// Sends requests to 140+ LLM providers with automatic provider detection
@@ -1676,5 +1715,25 @@ pub const DefaultClient = struct {
     /// Release the underlying FFI handle. Safe to call once per instance.
     pub fn free(self: *DefaultClient) void {
         c.literllm_default_client_free(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)));
+    }
+};
+
+pub const TowerCachedResponse = struct {
+    _handle: *anyopaque,
+
+    /// Convert this cached response back into the full `LlmResponse` enum.
+    pub fn into_llm_response(self: *TowerCachedResponse) error{OutOfMemory}![]u8 {
+        const _result = c.literllm_tower_cached_response_into_llm_response(@as(*c.LITERLLMTowerCachedResponse, @ptrCast(self._handle)));
+        return blk: {
+            const slice = std.mem.span(_result);
+            const owned = try std.heap.c_allocator.dupe(u8, slice);
+            c.literllm_free_string(_result);
+            break :blk owned;
+        };
+    }
+
+    /// Release the underlying FFI handle. Safe to call once per instance.
+    pub fn free(self: *TowerCachedResponse) void {
+        c.literllm_tower_cached_response_free(@as(*c.LITERLLMTowerCachedResponse, @ptrCast(self._handle)));
     }
 };

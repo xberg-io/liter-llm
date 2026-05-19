@@ -1004,6 +1004,10 @@ mod ffi {
     }
 
     extern "Rust" {
+        type TowerCachedResponse;
+    }
+
+    extern "Rust" {
         type RateLimitConfig;
         #[swift_bridge(init)]
         fn new(rpm: Option<u32>, tpm: Option<u64>, window: u64) -> RateLimitConfig;
@@ -1128,6 +1132,10 @@ mod ffi {
         ) -> Result<DefaultClient, String>;
         #[swift_bridge(swift_name = "createClientFromJson")]
         fn create_client_from_json(json: String) -> Result<DefaultClient, String>;
+        #[swift_bridge(swift_name = "registerCustomProvider")]
+        fn register_custom_provider(config: CustomProviderConfig) -> Result<(), String>;
+        #[swift_bridge(swift_name = "unregisterCustomProvider")]
+        fn unregister_custom_provider(name: String) -> Result<bool, String>;
     }
 
     extern "Rust" {
@@ -1171,6 +1179,8 @@ mod ffi {
         fn batch_list_query_from_json(json: String) -> Result<BatchListQuery, String>;
         #[swift_bridge(swift_name = "createResponseRequestFromJson")]
         fn create_response_request_from_json(json: String) -> Result<CreateResponseRequest, String>;
+        #[swift_bridge(swift_name = "customProviderConfigFromJson")]
+        fn custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String>;
     }
     extern "Rust" {
 
@@ -1211,8 +1221,6 @@ mod ffi {
         fn ocr_page_from_json(json: String) -> Result<OcrPage, String>;
         #[swift_bridge(swift_name = "ocrImageFromJson")]
         fn ocr_image_from_json(json: String) -> Result<OcrImage, String>;
-        #[swift_bridge(swift_name = "customProviderConfigFromJson")]
-        fn custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String>;
     }
 }
 
@@ -4276,6 +4284,8 @@ impl CacheConfig {
     }
 }
 
+pub struct TowerCachedResponse(pub liter_llm::tower::CachedResponse);
+
 pub struct RateLimitConfig(pub liter_llm::tower::RateLimitConfig);
 impl RateLimitConfig {
     pub fn new(rpm: Option<u32>, tpm: Option<u64>, window: u64) -> RateLimitConfig {
@@ -4838,6 +4848,14 @@ pub fn create_client_from_json(json: String) -> Result<DefaultClient, String> {
         .map(DefaultClient)
 }
 
+pub fn register_custom_provider(config: CustomProviderConfig) -> Result<(), String> {
+    liter_llm::provider::custom::register_custom_provider(config.0).map_err(|e| e.to_string())
+}
+
+pub fn unregister_custom_provider(name: String) -> Result<bool, String> {
+    liter_llm::provider::custom::unregister_custom_provider(&name).map_err(|e| e.to_string())
+}
+
 /// Opaque handle owning a tokio runtime and a boxed `ChatCompletionChunk` stream.
 ///
 /// Created by `default_client_chat_stream_start`, advanced via `next()`. Drop runs when the
@@ -4996,6 +5014,12 @@ pub fn create_response_request_from_json(json: String) -> Result<CreateResponseR
         .map_err(|e| e.to_string())
 }
 
+pub fn custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String> {
+    serde_json::from_str::<liter_llm::provider::custom::CustomProviderConfig>(&json)
+        .map(CustomProviderConfig)
+        .map_err(|e| e.to_string())
+}
+
 pub fn chat_completion_chunk_from_json(json: String) -> Result<ChatCompletionChunk, String> {
     serde_json::from_str::<liter_llm::types::ChatCompletionChunk>(&json)
         .map(ChatCompletionChunk)
@@ -5095,11 +5119,5 @@ pub fn ocr_page_from_json(json: String) -> Result<OcrPage, String> {
 pub fn ocr_image_from_json(json: String) -> Result<OcrImage, String> {
     serde_json::from_str::<liter_llm::types::OcrImage>(&json)
         .map(OcrImage)
-        .map_err(|e| e.to_string())
-}
-
-pub fn custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String> {
-    serde_json::from_str::<liter_llm::provider::custom::CustomProviderConfig>(&json)
-        .map(CustomProviderConfig)
         .map_err(|e| e.to_string())
 }
