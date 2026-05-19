@@ -1011,38 +1011,12 @@ mod ffi {
     }
 
     extern "Rust" {
-        type TowerCachedResponse;
-    }
-
-    extern "Rust" {
         type RateLimitConfig;
         #[swift_bridge(init)]
         fn new(rpm: Option<u32>, tpm: Option<u64>, window: u64) -> RateLimitConfig;
         fn rpm(&self) -> Option<u32>;
         fn tpm(&self) -> Option<u64>;
         fn window(&self) -> u64;
-    }
-
-    extern "Rust" {
-        type TowerLlmRequest;
-    }
-
-    extern "Rust" {
-        #[swift_bridge(swift_name = "towerLlmRequestOperationName")]
-        fn tower_llm_request_operation_name(client: &TowerLlmRequest) -> String;
-        #[swift_bridge(swift_name = "towerLlmRequestRequestType")]
-        fn tower_llm_request_request_type(client: &TowerLlmRequest) -> String;
-        #[swift_bridge(swift_name = "towerLlmRequestModel")]
-        fn tower_llm_request_model(client: &TowerLlmRequest) -> String;
-    }
-
-    extern "Rust" {
-        type TowerLlmResponse;
-    }
-
-    extern "Rust" {
-        #[swift_bridge(swift_name = "towerLlmResponseUsage")]
-        fn tower_llm_response_usage(client: &TowerLlmResponse) -> Option<Usage>;
     }
 
     extern "Rust" {
@@ -4347,8 +4321,6 @@ impl CacheConfig {
     }
 }
 
-pub struct TowerCachedResponse(pub liter_llm::tower::CachedResponse);
-
 pub struct RateLimitConfig(pub liter_llm::RateLimitConfig);
 impl RateLimitConfig {
     pub fn new(rpm: Option<u32>, tpm: Option<u64>, window: u64) -> RateLimitConfig {
@@ -4375,24 +4347,6 @@ impl RateLimitConfig {
     pub fn window(&self) -> u64 {
         self.0.window.as_millis() as u64
     }
-}
-
-pub struct TowerLlmRequest(pub liter_llm::tower::LlmRequest);
-
-pub fn tower_llm_request_operation_name(client: &TowerLlmRequest) -> String {
-    client.0.operation_name().to_string()
-}
-pub fn tower_llm_request_request_type(client: &TowerLlmRequest) -> String {
-    client.0.request_type().to_string()
-}
-pub fn tower_llm_request_model(client: &TowerLlmRequest) -> String {
-    serde_json::to_string(&(client.0.model())).expect("serializable return")
-}
-
-pub struct TowerLlmResponse(pub liter_llm::tower::LlmResponse);
-
-pub fn tower_llm_response_usage(client: &TowerLlmResponse) -> Option<Usage> {
-    (client.0.usage()).map(Usage)
 }
 
 pub enum Message {

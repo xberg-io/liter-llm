@@ -200,10 +200,16 @@ types = [
   "PreparedRequest",
   "RawExchange",
   "RawStreamExchange",
-  # Tower-internal Service request/response enums (externally tagged, contain BoxStream/Bytes)
+  # Tower-internal Service request/response enums (externally tagged, contain
+  # BoxStream/Bytes). Listed under both bare and Tower-prefixed names — alef
+  # prefixes types extracted from the `tower::` module path with "Tower" to
+  # disambiguate, so both spellings must be excluded.
   "LlmRequest",
   "LlmResponse",
   "CachedResponse",
+  "TowerLlmRequest",
+  "TowerLlmResponse",
+  "TowerCachedResponse",
   # Tower middleware Layer/Service/State wrappers (Rust-only middleware composition).
   # Public config DTOs (BudgetConfig, CacheConfig, RateLimitConfig, CacheBackend,
   # Enforcement) are intentionally NOT excluded — they are exposed across all bindings.

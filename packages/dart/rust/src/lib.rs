@@ -1041,23 +1041,6 @@ pub struct CacheConfig {
     pub backend: CacheBackend,
 }
 
-#[frb(opaque)]
-pub struct TowerCachedResponse {
-    pub(crate) inner: liter_llm::tower::CachedResponse,
-}
-
-impl From<liter_llm::tower::CachedResponse> for TowerCachedResponse {
-    fn from(inner: liter_llm::tower::CachedResponse) -> Self {
-        Self { inner }
-    }
-}
-
-impl From<TowerCachedResponse> for liter_llm::tower::CachedResponse {
-    fn from(value: TowerCachedResponse) -> Self {
-        value.inner
-    }
-}
-
 /// Configuration for per-model rate limits.
 #[frb(mirror(RateLimitConfig))]
 pub struct RateLimitConfig {
@@ -1067,40 +1050,6 @@ pub struct RateLimitConfig {
     pub tpm: Option<i64>,
     /// Fixed window duration (defaults to 60 s).
     pub window: i64,
-}
-
-#[frb(opaque)]
-pub struct TowerLlmRequest {
-    pub(crate) inner: liter_llm::tower::LlmRequest,
-}
-
-impl From<liter_llm::tower::LlmRequest> for TowerLlmRequest {
-    fn from(inner: liter_llm::tower::LlmRequest) -> Self {
-        Self { inner }
-    }
-}
-
-impl From<TowerLlmRequest> for liter_llm::tower::LlmRequest {
-    fn from(value: TowerLlmRequest) -> Self {
-        value.inner
-    }
-}
-
-#[frb(opaque)]
-pub struct TowerLlmResponse {
-    pub(crate) inner: liter_llm::tower::LlmResponse,
-}
-
-impl From<liter_llm::tower::LlmResponse> for TowerLlmResponse {
-    fn from(inner: liter_llm::tower::LlmResponse) -> Self {
-        Self { inner }
-    }
-}
-
-impl From<TowerLlmResponse> for liter_llm::tower::LlmResponse {
-    fn from(value: TowerLlmResponse) -> Self {
-        value.inner
-    }
 }
 
 #[allow(unused_imports)]
@@ -1315,32 +1264,6 @@ impl DefaultClient {
             .await
             .map(|v| ResponseObject::from(v))
             .map_err(|e| e.to_string())
-    }
-}
-
-impl TowerCachedResponse {
-    // Method `into_llm_response` has a sanitized return type that cannot be bridged through FRB — skipped.
-}
-
-impl TowerLlmRequest {
-    #[frb]
-    pub fn operation_name(&self) -> String {
-        (|v: &str| v.to_string())(self.inner.operation_name())
-    }
-    #[frb]
-    pub fn request_type(&self) -> String {
-        (|v: &str| v.to_string())(self.inner.request_type())
-    }
-    #[frb]
-    pub fn model(&self) -> Option<String> {
-        (|v: Option<&str>| v.map(|s| s.to_string()))(self.inner.model())
-    }
-}
-
-impl TowerLlmResponse {
-    #[frb]
-    pub fn usage(&self) -> Option<Usage> {
-        (|v: Option<_>| v.map(Usage::from))(self.inner.usage())
     }
 }
 

@@ -119,22 +119,6 @@ object LiterLlmBridge {
 
     external fun nativeFreeDefaultClient(handle: Long)
 
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeTowerLlmRequestOperationName(handle: Long): String
-
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeTowerLlmRequestRequestType(handle: Long): String
-
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeTowerLlmRequestModel(handle: Long): String?
-
-    external fun nativeFreeTowerLlmRequest(handle: Long)
-
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeTowerLlmResponseUsage(handle: Long): String?
-
-    external fun nativeFreeTowerLlmResponse(handle: Long)
-
     // JNI streaming external funs — implementations are Rust JNI shims.
 
     // Streaming JNI externs for DefaultClient.chatStream

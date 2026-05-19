@@ -405,9 +405,6 @@ typedef struct LITERLLMToolMessage LITERLLMToolMessage;
  * deserialization.
  */
 typedef struct LITERLLMToolType LITERLLMToolType;
-typedef struct LITERLLMTowerCachedResponse LITERLLMTowerCachedResponse;
-typedef struct LITERLLMTowerLlmRequest LITERLLMTowerLlmRequest;
-typedef struct LITERLLMTowerLlmResponse LITERLLMTowerLlmResponse;
 /**
  * Response from a transcription request.
  */
@@ -4541,20 +4538,6 @@ LITERLLMCacheBackend *literllm_cache_config_backend(const LITERLLMCacheConfig *p
 LITERLLMCacheConfig *literllm_cache_config_default(void);
 
 /**
- * Free a `TowerCachedResponse` handle.
- * # Safety
- * Pointer must have been returned by this library, or be null.
- */
-void literllm_tower_cached_response_free(LITERLLMCachedResponse *ptr);
-
-/**
- * Convert this cached response back into the full [`LlmResponse`] enum.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-char *literllm_tower_cached_response_into_llm_response(LITERLLMCachedResponse *_this);
-
-/**
  * Create a `RateLimitConfig` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -4603,55 +4586,6 @@ uint64_t literllm_rate_limit_config_window(const LITERLLMRateLimitConfig *ptr);
  * freed with the appropriate free function.
  */
 LITERLLMRateLimitConfig *literllm_rate_limit_config_default(void);
-
-/**
- * Free a `TowerLlmRequest` handle.
- * # Safety
- * Pointer must have been returned by this library, or be null.
- */
-void literllm_tower_llm_request_free(LITERLLMLlmRequest *ptr);
-
-/**
- * OpenTelemetry GenAI `gen_ai.operation.name` value for this request.
- *
- * Maps each variant to one of the canonical GenAI semantic convention
- * operation names: `"chat"`, `"embeddings"`, or `"list_models"`.
- * Both streaming and non-streaming chat map to `"chat"`.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-char *literllm_tower_llm_request_operation_name(const LITERLLMLlmRequest *this_);
-
-/**
- * Human-readable name of the request type; used as a span / metric label.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-char *literllm_tower_llm_request_request_type(const LITERLLMLlmRequest *this_);
-
-/**
- * Return the model name embedded in the request, if any.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-char *literllm_tower_llm_request_model(const LITERLLMLlmRequest *this_);
-
-/**
- * Free a `TowerLlmResponse` handle.
- * # Safety
- * Pointer must have been returned by this library, or be null.
- */
-void literllm_tower_llm_response_free(LITERLLMLlmResponse *ptr);
-
-/**
- * Return the usage data from the response, if present.
- *
- * Streaming, model-list, and non-chat responses do not carry aggregated
- * usage data and always return `None`.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-LITERLLMUsage *literllm_tower_llm_response_usage(const LITERLLMLlmResponse *this_);
 
 /**
  * Convert an integer to a `Message` variant. Returns -1 on invalid input.
