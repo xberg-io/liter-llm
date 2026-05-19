@@ -1430,3 +1430,162 @@ public func createResponseRequestFromJson(_ json: String) throws -> CreateRespon
 public func customProviderConfigFromJson(_ json: String) throws -> CustomProviderConfig {
     return try RustBridge.customProviderConfigFromJson(json)
 }
+
+// MARK: - Free-function Forwarders
+// Re-export every public free function on the source Rust crate as a
+// top-level `public func` on the host module so consumers do not need to
+// `import RustBridge` directly. Forwarders take Swift-native parameter
+// types and convert to the swift-bridge runtime types internally.
+
+/// Create a new LLM client with simple scalar configuration.
+///
+/// This is the primary binding entry-point. All parameters except `api_key`
+/// are optional — omitting them uses the same defaults as
+/// [`ClientConfigBuilder`].
+///
+/// # Errors
+///
+/// Returns [`LiterLlmError`] if the underlying HTTP client cannot be
+/// constructed, or if the resolved provider configuration is invalid.
+public func createClient(apiKey: String, baseUrl: String?, timeoutSecs: UInt64?, maxRetries: UInt32?, modelHint: String?) throws -> DefaultClient {
+    return try RustBridge.createClient(apiKey, baseUrl, timeoutSecs, maxRetries, modelHint)
+}
+
+/// Create a new LLM client from a JSON string.
+///
+/// The JSON object accepts the same fields as `liter-llm.toml` (snake_case).
+///
+/// # Errors
+///
+/// Returns [`LiterLlmError::BadRequest`] if `json` is not valid JSON or
+/// contains unknown fields.
+public func createClientFromJson(json: String) throws -> DefaultClient {
+    return try RustBridge.createClientFromJson(json)
+}
+
+/// Register a custom provider in the global runtime registry.
+///
+/// The provider will be checked **before** all built-in providers during model
+/// detection. If a provider with the same `name` already exists it is replaced.
+///
+/// # Errors
+///
+/// Returns an error if the config is invalid (empty name, empty base_url, or
+/// no model prefixes).
+public func registerCustomProvider(config: CustomProviderConfig) throws {
+    return try RustBridge.registerCustomProvider(config)
+}
+
+/// Remove a previously registered custom provider by name.
+///
+/// Returns `true` if a provider with the given name was found and removed,
+/// `false` if no such provider existed.
+///
+/// # Errors
+///
+/// Returns an error only if the internal lock is poisoned.
+public func unregisterCustomProvider(name: String) throws -> Bool {
+    return try RustBridge.unregisterCustomProvider(name)
+}
+
+/// Return all provider configs from the registry.
+///
+/// Useful for tooling, documentation generation, or runtime enumeration.
+public func allProviders() throws -> [ProviderConfig] {
+    return try RustBridge.allProviders()
+}
+
+/// Return the set of complex provider names.
+///
+/// Complex providers require custom auth/routing logic beyond simple bearer
+/// tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
+///
+/// The returned reference points into the static registry — no allocation.
+public func complexProviderNames() throws -> [String] {
+    return try RustBridge.complexProviderNames().map { $0.toString() }
+}
+
+/// Calculate the estimated cost of a completion given a model name and token
+/// counts.
+///
+/// Returns `None` if the model is not present in the embedded pricing registry.
+/// Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
+///
+/// When an exact model name match is not found, progressively shorter prefixes
+/// are tried by stripping from the last `-` or `.` separator.  For example,
+/// `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
+///
+/// # Example
+///
+/// ```rust
+/// use liter_llm::cost;
+///
+/// let usd = cost::completion_cost("gpt-4o", 1_000, 500).unwrap();
+/// // 1000 * 0.0000025 + 500 * 0.00001 = 0.0025 + 0.005 = 0.0075
+/// assert!((usd - 0.0075).abs() < 1e-9);
+/// ```
+public func completionCost(model: String, promptTokens: UInt64, completionTokens: UInt64) -> Double? {
+    return RustBridge.completionCost(model, promptTokens, completionTokens)
+}
+
+/// Calculate the estimated cost of a completion, accounting for cached
+/// (cache-hit) prompt tokens billed at the provider's discounted rate.
+///
+/// `cached_tokens` is the count of prompt tokens served from the provider's
+/// prompt cache. It must be `<= prompt_tokens` (cached tokens are a subset of
+/// the prompt). The non-cached portion is billed at `input_cost_per_token`
+/// and the cached portion at `cache_read_input_token_cost` when the model
+/// has cache pricing; otherwise the entire prompt is billed at the regular
+/// input rate.
+///
+/// Returns `None` if the model is not present in the embedded pricing
+/// registry, mirroring [`completion_cost`].
+public func completionCostWithCache(model: String, promptTokens: UInt64, cachedTokens: UInt64, completionTokens: UInt64) -> Double? {
+    return RustBridge.completionCostWithCache(model, promptTokens, cachedTokens, completionTokens)
+}
+
+/// Count tokens in a text string using the tokenizer for the given model.
+///
+/// The tokenizer is resolved from the model name prefix (e.g. `"gpt-4o"` maps
+/// to the `Xenova/gpt-4o` HuggingFace tokenizer). Tokenizers are cached after
+/// first load.
+///
+/// # Errors
+///
+/// Returns [`LiterLlmError::BadRequest`] if the tokenizer cannot be loaded
+/// (e.g. network failure on first use) or if tokenization itself fails.
+public func countTokens(model: String, text: String) throws -> UInt {
+    return try RustBridge.countTokens(model, text)
+}
+
+/// Count tokens for a full [`ChatCompletionRequest`].
+///
+/// Sums tokens across all message text contents plus a per-message overhead
+/// of ~4 tokens (for role, separators, and formatting metadata). Tool
+/// definitions and multimodal content parts (images, audio, documents) are
+/// not counted — only textual content contributes to the token total.
+///
+/// # Errors
+///
+/// Returns [`LiterLlmError::BadRequest`] if the tokenizer cannot be loaded or
+/// if tokenization fails for any message.
+public func countRequestTokens(model: String, req: ChatCompletionRequest) throws -> UInt {
+    return try RustBridge.countRequestTokens(model, req)
+}
+
+/// Install the `ring` crypto provider as the rustls process default, idempotently.
+///
+/// rustls 0.23+ removed the implicit default provider. This function installs
+/// `ring` once per process. Subsequent calls are no-ops. Calling it from a
+/// downstream Rust app that has already installed `aws-lc-rs` is safe — the
+/// `Err` from `install_default()` is silently ignored.
+///
+/// Called automatically by every internal `reqwest::Client` constructor
+/// (auth providers, default HTTP client). Bindings and downstream consumers
+/// reach those constructors transitively, so no manual init is required.
+///
+/// WASM builds are exempt — the WASM target uses the browser/Node.js fetch
+/// API instead of rustls, so no crypto provider is needed.
+public func ensureCryptoProvider() {
+    return RustBridge.ensureCryptoProvider()
+}
