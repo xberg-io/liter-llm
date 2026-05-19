@@ -8,7 +8,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Create a new LLM client with simple scalar configuration.
 ///
@@ -2139,6 +2139,103 @@ class JsonSchemaFormat {
           description == other.description &&
           schema == other.schema &&
           strict == other.strict;
+}
+
+@freezed
+sealed class LiterLlmError with _$LiterLlmError {
+  const LiterLlmError._();
+
+  /// `status` preserves the exact HTTP status code received (401 or 403).
+  const factory LiterLlmError.authentication({
+    required String message,
+    required PlatformInt64 status,
+  }) = LiterLlmError_Authentication;
+  const factory LiterLlmError.rateLimited({
+    required String message,
+    required PlatformInt64 retryAfter,
+  }) = LiterLlmError_RateLimited;
+
+  /// `status` preserves the exact HTTP status code received (400, 405, 413, 422, …).
+  const factory LiterLlmError.badRequest({
+    required String message,
+    required PlatformInt64 status,
+  }) = LiterLlmError_BadRequest;
+  const factory LiterLlmError.contextWindowExceeded({required String message}) =
+      LiterLlmError_ContextWindowExceeded;
+  const factory LiterLlmError.contentPolicy({required String message}) =
+      LiterLlmError_ContentPolicy;
+  const factory LiterLlmError.notFound({required String message}) =
+      LiterLlmError_NotFound;
+
+  /// `status` preserves the exact HTTP status code received (500, or other 5xx not covered
+  /// by `ServiceUnavailable`).
+  const factory LiterLlmError.serverError({
+    required String message,
+    required PlatformInt64 status,
+  }) = LiterLlmError_ServerError;
+
+  /// `status` preserves the exact HTTP status code received (502, 503, or 504).
+  const factory LiterLlmError.serviceUnavailable({
+    required String message,
+    required PlatformInt64 status,
+  }) = LiterLlmError_ServiceUnavailable;
+  const factory LiterLlmError.timeout() = LiterLlmError_Timeout;
+
+  /// A catch-all for errors that occur during streaming response processing.
+  ///
+  /// This variant covers multiple sub-conditions including UTF-8 decoding
+  /// failures, CRC/checksum mismatches (AWS EventStream), JSON parse errors
+  /// in individual SSE chunks, and buffer overflow conditions.  The `message`
+  /// field contains a human-readable description of the specific failure.
+  const factory LiterLlmError.streaming({required String message}) =
+      LiterLlmError_Streaming;
+  const factory LiterLlmError.endpointNotSupported({
+    required String endpoint,
+    required String provider,
+  }) = LiterLlmError_EndpointNotSupported;
+  const factory LiterLlmError.invalidHeader({
+    required String name,
+    required String reason,
+  }) = LiterLlmError_InvalidHeader;
+  const factory LiterLlmError.serialization({required String field0}) =
+      LiterLlmError_Serialization;
+  const factory LiterLlmError.budgetExceeded({
+    required String message,
+    required String model,
+  }) = LiterLlmError_BudgetExceeded;
+  const factory LiterLlmError.hookRejected({required String message}) =
+      LiterLlmError_HookRejected;
+
+  /// An internal logic error (e.g. unexpected Tower response variant).
+  ///
+  /// This should never surface in normal operation — if it does, it
+  /// indicates a bug in the library.
+  const factory LiterLlmError.internalError({required String message}) =
+      LiterLlmError_InternalError;
+
+  /// Return the OpenTelemetry `error.type` string for this error variant.
+  ///
+  /// Used by the tracing middleware to record the `error.type` span attribute
+  /// on failed requests per the GenAI semantic conventions.
+  Future<String> errorType() =>
+      RustLib.instance.api.crateLiterLlmErrorErrorType(that: this);
+
+  /// Returns `true` for errors that are worth retrying on a different service
+  /// or deployment (transient failures).
+  ///
+  /// Used by `FallbackService` and
+  /// `Router` to decide whether to route to an
+  /// alternative endpoint.
+  Future<bool> isTransient() =>
+      RustLib.instance.api.crateLiterLlmErrorIsTransient(that: this);
+
+  /// Returns the canonical HTTP status code associated with this error.
+  ///
+  /// Maps error variants to their originating HTTP status code as set by
+  /// [`LiterLlmError::from_status`].  Used by e2e assertions that check
+  /// `error.status_code` against the expected HTTP status.
+  Future<PlatformInt64> statusCode() =>
+      RustLib.instance.api.crateLiterLlmErrorStatusCode(that: this);
 }
 
 @freezed

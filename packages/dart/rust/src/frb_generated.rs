@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -2002307527;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1927561788;
 
 // Section: executor
 
@@ -3540,6 +3540,90 @@ fn wire__crate__ensure_crypto_provider_impl(
         },
     )
 }
+fn wire__crate__liter_llm_error_error_type_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "liter_llm_error_error_type",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
+            };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::LiterLlmError>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Result::<_, ()>::Ok(crate::LiterLlmError::error_type(&api_that))?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__liter_llm_error_is_transient_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "liter_llm_error_is_transient",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
+            };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::LiterLlmError>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Result::<_, ()>::Ok(crate::LiterLlmError::is_transient(&api_that))?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__liter_llm_error_status_code_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "liter_llm_error_status_code",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
+            };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::LiterLlmError>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Result::<_, ()>::Ok(crate::LiterLlmError::status_code(&api_that))?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__register_custom_provider_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -3915,6 +3999,62 @@ const _: fn() = || {
         let _: Option<String> = JsonSchemaFormat.description;
         let _: String = JsonSchemaFormat.schema;
         let _: Option<bool> = JsonSchemaFormat.strict;
+    }
+    match None::<crate::LiterLlmError>.unwrap() {
+        crate::LiterLlmError::Authentication { message, status } => {
+            let _: String = message;
+            let _: i64 = status;
+        }
+        crate::LiterLlmError::RateLimited { message, retry_after } => {
+            let _: String = message;
+            let _: i64 = retry_after;
+        }
+        crate::LiterLlmError::BadRequest { message, status } => {
+            let _: String = message;
+            let _: i64 = status;
+        }
+        crate::LiterLlmError::ContextWindowExceeded { message } => {
+            let _: String = message;
+        }
+        crate::LiterLlmError::ContentPolicy { message } => {
+            let _: String = message;
+        }
+        crate::LiterLlmError::NotFound { message } => {
+            let _: String = message;
+        }
+        crate::LiterLlmError::ServerError { message, status } => {
+            let _: String = message;
+            let _: i64 = status;
+        }
+        crate::LiterLlmError::ServiceUnavailable { message, status } => {
+            let _: String = message;
+            let _: i64 = status;
+        }
+        crate::LiterLlmError::Timeout => {}
+        crate::LiterLlmError::Streaming { message } => {
+            let _: String = message;
+        }
+        crate::LiterLlmError::EndpointNotSupported { endpoint, provider } => {
+            let _: String = endpoint;
+            let _: String = provider;
+        }
+        crate::LiterLlmError::InvalidHeader { name, reason } => {
+            let _: String = name;
+            let _: String = reason;
+        }
+        crate::LiterLlmError::Serialization { field0 } => {
+            let _: String = field0;
+        }
+        crate::LiterLlmError::BudgetExceeded { message, model } => {
+            let _: String = message;
+            let _: String = model;
+        }
+        crate::LiterLlmError::HookRejected { message } => {
+            let _: String = message;
+        }
+        crate::LiterLlmError::InternalError { message } => {
+            let _: String = message;
+        }
     }
     match None::<crate::Message>.unwrap() {
         crate::Message::System { field0 } => {
@@ -5514,6 +5654,113 @@ impl SseDecode for Vec<crate::TranscriptionSegment> {
     }
 }
 
+impl SseDecode for crate::LiterLlmError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                let mut var_status = <i64>::sse_decode(deserializer);
+                return crate::LiterLlmError::Authentication {
+                    message: var_message,
+                    status: var_status,
+                };
+            }
+            1 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                let mut var_retryAfter = <i64>::sse_decode(deserializer);
+                return crate::LiterLlmError::RateLimited {
+                    message: var_message,
+                    retry_after: var_retryAfter,
+                };
+            }
+            2 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                let mut var_status = <i64>::sse_decode(deserializer);
+                return crate::LiterLlmError::BadRequest {
+                    message: var_message,
+                    status: var_status,
+                };
+            }
+            3 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                return crate::LiterLlmError::ContextWindowExceeded { message: var_message };
+            }
+            4 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                return crate::LiterLlmError::ContentPolicy { message: var_message };
+            }
+            5 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                return crate::LiterLlmError::NotFound { message: var_message };
+            }
+            6 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                let mut var_status = <i64>::sse_decode(deserializer);
+                return crate::LiterLlmError::ServerError {
+                    message: var_message,
+                    status: var_status,
+                };
+            }
+            7 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                let mut var_status = <i64>::sse_decode(deserializer);
+                return crate::LiterLlmError::ServiceUnavailable {
+                    message: var_message,
+                    status: var_status,
+                };
+            }
+            8 => {
+                return crate::LiterLlmError::Timeout;
+            }
+            9 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                return crate::LiterLlmError::Streaming { message: var_message };
+            }
+            10 => {
+                let mut var_endpoint = <String>::sse_decode(deserializer);
+                let mut var_provider = <String>::sse_decode(deserializer);
+                return crate::LiterLlmError::EndpointNotSupported {
+                    endpoint: var_endpoint,
+                    provider: var_provider,
+                };
+            }
+            11 => {
+                let mut var_name = <String>::sse_decode(deserializer);
+                let mut var_reason = <String>::sse_decode(deserializer);
+                return crate::LiterLlmError::InvalidHeader {
+                    name: var_name,
+                    reason: var_reason,
+                };
+            }
+            12 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::LiterLlmError::Serialization { field0: var_field0 };
+            }
+            13 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                let mut var_model = <String>::sse_decode(deserializer);
+                return crate::LiterLlmError::BudgetExceeded {
+                    message: var_message,
+                    model: var_model,
+                };
+            }
+            14 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                return crate::LiterLlmError::HookRejected { message: var_message };
+            }
+            15 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                return crate::LiterLlmError::InternalError { message: var_message };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseDecode for crate::Message {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -6862,8 +7109,11 @@ fn pde_ffi_dispatcher_primary_impl(
         107 => wire__crate__create_usage_from_json_impl(port, ptr, rust_vec_len, data_len),
         108 => wire__crate__create_user_message_from_json_impl(port, ptr, rust_vec_len, data_len),
         109 => wire__crate__ensure_crypto_provider_impl(port, ptr, rust_vec_len, data_len),
-        110 => wire__crate__register_custom_provider_impl(port, ptr, rust_vec_len, data_len),
-        111 => wire__crate__unregister_custom_provider_impl(port, ptr, rust_vec_len, data_len),
+        110 => wire__crate__liter_llm_error_error_type_impl(port, ptr, rust_vec_len, data_len),
+        111 => wire__crate__liter_llm_error_is_transient_impl(port, ptr, rust_vec_len, data_len),
+        112 => wire__crate__liter_llm_error_status_code_impl(port, ptr, rust_vec_len, data_len),
+        113 => wire__crate__register_custom_provider_impl(port, ptr, rust_vec_len, data_len),
+        114 => wire__crate__unregister_custom_provider_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -7800,6 +8050,92 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::JsonSchemaFormat> {
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<crate::JsonSchemaFormat> {}
 impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::JsonSchemaFormat>> for crate::JsonSchemaFormat {
     fn into_into_dart(self) -> FrbWrapper<crate::JsonSchemaFormat> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::LiterLlmError> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self.0 {
+            crate::LiterLlmError::Authentication { message, status } => [
+                0.into_dart(),
+                message.into_into_dart().into_dart(),
+                status.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::LiterLlmError::RateLimited { message, retry_after } => [
+                1.into_dart(),
+                message.into_into_dart().into_dart(),
+                retry_after.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::LiterLlmError::BadRequest { message, status } => [
+                2.into_dart(),
+                message.into_into_dart().into_dart(),
+                status.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::LiterLlmError::ContextWindowExceeded { message } => {
+                [3.into_dart(), message.into_into_dart().into_dart()].into_dart()
+            }
+            crate::LiterLlmError::ContentPolicy { message } => {
+                [4.into_dart(), message.into_into_dart().into_dart()].into_dart()
+            }
+            crate::LiterLlmError::NotFound { message } => {
+                [5.into_dart(), message.into_into_dart().into_dart()].into_dart()
+            }
+            crate::LiterLlmError::ServerError { message, status } => [
+                6.into_dart(),
+                message.into_into_dart().into_dart(),
+                status.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::LiterLlmError::ServiceUnavailable { message, status } => [
+                7.into_dart(),
+                message.into_into_dart().into_dart(),
+                status.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::LiterLlmError::Timeout => [8.into_dart()].into_dart(),
+            crate::LiterLlmError::Streaming { message } => {
+                [9.into_dart(), message.into_into_dart().into_dart()].into_dart()
+            }
+            crate::LiterLlmError::EndpointNotSupported { endpoint, provider } => [
+                10.into_dart(),
+                endpoint.into_into_dart().into_dart(),
+                provider.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::LiterLlmError::InvalidHeader { name, reason } => [
+                11.into_dart(),
+                name.into_into_dart().into_dart(),
+                reason.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::LiterLlmError::Serialization { field0 } => {
+                [12.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::LiterLlmError::BudgetExceeded { message, model } => [
+                13.into_dart(),
+                message.into_into_dart().into_dart(),
+                model.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::LiterLlmError::HookRejected { message } => {
+                [14.into_dart(), message.into_into_dart().into_dart()].into_dart()
+            }
+            crate::LiterLlmError::InternalError { message } => {
+                [15.into_dart(), message.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<crate::LiterLlmError> {}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::LiterLlmError>> for crate::LiterLlmError {
+    fn into_into_dart(self) -> FrbWrapper<crate::LiterLlmError> {
         self.into()
     }
 }
@@ -9670,6 +10006,88 @@ impl SseEncode for Vec<crate::TranscriptionSegment> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::TranscriptionSegment>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for crate::LiterLlmError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::LiterLlmError::Authentication { message, status } => {
+                <i32>::sse_encode(0, serializer);
+                <String>::sse_encode(message, serializer);
+                <i64>::sse_encode(status, serializer);
+            }
+            crate::LiterLlmError::RateLimited { message, retry_after } => {
+                <i32>::sse_encode(1, serializer);
+                <String>::sse_encode(message, serializer);
+                <i64>::sse_encode(retry_after, serializer);
+            }
+            crate::LiterLlmError::BadRequest { message, status } => {
+                <i32>::sse_encode(2, serializer);
+                <String>::sse_encode(message, serializer);
+                <i64>::sse_encode(status, serializer);
+            }
+            crate::LiterLlmError::ContextWindowExceeded { message } => {
+                <i32>::sse_encode(3, serializer);
+                <String>::sse_encode(message, serializer);
+            }
+            crate::LiterLlmError::ContentPolicy { message } => {
+                <i32>::sse_encode(4, serializer);
+                <String>::sse_encode(message, serializer);
+            }
+            crate::LiterLlmError::NotFound { message } => {
+                <i32>::sse_encode(5, serializer);
+                <String>::sse_encode(message, serializer);
+            }
+            crate::LiterLlmError::ServerError { message, status } => {
+                <i32>::sse_encode(6, serializer);
+                <String>::sse_encode(message, serializer);
+                <i64>::sse_encode(status, serializer);
+            }
+            crate::LiterLlmError::ServiceUnavailable { message, status } => {
+                <i32>::sse_encode(7, serializer);
+                <String>::sse_encode(message, serializer);
+                <i64>::sse_encode(status, serializer);
+            }
+            crate::LiterLlmError::Timeout => {
+                <i32>::sse_encode(8, serializer);
+            }
+            crate::LiterLlmError::Streaming { message } => {
+                <i32>::sse_encode(9, serializer);
+                <String>::sse_encode(message, serializer);
+            }
+            crate::LiterLlmError::EndpointNotSupported { endpoint, provider } => {
+                <i32>::sse_encode(10, serializer);
+                <String>::sse_encode(endpoint, serializer);
+                <String>::sse_encode(provider, serializer);
+            }
+            crate::LiterLlmError::InvalidHeader { name, reason } => {
+                <i32>::sse_encode(11, serializer);
+                <String>::sse_encode(name, serializer);
+                <String>::sse_encode(reason, serializer);
+            }
+            crate::LiterLlmError::Serialization { field0 } => {
+                <i32>::sse_encode(12, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::LiterLlmError::BudgetExceeded { message, model } => {
+                <i32>::sse_encode(13, serializer);
+                <String>::sse_encode(message, serializer);
+                <String>::sse_encode(model, serializer);
+            }
+            crate::LiterLlmError::HookRejected { message } => {
+                <i32>::sse_encode(14, serializer);
+                <String>::sse_encode(message, serializer);
+            }
+            crate::LiterLlmError::InternalError { message } => {
+                <i32>::sse_encode(15, serializer);
+                <String>::sse_encode(message, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
         }
     }
 }

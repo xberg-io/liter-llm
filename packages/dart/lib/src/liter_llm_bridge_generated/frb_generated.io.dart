@@ -178,6 +178,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   JsonSchemaFormat dco_decode_box_autoadd_json_schema_format(dynamic raw);
 
   @protected
+  LiterLlmError dco_decode_box_autoadd_liter_llm_error(dynamic raw);
+
+  @protected
   ModerationRequest dco_decode_box_autoadd_moderation_request(dynamic raw);
 
   @protected
@@ -447,6 +450,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<TranscriptionSegment> dco_decode_list_transcription_segment(dynamic raw);
+
+  @protected
+  LiterLlmError dco_decode_liter_llm_error(dynamic raw);
 
   @protected
   Message dco_decode_message(dynamic raw);
@@ -930,6 +936,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  LiterLlmError sse_decode_box_autoadd_liter_llm_error(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   ModerationRequest sse_decode_box_autoadd_moderation_request(
     SseDeserializer deserializer,
   );
@@ -1275,6 +1286,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<TranscriptionSegment> sse_decode_list_transcription_segment(
     SseDeserializer deserializer,
   );
+
+  @protected
+  LiterLlmError sse_decode_liter_llm_error(SseDeserializer deserializer);
 
   @protected
   Message sse_decode_message(SseDeserializer deserializer);
@@ -1871,6 +1885,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_liter_llm_error(
+    LiterLlmError self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_moderation_request(
     ModerationRequest self,
     SseSerializer serializer,
@@ -2328,6 +2348,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     List<TranscriptionSegment> self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_liter_llm_error(LiterLlmError self, SseSerializer serializer);
 
   @protected
   void sse_encode_message(Message self, SseSerializer serializer);

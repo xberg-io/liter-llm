@@ -64,7 +64,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => -2002307527;
+  int get rustContentHash => -1927561788;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -487,6 +487,14 @@ abstract class RustLibApi extends BaseApi {
   Future<UserMessage> crateCreateUserMessageFromJson({required String json});
 
   Future<void> crateEnsureCryptoProvider();
+
+  Future<String> crateLiterLlmErrorErrorType({required LiterLlmError that});
+
+  Future<bool> crateLiterLlmErrorIsTransient({required LiterLlmError that});
+
+  Future<PlatformInt64> crateLiterLlmErrorStatusCode({
+    required LiterLlmError that,
+  });
 
   Future<void> crateRegisterCustomProvider({
     required CustomProviderConfig config,
@@ -4167,6 +4175,101 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "ensure_crypto_provider", argNames: []);
 
   @override
+  Future<String> crateLiterLlmErrorErrorType({required LiterLlmError that}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_liter_llm_error(that, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 110,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateLiterLlmErrorErrorTypeConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateLiterLlmErrorErrorTypeConstMeta =>
+      const TaskConstMeta(
+        debugName: "liter_llm_error_error_type",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<bool> crateLiterLlmErrorIsTransient({required LiterLlmError that}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_liter_llm_error(that, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 111,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateLiterLlmErrorIsTransientConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateLiterLlmErrorIsTransientConstMeta =>
+      const TaskConstMeta(
+        debugName: "liter_llm_error_is_transient",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<PlatformInt64> crateLiterLlmErrorStatusCode({
+    required LiterLlmError that,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_liter_llm_error(that, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 112,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_i_64,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateLiterLlmErrorStatusCodeConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateLiterLlmErrorStatusCodeConstMeta =>
+      const TaskConstMeta(
+        debugName: "liter_llm_error_status_code",
+        argNames: ["that"],
+      );
+
+  @override
   Future<void> crateRegisterCustomProvider({
     required CustomProviderConfig config,
   }) {
@@ -4178,7 +4281,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 110,
+            funcId: 113,
             port: port_,
           );
         },
@@ -4209,7 +4312,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 111,
+            funcId: 114,
             port: port_,
           );
         },
@@ -4607,6 +4710,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   JsonSchemaFormat dco_decode_box_autoadd_json_schema_format(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_json_schema_format(raw);
+  }
+
+  @protected
+  LiterLlmError dco_decode_box_autoadd_liter_llm_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_liter_llm_error(raw);
   }
 
   @protected
@@ -5440,6 +5549,73 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return (raw as List<dynamic>)
         .map(dco_decode_transcription_segment)
         .toList();
+  }
+
+  @protected
+  LiterLlmError dco_decode_liter_llm_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return LiterLlmError_Authentication(
+          message: dco_decode_String(raw[1]),
+          status: dco_decode_i_64(raw[2]),
+        );
+      case 1:
+        return LiterLlmError_RateLimited(
+          message: dco_decode_String(raw[1]),
+          retryAfter: dco_decode_i_64(raw[2]),
+        );
+      case 2:
+        return LiterLlmError_BadRequest(
+          message: dco_decode_String(raw[1]),
+          status: dco_decode_i_64(raw[2]),
+        );
+      case 3:
+        return LiterLlmError_ContextWindowExceeded(
+          message: dco_decode_String(raw[1]),
+        );
+      case 4:
+        return LiterLlmError_ContentPolicy(message: dco_decode_String(raw[1]));
+      case 5:
+        return LiterLlmError_NotFound(message: dco_decode_String(raw[1]));
+      case 6:
+        return LiterLlmError_ServerError(
+          message: dco_decode_String(raw[1]),
+          status: dco_decode_i_64(raw[2]),
+        );
+      case 7:
+        return LiterLlmError_ServiceUnavailable(
+          message: dco_decode_String(raw[1]),
+          status: dco_decode_i_64(raw[2]),
+        );
+      case 8:
+        return LiterLlmError_Timeout();
+      case 9:
+        return LiterLlmError_Streaming(message: dco_decode_String(raw[1]));
+      case 10:
+        return LiterLlmError_EndpointNotSupported(
+          endpoint: dco_decode_String(raw[1]),
+          provider: dco_decode_String(raw[2]),
+        );
+      case 11:
+        return LiterLlmError_InvalidHeader(
+          name: dco_decode_String(raw[1]),
+          reason: dco_decode_String(raw[2]),
+        );
+      case 12:
+        return LiterLlmError_Serialization(field0: dco_decode_String(raw[1]));
+      case 13:
+        return LiterLlmError_BudgetExceeded(
+          message: dco_decode_String(raw[1]),
+          model: dco_decode_String(raw[2]),
+        );
+      case 14:
+        return LiterLlmError_HookRejected(message: dco_decode_String(raw[1]));
+      case 15:
+        return LiterLlmError_InternalError(message: dco_decode_String(raw[1]));
+      default:
+        throw Exception("unreachable");
+    }
   }
 
   @protected
@@ -6829,6 +7005,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LiterLlmError sse_decode_box_autoadd_liter_llm_error(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_liter_llm_error(deserializer));
+  }
+
+  @protected
   ModerationRequest sse_decode_box_autoadd_moderation_request(
     SseDeserializer deserializer,
   ) {
@@ -7930,6 +8114,93 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       ans_.add(sse_decode_transcription_segment(deserializer));
     }
     return ans_;
+  }
+
+  @protected
+  LiterLlmError sse_decode_liter_llm_error(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_message = sse_decode_String(deserializer);
+        var var_status = sse_decode_i_64(deserializer);
+        return LiterLlmError_Authentication(
+          message: var_message,
+          status: var_status,
+        );
+      case 1:
+        var var_message = sse_decode_String(deserializer);
+        var var_retryAfter = sse_decode_i_64(deserializer);
+        return LiterLlmError_RateLimited(
+          message: var_message,
+          retryAfter: var_retryAfter,
+        );
+      case 2:
+        var var_message = sse_decode_String(deserializer);
+        var var_status = sse_decode_i_64(deserializer);
+        return LiterLlmError_BadRequest(
+          message: var_message,
+          status: var_status,
+        );
+      case 3:
+        var var_message = sse_decode_String(deserializer);
+        return LiterLlmError_ContextWindowExceeded(message: var_message);
+      case 4:
+        var var_message = sse_decode_String(deserializer);
+        return LiterLlmError_ContentPolicy(message: var_message);
+      case 5:
+        var var_message = sse_decode_String(deserializer);
+        return LiterLlmError_NotFound(message: var_message);
+      case 6:
+        var var_message = sse_decode_String(deserializer);
+        var var_status = sse_decode_i_64(deserializer);
+        return LiterLlmError_ServerError(
+          message: var_message,
+          status: var_status,
+        );
+      case 7:
+        var var_message = sse_decode_String(deserializer);
+        var var_status = sse_decode_i_64(deserializer);
+        return LiterLlmError_ServiceUnavailable(
+          message: var_message,
+          status: var_status,
+        );
+      case 8:
+        return LiterLlmError_Timeout();
+      case 9:
+        var var_message = sse_decode_String(deserializer);
+        return LiterLlmError_Streaming(message: var_message);
+      case 10:
+        var var_endpoint = sse_decode_String(deserializer);
+        var var_provider = sse_decode_String(deserializer);
+        return LiterLlmError_EndpointNotSupported(
+          endpoint: var_endpoint,
+          provider: var_provider,
+        );
+      case 11:
+        var var_name = sse_decode_String(deserializer);
+        var var_reason = sse_decode_String(deserializer);
+        return LiterLlmError_InvalidHeader(name: var_name, reason: var_reason);
+      case 12:
+        var var_field0 = sse_decode_String(deserializer);
+        return LiterLlmError_Serialization(field0: var_field0);
+      case 13:
+        var var_message = sse_decode_String(deserializer);
+        var var_model = sse_decode_String(deserializer);
+        return LiterLlmError_BudgetExceeded(
+          message: var_message,
+          model: var_model,
+        );
+      case 14:
+        var var_message = sse_decode_String(deserializer);
+        return LiterLlmError_HookRejected(message: var_message);
+      case 15:
+        var var_message = sse_decode_String(deserializer);
+        return LiterLlmError_InternalError(message: var_message);
+      default:
+        throw UnimplementedError('');
+    }
   }
 
   @protected
@@ -9564,6 +9835,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_liter_llm_error(
+    LiterLlmError self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_liter_llm_error(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_moderation_request(
     ModerationRequest self,
     SseSerializer serializer,
@@ -10511,6 +10791,92 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_transcription_segment(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_liter_llm_error(
+    LiterLlmError self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case LiterLlmError_Authentication(
+        message: final message,
+        status: final status,
+      ):
+        sse_encode_i_32(0, serializer);
+        sse_encode_String(message, serializer);
+        sse_encode_i_64(status, serializer);
+      case LiterLlmError_RateLimited(
+        message: final message,
+        retryAfter: final retryAfter,
+      ):
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(message, serializer);
+        sse_encode_i_64(retryAfter, serializer);
+      case LiterLlmError_BadRequest(
+        message: final message,
+        status: final status,
+      ):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(message, serializer);
+        sse_encode_i_64(status, serializer);
+      case LiterLlmError_ContextWindowExceeded(message: final message):
+        sse_encode_i_32(3, serializer);
+        sse_encode_String(message, serializer);
+      case LiterLlmError_ContentPolicy(message: final message):
+        sse_encode_i_32(4, serializer);
+        sse_encode_String(message, serializer);
+      case LiterLlmError_NotFound(message: final message):
+        sse_encode_i_32(5, serializer);
+        sse_encode_String(message, serializer);
+      case LiterLlmError_ServerError(
+        message: final message,
+        status: final status,
+      ):
+        sse_encode_i_32(6, serializer);
+        sse_encode_String(message, serializer);
+        sse_encode_i_64(status, serializer);
+      case LiterLlmError_ServiceUnavailable(
+        message: final message,
+        status: final status,
+      ):
+        sse_encode_i_32(7, serializer);
+        sse_encode_String(message, serializer);
+        sse_encode_i_64(status, serializer);
+      case LiterLlmError_Timeout():
+        sse_encode_i_32(8, serializer);
+      case LiterLlmError_Streaming(message: final message):
+        sse_encode_i_32(9, serializer);
+        sse_encode_String(message, serializer);
+      case LiterLlmError_EndpointNotSupported(
+        endpoint: final endpoint,
+        provider: final provider,
+      ):
+        sse_encode_i_32(10, serializer);
+        sse_encode_String(endpoint, serializer);
+        sse_encode_String(provider, serializer);
+      case LiterLlmError_InvalidHeader(name: final name, reason: final reason):
+        sse_encode_i_32(11, serializer);
+        sse_encode_String(name, serializer);
+        sse_encode_String(reason, serializer);
+      case LiterLlmError_Serialization(field0: final field0):
+        sse_encode_i_32(12, serializer);
+        sse_encode_String(field0, serializer);
+      case LiterLlmError_BudgetExceeded(
+        message: final message,
+        model: final model,
+      ):
+        sse_encode_i_32(13, serializer);
+        sse_encode_String(message, serializer);
+        sse_encode_String(model, serializer);
+      case LiterLlmError_HookRejected(message: final message):
+        sse_encode_i_32(14, serializer);
+        sse_encode_String(message, serializer);
+      case LiterLlmError_InternalError(message: final message):
+        sse_encode_i_32(15, serializer);
+        sse_encode_String(message, serializer);
     }
   }
 

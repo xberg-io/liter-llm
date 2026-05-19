@@ -1311,6 +1311,1288 @@ as List<String>,
 }
 
 /// @nodoc
+mixin _$LiterLlmError {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'LiterLlmError()';
+}
+
+
+}
+
+/// @nodoc
+class $LiterLlmErrorCopyWith<$Res>  {
+$LiterLlmErrorCopyWith(LiterLlmError _, $Res Function(LiterLlmError) __);
+}
+
+
+/// Adds pattern-matching-related methods to [LiterLlmError].
+extension LiterLlmErrorPatterns on LiterLlmError {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( LiterLlmError_Authentication value)?  authentication,TResult Function( LiterLlmError_RateLimited value)?  rateLimited,TResult Function( LiterLlmError_BadRequest value)?  badRequest,TResult Function( LiterLlmError_ContextWindowExceeded value)?  contextWindowExceeded,TResult Function( LiterLlmError_ContentPolicy value)?  contentPolicy,TResult Function( LiterLlmError_NotFound value)?  notFound,TResult Function( LiterLlmError_ServerError value)?  serverError,TResult Function( LiterLlmError_ServiceUnavailable value)?  serviceUnavailable,TResult Function( LiterLlmError_Timeout value)?  timeout,TResult Function( LiterLlmError_Streaming value)?  streaming,TResult Function( LiterLlmError_EndpointNotSupported value)?  endpointNotSupported,TResult Function( LiterLlmError_InvalidHeader value)?  invalidHeader,TResult Function( LiterLlmError_Serialization value)?  serialization,TResult Function( LiterLlmError_BudgetExceeded value)?  budgetExceeded,TResult Function( LiterLlmError_HookRejected value)?  hookRejected,TResult Function( LiterLlmError_InternalError value)?  internalError,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case LiterLlmError_Authentication() when authentication != null:
+return authentication(_that);case LiterLlmError_RateLimited() when rateLimited != null:
+return rateLimited(_that);case LiterLlmError_BadRequest() when badRequest != null:
+return badRequest(_that);case LiterLlmError_ContextWindowExceeded() when contextWindowExceeded != null:
+return contextWindowExceeded(_that);case LiterLlmError_ContentPolicy() when contentPolicy != null:
+return contentPolicy(_that);case LiterLlmError_NotFound() when notFound != null:
+return notFound(_that);case LiterLlmError_ServerError() when serverError != null:
+return serverError(_that);case LiterLlmError_ServiceUnavailable() when serviceUnavailable != null:
+return serviceUnavailable(_that);case LiterLlmError_Timeout() when timeout != null:
+return timeout(_that);case LiterLlmError_Streaming() when streaming != null:
+return streaming(_that);case LiterLlmError_EndpointNotSupported() when endpointNotSupported != null:
+return endpointNotSupported(_that);case LiterLlmError_InvalidHeader() when invalidHeader != null:
+return invalidHeader(_that);case LiterLlmError_Serialization() when serialization != null:
+return serialization(_that);case LiterLlmError_BudgetExceeded() when budgetExceeded != null:
+return budgetExceeded(_that);case LiterLlmError_HookRejected() when hookRejected != null:
+return hookRejected(_that);case LiterLlmError_InternalError() when internalError != null:
+return internalError(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( LiterLlmError_Authentication value)  authentication,required TResult Function( LiterLlmError_RateLimited value)  rateLimited,required TResult Function( LiterLlmError_BadRequest value)  badRequest,required TResult Function( LiterLlmError_ContextWindowExceeded value)  contextWindowExceeded,required TResult Function( LiterLlmError_ContentPolicy value)  contentPolicy,required TResult Function( LiterLlmError_NotFound value)  notFound,required TResult Function( LiterLlmError_ServerError value)  serverError,required TResult Function( LiterLlmError_ServiceUnavailable value)  serviceUnavailable,required TResult Function( LiterLlmError_Timeout value)  timeout,required TResult Function( LiterLlmError_Streaming value)  streaming,required TResult Function( LiterLlmError_EndpointNotSupported value)  endpointNotSupported,required TResult Function( LiterLlmError_InvalidHeader value)  invalidHeader,required TResult Function( LiterLlmError_Serialization value)  serialization,required TResult Function( LiterLlmError_BudgetExceeded value)  budgetExceeded,required TResult Function( LiterLlmError_HookRejected value)  hookRejected,required TResult Function( LiterLlmError_InternalError value)  internalError,}){
+final _that = this;
+switch (_that) {
+case LiterLlmError_Authentication():
+return authentication(_that);case LiterLlmError_RateLimited():
+return rateLimited(_that);case LiterLlmError_BadRequest():
+return badRequest(_that);case LiterLlmError_ContextWindowExceeded():
+return contextWindowExceeded(_that);case LiterLlmError_ContentPolicy():
+return contentPolicy(_that);case LiterLlmError_NotFound():
+return notFound(_that);case LiterLlmError_ServerError():
+return serverError(_that);case LiterLlmError_ServiceUnavailable():
+return serviceUnavailable(_that);case LiterLlmError_Timeout():
+return timeout(_that);case LiterLlmError_Streaming():
+return streaming(_that);case LiterLlmError_EndpointNotSupported():
+return endpointNotSupported(_that);case LiterLlmError_InvalidHeader():
+return invalidHeader(_that);case LiterLlmError_Serialization():
+return serialization(_that);case LiterLlmError_BudgetExceeded():
+return budgetExceeded(_that);case LiterLlmError_HookRejected():
+return hookRejected(_that);case LiterLlmError_InternalError():
+return internalError(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( LiterLlmError_Authentication value)?  authentication,TResult? Function( LiterLlmError_RateLimited value)?  rateLimited,TResult? Function( LiterLlmError_BadRequest value)?  badRequest,TResult? Function( LiterLlmError_ContextWindowExceeded value)?  contextWindowExceeded,TResult? Function( LiterLlmError_ContentPolicy value)?  contentPolicy,TResult? Function( LiterLlmError_NotFound value)?  notFound,TResult? Function( LiterLlmError_ServerError value)?  serverError,TResult? Function( LiterLlmError_ServiceUnavailable value)?  serviceUnavailable,TResult? Function( LiterLlmError_Timeout value)?  timeout,TResult? Function( LiterLlmError_Streaming value)?  streaming,TResult? Function( LiterLlmError_EndpointNotSupported value)?  endpointNotSupported,TResult? Function( LiterLlmError_InvalidHeader value)?  invalidHeader,TResult? Function( LiterLlmError_Serialization value)?  serialization,TResult? Function( LiterLlmError_BudgetExceeded value)?  budgetExceeded,TResult? Function( LiterLlmError_HookRejected value)?  hookRejected,TResult? Function( LiterLlmError_InternalError value)?  internalError,}){
+final _that = this;
+switch (_that) {
+case LiterLlmError_Authentication() when authentication != null:
+return authentication(_that);case LiterLlmError_RateLimited() when rateLimited != null:
+return rateLimited(_that);case LiterLlmError_BadRequest() when badRequest != null:
+return badRequest(_that);case LiterLlmError_ContextWindowExceeded() when contextWindowExceeded != null:
+return contextWindowExceeded(_that);case LiterLlmError_ContentPolicy() when contentPolicy != null:
+return contentPolicy(_that);case LiterLlmError_NotFound() when notFound != null:
+return notFound(_that);case LiterLlmError_ServerError() when serverError != null:
+return serverError(_that);case LiterLlmError_ServiceUnavailable() when serviceUnavailable != null:
+return serviceUnavailable(_that);case LiterLlmError_Timeout() when timeout != null:
+return timeout(_that);case LiterLlmError_Streaming() when streaming != null:
+return streaming(_that);case LiterLlmError_EndpointNotSupported() when endpointNotSupported != null:
+return endpointNotSupported(_that);case LiterLlmError_InvalidHeader() when invalidHeader != null:
+return invalidHeader(_that);case LiterLlmError_Serialization() when serialization != null:
+return serialization(_that);case LiterLlmError_BudgetExceeded() when budgetExceeded != null:
+return budgetExceeded(_that);case LiterLlmError_HookRejected() when hookRejected != null:
+return hookRejected(_that);case LiterLlmError_InternalError() when internalError != null:
+return internalError(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String message,  PlatformInt64 status)?  authentication,TResult Function( String message,  PlatformInt64 retryAfter)?  rateLimited,TResult Function( String message,  PlatformInt64 status)?  badRequest,TResult Function( String message)?  contextWindowExceeded,TResult Function( String message)?  contentPolicy,TResult Function( String message)?  notFound,TResult Function( String message,  PlatformInt64 status)?  serverError,TResult Function( String message,  PlatformInt64 status)?  serviceUnavailable,TResult Function()?  timeout,TResult Function( String message)?  streaming,TResult Function( String endpoint,  String provider)?  endpointNotSupported,TResult Function( String name,  String reason)?  invalidHeader,TResult Function( String field0)?  serialization,TResult Function( String message,  String model)?  budgetExceeded,TResult Function( String message)?  hookRejected,TResult Function( String message)?  internalError,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case LiterLlmError_Authentication() when authentication != null:
+return authentication(_that.message,_that.status);case LiterLlmError_RateLimited() when rateLimited != null:
+return rateLimited(_that.message,_that.retryAfter);case LiterLlmError_BadRequest() when badRequest != null:
+return badRequest(_that.message,_that.status);case LiterLlmError_ContextWindowExceeded() when contextWindowExceeded != null:
+return contextWindowExceeded(_that.message);case LiterLlmError_ContentPolicy() when contentPolicy != null:
+return contentPolicy(_that.message);case LiterLlmError_NotFound() when notFound != null:
+return notFound(_that.message);case LiterLlmError_ServerError() when serverError != null:
+return serverError(_that.message,_that.status);case LiterLlmError_ServiceUnavailable() when serviceUnavailable != null:
+return serviceUnavailable(_that.message,_that.status);case LiterLlmError_Timeout() when timeout != null:
+return timeout();case LiterLlmError_Streaming() when streaming != null:
+return streaming(_that.message);case LiterLlmError_EndpointNotSupported() when endpointNotSupported != null:
+return endpointNotSupported(_that.endpoint,_that.provider);case LiterLlmError_InvalidHeader() when invalidHeader != null:
+return invalidHeader(_that.name,_that.reason);case LiterLlmError_Serialization() when serialization != null:
+return serialization(_that.field0);case LiterLlmError_BudgetExceeded() when budgetExceeded != null:
+return budgetExceeded(_that.message,_that.model);case LiterLlmError_HookRejected() when hookRejected != null:
+return hookRejected(_that.message);case LiterLlmError_InternalError() when internalError != null:
+return internalError(_that.message);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String message,  PlatformInt64 status)  authentication,required TResult Function( String message,  PlatformInt64 retryAfter)  rateLimited,required TResult Function( String message,  PlatformInt64 status)  badRequest,required TResult Function( String message)  contextWindowExceeded,required TResult Function( String message)  contentPolicy,required TResult Function( String message)  notFound,required TResult Function( String message,  PlatformInt64 status)  serverError,required TResult Function( String message,  PlatformInt64 status)  serviceUnavailable,required TResult Function()  timeout,required TResult Function( String message)  streaming,required TResult Function( String endpoint,  String provider)  endpointNotSupported,required TResult Function( String name,  String reason)  invalidHeader,required TResult Function( String field0)  serialization,required TResult Function( String message,  String model)  budgetExceeded,required TResult Function( String message)  hookRejected,required TResult Function( String message)  internalError,}) {final _that = this;
+switch (_that) {
+case LiterLlmError_Authentication():
+return authentication(_that.message,_that.status);case LiterLlmError_RateLimited():
+return rateLimited(_that.message,_that.retryAfter);case LiterLlmError_BadRequest():
+return badRequest(_that.message,_that.status);case LiterLlmError_ContextWindowExceeded():
+return contextWindowExceeded(_that.message);case LiterLlmError_ContentPolicy():
+return contentPolicy(_that.message);case LiterLlmError_NotFound():
+return notFound(_that.message);case LiterLlmError_ServerError():
+return serverError(_that.message,_that.status);case LiterLlmError_ServiceUnavailable():
+return serviceUnavailable(_that.message,_that.status);case LiterLlmError_Timeout():
+return timeout();case LiterLlmError_Streaming():
+return streaming(_that.message);case LiterLlmError_EndpointNotSupported():
+return endpointNotSupported(_that.endpoint,_that.provider);case LiterLlmError_InvalidHeader():
+return invalidHeader(_that.name,_that.reason);case LiterLlmError_Serialization():
+return serialization(_that.field0);case LiterLlmError_BudgetExceeded():
+return budgetExceeded(_that.message,_that.model);case LiterLlmError_HookRejected():
+return hookRejected(_that.message);case LiterLlmError_InternalError():
+return internalError(_that.message);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String message,  PlatformInt64 status)?  authentication,TResult? Function( String message,  PlatformInt64 retryAfter)?  rateLimited,TResult? Function( String message,  PlatformInt64 status)?  badRequest,TResult? Function( String message)?  contextWindowExceeded,TResult? Function( String message)?  contentPolicy,TResult? Function( String message)?  notFound,TResult? Function( String message,  PlatformInt64 status)?  serverError,TResult? Function( String message,  PlatformInt64 status)?  serviceUnavailable,TResult? Function()?  timeout,TResult? Function( String message)?  streaming,TResult? Function( String endpoint,  String provider)?  endpointNotSupported,TResult? Function( String name,  String reason)?  invalidHeader,TResult? Function( String field0)?  serialization,TResult? Function( String message,  String model)?  budgetExceeded,TResult? Function( String message)?  hookRejected,TResult? Function( String message)?  internalError,}) {final _that = this;
+switch (_that) {
+case LiterLlmError_Authentication() when authentication != null:
+return authentication(_that.message,_that.status);case LiterLlmError_RateLimited() when rateLimited != null:
+return rateLimited(_that.message,_that.retryAfter);case LiterLlmError_BadRequest() when badRequest != null:
+return badRequest(_that.message,_that.status);case LiterLlmError_ContextWindowExceeded() when contextWindowExceeded != null:
+return contextWindowExceeded(_that.message);case LiterLlmError_ContentPolicy() when contentPolicy != null:
+return contentPolicy(_that.message);case LiterLlmError_NotFound() when notFound != null:
+return notFound(_that.message);case LiterLlmError_ServerError() when serverError != null:
+return serverError(_that.message,_that.status);case LiterLlmError_ServiceUnavailable() when serviceUnavailable != null:
+return serviceUnavailable(_that.message,_that.status);case LiterLlmError_Timeout() when timeout != null:
+return timeout();case LiterLlmError_Streaming() when streaming != null:
+return streaming(_that.message);case LiterLlmError_EndpointNotSupported() when endpointNotSupported != null:
+return endpointNotSupported(_that.endpoint,_that.provider);case LiterLlmError_InvalidHeader() when invalidHeader != null:
+return invalidHeader(_that.name,_that.reason);case LiterLlmError_Serialization() when serialization != null:
+return serialization(_that.field0);case LiterLlmError_BudgetExceeded() when budgetExceeded != null:
+return budgetExceeded(_that.message,_that.model);case LiterLlmError_HookRejected() when hookRejected != null:
+return hookRejected(_that.message);case LiterLlmError_InternalError() when internalError != null:
+return internalError(_that.message);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class LiterLlmError_Authentication extends LiterLlmError {
+  const LiterLlmError_Authentication({required this.message, required this.status}): super._();
+  
+
+ final  String message;
+ final  PlatformInt64 status;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LiterLlmError_AuthenticationCopyWith<LiterLlmError_Authentication> get copyWith => _$LiterLlmError_AuthenticationCopyWithImpl<LiterLlmError_Authentication>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError_Authentication&&(identical(other.message, message) || other.message == message)&&(identical(other.status, status) || other.status == status));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,message,status);
+
+@override
+String toString() {
+  return 'LiterLlmError.authentication(message: $message, status: $status)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LiterLlmError_AuthenticationCopyWith<$Res> implements $LiterLlmErrorCopyWith<$Res> {
+  factory $LiterLlmError_AuthenticationCopyWith(LiterLlmError_Authentication value, $Res Function(LiterLlmError_Authentication) _then) = _$LiterLlmError_AuthenticationCopyWithImpl;
+@useResult
+$Res call({
+ String message, PlatformInt64 status
+});
+
+
+
+
+}
+/// @nodoc
+class _$LiterLlmError_AuthenticationCopyWithImpl<$Res>
+    implements $LiterLlmError_AuthenticationCopyWith<$Res> {
+  _$LiterLlmError_AuthenticationCopyWithImpl(this._self, this._then);
+
+  final LiterLlmError_Authentication _self;
+  final $Res Function(LiterLlmError_Authentication) _then;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,Object? status = null,}) {
+  return _then(LiterLlmError_Authentication(
+message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as PlatformInt64,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class LiterLlmError_RateLimited extends LiterLlmError {
+  const LiterLlmError_RateLimited({required this.message, required this.retryAfter}): super._();
+  
+
+ final  String message;
+ final  PlatformInt64 retryAfter;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LiterLlmError_RateLimitedCopyWith<LiterLlmError_RateLimited> get copyWith => _$LiterLlmError_RateLimitedCopyWithImpl<LiterLlmError_RateLimited>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError_RateLimited&&(identical(other.message, message) || other.message == message)&&(identical(other.retryAfter, retryAfter) || other.retryAfter == retryAfter));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,message,retryAfter);
+
+@override
+String toString() {
+  return 'LiterLlmError.rateLimited(message: $message, retryAfter: $retryAfter)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LiterLlmError_RateLimitedCopyWith<$Res> implements $LiterLlmErrorCopyWith<$Res> {
+  factory $LiterLlmError_RateLimitedCopyWith(LiterLlmError_RateLimited value, $Res Function(LiterLlmError_RateLimited) _then) = _$LiterLlmError_RateLimitedCopyWithImpl;
+@useResult
+$Res call({
+ String message, PlatformInt64 retryAfter
+});
+
+
+
+
+}
+/// @nodoc
+class _$LiterLlmError_RateLimitedCopyWithImpl<$Res>
+    implements $LiterLlmError_RateLimitedCopyWith<$Res> {
+  _$LiterLlmError_RateLimitedCopyWithImpl(this._self, this._then);
+
+  final LiterLlmError_RateLimited _self;
+  final $Res Function(LiterLlmError_RateLimited) _then;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,Object? retryAfter = null,}) {
+  return _then(LiterLlmError_RateLimited(
+message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,retryAfter: null == retryAfter ? _self.retryAfter : retryAfter // ignore: cast_nullable_to_non_nullable
+as PlatformInt64,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class LiterLlmError_BadRequest extends LiterLlmError {
+  const LiterLlmError_BadRequest({required this.message, required this.status}): super._();
+  
+
+ final  String message;
+ final  PlatformInt64 status;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LiterLlmError_BadRequestCopyWith<LiterLlmError_BadRequest> get copyWith => _$LiterLlmError_BadRequestCopyWithImpl<LiterLlmError_BadRequest>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError_BadRequest&&(identical(other.message, message) || other.message == message)&&(identical(other.status, status) || other.status == status));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,message,status);
+
+@override
+String toString() {
+  return 'LiterLlmError.badRequest(message: $message, status: $status)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LiterLlmError_BadRequestCopyWith<$Res> implements $LiterLlmErrorCopyWith<$Res> {
+  factory $LiterLlmError_BadRequestCopyWith(LiterLlmError_BadRequest value, $Res Function(LiterLlmError_BadRequest) _then) = _$LiterLlmError_BadRequestCopyWithImpl;
+@useResult
+$Res call({
+ String message, PlatformInt64 status
+});
+
+
+
+
+}
+/// @nodoc
+class _$LiterLlmError_BadRequestCopyWithImpl<$Res>
+    implements $LiterLlmError_BadRequestCopyWith<$Res> {
+  _$LiterLlmError_BadRequestCopyWithImpl(this._self, this._then);
+
+  final LiterLlmError_BadRequest _self;
+  final $Res Function(LiterLlmError_BadRequest) _then;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,Object? status = null,}) {
+  return _then(LiterLlmError_BadRequest(
+message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as PlatformInt64,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class LiterLlmError_ContextWindowExceeded extends LiterLlmError {
+  const LiterLlmError_ContextWindowExceeded({required this.message}): super._();
+  
+
+ final  String message;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LiterLlmError_ContextWindowExceededCopyWith<LiterLlmError_ContextWindowExceeded> get copyWith => _$LiterLlmError_ContextWindowExceededCopyWithImpl<LiterLlmError_ContextWindowExceeded>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError_ContextWindowExceeded&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,message);
+
+@override
+String toString() {
+  return 'LiterLlmError.contextWindowExceeded(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LiterLlmError_ContextWindowExceededCopyWith<$Res> implements $LiterLlmErrorCopyWith<$Res> {
+  factory $LiterLlmError_ContextWindowExceededCopyWith(LiterLlmError_ContextWindowExceeded value, $Res Function(LiterLlmError_ContextWindowExceeded) _then) = _$LiterLlmError_ContextWindowExceededCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$LiterLlmError_ContextWindowExceededCopyWithImpl<$Res>
+    implements $LiterLlmError_ContextWindowExceededCopyWith<$Res> {
+  _$LiterLlmError_ContextWindowExceededCopyWithImpl(this._self, this._then);
+
+  final LiterLlmError_ContextWindowExceeded _self;
+  final $Res Function(LiterLlmError_ContextWindowExceeded) _then;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(LiterLlmError_ContextWindowExceeded(
+message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class LiterLlmError_ContentPolicy extends LiterLlmError {
+  const LiterLlmError_ContentPolicy({required this.message}): super._();
+  
+
+ final  String message;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LiterLlmError_ContentPolicyCopyWith<LiterLlmError_ContentPolicy> get copyWith => _$LiterLlmError_ContentPolicyCopyWithImpl<LiterLlmError_ContentPolicy>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError_ContentPolicy&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,message);
+
+@override
+String toString() {
+  return 'LiterLlmError.contentPolicy(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LiterLlmError_ContentPolicyCopyWith<$Res> implements $LiterLlmErrorCopyWith<$Res> {
+  factory $LiterLlmError_ContentPolicyCopyWith(LiterLlmError_ContentPolicy value, $Res Function(LiterLlmError_ContentPolicy) _then) = _$LiterLlmError_ContentPolicyCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$LiterLlmError_ContentPolicyCopyWithImpl<$Res>
+    implements $LiterLlmError_ContentPolicyCopyWith<$Res> {
+  _$LiterLlmError_ContentPolicyCopyWithImpl(this._self, this._then);
+
+  final LiterLlmError_ContentPolicy _self;
+  final $Res Function(LiterLlmError_ContentPolicy) _then;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(LiterLlmError_ContentPolicy(
+message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class LiterLlmError_NotFound extends LiterLlmError {
+  const LiterLlmError_NotFound({required this.message}): super._();
+  
+
+ final  String message;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LiterLlmError_NotFoundCopyWith<LiterLlmError_NotFound> get copyWith => _$LiterLlmError_NotFoundCopyWithImpl<LiterLlmError_NotFound>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError_NotFound&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,message);
+
+@override
+String toString() {
+  return 'LiterLlmError.notFound(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LiterLlmError_NotFoundCopyWith<$Res> implements $LiterLlmErrorCopyWith<$Res> {
+  factory $LiterLlmError_NotFoundCopyWith(LiterLlmError_NotFound value, $Res Function(LiterLlmError_NotFound) _then) = _$LiterLlmError_NotFoundCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$LiterLlmError_NotFoundCopyWithImpl<$Res>
+    implements $LiterLlmError_NotFoundCopyWith<$Res> {
+  _$LiterLlmError_NotFoundCopyWithImpl(this._self, this._then);
+
+  final LiterLlmError_NotFound _self;
+  final $Res Function(LiterLlmError_NotFound) _then;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(LiterLlmError_NotFound(
+message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class LiterLlmError_ServerError extends LiterLlmError {
+  const LiterLlmError_ServerError({required this.message, required this.status}): super._();
+  
+
+ final  String message;
+ final  PlatformInt64 status;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LiterLlmError_ServerErrorCopyWith<LiterLlmError_ServerError> get copyWith => _$LiterLlmError_ServerErrorCopyWithImpl<LiterLlmError_ServerError>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError_ServerError&&(identical(other.message, message) || other.message == message)&&(identical(other.status, status) || other.status == status));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,message,status);
+
+@override
+String toString() {
+  return 'LiterLlmError.serverError(message: $message, status: $status)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LiterLlmError_ServerErrorCopyWith<$Res> implements $LiterLlmErrorCopyWith<$Res> {
+  factory $LiterLlmError_ServerErrorCopyWith(LiterLlmError_ServerError value, $Res Function(LiterLlmError_ServerError) _then) = _$LiterLlmError_ServerErrorCopyWithImpl;
+@useResult
+$Res call({
+ String message, PlatformInt64 status
+});
+
+
+
+
+}
+/// @nodoc
+class _$LiterLlmError_ServerErrorCopyWithImpl<$Res>
+    implements $LiterLlmError_ServerErrorCopyWith<$Res> {
+  _$LiterLlmError_ServerErrorCopyWithImpl(this._self, this._then);
+
+  final LiterLlmError_ServerError _self;
+  final $Res Function(LiterLlmError_ServerError) _then;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,Object? status = null,}) {
+  return _then(LiterLlmError_ServerError(
+message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as PlatformInt64,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class LiterLlmError_ServiceUnavailable extends LiterLlmError {
+  const LiterLlmError_ServiceUnavailable({required this.message, required this.status}): super._();
+  
+
+ final  String message;
+ final  PlatformInt64 status;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LiterLlmError_ServiceUnavailableCopyWith<LiterLlmError_ServiceUnavailable> get copyWith => _$LiterLlmError_ServiceUnavailableCopyWithImpl<LiterLlmError_ServiceUnavailable>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError_ServiceUnavailable&&(identical(other.message, message) || other.message == message)&&(identical(other.status, status) || other.status == status));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,message,status);
+
+@override
+String toString() {
+  return 'LiterLlmError.serviceUnavailable(message: $message, status: $status)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LiterLlmError_ServiceUnavailableCopyWith<$Res> implements $LiterLlmErrorCopyWith<$Res> {
+  factory $LiterLlmError_ServiceUnavailableCopyWith(LiterLlmError_ServiceUnavailable value, $Res Function(LiterLlmError_ServiceUnavailable) _then) = _$LiterLlmError_ServiceUnavailableCopyWithImpl;
+@useResult
+$Res call({
+ String message, PlatformInt64 status
+});
+
+
+
+
+}
+/// @nodoc
+class _$LiterLlmError_ServiceUnavailableCopyWithImpl<$Res>
+    implements $LiterLlmError_ServiceUnavailableCopyWith<$Res> {
+  _$LiterLlmError_ServiceUnavailableCopyWithImpl(this._self, this._then);
+
+  final LiterLlmError_ServiceUnavailable _self;
+  final $Res Function(LiterLlmError_ServiceUnavailable) _then;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,Object? status = null,}) {
+  return _then(LiterLlmError_ServiceUnavailable(
+message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as PlatformInt64,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class LiterLlmError_Timeout extends LiterLlmError {
+  const LiterLlmError_Timeout(): super._();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError_Timeout);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'LiterLlmError.timeout()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class LiterLlmError_Streaming extends LiterLlmError {
+  const LiterLlmError_Streaming({required this.message}): super._();
+  
+
+ final  String message;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LiterLlmError_StreamingCopyWith<LiterLlmError_Streaming> get copyWith => _$LiterLlmError_StreamingCopyWithImpl<LiterLlmError_Streaming>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError_Streaming&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,message);
+
+@override
+String toString() {
+  return 'LiterLlmError.streaming(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LiterLlmError_StreamingCopyWith<$Res> implements $LiterLlmErrorCopyWith<$Res> {
+  factory $LiterLlmError_StreamingCopyWith(LiterLlmError_Streaming value, $Res Function(LiterLlmError_Streaming) _then) = _$LiterLlmError_StreamingCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$LiterLlmError_StreamingCopyWithImpl<$Res>
+    implements $LiterLlmError_StreamingCopyWith<$Res> {
+  _$LiterLlmError_StreamingCopyWithImpl(this._self, this._then);
+
+  final LiterLlmError_Streaming _self;
+  final $Res Function(LiterLlmError_Streaming) _then;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(LiterLlmError_Streaming(
+message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class LiterLlmError_EndpointNotSupported extends LiterLlmError {
+  const LiterLlmError_EndpointNotSupported({required this.endpoint, required this.provider}): super._();
+  
+
+ final  String endpoint;
+ final  String provider;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LiterLlmError_EndpointNotSupportedCopyWith<LiterLlmError_EndpointNotSupported> get copyWith => _$LiterLlmError_EndpointNotSupportedCopyWithImpl<LiterLlmError_EndpointNotSupported>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError_EndpointNotSupported&&(identical(other.endpoint, endpoint) || other.endpoint == endpoint)&&(identical(other.provider, provider) || other.provider == provider));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,endpoint,provider);
+
+@override
+String toString() {
+  return 'LiterLlmError.endpointNotSupported(endpoint: $endpoint, provider: $provider)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LiterLlmError_EndpointNotSupportedCopyWith<$Res> implements $LiterLlmErrorCopyWith<$Res> {
+  factory $LiterLlmError_EndpointNotSupportedCopyWith(LiterLlmError_EndpointNotSupported value, $Res Function(LiterLlmError_EndpointNotSupported) _then) = _$LiterLlmError_EndpointNotSupportedCopyWithImpl;
+@useResult
+$Res call({
+ String endpoint, String provider
+});
+
+
+
+
+}
+/// @nodoc
+class _$LiterLlmError_EndpointNotSupportedCopyWithImpl<$Res>
+    implements $LiterLlmError_EndpointNotSupportedCopyWith<$Res> {
+  _$LiterLlmError_EndpointNotSupportedCopyWithImpl(this._self, this._then);
+
+  final LiterLlmError_EndpointNotSupported _self;
+  final $Res Function(LiterLlmError_EndpointNotSupported) _then;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? endpoint = null,Object? provider = null,}) {
+  return _then(LiterLlmError_EndpointNotSupported(
+endpoint: null == endpoint ? _self.endpoint : endpoint // ignore: cast_nullable_to_non_nullable
+as String,provider: null == provider ? _self.provider : provider // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class LiterLlmError_InvalidHeader extends LiterLlmError {
+  const LiterLlmError_InvalidHeader({required this.name, required this.reason}): super._();
+  
+
+ final  String name;
+ final  String reason;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LiterLlmError_InvalidHeaderCopyWith<LiterLlmError_InvalidHeader> get copyWith => _$LiterLlmError_InvalidHeaderCopyWithImpl<LiterLlmError_InvalidHeader>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError_InvalidHeader&&(identical(other.name, name) || other.name == name)&&(identical(other.reason, reason) || other.reason == reason));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,name,reason);
+
+@override
+String toString() {
+  return 'LiterLlmError.invalidHeader(name: $name, reason: $reason)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LiterLlmError_InvalidHeaderCopyWith<$Res> implements $LiterLlmErrorCopyWith<$Res> {
+  factory $LiterLlmError_InvalidHeaderCopyWith(LiterLlmError_InvalidHeader value, $Res Function(LiterLlmError_InvalidHeader) _then) = _$LiterLlmError_InvalidHeaderCopyWithImpl;
+@useResult
+$Res call({
+ String name, String reason
+});
+
+
+
+
+}
+/// @nodoc
+class _$LiterLlmError_InvalidHeaderCopyWithImpl<$Res>
+    implements $LiterLlmError_InvalidHeaderCopyWith<$Res> {
+  _$LiterLlmError_InvalidHeaderCopyWithImpl(this._self, this._then);
+
+  final LiterLlmError_InvalidHeader _self;
+  final $Res Function(LiterLlmError_InvalidHeader) _then;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? name = null,Object? reason = null,}) {
+  return _then(LiterLlmError_InvalidHeader(
+name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,reason: null == reason ? _self.reason : reason // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class LiterLlmError_Serialization extends LiterLlmError {
+  const LiterLlmError_Serialization({required this.field0}): super._();
+  
+
+ final  String field0;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LiterLlmError_SerializationCopyWith<LiterLlmError_Serialization> get copyWith => _$LiterLlmError_SerializationCopyWithImpl<LiterLlmError_Serialization>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError_Serialization&&(identical(other.field0, field0) || other.field0 == field0));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,field0);
+
+@override
+String toString() {
+  return 'LiterLlmError.serialization(field0: $field0)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LiterLlmError_SerializationCopyWith<$Res> implements $LiterLlmErrorCopyWith<$Res> {
+  factory $LiterLlmError_SerializationCopyWith(LiterLlmError_Serialization value, $Res Function(LiterLlmError_Serialization) _then) = _$LiterLlmError_SerializationCopyWithImpl;
+@useResult
+$Res call({
+ String field0
+});
+
+
+
+
+}
+/// @nodoc
+class _$LiterLlmError_SerializationCopyWithImpl<$Res>
+    implements $LiterLlmError_SerializationCopyWith<$Res> {
+  _$LiterLlmError_SerializationCopyWithImpl(this._self, this._then);
+
+  final LiterLlmError_Serialization _self;
+  final $Res Function(LiterLlmError_Serialization) _then;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? field0 = null,}) {
+  return _then(LiterLlmError_Serialization(
+field0: null == field0 ? _self.field0 : field0 // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class LiterLlmError_BudgetExceeded extends LiterLlmError {
+  const LiterLlmError_BudgetExceeded({required this.message, required this.model}): super._();
+  
+
+ final  String message;
+ final  String model;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LiterLlmError_BudgetExceededCopyWith<LiterLlmError_BudgetExceeded> get copyWith => _$LiterLlmError_BudgetExceededCopyWithImpl<LiterLlmError_BudgetExceeded>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError_BudgetExceeded&&(identical(other.message, message) || other.message == message)&&(identical(other.model, model) || other.model == model));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,message,model);
+
+@override
+String toString() {
+  return 'LiterLlmError.budgetExceeded(message: $message, model: $model)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LiterLlmError_BudgetExceededCopyWith<$Res> implements $LiterLlmErrorCopyWith<$Res> {
+  factory $LiterLlmError_BudgetExceededCopyWith(LiterLlmError_BudgetExceeded value, $Res Function(LiterLlmError_BudgetExceeded) _then) = _$LiterLlmError_BudgetExceededCopyWithImpl;
+@useResult
+$Res call({
+ String message, String model
+});
+
+
+
+
+}
+/// @nodoc
+class _$LiterLlmError_BudgetExceededCopyWithImpl<$Res>
+    implements $LiterLlmError_BudgetExceededCopyWith<$Res> {
+  _$LiterLlmError_BudgetExceededCopyWithImpl(this._self, this._then);
+
+  final LiterLlmError_BudgetExceeded _self;
+  final $Res Function(LiterLlmError_BudgetExceeded) _then;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,Object? model = null,}) {
+  return _then(LiterLlmError_BudgetExceeded(
+message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,model: null == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class LiterLlmError_HookRejected extends LiterLlmError {
+  const LiterLlmError_HookRejected({required this.message}): super._();
+  
+
+ final  String message;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LiterLlmError_HookRejectedCopyWith<LiterLlmError_HookRejected> get copyWith => _$LiterLlmError_HookRejectedCopyWithImpl<LiterLlmError_HookRejected>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError_HookRejected&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,message);
+
+@override
+String toString() {
+  return 'LiterLlmError.hookRejected(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LiterLlmError_HookRejectedCopyWith<$Res> implements $LiterLlmErrorCopyWith<$Res> {
+  factory $LiterLlmError_HookRejectedCopyWith(LiterLlmError_HookRejected value, $Res Function(LiterLlmError_HookRejected) _then) = _$LiterLlmError_HookRejectedCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$LiterLlmError_HookRejectedCopyWithImpl<$Res>
+    implements $LiterLlmError_HookRejectedCopyWith<$Res> {
+  _$LiterLlmError_HookRejectedCopyWithImpl(this._self, this._then);
+
+  final LiterLlmError_HookRejected _self;
+  final $Res Function(LiterLlmError_HookRejected) _then;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(LiterLlmError_HookRejected(
+message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class LiterLlmError_InternalError extends LiterLlmError {
+  const LiterLlmError_InternalError({required this.message}): super._();
+  
+
+ final  String message;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LiterLlmError_InternalErrorCopyWith<LiterLlmError_InternalError> get copyWith => _$LiterLlmError_InternalErrorCopyWithImpl<LiterLlmError_InternalError>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError_InternalError&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,message);
+
+@override
+String toString() {
+  return 'LiterLlmError.internalError(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LiterLlmError_InternalErrorCopyWith<$Res> implements $LiterLlmErrorCopyWith<$Res> {
+  factory $LiterLlmError_InternalErrorCopyWith(LiterLlmError_InternalError value, $Res Function(LiterLlmError_InternalError) _then) = _$LiterLlmError_InternalErrorCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$LiterLlmError_InternalErrorCopyWithImpl<$Res>
+    implements $LiterLlmError_InternalErrorCopyWith<$Res> {
+  _$LiterLlmError_InternalErrorCopyWithImpl(this._self, this._then);
+
+  final LiterLlmError_InternalError _self;
+  final $Res Function(LiterLlmError_InternalError) _then;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(LiterLlmError_InternalError(
+message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$Message {
 
  Object get field0;

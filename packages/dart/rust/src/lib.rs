@@ -1555,6 +1555,197 @@ pub enum CacheBackend {
     },
 }
 
+/// All errors that can occur when using `liter-llm`.
+#[frb(mirror(LiterLlmError))]
+pub enum LiterLlmError {
+    /// `status` preserves the exact HTTP status code received (401 or 403).
+    Authentication {
+        message: String,
+        status: i64,
+    },
+    RateLimited {
+        message: String,
+        retry_after: i64,
+    },
+    /// `status` preserves the exact HTTP status code received (400, 405, 413, 422, …).
+    BadRequest {
+        message: String,
+        status: i64,
+    },
+    ContextWindowExceeded {
+        message: String,
+    },
+    ContentPolicy {
+        message: String,
+    },
+    NotFound {
+        message: String,
+    },
+    /// `status` preserves the exact HTTP status code received (500, or other 5xx not covered
+    /// by `ServiceUnavailable`).
+    ServerError {
+        message: String,
+        status: i64,
+    },
+    /// `status` preserves the exact HTTP status code received (502, 503, or 504).
+    ServiceUnavailable {
+        message: String,
+        status: i64,
+    },
+    Timeout,
+    /// A catch-all for errors that occur during streaming response processing.
+    ///
+    /// This variant covers multiple sub-conditions including UTF-8 decoding
+    /// failures, CRC/checksum mismatches (AWS EventStream), JSON parse errors
+    /// in individual SSE chunks, and buffer overflow conditions.  The `message`
+    /// field contains a human-readable description of the specific failure.
+    Streaming {
+        message: String,
+    },
+    EndpointNotSupported {
+        endpoint: String,
+        provider: String,
+    },
+    InvalidHeader {
+        name: String,
+        reason: String,
+    },
+    Serialization {
+        field0: String,
+    },
+    BudgetExceeded {
+        message: String,
+        model: String,
+    },
+    HookRejected {
+        message: String,
+    },
+    /// An internal logic error (e.g. unexpected Tower response variant).
+    ///
+    /// This should never surface in normal operation — if it does, it
+    /// indicates a bug in the library.
+    InternalError {
+        message: String,
+    },
+}
+
+#[allow(unreachable_patterns)]
+impl From<&LiterLlmError> for liter_llm::error::LiterLlmError {
+    fn from(m: &LiterLlmError) -> Self {
+        match m {
+            LiterLlmError::Authentication {
+                message: f_message,
+                status: f_status,
+            } => Self::Authentication {
+                message: f_message.clone(),
+                status: *f_status as u16,
+            },
+            LiterLlmError::RateLimited {
+                message: f_message,
+                retry_after: f_retry_after,
+            } => Self::RateLimited {
+                message: f_message.clone(),
+                retry_after: Some(std::time::Duration::from_millis(*f_retry_after as u64)),
+            },
+            LiterLlmError::BadRequest {
+                message: f_message,
+                status: f_status,
+            } => Self::BadRequest {
+                message: f_message.clone(),
+                status: *f_status as u16,
+            },
+            LiterLlmError::ContextWindowExceeded { message: f_message } => Self::ContextWindowExceeded {
+                message: f_message.clone(),
+            },
+            LiterLlmError::ContentPolicy { message: f_message } => Self::ContentPolicy {
+                message: f_message.clone(),
+            },
+            LiterLlmError::NotFound { message: f_message } => Self::NotFound {
+                message: f_message.clone(),
+            },
+            LiterLlmError::ServerError {
+                message: f_message,
+                status: f_status,
+            } => Self::ServerError {
+                message: f_message.clone(),
+                status: *f_status as u16,
+            },
+            LiterLlmError::ServiceUnavailable {
+                message: f_message,
+                status: f_status,
+            } => Self::ServiceUnavailable {
+                message: f_message.clone(),
+                status: *f_status as u16,
+            },
+            LiterLlmError::Timeout => Self::Timeout,
+            LiterLlmError::Streaming { message: f_message } => Self::Streaming {
+                message: f_message.clone(),
+            },
+            LiterLlmError::EndpointNotSupported {
+                endpoint: f_endpoint,
+                provider: f_provider,
+            } => Self::EndpointNotSupported {
+                endpoint: f_endpoint.clone(),
+                provider: f_provider.clone(),
+            },
+            LiterLlmError::InvalidHeader {
+                name: f_name,
+                reason: f_reason,
+            } => Self::InvalidHeader {
+                name: f_name.clone(),
+                reason: f_reason.clone(),
+            },
+            LiterLlmError::BudgetExceeded {
+                message: f_message,
+                model: f_model,
+            } => Self::BudgetExceeded {
+                message: f_message.clone(),
+                model: Some(f_model.clone()),
+            },
+            LiterLlmError::HookRejected { message: f_message } => Self::HookRejected {
+                message: f_message.clone(),
+            },
+            LiterLlmError::InternalError { message: f_message } => Self::InternalError {
+                message: f_message.clone(),
+            },
+            _ => unreachable!("mirror variant has sanitized fields and cannot be converted to the core error type"),
+        }
+    }
+}
+
+impl LiterLlmError {
+    /// Returns the canonical HTTP status code associated with this error.
+    ///
+    /// Maps error variants to their originating HTTP status code as set by
+    /// [`LiterLlmError::from_status`].  Used by e2e assertions that check
+    /// `error.status_code` against the expected HTTP status.
+    #[frb]
+    pub fn status_code(&self) -> i64 {
+        let real: liter_llm::error::LiterLlmError = self.into();
+        real.status_code() as i64
+    }
+    /// Returns `true` for errors that are worth retrying on a different service
+    /// or deployment (transient failures).
+    ///
+    /// Used by `FallbackService` and
+    /// `Router` to decide whether to route to an
+    /// alternative endpoint.
+    #[frb]
+    pub fn is_transient(&self) -> bool {
+        let real: liter_llm::error::LiterLlmError = self.into();
+        real.is_transient()
+    }
+    /// Return the OpenTelemetry `error.type` string for this error variant.
+    ///
+    /// Used by the tracing middleware to record the `error.type` span attribute
+    /// on failed requests per the GenAI semantic conventions.
+    #[frb]
+    pub fn error_type(&self) -> String {
+        let real: liter_llm::error::LiterLlmError = self.into();
+        real.error_type().to_string()
+    }
+}
+
 // From<SourceT> conversions for bridge return types.
 
 impl From<liter_llm::types::SystemMessage> for SystemMessage {
