@@ -36,7 +36,7 @@ dev = [
   "pytest>=8",
   "pyyaml>=6.0.3",
   "ruff>=0.15.13",
-  "typing-extensions>=4",
+  "typing-extensions>=4.15.0",
   "uv-bump",
 ]
 docs = [ "zensical" ]
