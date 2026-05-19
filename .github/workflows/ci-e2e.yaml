@@ -385,7 +385,7 @@ jobs:
 
       - name: Setup Android SDK
         if: matrix.lang == 'kotlin_android'
-        uses: android-actions/setup-android@v3.2.2
+        uses: android-actions/setup-android@v4.0.1
         with:
           packages: ""
 
