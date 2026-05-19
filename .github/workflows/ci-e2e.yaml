@@ -255,8 +255,12 @@ jobs:
           # connect. Redirecting stdin from /dev/null avoids the inherited FD
           # entirely; the env var swaps the lifetime watcher to ctrl_c().
           MOCK_URL_FILE=$(mktemp)
+          # `fixtures` resolves relative to the binary's CWD; we run from the repo
+          # root so pass the absolute path. mock-server's default of
+          # `../../fixtures` only matches the `cd e2e/<lang>` launch pattern that
+          # the other harnesses use.
           MOCK_SERVER_NO_STDIN_WATCH=1 e2e/rust/target/release/mock-server \
-            > "$MOCK_URL_FILE" 2>/dev/null </dev/null &
+            "$GITHUB_WORKSPACE/fixtures" > "$MOCK_URL_FILE" 2>/dev/null </dev/null &
           # Wait until the server prints its URL (up to 10 s).
           n=0
           until grep -q "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" 2>/dev/null || [ "$n" -ge 100 ]; do
@@ -318,8 +322,12 @@ jobs:
           # connect. Redirecting stdin from /dev/null avoids the inherited FD
           # entirely; the env var swaps the lifetime watcher to ctrl_c().
           MOCK_URL_FILE=$(mktemp)
+          # `fixtures` resolves relative to the binary's CWD; we run from the repo
+          # root so pass the absolute path. mock-server's default of
+          # `../../fixtures` only matches the `cd e2e/<lang>` launch pattern that
+          # the other harnesses use.
           MOCK_SERVER_NO_STDIN_WATCH=1 e2e/rust/target/release/mock-server \
-            > "$MOCK_URL_FILE" 2>/dev/null </dev/null &
+            "$GITHUB_WORKSPACE/fixtures" > "$MOCK_URL_FILE" 2>/dev/null </dev/null &
           # Wait until the server prints its URL (up to 10 s).
           n=0
           until grep -q "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" 2>/dev/null || [ "$n" -ge 100 ]; do
