@@ -259,8 +259,41 @@ jobs:
           MOCK_SERVER_URL=$(grep "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" | head -1 | cut -d= -f2-)
           echo "MOCK_SERVER_URL=${MOCK_SERVER_URL}" >> "$GITHUB_ENV"
 
-      # swift runs on macos-latest: the linux-arm64 binary cannot run here, so build
-      # mock-server from source before swift test.
+      # macos-14 ships Swift 5.10 in /usr/bin/swift; alef-emitted Package.swift
+      # files pin `swift-tools-version: 6.0`, so we have to point xcode-select at
+      # the bundled Xcode 16+ before any `swift test`. The runner has multiple
+      # Xcode installs side-by-side; pick the newest with a Swift 6 toolchain.
+      - name: Select Xcode 16 (swift)
+        if: matrix.lang == 'swift'
+        shell: bash
+        run: |
+          # Find the newest /Applications/Xcode_*.app with Swift >= 6.0.
+          best_xcode=""
+          best_swift=""
+          for app in /Applications/Xcode_*.app; do
+            [ -d "$app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin" ] || continue
+            ver=$("$app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift" --version 2>/dev/null \
+              | head -1 | sed -E 's/.* version ([0-9.]+).*/\1/')
+            [ -z "$ver" ] && continue
+            major=$(echo "$ver" | cut -d. -f1)
+            if [ "$major" -ge 6 ]; then
+              if [ -z "$best_swift" ] || [ "$(printf '%s\n%s' "$ver" "$best_swift" | sort -V | tail -1)" = "$ver" ]; then
+                best_swift="$ver"
+                best_xcode="$app"
+              fi
+            fi
+          done
+          if [ -z "$best_xcode" ]; then
+            echo "No Xcode with Swift >= 6 found on this runner" >&2
+            ls -la /Applications/Xcode_*.app 2>&1 || true
+            exit 1
+          fi
+          echo "Using $best_xcode (Swift $best_swift)"
+          sudo xcode-select -s "$best_xcode/Contents/Developer"
+          swift --version
+
+      # swift runs on macos-14: the linux-arm64 mock-server binary cannot run
+      # here, so build mock-server from source before swift test.
       - name: Build mock-server (swift)
         if: matrix.lang == 'swift'
         shell: bash
