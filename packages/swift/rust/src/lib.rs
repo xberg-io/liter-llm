@@ -16,6 +16,21 @@
     clippy::inherent_to_string
 )]
 
+/// Process-wide tokio runtime shared across every swift-bridge async wrapper.
+///
+/// alef-emitted; see shims.rs for the rationale (orphaned reqwest connection
+/// pools when each call creates and drops its own current-thread runtime).
+fn __alef_tokio_runtime() -> &'static ::tokio::runtime::Runtime {
+    use std::sync::OnceLock;
+    static RT: OnceLock<::tokio::runtime::Runtime> = OnceLock::new();
+    RT.get_or_init(|| {
+        ::tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .expect("build process-wide alef tokio runtime")
+    })
+}
+
 #[swift_bridge::bridge]
 mod ffi {
     extern "Rust" {
@@ -3962,320 +3977,233 @@ pub fn default_client_chat(
     client: &DefaultClient,
     req: ChatCompletionRequest,
 ) -> Result<ChatCompletionResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .chat(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(ChatCompletionResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .chat(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(ChatCompletionResponse)
+    })
 }
 pub fn default_client_embed(client: &DefaultClient, req: EmbeddingRequest) -> Result<EmbeddingResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .embed(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(EmbeddingResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .embed(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(EmbeddingResponse)
+    })
 }
 pub fn default_client_list_models(client: &DefaultClient) -> Result<ModelsListResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .list_models()
-                .await
-                .map_err(|e| e.to_string())
-                .map(ModelsListResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .list_models()
+            .await
+            .map_err(|e| e.to_string())
+            .map(ModelsListResponse)
+    })
 }
 pub fn default_client_image_generate(
     client: &DefaultClient,
     req: CreateImageRequest,
 ) -> Result<ImagesResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .image_generate(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(ImagesResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .image_generate(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(ImagesResponse)
+    })
 }
 pub fn default_client_speech(client: &DefaultClient, req: CreateSpeechRequest) -> Result<Vec<u8>, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .speech(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(|b| b.to_vec())
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .speech(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(|b| b.to_vec())
+    })
 }
 pub fn default_client_transcribe(
     client: &DefaultClient,
     req: CreateTranscriptionRequest,
 ) -> Result<TranscriptionResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .transcribe(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(TranscriptionResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .transcribe(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(TranscriptionResponse)
+    })
 }
 pub fn default_client_moderate(client: &DefaultClient, req: ModerationRequest) -> Result<ModerationResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .moderate(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(ModerationResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .moderate(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(ModerationResponse)
+    })
 }
 pub fn default_client_rerank(client: &DefaultClient, req: RerankRequest) -> Result<RerankResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .rerank(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(RerankResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .rerank(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(RerankResponse)
+    })
 }
 pub fn default_client_search(client: &DefaultClient, req: SearchRequest) -> Result<SearchResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .search(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(SearchResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .search(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(SearchResponse)
+    })
 }
 pub fn default_client_ocr(client: &DefaultClient, req: OcrRequest) -> Result<OcrResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
+    crate::__alef_tokio_runtime()
         .block_on(async { client.0.ocr(req.0).await.map_err(|e| e.to_string()).map(OcrResponse) })
 }
 pub fn default_client_create_file(client: &DefaultClient, req: CreateFileRequest) -> Result<FileObject, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .create_file(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(FileObject)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .create_file(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(FileObject)
+    })
 }
 pub fn default_client_retrieve_file(client: &DefaultClient, file_id: String) -> Result<FileObject, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .retrieve_file(&file_id)
-                .await
-                .map_err(|e| e.to_string())
-                .map(FileObject)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .retrieve_file(&file_id)
+            .await
+            .map_err(|e| e.to_string())
+            .map(FileObject)
+    })
 }
 pub fn default_client_delete_file(client: &DefaultClient, file_id: String) -> Result<DeleteResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .delete_file(&file_id)
-                .await
-                .map_err(|e| e.to_string())
-                .map(DeleteResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .delete_file(&file_id)
+            .await
+            .map_err(|e| e.to_string())
+            .map(DeleteResponse)
+    })
 }
 pub fn default_client_list_files(
     client: &DefaultClient,
     query: Option<FileListQuery>,
 ) -> Result<FileListResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .list_files(query.map(|v| v.0))
-                .await
-                .map_err(|e| e.to_string())
-                .map(FileListResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .list_files(query.map(|v| v.0))
+            .await
+            .map_err(|e| e.to_string())
+            .map(FileListResponse)
+    })
 }
 pub fn default_client_file_content(client: &DefaultClient, file_id: String) -> Result<Vec<u8>, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .file_content(&file_id)
-                .await
-                .map_err(|e| e.to_string())
-                .map(|b| b.to_vec())
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .file_content(&file_id)
+            .await
+            .map_err(|e| e.to_string())
+            .map(|b| b.to_vec())
+    })
 }
 pub fn default_client_create_batch(client: &DefaultClient, req: CreateBatchRequest) -> Result<BatchObject, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .create_batch(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(BatchObject)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .create_batch(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(BatchObject)
+    })
 }
 pub fn default_client_retrieve_batch(client: &DefaultClient, batch_id: String) -> Result<BatchObject, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .retrieve_batch(&batch_id)
-                .await
-                .map_err(|e| e.to_string())
-                .map(BatchObject)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .retrieve_batch(&batch_id)
+            .await
+            .map_err(|e| e.to_string())
+            .map(BatchObject)
+    })
 }
 pub fn default_client_list_batches(
     client: &DefaultClient,
     query: Option<BatchListQuery>,
 ) -> Result<BatchListResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .list_batches(query.map(|v| v.0))
-                .await
-                .map_err(|e| e.to_string())
-                .map(BatchListResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .list_batches(query.map(|v| v.0))
+            .await
+            .map_err(|e| e.to_string())
+            .map(BatchListResponse)
+    })
 }
 pub fn default_client_cancel_batch(client: &DefaultClient, batch_id: String) -> Result<BatchObject, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .cancel_batch(&batch_id)
-                .await
-                .map_err(|e| e.to_string())
-                .map(BatchObject)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .cancel_batch(&batch_id)
+            .await
+            .map_err(|e| e.to_string())
+            .map(BatchObject)
+    })
 }
 pub fn default_client_create_response(
     client: &DefaultClient,
     req: CreateResponseRequest,
 ) -> Result<ResponseObject, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .create_response(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(ResponseObject)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .create_response(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(ResponseObject)
+    })
 }
 pub fn default_client_retrieve_response(client: &DefaultClient, id: String) -> Result<ResponseObject, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .retrieve_response(&id)
-                .await
-                .map_err(|e| e.to_string())
-                .map(ResponseObject)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .retrieve_response(&id)
+            .await
+            .map_err(|e| e.to_string())
+            .map(ResponseObject)
+    })
 }
 pub fn default_client_cancel_response(client: &DefaultClient, id: String) -> Result<ResponseObject, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .cancel_response(&id)
-                .await
-                .map_err(|e| e.to_string())
-                .map(ResponseObject)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .cancel_response(&id)
+            .await
+            .map_err(|e| e.to_string())
+            .map(ResponseObject)
+    })
 }
 
 pub struct CustomProviderConfig(pub liter_llm::provider::custom::CustomProviderConfig);
