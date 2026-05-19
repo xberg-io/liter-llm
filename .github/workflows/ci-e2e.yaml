@@ -248,8 +248,15 @@ jobs:
           cp ffi-artifacts/e2e/rust/target/release/mock-server e2e/rust/target/release/mock-server
           chmod +x e2e/rust/target/release/mock-server
           # Start mock-server in background; capture its URL announcement from stdout.
+          # MOCK_SERVER_NO_STDIN_WATCH=1 makes the binary wait on SIGTERM instead of
+          # stdin EOF. Without it, when GitHub Actions ends this `Start mock-server`
+          # step the per-step bash exits, the inherited stdin FD closes, and the
+          # backgrounded mock-server reads EOF and exits before the test step can
+          # connect. Redirecting stdin from /dev/null avoids the inherited FD
+          # entirely; the env var swaps the lifetime watcher to ctrl_c().
           MOCK_URL_FILE=$(mktemp)
-          e2e/rust/target/release/mock-server > "$MOCK_URL_FILE" 2>/dev/null &
+          MOCK_SERVER_NO_STDIN_WATCH=1 e2e/rust/target/release/mock-server \
+            > "$MOCK_URL_FILE" 2>/dev/null </dev/null &
           # Wait until the server prints its URL (up to 10 s).
           n=0
           until grep -q "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" 2>/dev/null || [ "$n" -ge 100 ]; do
@@ -304,8 +311,15 @@ jobs:
         shell: bash
         run: |
           # Start mock-server in background; capture its URL announcement from stdout.
+          # MOCK_SERVER_NO_STDIN_WATCH=1 makes the binary wait on SIGTERM instead of
+          # stdin EOF. Without it, when GitHub Actions ends this `Start mock-server`
+          # step the per-step bash exits, the inherited stdin FD closes, and the
+          # backgrounded mock-server reads EOF and exits before the test step can
+          # connect. Redirecting stdin from /dev/null avoids the inherited FD
+          # entirely; the env var swaps the lifetime watcher to ctrl_c().
           MOCK_URL_FILE=$(mktemp)
-          e2e/rust/target/release/mock-server > "$MOCK_URL_FILE" 2>/dev/null &
+          MOCK_SERVER_NO_STDIN_WATCH=1 e2e/rust/target/release/mock-server \
+            > "$MOCK_URL_FILE" 2>/dev/null </dev/null &
           # Wait until the server prints its URL (up to 10 s).
           n=0
           until grep -q "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" 2>/dev/null || [ "$n" -ge 100 ]; do

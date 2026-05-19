@@ -1,0 +1,166 @@
+{
+  "": {
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/primary.swiftdeps"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/BatchesTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/BatchesTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/BatchesTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/BatchesTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/BatchesTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/BatchesTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/ChatTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ChatTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ChatTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ChatTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ChatTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ChatTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/ConfigurationTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ConfigurationTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ConfigurationTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ConfigurationTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ConfigurationTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ConfigurationTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/ContractTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ContractTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ContractTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ContractTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ContractTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ContractTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/CustomProviderTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/CustomProviderTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/CustomProviderTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/CustomProviderTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/CustomProviderTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/CustomProviderTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/EmbedTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/EmbedTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/EmbedTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/EmbedTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/EmbedTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/EmbedTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/ErrorHandlingTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ErrorHandlingTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ErrorHandlingTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ErrorHandlingTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ErrorHandlingTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ErrorHandlingTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/FilesTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/FilesTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/FilesTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/FilesTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/FilesTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/FilesTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/ImageGenerateTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ImageGenerateTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ImageGenerateTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ImageGenerateTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ImageGenerateTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ImageGenerateTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/ListModelsTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ListModelsTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ListModelsTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ListModelsTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ListModelsTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ListModelsTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/ModerateTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ModerateTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ModerateTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ModerateTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ModerateTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ModerateTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/OcrTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/OcrTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/OcrTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/OcrTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/OcrTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/OcrTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/ParityTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ParityTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ParityTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ParityTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ParityTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ParityTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/RerankTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/RerankTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/RerankTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/RerankTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/RerankTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/RerankTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/ResponsesTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ResponsesTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ResponsesTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ResponsesTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ResponsesTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ResponsesTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/SearchTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/SearchTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/SearchTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/SearchTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/SearchTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/SearchTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/SmokeTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/SmokeTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/SmokeTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/SmokeTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/SmokeTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/SmokeTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/SpeechTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/SpeechTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/SpeechTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/SpeechTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/SpeechTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/SpeechTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/StreamingTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/StreamingTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/StreamingTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/StreamingTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/StreamingTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/StreamingTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/TestHelpers.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/TestHelpers.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/TestHelpers.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/TestHelpers~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/TestHelpers.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/TestHelpers.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/ToolCallingTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ToolCallingTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ToolCallingTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ToolCallingTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ToolCallingTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/ToolCallingTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/TranscribeTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/TranscribeTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/TranscribeTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/TranscribeTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/TranscribeTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/TranscribeTests.dia"
+  },
+  "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/Tests/LiterLlmE2ETests/TypesTests.swift": {
+    "dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/TypesTests.d",
+    "object": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/TypesTests.swift.o",
+    "swiftmodule": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/TypesTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/TypesTests.swiftdeps",
+    "diagnostics": "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlmE2ETests.build/TypesTests.dia"
+  }
+}

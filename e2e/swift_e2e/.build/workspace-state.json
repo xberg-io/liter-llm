@@ -1,0 +1,27 @@
+{
+  "object" : {
+    "artifacts" : [
+
+    ],
+    "dependencies" : [
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "swift",
+          "kind" : "fileSystem",
+          "location" : "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/packages/swift",
+          "name" : "LiterLlm"
+        },
+        "state" : {
+          "name" : "fileSystem",
+          "path" : "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/packages/swift"
+        },
+        "subpath" : "swift"
+      }
+    ],
+    "prebuilts" : [
+
+    ]
+  },
+  "version" : 7
+}
