@@ -129,7 +129,14 @@ jobs:
     name: E2E (${{ matrix.lang }})
     if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
     needs: [build-ffi]
-    runs-on: ${{ matrix.lang == 'swift' && 'macos-latest' || 'ubuntu-24.04-arm' }}
+    # Swift e2e runs on macos-14 (Sonoma) rather than `macos-latest` (currently
+    # macos-15 Sequoia). macOS 15 added a "Local Network" privacy permission
+    # that silently denies 127.0.0.1 connections from sandboxed processes —
+    # SwiftPM test binaries linked against the Rust staticlib hit this. Plain
+    # reqwest from CLI on the same host works fine; only the swift-test launch
+    # context is affected. macos-14 predates the permission and reaches the
+    # mock-server without prompting.
+    runs-on: ${{ matrix.lang == 'swift' && 'macos-14' || 'ubuntu-24.04-arm' }}
     timeout-minutes: 60
     strategy:
       fail-fast: false
