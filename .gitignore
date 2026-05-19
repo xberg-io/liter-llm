@@ -117,6 +117,16 @@ e2e/elixir/deps/
 e2e/elixir/_build/
 e2e/php/vendor/
 
+# Swift Package Manager
+**/.build/
+**/.swiftpm/
+**/*.xcodeproj/xcuserdata/
+
+# Dart pub (test_apps)
+test_apps/dart/.dart_tool/
+test_apps/dart/.packages
+test_apps/dart/pubspec.lock
+
 # C FFI test binaries
 crates/liter-llm-ffi/tests/c/test_*
 !crates/liter-llm-ffi/tests/c/test_*.c
