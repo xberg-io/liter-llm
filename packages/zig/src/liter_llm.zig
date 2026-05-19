@@ -1265,6 +1265,144 @@ pub fn unregister_custom_provider(name: []const u8) LiterLlmError!bool {
     return _result != 0;
 }
 
+/// Return all provider configs from the registry.
+///
+/// Useful for tooling, documentation generation, or runtime enumeration.
+pub fn all_providers() LiterLlmError![]u8 {
+    const _result = c.literllm_all_providers();
+    const _result_len = c.literllm_all_providers_len();
+    if (c.literllm_last_error_code() != 0) {
+        return _first_error(LiterLlmError);
+    }
+    return blk: {
+        if (_result == null) return _first_error(LiterLlmError);
+        const slice = _result[0.._result_len];
+        const owned = try std.heap.c_allocator.dupe(u8, slice);
+        _free_string(_result);
+        break :blk owned;
+    };
+}
+
+/// Return the set of complex provider names.
+///
+/// Complex providers require custom auth/routing logic beyond simple bearer
+/// tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
+///
+/// The returned reference points into the static registry — no allocation.
+pub fn complex_provider_names() LiterLlmError![]u8 {
+    const _result = c.literllm_complex_provider_names();
+    const _result_len = c.literllm_complex_provider_names_len();
+    if (c.literllm_last_error_code() != 0) {
+        return _first_error(LiterLlmError);
+    }
+    return blk: {
+        if (_result == null) return _first_error(LiterLlmError);
+        const slice = _result[0.._result_len];
+        const owned = try std.heap.c_allocator.dupe(u8, slice);
+        _free_string(_result);
+        break :blk owned;
+    };
+}
+
+/// Calculate the estimated cost of a completion given a model name and token
+/// counts.
+///
+/// Returns `null` if the model is not present in the embedded pricing registry.
+/// Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
+///
+/// When an exact model name match is not found, progressively shorter prefixes
+/// are tried by stripping from the last `-` or `.` separator.  For example,
+/// `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
+pub fn completion_cost(model: []const u8, prompt_tokens: u64, completion_tokens: u64) error{OutOfMemory}!?f64 {
+    const model_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{model}, 0);
+    defer std.heap.c_allocator.free(model_z);
+    const _result = c.literllm_completion_cost(model_z, prompt_tokens, completion_tokens);
+    return _result;
+}
+
+/// Calculate the estimated cost of a completion, accounting for cached
+/// (cache-hit) prompt tokens billed at the provider's discounted rate.
+///
+/// `cached_tokens` is the count of prompt tokens served from the provider's
+/// prompt cache. It must be `<= prompt_tokens` (cached tokens are a subset of
+/// the prompt). The non-cached portion is billed at `input_cost_per_token`
+/// and the cached portion at `cache_read_input_token_cost` when the model
+/// has cache pricing; otherwise the entire prompt is billed at the regular
+/// input rate.
+///
+/// Returns `null` if the model is not present in the embedded pricing
+/// registry, mirroring `completion_cost`.
+pub fn completion_cost_with_cache(model: []const u8, prompt_tokens: u64, cached_tokens: u64, completion_tokens: u64) error{OutOfMemory}!?f64 {
+    const model_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{model}, 0);
+    defer std.heap.c_allocator.free(model_z);
+    const _result = c.literllm_completion_cost_with_cache(model_z, prompt_tokens, cached_tokens, completion_tokens);
+    return _result;
+}
+
+/// Count tokens in a text string using the tokenizer for the given model.
+///
+/// The tokenizer is resolved from the model name prefix (e.g. `"gpt-4o"` maps
+/// to the `Xenova/gpt-4o` HuggingFace tokenizer). Tokenizers are cached after
+/// first load.
+///
+/// **Errors:**
+///
+/// Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
+/// (e.g. network failure on first use) or if tokenization itself fails.
+pub fn count_tokens(model: []const u8, text: []const u8) LiterLlmError!u64 {
+    const model_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{model}, 0);
+    defer std.heap.c_allocator.free(model_z);
+    const text_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{text}, 0);
+    defer std.heap.c_allocator.free(text_z);
+    const _result = c.literllm_count_tokens(model_z, text_z);
+    if (c.literllm_last_error_code() != 0) {
+        return _first_error(LiterLlmError);
+    }
+    return _result;
+}
+
+/// Count tokens for a full `ChatCompletionRequest`.
+///
+/// Sums tokens across all message text contents plus a per-message overhead
+/// of ~4 tokens (for role, separators, and formatting metadata). Tool
+/// definitions and multimodal content parts (images, audio, documents) are
+/// not counted — only textual content contributes to the token total.
+///
+/// **Errors:**
+///
+/// Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded or
+/// if tokenization fails for any message.
+pub fn count_request_tokens(model: []const u8, req: []const u8) LiterLlmError!u64 {
+    const model_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{model}, 0);
+    defer std.heap.c_allocator.free(model_z);
+    const req_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{req}, 0);
+    defer std.heap.c_allocator.free(req_z);
+    const req_handle = c.literllm_chat_completion_request_from_json(req_z);
+    const _result = c.literllm_count_request_tokens(model_z, req_handle);
+    if (c.literllm_last_error_code() != 0) {
+        return _first_error(LiterLlmError);
+    }
+    if (req_handle) |h| c.literllm_chat_completion_request_free(h);
+    return _result;
+}
+
+/// Install the `ring` crypto provider as the rustls process default, idempotently.
+///
+/// rustls 0.23+ removed the implicit default provider. This function installs
+/// `ring` once per process. Subsequent calls are no-ops. Calling it from a
+/// downstream Rust app that has already installed `aws-lc-rs` is safe — the
+/// `Err` from `install_default()` is silently ignored.
+///
+/// Called automatically by every internal `reqwest.Client` constructor
+/// (auth providers, default HTTP client). Bindings and downstream consumers
+/// reach those constructors transitively, so no manual init is required.
+///
+/// WASM builds are exempt — the WASM target uses the browser/Node.js fetch
+/// API instead of rustls, so no crypto provider is needed.
+pub fn ensure_crypto_provider() void {
+    _ = c.literllm_ensure_crypto_provider();
+}
+
 /// Default client implementation backed by `reqwest`.
 ///
 /// Sends requests to 140+ LLM providers with automatic provider detection
@@ -1718,6 +1856,16 @@ pub const DefaultClient = struct {
     }
 };
 
+/// Static configuration for a single provider entry in providers.json.
+pub const ProviderConfig = struct {
+    _handle: *anyopaque,
+
+    /// Release the underlying FFI handle. Safe to call once per instance.
+    pub fn free(self: *ProviderConfig) void {
+        c.literllm_provider_config_free(@as(*c.LITERLLMProviderConfig, @ptrCast(self._handle)));
+    }
+};
+
 pub const TowerCachedResponse = struct {
     _handle: *anyopaque,
 
@@ -1735,5 +1883,64 @@ pub const TowerCachedResponse = struct {
     /// Release the underlying FFI handle. Safe to call once per instance.
     pub fn free(self: *TowerCachedResponse) void {
         c.literllm_tower_cached_response_free(@as(*c.LITERLLMTowerCachedResponse, @ptrCast(self._handle)));
+    }
+};
+
+pub const TowerLlmRequest = struct {
+    _handle: *anyopaque,
+
+    /// OpenTelemetry GenAI `gen_ai.operation.name` value for this request.
+    ///
+    /// Maps each variant to one of the canonical GenAI semantic convention
+    /// operation names: `"chat"`, `"embeddings"`, or `"list_models"`.
+    /// Both streaming and non-streaming chat map to `"chat"`.
+    pub fn operation_name(self: *TowerLlmRequest) error{OutOfMemory}![]u8 {
+        const _result = c.literllm_tower_llm_request_operation_name(@as(*c.LITERLLMTowerLlmRequest, @ptrCast(self._handle)));
+        return blk: {
+            const slice = std.mem.span(_result);
+            const owned = try std.heap.c_allocator.dupe(u8, slice);
+            c.literllm_free_string(_result);
+            break :blk owned;
+        };
+    }
+
+    /// Human-readable name of the request type; used as a span / metric label.
+    pub fn request_type(self: *TowerLlmRequest) error{OutOfMemory}![]u8 {
+        const _result = c.literllm_tower_llm_request_request_type(@as(*c.LITERLLMTowerLlmRequest, @ptrCast(self._handle)));
+        return blk: {
+            const slice = std.mem.span(_result);
+            const owned = try std.heap.c_allocator.dupe(u8, slice);
+            c.literllm_free_string(_result);
+            break :blk owned;
+        };
+    }
+
+    /// Return the model name embedded in the request, if any.
+    pub fn model(self: *TowerLlmRequest) ?[]u8 {
+        const _result = c.literllm_tower_llm_request_model(@as(*c.LITERLLMTowerLlmRequest, @ptrCast(self._handle)));
+        return _result;
+    }
+
+    /// Release the underlying FFI handle. Safe to call once per instance.
+    pub fn free(self: *TowerLlmRequest) void {
+        c.literllm_tower_llm_request_free(@as(*c.LITERLLMTowerLlmRequest, @ptrCast(self._handle)));
+    }
+};
+
+pub const TowerLlmResponse = struct {
+    _handle: *anyopaque,
+
+    /// Return the usage data from the response, if present.
+    ///
+    /// Streaming, model-list, and non-chat responses do not carry aggregated
+    /// usage data and always return `null`.
+    pub fn usage(self: *TowerLlmResponse) ?[]u8 {
+        const _result = c.literllm_tower_llm_response_usage(@as(*c.LITERLLMTowerLlmResponse, @ptrCast(self._handle)));
+        return _result;
+    }
+
+    /// Release the underlying FFI handle. Safe to call once per instance.
+    pub fn free(self: *TowerLlmResponse) void {
+        c.literllm_tower_llm_response_free(@as(*c.LITERLLMTowerLlmResponse, @ptrCast(self._handle)));
     }
 };

@@ -74,4 +74,131 @@ class LiterLlmBridge {
   static Future<bool> unregisterCustomProvider(String name) async {
     return await rust_bridge.unregisterCustomProvider(name: name);
   }
+
+  /// Return all provider configs from the registry.
+  ///
+  /// Useful for tooling, documentation generation, or runtime enumeration.
+  /// throws anyhow::Error on failure
+  static Future<List<ProviderConfig>> allProviders() async {
+    return await rust_bridge.allProviders();
+  }
+
+  /// Return the set of complex provider names.
+  ///
+  /// Complex providers require custom auth/routing logic beyond simple bearer
+  /// tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
+  ///
+  /// The returned reference points into the static registry — no allocation.
+  /// throws anyhow::Error on failure
+  static Future<List<String>> complexProviderNames() async {
+    return await rust_bridge.complexProviderNames();
+  }
+
+  /// Calculate the estimated cost of a completion given a model name and token
+  /// counts.
+  ///
+  /// Returns `None` if the model is not present in the embedded pricing registry.
+  /// Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
+  ///
+  /// When an exact model name match is not found, progressively shorter prefixes
+  /// are tried by stripping from the last `-` or `.` separator.  For example,
+  /// `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use liter_llm::cost;
+  ///
+  /// let usd = cost::completion_cost("gpt-4o", 1_000, 500).unwrap();
+  /// // 1000 * 0.0000025 + 500 * 0.00001 = 0.0025 + 0.005 = 0.0075
+  /// assert!((usd - 0.0075).abs() < 1e-9);
+  /// ```
+  static Future<double?> completionCost(
+    String model,
+    int promptTokens,
+    int completionTokens,
+  ) async {
+    return await rust_bridge.completionCost(
+      model: model,
+      promptTokens: promptTokens,
+      completionTokens: completionTokens,
+    );
+  }
+
+  /// Calculate the estimated cost of a completion, accounting for cached
+  /// (cache-hit) prompt tokens billed at the provider's discounted rate.
+  ///
+  /// `cached_tokens` is the count of prompt tokens served from the provider's
+  /// prompt cache. It must be `<= prompt_tokens` (cached tokens are a subset of
+  /// the prompt). The non-cached portion is billed at `input_cost_per_token`
+  /// and the cached portion at `cache_read_input_token_cost` when the model
+  /// has cache pricing; otherwise the entire prompt is billed at the regular
+  /// input rate.
+  ///
+  /// Returns `None` if the model is not present in the embedded pricing
+  /// registry, mirroring [`completion_cost`].
+  static Future<double?> completionCostWithCache(
+    String model,
+    int promptTokens,
+    int cachedTokens,
+    int completionTokens,
+  ) async {
+    return await rust_bridge.completionCostWithCache(
+      model: model,
+      promptTokens: promptTokens,
+      cachedTokens: cachedTokens,
+      completionTokens: completionTokens,
+    );
+  }
+
+  /// Count tokens in a text string using the tokenizer for the given model.
+  ///
+  /// The tokenizer is resolved from the model name prefix (e.g. `"gpt-4o"` maps
+  /// to the `Xenova/gpt-4o` HuggingFace tokenizer). Tokenizers are cached after
+  /// first load.
+  ///
+  /// # Errors
+  ///
+  /// Returns [`LiterLlmError::BadRequest`] if the tokenizer cannot be loaded
+  /// (e.g. network failure on first use) or if tokenization itself fails.
+  /// throws anyhow::Error on failure
+  static Future<int> countTokens(String model, String text) async {
+    return await rust_bridge.countTokens(model: model, text: text);
+  }
+
+  /// Count tokens for a full [`ChatCompletionRequest`].
+  ///
+  /// Sums tokens across all message text contents plus a per-message overhead
+  /// of ~4 tokens (for role, separators, and formatting metadata). Tool
+  /// definitions and multimodal content parts (images, audio, documents) are
+  /// not counted — only textual content contributes to the token total.
+  ///
+  /// # Errors
+  ///
+  /// Returns [`LiterLlmError::BadRequest`] if the tokenizer cannot be loaded or
+  /// if tokenization fails for any message.
+  /// throws anyhow::Error on failure
+  static Future<int> countRequestTokens(
+    String model,
+    ChatCompletionRequest req,
+  ) async {
+    return await rust_bridge.countRequestTokens(model: model, req: req);
+  }
+
+  /// Install the `ring` crypto provider as the rustls process default, idempotently.
+  ///
+  /// rustls 0.23+ removed the implicit default provider. This function installs
+  /// `ring` once per process. Subsequent calls are no-ops. Calling it from a
+  /// downstream Rust app that has already installed `aws-lc-rs` is safe — the
+  /// `Err` from `install_default()` is silently ignored.
+  ///
+  /// Called automatically by every internal `reqwest::Client` constructor
+  /// (auth providers, default HTTP client). Bindings and downstream consumers
+  /// reach those constructors transitively, so no manual init is required.
+  ///
+  /// WASM builds are exempt — the WASM target uses the browser/Node.js fetch
+  /// API instead of rustls, so no crypto provider is needed.
+  static Future<void> ensureCryptoProvider() async {
+    return await rust_bridge.ensureCryptoProvider();
+  }
 }

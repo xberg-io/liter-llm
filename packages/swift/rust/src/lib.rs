@@ -986,6 +986,13 @@ mod ffi {
     }
 
     extern "Rust" {
+        type ProviderConfig;
+        fn name(&self) -> String;
+        fn display_name(&self) -> Option<String>;
+        fn base_url(&self) -> Option<String>;
+    }
+
+    extern "Rust" {
         type BudgetConfig;
         #[swift_bridge(init)]
         fn new(global_limit: Option<f64>, model_limits: String, enforcement: Enforcement) -> BudgetConfig;
@@ -1014,6 +1021,28 @@ mod ffi {
         fn rpm(&self) -> Option<u32>;
         fn tpm(&self) -> Option<u64>;
         fn window(&self) -> u64;
+    }
+
+    extern "Rust" {
+        type TowerLlmRequest;
+    }
+
+    extern "Rust" {
+        #[swift_bridge(swift_name = "towerLlmRequestOperationName")]
+        fn tower_llm_request_operation_name(client: &TowerLlmRequest) -> String;
+        #[swift_bridge(swift_name = "towerLlmRequestRequestType")]
+        fn tower_llm_request_request_type(client: &TowerLlmRequest) -> String;
+        #[swift_bridge(swift_name = "towerLlmRequestModel")]
+        fn tower_llm_request_model(client: &TowerLlmRequest) -> String;
+    }
+
+    extern "Rust" {
+        type TowerLlmResponse;
+    }
+
+    extern "Rust" {
+        #[swift_bridge(swift_name = "towerLlmResponseUsage")]
+        fn tower_llm_response_usage(client: &TowerLlmResponse) -> Option<Usage>;
     }
 
     extern "Rust" {
@@ -1136,6 +1165,25 @@ mod ffi {
         fn register_custom_provider(config: CustomProviderConfig) -> Result<(), String>;
         #[swift_bridge(swift_name = "unregisterCustomProvider")]
         fn unregister_custom_provider(name: String) -> Result<bool, String>;
+        #[swift_bridge(swift_name = "allProviders")]
+        fn all_providers() -> Result<Vec<ProviderConfig>, String>;
+        #[swift_bridge(swift_name = "complexProviderNames")]
+        fn complex_provider_names() -> Result<Vec<String>, String>;
+        #[swift_bridge(swift_name = "completionCost")]
+        fn completion_cost(model: String, prompt_tokens: u64, completion_tokens: u64) -> String;
+        #[swift_bridge(swift_name = "completionCostWithCache")]
+        fn completion_cost_with_cache(
+            model: String,
+            prompt_tokens: u64,
+            cached_tokens: u64,
+            completion_tokens: u64,
+        ) -> String;
+        #[swift_bridge(swift_name = "countTokens")]
+        fn count_tokens(model: String, text: String) -> Result<usize, String>;
+        #[swift_bridge(swift_name = "countRequestTokens")]
+        fn count_request_tokens(model: String, req: ChatCompletionRequest) -> Result<usize, String>;
+        #[swift_bridge(swift_name = "ensureCryptoProvider")]
+        fn ensure_crypto_provider() -> ();
     }
 
     extern "Rust" {
@@ -4233,10 +4281,25 @@ impl CustomProviderConfig {
     }
 }
 
-pub struct BudgetConfig(pub liter_llm::tower::BudgetConfig);
+pub struct ProviderConfig(pub liter_llm::provider::ProviderConfig);
+impl ProviderConfig {
+    pub fn name(&self) -> String {
+        format!("{:?}", &self.0.name)
+    }
+    pub fn display_name(&self) -> Option<String> {
+        self.0.display_name.as_ref().map(|v| format!("{v:?}"))
+    }
+    pub fn base_url(&self) -> Option<String> {
+        self.0.base_url.as_ref().map(|v| format!("{v:?}"))
+    }
+    // alef: skipped getter `endpoints` — type cannot be bridged through swift-bridge
+    // alef: skipped getter `model_prefixes` — type cannot be bridged through swift-bridge
+}
+
+pub struct BudgetConfig(pub liter_llm::BudgetConfig);
 impl BudgetConfig {
     pub fn new(global_limit: Option<f64>, model_limits: String, enforcement: Enforcement) -> BudgetConfig {
-        let mut __target: liter_llm::tower::BudgetConfig = ::std::default::Default::default();
+        let mut __target: liter_llm::BudgetConfig = ::std::default::Default::default();
         __target.global_limit = global_limit;
         if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&model_limits) {
             if let Ok(t) = ::serde_json::from_value(v) {
@@ -4261,10 +4324,10 @@ impl BudgetConfig {
     }
 }
 
-pub struct CacheConfig(pub liter_llm::tower::CacheConfig);
+pub struct CacheConfig(pub liter_llm::CacheConfig);
 impl CacheConfig {
     pub fn new(max_entries: usize, ttl: u64, backend: CacheBackend) -> CacheConfig {
-        let mut __target: liter_llm::tower::CacheConfig = ::std::default::Default::default();
+        let mut __target: liter_llm::CacheConfig = ::std::default::Default::default();
         __target.max_entries = max_entries;
         __target.ttl = std::time::Duration::from_millis(ttl);
         // alef: backend (CacheBackend) is an enum; reverse From not generated — left at default
@@ -4286,10 +4349,10 @@ impl CacheConfig {
 
 pub struct TowerCachedResponse(pub liter_llm::tower::CachedResponse);
 
-pub struct RateLimitConfig(pub liter_llm::tower::RateLimitConfig);
+pub struct RateLimitConfig(pub liter_llm::RateLimitConfig);
 impl RateLimitConfig {
     pub fn new(rpm: Option<u32>, tpm: Option<u64>, window: u64) -> RateLimitConfig {
-        let mut __target: liter_llm::tower::RateLimitConfig = ::std::default::Default::default();
+        let mut __target: liter_llm::RateLimitConfig = ::std::default::Default::default();
         __target.rpm = rpm;
         __target.tpm = tpm;
         __target.window = std::time::Duration::from_millis(window);
@@ -4312,6 +4375,24 @@ impl RateLimitConfig {
     pub fn window(&self) -> u64 {
         self.0.window.as_millis() as u64
     }
+}
+
+pub struct TowerLlmRequest(pub liter_llm::tower::LlmRequest);
+
+pub fn tower_llm_request_operation_name(client: &TowerLlmRequest) -> String {
+    client.0.operation_name().to_string()
+}
+pub fn tower_llm_request_request_type(client: &TowerLlmRequest) -> String {
+    client.0.request_type().to_string()
+}
+pub fn tower_llm_request_model(client: &TowerLlmRequest) -> String {
+    serde_json::to_string(&(client.0.model())).expect("serializable return")
+}
+
+pub struct TowerLlmResponse(pub liter_llm::tower::LlmResponse);
+
+pub fn tower_llm_response_usage(client: &TowerLlmResponse) -> Option<Usage> {
+    (client.0.usage()).map(Usage)
 }
 
 pub enum Message {
@@ -4788,11 +4869,11 @@ pub enum Enforcement {
     Soft,
 }
 
-impl From<liter_llm::tower::Enforcement> for Enforcement {
-    fn from(val: liter_llm::tower::Enforcement) -> Self {
+impl From<liter_llm::Enforcement> for Enforcement {
+    fn from(val: liter_llm::Enforcement) -> Self {
         match val {
-            liter_llm::tower::Enforcement::Hard => Self::Hard,
-            liter_llm::tower::Enforcement::Soft => Self::Soft,
+            liter_llm::Enforcement::Hard => Self::Hard,
+            liter_llm::Enforcement::Soft => Self::Soft,
         }
     }
 }
@@ -4812,10 +4893,10 @@ pub enum CacheBackend {
     Unknown,
 }
 
-impl From<liter_llm::tower::CacheBackend> for CacheBackend {
-    fn from(val: liter_llm::tower::CacheBackend) -> Self {
+impl From<liter_llm::CacheBackend> for CacheBackend {
+    fn from(val: liter_llm::CacheBackend) -> Self {
         match val {
-            liter_llm::tower::CacheBackend::Memory => Self::Memory,
+            liter_llm::CacheBackend::Memory => Self::Memory,
             _ => Self::Unknown,
         }
     }
@@ -4854,6 +4935,47 @@ pub fn register_custom_provider(config: CustomProviderConfig) -> Result<(), Stri
 
 pub fn unregister_custom_provider(name: String) -> Result<bool, String> {
     liter_llm::provider::custom::unregister_custom_provider(&name).map_err(|e| e.to_string())
+}
+
+pub fn all_providers() -> Result<Vec<ProviderConfig>, String> {
+    liter_llm::provider::all_providers()
+        .map_err(|e| e.to_string())
+        .map(|v| v.into_iter().map(ProviderConfig).collect::<Vec<_>>())
+}
+
+pub fn complex_provider_names() -> Result<Vec<String>, String> {
+    liter_llm::provider::complex_provider_names()
+        .map_err(|e| e.to_string())
+        .map(|v| v.into_iter().map(|s| s.to_string()).collect::<Vec<_>>())
+}
+
+pub fn completion_cost(model: String, prompt_tokens: u64, completion_tokens: u64) -> String {
+    serde_json::to_string(&(liter_llm::cost::completion_cost(&model, prompt_tokens, completion_tokens)))
+        .expect("serializable return")
+}
+
+pub fn completion_cost_with_cache(
+    model: String,
+    prompt_tokens: u64,
+    cached_tokens: u64,
+    completion_tokens: u64,
+) -> String {
+    serde_json::to_string(
+        &(liter_llm::cost::completion_cost_with_cache(&model, prompt_tokens, cached_tokens, completion_tokens)),
+    )
+    .expect("serializable return")
+}
+
+pub fn count_tokens(model: String, text: String) -> Result<usize, String> {
+    liter_llm::tokenizer::count_tokens(&model, &text).map_err(|e| e.to_string())
+}
+
+pub fn count_request_tokens(model: String, req: ChatCompletionRequest) -> Result<usize, String> {
+    liter_llm::tokenizer::count_request_tokens(&model, &req.0).map_err(|e| e.to_string())
+}
+
+pub fn ensure_crypto_provider() -> () {
+    liter_llm::ensure_crypto_provider()
 }
 
 /// Opaque handle owning a tokio runtime and a boxed `ChatCompletionChunk` stream.

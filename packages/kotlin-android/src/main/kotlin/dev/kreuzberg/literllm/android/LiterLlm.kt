@@ -21,6 +21,7 @@
 
 package dev.kreuzberg.literllm.android
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -92,4 +93,128 @@ object LiterLlm {
      * Returns an error only if the internal lock is poisoned.
      */
     fun unregisterCustomProvider(name: String): Boolean = LiterLlmBridge.nativeUnregisterCustomProvider(name)
+    /**
+     * Return all provider configs from the registry.
+     *
+     * Useful for tooling, documentation generation, or runtime enumeration.
+     */
+    fun allProviders(): List<ProviderConfig> {
+        val resultJson = LiterLlmBridge.nativeAllProviders()
+        return mapper.readValue(resultJson, object : TypeReference<List<ProviderConfig>>() {})
+    }
+
+    /**
+     * Return all provider configs from the registry.
+     *
+     * Useful for tooling, documentation generation, or runtime enumeration.
+     */
+    suspend fun allProvidersAsync(): List<ProviderConfig> =
+        withContext(Dispatchers.IO) { allProviders() }
+
+    /**
+     * Return the set of complex provider names.
+     *
+     * Complex providers require custom auth/routing logic beyond simple bearer
+     * tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
+     *
+     * The returned reference points into the static registry — no allocation.
+     */
+    fun complexProviderNames(): List<String> {
+        val resultJson = LiterLlmBridge.nativeComplexProviderNames()
+        return mapper.readValue(resultJson, object : TypeReference<List<String>>() {})
+    }
+
+    /**
+     * Return the set of complex provider names.
+     *
+     * Complex providers require custom auth/routing logic beyond simple bearer
+     * tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
+     *
+     * The returned reference points into the static registry — no allocation.
+     */
+    suspend fun complexProviderNamesAsync(): List<String> =
+        withContext(Dispatchers.IO) { complexProviderNames() }
+
+    /**
+     * Calculate the estimated cost of a completion given a model name and token
+     * counts.
+     *
+     * Returns `null` if the model is not present in the embedded pricing registry.
+     * Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
+     *
+     * When an exact model name match is not found, progressively shorter prefixes
+     * are tried by stripping from the last `-` or `.` separator.  For example,
+     * `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
+     */
+    fun completionCost(
+        model: String,
+        promptTokens: Long,
+        completionTokens: Long
+    ): String? = LiterLlmBridge.nativeCompletionCost(model, promptTokens, completionTokens)
+    /**
+     * Calculate the estimated cost of a completion, accounting for cached
+     * (cache-hit) prompt tokens billed at the provider's discounted rate.
+     *
+     * `cached_tokens` is the count of prompt tokens served from the provider's
+     * prompt cache. It must be `<= prompt_tokens` (cached tokens are a subset of
+     * the prompt). The non-cached portion is billed at `input_cost_per_token`
+     * and the cached portion at `cache_read_input_token_cost` when the model
+     * has cache pricing; otherwise the entire prompt is billed at the regular
+     * input rate.
+     *
+     * Returns `null` if the model is not present in the embedded pricing
+     * registry, mirroring `completion_cost`.
+     */
+    fun completionCostWithCache(
+        model: String,
+        promptTokens: Long,
+        cachedTokens: Long,
+        completionTokens: Long
+    ): String? = LiterLlmBridge.nativeCompletionCostWithCache(model, promptTokens, cachedTokens, completionTokens)
+    /**
+     * Count tokens in a text string using the tokenizer for the given model.
+     *
+     * The tokenizer is resolved from the model name prefix (e.g. `"gpt-4o"` maps
+     * to the `Xenova/gpt-4o` HuggingFace tokenizer). Tokenizers are cached after
+     * first load.
+     *
+     * **Errors:**
+     *
+     * Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
+     * (e.g. network failure on first use) or if tokenization itself fails.
+     */
+    fun countTokens(model: String, text: String): Long = LiterLlmBridge.nativeCountTokens(model, text)
+    /**
+     * Count tokens for a full `ChatCompletionRequest`.
+     *
+     * Sums tokens across all message text contents plus a per-message overhead
+     * of ~4 tokens (for role, separators, and formatting metadata). Tool
+     * definitions and multimodal content parts (images, audio, documents) are
+     * not counted — only textual content contributes to the token total.
+     *
+     * **Errors:**
+     *
+     * Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded or
+     * if tokenization fails for any message.
+     */
+    fun countRequestTokens(
+        model: String,
+        req: ChatCompletionRequest
+    ): Long = LiterLlmBridge.nativeCountRequestTokens(model, mapper.writeValueAsString(req))
+    /**
+     * Install the `ring` crypto provider as the rustls process default, idempotently.
+     *
+     * rustls 0.23+ removed the implicit default provider. This function installs
+     * `ring` once per process. Subsequent calls are no-ops. Calling it from a
+     * downstream Rust app that has already installed `aws-lc-rs` is safe — the
+     * `Err` from `install_default()` is silently ignored.
+     *
+     * Called automatically by every internal `reqwest.Client` constructor
+     * (auth providers, default HTTP client). Bindings and downstream consumers
+     * reach those constructors transitively, so no manual init is required.
+     *
+     * WASM builds are exempt — the WASM target uses the browser/Node.js fetch
+     * API instead of rustls, so no crypto provider is needed.
+     */
+    fun ensureCryptoProvider(): Unit = LiterLlmBridge.nativeEnsureCryptoProvider()
 }

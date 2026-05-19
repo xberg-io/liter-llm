@@ -1003,6 +1003,21 @@ pub struct CustomProviderConfig {
     pub model_prefixes: Vec<String>,
 }
 
+/// Static configuration for a single provider entry in providers.json.
+#[frb(mirror(ProviderConfig))]
+pub struct ProviderConfig {
+    /// Provider identifier (matches the entry key in providers.json).
+    pub name: String,
+    /// Human-readable provider name shown in UIs.
+    pub display_name: Option<String>,
+    /// Base URL used as the default for this provider's HTTP client.
+    pub base_url: Option<String>,
+    /// Supported endpoint kinds (e.g. `chat`, `embeddings`).
+    pub endpoints: Option<Vec<String>>,
+    /// Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`).
+    pub model_prefixes: Option<Vec<String>>,
+}
+
 /// Configuration for budget enforcement.
 #[frb(mirror(BudgetConfig))]
 pub struct BudgetConfig {
@@ -1052,6 +1067,40 @@ pub struct RateLimitConfig {
     pub tpm: Option<i64>,
     /// Fixed window duration (defaults to 60 s).
     pub window: i64,
+}
+
+#[frb(opaque)]
+pub struct TowerLlmRequest {
+    pub(crate) inner: liter_llm::tower::LlmRequest,
+}
+
+impl From<liter_llm::tower::LlmRequest> for TowerLlmRequest {
+    fn from(inner: liter_llm::tower::LlmRequest) -> Self {
+        Self { inner }
+    }
+}
+
+impl From<TowerLlmRequest> for liter_llm::tower::LlmRequest {
+    fn from(value: TowerLlmRequest) -> Self {
+        value.inner
+    }
+}
+
+#[frb(opaque)]
+pub struct TowerLlmResponse {
+    pub(crate) inner: liter_llm::tower::LlmResponse,
+}
+
+impl From<liter_llm::tower::LlmResponse> for TowerLlmResponse {
+    fn from(inner: liter_llm::tower::LlmResponse) -> Self {
+        Self { inner }
+    }
+}
+
+impl From<TowerLlmResponse> for liter_llm::tower::LlmResponse {
+    fn from(value: TowerLlmResponse) -> Self {
+        value.inner
+    }
 }
 
 #[allow(unused_imports)]
@@ -1271,6 +1320,28 @@ impl DefaultClient {
 
 impl TowerCachedResponse {
     // Method `into_llm_response` has a sanitized return type that cannot be bridged through FRB — skipped.
+}
+
+impl TowerLlmRequest {
+    #[frb]
+    pub fn operation_name(&self) -> String {
+        (|v: &str| v.to_string())(self.inner.operation_name())
+    }
+    #[frb]
+    pub fn request_type(&self) -> String {
+        (|v: &str| v.to_string())(self.inner.request_type())
+    }
+    #[frb]
+    pub fn model(&self) -> Option<String> {
+        (|v: Option<&str>| v.map(|s| s.to_string()))(self.inner.model())
+    }
+}
+
+impl TowerLlmResponse {
+    #[frb]
+    pub fn usage(&self) -> Option<Usage> {
+        (|v: Option<_>| v.map(Usage::from))(self.inner.usage())
+    }
 }
 
 /// A chat message in a conversation.
@@ -2333,8 +2404,20 @@ impl From<liter_llm::provider::custom::CustomProviderConfig> for CustomProviderC
     }
 }
 
-impl From<liter_llm::tower::BudgetConfig> for BudgetConfig {
-    fn from(v: liter_llm::tower::BudgetConfig) -> Self {
+impl From<liter_llm::provider::ProviderConfig> for ProviderConfig {
+    fn from(v: liter_llm::provider::ProviderConfig) -> Self {
+        ProviderConfig {
+            name: v.name.into(),
+            display_name: v.display_name.map(|s| s.into()),
+            base_url: v.base_url.map(|s| s.into()),
+            endpoints: v.endpoints.map(|vec| vec.into_iter().map(|s| s.into()).collect()),
+            model_prefixes: v.model_prefixes.map(|vec| vec.into_iter().map(|s| s.into()).collect()),
+        }
+    }
+}
+
+impl From<liter_llm::BudgetConfig> for BudgetConfig {
+    fn from(v: liter_llm::BudgetConfig) -> Self {
         BudgetConfig {
             global_limit: v.global_limit.map(|x| x as _),
             model_limits: v.model_limits.into_iter().map(|(k, v)| (k.into(), v as _)).collect(),
@@ -2343,8 +2426,8 @@ impl From<liter_llm::tower::BudgetConfig> for BudgetConfig {
     }
 }
 
-impl From<liter_llm::tower::CacheConfig> for CacheConfig {
-    fn from(v: liter_llm::tower::CacheConfig) -> Self {
+impl From<liter_llm::CacheConfig> for CacheConfig {
+    fn from(v: liter_llm::CacheConfig) -> Self {
         CacheConfig {
             max_entries: v.max_entries as _,
             ttl: v.ttl.as_millis() as i64,
@@ -2353,8 +2436,8 @@ impl From<liter_llm::tower::CacheConfig> for CacheConfig {
     }
 }
 
-impl From<liter_llm::tower::RateLimitConfig> for RateLimitConfig {
-    fn from(v: liter_llm::tower::RateLimitConfig) -> Self {
+impl From<liter_llm::RateLimitConfig> for RateLimitConfig {
+    fn from(v: liter_llm::RateLimitConfig) -> Self {
         RateLimitConfig {
             rpm: v.rpm.map(|x| x as _),
             tpm: v.tpm.map(|x| x as _),
@@ -2582,20 +2665,20 @@ impl From<liter_llm::provider::custom::AuthHeaderFormat> for AuthHeaderFormat {
     }
 }
 
-impl From<liter_llm::tower::Enforcement> for Enforcement {
-    fn from(v: liter_llm::tower::Enforcement) -> Self {
+impl From<liter_llm::Enforcement> for Enforcement {
+    fn from(v: liter_llm::Enforcement) -> Self {
         match v {
-            liter_llm::tower::Enforcement::Hard => Enforcement::Hard,
-            liter_llm::tower::Enforcement::Soft => Enforcement::Soft,
+            liter_llm::Enforcement::Hard => Enforcement::Hard,
+            liter_llm::Enforcement::Soft => Enforcement::Soft,
         }
     }
 }
 
-impl From<liter_llm::tower::CacheBackend> for CacheBackend {
-    fn from(v: liter_llm::tower::CacheBackend) -> Self {
+impl From<liter_llm::CacheBackend> for CacheBackend {
+    fn from(v: liter_llm::CacheBackend) -> Self {
         match v {
-            liter_llm::tower::CacheBackend::Memory => CacheBackend::Memory,
-            liter_llm::tower::CacheBackend::OpenDal { scheme, config } => CacheBackend::OpenDal {
+            liter_llm::CacheBackend::Memory => CacheBackend::Memory,
+            liter_llm::CacheBackend::OpenDal { scheme, config } => CacheBackend::OpenDal {
                 scheme,
                 config: config.into_iter().map(|(k, v)| (k.into(), v.into())).collect(),
             },
@@ -3129,6 +3212,116 @@ pub fn unregister_custom_provider(name: String) -> Result<bool, String> {
         .map_err(|e| e.to_string())
 }
 
+/// Return all provider configs from the registry.
+///
+/// Useful for tooling, documentation generation, or runtime enumeration.
+pub fn all_providers() -> Result<Vec<ProviderConfig>, String> {
+    liter_llm::provider::all_providers()
+        .map(|v| v.into_iter().map(ProviderConfig::from).collect())
+        .map_err(|e| e.to_string())
+}
+
+/// Return the set of complex provider names.
+///
+/// Complex providers require custom auth/routing logic beyond simple bearer
+/// tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
+///
+/// The returned reference points into the static registry — no allocation.
+pub fn complex_provider_names() -> Result<Vec<String>, String> {
+    liter_llm::provider::complex_provider_names()
+        .map(|v| v.into_iter().map(|s| s.to_string()).collect::<Vec<_>>())
+        .map_err(|e| e.to_string())
+}
+
+/// Calculate the estimated cost of a completion given a model name and token
+/// counts.
+///
+/// Returns `null` if the model is not present in the embedded pricing registry.
+/// Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
+///
+/// When an exact model name match is not found, progressively shorter prefixes
+/// are tried by stripping from the last `-` or `.` separator.  For example,
+/// `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
+pub fn completion_cost(model: String, prompt_tokens: i64, completion_tokens: i64) -> Option<f64> {
+    liter_llm::cost::completion_cost(&model, prompt_tokens as u64, completion_tokens as u64)
+}
+
+/// Calculate the estimated cost of a completion, accounting for cached
+/// (cache-hit) prompt tokens billed at the provider's discounted rate.
+///
+/// `cached_tokens` is the count of prompt tokens served from the provider's
+/// prompt cache. It must be `<= prompt_tokens` (cached tokens are a subset of
+/// the prompt). The non-cached portion is billed at `input_cost_per_token`
+/// and the cached portion at `cache_read_input_token_cost` when the model
+/// has cache pricing; otherwise the entire prompt is billed at the regular
+/// input rate.
+///
+/// Returns `null` if the model is not present in the embedded pricing
+/// registry, mirroring `completion_cost`.
+pub fn completion_cost_with_cache(
+    model: String,
+    prompt_tokens: i64,
+    cached_tokens: i64,
+    completion_tokens: i64,
+) -> Option<f64> {
+    liter_llm::cost::completion_cost_with_cache(
+        &model,
+        prompt_tokens as u64,
+        cached_tokens as u64,
+        completion_tokens as u64,
+    )
+}
+
+/// Count tokens in a text string using the tokenizer for the given model.
+///
+/// The tokenizer is resolved from the model name prefix (e.g. `"gpt-4o"` maps
+/// to the `Xenova/gpt-4o` HuggingFace tokenizer). Tokenizers are cached after
+/// first load.
+///
+/// **Errors:**
+///
+/// Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
+/// (e.g. network failure on first use) or if tokenization itself fails.
+pub fn count_tokens(model: String, text: String) -> Result<i64, String> {
+    liter_llm::tokenizer::count_tokens(&model, &text)
+        .map(|v| v as i64)
+        .map_err(|e| e.to_string())
+}
+
+/// Count tokens for a full `ChatCompletionRequest`.
+///
+/// Sums tokens across all message text contents plus a per-message overhead
+/// of ~4 tokens (for role, separators, and formatting metadata). Tool
+/// definitions and multimodal content parts (images, audio, documents) are
+/// not counted — only textual content contributes to the token total.
+///
+/// **Errors:**
+///
+/// Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded or
+/// if tokenization fails for any message.
+pub fn count_request_tokens(model: String, req: ChatCompletionRequest) -> Result<i64, String> {
+    liter_llm::tokenizer::count_request_tokens(&model, &liter_llm::types::ChatCompletionRequest::from(req))
+        .map(|v| v as i64)
+        .map_err(|e| e.to_string())
+}
+
+/// Install the `ring` crypto provider as the rustls process default, idempotently.
+///
+/// rustls 0.23+ removed the implicit default provider. This function installs
+/// `ring` once per process. Subsequent calls are no-ops. Calling it from a
+/// downstream Rust app that has already installed `aws-lc-rs` is safe — the
+/// `Err` from `install_default()` is silently ignored.
+///
+/// Called automatically by every internal `reqwest.Client` constructor
+/// (auth providers, default HTTP client). Bindings and downstream consumers
+/// reach those constructors transitively, so no manual init is required.
+///
+/// WASM builds are exempt — the WASM target uses the browser/Node.js fetch
+/// API instead of rustls, so no crypto provider is needed.
+pub fn ensure_crypto_provider() -> () {
+    liter_llm::ensure_crypto_provider()
+}
+
 // `create_<Type>_from_json` helpers — deserialize a JSON string into a mirror type.
 
 #[frb]
@@ -3637,21 +3830,21 @@ pub fn create_custom_provider_config_from_json(json: String) -> Result<CustomPro
 
 #[frb]
 pub fn create_budget_config_from_json(json: String) -> Result<BudgetConfig, String> {
-    serde_json::from_str::<liter_llm::tower::BudgetConfig>(&json)
+    serde_json::from_str::<liter_llm::BudgetConfig>(&json)
         .map(BudgetConfig::from)
         .map_err(|e| e.to_string())
 }
 
 #[frb]
 pub fn create_cache_config_from_json(json: String) -> Result<CacheConfig, String> {
-    serde_json::from_str::<liter_llm::tower::CacheConfig>(&json)
+    serde_json::from_str::<liter_llm::CacheConfig>(&json)
         .map(CacheConfig::from)
         .map_err(|e| e.to_string())
 }
 
 #[frb]
 pub fn create_rate_limit_config_from_json(json: String) -> Result<RateLimitConfig, String> {
-    serde_json::from_str::<liter_llm::tower::RateLimitConfig>(&json)
+    serde_json::from_str::<liter_llm::RateLimitConfig>(&json)
         .map(RateLimitConfig::from)
         .map_err(|e| e.to_string())
 }

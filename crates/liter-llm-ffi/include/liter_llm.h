@@ -282,6 +282,10 @@ typedef struct LITERLLMPageDimensions LITERLLMPageDimensions;
  */
 typedef struct LITERLLMPromptTokensDetails LITERLLMPromptTokensDetails;
 /**
+ * Static configuration for a single provider entry in providers.json.
+ */
+typedef struct LITERLLMProviderConfig LITERLLMProviderConfig;
+/**
  * Configuration for per-model rate limits.
  */
 typedef struct LITERLLMRateLimitConfig LITERLLMRateLimitConfig;
@@ -402,6 +406,8 @@ typedef struct LITERLLMToolMessage LITERLLMToolMessage;
  */
 typedef struct LITERLLMToolType LITERLLMToolType;
 typedef struct LITERLLMTowerCachedResponse LITERLLMTowerCachedResponse;
+typedef struct LITERLLMTowerLlmRequest LITERLLMTowerLlmRequest;
+typedef struct LITERLLMTowerLlmResponse LITERLLMTowerLlmResponse;
 /**
  * Response from a transcription request.
  */
@@ -4393,6 +4399,48 @@ LITERLLMAuthHeaderFormat *literllm_custom_provider_config_auth_header(const LITE
 char *literllm_custom_provider_config_model_prefixes(const LITERLLMCustomProviderConfig *ptr);
 
 /**
+ * Free a `ProviderConfig` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_provider_config_free(LITERLLMProviderConfig *ptr);
+
+/**
+ * Get the `name` field from a `ProviderConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_provider_config_name(const LITERLLMProviderConfig *ptr);
+
+/**
+ * Get the `display_name` field from a `ProviderConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_provider_config_display_name(const LITERLLMProviderConfig *ptr);
+
+/**
+ * Get the `base_url` field from a `ProviderConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_provider_config_base_url(const LITERLLMProviderConfig *ptr);
+
+/**
+ * Get the `endpoints` field from a `ProviderConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_provider_config_endpoints(const LITERLLMProviderConfig *ptr);
+
+/**
+ * Get the `model_prefixes` field from a `ProviderConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_provider_config_model_prefixes(const LITERLLMProviderConfig *ptr);
+
+/**
  * Create a `BudgetConfig` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -4555,6 +4603,55 @@ uint64_t literllm_rate_limit_config_window(const LITERLLMRateLimitConfig *ptr);
  * freed with the appropriate free function.
  */
 LITERLLMRateLimitConfig *literllm_rate_limit_config_default(void);
+
+/**
+ * Free a `TowerLlmRequest` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_tower_llm_request_free(LITERLLMLlmRequest *ptr);
+
+/**
+ * OpenTelemetry GenAI `gen_ai.operation.name` value for this request.
+ *
+ * Maps each variant to one of the canonical GenAI semantic convention
+ * operation names: `"chat"`, `"embeddings"`, or `"list_models"`.
+ * Both streaming and non-streaming chat map to `"chat"`.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+char *literllm_tower_llm_request_operation_name(const LITERLLMLlmRequest *this_);
+
+/**
+ * Human-readable name of the request type; used as a span / metric label.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+char *literllm_tower_llm_request_request_type(const LITERLLMLlmRequest *this_);
+
+/**
+ * Return the model name embedded in the request, if any.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+char *literllm_tower_llm_request_model(const LITERLLMLlmRequest *this_);
+
+/**
+ * Free a `TowerLlmResponse` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_tower_llm_response_free(LITERLLMLlmResponse *ptr);
+
+/**
+ * Return the usage data from the response, if present.
+ *
+ * Streaming, model-list, and non-chat responses do not carry aggregated
+ * usage data and always return `None`.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+LITERLLMUsage *literllm_tower_llm_response_usage(const LITERLLMLlmResponse *this_);
 
 /**
  * Convert an integer to a `Message` variant. Returns -1 on invalid input.
@@ -5346,5 +5443,136 @@ int32_t literllm_register_custom_provider(const LITERLLMCustomProviderConfig *co
  * freed with the appropriate free function.
  */
 int32_t literllm_unregister_custom_provider(const char *name);
+
+/**
+ * Return all provider configs from the registry.
+ *
+ * Useful for tooling, documentation generation, or runtime enumeration.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+char *literllm_all_providers(void);
+
+/**
+ * Return the byte length of the C string that `literllm_all_providers` would return for the same
+ * arguments, without allocating. Returns 0 when the underlying value is None or an error occurs.
+ * Enables safe slice construction in Zig and Java FFM Panama without a NUL-scan.
+ * \note SAFETY: All pointer parameters obey the same validity rules as `literllm_all_providers`.
+ */
+uintptr_t literllm_all_providers_len(void);
+
+/**
+ * Return the set of complex provider names.
+ *
+ * Complex providers require custom auth/routing logic beyond simple bearer
+ * tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
+ *
+ * The returned reference points into the static registry â no allocation.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+char *literllm_complex_provider_names(void);
+
+/**
+ * Return the byte length of the C string that `literllm_complex_provider_names` would return for the
+ * same arguments, without allocating. Returns 0 when the underlying value is None or an error occurs.
+ * Enables safe slice construction in Zig and Java FFM Panama without a NUL-scan.
+ * \note SAFETY: All pointer parameters obey the same validity rules as
+ * `literllm_complex_provider_names`.
+ */
+uintptr_t literllm_complex_provider_names_len(void);
+
+/**
+ * Calculate the estimated cost of a completion given a model name and token
+ * counts.
+ *
+ * Returns `None` if the model is not present in the embedded pricing registry.
+ * Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
+ *
+ * When an exact model name match is not found, progressively shorter prefixes
+ * are tried by stripping from the last `-` or `.` separator.  For example,
+ * `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ * \code
+ * use liter_llm::cost;
+ *
+ * let usd = cost::completion_cost("gpt-4o", 1_000, 500).unwrap();
+ * // 1000 * 0.0000025 + 500 * 0.00001 = 0.0025 + 0.005 = 0.0075
+ * assert!((usd - 0.0075).abs() < 1e-9);
+ * \endcode
+ */
+double literllm_completion_cost(const char *model,
+                                uint64_t prompt_tokens,
+                                uint64_t completion_tokens);
+
+/**
+ * Calculate the estimated cost of a completion, accounting for cached
+ * (cache-hit) prompt tokens billed at the provider's discounted rate.
+ *
+ * `cached_tokens` is the count of prompt tokens served from the provider's
+ * prompt cache. It must be `<= prompt_tokens` (cached tokens are a subset of
+ * the prompt). The non-cached portion is billed at `input_cost_per_token`
+ * and the cached portion at `cache_read_input_token_cost` when the model
+ * has cache pricing; otherwise the entire prompt is billed at the regular
+ * input rate.
+ *
+ * Returns `None` if the model is not present in the embedded pricing
+ * registry, mirroring [`completion_cost`].
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+double literllm_completion_cost_with_cache(const char *model,
+                                           uint64_t prompt_tokens,
+                                           uint64_t cached_tokens,
+                                           uint64_t completion_tokens);
+
+/**
+ * Count tokens in a text string using the tokenizer for the given model.
+ *
+ * The tokenizer is resolved from the model name prefix (e.g. `"gpt-4o"` maps
+ * to the `Xenova/gpt-4o` HuggingFace tokenizer). Tokenizers are cached after
+ * first load.
+ * \note Returns [`LiterLlmError::BadRequest`] if the tokenizer cannot be loaded
+ * (e.g. network failure on first use) or if tokenization itself fails.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+uintptr_t literllm_count_tokens(const char *model,
+                                const char *text);
+
+/**
+ * Count tokens for a full [`ChatCompletionRequest`].
+ *
+ * Sums tokens across all message text contents plus a per-message overhead
+ * of ~4 tokens (for role, separators, and formatting metadata). Tool
+ * definitions and multimodal content parts (images, audio, documents) are
+ * not counted â only textual content contributes to the token total.
+ * \note Returns [`LiterLlmError::BadRequest`] if the tokenizer cannot be loaded or
+ * if tokenization fails for any message.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+uintptr_t literllm_count_request_tokens(const char *model,
+                                        const LITERLLMChatCompletionRequest *req);
+
+/**
+ * Install the `ring` crypto provider as the rustls process default, idempotently.
+ *
+ * rustls 0.23+ removed the implicit default provider. This function installs
+ * `ring` once per process. Subsequent calls are no-ops. Calling it from a
+ * downstream Rust app that has already installed `aws-lc-rs` is safe â the
+ * `Err` from `install_default()` is silently ignored.
+ *
+ * Called automatically by every internal `reqwest::Client` constructor
+ * (auth providers, default HTTP client). Bindings and downstream consumers
+ * reach those constructors transitively, so no manual init is required.
+ *
+ * WASM builds are exempt â the WASM target uses the browser/Node.js fetch
+ * API instead of rustls, so no crypto provider is needed.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+void literllm_ensure_crypto_provider(void);
 
 #endif  /* LITERLLM_H */

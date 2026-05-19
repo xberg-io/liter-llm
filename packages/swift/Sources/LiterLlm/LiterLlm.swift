@@ -992,6 +992,9 @@ internal extension ResponseUsage {
 /// Configuration for registering a custom LLM provider at runtime.
 public typealias CustomProviderConfig = RustBridge.CustomProviderConfig
 
+/// Static configuration for a single provider entry in providers.json.
+public typealias ProviderConfig = RustBridge.ProviderConfig
+
 /// Configuration for budget enforcement.
 public typealias BudgetConfig = RustBridge.BudgetConfig
 
