@@ -22,13 +22,12 @@ import kotlinx.coroutines.withContext
 @Suppress("TooManyFunctions")
 class DefaultClient internal constructor(internal val handle: Long) : AutoCloseable {
     companion object {
-        private val MAPPER =
-            com.fasterxml.jackson.databind
-                .ObjectMapper()
+        private val MAPPER = com.fasterxml.jackson.databind
+            .ObjectMapper()
             .registerModule(
                 com.fasterxml.jackson.datatype.jdk8
                 .Jdk8Module()
-                    ).findAndRegisterModules()
+            ).findAndRegisterModules()
             .setPropertyNamingStrategy(com.fasterxml.jackson.databind.PropertyNamingStrategies.SNAKE_CASE)
     }
 
@@ -181,24 +180,20 @@ class DefaultClient internal constructor(internal val handle: Long) : AutoClosea
     }
 
     @Suppress("TooGenericExceptionCaught")
-    fun chatStream(req: ChatCompletionRequest): kotlinx.coroutines.flow.Flow<ChatCompletionChunk> =
-        kotlinx.coroutines.flow.callbackFlow {
-        val mapper =
-            com.fasterxml.jackson.databind
-                .ObjectMapper()
+    fun chatStream(req: ChatCompletionRequest): kotlinx.coroutines.flow.Flow<ChatCompletionChunk> = kotlinx.coroutines.flow.callbackFlow {
+        val mapper = com.fasterxml.jackson.databind
+            .ObjectMapper()
             .registerModule(
                 com.fasterxml.jackson.datatype.jdk8
                 .Jdk8Module()
-                    ).findAndRegisterModules()
+            ).findAndRegisterModules()
             .setPropertyNamingStrategy(com.fasterxml.jackson.databind.PropertyNamingStrategies.SNAKE_CASE)
-        val streamHandle: Long =
-            withContext(Dispatchers.IO) {
+        val streamHandle: Long = withContext(Dispatchers.IO) {
             LiterLlmBridge.nativeDefaultClientChatStreamStart(handle, mapper.writeValueAsString(req))
         }
         try {
             while (true) {
-                val chunkJson: String? =
-                    withContext(Dispatchers.IO) {
+                val chunkJson: String? = withContext(Dispatchers.IO) {
                     LiterLlmBridge.nativeDefaultClientChatStreamNext(streamHandle)
                 }
                 if (chunkJson == null) break

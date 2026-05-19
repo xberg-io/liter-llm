@@ -47,16 +47,15 @@ object LiterLlm {
         timeoutSecs: Long? = null,
         maxRetries: Int? = null,
         modelHint: String? = null
-    ): DefaultClient =
-        DefaultClient(
-            LiterLlmBridge.nativeCreateClient(
-                apiKey,
+    ): DefaultClient = DefaultClient(
+        LiterLlmBridge.nativeCreateClient(
+            apiKey,
         baseUrl ?: "",
-                timeoutSecs ?: 0L,
-                maxRetries ?: 0,
-                modelHint ?: ""
-            )
-                )
+            timeoutSecs ?: 0L,
+            maxRetries ?: 0,
+            modelHint ?: ""
+        )
+    )
     /**
      * Create a new LLM client from a JSON string.
      *

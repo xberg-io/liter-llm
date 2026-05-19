@@ -2192,6 +2192,69 @@ public enum LiterLlmError: Swift.Error {
     case internalError(message: String)
 }
 
+extension LiterLlmError {
+    public var statusCode: UInt16 {
+        switch self {
+        case .authentication(message: _, status: let matched): return matched
+        case .rateLimited(message: _, retryAfter: _): return 0
+        case .badRequest(message: _, status: let matched): return matched
+        case .contextWindowExceeded(message: _): return 0
+        case .contentPolicy(message: _): return 0
+        case .notFound(message: _): return 0
+        case .serverError(message: _, status: let matched): return matched
+        case .serviceUnavailable(message: _, status: let matched): return matched
+        case .timeout: return 0
+        case .streaming(message: _): return 0
+        case .endpointNotSupported(endpoint: _, provider: _): return 0
+        case .invalidHeader(name: _, reason: _): return 0
+        case .serialization(field0: _): return 0
+        case .budgetExceeded(message: _, model: _): return 0
+        case .hookRejected(message: _): return 0
+        case .internalError(message: _): return 0
+        }
+    }
+    public var isTransient: Bool {
+        switch self {
+        case .authentication(message: _, status: _): return false
+        case .rateLimited(message: _, retryAfter: _): return false
+        case .badRequest(message: _, status: _): return false
+        case .contextWindowExceeded(message: _): return false
+        case .contentPolicy(message: _): return false
+        case .notFound(message: _): return false
+        case .serverError(message: _, status: _): return false
+        case .serviceUnavailable(message: _, status: _): return false
+        case .timeout: return false
+        case .streaming(message: _): return false
+        case .endpointNotSupported(endpoint: _, provider: _): return false
+        case .invalidHeader(name: _, reason: _): return false
+        case .serialization(field0: _): return false
+        case .budgetExceeded(message: _, model: _): return false
+        case .hookRejected(message: _): return false
+        case .internalError(message: _): return false
+        }
+    }
+    public var errorType: String {
+        switch self {
+        case .authentication(message: _, status: _): return ""
+        case .rateLimited(message: _, retryAfter: _): return ""
+        case .badRequest(message: _, status: _): return ""
+        case .contextWindowExceeded(message: _): return ""
+        case .contentPolicy(message: _): return ""
+        case .notFound(message: _): return ""
+        case .serverError(message: _, status: _): return ""
+        case .serviceUnavailable(message: _, status: _): return ""
+        case .timeout: return ""
+        case .streaming(message: _): return ""
+        case .endpointNotSupported(endpoint: _, provider: _): return ""
+        case .invalidHeader(name: _, reason: _): return ""
+        case .serialization(field0: _): return ""
+        case .budgetExceeded(message: _, model: _): return ""
+        case .hookRejected(message: _): return ""
+        case .internalError(message: _): return ""
+        }
+    }
+}
+
 public final class DefaultClient {
     private let inner: RustBridge.DefaultClient
     public init(apiKey: String, baseUrl: String? = nil) throws {

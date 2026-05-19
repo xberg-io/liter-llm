@@ -80,12 +80,10 @@ private class OcrDocumentSerializer : com.fasterxml.jackson.databind.ser.std.Std
         val mapper =
             (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper)
                 ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
-        val node: com.fasterxml.jackson.databind.node.ObjectNode =
-            when (value) {
+        val node: com.fasterxml.jackson.databind.node.ObjectNode = when (value) {
             is OcrDocument.Url -> {
                 @Suppress("UNCHECKED_CAST")
-                val n =
-                    mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
                     value as OcrDocument.Url
                 ) as com.fasterxml.jackson.databind.node.ObjectNode
                 n.put("type", "document_url")
@@ -93,8 +91,7 @@ private class OcrDocumentSerializer : com.fasterxml.jackson.databind.ser.std.Std
             }
             is OcrDocument.Base64 -> {
                 @Suppress("UNCHECKED_CAST")
-                val n =
-                    mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
                     value as OcrDocument.Base64
                 ) as com.fasterxml.jackson.databind.node.ObjectNode
                 n.put("type", "base64")

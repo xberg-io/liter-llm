@@ -82,8 +82,7 @@ private class ResponseFormatSerializer : com.fasterxml.jackson.databind.ser.std.
         val mapper =
             (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper)
                 ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
-        val node: com.fasterxml.jackson.databind.node.ObjectNode =
-            when (value) {
+        val node: com.fasterxml.jackson.databind.node.ObjectNode = when (value) {
             is ResponseFormat.Text -> {
                 val n = mapper.createObjectNode()
                 n.put("type", "text")
@@ -96,8 +95,7 @@ private class ResponseFormatSerializer : com.fasterxml.jackson.databind.ser.std.
             }
             is ResponseFormat.JsonSchema -> {
                 @Suppress("UNCHECKED_CAST")
-                val n =
-                    mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
                     value as ResponseFormat.JsonSchema
                 ) as com.fasterxml.jackson.databind.node.ObjectNode
                 n.put("type", "json_schema")

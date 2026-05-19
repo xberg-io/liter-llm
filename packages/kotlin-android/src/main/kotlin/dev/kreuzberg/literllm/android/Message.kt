@@ -100,12 +100,10 @@ private class MessageSerializer : com.fasterxml.jackson.databind.ser.std.StdSeri
         val mapper =
             (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper)
                 ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
-        val node: com.fasterxml.jackson.databind.node.ObjectNode =
-            when (value) {
+        val node: com.fasterxml.jackson.databind.node.ObjectNode = when (value) {
             is Message.System -> {
                 @Suppress("UNCHECKED_CAST")
-                val n =
-                    mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
                     value.message
                 ) as com.fasterxml.jackson.databind.node.ObjectNode
                 n.put("role", "system")
@@ -113,8 +111,7 @@ private class MessageSerializer : com.fasterxml.jackson.databind.ser.std.StdSeri
             }
             is Message.User -> {
                 @Suppress("UNCHECKED_CAST")
-                val n =
-                    mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
                     value.message
                 ) as com.fasterxml.jackson.databind.node.ObjectNode
                 n.put("role", "user")
@@ -122,8 +119,7 @@ private class MessageSerializer : com.fasterxml.jackson.databind.ser.std.StdSeri
             }
             is Message.Assistant -> {
                 @Suppress("UNCHECKED_CAST")
-                val n =
-                    mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
                     value.message
                 ) as com.fasterxml.jackson.databind.node.ObjectNode
                 n.put("role", "assistant")
@@ -131,8 +127,7 @@ private class MessageSerializer : com.fasterxml.jackson.databind.ser.std.StdSeri
             }
             is Message.Tool -> {
                 @Suppress("UNCHECKED_CAST")
-                val n =
-                    mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
                     value.message
                 ) as com.fasterxml.jackson.databind.node.ObjectNode
                 n.put("role", "tool")
@@ -140,8 +135,7 @@ private class MessageSerializer : com.fasterxml.jackson.databind.ser.std.StdSeri
             }
             is Message.Developer -> {
                 @Suppress("UNCHECKED_CAST")
-                val n =
-                    mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
                     value.message
                 ) as com.fasterxml.jackson.databind.node.ObjectNode
                 n.put("role", "developer")
@@ -149,8 +143,7 @@ private class MessageSerializer : com.fasterxml.jackson.databind.ser.std.StdSeri
             }
             is Message.Function -> {
                 @Suppress("UNCHECKED_CAST")
-                val n =
-                    mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
                     value.message
                 ) as com.fasterxml.jackson.databind.node.ObjectNode
                 n.put("role", "function")

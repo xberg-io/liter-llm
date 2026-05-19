@@ -5624,4 +5624,30 @@ uintptr_t literllm_count_request_tokens(const char *model,
  */
 void literllm_ensure_crypto_provider(void);
 
+/**
+ * Return the HTTP status code for the error pointed to by `err`.
+ * Returns `0` if `err` is null.
+ */
+uint16_t literllm_liter_llm_error_status_code(const LITERLLMLiterLlmError *err);
+
+/**
+ * Return whether the error pointed to by `err` is transient.
+ * Returns `false` if `err` is null.
+ */
+bool literllm_liter_llm_error_is_transient(const LITERLLMLiterLlmError *err);
+
+/**
+ * Return the machine-readable error category string for the error pointed
+ * to by `err` as a heap-allocated, NUL-terminated C string.
+ * The caller must free the returned pointer with `literllm_liter_llm_error_error_type_free`.
+ * Returns a null pointer if `err` is null.
+ */
+char *literllm_liter_llm_error_error_type(const LITERLLMLiterLlmError *err);
+
+/**
+ * Free a string previously returned by `literllm_liter_llm_error_error_type`.
+ * Passing a null pointer is a no-op.
+ */
+void literllm_liter_llm_error_error_type_free(char *ptr);
+
 #endif  /* LITERLLM_H */

@@ -75,4 +75,7 @@ sealed class LiterLlmError(message: String) : Exception(message) {
     data class InternalError(
         override val message: String
     ) : LiterLlmError("internal error: {message}")
+    abstract val statusCode: Short
+    abstract val isTransient: Boolean
+    abstract val errorType: String
 }
