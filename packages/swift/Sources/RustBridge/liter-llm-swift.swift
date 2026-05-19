@@ -456,6 +456,122 @@ public func createClientFromJson<GenericIntoRustString: IntoRustString>(
     }
   }()
 }
+public func registerCustomProvider(_ config: CustomProviderConfig) throws {
+  try {
+    let val = __swift_bridge__$register_custom_provider(
+      {
+        config.isOwned = false
+        return config.ptr
+      }())
+    if val != nil { throw RustString(ptr: val!) } else { return }
+  }()
+}
+public func unregisterCustomProvider<GenericIntoRustString: IntoRustString>(
+  _ name: GenericIntoRustString
+) throws -> Bool {
+  try {
+    let val = __swift_bridge__$unregister_custom_provider(
+      {
+        let rustString = name.intoRustString()
+        rustString.isOwned = false
+        return rustString.ptr
+      }())
+    switch val.tag {
+    case __swift_bridge__$ResultBoolAndString$ResultOk: return val.payload.ok
+    case __swift_bridge__$ResultBoolAndString$ResultErr: throw RustString(ptr: val.payload.err)
+    default: fatalError()
+    }
+  }()
+}
+public func allProviders() throws -> RustVec<ProviderConfig> {
+  try {
+    let val = __swift_bridge__$all_providers()
+    if val.is_ok {
+      return RustVec(ptr: val.ok_or_err!)
+    } else {
+      throw RustString(ptr: val.ok_or_err!)
+    }
+  }()
+}
+public func complexProviderNames() throws -> RustVec<RustString> {
+  try {
+    let val = __swift_bridge__$complex_provider_names()
+    if val.is_ok {
+      return RustVec(ptr: val.ok_or_err!)
+    } else {
+      throw RustString(ptr: val.ok_or_err!)
+    }
+  }()
+}
+public func completionCost<GenericIntoRustString: IntoRustString>(
+  _ model: GenericIntoRustString, _ prompt_tokens: UInt64, _ completion_tokens: UInt64
+) -> RustString {
+  RustString(
+    ptr: __swift_bridge__$completion_cost(
+      {
+        let rustString = model.intoRustString()
+        rustString.isOwned = false
+        return rustString.ptr
+      }(), prompt_tokens, completion_tokens))
+}
+public func completionCostWithCache<GenericIntoRustString: IntoRustString>(
+  _ model: GenericIntoRustString, _ prompt_tokens: UInt64, _ cached_tokens: UInt64,
+  _ completion_tokens: UInt64
+) -> RustString {
+  RustString(
+    ptr: __swift_bridge__$completion_cost_with_cache(
+      {
+        let rustString = model.intoRustString()
+        rustString.isOwned = false
+        return rustString.ptr
+      }(), prompt_tokens, cached_tokens, completion_tokens))
+}
+public func countTokens<GenericIntoRustString: IntoRustString>(
+  _ model: GenericIntoRustString, _ text: GenericIntoRustString
+) throws -> UInt {
+  try {
+    let val = __swift_bridge__$count_tokens(
+      {
+        let rustString = model.intoRustString()
+        rustString.isOwned = false
+        return rustString.ptr
+      }(),
+      {
+        let rustString = text.intoRustString()
+        rustString.isOwned = false
+        return rustString.ptr
+      }())
+    switch val.tag {
+    case __swift_bridge__$ResultUIntAndString$ResultOk: return val.payload.ok
+    case __swift_bridge__$ResultUIntAndString$ResultErr: throw RustString(ptr: val.payload.err)
+    default: fatalError()
+    }
+  }()
+}
+public func countRequestTokens<GenericIntoRustString: IntoRustString>(
+  _ model: GenericIntoRustString, _ req: ChatCompletionRequest
+) throws -> UInt {
+  try {
+    let val = __swift_bridge__$count_request_tokens(
+      {
+        let rustString = model.intoRustString()
+        rustString.isOwned = false
+        return rustString.ptr
+      }(),
+      {
+        req.isOwned = false
+        return req.ptr
+      }())
+    switch val.tag {
+    case __swift_bridge__$ResultUIntAndString$ResultOk: return val.payload.ok
+    case __swift_bridge__$ResultUIntAndString$ResultErr: throw RustString(ptr: val.payload.err)
+    default: fatalError()
+    }
+  }()
+}
+public func ensureCryptoProvider() {
+  __swift_bridge__$ensure_crypto_provider()
+}
 public func defaultClientChatStreamStart(
   _ client: DefaultClientRef, _ req: ChatCompletionRequestRef
 ) throws -> DefaultClientChatStreamStreamHandle {
@@ -701,6 +817,23 @@ public func createResponseRequestFromJson<GenericIntoRustString: IntoRustString>
       }())
     if val.is_ok {
       return CreateResponseRequest(ptr: val.ok_or_err!)
+    } else {
+      throw RustString(ptr: val.ok_or_err!)
+    }
+  }()
+}
+public func customProviderConfigFromJson<GenericIntoRustString: IntoRustString>(
+  _ json: GenericIntoRustString
+) throws -> CustomProviderConfig {
+  try {
+    let val = __swift_bridge__$custom_provider_config_from_json(
+      {
+        let rustString = json.intoRustString()
+        rustString.isOwned = false
+        return rustString.ptr
+      }())
+    if val.is_ok {
+      return CustomProviderConfig(ptr: val.ok_or_err!)
     } else {
       throw RustString(ptr: val.ok_or_err!)
     }
@@ -990,23 +1123,6 @@ public func ocrImageFromJson<GenericIntoRustString: IntoRustString>(_ json: Gene
       }())
     if val.is_ok {
       return OcrImage(ptr: val.ok_or_err!)
-    } else {
-      throw RustString(ptr: val.ok_or_err!)
-    }
-  }()
-}
-public func customProviderConfigFromJson<GenericIntoRustString: IntoRustString>(
-  _ json: GenericIntoRustString
-) throws -> CustomProviderConfig {
-  try {
-    let val = __swift_bridge__$custom_provider_config_from_json(
-      {
-        let rustString = json.intoRustString()
-        rustString.isOwned = false
-        return rustString.ptr
-      }())
-    if val.is_ok {
-      return CustomProviderConfig(ptr: val.ok_or_err!)
     } else {
       throw RustString(ptr: val.ok_or_err!)
     }
@@ -10209,6 +10325,111 @@ extension CustomProviderConfig: Vectorizable {
 
   public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
     __swift_bridge__$Vec_CustomProviderConfig$len(vecPtr)
+  }
+}
+
+public class ProviderConfig: ProviderConfigRefMut {
+  var isOwned: Bool = true
+
+  public override init(ptr: UnsafeMutableRawPointer) {
+    super.init(ptr: ptr)
+  }
+
+  deinit {
+    if isOwned {
+      __swift_bridge__$ProviderConfig$_free(ptr)
+    }
+  }
+}
+public class ProviderConfigRefMut: ProviderConfigRef {
+  public override init(ptr: UnsafeMutableRawPointer) {
+    super.init(ptr: ptr)
+  }
+}
+public class ProviderConfigRef {
+  var ptr: UnsafeMutableRawPointer
+
+  public init(ptr: UnsafeMutableRawPointer) {
+    self.ptr = ptr
+  }
+}
+extension ProviderConfigRef {
+  public func name() -> RustString {
+    RustString(ptr: __swift_bridge__$ProviderConfig$name(ptr))
+  }
+
+  public func display_name() -> RustString? {
+    {
+      let val = __swift_bridge__$ProviderConfig$display_name(ptr)
+      if val != nil { return RustString(ptr: val!) } else { return nil }
+    }()
+  }
+
+  public func base_url() -> RustString? {
+    {
+      let val = __swift_bridge__$ProviderConfig$base_url(ptr)
+      if val != nil { return RustString(ptr: val!) } else { return nil }
+    }()
+  }
+}
+extension ProviderConfig: Vectorizable {
+  public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+    __swift_bridge__$Vec_ProviderConfig$new()
+  }
+
+  public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+    __swift_bridge__$Vec_ProviderConfig$drop(vecPtr)
+  }
+
+  public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ProviderConfig) {
+    __swift_bridge__$Vec_ProviderConfig$push(
+      vecPtr,
+      {
+        value.isOwned = false
+        return value.ptr
+      }())
+  }
+
+  public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Self? {
+    let pointer = __swift_bridge__$Vec_ProviderConfig$pop(vecPtr)
+    if pointer == nil {
+      return nil
+    } else {
+      return (ProviderConfig(ptr: pointer!) as! Self)
+    }
+  }
+
+  public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt)
+    -> ProviderConfigRef?
+  {
+    let pointer = __swift_bridge__$Vec_ProviderConfig$get(vecPtr, index)
+    if pointer == nil {
+      return nil
+    } else {
+      return ProviderConfigRef(ptr: pointer!)
+    }
+  }
+
+  public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt)
+    -> ProviderConfigRefMut?
+  {
+    let pointer = __swift_bridge__$Vec_ProviderConfig$get_mut(vecPtr, index)
+    if pointer == nil {
+      return nil
+    } else {
+      return ProviderConfigRefMut(ptr: pointer!)
+    }
+  }
+
+  public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<
+    ProviderConfigRef
+  > {
+    UnsafePointer<ProviderConfigRef>(
+      OpaquePointer(__swift_bridge__$Vec_ProviderConfig$as_ptr(vecPtr)))
+  }
+
+  public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+    __swift_bridge__$Vec_ProviderConfig$len(vecPtr)
   }
 }
 

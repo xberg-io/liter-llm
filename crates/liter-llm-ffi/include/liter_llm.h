@@ -19,9 +19,17 @@ typedef struct LITERLLMAssistantMessage LITERLLMAssistantMessage;
  */
 typedef struct LITERLLMAudioContent LITERLLMAudioContent;
 /**
+ * Auth configuration block.
+ */
+typedef struct LITERLLMAuthConfig LITERLLMAuthConfig;
+/**
  * How the API key is sent in the HTTP request.
  */
 typedef struct LITERLLMAuthHeaderFormat LITERLLMAuthHeaderFormat;
+/**
+ * Auth scheme used by a provider.
+ */
+typedef struct LITERLLMAuthType LITERLLMAuthType;
 /**
  * Query parameters for listing batches.
  */
@@ -4396,6 +4404,22 @@ LITERLLMAuthHeaderFormat *literllm_custom_provider_config_auth_header(const LITE
 char *literllm_custom_provider_config_model_prefixes(const LITERLLMCustomProviderConfig *ptr);
 
 /**
+ * Create a `ProviderConfig` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `literllm_provider_config_free`.
+ */
+LITERLLMProviderConfig *literllm_provider_config_from_json(const char *json);
+
+/**
+ * Serialize a `ProviderConfig` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_provider_config_to_json(const LITERLLMProviderConfig *ptr);
+
+/**
  * Free a `ProviderConfig` handle.
  * # Safety
  * Pointer must have been returned by this library, or be null.
@@ -4424,6 +4448,13 @@ char *literllm_provider_config_display_name(const LITERLLMProviderConfig *ptr);
 char *literllm_provider_config_base_url(const LITERLLMProviderConfig *ptr);
 
 /**
+ * Get the `auth` field from a `ProviderConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+LITERLLMAuthConfig *literllm_provider_config_auth(const LITERLLMProviderConfig *ptr);
+
+/**
  * Get the `endpoints` field from a `ProviderConfig`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
@@ -4436,6 +4467,50 @@ char *literllm_provider_config_endpoints(const LITERLLMProviderConfig *ptr);
  * Pointer must be a valid handle returned by this library.
  */
 char *literllm_provider_config_model_prefixes(const LITERLLMProviderConfig *ptr);
+
+/**
+ * Get the `param_mappings` field from a `ProviderConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_provider_config_param_mappings(const LITERLLMProviderConfig *ptr);
+
+/**
+ * Create a `AuthConfig` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `literllm_auth_config_free`.
+ */
+LITERLLMAuthConfig *literllm_auth_config_from_json(const char *json);
+
+/**
+ * Serialize a `AuthConfig` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_auth_config_to_json(const LITERLLMAuthConfig *ptr);
+
+/**
+ * Free a `AuthConfig` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_auth_config_free(LITERLLMAuthConfig *ptr);
+
+/**
+ * Get the `auth_type` field from a `AuthConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+LITERLLMAuthType *literllm_auth_config_auth_type(const LITERLLMAuthConfig *ptr);
+
+/**
+ * Get the `env_var` field from a `AuthConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_auth_config_env_var(const LITERLLMAuthConfig *ptr);
 
 /**
  * Create a `BudgetConfig` from a JSON string. Returns null on failure.
@@ -4873,6 +4948,21 @@ int32_t literllm_auth_header_format_from_i32(int32_t value);
 int32_t literllm_auth_header_format_from_str(const char *name);
 
 /**
+ * Convert an integer to a `AuthType` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t literllm_auth_type_from_i32(int32_t value);
+
+/**
+ * Convert a `AuthType` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t literllm_auth_type_from_str(const char *name);
+
+/**
  * Convert an integer to a `Enforcement` variant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure all pointer arguments are valid or null.
@@ -5276,6 +5366,31 @@ char *literllm_auth_header_format_to_json(const LITERLLMAuthHeaderFormat *ptr);
  * The returned string must be freed with `literllm_free_string`.
  */
 char *literllm_auth_header_format_to_string(const LITERLLMAuthHeaderFormat *ptr);
+
+/**
+ * Free a heap-allocated `AuthType` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_auth_type_free(LITERLLMAuthType *ptr);
+
+/**
+ * Serialize a heap-allocated `AuthType` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_auth_type_to_json(const LITERLLMAuthType *ptr);
+
+/**
+ * Render a heap-allocated `AuthType` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_auth_type_to_string(const LITERLLMAuthType *ptr);
 
 /**
  * Free a heap-allocated `Enforcement` returned by a pointer-returning FFI function.

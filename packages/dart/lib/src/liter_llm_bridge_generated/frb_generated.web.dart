@@ -65,7 +65,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AudioContent dco_decode_audio_content(dynamic raw);
 
   @protected
+  AuthConfig dco_decode_auth_config(dynamic raw);
+
+  @protected
   AuthHeaderFormat dco_decode_auth_header_format(dynamic raw);
+
+  @protected
+  AuthType dco_decode_auth_type(dynamic raw);
 
   @protected
   BatchListQuery dco_decode_batch_list_query(dynamic raw);
@@ -90,6 +96,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AudioContent dco_decode_box_autoadd_audio_content(dynamic raw);
+
+  @protected
+  AuthConfig dco_decode_box_autoadd_auth_config(dynamic raw);
 
   @protected
   BatchListQuery dco_decode_box_autoadd_batch_list_query(dynamic raw);
@@ -125,6 +134,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   CreateTranscriptionRequest
   dco_decode_box_autoadd_create_transcription_request(dynamic raw);
+
+  @protected
+  CustomProviderConfig dco_decode_box_autoadd_custom_provider_config(
+    dynamic raw,
+  );
 
   @protected
   DeveloperMessage dco_decode_box_autoadd_developer_message(dynamic raw);
@@ -401,6 +415,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  List<ProviderConfig> dco_decode_list_provider_config(dynamic raw);
+
+  @protected
   List<(String, double)> dco_decode_list_record_string_f_64(dynamic raw);
 
   @protected
@@ -476,10 +493,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   OcrResponse dco_decode_ocr_response(dynamic raw);
 
   @protected
+  Map<String, String>? dco_decode_opt_Map_String_String_None(dynamic raw);
+
+  @protected
   Map<String, double>? dco_decode_opt_Map_String_f_64_None(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
+
+  @protected
+  AuthConfig? dco_decode_opt_box_autoadd_auth_config(dynamic raw);
 
   @protected
   BatchListQuery? dco_decode_opt_box_autoadd_batch_list_query(dynamic raw);
@@ -588,6 +611,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PromptTokensDetails dco_decode_prompt_tokens_details(dynamic raw);
+
+  @protected
+  ProviderConfig dco_decode_provider_config(dynamic raw);
 
   @protected
   RateLimitConfig dco_decode_rate_limit_config(dynamic raw);
@@ -751,7 +777,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AudioContent sse_decode_audio_content(SseDeserializer deserializer);
 
   @protected
+  AuthConfig sse_decode_auth_config(SseDeserializer deserializer);
+
+  @protected
   AuthHeaderFormat sse_decode_auth_header_format(SseDeserializer deserializer);
+
+  @protected
+  AuthType sse_decode_auth_type(SseDeserializer deserializer);
 
   @protected
   BatchListQuery sse_decode_batch_list_query(SseDeserializer deserializer);
@@ -784,6 +816,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AudioContent sse_decode_box_autoadd_audio_content(
     SseDeserializer deserializer,
   );
+
+  @protected
+  AuthConfig sse_decode_box_autoadd_auth_config(SseDeserializer deserializer);
 
   @protected
   BatchListQuery sse_decode_box_autoadd_batch_list_query(
@@ -831,6 +866,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   CreateTranscriptionRequest
   sse_decode_box_autoadd_create_transcription_request(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  CustomProviderConfig sse_decode_box_autoadd_custom_provider_config(
     SseDeserializer deserializer,
   );
 
@@ -1181,6 +1221,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
+  List<ProviderConfig> sse_decode_list_provider_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<(String, double)> sse_decode_list_record_string_f_64(
     SseDeserializer deserializer,
   );
@@ -1284,12 +1329,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   OcrResponse sse_decode_ocr_response(SseDeserializer deserializer);
 
   @protected
+  Map<String, String>? sse_decode_opt_Map_String_String_None(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   Map<String, double>? sse_decode_opt_Map_String_f_64_None(
     SseDeserializer deserializer,
   );
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
+  AuthConfig? sse_decode_opt_box_autoadd_auth_config(
+    SseDeserializer deserializer,
+  );
 
   @protected
   BatchListQuery? sse_decode_opt_box_autoadd_batch_list_query(
@@ -1430,6 +1485,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PromptTokensDetails sse_decode_prompt_tokens_details(
     SseDeserializer deserializer,
   );
+
+  @protected
+  ProviderConfig sse_decode_provider_config(SseDeserializer deserializer);
 
   @protected
   RateLimitConfig sse_decode_rate_limit_config(SseDeserializer deserializer);
@@ -1620,10 +1678,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_audio_content(AudioContent self, SseSerializer serializer);
 
   @protected
+  void sse_encode_auth_config(AuthConfig self, SseSerializer serializer);
+
+  @protected
   void sse_encode_auth_header_format(
     AuthHeaderFormat self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_auth_type(AuthType self, SseSerializer serializer);
 
   @protected
   void sse_encode_batch_list_query(
@@ -1661,6 +1725,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_audio_content(
     AudioContent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_auth_config(
+    AuthConfig self,
     SseSerializer serializer,
   );
 
@@ -1718,6 +1788,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_create_transcription_request(
     CreateTranscriptionRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_custom_provider_config(
+    CustomProviderConfig self,
     SseSerializer serializer,
   );
 
@@ -2187,6 +2263,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_provider_config(
+    List<ProviderConfig> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_record_string_f_64(
     List<(String, double)> self,
     SseSerializer serializer,
@@ -2313,6 +2395,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_ocr_response(OcrResponse self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_Map_String_String_None(
+    Map<String, String>? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_Map_String_f_64_None(
     Map<String, double>? self,
     SseSerializer serializer,
@@ -2320,6 +2408,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_auth_config(
+    AuthConfig? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_batch_list_query(
@@ -2498,6 +2592,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_prompt_tokens_details(
     PromptTokensDetails self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_provider_config(
+    ProviderConfig self,
     SseSerializer serializer,
   );
 

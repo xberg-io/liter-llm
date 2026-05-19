@@ -31,7 +31,29 @@ internal extension SystemMessage {
 public typealias UserMessage = RustBridge.UserMessage
 
 /// An image URL reference with optional detail level for processing.
-public typealias ImageUrl = RustBridge.ImageUrl
+public struct ImageUrl: Codable, Sendable, Hashable {
+    /// URL of the image (data URI or HTTP/HTTPS URL).
+    public let url: String
+    /// Detail level: low (512x512), high (2x2 tiles), or auto (model-selected).
+    public let detail: ImageDetail?
+    public init(url: String, detail: ImageDetail? = nil) {
+        self.url = url
+        self.detail = detail
+    }
+}
+
+// MARK: - Internal FFI conversions for ImageUrl
+internal extension ImageUrl {
+    init(_ rb: RustBridge.ImageUrl) throws {
+        self.url = rb.url().toString()
+        self.detail = rb.detail()?.toString().flatMap { ImageDetail(rawValue: $0) }
+    }
+    func intoRust() throws -> RustBridge.ImageUrl {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.imageUrlFromJson(json)
+    }
+}
 
 /// PDF/document content part for vision-capable models.
 public struct DocumentContent: Codable, Sendable, Hashable {
@@ -84,7 +106,48 @@ internal extension AudioContent {
 }
 
 /// Assistant's response to a user message.
-public typealias AssistantMessage = RustBridge.AssistantMessage
+public struct AssistantMessage: Codable, Sendable, Hashable {
+    /// The assistant's text response. Absent if tool calls are returned instead.
+    public let content: String?
+    /// Optional name for the assistant.
+    public let name: String?
+    /// Tool calls the model wants to execute, if any.
+    public let toolCalls: [ToolCall]?
+    /// Refusal reason, if the model declined to respond per safety policies.
+    public let refusal: String?
+    /// Deprecated legacy function_call field; retained for API compatibility.
+    public let functionCall: FunctionCall?
+    public init(content: String? = nil, name: String? = nil, toolCalls: [ToolCall]? = nil, refusal: String? = nil, functionCall: FunctionCall? = nil) {
+        self.content = content
+        self.name = name
+        self.toolCalls = toolCalls
+        self.refusal = refusal
+        self.functionCall = functionCall
+    }
+    private enum CodingKeys: String, CodingKey {
+        case content = "content"
+        case name = "name"
+        case toolCalls = "tool_calls"
+        case refusal = "refusal"
+        case functionCall = "function_call"
+    }
+}
+
+// MARK: - Internal FFI conversions for AssistantMessage
+internal extension AssistantMessage {
+    init(_ rb: RustBridge.AssistantMessage) throws {
+        self.content = rb.content()?.toString()
+        self.name = rb.name()?.toString()
+        self.toolCalls = try rb.tool_calls()?.map { try ToolCall($0) }
+        self.refusal = rb.refusal()?.toString()
+        self.functionCall = try rb.function_call().map { try FunctionCall($0) }
+    }
+    func intoRust() throws -> RustBridge.AssistantMessage {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.assistantMessageFromJson(json)
+    }
+}
 
 /// Tool execution result returned to the model.
 public struct ToolMessage: Codable, Sendable, Hashable {
@@ -169,13 +232,90 @@ public typealias ChatCompletionTool = RustBridge.ChatCompletionTool
 public typealias FunctionDefinition = RustBridge.FunctionDefinition
 
 /// A tool call the model wants to execute.
-public typealias ToolCall = RustBridge.ToolCall
+public struct ToolCall: Codable, Sendable, Hashable {
+    /// Unique ID for this call, used to reference in tool result messages.
+    public let id: String
+    /// Tool type (always "function").
+    public let callType: ToolType
+    /// Function name and arguments.
+    public let function: FunctionCall
+    public init(id: String, callType: ToolType, function: FunctionCall) {
+        self.id = id
+        self.callType = callType
+        self.function = function
+    }
+    private enum CodingKeys: String, CodingKey {
+        case id = "id"
+        case callType = "call_type"
+        case function = "function"
+    }
+}
+
+// MARK: - Internal FFI conversions for ToolCall
+internal extension ToolCall {
+    init(_ rb: RustBridge.ToolCall) throws {
+        self.id = rb.id().toString()
+        self.callType = ToolType(rawValue: rb.call_type().toString()) ?? { fatalError("Unknown ToolType: \(rb.call_type().toString())") }()
+        self.function = try FunctionCall(rb.function())
+    }
+    func intoRust() throws -> RustBridge.ToolCall {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.toolCallFromJson(json)
+    }
+}
 
 /// Function call details.
-public typealias FunctionCall = RustBridge.FunctionCall
+public struct FunctionCall: Codable, Sendable, Hashable {
+    /// Function name.
+    public let name: String
+    /// Arguments as a JSON string (parse with serde_json::from_str).
+    public let arguments: String
+    public init(name: String, arguments: String) {
+        self.name = name
+        self.arguments = arguments
+    }
+}
+
+// MARK: - Internal FFI conversions for FunctionCall
+internal extension FunctionCall {
+    init(_ rb: RustBridge.FunctionCall) throws {
+        self.name = rb.name().toString()
+        self.arguments = rb.arguments().toString()
+    }
+    func intoRust() throws -> RustBridge.FunctionCall {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.functionCallFromJson(json)
+    }
+}
 
 /// Directive to call a specific tool.
-public typealias SpecificToolChoice = RustBridge.SpecificToolChoice
+public struct SpecificToolChoice: Codable, Sendable, Hashable {
+    /// Tool type (always "function").
+    public let choiceType: ToolType
+    /// The specific function to invoke.
+    public let function: SpecificFunction
+    public init(choiceType: ToolType, function: SpecificFunction) {
+        self.choiceType = choiceType
+        self.function = function
+    }
+    private enum CodingKeys: String, CodingKey {
+        case choiceType = "choice_type"
+        case function = "function"
+    }
+}
+
+// MARK: - Internal FFI conversions for SpecificToolChoice
+internal extension SpecificToolChoice {
+    init(_ rb: RustBridge.SpecificToolChoice) throws {
+        self.choiceType = ToolType(rawValue: rb.choice_type().toString()) ?? { fatalError("Unknown ToolType: \(rb.choice_type().toString())") }()
+        self.function = try SpecificFunction(rb.function())
+    }
+    func intoRust() throws -> RustBridge.SpecificToolChoice {
+        return RustBridge.SpecificToolChoice(try self.choiceType.intoRust(), try self.function.intoRust())
+    }
+}
 
 /// Name of the specific function to invoke.
 public struct SpecificFunction: Codable, Sendable, Hashable {
@@ -200,7 +340,45 @@ internal extension SpecificFunction {
 public typealias JsonSchemaFormat = RustBridge.JsonSchemaFormat
 
 /// Token-usage accounting returned by the provider on each completion / embedding call.
-public typealias Usage = RustBridge.Usage
+public struct Usage: Codable, Sendable, Hashable {
+    /// Prompt tokens used. Defaults to 0 when absent (some providers omit this).
+    public let promptTokens: UInt64
+    /// Completion tokens used. Defaults to 0 when absent (e.g. embedding responses).
+    public let completionTokens: UInt64
+    /// Total tokens used. Defaults to 0 when absent (some providers omit this).
+    public let totalTokens: UInt64
+    /// Breakdown of tokens used in the prompt, including cached tokens served
+    /// at the provider's discounted cache-read rate. Absent when the provider
+    /// does not return prompt-token details.
+    public let promptTokensDetails: PromptTokensDetails?
+    public init(promptTokens: UInt64, completionTokens: UInt64, totalTokens: UInt64, promptTokensDetails: PromptTokensDetails? = nil) {
+        self.promptTokens = promptTokens
+        self.completionTokens = completionTokens
+        self.totalTokens = totalTokens
+        self.promptTokensDetails = promptTokensDetails
+    }
+    private enum CodingKeys: String, CodingKey {
+        case promptTokens = "prompt_tokens"
+        case completionTokens = "completion_tokens"
+        case totalTokens = "total_tokens"
+        case promptTokensDetails = "prompt_tokens_details"
+    }
+}
+
+// MARK: - Internal FFI conversions for Usage
+internal extension Usage {
+    init(_ rb: RustBridge.Usage) throws {
+        self.promptTokens = rb.prompt_tokens()
+        self.completionTokens = rb.completion_tokens()
+        self.totalTokens = rb.total_tokens()
+        self.promptTokensDetails = try rb.prompt_tokens_details().map { try PromptTokensDetails($0) }
+    }
+    func intoRust() throws -> RustBridge.Usage {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.usageFromJson(json)
+    }
+}
 
 /// Breakdown of tokens used in the prompt portion of a request.
 ///
@@ -260,22 +438,275 @@ internal extension StreamOptions {
 }
 
 /// Chat completion response from the API.
-public typealias ChatCompletionResponse = RustBridge.ChatCompletionResponse
+public struct ChatCompletionResponse: Codable, Sendable, Hashable {
+    /// Unique identifier for this response.
+    public let id: String
+    /// Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a
+    /// plain `String` so non-standard provider values do not break deserialization.
+    public let object: String
+    /// Unix timestamp of response creation.
+    public let created: UInt64
+    /// Model used to generate the response.
+    public let model: String
+    /// List of completion choices.
+    public let choices: [Choice]
+    /// Token usage statistics.
+    public let usage: Usage?
+    /// Fingerprint of the system configuration (OpenAI-specific).
+    public let systemFingerprint: String?
+    /// Service tier used (OpenAI-specific).
+    public let serviceTier: String?
+    public init(id: String, object: String, created: UInt64, model: String, choices: [Choice], usage: Usage? = nil, systemFingerprint: String? = nil, serviceTier: String? = nil) {
+        self.id = id
+        self.object = object
+        self.created = created
+        self.model = model
+        self.choices = choices
+        self.usage = usage
+        self.systemFingerprint = systemFingerprint
+        self.serviceTier = serviceTier
+    }
+    private enum CodingKeys: String, CodingKey {
+        case id = "id"
+        case object = "object"
+        case created = "created"
+        case model = "model"
+        case choices = "choices"
+        case usage = "usage"
+        case systemFingerprint = "system_fingerprint"
+        case serviceTier = "service_tier"
+    }
+}
+
+// MARK: - Internal FFI conversions for ChatCompletionResponse
+internal extension ChatCompletionResponse {
+    init(_ rb: RustBridge.ChatCompletionResponse) throws {
+        self.id = rb.id().toString()
+        self.object = rb.object().toString()
+        self.created = rb.created()
+        self.model = rb.model().toString()
+        self.choices = try rb.choices().map { try Choice($0) }
+        self.usage = try rb.usage().map { try Usage($0) }
+        self.systemFingerprint = rb.system_fingerprint()?.toString()
+        self.serviceTier = rb.service_tier()?.toString()
+    }
+    func intoRust() throws -> RustBridge.ChatCompletionResponse {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.chatCompletionResponseFromJson(json)
+    }
+}
 
 /// A single completion choice.
-public typealias Choice = RustBridge.Choice
+public struct Choice: Codable, Sendable, Hashable {
+    /// Index of this choice in the choices array.
+    public let index: UInt32
+    /// The assistant's message response.
+    public let message: AssistantMessage
+    /// Why the model stopped generating (stop, length, tool_calls, content_filter, etc.).
+    public let finishReason: FinishReason?
+    public init(index: UInt32, message: AssistantMessage, finishReason: FinishReason? = nil) {
+        self.index = index
+        self.message = message
+        self.finishReason = finishReason
+    }
+    private enum CodingKeys: String, CodingKey {
+        case index = "index"
+        case message = "message"
+        case finishReason = "finish_reason"
+    }
+}
+
+// MARK: - Internal FFI conversions for Choice
+internal extension Choice {
+    init(_ rb: RustBridge.Choice) throws {
+        self.index = rb.index()
+        self.message = try AssistantMessage(rb.message())
+        self.finishReason = rb.finish_reason()?.toString().flatMap { FinishReason(rawValue: $0) }
+    }
+    func intoRust() throws -> RustBridge.Choice {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.choiceFromJson(json)
+    }
+}
 
 /// A streamed chunk of a chat completion response.
-public typealias ChatCompletionChunk = RustBridge.ChatCompletionChunk
+public struct ChatCompletionChunk: Codable, Sendable, Hashable {
+    /// Unique identifier for this stream.
+    public let id: String
+    /// Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored
+    /// as a plain `String` so non-standard provider values do not fail parsing.
+    public let object: String
+    /// Unix timestamp of chunk creation.
+    public let created: UInt64
+    /// Model used to generate the chunk.
+    public let model: String
+    /// Streaming choices (delta updates).
+    public let choices: [StreamChoice]
+    /// Token usage (typically only in the final chunk).
+    public let usage: Usage?
+    /// Fingerprint of the system configuration (OpenAI-specific).
+    public let systemFingerprint: String?
+    /// Service tier used (OpenAI-specific).
+    public let serviceTier: String?
+    public init(id: String, object: String, created: UInt64, model: String, choices: [StreamChoice], usage: Usage? = nil, systemFingerprint: String? = nil, serviceTier: String? = nil) {
+        self.id = id
+        self.object = object
+        self.created = created
+        self.model = model
+        self.choices = choices
+        self.usage = usage
+        self.systemFingerprint = systemFingerprint
+        self.serviceTier = serviceTier
+    }
+    private enum CodingKeys: String, CodingKey {
+        case id = "id"
+        case object = "object"
+        case created = "created"
+        case model = "model"
+        case choices = "choices"
+        case usage = "usage"
+        case systemFingerprint = "system_fingerprint"
+        case serviceTier = "service_tier"
+    }
+}
+
+// MARK: - Internal FFI conversions for ChatCompletionChunk
+internal extension ChatCompletionChunk {
+    init(_ rb: RustBridge.ChatCompletionChunk) throws {
+        self.id = rb.id().toString()
+        self.object = rb.object().toString()
+        self.created = rb.created()
+        self.model = rb.model().toString()
+        self.choices = try rb.choices().map { try StreamChoice($0) }
+        self.usage = try rb.usage().map { try Usage($0) }
+        self.systemFingerprint = rb.system_fingerprint()?.toString()
+        self.serviceTier = rb.service_tier()?.toString()
+    }
+    func intoRust() throws -> RustBridge.ChatCompletionChunk {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.chatCompletionChunkFromJson(json)
+    }
+}
 
 /// A streaming choice with incremental delta.
-public typealias StreamChoice = RustBridge.StreamChoice
+public struct StreamChoice: Codable, Sendable, Hashable {
+    /// Index of this choice in the choices array.
+    public let index: UInt32
+    /// Incremental update to the message (content, tool calls, etc.).
+    public let delta: StreamDelta
+    /// Why the stream ended (present only in final chunk).
+    public let finishReason: FinishReason?
+    public init(index: UInt32, delta: StreamDelta, finishReason: FinishReason? = nil) {
+        self.index = index
+        self.delta = delta
+        self.finishReason = finishReason
+    }
+    private enum CodingKeys: String, CodingKey {
+        case index = "index"
+        case delta = "delta"
+        case finishReason = "finish_reason"
+    }
+}
+
+// MARK: - Internal FFI conversions for StreamChoice
+internal extension StreamChoice {
+    init(_ rb: RustBridge.StreamChoice) throws {
+        self.index = rb.index()
+        self.delta = try StreamDelta(rb.delta())
+        self.finishReason = rb.finish_reason()?.toString().flatMap { FinishReason(rawValue: $0) }
+    }
+    func intoRust() throws -> RustBridge.StreamChoice {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.streamChoiceFromJson(json)
+    }
+}
 
 /// Incremental delta in a stream chunk.
-public typealias StreamDelta = RustBridge.StreamDelta
+public struct StreamDelta: Codable, Sendable, Hashable {
+    /// Role (typically present only in the first chunk).
+    public let role: String?
+    /// Partial content chunk (e.g., a few words of the response).
+    public let content: String?
+    /// Partial tool calls being streamed.
+    public let toolCalls: [StreamToolCall]?
+    /// Deprecated legacy function_call delta; retained for API compatibility.
+    public let functionCall: StreamFunctionCall?
+    /// Partial refusal message.
+    public let refusal: String?
+    public init(role: String? = nil, content: String? = nil, toolCalls: [StreamToolCall]? = nil, functionCall: StreamFunctionCall? = nil, refusal: String? = nil) {
+        self.role = role
+        self.content = content
+        self.toolCalls = toolCalls
+        self.functionCall = functionCall
+        self.refusal = refusal
+    }
+    private enum CodingKeys: String, CodingKey {
+        case role = "role"
+        case content = "content"
+        case toolCalls = "tool_calls"
+        case functionCall = "function_call"
+        case refusal = "refusal"
+    }
+}
+
+// MARK: - Internal FFI conversions for StreamDelta
+internal extension StreamDelta {
+    init(_ rb: RustBridge.StreamDelta) throws {
+        self.role = rb.role()?.toString()
+        self.content = rb.content()?.toString()
+        self.toolCalls = try rb.tool_calls()?.map { try StreamToolCall($0) }
+        self.functionCall = try rb.function_call().map { try StreamFunctionCall($0) }
+        self.refusal = rb.refusal()?.toString()
+    }
+    func intoRust() throws -> RustBridge.StreamDelta {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.streamDeltaFromJson(json)
+    }
+}
 
 /// A streaming tool call being built incrementally.
-public typealias StreamToolCall = RustBridge.StreamToolCall
+public struct StreamToolCall: Codable, Sendable, Hashable {
+    /// Index of this tool call in the tool_calls array.
+    public let index: UInt32
+    /// Tool call ID (typically in the first chunk for this call).
+    public let id: String?
+    /// Tool type (typically "function").
+    public let callType: ToolType?
+    /// Partial function name and arguments.
+    public let function: StreamFunctionCall?
+    public init(index: UInt32, id: String? = nil, callType: ToolType? = nil, function: StreamFunctionCall? = nil) {
+        self.index = index
+        self.id = id
+        self.callType = callType
+        self.function = function
+    }
+    private enum CodingKeys: String, CodingKey {
+        case index = "index"
+        case id = "id"
+        case callType = "call_type"
+        case function = "function"
+    }
+}
+
+// MARK: - Internal FFI conversions for StreamToolCall
+internal extension StreamToolCall {
+    init(_ rb: RustBridge.StreamToolCall) throws {
+        self.index = rb.index()
+        self.id = rb.id()?.toString()
+        self.callType = rb.call_type()?.toString().flatMap { ToolType(rawValue: $0) }
+        self.function = try rb.function().map { try StreamFunctionCall($0) }
+    }
+    func intoRust() throws -> RustBridge.StreamToolCall {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.streamToolCallFromJson(json)
+    }
+}
 
 /// Partial function call details in a stream.
 public struct StreamFunctionCall: Codable, Sendable, Hashable {
@@ -304,10 +735,68 @@ internal extension StreamFunctionCall {
 public typealias EmbeddingRequest = RustBridge.EmbeddingRequest
 
 /// Embedding response.
-public typealias EmbeddingResponse = RustBridge.EmbeddingResponse
+public struct EmbeddingResponse: Codable, Sendable, Hashable {
+    /// Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
+    /// `String` so non-standard provider values do not break deserialization.
+    public let object: String
+    /// List of embeddings.
+    public let data: [EmbeddingObject]
+    /// Model used to generate embeddings.
+    public let model: String
+    /// Token usage (input tokens only; embeddings have zero output tokens).
+    public let usage: Usage?
+    public init(object: String, data: [EmbeddingObject], model: String, usage: Usage? = nil) {
+        self.object = object
+        self.data = data
+        self.model = model
+        self.usage = usage
+    }
+}
+
+// MARK: - Internal FFI conversions for EmbeddingResponse
+internal extension EmbeddingResponse {
+    init(_ rb: RustBridge.EmbeddingResponse) throws {
+        self.object = rb.object().toString()
+        self.data = try rb.data().map { try EmbeddingObject($0) }
+        self.model = rb.model().toString()
+        self.usage = try rb.usage().map { try Usage($0) }
+    }
+    func intoRust() throws -> RustBridge.EmbeddingResponse {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.embeddingResponseFromJson(json)
+    }
+}
 
 /// A single embedding vector.
-public typealias EmbeddingObject = RustBridge.EmbeddingObject
+public struct EmbeddingObject: Codable, Sendable, Hashable {
+    /// Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain
+    /// `String` so non-standard provider values do not break deserialization.
+    public let object: String
+    /// The embedding vector.
+    public let embedding: [Double]
+    /// Index in the batch (corresponds to input order).
+    public let index: UInt32
+    public init(object: String, embedding: [Double], index: UInt32) {
+        self.object = object
+        self.embedding = embedding
+        self.index = index
+    }
+}
+
+// MARK: - Internal FFI conversions for EmbeddingObject
+internal extension EmbeddingObject {
+    init(_ rb: RustBridge.EmbeddingObject) throws {
+        self.object = rb.object().toString()
+        self.embedding = Array(rb.embedding())
+        self.index = rb.index()
+    }
+    func intoRust() throws -> RustBridge.EmbeddingObject {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.embeddingObjectFromJson(json)
+    }
+}
 
 /// Request to create images from a text prompt.
 public struct CreateImageRequest: Codable, Sendable, Hashable {
@@ -367,7 +856,29 @@ internal extension CreateImageRequest {
 }
 
 /// Response containing generated images.
-public typealias ImagesResponse = RustBridge.ImagesResponse
+public struct ImagesResponse: Codable, Sendable, Hashable {
+    /// Unix timestamp of image creation.
+    public let created: UInt64
+    /// List of generated images.
+    public let data: [Image]
+    public init(created: UInt64, data: [Image]) {
+        self.created = created
+        self.data = data
+    }
+}
+
+// MARK: - Internal FFI conversions for ImagesResponse
+internal extension ImagesResponse {
+    init(_ rb: RustBridge.ImagesResponse) throws {
+        self.created = rb.created()
+        self.data = try rb.data().map { try Image($0) }
+    }
+    func intoRust() throws -> RustBridge.ImagesResponse {
+        let __data = RustVec<RustBridge.Image>()
+        for __elem in self.data { __data.push(value: try __elem.intoRust()) }
+        return RustBridge.ImagesResponse(self.created, __data)
+    }
+}
 
 /// A single generated image, returned as either a URL or base64 data.
 public struct Image: Codable, Sendable, Hashable {
@@ -491,7 +1002,37 @@ internal extension CreateTranscriptionRequest {
 }
 
 /// Response from a transcription request.
-public typealias TranscriptionResponse = RustBridge.TranscriptionResponse
+public struct TranscriptionResponse: Codable, Sendable, Hashable {
+    /// The transcribed text.
+    public let text: String
+    /// Detected language (ISO-639-1 code).
+    public let language: String?
+    /// Total audio duration in seconds.
+    public let duration: Double?
+    /// Detailed segment-level transcription (if response_format is "verbose_json").
+    public let segments: [TranscriptionSegment]?
+    public init(text: String, language: String? = nil, duration: Double? = nil, segments: [TranscriptionSegment]? = nil) {
+        self.text = text
+        self.language = language
+        self.duration = duration
+        self.segments = segments
+    }
+}
+
+// MARK: - Internal FFI conversions for TranscriptionResponse
+internal extension TranscriptionResponse {
+    init(_ rb: RustBridge.TranscriptionResponse) throws {
+        self.text = rb.text().toString()
+        self.language = rb.language()?.toString()
+        self.duration = rb.duration()
+        self.segments = try rb.segments()?.map { try TranscriptionSegment($0) }
+    }
+    func intoRust() throws -> RustBridge.TranscriptionResponse {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.transcriptionResponseFromJson(json)
+    }
+}
 
 /// A segment of transcribed audio with timing information.
 public struct TranscriptionSegment: Codable, Sendable, Hashable {
@@ -528,10 +1069,67 @@ internal extension TranscriptionSegment {
 public typealias ModerationRequest = RustBridge.ModerationRequest
 
 /// Response from the moderation endpoint.
-public typealias ModerationResponse = RustBridge.ModerationResponse
+public struct ModerationResponse: Codable, Sendable, Hashable {
+    /// Unique identifier for this moderation request.
+    public let id: String
+    /// Model used for classification.
+    public let model: String
+    /// Results for each input string.
+    public let results: [ModerationResult]
+    public init(id: String, model: String, results: [ModerationResult]) {
+        self.id = id
+        self.model = model
+        self.results = results
+    }
+}
+
+// MARK: - Internal FFI conversions for ModerationResponse
+internal extension ModerationResponse {
+    init(_ rb: RustBridge.ModerationResponse) throws {
+        self.id = rb.id().toString()
+        self.model = rb.model().toString()
+        self.results = try rb.results().map { try ModerationResult($0) }
+    }
+    func intoRust() throws -> RustBridge.ModerationResponse {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.moderationResponseFromJson(json)
+    }
+}
 
 /// A single moderation classification result.
-public typealias ModerationResult = RustBridge.ModerationResult
+public struct ModerationResult: Codable, Sendable, Hashable {
+    /// True if any category was flagged.
+    public let flagged: Bool
+    /// Boolean flags for each moderation category.
+    public let categories: ModerationCategories
+    /// Confidence scores for each category.
+    public let categoryScores: ModerationCategoryScores
+    public init(flagged: Bool, categories: ModerationCategories, categoryScores: ModerationCategoryScores) {
+        self.flagged = flagged
+        self.categories = categories
+        self.categoryScores = categoryScores
+    }
+    private enum CodingKeys: String, CodingKey {
+        case flagged = "flagged"
+        case categories = "categories"
+        case categoryScores = "category_scores"
+    }
+}
+
+// MARK: - Internal FFI conversions for ModerationResult
+internal extension ModerationResult {
+    init(_ rb: RustBridge.ModerationResult) throws {
+        self.flagged = rb.flagged()
+        self.categories = try ModerationCategories(rb.categories())
+        self.categoryScores = try ModerationCategoryScores(rb.category_scores())
+    }
+    func intoRust() throws -> RustBridge.ModerationResult {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.moderationResultFromJson(json)
+    }
+}
 
 /// Boolean flags for each moderation category.
 public struct ModerationCategories: Codable, Sendable, Hashable {
@@ -684,31 +1282,255 @@ public typealias RerankRequest = RustBridge.RerankRequest
 public typealias RerankResponse = RustBridge.RerankResponse
 
 /// A single reranked document with its relevance score.
-public typealias RerankResult = RustBridge.RerankResult
+public struct RerankResult: Codable, Sendable, Hashable {
+    /// Original document index in the input list.
+    public let index: UInt32
+    /// Relevance score in `[0, 1]`. Higher indicates more relevant.
+    public let relevanceScore: Double
+    /// Original document content (if `return_documents` was true).
+    public let document: RerankResultDocument?
+    public init(index: UInt32, relevanceScore: Double, document: RerankResultDocument? = nil) {
+        self.index = index
+        self.relevanceScore = relevanceScore
+        self.document = document
+    }
+    private enum CodingKeys: String, CodingKey {
+        case index = "index"
+        case relevanceScore = "relevance_score"
+        case document = "document"
+    }
+}
+
+// MARK: - Internal FFI conversions for RerankResult
+internal extension RerankResult {
+    init(_ rb: RustBridge.RerankResult) throws {
+        self.index = rb.index()
+        self.relevanceScore = rb.relevance_score()
+        self.document = try rb.document().map { try RerankResultDocument($0) }
+    }
+    func intoRust() throws -> RustBridge.RerankResult {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.rerankResultFromJson(json)
+    }
+}
 
 /// The text content of a reranked document, returned when `return_documents` is true.
-public typealias RerankResultDocument = RustBridge.RerankResultDocument
+public struct RerankResultDocument: Codable, Sendable, Hashable {
+    /// Document text.
+    public let text: String
+    public init(text: String) {
+        self.text = text
+    }
+}
+
+// MARK: - Internal FFI conversions for RerankResultDocument
+internal extension RerankResultDocument {
+    init(_ rb: RustBridge.RerankResultDocument) throws {
+        self.text = rb.text().toString()
+    }
+    func intoRust() throws -> RustBridge.RerankResultDocument {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.rerankResultDocumentFromJson(json)
+    }
+}
 
 /// A search request.
-public typealias SearchRequest = RustBridge.SearchRequest
+public struct SearchRequest: Codable, Sendable, Hashable {
+    /// The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`).
+    public let model: String
+    /// The search query string.
+    public let query: String
+    /// Maximum number of results to return.
+    public let maxResults: UInt32?
+    /// Domain filter — restrict results to specific domains.
+    public let searchDomainFilter: [String]?
+    /// Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`).
+    public let country: String?
+    public init(model: String, query: String, maxResults: UInt32? = nil, searchDomainFilter: [String]? = nil, country: String? = nil) {
+        self.model = model
+        self.query = query
+        self.maxResults = maxResults
+        self.searchDomainFilter = searchDomainFilter
+        self.country = country
+    }
+    private enum CodingKeys: String, CodingKey {
+        case model = "model"
+        case query = "query"
+        case maxResults = "max_results"
+        case searchDomainFilter = "search_domain_filter"
+        case country = "country"
+    }
+}
+
+// MARK: - Internal FFI conversions for SearchRequest
+internal extension SearchRequest {
+    init(_ rb: RustBridge.SearchRequest) throws {
+        self.model = rb.model().toString()
+        self.query = rb.query().toString()
+        self.maxResults = rb.max_results()
+        self.searchDomainFilter = rb.search_domain_filter()?.map { $0.toString() }
+        self.country = rb.country()?.toString()
+    }
+    func intoRust() throws -> RustBridge.SearchRequest {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.searchRequestFromJson(json)
+    }
+}
 
 /// A search response.
-public typealias SearchResponse = RustBridge.SearchResponse
+public struct SearchResponse: Codable, Sendable, Hashable {
+    /// List of search results.
+    public let results: [SearchResult]
+    /// Model/provider that performed the search.
+    public let model: String
+    public init(results: [SearchResult], model: String) {
+        self.results = results
+        self.model = model
+    }
+}
+
+// MARK: - Internal FFI conversions for SearchResponse
+internal extension SearchResponse {
+    init(_ rb: RustBridge.SearchResponse) throws {
+        self.results = try rb.results().map { try SearchResult($0) }
+        self.model = rb.model().toString()
+    }
+    func intoRust() throws -> RustBridge.SearchResponse {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.searchResponseFromJson(json)
+    }
+}
 
 /// An individual search result.
-public typealias SearchResult = RustBridge.SearchResult
+public struct SearchResult: Codable, Sendable, Hashable {
+    /// Result title.
+    public let title: String
+    /// Result URL.
+    public let url: String
+    /// Text snippet or excerpt from the page.
+    public let snippet: String
+    /// Publication or last-updated date, if available.
+    public let date: String?
+    public init(title: String, url: String, snippet: String, date: String? = nil) {
+        self.title = title
+        self.url = url
+        self.snippet = snippet
+        self.date = date
+    }
+}
+
+// MARK: - Internal FFI conversions for SearchResult
+internal extension SearchResult {
+    init(_ rb: RustBridge.SearchResult) throws {
+        self.title = rb.title().toString()
+        self.url = rb.url().toString()
+        self.snippet = rb.snippet().toString()
+        self.date = rb.date()?.toString()
+    }
+    func intoRust() throws -> RustBridge.SearchResult {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.searchResultFromJson(json)
+    }
+}
 
 /// An OCR request.
 public typealias OcrRequest = RustBridge.OcrRequest
 
 /// An OCR response.
-public typealias OcrResponse = RustBridge.OcrResponse
+public struct OcrResponse: Codable, Sendable, Hashable {
+    /// Extracted pages in order.
+    public let pages: [OcrPage]
+    /// Model/provider used for OCR.
+    public let model: String
+    /// Token usage, if reported by the provider.
+    public let usage: Usage?
+    public init(pages: [OcrPage], model: String, usage: Usage? = nil) {
+        self.pages = pages
+        self.model = model
+        self.usage = usage
+    }
+}
+
+// MARK: - Internal FFI conversions for OcrResponse
+internal extension OcrResponse {
+    init(_ rb: RustBridge.OcrResponse) throws {
+        self.pages = try rb.pages().map { try OcrPage($0) }
+        self.model = rb.model().toString()
+        self.usage = try rb.usage().map { try Usage($0) }
+    }
+    func intoRust() throws -> RustBridge.OcrResponse {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.ocrResponseFromJson(json)
+    }
+}
 
 /// A single page of OCR output.
-public typealias OcrPage = RustBridge.OcrPage
+public struct OcrPage: Codable, Sendable, Hashable {
+    /// Page index (0-based).
+    public let index: UInt32
+    /// Extracted page content as Markdown.
+    public let markdown: String
+    /// Embedded images extracted from the page (if `include_image_base64` was true).
+    public let images: [OcrImage]?
+    /// Page dimensions in pixels, if available.
+    public let dimensions: PageDimensions?
+    public init(index: UInt32, markdown: String, images: [OcrImage]? = nil, dimensions: PageDimensions? = nil) {
+        self.index = index
+        self.markdown = markdown
+        self.images = images
+        self.dimensions = dimensions
+    }
+}
+
+// MARK: - Internal FFI conversions for OcrPage
+internal extension OcrPage {
+    init(_ rb: RustBridge.OcrPage) throws {
+        self.index = rb.index()
+        self.markdown = rb.markdown().toString()
+        self.images = try rb.images()?.map { try OcrImage($0) }
+        self.dimensions = try rb.dimensions().map { try PageDimensions($0) }
+    }
+    func intoRust() throws -> RustBridge.OcrPage {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.ocrPageFromJson(json)
+    }
+}
 
 /// An image extracted from an OCR page.
-public typealias OcrImage = RustBridge.OcrImage
+public struct OcrImage: Codable, Sendable, Hashable {
+    /// Unique image identifier within the document.
+    public let id: String
+    /// Base64-encoded image data (if `include_image_base64` was true).
+    public let imageBase64: String?
+    public init(id: String, imageBase64: String? = nil) {
+        self.id = id
+        self.imageBase64 = imageBase64
+    }
+    private enum CodingKeys: String, CodingKey {
+        case id = "id"
+        case imageBase64 = "image_base64"
+    }
+}
+
+// MARK: - Internal FFI conversions for OcrImage
+internal extension OcrImage {
+    init(_ rb: RustBridge.OcrImage) throws {
+        self.id = rb.id().toString()
+        self.imageBase64 = rb.image_base64()?.toString()
+    }
+    func intoRust() throws -> RustBridge.OcrImage {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.ocrImageFromJson(json)
+    }
+}
 
 /// Page dimensions in pixels.
 public struct PageDimensions: Codable, Sendable, Hashable {
@@ -734,7 +1556,30 @@ internal extension PageDimensions {
 }
 
 /// Response listing available models.
-public typealias ModelsListResponse = RustBridge.ModelsListResponse
+public struct ModelsListResponse: Codable, Sendable, Hashable {
+    /// Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
+    /// `String` so non-standard provider values do not break deserialization.
+    public let object: String
+    /// List of available models.
+    public let data: [ModelObject]
+    public init(object: String, data: [ModelObject]) {
+        self.object = object
+        self.data = data
+    }
+}
+
+// MARK: - Internal FFI conversions for ModelsListResponse
+internal extension ModelsListResponse {
+    init(_ rb: RustBridge.ModelsListResponse) throws {
+        self.object = rb.object().toString()
+        self.data = try rb.data().map { try ModelObject($0) }
+    }
+    func intoRust() throws -> RustBridge.ModelsListResponse {
+        let __data = RustVec<RustBridge.ModelObject>()
+        for __elem in self.data { __data.push(value: try __elem.intoRust()) }
+        return RustBridge.ModelsListResponse(self.object, __data)
+    }
+}
 
 /// A model available from the API.
 public struct ModelObject: Codable, Sendable, Hashable {
@@ -775,7 +1620,31 @@ internal extension ModelObject {
 }
 
 /// Request to upload a file.
-public typealias CreateFileRequest = RustBridge.CreateFileRequest
+public struct CreateFileRequest: Codable, Sendable, Hashable {
+    /// Base64-encoded file data.
+    public let file: String
+    /// Purpose for the file.
+    public let purpose: FilePurpose
+    /// Optional filename to associate with the upload.
+    public let filename: String?
+    public init(file: String, purpose: FilePurpose, filename: String? = nil) {
+        self.file = file
+        self.purpose = purpose
+        self.filename = filename
+    }
+}
+
+// MARK: - Internal FFI conversions for CreateFileRequest
+internal extension CreateFileRequest {
+    init(_ rb: RustBridge.CreateFileRequest) throws {
+        self.file = rb.file().toString()
+        self.purpose = FilePurpose(rawValue: rb.purpose().toString()) ?? { fatalError("Unknown FilePurpose: \(rb.purpose().toString())") }()
+        self.filename = rb.filename()?.toString()
+    }
+    func intoRust() throws -> RustBridge.CreateFileRequest {
+        return RustBridge.CreateFileRequest(self.file, try self.purpose.intoRust(), self.filename)
+    }
+}
 
 /// An uploaded file object.
 public struct FileObject: Codable, Sendable, Hashable {
@@ -830,7 +1699,38 @@ internal extension FileObject {
 }
 
 /// Response from listing files.
-public typealias FileListResponse = RustBridge.FileListResponse
+public struct FileListResponse: Codable, Sendable, Hashable {
+    /// Object type (always `"list"`).
+    public let object: String
+    /// List of file objects.
+    public let data: [FileObject]
+    /// Whether more results are available.
+    public let hasMore: Bool?
+    public init(object: String, data: [FileObject], hasMore: Bool? = nil) {
+        self.object = object
+        self.data = data
+        self.hasMore = hasMore
+    }
+    private enum CodingKeys: String, CodingKey {
+        case object = "object"
+        case data = "data"
+        case hasMore = "has_more"
+    }
+}
+
+// MARK: - Internal FFI conversions for FileListResponse
+internal extension FileListResponse {
+    init(_ rb: RustBridge.FileListResponse) throws {
+        self.object = rb.object().toString()
+        self.data = try rb.data().map { try FileObject($0) }
+        self.hasMore = rb.has_more()
+    }
+    func intoRust() throws -> RustBridge.FileListResponse {
+        let __data = RustVec<RustBridge.FileObject>()
+        for __elem in self.data { __data.push(value: try __elem.intoRust()) }
+        return RustBridge.FileListResponse(self.object, __data, self.hasMore)
+    }
+}
 
 /// Query parameters for listing files.
 public struct FileListQuery: Codable, Sendable, Hashable {
@@ -995,6 +1895,36 @@ public typealias CustomProviderConfig = RustBridge.CustomProviderConfig
 /// Static configuration for a single provider entry in providers.json.
 public typealias ProviderConfig = RustBridge.ProviderConfig
 
+/// Auth configuration block.
+public struct AuthConfig: Codable, Sendable, Hashable {
+    /// Auth scheme classification.
+    public let authType: AuthType
+    /// Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`).
+    /// Holds the variable name, never the secret value.
+    public let envVar: String?
+    public init(authType: AuthType, envVar: String? = nil) {
+        self.authType = authType
+        self.envVar = envVar
+    }
+    private enum CodingKeys: String, CodingKey {
+        case authType = "auth_type"
+        case envVar = "env_var"
+    }
+}
+
+// MARK: - Internal FFI conversions for AuthConfig
+internal extension AuthConfig {
+    init(_ rb: RustBridge.AuthConfig) throws {
+        self.authType = AuthType(rawValue: rb.auth_type().toString()) ?? { fatalError("Unknown AuthType: \(rb.auth_type().toString())") }()
+        self.envVar = rb.env_var()?.toString()
+    }
+    func intoRust() throws -> RustBridge.AuthConfig {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.authConfigFromJson(json)
+    }
+}
+
 /// Configuration for budget enforcement.
 public typealias BudgetConfig = RustBridge.BudgetConfig
 
@@ -1036,13 +1966,13 @@ public enum ContentPart {
 }
 
 /// Image detail level controlling token cost and processing.
-public enum ImageDetail {
+public enum ImageDetail: String, Codable, Sendable, Hashable {
     /// Low detail: scales image to 512x512, uses fewer tokens.
-    case low
+    case low = "Low"
     /// High detail: processes up to 2x2 grid of tiles, higher token cost.
-    case high
+    case high = "High"
     /// Auto: model chooses low or high based on image dimensions.
-    case auto
+    case auto = "Auto"
 }
 
 /// The type discriminator for tool/tool-call objects.
@@ -1050,7 +1980,7 @@ public enum ImageDetail {
 /// Per the OpenAI spec this is always `"function"`. Using an enum enforces
 /// that constraint at the type level and rejects any other value on
 /// deserialization.
-public enum ToolType {
+public enum ToolType: String, Codable, Sendable, Hashable {
     case function
 }
 
@@ -1063,13 +1993,13 @@ public enum ToolChoice {
 }
 
 /// Tool choice mode.
-public enum ToolChoiceMode {
+public enum ToolChoiceMode: String, Codable, Sendable, Hashable {
     /// Model may or may not call tools; default behavior.
-    case auto
+    case auto = "Auto"
     /// Model must call at least one tool.
-    case required
+    case required = "Required"
     /// Model must not call any tools.
-    case none
+    case none = "None"
 }
 
 /// Response format constraint.
@@ -1091,13 +2021,13 @@ public enum StopSequence {
 }
 
 /// Why a choice stopped generating tokens.
-public enum FinishReason {
+public enum FinishReason: String, Codable, Sendable, Hashable {
     case stop
     case length
-    case toolCalls
-    case contentFilter
+    case toolCalls = "tool_calls"
+    case contentFilter = "content_filter"
     /// Deprecated legacy finish reason; retained for API compatibility.
-    case functionCall
+    case functionCall = "function_call"
     /// Catch-all for unknown finish reasons returned by non-OpenAI providers.
     ///
     /// Note: this intentionally does **not** carry the original string (e.g.
@@ -1109,18 +2039,18 @@ public enum FinishReason {
 }
 
 /// Controls how much reasoning effort the model should use.
-public enum ReasoningEffort {
-    case low
-    case medium
-    case high
+public enum ReasoningEffort: String, Codable, Sendable, Hashable {
+    case low = "Low"
+    case medium = "Medium"
+    case high = "High"
 }
 
 /// The format in which the embedding vectors are returned.
-public enum EmbeddingFormat {
+public enum EmbeddingFormat: String, Codable, Sendable, Hashable {
     /// 32-bit floating-point numbers (default).
-    case float
+    case float = "Float"
     /// Base64-encoded string representation of the floats.
-    case base64
+    case base64 = "Base64"
 }
 
 /// Text or texts to embed.
@@ -1156,25 +2086,25 @@ public enum OcrDocument {
 }
 
 /// Purpose of an uploaded file.
-public enum FilePurpose {
+public enum FilePurpose: String, Codable, Sendable, Hashable {
     /// File for use with Assistants API.
     case assistants
     /// File for batch processing.
     case batch
     /// File for fine-tuning.
-    case fineTune
+    case fineTune = "fine-tune"
     /// File for vision/image tasks.
     case vision
 }
 
 /// Status of a batch job.
-public enum BatchStatus {
+public enum BatchStatus: String, Codable, Sendable, Hashable {
     /// Validating the input file.
     case validating
     /// Job failed.
     case failed
     /// Job is running.
-    case inProgress
+    case inProgress = "in_progress"
     /// Finalizing results.
     case finalizing
     /// Job completed successfully.
@@ -1197,14 +2127,26 @@ public enum AuthHeaderFormat {
     case none
 }
 
+/// Auth scheme used by a provider.
+public enum AuthType: String, Codable, Sendable, Hashable {
+    /// Standard `Authorization: Bearer <key>` header.
+    case bearer
+    /// `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases).
+    case apiKey = "api-key"
+    /// No authentication header required.
+    case none
+    /// Unrecognised auth scheme — falls back to bearer.
+    case unknown
+}
+
 /// How budget limits are enforced.
-public enum Enforcement {
+public enum Enforcement: String, Codable, Sendable, Hashable {
     /// Reject requests that would exceed the budget with
     /// [`LiterLlmError::BudgetExceeded`].
-    case hard
+    case hard = "Hard"
     /// Allow requests through but emit a `tracing::warn!` when the budget is
     /// exceeded.
-    case soft
+    case soft = "Soft"
 }
 
 /// Storage backend for the response cache.
@@ -1256,38 +2198,38 @@ public final class DefaultClient {
         self.inner = try RustBridge.createDefaultClient(apiKey, baseUrl)
     }
     public func chat(_ req: ChatCompletionRequest) async throws -> ChatCompletionResponse {
-        return try await RustBridge.defaultClientChat(self.inner, req)
+        return try ChatCompletionResponse(try await RustBridge.defaultClientChat(self.inner, req))
     }
     public func embed(_ req: EmbeddingRequest) async throws -> EmbeddingResponse {
-        return try await RustBridge.defaultClientEmbed(self.inner, req)
+        return try EmbeddingResponse(try await RustBridge.defaultClientEmbed(self.inner, req))
     }
     public func listModels() async throws -> ModelsListResponse {
-        return try await RustBridge.defaultClientListModels(self.inner)
+        return try ModelsListResponse(try await RustBridge.defaultClientListModels(self.inner))
     }
     public func imageGenerate(_ req: CreateImageRequest) async throws -> ImagesResponse {
-        return try await RustBridge.defaultClientImageGenerate(self.inner, try req.intoRust())
+        return try ImagesResponse(try await RustBridge.defaultClientImageGenerate(self.inner, try req.intoRust()))
     }
     public func speech(_ req: CreateSpeechRequest) async throws -> Data {
         let _bytes = try await RustBridge.defaultClientSpeech(self.inner, try req.intoRust())
         return Data(_bytes.map { $0 })
     }
     public func transcribe(_ req: CreateTranscriptionRequest) async throws -> TranscriptionResponse {
-        return try await RustBridge.defaultClientTranscribe(self.inner, try req.intoRust())
+        return try TranscriptionResponse(try await RustBridge.defaultClientTranscribe(self.inner, try req.intoRust()))
     }
     public func moderate(_ req: ModerationRequest) async throws -> ModerationResponse {
-        return try await RustBridge.defaultClientModerate(self.inner, req)
+        return try ModerationResponse(try await RustBridge.defaultClientModerate(self.inner, req))
     }
     public func rerank(_ req: RerankRequest) async throws -> RerankResponse {
         return try await RustBridge.defaultClientRerank(self.inner, req)
     }
     public func search(_ req: SearchRequest) async throws -> SearchResponse {
-        return try await RustBridge.defaultClientSearch(self.inner, req)
+        return try SearchResponse(try await RustBridge.defaultClientSearch(self.inner, try req.intoRust()))
     }
     public func ocr(_ req: OcrRequest) async throws -> OcrResponse {
-        return try await RustBridge.defaultClientOcr(self.inner, req)
+        return try OcrResponse(try await RustBridge.defaultClientOcr(self.inner, req))
     }
     public func createFile(_ req: CreateFileRequest) async throws -> FileObject {
-        return try FileObject(try await RustBridge.defaultClientCreateFile(self.inner, req))
+        return try FileObject(try await RustBridge.defaultClientCreateFile(self.inner, try req.intoRust()))
     }
     public func retrieveFile(_ fileId: String) async throws -> FileObject {
         return try FileObject(try await RustBridge.defaultClientRetrieveFile(self.inner, fileId))
@@ -1296,7 +2238,7 @@ public final class DefaultClient {
         return try DeleteResponse(try await RustBridge.defaultClientDeleteFile(self.inner, fileId))
     }
     public func listFiles(_ query: FileListQuery?) async throws -> FileListResponse {
-        return try await RustBridge.defaultClientListFiles(self.inner, try query?.intoRust())
+        return try FileListResponse(try await RustBridge.defaultClientListFiles(self.inner, try query?.intoRust()))
     }
     public func fileContent(_ fileId: String) async throws -> Data {
         let _bytes = try await RustBridge.defaultClientFileContent(self.inner, fileId)
@@ -1335,7 +2277,8 @@ public final class DefaultClient {
                     while !Task.isCancelled {
                         let json = try handle.next().toString()
                         if json.isEmpty { break }
-                        let chunk = try RustBridge.chatCompletionChunkFromJson(json)
+                        let chunkData = json.data(using: .utf8) ?? Data()
+                        let chunk = try JSONDecoder().decode(ChatCompletionChunk.self, from: chunkData)
                         continuation.yield(chunk)
                     }
                     continuation.finish()
@@ -1398,7 +2341,8 @@ public func rerankRequestFromJson(_ json: String) throws -> RerankRequest {
 }
 
 public func searchRequestFromJson(_ json: String) throws -> SearchRequest {
-    return try RustBridge.searchRequestFromJson(json)
+    let data = json.data(using: .utf8) ?? Data()
+    return try JSONDecoder().decode(SearchRequest.self, from: data)
 }
 
 public func ocrRequestFromJson(_ json: String) throws -> OcrRequest {
@@ -1406,7 +2350,8 @@ public func ocrRequestFromJson(_ json: String) throws -> OcrRequest {
 }
 
 public func createFileRequestFromJson(_ json: String) throws -> CreateFileRequest {
-    return try RustBridge.createFileRequestFromJson(json)
+    let data = json.data(using: .utf8) ?? Data()
+    return try JSONDecoder().decode(CreateFileRequest.self, from: data)
 }
 
 public func fileListQueryFromJson(_ json: String) throws -> FileListQuery {

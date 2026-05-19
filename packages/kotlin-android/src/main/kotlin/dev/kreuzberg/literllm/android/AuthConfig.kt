@@ -22,20 +22,16 @@
 package dev.kreuzberg.literllm.android
 
 /**
- * Configuration for budget enforcement.
+ * Auth configuration block.
  */
-data class BudgetConfig(
+data class AuthConfig(
     /**
-     * Maximum total spend across all models, in USD.  `null` means unlimited.
+     * Auth scheme classification.
      */
-    val globalLimit: Double?,
+    val authType: AuthType,
     /**
-     * Per-model spending limits in USD.  Models not listed here are only
-     * constrained by `global_limit`.
+     * Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`).
+     * Holds the variable name, never the secret value.
      */
-    val modelLimits: Map<String, Double>,
-    /**
-     * Whether to reject requests or merely warn when a limit is exceeded.
-     */
-    val enforcement: Enforcement
+    val envVar: String?
 )

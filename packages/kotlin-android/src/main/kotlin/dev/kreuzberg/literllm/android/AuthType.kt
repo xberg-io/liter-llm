@@ -22,17 +22,23 @@
 package dev.kreuzberg.literllm.android
 
 /**
- * How budget limits are enforced.
+ * Auth scheme used by a provider.
  */
-enum class Enforcement {
+enum class AuthType {
     /**
-     * Reject requests that would exceed the budget with
-     * `LiterLlmError.BudgetExceeded`.
+     * Standard `Authorization: Bearer <key>` header.
      */
-    HARD,
+    BEARER,
     /**
-     * Allow requests through but emit a `tracing.warn!` when the budget is
-     * exceeded.
+     * `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases).
      */
-    SOFT;
+    API_KEY,
+    /**
+     * No authentication header required.
+     */
+    NONE,
+    /**
+     * Unrecognised auth scheme — falls back to bearer.
+     */
+    UNKNOWN;
 }

@@ -990,6 +990,16 @@ mod ffi {
         fn name(&self) -> String;
         fn display_name(&self) -> Option<String>;
         fn base_url(&self) -> Option<String>;
+        fn auth(&self) -> Option<AuthConfig>;
+        fn endpoints(&self) -> Option<Vec<String>>;
+        fn model_prefixes(&self) -> Option<Vec<String>>;
+        fn param_mappings(&self) -> String;
+    }
+
+    extern "Rust" {
+        type AuthConfig;
+        fn auth_type(&self) -> String;
+        fn env_var(&self) -> Option<String>;
     }
 
     extern "Rust" {
@@ -1111,6 +1121,11 @@ mod ffi {
 
     extern "Rust" {
         type AuthHeaderFormat;
+        fn to_string(&self) -> String;
+    }
+
+    extern "Rust" {
+        type AuthType;
         fn to_string(&self) -> String;
     }
 
@@ -1243,6 +1258,10 @@ mod ffi {
         fn ocr_page_from_json(json: String) -> Result<OcrPage, String>;
         #[swift_bridge(swift_name = "ocrImageFromJson")]
         fn ocr_image_from_json(json: String) -> Result<OcrImage, String>;
+        #[swift_bridge(swift_name = "providerConfigFromJson")]
+        fn provider_config_from_json(json: String) -> Result<ProviderConfig, String>;
+        #[swift_bridge(swift_name = "authConfigFromJson")]
+        fn auth_config_from_json(json: String) -> Result<AuthConfig, String>;
     }
 }
 
@@ -4258,16 +4277,44 @@ impl CustomProviderConfig {
 pub struct ProviderConfig(pub liter_llm::provider::ProviderConfig);
 impl ProviderConfig {
     pub fn name(&self) -> String {
-        format!("{:?}", &self.0.name)
+        self.0.name.clone()
     }
     pub fn display_name(&self) -> Option<String> {
-        self.0.display_name.as_ref().map(|v| format!("{v:?}"))
+        self.0.display_name.clone()
     }
     pub fn base_url(&self) -> Option<String> {
-        self.0.base_url.as_ref().map(|v| format!("{v:?}"))
+        self.0.base_url.clone()
     }
-    // alef: skipped getter `endpoints` — type cannot be bridged through swift-bridge
-    // alef: skipped getter `model_prefixes` — type cannot be bridged through swift-bridge
+    pub fn auth(&self) -> Option<AuthConfig> {
+        self.0.auth.clone().map(AuthConfig)
+    }
+    pub fn endpoints(&self) -> Option<Vec<String>> {
+        self.0.endpoints.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+    pub fn model_prefixes(&self) -> Option<Vec<String>> {
+        self.0.model_prefixes.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+    pub fn param_mappings(&self) -> String {
+        serde_json::to_string(&self.0.param_mappings).expect("serializable param_mappings")
+    }
+}
+
+pub struct AuthConfig(pub liter_llm::provider::AuthConfig);
+impl AuthConfig {
+    pub fn auth_type(&self) -> String {
+        AuthType::from(self.0.auth_type.clone()).to_string()
+    }
+    pub fn env_var(&self) -> Option<String> {
+        self.0.env_var.clone()
+    }
 }
 
 pub struct BudgetConfig(pub liter_llm::BudgetConfig);
@@ -4818,6 +4865,35 @@ impl AuthHeaderFormat {
     }
 }
 
+pub enum AuthType {
+    Bearer,
+    ApiKey,
+    None,
+    Unknown,
+}
+
+impl From<liter_llm::provider::AuthType> for AuthType {
+    fn from(val: liter_llm::provider::AuthType) -> Self {
+        match val {
+            liter_llm::provider::AuthType::Bearer => Self::Bearer,
+            liter_llm::provider::AuthType::ApiKey => Self::ApiKey,
+            liter_llm::provider::AuthType::None => Self::None,
+            liter_llm::provider::AuthType::Unknown => Self::Unknown,
+        }
+    }
+}
+
+impl AuthType {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Bearer => "bearer".to_string(),
+            Self::ApiKey => "api-key".to_string(),
+            Self::None => "none".to_string(),
+            Self::Unknown => "unknown".to_string(),
+        }
+    }
+}
+
 pub enum Enforcement {
     Hard,
     Soft,
@@ -4894,7 +4970,7 @@ pub fn unregister_custom_provider(name: String) -> Result<bool, String> {
 pub fn all_providers() -> Result<Vec<ProviderConfig>, String> {
     liter_llm::provider::all_providers()
         .map_err(|e| e.to_string())
-        .map(|v| v.into_iter().map(ProviderConfig).collect::<Vec<_>>())
+        .map(|v| v.iter().map(|x| ProviderConfig(x.clone())).collect::<Vec<_>>())
 }
 
 pub fn complex_provider_names() -> Result<Vec<String>, String> {
@@ -4904,7 +4980,7 @@ pub fn complex_provider_names() -> Result<Vec<String>, String> {
 }
 
 pub fn completion_cost(model: String, prompt_tokens: u64, completion_tokens: u64) -> String {
-    serde_json::to_string(&(liter_llm::cost::completion_cost(&model, prompt_tokens, completion_tokens)))
+    serde_json::to_string(&(liter_llm::completion_cost(&model, prompt_tokens, completion_tokens)))
         .expect("serializable return")
 }
 
@@ -4915,17 +4991,17 @@ pub fn completion_cost_with_cache(
     completion_tokens: u64,
 ) -> String {
     serde_json::to_string(
-        &(liter_llm::cost::completion_cost_with_cache(&model, prompt_tokens, cached_tokens, completion_tokens)),
+        &(liter_llm::completion_cost_with_cache(&model, prompt_tokens, cached_tokens, completion_tokens)),
     )
     .expect("serializable return")
 }
 
 pub fn count_tokens(model: String, text: String) -> Result<usize, String> {
-    liter_llm::tokenizer::count_tokens(&model, &text).map_err(|e| e.to_string())
+    liter_llm::count_tokens(&model, &text).map_err(|e| e.to_string())
 }
 
 pub fn count_request_tokens(model: String, req: ChatCompletionRequest) -> Result<usize, String> {
-    liter_llm::tokenizer::count_request_tokens(&model, &req.0).map_err(|e| e.to_string())
+    liter_llm::count_request_tokens(&model, &req.0).map_err(|e| e.to_string())
 }
 
 pub fn ensure_crypto_provider() -> () {
@@ -5195,5 +5271,17 @@ pub fn ocr_page_from_json(json: String) -> Result<OcrPage, String> {
 pub fn ocr_image_from_json(json: String) -> Result<OcrImage, String> {
     serde_json::from_str::<liter_llm::types::OcrImage>(&json)
         .map(OcrImage)
+        .map_err(|e| e.to_string())
+}
+
+pub fn provider_config_from_json(json: String) -> Result<ProviderConfig, String> {
+    serde_json::from_str::<liter_llm::provider::ProviderConfig>(&json)
+        .map(ProviderConfig)
+        .map_err(|e| e.to_string())
+}
+
+pub fn auth_config_from_json(json: String) -> Result<AuthConfig, String> {
+    serde_json::from_str::<liter_llm::provider::AuthConfig>(&json)
+        .map(AuthConfig)
         .map_err(|e| e.to_string())
 }

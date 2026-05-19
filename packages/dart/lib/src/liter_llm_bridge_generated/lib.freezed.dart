@@ -182,7 +182,7 @@ return none();case _:
 
 class AuthHeaderFormat_Bearer extends AuthHeaderFormat {
   const AuthHeaderFormat_Bearer(): super._();
-
+  
 
 
 
@@ -214,7 +214,7 @@ String toString() {
 
 class AuthHeaderFormat_ApiKey extends AuthHeaderFormat {
   const AuthHeaderFormat_ApiKey({required this.field0}): super._();
-
+  
 
  final  String field0;
 
@@ -280,7 +280,7 @@ as String,
 
 class AuthHeaderFormat_None extends AuthHeaderFormat {
   const AuthHeaderFormat_None(): super._();
-
+  
 
 
 
@@ -472,7 +472,7 @@ return openDal(_that.scheme,_that.config);case _:
 
 class CacheBackend_Memory extends CacheBackend {
   const CacheBackend_Memory(): super._();
-
+  
 
 
 
@@ -504,7 +504,7 @@ String toString() {
 
 class CacheBackend_OpenDal extends CacheBackend {
   const CacheBackend_OpenDal({required this.scheme, required final  Map<String, String> config}): _config = config,super._();
-
+  
 
 /// OpenDAL scheme name (e.g. "s3", "redis", "fs", "gcs", "azblob").
  final  String scheme;
@@ -753,7 +753,7 @@ return inputAudio(_that.inputAudio);case _:
 
 class ContentPart_Text extends ContentPart {
   const ContentPart_Text({required this.text}): super._();
-
+  
 
  final  String text;
 
@@ -819,7 +819,7 @@ as String,
 
 class ContentPart_ImageUrl extends ContentPart {
   const ContentPart_ImageUrl({required this.imageUrl}): super._();
-
+  
 
  final  ImageUrl imageUrl;
 
@@ -885,7 +885,7 @@ as ImageUrl,
 
 class ContentPart_Document extends ContentPart {
   const ContentPart_Document({required this.document}): super._();
-
+  
 
  final  DocumentContent document;
 
@@ -951,7 +951,7 @@ as DocumentContent,
 
 class ContentPart_InputAudio extends ContentPart {
   const ContentPart_InputAudio({required this.inputAudio}): super._();
-
+  
 
  final  AudioContent inputAudio;
 
@@ -1177,7 +1177,7 @@ return multiple(_that.field0);case _:
 
 class EmbeddingInput_Single extends EmbeddingInput {
   const EmbeddingInput_Single({required this.field0}): super._();
-
+  
 
 @override final  String field0;
 
@@ -1243,7 +1243,7 @@ as String,
 
 class EmbeddingInput_Multiple extends EmbeddingInput {
   const EmbeddingInput_Multiple({required final  List<String> field0}): _field0 = field0,super._();
-
+  
 
  final  List<String> _field0;
 @override List<String> get field0 {
@@ -1499,7 +1499,7 @@ return function(_that.field0);case _:
 
 class Message_System extends Message {
   const Message_System({required this.field0}): super._();
-
+  
 
 @override final  SystemMessage field0;
 
@@ -1565,7 +1565,7 @@ as SystemMessage,
 
 class Message_User extends Message {
   const Message_User({required this.field0}): super._();
-
+  
 
 @override final  UserMessage field0;
 
@@ -1631,7 +1631,7 @@ as UserMessage,
 
 class Message_Assistant extends Message {
   const Message_Assistant({required this.field0}): super._();
-
+  
 
 @override final  AssistantMessage field0;
 
@@ -1697,7 +1697,7 @@ as AssistantMessage,
 
 class Message_Tool extends Message {
   const Message_Tool({required this.field0}): super._();
-
+  
 
 @override final  ToolMessage field0;
 
@@ -1763,7 +1763,7 @@ as ToolMessage,
 
 class Message_Developer extends Message {
   const Message_Developer({required this.field0}): super._();
-
+  
 
 @override final  DeveloperMessage field0;
 
@@ -1829,7 +1829,7 @@ as DeveloperMessage,
 
 class Message_Function extends Message {
   const Message_Function({required this.field0}): super._();
-
+  
 
 @override final  FunctionMessage field0;
 
@@ -2055,7 +2055,7 @@ return multiple(_that.field0);case _:
 
 class ModerationInput_Single extends ModerationInput {
   const ModerationInput_Single({required this.field0}): super._();
-
+  
 
 @override final  String field0;
 
@@ -2121,7 +2121,7 @@ as String,
 
 class ModerationInput_Multiple extends ModerationInput {
   const ModerationInput_Multiple({required final  List<String> field0}): _field0 = field0,super._();
-
+  
 
  final  List<String> _field0;
 @override List<String> get field0 {
@@ -2353,7 +2353,7 @@ return base64(_that.data,_that.mediaType);case _:
 
 class OcrDocument_Url extends OcrDocument {
   const OcrDocument_Url({required this.url}): super._();
-
+  
 
 /// The document URL (HTTP/HTTPS).
  final  String url;
@@ -2420,7 +2420,7 @@ as String,
 
 class OcrDocument_Base64 extends OcrDocument {
   const OcrDocument_Base64({required this.data, required this.mediaType}): super._();
-
+  
 
 /// Base64-encoded document content.
  final  String data;
@@ -2650,7 +2650,7 @@ return object(_that.text);case _:
 
 class RerankDocument_Text extends RerankDocument {
   const RerankDocument_Text({required this.field0}): super._();
-
+  
 
  final  String field0;
 
@@ -2716,7 +2716,7 @@ as String,
 
 class RerankDocument_Object extends RerankDocument {
   const RerankDocument_Object({required this.text}): super._();
-
+  
 
  final  String text;
 
@@ -2948,7 +2948,7 @@ return jsonSchema(_that.jsonSchema);case _:
 
 class ResponseFormat_Text extends ResponseFormat {
   const ResponseFormat_Text(): super._();
-
+  
 
 
 
@@ -2980,7 +2980,7 @@ String toString() {
 
 class ResponseFormat_JsonObject extends ResponseFormat {
   const ResponseFormat_JsonObject(): super._();
-
+  
 
 
 
@@ -3012,7 +3012,7 @@ String toString() {
 
 class ResponseFormat_JsonSchema extends ResponseFormat {
   const ResponseFormat_JsonSchema({required this.jsonSchema}): super._();
-
+  
 
  final  JsonSchemaFormat jsonSchema;
 
@@ -3238,7 +3238,7 @@ return multiple(_that.field0);case _:
 
 class StopSequence_Single extends StopSequence {
   const StopSequence_Single({required this.field0}): super._();
-
+  
 
 @override final  String field0;
 
@@ -3304,7 +3304,7 @@ as String,
 
 class StopSequence_Multiple extends StopSequence {
   const StopSequence_Multiple({required final  List<String> field0}): _field0 = field0,super._();
-
+  
 
  final  List<String> _field0;
 @override List<String> get field0 {
@@ -3536,7 +3536,7 @@ return specific(_that.field0);case _:
 
 class ToolChoice_Mode extends ToolChoice {
   const ToolChoice_Mode({required this.field0}): super._();
-
+  
 
 @override final  ToolChoiceMode field0;
 
@@ -3602,7 +3602,7 @@ as ToolChoiceMode,
 
 class ToolChoice_Specific extends ToolChoice {
   const ToolChoice_Specific({required this.field0}): super._();
-
+  
 
 @override final  SpecificToolChoice field0;
 
@@ -3828,7 +3828,7 @@ return parts(_that.field0);case _:
 
 class UserContent_Text extends UserContent {
   const UserContent_Text({required this.field0}): super._();
-
+  
 
 @override final  String field0;
 
@@ -3894,7 +3894,7 @@ as String,
 
 class UserContent_Parts extends UserContent {
   const UserContent_Parts({required final  List<ContentPart> field0}): _field0 = field0,super._();
-
+  
 
  final  List<ContentPart> _field0;
 @override List<ContentPart> get field0 {

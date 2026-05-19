@@ -936,6 +936,37 @@ pub const CustomProviderConfig = struct {
     model_prefixes: []const []const u8,
 };
 
+/// Static configuration for a single provider entry in providers.json.
+pub const ProviderConfig = struct {
+    /// Provider identifier (matches the entry key in providers.json).
+    name: []const u8,
+    /// Human-readable provider name shown in UIs.
+    display_name: ?[]const u8,
+    /// Base URL used as the default for this provider's HTTP client.
+    base_url: ?[]const u8,
+    /// Authentication scheme metadata (auth type + env var holding the key).
+    auth: ?AuthConfig,
+    /// Supported endpoint kinds (e.g. `chat`, `embeddings`).
+    endpoints: ?[]const []const u8,
+    /// Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`).
+    model_prefixes: ?[]const []const u8,
+    /// Parameter key renaming for this provider.
+    ///
+    /// Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`)
+    /// to the name this provider expects (e.g. `"max_tokens"`).  Applied
+    /// automatically by `ConfigDrivenProvider.transform_request`.
+    param_mappings: ?std.StringHashMap([]const u8),
+};
+
+/// Auth configuration block.
+pub const AuthConfig = struct {
+    /// Auth scheme classification.
+    auth_type: AuthType,
+    /// Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`).
+    /// Holds the variable name, never the secret value.
+    env_var: ?[]const u8,
+};
+
 /// Configuration for budget enforcement.
 pub const BudgetConfig = struct {
     /// Maximum total spend across all models, in USD.  `null` means unlimited.
@@ -1161,6 +1192,18 @@ pub const AuthHeaderFormat = union(enum) {
     api_key: []const u8,
     /// No authentication required.
     none: void,
+};
+
+/// Auth scheme used by a provider.
+pub const AuthType = enum {
+    /// Standard `Authorization: Bearer <key>` header.
+    bearer,
+    /// `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases).
+    api_key,
+    /// No authentication header required.
+    none,
+    /// Unrecognised auth scheme — falls back to bearer.
+    unknown,
 };
 
 /// How budget limits are enforced.
@@ -1853,15 +1896,5 @@ pub const DefaultClient = struct {
     /// Release the underlying FFI handle. Safe to call once per instance.
     pub fn free(self: *DefaultClient) void {
         c.literllm_default_client_free(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)));
-    }
-};
-
-/// Static configuration for a single provider entry in providers.json.
-pub const ProviderConfig = struct {
-    _handle: *anyopaque,
-
-    /// Release the underlying FFI handle. Safe to call once per instance.
-    pub fn free(self: *ProviderConfig) void {
-        c.literllm_provider_config_free(@as(*c.LITERLLMProviderConfig, @ptrCast(self._handle)));
     }
 };

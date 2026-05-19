@@ -38,11 +38,23 @@ data class ProviderConfig(
      */
     val baseUrl: String?,
     /**
+     * Authentication scheme metadata (auth type + env var holding the key).
+     */
+    val auth: AuthConfig?,
+    /**
      * Supported endpoint kinds (e.g. `chat`, `embeddings`).
      */
     val endpoints: List<String>?,
     /**
      * Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`).
      */
-    val modelPrefixes: List<String>?
+    val modelPrefixes: List<String>?,
+    /**
+     * Parameter key renaming for this provider.
+     *
+     * Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`)
+     * to the name this provider expects (e.g. `"max_tokens"`).  Applied
+     * automatically by `ConfigDrivenProvider.transform_request`.
+     */
+    val paramMappings: Map<String, String>?
 )

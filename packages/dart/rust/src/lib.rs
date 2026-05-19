@@ -1012,10 +1012,28 @@ pub struct ProviderConfig {
     pub display_name: Option<String>,
     /// Base URL used as the default for this provider's HTTP client.
     pub base_url: Option<String>,
+    /// Authentication scheme metadata (auth type + env var holding the key).
+    pub auth: Option<AuthConfig>,
     /// Supported endpoint kinds (e.g. `chat`, `embeddings`).
     pub endpoints: Option<Vec<String>>,
     /// Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`).
     pub model_prefixes: Option<Vec<String>>,
+    /// Parameter key renaming for this provider.
+    ///
+    /// Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`)
+    /// to the name this provider expects (e.g. `"max_tokens"`).  Applied
+    /// automatically by [`ConfigDrivenProvider::transform_request`].
+    pub param_mappings: Option<std::collections::HashMap<String, String>>,
+}
+
+/// Auth configuration block.
+#[frb(mirror(AuthConfig))]
+pub struct AuthConfig {
+    /// Auth scheme classification.
+    pub auth_type: AuthType,
+    /// Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`).
+    /// Holds the variable name, never the secret value.
+    pub env_var: Option<String>,
 }
 
 /// Configuration for budget enforcement.
@@ -1497,6 +1515,19 @@ pub enum AuthHeaderFormat {
     ApiKey { field0: String },
     /// No authentication required.
     None,
+}
+
+/// Auth scheme used by a provider.
+#[frb(mirror(AuthType))]
+pub enum AuthType {
+    /// Standard `Authorization: Bearer <key>` header.
+    Bearer,
+    /// `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases).
+    ApiKey,
+    /// No authentication header required.
+    None,
+    /// Unrecognised auth scheme — falls back to bearer.
+    Unknown,
 }
 
 /// How budget limits are enforced.
@@ -2333,8 +2364,21 @@ impl From<liter_llm::provider::ProviderConfig> for ProviderConfig {
             name: v.name.into(),
             display_name: v.display_name.map(|s| s.into()),
             base_url: v.base_url.map(|s| s.into()),
+            auth: v.auth.map(AuthConfig::from),
             endpoints: v.endpoints.map(|vec| vec.into_iter().map(|s| s.into()).collect()),
             model_prefixes: v.model_prefixes.map(|vec| vec.into_iter().map(|s| s.into()).collect()),
+            param_mappings: v
+                .param_mappings
+                .map(|m| m.into_iter().map(|(k, v)| (k.into(), v.into())).collect()),
+        }
+    }
+}
+
+impl From<liter_llm::provider::AuthConfig> for AuthConfig {
+    fn from(v: liter_llm::provider::AuthConfig) -> Self {
+        AuthConfig {
+            auth_type: AuthType::from(v.auth_type),
+            env_var: v.env_var.map(|s| s.into()),
         }
     }
 }
@@ -2584,6 +2628,17 @@ impl From<liter_llm::provider::custom::AuthHeaderFormat> for AuthHeaderFormat {
             liter_llm::provider::custom::AuthHeaderFormat::Bearer => AuthHeaderFormat::Bearer,
             liter_llm::provider::custom::AuthHeaderFormat::ApiKey(f0) => AuthHeaderFormat::ApiKey { field0: f0 },
             liter_llm::provider::custom::AuthHeaderFormat::None => AuthHeaderFormat::None,
+        }
+    }
+}
+
+impl From<liter_llm::provider::AuthType> for AuthType {
+    fn from(v: liter_llm::provider::AuthType) -> Self {
+        match v {
+            liter_llm::provider::AuthType::Bearer => AuthType::Bearer,
+            liter_llm::provider::AuthType::ApiKey => AuthType::ApiKey,
+            liter_llm::provider::AuthType::None => AuthType::None,
+            liter_llm::provider::AuthType::Unknown => AuthType::Unknown,
         }
     }
 }
@@ -3140,7 +3195,7 @@ pub fn unregister_custom_provider(name: String) -> Result<bool, String> {
 /// Useful for tooling, documentation generation, or runtime enumeration.
 pub fn all_providers() -> Result<Vec<ProviderConfig>, String> {
     liter_llm::provider::all_providers()
-        .map(|v| v.into_iter().map(ProviderConfig::from).collect())
+        .map(|v| v.iter().map(|x| ProviderConfig::from(x.clone())).collect())
         .map_err(|e| e.to_string())
 }
 
@@ -3166,7 +3221,7 @@ pub fn complex_provider_names() -> Result<Vec<String>, String> {
 /// are tried by stripping from the last `-` or `.` separator.  For example,
 /// `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 pub fn completion_cost(model: String, prompt_tokens: i64, completion_tokens: i64) -> Option<f64> {
-    liter_llm::cost::completion_cost(&model, prompt_tokens as u64, completion_tokens as u64)
+    liter_llm::completion_cost(&model, prompt_tokens as u64, completion_tokens as u64)
 }
 
 /// Calculate the estimated cost of a completion, accounting for cached
@@ -3187,7 +3242,7 @@ pub fn completion_cost_with_cache(
     cached_tokens: i64,
     completion_tokens: i64,
 ) -> Option<f64> {
-    liter_llm::cost::completion_cost_with_cache(
+    liter_llm::completion_cost_with_cache(
         &model,
         prompt_tokens as u64,
         cached_tokens as u64,
@@ -3206,7 +3261,7 @@ pub fn completion_cost_with_cache(
 /// Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
 /// (e.g. network failure on first use) or if tokenization itself fails.
 pub fn count_tokens(model: String, text: String) -> Result<i64, String> {
-    liter_llm::tokenizer::count_tokens(&model, &text)
+    liter_llm::count_tokens(&model, &text)
         .map(|v| v as i64)
         .map_err(|e| e.to_string())
 }
@@ -3223,7 +3278,7 @@ pub fn count_tokens(model: String, text: String) -> Result<i64, String> {
 /// Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded or
 /// if tokenization fails for any message.
 pub fn count_request_tokens(model: String, req: ChatCompletionRequest) -> Result<i64, String> {
-    liter_llm::tokenizer::count_request_tokens(&model, &liter_llm::types::ChatCompletionRequest::from(req))
+    liter_llm::count_request_tokens(&model, &liter_llm::types::ChatCompletionRequest::from(req))
         .map(|v| v as i64)
         .map_err(|e| e.to_string())
 }
@@ -3748,6 +3803,20 @@ pub fn create_response_usage_from_json(json: String) -> Result<ResponseUsage, St
 pub fn create_custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String> {
     serde_json::from_str::<liter_llm::provider::custom::CustomProviderConfig>(&json)
         .map(CustomProviderConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_provider_config_from_json(json: String) -> Result<ProviderConfig, String> {
+    serde_json::from_str::<liter_llm::provider::ProviderConfig>(&json)
+        .map(ProviderConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_auth_config_from_json(json: String) -> Result<AuthConfig, String> {
+    serde_json::from_str::<liter_llm::provider::AuthConfig>(&json)
+        .map(AuthConfig::from)
         .map_err(|e| e.to_string())
 }
 

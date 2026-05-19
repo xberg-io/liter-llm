@@ -1049,6 +1049,18 @@ void* __swift_bridge__$Vec_CustomProviderConfig$get_mut(void* vec_ptr, uintptr_t
 uintptr_t __swift_bridge__$Vec_CustomProviderConfig$len(void* vec_ptr);
 void* __swift_bridge__$Vec_CustomProviderConfig$as_ptr(void* vec_ptr);
 
+typedef struct ProviderConfig ProviderConfig;
+void __swift_bridge__$ProviderConfig$_free(void* self);
+
+void* __swift_bridge__$Vec_ProviderConfig$new(void);
+void __swift_bridge__$Vec_ProviderConfig$drop(void* vec_ptr);
+void __swift_bridge__$Vec_ProviderConfig$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_ProviderConfig$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_ProviderConfig$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_ProviderConfig$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_ProviderConfig$len(void* vec_ptr);
+void* __swift_bridge__$Vec_ProviderConfig$as_ptr(void* vec_ptr);
+
 typedef struct BudgetConfig BudgetConfig;
 void __swift_bridge__$BudgetConfig$_free(void* self);
 
@@ -1718,6 +1730,9 @@ void* __swift_bridge__$CustomProviderConfig$name(void* self);
 void* __swift_bridge__$CustomProviderConfig$base_url(void* self);
 void* __swift_bridge__$CustomProviderConfig$auth_header(void* self);
 void* __swift_bridge__$CustomProviderConfig$model_prefixes(void* self);
+void* __swift_bridge__$ProviderConfig$name(void* self);
+void* __swift_bridge__$ProviderConfig$display_name(void* self);
+void* __swift_bridge__$ProviderConfig$base_url(void* self);
 void* __swift_bridge__$BudgetConfig$new(struct __private__OptionF64 global_limit, void* model_limits, void* enforcement);
 struct __private__OptionF64 __swift_bridge__$BudgetConfig$global_limit(void* self);
 void* __swift_bridge__$BudgetConfig$model_limits(void* self);
@@ -1753,6 +1768,15 @@ void* __swift_bridge__$Enforcement$to_string(void* self);
 void* __swift_bridge__$CacheBackend$to_string(void* self);
 struct __private__ResultPtrAndPtr __swift_bridge__$create_client(void* api_key, void* base_url, struct __private__OptionU64 timeout_secs, struct __private__OptionU32 max_retries, void* model_hint);
 struct __private__ResultPtrAndPtr __swift_bridge__$create_client_from_json(void* json);
+void* __swift_bridge__$register_custom_provider(void* config);
+struct __swift_bridge__$ResultBoolAndString __swift_bridge__$unregister_custom_provider(void* name);
+struct __private__ResultPtrAndPtr __swift_bridge__$all_providers(void);
+struct __private__ResultPtrAndPtr __swift_bridge__$complex_provider_names(void);
+void* __swift_bridge__$completion_cost(void* model, uint64_t prompt_tokens, uint64_t completion_tokens);
+void* __swift_bridge__$completion_cost_with_cache(void* model, uint64_t prompt_tokens, uint64_t cached_tokens, uint64_t completion_tokens);
+struct __swift_bridge__$ResultUIntAndString __swift_bridge__$count_tokens(void* model, void* text);
+struct __swift_bridge__$ResultUIntAndString __swift_bridge__$count_request_tokens(void* model, void* req);
+void __swift_bridge__$ensure_crypto_provider(void);
 struct __private__ResultPtrAndPtr __swift_bridge__$default_client_chat_stream_start(void* client, void* req);
 struct __private__ResultPtrAndPtr __swift_bridge__$DefaultClientChatStreamStreamHandle$next(void* self);
 struct __private__ResultPtrAndPtr __swift_bridge__$chat_completion_request_from_json(void* json);
@@ -1769,6 +1793,7 @@ struct __private__ResultPtrAndPtr __swift_bridge__$file_list_query_from_json(voi
 struct __private__ResultPtrAndPtr __swift_bridge__$create_batch_request_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$batch_list_query_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$create_response_request_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$custom_provider_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$chat_completion_chunk_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$chat_completion_tool_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$function_definition_from_json(void* json);
@@ -1786,7 +1811,12 @@ struct __private__ResultPtrAndPtr __swift_bridge__$search_result_from_json(void*
 struct __private__ResultPtrAndPtr __swift_bridge__$ocr_response_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$ocr_page_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$ocr_image_from_json(void* json);
-struct __private__ResultPtrAndPtr __swift_bridge__$custom_provider_config_from_json(void* json);
+typedef enum __swift_bridge__$ResultBoolAndString$Tag {__swift_bridge__$ResultBoolAndString$ResultOk, __swift_bridge__$ResultBoolAndString$ResultErr} __swift_bridge__$ResultBoolAndString$Tag;
+union __swift_bridge__$ResultBoolAndString$Fields {bool ok; void* err;};
+typedef struct __swift_bridge__$ResultBoolAndString{__swift_bridge__$ResultBoolAndString$Tag tag; union __swift_bridge__$ResultBoolAndString$Fields payload;} __swift_bridge__$ResultBoolAndString;
+typedef enum __swift_bridge__$ResultUIntAndString$Tag {__swift_bridge__$ResultUIntAndString$ResultOk, __swift_bridge__$ResultUIntAndString$ResultErr} __swift_bridge__$ResultUIntAndString$Tag;
+union __swift_bridge__$ResultUIntAndString$Fields {uintptr_t ok; void* err;};
+typedef struct __swift_bridge__$ResultUIntAndString{__swift_bridge__$ResultUIntAndString$Tag tag; union __swift_bridge__$ResultUIntAndString$Fields payload;} __swift_bridge__$ResultUIntAndString;
 
 
 #endif /* RUST_BRIDGE_C_H */

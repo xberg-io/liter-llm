@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.16.72"
+alef_version = "0.17.0"
 languages = [
   "python",
   "node",
@@ -166,6 +166,10 @@ namespace = "dev.kreuzberg.literllm.android"
 artifact_id = "liter-llm-android"
 group_id = "dev.kreuzberg"
 abis = ["arm64-v8a", "x86_64"]
+# Tower middleware config DTOs are excluded from the Android AAR for the same
+# reason they are excluded from the WASM binding: tower is not available in the
+# Android JNI build, so these types are unreachable and must not be emitted.
+exclude_types = ["BudgetConfig", "CacheConfig", "CacheBackend", "RateLimitConfig", "Enforcement"]
 
 [crates.output]
 python = "crates/liter-llm-py/src/"

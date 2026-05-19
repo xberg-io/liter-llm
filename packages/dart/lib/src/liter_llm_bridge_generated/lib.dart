@@ -8,7 +8,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Create a new LLM client with simple scalar configuration.
 ///
@@ -44,6 +44,134 @@ Future<DefaultClient> createClient({
 /// contains unknown fields.
 Future<DefaultClient> createClientFromJson({required String json}) =>
     RustLib.instance.api.crateCreateClientFromJson(json: json);
+
+/// Register a custom provider in the global runtime registry.
+///
+/// The provider will be checked **before** all built-in providers during model
+/// detection. If a provider with the same `name` already exists it is replaced.
+///
+/// **Errors:**
+///
+/// Returns an error if the config is invalid (empty name, empty base_url, or
+/// no model prefixes).
+Future<void> registerCustomProvider({required CustomProviderConfig config}) =>
+    RustLib.instance.api.crateRegisterCustomProvider(config: config);
+
+/// Remove a previously registered custom provider by name.
+///
+/// Returns `true` if a provider with the given name was found and removed,
+/// `false` if no such provider existed.
+///
+/// **Errors:**
+///
+/// Returns an error only if the internal lock is poisoned.
+Future<bool> unregisterCustomProvider({required String name}) =>
+    RustLib.instance.api.crateUnregisterCustomProvider(name: name);
+
+/// Return all provider configs from the registry.
+///
+/// Useful for tooling, documentation generation, or runtime enumeration.
+Future<List<ProviderConfig>> allProviders() =>
+    RustLib.instance.api.crateAllProviders();
+
+/// Return the set of complex provider names.
+///
+/// Complex providers require custom auth/routing logic beyond simple bearer
+/// tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
+///
+/// The returned reference points into the static registry — no allocation.
+Future<List<String>> complexProviderNames() =>
+    RustLib.instance.api.crateComplexProviderNames();
+
+/// Calculate the estimated cost of a completion given a model name and token
+/// counts.
+///
+/// Returns `null` if the model is not present in the embedded pricing registry.
+/// Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
+///
+/// When an exact model name match is not found, progressively shorter prefixes
+/// are tried by stripping from the last `-` or `.` separator.  For example,
+/// `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
+Future<double?> completionCost({
+  required String model,
+  required PlatformInt64 promptTokens,
+  required PlatformInt64 completionTokens,
+}) => RustLib.instance.api.crateCompletionCost(
+  model: model,
+  promptTokens: promptTokens,
+  completionTokens: completionTokens,
+);
+
+/// Calculate the estimated cost of a completion, accounting for cached
+/// (cache-hit) prompt tokens billed at the provider's discounted rate.
+///
+/// `cached_tokens` is the count of prompt tokens served from the provider's
+/// prompt cache. It must be `<= prompt_tokens` (cached tokens are a subset of
+/// the prompt). The non-cached portion is billed at `input_cost_per_token`
+/// and the cached portion at `cache_read_input_token_cost` when the model
+/// has cache pricing; otherwise the entire prompt is billed at the regular
+/// input rate.
+///
+/// Returns `null` if the model is not present in the embedded pricing
+/// registry, mirroring `completion_cost`.
+Future<double?> completionCostWithCache({
+  required String model,
+  required PlatformInt64 promptTokens,
+  required PlatformInt64 cachedTokens,
+  required PlatformInt64 completionTokens,
+}) => RustLib.instance.api.crateCompletionCostWithCache(
+  model: model,
+  promptTokens: promptTokens,
+  cachedTokens: cachedTokens,
+  completionTokens: completionTokens,
+);
+
+/// Count tokens in a text string using the tokenizer for the given model.
+///
+/// The tokenizer is resolved from the model name prefix (e.g. `"gpt-4o"` maps
+/// to the `Xenova/gpt-4o` HuggingFace tokenizer). Tokenizers are cached after
+/// first load.
+///
+/// **Errors:**
+///
+/// Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
+/// (e.g. network failure on first use) or if tokenization itself fails.
+Future<PlatformInt64> countTokens({
+  required String model,
+  required String text,
+}) => RustLib.instance.api.crateCountTokens(model: model, text: text);
+
+/// Count tokens for a full `ChatCompletionRequest`.
+///
+/// Sums tokens across all message text contents plus a per-message overhead
+/// of ~4 tokens (for role, separators, and formatting metadata). Tool
+/// definitions and multimodal content parts (images, audio, documents) are
+/// not counted — only textual content contributes to the token total.
+///
+/// **Errors:**
+///
+/// Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded or
+/// if tokenization fails for any message.
+Future<PlatformInt64> countRequestTokens({
+  required String model,
+  required ChatCompletionRequest req,
+}) => RustLib.instance.api.crateCountRequestTokens(model: model, req: req);
+
+/// Install the `ring` crypto provider as the rustls process default, idempotently.
+///
+/// rustls 0.23+ removed the implicit default provider. This function installs
+/// `ring` once per process. Subsequent calls are no-ops. Calling it from a
+/// downstream Rust app that has already installed `aws-lc-rs` is safe — the
+/// `Err` from `install_default()` is silently ignored.
+///
+/// Called automatically by every internal `reqwest.Client` constructor
+/// (auth providers, default HTTP client). Bindings and downstream consumers
+/// reach those constructors transitively, so no manual init is required.
+///
+/// WASM builds are exempt — the WASM target uses the browser/Node.js fetch
+/// API instead of rustls, so no crypto provider is needed.
+Future<void> ensureCryptoProvider() =>
+    RustLib.instance.api.crateEnsureCryptoProvider();
 
 Future<SystemMessage> createSystemMessageFromJson({required String json}) =>
     RustLib.instance.api.crateCreateSystemMessageFromJson(json: json);
@@ -300,6 +428,12 @@ Future<CustomProviderConfig> createCustomProviderConfigFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateCustomProviderConfigFromJson(json: json);
 
+Future<ProviderConfig> createProviderConfigFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateProviderConfigFromJson(json: json);
+
+Future<AuthConfig> createAuthConfigFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateAuthConfigFromJson(json: json);
+
 Future<BudgetConfig> createBudgetConfigFromJson({required String json}) =>
     RustLib.instance.api.crateCreateBudgetConfigFromJson(json: json);
 
@@ -427,6 +561,29 @@ class AudioContent {
           format == other.format;
 }
 
+/// Auth configuration block.
+class AuthConfig {
+  /// Auth scheme classification.
+  final AuthType authType;
+
+  /// Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`).
+  /// Holds the variable name, never the secret value.
+  final String? envVar;
+
+  const AuthConfig({required this.authType, this.envVar});
+
+  @override
+  int get hashCode => authType.hashCode ^ envVar.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AuthConfig &&
+          runtimeType == other.runtimeType &&
+          authType == other.authType &&
+          envVar == other.envVar;
+}
+
 @freezed
 sealed class AuthHeaderFormat with _$AuthHeaderFormat {
   const AuthHeaderFormat._();
@@ -440,6 +597,21 @@ sealed class AuthHeaderFormat with _$AuthHeaderFormat {
 
   /// No authentication required.
   const factory AuthHeaderFormat.none() = AuthHeaderFormat_None;
+}
+
+/// Auth scheme used by a provider.
+enum AuthType {
+  /// Standard `Authorization: Bearer <key>` header.
+  bearer,
+
+  /// `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases).
+  apiKey,
+
+  /// No authentication header required.
+  none,
+
+  /// Unrecognised auth scheme — falls back to bearer.
+  unknown,
 }
 
 /// Query parameters for listing batches.
@@ -2501,6 +2673,67 @@ class PromptTokensDetails {
           runtimeType == other.runtimeType &&
           cachedTokens == other.cachedTokens &&
           audioTokens == other.audioTokens;
+}
+
+/// Static configuration for a single provider entry in providers.json.
+class ProviderConfig {
+  /// Provider identifier (matches the entry key in providers.json).
+  final String name;
+
+  /// Human-readable provider name shown in UIs.
+  final String? displayName;
+
+  /// Base URL used as the default for this provider's HTTP client.
+  final String? baseUrl;
+
+  /// Authentication scheme metadata (auth type + env var holding the key).
+  final AuthConfig? auth;
+
+  /// Supported endpoint kinds (e.g. `chat`, `embeddings`).
+  final List<String>? endpoints;
+
+  /// Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`).
+  final List<String>? modelPrefixes;
+
+  /// Parameter key renaming for this provider.
+  ///
+  /// Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`)
+  /// to the name this provider expects (e.g. `"max_tokens"`).  Applied
+  /// automatically by [`ConfigDrivenProvider::transform_request`].
+  final Map<String, String>? paramMappings;
+
+  const ProviderConfig({
+    required this.name,
+    this.displayName,
+    this.baseUrl,
+    this.auth,
+    this.endpoints,
+    this.modelPrefixes,
+    this.paramMappings,
+  });
+
+  @override
+  int get hashCode =>
+      name.hashCode ^
+      displayName.hashCode ^
+      baseUrl.hashCode ^
+      auth.hashCode ^
+      endpoints.hashCode ^
+      modelPrefixes.hashCode ^
+      paramMappings.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProviderConfig &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          displayName == other.displayName &&
+          baseUrl == other.baseUrl &&
+          auth == other.auth &&
+          endpoints == other.endpoints &&
+          modelPrefixes == other.modelPrefixes &&
+          paramMappings == other.paramMappings;
 }
 
 /// Configuration for per-model rate limits.
