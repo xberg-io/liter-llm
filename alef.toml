@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.17.8"
+alef_version = "0.17.10"
 languages = [
   "python",
   "node",
@@ -184,6 +184,15 @@ abis = ["arm64-v8a", "x86_64"]
 # reason they are excluded from the WASM binding: tower is not available in the
 # Android JNI build, so these types are unreachable and must not be emitted.
 exclude_types = ["BudgetConfig", "CacheConfig", "CacheBackend", "RateLimitConfig", "Enforcement"]
+# count_tokens/count_request_tokens are gated behind the core crate's
+# `tokenizer` feature (HuggingFace tokenizers). The JNI crate's liter-llm dep
+# uses default features (tokenizer off), so these functions aren't reachable
+# through `liter_llm::*` in the JNI build, and `tokenizers` itself doesn't
+# build cleanly on the Android NDK toolchain. Apps that need token counting on
+# Android should call a server-side endpoint. The alef-backend-jni emitter
+# reads exclude_functions from this kotlin_android config (not from
+# [crates.jni]), so this is the canonical location for both bindings.
+exclude_functions = ["count_tokens", "count_request_tokens"]
 
 [crates.output]
 python = "crates/liter-llm-py/src/"

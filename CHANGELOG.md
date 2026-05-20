@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Bump alef pin to `0.17.8` and regenerate all 15 language bindings + reference docs + e2e suites (238 binding files, 112 API files, 16 scaffold files, 400 e2e files). Picks up alef-side codegen and formatter fixes shipped between `0.17.2` and `0.17.8`; Cargo manifests reformatted to 2-space indent by the workspace formatter.
+- Bump alef pin to `0.17.10` and regenerate all 15 language bindings + reference docs + e2e suites. Picks up alef-side codegen and formatter fixes shipped between `0.17.2` and `0.17.10`; Cargo manifests reformatted to 2-space indent by the workspace formatter.
+- `alef.toml`: move `exclude_functions = ["count_tokens", "count_request_tokens"]` from `[crates.jni]` to `[crates.kotlin_android]`. The `alef-backend-jni` emitter reads its exclude list from the kotlin_android crate config (not from a dedicated `[crates.jni]` block), so the previous placement was a no-op and the JNI lib was still emitting `core_crate::count_tokens` / `count_request_tokens` calls that fail to compile against a `liter-llm` dep without the `tokenizer` feature. Restores the CI Mobile builds.
 - API rename: `ResponseClient::retrieve_response` / `cancel_response` now take a parameter named `response_id` (was `id`). Positional callers are unaffected; named-arg callers must update. The new name is consistent with `file_id` / `batch_id` on the file and batch clients, and it stops the alef-generated Python binding from shadowing the `id` builtin (ruff A002). Adapter configs in `alef.toml` updated to match.
 
 ### Fixed

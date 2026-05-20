@@ -42,12 +42,6 @@ object LiterLlmBridge {
     external fun nativeCompletionCostWithCache(model: String, promptTokens: Long, cachedTokens: Long, completionTokens: Long): String?
 
     @Throws(LiterLlmBridgeException::class)
-    external fun nativeCountTokens(model: String, text: String): Long
-
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeCountRequestTokens(model: String, req: String): Long
-
-    @Throws(LiterLlmBridgeException::class)
     external fun nativeEnsureCryptoProvider()
 
     // JNI external funs for client instance methods.

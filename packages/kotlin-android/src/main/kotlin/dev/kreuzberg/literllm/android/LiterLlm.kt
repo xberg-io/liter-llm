@@ -171,36 +171,6 @@ object LiterLlm {
         completionTokens: Long
     ): String? = LiterLlmBridge.nativeCompletionCostWithCache(model, promptTokens, cachedTokens, completionTokens)
     /**
-     * Count tokens in a text string using the tokenizer for the given model.
-     *
-     * The tokenizer is resolved from the model name prefix (e.g. `"gpt-4o"` maps
-     * to the `Xenova/gpt-4o` HuggingFace tokenizer). Tokenizers are cached after
-     * first load.
-     *
-     * **Errors:**
-     *
-     * Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
-     * (e.g. network failure on first use) or if tokenization itself fails.
-     */
-    fun countTokens(model: String, text: String): Long = LiterLlmBridge.nativeCountTokens(model, text)
-    /**
-     * Count tokens for a full `ChatCompletionRequest`.
-     *
-     * Sums tokens across all message text contents plus a per-message overhead
-     * of ~4 tokens (for role, separators, and formatting metadata). Tool
-     * definitions and multimodal content parts (images, audio, documents) are
-     * not counted — only textual content contributes to the token total.
-     *
-     * **Errors:**
-     *
-     * Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded or
-     * if tokenization fails for any message.
-     */
-    fun countRequestTokens(
-        model: String,
-        req: ChatCompletionRequest
-    ): Long = LiterLlmBridge.nativeCountRequestTokens(model, mapper.writeValueAsString(req))
-    /**
      * Install the `ring` crypto provider as the rustls process default, idempotently.
      *
      * rustls 0.23+ removed the implicit default provider. This function installs
