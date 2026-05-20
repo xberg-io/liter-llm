@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 
-/** JNI-backed wrapper holding a native `DefaultClient` handle. */
 @Suppress("TooManyFunctions")
 class DefaultClient internal constructor(internal val handle: Long) : AutoCloseable {
     companion object {

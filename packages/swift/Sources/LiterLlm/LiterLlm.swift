@@ -1935,40 +1935,13 @@ public typealias CacheConfig = RustBridge.CacheConfig
 public typealias RateLimitConfig = RustBridge.RateLimitConfig
 
 /// A chat message in a conversation.
-public enum Message {
-    case system(field0: SystemMessage)
-    case user(field0: UserMessage)
-    case assistant(field0: AssistantMessage)
-    case tool(field0: ToolMessage)
-    case developer(field0: DeveloperMessage)
-    /// Deprecated legacy function-role message; retained for API compatibility.
-    case function(field0: FunctionMessage)
-}
-extension Message {
-    func intoRust() throws -> RustBridge.Message {
-        let data = try JSONEncoder().encode(self)
-        let json = String(data: data, encoding: .utf8) ?? "null"
-        return try RustBridge.messageFromJson(json)
-    }
-}
+public typealias Message = RustBridge.Message
 
 /// User message content as either plain text or a list of multimodal parts.
-public enum UserContent {
-    /// Plain text content.
-    case text(field0: String)
-    /// Array of content parts (text, images, documents, audio).
-    case parts(field0: [ContentPart])
-}
-extension UserContent {
-    func intoRust() throws -> RustBridge.UserContent {
-        let data = try JSONEncoder().encode(self)
-        let json = String(data: data, encoding: .utf8) ?? "null"
-        return try RustBridge.userContentFromJson(json)
-    }
-}
+public typealias UserContent = RustBridge.UserContent
 
 /// A single content part in a user message — text, image, document, or audio.
-public enum ContentPart {
+public enum ContentPart: Codable, Sendable, Hashable {
     /// Plain text.
     case text(text: String)
     /// Image identified by URL (with optional detail level).
@@ -2020,7 +1993,7 @@ extension ToolType {
 }
 
 /// Tool usage mode or a specific tool to call.
-public enum ToolChoice {
+public enum ToolChoice: Codable, Sendable, Hashable {
     /// Predefined mode: auto, required, or none.
     case mode(field0: ToolChoiceMode)
     /// Force a specific tool to be called.
@@ -2052,24 +2025,10 @@ extension ToolChoiceMode {
 }
 
 /// Response format constraint.
-public enum ResponseFormat {
-    /// Plain text output (default).
-    case text
-    /// Output must be valid JSON object (no schema validation).
-    case jsonObject
-    /// Output must conform to the specified JSON schema.
-    case jsonSchema(jsonSchema: JsonSchemaFormat)
-}
-extension ResponseFormat {
-    func intoRust() throws -> RustBridge.ResponseFormat {
-        let data = try JSONEncoder().encode(self)
-        let json = String(data: data, encoding: .utf8) ?? "null"
-        return try RustBridge.responseFormatFromJson(json)
-    }
-}
+public typealias ResponseFormat = RustBridge.ResponseFormat
 
 /// Stop sequence(s) that cause the model to stop generating.
-public enum StopSequence {
+public enum StopSequence: Codable, Sendable, Hashable {
     /// Single stop sequence.
     case single(field0: String)
     /// Multiple stop sequences.
@@ -2138,7 +2097,7 @@ extension EmbeddingFormat {
 }
 
 /// Text or texts to embed.
-public enum EmbeddingInput {
+public enum EmbeddingInput: Codable, Sendable, Hashable {
     /// Single text string.
     case single(field0: String)
     /// Multiple text strings (batch embedding).
@@ -2153,7 +2112,7 @@ extension EmbeddingInput {
 }
 
 /// Input to the moderation endpoint — a single string or multiple strings.
-public enum ModerationInput {
+public enum ModerationInput: Codable, Sendable, Hashable {
     /// Single text string.
     case single(field0: String)
     /// Multiple text strings (batch moderation).
@@ -2168,7 +2127,7 @@ extension ModerationInput {
 }
 
 /// A document to be reranked — either a plain string or an object with a text field.
-public enum RerankDocument {
+public enum RerankDocument: Codable, Sendable, Hashable {
     /// Plain text document content.
     case text(field0: String)
     /// Document with explicit text field (may include metadata).
@@ -2183,7 +2142,7 @@ extension RerankDocument {
 }
 
 /// Document input for OCR — either a URL or inline base64 data.
-public enum OcrDocument {
+public enum OcrDocument: Codable, Sendable, Hashable {
     /// A publicly accessible document URL.
     case url(url: String)
     /// Inline base64-encoded document data.
@@ -2244,7 +2203,7 @@ extension BatchStatus {
 }
 
 /// How the API key is sent in the HTTP request.
-public enum AuthHeaderFormat {
+public enum AuthHeaderFormat: Codable, Sendable, Hashable {
     /// Bearer token: `Authorization: Bearer <key>`
     case bearer
     /// Custom header: e.g., `X-Api-Key: <key>`
@@ -2297,7 +2256,7 @@ extension Enforcement {
 }
 
 /// Storage backend for the response cache.
-public enum CacheBackend {
+public enum CacheBackend: Codable, Sendable, Hashable {
     /// In-memory LRU cache (default). No external dependencies.
     case memory
     /// OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.).
@@ -2890,13 +2849,11 @@ public func rateLimitConfigFromJson(_ json: String) throws -> RateLimitConfig {
 }
 
 public func messageFromJson(_ json: String) throws -> Message {
-    let data = json.data(using: .utf8) ?? Data()
-    return try JSONDecoder().decode(Message.self, from: data)
+    return try RustBridge.messageFromJson(json)
 }
 
 public func userContentFromJson(_ json: String) throws -> UserContent {
-    let data = json.data(using: .utf8) ?? Data()
-    return try JSONDecoder().decode(UserContent.self, from: data)
+    return try RustBridge.userContentFromJson(json)
 }
 
 public func contentPartFromJson(_ json: String) throws -> ContentPart {
@@ -2925,8 +2882,7 @@ public func toolChoiceModeFromJson(_ json: String) throws -> ToolChoiceMode {
 }
 
 public func responseFormatFromJson(_ json: String) throws -> ResponseFormat {
-    let data = json.data(using: .utf8) ?? Data()
-    return try JSONDecoder().decode(ResponseFormat.self, from: data)
+    return try RustBridge.responseFormatFromJson(json)
 }
 
 public func stopSequenceFromJson(_ json: String) throws -> StopSequence {
