@@ -129,7 +129,7 @@ repos:
         args: ["-c", "packages/java/checkstyle.xml", "-p", "packages/java/checkstyle.properties"]
         exclude: ^(\.mvn/wrapper/|e2e/|packages/java/src/)
       - id: mypy
-        args: ["--strict", "packages/python/liter_llm/"]
+        args: ["--strict", "--config-file", "packages/python/pyproject.toml", "packages/python/liter_llm/"]
         exclude: ^(e2e/|scripts/|test_apps/|tests/|benchmarks/)
       - id: go-fmt
         exclude: ^(e2e/|test_apps/)
