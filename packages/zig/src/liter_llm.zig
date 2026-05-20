@@ -1859,10 +1859,10 @@ pub const DefaultClient = struct {
         };
     }
 
-    pub fn retrieve_response(self: *DefaultClient, id: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
-        const id_z = try std.heap.c_allocator.dupeZ(u8, id);
-        defer std.heap.c_allocator.free(id_z);
-        const _result = c.literllm_default_client_retrieve_response(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), id_z);
+    pub fn retrieve_response(self: *DefaultClient, response_id: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
+        const response_id_z = try std.heap.c_allocator.dupeZ(u8, response_id);
+        defer std.heap.c_allocator.free(response_id_z);
+        const _result = c.literllm_default_client_retrieve_response(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), response_id_z);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
@@ -1876,10 +1876,10 @@ pub const DefaultClient = struct {
         };
     }
 
-    pub fn cancel_response(self: *DefaultClient, id: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
-        const id_z = try std.heap.c_allocator.dupeZ(u8, id);
-        defer std.heap.c_allocator.free(id_z);
-        const _result = c.literllm_default_client_cancel_response(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), id_z);
+    pub fn cancel_response(self: *DefaultClient, response_id: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
+        const response_id_z = try std.heap.c_allocator.dupeZ(u8, response_id);
+        defer std.heap.c_allocator.free(response_id_z);
+        const _result = c.literllm_default_client_cancel_response(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), response_id_z);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }

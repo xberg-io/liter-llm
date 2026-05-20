@@ -21,36 +21,20 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * An uploaded file object.
- */
+/** An uploaded file object. */
 data class FileObject(
-    /**
-     * Unique file ID.
-     */
+    /** Unique file ID. */
     val id: String,
-    /**
-     * Object type (always `"file"`).
-     */
+    /** Object type (always `"file"`). */
     val `object`: String,
-    /**
-     * File size in bytes.
-     */
+    /** File size in bytes. */
     val bytes: Long,
-    /**
-     * Unix timestamp of file creation.
-     */
+    /** Unix timestamp of file creation. */
     val createdAt: Long,
-    /**
-     * Filename.
-     */
+    /** Filename. */
     val filename: String,
-    /**
-     * File purpose.
-     */
+    /** File purpose. */
     val purpose: String,
-    /**
-     * Processing status (e.g., `"uploaded"`, `"processed"`).
-     */
+    /** Processing status (e.g., `"uploaded"`, `"processed"`). */
     val status: String?
 )

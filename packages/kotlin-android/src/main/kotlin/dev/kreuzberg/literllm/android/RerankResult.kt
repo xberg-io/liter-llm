@@ -21,20 +21,12 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * A single reranked document with its relevance score.
- */
+/** A single reranked document with its relevance score. */
 data class RerankResult(
-    /**
-     * Original document index in the input list.
-     */
+    /** Original document index in the input list. */
     val index: Int,
-    /**
-     * Relevance score in `[0, 1]`. Higher indicates more relevant.
-     */
+    /** Relevance score in `[0, 1]`. Higher indicates more relevant. */
     val relevanceScore: Double,
-    /**
-     * Original document content (if `return_documents` was true).
-     */
+    /** Original document content (if `return_documents` was true). */
     val document: RerankResultDocument?
 )

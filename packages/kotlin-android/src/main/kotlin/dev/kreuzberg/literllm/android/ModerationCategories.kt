@@ -21,52 +21,28 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Boolean flags for each moderation category.
- */
+/** Boolean flags for each moderation category. */
 data class ModerationCategories(
-    /**
-     * Sexual content.
-     */
+    /** Sexual content. */
     val sexual: Boolean,
-    /**
-     * Hate speech.
-     */
+    /** Hate speech. */
     val hate: Boolean,
-    /**
-     * Harassment.
-     */
+    /** Harassment. */
     val harassment: Boolean,
-    /**
-     * Self-harm content.
-     */
+    /** Self-harm content. */
     val selfHarm: Boolean,
-    /**
-     * Sexual content involving minors.
-     */
+    /** Sexual content involving minors. */
     val sexualMinors: Boolean,
-    /**
-     * Hate speech that threatens violence.
-     */
+    /** Hate speech that threatens violence. */
     val hateThreatening: Boolean,
-    /**
-     * Graphic violence.
-     */
+    /** Graphic violence. */
     val violenceGraphic: Boolean,
-    /**
-     * Intent to self-harm.
-     */
+    /** Intent to self-harm. */
     val selfHarmIntent: Boolean,
-    /**
-     * Instructions for self-harm.
-     */
+    /** Instructions for self-harm. */
     val selfHarmInstructions: Boolean,
-    /**
-     * Harassment that threatens violence.
-     */
+    /** Harassment that threatens violence. */
     val harassmentThreatening: Boolean,
-    /**
-     * Non-graphic violence.
-     */
+    /** Non-graphic violence. */
     val violence: Boolean
 )

@@ -21,28 +21,16 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Assistant's response to a user message.
- */
+/** Assistant's response to a user message. */
 data class AssistantMessage(
-    /**
-     * The assistant's text response. Absent if tool calls are returned instead.
-     */
+    /** The assistant's text response. Absent if tool calls are returned instead. */
     val content: String?,
-    /**
-     * Optional name for the assistant.
-     */
+    /** Optional name for the assistant. */
     val name: String?,
-    /**
-     * Tool calls the model wants to execute, if any.
-     */
+    /** Tool calls the model wants to execute, if any. */
     val toolCalls: List<ToolCall>?,
-    /**
-     * Refusal reason, if the model declined to respond per safety policies.
-     */
+    /** Refusal reason, if the model declined to respond per safety policies. */
     val refusal: String?,
-    /**
-     * Deprecated legacy function_call field; retained for API compatibility.
-     */
+    /** Deprecated legacy function_call field; retained for API compatibility. */
     val functionCall: FunctionCall?
 )

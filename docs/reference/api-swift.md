@@ -423,9 +423,9 @@ Configuration for budget enforcement.
 | `modelLimits` | `[String: Double]` | `{}`               | Per-model spending limits in USD. Models not listed here are only constrained by `global_limit`. |
 | `enforcement` | `Enforcement`      | `Enforcement.Hard` | Whether to reject requests or merely warn when a limit is exceeded.                              |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -445,9 +445,9 @@ Configuration for the response cache.
 | `ttl`        | `Duration`     | `300000ms`            | Time-to-live for each cached entry. |
 | `backend`    | `CacheBackend` | `CacheBackend.Memory` | Storage backend to use.             |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -661,9 +661,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-##### Methods
+### Methods
 
-###### chat()
+#### chat()
 
 **Signature:**
 
@@ -671,7 +671,7 @@ headers are cached at construction to avoid redundant encoding on every request.
 public func chat(req: ChatCompletionRequest) throws -> ChatCompletionResponse
 ```
 
-###### chatStream()
+#### chatStream()
 
 **Signature:**
 
@@ -679,7 +679,7 @@ public func chat(req: ChatCompletionRequest) throws -> ChatCompletionResponse
 public func chatStream(req: ChatCompletionRequest) throws -> String
 ```
 
-###### embed()
+#### embed()
 
 **Signature:**
 
@@ -687,7 +687,7 @@ public func chatStream(req: ChatCompletionRequest) throws -> String
 public func embed(req: EmbeddingRequest) throws -> EmbeddingResponse
 ```
 
-###### listModels()
+#### listModels()
 
 **Signature:**
 
@@ -695,7 +695,7 @@ public func embed(req: EmbeddingRequest) throws -> EmbeddingResponse
 public func listModels() throws -> ModelsListResponse
 ```
 
-###### imageGenerate()
+#### imageGenerate()
 
 **Signature:**
 
@@ -703,7 +703,7 @@ public func listModels() throws -> ModelsListResponse
 public func imageGenerate(req: CreateImageRequest) throws -> ImagesResponse
 ```
 
-###### speech()
+#### speech()
 
 **Signature:**
 
@@ -711,7 +711,7 @@ public func imageGenerate(req: CreateImageRequest) throws -> ImagesResponse
 public func speech(req: CreateSpeechRequest) throws -> Data
 ```
 
-###### transcribe()
+#### transcribe()
 
 **Signature:**
 
@@ -719,7 +719,7 @@ public func speech(req: CreateSpeechRequest) throws -> Data
 public func transcribe(req: CreateTranscriptionRequest) throws -> TranscriptionResponse
 ```
 
-###### moderate()
+#### moderate()
 
 **Signature:**
 
@@ -727,7 +727,7 @@ public func transcribe(req: CreateTranscriptionRequest) throws -> TranscriptionR
 public func moderate(req: ModerationRequest) throws -> ModerationResponse
 ```
 
-###### rerank()
+#### rerank()
 
 **Signature:**
 
@@ -735,7 +735,7 @@ public func moderate(req: ModerationRequest) throws -> ModerationResponse
 public func rerank(req: RerankRequest) throws -> RerankResponse
 ```
 
-###### search()
+#### search()
 
 **Signature:**
 
@@ -743,7 +743,7 @@ public func rerank(req: RerankRequest) throws -> RerankResponse
 public func search(req: SearchRequest) throws -> SearchResponse
 ```
 
-###### ocr()
+#### ocr()
 
 **Signature:**
 
@@ -751,7 +751,7 @@ public func search(req: SearchRequest) throws -> SearchResponse
 public func ocr(req: OcrRequest) throws -> OcrResponse
 ```
 
-###### createFile()
+#### createFile()
 
 **Signature:**
 
@@ -759,7 +759,7 @@ public func ocr(req: OcrRequest) throws -> OcrResponse
 public func createFile(req: CreateFileRequest) throws -> FileObject
 ```
 
-###### retrieveFile()
+#### retrieveFile()
 
 **Signature:**
 
@@ -767,7 +767,7 @@ public func createFile(req: CreateFileRequest) throws -> FileObject
 public func retrieveFile(fileId: String) throws -> FileObject
 ```
 
-###### deleteFile()
+#### deleteFile()
 
 **Signature:**
 
@@ -775,7 +775,7 @@ public func retrieveFile(fileId: String) throws -> FileObject
 public func deleteFile(fileId: String) throws -> DeleteResponse
 ```
 
-###### listFiles()
+#### listFiles()
 
 **Signature:**
 
@@ -783,7 +783,7 @@ public func deleteFile(fileId: String) throws -> DeleteResponse
 public func listFiles(query: FileListQuery? = nil) throws -> FileListResponse
 ```
 
-###### fileContent()
+#### fileContent()
 
 **Signature:**
 
@@ -791,7 +791,7 @@ public func listFiles(query: FileListQuery? = nil) throws -> FileListResponse
 public func fileContent(fileId: String) throws -> Data
 ```
 
-###### createBatch()
+#### createBatch()
 
 **Signature:**
 
@@ -799,7 +799,7 @@ public func fileContent(fileId: String) throws -> Data
 public func createBatch(req: CreateBatchRequest) throws -> BatchObject
 ```
 
-###### retrieveBatch()
+#### retrieveBatch()
 
 **Signature:**
 
@@ -807,7 +807,7 @@ public func createBatch(req: CreateBatchRequest) throws -> BatchObject
 public func retrieveBatch(batchId: String) throws -> BatchObject
 ```
 
-###### listBatches()
+#### listBatches()
 
 **Signature:**
 
@@ -815,7 +815,7 @@ public func retrieveBatch(batchId: String) throws -> BatchObject
 public func listBatches(query: BatchListQuery? = nil) throws -> BatchListResponse
 ```
 
-###### cancelBatch()
+#### cancelBatch()
 
 **Signature:**
 
@@ -823,7 +823,7 @@ public func listBatches(query: BatchListQuery? = nil) throws -> BatchListRespons
 public func cancelBatch(batchId: String) throws -> BatchObject
 ```
 
-###### createResponse()
+#### createResponse()
 
 **Signature:**
 
@@ -831,7 +831,7 @@ public func cancelBatch(batchId: String) throws -> BatchObject
 public func createResponse(req: CreateResponseRequest) throws -> ResponseObject
 ```
 
-###### retrieveResponse()
+#### retrieveResponse()
 
 **Signature:**
 
@@ -839,7 +839,7 @@ public func createResponse(req: CreateResponseRequest) throws -> ResponseObject
 public func retrieveResponse(id: String) throws -> ResponseObject
 ```
 
-###### cancelResponse()
+#### cancelResponse()
 
 **Signature:**
 
@@ -1245,9 +1245,9 @@ Configuration for per-model rate limits.
 | `tpm`    | `UInt64?`  | `null`    | Maximum tokens per window. `null` means unlimited.   |
 | `window` | `Duration` | `60000ms` | Fixed window duration (defaults to 60 s).            |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 

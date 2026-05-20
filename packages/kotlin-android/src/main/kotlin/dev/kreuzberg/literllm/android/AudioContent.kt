@@ -21,16 +21,10 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Audio content part for speech-capable models.
- */
+/** Audio content part for speech-capable models. */
 data class AudioContent(
-    /**
-     * Base64-encoded audio data.
-     */
+    /** Base64-encoded audio data. */
     val data: String,
-    /**
-     * Audio format (e.g., "wav", "mp3", "ogg").
-     */
+    /** Audio format (e.g., "wav", "mp3", "ogg"). */
     val format: String
 )

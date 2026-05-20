@@ -165,16 +165,16 @@ class DefaultClient internal constructor(internal val handle: Long) : AutoClosea
         }
     }
 
-    suspend fun retrieveResponse(id: String): ResponseObject {
+    suspend fun retrieveResponse(responseId: String): ResponseObject {
         return withContext(Dispatchers.IO) {
-            val responseJson = LiterLlmBridge.nativeDefaultClientRetrieveResponse(handle, MAPPER.writeValueAsString(id))
+            val responseJson = LiterLlmBridge.nativeDefaultClientRetrieveResponse(handle, MAPPER.writeValueAsString(responseId))
             MAPPER.readValue(responseJson, ResponseObject::class.java)
         }
     }
 
-    suspend fun cancelResponse(id: String): ResponseObject {
+    suspend fun cancelResponse(responseId: String): ResponseObject {
         return withContext(Dispatchers.IO) {
-            val responseJson = LiterLlmBridge.nativeDefaultClientCancelResponse(handle, MAPPER.writeValueAsString(id))
+            val responseJson = LiterLlmBridge.nativeDefaultClientCancelResponse(handle, MAPPER.writeValueAsString(responseId))
             MAPPER.readValue(responseJson, ResponseObject::class.java)
         }
     }

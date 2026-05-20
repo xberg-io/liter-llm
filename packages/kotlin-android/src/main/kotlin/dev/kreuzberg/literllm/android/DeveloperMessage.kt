@@ -21,16 +21,10 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Developer message (system-like message for Claude models).
- */
+/** Developer message (system-like message for Claude models). */
 data class DeveloperMessage(
-    /**
-     * Developer-specific instructions or context.
-     */
+    /** Developer-specific instructions or context. */
     val content: String,
-    /**
-     * Optional name for the developer message source.
-     */
+    /** Optional name for the developer message source. */
     val name: String?
 )

@@ -21,20 +21,12 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Response from a delete operation.
- */
+/** Response from a delete operation. */
 data class DeleteResponse(
-    /**
-     * ID of the deleted resource.
-     */
+    /** ID of the deleted resource. */
     val id: String,
-    /**
-     * Object type.
-     */
+    /** Object type. */
     val `object`: String,
-    /**
-     * Confirmation that the resource was deleted.
-     */
+    /** Confirmation that the resource was deleted. */
     val deleted: Boolean
 )

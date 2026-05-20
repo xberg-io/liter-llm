@@ -21,24 +21,14 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * A single page of OCR output.
- */
+/** A single page of OCR output. */
 data class OcrPage(
-    /**
-     * Page index (0-based).
-     */
+    /** Page index (0-based). */
     val index: Int,
-    /**
-     * Extracted page content as Markdown.
-     */
+    /** Extracted page content as Markdown. */
     val markdown: String,
-    /**
-     * Embedded images extracted from the page (if `include_image_base64` was true).
-     */
+    /** Embedded images extracted from the page (if `include_image_base64` was true). */
     val images: List<OcrImage>?,
-    /**
-     * Page dimensions in pixels, if available.
-     */
+    /** Page dimensions in pixels, if available. */
     val dimensions: PageDimensions?
 )

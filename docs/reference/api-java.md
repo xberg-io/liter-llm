@@ -423,9 +423,9 @@ Configuration for budget enforcement.
 | `modelLimits` | `Map<String, Double>` | `Collections.emptyMap()` | Per-model spending limits in USD. Models not listed here are only constrained by `global_limit`. |
 | `enforcement` | `Enforcement`         | `Enforcement.HARD`       | Whether to reject requests or merely warn when a limit is exceeded.                              |
 
-##### Methods
+### Methods
 
-###### defaultOptions()
+#### defaultOptions()
 
 **Signature:**
 
@@ -445,9 +445,9 @@ Configuration for the response cache.
 | `ttl`        | `Duration`     | `300000ms`            | Time-to-live for each cached entry. |
 | `backend`    | `CacheBackend` | `CacheBackend.MEMORY` | Storage backend to use.             |
 
-##### Methods
+### Methods
 
-###### defaultOptions()
+#### defaultOptions()
 
 **Signature:**
 
@@ -661,9 +661,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-##### Methods
+### Methods
 
-###### chat()
+#### chat()
 
 **Signature:**
 
@@ -671,7 +671,7 @@ headers are cached at construction to avoid redundant encoding on every request.
 public ChatCompletionResponse chat(ChatCompletionRequest req) throws Error
 ```
 
-###### chatStream()
+#### chatStream()
 
 **Signature:**
 
@@ -679,7 +679,7 @@ public ChatCompletionResponse chat(ChatCompletionRequest req) throws Error
 public String chatStream(ChatCompletionRequest req) throws Error
 ```
 
-###### embed()
+#### embed()
 
 **Signature:**
 
@@ -687,7 +687,7 @@ public String chatStream(ChatCompletionRequest req) throws Error
 public EmbeddingResponse embed(EmbeddingRequest req) throws Error
 ```
 
-###### listModels()
+#### listModels()
 
 **Signature:**
 
@@ -695,7 +695,7 @@ public EmbeddingResponse embed(EmbeddingRequest req) throws Error
 public ModelsListResponse listModels() throws Error
 ```
 
-###### imageGenerate()
+#### imageGenerate()
 
 **Signature:**
 
@@ -703,7 +703,7 @@ public ModelsListResponse listModels() throws Error
 public ImagesResponse imageGenerate(CreateImageRequest req) throws Error
 ```
 
-###### speech()
+#### speech()
 
 **Signature:**
 
@@ -711,7 +711,7 @@ public ImagesResponse imageGenerate(CreateImageRequest req) throws Error
 public byte[] speech(CreateSpeechRequest req) throws Error
 ```
 
-###### transcribe()
+#### transcribe()
 
 **Signature:**
 
@@ -719,7 +719,7 @@ public byte[] speech(CreateSpeechRequest req) throws Error
 public TranscriptionResponse transcribe(CreateTranscriptionRequest req) throws Error
 ```
 
-###### moderate()
+#### moderate()
 
 **Signature:**
 
@@ -727,7 +727,7 @@ public TranscriptionResponse transcribe(CreateTranscriptionRequest req) throws E
 public ModerationResponse moderate(ModerationRequest req) throws Error
 ```
 
-###### rerank()
+#### rerank()
 
 **Signature:**
 
@@ -735,7 +735,7 @@ public ModerationResponse moderate(ModerationRequest req) throws Error
 public RerankResponse rerank(RerankRequest req) throws Error
 ```
 
-###### search()
+#### search()
 
 **Signature:**
 
@@ -743,7 +743,7 @@ public RerankResponse rerank(RerankRequest req) throws Error
 public SearchResponse search(SearchRequest req) throws Error
 ```
 
-###### ocr()
+#### ocr()
 
 **Signature:**
 
@@ -751,7 +751,7 @@ public SearchResponse search(SearchRequest req) throws Error
 public OcrResponse ocr(OcrRequest req) throws Error
 ```
 
-###### createFile()
+#### createFile()
 
 **Signature:**
 
@@ -759,7 +759,7 @@ public OcrResponse ocr(OcrRequest req) throws Error
 public FileObject createFile(CreateFileRequest req) throws Error
 ```
 
-###### retrieveFile()
+#### retrieveFile()
 
 **Signature:**
 
@@ -767,7 +767,7 @@ public FileObject createFile(CreateFileRequest req) throws Error
 public FileObject retrieveFile(String fileId) throws Error
 ```
 
-###### deleteFile()
+#### deleteFile()
 
 **Signature:**
 
@@ -775,7 +775,7 @@ public FileObject retrieveFile(String fileId) throws Error
 public DeleteResponse deleteFile(String fileId) throws Error
 ```
 
-###### listFiles()
+#### listFiles()
 
 **Signature:**
 
@@ -783,7 +783,7 @@ public DeleteResponse deleteFile(String fileId) throws Error
 public FileListResponse listFiles(FileListQuery query) throws Error
 ```
 
-###### fileContent()
+#### fileContent()
 
 **Signature:**
 
@@ -791,7 +791,7 @@ public FileListResponse listFiles(FileListQuery query) throws Error
 public byte[] fileContent(String fileId) throws Error
 ```
 
-###### createBatch()
+#### createBatch()
 
 **Signature:**
 
@@ -799,7 +799,7 @@ public byte[] fileContent(String fileId) throws Error
 public BatchObject createBatch(CreateBatchRequest req) throws Error
 ```
 
-###### retrieveBatch()
+#### retrieveBatch()
 
 **Signature:**
 
@@ -807,7 +807,7 @@ public BatchObject createBatch(CreateBatchRequest req) throws Error
 public BatchObject retrieveBatch(String batchId) throws Error
 ```
 
-###### listBatches()
+#### listBatches()
 
 **Signature:**
 
@@ -815,7 +815,7 @@ public BatchObject retrieveBatch(String batchId) throws Error
 public BatchListResponse listBatches(BatchListQuery query) throws Error
 ```
 
-###### cancelBatch()
+#### cancelBatch()
 
 **Signature:**
 
@@ -823,7 +823,7 @@ public BatchListResponse listBatches(BatchListQuery query) throws Error
 public BatchObject cancelBatch(String batchId) throws Error
 ```
 
-###### createResponse()
+#### createResponse()
 
 **Signature:**
 
@@ -831,7 +831,7 @@ public BatchObject cancelBatch(String batchId) throws Error
 public ResponseObject createResponse(CreateResponseRequest req) throws Error
 ```
 
-###### retrieveResponse()
+#### retrieveResponse()
 
 **Signature:**
 
@@ -839,7 +839,7 @@ public ResponseObject createResponse(CreateResponseRequest req) throws Error
 public ResponseObject retrieveResponse(String id) throws Error
 ```
 
-###### cancelResponse()
+#### cancelResponse()
 
 **Signature:**
 
@@ -1245,9 +1245,9 @@ Configuration for per-model rate limits.
 | `tpm`    | `Optional<Long>`    | `null`    | Maximum tokens per window. `null` means unlimited.   |
 | `window` | `Duration`          | `60000ms` | Fixed window duration (defaults to 60 s).            |
 
-##### Methods
+### Methods
 
-###### defaultOptions()
+#### defaultOptions()
 
 **Signature:**
 

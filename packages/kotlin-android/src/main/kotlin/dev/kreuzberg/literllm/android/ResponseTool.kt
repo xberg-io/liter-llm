@@ -21,16 +21,10 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * A tool available for the response request.
- */
+/** A tool available for the response request. */
 data class ResponseTool(
-    /**
-     * Tool type (e.g., "extractor", "search").
-     */
+    /** Tool type (e.g., "extractor", "search"). */
     val toolType: String,
-    /**
-     * Tool configuration (flattened into the object).
-     */
+    /** Tool configuration (flattened into the object). */
     val config: String
 )

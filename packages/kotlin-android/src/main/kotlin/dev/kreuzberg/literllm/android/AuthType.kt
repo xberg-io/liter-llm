@@ -21,24 +21,14 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Auth scheme used by a provider.
- */
+/** Auth scheme used by a provider. */
 enum class AuthType {
-    /**
-     * Standard `Authorization: Bearer <key>` header.
-     */
+    /** Standard `Authorization: Bearer <key>` header. */
     BEARER,
-    /**
-     * `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases).
-     */
+    /** `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). */
     API_KEY,
-    /**
-     * No authentication header required.
-     */
+    /** No authentication header required. */
     NONE,
-    /**
-     * Unrecognised auth scheme — falls back to bearer.
-     */
+    /** Unrecognised auth scheme — falls back to bearer. */
     UNKNOWN;
 }

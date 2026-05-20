@@ -30,12 +30,8 @@ package dev.kreuzberg.literllm.android
  * discounted rate and the remainder at the regular input rate.
  */
 data class PromptTokensDetails(
-    /**
-     * Cached tokens present in the prompt. Defaults to 0 when absent.
-     */
+    /** Cached tokens present in the prompt. Defaults to 0 when absent. */
     val cachedTokens: Long,
-    /**
-     * Audio input tokens present in the prompt. Defaults to 0 when absent.
-     */
+    /** Audio input tokens present in the prompt. Defaults to 0 when absent. */
     val audioTokens: Long
 )

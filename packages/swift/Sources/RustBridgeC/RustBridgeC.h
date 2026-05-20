@@ -1061,6 +1061,18 @@ void* __swift_bridge__$Vec_ProviderConfig$get_mut(void* vec_ptr, uintptr_t index
 uintptr_t __swift_bridge__$Vec_ProviderConfig$len(void* vec_ptr);
 void* __swift_bridge__$Vec_ProviderConfig$as_ptr(void* vec_ptr);
 
+typedef struct AuthConfig AuthConfig;
+void __swift_bridge__$AuthConfig$_free(void* self);
+
+void* __swift_bridge__$Vec_AuthConfig$new(void);
+void __swift_bridge__$Vec_AuthConfig$drop(void* vec_ptr);
+void __swift_bridge__$Vec_AuthConfig$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_AuthConfig$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_AuthConfig$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_AuthConfig$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_AuthConfig$len(void* vec_ptr);
+void* __swift_bridge__$Vec_AuthConfig$as_ptr(void* vec_ptr);
+
 typedef struct BudgetConfig BudgetConfig;
 void __swift_bridge__$BudgetConfig$_free(void* self);
 
@@ -1324,6 +1336,18 @@ void* __swift_bridge__$Vec_AuthHeaderFormat$get(void* vec_ptr, uintptr_t index);
 void* __swift_bridge__$Vec_AuthHeaderFormat$get_mut(void* vec_ptr, uintptr_t index);
 uintptr_t __swift_bridge__$Vec_AuthHeaderFormat$len(void* vec_ptr);
 void* __swift_bridge__$Vec_AuthHeaderFormat$as_ptr(void* vec_ptr);
+
+typedef struct AuthType AuthType;
+void __swift_bridge__$AuthType$_free(void* self);
+
+void* __swift_bridge__$Vec_AuthType$new(void);
+void __swift_bridge__$Vec_AuthType$drop(void* vec_ptr);
+void __swift_bridge__$Vec_AuthType$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_AuthType$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_AuthType$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_AuthType$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_AuthType$len(void* vec_ptr);
+void* __swift_bridge__$Vec_AuthType$as_ptr(void* vec_ptr);
 
 typedef struct Enforcement Enforcement;
 void __swift_bridge__$Enforcement$_free(void* self);
@@ -1733,6 +1757,12 @@ void* __swift_bridge__$CustomProviderConfig$model_prefixes(void* self);
 void* __swift_bridge__$ProviderConfig$name(void* self);
 void* __swift_bridge__$ProviderConfig$display_name(void* self);
 void* __swift_bridge__$ProviderConfig$base_url(void* self);
+void* __swift_bridge__$ProviderConfig$auth(void* self);
+void* __swift_bridge__$ProviderConfig$endpoints(void* self);
+void* __swift_bridge__$ProviderConfig$model_prefixes(void* self);
+void* __swift_bridge__$ProviderConfig$param_mappings(void* self);
+void* __swift_bridge__$AuthConfig$auth_type(void* self);
+void* __swift_bridge__$AuthConfig$env_var(void* self);
 void* __swift_bridge__$BudgetConfig$new(struct __private__OptionF64 global_limit, void* model_limits, void* enforcement);
 struct __private__OptionF64 __swift_bridge__$BudgetConfig$global_limit(void* self);
 void* __swift_bridge__$BudgetConfig$model_limits(void* self);
@@ -1764,6 +1794,7 @@ void* __swift_bridge__$OcrDocument$to_string(void* self);
 void* __swift_bridge__$FilePurpose$to_string(void* self);
 void* __swift_bridge__$BatchStatus$to_string(void* self);
 void* __swift_bridge__$AuthHeaderFormat$to_string(void* self);
+void* __swift_bridge__$AuthType$to_string(void* self);
 void* __swift_bridge__$Enforcement$to_string(void* self);
 void* __swift_bridge__$CacheBackend$to_string(void* self);
 struct __private__ResultPtrAndPtr __swift_bridge__$create_client(void* api_key, void* base_url, struct __private__OptionU64 timeout_secs, struct __private__OptionU32 max_retries, void* model_hint);
@@ -1811,6 +1842,8 @@ struct __private__ResultPtrAndPtr __swift_bridge__$search_result_from_json(void*
 struct __private__ResultPtrAndPtr __swift_bridge__$ocr_response_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$ocr_page_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$ocr_image_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$provider_config_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$auth_config_from_json(void* json);
 typedef enum __swift_bridge__$ResultBoolAndString$Tag {__swift_bridge__$ResultBoolAndString$ResultOk, __swift_bridge__$ResultBoolAndString$ResultErr} __swift_bridge__$ResultBoolAndString$Tag;
 union __swift_bridge__$ResultBoolAndString$Fields {bool ok; void* err;};
 typedef struct __swift_bridge__$ResultBoolAndString{__swift_bridge__$ResultBoolAndString$Tag tag; union __swift_bridge__$ResultBoolAndString$Fields payload;} __swift_bridge__$ResultBoolAndString;

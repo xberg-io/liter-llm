@@ -21,25 +21,17 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Embedding response.
- */
+/** Embedding response. */
 data class EmbeddingResponse(
     /**
      * Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
      * `String` so non-standard provider values do not break deserialization.
      */
     val `object`: String,
-    /**
-     * List of embeddings.
-     */
+    /** List of embeddings. */
     val data: List<EmbeddingObject>,
-    /**
-     * Model used to generate embeddings.
-     */
+    /** Model used to generate embeddings. */
     val model: String,
-    /**
-     * Token usage (input tokens only; embeddings have zero output tokens).
-     */
+    /** Token usage (input tokens only; embeddings have zero output tokens). */
     val usage: Usage?
 )

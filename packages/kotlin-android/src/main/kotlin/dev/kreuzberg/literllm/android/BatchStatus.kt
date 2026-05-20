@@ -21,40 +21,22 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Status of a batch job.
- */
+/** Status of a batch job. */
 enum class BatchStatus {
-    /**
-     * Validating the input file.
-     */
+    /** Validating the input file. */
     VALIDATING,
-    /**
-     * Job failed.
-     */
+    /** Job failed. */
     FAILED,
-    /**
-     * Job is running.
-     */
+    /** Job is running. */
     IN_PROGRESS,
-    /**
-     * Finalizing results.
-     */
+    /** Finalizing results. */
     FINALIZING,
-    /**
-     * Job completed successfully.
-     */
+    /** Job completed successfully. */
     COMPLETED,
-    /**
-     * Job expired before completion.
-     */
+    /** Job expired before completion. */
     EXPIRED,
-    /**
-     * Job is being cancelled.
-     */
+    /** Job is being cancelled. */
     CANCELLING,
-    /**
-     * Job has been cancelled.
-     */
+    /** Job has been cancelled. */
     CANCELLED;
 }

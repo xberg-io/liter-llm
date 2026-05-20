@@ -21,23 +21,15 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Response format constraint.
- */
+/** Response format constraint. */
 @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = ResponseFormatDeserializer::class)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = ResponseFormatSerializer::class)
 sealed class ResponseFormat {
-    /**
-     * Plain text output (default).
-     */
+    /** Plain text output (default). */
     object Text : ResponseFormat()
-    /**
-     * Output must be valid JSON object (no schema validation).
-     */
+    /** Output must be valid JSON object (no schema validation). */
     object JsonObject : ResponseFormat()
-    /**
-     * Output must conform to the specified JSON schema.
-     */
+    /** Output must conform to the specified JSON schema. */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class JsonSchema(

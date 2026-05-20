@@ -21,39 +21,29 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * A single content part in a user message — text, image, document, or audio.
- */
+/** A single content part in a user message — text, image, document, or audio. */
 @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = ContentPartDeserializer::class)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = ContentPartSerializer::class)
 sealed class ContentPart {
-    /**
-     * Plain text.
-     */
+    /** Plain text. */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Text(
         val text: String
     ) : ContentPart()
-    /**
-     * Image identified by URL (with optional detail level).
-     */
+    /** Image identified by URL (with optional detail level). */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class ImageUrl(
         val imageUrl: dev.kreuzberg.literllm.android.ImageUrl
     ) : ContentPart()
-    /**
-     * Document file (PDF, CSV, etc.) as base64 or URL.
-     */
+    /** Document file (PDF, CSV, etc.) as base64 or URL. */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Document(
         val document: DocumentContent
     ) : ContentPart()
-    /**
-     * Audio input as base64.
-     */
+    /** Audio input as base64. */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class InputAudio(

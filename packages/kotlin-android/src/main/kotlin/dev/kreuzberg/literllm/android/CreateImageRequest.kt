@@ -21,40 +21,22 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Request to create images from a text prompt.
- */
+/** Request to create images from a text prompt. */
 data class CreateImageRequest(
-    /**
-     * Text description of the image to generate.
-     */
+    /** Text description of the image to generate. */
     val prompt: String,
-    /**
-     * Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset.
-     */
+    /** Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset. */
     val model: String?,
-    /**
-     * Number of images to generate. Defaults to 1.
-     */
+    /** Number of images to generate. Defaults to 1. */
     val n: Int?,
-    /**
-     * Image size (e.g., `"1024x1024"`, `"1792x1024"`).
-     */
+    /** Image size (e.g., `"1024x1024"`, `"1792x1024"`). */
     val size: String?,
-    /**
-     * Image quality: `"standard"` or `"hd"`.
-     */
+    /** Image quality: `"standard"` or `"hd"`. */
     val quality: String?,
-    /**
-     * Style: `"natural"` or `"vivid"` (DALL-E 3 only).
-     */
+    /** Style: `"natural"` or `"vivid"` (DALL-E 3 only). */
     val style: String?,
-    /**
-     * Response format: `"url"` or `"b64_json"`.
-     */
+    /** Response format: `"url"` or `"b64_json"`. */
     val responseFormat: String?,
-    /**
-     * User identifier for request tracking.
-     */
+    /** User identifier for request tracking. */
     val user: String?
 )

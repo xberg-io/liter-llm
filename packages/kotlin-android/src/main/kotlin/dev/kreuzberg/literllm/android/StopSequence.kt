@@ -21,23 +21,17 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Stop sequence(s) that cause the model to stop generating.
- */
+/** Stop sequence(s) that cause the model to stop generating. */
 @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = StopSequenceDeserializer::class)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = StopSequenceSerializer::class)
 sealed class StopSequence {
-    /**
-     * Single stop sequence.
-     */
+    /** Single stop sequence. */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Single(
         val value: String
     ) : StopSequence()
-    /**
-     * Multiple stop sequences.
-     */
+    /** Multiple stop sequences. */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Multiple(

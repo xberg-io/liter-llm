@@ -21,9 +21,7 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * A chat message in a conversation.
- */
+/** A chat message in a conversation. */
 @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = MessageDeserializer::class)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = MessageSerializer::class)
 sealed class Message {
@@ -52,9 +50,7 @@ sealed class Message {
     data class Developer(
         val message: DeveloperMessage
     ) : Message()
-    /**
-     * Deprecated legacy function-role message; retained for API compatibility.
-     */
+    /** Deprecated legacy function-role message; retained for API compatibility. */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Function(

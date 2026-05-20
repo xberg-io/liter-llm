@@ -21,12 +21,8 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Name of the specific function to invoke.
- */
+/** Name of the specific function to invoke. */
 data class SpecificFunction(
-    /**
-     * Function name.
-     */
+    /** Function name. */
     val name: String
 )

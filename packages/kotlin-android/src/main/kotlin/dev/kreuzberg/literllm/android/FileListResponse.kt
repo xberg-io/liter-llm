@@ -21,20 +21,12 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Response from listing files.
- */
+/** Response from listing files. */
 data class FileListResponse(
-    /**
-     * Object type (always `"list"`).
-     */
+    /** Object type (always `"list"`). */
     val `object`: String,
-    /**
-     * List of file objects.
-     */
+    /** List of file objects. */
     val data: List<FileObject>,
-    /**
-     * Whether more results are available.
-     */
+    /** Whether more results are available. */
     val hasMore: Boolean?
 )

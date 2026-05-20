@@ -21,16 +21,10 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * An image extracted from an OCR page.
- */
+/** An image extracted from an OCR page. */
 data class OcrImage(
-    /**
-     * Unique image identifier within the document.
-     */
+    /** Unique image identifier within the document. */
     val id: String,
-    /**
-     * Base64-encoded image data (if `include_image_base64` was true).
-     */
+    /** Base64-encoded image data (if `include_image_base64` was true). */
     val imageBase64: String?
 )

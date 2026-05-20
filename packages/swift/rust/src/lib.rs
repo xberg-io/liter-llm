@@ -62,6 +62,7 @@ mod ffi {
         #[swift_bridge(init)]
         fn new(data: String, media_type: String) -> DocumentContent;
         fn data(&self) -> String;
+        #[swift_bridge(swift_name = "mediaType")]
         fn media_type(&self) -> String;
     }
 
@@ -85,8 +86,10 @@ mod ffi {
         ) -> AssistantMessage;
         fn content(&self) -> Option<String>;
         fn name(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "toolCalls")]
         fn tool_calls(&self) -> Option<Vec<ToolCall>>;
         fn refusal(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "functionCall")]
         fn function_call(&self) -> Option<FunctionCall>;
     }
 
@@ -95,6 +98,7 @@ mod ffi {
         #[swift_bridge(init)]
         fn new(content: String, tool_call_id: String, name: Option<String>) -> ToolMessage;
         fn content(&self) -> String;
+        #[swift_bridge(swift_name = "toolCallId")]
         fn tool_call_id(&self) -> String;
         fn name(&self) -> Option<String>;
     }
@@ -117,6 +121,7 @@ mod ffi {
 
     extern "Rust" {
         type ChatCompletionTool;
+        #[swift_bridge(swift_name = "toolType")]
         fn tool_type(&self) -> String;
         fn function(&self) -> FunctionDefinition;
     }
@@ -132,6 +137,7 @@ mod ffi {
     extern "Rust" {
         type ToolCall;
         fn id(&self) -> String;
+        #[swift_bridge(swift_name = "callType")]
         fn call_type(&self) -> String;
         fn function(&self) -> FunctionCall;
     }
@@ -146,6 +152,7 @@ mod ffi {
         type SpecificToolChoice;
         #[swift_bridge(init)]
         fn new(choice_type: ToolType, function: SpecificFunction) -> SpecificToolChoice;
+        #[swift_bridge(swift_name = "choiceType")]
         fn choice_type(&self) -> String;
         fn function(&self) -> SpecificFunction;
     }
@@ -176,9 +183,13 @@ mod ffi {
             total_tokens: u64,
             prompt_tokens_details: Option<PromptTokensDetails>,
         ) -> Usage;
+        #[swift_bridge(swift_name = "promptTokens")]
         fn prompt_tokens(&self) -> u64;
+        #[swift_bridge(swift_name = "completionTokens")]
         fn completion_tokens(&self) -> u64;
+        #[swift_bridge(swift_name = "totalTokens")]
         fn total_tokens(&self) -> u64;
+        #[swift_bridge(swift_name = "promptTokensDetails")]
         fn prompt_tokens_details(&self) -> Option<PromptTokensDetails>;
     }
 
@@ -186,7 +197,9 @@ mod ffi {
         type PromptTokensDetails;
         #[swift_bridge(init)]
         fn new(cached_tokens: u64, audio_tokens: u64) -> PromptTokensDetails;
+        #[swift_bridge(swift_name = "cachedTokens")]
         fn cached_tokens(&self) -> u64;
+        #[swift_bridge(swift_name = "audioTokens")]
         fn audio_tokens(&self) -> u64;
     }
 
@@ -218,22 +231,33 @@ mod ffi {
         fn model(&self) -> String;
         fn messages(&self) -> Vec<String>;
         fn temperature(&self) -> Option<f64>;
+        #[swift_bridge(swift_name = "topP")]
         fn top_p(&self) -> Option<f64>;
         fn n(&self) -> Option<u32>;
         fn stream(&self) -> Option<bool>;
         fn stop(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "maxTokens")]
         fn max_tokens(&self) -> Option<u64>;
+        #[swift_bridge(swift_name = "presencePenalty")]
         fn presence_penalty(&self) -> Option<f64>;
+        #[swift_bridge(swift_name = "frequencyPenalty")]
         fn frequency_penalty(&self) -> Option<f64>;
+        #[swift_bridge(swift_name = "logitBias")]
         fn logit_bias(&self) -> String;
         fn user(&self) -> Option<String>;
         fn tools(&self) -> Option<Vec<ChatCompletionTool>>;
+        #[swift_bridge(swift_name = "toolChoice")]
         fn tool_choice(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "parallelToolCalls")]
         fn parallel_tool_calls(&self) -> Option<bool>;
+        #[swift_bridge(swift_name = "responseFormat")]
         fn response_format(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "streamOptions")]
         fn stream_options(&self) -> Option<StreamOptions>;
         fn seed(&self) -> Option<i64>;
+        #[swift_bridge(swift_name = "reasoningEffort")]
         fn reasoning_effort(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "extraBody")]
         fn extra_body(&self) -> Option<String>;
     }
 
@@ -241,6 +265,7 @@ mod ffi {
         type StreamOptions;
         #[swift_bridge(init)]
         fn new(include_usage: Option<bool>) -> StreamOptions;
+        #[swift_bridge(swift_name = "includeUsage")]
         fn include_usage(&self) -> Option<bool>;
     }
 
@@ -263,7 +288,9 @@ mod ffi {
         fn model(&self) -> String;
         fn choices(&self) -> Vec<Choice>;
         fn usage(&self) -> Option<Usage>;
+        #[swift_bridge(swift_name = "systemFingerprint")]
         fn system_fingerprint(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "serviceTier")]
         fn service_tier(&self) -> Option<String>;
     }
 
@@ -273,6 +300,7 @@ mod ffi {
         fn new(index: u32, message: AssistantMessage, finish_reason: Option<FinishReason>) -> Choice;
         fn index(&self) -> u32;
         fn message(&self) -> AssistantMessage;
+        #[swift_bridge(swift_name = "finishReason")]
         fn finish_reason(&self) -> Option<String>;
     }
 
@@ -295,7 +323,9 @@ mod ffi {
         fn model(&self) -> String;
         fn choices(&self) -> Vec<StreamChoice>;
         fn usage(&self) -> Option<Usage>;
+        #[swift_bridge(swift_name = "systemFingerprint")]
         fn system_fingerprint(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "serviceTier")]
         fn service_tier(&self) -> Option<String>;
     }
 
@@ -305,6 +335,7 @@ mod ffi {
         fn new(index: u32, delta: StreamDelta, finish_reason: Option<FinishReason>) -> StreamChoice;
         fn index(&self) -> u32;
         fn delta(&self) -> StreamDelta;
+        #[swift_bridge(swift_name = "finishReason")]
         fn finish_reason(&self) -> Option<String>;
     }
 
@@ -320,7 +351,9 @@ mod ffi {
         ) -> StreamDelta;
         fn role(&self) -> Option<String>;
         fn content(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "toolCalls")]
         fn tool_calls(&self) -> Option<Vec<StreamToolCall>>;
+        #[swift_bridge(swift_name = "functionCall")]
         fn function_call(&self) -> Option<StreamFunctionCall>;
         fn refusal(&self) -> Option<String>;
     }
@@ -336,6 +369,7 @@ mod ffi {
         ) -> StreamToolCall;
         fn index(&self) -> u32;
         fn id(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "callType")]
         fn call_type(&self) -> Option<String>;
         fn function(&self) -> Option<StreamFunctionCall>;
     }
@@ -360,6 +394,7 @@ mod ffi {
         ) -> EmbeddingRequest;
         fn model(&self) -> String;
         fn input(&self) -> String;
+        #[swift_bridge(swift_name = "encodingFormat")]
         fn encoding_format(&self) -> Option<String>;
         fn dimensions(&self) -> Option<u32>;
         fn user(&self) -> Option<String>;
@@ -399,6 +434,7 @@ mod ffi {
         fn size(&self) -> Option<String>;
         fn quality(&self) -> Option<String>;
         fn style(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "responseFormat")]
         fn response_format(&self) -> Option<String>;
         fn user(&self) -> Option<String>;
     }
@@ -416,7 +452,9 @@ mod ffi {
         #[swift_bridge(init)]
         fn new(url: Option<String>, b64_json: Option<String>, revised_prompt: Option<String>) -> Image;
         fn url(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "b64Json")]
         fn b64_json(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "revisedPrompt")]
         fn revised_prompt(&self) -> Option<String>;
     }
 
@@ -433,6 +471,7 @@ mod ffi {
         fn model(&self) -> String;
         fn input(&self) -> String;
         fn voice(&self) -> String;
+        #[swift_bridge(swift_name = "responseFormat")]
         fn response_format(&self) -> Option<String>;
         fn speed(&self) -> Option<f64>;
     }
@@ -452,6 +491,7 @@ mod ffi {
         fn file(&self) -> String;
         fn language(&self) -> Option<String>;
         fn prompt(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "responseFormat")]
         fn response_format(&self) -> Option<String>;
         fn temperature(&self) -> Option<f64>;
     }
@@ -500,6 +540,7 @@ mod ffi {
         type ModerationResult;
         fn flagged(&self) -> bool;
         fn categories(&self) -> ModerationCategories;
+        #[swift_bridge(swift_name = "categoryScores")]
         fn category_scores(&self) -> ModerationCategoryScores;
     }
 
@@ -522,12 +563,19 @@ mod ffi {
         fn sexual(&self) -> bool;
         fn hate(&self) -> bool;
         fn harassment(&self) -> bool;
+        #[swift_bridge(swift_name = "selfHarm")]
         fn self_harm(&self) -> bool;
+        #[swift_bridge(swift_name = "sexualMinors")]
         fn sexual_minors(&self) -> bool;
+        #[swift_bridge(swift_name = "hateThreatening")]
         fn hate_threatening(&self) -> bool;
+        #[swift_bridge(swift_name = "violenceGraphic")]
         fn violence_graphic(&self) -> bool;
+        #[swift_bridge(swift_name = "selfHarmIntent")]
         fn self_harm_intent(&self) -> bool;
+        #[swift_bridge(swift_name = "selfHarmInstructions")]
         fn self_harm_instructions(&self) -> bool;
+        #[swift_bridge(swift_name = "harassmentThreatening")]
         fn harassment_threatening(&self) -> bool;
         fn violence(&self) -> bool;
     }
@@ -551,12 +599,19 @@ mod ffi {
         fn sexual(&self) -> f64;
         fn hate(&self) -> f64;
         fn harassment(&self) -> f64;
+        #[swift_bridge(swift_name = "selfHarm")]
         fn self_harm(&self) -> f64;
+        #[swift_bridge(swift_name = "sexualMinors")]
         fn sexual_minors(&self) -> f64;
+        #[swift_bridge(swift_name = "hateThreatening")]
         fn hate_threatening(&self) -> f64;
+        #[swift_bridge(swift_name = "violenceGraphic")]
         fn violence_graphic(&self) -> f64;
+        #[swift_bridge(swift_name = "selfHarmIntent")]
         fn self_harm_intent(&self) -> f64;
+        #[swift_bridge(swift_name = "selfHarmInstructions")]
         fn self_harm_instructions(&self) -> f64;
+        #[swift_bridge(swift_name = "harassmentThreatening")]
         fn harassment_threatening(&self) -> f64;
         fn violence(&self) -> f64;
     }
@@ -574,7 +629,9 @@ mod ffi {
         fn model(&self) -> String;
         fn query(&self) -> String;
         fn documents(&self) -> Vec<String>;
+        #[swift_bridge(swift_name = "topN")]
         fn top_n(&self) -> Option<u32>;
+        #[swift_bridge(swift_name = "returnDocuments")]
         fn return_documents(&self) -> Option<bool>;
     }
 
@@ -588,6 +645,7 @@ mod ffi {
     extern "Rust" {
         type RerankResult;
         fn index(&self) -> u32;
+        #[swift_bridge(swift_name = "relevanceScore")]
         fn relevance_score(&self) -> f64;
         fn document(&self) -> Option<RerankResultDocument>;
     }
@@ -609,7 +667,9 @@ mod ffi {
         ) -> SearchRequest;
         fn model(&self) -> String;
         fn query(&self) -> String;
+        #[swift_bridge(swift_name = "maxResults")]
         fn max_results(&self) -> Option<u32>;
+        #[swift_bridge(swift_name = "searchDomainFilter")]
         fn search_domain_filter(&self) -> Option<Vec<String>>;
         fn country(&self) -> Option<String>;
     }
@@ -640,6 +700,7 @@ mod ffi {
         fn model(&self) -> String;
         fn document(&self) -> String;
         fn pages(&self) -> Option<Vec<u32>>;
+        #[swift_bridge(swift_name = "includeImageBase64")]
         fn include_image_base64(&self) -> Option<bool>;
     }
 
@@ -661,6 +722,7 @@ mod ffi {
     extern "Rust" {
         type OcrImage;
         fn id(&self) -> String;
+        #[swift_bridge(swift_name = "imageBase64")]
         fn image_base64(&self) -> Option<String>;
     }
 
@@ -687,6 +749,7 @@ mod ffi {
         fn id(&self) -> String;
         fn object(&self) -> String;
         fn created(&self) -> u64;
+        #[swift_bridge(swift_name = "ownedBy")]
         fn owned_by(&self) -> String;
     }
 
@@ -714,6 +777,7 @@ mod ffi {
         fn id(&self) -> String;
         fn object(&self) -> String;
         fn bytes(&self) -> u64;
+        #[swift_bridge(swift_name = "createdAt")]
         fn created_at(&self) -> u64;
         fn filename(&self) -> String;
         fn purpose(&self) -> String;
@@ -726,6 +790,7 @@ mod ffi {
         fn new(object: String, data: Vec<FileObject>, has_more: Option<bool>) -> FileListResponse;
         fn object(&self) -> String;
         fn data(&self) -> Vec<FileObject>;
+        #[swift_bridge(swift_name = "hasMore")]
         fn has_more(&self) -> Option<bool>;
     }
 
@@ -756,8 +821,10 @@ mod ffi {
             completion_window: String,
             metadata: Option<String>,
         ) -> CreateBatchRequest;
+        #[swift_bridge(swift_name = "inputFileId")]
         fn input_file_id(&self) -> String;
         fn endpoint(&self) -> String;
+        #[swift_bridge(swift_name = "completionWindow")]
         fn completion_window(&self) -> String;
         fn metadata(&self) -> Option<String>;
     }
@@ -784,15 +851,24 @@ mod ffi {
         fn id(&self) -> String;
         fn object(&self) -> String;
         fn endpoint(&self) -> String;
+        #[swift_bridge(swift_name = "inputFileId")]
         fn input_file_id(&self) -> String;
+        #[swift_bridge(swift_name = "completionWindow")]
         fn completion_window(&self) -> String;
         fn status(&self) -> String;
+        #[swift_bridge(swift_name = "outputFileId")]
         fn output_file_id(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "errorFileId")]
         fn error_file_id(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "createdAt")]
         fn created_at(&self) -> u64;
+        #[swift_bridge(swift_name = "completedAt")]
         fn completed_at(&self) -> Option<u64>;
+        #[swift_bridge(swift_name = "failedAt")]
         fn failed_at(&self) -> Option<u64>;
+        #[swift_bridge(swift_name = "expiredAt")]
         fn expired_at(&self) -> Option<u64>;
+        #[swift_bridge(swift_name = "requestCounts")]
         fn request_counts(&self) -> Option<BatchRequestCounts>;
         fn metadata(&self) -> Option<String>;
     }
@@ -818,8 +894,11 @@ mod ffi {
         ) -> BatchListResponse;
         fn object(&self) -> String;
         fn data(&self) -> Vec<BatchObject>;
+        #[swift_bridge(swift_name = "hasMore")]
         fn has_more(&self) -> Option<bool>;
+        #[swift_bridge(swift_name = "firstId")]
         fn first_id(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "lastId")]
         fn last_id(&self) -> Option<String>;
     }
 
@@ -848,6 +927,7 @@ mod ffi {
         fn instructions(&self) -> Option<String>;
         fn tools(&self) -> Option<Vec<ResponseTool>>;
         fn temperature(&self) -> Option<f64>;
+        #[swift_bridge(swift_name = "maxOutputTokens")]
         fn max_output_tokens(&self) -> Option<u64>;
         fn metadata(&self) -> Option<String>;
     }
@@ -856,6 +936,7 @@ mod ffi {
         type ResponseTool;
         #[swift_bridge(init)]
         fn new(tool_type: String, config: String) -> ResponseTool;
+        #[swift_bridge(swift_name = "toolType")]
         fn tool_type(&self) -> String;
         fn config(&self) -> String;
     }
@@ -875,6 +956,7 @@ mod ffi {
         ) -> ResponseObject;
         fn id(&self) -> String;
         fn object(&self) -> String;
+        #[swift_bridge(swift_name = "createdAt")]
         fn created_at(&self) -> u64;
         fn model(&self) -> String;
         fn status(&self) -> String;
@@ -887,6 +969,7 @@ mod ffi {
         type ResponseOutputItem;
         #[swift_bridge(init)]
         fn new(item_type: String, content: String) -> ResponseOutputItem;
+        #[swift_bridge(swift_name = "itemType")]
         fn item_type(&self) -> String;
         fn content(&self) -> String;
     }
@@ -895,8 +978,11 @@ mod ffi {
         type ResponseUsage;
         #[swift_bridge(init)]
         fn new(input_tokens: u64, output_tokens: u64, total_tokens: u64) -> ResponseUsage;
+        #[swift_bridge(swift_name = "inputTokens")]
         fn input_tokens(&self) -> u64;
+        #[swift_bridge(swift_name = "outputTokens")]
         fn output_tokens(&self) -> u64;
+        #[swift_bridge(swift_name = "totalTokens")]
         fn total_tokens(&self) -> u64;
     }
 
@@ -972,33 +1058,48 @@ mod ffi {
             req: CreateResponseRequest,
         ) -> Result<ResponseObject, String>;
         #[swift_bridge(swift_name = "defaultClientRetrieveResponse")]
-        fn default_client_retrieve_response(client: &DefaultClient, id: String) -> Result<ResponseObject, String>;
+        fn default_client_retrieve_response(
+            client: &DefaultClient,
+            response_id: String,
+        ) -> Result<ResponseObject, String>;
         #[swift_bridge(swift_name = "defaultClientCancelResponse")]
-        fn default_client_cancel_response(client: &DefaultClient, id: String) -> Result<ResponseObject, String>;
+        fn default_client_cancel_response(
+            client: &DefaultClient,
+            response_id: String,
+        ) -> Result<ResponseObject, String>;
     }
 
     extern "Rust" {
         type CustomProviderConfig;
         fn name(&self) -> String;
+        #[swift_bridge(swift_name = "baseUrl")]
         fn base_url(&self) -> String;
+        #[swift_bridge(swift_name = "authHeader")]
         fn auth_header(&self) -> String;
+        #[swift_bridge(swift_name = "modelPrefixes")]
         fn model_prefixes(&self) -> Vec<String>;
     }
 
     extern "Rust" {
         type ProviderConfig;
         fn name(&self) -> String;
+        #[swift_bridge(swift_name = "displayName")]
         fn display_name(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "baseUrl")]
         fn base_url(&self) -> Option<String>;
         fn auth(&self) -> Option<AuthConfig>;
         fn endpoints(&self) -> Option<Vec<String>>;
+        #[swift_bridge(swift_name = "modelPrefixes")]
         fn model_prefixes(&self) -> Option<Vec<String>>;
+        #[swift_bridge(swift_name = "paramMappings")]
         fn param_mappings(&self) -> String;
     }
 
     extern "Rust" {
         type AuthConfig;
+        #[swift_bridge(swift_name = "authType")]
         fn auth_type(&self) -> String;
+        #[swift_bridge(swift_name = "envVar")]
         fn env_var(&self) -> Option<String>;
     }
 
@@ -1006,7 +1107,9 @@ mod ffi {
         type BudgetConfig;
         #[swift_bridge(init)]
         fn new(global_limit: Option<f64>, model_limits: String, enforcement: Enforcement) -> BudgetConfig;
+        #[swift_bridge(swift_name = "globalLimit")]
         fn global_limit(&self) -> Option<f64>;
+        #[swift_bridge(swift_name = "modelLimits")]
         fn model_limits(&self) -> String;
         fn enforcement(&self) -> String;
     }
@@ -1015,6 +1118,7 @@ mod ffi {
         type CacheConfig;
         #[swift_bridge(init)]
         fn new(max_entries: usize, ttl: u64, backend: CacheBackend) -> CacheConfig;
+        #[swift_bridge(swift_name = "maxEntries")]
         fn max_entries(&self) -> usize;
         fn ttl(&self) -> u64;
         fn backend(&self) -> String;
@@ -4234,21 +4338,21 @@ pub fn default_client_create_response(
             .map(ResponseObject)
     })
 }
-pub fn default_client_retrieve_response(client: &DefaultClient, id: String) -> Result<ResponseObject, String> {
+pub fn default_client_retrieve_response(client: &DefaultClient, response_id: String) -> Result<ResponseObject, String> {
     crate::__alef_tokio_runtime().block_on(async {
         client
             .0
-            .retrieve_response(&id)
+            .retrieve_response(&response_id)
             .await
             .map_err(|e| e.to_string())
             .map(ResponseObject)
     })
 }
-pub fn default_client_cancel_response(client: &DefaultClient, id: String) -> Result<ResponseObject, String> {
+pub fn default_client_cancel_response(client: &DefaultClient, response_id: String) -> Result<ResponseObject, String> {
     crate::__alef_tokio_runtime().block_on(async {
         client
             .0
-            .cancel_response(&id)
+            .cancel_response(&response_id)
             .await
             .map_err(|e| e.to_string())
             .map(ResponseObject)
@@ -5018,6 +5122,7 @@ pub fn ensure_crypto_provider() -> () {
 /// `Option<OpaqueRust>` support varies across versions, while `Result<String,
 /// String>` is well-tested. An empty string `""` is the EOF sentinel —
 /// no valid JSON value is the empty string.
+#[allow(clippy::type_complexity)]
 pub struct DefaultClientChatStreamStreamHandle {
     rt: ::tokio::runtime::Runtime,
     stream: ::std::sync::Mutex<
@@ -5055,6 +5160,7 @@ pub fn default_client_chat_stream_start(
     })
 }
 
+#[allow(clippy::should_implement_trait)]
 impl DefaultClientChatStreamStreamHandle {
     /// Advance the stream and return the next chunk JSON, or `""` on clean
     /// end-of-stream. Returns `Err(message)` on a stream-level error.

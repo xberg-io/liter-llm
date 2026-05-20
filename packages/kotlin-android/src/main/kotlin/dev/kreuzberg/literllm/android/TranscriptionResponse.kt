@@ -21,24 +21,14 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Response from a transcription request.
- */
+/** Response from a transcription request. */
 data class TranscriptionResponse(
-    /**
-     * The transcribed text.
-     */
+    /** The transcribed text. */
     val text: String,
-    /**
-     * Detected language (ISO-639-1 code).
-     */
+    /** Detected language (ISO-639-1 code). */
     val language: String?,
-    /**
-     * Total audio duration in seconds.
-     */
+    /** Total audio duration in seconds. */
     val duration: Double?,
-    /**
-     * Detailed segment-level transcription (if response_format is "verbose_json").
-     */
+    /** Detailed segment-level transcription (if response_format is "verbose_json"). */
     val segments: List<TranscriptionSegment>?
 )

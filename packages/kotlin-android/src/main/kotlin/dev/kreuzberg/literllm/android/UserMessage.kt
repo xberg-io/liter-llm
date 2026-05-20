@@ -21,16 +21,10 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * User message in the conversation.
- */
+/** User message in the conversation. */
 data class UserMessage(
-    /**
-     * Message content as plain text or array of content parts (text, images, documents, audio).
-     */
+    /** Message content as plain text or array of content parts (text, images, documents, audio). */
     val content: UserContent,
-    /**
-     * Optional name for the user.
-     */
+    /** Optional name for the user. */
     val name: String?
 )

@@ -423,9 +423,9 @@ Configuration for budget enforcement.
 | `model_limits` | `dict[str, float]` | `{}`               | Per-model spending limits in USD. Models not listed here are only constrained by `global_limit`. |
 | `enforcement`  | `Enforcement`      | `Enforcement.HARD` | Whether to reject requests or merely warn when a limit is exceeded.                              |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -446,9 +446,9 @@ Configuration for the response cache.
 | `ttl`         | `float`        | `300000ms`            | Time-to-live for each cached entry. |
 | `backend`     | `CacheBackend` | `CacheBackend.MEMORY` | Storage backend to use.             |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -663,9 +663,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-##### Methods
+### Methods
 
-###### chat()
+#### chat()
 
 **Signature:**
 
@@ -673,7 +673,7 @@ headers are cached at construction to avoid redundant encoding on every request.
 def chat(self, req: ChatCompletionRequest) -> ChatCompletionResponse
 ```
 
-###### chat_stream()
+#### chat_stream()
 
 **Signature:**
 
@@ -681,7 +681,7 @@ def chat(self, req: ChatCompletionRequest) -> ChatCompletionResponse
 def chat_stream(self, req: ChatCompletionRequest) -> str
 ```
 
-###### embed()
+#### embed()
 
 **Signature:**
 
@@ -689,7 +689,7 @@ def chat_stream(self, req: ChatCompletionRequest) -> str
 def embed(self, req: EmbeddingRequest) -> EmbeddingResponse
 ```
 
-###### list_models()
+#### list_models()
 
 **Signature:**
 
@@ -697,7 +697,7 @@ def embed(self, req: EmbeddingRequest) -> EmbeddingResponse
 def list_models(self) -> ModelsListResponse
 ```
 
-###### image_generate()
+#### image_generate()
 
 **Signature:**
 
@@ -705,7 +705,7 @@ def list_models(self) -> ModelsListResponse
 def image_generate(self, req: CreateImageRequest) -> ImagesResponse
 ```
 
-###### speech()
+#### speech()
 
 **Signature:**
 
@@ -713,7 +713,7 @@ def image_generate(self, req: CreateImageRequest) -> ImagesResponse
 def speech(self, req: CreateSpeechRequest) -> bytes
 ```
 
-###### transcribe()
+#### transcribe()
 
 **Signature:**
 
@@ -721,7 +721,7 @@ def speech(self, req: CreateSpeechRequest) -> bytes
 def transcribe(self, req: CreateTranscriptionRequest) -> TranscriptionResponse
 ```
 
-###### moderate()
+#### moderate()
 
 **Signature:**
 
@@ -729,7 +729,7 @@ def transcribe(self, req: CreateTranscriptionRequest) -> TranscriptionResponse
 def moderate(self, req: ModerationRequest) -> ModerationResponse
 ```
 
-###### rerank()
+#### rerank()
 
 **Signature:**
 
@@ -737,7 +737,7 @@ def moderate(self, req: ModerationRequest) -> ModerationResponse
 def rerank(self, req: RerankRequest) -> RerankResponse
 ```
 
-###### search()
+#### search()
 
 **Signature:**
 
@@ -745,7 +745,7 @@ def rerank(self, req: RerankRequest) -> RerankResponse
 def search(self, req: SearchRequest) -> SearchResponse
 ```
 
-###### ocr()
+#### ocr()
 
 **Signature:**
 
@@ -753,7 +753,7 @@ def search(self, req: SearchRequest) -> SearchResponse
 def ocr(self, req: OcrRequest) -> OcrResponse
 ```
 
-###### create_file()
+#### create_file()
 
 **Signature:**
 
@@ -761,7 +761,7 @@ def ocr(self, req: OcrRequest) -> OcrResponse
 def create_file(self, req: CreateFileRequest) -> FileObject
 ```
 
-###### retrieve_file()
+#### retrieve_file()
 
 **Signature:**
 
@@ -769,7 +769,7 @@ def create_file(self, req: CreateFileRequest) -> FileObject
 def retrieve_file(self, file_id: str) -> FileObject
 ```
 
-###### delete_file()
+#### delete_file()
 
 **Signature:**
 
@@ -777,7 +777,7 @@ def retrieve_file(self, file_id: str) -> FileObject
 def delete_file(self, file_id: str) -> DeleteResponse
 ```
 
-###### list_files()
+#### list_files()
 
 **Signature:**
 
@@ -785,7 +785,7 @@ def delete_file(self, file_id: str) -> DeleteResponse
 def list_files(self, query: FileListQuery) -> FileListResponse
 ```
 
-###### file_content()
+#### file_content()
 
 **Signature:**
 
@@ -793,7 +793,7 @@ def list_files(self, query: FileListQuery) -> FileListResponse
 def file_content(self, file_id: str) -> bytes
 ```
 
-###### create_batch()
+#### create_batch()
 
 **Signature:**
 
@@ -801,7 +801,7 @@ def file_content(self, file_id: str) -> bytes
 def create_batch(self, req: CreateBatchRequest) -> BatchObject
 ```
 
-###### retrieve_batch()
+#### retrieve_batch()
 
 **Signature:**
 
@@ -809,7 +809,7 @@ def create_batch(self, req: CreateBatchRequest) -> BatchObject
 def retrieve_batch(self, batch_id: str) -> BatchObject
 ```
 
-###### list_batches()
+#### list_batches()
 
 **Signature:**
 
@@ -817,7 +817,7 @@ def retrieve_batch(self, batch_id: str) -> BatchObject
 def list_batches(self, query: BatchListQuery) -> BatchListResponse
 ```
 
-###### cancel_batch()
+#### cancel_batch()
 
 **Signature:**
 
@@ -825,7 +825,7 @@ def list_batches(self, query: BatchListQuery) -> BatchListResponse
 def cancel_batch(self, batch_id: str) -> BatchObject
 ```
 
-###### create_response()
+#### create_response()
 
 **Signature:**
 
@@ -833,7 +833,7 @@ def cancel_batch(self, batch_id: str) -> BatchObject
 def create_response(self, req: CreateResponseRequest) -> ResponseObject
 ```
 
-###### retrieve_response()
+#### retrieve_response()
 
 **Signature:**
 
@@ -841,7 +841,7 @@ def create_response(self, req: CreateResponseRequest) -> ResponseObject
 def retrieve_response(self, id: str) -> ResponseObject
 ```
 
-###### cancel_response()
+#### cancel_response()
 
 **Signature:**
 
@@ -1247,9 +1247,9 @@ Configuration for per-model rate limits.
 | `tpm`    | `int \| None` | `None`    | Maximum tokens per window. `None` means unlimited.   |
 | `window` | `float`       | `60000ms` | Fixed window duration (defaults to 60 s).            |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -1843,23 +1843,23 @@ All errors that can occur when using `liter-llm`.
 
 **Base class:** `LiterLlmError(Exception)`
 
-| Exception | Description |
-|-----------|-------------|
-| `Authentication(LiterLlmError)` | `status` preserves the exact HTTP status code received (401 or 403). |
-| `RateLimited(LiterLlmError)` | rate limited: {message} |
-| `BadRequest(LiterLlmError)` | `status` preserves the exact HTTP status code received (400, 405, 413, 422, …). |
-| `ContextWindowExceeded(LiterLlmError)` | context window exceeded: {message} |
-| `ContentPolicy(LiterLlmError)` | content policy violation: {message} |
-| `NotFound(LiterLlmError)` | not found: {message} |
-| `ServerError(LiterLlmError)` | `status` preserves the exact HTTP status code received (500, or other 5xx not covered by `ServiceUnavailable`). |
-| `ServiceUnavailable(LiterLlmError)` | `status` preserves the exact HTTP status code received (502, 503, or 504). |
-| `Timeout(LiterLlmError)` | request timeout |
-| `Streaming(LiterLlmError)` | A catch-all for errors that occur during streaming response processing. This variant covers multiple sub-conditions including UTF-8 decoding failures, CRC/checksum mismatches (AWS EventStream), JSON parse errors in individual SSE chunks, and buffer overflow conditions. The `message` field contains a human-readable description of the specific failure. |
-| `EndpointNotSupported(LiterLlmError)` | provider {provider} does not support {endpoint} |
-| `InvalidHeader(LiterLlmError)` | invalid header {name:?}: {reason} |
-| `Serialization(LiterLlmError)` | serialization error: {0} |
-| `BudgetExceeded(LiterLlmError)` | budget exceeded: {message} |
-| `HookRejected(LiterLlmError)` | hook rejected: {message} |
-| `InternalError(LiterLlmError)` | An internal logic error (e.g. unexpected Tower response variant). This should never surface in normal operation — if it does, it indicates a bug in the library. |
+| Exception                              | Description                                                                                                                                                                                                                                                                                                                                                      |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Authentication(LiterLlmError)`        | `status` preserves the exact HTTP status code received (401 or 403).                                                                                                                                                                                                                                                                                             |
+| `RateLimited(LiterLlmError)`           | rate limited: {message}                                                                                                                                                                                                                                                                                                                                          |
+| `BadRequest(LiterLlmError)`            | `status` preserves the exact HTTP status code received (400, 405, 413, 422, …).                                                                                                                                                                                                                                                                                  |
+| `ContextWindowExceeded(LiterLlmError)` | context window exceeded: {message}                                                                                                                                                                                                                                                                                                                               |
+| `ContentPolicy(LiterLlmError)`         | content policy violation: {message}                                                                                                                                                                                                                                                                                                                              |
+| `NotFound(LiterLlmError)`              | not found: {message}                                                                                                                                                                                                                                                                                                                                             |
+| `ServerError(LiterLlmError)`           | `status` preserves the exact HTTP status code received (500, or other 5xx not covered by `ServiceUnavailable`).                                                                                                                                                                                                                                                  |
+| `ServiceUnavailable(LiterLlmError)`    | `status` preserves the exact HTTP status code received (502, 503, or 504).                                                                                                                                                                                                                                                                                       |
+| `Timeout(LiterLlmError)`               | request timeout                                                                                                                                                                                                                                                                                                                                                  |
+| `Streaming(LiterLlmError)`             | A catch-all for errors that occur during streaming response processing. This variant covers multiple sub-conditions including UTF-8 decoding failures, CRC/checksum mismatches (AWS EventStream), JSON parse errors in individual SSE chunks, and buffer overflow conditions. The `message` field contains a human-readable description of the specific failure. |
+| `EndpointNotSupported(LiterLlmError)`  | provider {provider} does not support {endpoint}                                                                                                                                                                                                                                                                                                                  |
+| `InvalidHeader(LiterLlmError)`         | invalid header {name:?}: {reason}                                                                                                                                                                                                                                                                                                                                |
+| `Serialization(LiterLlmError)`         | serialization error: {0}                                                                                                                                                                                                                                                                                                                                         |
+| `BudgetExceeded(LiterLlmError)`        | budget exceeded: {message}                                                                                                                                                                                                                                                                                                                                       |
+| `HookRejected(LiterLlmError)`          | hook rejected: {message}                                                                                                                                                                                                                                                                                                                                         |
+| `InternalError(LiterLlmError)`         | An internal logic error (e.g. unexpected Tower response variant). This should never surface in normal operation — if it does, it indicates a bug in the library.                                                                                                                                                                                                 |
 
 ---

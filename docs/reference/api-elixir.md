@@ -434,9 +434,9 @@ Configuration for budget enforcement.
 | `model_limits` | `map()`          | `%{}`   | Per-model spending limits in USD. Models not listed here are only constrained by `global_limit`. |
 | `enforcement`  | `Enforcement`    | `:hard` | Whether to reject requests or merely warn when a limit is exceeded.                              |
 
-##### Functions
+### Functions
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -456,9 +456,9 @@ Configuration for the response cache.
 | `ttl`         | `integer()`    | `300000ms` | Time-to-live for each cached entry. |
 | `backend`     | `CacheBackend` | `:memory`  | Storage backend to use.             |
 
-##### Functions
+### Functions
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -672,9 +672,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-##### Functions
+### Functions
 
-###### chat()
+#### chat()
 
 **Signature:**
 
@@ -682,7 +682,7 @@ headers are cached at construction to avoid redundant encoding on every request.
 def chat(req)
 ```
 
-###### chat_stream()
+#### chat_stream()
 
 **Signature:**
 
@@ -690,7 +690,7 @@ def chat(req)
 def chat_stream(req)
 ```
 
-###### embed()
+#### embed()
 
 **Signature:**
 
@@ -698,7 +698,7 @@ def chat_stream(req)
 def embed(req)
 ```
 
-###### list_models()
+#### list_models()
 
 **Signature:**
 
@@ -706,7 +706,7 @@ def embed(req)
 def list_models()
 ```
 
-###### image_generate()
+#### image_generate()
 
 **Signature:**
 
@@ -714,7 +714,7 @@ def list_models()
 def image_generate(req)
 ```
 
-###### speech()
+#### speech()
 
 **Signature:**
 
@@ -722,7 +722,7 @@ def image_generate(req)
 def speech(req)
 ```
 
-###### transcribe()
+#### transcribe()
 
 **Signature:**
 
@@ -730,7 +730,7 @@ def speech(req)
 def transcribe(req)
 ```
 
-###### moderate()
+#### moderate()
 
 **Signature:**
 
@@ -738,7 +738,7 @@ def transcribe(req)
 def moderate(req)
 ```
 
-###### rerank()
+#### rerank()
 
 **Signature:**
 
@@ -746,7 +746,7 @@ def moderate(req)
 def rerank(req)
 ```
 
-###### search()
+#### search()
 
 **Signature:**
 
@@ -754,7 +754,7 @@ def rerank(req)
 def search(req)
 ```
 
-###### ocr()
+#### ocr()
 
 **Signature:**
 
@@ -762,7 +762,7 @@ def search(req)
 def ocr(req)
 ```
 
-###### create_file()
+#### create_file()
 
 **Signature:**
 
@@ -770,7 +770,7 @@ def ocr(req)
 def create_file(req)
 ```
 
-###### retrieve_file()
+#### retrieve_file()
 
 **Signature:**
 
@@ -778,7 +778,7 @@ def create_file(req)
 def retrieve_file(file_id)
 ```
 
-###### delete_file()
+#### delete_file()
 
 **Signature:**
 
@@ -786,7 +786,7 @@ def retrieve_file(file_id)
 def delete_file(file_id)
 ```
 
-###### list_files()
+#### list_files()
 
 **Signature:**
 
@@ -794,7 +794,7 @@ def delete_file(file_id)
 def list_files(query)
 ```
 
-###### file_content()
+#### file_content()
 
 **Signature:**
 
@@ -802,7 +802,7 @@ def list_files(query)
 def file_content(file_id)
 ```
 
-###### create_batch()
+#### create_batch()
 
 **Signature:**
 
@@ -810,7 +810,7 @@ def file_content(file_id)
 def create_batch(req)
 ```
 
-###### retrieve_batch()
+#### retrieve_batch()
 
 **Signature:**
 
@@ -818,7 +818,7 @@ def create_batch(req)
 def retrieve_batch(batch_id)
 ```
 
-###### list_batches()
+#### list_batches()
 
 **Signature:**
 
@@ -826,7 +826,7 @@ def retrieve_batch(batch_id)
 def list_batches(query)
 ```
 
-###### cancel_batch()
+#### cancel_batch()
 
 **Signature:**
 
@@ -834,7 +834,7 @@ def list_batches(query)
 def cancel_batch(batch_id)
 ```
 
-###### create_response()
+#### create_response()
 
 **Signature:**
 
@@ -842,7 +842,7 @@ def cancel_batch(batch_id)
 def create_response(req)
 ```
 
-###### retrieve_response()
+#### retrieve_response()
 
 **Signature:**
 
@@ -850,7 +850,7 @@ def create_response(req)
 def retrieve_response(id)
 ```
 
-###### cancel_response()
+#### cancel_response()
 
 **Signature:**
 
@@ -1256,9 +1256,9 @@ Configuration for per-model rate limits.
 | `tpm`    | `integer() \| nil` | `nil`     | Maximum tokens per window. `nil` means unlimited.   |
 | `window` | `integer()`        | `60000ms` | Fixed window duration (defaults to 60 s).           |
 
-##### Functions
+### Functions
 
-###### default()
+#### default()
 
 **Signature:**
 

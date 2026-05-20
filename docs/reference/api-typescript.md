@@ -438,9 +438,9 @@ Configuration for budget enforcement.
 | `modelLimits` | `Record<string, number>` | `{}`               | Per-model spending limits in USD. Models not listed here are only constrained by `global_limit`. |
 | `enforcement` | `Enforcement`            | `Enforcement.Hard` | Whether to reject requests or merely warn when a limit is exceeded.                              |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -460,9 +460,9 @@ Configuration for the response cache.
 | `ttl`        | `number`       | `300000ms`            | Time-to-live for each cached entry. |
 | `backend`    | `CacheBackend` | `CacheBackend.Memory` | Storage backend to use.             |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -676,9 +676,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-##### Methods
+### Methods
 
-###### chat()
+#### chat()
 
 **Signature:**
 
@@ -686,7 +686,7 @@ headers are cached at construction to avoid redundant encoding on every request.
 chat(req: ChatCompletionRequest): ChatCompletionResponse
 ```
 
-###### chatStream()
+#### chatStream()
 
 **Signature:**
 
@@ -694,7 +694,7 @@ chat(req: ChatCompletionRequest): ChatCompletionResponse
 chatStream(req: ChatCompletionRequest): string
 ```
 
-###### embed()
+#### embed()
 
 **Signature:**
 
@@ -702,7 +702,7 @@ chatStream(req: ChatCompletionRequest): string
 embed(req: EmbeddingRequest): EmbeddingResponse
 ```
 
-###### listModels()
+#### listModels()
 
 **Signature:**
 
@@ -710,7 +710,7 @@ embed(req: EmbeddingRequest): EmbeddingResponse
 listModels(): ModelsListResponse
 ```
 
-###### imageGenerate()
+#### imageGenerate()
 
 **Signature:**
 
@@ -718,7 +718,7 @@ listModels(): ModelsListResponse
 imageGenerate(req: CreateImageRequest): ImagesResponse
 ```
 
-###### speech()
+#### speech()
 
 **Signature:**
 
@@ -726,7 +726,7 @@ imageGenerate(req: CreateImageRequest): ImagesResponse
 speech(req: CreateSpeechRequest): Buffer
 ```
 
-###### transcribe()
+#### transcribe()
 
 **Signature:**
 
@@ -734,7 +734,7 @@ speech(req: CreateSpeechRequest): Buffer
 transcribe(req: CreateTranscriptionRequest): TranscriptionResponse
 ```
 
-###### moderate()
+#### moderate()
 
 **Signature:**
 
@@ -742,7 +742,7 @@ transcribe(req: CreateTranscriptionRequest): TranscriptionResponse
 moderate(req: ModerationRequest): ModerationResponse
 ```
 
-###### rerank()
+#### rerank()
 
 **Signature:**
 
@@ -750,7 +750,7 @@ moderate(req: ModerationRequest): ModerationResponse
 rerank(req: RerankRequest): RerankResponse
 ```
 
-###### search()
+#### search()
 
 **Signature:**
 
@@ -758,7 +758,7 @@ rerank(req: RerankRequest): RerankResponse
 search(req: SearchRequest): SearchResponse
 ```
 
-###### ocr()
+#### ocr()
 
 **Signature:**
 
@@ -766,7 +766,7 @@ search(req: SearchRequest): SearchResponse
 ocr(req: OcrRequest): OcrResponse
 ```
 
-###### createFile()
+#### createFile()
 
 **Signature:**
 
@@ -774,7 +774,7 @@ ocr(req: OcrRequest): OcrResponse
 createFile(req: CreateFileRequest): FileObject
 ```
 
-###### retrieveFile()
+#### retrieveFile()
 
 **Signature:**
 
@@ -782,7 +782,7 @@ createFile(req: CreateFileRequest): FileObject
 retrieveFile(fileId: string): FileObject
 ```
 
-###### deleteFile()
+#### deleteFile()
 
 **Signature:**
 
@@ -790,7 +790,7 @@ retrieveFile(fileId: string): FileObject
 deleteFile(fileId: string): DeleteResponse
 ```
 
-###### listFiles()
+#### listFiles()
 
 **Signature:**
 
@@ -798,7 +798,7 @@ deleteFile(fileId: string): DeleteResponse
 listFiles(query: FileListQuery): FileListResponse
 ```
 
-###### fileContent()
+#### fileContent()
 
 **Signature:**
 
@@ -806,7 +806,7 @@ listFiles(query: FileListQuery): FileListResponse
 fileContent(fileId: string): Buffer
 ```
 
-###### createBatch()
+#### createBatch()
 
 **Signature:**
 
@@ -814,7 +814,7 @@ fileContent(fileId: string): Buffer
 createBatch(req: CreateBatchRequest): BatchObject
 ```
 
-###### retrieveBatch()
+#### retrieveBatch()
 
 **Signature:**
 
@@ -822,7 +822,7 @@ createBatch(req: CreateBatchRequest): BatchObject
 retrieveBatch(batchId: string): BatchObject
 ```
 
-###### listBatches()
+#### listBatches()
 
 **Signature:**
 
@@ -830,7 +830,7 @@ retrieveBatch(batchId: string): BatchObject
 listBatches(query: BatchListQuery): BatchListResponse
 ```
 
-###### cancelBatch()
+#### cancelBatch()
 
 **Signature:**
 
@@ -838,7 +838,7 @@ listBatches(query: BatchListQuery): BatchListResponse
 cancelBatch(batchId: string): BatchObject
 ```
 
-###### createResponse()
+#### createResponse()
 
 **Signature:**
 
@@ -846,7 +846,7 @@ cancelBatch(batchId: string): BatchObject
 createResponse(req: CreateResponseRequest): ResponseObject
 ```
 
-###### retrieveResponse()
+#### retrieveResponse()
 
 **Signature:**
 
@@ -854,7 +854,7 @@ createResponse(req: CreateResponseRequest): ResponseObject
 retrieveResponse(id: string): ResponseObject
 ```
 
-###### cancelResponse()
+#### cancelResponse()
 
 **Signature:**
 
@@ -1260,9 +1260,9 @@ Configuration for per-model rate limits.
 | `tpm`    | `number \| null` | `null`    | Maximum tokens per window. `null` means unlimited.   |
 | `window` | `number`         | `60000ms` | Fixed window duration (defaults to 60 s).            |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 

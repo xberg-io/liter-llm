@@ -423,9 +423,9 @@ Configuration for budget enforcement.
 | `modelLimits` | `std.StringHashMap(f64)` | `{}`               | Per-model spending limits in USD. Models not listed here are only constrained by `global_limit`. |
 | `enforcement` | `Enforcement`            | `Enforcement.Hard` | Whether to reject requests or merely warn when a limit is exceeded.                              |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -445,9 +445,9 @@ Configuration for the response cache.
 | `ttl`        | `i64`          | `300000ms`            | Time-to-live for each cached entry. |
 | `backend`    | `CacheBackend` | `CacheBackend.Memory` | Storage backend to use.             |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -661,9 +661,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-##### Methods
+### Methods
 
-###### chat()
+#### chat()
 
 **Signature:**
 
@@ -671,7 +671,7 @@ headers are cached at construction to avoid redundant encoding on every request.
 pub fn chat(self: *const DefaultClient, req: ChatCompletionRequest) Error!ChatCompletionResponse
 ```
 
-###### chatStream()
+#### chatStream()
 
 **Signature:**
 
@@ -679,7 +679,7 @@ pub fn chat(self: *const DefaultClient, req: ChatCompletionRequest) Error!ChatCo
 pub fn chatStream(self: *const DefaultClient, req: ChatCompletionRequest) Error![:0]const u8
 ```
 
-###### embed()
+#### embed()
 
 **Signature:**
 
@@ -687,7 +687,7 @@ pub fn chatStream(self: *const DefaultClient, req: ChatCompletionRequest) Error!
 pub fn embed(self: *const DefaultClient, req: EmbeddingRequest) Error!EmbeddingResponse
 ```
 
-###### listModels()
+#### listModels()
 
 **Signature:**
 
@@ -695,7 +695,7 @@ pub fn embed(self: *const DefaultClient, req: EmbeddingRequest) Error!EmbeddingR
 pub fn listModels(self: *const DefaultClient) Error!ModelsListResponse
 ```
 
-###### imageGenerate()
+#### imageGenerate()
 
 **Signature:**
 
@@ -703,7 +703,7 @@ pub fn listModels(self: *const DefaultClient) Error!ModelsListResponse
 pub fn imageGenerate(self: *const DefaultClient, req: CreateImageRequest) Error!ImagesResponse
 ```
 
-###### speech()
+#### speech()
 
 **Signature:**
 
@@ -711,7 +711,7 @@ pub fn imageGenerate(self: *const DefaultClient, req: CreateImageRequest) Error!
 pub fn speech(self: *const DefaultClient, req: CreateSpeechRequest) Error![]const u8
 ```
 
-###### transcribe()
+#### transcribe()
 
 **Signature:**
 
@@ -719,7 +719,7 @@ pub fn speech(self: *const DefaultClient, req: CreateSpeechRequest) Error![]cons
 pub fn transcribe(self: *const DefaultClient, req: CreateTranscriptionRequest) Error!TranscriptionResponse
 ```
 
-###### moderate()
+#### moderate()
 
 **Signature:**
 
@@ -727,7 +727,7 @@ pub fn transcribe(self: *const DefaultClient, req: CreateTranscriptionRequest) E
 pub fn moderate(self: *const DefaultClient, req: ModerationRequest) Error!ModerationResponse
 ```
 
-###### rerank()
+#### rerank()
 
 **Signature:**
 
@@ -735,7 +735,7 @@ pub fn moderate(self: *const DefaultClient, req: ModerationRequest) Error!Modera
 pub fn rerank(self: *const DefaultClient, req: RerankRequest) Error!RerankResponse
 ```
 
-###### search()
+#### search()
 
 **Signature:**
 
@@ -743,7 +743,7 @@ pub fn rerank(self: *const DefaultClient, req: RerankRequest) Error!RerankRespon
 pub fn search(self: *const DefaultClient, req: SearchRequest) Error!SearchResponse
 ```
 
-###### ocr()
+#### ocr()
 
 **Signature:**
 
@@ -751,7 +751,7 @@ pub fn search(self: *const DefaultClient, req: SearchRequest) Error!SearchRespon
 pub fn ocr(self: *const DefaultClient, req: OcrRequest) Error!OcrResponse
 ```
 
-###### createFile()
+#### createFile()
 
 **Signature:**
 
@@ -759,7 +759,7 @@ pub fn ocr(self: *const DefaultClient, req: OcrRequest) Error!OcrResponse
 pub fn createFile(self: *const DefaultClient, req: CreateFileRequest) Error!FileObject
 ```
 
-###### retrieveFile()
+#### retrieveFile()
 
 **Signature:**
 
@@ -767,7 +767,7 @@ pub fn createFile(self: *const DefaultClient, req: CreateFileRequest) Error!File
 pub fn retrieveFile(self: *const DefaultClient, file_id: [:0]const u8) Error!FileObject
 ```
 
-###### deleteFile()
+#### deleteFile()
 
 **Signature:**
 
@@ -775,7 +775,7 @@ pub fn retrieveFile(self: *const DefaultClient, file_id: [:0]const u8) Error!Fil
 pub fn deleteFile(self: *const DefaultClient, file_id: [:0]const u8) Error!DeleteResponse
 ```
 
-###### listFiles()
+#### listFiles()
 
 **Signature:**
 
@@ -783,7 +783,7 @@ pub fn deleteFile(self: *const DefaultClient, file_id: [:0]const u8) Error!Delet
 pub fn listFiles(self: *const DefaultClient, query: ?FileListQuery) Error!FileListResponse
 ```
 
-###### fileContent()
+#### fileContent()
 
 **Signature:**
 
@@ -791,7 +791,7 @@ pub fn listFiles(self: *const DefaultClient, query: ?FileListQuery) Error!FileLi
 pub fn fileContent(self: *const DefaultClient, file_id: [:0]const u8) Error![]const u8
 ```
 
-###### createBatch()
+#### createBatch()
 
 **Signature:**
 
@@ -799,7 +799,7 @@ pub fn fileContent(self: *const DefaultClient, file_id: [:0]const u8) Error![]co
 pub fn createBatch(self: *const DefaultClient, req: CreateBatchRequest) Error!BatchObject
 ```
 
-###### retrieveBatch()
+#### retrieveBatch()
 
 **Signature:**
 
@@ -807,7 +807,7 @@ pub fn createBatch(self: *const DefaultClient, req: CreateBatchRequest) Error!Ba
 pub fn retrieveBatch(self: *const DefaultClient, batch_id: [:0]const u8) Error!BatchObject
 ```
 
-###### listBatches()
+#### listBatches()
 
 **Signature:**
 
@@ -815,7 +815,7 @@ pub fn retrieveBatch(self: *const DefaultClient, batch_id: [:0]const u8) Error!B
 pub fn listBatches(self: *const DefaultClient, query: ?BatchListQuery) Error!BatchListResponse
 ```
 
-###### cancelBatch()
+#### cancelBatch()
 
 **Signature:**
 
@@ -823,7 +823,7 @@ pub fn listBatches(self: *const DefaultClient, query: ?BatchListQuery) Error!Bat
 pub fn cancelBatch(self: *const DefaultClient, batch_id: [:0]const u8) Error!BatchObject
 ```
 
-###### createResponse()
+#### createResponse()
 
 **Signature:**
 
@@ -831,7 +831,7 @@ pub fn cancelBatch(self: *const DefaultClient, batch_id: [:0]const u8) Error!Bat
 pub fn createResponse(self: *const DefaultClient, req: CreateResponseRequest) Error!ResponseObject
 ```
 
-###### retrieveResponse()
+#### retrieveResponse()
 
 **Signature:**
 
@@ -839,7 +839,7 @@ pub fn createResponse(self: *const DefaultClient, req: CreateResponseRequest) Er
 pub fn retrieveResponse(self: *const DefaultClient, id: [:0]const u8) Error!ResponseObject
 ```
 
-###### cancelResponse()
+#### cancelResponse()
 
 **Signature:**
 
@@ -1245,9 +1245,9 @@ Configuration for per-model rate limits.
 | `tpm`    | `u64?` | `null`    | Maximum tokens per window. `null` means unlimited.   |
 | `window` | `i64`  | `60000ms` | Fixed window duration (defaults to 60 s).            |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 

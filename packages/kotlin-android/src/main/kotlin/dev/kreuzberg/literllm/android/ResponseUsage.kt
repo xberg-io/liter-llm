@@ -21,20 +21,12 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Token usage for a response.
- */
+/** Token usage for a response. */
 data class ResponseUsage(
-    /**
-     * Input tokens used.
-     */
+    /** Input tokens used. */
     val inputTokens: Long,
-    /**
-     * Output tokens used.
-     */
+    /** Output tokens used. */
     val outputTokens: Long,
-    /**
-     * Total tokens used.
-     */
+    /** Total tokens used. */
     val totalTokens: Long
 )

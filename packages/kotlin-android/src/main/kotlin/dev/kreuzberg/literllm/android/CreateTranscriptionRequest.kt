@@ -21,32 +21,18 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Request to transcribe audio into text.
- */
+/** Request to transcribe audio into text. */
 data class CreateTranscriptionRequest(
-    /**
-     * Model ID (e.g., `"whisper-1"`).
-     */
+    /** Model ID (e.g., `"whisper-1"`). */
     val model: String,
-    /**
-     * Base64-encoded audio file data.
-     */
+    /** Base64-encoded audio file data. */
     val file: String,
-    /**
-     * Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects.
-     */
+    /** Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. */
     val language: String?,
-    /**
-     * Optional text to guide the model (improves accuracy for domain-specific terms).
-     */
+    /** Optional text to guide the model (improves accuracy for domain-specific terms). */
     val prompt: String?,
-    /**
-     * Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`).
-     */
+    /** Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`). */
     val responseFormat: String?,
-    /**
-     * Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0.
-     */
+    /** Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0. */
     val temperature: Double?
 )

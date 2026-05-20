@@ -21,23 +21,17 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Text or texts to embed.
- */
+/** Text or texts to embed. */
 @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = EmbeddingInputDeserializer::class)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = EmbeddingInputSerializer::class)
 sealed class EmbeddingInput {
-    /**
-     * Single text string.
-     */
+    /** Single text string. */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Single(
         val value: String
     ) : EmbeddingInput()
-    /**
-     * Multiple text strings (batch embedding).
-     */
+    /** Multiple text strings (batch embedding). */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Multiple(

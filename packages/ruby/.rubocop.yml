@@ -57,3 +57,19 @@ RSpec/MultipleExpectations:
 
 RSpec/NestedGroups:
   Max: 6
+
+# `lib/liter_llm/native.rb` is alef-generated: one file containing the whole
+# DTO surface (request/response structs, enum variants, error type, multiple
+# top-level modules). Splitting would either duplicate boilerplate or require
+# a multi-file scaffold that alef doesn't currently support.
+Metrics/ModuleLength:
+  Exclude:
+    - "lib/liter_llm/native.rb"
+
+Metrics/CyclomaticComplexity:
+  Exclude:
+    - "lib/liter_llm/native.rb"
+
+Style/OneClassPerFile:
+  Exclude:
+    - "lib/liter_llm/native.rb"

@@ -21,16 +21,10 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * A tool the model can invoke (currently, all tools are functions).
- */
+/** A tool the model can invoke (currently, all tools are functions). */
 data class ChatCompletionTool(
-    /**
-     * Tool type (always "function" in OpenAI spec).
-     */
+    /** Tool type (always "function" in OpenAI spec). */
     val toolType: ToolType,
-    /**
-     * Function definition with name, description, and JSON schema parameters.
-     */
+    /** Function definition with name, description, and JSON schema parameters. */
     val function: FunctionDefinition
 )

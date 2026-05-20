@@ -423,9 +423,9 @@ Configuration for budget enforcement.
 | `modelLimits` | `Map<String, double>` | `{}`               | Per-model spending limits in USD. Models not listed here are only constrained by `global_limit`. |
 | `enforcement` | `Enforcement`         | `Enforcement.Hard` | Whether to reject requests or merely warn when a limit is exceeded.                              |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -445,9 +445,9 @@ Configuration for the response cache.
 | `ttl`        | `Duration`     | `300000ms`            | Time-to-live for each cached entry. |
 | `backend`    | `CacheBackend` | `CacheBackend.Memory` | Storage backend to use.             |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -661,9 +661,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-##### Methods
+### Methods
 
-###### chat()
+#### chat()
 
 **Signature:**
 
@@ -671,7 +671,7 @@ headers are cached at construction to avoid redundant encoding on every request.
 ChatCompletionResponse chat(ChatCompletionRequest req)
 ```
 
-###### chatStream()
+#### chatStream()
 
 **Signature:**
 
@@ -679,7 +679,7 @@ ChatCompletionResponse chat(ChatCompletionRequest req)
 String chatStream(ChatCompletionRequest req)
 ```
 
-###### embed()
+#### embed()
 
 **Signature:**
 
@@ -687,7 +687,7 @@ String chatStream(ChatCompletionRequest req)
 EmbeddingResponse embed(EmbeddingRequest req)
 ```
 
-###### listModels()
+#### listModels()
 
 **Signature:**
 
@@ -695,7 +695,7 @@ EmbeddingResponse embed(EmbeddingRequest req)
 ModelsListResponse listModels()
 ```
 
-###### imageGenerate()
+#### imageGenerate()
 
 **Signature:**
 
@@ -703,7 +703,7 @@ ModelsListResponse listModels()
 ImagesResponse imageGenerate(CreateImageRequest req)
 ```
 
-###### speech()
+#### speech()
 
 **Signature:**
 
@@ -711,7 +711,7 @@ ImagesResponse imageGenerate(CreateImageRequest req)
 Uint8List speech(CreateSpeechRequest req)
 ```
 
-###### transcribe()
+#### transcribe()
 
 **Signature:**
 
@@ -719,7 +719,7 @@ Uint8List speech(CreateSpeechRequest req)
 TranscriptionResponse transcribe(CreateTranscriptionRequest req)
 ```
 
-###### moderate()
+#### moderate()
 
 **Signature:**
 
@@ -727,7 +727,7 @@ TranscriptionResponse transcribe(CreateTranscriptionRequest req)
 ModerationResponse moderate(ModerationRequest req)
 ```
 
-###### rerank()
+#### rerank()
 
 **Signature:**
 
@@ -735,7 +735,7 @@ ModerationResponse moderate(ModerationRequest req)
 RerankResponse rerank(RerankRequest req)
 ```
 
-###### search()
+#### search()
 
 **Signature:**
 
@@ -743,7 +743,7 @@ RerankResponse rerank(RerankRequest req)
 SearchResponse search(SearchRequest req)
 ```
 
-###### ocr()
+#### ocr()
 
 **Signature:**
 
@@ -751,7 +751,7 @@ SearchResponse search(SearchRequest req)
 OcrResponse ocr(OcrRequest req)
 ```
 
-###### createFile()
+#### createFile()
 
 **Signature:**
 
@@ -759,7 +759,7 @@ OcrResponse ocr(OcrRequest req)
 FileObject createFile(CreateFileRequest req)
 ```
 
-###### retrieveFile()
+#### retrieveFile()
 
 **Signature:**
 
@@ -767,7 +767,7 @@ FileObject createFile(CreateFileRequest req)
 FileObject retrieveFile(String fileId)
 ```
 
-###### deleteFile()
+#### deleteFile()
 
 **Signature:**
 
@@ -775,7 +775,7 @@ FileObject retrieveFile(String fileId)
 DeleteResponse deleteFile(String fileId)
 ```
 
-###### listFiles()
+#### listFiles()
 
 **Signature:**
 
@@ -783,7 +783,7 @@ DeleteResponse deleteFile(String fileId)
 FileListResponse listFiles([FileListQuery? query])
 ```
 
-###### fileContent()
+#### fileContent()
 
 **Signature:**
 
@@ -791,7 +791,7 @@ FileListResponse listFiles([FileListQuery? query])
 Uint8List fileContent(String fileId)
 ```
 
-###### createBatch()
+#### createBatch()
 
 **Signature:**
 
@@ -799,7 +799,7 @@ Uint8List fileContent(String fileId)
 BatchObject createBatch(CreateBatchRequest req)
 ```
 
-###### retrieveBatch()
+#### retrieveBatch()
 
 **Signature:**
 
@@ -807,7 +807,7 @@ BatchObject createBatch(CreateBatchRequest req)
 BatchObject retrieveBatch(String batchId)
 ```
 
-###### listBatches()
+#### listBatches()
 
 **Signature:**
 
@@ -815,7 +815,7 @@ BatchObject retrieveBatch(String batchId)
 BatchListResponse listBatches([BatchListQuery? query])
 ```
 
-###### cancelBatch()
+#### cancelBatch()
 
 **Signature:**
 
@@ -823,7 +823,7 @@ BatchListResponse listBatches([BatchListQuery? query])
 BatchObject cancelBatch(String batchId)
 ```
 
-###### createResponse()
+#### createResponse()
 
 **Signature:**
 
@@ -831,7 +831,7 @@ BatchObject cancelBatch(String batchId)
 ResponseObject createResponse(CreateResponseRequest req)
 ```
 
-###### retrieveResponse()
+#### retrieveResponse()
 
 **Signature:**
 
@@ -839,7 +839,7 @@ ResponseObject createResponse(CreateResponseRequest req)
 ResponseObject retrieveResponse(String id)
 ```
 
-###### cancelResponse()
+#### cancelResponse()
 
 **Signature:**
 
@@ -1245,9 +1245,9 @@ Configuration for per-model rate limits.
 | `tpm`    | `int?`     | `null`    | Maximum tokens per window. `null` means unlimited.   |
 | `window` | `Duration` | `60000ms` | Fixed window duration (defaults to 60 s).            |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 

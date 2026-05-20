@@ -21,24 +21,14 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * An individual search result.
- */
+/** An individual search result. */
 data class SearchResult(
-    /**
-     * Result title.
-     */
+    /** Result title. */
     val title: String,
-    /**
-     * Result URL.
-     */
+    /** Result URL. */
     val url: String,
-    /**
-     * Text snippet or excerpt from the page.
-     */
+    /** Text snippet or excerpt from the page. */
     val snippet: String,
-    /**
-     * Publication or last-updated date, if available.
-     */
+    /** Publication or last-updated date, if available. */
     val date: String?
 )

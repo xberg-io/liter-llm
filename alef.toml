@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.17.0"
+alef_version = "0.17.2"
 languages = [
   "python",
   "node",
@@ -120,6 +120,20 @@ features = ["wasm-http"]
 # reachable through `liter_llm::*` in that build, so skip them in the WASM
 # binding to avoid E0433 "cannot find `tower`" / "cannot find `BudgetConfig`" etc.
 exclude_types = ["BudgetConfig", "CacheConfig", "CacheBackend", "RateLimitConfig", "Enforcement"]
+# Token counting via HuggingFace `tokenizers` requires the optional `tokenizer`
+# feature on the core crate. That feature pulls in `hf-hub` (HTTP) and `fancy-regex`
+# which don't build cleanly for `wasm32-unknown-unknown` without the upstream
+# `unstable_wasm` feature. Excluding these functions keeps WASM lean — apps that
+# need token counting on the browser/edge should fetch counts from a server.
+exclude_functions = ["count_tokens", "count_request_tokens"]
+
+# JNI is a transitive language used by the Java and Kotlin Android bindings; it
+# has no standalone package directory. Its liter-llm dep uses default features
+# (no `tokenizer`), so the tokenizer-backed functions aren't reachable through
+# `liter_llm::*` in the JNI build. Token counting on Android is unusual; users
+# that need it can call a server-side endpoint.
+[crates.jni]
+exclude_functions = ["count_tokens", "count_request_tokens"]
 
 [crates.ffi]
 prefix = "literllm"
@@ -297,8 +311,8 @@ check = "pnpm dlx oxlint packages/wasm"
 [crates.lint.php]
 precondition = "command -v php >/dev/null 2>&1 && command -v composer >/dev/null 2>&1"
 before = "cd packages/php && composer install --no-interaction --quiet"
-format = "cd packages/php && PHP_CS_FIXER_IGNORE_ENV=1 php vendor/bin/php-cs-fixer fix --config php-cs-fixer.php src"
-check = "cd packages/php && PHP_CS_FIXER_IGNORE_ENV=1 php vendor/bin/php-cs-fixer fix --config php-cs-fixer.php --dry-run src"
+format = "cd packages/php && PHP_CS_FIXER_IGNORE_ENV=1 php vendor/bin/php-cs-fixer fix src"
+check = "cd packages/php && PHP_CS_FIXER_IGNORE_ENV=1 php vendor/bin/php-cs-fixer fix --dry-run src"
 
 [crates.lint.go]
 precondition = "command -v golangci-lint >/dev/null 2>&1"
@@ -1560,7 +1574,11 @@ async = true
 function = "defaultclient_retrieve_response"
 
 [[crates.e2e.calls.retrieve_response.args]]
-name = "id"
+# `response_id` (not bare `id`) — `id` shadows Python's `id` builtin
+# (rejected by ruff A002) and is ambiguous in languages like Ruby where
+# `id` is a common method name. Matches the parameter name in the Rust
+# trait `ResponseClient::retrieve_response(response_id: &str)`.
+name = "response_id"
 field = "input.response_id"
 type = "string"
 
@@ -1577,7 +1595,7 @@ async = true
 function = "defaultclient_cancel_response"
 
 [[crates.e2e.calls.cancel_response.args]]
-name = "id"
+name = "response_id"
 field = "input.response_id"
 type = "string"
 
@@ -2304,7 +2322,7 @@ returns = "ResponseObject"
 error_type = "LiterLlmError"
 
 [[crates.adapters.params]]
-name = "id"
+name = "response_id"
 type = "String"
 
 [[crates.adapters]]
@@ -2316,5 +2334,5 @@ returns = "ResponseObject"
 error_type = "LiterLlmError"
 
 [[crates.adapters.params]]
-name = "id"
+name = "response_id"
 type = "String"

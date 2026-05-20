@@ -21,16 +21,10 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Function call details.
- */
+/** Function call details. */
 data class FunctionCall(
-    /**
-     * Function name.
-     */
+    /** Function name. */
     val name: String,
-    /**
-     * Arguments as a JSON string (parse with serde_json.from_str).
-     */
+    /** Arguments as a JSON string (parse with serde_json.from_str). */
     val arguments: String
 )

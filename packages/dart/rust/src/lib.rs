@@ -1268,17 +1268,17 @@ impl DefaultClient {
             .map_err(|e| e.to_string())
     }
     #[frb]
-    pub async fn retrieve_response(&self, id: String) -> Result<ResponseObject, String> {
+    pub async fn retrieve_response(&self, response_id: String) -> Result<ResponseObject, String> {
         self.inner
-            .retrieve_response(&id)
+            .retrieve_response(&response_id)
             .await
             .map(|v| ResponseObject::from(v))
             .map_err(|e| e.to_string())
     }
     #[frb]
-    pub async fn cancel_response(&self, id: String) -> Result<ResponseObject, String> {
+    pub async fn cancel_response(&self, response_id: String) -> Result<ResponseObject, String> {
         self.inner
-            .cancel_response(&id)
+            .cancel_response(&response_id)
             .await
             .map(|v| ResponseObject::from(v))
             .map_err(|e| e.to_string())

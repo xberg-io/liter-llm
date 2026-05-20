@@ -423,9 +423,9 @@ Configuration for budget enforcement.
 | `model_limits` | `void*`               | `NULL`                   | Per-model spending limits in USD. Models not listed here are only constrained by `global_limit`. |
 | `enforcement`  | `LiterllmEnforcement` | `LITERLLM_LITERLLM_HARD` | Whether to reject requests or merely warn when a limit is exceeded.                              |
 
-##### Methods
+### Methods
 
-###### literllm_default()
+#### literllm_default()
 
 **Signature:**
 
@@ -445,9 +445,9 @@ Configuration for the response cache.
 | `ttl`         | `uint64_t`             | `300000ms`                 | Time-to-live for each cached entry. |
 | `backend`     | `LiterllmCacheBackend` | `LITERLLM_LITERLLM_MEMORY` | Storage backend to use.             |
 
-##### Methods
+### Methods
 
-###### literllm_default()
+#### literllm_default()
 
 **Signature:**
 
@@ -661,9 +661,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-##### Methods
+### Methods
 
-###### literllm_chat()
+#### literllm_chat()
 
 **Signature:**
 
@@ -671,7 +671,7 @@ headers are cached at construction to avoid redundant encoding on every request.
 LiterllmChatCompletionResponse literllm_chat(LiterllmChatCompletionRequest req);
 ```
 
-###### literllm_chat_stream()
+#### literllm_chat_stream()
 
 **Signature:**
 
@@ -679,7 +679,7 @@ LiterllmChatCompletionResponse literllm_chat(LiterllmChatCompletionRequest req);
 const char* literllm_chat_stream(LiterllmChatCompletionRequest req);
 ```
 
-###### literllm_embed()
+#### literllm_embed()
 
 **Signature:**
 
@@ -687,7 +687,7 @@ const char* literllm_chat_stream(LiterllmChatCompletionRequest req);
 LiterllmEmbeddingResponse literllm_embed(LiterllmEmbeddingRequest req);
 ```
 
-###### literllm_list_models()
+#### literllm_list_models()
 
 **Signature:**
 
@@ -695,7 +695,7 @@ LiterllmEmbeddingResponse literllm_embed(LiterllmEmbeddingRequest req);
 LiterllmModelsListResponse literllm_list_models();
 ```
 
-###### literllm_image_generate()
+#### literllm_image_generate()
 
 **Signature:**
 
@@ -703,7 +703,7 @@ LiterllmModelsListResponse literllm_list_models();
 LiterllmImagesResponse literllm_image_generate(LiterllmCreateImageRequest req);
 ```
 
-###### literllm_speech()
+#### literllm_speech()
 
 **Signature:**
 
@@ -711,7 +711,7 @@ LiterllmImagesResponse literllm_image_generate(LiterllmCreateImageRequest req);
 const uint8_t* literllm_speech(LiterllmCreateSpeechRequest req);
 ```
 
-###### literllm_transcribe()
+#### literllm_transcribe()
 
 **Signature:**
 
@@ -719,7 +719,7 @@ const uint8_t* literllm_speech(LiterllmCreateSpeechRequest req);
 LiterllmTranscriptionResponse literllm_transcribe(LiterllmCreateTranscriptionRequest req);
 ```
 
-###### literllm_moderate()
+#### literllm_moderate()
 
 **Signature:**
 
@@ -727,7 +727,7 @@ LiterllmTranscriptionResponse literllm_transcribe(LiterllmCreateTranscriptionReq
 LiterllmModerationResponse literllm_moderate(LiterllmModerationRequest req);
 ```
 
-###### literllm_rerank()
+#### literllm_rerank()
 
 **Signature:**
 
@@ -735,7 +735,7 @@ LiterllmModerationResponse literllm_moderate(LiterllmModerationRequest req);
 LiterllmRerankResponse literllm_rerank(LiterllmRerankRequest req);
 ```
 
-###### literllm_search()
+#### literllm_search()
 
 **Signature:**
 
@@ -743,7 +743,7 @@ LiterllmRerankResponse literllm_rerank(LiterllmRerankRequest req);
 LiterllmSearchResponse literllm_search(LiterllmSearchRequest req);
 ```
 
-###### literllm_ocr()
+#### literllm_ocr()
 
 **Signature:**
 
@@ -751,7 +751,7 @@ LiterllmSearchResponse literllm_search(LiterllmSearchRequest req);
 LiterllmOcrResponse literllm_ocr(LiterllmOcrRequest req);
 ```
 
-###### literllm_create_file()
+#### literllm_create_file()
 
 **Signature:**
 
@@ -759,7 +759,7 @@ LiterllmOcrResponse literllm_ocr(LiterllmOcrRequest req);
 LiterllmFileObject literllm_create_file(LiterllmCreateFileRequest req);
 ```
 
-###### literllm_retrieve_file()
+#### literllm_retrieve_file()
 
 **Signature:**
 
@@ -767,7 +767,7 @@ LiterllmFileObject literllm_create_file(LiterllmCreateFileRequest req);
 LiterllmFileObject literllm_retrieve_file(const char* file_id);
 ```
 
-###### literllm_delete_file()
+#### literllm_delete_file()
 
 **Signature:**
 
@@ -775,7 +775,7 @@ LiterllmFileObject literllm_retrieve_file(const char* file_id);
 LiterllmDeleteResponse literllm_delete_file(const char* file_id);
 ```
 
-###### literllm_list_files()
+#### literllm_list_files()
 
 **Signature:**
 
@@ -783,7 +783,7 @@ LiterllmDeleteResponse literllm_delete_file(const char* file_id);
 LiterllmFileListResponse literllm_list_files(LiterllmFileListQuery query);
 ```
 
-###### literllm_file_content()
+#### literllm_file_content()
 
 **Signature:**
 
@@ -791,7 +791,7 @@ LiterllmFileListResponse literllm_list_files(LiterllmFileListQuery query);
 const uint8_t* literllm_file_content(const char* file_id);
 ```
 
-###### literllm_create_batch()
+#### literllm_create_batch()
 
 **Signature:**
 
@@ -799,7 +799,7 @@ const uint8_t* literllm_file_content(const char* file_id);
 LiterllmBatchObject literllm_create_batch(LiterllmCreateBatchRequest req);
 ```
 
-###### literllm_retrieve_batch()
+#### literllm_retrieve_batch()
 
 **Signature:**
 
@@ -807,7 +807,7 @@ LiterllmBatchObject literllm_create_batch(LiterllmCreateBatchRequest req);
 LiterllmBatchObject literllm_retrieve_batch(const char* batch_id);
 ```
 
-###### literllm_list_batches()
+#### literllm_list_batches()
 
 **Signature:**
 
@@ -815,7 +815,7 @@ LiterllmBatchObject literllm_retrieve_batch(const char* batch_id);
 LiterllmBatchListResponse literllm_list_batches(LiterllmBatchListQuery query);
 ```
 
-###### literllm_cancel_batch()
+#### literllm_cancel_batch()
 
 **Signature:**
 
@@ -823,7 +823,7 @@ LiterllmBatchListResponse literllm_list_batches(LiterllmBatchListQuery query);
 LiterllmBatchObject literllm_cancel_batch(const char* batch_id);
 ```
 
-###### literllm_create_response()
+#### literllm_create_response()
 
 **Signature:**
 
@@ -831,7 +831,7 @@ LiterllmBatchObject literllm_cancel_batch(const char* batch_id);
 LiterllmResponseObject literllm_create_response(LiterllmCreateResponseRequest req);
 ```
 
-###### literllm_retrieve_response()
+#### literllm_retrieve_response()
 
 **Signature:**
 
@@ -839,7 +839,7 @@ LiterllmResponseObject literllm_create_response(LiterllmCreateResponseRequest re
 LiterllmResponseObject literllm_retrieve_response(const char* id);
 ```
 
-###### literllm_cancel_response()
+#### literllm_cancel_response()
 
 **Signature:**
 
@@ -1245,9 +1245,9 @@ Configuration for per-model rate limits.
 | `tpm`    | `uint64_t*` | `NULL`    | Maximum tokens per window. `NULL` means unlimited.   |
 | `window` | `uint64_t`  | `60000ms` | Fixed window duration (defaults to 60 s).            |
 
-##### Methods
+### Methods
 
-###### literllm_default()
+#### literllm_default()
 
 **Signature:**
 

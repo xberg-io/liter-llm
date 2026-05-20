@@ -21,28 +21,16 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Request to generate speech audio from text.
- */
+/** Request to generate speech audio from text. */
 data class CreateSpeechRequest(
-    /**
-     * Model ID (e.g., `"tts-1"`, `"tts-1-hd"`).
-     */
+    /** Model ID (e.g., `"tts-1"`, `"tts-1-hd"`). */
     val model: String,
-    /**
-     * Text to synthesize into speech.
-     */
+    /** Text to synthesize into speech. */
     val input: String,
-    /**
-     * Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`).
-     */
+    /** Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). */
     val voice: String,
-    /**
-     * Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`).
-     */
+    /** Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`). */
     val responseFormat: String?,
-    /**
-     * Playback speed in `[0.25, 4.0]`. Defaults to 1.0.
-     */
+    /** Playback speed in `[0.25, 4.0]`. Defaults to 1.0. */
     val speed: Double?
 )

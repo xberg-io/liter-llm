@@ -21,24 +21,14 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Request to create a batch job.
- */
+/** Request to create a batch job. */
 data class CreateBatchRequest(
-    /**
-     * ID of the uploaded input file (JSONL format).
-     */
+    /** ID of the uploaded input file (JSONL format). */
     val inputFileId: String,
-    /**
-     * API endpoint (e.g., `"/v1/chat/completions"`).
-     */
+    /** API endpoint (e.g., `"/v1/chat/completions"`). */
     val endpoint: String,
-    /**
-     * Completion window (e.g., `"24h"`).
-     */
+    /** Completion window (e.g., `"24h"`). */
     val completionWindow: String,
-    /**
-     * Optional metadata to attach to the batch.
-     */
+    /** Optional metadata to attach to the batch. */
     val metadata: String?
 )

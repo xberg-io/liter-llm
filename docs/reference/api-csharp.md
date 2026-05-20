@@ -423,9 +423,9 @@ Configuration for budget enforcement.
 | `ModelLimits` | `Dictionary<string, double>` | `new Dictionary<string, double>()` | Per-model spending limits in USD. Models not listed here are only constrained by `global_limit`. |
 | `Enforcement` | `Enforcement`                | `Enforcement.Hard`                 | Whether to reject requests or merely warn when a limit is exceeded.                              |
 
-##### Methods
+### Methods
 
-###### CreateDefault()
+#### CreateDefault()
 
 **Signature:**
 
@@ -445,9 +445,9 @@ Configuration for the response cache.
 | `Ttl`        | `TimeSpan`     | `300000ms`            | Time-to-live for each cached entry. |
 | `Backend`    | `CacheBackend` | `CacheBackend.Memory` | Storage backend to use.             |
 
-##### Methods
+### Methods
 
-###### CreateDefault()
+#### CreateDefault()
 
 **Signature:**
 
@@ -661,9 +661,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-##### Methods
+### Methods
 
-###### Chat()
+#### Chat()
 
 **Signature:**
 
@@ -671,7 +671,7 @@ headers are cached at construction to avoid redundant encoding on every request.
 public async Task<ChatCompletionResponse> ChatAsync(ChatCompletionRequest req)
 ```
 
-###### ChatStream()
+#### ChatStream()
 
 **Signature:**
 
@@ -679,7 +679,7 @@ public async Task<ChatCompletionResponse> ChatAsync(ChatCompletionRequest req)
 public async Task<string> ChatStreamAsync(ChatCompletionRequest req)
 ```
 
-###### Embed()
+#### Embed()
 
 **Signature:**
 
@@ -687,7 +687,7 @@ public async Task<string> ChatStreamAsync(ChatCompletionRequest req)
 public async Task<EmbeddingResponse> EmbedAsync(EmbeddingRequest req)
 ```
 
-###### ListModels()
+#### ListModels()
 
 **Signature:**
 
@@ -695,7 +695,7 @@ public async Task<EmbeddingResponse> EmbedAsync(EmbeddingRequest req)
 public async Task<ModelsListResponse> ListModelsAsync()
 ```
 
-###### ImageGenerate()
+#### ImageGenerate()
 
 **Signature:**
 
@@ -703,7 +703,7 @@ public async Task<ModelsListResponse> ListModelsAsync()
 public async Task<ImagesResponse> ImageGenerateAsync(CreateImageRequest req)
 ```
 
-###### Speech()
+#### Speech()
 
 **Signature:**
 
@@ -711,7 +711,7 @@ public async Task<ImagesResponse> ImageGenerateAsync(CreateImageRequest req)
 public async Task<byte[]> SpeechAsync(CreateSpeechRequest req)
 ```
 
-###### Transcribe()
+#### Transcribe()
 
 **Signature:**
 
@@ -719,7 +719,7 @@ public async Task<byte[]> SpeechAsync(CreateSpeechRequest req)
 public async Task<TranscriptionResponse> TranscribeAsync(CreateTranscriptionRequest req)
 ```
 
-###### Moderate()
+#### Moderate()
 
 **Signature:**
 
@@ -727,7 +727,7 @@ public async Task<TranscriptionResponse> TranscribeAsync(CreateTranscriptionRequ
 public async Task<ModerationResponse> ModerateAsync(ModerationRequest req)
 ```
 
-###### Rerank()
+#### Rerank()
 
 **Signature:**
 
@@ -735,7 +735,7 @@ public async Task<ModerationResponse> ModerateAsync(ModerationRequest req)
 public async Task<RerankResponse> RerankAsync(RerankRequest req)
 ```
 
-###### Search()
+#### Search()
 
 **Signature:**
 
@@ -743,7 +743,7 @@ public async Task<RerankResponse> RerankAsync(RerankRequest req)
 public async Task<SearchResponse> SearchAsync(SearchRequest req)
 ```
 
-###### Ocr()
+#### Ocr()
 
 **Signature:**
 
@@ -751,7 +751,7 @@ public async Task<SearchResponse> SearchAsync(SearchRequest req)
 public async Task<OcrResponse> OcrAsync(OcrRequest req)
 ```
 
-###### CreateFile()
+#### CreateFile()
 
 **Signature:**
 
@@ -759,7 +759,7 @@ public async Task<OcrResponse> OcrAsync(OcrRequest req)
 public async Task<FileObject> CreateFileAsync(CreateFileRequest req)
 ```
 
-###### RetrieveFile()
+#### RetrieveFile()
 
 **Signature:**
 
@@ -767,7 +767,7 @@ public async Task<FileObject> CreateFileAsync(CreateFileRequest req)
 public async Task<FileObject> RetrieveFileAsync(string fileId)
 ```
 
-###### DeleteFile()
+#### DeleteFile()
 
 **Signature:**
 
@@ -775,7 +775,7 @@ public async Task<FileObject> RetrieveFileAsync(string fileId)
 public async Task<DeleteResponse> DeleteFileAsync(string fileId)
 ```
 
-###### ListFiles()
+#### ListFiles()
 
 **Signature:**
 
@@ -783,7 +783,7 @@ public async Task<DeleteResponse> DeleteFileAsync(string fileId)
 public async Task<FileListResponse> ListFilesAsync(FileListQuery query)
 ```
 
-###### FileContent()
+#### FileContent()
 
 **Signature:**
 
@@ -791,7 +791,7 @@ public async Task<FileListResponse> ListFilesAsync(FileListQuery query)
 public async Task<byte[]> FileContentAsync(string fileId)
 ```
 
-###### CreateBatch()
+#### CreateBatch()
 
 **Signature:**
 
@@ -799,7 +799,7 @@ public async Task<byte[]> FileContentAsync(string fileId)
 public async Task<BatchObject> CreateBatchAsync(CreateBatchRequest req)
 ```
 
-###### RetrieveBatch()
+#### RetrieveBatch()
 
 **Signature:**
 
@@ -807,7 +807,7 @@ public async Task<BatchObject> CreateBatchAsync(CreateBatchRequest req)
 public async Task<BatchObject> RetrieveBatchAsync(string batchId)
 ```
 
-###### ListBatches()
+#### ListBatches()
 
 **Signature:**
 
@@ -815,7 +815,7 @@ public async Task<BatchObject> RetrieveBatchAsync(string batchId)
 public async Task<BatchListResponse> ListBatchesAsync(BatchListQuery query)
 ```
 
-###### CancelBatch()
+#### CancelBatch()
 
 **Signature:**
 
@@ -823,7 +823,7 @@ public async Task<BatchListResponse> ListBatchesAsync(BatchListQuery query)
 public async Task<BatchObject> CancelBatchAsync(string batchId)
 ```
 
-###### CreateResponse()
+#### CreateResponse()
 
 **Signature:**
 
@@ -831,7 +831,7 @@ public async Task<BatchObject> CancelBatchAsync(string batchId)
 public async Task<ResponseObject> CreateResponseAsync(CreateResponseRequest req)
 ```
 
-###### RetrieveResponse()
+#### RetrieveResponse()
 
 **Signature:**
 
@@ -839,7 +839,7 @@ public async Task<ResponseObject> CreateResponseAsync(CreateResponseRequest req)
 public async Task<ResponseObject> RetrieveResponseAsync(string id)
 ```
 
-###### CancelResponse()
+#### CancelResponse()
 
 **Signature:**
 
@@ -1245,9 +1245,9 @@ Configuration for per-model rate limits.
 | `Tpm`    | `ulong?`   | `null`    | Maximum tokens per window. `null` means unlimited.   |
 | `Window` | `TimeSpan` | `60000ms` | Fixed window duration (defaults to 60 s).            |
 
-##### Methods
+### Methods
 
-###### CreateDefault()
+#### CreateDefault()
 
 **Signature:**
 

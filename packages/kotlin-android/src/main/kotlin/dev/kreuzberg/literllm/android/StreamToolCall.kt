@@ -21,24 +21,14 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * A streaming tool call being built incrementally.
- */
+/** A streaming tool call being built incrementally. */
 data class StreamToolCall(
-    /**
-     * Index of this tool call in the tool_calls array.
-     */
+    /** Index of this tool call in the tool_calls array. */
     val index: Int,
-    /**
-     * Tool call ID (typically in the first chunk for this call).
-     */
+    /** Tool call ID (typically in the first chunk for this call). */
     val id: String?,
-    /**
-     * Tool type (typically "function").
-     */
+    /** Tool type (typically "function"). */
     val callType: ToolType?,
-    /**
-     * Partial function name and arguments.
-     */
+    /** Partial function name and arguments. */
     val function: StreamFunctionCall?
 )

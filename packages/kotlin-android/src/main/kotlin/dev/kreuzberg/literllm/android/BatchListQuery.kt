@@ -21,16 +21,10 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Query parameters for listing batches.
- */
+/** Query parameters for listing batches. */
 data class BatchListQuery(
-    /**
-     * Maximum number of results to return. Defaults to 20.
-     */
+    /** Maximum number of results to return. Defaults to 20. */
     val limit: Int?,
-    /**
-     * Pagination cursor: return results after this batch ID.
-     */
+    /** Pagination cursor: return results after this batch ID. */
     val after: String?
 )

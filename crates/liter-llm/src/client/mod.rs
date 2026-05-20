@@ -404,10 +404,10 @@ pub trait ResponseClient: Send + Sync {
     fn create_response(&self, req: CreateResponseRequest) -> BoxFuture<'_, Result<ResponseObject>>;
 
     /// Retrieve a response by ID.
-    fn retrieve_response(&self, id: &str) -> BoxFuture<'_, Result<ResponseObject>>;
+    fn retrieve_response(&self, response_id: &str) -> BoxFuture<'_, Result<ResponseObject>>;
 
     /// Cancel an in-progress response.
-    fn cancel_response(&self, id: &str) -> BoxFuture<'_, Result<ResponseObject>>;
+    fn cancel_response(&self, response_id: &str) -> BoxFuture<'_, Result<ResponseObject>>;
 }
 
 /// Responses API operations (create, retrieve, cancel) (WASM variant).
@@ -418,10 +418,10 @@ pub trait ResponseClient {
     fn create_response(&self, req: CreateResponseRequest) -> BoxFuture<'_, Result<ResponseObject>>;
 
     /// Retrieve a response by ID.
-    fn retrieve_response(&self, id: &str) -> BoxFuture<'_, Result<ResponseObject>>;
+    fn retrieve_response(&self, response_id: &str) -> BoxFuture<'_, Result<ResponseObject>>;
 
     /// Cancel an in-progress response.
-    fn cancel_response(&self, id: &str) -> BoxFuture<'_, Result<ResponseObject>>;
+    fn cancel_response(&self, response_id: &str) -> BoxFuture<'_, Result<ResponseObject>>;
 }
 
 /// Default client implementation backed by `reqwest`.
@@ -1738,10 +1738,14 @@ impl ResponseClient for DefaultClient {
         })
     }
 
-    fn retrieve_response(&self, id: &str) -> BoxFuture<'_, Result<ResponseObject>> {
-        let id = id.to_owned();
+    fn retrieve_response(&self, response_id: &str) -> BoxFuture<'_, Result<ResponseObject>> {
+        let response_id = response_id.to_owned();
         Box::pin(async move {
-            let url = format!("{}/{}", self.provider.build_url(self.provider.responses_path(), ""), id);
+            let url = format!(
+                "{}/{}",
+                self.provider.build_url(self.provider.responses_path(), ""),
+                response_id
+            );
             let auth_header = self.resolve_auth_header().await?;
             let auth = auth_header.as_ref().map(str_pair);
             let all_headers = self.all_headers("GET", &url, &serde_json::Value::Null, &[]);
@@ -1752,13 +1756,13 @@ impl ResponseClient for DefaultClient {
         })
     }
 
-    fn cancel_response(&self, id: &str) -> BoxFuture<'_, Result<ResponseObject>> {
-        let id = id.to_owned();
+    fn cancel_response(&self, response_id: &str) -> BoxFuture<'_, Result<ResponseObject>> {
+        let response_id = response_id.to_owned();
         Box::pin(async move {
             let url = format!(
                 "{}/{}/cancel",
                 self.provider.build_url(self.provider.responses_path(), ""),
-                id
+                response_id
             );
             let auth_header = self.resolve_auth_header().await?;
             let body_json = serde_json::Value::Null;

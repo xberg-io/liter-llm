@@ -538,12 +538,12 @@ impl ResponseClient for ManagedClient {
         self.inner.create_response(req)
     }
 
-    fn retrieve_response(&self, id: &str) -> BoxFuture<'_, Result<ResponseObject>> {
-        self.inner.retrieve_response(id)
+    fn retrieve_response(&self, response_id: &str) -> BoxFuture<'_, Result<ResponseObject>> {
+        self.inner.retrieve_response(response_id)
     }
 
-    fn cancel_response(&self, id: &str) -> BoxFuture<'_, Result<ResponseObject>> {
-        self.inner.cancel_response(id)
+    fn cancel_response(&self, response_id: &str) -> BoxFuture<'_, Result<ResponseObject>> {
+        self.inner.cancel_response(response_id)
     }
 }
 

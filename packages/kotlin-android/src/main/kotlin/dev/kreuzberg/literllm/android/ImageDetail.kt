@@ -21,20 +21,12 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Image detail level controlling token cost and processing.
- */
+/** Image detail level controlling token cost and processing. */
 enum class ImageDetail {
-    /**
-     * Low detail: scales image to 512x512, uses fewer tokens.
-     */
+    /** Low detail: scales image to 512x512, uses fewer tokens. */
     LOW,
-    /**
-     * High detail: processes up to 2x2 grid of tiles, higher token cost.
-     */
+    /** High detail: processes up to 2x2 grid of tiles, higher token cost. */
     HIGH,
-    /**
-     * Auto: model chooses low or high based on image dimensions.
-     */
+    /** Auto: model chooses low or high based on image dimensions. */
     AUTO;
 }

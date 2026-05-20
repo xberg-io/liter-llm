@@ -21,24 +21,14 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * An OCR request.
- */
+/** An OCR request. */
 data class OcrRequest(
-    /**
-     * The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`).
-     */
+    /** The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). */
     val model: String,
-    /**
-     * The document to process (URL or base64).
-     */
+    /** The document to process (URL or base64). */
     val document: OcrDocument,
-    /**
-     * Specific pages to process (1-indexed). `null` means all pages.
-     */
+    /** Specific pages to process (1-indexed). `null` means all pages. */
     val pages: List<Int>?,
-    /**
-     * Whether to include base64-encoded images of each processed page.
-     */
+    /** Whether to include base64-encoded images of each processed page. */
     val includeImageBase64: Boolean?
 )

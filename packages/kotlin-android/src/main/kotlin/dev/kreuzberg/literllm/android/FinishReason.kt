@@ -21,17 +21,13 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Why a choice stopped generating tokens.
- */
+/** Why a choice stopped generating tokens. */
 enum class FinishReason {
     STOP,
     LENGTH,
     TOOL_CALLS,
     CONTENT_FILTER,
-    /**
-     * Deprecated legacy finish reason; retained for API compatibility.
-     */
+    /** Deprecated legacy finish reason; retained for API compatibility. */
     FUNCTION_CALL,
     /**
      * Catch-all for unknown finish reasons returned by non-OpenAI providers.

@@ -21,20 +21,12 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Request processing counts for a batch.
- */
+/** Request processing counts for a batch. */
 data class BatchRequestCounts(
-    /**
-     * Total requests in the batch.
-     */
+    /** Total requests in the batch. */
     val total: Long,
-    /**
-     * Completed requests.
-     */
+    /** Completed requests. */
     val completed: Long,
-    /**
-     * Failed requests.
-     */
+    /** Failed requests. */
     val failed: Long
 )

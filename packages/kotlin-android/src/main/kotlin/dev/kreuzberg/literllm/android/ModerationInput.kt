@@ -21,23 +21,17 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Input to the moderation endpoint — a single string or multiple strings.
- */
+/** Input to the moderation endpoint — a single string or multiple strings. */
 @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = ModerationInputDeserializer::class)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = ModerationInputSerializer::class)
 sealed class ModerationInput {
-    /**
-     * Single text string.
-     */
+    /** Single text string. */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Single(
         val value: String
     ) : ModerationInput()
-    /**
-     * Multiple text strings (batch moderation).
-     */
+    /** Multiple text strings (batch moderation). */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Multiple(

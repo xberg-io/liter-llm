@@ -21,28 +21,16 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Embedding request.
- */
+/** Embedding request. */
 data class EmbeddingRequest(
-    /**
-     * Model ID (e.g., `"text-embedding-3-small"`).
-     */
+    /** Model ID (e.g., `"text-embedding-3-small"`). */
     val model: String,
-    /**
-     * Text or texts to embed.
-     */
+    /** Text or texts to embed. */
     val input: EmbeddingInput,
-    /**
-     * Output format: float (native) or base64.
-     */
+    /** Output format: float (native) or base64. */
     val encodingFormat: EmbeddingFormat?,
-    /**
-     * Requested embedding dimensions (if supported by the model).
-     */
+    /** Requested embedding dimensions (if supported by the model). */
     val dimensions: Int?,
-    /**
-     * User identifier for request tracking.
-     */
+    /** User identifier for request tracking. */
     val user: String?
 )

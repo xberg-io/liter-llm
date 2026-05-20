@@ -21,16 +21,10 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * A search response.
- */
+/** A search response. */
 data class SearchResponse(
-    /**
-     * List of search results.
-     */
+    /** List of search results. */
     val results: List<SearchResult>,
-    /**
-     * Model/provider that performed the search.
-     */
+    /** Model/provider that performed the search. */
     val model: String
 )

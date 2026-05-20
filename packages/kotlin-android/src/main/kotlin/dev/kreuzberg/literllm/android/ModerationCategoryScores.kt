@@ -21,52 +21,28 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Confidence scores for each moderation category.
- */
+/** Confidence scores for each moderation category. */
 data class ModerationCategoryScores(
-    /**
-     * Sexual content score.
-     */
+    /** Sexual content score. */
     val sexual: Double,
-    /**
-     * Hate speech score.
-     */
+    /** Hate speech score. */
     val hate: Double,
-    /**
-     * Harassment score.
-     */
+    /** Harassment score. */
     val harassment: Double,
-    /**
-     * Self-harm content score.
-     */
+    /** Self-harm content score. */
     val selfHarm: Double,
-    /**
-     * Sexual content involving minors score.
-     */
+    /** Sexual content involving minors score. */
     val sexualMinors: Double,
-    /**
-     * Hate speech that threatens violence score.
-     */
+    /** Hate speech that threatens violence score. */
     val hateThreatening: Double,
-    /**
-     * Graphic violence score.
-     */
+    /** Graphic violence score. */
     val violenceGraphic: Double,
-    /**
-     * Intent to self-harm score.
-     */
+    /** Intent to self-harm score. */
     val selfHarmIntent: Double,
-    /**
-     * Instructions for self-harm score.
-     */
+    /** Instructions for self-harm score. */
     val selfHarmInstructions: Double,
-    /**
-     * Harassment that threatens violence score.
-     */
+    /** Harassment that threatens violence score. */
     val harassmentThreatening: Double,
-    /**
-     * Non-graphic violence score.
-     */
+    /** Non-graphic violence score. */
     val violence: Double
 )

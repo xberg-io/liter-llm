@@ -1466,13 +1466,13 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let id: String = match serde_json::from_str(&req_str) {
+    let response_id: String = match serde_json::from_str(&req_str) {
         Ok(s) => s,
         Err(_) => req_str,
     };
     let Some(result) = run_or_throw(
         env,
-        std::panic::AssertUnwindSafe(|| runtime().block_on(client.retrieve_response(&id))),
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.retrieve_response(&response_id))),
     ) else {
         return std::ptr::null_mut();
     };
@@ -1515,13 +1515,13 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let id: String = match serde_json::from_str(&req_str) {
+    let response_id: String = match serde_json::from_str(&req_str) {
         Ok(s) => s,
         Err(_) => req_str,
     };
     let Some(result) = run_or_throw(
         env,
-        std::panic::AssertUnwindSafe(|| runtime().block_on(client.cancel_response(&id))),
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.cancel_response(&response_id))),
     ) else {
         return std::ptr::null_mut();
     };

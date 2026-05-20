@@ -21,20 +21,12 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * A single completion choice.
- */
+/** A single completion choice. */
 data class Choice(
-    /**
-     * Index of this choice in the choices array.
-     */
+    /** Index of this choice in the choices array. */
     val index: Int,
-    /**
-     * The assistant's message response.
-     */
+    /** The assistant's message response. */
     val message: AssistantMessage,
-    /**
-     * Why the model stopped generating (stop, length, tool_calls, content_filter, etc.).
-     */
+    /** Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). */
     val finishReason: FinishReason?
 )

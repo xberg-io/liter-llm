@@ -21,13 +21,9 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Auth configuration block.
- */
+/** Auth configuration block. */
 data class AuthConfig(
-    /**
-     * Auth scheme classification.
-     */
+    /** Auth scheme classification. */
     val authType: AuthType,
     /**
      * Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`).

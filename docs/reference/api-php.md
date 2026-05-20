@@ -423,9 +423,9 @@ Configuration for budget enforcement.
 | `modelLimits` | `array<string, float>` | `{}`                | Per-model spending limits in USD. Models not listed here are only constrained by `global_limit`. |
 | `enforcement` | `Enforcement`          | `Enforcement::Hard` | Whether to reject requests or merely warn when a limit is exceeded.                              |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -445,9 +445,9 @@ Configuration for the response cache.
 | `ttl`        | `float`        | `300000ms`             | Time-to-live for each cached entry. |
 | `backend`    | `CacheBackend` | `CacheBackend::Memory` | Storage backend to use.             |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -661,9 +661,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-##### Methods
+### Methods
 
-###### chat()
+#### chat()
 
 **Signature:**
 
@@ -671,7 +671,7 @@ headers are cached at construction to avoid redundant encoding on every request.
 public function chat(ChatCompletionRequest $req): ChatCompletionResponse
 ```
 
-###### chatStream()
+#### chatStream()
 
 **Signature:**
 
@@ -679,7 +679,7 @@ public function chat(ChatCompletionRequest $req): ChatCompletionResponse
 public function chatStream(ChatCompletionRequest $req): string
 ```
 
-###### embed()
+#### embed()
 
 **Signature:**
 
@@ -687,7 +687,7 @@ public function chatStream(ChatCompletionRequest $req): string
 public function embed(EmbeddingRequest $req): EmbeddingResponse
 ```
 
-###### listModels()
+#### listModels()
 
 **Signature:**
 
@@ -695,7 +695,7 @@ public function embed(EmbeddingRequest $req): EmbeddingResponse
 public function listModels(): ModelsListResponse
 ```
 
-###### imageGenerate()
+#### imageGenerate()
 
 **Signature:**
 
@@ -703,7 +703,7 @@ public function listModels(): ModelsListResponse
 public function imageGenerate(CreateImageRequest $req): ImagesResponse
 ```
 
-###### speech()
+#### speech()
 
 **Signature:**
 
@@ -711,7 +711,7 @@ public function imageGenerate(CreateImageRequest $req): ImagesResponse
 public function speech(CreateSpeechRequest $req): string
 ```
 
-###### transcribe()
+#### transcribe()
 
 **Signature:**
 
@@ -719,7 +719,7 @@ public function speech(CreateSpeechRequest $req): string
 public function transcribe(CreateTranscriptionRequest $req): TranscriptionResponse
 ```
 
-###### moderate()
+#### moderate()
 
 **Signature:**
 
@@ -727,7 +727,7 @@ public function transcribe(CreateTranscriptionRequest $req): TranscriptionRespon
 public function moderate(ModerationRequest $req): ModerationResponse
 ```
 
-###### rerank()
+#### rerank()
 
 **Signature:**
 
@@ -735,7 +735,7 @@ public function moderate(ModerationRequest $req): ModerationResponse
 public function rerank(RerankRequest $req): RerankResponse
 ```
 
-###### search()
+#### search()
 
 **Signature:**
 
@@ -743,7 +743,7 @@ public function rerank(RerankRequest $req): RerankResponse
 public function search(SearchRequest $req): SearchResponse
 ```
 
-###### ocr()
+#### ocr()
 
 **Signature:**
 
@@ -751,7 +751,7 @@ public function search(SearchRequest $req): SearchResponse
 public function ocr(OcrRequest $req): OcrResponse
 ```
 
-###### createFile()
+#### createFile()
 
 **Signature:**
 
@@ -759,7 +759,7 @@ public function ocr(OcrRequest $req): OcrResponse
 public function createFile(CreateFileRequest $req): FileObject
 ```
 
-###### retrieveFile()
+#### retrieveFile()
 
 **Signature:**
 
@@ -767,7 +767,7 @@ public function createFile(CreateFileRequest $req): FileObject
 public function retrieveFile(string $fileId): FileObject
 ```
 
-###### deleteFile()
+#### deleteFile()
 
 **Signature:**
 
@@ -775,7 +775,7 @@ public function retrieveFile(string $fileId): FileObject
 public function deleteFile(string $fileId): DeleteResponse
 ```
 
-###### listFiles()
+#### listFiles()
 
 **Signature:**
 
@@ -783,7 +783,7 @@ public function deleteFile(string $fileId): DeleteResponse
 public function listFiles(FileListQuery $query): FileListResponse
 ```
 
-###### fileContent()
+#### fileContent()
 
 **Signature:**
 
@@ -791,7 +791,7 @@ public function listFiles(FileListQuery $query): FileListResponse
 public function fileContent(string $fileId): string
 ```
 
-###### createBatch()
+#### createBatch()
 
 **Signature:**
 
@@ -799,7 +799,7 @@ public function fileContent(string $fileId): string
 public function createBatch(CreateBatchRequest $req): BatchObject
 ```
 
-###### retrieveBatch()
+#### retrieveBatch()
 
 **Signature:**
 
@@ -807,7 +807,7 @@ public function createBatch(CreateBatchRequest $req): BatchObject
 public function retrieveBatch(string $batchId): BatchObject
 ```
 
-###### listBatches()
+#### listBatches()
 
 **Signature:**
 
@@ -815,7 +815,7 @@ public function retrieveBatch(string $batchId): BatchObject
 public function listBatches(BatchListQuery $query): BatchListResponse
 ```
 
-###### cancelBatch()
+#### cancelBatch()
 
 **Signature:**
 
@@ -823,7 +823,7 @@ public function listBatches(BatchListQuery $query): BatchListResponse
 public function cancelBatch(string $batchId): BatchObject
 ```
 
-###### createResponse()
+#### createResponse()
 
 **Signature:**
 
@@ -831,7 +831,7 @@ public function cancelBatch(string $batchId): BatchObject
 public function createResponse(CreateResponseRequest $req): ResponseObject
 ```
 
-###### retrieveResponse()
+#### retrieveResponse()
 
 **Signature:**
 
@@ -839,7 +839,7 @@ public function createResponse(CreateResponseRequest $req): ResponseObject
 public function retrieveResponse(string $id): ResponseObject
 ```
 
-###### cancelResponse()
+#### cancelResponse()
 
 **Signature:**
 
@@ -1245,9 +1245,9 @@ Configuration for per-model rate limits.
 | `tpm`    | `?int`  | `null`    | Maximum tokens per window. `null` means unlimited.   |
 | `window` | `float` | `60000ms` | Fixed window duration (defaults to 60 s).            |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 

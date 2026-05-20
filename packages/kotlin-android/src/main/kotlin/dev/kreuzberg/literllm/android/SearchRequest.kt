@@ -21,28 +21,16 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * A search request.
- */
+/** A search request. */
 data class SearchRequest(
-    /**
-     * The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`).
-     */
+    /** The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). */
     val model: String,
-    /**
-     * The search query string.
-     */
+    /** The search query string. */
     val query: String,
-    /**
-     * Maximum number of results to return.
-     */
+    /** Maximum number of results to return. */
     val maxResults: Int?,
-    /**
-     * Domain filter — restrict results to specific domains.
-     */
+    /** Domain filter — restrict results to specific domains. */
     val searchDomainFilter: List<String>?,
-    /**
-     * Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`).
-     */
+    /** Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). */
     val country: String?
 )

@@ -423,9 +423,9 @@ Configuration for budget enforcement.
 | `model_limits` | `HashMap<String, f64>` | `HashMap::new()`    | Per-model spending limits in USD. Models not listed here are only constrained by `global_limit`. |
 | `enforcement`  | `Enforcement`          | `Enforcement::Hard` | Whether to reject requests or merely warn when a limit is exceeded.                              |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -445,9 +445,9 @@ Configuration for the response cache.
 | `ttl`         | `std::time::Duration` | `300000ms`             | Time-to-live for each cached entry. |
 | `backend`     | `CacheBackend`        | `CacheBackend::Memory` | Storage backend to use.             |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -661,9 +661,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-##### Methods
+### Methods
 
-###### chat()
+#### chat()
 
 **Signature:**
 
@@ -671,7 +671,7 @@ headers are cached at construction to avoid redundant encoding on every request.
 pub fn chat(&self, req: ChatCompletionRequest) -> ChatCompletionResponse
 ```
 
-###### chat_stream()
+#### chat_stream()
 
 **Signature:**
 
@@ -679,7 +679,7 @@ pub fn chat(&self, req: ChatCompletionRequest) -> ChatCompletionResponse
 pub fn chat_stream(&self, req: ChatCompletionRequest) -> String
 ```
 
-###### embed()
+#### embed()
 
 **Signature:**
 
@@ -687,7 +687,7 @@ pub fn chat_stream(&self, req: ChatCompletionRequest) -> String
 pub fn embed(&self, req: EmbeddingRequest) -> EmbeddingResponse
 ```
 
-###### list_models()
+#### list_models()
 
 **Signature:**
 
@@ -695,7 +695,7 @@ pub fn embed(&self, req: EmbeddingRequest) -> EmbeddingResponse
 pub fn list_models(&self) -> ModelsListResponse
 ```
 
-###### image_generate()
+#### image_generate()
 
 **Signature:**
 
@@ -703,7 +703,7 @@ pub fn list_models(&self) -> ModelsListResponse
 pub fn image_generate(&self, req: CreateImageRequest) -> ImagesResponse
 ```
 
-###### speech()
+#### speech()
 
 **Signature:**
 
@@ -711,7 +711,7 @@ pub fn image_generate(&self, req: CreateImageRequest) -> ImagesResponse
 pub fn speech(&self, req: CreateSpeechRequest) -> Vec<u8>
 ```
 
-###### transcribe()
+#### transcribe()
 
 **Signature:**
 
@@ -719,7 +719,7 @@ pub fn speech(&self, req: CreateSpeechRequest) -> Vec<u8>
 pub fn transcribe(&self, req: CreateTranscriptionRequest) -> TranscriptionResponse
 ```
 
-###### moderate()
+#### moderate()
 
 **Signature:**
 
@@ -727,7 +727,7 @@ pub fn transcribe(&self, req: CreateTranscriptionRequest) -> TranscriptionRespon
 pub fn moderate(&self, req: ModerationRequest) -> ModerationResponse
 ```
 
-###### rerank()
+#### rerank()
 
 **Signature:**
 
@@ -735,7 +735,7 @@ pub fn moderate(&self, req: ModerationRequest) -> ModerationResponse
 pub fn rerank(&self, req: RerankRequest) -> RerankResponse
 ```
 
-###### search()
+#### search()
 
 **Signature:**
 
@@ -743,7 +743,7 @@ pub fn rerank(&self, req: RerankRequest) -> RerankResponse
 pub fn search(&self, req: SearchRequest) -> SearchResponse
 ```
 
-###### ocr()
+#### ocr()
 
 **Signature:**
 
@@ -751,7 +751,7 @@ pub fn search(&self, req: SearchRequest) -> SearchResponse
 pub fn ocr(&self, req: OcrRequest) -> OcrResponse
 ```
 
-###### create_file()
+#### create_file()
 
 **Signature:**
 
@@ -759,7 +759,7 @@ pub fn ocr(&self, req: OcrRequest) -> OcrResponse
 pub fn create_file(&self, req: CreateFileRequest) -> FileObject
 ```
 
-###### retrieve_file()
+#### retrieve_file()
 
 **Signature:**
 
@@ -767,7 +767,7 @@ pub fn create_file(&self, req: CreateFileRequest) -> FileObject
 pub fn retrieve_file(&self, file_id: &str) -> FileObject
 ```
 
-###### delete_file()
+#### delete_file()
 
 **Signature:**
 
@@ -775,7 +775,7 @@ pub fn retrieve_file(&self, file_id: &str) -> FileObject
 pub fn delete_file(&self, file_id: &str) -> DeleteResponse
 ```
 
-###### list_files()
+#### list_files()
 
 **Signature:**
 
@@ -783,7 +783,7 @@ pub fn delete_file(&self, file_id: &str) -> DeleteResponse
 pub fn list_files(&self, query: Option<FileListQuery>) -> FileListResponse
 ```
 
-###### file_content()
+#### file_content()
 
 **Signature:**
 
@@ -791,7 +791,7 @@ pub fn list_files(&self, query: Option<FileListQuery>) -> FileListResponse
 pub fn file_content(&self, file_id: &str) -> Vec<u8>
 ```
 
-###### create_batch()
+#### create_batch()
 
 **Signature:**
 
@@ -799,7 +799,7 @@ pub fn file_content(&self, file_id: &str) -> Vec<u8>
 pub fn create_batch(&self, req: CreateBatchRequest) -> BatchObject
 ```
 
-###### retrieve_batch()
+#### retrieve_batch()
 
 **Signature:**
 
@@ -807,7 +807,7 @@ pub fn create_batch(&self, req: CreateBatchRequest) -> BatchObject
 pub fn retrieve_batch(&self, batch_id: &str) -> BatchObject
 ```
 
-###### list_batches()
+#### list_batches()
 
 **Signature:**
 
@@ -815,7 +815,7 @@ pub fn retrieve_batch(&self, batch_id: &str) -> BatchObject
 pub fn list_batches(&self, query: Option<BatchListQuery>) -> BatchListResponse
 ```
 
-###### cancel_batch()
+#### cancel_batch()
 
 **Signature:**
 
@@ -823,7 +823,7 @@ pub fn list_batches(&self, query: Option<BatchListQuery>) -> BatchListResponse
 pub fn cancel_batch(&self, batch_id: &str) -> BatchObject
 ```
 
-###### create_response()
+#### create_response()
 
 **Signature:**
 
@@ -831,7 +831,7 @@ pub fn cancel_batch(&self, batch_id: &str) -> BatchObject
 pub fn create_response(&self, req: CreateResponseRequest) -> ResponseObject
 ```
 
-###### retrieve_response()
+#### retrieve_response()
 
 **Signature:**
 
@@ -839,7 +839,7 @@ pub fn create_response(&self, req: CreateResponseRequest) -> ResponseObject
 pub fn retrieve_response(&self, id: &str) -> ResponseObject
 ```
 
-###### cancel_response()
+#### cancel_response()
 
 **Signature:**
 
@@ -1245,9 +1245,9 @@ Configuration for per-model rate limits.
 | `tpm`    | `Option<u64>`         | `None`    | Maximum tokens per window. `None` means unlimited.   |
 | `window` | `std::time::Duration` | `60000ms` | Fixed window duration (defaults to 60 s).            |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 

@@ -422,9 +422,9 @@ Configuration for budget enforcement.
 | `ModelLimits` | `map[string]float64` | `nil`              | Per-model spending limits in USD. Models not listed here are only constrained by `global_limit`. |
 | `Enforcement` | `Enforcement`        | `Enforcement.Hard` | Whether to reject requests or merely warn when a limit is exceeded.                              |
 
-##### Methods
+### Methods
 
-###### Default()
+#### Default()
 
 **Signature:**
 
@@ -444,9 +444,9 @@ Configuration for the response cache.
 | `Ttl`        | `time.Duration` | `300000ms`            | Time-to-live for each cached entry. |
 | `Backend`    | `CacheBackend`  | `CacheBackend.Memory` | Storage backend to use.             |
 
-##### Methods
+### Methods
 
-###### Default()
+#### Default()
 
 **Signature:**
 
@@ -660,9 +660,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-##### Methods
+### Methods
 
-###### Chat()
+#### Chat()
 
 **Signature:**
 
@@ -670,7 +670,7 @@ headers are cached at construction to avoid redundant encoding on every request.
 func (o *DefaultClient) Chat(req ChatCompletionRequest) (ChatCompletionResponse, error)
 ```
 
-###### ChatStream()
+#### ChatStream()
 
 **Signature:**
 
@@ -678,7 +678,7 @@ func (o *DefaultClient) Chat(req ChatCompletionRequest) (ChatCompletionResponse,
 func (o *DefaultClient) ChatStream(req ChatCompletionRequest) (string, error)
 ```
 
-###### Embed()
+#### Embed()
 
 **Signature:**
 
@@ -686,7 +686,7 @@ func (o *DefaultClient) ChatStream(req ChatCompletionRequest) (string, error)
 func (o *DefaultClient) Embed(req EmbeddingRequest) (EmbeddingResponse, error)
 ```
 
-###### ListModels()
+#### ListModels()
 
 **Signature:**
 
@@ -694,7 +694,7 @@ func (o *DefaultClient) Embed(req EmbeddingRequest) (EmbeddingResponse, error)
 func (o *DefaultClient) ListModels() (ModelsListResponse, error)
 ```
 
-###### ImageGenerate()
+#### ImageGenerate()
 
 **Signature:**
 
@@ -702,7 +702,7 @@ func (o *DefaultClient) ListModels() (ModelsListResponse, error)
 func (o *DefaultClient) ImageGenerate(req CreateImageRequest) (ImagesResponse, error)
 ```
 
-###### Speech()
+#### Speech()
 
 **Signature:**
 
@@ -710,7 +710,7 @@ func (o *DefaultClient) ImageGenerate(req CreateImageRequest) (ImagesResponse, e
 func (o *DefaultClient) Speech(req CreateSpeechRequest) ([]byte, error)
 ```
 
-###### Transcribe()
+#### Transcribe()
 
 **Signature:**
 
@@ -718,7 +718,7 @@ func (o *DefaultClient) Speech(req CreateSpeechRequest) ([]byte, error)
 func (o *DefaultClient) Transcribe(req CreateTranscriptionRequest) (TranscriptionResponse, error)
 ```
 
-###### Moderate()
+#### Moderate()
 
 **Signature:**
 
@@ -726,7 +726,7 @@ func (o *DefaultClient) Transcribe(req CreateTranscriptionRequest) (Transcriptio
 func (o *DefaultClient) Moderate(req ModerationRequest) (ModerationResponse, error)
 ```
 
-###### Rerank()
+#### Rerank()
 
 **Signature:**
 
@@ -734,7 +734,7 @@ func (o *DefaultClient) Moderate(req ModerationRequest) (ModerationResponse, err
 func (o *DefaultClient) Rerank(req RerankRequest) (RerankResponse, error)
 ```
 
-###### Search()
+#### Search()
 
 **Signature:**
 
@@ -742,7 +742,7 @@ func (o *DefaultClient) Rerank(req RerankRequest) (RerankResponse, error)
 func (o *DefaultClient) Search(req SearchRequest) (SearchResponse, error)
 ```
 
-###### Ocr()
+#### Ocr()
 
 **Signature:**
 
@@ -750,7 +750,7 @@ func (o *DefaultClient) Search(req SearchRequest) (SearchResponse, error)
 func (o *DefaultClient) Ocr(req OcrRequest) (OcrResponse, error)
 ```
 
-###### CreateFile()
+#### CreateFile()
 
 **Signature:**
 
@@ -758,7 +758,7 @@ func (o *DefaultClient) Ocr(req OcrRequest) (OcrResponse, error)
 func (o *DefaultClient) CreateFile(req CreateFileRequest) (FileObject, error)
 ```
 
-###### RetrieveFile()
+#### RetrieveFile()
 
 **Signature:**
 
@@ -766,7 +766,7 @@ func (o *DefaultClient) CreateFile(req CreateFileRequest) (FileObject, error)
 func (o *DefaultClient) RetrieveFile(fileId string) (FileObject, error)
 ```
 
-###### DeleteFile()
+#### DeleteFile()
 
 **Signature:**
 
@@ -774,7 +774,7 @@ func (o *DefaultClient) RetrieveFile(fileId string) (FileObject, error)
 func (o *DefaultClient) DeleteFile(fileId string) (DeleteResponse, error)
 ```
 
-###### ListFiles()
+#### ListFiles()
 
 **Signature:**
 
@@ -782,7 +782,7 @@ func (o *DefaultClient) DeleteFile(fileId string) (DeleteResponse, error)
 func (o *DefaultClient) ListFiles(query FileListQuery) (FileListResponse, error)
 ```
 
-###### FileContent()
+#### FileContent()
 
 **Signature:**
 
@@ -790,7 +790,7 @@ func (o *DefaultClient) ListFiles(query FileListQuery) (FileListResponse, error)
 func (o *DefaultClient) FileContent(fileId string) ([]byte, error)
 ```
 
-###### CreateBatch()
+#### CreateBatch()
 
 **Signature:**
 
@@ -798,7 +798,7 @@ func (o *DefaultClient) FileContent(fileId string) ([]byte, error)
 func (o *DefaultClient) CreateBatch(req CreateBatchRequest) (BatchObject, error)
 ```
 
-###### RetrieveBatch()
+#### RetrieveBatch()
 
 **Signature:**
 
@@ -806,7 +806,7 @@ func (o *DefaultClient) CreateBatch(req CreateBatchRequest) (BatchObject, error)
 func (o *DefaultClient) RetrieveBatch(batchId string) (BatchObject, error)
 ```
 
-###### ListBatches()
+#### ListBatches()
 
 **Signature:**
 
@@ -814,7 +814,7 @@ func (o *DefaultClient) RetrieveBatch(batchId string) (BatchObject, error)
 func (o *DefaultClient) ListBatches(query BatchListQuery) (BatchListResponse, error)
 ```
 
-###### CancelBatch()
+#### CancelBatch()
 
 **Signature:**
 
@@ -822,7 +822,7 @@ func (o *DefaultClient) ListBatches(query BatchListQuery) (BatchListResponse, er
 func (o *DefaultClient) CancelBatch(batchId string) (BatchObject, error)
 ```
 
-###### CreateResponse()
+#### CreateResponse()
 
 **Signature:**
 
@@ -830,7 +830,7 @@ func (o *DefaultClient) CancelBatch(batchId string) (BatchObject, error)
 func (o *DefaultClient) CreateResponse(req CreateResponseRequest) (ResponseObject, error)
 ```
 
-###### RetrieveResponse()
+#### RetrieveResponse()
 
 **Signature:**
 
@@ -838,7 +838,7 @@ func (o *DefaultClient) CreateResponse(req CreateResponseRequest) (ResponseObjec
 func (o *DefaultClient) RetrieveResponse(id string) (ResponseObject, error)
 ```
 
-###### CancelResponse()
+#### CancelResponse()
 
 **Signature:**
 
@@ -1244,9 +1244,9 @@ Configuration for per-model rate limits.
 | `Tpm`    | `*uint64`       | `nil`     | Maximum tokens per window. `nil` means unlimited.   |
 | `Window` | `time.Duration` | `60000ms` | Fixed window duration (defaults to 60 s).           |
 
-##### Methods
+### Methods
 
-###### Default()
+#### Default()
 
 **Signature:**
 

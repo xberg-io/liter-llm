@@ -21,20 +21,12 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * A tool call the model wants to execute.
- */
+/** A tool call the model wants to execute. */
 data class ToolCall(
-    /**
-     * Unique ID for this call, used to reference in tool result messages.
-     */
+    /** Unique ID for this call, used to reference in tool result messages. */
     val id: String,
-    /**
-     * Tool type (always "function").
-     */
+    /** Tool type (always "function"). */
     val callType: ToolType,
-    /**
-     * Function name and arguments.
-     */
+    /** Function name and arguments. */
     val function: FunctionCall
 )

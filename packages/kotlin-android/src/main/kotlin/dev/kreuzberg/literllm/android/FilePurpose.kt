@@ -21,24 +21,14 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Purpose of an uploaded file.
- */
+/** Purpose of an uploaded file. */
 enum class FilePurpose {
-    /**
-     * File for use with Assistants API.
-     */
+    /** File for use with Assistants API. */
     ASSISTANTS,
-    /**
-     * File for batch processing.
-     */
+    /** File for batch processing. */
     BATCH,
-    /**
-     * File for fine-tuning.
-     */
+    /** File for fine-tuning. */
     FINE_TUNE,
-    /**
-     * File for vision/image tasks.
-     */
+    /** File for vision/image tasks. */
     VISION;
 }

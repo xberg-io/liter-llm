@@ -221,6 +221,10 @@ typedef struct LITERLLMImagesResponse LITERLLMImagesResponse;
  */
 typedef struct LITERLLMJsonSchemaFormat LITERLLMJsonSchemaFormat;
 /**
+ * All errors that can occur when using `liter-llm`.
+ */
+typedef struct LITERLLMLiterLlmError LITERLLMLiterLlmError;
+/**
  * A chat message in a conversation.
  */
 typedef struct LITERLLMMessage LITERLLMMessage;
@@ -4343,14 +4347,14 @@ LITERLLMResponseObject *literllm_default_client_create_response(const LITERLLMDe
  * freed with the appropriate free function.
  */
 LITERLLMResponseObject *literllm_default_client_retrieve_response(const LITERLLMDefaultClient *this_,
-                                                                  const char *id);
+                                                                  const char *response_id);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMResponseObject *literllm_default_client_cancel_response(const LITERLLMDefaultClient *this_,
-                                                                const char *id);
+                                                                const char *response_id);
 
 /**
  * Create a `CustomProviderConfig` from a JSON string. Returns null on failure.

@@ -21,23 +21,17 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * User message content as either plain text or a list of multimodal parts.
- */
+/** User message content as either plain text or a list of multimodal parts. */
 @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = UserContentDeserializer::class)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = UserContentSerializer::class)
 sealed class UserContent {
-    /**
-     * Plain text content.
-     */
+    /** Plain text content. */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Text(
         val value: String
     ) : UserContent()
-    /**
-     * Array of content parts (text, images, documents, audio).
-     */
+    /** Array of content parts (text, images, documents, audio). */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Parts(

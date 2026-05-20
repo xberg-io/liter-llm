@@ -23,9 +23,7 @@ package dev.kreuzberg.literllm.android
 
 import kotlin.time.Duration
 
-/**
- * All errors that can occur when using `liter-llm`.
- */
+/** All errors that can occur when using `liter-llm`. */
 sealed class LiterLlmError(message: String) : Exception(message) {
     data class Authentication(
         override val message: String,

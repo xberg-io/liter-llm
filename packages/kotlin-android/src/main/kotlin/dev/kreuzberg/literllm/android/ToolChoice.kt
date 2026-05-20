@@ -21,23 +21,17 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Tool usage mode or a specific tool to call.
- */
+/** Tool usage mode or a specific tool to call. */
 @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = ToolChoiceDeserializer::class)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = ToolChoiceSerializer::class)
 sealed class ToolChoice {
-    /**
-     * Predefined mode: auto, required, or none.
-     */
+    /** Predefined mode: auto, required, or none. */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Mode(
         val value: ToolChoiceMode
     ) : ToolChoice()
-    /**
-     * Force a specific tool to be called.
-     */
+    /** Force a specific tool to be called. */
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize
     @com.fasterxml.jackson.databind.annotation.JsonSerialize
     data class Specific(

@@ -21,33 +21,19 @@
 
 package dev.kreuzberg.literllm.android
 
-/**
- * Static configuration for a single provider entry in providers.json.
- */
+/** Static configuration for a single provider entry in providers.json. */
 data class ProviderConfig(
-    /**
-     * Provider identifier (matches the entry key in providers.json).
-     */
+    /** Provider identifier (matches the entry key in providers.json). */
     val name: String,
-    /**
-     * Human-readable provider name shown in UIs.
-     */
+    /** Human-readable provider name shown in UIs. */
     val displayName: String?,
-    /**
-     * Base URL used as the default for this provider's HTTP client.
-     */
+    /** Base URL used as the default for this provider's HTTP client. */
     val baseUrl: String?,
-    /**
-     * Authentication scheme metadata (auth type + env var holding the key).
-     */
+    /** Authentication scheme metadata (auth type + env var holding the key). */
     val auth: AuthConfig?,
-    /**
-     * Supported endpoint kinds (e.g. `chat`, `embeddings`).
-     */
+    /** Supported endpoint kinds (e.g. `chat`, `embeddings`). */
     val endpoints: List<String>?,
-    /**
-     * Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`).
-     */
+    /** Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`). */
     val modelPrefixes: List<String>?,
     /**
      * Parameter key renaming for this provider.

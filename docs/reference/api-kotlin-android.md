@@ -625,9 +625,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-##### Methods
+### Methods
 
-###### chat()
+#### chat()
 
 **Signature:**
 
@@ -636,7 +636,7 @@ headers are cached at construction to avoid redundant encoding on every request.
 fun chat(req: ChatCompletionRequest): ChatCompletionResponse
 ```
 
-###### chatStream()
+#### chatStream()
 
 **Signature:**
 
@@ -645,7 +645,7 @@ fun chat(req: ChatCompletionRequest): ChatCompletionResponse
 fun chatStream(req: ChatCompletionRequest): String
 ```
 
-###### embed()
+#### embed()
 
 **Signature:**
 
@@ -654,7 +654,7 @@ fun chatStream(req: ChatCompletionRequest): String
 fun embed(req: EmbeddingRequest): EmbeddingResponse
 ```
 
-###### listModels()
+#### listModels()
 
 **Signature:**
 
@@ -663,7 +663,7 @@ fun embed(req: EmbeddingRequest): EmbeddingResponse
 fun listModels(): ModelsListResponse
 ```
 
-###### imageGenerate()
+#### imageGenerate()
 
 **Signature:**
 
@@ -672,7 +672,7 @@ fun listModels(): ModelsListResponse
 fun imageGenerate(req: CreateImageRequest): ImagesResponse
 ```
 
-###### speech()
+#### speech()
 
 **Signature:**
 
@@ -681,7 +681,7 @@ fun imageGenerate(req: CreateImageRequest): ImagesResponse
 fun speech(req: CreateSpeechRequest): ByteArray
 ```
 
-###### transcribe()
+#### transcribe()
 
 **Signature:**
 
@@ -690,7 +690,7 @@ fun speech(req: CreateSpeechRequest): ByteArray
 fun transcribe(req: CreateTranscriptionRequest): TranscriptionResponse
 ```
 
-###### moderate()
+#### moderate()
 
 **Signature:**
 
@@ -699,7 +699,7 @@ fun transcribe(req: CreateTranscriptionRequest): TranscriptionResponse
 fun moderate(req: ModerationRequest): ModerationResponse
 ```
 
-###### rerank()
+#### rerank()
 
 **Signature:**
 
@@ -708,7 +708,7 @@ fun moderate(req: ModerationRequest): ModerationResponse
 fun rerank(req: RerankRequest): RerankResponse
 ```
 
-###### search()
+#### search()
 
 **Signature:**
 
@@ -717,7 +717,7 @@ fun rerank(req: RerankRequest): RerankResponse
 fun search(req: SearchRequest): SearchResponse
 ```
 
-###### ocr()
+#### ocr()
 
 **Signature:**
 
@@ -726,7 +726,7 @@ fun search(req: SearchRequest): SearchResponse
 fun ocr(req: OcrRequest): OcrResponse
 ```
 
-###### createFile()
+#### createFile()
 
 **Signature:**
 
@@ -735,7 +735,7 @@ fun ocr(req: OcrRequest): OcrResponse
 fun createFile(req: CreateFileRequest): FileObject
 ```
 
-###### retrieveFile()
+#### retrieveFile()
 
 **Signature:**
 
@@ -744,7 +744,7 @@ fun createFile(req: CreateFileRequest): FileObject
 fun retrieveFile(fileId: String): FileObject
 ```
 
-###### deleteFile()
+#### deleteFile()
 
 **Signature:**
 
@@ -753,7 +753,7 @@ fun retrieveFile(fileId: String): FileObject
 fun deleteFile(fileId: String): DeleteResponse
 ```
 
-###### listFiles()
+#### listFiles()
 
 **Signature:**
 
@@ -762,7 +762,7 @@ fun deleteFile(fileId: String): DeleteResponse
 fun listFiles(query: FileListQuery? = null): FileListResponse
 ```
 
-###### fileContent()
+#### fileContent()
 
 **Signature:**
 
@@ -771,7 +771,7 @@ fun listFiles(query: FileListQuery? = null): FileListResponse
 fun fileContent(fileId: String): ByteArray
 ```
 
-###### createBatch()
+#### createBatch()
 
 **Signature:**
 
@@ -780,7 +780,7 @@ fun fileContent(fileId: String): ByteArray
 fun createBatch(req: CreateBatchRequest): BatchObject
 ```
 
-###### retrieveBatch()
+#### retrieveBatch()
 
 **Signature:**
 
@@ -789,7 +789,7 @@ fun createBatch(req: CreateBatchRequest): BatchObject
 fun retrieveBatch(batchId: String): BatchObject
 ```
 
-###### listBatches()
+#### listBatches()
 
 **Signature:**
 
@@ -798,7 +798,7 @@ fun retrieveBatch(batchId: String): BatchObject
 fun listBatches(query: BatchListQuery? = null): BatchListResponse
 ```
 
-###### cancelBatch()
+#### cancelBatch()
 
 **Signature:**
 
@@ -807,7 +807,7 @@ fun listBatches(query: BatchListQuery? = null): BatchListResponse
 fun cancelBatch(batchId: String): BatchObject
 ```
 
-###### createResponse()
+#### createResponse()
 
 **Signature:**
 
@@ -816,7 +816,7 @@ fun cancelBatch(batchId: String): BatchObject
 fun createResponse(req: CreateResponseRequest): ResponseObject
 ```
 
-###### retrieveResponse()
+#### retrieveResponse()
 
 **Signature:**
 
@@ -825,7 +825,7 @@ fun createResponse(req: CreateResponseRequest): ResponseObject
 fun retrieveResponse(id: String): ResponseObject
 ```
 
-###### cancelResponse()
+#### cancelResponse()
 
 **Signature:**
 
