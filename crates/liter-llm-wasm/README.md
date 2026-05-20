@@ -126,6 +126,7 @@ pnpm add @kreuzberg/liter-llm-wasm
 yarn add @kreuzberg/liter-llm-wasm
 ```
 
+
 ### System Requirements
 
 - Modern browser with WebAssembly support, or Deno 1.0+, or Cloudflare Workers
@@ -154,6 +155,7 @@ console.log(response.choices[0].message.content);
 
 ### Common Use Cases
 
+
 #### Streaming Responses
 
 Stream tokens in real time:
@@ -178,10 +180,12 @@ for (const chunk of chunks) {
 console.log();
 ```
 
+
 ### Next Steps
 
 - **[Provider Registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)** - Full list of supported providers
 - **[GitHub Repository](https://github.com/kreuzberg-dev/liter-llm)** - Source, issues, and discussions
+
 
 ## Features
 
@@ -224,6 +228,7 @@ Built on a compiled Rust core for speed and safety:
 - **Zero-copy streaming** with SSE and AWS EventStream support
 - **API keys** wrapped in secure memory, zeroed on drop
 
+
 ## Provider Routing
 
 Route to 143+ providers using the `provider/model` prefix convention:
@@ -236,6 +241,7 @@ mistral/mistral-large-latest
 ```
 
 See the [provider registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json) for the full list.
+
 
 ## Proxy Server
 
