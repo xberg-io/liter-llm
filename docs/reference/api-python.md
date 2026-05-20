@@ -838,7 +838,7 @@ def create_response(self, req: CreateResponseRequest) -> ResponseObject
 **Signature:**
 
 ```python
-def retrieve_response(self, id: str) -> ResponseObject
+def retrieve_response(self, response_id: str) -> ResponseObject
 ```
 
 #### cancel_response()
@@ -846,7 +846,7 @@ def retrieve_response(self, id: str) -> ResponseObject
 **Signature:**
 
 ```python
-def cancel_response(self, id: str) -> ResponseObject
+def cancel_response(self, response_id: str) -> ResponseObject
 ```
 
 ---

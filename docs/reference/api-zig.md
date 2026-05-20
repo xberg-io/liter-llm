@@ -836,7 +836,7 @@ pub fn createResponse(self: *const DefaultClient, req: CreateResponseRequest) Er
 **Signature:**
 
 ```zig
-pub fn retrieveResponse(self: *const DefaultClient, id: [:0]const u8) Error!ResponseObject
+pub fn retrieveResponse(self: *const DefaultClient, response_id: [:0]const u8) Error!ResponseObject
 ```
 
 #### cancelResponse()
@@ -844,7 +844,7 @@ pub fn retrieveResponse(self: *const DefaultClient, id: [:0]const u8) Error!Resp
 **Signature:**
 
 ```zig
-pub fn cancelResponse(self: *const DefaultClient, id: [:0]const u8) Error!ResponseObject
+pub fn cancelResponse(self: *const DefaultClient, response_id: [:0]const u8) Error!ResponseObject
 ```
 
 ---

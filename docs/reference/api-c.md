@@ -836,7 +836,7 @@ LiterllmResponseObject literllm_create_response(LiterllmCreateResponseRequest re
 **Signature:**
 
 ```c
-LiterllmResponseObject literllm_retrieve_response(const char* id);
+LiterllmResponseObject literllm_retrieve_response(const char* response_id);
 ```
 
 #### literllm_cancel_response()
@@ -844,7 +844,7 @@ LiterllmResponseObject literllm_retrieve_response(const char* id);
 **Signature:**
 
 ```c
-LiterllmResponseObject literllm_cancel_response(const char* id);
+LiterllmResponseObject literllm_cancel_response(const char* response_id);
 ```
 
 ---

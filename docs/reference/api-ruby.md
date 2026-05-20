@@ -814,7 +814,7 @@ def create_response(req)
 **Signature:**
 
 ```ruby
-def retrieve_response(id)
+def retrieve_response(response_id)
 ```
 
 #### cancel_response()
@@ -822,7 +822,7 @@ def retrieve_response(id)
 **Signature:**
 
 ```ruby
-def cancel_response(id)
+def cancel_response(response_id)
 ```
 
 ---

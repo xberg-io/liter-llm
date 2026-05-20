@@ -836,7 +836,7 @@ public function createResponse(CreateResponseRequest $req): ResponseObject
 **Signature:**
 
 ```php
-public function retrieveResponse(string $id): ResponseObject
+public function retrieveResponse(string $responseId): ResponseObject
 ```
 
 #### cancelResponse()
@@ -844,7 +844,7 @@ public function retrieveResponse(string $id): ResponseObject
 **Signature:**
 
 ```php
-public function cancelResponse(string $id): ResponseObject
+public function cancelResponse(string $responseId): ResponseObject
 ```
 
 ---

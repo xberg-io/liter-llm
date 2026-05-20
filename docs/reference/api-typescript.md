@@ -851,7 +851,7 @@ createResponse(req: CreateResponseRequest): ResponseObject
 **Signature:**
 
 ```typescript
-retrieveResponse(id: string): ResponseObject
+retrieveResponse(responseId: string): ResponseObject
 ```
 
 #### cancelResponse()
@@ -859,7 +859,7 @@ retrieveResponse(id: string): ResponseObject
 **Signature:**
 
 ```typescript
-cancelResponse(id: string): ResponseObject
+cancelResponse(responseId: string): ResponseObject
 ```
 
 ---

@@ -836,7 +836,7 @@ ResponseObject createResponse(CreateResponseRequest req)
 **Signature:**
 
 ```dart
-ResponseObject retrieveResponse(String id)
+ResponseObject retrieveResponse(String responseId)
 ```
 
 #### cancelResponse()
@@ -844,7 +844,7 @@ ResponseObject retrieveResponse(String id)
 **Signature:**
 
 ```dart
-ResponseObject cancelResponse(String id)
+ResponseObject cancelResponse(String responseId)
 ```
 
 ---

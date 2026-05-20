@@ -836,7 +836,7 @@ public ResponseObject createResponse(CreateResponseRequest req) throws Error
 **Signature:**
 
 ```java
-public ResponseObject retrieveResponse(String id) throws Error
+public ResponseObject retrieveResponse(String responseId) throws Error
 ```
 
 #### cancelResponse()
@@ -844,7 +844,7 @@ public ResponseObject retrieveResponse(String id) throws Error
 **Signature:**
 
 ```java
-public ResponseObject cancelResponse(String id) throws Error
+public ResponseObject cancelResponse(String responseId) throws Error
 ```
 
 ---

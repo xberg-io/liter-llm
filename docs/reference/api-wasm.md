@@ -241,69 +241,6 @@ function completionCostWithCache(
 
 ---
 
-#### countTokens()
-
-Count tokens in a text string using the tokenizer for the given model.
-
-The tokenizer is resolved from the model name prefix (e.g. `"gpt-4o"` maps
-to the `Xenova/gpt-4o` HuggingFace tokenizer). Tokenizers are cached after
-first load.
-
-**Errors:**
-
-Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
-(e.g. network failure on first use) or if tokenization itself fails.
-
-**Signature:**
-
-```typescript
-function countTokens(model: string, text: string): number;
-```
-
-**Parameters:**
-
-| Name    | Type     | Required | Description |
-| ------- | -------- | -------- | ----------- |
-| `model` | `string` | Yes      | The model   |
-| `text`  | `string` | Yes      | The text    |
-
-**Returns:** `number`
-**Errors:** Throws `Error` with a descriptive message.
-
----
-
-#### countRequestTokens()
-
-Count tokens for a full `ChatCompletionRequest`.
-
-Sums tokens across all message text contents plus a per-message overhead
-of ~4 tokens (for role, separators, and formatting metadata). Tool
-definitions and multimodal content parts (images, audio, documents) are
-not counted — only textual content contributes to the token total.
-
-**Errors:**
-
-Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded or
-if tokenization fails for any message.
-
-**Signature:**
-
-```typescript
-function countRequestTokens(model: string, req: ChatCompletionRequest): number;
-```
-
-**Parameters:**
-
-| Name    | Type                    | Required | Description                 |
-| ------- | ----------------------- | -------- | --------------------------- |
-| `model` | `string`                | Yes      | The model                   |
-| `req`   | `ChatCompletionRequest` | Yes      | The chat completion request |
-
-**Returns:** `number`
-**Errors:** Throws `Error` with a descriptive message.
-
----
-
 #### ensureCryptoProvider()
 
 Install the `ring` crypto provider as the rustls process default, idempotently.
@@ -807,7 +744,7 @@ createResponse(req: CreateResponseRequest): ResponseObject
 **Signature:**
 
 ```typescript
-retrieveResponse(id: string): ResponseObject
+retrieveResponse(responseId: string): ResponseObject
 ```
 
 #### cancelResponse()
@@ -815,7 +752,7 @@ retrieveResponse(id: string): ResponseObject
 **Signature:**
 
 ```typescript
-cancelResponse(id: string): ResponseObject
+cancelResponse(responseId: string): ResponseObject
 ```
 
 ---

@@ -1330,6 +1330,24 @@ mod ffi {
     }
     extern "Rust" {
 
+        #[swift_bridge(swift_name = "systemMessageFromJson")]
+        fn system_message_from_json(json: String) -> Result<SystemMessage, String>;
+        #[swift_bridge(swift_name = "userMessageFromJson")]
+        fn user_message_from_json(json: String) -> Result<UserMessage, String>;
+        #[swift_bridge(swift_name = "imageUrlFromJson")]
+        fn image_url_from_json(json: String) -> Result<ImageUrl, String>;
+        #[swift_bridge(swift_name = "documentContentFromJson")]
+        fn document_content_from_json(json: String) -> Result<DocumentContent, String>;
+        #[swift_bridge(swift_name = "audioContentFromJson")]
+        fn audio_content_from_json(json: String) -> Result<AudioContent, String>;
+        #[swift_bridge(swift_name = "assistantMessageFromJson")]
+        fn assistant_message_from_json(json: String) -> Result<AssistantMessage, String>;
+        #[swift_bridge(swift_name = "toolMessageFromJson")]
+        fn tool_message_from_json(json: String) -> Result<ToolMessage, String>;
+        #[swift_bridge(swift_name = "developerMessageFromJson")]
+        fn developer_message_from_json(json: String) -> Result<DeveloperMessage, String>;
+        #[swift_bridge(swift_name = "functionMessageFromJson")]
+        fn function_message_from_json(json: String) -> Result<FunctionMessage, String>;
         #[swift_bridge(swift_name = "chatCompletionToolFromJson")]
         fn chat_completion_tool_from_json(json: String) -> Result<ChatCompletionTool, String>;
         #[swift_bridge(swift_name = "functionDefinitionFromJson")]
@@ -1338,14 +1356,50 @@ mod ffi {
         fn tool_call_from_json(json: String) -> Result<ToolCall, String>;
         #[swift_bridge(swift_name = "functionCallFromJson")]
         fn function_call_from_json(json: String) -> Result<FunctionCall, String>;
+        #[swift_bridge(swift_name = "specificToolChoiceFromJson")]
+        fn specific_tool_choice_from_json(json: String) -> Result<SpecificToolChoice, String>;
+        #[swift_bridge(swift_name = "specificFunctionFromJson")]
+        fn specific_function_from_json(json: String) -> Result<SpecificFunction, String>;
+        #[swift_bridge(swift_name = "jsonSchemaFormatFromJson")]
+        fn json_schema_format_from_json(json: String) -> Result<JsonSchemaFormat, String>;
+        #[swift_bridge(swift_name = "usageFromJson")]
+        fn usage_from_json(json: String) -> Result<Usage, String>;
+        #[swift_bridge(swift_name = "promptTokensDetailsFromJson")]
+        fn prompt_tokens_details_from_json(json: String) -> Result<PromptTokensDetails, String>;
+        #[swift_bridge(swift_name = "streamOptionsFromJson")]
+        fn stream_options_from_json(json: String) -> Result<StreamOptions, String>;
+        #[swift_bridge(swift_name = "chatCompletionResponseFromJson")]
+        fn chat_completion_response_from_json(json: String) -> Result<ChatCompletionResponse, String>;
+        #[swift_bridge(swift_name = "choiceFromJson")]
+        fn choice_from_json(json: String) -> Result<Choice, String>;
+        #[swift_bridge(swift_name = "streamChoiceFromJson")]
+        fn stream_choice_from_json(json: String) -> Result<StreamChoice, String>;
+        #[swift_bridge(swift_name = "streamDeltaFromJson")]
+        fn stream_delta_from_json(json: String) -> Result<StreamDelta, String>;
+        #[swift_bridge(swift_name = "streamToolCallFromJson")]
+        fn stream_tool_call_from_json(json: String) -> Result<StreamToolCall, String>;
+        #[swift_bridge(swift_name = "streamFunctionCallFromJson")]
+        fn stream_function_call_from_json(json: String) -> Result<StreamFunctionCall, String>;
         #[swift_bridge(swift_name = "embeddingResponseFromJson")]
         fn embedding_response_from_json(json: String) -> Result<EmbeddingResponse, String>;
         #[swift_bridge(swift_name = "embeddingObjectFromJson")]
         fn embedding_object_from_json(json: String) -> Result<EmbeddingObject, String>;
+        #[swift_bridge(swift_name = "imagesResponseFromJson")]
+        fn images_response_from_json(json: String) -> Result<ImagesResponse, String>;
+        #[swift_bridge(swift_name = "imageFromJson")]
+        fn image_from_json(json: String) -> Result<Image, String>;
+        #[swift_bridge(swift_name = "transcriptionResponseFromJson")]
+        fn transcription_response_from_json(json: String) -> Result<TranscriptionResponse, String>;
+        #[swift_bridge(swift_name = "transcriptionSegmentFromJson")]
+        fn transcription_segment_from_json(json: String) -> Result<TranscriptionSegment, String>;
         #[swift_bridge(swift_name = "moderationResponseFromJson")]
         fn moderation_response_from_json(json: String) -> Result<ModerationResponse, String>;
         #[swift_bridge(swift_name = "moderationResultFromJson")]
         fn moderation_result_from_json(json: String) -> Result<ModerationResult, String>;
+        #[swift_bridge(swift_name = "moderationCategoriesFromJson")]
+        fn moderation_categories_from_json(json: String) -> Result<ModerationCategories, String>;
+        #[swift_bridge(swift_name = "moderationCategoryScoresFromJson")]
+        fn moderation_category_scores_from_json(json: String) -> Result<ModerationCategoryScores, String>;
         #[swift_bridge(swift_name = "rerankResponseFromJson")]
         fn rerank_response_from_json(json: String) -> Result<RerankResponse, String>;
         #[swift_bridge(swift_name = "rerankResultFromJson")]
@@ -1362,10 +1416,89 @@ mod ffi {
         fn ocr_page_from_json(json: String) -> Result<OcrPage, String>;
         #[swift_bridge(swift_name = "ocrImageFromJson")]
         fn ocr_image_from_json(json: String) -> Result<OcrImage, String>;
+        #[swift_bridge(swift_name = "pageDimensionsFromJson")]
+        fn page_dimensions_from_json(json: String) -> Result<PageDimensions, String>;
+        #[swift_bridge(swift_name = "modelsListResponseFromJson")]
+        fn models_list_response_from_json(json: String) -> Result<ModelsListResponse, String>;
+        #[swift_bridge(swift_name = "modelObjectFromJson")]
+        fn model_object_from_json(json: String) -> Result<ModelObject, String>;
+        #[swift_bridge(swift_name = "fileObjectFromJson")]
+        fn file_object_from_json(json: String) -> Result<FileObject, String>;
+        #[swift_bridge(swift_name = "fileListResponseFromJson")]
+        fn file_list_response_from_json(json: String) -> Result<FileListResponse, String>;
+        #[swift_bridge(swift_name = "deleteResponseFromJson")]
+        fn delete_response_from_json(json: String) -> Result<DeleteResponse, String>;
+        #[swift_bridge(swift_name = "batchObjectFromJson")]
+        fn batch_object_from_json(json: String) -> Result<BatchObject, String>;
+        #[swift_bridge(swift_name = "batchRequestCountsFromJson")]
+        fn batch_request_counts_from_json(json: String) -> Result<BatchRequestCounts, String>;
+        #[swift_bridge(swift_name = "batchListResponseFromJson")]
+        fn batch_list_response_from_json(json: String) -> Result<BatchListResponse, String>;
+        #[swift_bridge(swift_name = "responseToolFromJson")]
+        fn response_tool_from_json(json: String) -> Result<ResponseTool, String>;
+        #[swift_bridge(swift_name = "responseObjectFromJson")]
+        fn response_object_from_json(json: String) -> Result<ResponseObject, String>;
+        #[swift_bridge(swift_name = "responseOutputItemFromJson")]
+        fn response_output_item_from_json(json: String) -> Result<ResponseOutputItem, String>;
+        #[swift_bridge(swift_name = "responseUsageFromJson")]
+        fn response_usage_from_json(json: String) -> Result<ResponseUsage, String>;
         #[swift_bridge(swift_name = "providerConfigFromJson")]
         fn provider_config_from_json(json: String) -> Result<ProviderConfig, String>;
         #[swift_bridge(swift_name = "authConfigFromJson")]
         fn auth_config_from_json(json: String) -> Result<AuthConfig, String>;
+        #[swift_bridge(swift_name = "budgetConfigFromJson")]
+        fn budget_config_from_json(json: String) -> Result<BudgetConfig, String>;
+        #[swift_bridge(swift_name = "cacheConfigFromJson")]
+        fn cache_config_from_json(json: String) -> Result<CacheConfig, String>;
+        #[swift_bridge(swift_name = "rateLimitConfigFromJson")]
+        fn rate_limit_config_from_json(json: String) -> Result<RateLimitConfig, String>;
+    }
+    extern "Rust" {
+
+        #[swift_bridge(swift_name = "messageFromJson")]
+        fn message_from_json(json: String) -> Result<Message, String>;
+        #[swift_bridge(swift_name = "userContentFromJson")]
+        fn user_content_from_json(json: String) -> Result<UserContent, String>;
+        #[swift_bridge(swift_name = "contentPartFromJson")]
+        fn content_part_from_json(json: String) -> Result<ContentPart, String>;
+        #[swift_bridge(swift_name = "imageDetailFromJson")]
+        fn image_detail_from_json(json: String) -> Result<ImageDetail, String>;
+        #[swift_bridge(swift_name = "toolTypeFromJson")]
+        fn tool_type_from_json(json: String) -> Result<ToolType, String>;
+        #[swift_bridge(swift_name = "toolChoiceFromJson")]
+        fn tool_choice_from_json(json: String) -> Result<ToolChoice, String>;
+        #[swift_bridge(swift_name = "toolChoiceModeFromJson")]
+        fn tool_choice_mode_from_json(json: String) -> Result<ToolChoiceMode, String>;
+        #[swift_bridge(swift_name = "responseFormatFromJson")]
+        fn response_format_from_json(json: String) -> Result<ResponseFormat, String>;
+        #[swift_bridge(swift_name = "stopSequenceFromJson")]
+        fn stop_sequence_from_json(json: String) -> Result<StopSequence, String>;
+        #[swift_bridge(swift_name = "finishReasonFromJson")]
+        fn finish_reason_from_json(json: String) -> Result<FinishReason, String>;
+        #[swift_bridge(swift_name = "reasoningEffortFromJson")]
+        fn reasoning_effort_from_json(json: String) -> Result<ReasoningEffort, String>;
+        #[swift_bridge(swift_name = "embeddingFormatFromJson")]
+        fn embedding_format_from_json(json: String) -> Result<EmbeddingFormat, String>;
+        #[swift_bridge(swift_name = "embeddingInputFromJson")]
+        fn embedding_input_from_json(json: String) -> Result<EmbeddingInput, String>;
+        #[swift_bridge(swift_name = "moderationInputFromJson")]
+        fn moderation_input_from_json(json: String) -> Result<ModerationInput, String>;
+        #[swift_bridge(swift_name = "rerankDocumentFromJson")]
+        fn rerank_document_from_json(json: String) -> Result<RerankDocument, String>;
+        #[swift_bridge(swift_name = "ocrDocumentFromJson")]
+        fn ocr_document_from_json(json: String) -> Result<OcrDocument, String>;
+        #[swift_bridge(swift_name = "filePurposeFromJson")]
+        fn file_purpose_from_json(json: String) -> Result<FilePurpose, String>;
+        #[swift_bridge(swift_name = "batchStatusFromJson")]
+        fn batch_status_from_json(json: String) -> Result<BatchStatus, String>;
+        #[swift_bridge(swift_name = "authHeaderFormatFromJson")]
+        fn auth_header_format_from_json(json: String) -> Result<AuthHeaderFormat, String>;
+        #[swift_bridge(swift_name = "authTypeFromJson")]
+        fn auth_type_from_json(json: String) -> Result<AuthType, String>;
+        #[swift_bridge(swift_name = "enforcementFromJson")]
+        fn enforcement_from_json(json: String) -> Result<Enforcement, String>;
+        #[swift_bridge(swift_name = "cacheBackendFromJson")]
+        fn cache_backend_from_json(json: String) -> Result<CacheBackend, String>;
     }
 }
 
@@ -5193,201 +5326,493 @@ pub fn chat_completion_request_from_json(json: String) -> Result<ChatCompletionR
         .map(ChatCompletionRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn embedding_request_from_json(json: String) -> Result<EmbeddingRequest, String> {
     serde_json::from_str::<liter_llm::types::EmbeddingRequest>(&json)
         .map(EmbeddingRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn create_image_request_from_json(json: String) -> Result<CreateImageRequest, String> {
     serde_json::from_str::<liter_llm::types::CreateImageRequest>(&json)
         .map(CreateImageRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn create_speech_request_from_json(json: String) -> Result<CreateSpeechRequest, String> {
     serde_json::from_str::<liter_llm::types::CreateSpeechRequest>(&json)
         .map(CreateSpeechRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn create_transcription_request_from_json(json: String) -> Result<CreateTranscriptionRequest, String> {
     serde_json::from_str::<liter_llm::types::CreateTranscriptionRequest>(&json)
         .map(CreateTranscriptionRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn moderation_request_from_json(json: String) -> Result<ModerationRequest, String> {
     serde_json::from_str::<liter_llm::types::ModerationRequest>(&json)
         .map(ModerationRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn rerank_request_from_json(json: String) -> Result<RerankRequest, String> {
     serde_json::from_str::<liter_llm::types::RerankRequest>(&json)
         .map(RerankRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn search_request_from_json(json: String) -> Result<SearchRequest, String> {
     serde_json::from_str::<liter_llm::types::SearchRequest>(&json)
         .map(SearchRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn ocr_request_from_json(json: String) -> Result<OcrRequest, String> {
     serde_json::from_str::<liter_llm::types::OcrRequest>(&json)
         .map(OcrRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn create_file_request_from_json(json: String) -> Result<CreateFileRequest, String> {
     serde_json::from_str::<liter_llm::types::CreateFileRequest>(&json)
         .map(CreateFileRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn file_list_query_from_json(json: String) -> Result<FileListQuery, String> {
     serde_json::from_str::<liter_llm::types::FileListQuery>(&json)
         .map(FileListQuery)
         .map_err(|e| e.to_string())
 }
-
 pub fn create_batch_request_from_json(json: String) -> Result<CreateBatchRequest, String> {
     serde_json::from_str::<liter_llm::types::CreateBatchRequest>(&json)
         .map(CreateBatchRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn batch_list_query_from_json(json: String) -> Result<BatchListQuery, String> {
     serde_json::from_str::<liter_llm::types::BatchListQuery>(&json)
         .map(BatchListQuery)
         .map_err(|e| e.to_string())
 }
-
 pub fn create_response_request_from_json(json: String) -> Result<CreateResponseRequest, String> {
     serde_json::from_str::<liter_llm::types::CreateResponseRequest>(&json)
         .map(CreateResponseRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String> {
     serde_json::from_str::<liter_llm::provider::custom::CustomProviderConfig>(&json)
         .map(CustomProviderConfig)
         .map_err(|e| e.to_string())
 }
-
 pub fn chat_completion_chunk_from_json(json: String) -> Result<ChatCompletionChunk, String> {
     serde_json::from_str::<liter_llm::types::ChatCompletionChunk>(&json)
         .map(ChatCompletionChunk)
         .map_err(|e| e.to_string())
 }
-
+pub fn system_message_from_json(json: String) -> Result<SystemMessage, String> {
+    serde_json::from_str::<liter_llm::types::SystemMessage>(&json)
+        .map(SystemMessage)
+        .map_err(|e| e.to_string())
+}
+pub fn user_message_from_json(json: String) -> Result<UserMessage, String> {
+    serde_json::from_str::<liter_llm::types::UserMessage>(&json)
+        .map(UserMessage)
+        .map_err(|e| e.to_string())
+}
+pub fn image_url_from_json(json: String) -> Result<ImageUrl, String> {
+    serde_json::from_str::<liter_llm::types::ImageUrl>(&json)
+        .map(ImageUrl)
+        .map_err(|e| e.to_string())
+}
+pub fn document_content_from_json(json: String) -> Result<DocumentContent, String> {
+    serde_json::from_str::<liter_llm::types::DocumentContent>(&json)
+        .map(DocumentContent)
+        .map_err(|e| e.to_string())
+}
+pub fn audio_content_from_json(json: String) -> Result<AudioContent, String> {
+    serde_json::from_str::<liter_llm::types::AudioContent>(&json)
+        .map(AudioContent)
+        .map_err(|e| e.to_string())
+}
+pub fn assistant_message_from_json(json: String) -> Result<AssistantMessage, String> {
+    serde_json::from_str::<liter_llm::types::AssistantMessage>(&json)
+        .map(AssistantMessage)
+        .map_err(|e| e.to_string())
+}
+pub fn tool_message_from_json(json: String) -> Result<ToolMessage, String> {
+    serde_json::from_str::<liter_llm::types::ToolMessage>(&json)
+        .map(ToolMessage)
+        .map_err(|e| e.to_string())
+}
+pub fn developer_message_from_json(json: String) -> Result<DeveloperMessage, String> {
+    serde_json::from_str::<liter_llm::types::DeveloperMessage>(&json)
+        .map(DeveloperMessage)
+        .map_err(|e| e.to_string())
+}
+pub fn function_message_from_json(json: String) -> Result<FunctionMessage, String> {
+    serde_json::from_str::<liter_llm::types::FunctionMessage>(&json)
+        .map(FunctionMessage)
+        .map_err(|e| e.to_string())
+}
 pub fn chat_completion_tool_from_json(json: String) -> Result<ChatCompletionTool, String> {
     serde_json::from_str::<liter_llm::types::ChatCompletionTool>(&json)
         .map(ChatCompletionTool)
         .map_err(|e| e.to_string())
 }
-
 pub fn function_definition_from_json(json: String) -> Result<FunctionDefinition, String> {
     serde_json::from_str::<liter_llm::types::FunctionDefinition>(&json)
         .map(FunctionDefinition)
         .map_err(|e| e.to_string())
 }
-
 pub fn tool_call_from_json(json: String) -> Result<ToolCall, String> {
     serde_json::from_str::<liter_llm::types::ToolCall>(&json)
         .map(ToolCall)
         .map_err(|e| e.to_string())
 }
-
 pub fn function_call_from_json(json: String) -> Result<FunctionCall, String> {
     serde_json::from_str::<liter_llm::types::FunctionCall>(&json)
         .map(FunctionCall)
         .map_err(|e| e.to_string())
 }
-
+pub fn specific_tool_choice_from_json(json: String) -> Result<SpecificToolChoice, String> {
+    serde_json::from_str::<liter_llm::types::SpecificToolChoice>(&json)
+        .map(SpecificToolChoice)
+        .map_err(|e| e.to_string())
+}
+pub fn specific_function_from_json(json: String) -> Result<SpecificFunction, String> {
+    serde_json::from_str::<liter_llm::types::SpecificFunction>(&json)
+        .map(SpecificFunction)
+        .map_err(|e| e.to_string())
+}
+pub fn json_schema_format_from_json(json: String) -> Result<JsonSchemaFormat, String> {
+    serde_json::from_str::<liter_llm::types::JsonSchemaFormat>(&json)
+        .map(JsonSchemaFormat)
+        .map_err(|e| e.to_string())
+}
+pub fn usage_from_json(json: String) -> Result<Usage, String> {
+    serde_json::from_str::<liter_llm::types::Usage>(&json)
+        .map(Usage)
+        .map_err(|e| e.to_string())
+}
+pub fn prompt_tokens_details_from_json(json: String) -> Result<PromptTokensDetails, String> {
+    serde_json::from_str::<liter_llm::types::PromptTokensDetails>(&json)
+        .map(PromptTokensDetails)
+        .map_err(|e| e.to_string())
+}
+pub fn stream_options_from_json(json: String) -> Result<StreamOptions, String> {
+    serde_json::from_str::<liter_llm::types::StreamOptions>(&json)
+        .map(StreamOptions)
+        .map_err(|e| e.to_string())
+}
+pub fn chat_completion_response_from_json(json: String) -> Result<ChatCompletionResponse, String> {
+    serde_json::from_str::<liter_llm::types::ChatCompletionResponse>(&json)
+        .map(ChatCompletionResponse)
+        .map_err(|e| e.to_string())
+}
+pub fn choice_from_json(json: String) -> Result<Choice, String> {
+    serde_json::from_str::<liter_llm::types::Choice>(&json)
+        .map(Choice)
+        .map_err(|e| e.to_string())
+}
+pub fn stream_choice_from_json(json: String) -> Result<StreamChoice, String> {
+    serde_json::from_str::<liter_llm::types::StreamChoice>(&json)
+        .map(StreamChoice)
+        .map_err(|e| e.to_string())
+}
+pub fn stream_delta_from_json(json: String) -> Result<StreamDelta, String> {
+    serde_json::from_str::<liter_llm::types::StreamDelta>(&json)
+        .map(StreamDelta)
+        .map_err(|e| e.to_string())
+}
+pub fn stream_tool_call_from_json(json: String) -> Result<StreamToolCall, String> {
+    serde_json::from_str::<liter_llm::types::StreamToolCall>(&json)
+        .map(StreamToolCall)
+        .map_err(|e| e.to_string())
+}
+pub fn stream_function_call_from_json(json: String) -> Result<StreamFunctionCall, String> {
+    serde_json::from_str::<liter_llm::types::StreamFunctionCall>(&json)
+        .map(StreamFunctionCall)
+        .map_err(|e| e.to_string())
+}
 pub fn embedding_response_from_json(json: String) -> Result<EmbeddingResponse, String> {
     serde_json::from_str::<liter_llm::types::EmbeddingResponse>(&json)
         .map(EmbeddingResponse)
         .map_err(|e| e.to_string())
 }
-
 pub fn embedding_object_from_json(json: String) -> Result<EmbeddingObject, String> {
     serde_json::from_str::<liter_llm::types::EmbeddingObject>(&json)
         .map(EmbeddingObject)
         .map_err(|e| e.to_string())
 }
-
+pub fn images_response_from_json(json: String) -> Result<ImagesResponse, String> {
+    serde_json::from_str::<liter_llm::types::ImagesResponse>(&json)
+        .map(ImagesResponse)
+        .map_err(|e| e.to_string())
+}
+pub fn image_from_json(json: String) -> Result<Image, String> {
+    serde_json::from_str::<liter_llm::types::Image>(&json)
+        .map(Image)
+        .map_err(|e| e.to_string())
+}
+pub fn transcription_response_from_json(json: String) -> Result<TranscriptionResponse, String> {
+    serde_json::from_str::<liter_llm::types::TranscriptionResponse>(&json)
+        .map(TranscriptionResponse)
+        .map_err(|e| e.to_string())
+}
+pub fn transcription_segment_from_json(json: String) -> Result<TranscriptionSegment, String> {
+    serde_json::from_str::<liter_llm::types::TranscriptionSegment>(&json)
+        .map(TranscriptionSegment)
+        .map_err(|e| e.to_string())
+}
 pub fn moderation_response_from_json(json: String) -> Result<ModerationResponse, String> {
     serde_json::from_str::<liter_llm::types::ModerationResponse>(&json)
         .map(ModerationResponse)
         .map_err(|e| e.to_string())
 }
-
 pub fn moderation_result_from_json(json: String) -> Result<ModerationResult, String> {
     serde_json::from_str::<liter_llm::types::ModerationResult>(&json)
         .map(ModerationResult)
         .map_err(|e| e.to_string())
 }
-
+pub fn moderation_categories_from_json(json: String) -> Result<ModerationCategories, String> {
+    serde_json::from_str::<liter_llm::types::ModerationCategories>(&json)
+        .map(ModerationCategories)
+        .map_err(|e| e.to_string())
+}
+pub fn moderation_category_scores_from_json(json: String) -> Result<ModerationCategoryScores, String> {
+    serde_json::from_str::<liter_llm::types::ModerationCategoryScores>(&json)
+        .map(ModerationCategoryScores)
+        .map_err(|e| e.to_string())
+}
 pub fn rerank_response_from_json(json: String) -> Result<RerankResponse, String> {
     serde_json::from_str::<liter_llm::types::RerankResponse>(&json)
         .map(RerankResponse)
         .map_err(|e| e.to_string())
 }
-
 pub fn rerank_result_from_json(json: String) -> Result<RerankResult, String> {
     serde_json::from_str::<liter_llm::types::RerankResult>(&json)
         .map(RerankResult)
         .map_err(|e| e.to_string())
 }
-
 pub fn rerank_result_document_from_json(json: String) -> Result<RerankResultDocument, String> {
     serde_json::from_str::<liter_llm::types::RerankResultDocument>(&json)
         .map(RerankResultDocument)
         .map_err(|e| e.to_string())
 }
-
 pub fn search_response_from_json(json: String) -> Result<SearchResponse, String> {
     serde_json::from_str::<liter_llm::types::SearchResponse>(&json)
         .map(SearchResponse)
         .map_err(|e| e.to_string())
 }
-
 pub fn search_result_from_json(json: String) -> Result<SearchResult, String> {
     serde_json::from_str::<liter_llm::types::SearchResult>(&json)
         .map(SearchResult)
         .map_err(|e| e.to_string())
 }
-
 pub fn ocr_response_from_json(json: String) -> Result<OcrResponse, String> {
     serde_json::from_str::<liter_llm::types::OcrResponse>(&json)
         .map(OcrResponse)
         .map_err(|e| e.to_string())
 }
-
 pub fn ocr_page_from_json(json: String) -> Result<OcrPage, String> {
     serde_json::from_str::<liter_llm::types::OcrPage>(&json)
         .map(OcrPage)
         .map_err(|e| e.to_string())
 }
-
 pub fn ocr_image_from_json(json: String) -> Result<OcrImage, String> {
     serde_json::from_str::<liter_llm::types::OcrImage>(&json)
         .map(OcrImage)
         .map_err(|e| e.to_string())
 }
-
+pub fn page_dimensions_from_json(json: String) -> Result<PageDimensions, String> {
+    serde_json::from_str::<liter_llm::types::PageDimensions>(&json)
+        .map(PageDimensions)
+        .map_err(|e| e.to_string())
+}
+pub fn models_list_response_from_json(json: String) -> Result<ModelsListResponse, String> {
+    serde_json::from_str::<liter_llm::types::ModelsListResponse>(&json)
+        .map(ModelsListResponse)
+        .map_err(|e| e.to_string())
+}
+pub fn model_object_from_json(json: String) -> Result<ModelObject, String> {
+    serde_json::from_str::<liter_llm::types::ModelObject>(&json)
+        .map(ModelObject)
+        .map_err(|e| e.to_string())
+}
+pub fn file_object_from_json(json: String) -> Result<FileObject, String> {
+    serde_json::from_str::<liter_llm::types::FileObject>(&json)
+        .map(FileObject)
+        .map_err(|e| e.to_string())
+}
+pub fn file_list_response_from_json(json: String) -> Result<FileListResponse, String> {
+    serde_json::from_str::<liter_llm::types::FileListResponse>(&json)
+        .map(FileListResponse)
+        .map_err(|e| e.to_string())
+}
+pub fn delete_response_from_json(json: String) -> Result<DeleteResponse, String> {
+    serde_json::from_str::<liter_llm::types::DeleteResponse>(&json)
+        .map(DeleteResponse)
+        .map_err(|e| e.to_string())
+}
+pub fn batch_object_from_json(json: String) -> Result<BatchObject, String> {
+    serde_json::from_str::<liter_llm::types::BatchObject>(&json)
+        .map(BatchObject)
+        .map_err(|e| e.to_string())
+}
+pub fn batch_request_counts_from_json(json: String) -> Result<BatchRequestCounts, String> {
+    serde_json::from_str::<liter_llm::types::BatchRequestCounts>(&json)
+        .map(BatchRequestCounts)
+        .map_err(|e| e.to_string())
+}
+pub fn batch_list_response_from_json(json: String) -> Result<BatchListResponse, String> {
+    serde_json::from_str::<liter_llm::types::BatchListResponse>(&json)
+        .map(BatchListResponse)
+        .map_err(|e| e.to_string())
+}
+pub fn response_tool_from_json(json: String) -> Result<ResponseTool, String> {
+    serde_json::from_str::<liter_llm::types::ResponseTool>(&json)
+        .map(ResponseTool)
+        .map_err(|e| e.to_string())
+}
+pub fn response_object_from_json(json: String) -> Result<ResponseObject, String> {
+    serde_json::from_str::<liter_llm::types::ResponseObject>(&json)
+        .map(ResponseObject)
+        .map_err(|e| e.to_string())
+}
+pub fn response_output_item_from_json(json: String) -> Result<ResponseOutputItem, String> {
+    serde_json::from_str::<liter_llm::types::ResponseOutputItem>(&json)
+        .map(ResponseOutputItem)
+        .map_err(|e| e.to_string())
+}
+pub fn response_usage_from_json(json: String) -> Result<ResponseUsage, String> {
+    serde_json::from_str::<liter_llm::types::ResponseUsage>(&json)
+        .map(ResponseUsage)
+        .map_err(|e| e.to_string())
+}
 pub fn provider_config_from_json(json: String) -> Result<ProviderConfig, String> {
     serde_json::from_str::<liter_llm::provider::ProviderConfig>(&json)
         .map(ProviderConfig)
         .map_err(|e| e.to_string())
 }
-
 pub fn auth_config_from_json(json: String) -> Result<AuthConfig, String> {
     serde_json::from_str::<liter_llm::provider::AuthConfig>(&json)
         .map(AuthConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn budget_config_from_json(json: String) -> Result<BudgetConfig, String> {
+    serde_json::from_str::<liter_llm::BudgetConfig>(&json)
+        .map(BudgetConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn cache_config_from_json(json: String) -> Result<CacheConfig, String> {
+    serde_json::from_str::<liter_llm::CacheConfig>(&json)
+        .map(CacheConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn rate_limit_config_from_json(json: String) -> Result<RateLimitConfig, String> {
+    serde_json::from_str::<liter_llm::RateLimitConfig>(&json)
+        .map(RateLimitConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn message_from_json(json: String) -> Result<Message, String> {
+    serde_json::from_str::<liter_llm::types::Message>(&json)
+        .map(Message::from)
+        .map_err(|e| e.to_string())
+}
+pub fn user_content_from_json(json: String) -> Result<UserContent, String> {
+    serde_json::from_str::<liter_llm::types::UserContent>(&json)
+        .map(UserContent::from)
+        .map_err(|e| e.to_string())
+}
+pub fn content_part_from_json(json: String) -> Result<ContentPart, String> {
+    serde_json::from_str::<liter_llm::types::ContentPart>(&json)
+        .map(ContentPart::from)
+        .map_err(|e| e.to_string())
+}
+pub fn image_detail_from_json(json: String) -> Result<ImageDetail, String> {
+    serde_json::from_str::<liter_llm::types::ImageDetail>(&json)
+        .map(ImageDetail::from)
+        .map_err(|e| e.to_string())
+}
+pub fn tool_type_from_json(json: String) -> Result<ToolType, String> {
+    serde_json::from_str::<liter_llm::types::ToolType>(&json)
+        .map(ToolType::from)
+        .map_err(|e| e.to_string())
+}
+pub fn tool_choice_from_json(json: String) -> Result<ToolChoice, String> {
+    serde_json::from_str::<liter_llm::types::ToolChoice>(&json)
+        .map(ToolChoice::from)
+        .map_err(|e| e.to_string())
+}
+pub fn tool_choice_mode_from_json(json: String) -> Result<ToolChoiceMode, String> {
+    serde_json::from_str::<liter_llm::types::ToolChoiceMode>(&json)
+        .map(ToolChoiceMode::from)
+        .map_err(|e| e.to_string())
+}
+pub fn response_format_from_json(json: String) -> Result<ResponseFormat, String> {
+    serde_json::from_str::<liter_llm::types::ResponseFormat>(&json)
+        .map(ResponseFormat::from)
+        .map_err(|e| e.to_string())
+}
+pub fn stop_sequence_from_json(json: String) -> Result<StopSequence, String> {
+    serde_json::from_str::<liter_llm::types::StopSequence>(&json)
+        .map(StopSequence::from)
+        .map_err(|e| e.to_string())
+}
+pub fn finish_reason_from_json(json: String) -> Result<FinishReason, String> {
+    serde_json::from_str::<liter_llm::types::FinishReason>(&json)
+        .map(FinishReason::from)
+        .map_err(|e| e.to_string())
+}
+pub fn reasoning_effort_from_json(json: String) -> Result<ReasoningEffort, String> {
+    serde_json::from_str::<liter_llm::types::ReasoningEffort>(&json)
+        .map(ReasoningEffort::from)
+        .map_err(|e| e.to_string())
+}
+pub fn embedding_format_from_json(json: String) -> Result<EmbeddingFormat, String> {
+    serde_json::from_str::<liter_llm::types::EmbeddingFormat>(&json)
+        .map(EmbeddingFormat::from)
+        .map_err(|e| e.to_string())
+}
+pub fn embedding_input_from_json(json: String) -> Result<EmbeddingInput, String> {
+    serde_json::from_str::<liter_llm::types::EmbeddingInput>(&json)
+        .map(EmbeddingInput::from)
+        .map_err(|e| e.to_string())
+}
+pub fn moderation_input_from_json(json: String) -> Result<ModerationInput, String> {
+    serde_json::from_str::<liter_llm::types::ModerationInput>(&json)
+        .map(ModerationInput::from)
+        .map_err(|e| e.to_string())
+}
+pub fn rerank_document_from_json(json: String) -> Result<RerankDocument, String> {
+    serde_json::from_str::<liter_llm::types::RerankDocument>(&json)
+        .map(RerankDocument::from)
+        .map_err(|e| e.to_string())
+}
+pub fn ocr_document_from_json(json: String) -> Result<OcrDocument, String> {
+    serde_json::from_str::<liter_llm::types::OcrDocument>(&json)
+        .map(OcrDocument::from)
+        .map_err(|e| e.to_string())
+}
+pub fn file_purpose_from_json(json: String) -> Result<FilePurpose, String> {
+    serde_json::from_str::<liter_llm::types::FilePurpose>(&json)
+        .map(FilePurpose::from)
+        .map_err(|e| e.to_string())
+}
+pub fn batch_status_from_json(json: String) -> Result<BatchStatus, String> {
+    serde_json::from_str::<liter_llm::types::BatchStatus>(&json)
+        .map(BatchStatus::from)
+        .map_err(|e| e.to_string())
+}
+pub fn auth_header_format_from_json(json: String) -> Result<AuthHeaderFormat, String> {
+    serde_json::from_str::<liter_llm::provider::custom::AuthHeaderFormat>(&json)
+        .map(AuthHeaderFormat::from)
+        .map_err(|e| e.to_string())
+}
+pub fn auth_type_from_json(json: String) -> Result<AuthType, String> {
+    serde_json::from_str::<liter_llm::provider::AuthType>(&json)
+        .map(AuthType::from)
+        .map_err(|e| e.to_string())
+}
+pub fn enforcement_from_json(json: String) -> Result<Enforcement, String> {
+    serde_json::from_str::<liter_llm::Enforcement>(&json)
+        .map(Enforcement::from)
+        .map_err(|e| e.to_string())
+}
+pub fn cache_backend_from_json(json: String) -> Result<CacheBackend, String> {
+    serde_json::from_str::<liter_llm::CacheBackend>(&json)
+        .map(CacheBackend::from)
         .map_err(|e| e.to_string())
 }

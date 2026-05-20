@@ -83,7 +83,7 @@ abstract class RustLibApi extends BaseApi {
 
   Future<ResponseObject> crateDefaultClientCancelResponse({
     required DefaultClient that,
-    required String id,
+    required String responseId,
   });
 
   Future<ChatCompletionResponse> crateDefaultClientChat({
@@ -172,7 +172,7 @@ abstract class RustLibApi extends BaseApi {
 
   Future<ResponseObject> crateDefaultClientRetrieveResponse({
     required DefaultClient that,
-    required String id,
+    required String responseId,
   });
 
   Future<SearchResponse> crateDefaultClientSearch({
@@ -561,7 +561,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @override
   Future<ResponseObject> crateDefaultClientCancelResponse({
     required DefaultClient that,
-    required String id,
+    required String responseId,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -571,7 +571,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          sse_encode_String(id, serializer);
+          sse_encode_String(responseId, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -584,7 +584,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateDefaultClientCancelResponseConstMeta,
-        argValues: [that, id],
+        argValues: [that, responseId],
         apiImpl: this,
       ),
     );
@@ -593,7 +593,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateDefaultClientCancelResponseConstMeta =>
       const TaskConstMeta(
         debugName: "DefaultClient_cancel_response",
-        argNames: ["that", "id"],
+        argNames: ["that", "responseId"],
       );
 
   @override
@@ -1243,7 +1243,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @override
   Future<ResponseObject> crateDefaultClientRetrieveResponse({
     required DefaultClient that,
-    required String id,
+    required String responseId,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -1253,7 +1253,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          sse_encode_String(id, serializer);
+          sse_encode_String(responseId, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -1266,7 +1266,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateDefaultClientRetrieveResponseConstMeta,
-        argValues: [that, id],
+        argValues: [that, responseId],
         apiImpl: this,
       ),
     );
@@ -1275,7 +1275,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateDefaultClientRetrieveResponseConstMeta =>
       const TaskConstMeta(
         debugName: "DefaultClient_retrieve_response",
-        argNames: ["that", "id"],
+        argNames: ["that", "responseId"],
       );
 
   @override
@@ -11936,8 +11936,10 @@ class DefaultClientImpl extends RustOpaque implements DefaultClient {
       .api
       .crateDefaultClientCancelBatch(that: this, batchId: batchId);
 
-  Future<ResponseObject> cancelResponse({required String id}) =>
-      RustLib.instance.api.crateDefaultClientCancelResponse(that: this, id: id);
+  Future<ResponseObject> cancelResponse({required String responseId}) => RustLib
+      .instance
+      .api
+      .crateDefaultClientCancelResponse(that: this, responseId: responseId);
 
   Future<ChatCompletionResponse> chat({required ChatCompletionRequest req}) =>
       RustLib.instance.api.crateDefaultClientChat(that: this, req: req);
@@ -12009,10 +12011,11 @@ class DefaultClientImpl extends RustOpaque implements DefaultClient {
       .api
       .crateDefaultClientRetrieveFile(that: this, fileId: fileId);
 
-  Future<ResponseObject> retrieveResponse({required String id}) => RustLib
-      .instance
-      .api
-      .crateDefaultClientRetrieveResponse(that: this, id: id);
+  Future<ResponseObject> retrieveResponse({required String responseId}) =>
+      RustLib.instance.api.crateDefaultClientRetrieveResponse(
+        that: this,
+        responseId: responseId,
+      );
 
   Future<SearchResponse> search({required SearchRequest req}) =>
       RustLib.instance.api.crateDefaultClientSearch(that: this, req: req);

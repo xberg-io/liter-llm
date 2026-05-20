@@ -23,7 +23,7 @@ internal extension SystemMessage {
         self.name = rb.name()?.toString()
     }
     func intoRust() throws -> RustBridge.SystemMessage {
-        return RustBridge.SystemMessage(self.content, self.name)
+        return RustBridge.SystemMessage(RustString(self.content), self.name.map(RustString.init))
     }
 }
 
@@ -78,7 +78,7 @@ internal extension DocumentContent {
         self.mediaType = rb.mediaType().toString()
     }
     func intoRust() throws -> RustBridge.DocumentContent {
-        return RustBridge.DocumentContent(self.data, self.mediaType)
+        return RustBridge.DocumentContent(RustString(self.data), RustString(self.mediaType))
     }
 }
 
@@ -101,7 +101,7 @@ internal extension AudioContent {
         self.format = rb.format().toString()
     }
     func intoRust() throws -> RustBridge.AudioContent {
-        return RustBridge.AudioContent(self.data, self.format)
+        return RustBridge.AudioContent(RustString(self.data), RustString(self.format))
     }
 }
 
@@ -177,7 +177,7 @@ internal extension ToolMessage {
         self.name = rb.name()?.toString()
     }
     func intoRust() throws -> RustBridge.ToolMessage {
-        return RustBridge.ToolMessage(self.content, self.toolCallId, self.name)
+        return RustBridge.ToolMessage(RustString(self.content), RustString(self.toolCallId), self.name.map(RustString.init))
     }
 }
 
@@ -200,7 +200,7 @@ internal extension DeveloperMessage {
         self.name = rb.name()?.toString()
     }
     func intoRust() throws -> RustBridge.DeveloperMessage {
-        return RustBridge.DeveloperMessage(self.content, self.name)
+        return RustBridge.DeveloperMessage(RustString(self.content), self.name.map(RustString.init))
     }
 }
 
@@ -221,7 +221,7 @@ internal extension FunctionMessage {
         self.name = rb.name().toString()
     }
     func intoRust() throws -> RustBridge.FunctionMessage {
-        return RustBridge.FunctionMessage(self.content, self.name)
+        return RustBridge.FunctionMessage(RustString(self.content), RustString(self.name))
     }
 }
 
@@ -332,7 +332,7 @@ internal extension SpecificFunction {
         self.name = rb.name().toString()
     }
     func intoRust() throws -> RustBridge.SpecificFunction {
-        return RustBridge.SpecificFunction(self.name)
+        return RustBridge.SpecificFunction(RustString(self.name))
     }
 }
 
@@ -727,7 +727,7 @@ internal extension StreamFunctionCall {
         self.arguments = rb.arguments()?.toString()
     }
     func intoRust() throws -> RustBridge.StreamFunctionCall {
-        return RustBridge.StreamFunctionCall(self.name, self.arguments)
+        return RustBridge.StreamFunctionCall(self.name.map(RustString.init), self.arguments.map(RustString.init))
     }
 }
 
@@ -851,7 +851,7 @@ internal extension CreateImageRequest {
         self.user = rb.user()?.toString()
     }
     func intoRust() throws -> RustBridge.CreateImageRequest {
-        return RustBridge.CreateImageRequest(self.prompt, self.model, self.n, self.size, self.quality, self.style, self.responseFormat, self.user)
+        return RustBridge.CreateImageRequest(RustString(self.prompt), self.model.map(RustString.init), self.n, self.size.map(RustString.init), self.quality.map(RustString.init), self.style.map(RustString.init), self.responseFormat.map(RustString.init), self.user.map(RustString.init))
     }
 }
 
@@ -908,7 +908,7 @@ internal extension Image {
         self.revisedPrompt = rb.revisedPrompt()?.toString()
     }
     func intoRust() throws -> RustBridge.Image {
-        return RustBridge.Image(self.url, self.b64Json, self.revisedPrompt)
+        return RustBridge.Image(self.url.map(RustString.init), self.b64Json.map(RustString.init), self.revisedPrompt.map(RustString.init))
     }
 }
 
@@ -950,7 +950,7 @@ internal extension CreateSpeechRequest {
         self.speed = rb.speed()
     }
     func intoRust() throws -> RustBridge.CreateSpeechRequest {
-        return RustBridge.CreateSpeechRequest(self.model, self.input, self.voice, self.responseFormat, self.speed)
+        return RustBridge.CreateSpeechRequest(RustString(self.model), RustString(self.input), RustString(self.voice), self.responseFormat.map(RustString.init), self.speed)
     }
 }
 
@@ -997,7 +997,7 @@ internal extension CreateTranscriptionRequest {
         self.temperature = rb.temperature()
     }
     func intoRust() throws -> RustBridge.CreateTranscriptionRequest {
-        return RustBridge.CreateTranscriptionRequest(self.model, self.file, self.language, self.prompt, self.responseFormat, self.temperature)
+        return RustBridge.CreateTranscriptionRequest(RustString(self.model), RustString(self.file), self.language.map(RustString.init), self.prompt.map(RustString.init), self.responseFormat.map(RustString.init), self.temperature)
     }
 }
 
@@ -1061,7 +1061,7 @@ internal extension TranscriptionSegment {
         self.text = rb.text().toString()
     }
     func intoRust() throws -> RustBridge.TranscriptionSegment {
-        return RustBridge.TranscriptionSegment(self.id, self.start, self.end, self.text)
+        return RustBridge.TranscriptionSegment(self.id, self.start, self.end, RustString(self.text))
     }
 }
 
@@ -1577,7 +1577,7 @@ internal extension ModelsListResponse {
     func intoRust() throws -> RustBridge.ModelsListResponse {
         let __data = RustVec<RustBridge.ModelObject>()
         for __elem in self.data { __data.push(value: try __elem.intoRust()) }
-        return RustBridge.ModelsListResponse(self.object, __data)
+        return RustBridge.ModelsListResponse(RustString(self.object), __data)
     }
 }
 
@@ -1615,7 +1615,7 @@ internal extension ModelObject {
         self.ownedBy = rb.ownedBy().toString()
     }
     func intoRust() throws -> RustBridge.ModelObject {
-        return RustBridge.ModelObject(self.id, self.object, self.created, self.ownedBy)
+        return RustBridge.ModelObject(RustString(self.id), RustString(self.object), self.created, RustString(self.ownedBy))
     }
 }
 
@@ -1642,7 +1642,7 @@ internal extension CreateFileRequest {
         self.filename = rb.filename()?.toString()
     }
     func intoRust() throws -> RustBridge.CreateFileRequest {
-        return RustBridge.CreateFileRequest(self.file, try self.purpose.intoRust(), self.filename)
+        return RustBridge.CreateFileRequest(RustString(self.file), try self.purpose.intoRust(), self.filename.map(RustString.init))
     }
 }
 
@@ -1694,7 +1694,7 @@ internal extension FileObject {
         self.status = rb.status()?.toString()
     }
     func intoRust() throws -> RustBridge.FileObject {
-        return RustBridge.FileObject(self.id, self.object, self.bytes, self.createdAt, self.filename, self.purpose, self.status)
+        return RustBridge.FileObject(RustString(self.id), RustString(self.object), self.bytes, self.createdAt, RustString(self.filename), RustString(self.purpose), self.status.map(RustString.init))
     }
 }
 
@@ -1728,7 +1728,7 @@ internal extension FileListResponse {
     func intoRust() throws -> RustBridge.FileListResponse {
         let __data = RustVec<RustBridge.FileObject>()
         for __elem in self.data { __data.push(value: try __elem.intoRust()) }
-        return RustBridge.FileListResponse(self.object, __data, self.hasMore)
+        return RustBridge.FileListResponse(RustString(self.object), __data, self.hasMore)
     }
 }
 
@@ -1755,7 +1755,7 @@ internal extension FileListQuery {
         self.after = rb.after()?.toString()
     }
     func intoRust() throws -> RustBridge.FileListQuery {
-        return RustBridge.FileListQuery(self.purpose, self.limit, self.after)
+        return RustBridge.FileListQuery(self.purpose.map(RustString.init), self.limit, self.after.map(RustString.init))
     }
 }
 
@@ -1782,7 +1782,7 @@ internal extension DeleteResponse {
         self.deleted = rb.deleted()
     }
     func intoRust() throws -> RustBridge.DeleteResponse {
-        return RustBridge.DeleteResponse(self.id, self.object, self.deleted)
+        return RustBridge.DeleteResponse(RustString(self.id), RustString(self.object), self.deleted)
     }
 }
 
@@ -1841,7 +1841,7 @@ internal extension BatchListQuery {
         self.after = rb.after()?.toString()
     }
     func intoRust() throws -> RustBridge.BatchListQuery {
-        return RustBridge.BatchListQuery(self.limit, self.after)
+        return RustBridge.BatchListQuery(self.limit, self.after.map(RustString.init))
     }
 }
 

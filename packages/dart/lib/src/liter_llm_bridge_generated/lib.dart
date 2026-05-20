@@ -447,7 +447,7 @@ Future<RateLimitConfig> createRateLimitConfigFromJson({required String json}) =>
 abstract class DefaultClient implements RustOpaqueInterface {
   Future<BatchObject> cancelBatch({required String batchId});
 
-  Future<ResponseObject> cancelResponse({required String id});
+  Future<ResponseObject> cancelResponse({required String responseId});
 
   Future<ChatCompletionResponse> chat({required ChatCompletionRequest req});
 
@@ -483,7 +483,7 @@ abstract class DefaultClient implements RustOpaqueInterface {
 
   Future<FileObject> retrieveFile({required String fileId});
 
-  Future<ResponseObject> retrieveResponse({required String id});
+  Future<ResponseObject> retrieveResponse({required String responseId});
 
   Future<SearchResponse> search({required SearchRequest req});
 

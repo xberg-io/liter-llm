@@ -847,7 +847,7 @@ def create_response(req)
 **Signature:**
 
 ```elixir
-def retrieve_response(id)
+def retrieve_response(response_id)
 ```
 
 #### cancel_response()
@@ -855,7 +855,7 @@ def retrieve_response(id)
 **Signature:**
 
 ```elixir
-def cancel_response(id)
+def cancel_response(response_id)
 ```
 
 ---

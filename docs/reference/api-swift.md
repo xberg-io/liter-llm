@@ -836,7 +836,7 @@ public func createResponse(req: CreateResponseRequest) throws -> ResponseObject
 **Signature:**
 
 ```swift
-public func retrieveResponse(id: String) throws -> ResponseObject
+public func retrieveResponse(responseId: String) throws -> ResponseObject
 ```
 
 #### cancelResponse()
@@ -844,7 +844,7 @@ public func retrieveResponse(id: String) throws -> ResponseObject
 **Signature:**
 
 ```swift
-public func cancelResponse(id: String) throws -> ResponseObject
+public func cancelResponse(responseId: String) throws -> ResponseObject
 ```
 
 ---

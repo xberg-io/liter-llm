@@ -822,7 +822,7 @@ fun createResponse(req: CreateResponseRequest): ResponseObject
 
 ```kotlin
 @Throws(Error::class)
-fun retrieveResponse(id: String): ResponseObject
+fun retrieveResponse(responseId: String): ResponseObject
 ```
 
 #### cancelResponse()
@@ -831,7 +831,7 @@ fun retrieveResponse(id: String): ResponseObject
 
 ```kotlin
 @Throws(Error::class)
-fun cancelResponse(id: String): ResponseObject
+fun cancelResponse(responseId: String): ResponseObject
 ```
 
 ---

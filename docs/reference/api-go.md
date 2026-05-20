@@ -835,7 +835,7 @@ func (o *DefaultClient) CreateResponse(req CreateResponseRequest) (ResponseObjec
 **Signature:**
 
 ```go
-func (o *DefaultClient) RetrieveResponse(id string) (ResponseObject, error)
+func (o *DefaultClient) RetrieveResponse(responseId string) (ResponseObject, error)
 ```
 
 #### CancelResponse()
@@ -843,7 +843,7 @@ func (o *DefaultClient) RetrieveResponse(id string) (ResponseObject, error)
 **Signature:**
 
 ```go
-func (o *DefaultClient) CancelResponse(id string) (ResponseObject, error)
+func (o *DefaultClient) CancelResponse(responseId string) (ResponseObject, error)
 ```
 
 ---

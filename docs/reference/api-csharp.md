@@ -836,7 +836,7 @@ public async Task<ResponseObject> CreateResponseAsync(CreateResponseRequest req)
 **Signature:**
 
 ```csharp
-public async Task<ResponseObject> RetrieveResponseAsync(string id)
+public async Task<ResponseObject> RetrieveResponseAsync(string responseId)
 ```
 
 #### CancelResponse()
@@ -844,7 +844,7 @@ public async Task<ResponseObject> RetrieveResponseAsync(string id)
 **Signature:**
 
 ```csharp
-public async Task<ResponseObject> CancelResponseAsync(string id)
+public async Task<ResponseObject> CancelResponseAsync(string responseId)
 ```
 
 ---

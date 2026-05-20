@@ -114,7 +114,7 @@ fn wire__crate__DefaultClient_cancel_response_impl(
                 <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DefaultClient>>>::sse_decode(
                     &mut deserializer,
                 );
-            let api_id = <String>::sse_decode(&mut deserializer);
+            let api_response_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse::<_, String>(
@@ -130,7 +130,8 @@ fn wire__crate__DefaultClient_cancel_response_impl(
                             }
                         }
                         let api_that_guard = api_that_guard.unwrap();
-                        let output_ok = crate::DefaultClient::cancel_response(&*api_that_guard, api_id).await?;
+                        let output_ok =
+                            crate::DefaultClient::cancel_response(&*api_that_guard, api_response_id).await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -944,7 +945,7 @@ fn wire__crate__DefaultClient_retrieve_response_impl(
                 <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DefaultClient>>>::sse_decode(
                     &mut deserializer,
                 );
-            let api_id = <String>::sse_decode(&mut deserializer);
+            let api_response_id = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse::<_, String>(
@@ -960,7 +961,8 @@ fn wire__crate__DefaultClient_retrieve_response_impl(
                             }
                         }
                         let api_that_guard = api_that_guard.unwrap();
-                        let output_ok = crate::DefaultClient::retrieve_response(&*api_that_guard, api_id).await?;
+                        let output_ok =
+                            crate::DefaultClient::retrieve_response(&*api_that_guard, api_response_id).await?;
                         Ok(output_ok)
                     })()
                     .await,

@@ -836,7 +836,7 @@ pub fn create_response(&self, req: CreateResponseRequest) -> ResponseObject
 **Signature:**
 
 ```rust
-pub fn retrieve_response(&self, id: &str) -> ResponseObject
+pub fn retrieve_response(&self, response_id: &str) -> ResponseObject
 ```
 
 #### cancel_response()
@@ -844,7 +844,7 @@ pub fn retrieve_response(&self, id: &str) -> ResponseObject
 **Signature:**
 
 ```rust
-pub fn cancel_response(&self, id: &str) -> ResponseObject
+pub fn cancel_response(&self, response_id: &str) -> ResponseObject
 ```
 
 ---
