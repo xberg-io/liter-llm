@@ -2276,7 +2276,7 @@ pub fn unregister_custom_provider(name: String) -> Result<bool> {
 #[napi(js_name = "allProviders")]
 pub fn all_providers() -> Result<Vec<JsProviderConfig>> {
     liter_llm::provider::all_providers()
-        .map(|val| val.into_iter().map(|v| v.clone().into()).collect())
+        .map(|val| val.iter().map(|v| v.clone().into()).collect())
         .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))
 }
 

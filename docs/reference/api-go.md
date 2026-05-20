@@ -68,21 +68,271 @@ func CreateClientFromJson(json string) (DefaultClient, error)
 
 ---
 
+#### RegisterCustomProvider()
+
+Register a custom provider in the global runtime registry.
+
+The provider will be checked **before** all built-in providers during model
+detection. If a provider with the same `name` already exists it is replaced.
+
+**Errors:**
+
+Returns an error if the config is invalid (empty name, empty base_url, or
+no model prefixes).
+
+**Signature:**
+
+```go
+func RegisterCustomProvider(config CustomProviderConfig) error
+```
+
+**Parameters:**
+
+| Name     | Type                   | Required | Description               |
+| -------- | ---------------------- | -------- | ------------------------- |
+| `Config` | `CustomProviderConfig` | Yes      | The configuration options |
+
+**Returns:** ``**Errors:** Returns`error`.
+
+---
+
+#### UnregisterCustomProvider()
+
+Remove a previously registered custom provider by name.
+
+Returns `true` if a provider with the given name was found and removed,
+`false` if no such provider existed.
+
+**Errors:**
+
+Returns an error only if the internal lock is poisoned.
+
+**Signature:**
+
+```go
+func UnregisterCustomProvider(name string) (bool, error)
+```
+
+**Parameters:**
+
+| Name   | Type     | Required | Description |
+| ------ | -------- | -------- | ----------- |
+| `Name` | `string` | Yes      | The name    |
+
+**Returns:** `bool`
+**Errors:** Returns `error`.
+
+---
+
+#### AllProviders()
+
+Return all provider configs from the registry.
+
+Useful for tooling, documentation generation, or runtime enumeration.
+
+**Signature:**
+
+```go
+func AllProviders() ([]ProviderConfig, error)
+```
+
+**Returns:** `[]ProviderConfig`
+**Errors:** Returns `error`.
+
+---
+
+#### ComplexProviderNames()
+
+Return the set of complex provider names.
+
+Complex providers require custom auth/routing logic beyond simple bearer
+tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
+
+The returned reference points into the static registry — no allocation.
+
+**Signature:**
+
+```go
+func ComplexProviderNames() ([]string, error)
+```
+
+**Returns:** `[]string`
+**Errors:** Returns `error`.
+
+---
+
+#### CompletionCost()
+
+Calculate the estimated cost of a completion given a model name and token
+counts.
+
+Returns `nil` if the model is not present in the embedded pricing registry.
+Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
+
+When an exact model name match is not found, progressively shorter prefixes
+are tried by stripping from the last `-` or `.` separator. For example,
+`gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
+
+**Signature:**
+
+```go
+func CompletionCost(model string, promptTokens uint64, completionTokens uint64) *float64
+```
+
+**Parameters:**
+
+| Name               | Type     | Required | Description           |
+| ------------------ | -------- | -------- | --------------------- |
+| `Model`            | `string` | Yes      | The model             |
+| `PromptTokens`     | `uint64` | Yes      | The prompt tokens     |
+| `CompletionTokens` | `uint64` | Yes      | The completion tokens |
+
+**Returns:** `*float64`
+
+---
+
+#### CompletionCostWithCache()
+
+Calculate the estimated cost of a completion, accounting for cached
+(cache-hit) prompt tokens billed at the provider's discounted rate.
+
+`cached_tokens` is the count of prompt tokens served from the provider's
+prompt cache. It must be `<= prompt_tokens` (cached tokens are a subset of
+the prompt). The non-cached portion is billed at `input_cost_per_token`
+and the cached portion at `cache_read_input_token_cost` when the model
+has cache pricing; otherwise the entire prompt is billed at the regular
+input rate.
+
+Returns `nil` if the model is not present in the embedded pricing
+registry, mirroring `completion_cost`.
+
+**Signature:**
+
+```go
+func CompletionCostWithCache(model string, promptTokens uint64, cachedTokens uint64, completionTokens uint64) *float64
+```
+
+**Parameters:**
+
+| Name               | Type     | Required | Description           |
+| ------------------ | -------- | -------- | --------------------- |
+| `Model`            | `string` | Yes      | The model             |
+| `PromptTokens`     | `uint64` | Yes      | The prompt tokens     |
+| `CachedTokens`     | `uint64` | Yes      | The cached tokens     |
+| `CompletionTokens` | `uint64` | Yes      | The completion tokens |
+
+**Returns:** `*float64`
+
+---
+
+#### CountTokens()
+
+Count tokens in a text string using the tokenizer for the given model.
+
+The tokenizer is resolved from the model name prefix (e.g. `"gpt-4o"` maps
+to the `Xenova/gpt-4o` HuggingFace tokenizer). Tokenizers are cached after
+first load.
+
+**Errors:**
+
+Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
+(e.g. network failure on first use) or if tokenization itself fails.
+
+**Signature:**
+
+```go
+func CountTokens(model string, text string) (int, error)
+```
+
+**Parameters:**
+
+| Name    | Type     | Required | Description |
+| ------- | -------- | -------- | ----------- |
+| `Model` | `string` | Yes      | The model   |
+| `Text`  | `string` | Yes      | The text    |
+
+**Returns:** `int`
+**Errors:** Returns `error`.
+
+---
+
+#### CountRequestTokens()
+
+Count tokens for a full `ChatCompletionRequest`.
+
+Sums tokens across all message text contents plus a per-message overhead
+of ~4 tokens (for role, separators, and formatting metadata). Tool
+definitions and multimodal content parts (images, audio, documents) are
+not counted — only textual content contributes to the token total.
+
+**Errors:**
+
+Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded or
+if tokenization fails for any message.
+
+**Signature:**
+
+```go
+func CountRequestTokens(model string, req ChatCompletionRequest) (int, error)
+```
+
+**Parameters:**
+
+| Name    | Type                    | Required | Description                 |
+| ------- | ----------------------- | -------- | --------------------------- |
+| `Model` | `string`                | Yes      | The model                   |
+| `Req`   | `ChatCompletionRequest` | Yes      | The chat completion request |
+
+**Returns:** `int`
+**Errors:** Returns `error`.
+
+---
+
+#### EnsureCryptoProvider()
+
+Install the `ring` crypto provider as the rustls process default, idempotently.
+
+rustls 0.23+ removed the implicit default provider. This function installs
+`ring` once per process. Subsequent calls are no-ops. Calling it from a
+downstream Rust app that has already installed `aws-lc-rs` is safe — the
+`Err` from `install_default()` is silently ignored.
+
+Called automatically by every internal `reqwest.Client` constructor
+(auth providers, default HTTP client). Bindings and downstream consumers
+reach those constructors transitively, so no manual init is required.
+
+WASM builds are exempt — the WASM target uses the browser/Node.js fetch
+API instead of rustls, so no crypto provider is needed.
+
+**Signature:**
+
+```go
+func EnsureCryptoProvider()
+```
+
+**Returns:** ``
+
+---
+
 ### Types
 
 #### AssistantMessage
 
-| Field          | Type            | Default | Description                                                            |
-| -------------- | --------------- | ------- | ---------------------------------------------------------------------- |
-| `Content`      | `*string`       | `nil`   | The extracted text content                                             |
-| `Name`         | `*string`       | `nil`   | The name                                                               |
-| `ToolCalls`    | `*[]ToolCall`   | `nil`   | Tool calls                                                             |
-| `Refusal`      | `*string`       | `nil`   | Refusal                                                                |
-| `FunctionCall` | `*FunctionCall` | `nil`   | Deprecated legacy function_call field; retained for API compatibility. |
+Assistant's response to a user message.
+
+| Field          | Type            | Default | Description                                                               |
+| -------------- | --------------- | ------- | ------------------------------------------------------------------------- |
+| `Content`      | `*string`       | `nil`   | The assistant's text response. Absent if tool calls are returned instead. |
+| `Name`         | `*string`       | `nil`   | Optional name for the assistant.                                          |
+| `ToolCalls`    | `*[]ToolCall`   | `nil`   | Tool calls the model wants to execute, if any.                            |
+| `Refusal`      | `*string`       | `nil`   | Refusal reason, if the model declined to respond per safety policies.     |
+| `FunctionCall` | `*FunctionCall` | `nil`   | Deprecated legacy function_call field; retained for API compatibility.    |
 
 ---
 
 #### AudioContent
+
+Audio content part for speech-capable models.
 
 | Field    | Type     | Default | Description                               |
 | -------- | -------- | ------- | ----------------------------------------- |
@@ -91,152 +341,229 @@ func CreateClientFromJson(json string) (DefaultClient, error)
 
 ---
 
+#### AuthConfig
+
+Auth configuration block.
+
+| Field      | Type       | Default | Description                                                                                                                         |
+| ---------- | ---------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `AuthType` | `AuthType` | —       | Auth scheme classification.                                                                                                         |
+| `EnvVar`   | `*string`  | `nil`   | Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`). Holds the variable name, never the secret value. |
+
+---
+
 #### BatchListQuery
 
-| Field   | Type      | Default | Description |
-| ------- | --------- | ------- | ----------- |
-| `Limit` | `*uint32` | `nil`   | Limit       |
-| `After` | `*string` | `nil`   | After       |
+Query parameters for listing batches.
+
+| Field   | Type      | Default | Description                                            |
+| ------- | --------- | ------- | ------------------------------------------------------ |
+| `Limit` | `*uint32` | `nil`   | Maximum number of results to return. Defaults to 20.   |
+| `After` | `*string` | `nil`   | Pagination cursor: return results after this batch ID. |
 
 ---
 
 #### BatchListResponse
 
-| Field     | Type            | Default | Description  |
-| --------- | --------------- | ------- | ------------ |
-| `Object`  | `string`        | —       | Object       |
-| `Data`    | `[]BatchObject` | `nil`   | Data         |
-| `HasMore` | `*bool`         | `nil`   | Whether more |
-| `FirstId` | `*string`       | `nil`   | First id     |
-| `LastId`  | `*string`       | `nil`   | Last id      |
+Response from listing batches.
+
+| Field     | Type            | Default | Description                                        |
+| --------- | --------------- | ------- | -------------------------------------------------- |
+| `Object`  | `string`        | —       | Object type (always `"list"`).                     |
+| `Data`    | `[]BatchObject` | `nil`   | List of batch objects.                             |
+| `HasMore` | `*bool`         | `nil`   | Whether more results are available.                |
+| `FirstId` | `*string`       | `nil`   | First batch ID in the result set (for pagination). |
+| `LastId`  | `*string`       | `nil`   | Last batch ID in the result set (for pagination).  |
 
 ---
 
 #### BatchObject
 
-| Field              | Type                  | Default                  | Description                           |
-| ------------------ | --------------------- | ------------------------ | ------------------------------------- |
-| `Id`               | `string`              | —                        | Unique identifier                     |
-| `Object`           | `string`              | —                        | Object                                |
-| `Endpoint`         | `string`              | —                        | Endpoint                              |
-| `InputFileId`      | `string`              | —                        | Input file id                         |
-| `CompletionWindow` | `string`              | —                        | Completion window                     |
-| `Status`           | `BatchStatus`         | `BatchStatus.Validating` | Status (batch status)                 |
-| `OutputFileId`     | `*string`             | `nil`                    | Output file id                        |
-| `ErrorFileId`      | `*string`             | `nil`                    | Error file id                         |
-| `CreatedAt`        | `uint64`              | —                        | Created at                            |
-| `CompletedAt`      | `*uint64`             | `nil`                    | Completed at                          |
-| `FailedAt`         | `*uint64`             | `nil`                    | Failed at                             |
-| `ExpiredAt`        | `*uint64`             | `nil`                    | Expired at                            |
-| `RequestCounts`    | `*BatchRequestCounts` | `nil`                    | Request counts (batch request counts) |
-| `Metadata`         | `*interface{}`        | `nil`                    | Document metadata                     |
+A batch job object.
+
+| Field              | Type                  | Default                  | Description                                             |
+| ------------------ | --------------------- | ------------------------ | ------------------------------------------------------- |
+| `Id`               | `string`              | —                        | Unique batch ID.                                        |
+| `Object`           | `string`              | —                        | Object type (always `"batch"`).                         |
+| `Endpoint`         | `string`              | —                        | API endpoint (e.g., `"/v1/chat/completions"`).          |
+| `InputFileId`      | `string`              | —                        | ID of the input file.                                   |
+| `CompletionWindow` | `string`              | —                        | Completion window (e.g., `"24h"`).                      |
+| `Status`           | `BatchStatus`         | `BatchStatus.Validating` | Current job status.                                     |
+| `OutputFileId`     | `*string`             | `nil`                    | ID of the output file (present when completed).         |
+| `ErrorFileId`      | `*string`             | `nil`                    | ID of the error file (present if some requests failed). |
+| `CreatedAt`        | `uint64`              | —                        | Unix timestamp of batch creation.                       |
+| `CompletedAt`      | `*uint64`             | `nil`                    | Unix timestamp of completion (if completed).            |
+| `FailedAt`         | `*uint64`             | `nil`                    | Unix timestamp of failure (if failed).                  |
+| `ExpiredAt`        | `*uint64`             | `nil`                    | Unix timestamp of expiration (if expired).              |
+| `RequestCounts`    | `*BatchRequestCounts` | `nil`                    | Request processing counts.                              |
+| `Metadata`         | `*interface{}`        | `nil`                    | Metadata attached to the batch.                         |
 
 ---
 
 #### BatchRequestCounts
 
-| Field       | Type     | Default | Description |
-| ----------- | -------- | ------- | ----------- |
-| `Total`     | `uint64` | —       | Total       |
-| `Completed` | `uint64` | —       | Completed   |
-| `Failed`    | `uint64` | —       | Failed      |
+Request processing counts for a batch.
+
+| Field       | Type     | Default | Description                  |
+| ----------- | -------- | ------- | ---------------------------- |
+| `Total`     | `uint64` | —       | Total requests in the batch. |
+| `Completed` | `uint64` | —       | Completed requests.          |
+| `Failed`    | `uint64` | —       | Failed requests.             |
+
+---
+
+#### BudgetConfig
+
+Configuration for budget enforcement.
+
+| Field         | Type                 | Default            | Description                                                                                      |
+| ------------- | -------------------- | ------------------ | ------------------------------------------------------------------------------------------------ |
+| `GlobalLimit` | `*float64`           | `nil`              | Maximum total spend across all models, in USD. `nil` means unlimited.                            |
+| `ModelLimits` | `map[string]float64` | `nil`              | Per-model spending limits in USD. Models not listed here are only constrained by `global_limit`. |
+| `Enforcement` | `Enforcement`        | `Enforcement.Hard` | Whether to reject requests or merely warn when a limit is exceeded.                              |
+
+##### Methods
+
+###### Default()
+
+**Signature:**
+
+```go
+func (o *BudgetConfig) Default() BudgetConfig
+```
+
+---
+
+#### CacheConfig
+
+Configuration for the response cache.
+
+| Field        | Type            | Default               | Description                         |
+| ------------ | --------------- | --------------------- | ----------------------------------- |
+| `MaxEntries` | `int`           | `256`                 | Maximum number of cached entries.   |
+| `Ttl`        | `time.Duration` | `300000ms`            | Time-to-live for each cached entry. |
+| `Backend`    | `CacheBackend`  | `CacheBackend.Memory` | Storage backend to use.             |
+
+##### Methods
+
+###### Default()
+
+**Signature:**
+
+```go
+func (o *CacheConfig) Default() CacheConfig
+```
 
 ---
 
 #### ChatCompletionChunk
 
+A streamed chunk of a chat completion response.
+
 | Field               | Type             | Default | Description                                                                                                                                   |
 | ------------------- | ---------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Id`                | `string`         | —       | Unique identifier                                                                                                                             |
+| `Id`                | `string`         | —       | Unique identifier for this stream.                                                                                                            |
 | `Object`            | `string`         | —       | Always `"chat.completion.chunk"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not fail parsing. |
-| `Created`           | `uint64`         | —       | Created                                                                                                                                       |
-| `Model`             | `string`         | —       | Model                                                                                                                                         |
-| `Choices`           | `[]StreamChoice` | `nil`   | Choices                                                                                                                                       |
-| `Usage`             | `*Usage`         | `nil`   | Usage (usage)                                                                                                                                 |
-| `SystemFingerprint` | `*string`        | `nil`   | System fingerprint                                                                                                                            |
-| `ServiceTier`       | `*string`        | `nil`   | Service tier                                                                                                                                  |
+| `Created`           | `uint64`         | —       | Unix timestamp of chunk creation.                                                                                                             |
+| `Model`             | `string`         | —       | Model used to generate the chunk.                                                                                                             |
+| `Choices`           | `[]StreamChoice` | `nil`   | Streaming choices (delta updates).                                                                                                            |
+| `Usage`             | `*Usage`         | `nil`   | Token usage (typically only in the final chunk).                                                                                              |
+| `SystemFingerprint` | `*string`        | `nil`   | Fingerprint of the system configuration (OpenAI-specific).                                                                                    |
+| `ServiceTier`       | `*string`        | `nil`   | Service tier used (OpenAI-specific).                                                                                                          |
 
 ---
 
 #### ChatCompletionRequest
 
+Chat completion request (compatible with OpenAI and similar APIs).
+
 | Field               | Type                    | Default | Description                                                                                                                       |
 | ------------------- | ----------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `Model`             | `string`                | —       | Model                                                                                                                             |
-| `Messages`          | `[]Message`             | `nil`   | Messages                                                                                                                          |
-| `Temperature`       | `*float64`              | `nil`   | Temperature                                                                                                                       |
-| `TopP`              | `*float64`              | `nil`   | Top p                                                                                                                             |
-| `N`                 | `*uint32`               | `nil`   | N                                                                                                                                 |
+| `Model`             | `string`                | —       | Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`).                                                                          |
+| `Messages`          | `[]Message`             | `nil`   | Conversation history from oldest to newest.                                                                                       |
+| `Temperature`       | `*float64`              | `nil`   | Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0.                                               |
+| `TopP`              | `*float64`              | `nil`   | Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused.                                                                |
+| `N`                 | `*uint32`               | `nil`   | Number of chat completions to generate. Defaults to 1.                                                                            |
 | `Stream`            | `*bool`                 | `nil`   | Whether to stream the response. Managed by the client layer — do not set directly.                                                |
-| `Stop`              | `*StopSequence`         | `nil`   | Stop (stop sequence)                                                                                                              |
-| `MaxTokens`         | `*uint64`               | `nil`   | Maximum tokens                                                                                                                    |
-| `PresencePenalty`   | `*float64`              | `nil`   | Presence penalty                                                                                                                  |
-| `FrequencyPenalty`  | `*float64`              | `nil`   | Frequency penalty                                                                                                                 |
+| `Stop`              | `*StopSequence`         | `nil`   | Stop sequence(s) that halt token generation.                                                                                      |
+| `MaxTokens`         | `*uint64`               | `nil`   | Max output tokens. Different from max_completion_tokens in some providers.                                                        |
+| `PresencePenalty`   | `*float64`              | `nil`   | Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics.                                                          |
+| `FrequencyPenalty`  | `*float64`              | `nil`   | Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens.                                                         |
 | `LogitBias`         | `*map[string]float64`   | `nil`   | Token bias map. Uses `BTreeMap` (sorted keys) for deterministic serialization order — important when hashing or signing requests. |
-| `User`              | `*string`               | `nil`   | User                                                                                                                              |
-| `Tools`             | `*[]ChatCompletionTool` | `nil`   | Tools                                                                                                                             |
-| `ToolChoice`        | `*ToolChoice`           | `nil`   | Tool choice (tool choice)                                                                                                         |
-| `ParallelToolCalls` | `*bool`                 | `nil`   | Parallel tool calls                                                                                                               |
-| `ResponseFormat`    | `*ResponseFormat`       | `nil`   | Response format (response format)                                                                                                 |
-| `StreamOptions`     | `*StreamOptions`        | `nil`   | Stream options (stream options)                                                                                                   |
-| `Seed`              | `*int64`                | `nil`   | Seed                                                                                                                              |
-| `ReasoningEffort`   | `*ReasoningEffort`      | `nil`   | Reasoning effort (reasoning effort)                                                                                               |
+| `User`              | `*string`               | `nil`   | User identifier for request tracking and abuse detection.                                                                         |
+| `Tools`             | `*[]ChatCompletionTool` | `nil`   | Tools the model can invoke.                                                                                                       |
+| `ToolChoice`        | `*ToolChoice`           | `nil`   | Tool usage mode (auto, required, none, or specific tool).                                                                         |
+| `ParallelToolCalls` | `*bool`                 | `nil`   | Whether the model can call multiple tools in parallel. Defaults to true.                                                          |
+| `ResponseFormat`    | `*ResponseFormat`       | `nil`   | Output format constraint (text, JSON, JSON schema).                                                                               |
+| `StreamOptions`     | `*StreamOptions`        | `nil`   | Streaming options (e.g., include_usage).                                                                                          |
+| `Seed`              | `*int64`                | `nil`   | Random seed for reproducible outputs. Provider support varies.                                                                    |
+| `ReasoningEffort`   | `*ReasoningEffort`      | `nil`   | Reasoning effort level (low, medium, high) for extended-thinking models.                                                          |
 | `ExtraBody`         | `*interface{}`          | `nil`   | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc.      |
 
 ---
 
 #### ChatCompletionResponse
 
+Chat completion response from the API.
+
 | Field               | Type       | Default | Description                                                                                                                                      |
 | ------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Id`                | `string`   | —       | Unique identifier                                                                                                                                |
+| `Id`                | `string`   | —       | Unique identifier for this response.                                                                                                             |
 | `Object`            | `string`   | —       | Always `"chat.completion"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `Created`           | `uint64`   | —       | Created                                                                                                                                          |
-| `Model`             | `string`   | —       | Model                                                                                                                                            |
-| `Choices`           | `[]Choice` | `nil`   | Choices                                                                                                                                          |
-| `Usage`             | `*Usage`   | `nil`   | Usage (usage)                                                                                                                                    |
-| `SystemFingerprint` | `*string`  | `nil`   | System fingerprint                                                                                                                               |
-| `ServiceTier`       | `*string`  | `nil`   | Service tier                                                                                                                                     |
+| `Created`           | `uint64`   | —       | Unix timestamp of response creation.                                                                                                             |
+| `Model`             | `string`   | —       | Model used to generate the response.                                                                                                             |
+| `Choices`           | `[]Choice` | `nil`   | List of completion choices.                                                                                                                      |
+| `Usage`             | `*Usage`   | `nil`   | Token usage statistics.                                                                                                                          |
+| `SystemFingerprint` | `*string`  | `nil`   | Fingerprint of the system configuration (OpenAI-specific).                                                                                       |
+| `ServiceTier`       | `*string`  | `nil`   | Service tier used (OpenAI-specific).                                                                                                             |
 
 ---
 
 #### ChatCompletionTool
 
-| Field      | Type                 | Default | Description                    |
-| ---------- | -------------------- | ------- | ------------------------------ |
-| `ToolType` | `ToolType`           | —       | Tool type (tool type)          |
-| `Function` | `FunctionDefinition` | —       | Function (function definition) |
+A tool the model can invoke (currently, all tools are functions).
+
+| Field      | Type                 | Default | Description                                                             |
+| ---------- | -------------------- | ------- | ----------------------------------------------------------------------- |
+| `ToolType` | `ToolType`           | —       | Tool type (always "function" in OpenAI spec).                           |
+| `Function` | `FunctionDefinition` | —       | Function definition with name, description, and JSON schema parameters. |
 
 ---
 
 #### Choice
 
-| Field          | Type               | Default | Description                   |
-| -------------- | ------------------ | ------- | ----------------------------- |
-| `Index`        | `uint32`           | —       | Index                         |
-| `Message`      | `AssistantMessage` | —       | Message (assistant message)   |
-| `FinishReason` | `*FinishReason`    | `nil`   | Finish reason (finish reason) |
+A single completion choice.
+
+| Field          | Type               | Default | Description                                                                        |
+| -------------- | ------------------ | ------- | ---------------------------------------------------------------------------------- |
+| `Index`        | `uint32`           | —       | Index of this choice in the choices array.                                         |
+| `Message`      | `AssistantMessage` | —       | The assistant's message response.                                                  |
+| `FinishReason` | `*FinishReason`    | `nil`   | Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). |
 
 ---
 
 #### CreateBatchRequest
 
-| Field              | Type           | Default | Description       |
-| ------------------ | -------------- | ------- | ----------------- |
-| `InputFileId`      | `string`       | —       | Input file id     |
-| `Endpoint`         | `string`       | —       | Endpoint          |
-| `CompletionWindow` | `string`       | —       | Completion window |
-| `Metadata`         | `*interface{}` | `nil`   | Document metadata |
+Request to create a batch job.
+
+| Field              | Type           | Default | Description                                    |
+| ------------------ | -------------- | ------- | ---------------------------------------------- |
+| `InputFileId`      | `string`       | —       | ID of the uploaded input file (JSONL format).  |
+| `Endpoint`         | `string`       | —       | API endpoint (e.g., `"/v1/chat/completions"`). |
+| `CompletionWindow` | `string`       | —       | Completion window (e.g., `"24h"`).             |
+| `Metadata`         | `*interface{}` | `nil`   | Optional metadata to attach to the batch.      |
 
 ---
 
 #### CreateFileRequest
 
-| Field      | Type          | Default                  | Description               |
-| ---------- | ------------- | ------------------------ | ------------------------- |
-| `File`     | `string`      | —                        | Base64-encoded file data. |
-| `Purpose`  | `FilePurpose` | `FilePurpose.Assistants` | Purpose (file purpose)    |
-| `Filename` | `*string`     | `nil`                    | Filename                  |
+Request to upload a file.
+
+| Field      | Type          | Default                  | Description                                     |
+| ---------- | ------------- | ------------------------ | ----------------------------------------------- |
+| `File`     | `string`      | —                        | Base64-encoded file data.                       |
+| `Purpose`  | `FilePurpose` | `FilePurpose.Assistants` | Purpose for the file.                           |
+| `Filename` | `*string`     | `nil`                    | Optional filename to associate with the upload. |
 
 ---
 
@@ -244,30 +571,32 @@ func CreateClientFromJson(json string) (DefaultClient, error)
 
 Request to create images from a text prompt.
 
-| Field            | Type      | Default | Description     |
-| ---------------- | --------- | ------- | --------------- |
-| `Prompt`         | `string`  | —       | Prompt          |
-| `Model`          | `*string` | `nil`   | Model           |
-| `N`              | `*uint32` | `nil`   | N               |
-| `Size`           | `*string` | `nil`   | Size in bytes   |
-| `Quality`        | `*string` | `nil`   | Quality         |
-| `Style`          | `*string` | `nil`   | Style           |
-| `ResponseFormat` | `*string` | `nil`   | Response format |
-| `User`           | `*string` | `nil`   | User            |
+| Field            | Type      | Default | Description                                                            |
+| ---------------- | --------- | ------- | ---------------------------------------------------------------------- |
+| `Prompt`         | `string`  | —       | Text description of the image to generate.                             |
+| `Model`          | `*string` | `nil`   | Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset. |
+| `N`              | `*uint32` | `nil`   | Number of images to generate. Defaults to 1.                           |
+| `Size`           | `*string` | `nil`   | Image size (e.g., `"1024x1024"`, `"1792x1024"`).                       |
+| `Quality`        | `*string` | `nil`   | Image quality: `"standard"` or `"hd"`.                                 |
+| `Style`          | `*string` | `nil`   | Style: `"natural"` or `"vivid"` (DALL-E 3 only).                       |
+| `ResponseFormat` | `*string` | `nil`   | Response format: `"url"` or `"b64_json"`.                              |
+| `User`           | `*string` | `nil`   | User identifier for request tracking.                                  |
 
 ---
 
 #### CreateResponseRequest
 
-| Field             | Type              | Default | Description           |
-| ----------------- | ----------------- | ------- | --------------------- |
-| `Model`           | `string`          | —       | Model                 |
-| `Input`           | `interface{}`     | —       | Input                 |
-| `Instructions`    | `*string`         | `nil`   | Instructions          |
-| `Tools`           | `*[]ResponseTool` | `nil`   | Tools                 |
-| `Temperature`     | `*float64`        | `nil`   | Temperature           |
-| `MaxOutputTokens` | `*uint64`         | `nil`   | Maximum output tokens |
-| `Metadata`        | `*interface{}`    | `nil`   | Document metadata     |
+Request to create a structured response.
+
+| Field             | Type              | Default | Description                                               |
+| ----------------- | ----------------- | ------- | --------------------------------------------------------- |
+| `Model`           | `string`          | —       | Model ID.                                                 |
+| `Input`           | `interface{}`     | —       | Input data to process (e.g., a document to extract from). |
+| `Instructions`    | `*string`         | `nil`   | Instructions for processing the input.                    |
+| `Tools`           | `*[]ResponseTool` | `nil`   | Available tools the model can use.                        |
+| `Temperature`     | `*float64`        | `nil`   | Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0.    |
+| `MaxOutputTokens` | `*uint64`         | `nil`   | Maximum output tokens.                                    |
+| `Metadata`        | `*interface{}`    | `nil`   | Optional metadata.                                        |
 
 ---
 
@@ -275,13 +604,13 @@ Request to create images from a text prompt.
 
 Request to generate speech audio from text.
 
-| Field            | Type       | Default | Description     |
-| ---------------- | ---------- | ------- | --------------- |
-| `Model`          | `string`   | —       | Model           |
-| `Input`          | `string`   | —       | Input           |
-| `Voice`          | `string`   | —       | Voice           |
-| `ResponseFormat` | `*string`  | `nil`   | Response format |
-| `Speed`          | `*float64` | `nil`   | Speed           |
+| Field            | Type       | Default | Description                                                                         |
+| ---------------- | ---------- | ------- | ----------------------------------------------------------------------------------- |
+| `Model`          | `string`   | —       | Model ID (e.g., `"tts-1"`, `"tts-1-hd"`).                                           |
+| `Input`          | `string`   | —       | Text to synthesize into speech.                                                     |
+| `Voice`          | `string`   | —       | Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). |
+| `ResponseFormat` | `*string`  | `nil`   | Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`).        |
+| `Speed`          | `*float64` | `nil`   | Playback speed in `[0.25, 4.0]`. Defaults to 1.0.                                   |
 
 ---
 
@@ -289,14 +618,14 @@ Request to generate speech audio from text.
 
 Request to transcribe audio into text.
 
-| Field            | Type       | Default | Description                     |
-| ---------------- | ---------- | ------- | ------------------------------- |
-| `Model`          | `string`   | —       | Model                           |
-| `File`           | `string`   | —       | Base64-encoded audio file data. |
-| `Language`       | `*string`  | `nil`   | Language                        |
-| `Prompt`         | `*string`  | `nil`   | Prompt                          |
-| `ResponseFormat` | `*string`  | `nil`   | Response format                 |
-| `Temperature`    | `*float64` | `nil`   | Temperature                     |
+| Field            | Type       | Default | Description                                                                           |
+| ---------------- | ---------- | ------- | ------------------------------------------------------------------------------------- |
+| `Model`          | `string`   | —       | Model ID (e.g., `"whisper-1"`).                                                       |
+| `File`           | `string`   | —       | Base64-encoded audio file data.                                                       |
+| `Language`       | `*string`  | `nil`   | Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. |
+| `Prompt`         | `*string`  | `nil`   | Optional text to guide the model (improves accuracy for domain-specific terms).       |
+| `ResponseFormat` | `*string`  | `nil`   | Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`).         |
+| `Temperature`    | `*float64` | `nil`   | Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0.    |
 
 ---
 
@@ -521,24 +850,30 @@ func (o *DefaultClient) CancelResponse(id string) (ResponseObject, error)
 
 #### DeleteResponse
 
-| Field     | Type     | Default | Description       |
-| --------- | -------- | ------- | ----------------- |
-| `Id`      | `string` | —       | Unique identifier |
-| `Object`  | `string` | —       | Object            |
-| `Deleted` | `bool`   | —       | Deleted           |
+Response from a delete operation.
+
+| Field     | Type     | Default | Description                                 |
+| --------- | -------- | ------- | ------------------------------------------- |
+| `Id`      | `string` | —       | ID of the deleted resource.                 |
+| `Object`  | `string` | —       | Object type.                                |
+| `Deleted` | `bool`   | —       | Confirmation that the resource was deleted. |
 
 ---
 
 #### DeveloperMessage
 
-| Field     | Type      | Default | Description                |
-| --------- | --------- | ------- | -------------------------- |
-| `Content` | `string`  | —       | The extracted text content |
-| `Name`    | `*string` | `nil`   | The name                   |
+Developer message (system-like message for Claude models).
+
+| Field     | Type      | Default | Description                                     |
+| --------- | --------- | ------- | ----------------------------------------------- |
+| `Content` | `string`  | —       | Developer-specific instructions or context.     |
+| `Name`    | `*string` | `nil`   | Optional name for the developer message source. |
 
 ---
 
 #### DocumentContent
+
+PDF/document content part for vision-capable models.
 
 | Field       | Type     | Default | Description                                      |
 | ----------- | -------- | ------- | ------------------------------------------------ |
@@ -549,88 +884,104 @@ func (o *DefaultClient) CancelResponse(id string) (ResponseObject, error)
 
 #### EmbeddingObject
 
+A single embedding vector.
+
 | Field       | Type        | Default | Description                                                                                                                                |
 | ----------- | ----------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `Object`    | `string`    | —       | Always `"embedding"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `Embedding` | `[]float64` | —       | Embedding                                                                                                                                  |
-| `Index`     | `uint32`    | —       | Index                                                                                                                                      |
+| `Embedding` | `[]float64` | —       | The embedding vector.                                                                                                                      |
+| `Index`     | `uint32`    | —       | Index in the batch (corresponds to input order).                                                                                           |
 
 ---
 
 #### EmbeddingRequest
 
-| Field            | Type               | Default                 | Description                        |
-| ---------------- | ------------------ | ----------------------- | ---------------------------------- |
-| `Model`          | `string`           | —                       | Model                              |
-| `Input`          | `EmbeddingInput`   | `EmbeddingInput.Single` | Input (embedding input)            |
-| `EncodingFormat` | `*EmbeddingFormat` | `nil`                   | Encoding format (embedding format) |
-| `Dimensions`     | `*uint32`          | `nil`                   | Dimensions                         |
-| `User`           | `*string`          | `nil`                   | User                               |
+Embedding request.
+
+| Field            | Type               | Default                 | Description                                                 |
+| ---------------- | ------------------ | ----------------------- | ----------------------------------------------------------- |
+| `Model`          | `string`           | —                       | Model ID (e.g., `"text-embedding-3-small"`).                |
+| `Input`          | `EmbeddingInput`   | `EmbeddingInput.Single` | Text or texts to embed.                                     |
+| `EncodingFormat` | `*EmbeddingFormat` | `nil`                   | Output format: float (native) or base64.                    |
+| `Dimensions`     | `*uint32`          | `nil`                   | Requested embedding dimensions (if supported by the model). |
+| `User`           | `*string`          | `nil`                   | User identifier for request tracking.                       |
 
 ---
 
 #### EmbeddingResponse
 
+Embedding response.
+
 | Field    | Type                | Default | Description                                                                                                                           |
 | -------- | ------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `Object` | `string`            | —       | Always `"list"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `Data`   | `[]EmbeddingObject` | —       | Data                                                                                                                                  |
-| `Model`  | `string`            | —       | Model                                                                                                                                 |
-| `Usage`  | `*Usage`            | `nil`   | Usage (usage)                                                                                                                         |
+| `Data`   | `[]EmbeddingObject` | —       | List of embeddings.                                                                                                                   |
+| `Model`  | `string`            | —       | Model used to generate embeddings.                                                                                                    |
+| `Usage`  | `*Usage`            | `nil`   | Token usage (input tokens only; embeddings have zero output tokens).                                                                  |
 
 ---
 
 #### FileListQuery
 
-| Field     | Type      | Default | Description |
-| --------- | --------- | ------- | ----------- |
-| `Purpose` | `*string` | `nil`   | Purpose     |
-| `Limit`   | `*uint32` | `nil`   | Limit       |
-| `After`   | `*string` | `nil`   | After       |
+Query parameters for listing files.
+
+| Field     | Type      | Default | Description                                              |
+| --------- | --------- | ------- | -------------------------------------------------------- |
+| `Purpose` | `*string` | `nil`   | Filter by file purpose (e.g., `"batch"`, `"fine-tune"`). |
+| `Limit`   | `*uint32` | `nil`   | Maximum number of results to return. Defaults to 20.     |
+| `After`   | `*string` | `nil`   | Pagination cursor: return results after this file ID.    |
 
 ---
 
 #### FileListResponse
 
-| Field     | Type           | Default | Description  |
-| --------- | -------------- | ------- | ------------ |
-| `Object`  | `string`       | —       | Object       |
-| `Data`    | `[]FileObject` | `nil`   | Data         |
-| `HasMore` | `*bool`        | `nil`   | Whether more |
+Response from listing files.
+
+| Field     | Type           | Default | Description                         |
+| --------- | -------------- | ------- | ----------------------------------- |
+| `Object`  | `string`       | —       | Object type (always `"list"`).      |
+| `Data`    | `[]FileObject` | `nil`   | List of file objects.               |
+| `HasMore` | `*bool`        | `nil`   | Whether more results are available. |
 
 ---
 
 #### FileObject
 
-| Field       | Type      | Default | Description       |
-| ----------- | --------- | ------- | ----------------- |
-| `Id`        | `string`  | —       | Unique identifier |
-| `Object`    | `string`  | —       | Object            |
-| `Bytes`     | `uint64`  | —       | Bytes             |
-| `CreatedAt` | `uint64`  | —       | Created at        |
-| `Filename`  | `string`  | —       | Filename          |
-| `Purpose`   | `string`  | —       | Purpose           |
-| `Status`    | `*string` | `nil`   | Status            |
+An uploaded file object.
+
+| Field       | Type      | Default | Description                                            |
+| ----------- | --------- | ------- | ------------------------------------------------------ |
+| `Id`        | `string`  | —       | Unique file ID.                                        |
+| `Object`    | `string`  | —       | Object type (always `"file"`).                         |
+| `Bytes`     | `uint64`  | —       | File size in bytes.                                    |
+| `CreatedAt` | `uint64`  | —       | Unix timestamp of file creation.                       |
+| `Filename`  | `string`  | —       | Filename.                                              |
+| `Purpose`   | `string`  | —       | File purpose.                                          |
+| `Status`    | `*string` | `nil`   | Processing status (e.g., `"uploaded"`, `"processed"`). |
 
 ---
 
 #### FunctionCall
 
-| Field       | Type     | Default | Description |
-| ----------- | -------- | ------- | ----------- |
-| `Name`      | `string` | —       | The name    |
-| `Arguments` | `string` | —       | Arguments   |
+Function call details.
+
+| Field       | Type     | Default | Description                                                  |
+| ----------- | -------- | ------- | ------------------------------------------------------------ |
+| `Name`      | `string` | —       | Function name.                                               |
+| `Arguments` | `string` | —       | Arguments as a JSON string (parse with serde_json.from_str). |
 
 ---
 
 #### FunctionDefinition
 
-| Field         | Type           | Default | Description                |
-| ------------- | -------------- | ------- | -------------------------- |
-| `Name`        | `string`       | —       | The name                   |
-| `Description` | `*string`      | `nil`   | Human-readable description |
-| `Parameters`  | `*interface{}` | `nil`   | Parameters                 |
-| `Strict`      | `*bool`        | `nil`   | Strict                     |
+Function definition exposed to the model.
+
+| Field         | Type           | Default | Description                                                            |
+| ------------- | -------------- | ------- | ---------------------------------------------------------------------- |
+| `Name`        | `string`       | —       | Name of the function. Required and must be alphanumeric + underscores. |
+| `Description` | `*string`      | `nil`   | Human-readable description explaining what the function does.          |
+| `Parameters`  | `*interface{}` | `nil`   | JSON Schema defining the function's parameters.                        |
+| `Strict`      | `*bool`        | `nil`   | If true, enforce strict JSON schema validation for arguments.          |
 
 ---
 
@@ -649,20 +1000,22 @@ Deprecated legacy function-role message body.
 
 A single generated image, returned as either a URL or base64 data.
 
-| Field           | Type      | Default | Description    |
-| --------------- | --------- | ------- | -------------- |
-| `Url`           | `*string` | `nil`   | Url            |
-| `B64Json`       | `*string` | `nil`   | B64 json       |
-| `RevisedPrompt` | `*string` | `nil`   | Revised prompt |
+| Field           | Type      | Default | Description                                                    |
+| --------------- | --------- | ------- | -------------------------------------------------------------- |
+| `Url`           | `*string` | `nil`   | Image URL (if response_format was "url").                      |
+| `B64Json`       | `*string` | `nil`   | Base64-encoded image data (if response_format was "b64_json"). |
+| `RevisedPrompt` | `*string` | `nil`   | The final prompt used to generate the image (DALL-E 3).        |
 
 ---
 
 #### ImageUrl
 
-| Field    | Type           | Default | Description           |
-| -------- | -------------- | ------- | --------------------- |
-| `Url`    | `string`       | —       | Url                   |
-| `Detail` | `*ImageDetail` | `nil`   | Detail (image detail) |
+An image URL reference with optional detail level for processing.
+
+| Field    | Type           | Default | Description                                                              |
+| -------- | -------------- | ------- | ------------------------------------------------------------------------ |
+| `Url`    | `string`       | —       | URL of the image (data URI or HTTP/HTTPS URL).                           |
+| `Detail` | `*ImageDetail` | `nil`   | Detail level: low (512x512), high (2x2 tiles), or auto (model-selected). |
 
 ---
 
@@ -670,41 +1023,47 @@ A single generated image, returned as either a URL or base64 data.
 
 Response containing generated images.
 
-| Field     | Type      | Default | Description |
-| --------- | --------- | ------- | ----------- |
-| `Created` | `uint64`  | —       | Created     |
-| `Data`    | `[]Image` | `nil`   | Data        |
+| Field     | Type      | Default | Description                       |
+| --------- | --------- | ------- | --------------------------------- |
+| `Created` | `uint64`  | —       | Unix timestamp of image creation. |
+| `Data`    | `[]Image` | `nil`   | List of generated images.         |
 
 ---
 
 #### JsonSchemaFormat
 
-| Field         | Type          | Default | Description                |
-| ------------- | ------------- | ------- | -------------------------- |
-| `Name`        | `string`      | —       | The name                   |
-| `Description` | `*string`     | `nil`   | Human-readable description |
-| `Schema`      | `interface{}` | —       | Schema                     |
-| `Strict`      | `*bool`       | `nil`   | Strict                     |
+JSON Schema specification for constrained output.
+
+| Field         | Type          | Default | Description                                         |
+| ------------- | ------------- | ------- | --------------------------------------------------- |
+| `Name`        | `string`      | —       | Name of the schema (must be unique in the request). |
+| `Description` | `*string`     | `nil`   | Description of what the schema represents.          |
+| `Schema`      | `interface{}` | —       | JSON Schema object defining the output structure.   |
+| `Strict`      | `*bool`       | `nil`   | If true, enforce strict schema validation.          |
 
 ---
 
 #### ModelObject
 
+A model available from the API.
+
 | Field     | Type     | Default | Description                                                                                                                            |
 | --------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `Id`      | `string` | —       | Unique identifier                                                                                                                      |
+| `Id`      | `string` | —       | Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`).                                                                                    |
 | `Object`  | `string` | —       | Always `"model"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `Created` | `uint64` | —       | Created                                                                                                                                |
-| `OwnedBy` | `string` | —       | Owned by                                                                                                                               |
+| `Created` | `uint64` | —       | Unix timestamp of model creation (or release date).                                                                                    |
+| `OwnedBy` | `string` | —       | Organization or entity that owns the model.                                                                                            |
 
 ---
 
 #### ModelsListResponse
 
+Response listing available models.
+
 | Field    | Type            | Default | Description                                                                                                                           |
 | -------- | --------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `Object` | `string`        | —       | Always `"list"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `Data`   | `[]ModelObject` | `nil`   | Data                                                                                                                                  |
+| `Data`   | `[]ModelObject` | `nil`   | List of available models.                                                                                                             |
 
 ---
 
@@ -712,19 +1071,19 @@ Response containing generated images.
 
 Boolean flags for each moderation category.
 
-| Field                   | Type   | Default | Description            |
-| ----------------------- | ------ | ------- | ---------------------- |
-| `Sexual`                | `bool` | —       | Sexual                 |
-| `Hate`                  | `bool` | —       | Hate                   |
-| `Harassment`            | `bool` | —       | Harassment             |
-| `SelfHarm`              | `bool` | —       | Self harm              |
-| `SexualMinors`          | `bool` | —       | Sexual minors          |
-| `HateThreatening`       | `bool` | —       | Hate threatening       |
-| `ViolenceGraphic`       | `bool` | —       | Violence graphic       |
-| `SelfHarmIntent`        | `bool` | —       | Self harm intent       |
-| `SelfHarmInstructions`  | `bool` | —       | Self harm instructions |
-| `HarassmentThreatening` | `bool` | —       | Harassment threatening |
-| `Violence`              | `bool` | —       | Violence               |
+| Field                   | Type   | Default | Description                          |
+| ----------------------- | ------ | ------- | ------------------------------------ |
+| `Sexual`                | `bool` | —       | Sexual content.                      |
+| `Hate`                  | `bool` | —       | Hate speech.                         |
+| `Harassment`            | `bool` | —       | Harassment.                          |
+| `SelfHarm`              | `bool` | —       | Self-harm content.                   |
+| `SexualMinors`          | `bool` | —       | Sexual content involving minors.     |
+| `HateThreatening`       | `bool` | —       | Hate speech that threatens violence. |
+| `ViolenceGraphic`       | `bool` | —       | Graphic violence.                    |
+| `SelfHarmIntent`        | `bool` | —       | Intent to self-harm.                 |
+| `SelfHarmInstructions`  | `bool` | —       | Instructions for self-harm.          |
+| `HarassmentThreatening` | `bool` | —       | Harassment that threatens violence.  |
+| `Violence`              | `bool` | —       | Non-graphic violence.                |
 
 ---
 
@@ -732,19 +1091,19 @@ Boolean flags for each moderation category.
 
 Confidence scores for each moderation category.
 
-| Field                   | Type      | Default | Description            |
-| ----------------------- | --------- | ------- | ---------------------- |
-| `Sexual`                | `float64` | —       | Sexual                 |
-| `Hate`                  | `float64` | —       | Hate                   |
-| `Harassment`            | `float64` | —       | Harassment             |
-| `SelfHarm`              | `float64` | —       | Self harm              |
-| `SexualMinors`          | `float64` | —       | Sexual minors          |
-| `HateThreatening`       | `float64` | —       | Hate threatening       |
-| `ViolenceGraphic`       | `float64` | —       | Violence graphic       |
-| `SelfHarmIntent`        | `float64` | —       | Self harm intent       |
-| `SelfHarmInstructions`  | `float64` | —       | Self harm instructions |
-| `HarassmentThreatening` | `float64` | —       | Harassment threatening |
-| `Violence`              | `float64` | —       | Violence               |
+| Field                   | Type      | Default | Description                                |
+| ----------------------- | --------- | ------- | ------------------------------------------ |
+| `Sexual`                | `float64` | —       | Sexual content score.                      |
+| `Hate`                  | `float64` | —       | Hate speech score.                         |
+| `Harassment`            | `float64` | —       | Harassment score.                          |
+| `SelfHarm`              | `float64` | —       | Self-harm content score.                   |
+| `SexualMinors`          | `float64` | —       | Sexual content involving minors score.     |
+| `HateThreatening`       | `float64` | —       | Hate speech that threatens violence score. |
+| `ViolenceGraphic`       | `float64` | —       | Graphic violence score.                    |
+| `SelfHarmIntent`        | `float64` | —       | Intent to self-harm score.                 |
+| `SelfHarmInstructions`  | `float64` | —       | Instructions for self-harm score.          |
+| `HarassmentThreatening` | `float64` | —       | Harassment that threatens violence score.  |
+| `Violence`              | `float64` | —       | Non-graphic violence score.                |
 
 ---
 
@@ -752,10 +1111,10 @@ Confidence scores for each moderation category.
 
 Request to classify content for policy violations.
 
-| Field   | Type              | Default                  | Description              |
-| ------- | ----------------- | ------------------------ | ------------------------ |
-| `Input` | `ModerationInput` | `ModerationInput.Single` | Input (moderation input) |
-| `Model` | `*string`         | `nil`                    | Model                    |
+| Field   | Type              | Default                  | Description                                                                       |
+| ------- | ----------------- | ------------------------ | --------------------------------------------------------------------------------- |
+| `Input` | `ModerationInput` | `ModerationInput.Single` | Text or texts to check.                                                           |
+| `Model` | `*string`         | `nil`                    | Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset. |
 
 ---
 
@@ -763,11 +1122,11 @@ Request to classify content for policy violations.
 
 Response from the moderation endpoint.
 
-| Field     | Type                 | Default | Description       |
-| --------- | -------------------- | ------- | ----------------- |
-| `Id`      | `string`             | —       | Unique identifier |
-| `Model`   | `string`             | —       | Model             |
-| `Results` | `[]ModerationResult` | —       | Results           |
+| Field     | Type                 | Default | Description                                    |
+| --------- | -------------------- | ------- | ---------------------------------------------- |
+| `Id`      | `string`             | —       | Unique identifier for this moderation request. |
+| `Model`   | `string`             | —       | Model used for classification.                 |
+| `Results` | `[]ModerationResult` | —       | Results for each input string.                 |
 
 ---
 
@@ -775,11 +1134,11 @@ Response from the moderation endpoint.
 
 A single moderation classification result.
 
-| Field            | Type                       | Default | Description                                  |
-| ---------------- | -------------------------- | ------- | -------------------------------------------- |
-| `Flagged`        | `bool`                     | —       | Flagged                                      |
-| `Categories`     | `ModerationCategories`     | —       | Categories (moderation categories)           |
-| `CategoryScores` | `ModerationCategoryScores` | —       | Category scores (moderation category scores) |
+| Field            | Type                       | Default | Description                                 |
+| ---------------- | -------------------------- | ------- | ------------------------------------------- |
+| `Flagged`        | `bool`                     | —       | True if any category was flagged.           |
+| `Categories`     | `ModerationCategories`     | —       | Boolean flags for each moderation category. |
+| `CategoryScores` | `ModerationCategoryScores` | —       | Confidence scores for each category.        |
 
 ---
 
@@ -787,10 +1146,10 @@ A single moderation classification result.
 
 An image extracted from an OCR page.
 
-| Field         | Type      | Default | Description                |
-| ------------- | --------- | ------- | -------------------------- |
-| `Id`          | `string`  | —       | Unique image identifier.   |
-| `ImageBase64` | `*string` | `nil`   | Base64-encoded image data. |
+| Field         | Type      | Default | Description                                                     |
+| ------------- | --------- | ------- | --------------------------------------------------------------- |
+| `Id`          | `string`  | —       | Unique image identifier within the document.                    |
+| `ImageBase64` | `*string` | `nil`   | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -798,12 +1157,12 @@ An image extracted from an OCR page.
 
 A single page of OCR output.
 
-| Field        | Type              | Default | Description                                          |
-| ------------ | ----------------- | ------- | ---------------------------------------------------- |
-| `Index`      | `uint32`          | —       | Page index (0-based).                                |
-| `Markdown`   | `string`          | —       | Extracted content as Markdown.                       |
-| `Images`     | `*[]OcrImage`     | `nil`   | Extracted images, if `include_image_base64` was set. |
-| `Dimensions` | `*PageDimensions` | `nil`   | Page dimensions in pixels, if available.             |
+| Field        | Type              | Default | Description                                                                   |
+| ------------ | ----------------- | ------- | ----------------------------------------------------------------------------- |
+| `Index`      | `uint32`          | —       | Page index (0-based).                                                         |
+| `Markdown`   | `string`          | —       | Extracted page content as Markdown.                                           |
+| `Images`     | `*[]OcrImage`     | `nil`   | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `Dimensions` | `*PageDimensions` | `nil`   | Page dimensions in pixels, if available.                                      |
 
 ---
 
@@ -814,9 +1173,9 @@ An OCR request.
 | Field                | Type          | Default           | Description                                                      |
 | -------------------- | ------------- | ----------------- | ---------------------------------------------------------------- |
 | `Model`              | `string`      | —                 | The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). |
-| `Document`           | `OcrDocument` | `OcrDocument.Url` | The document to process.                                         |
+| `Document`           | `OcrDocument` | `OcrDocument.Url` | The document to process (URL or base64).                         |
 | `Pages`              | `*[]uint32`   | `nil`             | Specific pages to process (1-indexed). `nil` means all pages.    |
-| `IncludeImageBase64` | `*bool`       | `nil`             | Whether to include base64-encoded images of each page.           |
+| `IncludeImageBase64` | `*bool`       | `nil`             | Whether to include base64-encoded images of each processed page. |
 
 ---
 
@@ -826,8 +1185,8 @@ An OCR response.
 
 | Field   | Type        | Default | Description                               |
 | ------- | ----------- | ------- | ----------------------------------------- |
-| `Pages` | `[]OcrPage` | —       | Extracted pages.                          |
-| `Model` | `string`    | —       | The model used.                           |
+| `Pages` | `[]OcrPage` | —       | Extracted pages in order.                 |
+| `Model` | `string`    | —       | Model/provider used for OCR.              |
 | `Usage` | `*Usage`    | `nil`   | Token usage, if reported by the provider. |
 
 ---
@@ -859,17 +1218,55 @@ discounted rate and the remainder at the regular input rate.
 
 ---
 
+#### ProviderConfig
+
+Static configuration for a single provider entry in providers.json.
+
+| Field           | Type                 | Default | Description                                                                                                                                                                                                                                      |
+| --------------- | -------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Name`          | `string`             | —       | Provider identifier (matches the entry key in providers.json).                                                                                                                                                                                   |
+| `DisplayName`   | `*string`            | `nil`   | Human-readable provider name shown in UIs.                                                                                                                                                                                                       |
+| `BaseUrl`       | `*string`            | `nil`   | Base URL used as the default for this provider's HTTP client.                                                                                                                                                                                    |
+| `Auth`          | `*AuthConfig`        | `nil`   | Authentication scheme metadata (auth type + env var holding the key).                                                                                                                                                                            |
+| `Endpoints`     | `*[]string`          | `nil`   | Supported endpoint kinds (e.g. `chat`, `embeddings`).                                                                                                                                                                                            |
+| `ModelPrefixes` | `*[]string`          | `nil`   | Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`).                                                                                                                                                                           |
+| `ParamMappings` | `*map[string]string` | `nil`   | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`). Applied automatically by `ConfigDrivenProvider.transform_request`. |
+
+---
+
+#### RateLimitConfig
+
+Configuration for per-model rate limits.
+
+| Field    | Type            | Default   | Description                                         |
+| -------- | --------------- | --------- | --------------------------------------------------- |
+| `Rpm`    | `*uint32`       | `nil`     | Maximum requests per window. `nil` means unlimited. |
+| `Tpm`    | `*uint64`       | `nil`     | Maximum tokens per window. `nil` means unlimited.   |
+| `Window` | `time.Duration` | `60000ms` | Fixed window duration (defaults to 60 s).           |
+
+##### Methods
+
+###### Default()
+
+**Signature:**
+
+```go
+func (o *RateLimitConfig) Default() RateLimitConfig
+```
+
+---
+
 #### RerankRequest
 
 Request to rerank documents by relevance to a query.
 
-| Field             | Type               | Default | Description      |
-| ----------------- | ------------------ | ------- | ---------------- |
-| `Model`           | `string`           | —       | Model            |
-| `Query`           | `string`           | —       | Query            |
-| `Documents`       | `[]RerankDocument` | `nil`   | Documents        |
-| `TopN`            | `*uint32`          | `nil`   | Top n            |
-| `ReturnDocuments` | `*bool`            | `nil`   | Return documents |
+| Field             | Type               | Default | Description                                                 |
+| ----------------- | ------------------ | ------- | ----------------------------------------------------------- |
+| `Model`           | `string`           | —       | Model ID (e.g., `"cohere/rerank-english-v3.0"`).            |
+| `Query`           | `string`           | —       | The search query.                                           |
+| `Documents`       | `[]RerankDocument` | `nil`   | Documents to rerank.                                        |
+| `TopN`            | `*uint32`          | `nil`   | Return only the top N results. Optional.                    |
+| `ReturnDocuments` | `*bool`            | `nil`   | Include the document content in results. Defaults to false. |
 
 ---
 
@@ -877,11 +1274,11 @@ Request to rerank documents by relevance to a query.
 
 Response from the rerank endpoint.
 
-| Field     | Type             | Default | Description       |
-| --------- | ---------------- | ------- | ----------------- |
-| `Id`      | `*string`        | `nil`   | Unique identifier |
-| `Results` | `[]RerankResult` | —       | Results           |
-| `Meta`    | `*interface{}`   | `nil`   | Meta              |
+| Field     | Type             | Default | Description                                      |
+| --------- | ---------------- | ------- | ------------------------------------------------ |
+| `Id`      | `*string`        | `nil`   | Unique identifier for this rerank request.       |
+| `Results` | `[]RerankResult` | —       | Reranked documents in order of relevance.        |
+| `Meta`    | `*interface{}`   | `nil`   | Optional metadata about the reranking operation. |
 
 ---
 
@@ -889,11 +1286,11 @@ Response from the rerank endpoint.
 
 A single reranked document with its relevance score.
 
-| Field            | Type                    | Default | Description                       |
-| ---------------- | ----------------------- | ------- | --------------------------------- |
-| `Index`          | `uint32`                | —       | Index                             |
-| `RelevanceScore` | `float64`               | —       | Relevance score                   |
-| `Document`       | `*RerankResultDocument` | `nil`   | Document (rerank result document) |
+| Field            | Type                    | Default | Description                                                  |
+| ---------------- | ----------------------- | ------- | ------------------------------------------------------------ |
+| `Index`          | `uint32`                | —       | Original document index in the input list.                   |
+| `RelevanceScore` | `float64`               | —       | Relevance score in `[0, 1]`. Higher indicates more relevant. |
+| `Document`       | `*RerankResultDocument` | `nil`   | Original document content (if `return_documents` was true).  |
 
 ---
 
@@ -901,52 +1298,60 @@ A single reranked document with its relevance score.
 
 The text content of a reranked document, returned when `return_documents` is true.
 
-| Field  | Type     | Default | Description |
-| ------ | -------- | ------- | ----------- |
-| `Text` | `string` | —       | Text        |
+| Field  | Type     | Default | Description    |
+| ------ | -------- | ------- | -------------- |
+| `Text` | `string` | —       | Document text. |
 
 ---
 
 #### ResponseObject
 
-| Field       | Type                   | Default | Description            |
-| ----------- | ---------------------- | ------- | ---------------------- |
-| `Id`        | `string`               | —       | Unique identifier      |
-| `Object`    | `string`               | —       | Object                 |
-| `CreatedAt` | `uint64`               | —       | Created at             |
-| `Model`     | `string`               | —       | Model                  |
-| `Status`    | `string`               | —       | Status                 |
-| `Output`    | `[]ResponseOutputItem` | `nil`   | Output                 |
-| `Usage`     | `*ResponseUsage`       | `nil`   | Usage (response usage) |
-| `Error`     | `*interface{}`         | `nil`   | Error                  |
+Response from a structured response request.
+
+| Field       | Type                   | Default | Description                               |
+| ----------- | ---------------------- | ------- | ----------------------------------------- |
+| `Id`        | `string`               | —       | Unique response ID.                       |
+| `Object`    | `string`               | —       | Object type (e.g., `"response"`).         |
+| `CreatedAt` | `uint64`               | —       | Unix timestamp of response creation.      |
+| `Model`     | `string`               | —       | Model used to generate the response.      |
+| `Status`    | `string`               | —       | Status (e.g., `"succeeded"`, `"failed"`). |
+| `Output`    | `[]ResponseOutputItem` | `nil`   | Output items from the response.           |
+| `Usage`     | `*ResponseUsage`       | `nil`   | Token usage.                              |
+| `Error`     | `*interface{}`         | `nil`   | Error details (if status is "failed").    |
 
 ---
 
 #### ResponseOutputItem
 
-| Field      | Type          | Default | Description                |
-| ---------- | ------------- | ------- | -------------------------- |
-| `ItemType` | `string`      | —       | Item type                  |
-| `Content`  | `interface{}` | —       | The extracted text content |
+A single output item from the response.
+
+| Field      | Type          | Default | Description                                          |
+| ---------- | ------------- | ------- | ---------------------------------------------------- |
+| `ItemType` | `string`      | —       | Output type (e.g., `"text"`, `"object"`, `"error"`). |
+| `Content`  | `interface{}` | —       | Output content (flattened into the object).          |
 
 ---
 
 #### ResponseTool
 
-| Field      | Type          | Default | Description |
-| ---------- | ------------- | ------- | ----------- |
-| `ToolType` | `string`      | —       | Tool type   |
-| `Config`   | `interface{}` | —       | Config      |
+A tool available for the response request.
+
+| Field      | Type          | Default | Description                                     |
+| ---------- | ------------- | ------- | ----------------------------------------------- |
+| `ToolType` | `string`      | —       | Tool type (e.g., "extractor", "search").        |
+| `Config`   | `interface{}` | —       | Tool configuration (flattened into the object). |
 
 ---
 
 #### ResponseUsage
 
-| Field          | Type     | Default | Description   |
-| -------------- | -------- | ------- | ------------- |
-| `InputTokens`  | `uint64` | —       | Input tokens  |
-| `OutputTokens` | `uint64` | —       | Output tokens |
-| `TotalTokens`  | `uint64` | —       | Total tokens  |
+Token usage for a response.
+
+| Field          | Type     | Default | Description         |
+| -------------- | -------- | ------- | ------------------- |
+| `InputTokens`  | `uint64` | —       | Input tokens used.  |
+| `OutputTokens` | `uint64` | —       | Output tokens used. |
+| `TotalTokens`  | `uint64` | —       | Total tokens used.  |
 
 ---
 
@@ -954,13 +1359,13 @@ The text content of a reranked document, returned when `return_documents` is tru
 
 A search request.
 
-| Field                | Type        | Default | Description                                                               |
-| -------------------- | ----------- | ------- | ------------------------------------------------------------------------- |
-| `Model`              | `string`    | —       | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). |
-| `Query`              | `string`    | —       | The search query.                                                         |
-| `MaxResults`         | `*uint32`   | `nil`   | Maximum number of results to return.                                      |
-| `SearchDomainFilter` | `*[]string` | `nil`   | Domain filter — restrict results to specific domains.                     |
-| `Country`            | `*string`   | `nil`   | Country code for localized results (ISO 3166-1 alpha-2).                  |
+| Field                | Type        | Default | Description                                                                    |
+| -------------------- | ----------- | ------- | ------------------------------------------------------------------------------ |
+| `Model`              | `string`    | —       | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`).      |
+| `Query`              | `string`    | —       | The search query string.                                                       |
+| `MaxResults`         | `*uint32`   | `nil`   | Maximum number of results to return.                                           |
+| `SearchDomainFilter` | `*[]string` | `nil`   | Domain filter — restrict results to specific domains.                          |
+| `Country`            | `*string`   | `nil`   | Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). |
 
 ---
 
@@ -968,10 +1373,10 @@ A search request.
 
 A search response.
 
-| Field     | Type             | Default | Description         |
-| --------- | ---------------- | ------- | ------------------- |
-| `Results` | `[]SearchResult` | —       | The search results. |
-| `Model`   | `string`         | —       | The model used.     |
+| Field     | Type             | Default | Description                               |
+| --------- | ---------------- | ------- | ----------------------------------------- |
+| `Results` | `[]SearchResult` | —       | List of search results.                   |
+| `Model`   | `string`         | —       | Model/provider that performed the search. |
 
 ---
 
@@ -981,106 +1386,126 @@ An individual search result.
 
 | Field     | Type      | Default | Description                                     |
 | --------- | --------- | ------- | ----------------------------------------------- |
-| `Title`   | `string`  | —       | Title of the result.                            |
-| `Url`     | `string`  | —       | URL of the result.                              |
-| `Snippet` | `string`  | —       | Text snippet / excerpt.                         |
+| `Title`   | `string`  | —       | Result title.                                   |
+| `Url`     | `string`  | —       | Result URL.                                     |
+| `Snippet` | `string`  | —       | Text snippet or excerpt from the page.          |
 | `Date`    | `*string` | `nil`   | Publication or last-updated date, if available. |
 
 ---
 
 #### SpecificFunction
 
-| Field  | Type     | Default | Description |
-| ------ | -------- | ------- | ----------- |
-| `Name` | `string` | —       | The name    |
+Name of the specific function to invoke.
+
+| Field  | Type     | Default | Description    |
+| ------ | -------- | ------- | -------------- |
+| `Name` | `string` | —       | Function name. |
 
 ---
 
 #### SpecificToolChoice
 
-| Field        | Type               | Default             | Description                  |
-| ------------ | ------------------ | ------------------- | ---------------------------- |
-| `ChoiceType` | `ToolType`         | `ToolType.Function` | Choice type (tool type)      |
-| `Function`   | `SpecificFunction` | —                   | Function (specific function) |
+Directive to call a specific tool.
+
+| Field        | Type               | Default             | Description                      |
+| ------------ | ------------------ | ------------------- | -------------------------------- |
+| `ChoiceType` | `ToolType`         | `ToolType.Function` | Tool type (always "function").   |
+| `Function`   | `SpecificFunction` | —                   | The specific function to invoke. |
 
 ---
 
 #### StreamChoice
 
-| Field          | Type            | Default | Description                   |
-| -------------- | --------------- | ------- | ----------------------------- |
-| `Index`        | `uint32`        | —       | Index                         |
-| `Delta`        | `StreamDelta`   | —       | Delta (stream delta)          |
-| `FinishReason` | `*FinishReason` | `nil`   | Finish reason (finish reason) |
+A streaming choice with incremental delta.
+
+| Field          | Type            | Default | Description                                                    |
+| -------------- | --------------- | ------- | -------------------------------------------------------------- |
+| `Index`        | `uint32`        | —       | Index of this choice in the choices array.                     |
+| `Delta`        | `StreamDelta`   | —       | Incremental update to the message (content, tool calls, etc.). |
+| `FinishReason` | `*FinishReason` | `nil`   | Why the stream ended (present only in final chunk).            |
 
 ---
 
 #### StreamDelta
 
+Incremental delta in a stream chunk.
+
 | Field          | Type                  | Default | Description                                                            |
 | -------------- | --------------------- | ------- | ---------------------------------------------------------------------- |
-| `Role`         | `*string`             | `nil`   | Role                                                                   |
-| `Content`      | `*string`             | `nil`   | The extracted text content                                             |
-| `ToolCalls`    | `*[]StreamToolCall`   | `nil`   | Tool calls                                                             |
+| `Role`         | `*string`             | `nil`   | Role (typically present only in the first chunk).                      |
+| `Content`      | `*string`             | `nil`   | Partial content chunk (e.g., a few words of the response).             |
+| `ToolCalls`    | `*[]StreamToolCall`   | `nil`   | Partial tool calls being streamed.                                     |
 | `FunctionCall` | `*StreamFunctionCall` | `nil`   | Deprecated legacy function_call delta; retained for API compatibility. |
-| `Refusal`      | `*string`             | `nil`   | Refusal                                                                |
+| `Refusal`      | `*string`             | `nil`   | Partial refusal message.                                               |
 
 ---
 
 #### StreamFunctionCall
 
-| Field       | Type      | Default | Description |
-| ----------- | --------- | ------- | ----------- |
-| `Name`      | `*string` | `nil`   | The name    |
-| `Arguments` | `*string` | `nil`   | Arguments   |
+Partial function call details in a stream.
+
+| Field       | Type      | Default | Description                                   |
+| ----------- | --------- | ------- | --------------------------------------------- |
+| `Name`      | `*string` | `nil`   | Function name (typically in the first chunk). |
+| `Arguments` | `*string` | `nil`   | Partial JSON arguments chunk.                 |
 
 ---
 
 #### StreamOptions
 
-| Field          | Type    | Default | Description   |
-| -------------- | ------- | ------- | ------------- |
-| `IncludeUsage` | `*bool` | `nil`   | Include usage |
+Options for streaming responses.
+
+| Field          | Type    | Default | Description                                             |
+| -------------- | ------- | ------- | ------------------------------------------------------- |
+| `IncludeUsage` | `*bool` | `nil`   | If true, include token usage in the final stream chunk. |
 
 ---
 
 #### StreamToolCall
 
-| Field      | Type                  | Default | Description                     |
-| ---------- | --------------------- | ------- | ------------------------------- |
-| `Index`    | `uint32`              | —       | Index                           |
-| `Id`       | `*string`             | `nil`   | Unique identifier               |
-| `CallType` | `*ToolType`           | `nil`   | Call type (tool type)           |
-| `Function` | `*StreamFunctionCall` | `nil`   | Function (stream function call) |
+A streaming tool call being built incrementally.
+
+| Field      | Type                  | Default | Description                                                |
+| ---------- | --------------------- | ------- | ---------------------------------------------------------- |
+| `Index`    | `uint32`              | —       | Index of this tool call in the tool_calls array.           |
+| `Id`       | `*string`             | `nil`   | Tool call ID (typically in the first chunk for this call). |
+| `CallType` | `*ToolType`           | `nil`   | Tool type (typically "function").                          |
+| `Function` | `*StreamFunctionCall` | `nil`   | Partial function name and arguments.                       |
 
 ---
 
 #### SystemMessage
 
-| Field     | Type      | Default | Description                |
-| --------- | --------- | ------- | -------------------------- |
-| `Content` | `string`  | —       | The extracted text content |
-| `Name`    | `*string` | `nil`   | The name                   |
+System message guiding model behavior for the entire conversation.
+
+| Field     | Type      | Default | Description                                                     |
+| --------- | --------- | ------- | --------------------------------------------------------------- |
+| `Content` | `string`  | —       | Instructions or context that apply throughout the conversation. |
+| `Name`    | `*string` | `nil`   | Optional name for the system message source.                    |
 
 ---
 
 #### ToolCall
 
-| Field      | Type           | Default | Description              |
-| ---------- | -------------- | ------- | ------------------------ |
-| `Id`       | `string`       | —       | Unique identifier        |
-| `CallType` | `ToolType`     | —       | Call type (tool type)    |
-| `Function` | `FunctionCall` | —       | Function (function call) |
+A tool call the model wants to execute.
+
+| Field      | Type           | Default | Description                                                         |
+| ---------- | -------------- | ------- | ------------------------------------------------------------------- |
+| `Id`       | `string`       | —       | Unique ID for this call, used to reference in tool result messages. |
+| `CallType` | `ToolType`     | —       | Tool type (always "function").                                      |
+| `Function` | `FunctionCall` | —       | Function name and arguments.                                        |
 
 ---
 
 #### ToolMessage
 
-| Field        | Type      | Default | Description                |
-| ------------ | --------- | ------- | -------------------------- |
-| `Content`    | `string`  | —       | The extracted text content |
-| `ToolCallId` | `string`  | —       | Tool call id               |
-| `Name`       | `*string` | `nil`   | The name                   |
+Tool execution result returned to the model.
+
+| Field        | Type      | Default | Description                                  |
+| ------------ | --------- | ------- | -------------------------------------------- |
+| `Content`    | `string`  | —       | Result of the tool execution.                |
+| `ToolCallId` | `string`  | —       | ID of the tool call this result responds to. |
+| `Name`       | `*string` | `nil`   | Optional tool/function name.                 |
 
 ---
 
@@ -1088,12 +1513,12 @@ An individual search result.
 
 Response from a transcription request.
 
-| Field      | Type                      | Default | Description |
-| ---------- | ------------------------- | ------- | ----------- |
-| `Text`     | `string`                  | —       | Text        |
-| `Language` | `*string`                 | `nil`   | Language    |
-| `Duration` | `*float64`                | `nil`   | Duration    |
-| `Segments` | `*[]TranscriptionSegment` | `nil`   | Segments    |
+| Field      | Type                      | Default | Description                                                                  |
+| ---------- | ------------------------- | ------- | ---------------------------------------------------------------------------- |
+| `Text`     | `string`                  | —       | The transcribed text.                                                        |
+| `Language` | `*string`                 | `nil`   | Detected language (ISO-639-1 code).                                          |
+| `Duration` | `*float64`                | `nil`   | Total audio duration in seconds.                                             |
+| `Segments` | `*[]TranscriptionSegment` | `nil`   | Detailed segment-level transcription (if response_format is "verbose_json"). |
 
 ---
 
@@ -1101,16 +1526,18 @@ Response from a transcription request.
 
 A segment of transcribed audio with timing information.
 
-| Field   | Type      | Default | Description       |
-| ------- | --------- | ------- | ----------------- |
-| `Id`    | `uint32`  | —       | Unique identifier |
-| `Start` | `float64` | —       | Start             |
-| `End`   | `float64` | —       | End               |
-| `Text`  | `string`  | —       | Text              |
+| Field   | Type      | Default | Description                        |
+| ------- | --------- | ------- | ---------------------------------- |
+| `Id`    | `uint32`  | —       | Segment index (0-based).           |
+| `Start` | `float64` | —       | Start time in seconds.             |
+| `End`   | `float64` | —       | End time in seconds.               |
+| `Text`  | `string`  | —       | Transcribed text for this segment. |
 
 ---
 
 #### Usage
+
+Token-usage accounting returned by the provider on each completion / embedding call.
 
 | Field                 | Type                   | Default | Description                                                                                                                                                                         |
 | --------------------- | ---------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1123,10 +1550,12 @@ A segment of transcribed audio with timing information.
 
 #### UserMessage
 
-| Field     | Type          | Default            | Description                |
-| --------- | ------------- | ------------------ | -------------------------- |
-| `Content` | `UserContent` | `UserContent.Text` | The extracted text content |
-| `Name`    | `*string`     | `nil`              | The name                   |
+User message in the conversation.
+
+| Field     | Type          | Default            | Description                                                                               |
+| --------- | ------------- | ------------------ | ----------------------------------------------------------------------------------------- |
+| `Content` | `UserContent` | `UserContent.Text` | Message content as plain text or array of content parts (text, images, documents, audio). |
+| `Name`    | `*string`     | `nil`              | Optional name for the user.                                                               |
 
 ---
 
@@ -1149,31 +1578,37 @@ A chat message in a conversation.
 
 #### UserContent
 
-| Value   | Description                          |
-| ------- | ------------------------------------ |
-| `Text`  | Text format — Fields: `0`: `string`  |
-| `Parts` | Parts — Fields: `0`: `[]ContentPart` |
+User message content as either plain text or a list of multimodal parts.
+
+| Value   | Description                                                                             |
+| ------- | --------------------------------------------------------------------------------------- |
+| `Text`  | Plain text content. — Fields: `0`: `string`                                             |
+| `Parts` | Array of content parts (text, images, documents, audio). — Fields: `0`: `[]ContentPart` |
 
 ---
 
 #### ContentPart
 
-| Value        | Description                                        |
-| ------------ | -------------------------------------------------- |
-| `Text`       | Text format — Fields: `Text`: `string`             |
-| `ImageUrl`   | Image url — Fields: `ImageUrl`: `ImageUrl`         |
-| `Document`   | Document — Fields: `Document`: `DocumentContent`   |
-| `InputAudio` | Input audio — Fields: `InputAudio`: `AudioContent` |
+A single content part in a user message — text, image, document, or audio.
+
+| Value        | Description                                                                              |
+| ------------ | ---------------------------------------------------------------------------------------- |
+| `Text`       | Plain text. — Fields: `Text`: `string`                                                   |
+| `ImageUrl`   | Image identified by URL (with optional detail level). — Fields: `ImageUrl`: `ImageUrl`   |
+| `Document`   | Document file (PDF, CSV, etc.) as base64 or URL. — Fields: `Document`: `DocumentContent` |
+| `InputAudio` | Audio input as base64. — Fields: `InputAudio`: `AudioContent`                            |
 
 ---
 
 #### ImageDetail
 
-| Value  | Description |
-| ------ | ----------- |
-| `Low`  | Low         |
-| `High` | High        |
-| `Auto` | Auto        |
+Image detail level controlling token cost and processing.
+
+| Value  | Description                                                        |
+| ------ | ------------------------------------------------------------------ |
+| `Low`  | Low detail: scales image to 512x512, uses fewer tokens.            |
+| `High` | High detail: processes up to 2x2 grid of tiles, higher token cost. |
+| `Auto` | Auto: model chooses low or high based on image dimensions.         |
 
 ---
 
@@ -1193,39 +1628,47 @@ deserialization.
 
 #### ToolChoice
 
-| Value      | Description                                  |
-| ---------- | -------------------------------------------- |
-| `Mode`     | Mode — Fields: `0`: `ToolChoiceMode`         |
-| `Specific` | Specific — Fields: `0`: `SpecificToolChoice` |
+Tool usage mode or a specific tool to call.
+
+| Value      | Description                                                               |
+| ---------- | ------------------------------------------------------------------------- |
+| `Mode`     | Predefined mode: auto, required, or none. — Fields: `0`: `ToolChoiceMode` |
+| `Specific` | Force a specific tool to be called. — Fields: `0`: `SpecificToolChoice`   |
 
 ---
 
 #### ToolChoiceMode
 
-| Value      | Description |
-| ---------- | ----------- |
-| `Auto`     | Auto        |
-| `Required` | Required    |
-| `None`     | None        |
+Tool choice mode.
+
+| Value      | Description                                        |
+| ---------- | -------------------------------------------------- |
+| `Auto`     | Model may or may not call tools; default behavior. |
+| `Required` | Model must call at least one tool.                 |
+| `None`     | Model must not call any tools.                     |
 
 ---
 
 #### ResponseFormat
 
-| Value        | Description                                            |
-| ------------ | ------------------------------------------------------ |
-| `Text`       | Text format                                            |
-| `JsonObject` | Json object                                            |
-| `JsonSchema` | Json schema — Fields: `JsonSchema`: `JsonSchemaFormat` |
+Response format constraint.
+
+| Value        | Description                                                                                  |
+| ------------ | -------------------------------------------------------------------------------------------- |
+| `Text`       | Plain text output (default).                                                                 |
+| `JsonObject` | Output must be valid JSON object (no schema validation).                                     |
+| `JsonSchema` | Output must conform to the specified JSON schema. — Fields: `JsonSchema`: `JsonSchemaFormat` |
 
 ---
 
 #### StopSequence
 
-| Value      | Description                        |
-| ---------- | ---------------------------------- |
-| `Single`   | Single — Fields: `0`: `string`     |
-| `Multiple` | Multiple — Fields: `0`: `[]string` |
+Stop sequence(s) that cause the model to stop generating.
+
+| Value      | Description                                        |
+| ---------- | -------------------------------------------------- |
+| `Single`   | Single stop sequence. — Fields: `0`: `string`      |
+| `Multiple` | Multiple stop sequences. — Fields: `0`: `[]string` |
 
 ---
 
@@ -1269,10 +1712,12 @@ The format in which the embedding vectors are returned.
 
 #### EmbeddingInput
 
-| Value      | Description                        |
-| ---------- | ---------------------------------- |
-| `Single`   | Single — Fields: `0`: `string`     |
-| `Multiple` | Multiple — Fields: `0`: `[]string` |
+Text or texts to embed.
+
+| Value      | Description                                                        |
+| ---------- | ------------------------------------------------------------------ |
+| `Single`   | Single text string. — Fields: `0`: `string`                        |
+| `Multiple` | Multiple text strings (batch embedding). — Fields: `0`: `[]string` |
 
 ---
 
@@ -1280,10 +1725,10 @@ The format in which the embedding vectors are returned.
 
 Input to the moderation endpoint — a single string or multiple strings.
 
-| Value      | Description                        |
-| ---------- | ---------------------------------- |
-| `Single`   | Single — Fields: `0`: `string`     |
-| `Multiple` | Multiple — Fields: `0`: `[]string` |
+| Value      | Description                                                         |
+| ---------- | ------------------------------------------------------------------- |
+| `Single`   | Single text string. — Fields: `0`: `string`                         |
+| `Multiple` | Multiple text strings (batch moderation). — Fields: `0`: `[]string` |
 
 ---
 
@@ -1291,10 +1736,10 @@ Input to the moderation endpoint — a single string or multiple strings.
 
 A document to be reranked — either a plain string or an object with a text field.
 
-| Value    | Description                         |
-| -------- | ----------------------------------- |
-| `Text`   | Text format — Fields: `0`: `string` |
-| `Object` | Object — Fields: `Text`: `string`   |
+| Value    | Description                                                                          |
+| -------- | ------------------------------------------------------------------------------------ |
+| `Text`   | Plain text document content. — Fields: `0`: `string`                                 |
+| `Object` | Document with explicit text field (may include metadata). — Fields: `Text`: `string` |
 
 ---
 
@@ -1311,27 +1756,31 @@ Document input for OCR — either a URL or inline base64 data.
 
 #### FilePurpose
 
-| Value        | Description |
-| ------------ | ----------- |
-| `Assistants` | Assistants  |
-| `Batch`      | Batch       |
-| `FineTune`   | Fine tune   |
-| `Vision`     | Vision      |
+Purpose of an uploaded file.
+
+| Value        | Description                       |
+| ------------ | --------------------------------- |
+| `Assistants` | File for use with Assistants API. |
+| `Batch`      | File for batch processing.        |
+| `FineTune`   | File for fine-tuning.             |
+| `Vision`     | File for vision/image tasks.      |
 
 ---
 
 #### BatchStatus
 
-| Value        | Description |
-| ------------ | ----------- |
-| `Validating` | Validating  |
-| `Failed`     | Failed      |
-| `InProgress` | In progress |
-| `Finalizing` | Finalizing  |
-| `Completed`  | Completed   |
-| `Expired`    | Expired     |
-| `Cancelling` | Cancelling  |
-| `Cancelled`  | Cancelled   |
+Status of a batch job.
+
+| Value        | Description                    |
+| ------------ | ------------------------------ |
+| `Validating` | Validating the input file.     |
+| `Failed`     | Job failed.                    |
+| `InProgress` | Job is running.                |
+| `Finalizing` | Finalizing results.            |
+| `Completed`  | Job completed successfully.    |
+| `Expired`    | Job expired before completion. |
+| `Cancelling` | Job is being cancelled.        |
+| `Cancelled`  | Job has been cancelled.        |
 
 ---
 
@@ -1344,6 +1793,41 @@ How the API key is sent in the HTTP request.
 | `Bearer` | Bearer token: `Authorization: Bearer <key>`                     |
 | `ApiKey` | Custom header: e.g., `X-Api-Key: <key>` — Fields: `0`: `string` |
 | `None`   | No authentication required.                                     |
+
+---
+
+#### AuthType
+
+Auth scheme used by a provider.
+
+| Value     | Description                                                                    |
+| --------- | ------------------------------------------------------------------------------ |
+| `Bearer`  | Standard `Authorization: Bearer <key>` header.                                 |
+| `ApiKey`  | `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). |
+| `None`    | No authentication header required.                                             |
+| `Unknown` | Unrecognised auth scheme — falls back to bearer.                               |
+
+---
+
+#### Enforcement
+
+How budget limits are enforced.
+
+| Value  | Description                                                                       |
+| ------ | --------------------------------------------------------------------------------- |
+| `Hard` | Reject requests that would exceed the budget with `LiterLlmError.BudgetExceeded`. |
+| `Soft` | Allow requests through but emit a `tracing.warn!` when the budget is exceeded.    |
+
+---
+
+#### CacheBackend
+
+Storage backend for the response cache.
+
+| Value     | Description                                                                                                                                 |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Memory`  | In-memory LRU cache (default). No external dependencies.                                                                                    |
+| `OpenDal` | OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.). — Fields: `Scheme`: `string`, `Config`: `map[string]string` |
 
 ---
 

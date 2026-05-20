@@ -5285,7 +5285,7 @@ pub fn unregister_custom_provider(name: String) -> PyResult<bool> {
 #[pyo3(signature = ())]
 pub fn all_providers() -> PyResult<Vec<ProviderConfig>> {
     liter_llm::provider::all_providers()
-        .map(|val| val.into_iter().map(|v| v.clone().into()).collect())
+        .map(|val| val.iter().map(|v| v.clone().into()).collect())
         .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
 }
 

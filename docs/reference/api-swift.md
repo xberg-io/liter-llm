@@ -68,21 +68,272 @@ public static func createClientFromJson(json: String) throws -> DefaultClient
 
 ---
 
+#### registerCustomProvider()
+
+Register a custom provider in the global runtime registry.
+
+The provider will be checked **before** all built-in providers during model
+detection. If a provider with the same `name` already exists it is replaced.
+
+**Errors:**
+
+Returns an error if the config is invalid (empty name, empty base_url, or
+no model prefixes).
+
+**Signature:**
+
+```swift
+public static func registerCustomProvider(config: CustomProviderConfig) throws
+```
+
+**Parameters:**
+
+| Name     | Type                   | Required | Description               |
+| -------- | ---------------------- | -------- | ------------------------- |
+| `config` | `CustomProviderConfig` | Yes      | The configuration options |
+
+**Returns:** `Void`
+**Errors:** Throws `Error`.
+
+---
+
+#### unregisterCustomProvider()
+
+Remove a previously registered custom provider by name.
+
+Returns `true` if a provider with the given name was found and removed,
+`false` if no such provider existed.
+
+**Errors:**
+
+Returns an error only if the internal lock is poisoned.
+
+**Signature:**
+
+```swift
+public static func unregisterCustomProvider(name: String) throws -> Bool
+```
+
+**Parameters:**
+
+| Name   | Type     | Required | Description |
+| ------ | -------- | -------- | ----------- |
+| `name` | `String` | Yes      | The name    |
+
+**Returns:** `Bool`
+**Errors:** Throws `Error`.
+
+---
+
+#### allProviders()
+
+Return all provider configs from the registry.
+
+Useful for tooling, documentation generation, or runtime enumeration.
+
+**Signature:**
+
+```swift
+public static func allProviders() throws -> [ProviderConfig]
+```
+
+**Returns:** `[ProviderConfig]`
+**Errors:** Throws `Error`.
+
+---
+
+#### complexProviderNames()
+
+Return the set of complex provider names.
+
+Complex providers require custom auth/routing logic beyond simple bearer
+tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
+
+The returned reference points into the static registry — no allocation.
+
+**Signature:**
+
+```swift
+public static func complexProviderNames() throws -> [String]
+```
+
+**Returns:** `[String]`
+**Errors:** Throws `Error`.
+
+---
+
+#### completionCost()
+
+Calculate the estimated cost of a completion given a model name and token
+counts.
+
+Returns `null` if the model is not present in the embedded pricing registry.
+Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
+
+When an exact model name match is not found, progressively shorter prefixes
+are tried by stripping from the last `-` or `.` separator. For example,
+`gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
+
+**Signature:**
+
+```swift
+public static func completionCost(model: String, promptTokens: UInt64, completionTokens: UInt64) -> Double?
+```
+
+**Parameters:**
+
+| Name               | Type     | Required | Description           |
+| ------------------ | -------- | -------- | --------------------- |
+| `model`            | `String` | Yes      | The model             |
+| `promptTokens`     | `UInt64` | Yes      | The prompt tokens     |
+| `completionTokens` | `UInt64` | Yes      | The completion tokens |
+
+**Returns:** `Double?`
+
+---
+
+#### completionCostWithCache()
+
+Calculate the estimated cost of a completion, accounting for cached
+(cache-hit) prompt tokens billed at the provider's discounted rate.
+
+`cached_tokens` is the count of prompt tokens served from the provider's
+prompt cache. It must be `<= prompt_tokens` (cached tokens are a subset of
+the prompt). The non-cached portion is billed at `input_cost_per_token`
+and the cached portion at `cache_read_input_token_cost` when the model
+has cache pricing; otherwise the entire prompt is billed at the regular
+input rate.
+
+Returns `null` if the model is not present in the embedded pricing
+registry, mirroring `completion_cost`.
+
+**Signature:**
+
+```swift
+public static func completionCostWithCache(model: String, promptTokens: UInt64, cachedTokens: UInt64, completionTokens: UInt64) -> Double?
+```
+
+**Parameters:**
+
+| Name               | Type     | Required | Description           |
+| ------------------ | -------- | -------- | --------------------- |
+| `model`            | `String` | Yes      | The model             |
+| `promptTokens`     | `UInt64` | Yes      | The prompt tokens     |
+| `cachedTokens`     | `UInt64` | Yes      | The cached tokens     |
+| `completionTokens` | `UInt64` | Yes      | The completion tokens |
+
+**Returns:** `Double?`
+
+---
+
+#### countTokens()
+
+Count tokens in a text string using the tokenizer for the given model.
+
+The tokenizer is resolved from the model name prefix (e.g. `"gpt-4o"` maps
+to the `Xenova/gpt-4o` HuggingFace tokenizer). Tokenizers are cached after
+first load.
+
+**Errors:**
+
+Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
+(e.g. network failure on first use) or if tokenization itself fails.
+
+**Signature:**
+
+```swift
+public static func countTokens(model: String, text: String) throws -> UInt64
+```
+
+**Parameters:**
+
+| Name    | Type     | Required | Description |
+| ------- | -------- | -------- | ----------- |
+| `model` | `String` | Yes      | The model   |
+| `text`  | `String` | Yes      | The text    |
+
+**Returns:** `UInt64`
+**Errors:** Throws `Error`.
+
+---
+
+#### countRequestTokens()
+
+Count tokens for a full `ChatCompletionRequest`.
+
+Sums tokens across all message text contents plus a per-message overhead
+of ~4 tokens (for role, separators, and formatting metadata). Tool
+definitions and multimodal content parts (images, audio, documents) are
+not counted — only textual content contributes to the token total.
+
+**Errors:**
+
+Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded or
+if tokenization fails for any message.
+
+**Signature:**
+
+```swift
+public static func countRequestTokens(model: String, req: ChatCompletionRequest) throws -> UInt64
+```
+
+**Parameters:**
+
+| Name    | Type                    | Required | Description                 |
+| ------- | ----------------------- | -------- | --------------------------- |
+| `model` | `String`                | Yes      | The model                   |
+| `req`   | `ChatCompletionRequest` | Yes      | The chat completion request |
+
+**Returns:** `UInt64`
+**Errors:** Throws `Error`.
+
+---
+
+#### ensureCryptoProvider()
+
+Install the `ring` crypto provider as the rustls process default, idempotently.
+
+rustls 0.23+ removed the implicit default provider. This function installs
+`ring` once per process. Subsequent calls are no-ops. Calling it from a
+downstream Rust app that has already installed `aws-lc-rs` is safe — the
+`Err` from `install_default()` is silently ignored.
+
+Called automatically by every internal `reqwest.Client` constructor
+(auth providers, default HTTP client). Bindings and downstream consumers
+reach those constructors transitively, so no manual init is required.
+
+WASM builds are exempt — the WASM target uses the browser/Node.js fetch
+API instead of rustls, so no crypto provider is needed.
+
+**Signature:**
+
+```swift
+public static func ensureCryptoProvider()
+```
+
+**Returns:** `Void`
+
+---
+
 ### Types
 
 #### AssistantMessage
 
-| Field          | Type            | Default | Description                                                            |
-| -------------- | --------------- | ------- | ---------------------------------------------------------------------- |
-| `content`      | `String?`       | `null`  | The extracted text content                                             |
-| `name`         | `String?`       | `null`  | The name                                                               |
-| `toolCalls`    | `[ToolCall]?`   | `[]`    | Tool calls                                                             |
-| `refusal`      | `String?`       | `null`  | Refusal                                                                |
-| `functionCall` | `FunctionCall?` | `null`  | Deprecated legacy function_call field; retained for API compatibility. |
+Assistant's response to a user message.
+
+| Field          | Type            | Default | Description                                                               |
+| -------------- | --------------- | ------- | ------------------------------------------------------------------------- |
+| `content`      | `String?`       | `null`  | The assistant's text response. Absent if tool calls are returned instead. |
+| `name`         | `String?`       | `null`  | Optional name for the assistant.                                          |
+| `toolCalls`    | `[ToolCall]?`   | `[]`    | Tool calls the model wants to execute, if any.                            |
+| `refusal`      | `String?`       | `null`  | Refusal reason, if the model declined to respond per safety policies.     |
+| `functionCall` | `FunctionCall?` | `null`  | Deprecated legacy function_call field; retained for API compatibility.    |
 
 ---
 
 #### AudioContent
+
+Audio content part for speech-capable models.
 
 | Field    | Type     | Default | Description                               |
 | -------- | -------- | ------- | ----------------------------------------- |
@@ -91,152 +342,229 @@ public static func createClientFromJson(json: String) throws -> DefaultClient
 
 ---
 
+#### AuthConfig
+
+Auth configuration block.
+
+| Field      | Type       | Default | Description                                                                                                                         |
+| ---------- | ---------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `authType` | `AuthType` | —       | Auth scheme classification.                                                                                                         |
+| `envVar`   | `String?`  | `null`  | Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`). Holds the variable name, never the secret value. |
+
+---
+
 #### BatchListQuery
 
-| Field   | Type      | Default | Description |
-| ------- | --------- | ------- | ----------- |
-| `limit` | `UInt32?` | `null`  | Limit       |
-| `after` | `String?` | `null`  | After       |
+Query parameters for listing batches.
+
+| Field   | Type      | Default | Description                                            |
+| ------- | --------- | ------- | ------------------------------------------------------ |
+| `limit` | `UInt32?` | `null`  | Maximum number of results to return. Defaults to 20.   |
+| `after` | `String?` | `null`  | Pagination cursor: return results after this batch ID. |
 
 ---
 
 #### BatchListResponse
 
-| Field     | Type            | Default | Description  |
-| --------- | --------------- | ------- | ------------ |
-| `object`  | `String`        | —       | Object       |
-| `data`    | `[BatchObject]` | `[]`    | Data         |
-| `hasMore` | `Bool?`         | `null`  | Whether more |
-| `firstId` | `String?`       | `null`  | First id     |
-| `lastId`  | `String?`       | `null`  | Last id      |
+Response from listing batches.
+
+| Field     | Type            | Default | Description                                        |
+| --------- | --------------- | ------- | -------------------------------------------------- |
+| `object`  | `String`        | —       | Object type (always `"list"`).                     |
+| `data`    | `[BatchObject]` | `[]`    | List of batch objects.                             |
+| `hasMore` | `Bool?`         | `null`  | Whether more results are available.                |
+| `firstId` | `String?`       | `null`  | First batch ID in the result set (for pagination). |
+| `lastId`  | `String?`       | `null`  | Last batch ID in the result set (for pagination).  |
 
 ---
 
 #### BatchObject
 
-| Field              | Type                  | Default                  | Description                           |
-| ------------------ | --------------------- | ------------------------ | ------------------------------------- |
-| `id`               | `String`              | —                        | Unique identifier                     |
-| `object`           | `String`              | —                        | Object                                |
-| `endpoint`         | `String`              | —                        | Endpoint                              |
-| `inputFileId`      | `String`              | —                        | Input file id                         |
-| `completionWindow` | `String`              | —                        | Completion window                     |
-| `status`           | `BatchStatus`         | `BatchStatus.Validating` | Status (batch status)                 |
-| `outputFileId`     | `String?`             | `null`                   | Output file id                        |
-| `errorFileId`      | `String?`             | `null`                   | Error file id                         |
-| `createdAt`        | `UInt64`              | —                        | Created at                            |
-| `completedAt`      | `UInt64?`             | `null`                   | Completed at                          |
-| `failedAt`         | `UInt64?`             | `null`                   | Failed at                             |
-| `expiredAt`        | `UInt64?`             | `null`                   | Expired at                            |
-| `requestCounts`    | `BatchRequestCounts?` | `null`                   | Request counts (batch request counts) |
-| `metadata`         | `String?`             | `null`                   | Document metadata                     |
+A batch job object.
+
+| Field              | Type                  | Default                  | Description                                             |
+| ------------------ | --------------------- | ------------------------ | ------------------------------------------------------- |
+| `id`               | `String`              | —                        | Unique batch ID.                                        |
+| `object`           | `String`              | —                        | Object type (always `"batch"`).                         |
+| `endpoint`         | `String`              | —                        | API endpoint (e.g., `"/v1/chat/completions"`).          |
+| `inputFileId`      | `String`              | —                        | ID of the input file.                                   |
+| `completionWindow` | `String`              | —                        | Completion window (e.g., `"24h"`).                      |
+| `status`           | `BatchStatus`         | `BatchStatus.Validating` | Current job status.                                     |
+| `outputFileId`     | `String?`             | `null`                   | ID of the output file (present when completed).         |
+| `errorFileId`      | `String?`             | `null`                   | ID of the error file (present if some requests failed). |
+| `createdAt`        | `UInt64`              | —                        | Unix timestamp of batch creation.                       |
+| `completedAt`      | `UInt64?`             | `null`                   | Unix timestamp of completion (if completed).            |
+| `failedAt`         | `UInt64?`             | `null`                   | Unix timestamp of failure (if failed).                  |
+| `expiredAt`        | `UInt64?`             | `null`                   | Unix timestamp of expiration (if expired).              |
+| `requestCounts`    | `BatchRequestCounts?` | `null`                   | Request processing counts.                              |
+| `metadata`         | `String?`             | `null`                   | Metadata attached to the batch.                         |
 
 ---
 
 #### BatchRequestCounts
 
-| Field       | Type     | Default | Description |
-| ----------- | -------- | ------- | ----------- |
-| `total`     | `UInt64` | —       | Total       |
-| `completed` | `UInt64` | —       | Completed   |
-| `failed`    | `UInt64` | —       | Failed      |
+Request processing counts for a batch.
+
+| Field       | Type     | Default | Description                  |
+| ----------- | -------- | ------- | ---------------------------- |
+| `total`     | `UInt64` | —       | Total requests in the batch. |
+| `completed` | `UInt64` | —       | Completed requests.          |
+| `failed`    | `UInt64` | —       | Failed requests.             |
+
+---
+
+#### BudgetConfig
+
+Configuration for budget enforcement.
+
+| Field         | Type               | Default            | Description                                                                                      |
+| ------------- | ------------------ | ------------------ | ------------------------------------------------------------------------------------------------ |
+| `globalLimit` | `Double?`          | `null`             | Maximum total spend across all models, in USD. `null` means unlimited.                           |
+| `modelLimits` | `[String: Double]` | `{}`               | Per-model spending limits in USD. Models not listed here are only constrained by `global_limit`. |
+| `enforcement` | `Enforcement`      | `Enforcement.Hard` | Whether to reject requests or merely warn when a limit is exceeded.                              |
+
+##### Methods
+
+###### default()
+
+**Signature:**
+
+```swift
+public static func default() -> BudgetConfig
+```
+
+---
+
+#### CacheConfig
+
+Configuration for the response cache.
+
+| Field        | Type           | Default               | Description                         |
+| ------------ | -------------- | --------------------- | ----------------------------------- |
+| `maxEntries` | `UInt64`       | `256`                 | Maximum number of cached entries.   |
+| `ttl`        | `Duration`     | `300000ms`            | Time-to-live for each cached entry. |
+| `backend`    | `CacheBackend` | `CacheBackend.Memory` | Storage backend to use.             |
+
+##### Methods
+
+###### default()
+
+**Signature:**
+
+```swift
+public static func default() -> CacheConfig
+```
 
 ---
 
 #### ChatCompletionChunk
 
+A streamed chunk of a chat completion response.
+
 | Field               | Type             | Default | Description                                                                                                                                   |
 | ------------------- | ---------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                | `String`         | —       | Unique identifier                                                                                                                             |
+| `id`                | `String`         | —       | Unique identifier for this stream.                                                                                                            |
 | `object`            | `String`         | —       | Always `"chat.completion.chunk"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not fail parsing. |
-| `created`           | `UInt64`         | —       | Created                                                                                                                                       |
-| `model`             | `String`         | —       | Model                                                                                                                                         |
-| `choices`           | `[StreamChoice]` | `[]`    | Choices                                                                                                                                       |
-| `usage`             | `Usage?`         | `null`  | Usage (usage)                                                                                                                                 |
-| `systemFingerprint` | `String?`        | `null`  | System fingerprint                                                                                                                            |
-| `serviceTier`       | `String?`        | `null`  | Service tier                                                                                                                                  |
+| `created`           | `UInt64`         | —       | Unix timestamp of chunk creation.                                                                                                             |
+| `model`             | `String`         | —       | Model used to generate the chunk.                                                                                                             |
+| `choices`           | `[StreamChoice]` | `[]`    | Streaming choices (delta updates).                                                                                                            |
+| `usage`             | `Usage?`         | `null`  | Token usage (typically only in the final chunk).                                                                                              |
+| `systemFingerprint` | `String?`        | `null`  | Fingerprint of the system configuration (OpenAI-specific).                                                                                    |
+| `serviceTier`       | `String?`        | `null`  | Service tier used (OpenAI-specific).                                                                                                          |
 
 ---
 
 #### ChatCompletionRequest
 
+Chat completion request (compatible with OpenAI and similar APIs).
+
 | Field               | Type                    | Default | Description                                                                                                                       |
 | ------------------- | ----------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `model`             | `String`                | —       | Model                                                                                                                             |
-| `messages`          | `[Message]`             | `[]`    | Messages                                                                                                                          |
-| `temperature`       | `Double?`               | `null`  | Temperature                                                                                                                       |
-| `topP`              | `Double?`               | `null`  | Top p                                                                                                                             |
-| `n`                 | `UInt32?`               | `null`  | N                                                                                                                                 |
+| `model`             | `String`                | —       | Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`).                                                                          |
+| `messages`          | `[Message]`             | `[]`    | Conversation history from oldest to newest.                                                                                       |
+| `temperature`       | `Double?`               | `null`  | Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0.                                               |
+| `topP`              | `Double?`               | `null`  | Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused.                                                                |
+| `n`                 | `UInt32?`               | `null`  | Number of chat completions to generate. Defaults to 1.                                                                            |
 | `stream`            | `Bool?`                 | `null`  | Whether to stream the response. Managed by the client layer — do not set directly.                                                |
-| `stop`              | `StopSequence?`         | `null`  | Stop (stop sequence)                                                                                                              |
-| `maxTokens`         | `UInt64?`               | `null`  | Maximum tokens                                                                                                                    |
-| `presencePenalty`   | `Double?`               | `null`  | Presence penalty                                                                                                                  |
-| `frequencyPenalty`  | `Double?`               | `null`  | Frequency penalty                                                                                                                 |
+| `stop`              | `StopSequence?`         | `null`  | Stop sequence(s) that halt token generation.                                                                                      |
+| `maxTokens`         | `UInt64?`               | `null`  | Max output tokens. Different from max_completion_tokens in some providers.                                                        |
+| `presencePenalty`   | `Double?`               | `null`  | Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics.                                                          |
+| `frequencyPenalty`  | `Double?`               | `null`  | Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens.                                                         |
 | `logitBias`         | `[String: Double]?`     | `{}`    | Token bias map. Uses `BTreeMap` (sorted keys) for deterministic serialization order — important when hashing or signing requests. |
-| `user`              | `String?`               | `null`  | User                                                                                                                              |
-| `tools`             | `[ChatCompletionTool]?` | `[]`    | Tools                                                                                                                             |
-| `toolChoice`        | `ToolChoice?`           | `null`  | Tool choice (tool choice)                                                                                                         |
-| `parallelToolCalls` | `Bool?`                 | `null`  | Parallel tool calls                                                                                                               |
-| `responseFormat`    | `ResponseFormat?`       | `null`  | Response format (response format)                                                                                                 |
-| `streamOptions`     | `StreamOptions?`        | `null`  | Stream options (stream options)                                                                                                   |
-| `seed`              | `Int64?`                | `null`  | Seed                                                                                                                              |
-| `reasoningEffort`   | `ReasoningEffort?`      | `null`  | Reasoning effort (reasoning effort)                                                                                               |
+| `user`              | `String?`               | `null`  | User identifier for request tracking and abuse detection.                                                                         |
+| `tools`             | `[ChatCompletionTool]?` | `[]`    | Tools the model can invoke.                                                                                                       |
+| `toolChoice`        | `ToolChoice?`           | `null`  | Tool usage mode (auto, required, none, or specific tool).                                                                         |
+| `parallelToolCalls` | `Bool?`                 | `null`  | Whether the model can call multiple tools in parallel. Defaults to true.                                                          |
+| `responseFormat`    | `ResponseFormat?`       | `null`  | Output format constraint (text, JSON, JSON schema).                                                                               |
+| `streamOptions`     | `StreamOptions?`        | `null`  | Streaming options (e.g., include_usage).                                                                                          |
+| `seed`              | `Int64?`                | `null`  | Random seed for reproducible outputs. Provider support varies.                                                                    |
+| `reasoningEffort`   | `ReasoningEffort?`      | `null`  | Reasoning effort level (low, medium, high) for extended-thinking models.                                                          |
 | `extraBody`         | `String?`               | `null`  | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc.      |
 
 ---
 
 #### ChatCompletionResponse
 
+Chat completion response from the API.
+
 | Field               | Type       | Default | Description                                                                                                                                      |
 | ------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `id`                | `String`   | —       | Unique identifier                                                                                                                                |
+| `id`                | `String`   | —       | Unique identifier for this response.                                                                                                             |
 | `object`            | `String`   | —       | Always `"chat.completion"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `created`           | `UInt64`   | —       | Created                                                                                                                                          |
-| `model`             | `String`   | —       | Model                                                                                                                                            |
-| `choices`           | `[Choice]` | `[]`    | Choices                                                                                                                                          |
-| `usage`             | `Usage?`   | `null`  | Usage (usage)                                                                                                                                    |
-| `systemFingerprint` | `String?`  | `null`  | System fingerprint                                                                                                                               |
-| `serviceTier`       | `String?`  | `null`  | Service tier                                                                                                                                     |
+| `created`           | `UInt64`   | —       | Unix timestamp of response creation.                                                                                                             |
+| `model`             | `String`   | —       | Model used to generate the response.                                                                                                             |
+| `choices`           | `[Choice]` | `[]`    | List of completion choices.                                                                                                                      |
+| `usage`             | `Usage?`   | `null`  | Token usage statistics.                                                                                                                          |
+| `systemFingerprint` | `String?`  | `null`  | Fingerprint of the system configuration (OpenAI-specific).                                                                                       |
+| `serviceTier`       | `String?`  | `null`  | Service tier used (OpenAI-specific).                                                                                                             |
 
 ---
 
 #### ChatCompletionTool
 
-| Field      | Type                 | Default | Description                    |
-| ---------- | -------------------- | ------- | ------------------------------ |
-| `toolType` | `ToolType`           | —       | Tool type (tool type)          |
-| `function` | `FunctionDefinition` | —       | Function (function definition) |
+A tool the model can invoke (currently, all tools are functions).
+
+| Field      | Type                 | Default | Description                                                             |
+| ---------- | -------------------- | ------- | ----------------------------------------------------------------------- |
+| `toolType` | `ToolType`           | —       | Tool type (always "function" in OpenAI spec).                           |
+| `function` | `FunctionDefinition` | —       | Function definition with name, description, and JSON schema parameters. |
 
 ---
 
 #### Choice
 
-| Field          | Type               | Default | Description                   |
-| -------------- | ------------------ | ------- | ----------------------------- |
-| `index`        | `UInt32`           | —       | Index                         |
-| `message`      | `AssistantMessage` | —       | Message (assistant message)   |
-| `finishReason` | `FinishReason?`    | `null`  | Finish reason (finish reason) |
+A single completion choice.
+
+| Field          | Type               | Default | Description                                                                        |
+| -------------- | ------------------ | ------- | ---------------------------------------------------------------------------------- |
+| `index`        | `UInt32`           | —       | Index of this choice in the choices array.                                         |
+| `message`      | `AssistantMessage` | —       | The assistant's message response.                                                  |
+| `finishReason` | `FinishReason?`    | `null`  | Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). |
 
 ---
 
 #### CreateBatchRequest
 
-| Field              | Type      | Default | Description       |
-| ------------------ | --------- | ------- | ----------------- |
-| `inputFileId`      | `String`  | —       | Input file id     |
-| `endpoint`         | `String`  | —       | Endpoint          |
-| `completionWindow` | `String`  | —       | Completion window |
-| `metadata`         | `String?` | `null`  | Document metadata |
+Request to create a batch job.
+
+| Field              | Type      | Default | Description                                    |
+| ------------------ | --------- | ------- | ---------------------------------------------- |
+| `inputFileId`      | `String`  | —       | ID of the uploaded input file (JSONL format).  |
+| `endpoint`         | `String`  | —       | API endpoint (e.g., `"/v1/chat/completions"`). |
+| `completionWindow` | `String`  | —       | Completion window (e.g., `"24h"`).             |
+| `metadata`         | `String?` | `null`  | Optional metadata to attach to the batch.      |
 
 ---
 
 #### CreateFileRequest
 
-| Field      | Type          | Default                  | Description               |
-| ---------- | ------------- | ------------------------ | ------------------------- |
-| `file`     | `String`      | —                        | Base64-encoded file data. |
-| `purpose`  | `FilePurpose` | `FilePurpose.Assistants` | Purpose (file purpose)    |
-| `filename` | `String?`     | `null`                   | Filename                  |
+Request to upload a file.
+
+| Field      | Type          | Default                  | Description                                     |
+| ---------- | ------------- | ------------------------ | ----------------------------------------------- |
+| `file`     | `String`      | —                        | Base64-encoded file data.                       |
+| `purpose`  | `FilePurpose` | `FilePurpose.Assistants` | Purpose for the file.                           |
+| `filename` | `String?`     | `null`                   | Optional filename to associate with the upload. |
 
 ---
 
@@ -244,30 +572,32 @@ public static func createClientFromJson(json: String) throws -> DefaultClient
 
 Request to create images from a text prompt.
 
-| Field            | Type      | Default | Description     |
-| ---------------- | --------- | ------- | --------------- |
-| `prompt`         | `String`  | —       | Prompt          |
-| `model`          | `String?` | `null`  | Model           |
-| `n`              | `UInt32?` | `null`  | N               |
-| `size`           | `String?` | `null`  | Size in bytes   |
-| `quality`        | `String?` | `null`  | Quality         |
-| `style`          | `String?` | `null`  | Style           |
-| `responseFormat` | `String?` | `null`  | Response format |
-| `user`           | `String?` | `null`  | User            |
+| Field            | Type      | Default | Description                                                            |
+| ---------------- | --------- | ------- | ---------------------------------------------------------------------- |
+| `prompt`         | `String`  | —       | Text description of the image to generate.                             |
+| `model`          | `String?` | `null`  | Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset. |
+| `n`              | `UInt32?` | `null`  | Number of images to generate. Defaults to 1.                           |
+| `size`           | `String?` | `null`  | Image size (e.g., `"1024x1024"`, `"1792x1024"`).                       |
+| `quality`        | `String?` | `null`  | Image quality: `"standard"` or `"hd"`.                                 |
+| `style`          | `String?` | `null`  | Style: `"natural"` or `"vivid"` (DALL-E 3 only).                       |
+| `responseFormat` | `String?` | `null`  | Response format: `"url"` or `"b64_json"`.                              |
+| `user`           | `String?` | `null`  | User identifier for request tracking.                                  |
 
 ---
 
 #### CreateResponseRequest
 
-| Field             | Type              | Default | Description           |
-| ----------------- | ----------------- | ------- | --------------------- |
-| `model`           | `String`          | —       | Model                 |
-| `input`           | `String`          | —       | Input                 |
-| `instructions`    | `String?`         | `null`  | Instructions          |
-| `tools`           | `[ResponseTool]?` | `[]`    | Tools                 |
-| `temperature`     | `Double?`         | `null`  | Temperature           |
-| `maxOutputTokens` | `UInt64?`         | `null`  | Maximum output tokens |
-| `metadata`        | `String?`         | `null`  | Document metadata     |
+Request to create a structured response.
+
+| Field             | Type              | Default | Description                                               |
+| ----------------- | ----------------- | ------- | --------------------------------------------------------- |
+| `model`           | `String`          | —       | Model ID.                                                 |
+| `input`           | `String`          | —       | Input data to process (e.g., a document to extract from). |
+| `instructions`    | `String?`         | `null`  | Instructions for processing the input.                    |
+| `tools`           | `[ResponseTool]?` | `[]`    | Available tools the model can use.                        |
+| `temperature`     | `Double?`         | `null`  | Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0.    |
+| `maxOutputTokens` | `UInt64?`         | `null`  | Maximum output tokens.                                    |
+| `metadata`        | `String?`         | `null`  | Optional metadata.                                        |
 
 ---
 
@@ -275,13 +605,13 @@ Request to create images from a text prompt.
 
 Request to generate speech audio from text.
 
-| Field            | Type      | Default | Description     |
-| ---------------- | --------- | ------- | --------------- |
-| `model`          | `String`  | —       | Model           |
-| `input`          | `String`  | —       | Input           |
-| `voice`          | `String`  | —       | Voice           |
-| `responseFormat` | `String?` | `null`  | Response format |
-| `speed`          | `Double?` | `null`  | Speed           |
+| Field            | Type      | Default | Description                                                                         |
+| ---------------- | --------- | ------- | ----------------------------------------------------------------------------------- |
+| `model`          | `String`  | —       | Model ID (e.g., `"tts-1"`, `"tts-1-hd"`).                                           |
+| `input`          | `String`  | —       | Text to synthesize into speech.                                                     |
+| `voice`          | `String`  | —       | Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). |
+| `responseFormat` | `String?` | `null`  | Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`).        |
+| `speed`          | `Double?` | `null`  | Playback speed in `[0.25, 4.0]`. Defaults to 1.0.                                   |
 
 ---
 
@@ -289,14 +619,14 @@ Request to generate speech audio from text.
 
 Request to transcribe audio into text.
 
-| Field            | Type      | Default | Description                     |
-| ---------------- | --------- | ------- | ------------------------------- |
-| `model`          | `String`  | —       | Model                           |
-| `file`           | `String`  | —       | Base64-encoded audio file data. |
-| `language`       | `String?` | `null`  | Language                        |
-| `prompt`         | `String?` | `null`  | Prompt                          |
-| `responseFormat` | `String?` | `null`  | Response format                 |
-| `temperature`    | `Double?` | `null`  | Temperature                     |
+| Field            | Type      | Default | Description                                                                           |
+| ---------------- | --------- | ------- | ------------------------------------------------------------------------------------- |
+| `model`          | `String`  | —       | Model ID (e.g., `"whisper-1"`).                                                       |
+| `file`           | `String`  | —       | Base64-encoded audio file data.                                                       |
+| `language`       | `String?` | `null`  | Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. |
+| `prompt`         | `String?` | `null`  | Optional text to guide the model (improves accuracy for domain-specific terms).       |
+| `responseFormat` | `String?` | `null`  | Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`).         |
+| `temperature`    | `Double?` | `null`  | Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0.    |
 
 ---
 
@@ -521,24 +851,30 @@ public func cancelResponse(id: String) throws -> ResponseObject
 
 #### DeleteResponse
 
-| Field     | Type     | Default | Description       |
-| --------- | -------- | ------- | ----------------- |
-| `id`      | `String` | —       | Unique identifier |
-| `object`  | `String` | —       | Object            |
-| `deleted` | `Bool`   | —       | Deleted           |
+Response from a delete operation.
+
+| Field     | Type     | Default | Description                                 |
+| --------- | -------- | ------- | ------------------------------------------- |
+| `id`      | `String` | —       | ID of the deleted resource.                 |
+| `object`  | `String` | —       | Object type.                                |
+| `deleted` | `Bool`   | —       | Confirmation that the resource was deleted. |
 
 ---
 
 #### DeveloperMessage
 
-| Field     | Type      | Default | Description                |
-| --------- | --------- | ------- | -------------------------- |
-| `content` | `String`  | —       | The extracted text content |
-| `name`    | `String?` | `null`  | The name                   |
+Developer message (system-like message for Claude models).
+
+| Field     | Type      | Default | Description                                     |
+| --------- | --------- | ------- | ----------------------------------------------- |
+| `content` | `String`  | —       | Developer-specific instructions or context.     |
+| `name`    | `String?` | `null`  | Optional name for the developer message source. |
 
 ---
 
 #### DocumentContent
+
+PDF/document content part for vision-capable models.
 
 | Field       | Type     | Default | Description                                      |
 | ----------- | -------- | ------- | ------------------------------------------------ |
@@ -549,88 +885,104 @@ public func cancelResponse(id: String) throws -> ResponseObject
 
 #### EmbeddingObject
 
+A single embedding vector.
+
 | Field       | Type       | Default | Description                                                                                                                                |
 | ----------- | ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `object`    | `String`   | —       | Always `"embedding"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `embedding` | `[Double]` | —       | Embedding                                                                                                                                  |
-| `index`     | `UInt32`   | —       | Index                                                                                                                                      |
+| `embedding` | `[Double]` | —       | The embedding vector.                                                                                                                      |
+| `index`     | `UInt32`   | —       | Index in the batch (corresponds to input order).                                                                                           |
 
 ---
 
 #### EmbeddingRequest
 
-| Field            | Type               | Default                 | Description                        |
-| ---------------- | ------------------ | ----------------------- | ---------------------------------- |
-| `model`          | `String`           | —                       | Model                              |
-| `input`          | `EmbeddingInput`   | `EmbeddingInput.Single` | Input (embedding input)            |
-| `encodingFormat` | `EmbeddingFormat?` | `null`                  | Encoding format (embedding format) |
-| `dimensions`     | `UInt32?`          | `null`                  | Dimensions                         |
-| `user`           | `String?`          | `null`                  | User                               |
+Embedding request.
+
+| Field            | Type               | Default                 | Description                                                 |
+| ---------------- | ------------------ | ----------------------- | ----------------------------------------------------------- |
+| `model`          | `String`           | —                       | Model ID (e.g., `"text-embedding-3-small"`).                |
+| `input`          | `EmbeddingInput`   | `EmbeddingInput.Single` | Text or texts to embed.                                     |
+| `encodingFormat` | `EmbeddingFormat?` | `null`                  | Output format: float (native) or base64.                    |
+| `dimensions`     | `UInt32?`          | `null`                  | Requested embedding dimensions (if supported by the model). |
+| `user`           | `String?`          | `null`                  | User identifier for request tracking.                       |
 
 ---
 
 #### EmbeddingResponse
 
+Embedding response.
+
 | Field    | Type                | Default | Description                                                                                                                           |
 | -------- | ------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `object` | `String`            | —       | Always `"list"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `data`   | `[EmbeddingObject]` | —       | Data                                                                                                                                  |
-| `model`  | `String`            | —       | Model                                                                                                                                 |
-| `usage`  | `Usage?`            | `null`  | Usage (usage)                                                                                                                         |
+| `data`   | `[EmbeddingObject]` | —       | List of embeddings.                                                                                                                   |
+| `model`  | `String`            | —       | Model used to generate embeddings.                                                                                                    |
+| `usage`  | `Usage?`            | `null`  | Token usage (input tokens only; embeddings have zero output tokens).                                                                  |
 
 ---
 
 #### FileListQuery
 
-| Field     | Type      | Default | Description |
-| --------- | --------- | ------- | ----------- |
-| `purpose` | `String?` | `null`  | Purpose     |
-| `limit`   | `UInt32?` | `null`  | Limit       |
-| `after`   | `String?` | `null`  | After       |
+Query parameters for listing files.
+
+| Field     | Type      | Default | Description                                              |
+| --------- | --------- | ------- | -------------------------------------------------------- |
+| `purpose` | `String?` | `null`  | Filter by file purpose (e.g., `"batch"`, `"fine-tune"`). |
+| `limit`   | `UInt32?` | `null`  | Maximum number of results to return. Defaults to 20.     |
+| `after`   | `String?` | `null`  | Pagination cursor: return results after this file ID.    |
 
 ---
 
 #### FileListResponse
 
-| Field     | Type           | Default | Description  |
-| --------- | -------------- | ------- | ------------ |
-| `object`  | `String`       | —       | Object       |
-| `data`    | `[FileObject]` | `[]`    | Data         |
-| `hasMore` | `Bool?`        | `null`  | Whether more |
+Response from listing files.
+
+| Field     | Type           | Default | Description                         |
+| --------- | -------------- | ------- | ----------------------------------- |
+| `object`  | `String`       | —       | Object type (always `"list"`).      |
+| `data`    | `[FileObject]` | `[]`    | List of file objects.               |
+| `hasMore` | `Bool?`        | `null`  | Whether more results are available. |
 
 ---
 
 #### FileObject
 
-| Field       | Type      | Default | Description       |
-| ----------- | --------- | ------- | ----------------- |
-| `id`        | `String`  | —       | Unique identifier |
-| `object`    | `String`  | —       | Object            |
-| `bytes`     | `UInt64`  | —       | Bytes             |
-| `createdAt` | `UInt64`  | —       | Created at        |
-| `filename`  | `String`  | —       | Filename          |
-| `purpose`   | `String`  | —       | Purpose           |
-| `status`    | `String?` | `null`  | Status            |
+An uploaded file object.
+
+| Field       | Type      | Default | Description                                            |
+| ----------- | --------- | ------- | ------------------------------------------------------ |
+| `id`        | `String`  | —       | Unique file ID.                                        |
+| `object`    | `String`  | —       | Object type (always `"file"`).                         |
+| `bytes`     | `UInt64`  | —       | File size in bytes.                                    |
+| `createdAt` | `UInt64`  | —       | Unix timestamp of file creation.                       |
+| `filename`  | `String`  | —       | Filename.                                              |
+| `purpose`   | `String`  | —       | File purpose.                                          |
+| `status`    | `String?` | `null`  | Processing status (e.g., `"uploaded"`, `"processed"`). |
 
 ---
 
 #### FunctionCall
 
-| Field       | Type     | Default | Description |
-| ----------- | -------- | ------- | ----------- |
-| `name`      | `String` | —       | The name    |
-| `arguments` | `String` | —       | Arguments   |
+Function call details.
+
+| Field       | Type     | Default | Description                                                  |
+| ----------- | -------- | ------- | ------------------------------------------------------------ |
+| `name`      | `String` | —       | Function name.                                               |
+| `arguments` | `String` | —       | Arguments as a JSON string (parse with serde_json.from_str). |
 
 ---
 
 #### FunctionDefinition
 
-| Field         | Type      | Default | Description                |
-| ------------- | --------- | ------- | -------------------------- |
-| `name`        | `String`  | —       | The name                   |
-| `description` | `String?` | `null`  | Human-readable description |
-| `parameters`  | `String?` | `null`  | Parameters                 |
-| `strict`      | `Bool?`   | `null`  | Strict                     |
+Function definition exposed to the model.
+
+| Field         | Type      | Default | Description                                                            |
+| ------------- | --------- | ------- | ---------------------------------------------------------------------- |
+| `name`        | `String`  | —       | Name of the function. Required and must be alphanumeric + underscores. |
+| `description` | `String?` | `null`  | Human-readable description explaining what the function does.          |
+| `parameters`  | `String?` | `null`  | JSON Schema defining the function's parameters.                        |
+| `strict`      | `Bool?`   | `null`  | If true, enforce strict JSON schema validation for arguments.          |
 
 ---
 
@@ -649,20 +1001,22 @@ Deprecated legacy function-role message body.
 
 A single generated image, returned as either a URL or base64 data.
 
-| Field           | Type      | Default | Description    |
-| --------------- | --------- | ------- | -------------- |
-| `url`           | `String?` | `null`  | Url            |
-| `b64Json`       | `String?` | `null`  | B64 json       |
-| `revisedPrompt` | `String?` | `null`  | Revised prompt |
+| Field           | Type      | Default | Description                                                    |
+| --------------- | --------- | ------- | -------------------------------------------------------------- |
+| `url`           | `String?` | `null`  | Image URL (if response_format was "url").                      |
+| `b64Json`       | `String?` | `null`  | Base64-encoded image data (if response_format was "b64_json"). |
+| `revisedPrompt` | `String?` | `null`  | The final prompt used to generate the image (DALL-E 3).        |
 
 ---
 
 #### ImageUrl
 
-| Field    | Type           | Default | Description           |
-| -------- | -------------- | ------- | --------------------- |
-| `url`    | `String`       | —       | Url                   |
-| `detail` | `ImageDetail?` | `null`  | Detail (image detail) |
+An image URL reference with optional detail level for processing.
+
+| Field    | Type           | Default | Description                                                              |
+| -------- | -------------- | ------- | ------------------------------------------------------------------------ |
+| `url`    | `String`       | —       | URL of the image (data URI or HTTP/HTTPS URL).                           |
+| `detail` | `ImageDetail?` | `null`  | Detail level: low (512x512), high (2x2 tiles), or auto (model-selected). |
 
 ---
 
@@ -670,41 +1024,47 @@ A single generated image, returned as either a URL or base64 data.
 
 Response containing generated images.
 
-| Field     | Type      | Default | Description |
-| --------- | --------- | ------- | ----------- |
-| `created` | `UInt64`  | —       | Created     |
-| `data`    | `[Image]` | `[]`    | Data        |
+| Field     | Type      | Default | Description                       |
+| --------- | --------- | ------- | --------------------------------- |
+| `created` | `UInt64`  | —       | Unix timestamp of image creation. |
+| `data`    | `[Image]` | `[]`    | List of generated images.         |
 
 ---
 
 #### JsonSchemaFormat
 
-| Field         | Type      | Default | Description                |
-| ------------- | --------- | ------- | -------------------------- |
-| `name`        | `String`  | —       | The name                   |
-| `description` | `String?` | `null`  | Human-readable description |
-| `schema`      | `String`  | —       | Schema                     |
-| `strict`      | `Bool?`   | `null`  | Strict                     |
+JSON Schema specification for constrained output.
+
+| Field         | Type      | Default | Description                                         |
+| ------------- | --------- | ------- | --------------------------------------------------- |
+| `name`        | `String`  | —       | Name of the schema (must be unique in the request). |
+| `description` | `String?` | `null`  | Description of what the schema represents.          |
+| `schema`      | `String`  | —       | JSON Schema object defining the output structure.   |
+| `strict`      | `Bool?`   | `null`  | If true, enforce strict schema validation.          |
 
 ---
 
 #### ModelObject
 
+A model available from the API.
+
 | Field     | Type     | Default | Description                                                                                                                            |
 | --------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`      | `String` | —       | Unique identifier                                                                                                                      |
+| `id`      | `String` | —       | Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`).                                                                                    |
 | `object`  | `String` | —       | Always `"model"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `created` | `UInt64` | —       | Created                                                                                                                                |
-| `ownedBy` | `String` | —       | Owned by                                                                                                                               |
+| `created` | `UInt64` | —       | Unix timestamp of model creation (or release date).                                                                                    |
+| `ownedBy` | `String` | —       | Organization or entity that owns the model.                                                                                            |
 
 ---
 
 #### ModelsListResponse
 
+Response listing available models.
+
 | Field    | Type            | Default | Description                                                                                                                           |
 | -------- | --------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `object` | `String`        | —       | Always `"list"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `data`   | `[ModelObject]` | `[]`    | Data                                                                                                                                  |
+| `data`   | `[ModelObject]` | `[]`    | List of available models.                                                                                                             |
 
 ---
 
@@ -712,19 +1072,19 @@ Response containing generated images.
 
 Boolean flags for each moderation category.
 
-| Field                   | Type   | Default | Description            |
-| ----------------------- | ------ | ------- | ---------------------- |
-| `sexual`                | `Bool` | —       | Sexual                 |
-| `hate`                  | `Bool` | —       | Hate                   |
-| `harassment`            | `Bool` | —       | Harassment             |
-| `selfHarm`              | `Bool` | —       | Self harm              |
-| `sexualMinors`          | `Bool` | —       | Sexual minors          |
-| `hateThreatening`       | `Bool` | —       | Hate threatening       |
-| `violenceGraphic`       | `Bool` | —       | Violence graphic       |
-| `selfHarmIntent`        | `Bool` | —       | Self harm intent       |
-| `selfHarmInstructions`  | `Bool` | —       | Self harm instructions |
-| `harassmentThreatening` | `Bool` | —       | Harassment threatening |
-| `violence`              | `Bool` | —       | Violence               |
+| Field                   | Type   | Default | Description                          |
+| ----------------------- | ------ | ------- | ------------------------------------ |
+| `sexual`                | `Bool` | —       | Sexual content.                      |
+| `hate`                  | `Bool` | —       | Hate speech.                         |
+| `harassment`            | `Bool` | —       | Harassment.                          |
+| `selfHarm`              | `Bool` | —       | Self-harm content.                   |
+| `sexualMinors`          | `Bool` | —       | Sexual content involving minors.     |
+| `hateThreatening`       | `Bool` | —       | Hate speech that threatens violence. |
+| `violenceGraphic`       | `Bool` | —       | Graphic violence.                    |
+| `selfHarmIntent`        | `Bool` | —       | Intent to self-harm.                 |
+| `selfHarmInstructions`  | `Bool` | —       | Instructions for self-harm.          |
+| `harassmentThreatening` | `Bool` | —       | Harassment that threatens violence.  |
+| `violence`              | `Bool` | —       | Non-graphic violence.                |
 
 ---
 
@@ -732,19 +1092,19 @@ Boolean flags for each moderation category.
 
 Confidence scores for each moderation category.
 
-| Field                   | Type     | Default | Description            |
-| ----------------------- | -------- | ------- | ---------------------- |
-| `sexual`                | `Double` | —       | Sexual                 |
-| `hate`                  | `Double` | —       | Hate                   |
-| `harassment`            | `Double` | —       | Harassment             |
-| `selfHarm`              | `Double` | —       | Self harm              |
-| `sexualMinors`          | `Double` | —       | Sexual minors          |
-| `hateThreatening`       | `Double` | —       | Hate threatening       |
-| `violenceGraphic`       | `Double` | —       | Violence graphic       |
-| `selfHarmIntent`        | `Double` | —       | Self harm intent       |
-| `selfHarmInstructions`  | `Double` | —       | Self harm instructions |
-| `harassmentThreatening` | `Double` | —       | Harassment threatening |
-| `violence`              | `Double` | —       | Violence               |
+| Field                   | Type     | Default | Description                                |
+| ----------------------- | -------- | ------- | ------------------------------------------ |
+| `sexual`                | `Double` | —       | Sexual content score.                      |
+| `hate`                  | `Double` | —       | Hate speech score.                         |
+| `harassment`            | `Double` | —       | Harassment score.                          |
+| `selfHarm`              | `Double` | —       | Self-harm content score.                   |
+| `sexualMinors`          | `Double` | —       | Sexual content involving minors score.     |
+| `hateThreatening`       | `Double` | —       | Hate speech that threatens violence score. |
+| `violenceGraphic`       | `Double` | —       | Graphic violence score.                    |
+| `selfHarmIntent`        | `Double` | —       | Intent to self-harm score.                 |
+| `selfHarmInstructions`  | `Double` | —       | Instructions for self-harm score.          |
+| `harassmentThreatening` | `Double` | —       | Harassment that threatens violence score.  |
+| `violence`              | `Double` | —       | Non-graphic violence score.                |
 
 ---
 
@@ -752,10 +1112,10 @@ Confidence scores for each moderation category.
 
 Request to classify content for policy violations.
 
-| Field   | Type              | Default                  | Description              |
-| ------- | ----------------- | ------------------------ | ------------------------ |
-| `input` | `ModerationInput` | `ModerationInput.Single` | Input (moderation input) |
-| `model` | `String?`         | `null`                   | Model                    |
+| Field   | Type              | Default                  | Description                                                                       |
+| ------- | ----------------- | ------------------------ | --------------------------------------------------------------------------------- |
+| `input` | `ModerationInput` | `ModerationInput.Single` | Text or texts to check.                                                           |
+| `model` | `String?`         | `null`                   | Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset. |
 
 ---
 
@@ -763,11 +1123,11 @@ Request to classify content for policy violations.
 
 Response from the moderation endpoint.
 
-| Field     | Type                 | Default | Description       |
-| --------- | -------------------- | ------- | ----------------- |
-| `id`      | `String`             | —       | Unique identifier |
-| `model`   | `String`             | —       | Model             |
-| `results` | `[ModerationResult]` | —       | Results           |
+| Field     | Type                 | Default | Description                                    |
+| --------- | -------------------- | ------- | ---------------------------------------------- |
+| `id`      | `String`             | —       | Unique identifier for this moderation request. |
+| `model`   | `String`             | —       | Model used for classification.                 |
+| `results` | `[ModerationResult]` | —       | Results for each input string.                 |
 
 ---
 
@@ -775,11 +1135,11 @@ Response from the moderation endpoint.
 
 A single moderation classification result.
 
-| Field            | Type                       | Default | Description                                  |
-| ---------------- | -------------------------- | ------- | -------------------------------------------- |
-| `flagged`        | `Bool`                     | —       | Flagged                                      |
-| `categories`     | `ModerationCategories`     | —       | Categories (moderation categories)           |
-| `categoryScores` | `ModerationCategoryScores` | —       | Category scores (moderation category scores) |
+| Field            | Type                       | Default | Description                                 |
+| ---------------- | -------------------------- | ------- | ------------------------------------------- |
+| `flagged`        | `Bool`                     | —       | True if any category was flagged.           |
+| `categories`     | `ModerationCategories`     | —       | Boolean flags for each moderation category. |
+| `categoryScores` | `ModerationCategoryScores` | —       | Confidence scores for each category.        |
 
 ---
 
@@ -787,10 +1147,10 @@ A single moderation classification result.
 
 An image extracted from an OCR page.
 
-| Field         | Type      | Default | Description                |
-| ------------- | --------- | ------- | -------------------------- |
-| `id`          | `String`  | —       | Unique image identifier.   |
-| `imageBase64` | `String?` | `null`  | Base64-encoded image data. |
+| Field         | Type      | Default | Description                                                     |
+| ------------- | --------- | ------- | --------------------------------------------------------------- |
+| `id`          | `String`  | —       | Unique image identifier within the document.                    |
+| `imageBase64` | `String?` | `null`  | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -798,12 +1158,12 @@ An image extracted from an OCR page.
 
 A single page of OCR output.
 
-| Field        | Type              | Default | Description                                          |
-| ------------ | ----------------- | ------- | ---------------------------------------------------- |
-| `index`      | `UInt32`          | —       | Page index (0-based).                                |
-| `markdown`   | `String`          | —       | Extracted content as Markdown.                       |
-| `images`     | `[OcrImage]?`     | `null`  | Extracted images, if `include_image_base64` was set. |
-| `dimensions` | `PageDimensions?` | `null`  | Page dimensions in pixels, if available.             |
+| Field        | Type              | Default | Description                                                                   |
+| ------------ | ----------------- | ------- | ----------------------------------------------------------------------------- |
+| `index`      | `UInt32`          | —       | Page index (0-based).                                                         |
+| `markdown`   | `String`          | —       | Extracted page content as Markdown.                                           |
+| `images`     | `[OcrImage]?`     | `null`  | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `PageDimensions?` | `null`  | Page dimensions in pixels, if available.                                      |
 
 ---
 
@@ -814,9 +1174,9 @@ An OCR request.
 | Field                | Type          | Default           | Description                                                      |
 | -------------------- | ------------- | ----------------- | ---------------------------------------------------------------- |
 | `model`              | `String`      | —                 | The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). |
-| `document`           | `OcrDocument` | `OcrDocument.Url` | The document to process.                                         |
+| `document`           | `OcrDocument` | `OcrDocument.Url` | The document to process (URL or base64).                         |
 | `pages`              | `[UInt32]?`   | `[]`              | Specific pages to process (1-indexed). `null` means all pages.   |
-| `includeImageBase64` | `Bool?`       | `null`            | Whether to include base64-encoded images of each page.           |
+| `includeImageBase64` | `Bool?`       | `null`            | Whether to include base64-encoded images of each processed page. |
 
 ---
 
@@ -826,8 +1186,8 @@ An OCR response.
 
 | Field   | Type        | Default | Description                               |
 | ------- | ----------- | ------- | ----------------------------------------- |
-| `pages` | `[OcrPage]` | —       | Extracted pages.                          |
-| `model` | `String`    | —       | The model used.                           |
+| `pages` | `[OcrPage]` | —       | Extracted pages in order.                 |
+| `model` | `String`    | —       | Model/provider used for OCR.              |
 | `usage` | `Usage?`    | `null`  | Token usage, if reported by the provider. |
 
 ---
@@ -859,17 +1219,55 @@ discounted rate and the remainder at the regular input rate.
 
 ---
 
+#### ProviderConfig
+
+Static configuration for a single provider entry in providers.json.
+
+| Field           | Type                | Default | Description                                                                                                                                                                                                                                      |
+| --------------- | ------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`          | `String`            | —       | Provider identifier (matches the entry key in providers.json).                                                                                                                                                                                   |
+| `displayName`   | `String?`           | `null`  | Human-readable provider name shown in UIs.                                                                                                                                                                                                       |
+| `baseUrl`       | `String?`           | `null`  | Base URL used as the default for this provider's HTTP client.                                                                                                                                                                                    |
+| `auth`          | `AuthConfig?`       | `null`  | Authentication scheme metadata (auth type + env var holding the key).                                                                                                                                                                            |
+| `endpoints`     | `[String]?`         | `null`  | Supported endpoint kinds (e.g. `chat`, `embeddings`).                                                                                                                                                                                            |
+| `modelPrefixes` | `[String]?`         | `null`  | Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`).                                                                                                                                                                           |
+| `paramMappings` | `[String: String]?` | `null`  | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`). Applied automatically by `ConfigDrivenProvider.transform_request`. |
+
+---
+
+#### RateLimitConfig
+
+Configuration for per-model rate limits.
+
+| Field    | Type       | Default   | Description                                          |
+| -------- | ---------- | --------- | ---------------------------------------------------- |
+| `rpm`    | `UInt32?`  | `null`    | Maximum requests per window. `null` means unlimited. |
+| `tpm`    | `UInt64?`  | `null`    | Maximum tokens per window. `null` means unlimited.   |
+| `window` | `Duration` | `60000ms` | Fixed window duration (defaults to 60 s).            |
+
+##### Methods
+
+###### default()
+
+**Signature:**
+
+```swift
+public static func default() -> RateLimitConfig
+```
+
+---
+
 #### RerankRequest
 
 Request to rerank documents by relevance to a query.
 
-| Field             | Type               | Default | Description      |
-| ----------------- | ------------------ | ------- | ---------------- |
-| `model`           | `String`           | —       | Model            |
-| `query`           | `String`           | —       | Query            |
-| `documents`       | `[RerankDocument]` | `[]`    | Documents        |
-| `topN`            | `UInt32?`          | `null`  | Top n            |
-| `returnDocuments` | `Bool?`            | `null`  | Return documents |
+| Field             | Type               | Default | Description                                                 |
+| ----------------- | ------------------ | ------- | ----------------------------------------------------------- |
+| `model`           | `String`           | —       | Model ID (e.g., `"cohere/rerank-english-v3.0"`).            |
+| `query`           | `String`           | —       | The search query.                                           |
+| `documents`       | `[RerankDocument]` | `[]`    | Documents to rerank.                                        |
+| `topN`            | `UInt32?`          | `null`  | Return only the top N results. Optional.                    |
+| `returnDocuments` | `Bool?`            | `null`  | Include the document content in results. Defaults to false. |
 
 ---
 
@@ -877,11 +1275,11 @@ Request to rerank documents by relevance to a query.
 
 Response from the rerank endpoint.
 
-| Field     | Type             | Default | Description       |
-| --------- | ---------------- | ------- | ----------------- |
-| `id`      | `String?`        | `null`  | Unique identifier |
-| `results` | `[RerankResult]` | —       | Results           |
-| `meta`    | `String?`        | `null`  | Meta              |
+| Field     | Type             | Default | Description                                      |
+| --------- | ---------------- | ------- | ------------------------------------------------ |
+| `id`      | `String?`        | `null`  | Unique identifier for this rerank request.       |
+| `results` | `[RerankResult]` | —       | Reranked documents in order of relevance.        |
+| `meta`    | `String?`        | `null`  | Optional metadata about the reranking operation. |
 
 ---
 
@@ -889,11 +1287,11 @@ Response from the rerank endpoint.
 
 A single reranked document with its relevance score.
 
-| Field            | Type                    | Default | Description                       |
-| ---------------- | ----------------------- | ------- | --------------------------------- |
-| `index`          | `UInt32`                | —       | Index                             |
-| `relevanceScore` | `Double`                | —       | Relevance score                   |
-| `document`       | `RerankResultDocument?` | `null`  | Document (rerank result document) |
+| Field            | Type                    | Default | Description                                                  |
+| ---------------- | ----------------------- | ------- | ------------------------------------------------------------ |
+| `index`          | `UInt32`                | —       | Original document index in the input list.                   |
+| `relevanceScore` | `Double`                | —       | Relevance score in `[0, 1]`. Higher indicates more relevant. |
+| `document`       | `RerankResultDocument?` | `null`  | Original document content (if `return_documents` was true).  |
 
 ---
 
@@ -901,52 +1299,60 @@ A single reranked document with its relevance score.
 
 The text content of a reranked document, returned when `return_documents` is true.
 
-| Field  | Type     | Default | Description |
-| ------ | -------- | ------- | ----------- |
-| `text` | `String` | —       | Text        |
+| Field  | Type     | Default | Description    |
+| ------ | -------- | ------- | -------------- |
+| `text` | `String` | —       | Document text. |
 
 ---
 
 #### ResponseObject
 
-| Field       | Type                   | Default | Description            |
-| ----------- | ---------------------- | ------- | ---------------------- |
-| `id`        | `String`               | —       | Unique identifier      |
-| `object`    | `String`               | —       | Object                 |
-| `createdAt` | `UInt64`               | —       | Created at             |
-| `model`     | `String`               | —       | Model                  |
-| `status`    | `String`               | —       | Status                 |
-| `output`    | `[ResponseOutputItem]` | `[]`    | Output                 |
-| `usage`     | `ResponseUsage?`       | `null`  | Usage (response usage) |
-| `error`     | `String?`              | `null`  | Error                  |
+Response from a structured response request.
+
+| Field       | Type                   | Default | Description                               |
+| ----------- | ---------------------- | ------- | ----------------------------------------- |
+| `id`        | `String`               | —       | Unique response ID.                       |
+| `object`    | `String`               | —       | Object type (e.g., `"response"`).         |
+| `createdAt` | `UInt64`               | —       | Unix timestamp of response creation.      |
+| `model`     | `String`               | —       | Model used to generate the response.      |
+| `status`    | `String`               | —       | Status (e.g., `"succeeded"`, `"failed"`). |
+| `output`    | `[ResponseOutputItem]` | `[]`    | Output items from the response.           |
+| `usage`     | `ResponseUsage?`       | `null`  | Token usage.                              |
+| `error`     | `String?`              | `null`  | Error details (if status is "failed").    |
 
 ---
 
 #### ResponseOutputItem
 
-| Field      | Type     | Default | Description                |
-| ---------- | -------- | ------- | -------------------------- |
-| `itemType` | `String` | —       | Item type                  |
-| `content`  | `String` | —       | The extracted text content |
+A single output item from the response.
+
+| Field      | Type     | Default | Description                                          |
+| ---------- | -------- | ------- | ---------------------------------------------------- |
+| `itemType` | `String` | —       | Output type (e.g., `"text"`, `"object"`, `"error"`). |
+| `content`  | `String` | —       | Output content (flattened into the object).          |
 
 ---
 
 #### ResponseTool
 
-| Field      | Type     | Default | Description |
-| ---------- | -------- | ------- | ----------- |
-| `toolType` | `String` | —       | Tool type   |
-| `config`   | `String` | —       | Config      |
+A tool available for the response request.
+
+| Field      | Type     | Default | Description                                     |
+| ---------- | -------- | ------- | ----------------------------------------------- |
+| `toolType` | `String` | —       | Tool type (e.g., "extractor", "search").        |
+| `config`   | `String` | —       | Tool configuration (flattened into the object). |
 
 ---
 
 #### ResponseUsage
 
-| Field          | Type     | Default | Description   |
-| -------------- | -------- | ------- | ------------- |
-| `inputTokens`  | `UInt64` | —       | Input tokens  |
-| `outputTokens` | `UInt64` | —       | Output tokens |
-| `totalTokens`  | `UInt64` | —       | Total tokens  |
+Token usage for a response.
+
+| Field          | Type     | Default | Description         |
+| -------------- | -------- | ------- | ------------------- |
+| `inputTokens`  | `UInt64` | —       | Input tokens used.  |
+| `outputTokens` | `UInt64` | —       | Output tokens used. |
+| `totalTokens`  | `UInt64` | —       | Total tokens used.  |
 
 ---
 
@@ -954,13 +1360,13 @@ The text content of a reranked document, returned when `return_documents` is tru
 
 A search request.
 
-| Field                | Type        | Default | Description                                                               |
-| -------------------- | ----------- | ------- | ------------------------------------------------------------------------- |
-| `model`              | `String`    | —       | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). |
-| `query`              | `String`    | —       | The search query.                                                         |
-| `maxResults`         | `UInt32?`   | `null`  | Maximum number of results to return.                                      |
-| `searchDomainFilter` | `[String]?` | `[]`    | Domain filter — restrict results to specific domains.                     |
-| `country`            | `String?`   | `null`  | Country code for localized results (ISO 3166-1 alpha-2).                  |
+| Field                | Type        | Default | Description                                                                    |
+| -------------------- | ----------- | ------- | ------------------------------------------------------------------------------ |
+| `model`              | `String`    | —       | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`).      |
+| `query`              | `String`    | —       | The search query string.                                                       |
+| `maxResults`         | `UInt32?`   | `null`  | Maximum number of results to return.                                           |
+| `searchDomainFilter` | `[String]?` | `[]`    | Domain filter — restrict results to specific domains.                          |
+| `country`            | `String?`   | `null`  | Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). |
 
 ---
 
@@ -968,10 +1374,10 @@ A search request.
 
 A search response.
 
-| Field     | Type             | Default | Description         |
-| --------- | ---------------- | ------- | ------------------- |
-| `results` | `[SearchResult]` | —       | The search results. |
-| `model`   | `String`         | —       | The model used.     |
+| Field     | Type             | Default | Description                               |
+| --------- | ---------------- | ------- | ----------------------------------------- |
+| `results` | `[SearchResult]` | —       | List of search results.                   |
+| `model`   | `String`         | —       | Model/provider that performed the search. |
 
 ---
 
@@ -981,106 +1387,126 @@ An individual search result.
 
 | Field     | Type      | Default | Description                                     |
 | --------- | --------- | ------- | ----------------------------------------------- |
-| `title`   | `String`  | —       | Title of the result.                            |
-| `url`     | `String`  | —       | URL of the result.                              |
-| `snippet` | `String`  | —       | Text snippet / excerpt.                         |
+| `title`   | `String`  | —       | Result title.                                   |
+| `url`     | `String`  | —       | Result URL.                                     |
+| `snippet` | `String`  | —       | Text snippet or excerpt from the page.          |
 | `date`    | `String?` | `null`  | Publication or last-updated date, if available. |
 
 ---
 
 #### SpecificFunction
 
-| Field  | Type     | Default | Description |
-| ------ | -------- | ------- | ----------- |
-| `name` | `String` | —       | The name    |
+Name of the specific function to invoke.
+
+| Field  | Type     | Default | Description    |
+| ------ | -------- | ------- | -------------- |
+| `name` | `String` | —       | Function name. |
 
 ---
 
 #### SpecificToolChoice
 
-| Field        | Type               | Default             | Description                  |
-| ------------ | ------------------ | ------------------- | ---------------------------- |
-| `choiceType` | `ToolType`         | `ToolType.Function` | Choice type (tool type)      |
-| `function`   | `SpecificFunction` | —                   | Function (specific function) |
+Directive to call a specific tool.
+
+| Field        | Type               | Default             | Description                      |
+| ------------ | ------------------ | ------------------- | -------------------------------- |
+| `choiceType` | `ToolType`         | `ToolType.Function` | Tool type (always "function").   |
+| `function`   | `SpecificFunction` | —                   | The specific function to invoke. |
 
 ---
 
 #### StreamChoice
 
-| Field          | Type            | Default | Description                   |
-| -------------- | --------------- | ------- | ----------------------------- |
-| `index`        | `UInt32`        | —       | Index                         |
-| `delta`        | `StreamDelta`   | —       | Delta (stream delta)          |
-| `finishReason` | `FinishReason?` | `null`  | Finish reason (finish reason) |
+A streaming choice with incremental delta.
+
+| Field          | Type            | Default | Description                                                    |
+| -------------- | --------------- | ------- | -------------------------------------------------------------- |
+| `index`        | `UInt32`        | —       | Index of this choice in the choices array.                     |
+| `delta`        | `StreamDelta`   | —       | Incremental update to the message (content, tool calls, etc.). |
+| `finishReason` | `FinishReason?` | `null`  | Why the stream ended (present only in final chunk).            |
 
 ---
 
 #### StreamDelta
 
+Incremental delta in a stream chunk.
+
 | Field          | Type                  | Default | Description                                                            |
 | -------------- | --------------------- | ------- | ---------------------------------------------------------------------- |
-| `role`         | `String?`             | `null`  | Role                                                                   |
-| `content`      | `String?`             | `null`  | The extracted text content                                             |
-| `toolCalls`    | `[StreamToolCall]?`   | `[]`    | Tool calls                                                             |
+| `role`         | `String?`             | `null`  | Role (typically present only in the first chunk).                      |
+| `content`      | `String?`             | `null`  | Partial content chunk (e.g., a few words of the response).             |
+| `toolCalls`    | `[StreamToolCall]?`   | `[]`    | Partial tool calls being streamed.                                     |
 | `functionCall` | `StreamFunctionCall?` | `null`  | Deprecated legacy function_call delta; retained for API compatibility. |
-| `refusal`      | `String?`             | `null`  | Refusal                                                                |
+| `refusal`      | `String?`             | `null`  | Partial refusal message.                                               |
 
 ---
 
 #### StreamFunctionCall
 
-| Field       | Type      | Default | Description |
-| ----------- | --------- | ------- | ----------- |
-| `name`      | `String?` | `null`  | The name    |
-| `arguments` | `String?` | `null`  | Arguments   |
+Partial function call details in a stream.
+
+| Field       | Type      | Default | Description                                   |
+| ----------- | --------- | ------- | --------------------------------------------- |
+| `name`      | `String?` | `null`  | Function name (typically in the first chunk). |
+| `arguments` | `String?` | `null`  | Partial JSON arguments chunk.                 |
 
 ---
 
 #### StreamOptions
 
-| Field          | Type    | Default | Description   |
-| -------------- | ------- | ------- | ------------- |
-| `includeUsage` | `Bool?` | `null`  | Include usage |
+Options for streaming responses.
+
+| Field          | Type    | Default | Description                                             |
+| -------------- | ------- | ------- | ------------------------------------------------------- |
+| `includeUsage` | `Bool?` | `null`  | If true, include token usage in the final stream chunk. |
 
 ---
 
 #### StreamToolCall
 
-| Field      | Type                  | Default | Description                     |
-| ---------- | --------------------- | ------- | ------------------------------- |
-| `index`    | `UInt32`              | —       | Index                           |
-| `id`       | `String?`             | `null`  | Unique identifier               |
-| `callType` | `ToolType?`           | `null`  | Call type (tool type)           |
-| `function` | `StreamFunctionCall?` | `null`  | Function (stream function call) |
+A streaming tool call being built incrementally.
+
+| Field      | Type                  | Default | Description                                                |
+| ---------- | --------------------- | ------- | ---------------------------------------------------------- |
+| `index`    | `UInt32`              | —       | Index of this tool call in the tool_calls array.           |
+| `id`       | `String?`             | `null`  | Tool call ID (typically in the first chunk for this call). |
+| `callType` | `ToolType?`           | `null`  | Tool type (typically "function").                          |
+| `function` | `StreamFunctionCall?` | `null`  | Partial function name and arguments.                       |
 
 ---
 
 #### SystemMessage
 
-| Field     | Type      | Default | Description                |
-| --------- | --------- | ------- | -------------------------- |
-| `content` | `String`  | —       | The extracted text content |
-| `name`    | `String?` | `null`  | The name                   |
+System message guiding model behavior for the entire conversation.
+
+| Field     | Type      | Default | Description                                                     |
+| --------- | --------- | ------- | --------------------------------------------------------------- |
+| `content` | `String`  | —       | Instructions or context that apply throughout the conversation. |
+| `name`    | `String?` | `null`  | Optional name for the system message source.                    |
 
 ---
 
 #### ToolCall
 
-| Field      | Type           | Default | Description              |
-| ---------- | -------------- | ------- | ------------------------ |
-| `id`       | `String`       | —       | Unique identifier        |
-| `callType` | `ToolType`     | —       | Call type (tool type)    |
-| `function` | `FunctionCall` | —       | Function (function call) |
+A tool call the model wants to execute.
+
+| Field      | Type           | Default | Description                                                         |
+| ---------- | -------------- | ------- | ------------------------------------------------------------------- |
+| `id`       | `String`       | —       | Unique ID for this call, used to reference in tool result messages. |
+| `callType` | `ToolType`     | —       | Tool type (always "function").                                      |
+| `function` | `FunctionCall` | —       | Function name and arguments.                                        |
 
 ---
 
 #### ToolMessage
 
-| Field        | Type      | Default | Description                |
-| ------------ | --------- | ------- | -------------------------- |
-| `content`    | `String`  | —       | The extracted text content |
-| `toolCallId` | `String`  | —       | Tool call id               |
-| `name`       | `String?` | `null`  | The name                   |
+Tool execution result returned to the model.
+
+| Field        | Type      | Default | Description                                  |
+| ------------ | --------- | ------- | -------------------------------------------- |
+| `content`    | `String`  | —       | Result of the tool execution.                |
+| `toolCallId` | `String`  | —       | ID of the tool call this result responds to. |
+| `name`       | `String?` | `null`  | Optional tool/function name.                 |
 
 ---
 
@@ -1088,12 +1514,12 @@ An individual search result.
 
 Response from a transcription request.
 
-| Field      | Type                      | Default | Description |
-| ---------- | ------------------------- | ------- | ----------- |
-| `text`     | `String`                  | —       | Text        |
-| `language` | `String?`                 | `null`  | Language    |
-| `duration` | `Double?`                 | `null`  | Duration    |
-| `segments` | `[TranscriptionSegment]?` | `[]`    | Segments    |
+| Field      | Type                      | Default | Description                                                                  |
+| ---------- | ------------------------- | ------- | ---------------------------------------------------------------------------- |
+| `text`     | `String`                  | —       | The transcribed text.                                                        |
+| `language` | `String?`                 | `null`  | Detected language (ISO-639-1 code).                                          |
+| `duration` | `Double?`                 | `null`  | Total audio duration in seconds.                                             |
+| `segments` | `[TranscriptionSegment]?` | `[]`    | Detailed segment-level transcription (if response_format is "verbose_json"). |
 
 ---
 
@@ -1101,16 +1527,18 @@ Response from a transcription request.
 
 A segment of transcribed audio with timing information.
 
-| Field   | Type     | Default | Description       |
-| ------- | -------- | ------- | ----------------- |
-| `id`    | `UInt32` | —       | Unique identifier |
-| `start` | `Double` | —       | Start             |
-| `end`   | `Double` | —       | End               |
-| `text`  | `String` | —       | Text              |
+| Field   | Type     | Default | Description                        |
+| ------- | -------- | ------- | ---------------------------------- |
+| `id`    | `UInt32` | —       | Segment index (0-based).           |
+| `start` | `Double` | —       | Start time in seconds.             |
+| `end`   | `Double` | —       | End time in seconds.               |
+| `text`  | `String` | —       | Transcribed text for this segment. |
 
 ---
 
 #### Usage
+
+Token-usage accounting returned by the provider on each completion / embedding call.
 
 | Field                 | Type                   | Default | Description                                                                                                                                                                         |
 | --------------------- | ---------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1123,10 +1551,12 @@ A segment of transcribed audio with timing information.
 
 #### UserMessage
 
-| Field     | Type          | Default            | Description                |
-| --------- | ------------- | ------------------ | -------------------------- |
-| `content` | `UserContent` | `UserContent.Text` | The extracted text content |
-| `name`    | `String?`     | `null`             | The name                   |
+User message in the conversation.
+
+| Field     | Type          | Default            | Description                                                                               |
+| --------- | ------------- | ------------------ | ----------------------------------------------------------------------------------------- |
+| `content` | `UserContent` | `UserContent.Text` | Message content as plain text or array of content parts (text, images, documents, audio). |
+| `name`    | `String?`     | `null`             | Optional name for the user.                                                               |
 
 ---
 
@@ -1149,31 +1579,37 @@ A chat message in a conversation.
 
 #### UserContent
 
-| Value   | Description                          |
-| ------- | ------------------------------------ |
-| `Text`  | Text format — Fields: `0`: `String`  |
-| `Parts` | Parts — Fields: `0`: `[ContentPart]` |
+User message content as either plain text or a list of multimodal parts.
+
+| Value   | Description                                                                             |
+| ------- | --------------------------------------------------------------------------------------- |
+| `Text`  | Plain text content. — Fields: `0`: `String`                                             |
+| `Parts` | Array of content parts (text, images, documents, audio). — Fields: `0`: `[ContentPart]` |
 
 ---
 
 #### ContentPart
 
-| Value        | Description                                        |
-| ------------ | -------------------------------------------------- |
-| `Text`       | Text format — Fields: `text`: `String`             |
-| `ImageUrl`   | Image url — Fields: `imageUrl`: `ImageUrl`         |
-| `Document`   | Document — Fields: `document`: `DocumentContent`   |
-| `InputAudio` | Input audio — Fields: `inputAudio`: `AudioContent` |
+A single content part in a user message — text, image, document, or audio.
+
+| Value        | Description                                                                              |
+| ------------ | ---------------------------------------------------------------------------------------- |
+| `Text`       | Plain text. — Fields: `text`: `String`                                                   |
+| `ImageUrl`   | Image identified by URL (with optional detail level). — Fields: `imageUrl`: `ImageUrl`   |
+| `Document`   | Document file (PDF, CSV, etc.) as base64 or URL. — Fields: `document`: `DocumentContent` |
+| `InputAudio` | Audio input as base64. — Fields: `inputAudio`: `AudioContent`                            |
 
 ---
 
 #### ImageDetail
 
-| Value  | Description |
-| ------ | ----------- |
-| `Low`  | Low         |
-| `High` | High        |
-| `Auto` | Auto        |
+Image detail level controlling token cost and processing.
+
+| Value  | Description                                                        |
+| ------ | ------------------------------------------------------------------ |
+| `Low`  | Low detail: scales image to 512x512, uses fewer tokens.            |
+| `High` | High detail: processes up to 2x2 grid of tiles, higher token cost. |
+| `Auto` | Auto: model chooses low or high based on image dimensions.         |
 
 ---
 
@@ -1193,39 +1629,47 @@ deserialization.
 
 #### ToolChoice
 
-| Value      | Description                                  |
-| ---------- | -------------------------------------------- |
-| `Mode`     | Mode — Fields: `0`: `ToolChoiceMode`         |
-| `Specific` | Specific — Fields: `0`: `SpecificToolChoice` |
+Tool usage mode or a specific tool to call.
+
+| Value      | Description                                                               |
+| ---------- | ------------------------------------------------------------------------- |
+| `Mode`     | Predefined mode: auto, required, or none. — Fields: `0`: `ToolChoiceMode` |
+| `Specific` | Force a specific tool to be called. — Fields: `0`: `SpecificToolChoice`   |
 
 ---
 
 #### ToolChoiceMode
 
-| Value      | Description |
-| ---------- | ----------- |
-| `Auto`     | Auto        |
-| `Required` | Required    |
-| `None`     | None        |
+Tool choice mode.
+
+| Value      | Description                                        |
+| ---------- | -------------------------------------------------- |
+| `Auto`     | Model may or may not call tools; default behavior. |
+| `Required` | Model must call at least one tool.                 |
+| `None`     | Model must not call any tools.                     |
 
 ---
 
 #### ResponseFormat
 
-| Value        | Description                                            |
-| ------------ | ------------------------------------------------------ |
-| `Text`       | Text format                                            |
-| `JsonObject` | Json object                                            |
-| `JsonSchema` | Json schema — Fields: `jsonSchema`: `JsonSchemaFormat` |
+Response format constraint.
+
+| Value        | Description                                                                                  |
+| ------------ | -------------------------------------------------------------------------------------------- |
+| `Text`       | Plain text output (default).                                                                 |
+| `JsonObject` | Output must be valid JSON object (no schema validation).                                     |
+| `JsonSchema` | Output must conform to the specified JSON schema. — Fields: `jsonSchema`: `JsonSchemaFormat` |
 
 ---
 
 #### StopSequence
 
-| Value      | Description                        |
-| ---------- | ---------------------------------- |
-| `Single`   | Single — Fields: `0`: `String`     |
-| `Multiple` | Multiple — Fields: `0`: `[String]` |
+Stop sequence(s) that cause the model to stop generating.
+
+| Value      | Description                                        |
+| ---------- | -------------------------------------------------- |
+| `Single`   | Single stop sequence. — Fields: `0`: `String`      |
+| `Multiple` | Multiple stop sequences. — Fields: `0`: `[String]` |
 
 ---
 
@@ -1269,10 +1713,12 @@ The format in which the embedding vectors are returned.
 
 #### EmbeddingInput
 
-| Value      | Description                        |
-| ---------- | ---------------------------------- |
-| `Single`   | Single — Fields: `0`: `String`     |
-| `Multiple` | Multiple — Fields: `0`: `[String]` |
+Text or texts to embed.
+
+| Value      | Description                                                        |
+| ---------- | ------------------------------------------------------------------ |
+| `Single`   | Single text string. — Fields: `0`: `String`                        |
+| `Multiple` | Multiple text strings (batch embedding). — Fields: `0`: `[String]` |
 
 ---
 
@@ -1280,10 +1726,10 @@ The format in which the embedding vectors are returned.
 
 Input to the moderation endpoint — a single string or multiple strings.
 
-| Value      | Description                        |
-| ---------- | ---------------------------------- |
-| `Single`   | Single — Fields: `0`: `String`     |
-| `Multiple` | Multiple — Fields: `0`: `[String]` |
+| Value      | Description                                                         |
+| ---------- | ------------------------------------------------------------------- |
+| `Single`   | Single text string. — Fields: `0`: `String`                         |
+| `Multiple` | Multiple text strings (batch moderation). — Fields: `0`: `[String]` |
 
 ---
 
@@ -1291,10 +1737,10 @@ Input to the moderation endpoint — a single string or multiple strings.
 
 A document to be reranked — either a plain string or an object with a text field.
 
-| Value    | Description                         |
-| -------- | ----------------------------------- |
-| `Text`   | Text format — Fields: `0`: `String` |
-| `Object` | Object — Fields: `text`: `String`   |
+| Value    | Description                                                                          |
+| -------- | ------------------------------------------------------------------------------------ |
+| `Text`   | Plain text document content. — Fields: `0`: `String`                                 |
+| `Object` | Document with explicit text field (may include metadata). — Fields: `text`: `String` |
 
 ---
 
@@ -1311,27 +1757,31 @@ Document input for OCR — either a URL or inline base64 data.
 
 #### FilePurpose
 
-| Value        | Description |
-| ------------ | ----------- |
-| `Assistants` | Assistants  |
-| `Batch`      | Batch       |
-| `FineTune`   | Fine tune   |
-| `Vision`     | Vision      |
+Purpose of an uploaded file.
+
+| Value        | Description                       |
+| ------------ | --------------------------------- |
+| `Assistants` | File for use with Assistants API. |
+| `Batch`      | File for batch processing.        |
+| `FineTune`   | File for fine-tuning.             |
+| `Vision`     | File for vision/image tasks.      |
 
 ---
 
 #### BatchStatus
 
-| Value        | Description |
-| ------------ | ----------- |
-| `Validating` | Validating  |
-| `Failed`     | Failed      |
-| `InProgress` | In progress |
-| `Finalizing` | Finalizing  |
-| `Completed`  | Completed   |
-| `Expired`    | Expired     |
-| `Cancelling` | Cancelling  |
-| `Cancelled`  | Cancelled   |
+Status of a batch job.
+
+| Value        | Description                    |
+| ------------ | ------------------------------ |
+| `Validating` | Validating the input file.     |
+| `Failed`     | Job failed.                    |
+| `InProgress` | Job is running.                |
+| `Finalizing` | Finalizing results.            |
+| `Completed`  | Job completed successfully.    |
+| `Expired`    | Job expired before completion. |
+| `Cancelling` | Job is being cancelled.        |
+| `Cancelled`  | Job has been cancelled.        |
 
 ---
 
@@ -1344,6 +1794,41 @@ How the API key is sent in the HTTP request.
 | `Bearer` | Bearer token: `Authorization: Bearer <key>`                     |
 | `ApiKey` | Custom header: e.g., `X-Api-Key: <key>` — Fields: `0`: `String` |
 | `None`   | No authentication required.                                     |
+
+---
+
+#### AuthType
+
+Auth scheme used by a provider.
+
+| Value     | Description                                                                    |
+| --------- | ------------------------------------------------------------------------------ |
+| `Bearer`  | Standard `Authorization: Bearer <key>` header.                                 |
+| `ApiKey`  | `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). |
+| `None`    | No authentication header required.                                             |
+| `Unknown` | Unrecognised auth scheme — falls back to bearer.                               |
+
+---
+
+#### Enforcement
+
+How budget limits are enforced.
+
+| Value  | Description                                                                       |
+| ------ | --------------------------------------------------------------------------------- |
+| `Hard` | Reject requests that would exceed the budget with `LiterLlmError.BudgetExceeded`. |
+| `Soft` | Allow requests through but emit a `tracing.warn!` when the budget is exceeded.    |
+
+---
+
+#### CacheBackend
+
+Storage backend for the response cache.
+
+| Value     | Description                                                                                                                                |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Memory`  | In-memory LRU cache (default). No external dependencies.                                                                                   |
+| `OpenDal` | OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.). — Fields: `scheme`: `String`, `config`: `[String: String]` |
 
 ---
 

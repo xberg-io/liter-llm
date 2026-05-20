@@ -14688,10 +14688,7 @@ pub unsafe extern "C" fn literllm_completion_cost(
     let prompt_tokens_rs = prompt_tokens;
     let completion_tokens_rs = completion_tokens;
     let result = liter_llm::completion_cost(&model_rs, prompt_tokens_rs, completion_tokens_rs);
-    match result {
-        Some(val) => val,
-        None => 0.0,
-    }
+    result.unwrap_or(0.0)
 }
 
 /// Calculate the estimated cost of a completion, accounting for cached
@@ -14733,10 +14730,7 @@ pub unsafe extern "C" fn literllm_completion_cost_with_cache(
     let completion_tokens_rs = completion_tokens;
     let result =
         liter_llm::completion_cost_with_cache(&model_rs, prompt_tokens_rs, cached_tokens_rs, completion_tokens_rs);
-    match result {
-        Some(val) => val,
-        None => 0.0,
-    }
+    result.unwrap_or(0.0)
 }
 
 /// Count tokens in a text string using the tokenizer for the given model.

@@ -6760,7 +6760,7 @@ pub fn unregister_custom_provider(name: String) -> Result<bool, JsValue> {
 #[wasm_bindgen(js_name = "allProviders")]
 pub fn all_providers() -> Result<Vec<WasmProviderConfig>, JsValue> {
     let result = liter_llm::provider::all_providers().map_err(|e| JsValue::from_str(&e.to_string()))?;
-    Ok(result.into_iter().map(|v| v.clone().into()).collect())
+    Ok(result.iter().map(|v| v.clone().into()).collect())
 }
 
 /// Return the set of complex provider names.
