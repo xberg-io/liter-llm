@@ -44,12 +44,12 @@ lint.ignore = [
 ]
 lint.mccabe.max-complexity = 15
 lint.per-file-ignores."tests/**" = [ "ANN", "D103", "PLR2004", "S101" ]
-# Alef-generated stubs/wrapper modules ship with conservative
-# `# noqa: TC001`/`F401` markers on imports that are conditionally used and
-# `from typing import AsyncIterator`/un-sorted import blocks that ruff would
-# rewrite on every regen. Disable the cosmetic rules on the generated files
-# until the alef Python codegen emits clean output. Remove once fixed
-# upstream.
+# The alef Python codegen still emits cosmetic warnings on the wrapper
+# modules: api.py keeps the legacy `from typing import AsyncIterator` and a
+# single-line import block, options.py carries # noqa: TC001 / F401 markers
+# that turn out unused on every regen, __init__.py star-imports re-sort with
+# a different convention. Silence these specific rules on the wrappers until
+# the codegen is updated to emit ruff-clean output.
 lint.per-file-ignores."liter_llm/api.py" = [ "F401", "I001", "UP035" ]
 lint.per-file-ignores."liter_llm/options.py" = [ "F401", "RUF100" ]
 lint.per-file-ignores."liter_llm/__init__.py" = [ "I001" ]
@@ -65,13 +65,13 @@ show_error_codes = true
 implicit_reexport = false
 namespace_packages = true
 
-# The alef-generated `liter_llm.api` wrapper has a known structural mismatch
-# between its `options.*` dataclass signatures and the `_internal_bindings.*`
-# pyclass types that the pyo3 bindings actually accept/return at runtime.
-# pyo3 reconciles the two via FromPyObject, so the runtime works and the
-# Python e2e suite passes; mypy only sees the static-type discrepancy. Remove
-# these overrides once alef's Python wrapper codegen emits the matching
-# converter calls (`_to_rust_*`) and casts the return values.
+# The alef-emitted `api.py` wrapper has a structural mismatch between its
+# `options.*` dataclass signatures and the `_internal_bindings.*` pyclass
+# types pyo3 accepts/returns at runtime. pyo3 reconciles them dynamically via
+# FromPyObject — the Python e2e suite exercises the runtime path — but mypy
+# sees only the static-type discrepancy. Disable the four error codes the
+# discrepancy raises until the codegen emits matching `_to_rust_*` calls and
+# casts the return values.
 [[tool.mypy.overrides]]
 module = "liter_llm.api"
 disable_error_code = [ "call-arg", "arg-type", "return-value", "attr-defined" ]
