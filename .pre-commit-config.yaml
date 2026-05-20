@@ -24,6 +24,10 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
+        # freezed-generated Dart shipped by flutter_rust_bridge contains trailing
+        # whitespace as a fundamental property of its emission, regenerated on
+        # every `task alef:all`. Excluding it stops the format/verify ping-pong.
+        exclude: ^packages/dart/lib/src/liter_llm_bridge_generated/lib\.freezed\.dart$
       - id: end-of-file-fixer
         exclude: ^(packages/python/liter_llm/py\.typed|packages/java/checkstyle\.properties)$
       - id: check-merge-conflict
