@@ -46,7 +46,7 @@ public struct ImageUrl: Codable, Sendable, Hashable {
 internal extension ImageUrl {
     init(_ rb: RustBridge.ImageUrlRef) throws {
         self.url = rb.url().toString()
-        self.detail = rb.detail()?.toString().flatMap { ImageDetail(rawValue: $0) }
+        self.detail = rb.detail().flatMap { ImageDetail(rawValue: $0.toString()) }
     }
     func intoRust() throws -> RustBridge.ImageUrl {
         let data = try JSONEncoder().encode(self)
@@ -522,7 +522,7 @@ internal extension Choice {
     init(_ rb: RustBridge.ChoiceRef) throws {
         self.index = rb.index()
         self.message = try AssistantMessage(rb.message())
-        self.finishReason = rb.finishReason()?.toString().flatMap { FinishReason(rawValue: $0) }
+        self.finishReason = rb.finishReason().flatMap { FinishReason(rawValue: $0.toString()) }
     }
     func intoRust() throws -> RustBridge.Choice {
         let data = try JSONEncoder().encode(self)
@@ -616,7 +616,7 @@ internal extension StreamChoice {
     init(_ rb: RustBridge.StreamChoiceRef) throws {
         self.index = rb.index()
         self.delta = try StreamDelta(rb.delta())
-        self.finishReason = rb.finishReason()?.toString().flatMap { FinishReason(rawValue: $0) }
+        self.finishReason = rb.finishReason().flatMap { FinishReason(rawValue: $0.toString()) }
     }
     func intoRust() throws -> RustBridge.StreamChoice {
         let data = try JSONEncoder().encode(self)
@@ -698,7 +698,7 @@ internal extension StreamToolCall {
     init(_ rb: RustBridge.StreamToolCallRef) throws {
         self.index = rb.index()
         self.id = rb.id()?.toString()
-        self.callType = rb.callType()?.toString().flatMap { ToolType(rawValue: $0) }
+        self.callType = rb.callType().flatMap { ToolType(rawValue: $0.toString()) }
         self.function = try rb.function().map { try StreamFunctionCall($0) }
     }
     func intoRust() throws -> RustBridge.StreamToolCall {
@@ -2318,9 +2318,9 @@ extension LiterLlmError {
         case .serviceUnavailable(message: _, status: let matched): return matched
         case .timeout: return 0
         case .streaming(message: _): return 0
-        case .endpointNotSupported(endpoint: _, provider: _): return 0
-        case .invalidHeader(name: _, reason: _): return 0
-        case .serialization(field0: _): return 0
+        case .endpointNotSupported(message: _, endpoint: _, provider: _): return 0
+        case .invalidHeader(message: _, name: _, reason: _): return 0
+        case .serialization(message: _, field0: _): return 0
         case .budgetExceeded(message: _, model: _): return 0
         case .hookRejected(message: _): return 0
         case .internalError(message: _): return 0
@@ -2338,9 +2338,9 @@ extension LiterLlmError {
         case .serviceUnavailable(message: _, status: _): return false
         case .timeout: return false
         case .streaming(message: _): return false
-        case .endpointNotSupported(endpoint: _, provider: _): return false
-        case .invalidHeader(name: _, reason: _): return false
-        case .serialization(field0: _): return false
+        case .endpointNotSupported(message: _, endpoint: _, provider: _): return false
+        case .invalidHeader(message: _, name: _, reason: _): return false
+        case .serialization(message: _, field0: _): return false
         case .budgetExceeded(message: _, model: _): return false
         case .hookRejected(message: _): return false
         case .internalError(message: _): return false
@@ -2358,9 +2358,9 @@ extension LiterLlmError {
         case .serviceUnavailable(message: _, status: _): return ""
         case .timeout: return ""
         case .streaming(message: _): return ""
-        case .endpointNotSupported(endpoint: _, provider: _): return ""
-        case .invalidHeader(name: _, reason: _): return ""
-        case .serialization(field0: _): return ""
+        case .endpointNotSupported(message: _, endpoint: _, provider: _): return ""
+        case .invalidHeader(message: _, name: _, reason: _): return ""
+        case .serialization(message: _, field0: _): return ""
         case .budgetExceeded(message: _, model: _): return ""
         case .hookRejected(message: _): return ""
         case .internalError(message: _): return ""
@@ -2372,6 +2372,9 @@ public final class DefaultClient {
     private let inner: RustBridge.DefaultClient
     public init(apiKey: String, baseUrl: String? = nil) throws {
         self.inner = try RustBridge.createDefaultClient(apiKey, baseUrl)
+    }
+    internal init(_ inner: RustBridge.DefaultClient) {
+        self.inner = inner
     }
     public func chat(_ req: ChatCompletionRequest) async throws -> ChatCompletionResponse {
         return try ChatCompletionResponse(try await RustBridge.defaultClientChat(self.inner, req))
@@ -2972,7 +2975,8 @@ public func cacheBackendFromJson(_ json: String) throws -> CacheBackend {
 /// Returns [`LiterLlmError`] if the underlying HTTP client cannot be
 /// constructed, or if the resolved provider configuration is invalid.
 public func createClient(apiKey: String, baseUrl: String?, timeoutSecs: UInt64?, maxRetries: UInt32?, modelHint: String?) throws -> DefaultClient {
-    return try RustBridge.createClient(apiKey, baseUrl, timeoutSecs, maxRetries, modelHint)
+    let _rb = try RustBridge.createClient(apiKey, baseUrl, timeoutSecs, maxRetries, modelHint)
+    return DefaultClient(_rb)
 }
 
 /// Create a new LLM client from a JSON string.
@@ -2984,7 +2988,8 @@ public func createClient(apiKey: String, baseUrl: String?, timeoutSecs: UInt64?,
 /// Returns [`LiterLlmError::BadRequest`] if `json` is not valid JSON or
 /// contains unknown fields.
 public func createClientFromJson(json: String) throws -> DefaultClient {
-    return try RustBridge.createClientFromJson(json)
+    let _rb = try RustBridge.createClientFromJson(json)
+    return DefaultClient(_rb)
 }
 
 /// Register a custom provider in the global runtime registry.
@@ -3010,13 +3015,6 @@ public func registerCustomProvider(config: CustomProviderConfig) throws {
 /// Returns an error only if the internal lock is poisoned.
 public func unregisterCustomProvider(name: String) throws -> Bool {
     return try RustBridge.unregisterCustomProvider(name)
-}
-
-/// Return all provider configs from the registry.
-///
-/// Useful for tooling, documentation generation, or runtime enumeration.
-public func allProviders() throws -> [ProviderConfig] {
-    return try RustBridge.allProviders()
 }
 
 /// Return the set of complex provider names.
@@ -3049,7 +3047,9 @@ public func complexProviderNames() throws -> [String] {
 /// assert!((usd - 0.0075).abs() < 1e-9);
 /// ```
 public func completionCost(model: String, promptTokens: UInt64, completionTokens: UInt64) -> Double? {
-    return RustBridge.completionCost(model, promptTokens, completionTokens)
+    let _rb_json = RustBridge.completionCost(model, promptTokens, completionTokens).toString()
+    let _rb_data = _rb_json.data(using: .utf8) ?? Data()
+    return (try? JSONDecoder().decode(Double?.self, from: _rb_data)) ?? nil
 }
 
 /// Calculate the estimated cost of a completion, accounting for cached
@@ -3065,7 +3065,9 @@ public func completionCost(model: String, promptTokens: UInt64, completionTokens
 /// Returns `None` if the model is not present in the embedded pricing
 /// registry, mirroring [`completion_cost`].
 public func completionCostWithCache(model: String, promptTokens: UInt64, cachedTokens: UInt64, completionTokens: UInt64) -> Double? {
-    return RustBridge.completionCostWithCache(model, promptTokens, cachedTokens, completionTokens)
+    let _rb_json = RustBridge.completionCostWithCache(model, promptTokens, cachedTokens, completionTokens).toString()
+    let _rb_data = _rb_json.data(using: .utf8) ?? Data()
+    return (try? JSONDecoder().decode(Double?.self, from: _rb_data)) ?? nil
 }
 
 /// Count tokens in a text string using the tokenizer for the given model.

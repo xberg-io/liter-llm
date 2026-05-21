@@ -129,7 +129,13 @@ repos:
         args: ["-c", "packages/java/checkstyle.xml", "-p", "packages/java/checkstyle.properties"]
         exclude: ^(\.mvn/wrapper/|e2e/|packages/java/src/)
       - id: mypy
-        args: ["--strict", "--config-file", "packages/python/pyproject.toml", "packages/python/liter_llm/"]
+        args:
+          [
+            "--strict",
+            "--config-file",
+            "packages/python/pyproject.toml",
+            "packages/python/liter_llm/",
+          ]
         exclude: ^(e2e/|scripts/|test_apps/|tests/|benchmarks/)
       - id: go-fmt
         exclude: ^(e2e/|test_apps/)
@@ -206,7 +212,7 @@ repos:
   # matches the pinned alef.toml version, falling back to a sha256-verified
   # release-tarball download. Do not override `entry:` here.
   - repo: https://github.com/kreuzberg-dev/alef
-    rev: v0.17.2
+    rev: v0.17.11
     hooks:
       - id: alef-verify
       - id: alef-sync-versions

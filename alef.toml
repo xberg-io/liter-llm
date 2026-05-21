@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.17.10"
+alef_version = "0.17.11"
 languages = [
   "python",
   "node",
@@ -160,6 +160,14 @@ package_name = "liter_llm"
 
 [crates.swift]
 package_name = "LiterLlm"
+# all_providers returns Vec<ProviderConfig>; swift-bridge transports as
+# RustVec<ProviderConfig> whose iteration yields ProviderConfigRef. There is no
+# symmetric init for borrowed refs, so the alef-emitted forwarder cannot wrap
+# each element back into ProviderConfig without a per-element JSON roundtrip.
+# Until alef-backend-swift wires Vec<Named> through needs_json_bridge, exclude
+# the function from the Swift binding (consumers can still call
+# RustBridge.allProviders() directly if needed).
+exclude_functions = ["all_providers"]
 
 [crates.swift.client_constructor_body]
 DefaultClient = """    let mut config = liter_llm::ClientConfig::new(api_key);

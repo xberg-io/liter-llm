@@ -6,9 +6,7 @@
  *
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_async_iterator_and_async_iterable_protocols
  */
-export declare class ChatStreamIterator {
-
-}
+export declare class ChatStreamIterator {}
 
 /**
  * Default client implementation backed by `reqwest`.
@@ -28,42 +26,42 @@ export declare class ChatStreamIterator {
  * headers are cached at construction to avoid redundant encoding on every request.
  */
 export declare class DefaultClient {
-  chat(req: ChatCompletionRequest): Promise<ChatCompletionResponse>
-  chatStream(req: ChatCompletionRequest): Promise<ChatStreamIterator>
-  embed(req: EmbeddingRequest): Promise<EmbeddingResponse>
-  listModels(): Promise<ModelsListResponse>
-  imageGenerate(req: CreateImageRequest): Promise<ImagesResponse>
-  speech(req: CreateSpeechRequest): Promise<Buffer>
-  transcribe(req: CreateTranscriptionRequest): Promise<TranscriptionResponse>
-  moderate(req: ModerationRequest): Promise<ModerationResponse>
-  rerank(req: RerankRequest): Promise<RerankResponse>
-  search(req: SearchRequest): Promise<SearchResponse>
-  ocr(req: OcrRequest): Promise<OcrResponse>
-  createFile(req: CreateFileRequest): Promise<FileObject>
-  retrieveFile(fileId: string): Promise<FileObject>
-  deleteFile(fileId: string): Promise<DeleteResponse>
-  listFiles(query?: FileListQuery | undefined | null): Promise<FileListResponse>
-  fileContent(fileId: string): Promise<Buffer>
-  createBatch(req: CreateBatchRequest): Promise<BatchObject>
-  retrieveBatch(batchId: string): Promise<BatchObject>
-  listBatches(query?: BatchListQuery | undefined | null): Promise<BatchListResponse>
-  cancelBatch(batchId: string): Promise<BatchObject>
-  createResponse(req: CreateResponseRequest): Promise<ResponseObject>
-  retrieveResponse(responseId: string): Promise<ResponseObject>
-  cancelResponse(responseId: string): Promise<ResponseObject>
+  chat(req: ChatCompletionRequest): Promise<ChatCompletionResponse>;
+  chatStream(req: ChatCompletionRequest): Promise<ChatStreamIterator>;
+  embed(req: EmbeddingRequest): Promise<EmbeddingResponse>;
+  listModels(): Promise<ModelsListResponse>;
+  imageGenerate(req: CreateImageRequest): Promise<ImagesResponse>;
+  speech(req: CreateSpeechRequest): Promise<Buffer>;
+  transcribe(req: CreateTranscriptionRequest): Promise<TranscriptionResponse>;
+  moderate(req: ModerationRequest): Promise<ModerationResponse>;
+  rerank(req: RerankRequest): Promise<RerankResponse>;
+  search(req: SearchRequest): Promise<SearchResponse>;
+  ocr(req: OcrRequest): Promise<OcrResponse>;
+  createFile(req: CreateFileRequest): Promise<FileObject>;
+  retrieveFile(fileId: string): Promise<FileObject>;
+  deleteFile(fileId: string): Promise<DeleteResponse>;
+  listFiles(query?: FileListQuery | undefined | null): Promise<FileListResponse>;
+  fileContent(fileId: string): Promise<Buffer>;
+  createBatch(req: CreateBatchRequest): Promise<BatchObject>;
+  retrieveBatch(batchId: string): Promise<BatchObject>;
+  listBatches(query?: BatchListQuery | undefined | null): Promise<BatchListResponse>;
+  cancelBatch(batchId: string): Promise<BatchObject>;
+  createResponse(req: CreateResponseRequest): Promise<ResponseObject>;
+  retrieveResponse(responseId: string): Promise<ResponseObject>;
+  cancelResponse(responseId: string): Promise<ResponseObject>;
 }
-export type JsDefaultClient = DefaultClient
+export type JsDefaultClient = DefaultClient;
 
 export declare class JsLiterLlmErrorInfo {
-  statusCode: number
-  isTransient: boolean
-  errorType: string
+  statusCode: number;
+  isTransient: boolean;
+  errorType: string;
   /** HTTP status code for this error (0 means no associated status). */
-  statusCode(): number
+  statusCode(): number;
   /** Returns `true` if the error is transient and a retry may succeed. */
-  isTransient(): boolean
+  isTransient(): boolean;
   /** Machine-readable error category string for matching and logging. */
-  errorType(): string
+  errorType(): string;
 }
 
 /**
@@ -71,297 +69,297 @@ export declare class JsLiterLlmErrorInfo {
  *
  * Useful for tooling, documentation generation, or runtime enumeration.
  */
-export declare function allProviders(): Array<ProviderConfig>
+export declare function allProviders(): Array<ProviderConfig>;
 
 /** Assistant's response to a user message. */
 export interface AssistantMessage {
   /** The assistant's text response. Absent if tool calls are returned instead. */
-  content?: string
+  content?: string;
   /** Optional name for the assistant. */
-  name?: string
+  name?: string;
   /** Tool calls the model wants to execute, if any. */
-  toolCalls?: Array<JsToolCall>
+  toolCalls?: Array<JsToolCall>;
   /** Refusal reason, if the model declined to respond per safety policies. */
-  refusal?: string
+  refusal?: string;
   /** Deprecated legacy function_call field; retained for API compatibility. */
-  functionCall?: JsFunctionCall
+  functionCall?: JsFunctionCall;
 }
 
 /** Audio content part for speech-capable models. */
 export interface AudioContent {
   /** Base64-encoded audio data. */
-  data?: string
+  data?: string;
   /** Audio format (e.g., "wav", "mp3", "ogg"). */
-  format?: string
+  format?: string;
 }
 
 /** Auth configuration block. */
 export interface AuthConfig {
   /** Auth scheme classification. */
-  type: JsAuthType
+  type: JsAuthType;
   /**
    * Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`).
    * Holds the variable name, never the secret value.
    */
-  envVar?: string
+  envVar?: string;
 }
 
 /** How the API key is sent in the HTTP request. */
 export declare const enum AuthHeaderFormat {
   /** Bearer token: `Authorization: Bearer <key>` */
-  Bearer = 'Bearer',
+  Bearer = "Bearer",
   /** Custom header: e.g., `X-Api-Key: <key>` */
-  ApiKey = 'ApiKey',
+  ApiKey = "ApiKey",
   /** No authentication required. */
-  None = 'None'
+  None = "None",
 }
 
 /** Auth scheme used by a provider. */
 export declare const enum AuthType {
   /** Standard `Authorization: Bearer <key>` header. */
-  Bearer = 'bearer',
+  Bearer = "bearer",
   /** `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). */
-  ApiKey = 'api-key',
+  ApiKey = "api-key",
   /** No authentication header required. */
-  None = 'none',
+  None = "none",
   /** Unrecognised auth scheme — falls back to bearer. */
-  Unknown = 'unknown'
+  Unknown = "unknown",
 }
 
 /** Query parameters for listing batches. */
 export interface BatchListQuery {
   /** Maximum number of results to return. Defaults to 20. */
-  limit?: number
+  limit?: number;
   /** Pagination cursor: return results after this batch ID. */
-  after?: string
+  after?: string;
 }
 
 /** Response from listing batches. */
 export interface BatchListResponse {
   /** Object type (always `"list"`). */
-  object?: string
+  object?: string;
   /** List of batch objects. */
-  data?: Array<BatchObject>
+  data?: Array<BatchObject>;
   /** Whether more results are available. */
-  hasMore?: boolean
+  hasMore?: boolean;
   /** First batch ID in the result set (for pagination). */
-  firstId?: string
+  firstId?: string;
   /** Last batch ID in the result set (for pagination). */
-  lastId?: string
+  lastId?: string;
 }
 
 /** A batch job object. */
 export interface BatchObject {
   /** Unique batch ID. */
-  id?: string
+  id?: string;
   /** Object type (always `"batch"`). */
-  object?: string
+  object?: string;
   /** API endpoint (e.g., `"/v1/chat/completions"`). */
-  endpoint?: string
+  endpoint?: string;
   /** ID of the input file. */
-  inputFileId?: string
+  inputFileId?: string;
   /** Completion window (e.g., `"24h"`). */
-  completionWindow?: string
+  completionWindow?: string;
   /** Current job status. */
-  status?: JsBatchStatus
+  status?: JsBatchStatus;
   /** ID of the output file (present when completed). */
-  outputFileId?: string
+  outputFileId?: string;
   /** ID of the error file (present if some requests failed). */
-  errorFileId?: string
+  errorFileId?: string;
   /** Unix timestamp of batch creation. */
-  createdAt?: number
+  createdAt?: number;
   /** Unix timestamp of completion (if completed). */
-  completedAt?: number
+  completedAt?: number;
   /** Unix timestamp of failure (if failed). */
-  failedAt?: number
+  failedAt?: number;
   /** Unix timestamp of expiration (if expired). */
-  expiredAt?: number
+  expiredAt?: number;
   /** Request processing counts. */
-  requestCounts?: JsBatchRequestCounts
+  requestCounts?: JsBatchRequestCounts;
   /** Metadata attached to the batch. */
-  metadata?: any
+  metadata?: any;
 }
 
 /** Request processing counts for a batch. */
 export interface BatchRequestCounts {
   /** Total requests in the batch. */
-  total?: number
+  total?: number;
   /** Completed requests. */
-  completed?: number
+  completed?: number;
   /** Failed requests. */
-  failed?: number
+  failed?: number;
 }
 
 /** Status of a batch job. */
 export declare const enum BatchStatus {
   /** Validating the input file. */
-  Validating = 'validating',
+  Validating = "validating",
   /** Job failed. */
-  Failed = 'failed',
+  Failed = "failed",
   /** Job is running. */
-  InProgress = 'in_progress',
+  InProgress = "in_progress",
   /** Finalizing results. */
-  Finalizing = 'finalizing',
+  Finalizing = "finalizing",
   /** Job completed successfully. */
-  Completed = 'completed',
+  Completed = "completed",
   /** Job expired before completion. */
-  Expired = 'expired',
+  Expired = "expired",
   /** Job is being cancelled. */
-  Cancelling = 'cancelling',
+  Cancelling = "cancelling",
   /** Job has been cancelled. */
-  Cancelled = 'cancelled'
+  Cancelled = "cancelled",
 }
 
 /** Configuration for budget enforcement. */
 export interface BudgetConfig {
   /** Maximum total spend across all models, in USD.  `None` means unlimited. */
-  globalLimit?: number
+  globalLimit?: number;
   /**
    * Per-model spending limits in USD.  Models not listed here are only
    * constrained by `global_limit`.
    */
-  modelLimits?: Record<string, number>
+  modelLimits?: Record<string, number>;
   /** Whether to reject requests or merely warn when a limit is exceeded. */
-  enforcement?: JsEnforcement
+  enforcement?: JsEnforcement;
 }
 
-export declare function budgetConfigDefault(): BudgetConfig
+export declare function budgetConfigDefault(): BudgetConfig;
 
 /** Storage backend for the response cache. */
 export interface CacheBackend {
-  type: string
-  scheme?: string
-  config?: Record<string, string>
+  type: string;
+  scheme?: string;
+  config?: Record<string, string>;
 }
 
 /** Configuration for the response cache. */
 export interface CacheConfig {
   /** Maximum number of cached entries. */
-  maxEntries?: number
+  maxEntries?: number;
   /** Time-to-live for each cached entry. */
-  ttl?: number
+  ttl?: number;
   /** Storage backend to use. */
-  backend?: JsCacheBackend
+  backend?: JsCacheBackend;
 }
 
-export declare function cacheConfigDefault(): CacheConfig
+export declare function cacheConfigDefault(): CacheConfig;
 
 /** A streamed chunk of a chat completion response. */
 export interface ChatCompletionChunk {
   /** Unique identifier for this stream. */
-  id?: string
+  id?: string;
   /**
    * Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored
    * as a plain `String` so non-standard provider values do not fail parsing.
    */
-  object?: string
+  object?: string;
   /** Unix timestamp of chunk creation. */
-  created?: number
+  created?: number;
   /** Model used to generate the chunk. */
-  model?: string
+  model?: string;
   /** Streaming choices (delta updates). */
-  choices?: Array<JsStreamChoice>
+  choices?: Array<JsStreamChoice>;
   /** Token usage (typically only in the final chunk). */
-  usage?: Usage
+  usage?: Usage;
   /** Fingerprint of the system configuration (OpenAI-specific). */
-  systemFingerprint?: string
+  systemFingerprint?: string;
   /** Service tier used (OpenAI-specific). */
-  serviceTier?: string
+  serviceTier?: string;
 }
 
 /** Chat completion request (compatible with OpenAI and similar APIs). */
 export interface ChatCompletionRequest {
   /** Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`). */
-  model?: string
+  model?: string;
   /** Conversation history from oldest to newest. */
-  messages?: Array<JsMessage>
+  messages?: Array<JsMessage>;
   /** Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0. */
-  temperature?: number
+  temperature?: number;
   /** Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused. */
-  topP?: number
+  topP?: number;
   /** Number of chat completions to generate. Defaults to 1. */
-  n?: number
+  n?: number;
   /**
    * Whether to stream the response.
    *
    * Managed by the client layer — do not set directly.
    */
-  stream?: boolean
+  stream?: boolean;
   /** Stop sequence(s) that halt token generation. */
-  stop?: JsStopSequence
+  stop?: JsStopSequence;
   /** Max output tokens. Different from max_completion_tokens in some providers. */
-  maxTokens?: number
+  maxTokens?: number;
   /** Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics. */
-  presencePenalty?: number
+  presencePenalty?: number;
   /** Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens. */
-  frequencyPenalty?: number
+  frequencyPenalty?: number;
   /**
    * Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic
    * serialization order — important when hashing or signing requests.
    */
-  logitBias?: Record<string, number>
+  logitBias?: Record<string, number>;
   /** User identifier for request tracking and abuse detection. */
-  user?: string
+  user?: string;
   /** Tools the model can invoke. */
-  tools?: Array<ChatCompletionTool>
+  tools?: Array<ChatCompletionTool>;
   /** Tool usage mode (auto, required, none, or specific tool). */
-  toolChoice?: JsToolChoice
+  toolChoice?: JsToolChoice;
   /** Whether the model can call multiple tools in parallel. Defaults to true. */
-  parallelToolCalls?: boolean
+  parallelToolCalls?: boolean;
   /** Output format constraint (text, JSON, JSON schema). */
-  responseFormat?: JsResponseFormat
+  responseFormat?: JsResponseFormat;
   /** Streaming options (e.g., include_usage). */
-  streamOptions?: JsStreamOptions
+  streamOptions?: JsStreamOptions;
   /** Random seed for reproducible outputs. Provider support varies. */
-  seed?: number
+  seed?: number;
   /** Reasoning effort level (low, medium, high) for extended-thinking models. */
-  reasoningEffort?: JsReasoningEffort
+  reasoningEffort?: JsReasoningEffort;
   /**
    * Provider-specific extra parameters merged into the request body.
    * Use for guardrails, safety settings, grounding config, etc.
    */
-  extraBody?: any
+  extraBody?: any;
 }
 
 /** Chat completion response from the API. */
 export interface ChatCompletionResponse {
   /** Unique identifier for this response. */
-  id?: string
+  id?: string;
   /**
    * Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a
    * plain `String` so non-standard provider values do not break deserialization.
    */
-  object?: string
+  object?: string;
   /** Unix timestamp of response creation. */
-  created?: number
+  created?: number;
   /** Model used to generate the response. */
-  model?: string
+  model?: string;
   /** List of completion choices. */
-  choices?: Array<JsChoice>
+  choices?: Array<JsChoice>;
   /** Token usage statistics. */
-  usage?: Usage
+  usage?: Usage;
   /** Fingerprint of the system configuration (OpenAI-specific). */
-  systemFingerprint?: string
+  systemFingerprint?: string;
   /** Service tier used (OpenAI-specific). */
-  serviceTier?: string
+  serviceTier?: string;
 }
 
 /** A tool the model can invoke (currently, all tools are functions). */
 export interface ChatCompletionTool {
   /** Tool type (always "function" in OpenAI spec). */
-  type: JsToolType
+  type: JsToolType;
   /** Function definition with name, description, and JSON schema parameters. */
-  function: JsFunctionDefinition
+  function: JsFunctionDefinition;
 }
 
 /** A single completion choice. */
 export interface Choice {
   /** Index of this choice in the choices array. */
-  index?: number
+  index?: number;
   /** The assistant's message response. */
-  message?: AssistantMessage
+  message?: AssistantMessage;
   /** Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). */
-  finishReason?: JsFinishReason
+  finishReason?: JsFinishReason;
 }
 
 /**
@@ -377,7 +375,11 @@ export interface Choice {
  *
  * # Example
  */
-export declare function completionCost(model: string, promptTokens: number, completionTokens: number): number | null
+export declare function completionCost(
+  model: string,
+  promptTokens: number,
+  completionTokens: number,
+): number | null;
 
 /**
  * Calculate the estimated cost of a completion, accounting for cached
@@ -393,7 +395,12 @@ export declare function completionCost(model: string, promptTokens: number, comp
  * Returns `None` if the model is not present in the embedded pricing
  * registry, mirroring `completion_cost`.
  */
-export declare function completionCostWithCache(model: string, promptTokens: number, cachedTokens: number, completionTokens: number): number | null
+export declare function completionCostWithCache(
+  model: string,
+  promptTokens: number,
+  cachedTokens: number,
+  completionTokens: number,
+): number | null;
 
 /**
  * Return the set of complex provider names.
@@ -403,15 +410,15 @@ export declare function completionCostWithCache(model: string, promptTokens: num
  *
  * The returned reference points into the static registry — no allocation.
  */
-export declare function complexProviderNames(): Array<string>
+export declare function complexProviderNames(): Array<string>;
 
 /** A single content part in a user message — text, image, document, or audio. */
 export interface ContentPart {
-  type: string
-  text?: string
-  imageUrl?: ImageUrl
-  document?: DocumentContent
-  inputAudio?: AudioContent
+  type: string;
+  text?: string;
+  imageUrl?: ImageUrl;
+  document?: DocumentContent;
+  inputAudio?: AudioContent;
 }
 
 /**
@@ -427,7 +434,10 @@ export interface ContentPart {
  * Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded or
  * if tokenization fails for any message.
  */
-export declare function countRequestTokens(model: string, req?: ChatCompletionRequest | undefined | null): number
+export declare function countRequestTokens(
+  model: string,
+  req?: ChatCompletionRequest | undefined | null,
+): number;
 
 /**
  * Count tokens in a text string using the tokenizer for the given model.
@@ -441,18 +451,18 @@ export declare function countRequestTokens(model: string, req?: ChatCompletionRe
  * Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
  * (e.g. network failure on first use) or if tokenization itself fails.
  */
-export declare function countTokens(model: string, text: string): number
+export declare function countTokens(model: string, text: string): number;
 
 /** Request to create a batch job. */
 export interface CreateBatchRequest {
   /** ID of the uploaded input file (JSONL format). */
-  inputFileId?: string
+  inputFileId?: string;
   /** API endpoint (e.g., `"/v1/chat/completions"`). */
-  endpoint?: string
+  endpoint?: string;
   /** Completion window (e.g., `"24h"`). */
-  completionWindow?: string
+  completionWindow?: string;
   /** Optional metadata to attach to the batch. */
-  metadata?: any
+  metadata?: any;
 }
 
 /**
@@ -467,7 +477,13 @@ export interface CreateBatchRequest {
  * Returns `LiterLlmError` if the underlying HTTP client cannot be
  * constructed, or if the resolved provider configuration is invalid.
  */
-export declare function createClient(apiKey: string, baseUrl?: string | undefined | null, timeoutSecs?: number | undefined | null, maxRetries?: number | undefined | null, modelHint?: string | undefined | null): DefaultClient
+export declare function createClient(
+  apiKey: string,
+  baseUrl?: string | undefined | null,
+  timeoutSecs?: number | undefined | null,
+  maxRetries?: number | undefined | null,
+  modelHint?: string | undefined | null,
+): DefaultClient;
 
 /**
  * Create a new LLM client from a JSON string.
@@ -479,130 +495,130 @@ export declare function createClient(apiKey: string, baseUrl?: string | undefine
  * Returns `LiterLlmError.BadRequest` if `json` is not valid JSON or
  * contains unknown fields.
  */
-export declare function createClientFromJson(json: string): DefaultClient
+export declare function createClientFromJson(json: string): DefaultClient;
 
 /** Request to upload a file. */
 export interface CreateFileRequest {
   /** Base64-encoded file data. */
-  file?: string
+  file?: string;
   /** Purpose for the file. */
-  purpose?: JsFilePurpose
+  purpose?: JsFilePurpose;
   /** Optional filename to associate with the upload. */
-  filename?: string
+  filename?: string;
 }
 
 /** Request to create images from a text prompt. */
 export interface CreateImageRequest {
   /** Text description of the image to generate. */
-  prompt?: string
+  prompt?: string;
   /** Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset. */
-  model?: string
+  model?: string;
   /** Number of images to generate. Defaults to 1. */
-  n?: number
+  n?: number;
   /** Image size (e.g., `"1024x1024"`, `"1792x1024"`). */
-  size?: string
+  size?: string;
   /** Image quality: `"standard"` or `"hd"`. */
-  quality?: string
+  quality?: string;
   /** Style: `"natural"` or `"vivid"` (DALL-E 3 only). */
-  style?: string
+  style?: string;
   /** Response format: `"url"` or `"b64_json"`. */
-  responseFormat?: string
+  responseFormat?: string;
   /** User identifier for request tracking. */
-  user?: string
+  user?: string;
 }
 
 /** Request to create a structured response. */
 export interface CreateResponseRequest {
   /** Model ID. */
-  model?: string
+  model?: string;
   /** Input data to process (e.g., a document to extract from). */
-  input?: any
+  input?: any;
   /** Instructions for processing the input. */
-  instructions?: string
+  instructions?: string;
   /** Available tools the model can use. */
-  tools?: Array<JsResponseTool>
+  tools?: Array<JsResponseTool>;
   /** Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0. */
-  temperature?: number
+  temperature?: number;
   /** Maximum output tokens. */
-  maxOutputTokens?: number
+  maxOutputTokens?: number;
   /** Optional metadata. */
-  metadata?: any
+  metadata?: any;
 }
 
 /** Request to generate speech audio from text. */
 export interface CreateSpeechRequest {
   /** Model ID (e.g., `"tts-1"`, `"tts-1-hd"`). */
-  model?: string
+  model?: string;
   /** Text to synthesize into speech. */
-  input?: string
+  input?: string;
   /** Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). */
-  voice?: string
+  voice?: string;
   /** Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`). */
-  responseFormat?: string
+  responseFormat?: string;
   /** Playback speed in `[0.25, 4.0]`. Defaults to 1.0. */
-  speed?: number
+  speed?: number;
 }
 
 /** Request to transcribe audio into text. */
 export interface CreateTranscriptionRequest {
   /** Model ID (e.g., `"whisper-1"`). */
-  model?: string
+  model?: string;
   /** Base64-encoded audio file data. */
-  file?: string
+  file?: string;
   /** Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. */
-  language?: string
+  language?: string;
   /** Optional text to guide the model (improves accuracy for domain-specific terms). */
-  prompt?: string
+  prompt?: string;
   /** Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`). */
-  responseFormat?: string
+  responseFormat?: string;
   /** Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0. */
-  temperature?: number
+  temperature?: number;
 }
 
 /** Configuration for registering a custom LLM provider at runtime. */
 export interface CustomProviderConfig {
   /** Unique name for this provider (e.g., "my-provider"). */
-  name: string
+  name: string;
   /** Base URL for the provider's API (e.g., "https://api.my-provider.com/v1"). */
-  baseUrl: string
+  baseUrl: string;
   /** Authentication header format. */
-  authHeader: JsAuthHeaderFormat
+  authHeader: JsAuthHeaderFormat;
   /** Model name prefixes that route to this provider (e.g., ["my-"]). */
-  modelPrefixes: Array<string>
+  modelPrefixes: Array<string>;
 }
 
 /** Response from a delete operation. */
 export interface DeleteResponse {
   /** ID of the deleted resource. */
-  id?: string
+  id?: string;
   /** Object type. */
-  object?: string
+  object?: string;
   /** Confirmation that the resource was deleted. */
-  deleted?: boolean
+  deleted?: boolean;
 }
 
 /** Developer message (system-like message for Claude models). */
 export interface DeveloperMessage {
   /** Developer-specific instructions or context. */
-  content?: string
+  content?: string;
   /** Optional name for the developer message source. */
-  name?: string
+  name?: string;
 }
 
 /** PDF/document content part for vision-capable models. */
 export interface DocumentContent {
   /** Base64-encoded document data or URL. */
-  data?: string
+  data?: string;
   /** MIME type (e.g., "application/pdf", "text/csv"). */
-  mediaType?: string
+  mediaType?: string;
 }
 
 /** The format in which the embedding vectors are returned. */
 export declare const enum EmbeddingFormat {
   /** 32-bit floating-point numbers (default). */
-  Float = 'float',
+  Float = "float",
   /** Base64-encoded string representation of the floats. */
-  Base64 = 'base64'
+  Base64 = "base64",
 }
 
 /** A single embedding vector. */
@@ -611,25 +627,25 @@ export interface EmbeddingObject {
    * Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain
    * `String` so non-standard provider values do not break deserialization.
    */
-  object: string
+  object: string;
   /** The embedding vector. */
-  embedding: Array<number>
+  embedding: Array<number>;
   /** Index in the batch (corresponds to input order). */
-  index: number
+  index: number;
 }
 
 /** Embedding request. */
 export interface EmbeddingRequest {
   /** Model ID (e.g., `"text-embedding-3-small"`). */
-  model?: string
+  model?: string;
   /** Text or texts to embed. */
-  input?: JsEmbeddingInput
+  input?: JsEmbeddingInput;
   /** Output format: float (native) or base64. */
-  encodingFormat?: JsEmbeddingFormat
+  encodingFormat?: JsEmbeddingFormat;
   /** Requested embedding dimensions (if supported by the model). */
-  dimensions?: number
+  dimensions?: number;
   /** User identifier for request tracking. */
-  user?: string
+  user?: string;
 }
 
 /** Embedding response. */
@@ -638,13 +654,13 @@ export interface EmbeddingResponse {
    * Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
    * `String` so non-standard provider values do not break deserialization.
    */
-  object: string
+  object: string;
   /** List of embeddings. */
-  data: Array<JsEmbeddingObject>
+  data: Array<JsEmbeddingObject>;
   /** Model used to generate embeddings. */
-  model: string
+  model: string;
   /** Token usage (input tokens only; embeddings have zero output tokens). */
-  usage?: Usage
+  usage?: Usage;
 }
 
 /** How budget limits are enforced. */
@@ -653,12 +669,12 @@ export declare const enum Enforcement {
    * Reject requests that would exceed the budget with
    * `LiterLlmError.BudgetExceeded`.
    */
-  Hard = 'Hard',
+  Hard = "Hard",
   /**
    * Allow requests through but emit a `tracing.warn!` when the budget is
    * exceeded.
    */
-  Soft = 'Soft'
+  Soft = "Soft",
 }
 
 /**
@@ -676,66 +692,66 @@ export declare const enum Enforcement {
  * WASM builds are exempt — the WASM target uses the browser/Node.js fetch
  * API instead of rustls, so no crypto provider is needed.
  */
-export declare function ensureCryptoProvider(): void
+export declare function ensureCryptoProvider(): void;
 
 /** Query parameters for listing files. */
 export interface FileListQuery {
   /** Filter by file purpose (e.g., `"batch"`, `"fine-tune"`). */
-  purpose?: string
+  purpose?: string;
   /** Maximum number of results to return. Defaults to 20. */
-  limit?: number
+  limit?: number;
   /** Pagination cursor: return results after this file ID. */
-  after?: string
+  after?: string;
 }
 
 /** Response from listing files. */
 export interface FileListResponse {
   /** Object type (always `"list"`). */
-  object?: string
+  object?: string;
   /** List of file objects. */
-  data?: Array<FileObject>
+  data?: Array<FileObject>;
   /** Whether more results are available. */
-  hasMore?: boolean
+  hasMore?: boolean;
 }
 
 /** An uploaded file object. */
 export interface FileObject {
   /** Unique file ID. */
-  id?: string
+  id?: string;
   /** Object type (always `"file"`). */
-  object?: string
+  object?: string;
   /** File size in bytes. */
-  bytes?: number
+  bytes?: number;
   /** Unix timestamp of file creation. */
-  createdAt?: number
+  createdAt?: number;
   /** Filename. */
-  filename?: string
+  filename?: string;
   /** File purpose. */
-  purpose?: string
+  purpose?: string;
   /** Processing status (e.g., `"uploaded"`, `"processed"`). */
-  status?: string
+  status?: string;
 }
 
 /** Purpose of an uploaded file. */
 export declare const enum FilePurpose {
   /** File for use with Assistants API. */
-  Assistants = 'assistants',
+  Assistants = "assistants",
   /** File for batch processing. */
-  Batch = 'batch',
+  Batch = "batch",
   /** File for fine-tuning. */
-  FineTune = 'fine-tune',
+  FineTune = "fine-tune",
   /** File for vision/image tasks. */
-  Vision = 'vision'
+  Vision = "vision",
 }
 
 /** Why a choice stopped generating tokens. */
 export declare const enum FinishReason {
-  Stop = 'stop',
-  Length = 'length',
-  ToolCalls = 'tool_calls',
-  ContentFilter = 'content_filter',
+  Stop = "stop",
+  Length = "length",
+  ToolCalls = "tool_calls",
+  ContentFilter = "content_filter",
   /** Deprecated legacy finish reason; retained for API compatibility. */
-  FunctionCall = 'function_call',
+  FunctionCall = "function_call",
   /**
    * Catch-all for unknown finish reasons returned by non-OpenAI providers.
    *
@@ -745,107 +761,107 @@ export declare const enum FinishReason {
    * for all variants.  The original value can be recovered by inspecting the
    * raw JSON if needed.
    */
-  Other = 'other'
+  Other = "other",
 }
 
 /** Function call details. */
 export interface FunctionCall {
   /** Function name. */
-  name: string
+  name: string;
   /** Arguments as a JSON string (parse with serde_json::from_str). */
-  arguments: string
+  arguments: string;
 }
 
 /** Function definition exposed to the model. */
 export interface FunctionDefinition {
   /** Name of the function. Required and must be alphanumeric + underscores. */
-  name: string
+  name: string;
   /** Human-readable description explaining what the function does. */
-  description?: string
+  description?: string;
   /** JSON Schema defining the function's parameters. */
-  parameters?: any
+  parameters?: any;
   /** If true, enforce strict JSON schema validation for arguments. */
-  strict?: boolean
+  strict?: boolean;
 }
 
 /** Deprecated legacy function-role message body. */
 export interface FunctionMessage {
-  content?: string
-  name?: string
+  content?: string;
+  name?: string;
 }
 
 /** A single generated image, returned as either a URL or base64 data. */
 export interface Image {
   /** Image URL (if response_format was "url"). */
-  url?: string
+  url?: string;
   /** Base64-encoded image data (if response_format was "b64_json"). */
-  b64Json?: string
+  b64Json?: string;
   /** The final prompt used to generate the image (DALL-E 3). */
-  revisedPrompt?: string
+  revisedPrompt?: string;
 }
 
 /** Image detail level controlling token cost and processing. */
 export declare const enum ImageDetail {
   /** Low detail: scales image to 512x512, uses fewer tokens. */
-  Low = 'low',
+  Low = "low",
   /** High detail: processes up to 2x2 grid of tiles, higher token cost. */
-  High = 'high',
+  High = "high",
   /** Auto: model chooses low or high based on image dimensions. */
-  Auto = 'auto'
+  Auto = "auto",
 }
 
 /** Response containing generated images. */
 export interface ImagesResponse {
   /** Unix timestamp of image creation. */
-  created?: number
+  created?: number;
   /** List of generated images. */
-  data?: Array<JsImage>
+  data?: Array<JsImage>;
 }
 
 /** An image URL reference with optional detail level for processing. */
 export interface ImageUrl {
   /** URL of the image (data URI or HTTP/HTTPS URL). */
-  url?: string
+  url?: string;
   /** Detail level: low (512x512), high (2x2 tiles), or auto (model-selected). */
-  detail?: JsImageDetail
+  detail?: JsImageDetail;
 }
 
 /** JSON Schema specification for constrained output. */
 export interface JsonSchemaFormat {
   /** Name of the schema (must be unique in the request). */
-  name?: string
+  name?: string;
   /** Description of what the schema represents. */
-  description?: string
+  description?: string;
   /** JSON Schema object defining the output structure. */
-  schema?: any
+  schema?: any;
   /** If true, enforce strict schema validation. */
-  strict?: boolean
+  strict?: boolean;
 }
 
 /** A chat message in a conversation. */
 export interface Message {
-  role: string
-  system?: SystemMessage
-  user?: UserMessage
-  assistant?: AssistantMessage
-  tool?: ToolMessage
-  developer?: DeveloperMessage
-  function?: FunctionMessage
+  role: string;
+  system?: SystemMessage;
+  user?: UserMessage;
+  assistant?: AssistantMessage;
+  tool?: ToolMessage;
+  developer?: DeveloperMessage;
+  function?: FunctionMessage;
 }
 
 /** A model available from the API. */
 export interface ModelObject {
   /** Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`). */
-  id?: string
+  id?: string;
   /**
    * Always `"model"` from OpenAI-compatible APIs.  Stored as a plain
    * `String` so non-standard provider values do not break deserialization.
    */
-  object?: string
+  object?: string;
   /** Unix timestamp of model creation (or release date). */
-  created?: number
+  created?: number;
   /** Organization or entity that owns the model. */
-  ownedBy?: string
+  ownedBy?: string;
 }
 
 /** Response listing available models. */
@@ -854,147 +870,147 @@ export interface ModelsListResponse {
    * Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
    * `String` so non-standard provider values do not break deserialization.
    */
-  object?: string
+  object?: string;
   /** List of available models. */
-  data?: Array<JsModelObject>
+  data?: Array<JsModelObject>;
 }
 
 /** Boolean flags for each moderation category. */
 export interface ModerationCategories {
   /** Sexual content. */
-  sexual?: boolean
+  sexual?: boolean;
   /** Hate speech. */
-  hate?: boolean
+  hate?: boolean;
   /** Harassment. */
-  harassment?: boolean
+  harassment?: boolean;
   /** Self-harm content. */
-  'self-harm'?: boolean
+  "self-harm"?: boolean;
   /** Sexual content involving minors. */
-  'sexual/minors'?: boolean
+  "sexual/minors"?: boolean;
   /** Hate speech that threatens violence. */
-  'hate/threatening'?: boolean
+  "hate/threatening"?: boolean;
   /** Graphic violence. */
-  'violence/graphic'?: boolean
+  "violence/graphic"?: boolean;
   /** Intent to self-harm. */
-  'self-harm/intent'?: boolean
+  "self-harm/intent"?: boolean;
   /** Instructions for self-harm. */
-  'self-harm/instructions'?: boolean
+  "self-harm/instructions"?: boolean;
   /** Harassment that threatens violence. */
-  'harassment/threatening'?: boolean
+  "harassment/threatening"?: boolean;
   /** Non-graphic violence. */
-  violence?: boolean
+  violence?: boolean;
 }
 
 /** Confidence scores for each moderation category. */
 export interface ModerationCategoryScores {
   /** Sexual content score. */
-  sexual?: number
+  sexual?: number;
   /** Hate speech score. */
-  hate?: number
+  hate?: number;
   /** Harassment score. */
-  harassment?: number
+  harassment?: number;
   /** Self-harm content score. */
-  'self-harm'?: number
+  "self-harm"?: number;
   /** Sexual content involving minors score. */
-  'sexual/minors'?: number
+  "sexual/minors"?: number;
   /** Hate speech that threatens violence score. */
-  'hate/threatening'?: number
+  "hate/threatening"?: number;
   /** Graphic violence score. */
-  'violence/graphic'?: number
+  "violence/graphic"?: number;
   /** Intent to self-harm score. */
-  'self-harm/intent'?: number
+  "self-harm/intent"?: number;
   /** Instructions for self-harm score. */
-  'self-harm/instructions'?: number
+  "self-harm/instructions"?: number;
   /** Harassment that threatens violence score. */
-  'harassment/threatening'?: number
+  "harassment/threatening"?: number;
   /** Non-graphic violence score. */
-  violence?: number
+  violence?: number;
 }
 
 /** Request to classify content for policy violations. */
 export interface ModerationRequest {
   /** Text or texts to check. */
-  input?: JsModerationInput
+  input?: JsModerationInput;
   /** Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset. */
-  model?: string
+  model?: string;
 }
 
 /** Response from the moderation endpoint. */
 export interface ModerationResponse {
   /** Unique identifier for this moderation request. */
-  id: string
+  id: string;
   /** Model used for classification. */
-  model: string
+  model: string;
   /** Results for each input string. */
-  results: Array<JsModerationResult>
+  results: Array<JsModerationResult>;
 }
 
 /** A single moderation classification result. */
 export interface ModerationResult {
   /** True if any category was flagged. */
-  flagged: boolean
+  flagged: boolean;
   /** Boolean flags for each moderation category. */
-  categories: JsModerationCategories
+  categories: JsModerationCategories;
   /** Confidence scores for each category. */
-  categoryScores: JsModerationCategoryScores
+  categoryScores: JsModerationCategoryScores;
 }
 
 /** Document input for OCR — either a URL or inline base64 data. */
 export interface OcrDocument {
-  type: string
-  url?: string
-  data?: string
-  mediaType?: string
+  type: string;
+  url?: string;
+  data?: string;
+  mediaType?: string;
 }
 
 /** An image extracted from an OCR page. */
 export interface OcrImage {
   /** Unique image identifier within the document. */
-  id: string
+  id: string;
   /** Base64-encoded image data (if `include_image_base64` was true). */
-  imageBase64?: string
+  imageBase64?: string;
 }
 
 /** A single page of OCR output. */
 export interface OcrPage {
   /** Page index (0-based). */
-  index: number
+  index: number;
   /** Extracted page content as Markdown. */
-  markdown: string
+  markdown: string;
   /** Embedded images extracted from the page (if `include_image_base64` was true). */
-  images?: Array<JsOcrImage>
+  images?: Array<JsOcrImage>;
   /** Page dimensions in pixels, if available. */
-  dimensions?: JsPageDimensions
+  dimensions?: JsPageDimensions;
 }
 
 /** An OCR request. */
 export interface OcrRequest {
   /** The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). */
-  model?: string
+  model?: string;
   /** The document to process (URL or base64). */
-  document?: JsOcrDocument
+  document?: JsOcrDocument;
   /** Specific pages to process (1-indexed). `None` means all pages. */
-  pages?: Array<number>
+  pages?: Array<number>;
   /** Whether to include base64-encoded images of each processed page. */
-  includeImageBase64?: boolean
+  includeImageBase64?: boolean;
 }
 
 /** An OCR response. */
 export interface OcrResponse {
   /** Extracted pages in order. */
-  pages: Array<JsOcrPage>
+  pages: Array<JsOcrPage>;
   /** Model/provider used for OCR. */
-  model: string
+  model: string;
   /** Token usage, if reported by the provider. */
-  usage?: Usage
+  usage?: Usage;
 }
 
 /** Page dimensions in pixels. */
 export interface PageDimensions {
   /** Width in pixels. */
-  width: number
+  width: number;
   /** Height in pixels. */
-  height: number
+  height: number;
 }
 
 /**
@@ -1007,25 +1023,25 @@ export interface PageDimensions {
  */
 export interface PromptTokensDetails {
   /** Cached tokens present in the prompt. Defaults to 0 when absent. */
-  cachedTokens?: number
+  cachedTokens?: number;
   /** Audio input tokens present in the prompt. Defaults to 0 when absent. */
-  audioTokens?: number
+  audioTokens?: number;
 }
 
 /** Static configuration for a single provider entry in providers.json. */
 export interface ProviderConfig {
   /** Provider identifier (matches the entry key in providers.json). */
-  name: string
+  name: string;
   /** Human-readable provider name shown in UIs. */
-  displayName?: string
+  displayName?: string;
   /** Base URL used as the default for this provider's HTTP client. */
-  baseUrl?: string
+  baseUrl?: string;
   /** Authentication scheme metadata (auth type + env var holding the key). */
-  auth?: JsAuthConfig
+  auth?: JsAuthConfig;
   /** Supported endpoint kinds (e.g. `chat`, `embeddings`). */
-  endpoints?: Array<string>
+  endpoints?: Array<string>;
   /** Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`). */
-  modelPrefixes?: Array<string>
+  modelPrefixes?: Array<string>;
   /**
    * Parameter key renaming for this provider.
    *
@@ -1033,26 +1049,26 @@ export interface ProviderConfig {
    * to the name this provider expects (e.g. `"max_tokens"`).  Applied
    * automatically by [`ConfigDrivenProvider::transform_request`].
    */
-  paramMappings?: Record<string, string>
+  paramMappings?: Record<string, string>;
 }
 
 /** Configuration for per-model rate limits. */
 export interface RateLimitConfig {
   /** Maximum requests per window.  `None` means unlimited. */
-  rpm?: number
+  rpm?: number;
   /** Maximum tokens per window.  `None` means unlimited. */
-  tpm?: number
+  tpm?: number;
   /** Fixed window duration (defaults to 60 s). */
-  window?: number
+  window?: number;
 }
 
-export declare function rateLimitConfigDefault(): RateLimitConfig
+export declare function rateLimitConfigDefault(): RateLimitConfig;
 
 /** Controls how much reasoning effort the model should use. */
 export declare const enum ReasoningEffort {
-  Low = 'low',
-  Medium = 'medium',
-  High = 'high'
+  Low = "low",
+  Medium = "medium",
+  High = "high",
 }
 
 /**
@@ -1066,234 +1082,234 @@ export declare const enum ReasoningEffort {
  * Returns an error if the config is invalid (empty name, empty base_url, or
  * no model prefixes).
  */
-export declare function registerCustomProvider(config: CustomProviderConfig): void
+export declare function registerCustomProvider(config: CustomProviderConfig): void;
 
 /** Request to rerank documents by relevance to a query. */
 export interface RerankRequest {
   /** Model ID (e.g., `"cohere/rerank-english-v3.0"`). */
-  model?: string
+  model?: string;
   /** The search query. */
-  query?: string
+  query?: string;
   /** Documents to rerank. */
-  documents?: Array<JsRerankDocument>
+  documents?: Array<JsRerankDocument>;
   /** Return only the top N results. Optional. */
-  topN?: number
+  topN?: number;
   /** Include the document content in results. Defaults to false. */
-  returnDocuments?: boolean
+  returnDocuments?: boolean;
 }
 
 /** Response from the rerank endpoint. */
 export interface RerankResponse {
   /** Unique identifier for this rerank request. */
-  id?: string
+  id?: string;
   /** Reranked documents in order of relevance. */
-  results: Array<JsRerankResult>
+  results: Array<JsRerankResult>;
   /** Optional metadata about the reranking operation. */
-  meta?: any
+  meta?: any;
 }
 
 /** A single reranked document with its relevance score. */
 export interface RerankResult {
   /** Original document index in the input list. */
-  index: number
+  index: number;
   /** Relevance score in `[0, 1]`. Higher indicates more relevant. */
-  relevanceScore: number
+  relevanceScore: number;
   /** Original document content (if `return_documents` was true). */
-  document?: JsRerankResultDocument
+  document?: JsRerankResultDocument;
 }
 
 /** The text content of a reranked document, returned when `return_documents` is true. */
 export interface RerankResultDocument {
   /** Document text. */
-  text: string
+  text: string;
 }
 
 /** Response format constraint. */
 export interface ResponseFormat {
-  type: string
-  jsonSchema?: JsonSchemaFormat
+  type: string;
+  jsonSchema?: JsonSchemaFormat;
 }
 
 /** Response from a structured response request. */
 export interface ResponseObject {
   /** Unique response ID. */
-  id?: string
+  id?: string;
   /** Object type (e.g., `"response"`). */
-  object?: string
+  object?: string;
   /** Unix timestamp of response creation. */
-  createdAt?: number
+  createdAt?: number;
   /** Model used to generate the response. */
-  model?: string
+  model?: string;
   /** Status (e.g., `"succeeded"`, `"failed"`). */
-  status?: string
+  status?: string;
   /** Output items from the response. */
-  output?: Array<JsResponseOutputItem>
+  output?: Array<JsResponseOutputItem>;
   /** Token usage. */
-  usage?: JsResponseUsage
+  usage?: JsResponseUsage;
   /** Error details (if status is "failed"). */
-  error?: any
+  error?: any;
 }
 
 /** A single output item from the response. */
 export interface ResponseOutputItem {
   /** Output type (e.g., `"text"`, `"object"`, `"error"`). */
-  type?: string
+  type?: string;
   /** Output content (flattened into the object). */
-  content?: any
+  content?: any;
 }
 
 /** A tool available for the response request. */
 export interface ResponseTool {
   /** Tool type (e.g., "extractor", "search"). */
-  type?: string
+  type?: string;
   /** Tool configuration (flattened into the object). */
-  config?: any
+  config?: any;
 }
 
 /** Token usage for a response. */
 export interface ResponseUsage {
   /** Input tokens used. */
-  inputTokens?: number
+  inputTokens?: number;
   /** Output tokens used. */
-  outputTokens?: number
+  outputTokens?: number;
   /** Total tokens used. */
-  totalTokens?: number
+  totalTokens?: number;
 }
 
 /** A search request. */
 export interface SearchRequest {
   /** The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). */
-  model?: string
+  model?: string;
   /** The search query string. */
-  query?: string
+  query?: string;
   /** Maximum number of results to return. */
-  maxResults?: number
+  maxResults?: number;
   /** Domain filter — restrict results to specific domains. */
-  searchDomainFilter?: Array<string>
+  searchDomainFilter?: Array<string>;
   /** Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). */
-  country?: string
+  country?: string;
 }
 
 /** A search response. */
 export interface SearchResponse {
   /** List of search results. */
-  results: Array<JsSearchResult>
+  results: Array<JsSearchResult>;
   /** Model/provider that performed the search. */
-  model: string
+  model: string;
 }
 
 /** An individual search result. */
 export interface SearchResult {
   /** Result title. */
-  title: string
+  title: string;
   /** Result URL. */
-  url: string
+  url: string;
   /** Text snippet or excerpt from the page. */
-  snippet: string
+  snippet: string;
   /** Publication or last-updated date, if available. */
-  date?: string
+  date?: string;
 }
 
 /** Name of the specific function to invoke. */
 export interface SpecificFunction {
   /** Function name. */
-  name?: string
+  name?: string;
 }
 
 /** Directive to call a specific tool. */
 export interface SpecificToolChoice {
   /** Tool type (always "function"). */
-  type?: JsToolType
+  type?: JsToolType;
   /** The specific function to invoke. */
-  function?: JsSpecificFunction
+  function?: JsSpecificFunction;
 }
 
 /** A streaming choice with incremental delta. */
 export interface StreamChoice {
   /** Index of this choice in the choices array. */
-  index?: number
+  index?: number;
   /** Incremental update to the message (content, tool calls, etc.). */
-  delta?: JsStreamDelta
+  delta?: JsStreamDelta;
   /** Why the stream ended (present only in final chunk). */
-  finishReason?: JsFinishReason
+  finishReason?: JsFinishReason;
 }
 
 /** Incremental delta in a stream chunk. */
 export interface StreamDelta {
   /** Role (typically present only in the first chunk). */
-  role?: string
+  role?: string;
   /** Partial content chunk (e.g., a few words of the response). */
-  content?: string
+  content?: string;
   /** Partial tool calls being streamed. */
-  toolCalls?: Array<JsStreamToolCall>
+  toolCalls?: Array<JsStreamToolCall>;
   /** Deprecated legacy function_call delta; retained for API compatibility. */
-  functionCall?: JsStreamFunctionCall
+  functionCall?: JsStreamFunctionCall;
   /** Partial refusal message. */
-  refusal?: string
+  refusal?: string;
 }
 
 /** Partial function call details in a stream. */
 export interface StreamFunctionCall {
   /** Function name (typically in the first chunk). */
-  name?: string
+  name?: string;
   /** Partial JSON arguments chunk. */
-  arguments?: string
+  arguments?: string;
 }
 
 /** Options for streaming responses. */
 export interface StreamOptions {
   /** If true, include token usage in the final stream chunk. */
-  includeUsage?: boolean
+  includeUsage?: boolean;
 }
 
 /** A streaming tool call being built incrementally. */
 export interface StreamToolCall {
   /** Index of this tool call in the tool_calls array. */
-  index?: number
+  index?: number;
   /** Tool call ID (typically in the first chunk for this call). */
-  id?: string
+  id?: string;
   /** Tool type (typically "function"). */
-  type?: JsToolType
+  type?: JsToolType;
   /** Partial function name and arguments. */
-  function?: JsStreamFunctionCall
+  function?: JsStreamFunctionCall;
 }
 
 /** System message guiding model behavior for the entire conversation. */
 export interface SystemMessage {
   /** Instructions or context that apply throughout the conversation. */
-  content?: string
+  content?: string;
   /** Optional name for the system message source. */
-  name?: string
+  name?: string;
 }
 
 /** A tool call the model wants to execute. */
 export interface ToolCall {
   /** Unique ID for this call, used to reference in tool result messages. */
-  id: string
+  id: string;
   /** Tool type (always "function"). */
-  type: JsToolType
+  type: JsToolType;
   /** Function name and arguments. */
-  function: JsFunctionCall
+  function: JsFunctionCall;
 }
 
 /** Tool choice mode. */
 export declare const enum ToolChoiceMode {
   /** Model may or may not call tools; default behavior. */
-  Auto = 'auto',
+  Auto = "auto",
   /** Model must call at least one tool. */
-  Required = 'required',
+  Required = "required",
   /** Model must not call any tools. */
-  None = 'none'
+  None = "none",
 }
 
 /** Tool execution result returned to the model. */
 export interface ToolMessage {
   /** Result of the tool execution. */
-  content?: string
+  content?: string;
   /** ID of the tool call this result responds to. */
-  toolCallId?: string
+  toolCallId?: string;
   /** Optional tool/function name. */
-  name?: string
+  name?: string;
 }
 
 /**
@@ -1304,31 +1320,31 @@ export interface ToolMessage {
  * deserialization.
  */
 export declare const enum ToolType {
-  Function = 'function'
+  Function = "function",
 }
 
 /** Response from a transcription request. */
 export interface TranscriptionResponse {
   /** The transcribed text. */
-  text?: string
+  text?: string;
   /** Detected language (ISO-639-1 code). */
-  language?: string
+  language?: string;
   /** Total audio duration in seconds. */
-  duration?: number
+  duration?: number;
   /** Detailed segment-level transcription (if response_format is "verbose_json"). */
-  segments?: Array<JsTranscriptionSegment>
+  segments?: Array<JsTranscriptionSegment>;
 }
 
 /** A segment of transcribed audio with timing information. */
 export interface TranscriptionSegment {
   /** Segment index (0-based). */
-  id?: number
+  id?: number;
   /** Start time in seconds. */
-  start?: number
+  start?: number;
   /** End time in seconds. */
-  end?: number
+  end?: number;
   /** Transcribed text for this segment. */
-  text?: string
+  text?: string;
 }
 
 /**
@@ -1341,28 +1357,28 @@ export interface TranscriptionSegment {
  *
  * Returns an error only if the internal lock is poisoned.
  */
-export declare function unregisterCustomProvider(name: string): boolean
+export declare function unregisterCustomProvider(name: string): boolean;
 
 /** Token-usage accounting returned by the provider on each completion / embedding call. */
 export interface Usage {
   /** Prompt tokens used. Defaults to 0 when absent (some providers omit this). */
-  promptTokens?: number
+  promptTokens?: number;
   /** Completion tokens used. Defaults to 0 when absent (e.g. embedding responses). */
-  completionTokens?: number
+  completionTokens?: number;
   /** Total tokens used. Defaults to 0 when absent (some providers omit this). */
-  totalTokens?: number
+  totalTokens?: number;
   /**
    * Breakdown of tokens used in the prompt, including cached tokens served
    * at the provider's discounted cache-read rate. Absent when the provider
    * does not return prompt-token details.
    */
-  promptTokensDetails?: JsPromptTokensDetails
+  promptTokensDetails?: JsPromptTokensDetails;
 }
 
 /** User message in the conversation. */
 export interface UserMessage {
   /** Message content as plain text or array of content parts (text, images, documents, audio). */
-  content?: JsUserContent
+  content?: JsUserContent;
   /** Optional name for the user. */
-  name?: string
+  name?: string;
 }

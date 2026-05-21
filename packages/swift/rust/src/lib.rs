@@ -1258,8 +1258,6 @@ mod ffi {
         fn register_custom_provider(config: CustomProviderConfig) -> Result<(), String>;
         #[swift_bridge(swift_name = "unregisterCustomProvider")]
         fn unregister_custom_provider(name: String) -> Result<bool, String>;
-        #[swift_bridge(swift_name = "allProviders")]
-        fn all_providers() -> Result<Vec<ProviderConfig>, String>;
         #[swift_bridge(swift_name = "complexProviderNames")]
         fn complex_provider_names() -> Result<Vec<String>, String>;
         #[swift_bridge(swift_name = "completionCost")]
@@ -5202,12 +5200,6 @@ pub fn register_custom_provider(config: CustomProviderConfig) -> Result<(), Stri
 
 pub fn unregister_custom_provider(name: String) -> Result<bool, String> {
     liter_llm::provider::custom::unregister_custom_provider(&name).map_err(|e| e.to_string())
-}
-
-pub fn all_providers() -> Result<Vec<ProviderConfig>, String> {
-    liter_llm::provider::all_providers()
-        .map_err(|e| e.to_string())
-        .map(|v| v.iter().map(|x| ProviderConfig(x.clone())).collect::<Vec<_>>())
 }
 
 pub fn complex_provider_names() -> Result<Vec<String>, String> {
