@@ -28,5 +28,5 @@ data class RerankResponse(
     /** Reranked documents in order of relevance. */
     val results: List<RerankResult>,
     /** Optional metadata about the reranking operation. */
-    val meta: String?
+    val meta: String?,
 )

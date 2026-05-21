@@ -30,5 +30,5 @@ data class TranscriptionSegment(
     /** End time in seconds. */
     val end: Double,
     /** Transcribed text for this segment. */
-    val text: String
+    val text: String,
 )

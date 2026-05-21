@@ -26,5 +26,5 @@ data class PageDimensions(
     /** Width in pixels. */
     val width: Int,
     /** Height in pixels. */
-    val height: Int
+    val height: Int,
 )

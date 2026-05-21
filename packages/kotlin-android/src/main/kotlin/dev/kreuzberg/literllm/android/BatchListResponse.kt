@@ -32,5 +32,5 @@ data class BatchListResponse(
     /** First batch ID in the result set (for pagination). */
     val firstId: String?,
     /** Last batch ID in the result set (for pagination). */
-    val lastId: String?
+    val lastId: String?,
 )

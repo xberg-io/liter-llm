@@ -44,5 +44,5 @@ data class ModerationCategories(
     /** Harassment that threatens violence. */
     val harassmentThreatening: Boolean,
     /** Non-graphic violence. */
-    val violence: Boolean
+    val violence: Boolean,
 )

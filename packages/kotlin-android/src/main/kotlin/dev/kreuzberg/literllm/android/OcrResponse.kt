@@ -28,5 +28,5 @@ data class OcrResponse(
     /** Model/provider used for OCR. */
     val model: String,
     /** Token usage, if reported by the provider. */
-    val usage: Usage?
+    val usage: Usage?,
 )

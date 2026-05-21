@@ -32,5 +32,5 @@ data class EmbeddingRequest(
     /** Requested embedding dimensions (if supported by the model). */
     val dimensions: Int?,
     /** User identifier for request tracking. */
-    val user: String?
+    val user: String?,
 )

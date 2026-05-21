@@ -38,5 +38,5 @@ data class CreateImageRequest(
     /** Response format: `"url"` or `"b64_json"`. */
     val responseFormat: String?,
     /** User identifier for request tracking. */
-    val user: String?
+    val user: String?,
 )

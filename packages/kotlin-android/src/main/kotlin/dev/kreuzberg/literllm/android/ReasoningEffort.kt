@@ -25,5 +25,5 @@ package dev.kreuzberg.literllm.android
 enum class ReasoningEffort {
     LOW,
     MEDIUM,
-    HIGH;
+    HIGH,
 }

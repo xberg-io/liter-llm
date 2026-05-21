@@ -30,5 +30,5 @@ data class FunctionDefinition(
     /** JSON Schema defining the function's parameters. */
     val parameters: String?,
     /** If true, enforce strict JSON schema validation for arguments. */
-    val strict: Boolean?
+    val strict: Boolean?,
 )

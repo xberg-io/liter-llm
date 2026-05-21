@@ -28,5 +28,5 @@ data class FileListResponse(
     /** List of file objects. */
     val data: List<FileObject>,
     /** Whether more results are available. */
-    val hasMore: Boolean?
+    val hasMore: Boolean?,
 )

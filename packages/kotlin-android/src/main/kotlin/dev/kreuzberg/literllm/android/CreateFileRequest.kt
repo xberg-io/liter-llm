@@ -28,5 +28,5 @@ data class CreateFileRequest(
     /** Purpose for the file. */
     val purpose: FilePurpose,
     /** Optional filename to associate with the upload. */
-    val filename: String?
+    val filename: String?,
 )

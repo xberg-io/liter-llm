@@ -30,5 +30,5 @@ data class StreamToolCall(
     /** Tool type (typically "function"). */
     val callType: ToolType?,
     /** Partial function name and arguments. */
-    val function: StreamFunctionCall?
+    val function: StreamFunctionCall?,
 )

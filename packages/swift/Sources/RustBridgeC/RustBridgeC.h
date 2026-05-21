@@ -1801,7 +1801,6 @@ struct __private__ResultPtrAndPtr __swift_bridge__$create_client(void* api_key, 
 struct __private__ResultPtrAndPtr __swift_bridge__$create_client_from_json(void* json);
 void* __swift_bridge__$register_custom_provider(void* config);
 struct __swift_bridge__$ResultBoolAndString __swift_bridge__$unregister_custom_provider(void* name);
-struct __private__ResultPtrAndPtr __swift_bridge__$all_providers(void);
 struct __private__ResultPtrAndPtr __swift_bridge__$complex_provider_names(void);
 void* __swift_bridge__$completion_cost(void* model, uint64_t prompt_tokens, uint64_t completion_tokens);
 void* __swift_bridge__$completion_cost_with_cache(void* model, uint64_t prompt_tokens, uint64_t cached_tokens, uint64_t completion_tokens);

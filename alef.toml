@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.17.14"
+alef_version = "0.17.16"
 languages = [
   "python",
   "node",
@@ -404,6 +404,31 @@ precondition = "command -v make >/dev/null 2>&1"
 before = "cargo build -p liter-llm-ffi --release && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 e2e = "cd e2e/c && make test"
 
+[crates.test.dart]
+# `alef test --lang dart` defaults to `cd packages/dart && dart test`, which only
+# exercises the placeholder unit test. The real fixture-driven suite lives in
+# e2e/dart/ and needs the mock HTTP server up plus FRB pointed at the cdylib in
+# target/release.
+precondition = "command -v dart >/dev/null 2>&1"
+before = "cargo build --release -p liter-llm-dart && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+e2e = [
+  "cd e2e/dart && dart pub get",
+  "FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR=\"$PWD/target/release\" scripts/e2e/run-with-mock-server.sh 'cd e2e/dart && dart test'",
+]
+
+[crates.test.swift]
+# Same shape as dart — point the e2e step at e2e/swift_e2e/, not the
+# `packages/swift` placeholder, and start the mock HTTP server first.
+precondition = "command -v swift >/dev/null 2>&1"
+before = "cargo build --release -p liter-llm-swift && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+e2e = "scripts/e2e/run-with-mock-server.sh 'cd e2e/swift_e2e && swift test'"
+
+[crates.test.zig]
+# Same shape as dart/swift — point at e2e/zig, not the `packages/zig` placeholder.
+precondition = "command -v zig >/dev/null 2>&1"
+before = "cargo build -p liter-llm-ffi && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+e2e = "scripts/e2e/run-with-mock-server.sh 'cd e2e/zig && zig build test'"
+
 [crates.test.kotlin_android]
 # Android-only AAR — tests require an emulator runner (out of scope until a
 # kreuzberg-dev/actions/setup-android-emulator action exists). E2E excluded.
@@ -677,6 +702,7 @@ function = "chat_stream"
 path = "/chat/completions"
 module = "liter_llm"
 async = true
+streaming = true
 
 [[crates.e2e.calls.chat_stream.args]]
 name = "request"
@@ -1406,6 +1432,7 @@ result_enum_fields = { "status" = "WasmBatchStatus" }
 [crates.e2e.calls.create_batch.overrides.dart]
 options_type = "CreateBatchRequest"
 options_via = "from_json"
+enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.create_batch.overrides.swift]
 options_type = "CreateBatchRequest"
@@ -1449,6 +1476,9 @@ enum_fields = { "status" = "BatchStatus" }
 result_enum_fields = { "status" = "WasmBatchStatus" }
 
 [crates.e2e.calls.retrieve_batch.overrides.swift]
+enum_fields = { "status" = "BatchStatus" }
+
+[crates.e2e.calls.retrieve_batch.overrides.dart]
 enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.list_batches]
@@ -1531,6 +1561,9 @@ enum_fields = { "status" = "BatchStatus" }
 result_enum_fields = { "status" = "WasmBatchStatus" }
 
 [crates.e2e.calls.cancel_batch.overrides.swift]
+enum_fields = { "status" = "BatchStatus" }
+
+[crates.e2e.calls.cancel_batch.overrides.dart]
 enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.create_response]

@@ -26,5 +26,5 @@ data class SpecificToolChoice(
     /** Tool type (always "function"). */
     val choiceType: ToolType,
     /** The specific function to invoke. */
-    val function: SpecificFunction
+    val function: SpecificFunction,
 )

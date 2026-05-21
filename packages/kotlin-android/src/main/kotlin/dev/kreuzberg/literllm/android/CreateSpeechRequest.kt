@@ -32,5 +32,5 @@ data class CreateSpeechRequest(
     /** Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`). */
     val responseFormat: String?,
     /** Playback speed in `[0.25, 4.0]`. Defaults to 1.0. */
-    val speed: Double?
+    val speed: Double?,
 )

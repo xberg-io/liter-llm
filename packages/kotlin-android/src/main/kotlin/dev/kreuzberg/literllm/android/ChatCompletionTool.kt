@@ -26,5 +26,5 @@ data class ChatCompletionTool(
     /** Tool type (always "function" in OpenAI spec). */
     val toolType: ToolType,
     /** Function definition with name, description, and JSON schema parameters. */
-    val function: FunctionDefinition
+    val function: FunctionDefinition,
 )

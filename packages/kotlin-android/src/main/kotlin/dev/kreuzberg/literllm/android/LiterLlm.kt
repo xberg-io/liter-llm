@@ -32,30 +32,31 @@ object LiterLlm {
     /**
      * Create a new LLM client with simple scalar configuration.
      *
-     * This is the primary binding entry-point. All parameters except `api_key`
-     * are optional — omitting them uses the same defaults as
-     * `ClientConfigBuilder`.
+     * This is the primary binding entry-point. All parameters except `api_key` are optional —
+     * omitting them uses the same defaults as `ClientConfigBuilder`.
      *
      * **Errors:**
      *
-     * Returns `LiterLlmError` if the underlying HTTP client cannot be
-     * constructed, or if the resolved provider configuration is invalid.
+     * Returns `LiterLlmError` if the underlying HTTP client cannot be constructed, or if the
+     * resolved provider configuration is invalid.
      */
     fun createClient(
         apiKey: String,
         baseUrl: String? = null,
         timeoutSecs: Long? = null,
         maxRetries: Int? = null,
-        modelHint: String? = null
-    ): DefaultClient = DefaultClient(
-        LiterLlmBridge.nativeCreateClient(
-            apiKey,
-        baseUrl ?: "",
-            timeoutSecs ?: 0L,
-            maxRetries ?: 0,
-            modelHint ?: ""
+        modelHint: String? = null,
+    ): DefaultClient =
+        DefaultClient(
+            LiterLlmBridge.nativeCreateClient(
+                apiKey,
+                baseUrl ?: "",
+                timeoutSecs ?: 0L,
+                maxRetries ?: 0,
+                modelHint ?: "",
+            )
         )
-    )
+
     /**
      * Create a new LLM client from a JSON string.
      *
@@ -63,35 +64,37 @@ object LiterLlm {
      *
      * **Errors:**
      *
-     * Returns `LiterLlmError.BadRequest` if `json` is not valid JSON or
-     * contains unknown fields.
+     * Returns `LiterLlmError.BadRequest` if `json` is not valid JSON or contains unknown fields.
      */
-    fun createClientFromJson(json: String): DefaultClient = DefaultClient(LiterLlmBridge.nativeCreateClientFromJson(json))
+    fun createClientFromJson(json: String): DefaultClient =
+        DefaultClient(LiterLlmBridge.nativeCreateClientFromJson(json))
+
     /**
      * Register a custom provider in the global runtime registry.
      *
-     * The provider will be checked **before** all built-in providers during model
-     * detection. If a provider with the same `name` already exists it is replaced.
+     * The provider will be checked **before** all built-in providers during model detection. If a
+     * provider with the same `name` already exists it is replaced.
      *
      * **Errors:**
      *
-     * Returns an error if the config is invalid (empty name, empty base_url, or
-     * no model prefixes).
+     * Returns an error if the config is invalid (empty name, empty base_url, or no model prefixes).
      */
-    fun registerCustomProvider(
-        config: CustomProviderConfig
-    ): Unit = LiterLlmBridge.nativeRegisterCustomProvider(mapper.writeValueAsString(config))
+    fun registerCustomProvider(config: CustomProviderConfig): Unit =
+        LiterLlmBridge.nativeRegisterCustomProvider(mapper.writeValueAsString(config))
+
     /**
      * Remove a previously registered custom provider by name.
      *
-     * Returns `true` if a provider with the given name was found and removed,
-     * `false` if no such provider existed.
+     * Returns `true` if a provider with the given name was found and removed, `false` if no such
+     * provider existed.
      *
      * **Errors:**
      *
      * Returns an error only if the internal lock is poisoned.
      */
-    fun unregisterCustomProvider(name: String): Boolean = LiterLlmBridge.nativeUnregisterCustomProvider(name)
+    fun unregisterCustomProvider(name: String): Boolean =
+        LiterLlmBridge.nativeUnregisterCustomProvider(name)
+
     /**
      * Return all provider configs from the registry.
      *
@@ -113,8 +116,8 @@ object LiterLlm {
     /**
      * Return the set of complex provider names.
      *
-     * Complex providers require custom auth/routing logic beyond simple bearer
-     * tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
+     * Complex providers require custom auth/routing logic beyond simple bearer tokens (e.g. AWS
+     * Bedrock SigV4, Vertex AI OAuth2).
      *
      * The returned reference points into the static registry — no allocation.
      */
@@ -126,8 +129,8 @@ object LiterLlm {
     /**
      * Return the set of complex provider names.
      *
-     * Complex providers require custom auth/routing logic beyond simple bearer
-     * tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
+     * Complex providers require custom auth/routing logic beyond simple bearer tokens (e.g. AWS
+     * Bedrock SigV4, Vertex AI OAuth2).
      *
      * The returned reference points into the static registry — no allocation.
      */
@@ -135,55 +138,57 @@ object LiterLlm {
         withContext(Dispatchers.IO) { complexProviderNames() }
 
     /**
-     * Calculate the estimated cost of a completion given a model name and token
-     * counts.
+     * Calculate the estimated cost of a completion given a model name and token counts.
      *
-     * Returns `null` if the model is not present in the embedded pricing registry.
-     * Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
+     * Returns `null` if the model is not present in the embedded pricing registry. Returns
+     * `Some(cost_usd)` otherwise, where the value is in US dollars.
      *
-     * When an exact model name match is not found, progressively shorter prefixes
-     * are tried by stripping from the last `-` or `.` separator.  For example,
-     * `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
+     * When an exact model name match is not found, progressively shorter prefixes are tried by
+     * stripping from the last `-` or `.` separator. For example, `gpt-4-0613` will match `gpt-4` if
+     * no `gpt-4-0613` entry exists.
      */
-    fun completionCost(
-        model: String,
-        promptTokens: Long,
-        completionTokens: Long
-    ): String? = LiterLlmBridge.nativeCompletionCost(model, promptTokens, completionTokens)
+    fun completionCost(model: String, promptTokens: Long, completionTokens: Long): String? =
+        LiterLlmBridge.nativeCompletionCost(model, promptTokens, completionTokens)
+
     /**
-     * Calculate the estimated cost of a completion, accounting for cached
-     * (cache-hit) prompt tokens billed at the provider's discounted rate.
+     * Calculate the estimated cost of a completion, accounting for cached (cache-hit) prompt tokens
+     * billed at the provider's discounted rate.
      *
-     * `cached_tokens` is the count of prompt tokens served from the provider's
-     * prompt cache. It must be `<= prompt_tokens` (cached tokens are a subset of
-     * the prompt). The non-cached portion is billed at `input_cost_per_token`
-     * and the cached portion at `cache_read_input_token_cost` when the model
-     * has cache pricing; otherwise the entire prompt is billed at the regular
-     * input rate.
+     * `cached_tokens` is the count of prompt tokens served from the provider's prompt cache. It
+     * must be `<= prompt_tokens` (cached tokens are a subset of the prompt). The non-cached portion
+     * is billed at `input_cost_per_token` and the cached portion at `cache_read_input_token_cost`
+     * when the model has cache pricing; otherwise the entire prompt is billed at the regular input
+     * rate.
      *
-     * Returns `null` if the model is not present in the embedded pricing
-     * registry, mirroring `completion_cost`.
+     * Returns `null` if the model is not present in the embedded pricing registry, mirroring
+     * `completion_cost`.
      */
     fun completionCostWithCache(
         model: String,
         promptTokens: Long,
         cachedTokens: Long,
-        completionTokens: Long
-    ): String? = LiterLlmBridge.nativeCompletionCostWithCache(model, promptTokens, cachedTokens, completionTokens)
+        completionTokens: Long,
+    ): String? =
+        LiterLlmBridge.nativeCompletionCostWithCache(
+            model,
+            promptTokens,
+            cachedTokens,
+            completionTokens,
+        )
+
     /**
      * Install the `ring` crypto provider as the rustls process default, idempotently.
      *
-     * rustls 0.23+ removed the implicit default provider. This function installs
-     * `ring` once per process. Subsequent calls are no-ops. Calling it from a
-     * downstream Rust app that has already installed `aws-lc-rs` is safe — the
-     * `Err` from `install_default()` is silently ignored.
+     * rustls 0.23+ removed the implicit default provider. This function installs `ring` once per
+     * process. Subsequent calls are no-ops. Calling it from a downstream Rust app that has already
+     * installed `aws-lc-rs` is safe — the `Err` from `install_default()` is silently ignored.
      *
-     * Called automatically by every internal `reqwest.Client` constructor
-     * (auth providers, default HTTP client). Bindings and downstream consumers
-     * reach those constructors transitively, so no manual init is required.
+     * Called automatically by every internal `reqwest.Client` constructor (auth providers, default
+     * HTTP client). Bindings and downstream consumers reach those constructors transitively, so no
+     * manual init is required.
      *
-     * WASM builds are exempt — the WASM target uses the browser/Node.js fetch
-     * API instead of rustls, so no crypto provider is needed.
+     * WASM builds are exempt — the WASM target uses the browser/Node.js fetch API instead of
+     * rustls, so no crypto provider is needed.
      */
     fun ensureCryptoProvider(): Unit = LiterLlmBridge.nativeEnsureCryptoProvider()
 }

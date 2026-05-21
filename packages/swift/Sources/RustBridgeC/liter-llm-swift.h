@@ -1742,5 +1742,3 @@ typedef struct __swift_bridge__$ResultBoolAndString{__swift_bridge__$ResultBoolA
 typedef enum __swift_bridge__$ResultUIntAndString$Tag {__swift_bridge__$ResultUIntAndString$ResultOk, __swift_bridge__$ResultUIntAndString$ResultErr} __swift_bridge__$ResultUIntAndString$Tag;
 union __swift_bridge__$ResultUIntAndString$Fields {uintptr_t ok; void* err;};
 typedef struct __swift_bridge__$ResultUIntAndString{__swift_bridge__$ResultUIntAndString$Tag tag; union __swift_bridge__$ResultUIntAndString$Fields payload;} __swift_bridge__$ResultUIntAndString;
-
-

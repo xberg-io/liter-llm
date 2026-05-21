@@ -28,5 +28,5 @@ enum class ToolChoiceMode {
     /** Model must call at least one tool. */
     REQUIRED,
     /** Model must not call any tools. */
-    NONE;
+    NONE,
 }

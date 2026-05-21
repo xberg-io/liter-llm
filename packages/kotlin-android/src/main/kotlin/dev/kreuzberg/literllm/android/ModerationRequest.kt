@@ -26,5 +26,5 @@ data class ModerationRequest(
     /** Text or texts to check. */
     val input: ModerationInput,
     /** Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset. */
-    val model: String?
+    val model: String?,
 )

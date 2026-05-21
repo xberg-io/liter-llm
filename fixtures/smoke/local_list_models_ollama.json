@@ -33,7 +33,10 @@
       "elixir",
       "wasm",
       "c",
-      "kotlin"
+      "kotlin",
+      "swift",
+      "dart",
+      "zig"
     ],
     "reason": "requires local Ollama service; skipped in standard CI environments"
   }

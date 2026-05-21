@@ -32,5 +32,5 @@ data class AssistantMessage(
     /** Refusal reason, if the model declined to respond per safety policies. */
     val refusal: String?,
     /** Deprecated legacy function_call field; retained for API compatibility. */
-    val functionCall: FunctionCall?
+    val functionCall: FunctionCall?,
 )

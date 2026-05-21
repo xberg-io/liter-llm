@@ -28,5 +28,5 @@ enum class ImageDetail {
     /** High detail: processes up to 2x2 grid of tiles, higher token cost. */
     HIGH,
     /** Auto: model chooses low or high based on image dimensions. */
-    AUTO;
+    AUTO,
 }

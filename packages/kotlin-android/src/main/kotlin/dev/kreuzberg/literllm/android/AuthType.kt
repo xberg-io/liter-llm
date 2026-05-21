@@ -30,5 +30,5 @@ enum class AuthType {
     /** No authentication header required. */
     NONE,
     /** Unrecognised auth scheme — falls back to bearer. */
-    UNKNOWN;
+    UNKNOWN,
 }

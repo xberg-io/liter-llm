@@ -28,5 +28,5 @@ data class Image(
     /** Base64-encoded image data (if response_format was "b64_json"). */
     val b64Json: String?,
     /** The final prompt used to generate the image (DALL-E 3). */
-    val revisedPrompt: String?
+    val revisedPrompt: String?,
 )

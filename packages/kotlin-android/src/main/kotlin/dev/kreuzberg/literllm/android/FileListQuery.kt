@@ -28,5 +28,5 @@ data class FileListQuery(
     /** Maximum number of results to return. Defaults to 20. */
     val limit: Int?,
     /** Pagination cursor: return results after this file ID. */
-    val after: String?
+    val after: String?,
 )

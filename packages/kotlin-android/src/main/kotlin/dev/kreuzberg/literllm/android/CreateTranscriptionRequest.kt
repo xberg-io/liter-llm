@@ -34,5 +34,5 @@ data class CreateTranscriptionRequest(
     /** Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`). */
     val responseFormat: String?,
     /** Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0. */
-    val temperature: Double?
+    val temperature: Double?,
 )

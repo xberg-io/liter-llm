@@ -30,5 +30,5 @@ enum class FilePurpose {
     /** File for fine-tuning. */
     FINE_TUNE,
     /** File for vision/image tasks. */
-    VISION;
+    VISION,
 }

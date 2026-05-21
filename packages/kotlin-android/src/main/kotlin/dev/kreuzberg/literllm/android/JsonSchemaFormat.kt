@@ -30,5 +30,5 @@ data class JsonSchemaFormat(
     /** JSON Schema object defining the output structure. */
     val schema: String,
     /** If true, enforce strict schema validation. */
-    val strict: Boolean?
+    val strict: Boolean?,
 )

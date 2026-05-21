@@ -30,5 +30,5 @@ data class TranscriptionResponse(
     /** Total audio duration in seconds. */
     val duration: Double?,
     /** Detailed segment-level transcription (if response_format is "verbose_json"). */
-    val segments: List<TranscriptionSegment>?
+    val segments: List<TranscriptionSegment>?,
 )

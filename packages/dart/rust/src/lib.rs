@@ -1090,9 +1090,17 @@ impl DefaultClient {
     #[frb]
     pub fn chat_stream(&self, req: ChatCompletionRequest, sink: crate::frb_generated::StreamSink<ChatCompletionChunk>) {
         use futures_util::StreamExt;
+        use std::sync::OnceLock;
+        static FRB_STREAM_TOKIO_RT: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
+        let _rt = FRB_STREAM_TOKIO_RT.get_or_init(|| {
+            tokio::runtime::Builder::new_multi_thread()
+                .enable_all()
+                .build()
+                .expect("failed to build tokio runtime for FRB streaming")
+        });
         let inner = self.inner.clone();
         let core_req: liter_llm::ChatCompletionRequest = req.into();
-        flutter_rust_bridge::spawn(async move {
+        _rt.spawn(async move {
             match inner.chat_stream(core_req).await {
                 Ok(mut stream) => {
                     while let Some(item) = stream.next().await {

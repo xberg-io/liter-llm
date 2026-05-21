@@ -2543,6 +2543,7 @@ dependencies = [
  "futures-util",
  "liter-llm",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]

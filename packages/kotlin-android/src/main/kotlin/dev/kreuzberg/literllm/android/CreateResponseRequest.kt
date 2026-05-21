@@ -36,5 +36,5 @@ data class CreateResponseRequest(
     /** Maximum output tokens. */
     val maxOutputTokens: Long?,
     /** Optional metadata. */
-    val metadata: String?
+    val metadata: String?,
 )

@@ -32,5 +32,5 @@ data class RerankRequest(
     /** Return only the top N results. Optional. */
     val topN: Int?,
     /** Include the document content in results. Defaults to false. */
-    val returnDocuments: Boolean?
+    val returnDocuments: Boolean?,
 )

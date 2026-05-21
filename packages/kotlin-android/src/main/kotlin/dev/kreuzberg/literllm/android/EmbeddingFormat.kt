@@ -26,5 +26,5 @@ enum class EmbeddingFormat {
     /** 32-bit floating-point numbers (default). */
     FLOAT,
     /** Base64-encoded string representation of the floats. */
-    BASE64;
+    BASE64,
 }

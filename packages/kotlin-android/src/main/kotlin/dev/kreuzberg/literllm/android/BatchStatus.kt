@@ -38,5 +38,5 @@ enum class BatchStatus {
     /** Job is being cancelled. */
     CANCELLING,
     /** Job has been cancelled. */
-    CANCELLED;
+    CANCELLED,
 }
