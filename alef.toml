@@ -313,7 +313,7 @@ methods = [
 functions = ["str_pair", "build_provider"]
 
 [crates.lint.python]
-before = "uv sync --no-install-project"
+before = "uv sync --no-install-project --no-install-workspace"
 
 [crates.lint.node]
 precondition = "command -v pnpm >/dev/null 2>&1"
@@ -349,7 +349,10 @@ e2e = "cargo test --manifest-path e2e/rust/Cargo.toml"
 
 [crates.test.python]
 precondition = "command -v uv >/dev/null 2>&1"
-e2e = ["cd e2e/python && uv sync", "cd e2e/python && uv run pytest tests/ -q"]
+e2e = [
+  "cd e2e/python && uv sync --no-install-project --no-install-workspace",
+  "cd e2e/python && uv run --no-sync pytest tests/ -q",
+]
 
 [crates.test.node]
 precondition = "command -v pnpm >/dev/null 2>&1"

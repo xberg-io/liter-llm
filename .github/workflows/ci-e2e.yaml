@@ -146,7 +146,7 @@ jobs:
             test-cmd: "RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' task rust:e2e:test"
           - lang: python
             python-version: "3.13"
-            test-cmd: "cd packages/python && uv sync && uvx maturin develop --release && cd ../.. && task python:e2e:test"
+            test-cmd: "cd packages/python && uv sync --no-install-project --no-install-workspace && uvx maturin develop --release && cd ../.. && task python:e2e:test"
           - lang: node
             node-version: "24"
             test-cmd: "task node:build && task node:e2e:test"

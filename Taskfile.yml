@@ -264,22 +264,22 @@ tasks:
   generate:providers-doc:
     desc: Generate providers documentation from schemas/providers.json
     cmds:
-      - uv run python scripts/generate_providers_doc.py
+      - uv run --no-sync python scripts/generate_providers_doc.py
 
   generate:providers-doc:check:
     desc: Validate providers documentation is up-to-date (CI)
     cmds:
-      - uv run python scripts/generate_providers_doc.py --validate
+      - uv run --no-sync python scripts/generate_providers_doc.py --validate
 
   generate:pricing:
     desc: Refresh schemas/pricing.json from models.dev (also runs as part of `task update`/`upgrade`)
     cmds:
-      - uv run python scripts/generate_pricing.py
+      - uv run --no-sync python scripts/generate_pricing.py
 
   generate:pricing:check:
     desc: Validate pricing.json is up-to-date with models.dev (CI)
     cmds:
-      - uv run python scripts/generate_pricing.py --validate
+      - uv run --no-sync python scripts/generate_pricing.py --validate
 
   test:e2e:
     desc: Generate and run e2e tests across all bindings (alias for e2e:verify:all)
