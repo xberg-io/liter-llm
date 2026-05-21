@@ -1,105 +1,110 @@
 default_install_hook_types:
   - pre-commit
   - commit-msg
+default_stages:
+  - pre-commit
 exclude: ^e2e/|vendor/|node_modules/|target/|_build/|test_apps/|dist/|artifacts/|^scripts/ci/
-
 repos:
-  # AI-Rulez: validate and auto-generate AI assistant configuration files
   - repo: https://github.com/Goldziher/ai-rulez
-    rev: v4.1.6
+    rev: v4.2.1
     hooks:
       - id: ai-rulez-validate
       - id: ai-rulez-generate
-
-  # Commit message linting
   - repo: https://github.com/Goldziher/gitfluff
     rev: v0.8.0
     hooks:
       - id: gitfluff-lint
-        args: ["--write"]
-        stages: [commit-msg]
-
-  # General file checks
+        args:
+          - --write
+        stages:
+          - commit-msg
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
-        # freezed-generated Dart shipped by flutter_rust_bridge contains trailing
-        # whitespace as a fundamental property of its emission, regenerated on
-        # every `task alef:all`. Excluding it stops the format/verify ping-pong.
         exclude: ^packages/dart/lib/src/liter_llm_bridge_generated/lib\.freezed\.dart$
       - id: end-of-file-fixer
         exclude: ^(packages/python/liter_llm/py\.typed|packages/java/checkstyle\.properties)$
       - id: check-merge-conflict
       - id: check-added-large-files
-        args: ["--maxkb=500"]
+        args:
+          - --maxkb=500
         exclude: Cargo.lock|docs/assets/
       - id: detect-private-key
       - id: check-json
       - id: check-yaml
-        args: ["--allow-multiple-documents", "--unsafe"]
+        args:
+          - --allow-multiple-documents
+          - --unsafe
       - id: check-toml
       - id: check-case-conflict
-
-  # TOML formatting
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: "v2.21.2"
+    rev: v2.21.2
     hooks:
       - id: pyproject-fmt
         exclude: ^packages/python/pyproject\.toml$
-
-  # Markdown: linting
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.13
     hooks:
       - id: ruff
-        args: [--fix]
+        args:
+          - --fix
         exclude: ^packages/python/liter_llm/(__init__\.py|api\.py|exceptions\.py|options\.py|_internal_bindings\.pyi)$
       - id: ruff-format
         exclude: ^packages/python/liter_llm/(__init__\.py|api\.py|exceptions\.py|options\.py|_internal_bindings\.pyi)$
-
-  # Node/TS/WASM: oxlint
   - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
-    rev: v1.1.12
+    rev: v1.1.14
     hooks:
       - id: cargo-sort
-        args: [-w]
+        args:
+          - -w
         exclude: ^(crates/liter-llm-(ffi|node|php|py|wasm|swift|dart|rb)/Cargo\.toml|packages/(dart|swift|elixir/native/liter_llm_nif|ruby/ext/liter_llm_rb/native)/Cargo\.toml|packages/(go|java|csharp|python|elixir|php|zig|wasm|typescript|swift|dart|ruby)/.*/Cargo\.toml|e2e/rust/Cargo\.toml)$
       - id: cargo-fmt
-        args: ["--all"]
+        args:
+          - --all
       - id: cargo-check
         name: cargo check (workspace)
-        args: ["--workspace", "--exclude=liter-llm-php", "--all-features", "--all-targets"]
-        files: ^(crates/|tools/|Cargo\.(toml|lock))
-        types_or: [rust, toml]
-      - id: cargo-clippy
-        name: clippy (workspace — core, cli, proxy, ffi, bindings)
         args:
-          [
-            "--fix",
-            "--allow-dirty",
-            "--allow-staged",
-            "--workspace",
-            "--exclude=liter-llm-php",
-            "--exclude=liter-llm-swift",
-            "--exclude=liter-llm-dart",
-            "--all-features",
-            "--all-targets",
-            "--",
-            "-D",
-            "warnings",
-          ]
+          - --workspace
+          - --exclude=liter-llm-php
+          - --all-features
+          - --all-targets
         files: ^(crates/|tools/|Cargo\.(toml|lock))
-        types_or: [rust, toml]
+        types_or:
+          - rust
+          - toml
+      - id: cargo-clippy
+        name: "clippy (workspace \u2014 core, cli, proxy, ffi, bindings)"
+        args:
+          - --fix
+          - --allow-dirty
+          - --allow-staged
+          - --workspace
+          - --exclude=liter-llm-php
+          - --exclude=liter-llm-swift
+          - --exclude=liter-llm-dart
+          - --all-features
+          - --all-targets
+          - --
+          - -D
+          - warnings
+        files: ^(crates/|tools/|Cargo\.(toml|lock))
+        types_or:
+          - rust
+          - toml
       - id: cargo-machete
-        args: [crates/]
+        args:
+          - crates/
         exclude: ^(e2e/|test_apps/)
       - id: cargo-deny
-        args: ["check"]
+        args:
+          - check
       - id: rustdoc-lint
         files: ^crates/liter-llm/src/.*\.rs$
         exclude: /tests/
-        args: ["-p", "liter-llm"]
+        args:
+          - -p
+          - liter-llm
       - id: pydocstyle
         files: ^packages/python/.*\.py$
         exclude: ^packages/python/(tests/|.*_native\.py$)
@@ -122,20 +127,26 @@ repos:
       - id: swiftlint
         files: ^packages/swift/.*\.swift$
       - id: shfmt
-        args: ["-w", "-i", "2"]
+        args:
+          - -w
+          - -i
+          - "2"
       - id: shellcheck
-        args: ["-x"]
+        args:
+          - -x
       - id: checkstyle
-        args: ["-c", "packages/java/checkstyle.xml", "-p", "packages/java/checkstyle.properties"]
+        args:
+          - -c
+          - packages/java/checkstyle.xml
+          - -p
+          - packages/java/checkstyle.properties
         exclude: ^(\.mvn/wrapper/|e2e/|packages/java/src/)
       - id: mypy
         args:
-          [
-            "--strict",
-            "--config-file",
-            "packages/python/pyproject.toml",
-            "packages/python/liter_llm/",
-          ]
+          - --strict
+          - --config-file
+          - packages/python/pyproject.toml
+          - packages/python/liter_llm/
         exclude: ^(e2e/|scripts/|test_apps/|tests/|benchmarks/)
       - id: go-fmt
         exclude: ^(e2e/|test_apps/)
@@ -162,7 +173,9 @@ repos:
       - id: php-cs-fixer
         files: ^packages/php/.*\.php$
         exclude: ^packages/php/(src/(DefaultClient|LiterLlm)\.php|stubs/liter_llm_extension\.php)$
-        args: ["fix", "--config=packages/php/.php-cs-fixer.dist.php"]
+        args:
+          - fix
+          - --config=packages/php/.php-cs-fixer.dist.php
       - id: phpstan
         files: ^packages/php/.*\.php$
         exclude: ^packages/php/(\.?php-cs-fixer(\.dist)?\.php|vendor/)
@@ -186,15 +199,18 @@ repos:
       - id: ktlint
         files: ^packages/kotlin-android/.*\.kts?$
       - id: clang-format
-        args: ["--style=file"]
+        args:
+          - --style=file
         files: ^crates/liter-llm-ffi/tests/c/
       - id: clang-tidy
         files: ^crates/liter-llm-ffi/tests/c/
       - id: textlint
         files: ^docs/.*\.md$
         exclude: ^docs/(reference/|api-|snippets/|migration/)
-        args: ["--fix", "--config", ".textlintrc.json"]
-
+        args:
+          - --fix
+          - --config
+          - .textlintrc.json
       - id: oxlint
         require_serial: true
         exclude: ^(crates/liter-llm-node/index\.d\.ts|packages/(typescript|wasm)/src/index\.ts)$
@@ -202,25 +218,19 @@ repos:
         require_serial: true
         exclude: ^(crates/liter-llm-node/index\.d\.ts|packages/(typescript|wasm)/src/index\.ts)$
       - id: cppcheck
-        args: ["--suppress=unusedStructMember"]
+        args:
+          - --suppress=unusedStructMember
         require_serial: true
       - id: rumdl-fmt
         exclude: ^docs/providers\.md$
       - id: cpd
-  # Alef: multi-language formatting, linting, type checking, and version sync.
-  # The script entry prefers a locally-installed `alef` binary whose --version
-  # matches the pinned alef.toml version, falling back to a sha256-verified
-  # release-tarball download. Do not override `entry:` here.
+      - id: ktfmt
+      - id: hadolint
   - repo: https://github.com/kreuzberg-dev/alef
-    rev: v0.17.11
+    rev: v0.17.15
     hooks:
       - id: alef-verify
       - id: alef-sync-versions
-
-  # Documentation snippets: validate every fenced code block under docs/snippets/
-  # against the language's toolchain via alef-snippets. The runner returns
-  # Unavailable (not Fail) when a toolchain is missing on the local machine, so
-  # hooks stay non-flaky across contributors with different toolchain coverage.
   - repo: local
     hooks:
       - id: alef-snippets-audit
@@ -237,22 +247,17 @@ repos:
         files: ^docs/snippets/
         pass_filenames: false
         require_serial: true
-
-  # GitHub Actions: linting
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.12
     hooks:
       - id: actionlint
-
-  # GitHub Actions: pin maintenance
   - repo: https://github.com/Goldziher/gh-actions-updater
     rev: v0.1.3
     hooks:
       - id: gh-actions-updater
-
-  # Spelling: fast Rust-based spell checker
   - repo: https://github.com/crate-ci/typos
     rev: v1.46.2
     hooks:
       - id: typos
-        args: [--force-exclude]
+        args:
+          - --force-exclude
