@@ -49,11 +49,12 @@ private class RerankDocumentDeserializer :
     ): RerankDocument {
         val node = parser.codec.readTree<com.fasterxml.jackson.databind.JsonNode>(parser)
         if (node.isTextual) return RerankDocument.Text(node.asText())
-        if (node.isObject)
+        if (node.isObject) {
             return ctx.readTreeAsValue<RerankDocument.Object>(
                 node,
                 RerankDocument.Object::class.java,
             )
+        }
         throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
             parser,
             "Cannot deserialize RerankDocument: no matching variant for JSON shape",

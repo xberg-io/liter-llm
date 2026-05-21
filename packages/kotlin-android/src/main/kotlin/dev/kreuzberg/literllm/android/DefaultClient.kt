@@ -24,8 +24,10 @@ class DefaultClient internal constructor(internal val handle: Long) : AutoClosea
         private val MAPPER =
             com.fasterxml.jackson.databind
                 .ObjectMapper()
-                .registerModule(com.fasterxml.jackson.datatype.jdk8.Jdk8Module())
-                .findAndRegisterModules()
+                .registerModule(
+                    com.fasterxml.jackson.datatype.jdk8
+                    .Jdk8Module()
+                ).findAndRegisterModules()
                 .setPropertyNamingStrategy(
                     com.fasterxml.jackson.databind.PropertyNamingStrategies.SNAKE_CASE
                 )
@@ -241,8 +243,10 @@ class DefaultClient internal constructor(internal val handle: Long) : AutoClosea
             val mapper =
                 com.fasterxml.jackson.databind
                     .ObjectMapper()
-                    .registerModule(com.fasterxml.jackson.datatype.jdk8.Jdk8Module())
-                    .findAndRegisterModules()
+                    .registerModule(
+                        com.fasterxml.jackson.datatype.jdk8
+                        .Jdk8Module()
+                    ).findAndRegisterModules()
                     .setPropertyNamingStrategy(
                         com.fasterxml.jackson.databind.PropertyNamingStrategies.SNAKE_CASE
                     )

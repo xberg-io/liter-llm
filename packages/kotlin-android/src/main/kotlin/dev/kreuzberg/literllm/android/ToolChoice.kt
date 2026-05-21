@@ -44,10 +44,12 @@ private class ToolChoiceDeserializer :
         ctx: com.fasterxml.jackson.databind.DeserializationContext,
     ): ToolChoice {
         val node = parser.codec.readTree<com.fasterxml.jackson.databind.JsonNode>(parser)
-        if (node.isObject)
+        if (node.isObject) {
             return ToolChoice.Mode(ctx.readTreeAsValue(node, ToolChoiceMode::class.java))
-        if (node.isObject)
+        }
+        if (node.isObject) {
             return ToolChoice.Specific(ctx.readTreeAsValue(node, SpecificToolChoice::class.java))
+        }
         throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
             parser,
             "Cannot deserialize ToolChoice: no matching variant for JSON shape",

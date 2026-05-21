@@ -70,7 +70,8 @@ export MOCK_SERVER_URL
 MOCK_SERVERS_JSON="$(grep -o 'MOCK_SERVERS={.*}' "$MOCK_URL_FILE" | head -1 | cut -d= -f2- || true)"
 if [ -n "$MOCK_SERVERS_JSON" ] && command -v python3 >/dev/null 2>&1; then
   while IFS= read -r line; do
-    [ -n "$line" ] && export "$line"
+    # shellcheck disable=SC2163  # We intentionally pass `KEY=value` strings.
+    [ -n "$line" ] && export "${line?}"
   done < <(python3 -c "import json,sys; d=json.loads(sys.argv[1]); print('\n'.join('MOCK_SERVER_{}={}'.format(k.upper().replace('-','_'),v) for k,v in d.items()))" "$MOCK_SERVERS_JSON")
 fi
 
