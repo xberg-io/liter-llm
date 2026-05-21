@@ -24,25 +24,32 @@ package dev.kreuzberg.literllm.android
 /** Confidence scores for each moderation category. */
 data class ModerationCategoryScores(
     /** Sexual content score. */
-    val sexual: Double,
+    val sexual: Double = 0.0,
     /** Hate speech score. */
-    val hate: Double,
+    val hate: Double = 0.0,
     /** Harassment score. */
-    val harassment: Double,
+    val harassment: Double = 0.0,
     /** Self-harm content score. */
-    val selfHarm: Double,
+    @com.fasterxml.jackson.annotation.JsonProperty("self-harm")
+    val selfHarm: Double = 0.0,
     /** Sexual content involving minors score. */
-    val sexualMinors: Double,
+    @com.fasterxml.jackson.annotation.JsonProperty("sexual/minors")
+    val sexualMinors: Double = 0.0,
     /** Hate speech that threatens violence score. */
-    val hateThreatening: Double,
+    @com.fasterxml.jackson.annotation.JsonProperty("hate/threatening")
+    val hateThreatening: Double = 0.0,
     /** Graphic violence score. */
-    val violenceGraphic: Double,
+    @com.fasterxml.jackson.annotation.JsonProperty("violence/graphic")
+    val violenceGraphic: Double = 0.0,
     /** Intent to self-harm score. */
-    val selfHarmIntent: Double,
+    @com.fasterxml.jackson.annotation.JsonProperty("self-harm/intent")
+    val selfHarmIntent: Double = 0.0,
     /** Instructions for self-harm score. */
-    val selfHarmInstructions: Double,
+    @com.fasterxml.jackson.annotation.JsonProperty("self-harm/instructions")
+    val selfHarmInstructions: Double = 0.0,
     /** Harassment that threatens violence score. */
-    val harassmentThreatening: Double,
+    @com.fasterxml.jackson.annotation.JsonProperty("harassment/threatening")
+    val harassmentThreatening: Double = 0.0,
     /** Non-graphic violence score. */
-    val violence: Double
+    val violence: Double = 0.0
 )

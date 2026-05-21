@@ -27,7 +27,7 @@ data class ModelsListResponse(
      * Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
      * `String` so non-standard provider values do not break deserialization.
      */
-    val `object`: String,
+    val `object`: String = "",
     /** List of available models. */
     val data: List<ModelObject> = emptyList()
 )

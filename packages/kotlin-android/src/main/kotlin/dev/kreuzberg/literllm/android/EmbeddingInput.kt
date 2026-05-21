@@ -26,17 +26,9 @@ package dev.kreuzberg.literllm.android
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = EmbeddingInputSerializer::class)
 sealed class EmbeddingInput {
     /** Single text string. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Single(
-        val value: String
-    ) : EmbeddingInput()
+    data class Single(val value: String) : EmbeddingInput()
     /** Multiple text strings (batch embedding). */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Multiple(
-        val value: List<String>
-    ) : EmbeddingInput()
+    data class Multiple(val value: List<String>) : EmbeddingInput()
 }
 
 private class EmbeddingInputDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<EmbeddingInput>(

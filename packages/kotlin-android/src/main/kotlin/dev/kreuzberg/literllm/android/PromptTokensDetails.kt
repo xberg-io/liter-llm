@@ -31,7 +31,7 @@ package dev.kreuzberg.literllm.android
  */
 data class PromptTokensDetails(
     /** Cached tokens present in the prompt. Defaults to 0 when absent. */
-    val cachedTokens: Long,
+    val cachedTokens: Long = 0L,
     /** Audio input tokens present in the prompt. Defaults to 0 when absent. */
-    val audioTokens: Long
+    val audioTokens: Long = 0L
 )

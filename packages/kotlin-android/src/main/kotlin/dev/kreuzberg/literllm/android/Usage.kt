@@ -24,11 +24,11 @@ package dev.kreuzberg.literllm.android
 /** Token-usage accounting returned by the provider on each completion / embedding call. */
 data class Usage(
     /** Prompt tokens used. Defaults to 0 when absent (some providers omit this). */
-    val promptTokens: Long,
+    val promptTokens: Long = 0L,
     /** Completion tokens used. Defaults to 0 when absent (e.g. embedding responses). */
-    val completionTokens: Long,
+    val completionTokens: Long = 0L,
     /** Total tokens used. Defaults to 0 when absent (some providers omit this). */
-    val totalTokens: Long,
+    val totalTokens: Long = 0L,
     /**
      * Breakdown of tokens used in the prompt, including cached tokens served
      * at the provider's discounted cache-read rate. Absent when the provider

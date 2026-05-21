@@ -73,20 +73,6 @@ class SmokeTest {
     }
 
     @Test
-    fun test_local_chat_ollama() {
-        val client = LiterLlm()
-        val result = client.chat(/* fixture: local_chat_ollama */)
-        // TODO: assert result is not an error
-    }
-
-    @Test
-    fun test_local_list_models_ollama() {
-        val client = LiterLlm()
-        val result = client.chat(/* fixture: local_list_models_ollama */)
-        // TODO: assert result is not an error
-    }
-
-    @Test
     fun test_smoke_cache_memory() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: smoke_cache_memory */)

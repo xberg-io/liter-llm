@@ -24,6 +24,7 @@ package dev.kreuzberg.literllm.android
 /** User message in the conversation. */
 data class UserMessage(
     /** Message content as plain text or array of content parts (text, images, documents, audio). */
+    @field:com.fasterxml.jackson.databind.annotation.JsonSerialize(`as` = UserContent::class)
     val content: UserContent,
     /** Optional name for the user. */
     val name: String? = null

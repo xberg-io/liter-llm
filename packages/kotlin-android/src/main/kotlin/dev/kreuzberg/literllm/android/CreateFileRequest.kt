@@ -24,7 +24,7 @@ package dev.kreuzberg.literllm.android
 /** Request to upload a file. */
 data class CreateFileRequest(
     /** Base64-encoded file data. */
-    val file: String,
+    val file: String = "",
     /** Purpose for the file. */
     val purpose: FilePurpose = FilePurpose.ASSISTANTS,
     /** Optional filename to associate with the upload. */

@@ -28,7 +28,7 @@ data class AssistantMessage(
     /** Optional name for the assistant. */
     val name: String? = null,
     /** Tool calls the model wants to execute, if any. */
-    val toolCalls: List<ToolCall>? = emptyList(),
+    val toolCalls: List<ToolCall>? = null,
     /** Refusal reason, if the model declined to respond per safety policies. */
     val refusal: String? = null,
     /** Deprecated legacy function_call field; retained for API compatibility. */

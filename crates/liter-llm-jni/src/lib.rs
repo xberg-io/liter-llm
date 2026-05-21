@@ -110,10 +110,18 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
     };
     let result = core_crate::create_client(
         api_key,
-        Some(base_url),
-        Some(timeout_secs as u64),
-        Some(max_retries as u32),
-        Some(model_hint),
+        (if base_url.is_empty() { None } else { Some(base_url) }),
+        (if timeout_secs != 0 {
+            Some(timeout_secs as u64)
+        } else {
+            None
+        }),
+        (if max_retries != 0 {
+            Some(max_retries as u32)
+        } else {
+            None
+        }),
+        (if model_hint.is_empty() { None } else { Some(model_hint) }),
     );
     match result {
         Err(e) => {
@@ -1021,16 +1029,20 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let query: core_crate::FileListQuery = match serde_json::from_str(&req_str) {
-        Ok(v) => v,
-        Err(e) => {
-            throw_jni_error(env, &format!("request deserialize: {e}"));
-            return std::ptr::null_mut();
+    let query: Option<core_crate::FileListQuery> = if req_str.is_empty() {
+        None
+    } else {
+        match serde_json::from_str(&req_str) {
+            Ok(v) => Some(v),
+            Err(e) => {
+                throw_jni_error(env, &format!("request deserialize: {e}"));
+                return std::ptr::null_mut();
+            }
         }
     };
     let Some(result) = run_or_throw(
         env,
-        std::panic::AssertUnwindSafe(|| runtime().block_on(client.list_files(Some(query)))),
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.list_files(query))),
     ) else {
         return std::ptr::null_mut();
     };
@@ -1220,16 +1232,20 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let query: core_crate::BatchListQuery = match serde_json::from_str(&req_str) {
-        Ok(v) => v,
-        Err(e) => {
-            throw_jni_error(env, &format!("request deserialize: {e}"));
-            return std::ptr::null_mut();
+    let query: Option<core_crate::BatchListQuery> = if req_str.is_empty() {
+        None
+    } else {
+        match serde_json::from_str(&req_str) {
+            Ok(v) => Some(v),
+            Err(e) => {
+                throw_jni_error(env, &format!("request deserialize: {e}"));
+                return std::ptr::null_mut();
+            }
         }
     };
     let Some(result) = run_or_throw(
         env,
-        std::panic::AssertUnwindSafe(|| runtime().block_on(client.list_batches(Some(query)))),
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.list_batches(query))),
     ) else {
         return std::ptr::null_mut();
     };

@@ -25,37 +25,13 @@ package dev.kreuzberg.literllm.android
 @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = MessageDeserializer::class)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = MessageSerializer::class)
 sealed class Message {
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class System(
-        val message: SystemMessage
-    ) : Message()
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class User(
-        val message: UserMessage
-    ) : Message()
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Assistant(
-        val message: AssistantMessage
-    ) : Message()
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Tool(
-        val message: ToolMessage
-    ) : Message()
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Developer(
-        val message: DeveloperMessage
-    ) : Message()
+    data class System(val message: SystemMessage) : Message()
+    data class User(val message: UserMessage) : Message()
+    data class Assistant(val message: AssistantMessage) : Message()
+    data class Tool(val message: ToolMessage) : Message()
+    data class Developer(val message: DeveloperMessage) : Message()
     /** Deprecated legacy function-role message; retained for API compatibility. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Function(
-        val message: FunctionMessage
-    ) : Message()
+    data class Function(val message: FunctionMessage) : Message()
 }
 
 private class MessageDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<Message>(Message::class.java) {

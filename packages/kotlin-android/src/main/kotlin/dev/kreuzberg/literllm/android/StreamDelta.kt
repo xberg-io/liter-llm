@@ -28,7 +28,7 @@ data class StreamDelta(
     /** Partial content chunk (e.g., a few words of the response). */
     val content: String? = null,
     /** Partial tool calls being streamed. */
-    val toolCalls: List<StreamToolCall>? = emptyList(),
+    val toolCalls: List<StreamToolCall>? = null,
     /** Deprecated legacy function_call delta; retained for API compatibility. */
     val functionCall: StreamFunctionCall? = null,
     /** Partial refusal message. */

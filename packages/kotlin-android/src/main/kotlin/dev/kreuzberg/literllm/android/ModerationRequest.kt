@@ -24,6 +24,7 @@ package dev.kreuzberg.literllm.android
 /** Request to classify content for policy violations. */
 data class ModerationRequest(
     /** Text or texts to check. */
+    @field:com.fasterxml.jackson.databind.annotation.JsonSerialize(`as` = ModerationInput::class)
     val input: ModerationInput,
     /** Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset. */
     val model: String? = null

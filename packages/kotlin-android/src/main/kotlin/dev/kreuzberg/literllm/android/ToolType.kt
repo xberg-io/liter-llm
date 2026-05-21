@@ -31,4 +31,18 @@ package dev.kreuzberg.literllm.android
 enum class ToolType {
     @com.fasterxml.jackson.annotation.JsonProperty("function")
     FUNCTION;
+
+    @com.fasterxml.jackson.annotation.JsonValue
+    fun toWire(): String = when (this) {
+        FUNCTION -> "function"
+    }
+
+    companion object {
+        @com.fasterxml.jackson.annotation.JsonCreator
+        @JvmStatic
+        fun fromWire(value: String): ToolType = when (value) {
+            "function" -> FUNCTION
+            else -> throw IllegalArgumentException("Unknown ToolType value: $value")
+        }
+    }
 }

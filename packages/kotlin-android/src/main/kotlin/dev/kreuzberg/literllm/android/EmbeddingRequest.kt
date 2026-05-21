@@ -24,8 +24,9 @@ package dev.kreuzberg.literllm.android
 /** Embedding request. */
 data class EmbeddingRequest(
     /** Model ID (e.g., `"text-embedding-3-small"`). */
-    val model: String,
+    val model: String = "",
     /** Text or texts to embed. */
+    @field:com.fasterxml.jackson.databind.annotation.JsonSerialize(`as` = EmbeddingInput::class)
     val input: EmbeddingInput,
     /** Output format: float (native) or base64. */
     val encodingFormat: EmbeddingFormat? = null,

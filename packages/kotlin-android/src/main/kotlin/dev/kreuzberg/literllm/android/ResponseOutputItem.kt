@@ -22,9 +22,11 @@
 package dev.kreuzberg.literllm.android
 
 /** A single output item from the response. */
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 data class ResponseOutputItem(
     /** Output type (e.g., `"text"`, `"object"`, `"error"`). */
-    val itemType: String,
+    @com.fasterxml.jackson.annotation.JsonProperty("type")
+    val itemType: String = "",
     /** Output content (flattened into the object). */
-    val content: String
+    val content: Any? = null
 )

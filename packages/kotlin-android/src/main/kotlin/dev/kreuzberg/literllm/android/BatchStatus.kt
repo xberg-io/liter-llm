@@ -47,4 +47,32 @@ enum class BatchStatus {
     /** Job has been cancelled. */
     @com.fasterxml.jackson.annotation.JsonProperty("cancelled")
     CANCELLED;
+
+    @com.fasterxml.jackson.annotation.JsonValue
+    fun toWire(): String = when (this) {
+        VALIDATING -> "validating"
+        FAILED -> "failed"
+        IN_PROGRESS -> "in_progress"
+        FINALIZING -> "finalizing"
+        COMPLETED -> "completed"
+        EXPIRED -> "expired"
+        CANCELLING -> "cancelling"
+        CANCELLED -> "cancelled"
+    }
+
+    companion object {
+        @com.fasterxml.jackson.annotation.JsonCreator
+        @JvmStatic
+        fun fromWire(value: String): BatchStatus = when (value) {
+            "validating" -> VALIDATING
+            "failed" -> FAILED
+            "in_progress" -> IN_PROGRESS
+            "finalizing" -> FINALIZING
+            "completed" -> COMPLETED
+            "expired" -> EXPIRED
+            "cancelling" -> CANCELLING
+            "cancelled" -> CANCELLED
+            else -> throw IllegalArgumentException("Unknown BatchStatus value: $value")
+        }
+    }
 }

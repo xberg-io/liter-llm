@@ -26,17 +26,9 @@ package dev.kreuzberg.literllm.android
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = UserContentSerializer::class)
 sealed class UserContent {
     /** Plain text content. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Text(
-        val value: String
-    ) : UserContent()
+    data class Text(val value: String) : UserContent()
     /** Array of content parts (text, images, documents, audio). */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Parts(
-        val value: List<ContentPart>
-    ) : UserContent()
+    data class Parts(val value: List<ContentPart>) : UserContent()
 }
 
 private class UserContentDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<UserContent>(UserContent::class.java) {
@@ -75,7 +67,14 @@ private class UserContentSerializer : com.fasterxml.jackson.databind.ser.std.Std
                 ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
         when (value) {
             is UserContent.Text -> mapper.writeValue(gen, value.value)
-            is UserContent.Parts -> mapper.writeValue(gen, value.value)
+            is UserContent.Parts -> {
+                gen.writeStartArray()
+                val elemSerializer = provider.findValueSerializer(ContentPart::class.java)
+                for (elem in value.value) {
+                    elemSerializer.serialize(elem, gen, provider)
+                }
+                gen.writeEndArray()
+            }
         }
     }
 }

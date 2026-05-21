@@ -24,9 +24,9 @@ package dev.kreuzberg.literllm.android
 /** Request to transcribe audio into text. */
 data class CreateTranscriptionRequest(
     /** Model ID (e.g., `"whisper-1"`). */
-    val model: String,
+    val model: String = "",
     /** Base64-encoded audio file data. */
-    val file: String,
+    val file: String = "",
     /** Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. */
     val language: String? = null,
     /** Optional text to guide the model (improves accuracy for domain-specific terms). */

@@ -26,17 +26,9 @@ package dev.kreuzberg.literllm.android
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = ToolChoiceSerializer::class)
 sealed class ToolChoice {
     /** Predefined mode: auto, required, or none. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Mode(
-        val value: ToolChoiceMode
-    ) : ToolChoice()
+    data class Mode(val value: ToolChoiceMode) : ToolChoice()
     /** Force a specific tool to be called. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Specific(
-        val toolChoice: SpecificToolChoice
-    ) : ToolChoice()
+    data class Specific(val toolChoice: SpecificToolChoice) : ToolChoice()
 }
 
 private class ToolChoiceDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<ToolChoice>(ToolChoice::class.java) {
@@ -46,8 +38,30 @@ private class ToolChoiceDeserializer : com.fasterxml.jackson.databind.deser.std.
         ctx: com.fasterxml.jackson.databind.DeserializationContext,
     ): ToolChoice {
         val node = parser.codec.readTree<com.fasterxml.jackson.databind.JsonNode>(parser)
-        if (node.isObject) return ToolChoice.Mode(ctx.readTreeAsValue(node, ToolChoiceMode::class.java))
-        if (node.isObject) return ToolChoice.Specific(ctx.readTreeAsValue(node, SpecificToolChoice::class.java))
+        if (true) {
+            val result = try {
+                ToolChoice.Mode(ctx.readTreeAsValue(node, ToolChoiceMode::class.java))
+            } catch (
+                _: com.fasterxml.jackson.databind.exc.MismatchedInputException
+            ) {
+                null as? ToolChoice
+            } catch (_: com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException) {
+                null as? ToolChoice
+            }
+            if (result != null) return result
+        }
+        if (true) {
+            val result = try {
+                ToolChoice.Specific(ctx.readTreeAsValue(node, SpecificToolChoice::class.java))
+            } catch (
+                _: com.fasterxml.jackson.databind.exc.MismatchedInputException
+            ) {
+                null as? ToolChoice
+            } catch (_: com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException) {
+                null as? ToolChoice
+            }
+            if (result != null) return result
+        }
         throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
             parser,
             "Cannot deserialize ToolChoice: no matching variant for JSON shape",

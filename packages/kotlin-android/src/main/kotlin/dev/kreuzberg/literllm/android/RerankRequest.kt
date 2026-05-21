@@ -24,10 +24,11 @@ package dev.kreuzberg.literllm.android
 /** Request to rerank documents by relevance to a query. */
 data class RerankRequest(
     /** Model ID (e.g., `"cohere/rerank-english-v3.0"`). */
-    val model: String,
+    val model: String = "",
     /** The search query. */
-    val query: String,
+    val query: String = "",
     /** Documents to rerank. */
+    @field:com.fasterxml.jackson.databind.annotation.JsonSerialize(contentAs = RerankDocument::class)
     val documents: List<RerankDocument> = emptyList(),
     /** Return only the top N results. Optional. */
     val topN: Int? = null,

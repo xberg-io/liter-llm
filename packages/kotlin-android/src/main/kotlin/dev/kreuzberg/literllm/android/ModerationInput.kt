@@ -26,17 +26,9 @@ package dev.kreuzberg.literllm.android
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = ModerationInputSerializer::class)
 sealed class ModerationInput {
     /** Single text string. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Single(
-        val value: String
-    ) : ModerationInput()
+    data class Single(val value: String) : ModerationInput()
     /** Multiple text strings (batch moderation). */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Multiple(
-        val value: List<String>
-    ) : ModerationInput()
+    data class Multiple(val value: List<String>) : ModerationInput()
 }
 
 private class ModerationInputDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<ModerationInput>(

@@ -24,7 +24,7 @@ package dev.kreuzberg.literllm.android
 /** System message guiding model behavior for the entire conversation. */
 data class SystemMessage(
     /** Instructions or context that apply throughout the conversation. */
-    val content: String,
+    val content: String = "",
     /** Optional name for the system message source. */
     val name: String? = null
 )

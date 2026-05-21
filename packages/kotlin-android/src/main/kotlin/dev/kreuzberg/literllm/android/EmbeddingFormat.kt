@@ -29,4 +29,20 @@ enum class EmbeddingFormat {
     /** Base64-encoded string representation of the floats. */
     @com.fasterxml.jackson.annotation.JsonProperty("base64")
     BASE64;
+
+    @com.fasterxml.jackson.annotation.JsonValue
+    fun toWire(): String = when (this) {
+        FLOAT -> "float"
+        BASE64 -> "base64"
+    }
+
+    companion object {
+        @com.fasterxml.jackson.annotation.JsonCreator
+        @JvmStatic
+        fun fromWire(value: String): EmbeddingFormat = when (value) {
+            "float" -> FLOAT
+            "base64" -> BASE64
+            else -> throw IllegalArgumentException("Unknown EmbeddingFormat value: $value")
+        }
+    }
 }

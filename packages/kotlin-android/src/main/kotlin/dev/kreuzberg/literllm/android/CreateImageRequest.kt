@@ -24,7 +24,7 @@ package dev.kreuzberg.literllm.android
 /** Request to create images from a text prompt. */
 data class CreateImageRequest(
     /** Text description of the image to generate. */
-    val prompt: String,
+    val prompt: String = "",
     /** Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset. */
     val model: String? = null,
     /** Number of images to generate. Defaults to 1. */

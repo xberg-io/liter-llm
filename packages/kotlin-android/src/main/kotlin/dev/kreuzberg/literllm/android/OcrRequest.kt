@@ -24,11 +24,12 @@ package dev.kreuzberg.literllm.android
 /** An OCR request. */
 data class OcrRequest(
     /** The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). */
-    val model: String,
+    val model: String = "",
     /** The document to process (URL or base64). */
+    @field:com.fasterxml.jackson.databind.annotation.JsonSerialize(`as` = OcrDocument::class)
     val document: OcrDocument,
     /** Specific pages to process (1-indexed). `null` means all pages. */
-    val pages: List<Int>? = emptyList(),
+    val pages: List<Int>? = null,
     /** Whether to include base64-encoded images of each processed page. */
     val includeImageBase64: Boolean? = null
 )

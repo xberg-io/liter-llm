@@ -24,7 +24,7 @@ package dev.kreuzberg.literllm.android
 /** Response from listing batches. */
 data class BatchListResponse(
     /** Object type (always `"list"`). */
-    val `object`: String,
+    val `object`: String = "",
     /** List of batch objects. */
     val data: List<BatchObject> = emptyList(),
     /** Whether more results are available. */

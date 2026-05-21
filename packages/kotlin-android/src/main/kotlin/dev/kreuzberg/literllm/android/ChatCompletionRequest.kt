@@ -24,8 +24,9 @@ package dev.kreuzberg.literllm.android
 /** Chat completion request (compatible with OpenAI and similar APIs). */
 data class ChatCompletionRequest(
     /** Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`). */
-    val model: String,
+    val model: String = "",
     /** Conversation history from oldest to newest. */
+    @field:com.fasterxml.jackson.databind.annotation.JsonSerialize(contentAs = Message::class)
     val messages: List<Message> = emptyList(),
     /** Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0. */
     val temperature: Double? = null,
@@ -40,6 +41,7 @@ data class ChatCompletionRequest(
      */
     val stream: Boolean? = null,
     /** Stop sequence(s) that halt token generation. */
+    @field:com.fasterxml.jackson.databind.annotation.JsonSerialize(`as` = StopSequence::class)
     val stop: StopSequence? = null,
     /** Max output tokens. Different from max_completion_tokens in some providers. */
     val maxTokens: Long? = null,
@@ -51,26 +53,28 @@ data class ChatCompletionRequest(
      * Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic
      * serialization order — important when hashing or signing requests.
      */
-    val logitBias: Map<String, Double>? = emptyMap(),
+    val logitBias: Map<String, Double>? = null,
     /** User identifier for request tracking and abuse detection. */
     val user: String? = null,
     /** Tools the model can invoke. */
-    val tools: List<ChatCompletionTool>? = emptyList(),
+    val tools: List<ChatCompletionTool>? = null,
     /** Tool usage mode (auto, required, none, or specific tool). */
+    @field:com.fasterxml.jackson.databind.annotation.JsonSerialize(`as` = ToolChoice::class)
     val toolChoice: ToolChoice? = null,
     /** Whether the model can call multiple tools in parallel. Defaults to true. */
     val parallelToolCalls: Boolean? = null,
     /** Output format constraint (text, JSON, JSON schema). */
+    @field:com.fasterxml.jackson.databind.annotation.JsonSerialize(`as` = ResponseFormat::class)
     val responseFormat: ResponseFormat? = null,
     /** Streaming options (e.g., include_usage). */
     val streamOptions: StreamOptions? = null,
     /** Random seed for reproducible outputs. Provider support varies. */
     val seed: Long? = null,
     /** Reasoning effort level (low, medium, high) for extended-thinking models. */
-    val reasoningEffort: ReasoningEffort? = ReasoningEffort.MEDIUM,
+    val reasoningEffort: ReasoningEffort? = null,
     /**
      * Provider-specific extra parameters merged into the request body.
      * Use for guardrails, safety settings, grounding config, etc.
      */
-    val extraBody: String? = null
+    val extraBody: Any? = null
 )

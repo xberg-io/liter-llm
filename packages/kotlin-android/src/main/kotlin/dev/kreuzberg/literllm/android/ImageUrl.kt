@@ -24,7 +24,7 @@ package dev.kreuzberg.literllm.android
 /** An image URL reference with optional detail level for processing. */
 data class ImageUrl(
     /** URL of the image (data URI or HTTP/HTTPS URL). */
-    val url: String,
+    val url: String = "",
     /** Detail level: low (512x512), high (2x2 tiles), or auto (model-selected). */
     val detail: ImageDetail? = null
 )

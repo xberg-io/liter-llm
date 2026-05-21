@@ -24,11 +24,11 @@ package dev.kreuzberg.literllm.android
 /** A segment of transcribed audio with timing information. */
 data class TranscriptionSegment(
     /** Segment index (0-based). */
-    val id: Int,
+    val id: Int = 0,
     /** Start time in seconds. */
-    val start: Double,
+    val start: Double = 0.0,
     /** End time in seconds. */
-    val end: Double,
+    val end: Double = 0.0,
     /** Transcribed text for this segment. */
-    val text: String
+    val text: String = ""
 )

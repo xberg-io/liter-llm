@@ -24,25 +24,32 @@ package dev.kreuzberg.literllm.android
 /** Boolean flags for each moderation category. */
 data class ModerationCategories(
     /** Sexual content. */
-    val sexual: Boolean,
+    val sexual: Boolean = false,
     /** Hate speech. */
-    val hate: Boolean,
+    val hate: Boolean = false,
     /** Harassment. */
-    val harassment: Boolean,
+    val harassment: Boolean = false,
     /** Self-harm content. */
-    val selfHarm: Boolean,
+    @com.fasterxml.jackson.annotation.JsonProperty("self-harm")
+    val selfHarm: Boolean = false,
     /** Sexual content involving minors. */
-    val sexualMinors: Boolean,
+    @com.fasterxml.jackson.annotation.JsonProperty("sexual/minors")
+    val sexualMinors: Boolean = false,
     /** Hate speech that threatens violence. */
-    val hateThreatening: Boolean,
+    @com.fasterxml.jackson.annotation.JsonProperty("hate/threatening")
+    val hateThreatening: Boolean = false,
     /** Graphic violence. */
-    val violenceGraphic: Boolean,
+    @com.fasterxml.jackson.annotation.JsonProperty("violence/graphic")
+    val violenceGraphic: Boolean = false,
     /** Intent to self-harm. */
-    val selfHarmIntent: Boolean,
+    @com.fasterxml.jackson.annotation.JsonProperty("self-harm/intent")
+    val selfHarmIntent: Boolean = false,
     /** Instructions for self-harm. */
-    val selfHarmInstructions: Boolean,
+    @com.fasterxml.jackson.annotation.JsonProperty("self-harm/instructions")
+    val selfHarmInstructions: Boolean = false,
     /** Harassment that threatens violence. */
-    val harassmentThreatening: Boolean,
+    @com.fasterxml.jackson.annotation.JsonProperty("harassment/threatening")
+    val harassmentThreatening: Boolean = false,
     /** Non-graphic violence. */
-    val violence: Boolean
+    val violence: Boolean = false
 )

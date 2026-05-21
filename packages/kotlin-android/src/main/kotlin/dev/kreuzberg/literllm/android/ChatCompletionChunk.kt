@@ -24,16 +24,16 @@ package dev.kreuzberg.literllm.android
 /** A streamed chunk of a chat completion response. */
 data class ChatCompletionChunk(
     /** Unique identifier for this stream. */
-    val id: String,
+    val id: String = "",
     /**
      * Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored
      * as a plain `String` so non-standard provider values do not fail parsing.
      */
-    val `object`: String,
+    val `object`: String = "",
     /** Unix timestamp of chunk creation. */
-    val created: Long,
+    val created: Long = 0L,
     /** Model used to generate the chunk. */
-    val model: String,
+    val model: String = "",
     /** Streaming choices (delta updates). */
     val choices: List<StreamChoice> = emptyList(),
     /** Token usage (typically only in the final chunk). */

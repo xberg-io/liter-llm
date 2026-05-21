@@ -24,14 +24,14 @@ package dev.kreuzberg.literllm.android
 /** A model available from the API. */
 data class ModelObject(
     /** Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`). */
-    val id: String,
+    val id: String = "",
     /**
      * Always `"model"` from OpenAI-compatible APIs.  Stored as a plain
      * `String` so non-standard provider values do not break deserialization.
      */
-    val `object`: String,
+    val `object`: String = "",
     /** Unix timestamp of model creation (or release date). */
-    val created: Long,
+    val created: Long = 0L,
     /** Organization or entity that owns the model. */
-    val ownedBy: String
+    val ownedBy: String = ""
 )

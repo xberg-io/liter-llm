@@ -24,9 +24,9 @@ package dev.kreuzberg.literllm.android
 /** Request processing counts for a batch. */
 data class BatchRequestCounts(
     /** Total requests in the batch. */
-    val total: Long,
+    val total: Long = 0L,
     /** Completed requests. */
-    val completed: Long,
+    val completed: Long = 0L,
     /** Failed requests. */
-    val failed: Long
+    val failed: Long = 0L
 )

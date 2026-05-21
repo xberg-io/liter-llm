@@ -24,6 +24,7 @@ package dev.kreuzberg.literllm.android
 /** Directive to call a specific tool. */
 data class SpecificToolChoice(
     /** Tool type (always "function"). */
+    @com.fasterxml.jackson.annotation.JsonProperty("type")
     val choiceType: ToolType = ToolType.FUNCTION,
     /** The specific function to invoke. */
     val function: SpecificFunction

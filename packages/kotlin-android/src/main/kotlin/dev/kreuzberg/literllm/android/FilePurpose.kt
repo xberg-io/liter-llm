@@ -35,4 +35,24 @@ enum class FilePurpose {
     /** File for vision/image tasks. */
     @com.fasterxml.jackson.annotation.JsonProperty("vision")
     VISION;
+
+    @com.fasterxml.jackson.annotation.JsonValue
+    fun toWire(): String = when (this) {
+        ASSISTANTS -> "assistants"
+        BATCH -> "batch"
+        FINE_TUNE -> "fine-tune"
+        VISION -> "vision"
+    }
+
+    companion object {
+        @com.fasterxml.jackson.annotation.JsonCreator
+        @JvmStatic
+        fun fromWire(value: String): FilePurpose = when (value) {
+            "assistants" -> ASSISTANTS
+            "batch" -> BATCH
+            "fine-tune" -> FINE_TUNE
+            "vision" -> VISION
+            else -> throw IllegalArgumentException("Unknown FilePurpose value: $value")
+        }
+    }
 }

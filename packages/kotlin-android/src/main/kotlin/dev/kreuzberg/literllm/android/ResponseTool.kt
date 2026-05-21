@@ -22,9 +22,11 @@
 package dev.kreuzberg.literllm.android
 
 /** A tool available for the response request. */
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 data class ResponseTool(
     /** Tool type (e.g., "extractor", "search"). */
-    val toolType: String,
+    @com.fasterxml.jackson.annotation.JsonProperty("type")
+    val toolType: String = "",
     /** Tool configuration (flattened into the object). */
-    val config: String
+    val config: Any? = null
 )

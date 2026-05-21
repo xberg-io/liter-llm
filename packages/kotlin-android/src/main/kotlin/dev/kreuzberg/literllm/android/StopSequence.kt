@@ -26,17 +26,9 @@ package dev.kreuzberg.literllm.android
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = StopSequenceSerializer::class)
 sealed class StopSequence {
     /** Single stop sequence. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Single(
-        val value: String
-    ) : StopSequence()
+    data class Single(val value: String) : StopSequence()
     /** Multiple stop sequences. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize
-    data class Multiple(
-        val value: List<String>
-    ) : StopSequence()
+    data class Multiple(val value: List<String>) : StopSequence()
 }
 
 private class StopSequenceDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<StopSequence>(StopSequence::class.java) {

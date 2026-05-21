@@ -28,7 +28,7 @@ data class FunctionDefinition(
     /** Human-readable description explaining what the function does. */
     val description: String? = null,
     /** JSON Schema defining the function's parameters. */
-    val parameters: String? = null,
+    val parameters: Any? = null,
     /** If true, enforce strict JSON schema validation for arguments. */
     val strict: Boolean? = null
 )

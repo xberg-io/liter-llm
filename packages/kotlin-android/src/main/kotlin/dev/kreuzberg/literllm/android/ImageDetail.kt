@@ -32,4 +32,22 @@ enum class ImageDetail {
     /** Auto: model chooses low or high based on image dimensions. */
     @com.fasterxml.jackson.annotation.JsonProperty("auto")
     AUTO;
+
+    @com.fasterxml.jackson.annotation.JsonValue
+    fun toWire(): String = when (this) {
+        LOW -> "low"
+        HIGH -> "high"
+        AUTO -> "auto"
+    }
+
+    companion object {
+        @com.fasterxml.jackson.annotation.JsonCreator
+        @JvmStatic
+        fun fromWire(value: String): ImageDetail = when (value) {
+            "low" -> LOW
+            "high" -> HIGH
+            "auto" -> AUTO
+            else -> throw IllegalArgumentException("Unknown ImageDetail value: $value")
+        }
+    }
 }

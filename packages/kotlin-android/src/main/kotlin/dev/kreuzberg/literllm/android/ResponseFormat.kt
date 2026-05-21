@@ -30,8 +30,8 @@ sealed class ResponseFormat {
     /** Output must be valid JSON object (no schema validation). */
     object JsonObject : ResponseFormat()
     /** Output must conform to the specified JSON schema. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
     data class JsonSchema(
         val jsonSchema: JsonSchemaFormat
     ) : ResponseFormat()

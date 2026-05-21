@@ -32,4 +32,22 @@ enum class ToolChoiceMode {
     /** Model must not call any tools. */
     @com.fasterxml.jackson.annotation.JsonProperty("none")
     NONE;
+
+    @com.fasterxml.jackson.annotation.JsonValue
+    fun toWire(): String = when (this) {
+        AUTO -> "auto"
+        REQUIRED -> "required"
+        NONE -> "none"
+    }
+
+    companion object {
+        @com.fasterxml.jackson.annotation.JsonCreator
+        @JvmStatic
+        fun fromWire(value: String): ToolChoiceMode = when (value) {
+            "auto" -> AUTO
+            "required" -> REQUIRED
+            "none" -> NONE
+            else -> throw IllegalArgumentException("Unknown ToolChoiceMode value: $value")
+        }
+    }
 }

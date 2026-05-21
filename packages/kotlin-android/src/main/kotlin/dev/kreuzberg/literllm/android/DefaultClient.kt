@@ -117,7 +117,7 @@ class DefaultClient internal constructor(internal val handle: Long) : AutoClosea
 
     suspend fun listFiles(query: FileListQuery? = null): FileListResponse {
         return withContext(Dispatchers.IO) {
-            val responseJson = LiterLlmBridge.nativeDefaultClientListFiles(handle, MAPPER.writeValueAsString(query))
+            val responseJson = LiterLlmBridge.nativeDefaultClientListFiles(handle, query?.let { MAPPER.writeValueAsString(it) } ?: "")
             MAPPER.readValue(responseJson, FileListResponse::class.java)
         }
     }
@@ -142,7 +142,7 @@ class DefaultClient internal constructor(internal val handle: Long) : AutoClosea
 
     suspend fun listBatches(query: BatchListQuery? = null): BatchListResponse {
         return withContext(Dispatchers.IO) {
-            val responseJson = LiterLlmBridge.nativeDefaultClientListBatches(handle, MAPPER.writeValueAsString(query))
+            val responseJson = LiterLlmBridge.nativeDefaultClientListBatches(handle, query?.let { MAPPER.writeValueAsString(it) } ?: "")
             MAPPER.readValue(responseJson, BatchListResponse::class.java)
         }
     }

@@ -45,4 +45,28 @@ enum class FinishReason {
      */
     @com.fasterxml.jackson.annotation.JsonProperty("other")
     OTHER;
+
+    @com.fasterxml.jackson.annotation.JsonValue
+    fun toWire(): String = when (this) {
+        STOP -> "stop"
+        LENGTH -> "length"
+        TOOL_CALLS -> "tool_calls"
+        CONTENT_FILTER -> "content_filter"
+        FUNCTION_CALL -> "function_call"
+        OTHER -> "other"
+    }
+
+    companion object {
+        @com.fasterxml.jackson.annotation.JsonCreator
+        @JvmStatic
+        fun fromWire(value: String): FinishReason = when (value) {
+            "stop" -> STOP
+            "length" -> LENGTH
+            "tool_calls" -> TOOL_CALLS
+            "content_filter" -> CONTENT_FILTER
+            "function_call" -> FUNCTION_CALL
+            "other" -> OTHER
+            else -> throw IllegalArgumentException("Unknown FinishReason value: $value")
+        }
+    }
 }

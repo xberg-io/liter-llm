@@ -22,4 +22,4 @@
 package dev.kreuzberg.literllm.android
 
 /** Deprecated legacy function-role message body. */
-data class FunctionMessage(val content: String, val name: String)
+data class FunctionMessage(val content: String = "", val name: String = "")
