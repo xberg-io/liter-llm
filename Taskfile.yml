@@ -185,7 +185,7 @@ tasks:
       - echo "Updating dependencies (within-major)..."
       - alef update
       - prek autoupdate
-      - gh-actions-updater --update .
+      - gau --update .
       - task: generate:pricing
       - echo "All dependencies updated"
 
@@ -195,7 +195,7 @@ tasks:
       - echo "Upgrading dependencies (latest)..."
       - alef update --latest
       - prek autoupdate
-      - gh-actions-updater --update .
+      - gau --update .
       - task: generate:pricing
       - echo "All dependencies upgraded"
 
