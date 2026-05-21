@@ -49,7 +49,7 @@ private class ModerationInputDeserializer :
     ): ModerationInput {
         val node = parser.codec.readTree<com.fasterxml.jackson.databind.JsonNode>(parser)
         if (node.isTextual) return ModerationInput.Single(node.asText())
-        if (node.isArray) {
+        if (node.isArray)
             return run {
                 val javaType =
                     ctx.typeFactory.constructCollectionType(List::class.java, String::class.java)
@@ -58,7 +58,6 @@ private class ModerationInputDeserializer :
                     ctx.readTreeAsValue<List<String>>(node, javaType) as List<String>
                 )
             }
-        }
         throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
             parser,
             "Cannot deserialize ModerationInput: no matching variant for JSON shape",

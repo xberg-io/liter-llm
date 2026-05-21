@@ -45,7 +45,7 @@ private class UserContentDeserializer :
     ): UserContent {
         val node = parser.codec.readTree<com.fasterxml.jackson.databind.JsonNode>(parser)
         if (node.isTextual) return UserContent.Text(node.asText())
-        if (node.isArray) {
+        if (node.isArray)
             return run {
                 val javaType =
                     ctx.typeFactory.constructCollectionType(
@@ -57,7 +57,6 @@ private class UserContentDeserializer :
                     ctx.readTreeAsValue<List<ContentPart>>(node, javaType) as List<ContentPart>
                 )
             }
-        }
         throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
             parser,
             "Cannot deserialize UserContent: no matching variant for JSON shape",

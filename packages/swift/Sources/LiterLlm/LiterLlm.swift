@@ -14,6 +14,15 @@ public struct SystemMessage: Codable, Sendable, Hashable {
         self.content = content
         self.name = name
     }
+    private enum CodingKeys: String, CodingKey {
+        case content = "content"
+        case name = "name"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.content = try container.decodeIfPresent(String.self, forKey: .content) ?? ""
+        self.name = try container.decodeIfPresent(String.self, forKey: .name) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for SystemMessage
@@ -39,6 +48,15 @@ public struct ImageUrl: Codable, Sendable, Hashable {
     public init(url: String, detail: ImageDetail? = nil) {
         self.url = url
         self.detail = detail
+    }
+    private enum CodingKeys: String, CodingKey {
+        case url = "url"
+        case detail = "detail"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.url = try container.decodeIfPresent(String.self, forKey: .url) ?? ""
+        self.detail = try container.decodeIfPresent(ImageDetail.self, forKey: .detail) ?? nil
     }
 }
 
@@ -69,6 +87,11 @@ public struct DocumentContent: Codable, Sendable, Hashable {
         case data = "data"
         case mediaType = "media_type"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.data = try container.decodeIfPresent(String.self, forKey: .data) ?? ""
+        self.mediaType = try container.decodeIfPresent(String.self, forKey: .mediaType) ?? ""
+    }
 }
 
 // MARK: - Internal FFI conversions for DocumentContent
@@ -91,6 +114,15 @@ public struct AudioContent: Codable, Sendable, Hashable {
     public init(data: String, format: String) {
         self.data = data
         self.format = format
+    }
+    private enum CodingKeys: String, CodingKey {
+        case data = "data"
+        case format = "format"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.data = try container.decodeIfPresent(String.self, forKey: .data) ?? ""
+        self.format = try container.decodeIfPresent(String.self, forKey: .format) ?? ""
     }
 }
 
@@ -131,6 +163,14 @@ public struct AssistantMessage: Codable, Sendable, Hashable {
         case refusal = "refusal"
         case functionCall = "function_call"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.content = try container.decodeIfPresent(String.self, forKey: .content) ?? nil
+        self.name = try container.decodeIfPresent(String.self, forKey: .name) ?? nil
+        self.toolCalls = try container.decodeIfPresent([ToolCall].self, forKey: .toolCalls) ?? nil
+        self.refusal = try container.decodeIfPresent(String.self, forKey: .refusal) ?? nil
+        self.functionCall = try container.decodeIfPresent(FunctionCall.self, forKey: .functionCall) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for AssistantMessage
@@ -167,6 +207,12 @@ public struct ToolMessage: Codable, Sendable, Hashable {
         case toolCallId = "tool_call_id"
         case name = "name"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.content = try container.decodeIfPresent(String.self, forKey: .content) ?? ""
+        self.toolCallId = try container.decodeIfPresent(String.self, forKey: .toolCallId) ?? ""
+        self.name = try container.decodeIfPresent(String.self, forKey: .name) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for ToolMessage
@@ -191,6 +237,15 @@ public struct DeveloperMessage: Codable, Sendable, Hashable {
         self.content = content
         self.name = name
     }
+    private enum CodingKeys: String, CodingKey {
+        case content = "content"
+        case name = "name"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.content = try container.decodeIfPresent(String.self, forKey: .content) ?? ""
+        self.name = try container.decodeIfPresent(String.self, forKey: .name) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for DeveloperMessage
@@ -211,6 +266,15 @@ public struct FunctionMessage: Codable, Sendable, Hashable {
     public init(content: String, name: String) {
         self.content = content
         self.name = name
+    }
+    private enum CodingKeys: String, CodingKey {
+        case content = "content"
+        case name = "name"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.content = try container.decodeIfPresent(String.self, forKey: .content) ?? ""
+        self.name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
     }
 }
 
@@ -304,6 +368,11 @@ public struct SpecificToolChoice: Codable, Sendable, Hashable {
         case choiceType = "choice_type"
         case function = "function"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.choiceType = try container.decode(ToolType.self, forKey: .choiceType)
+        self.function = try container.decode(SpecificFunction.self, forKey: .function)
+    }
 }
 
 // MARK: - Internal FFI conversions for SpecificToolChoice
@@ -323,6 +392,13 @@ public struct SpecificFunction: Codable, Sendable, Hashable {
     public let name: String
     public init(name: String) {
         self.name = name
+    }
+    private enum CodingKeys: String, CodingKey {
+        case name = "name"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
     }
 }
 
@@ -363,6 +439,13 @@ public struct Usage: Codable, Sendable, Hashable {
         case totalTokens = "total_tokens"
         case promptTokensDetails = "prompt_tokens_details"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.promptTokens = try container.decodeIfPresent(UInt64.self, forKey: .promptTokens) ?? 0
+        self.completionTokens = try container.decodeIfPresent(UInt64.self, forKey: .completionTokens) ?? 0
+        self.totalTokens = try container.decodeIfPresent(UInt64.self, forKey: .totalTokens) ?? 0
+        self.promptTokensDetails = try container.decodeIfPresent(PromptTokensDetails.self, forKey: .promptTokensDetails) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for Usage
@@ -399,6 +482,11 @@ public struct PromptTokensDetails: Codable, Sendable, Hashable {
         case cachedTokens = "cached_tokens"
         case audioTokens = "audio_tokens"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.cachedTokens = try container.decodeIfPresent(UInt64.self, forKey: .cachedTokens) ?? 0
+        self.audioTokens = try container.decodeIfPresent(UInt64.self, forKey: .audioTokens) ?? 0
+    }
 }
 
 // MARK: - Internal FFI conversions for PromptTokensDetails
@@ -424,6 +512,10 @@ public struct StreamOptions: Codable, Sendable, Hashable {
     }
     private enum CodingKeys: String, CodingKey {
         case includeUsage = "include_usage"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.includeUsage = try container.decodeIfPresent(Bool.self, forKey: .includeUsage) ?? nil
     }
 }
 
@@ -476,6 +568,17 @@ public struct ChatCompletionResponse: Codable, Sendable, Hashable {
         case systemFingerprint = "system_fingerprint"
         case serviceTier = "service_tier"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decodeIfPresent(String.self, forKey: .id) ?? ""
+        self.object = try container.decodeIfPresent(String.self, forKey: .object) ?? ""
+        self.created = try container.decodeIfPresent(UInt64.self, forKey: .created) ?? 0
+        self.model = try container.decodeIfPresent(String.self, forKey: .model) ?? ""
+        self.choices = try container.decodeIfPresent([Choice].self, forKey: .choices) ?? []
+        self.usage = try container.decodeIfPresent(Usage.self, forKey: .usage) ?? nil
+        self.systemFingerprint = try container.decodeIfPresent(String.self, forKey: .systemFingerprint) ?? nil
+        self.serviceTier = try container.decodeIfPresent(String.self, forKey: .serviceTier) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for ChatCompletionResponse
@@ -514,6 +617,12 @@ public struct Choice: Codable, Sendable, Hashable {
         case index = "index"
         case message = "message"
         case finishReason = "finish_reason"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.index = try container.decodeIfPresent(UInt32.self, forKey: .index) ?? 0
+        self.message = try container.decode(AssistantMessage.self, forKey: .message)
+        self.finishReason = try container.decodeIfPresent(FinishReason.self, forKey: .finishReason) ?? nil
     }
 }
 
@@ -570,6 +679,17 @@ public struct ChatCompletionChunk: Codable, Sendable, Hashable {
         case systemFingerprint = "system_fingerprint"
         case serviceTier = "service_tier"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decodeIfPresent(String.self, forKey: .id) ?? ""
+        self.object = try container.decodeIfPresent(String.self, forKey: .object) ?? ""
+        self.created = try container.decodeIfPresent(UInt64.self, forKey: .created) ?? 0
+        self.model = try container.decodeIfPresent(String.self, forKey: .model) ?? ""
+        self.choices = try container.decodeIfPresent([StreamChoice].self, forKey: .choices) ?? []
+        self.usage = try container.decodeIfPresent(Usage.self, forKey: .usage) ?? nil
+        self.systemFingerprint = try container.decodeIfPresent(String.self, forKey: .systemFingerprint) ?? nil
+        self.serviceTier = try container.decodeIfPresent(String.self, forKey: .serviceTier) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for ChatCompletionChunk
@@ -608,6 +728,12 @@ public struct StreamChoice: Codable, Sendable, Hashable {
         case index = "index"
         case delta = "delta"
         case finishReason = "finish_reason"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.index = try container.decodeIfPresent(UInt32.self, forKey: .index) ?? 0
+        self.delta = try container.decode(StreamDelta.self, forKey: .delta)
+        self.finishReason = try container.decodeIfPresent(FinishReason.self, forKey: .finishReason) ?? nil
     }
 }
 
@@ -651,6 +777,14 @@ public struct StreamDelta: Codable, Sendable, Hashable {
         case functionCall = "function_call"
         case refusal = "refusal"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.role = try container.decodeIfPresent(String.self, forKey: .role) ?? nil
+        self.content = try container.decodeIfPresent(String.self, forKey: .content) ?? nil
+        self.toolCalls = try container.decodeIfPresent([StreamToolCall].self, forKey: .toolCalls) ?? nil
+        self.functionCall = try container.decodeIfPresent(StreamFunctionCall.self, forKey: .functionCall) ?? nil
+        self.refusal = try container.decodeIfPresent(String.self, forKey: .refusal) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for StreamDelta
@@ -691,6 +825,13 @@ public struct StreamToolCall: Codable, Sendable, Hashable {
         case callType = "call_type"
         case function = "function"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.index = try container.decodeIfPresent(UInt32.self, forKey: .index) ?? 0
+        self.id = try container.decodeIfPresent(String.self, forKey: .id) ?? nil
+        self.callType = try container.decodeIfPresent(ToolType.self, forKey: .callType) ?? nil
+        self.function = try container.decodeIfPresent(StreamFunctionCall.self, forKey: .function) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for StreamToolCall
@@ -717,6 +858,15 @@ public struct StreamFunctionCall: Codable, Sendable, Hashable {
     public init(name: String? = nil, arguments: String? = nil) {
         self.name = name
         self.arguments = arguments
+    }
+    private enum CodingKeys: String, CodingKey {
+        case name = "name"
+        case arguments = "arguments"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.name = try container.decodeIfPresent(String.self, forKey: .name) ?? nil
+        self.arguments = try container.decodeIfPresent(String.self, forKey: .arguments) ?? nil
     }
 }
 
@@ -836,6 +986,17 @@ public struct CreateImageRequest: Codable, Sendable, Hashable {
         case responseFormat = "response_format"
         case user = "user"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.prompt = try container.decodeIfPresent(String.self, forKey: .prompt) ?? ""
+        self.model = try container.decodeIfPresent(String.self, forKey: .model) ?? nil
+        self.n = try container.decodeIfPresent(UInt32.self, forKey: .n) ?? nil
+        self.size = try container.decodeIfPresent(String.self, forKey: .size) ?? nil
+        self.quality = try container.decodeIfPresent(String.self, forKey: .quality) ?? nil
+        self.style = try container.decodeIfPresent(String.self, forKey: .style) ?? nil
+        self.responseFormat = try container.decodeIfPresent(String.self, forKey: .responseFormat) ?? nil
+        self.user = try container.decodeIfPresent(String.self, forKey: .user) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for CreateImageRequest
@@ -864,6 +1025,15 @@ public struct ImagesResponse: Codable, Sendable, Hashable {
     public init(created: UInt64, data: [Image]) {
         self.created = created
         self.data = data
+    }
+    private enum CodingKeys: String, CodingKey {
+        case created = "created"
+        case data = "data"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.created = try container.decodeIfPresent(UInt64.self, forKey: .created) ?? 0
+        self.data = try container.decodeIfPresent([Image].self, forKey: .data) ?? []
     }
 }
 
@@ -897,6 +1067,12 @@ public struct Image: Codable, Sendable, Hashable {
         case url = "url"
         case b64Json = "b64_json"
         case revisedPrompt = "revised_prompt"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.url = try container.decodeIfPresent(String.self, forKey: .url) ?? nil
+        self.b64Json = try container.decodeIfPresent(String.self, forKey: .b64Json) ?? nil
+        self.revisedPrompt = try container.decodeIfPresent(String.self, forKey: .revisedPrompt) ?? nil
     }
 }
 
@@ -937,6 +1113,14 @@ public struct CreateSpeechRequest: Codable, Sendable, Hashable {
         case voice = "voice"
         case responseFormat = "response_format"
         case speed = "speed"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.model = try container.decodeIfPresent(String.self, forKey: .model) ?? ""
+        self.input = try container.decodeIfPresent(String.self, forKey: .input) ?? ""
+        self.voice = try container.decodeIfPresent(String.self, forKey: .voice) ?? ""
+        self.responseFormat = try container.decodeIfPresent(String.self, forKey: .responseFormat) ?? nil
+        self.speed = try container.decodeIfPresent(Double.self, forKey: .speed) ?? nil
     }
 }
 
@@ -984,6 +1168,15 @@ public struct CreateTranscriptionRequest: Codable, Sendable, Hashable {
         case responseFormat = "response_format"
         case temperature = "temperature"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.model = try container.decodeIfPresent(String.self, forKey: .model) ?? ""
+        self.file = try container.decodeIfPresent(String.self, forKey: .file) ?? ""
+        self.language = try container.decodeIfPresent(String.self, forKey: .language) ?? nil
+        self.prompt = try container.decodeIfPresent(String.self, forKey: .prompt) ?? nil
+        self.responseFormat = try container.decodeIfPresent(String.self, forKey: .responseFormat) ?? nil
+        self.temperature = try container.decodeIfPresent(Double.self, forKey: .temperature) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for CreateTranscriptionRequest
@@ -1017,6 +1210,19 @@ public struct TranscriptionResponse: Codable, Sendable, Hashable {
         self.duration = duration
         self.segments = segments
     }
+    private enum CodingKeys: String, CodingKey {
+        case text = "text"
+        case language = "language"
+        case duration = "duration"
+        case segments = "segments"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.text = try container.decodeIfPresent(String.self, forKey: .text) ?? ""
+        self.language = try container.decodeIfPresent(String.self, forKey: .language) ?? nil
+        self.duration = try container.decodeIfPresent(Double.self, forKey: .duration) ?? nil
+        self.segments = try container.decodeIfPresent([TranscriptionSegment].self, forKey: .segments) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for TranscriptionResponse
@@ -1049,6 +1255,19 @@ public struct TranscriptionSegment: Codable, Sendable, Hashable {
         self.start = start
         self.end = end
         self.text = text
+    }
+    private enum CodingKeys: String, CodingKey {
+        case id = "id"
+        case start = "start"
+        case end = "end"
+        case text = "text"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decodeIfPresent(UInt32.self, forKey: .id) ?? 0
+        self.start = try container.decodeIfPresent(Double.self, forKey: .start) ?? 0
+        self.end = try container.decodeIfPresent(Double.self, forKey: .end) ?? 0
+        self.text = try container.decodeIfPresent(String.self, forKey: .text) ?? ""
     }
 }
 
@@ -1181,6 +1400,20 @@ public struct ModerationCategories: Codable, Sendable, Hashable {
         case harassmentThreatening = "harassment_threatening"
         case violence = "violence"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.sexual = try container.decodeIfPresent(Bool.self, forKey: .sexual) ?? false
+        self.hate = try container.decodeIfPresent(Bool.self, forKey: .hate) ?? false
+        self.harassment = try container.decodeIfPresent(Bool.self, forKey: .harassment) ?? false
+        self.selfHarm = try container.decodeIfPresent(Bool.self, forKey: .selfHarm) ?? false
+        self.sexualMinors = try container.decodeIfPresent(Bool.self, forKey: .sexualMinors) ?? false
+        self.hateThreatening = try container.decodeIfPresent(Bool.self, forKey: .hateThreatening) ?? false
+        self.violenceGraphic = try container.decodeIfPresent(Bool.self, forKey: .violenceGraphic) ?? false
+        self.selfHarmIntent = try container.decodeIfPresent(Bool.self, forKey: .selfHarmIntent) ?? false
+        self.selfHarmInstructions = try container.decodeIfPresent(Bool.self, forKey: .selfHarmInstructions) ?? false
+        self.harassmentThreatening = try container.decodeIfPresent(Bool.self, forKey: .harassmentThreatening) ?? false
+        self.violence = try container.decodeIfPresent(Bool.self, forKey: .violence) ?? false
+    }
 }
 
 // MARK: - Internal FFI conversions for ModerationCategories
@@ -1252,6 +1485,20 @@ public struct ModerationCategoryScores: Codable, Sendable, Hashable {
         case selfHarmInstructions = "self_harm_instructions"
         case harassmentThreatening = "harassment_threatening"
         case violence = "violence"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.sexual = try container.decodeIfPresent(Double.self, forKey: .sexual) ?? 0
+        self.hate = try container.decodeIfPresent(Double.self, forKey: .hate) ?? 0
+        self.harassment = try container.decodeIfPresent(Double.self, forKey: .harassment) ?? 0
+        self.selfHarm = try container.decodeIfPresent(Double.self, forKey: .selfHarm) ?? 0
+        self.sexualMinors = try container.decodeIfPresent(Double.self, forKey: .sexualMinors) ?? 0
+        self.hateThreatening = try container.decodeIfPresent(Double.self, forKey: .hateThreatening) ?? 0
+        self.violenceGraphic = try container.decodeIfPresent(Double.self, forKey: .violenceGraphic) ?? 0
+        self.selfHarmIntent = try container.decodeIfPresent(Double.self, forKey: .selfHarmIntent) ?? 0
+        self.selfHarmInstructions = try container.decodeIfPresent(Double.self, forKey: .selfHarmInstructions) ?? 0
+        self.harassmentThreatening = try container.decodeIfPresent(Double.self, forKey: .harassmentThreatening) ?? 0
+        self.violence = try container.decodeIfPresent(Double.self, forKey: .violence) ?? 0
     }
 }
 
@@ -1361,6 +1608,14 @@ public struct SearchRequest: Codable, Sendable, Hashable {
         case maxResults = "max_results"
         case searchDomainFilter = "search_domain_filter"
         case country = "country"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.model = try container.decodeIfPresent(String.self, forKey: .model) ?? ""
+        self.query = try container.decodeIfPresent(String.self, forKey: .query) ?? ""
+        self.maxResults = try container.decodeIfPresent(UInt32.self, forKey: .maxResults) ?? nil
+        self.searchDomainFilter = try container.decodeIfPresent([String].self, forKey: .searchDomainFilter) ?? nil
+        self.country = try container.decodeIfPresent(String.self, forKey: .country) ?? nil
     }
 }
 
@@ -1566,6 +1821,15 @@ public struct ModelsListResponse: Codable, Sendable, Hashable {
         self.object = object
         self.data = data
     }
+    private enum CodingKeys: String, CodingKey {
+        case object = "object"
+        case data = "data"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.object = try container.decodeIfPresent(String.self, forKey: .object) ?? ""
+        self.data = try container.decodeIfPresent([ModelObject].self, forKey: .data) ?? []
+    }
 }
 
 // MARK: - Internal FFI conversions for ModelsListResponse
@@ -1604,6 +1868,13 @@ public struct ModelObject: Codable, Sendable, Hashable {
         case created = "created"
         case ownedBy = "owned_by"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decodeIfPresent(String.self, forKey: .id) ?? ""
+        self.object = try container.decodeIfPresent(String.self, forKey: .object) ?? ""
+        self.created = try container.decodeIfPresent(UInt64.self, forKey: .created) ?? 0
+        self.ownedBy = try container.decodeIfPresent(String.self, forKey: .ownedBy) ?? ""
+    }
 }
 
 // MARK: - Internal FFI conversions for ModelObject
@@ -1631,6 +1902,17 @@ public struct CreateFileRequest: Codable, Sendable, Hashable {
         self.file = file
         self.purpose = purpose
         self.filename = filename
+    }
+    private enum CodingKeys: String, CodingKey {
+        case file = "file"
+        case purpose = "purpose"
+        case filename = "filename"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.file = try container.decodeIfPresent(String.self, forKey: .file) ?? ""
+        self.purpose = try container.decode(FilePurpose.self, forKey: .purpose)
+        self.filename = try container.decodeIfPresent(String.self, forKey: .filename) ?? nil
     }
 }
 
@@ -1680,6 +1962,16 @@ public struct FileObject: Codable, Sendable, Hashable {
         case purpose = "purpose"
         case status = "status"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decodeIfPresent(String.self, forKey: .id) ?? ""
+        self.object = try container.decodeIfPresent(String.self, forKey: .object) ?? ""
+        self.bytes = try container.decodeIfPresent(UInt64.self, forKey: .bytes) ?? 0
+        self.createdAt = try container.decodeIfPresent(UInt64.self, forKey: .createdAt) ?? 0
+        self.filename = try container.decodeIfPresent(String.self, forKey: .filename) ?? ""
+        self.purpose = try container.decodeIfPresent(String.self, forKey: .purpose) ?? ""
+        self.status = try container.decodeIfPresent(String.self, forKey: .status) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for FileObject
@@ -1716,6 +2008,12 @@ public struct FileListResponse: Codable, Sendable, Hashable {
         case data = "data"
         case hasMore = "has_more"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.object = try container.decodeIfPresent(String.self, forKey: .object) ?? ""
+        self.data = try container.decodeIfPresent([FileObject].self, forKey: .data) ?? []
+        self.hasMore = try container.decodeIfPresent(Bool.self, forKey: .hasMore) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for FileListResponse
@@ -1745,6 +2043,17 @@ public struct FileListQuery: Codable, Sendable, Hashable {
         self.limit = limit
         self.after = after
     }
+    private enum CodingKeys: String, CodingKey {
+        case purpose = "purpose"
+        case limit = "limit"
+        case after = "after"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.purpose = try container.decodeIfPresent(String.self, forKey: .purpose) ?? nil
+        self.limit = try container.decodeIfPresent(UInt32.self, forKey: .limit) ?? nil
+        self.after = try container.decodeIfPresent(String.self, forKey: .after) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for FileListQuery
@@ -1771,6 +2080,17 @@ public struct DeleteResponse: Codable, Sendable, Hashable {
         self.id = id
         self.object = object
         self.deleted = deleted
+    }
+    private enum CodingKeys: String, CodingKey {
+        case id = "id"
+        case object = "object"
+        case deleted = "deleted"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decodeIfPresent(String.self, forKey: .id) ?? ""
+        self.object = try container.decodeIfPresent(String.self, forKey: .object) ?? ""
+        self.deleted = try container.decodeIfPresent(Bool.self, forKey: .deleted) ?? false
     }
 }
 
@@ -1805,6 +2125,17 @@ public struct BatchRequestCounts: Codable, Sendable, Hashable {
         self.completed = completed
         self.failed = failed
     }
+    private enum CodingKeys: String, CodingKey {
+        case total = "total"
+        case completed = "completed"
+        case failed = "failed"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.total = try container.decodeIfPresent(UInt64.self, forKey: .total) ?? 0
+        self.completed = try container.decodeIfPresent(UInt64.self, forKey: .completed) ?? 0
+        self.failed = try container.decodeIfPresent(UInt64.self, forKey: .failed) ?? 0
+    }
 }
 
 // MARK: - Internal FFI conversions for BatchRequestCounts
@@ -1831,6 +2162,15 @@ public struct BatchListQuery: Codable, Sendable, Hashable {
     public init(limit: UInt32? = nil, after: String? = nil) {
         self.limit = limit
         self.after = after
+    }
+    private enum CodingKeys: String, CodingKey {
+        case limit = "limit"
+        case after = "after"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.limit = try container.decodeIfPresent(UInt32.self, forKey: .limit) ?? nil
+        self.after = try container.decodeIfPresent(String.self, forKey: .after) ?? nil
     }
 }
 
@@ -1874,6 +2214,12 @@ public struct ResponseUsage: Codable, Sendable, Hashable {
         case inputTokens = "input_tokens"
         case outputTokens = "output_tokens"
         case totalTokens = "total_tokens"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.inputTokens = try container.decodeIfPresent(UInt64.self, forKey: .inputTokens) ?? 0
+        self.outputTokens = try container.decodeIfPresent(UInt64.self, forKey: .outputTokens) ?? 0
+        self.totalTokens = try container.decodeIfPresent(UInt64.self, forKey: .totalTokens) ?? 0
     }
 }
 

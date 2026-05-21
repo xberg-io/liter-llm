@@ -47,7 +47,7 @@ private class StopSequenceDeserializer :
     ): StopSequence {
         val node = parser.codec.readTree<com.fasterxml.jackson.databind.JsonNode>(parser)
         if (node.isTextual) return StopSequence.Single(node.asText())
-        if (node.isArray) {
+        if (node.isArray)
             return run {
                 val javaType =
                     ctx.typeFactory.constructCollectionType(List::class.java, String::class.java)
@@ -56,7 +56,6 @@ private class StopSequenceDeserializer :
                     ctx.readTreeAsValue<List<String>>(node, javaType) as List<String>
                 )
             }
-        }
         throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
             parser,
             "Cannot deserialize StopSequence: no matching variant for JSON shape",
