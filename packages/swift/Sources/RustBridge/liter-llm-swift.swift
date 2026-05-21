@@ -82,9 +82,6 @@ public func registerCustomProvider(_ config: CustomProviderConfig) throws -> () 
 public func unregisterCustomProvider<GenericIntoRustString: IntoRustString>(_ name: GenericIntoRustString) throws -> Bool {
     try { let val = __swift_bridge__$unregister_custom_provider({ let rustString = name.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); switch val.tag { case __swift_bridge__$ResultBoolAndString$ResultOk: return val.payload.ok case __swift_bridge__$ResultBoolAndString$ResultErr: throw RustString(ptr: val.payload.err) default: fatalError() } }()
 }
-public func allProviders() throws -> RustVec<ProviderConfig> {
-    try { let val = __swift_bridge__$all_providers(); if val.is_ok { return RustVec(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
 public func complexProviderNames() throws -> RustVec<RustString> {
     try { let val = __swift_bridge__$complex_provider_names(); if val.is_ok { return RustVec(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
@@ -9695,3 +9692,6 @@ extension DefaultClientChatStreamStreamHandle: Vectorizable {
         __swift_bridge__$Vec_DefaultClientChatStreamStreamHandle$len(vecPtr)
     }
 }
+
+
+
