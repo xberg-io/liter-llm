@@ -28,7 +28,7 @@ data class OcrRequest(
     /** The document to process (URL or base64). */
     val document: OcrDocument,
     /** Specific pages to process (1-indexed). `null` means all pages. */
-    val pages: List<Int>?,
+    val pages: List<Int>? = emptyList(),
     /** Whether to include base64-encoded images of each processed page. */
-    val includeImageBase64: Boolean?,
+    val includeImageBase64: Boolean? = null
 )

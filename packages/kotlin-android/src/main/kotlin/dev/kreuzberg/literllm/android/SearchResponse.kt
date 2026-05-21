@@ -24,7 +24,7 @@ package dev.kreuzberg.literllm.android
 /** A search response. */
 data class SearchResponse(
     /** List of search results. */
-    val results: List<SearchResult>,
+    val results: List<SearchResult> = emptyList(),
     /** Model/provider that performed the search. */
-    val model: String,
+    val model: String
 )

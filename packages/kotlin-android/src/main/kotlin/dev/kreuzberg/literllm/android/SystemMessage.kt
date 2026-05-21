@@ -26,5 +26,5 @@ data class SystemMessage(
     /** Instructions or context that apply throughout the conversation. */
     val content: String,
     /** Optional name for the system message source. */
-    val name: String?,
+    val name: String? = null
 )

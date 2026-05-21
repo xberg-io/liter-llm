@@ -24,7 +24,9 @@ package dev.kreuzberg.literllm.android
 /** The format in which the embedding vectors are returned. */
 enum class EmbeddingFormat {
     /** 32-bit floating-point numbers (default). */
+    @com.fasterxml.jackson.annotation.JsonProperty("float")
     FLOAT,
     /** Base64-encoded string representation of the floats. */
-    BASE64,
+    @com.fasterxml.jackson.annotation.JsonProperty("base64")
+    BASE64;
 }

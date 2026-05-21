@@ -26,5 +26,5 @@ data class ResponseOutputItem(
     /** Output type (e.g., `"text"`, `"object"`, `"error"`). */
     val itemType: String,
     /** Output content (flattened into the object). */
-    val content: String,
+    val content: String
 )

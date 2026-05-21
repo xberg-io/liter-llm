@@ -28,9 +28,9 @@ data class SearchRequest(
     /** The search query string. */
     val query: String,
     /** Maximum number of results to return. */
-    val maxResults: Int?,
+    val maxResults: Int? = null,
     /** Domain filter — restrict results to specific domains. */
-    val searchDomainFilter: List<String>?,
+    val searchDomainFilter: List<String>? = emptyList(),
     /** Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). */
-    val country: String?,
+    val country: String? = null
 )

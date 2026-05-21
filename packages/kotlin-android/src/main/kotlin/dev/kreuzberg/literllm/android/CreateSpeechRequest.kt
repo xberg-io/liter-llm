@@ -30,7 +30,7 @@ data class CreateSpeechRequest(
     /** Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). */
     val voice: String,
     /** Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`). */
-    val responseFormat: String?,
+    val responseFormat: String? = null,
     /** Playback speed in `[0.25, 4.0]`. Defaults to 1.0. */
-    val speed: Double?,
+    val speed: Double? = null
 )

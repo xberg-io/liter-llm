@@ -26,51 +26,51 @@ data class ChatCompletionRequest(
     /** Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`). */
     val model: String,
     /** Conversation history from oldest to newest. */
-    val messages: List<Message>,
+    val messages: List<Message> = emptyList(),
     /** Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0. */
-    val temperature: Double?,
+    val temperature: Double? = null,
     /** Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused. */
-    val topP: Double?,
+    val topP: Double? = null,
     /** Number of chat completions to generate. Defaults to 1. */
-    val n: Int?,
+    val n: Int? = null,
     /**
      * Whether to stream the response.
      *
      * Managed by the client layer — do not set directly.
      */
-    val stream: Boolean?,
+    val stream: Boolean? = null,
     /** Stop sequence(s) that halt token generation. */
-    val stop: StopSequence?,
+    val stop: StopSequence? = null,
     /** Max output tokens. Different from max_completion_tokens in some providers. */
-    val maxTokens: Long?,
+    val maxTokens: Long? = null,
     /** Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics. */
-    val presencePenalty: Double?,
+    val presencePenalty: Double? = null,
     /** Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens. */
-    val frequencyPenalty: Double?,
+    val frequencyPenalty: Double? = null,
     /**
-     * Token bias map. Uses `BTreeMap` (sorted keys) for deterministic serialization order —
-     * important when hashing or signing requests.
+     * Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic
+     * serialization order — important when hashing or signing requests.
      */
-    val logitBias: Map<String, Double>?,
+    val logitBias: Map<String, Double>? = emptyMap(),
     /** User identifier for request tracking and abuse detection. */
-    val user: String?,
+    val user: String? = null,
     /** Tools the model can invoke. */
-    val tools: List<ChatCompletionTool>?,
+    val tools: List<ChatCompletionTool>? = emptyList(),
     /** Tool usage mode (auto, required, none, or specific tool). */
-    val toolChoice: ToolChoice?,
+    val toolChoice: ToolChoice? = null,
     /** Whether the model can call multiple tools in parallel. Defaults to true. */
-    val parallelToolCalls: Boolean?,
+    val parallelToolCalls: Boolean? = null,
     /** Output format constraint (text, JSON, JSON schema). */
-    val responseFormat: ResponseFormat?,
+    val responseFormat: ResponseFormat? = null,
     /** Streaming options (e.g., include_usage). */
-    val streamOptions: StreamOptions?,
+    val streamOptions: StreamOptions? = null,
     /** Random seed for reproducible outputs. Provider support varies. */
-    val seed: Long?,
+    val seed: Long? = null,
     /** Reasoning effort level (low, medium, high) for extended-thinking models. */
-    val reasoningEffort: ReasoningEffort?,
+    val reasoningEffort: ReasoningEffort? = ReasoningEffort.MEDIUM,
     /**
-     * Provider-specific extra parameters merged into the request body. Use for guardrails, safety
-     * settings, grounding config, etc.
+     * Provider-specific extra parameters merged into the request body.
+     * Use for guardrails, safety settings, grounding config, etc.
      */
-    val extraBody: String?,
+    val extraBody: String? = null
 )

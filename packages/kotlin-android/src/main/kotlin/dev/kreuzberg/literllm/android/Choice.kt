@@ -28,5 +28,5 @@ data class Choice(
     /** The assistant's message response. */
     val message: AssistantMessage,
     /** Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). */
-    val finishReason: FinishReason?,
+    val finishReason: FinishReason? = FinishReason.STOP
 )

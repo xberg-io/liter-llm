@@ -26,17 +26,17 @@ data class CreateImageRequest(
     /** Text description of the image to generate. */
     val prompt: String,
     /** Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset. */
-    val model: String?,
+    val model: String? = null,
     /** Number of images to generate. Defaults to 1. */
-    val n: Int?,
+    val n: Int? = null,
     /** Image size (e.g., `"1024x1024"`, `"1792x1024"`). */
-    val size: String?,
+    val size: String? = null,
     /** Image quality: `"standard"` or `"hd"`. */
-    val quality: String?,
+    val quality: String? = null,
     /** Style: `"natural"` or `"vivid"` (DALL-E 3 only). */
-    val style: String?,
+    val style: String? = null,
     /** Response format: `"url"` or `"b64_json"`. */
-    val responseFormat: String?,
+    val responseFormat: String? = null,
     /** User identifier for request tracking. */
-    val user: String?,
+    val user: String? = null
 )

@@ -26,9 +26,9 @@ data class TranscriptionResponse(
     /** The transcribed text. */
     val text: String,
     /** Detected language (ISO-639-1 code). */
-    val language: String?,
+    val language: String? = null,
     /** Total audio duration in seconds. */
-    val duration: Double?,
+    val duration: Double? = null,
     /** Detailed segment-level transcription (if response_format is "verbose_json"). */
-    val segments: List<TranscriptionSegment>?,
+    val segments: List<TranscriptionSegment>? = emptyList()
 )

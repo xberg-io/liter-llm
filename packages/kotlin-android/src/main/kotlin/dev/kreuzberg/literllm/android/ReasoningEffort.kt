@@ -23,7 +23,10 @@ package dev.kreuzberg.literllm.android
 
 /** Controls how much reasoning effort the model should use. */
 enum class ReasoningEffort {
+    @com.fasterxml.jackson.annotation.JsonProperty("low")
     LOW,
+    @com.fasterxml.jackson.annotation.JsonProperty("medium")
     MEDIUM,
-    HIGH,
+    @com.fasterxml.jackson.annotation.JsonProperty("high")
+    HIGH;
 }

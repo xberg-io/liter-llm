@@ -24,9 +24,12 @@ package dev.kreuzberg.literllm.android
 /** Image detail level controlling token cost and processing. */
 enum class ImageDetail {
     /** Low detail: scales image to 512x512, uses fewer tokens. */
+    @com.fasterxml.jackson.annotation.JsonProperty("low")
     LOW,
     /** High detail: processes up to 2x2 grid of tiles, higher token cost. */
+    @com.fasterxml.jackson.annotation.JsonProperty("high")
     HIGH,
     /** Auto: model chooses low or high based on image dimensions. */
-    AUTO,
+    @com.fasterxml.jackson.annotation.JsonProperty("auto")
+    AUTO;
 }

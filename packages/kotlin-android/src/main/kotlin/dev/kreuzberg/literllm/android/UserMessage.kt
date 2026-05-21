@@ -26,5 +26,5 @@ data class UserMessage(
     /** Message content as plain text or array of content parts (text, images, documents, audio). */
     val content: UserContent,
     /** Optional name for the user. */
-    val name: String?,
+    val name: String? = null
 )

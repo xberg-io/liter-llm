@@ -28,7 +28,7 @@ data class OcrPage(
     /** Extracted page content as Markdown. */
     val markdown: String,
     /** Embedded images extracted from the page (if `include_image_base64` was true). */
-    val images: List<OcrImage>?,
+    val images: List<OcrImage>? = null,
     /** Page dimensions in pixels, if available. */
-    val dimensions: PageDimensions?,
+    val dimensions: PageDimensions? = null
 )

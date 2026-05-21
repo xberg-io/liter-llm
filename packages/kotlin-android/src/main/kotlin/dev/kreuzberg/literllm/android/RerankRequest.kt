@@ -28,9 +28,9 @@ data class RerankRequest(
     /** The search query. */
     val query: String,
     /** Documents to rerank. */
-    val documents: List<RerankDocument>,
+    val documents: List<RerankDocument> = emptyList(),
     /** Return only the top N results. Optional. */
-    val topN: Int?,
+    val topN: Int? = null,
     /** Include the document content in results. Defaults to false. */
-    val returnDocuments: Boolean?,
+    val returnDocuments: Boolean? = null
 )

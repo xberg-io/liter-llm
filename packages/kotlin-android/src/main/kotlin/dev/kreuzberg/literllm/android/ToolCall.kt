@@ -28,5 +28,5 @@ data class ToolCall(
     /** Tool type (always "function"). */
     val callType: ToolType,
     /** Function name and arguments. */
-    val function: FunctionCall,
+    val function: FunctionCall
 )

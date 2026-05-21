@@ -24,11 +24,15 @@ package dev.kreuzberg.literllm.android
 /** Auth scheme used by a provider. */
 enum class AuthType {
     /** Standard `Authorization: Bearer <key>` header. */
+    @com.fasterxml.jackson.annotation.JsonProperty("bearer")
     BEARER,
     /** `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). */
+    @com.fasterxml.jackson.annotation.JsonProperty("api-key")
     API_KEY,
     /** No authentication header required. */
+    @com.fasterxml.jackson.annotation.JsonProperty("none")
     NONE,
     /** Unrecognised auth scheme — falls back to bearer. */
-    UNKNOWN,
+    @com.fasterxml.jackson.annotation.JsonProperty("unknown")
+    UNKNOWN;
 }

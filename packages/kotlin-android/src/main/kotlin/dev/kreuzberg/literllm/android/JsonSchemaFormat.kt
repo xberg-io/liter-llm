@@ -26,9 +26,9 @@ data class JsonSchemaFormat(
     /** Name of the schema (must be unique in the request). */
     val name: String,
     /** Description of what the schema represents. */
-    val description: String?,
+    val description: String? = null,
     /** JSON Schema object defining the output structure. */
     val schema: String,
     /** If true, enforce strict schema validation. */
-    val strict: Boolean?,
+    val strict: Boolean? = null
 )

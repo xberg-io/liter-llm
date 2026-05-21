@@ -28,13 +28,13 @@ data class CreateResponseRequest(
     /** Input data to process (e.g., a document to extract from). */
     val input: String,
     /** Instructions for processing the input. */
-    val instructions: String?,
+    val instructions: String? = null,
     /** Available tools the model can use. */
-    val tools: List<ResponseTool>?,
+    val tools: List<ResponseTool>? = emptyList(),
     /** Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0. */
-    val temperature: Double?,
+    val temperature: Double? = null,
     /** Maximum output tokens. */
-    val maxOutputTokens: Long?,
+    val maxOutputTokens: Long? = null,
     /** Optional metadata. */
-    val metadata: String?,
+    val metadata: String? = null
 )

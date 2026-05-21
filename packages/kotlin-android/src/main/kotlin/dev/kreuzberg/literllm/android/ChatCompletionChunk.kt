@@ -26,8 +26,8 @@ data class ChatCompletionChunk(
     /** Unique identifier for this stream. */
     val id: String,
     /**
-     * Always `"chat.completion.chunk"` from OpenAI-compatible APIs. Stored as a plain `String` so
-     * non-standard provider values do not fail parsing.
+     * Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored
+     * as a plain `String` so non-standard provider values do not fail parsing.
      */
     val `object`: String,
     /** Unix timestamp of chunk creation. */
@@ -35,11 +35,11 @@ data class ChatCompletionChunk(
     /** Model used to generate the chunk. */
     val model: String,
     /** Streaming choices (delta updates). */
-    val choices: List<StreamChoice>,
+    val choices: List<StreamChoice> = emptyList(),
     /** Token usage (typically only in the final chunk). */
-    val usage: Usage?,
+    val usage: Usage? = null,
     /** Fingerprint of the system configuration (OpenAI-specific). */
-    val systemFingerprint: String?,
+    val systemFingerprint: String? = null,
     /** Service tier used (OpenAI-specific). */
-    val serviceTier: String?,
+    val serviceTier: String? = null
 )

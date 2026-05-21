@@ -24,7 +24,7 @@ package dev.kreuzberg.literllm.android
 /** Partial function call details in a stream. */
 data class StreamFunctionCall(
     /** Function name (typically in the first chunk). */
-    val name: String?,
+    val name: String? = null,
     /** Partial JSON arguments chunk. */
-    val arguments: String?,
+    val arguments: String? = null
 )

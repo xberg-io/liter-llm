@@ -28,9 +28,9 @@ data class EmbeddingRequest(
     /** Text or texts to embed. */
     val input: EmbeddingInput,
     /** Output format: float (native) or base64. */
-    val encodingFormat: EmbeddingFormat?,
+    val encodingFormat: EmbeddingFormat? = null,
     /** Requested embedding dimensions (if supported by the model). */
-    val dimensions: Int?,
+    val dimensions: Int? = null,
     /** User identifier for request tracking. */
-    val user: String?,
+    val user: String? = null
 )

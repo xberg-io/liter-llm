@@ -26,7 +26,7 @@ data class CreateFileRequest(
     /** Base64-encoded file data. */
     val file: String,
     /** Purpose for the file. */
-    val purpose: FilePurpose,
+    val purpose: FilePurpose = FilePurpose.ASSISTANTS,
     /** Optional filename to associate with the upload. */
-    val filename: String?,
+    val filename: String? = null
 )

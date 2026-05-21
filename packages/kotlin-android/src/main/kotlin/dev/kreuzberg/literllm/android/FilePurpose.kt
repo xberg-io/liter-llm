@@ -24,11 +24,15 @@ package dev.kreuzberg.literllm.android
 /** Purpose of an uploaded file. */
 enum class FilePurpose {
     /** File for use with Assistants API. */
+    @com.fasterxml.jackson.annotation.JsonProperty("assistants")
     ASSISTANTS,
     /** File for batch processing. */
+    @com.fasterxml.jackson.annotation.JsonProperty("batch")
     BATCH,
     /** File for fine-tuning. */
+    @com.fasterxml.jackson.annotation.JsonProperty("fine-tune")
     FINE_TUNE,
     /** File for vision/image tasks. */
-    VISION,
+    @com.fasterxml.jackson.annotation.JsonProperty("vision")
+    VISION;
 }

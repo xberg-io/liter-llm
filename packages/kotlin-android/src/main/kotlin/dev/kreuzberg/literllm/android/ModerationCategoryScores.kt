@@ -44,5 +44,5 @@ data class ModerationCategoryScores(
     /** Harassment that threatens violence score. */
     val harassmentThreatening: Double,
     /** Non-graphic violence score. */
-    val violence: Double,
+    val violence: Double
 )

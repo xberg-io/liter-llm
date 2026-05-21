@@ -28,5 +28,5 @@ data class ResponseUsage(
     /** Output tokens used. */
     val outputTokens: Long,
     /** Total tokens used. */
-    val totalTokens: Long,
+    val totalTokens: Long
 )

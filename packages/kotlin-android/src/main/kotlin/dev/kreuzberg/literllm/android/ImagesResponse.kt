@@ -26,5 +26,5 @@ data class ImagesResponse(
     /** Unix timestamp of image creation. */
     val created: Long,
     /** List of generated images. */
-    val data: List<Image>,
+    val data: List<Image> = emptyList()
 )

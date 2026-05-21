@@ -24,19 +24,27 @@ package dev.kreuzberg.literllm.android
 /** Status of a batch job. */
 enum class BatchStatus {
     /** Validating the input file. */
+    @com.fasterxml.jackson.annotation.JsonProperty("validating")
     VALIDATING,
     /** Job failed. */
+    @com.fasterxml.jackson.annotation.JsonProperty("failed")
     FAILED,
     /** Job is running. */
+    @com.fasterxml.jackson.annotation.JsonProperty("in_progress")
     IN_PROGRESS,
     /** Finalizing results. */
+    @com.fasterxml.jackson.annotation.JsonProperty("finalizing")
     FINALIZING,
     /** Job completed successfully. */
+    @com.fasterxml.jackson.annotation.JsonProperty("completed")
     COMPLETED,
     /** Job expired before completion. */
+    @com.fasterxml.jackson.annotation.JsonProperty("expired")
     EXPIRED,
     /** Job is being cancelled. */
+    @com.fasterxml.jackson.annotation.JsonProperty("cancelling")
     CANCELLING,
     /** Job has been cancelled. */
-    CANCELLED,
+    @com.fasterxml.jackson.annotation.JsonProperty("cancelled")
+    CANCELLED;
 }

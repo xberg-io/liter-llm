@@ -26,5 +26,5 @@ data class ResponseTool(
     /** Tool type (e.g., "extractor", "search"). */
     val toolType: String,
     /** Tool configuration (flattened into the object). */
-    val config: String,
+    val config: String
 )

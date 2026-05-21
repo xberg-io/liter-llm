@@ -24,13 +24,14 @@ package dev.kreuzberg.literllm.android
 /**
  * Breakdown of tokens used in the prompt portion of a request.
  *
- * `cached_tokens` is included in `Usage.prompt_tokens` — it is *not* an additional charge on top of
- * the prompt token count. When pricing supports a `cache_read_input_token_cost`, the cached portion
- * is billed at the discounted rate and the remainder at the regular input rate.
+ * `cached_tokens` is included in `Usage.prompt_tokens` — it is *not* an
+ * additional charge on top of the prompt token count. When pricing supports
+ * a `cache_read_input_token_cost`, the cached portion is billed at the
+ * discounted rate and the remainder at the regular input rate.
  */
 data class PromptTokensDetails(
     /** Cached tokens present in the prompt. Defaults to 0 when absent. */
     val cachedTokens: Long,
     /** Audio input tokens present in the prompt. Defaults to 0 when absent. */
-    val audioTokens: Long,
+    val audioTokens: Long
 )

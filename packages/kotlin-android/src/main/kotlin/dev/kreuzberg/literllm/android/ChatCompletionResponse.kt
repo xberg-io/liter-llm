@@ -26,8 +26,8 @@ data class ChatCompletionResponse(
     /** Unique identifier for this response. */
     val id: String,
     /**
-     * Always `"chat.completion"` from OpenAI-compatible APIs. Stored as a plain `String` so
-     * non-standard provider values do not break deserialization.
+     * Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a
+     * plain `String` so non-standard provider values do not break deserialization.
      */
     val `object`: String,
     /** Unix timestamp of response creation. */
@@ -35,11 +35,11 @@ data class ChatCompletionResponse(
     /** Model used to generate the response. */
     val model: String,
     /** List of completion choices. */
-    val choices: List<Choice>,
+    val choices: List<Choice> = emptyList(),
     /** Token usage statistics. */
-    val usage: Usage?,
+    val usage: Usage? = null,
     /** Fingerprint of the system configuration (OpenAI-specific). */
-    val systemFingerprint: String?,
+    val systemFingerprint: String? = null,
     /** Service tier used (OpenAI-specific). */
-    val serviceTier: String?,
+    val serviceTier: String? = null
 )

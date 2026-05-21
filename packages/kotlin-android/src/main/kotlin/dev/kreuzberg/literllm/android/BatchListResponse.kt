@@ -26,11 +26,11 @@ data class BatchListResponse(
     /** Object type (always `"list"`). */
     val `object`: String,
     /** List of batch objects. */
-    val data: List<BatchObject>,
+    val data: List<BatchObject> = emptyList(),
     /** Whether more results are available. */
-    val hasMore: Boolean?,
+    val hasMore: Boolean? = null,
     /** First batch ID in the result set (for pagination). */
-    val firstId: String?,
+    val firstId: String? = null,
     /** Last batch ID in the result set (for pagination). */
-    val lastId: String?,
+    val lastId: String? = null
 )

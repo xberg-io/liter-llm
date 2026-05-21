@@ -24,13 +24,13 @@ package dev.kreuzberg.literllm.android
 /** Incremental delta in a stream chunk. */
 data class StreamDelta(
     /** Role (typically present only in the first chunk). */
-    val role: String?,
+    val role: String? = null,
     /** Partial content chunk (e.g., a few words of the response). */
-    val content: String?,
+    val content: String? = null,
     /** Partial tool calls being streamed. */
-    val toolCalls: List<StreamToolCall>?,
+    val toolCalls: List<StreamToolCall>? = emptyList(),
     /** Deprecated legacy function_call delta; retained for API compatibility. */
-    val functionCall: StreamFunctionCall?,
+    val functionCall: StreamFunctionCall? = null,
     /** Partial refusal message. */
-    val refusal: String?,
+    val refusal: String? = null
 )

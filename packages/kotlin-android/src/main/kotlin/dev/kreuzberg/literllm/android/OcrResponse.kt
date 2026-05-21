@@ -24,9 +24,9 @@ package dev.kreuzberg.literllm.android
 /** An OCR response. */
 data class OcrResponse(
     /** Extracted pages in order. */
-    val pages: List<OcrPage>,
+    val pages: List<OcrPage> = emptyList(),
     /** Model/provider used for OCR. */
     val model: String,
     /** Token usage, if reported by the provider. */
-    val usage: Usage?,
+    val usage: Usage? = null
 )

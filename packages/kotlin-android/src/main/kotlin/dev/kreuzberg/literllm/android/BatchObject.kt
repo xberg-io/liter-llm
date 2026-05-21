@@ -34,21 +34,21 @@ data class BatchObject(
     /** Completion window (e.g., `"24h"`). */
     val completionWindow: String,
     /** Current job status. */
-    val status: BatchStatus,
+    val status: BatchStatus = BatchStatus.VALIDATING,
     /** ID of the output file (present when completed). */
-    val outputFileId: String?,
+    val outputFileId: String? = null,
     /** ID of the error file (present if some requests failed). */
-    val errorFileId: String?,
+    val errorFileId: String? = null,
     /** Unix timestamp of batch creation. */
     val createdAt: Long,
     /** Unix timestamp of completion (if completed). */
-    val completedAt: Long?,
+    val completedAt: Long? = null,
     /** Unix timestamp of failure (if failed). */
-    val failedAt: Long?,
+    val failedAt: Long? = null,
     /** Unix timestamp of expiration (if expired). */
-    val expiredAt: Long?,
+    val expiredAt: Long? = null,
     /** Request processing counts. */
-    val requestCounts: BatchRequestCounts?,
+    val requestCounts: BatchRequestCounts? = null,
     /** Metadata attached to the batch. */
-    val metadata: String?,
+    val metadata: String? = null
 )

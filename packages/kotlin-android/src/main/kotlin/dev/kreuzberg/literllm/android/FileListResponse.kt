@@ -26,7 +26,7 @@ data class FileListResponse(
     /** Object type (always `"list"`). */
     val `object`: String,
     /** List of file objects. */
-    val data: List<FileObject>,
+    val data: List<FileObject> = emptyList(),
     /** Whether more results are available. */
-    val hasMore: Boolean?,
+    val hasMore: Boolean? = null
 )

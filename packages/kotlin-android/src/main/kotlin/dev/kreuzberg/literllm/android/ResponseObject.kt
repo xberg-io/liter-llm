@@ -34,9 +34,9 @@ data class ResponseObject(
     /** Status (e.g., `"succeeded"`, `"failed"`). */
     val status: String,
     /** Output items from the response. */
-    val output: List<ResponseOutputItem>,
+    val output: List<ResponseOutputItem> = emptyList(),
     /** Token usage. */
-    val usage: ResponseUsage?,
+    val usage: ResponseUsage? = null,
     /** Error details (if status is "failed"). */
-    val error: String?,
+    val error: String? = null
 )

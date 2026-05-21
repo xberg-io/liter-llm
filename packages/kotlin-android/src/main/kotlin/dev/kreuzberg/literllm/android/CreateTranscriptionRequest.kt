@@ -28,11 +28,11 @@ data class CreateTranscriptionRequest(
     /** Base64-encoded audio file data. */
     val file: String,
     /** Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. */
-    val language: String?,
+    val language: String? = null,
     /** Optional text to guide the model (improves accuracy for domain-specific terms). */
-    val prompt: String?,
+    val prompt: String? = null,
     /** Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`). */
-    val responseFormat: String?,
+    val responseFormat: String? = null,
     /** Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0. */
-    val temperature: Double?,
+    val temperature: Double? = null
 )
