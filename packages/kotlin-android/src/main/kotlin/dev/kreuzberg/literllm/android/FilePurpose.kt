@@ -24,35 +24,33 @@ package dev.kreuzberg.literllm.android
 /** Purpose of an uploaded file. */
 enum class FilePurpose {
     /** File for use with Assistants API. */
-    @com.fasterxml.jackson.annotation.JsonProperty("assistants")
-    ASSISTANTS,
+    @com.fasterxml.jackson.annotation.JsonProperty("assistants") ASSISTANTS,
     /** File for batch processing. */
-    @com.fasterxml.jackson.annotation.JsonProperty("batch")
-    BATCH,
+    @com.fasterxml.jackson.annotation.JsonProperty("batch") BATCH,
     /** File for fine-tuning. */
-    @com.fasterxml.jackson.annotation.JsonProperty("fine-tune")
-    FINE_TUNE,
+    @com.fasterxml.jackson.annotation.JsonProperty("fine-tune") FINE_TUNE,
     /** File for vision/image tasks. */
-    @com.fasterxml.jackson.annotation.JsonProperty("vision")
-    VISION;
+    @com.fasterxml.jackson.annotation.JsonProperty("vision") VISION;
 
     @com.fasterxml.jackson.annotation.JsonValue
-    fun toWire(): String = when (this) {
-        ASSISTANTS -> "assistants"
-        BATCH -> "batch"
-        FINE_TUNE -> "fine-tune"
-        VISION -> "vision"
-    }
+    fun toWire(): String =
+        when (this) {
+            ASSISTANTS -> "assistants"
+            BATCH -> "batch"
+            FINE_TUNE -> "fine-tune"
+            VISION -> "vision"
+        }
 
     companion object {
         @com.fasterxml.jackson.annotation.JsonCreator
         @JvmStatic
-        fun fromWire(value: String): FilePurpose = when (value) {
-            "assistants" -> ASSISTANTS
-            "batch" -> BATCH
-            "fine-tune" -> FINE_TUNE
-            "vision" -> VISION
-            else -> throw IllegalArgumentException("Unknown FilePurpose value: $value")
-        }
+        fun fromWire(value: String): FilePurpose =
+            when (value) {
+                "assistants" -> ASSISTANTS
+                "batch" -> BATCH
+                "fine-tune" -> FINE_TUNE
+                "vision" -> VISION
+                else -> throw IllegalArgumentException("Unknown FilePurpose value: $value")
+            }
     }
 }

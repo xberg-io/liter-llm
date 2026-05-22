@@ -30,5 +30,5 @@ data class CustomProviderConfig(
     /** Authentication header format. */
     val authHeader: AuthHeaderFormat,
     /** Model name prefixes that route to this provider (e.g., ["my-"]). */
-    val modelPrefixes: List<String> = emptyList()
+    val modelPrefixes: List<String> = emptyList(),
 )

@@ -27,5 +27,5 @@ data class ModerationRequest(
     @field:com.fasterxml.jackson.databind.annotation.JsonSerialize(`as` = ModerationInput::class)
     val input: ModerationInput,
     /** Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset. */
-    val model: String? = null
+    val model: String? = null,
 )

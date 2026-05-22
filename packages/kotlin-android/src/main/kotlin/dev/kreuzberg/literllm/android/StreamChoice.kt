@@ -28,5 +28,5 @@ data class StreamChoice(
     /** Incremental update to the message (content, tool calls, etc.). */
     val delta: StreamDelta = StreamDelta(),
     /** Why the stream ended (present only in final chunk). */
-    val finishReason: FinishReason? = null
+    val finishReason: FinishReason? = null,
 )

@@ -30,11 +30,9 @@ data class ModerationCategoryScores(
     /** Harassment score. */
     val harassment: Double = 0.0,
     /** Self-harm content score. */
-    @com.fasterxml.jackson.annotation.JsonProperty("self-harm")
-    val selfHarm: Double = 0.0,
+    @com.fasterxml.jackson.annotation.JsonProperty("self-harm") val selfHarm: Double = 0.0,
     /** Sexual content involving minors score. */
-    @com.fasterxml.jackson.annotation.JsonProperty("sexual/minors")
-    val sexualMinors: Double = 0.0,
+    @com.fasterxml.jackson.annotation.JsonProperty("sexual/minors") val sexualMinors: Double = 0.0,
     /** Hate speech that threatens violence score. */
     @com.fasterxml.jackson.annotation.JsonProperty("hate/threatening")
     val hateThreatening: Double = 0.0,
@@ -51,5 +49,5 @@ data class ModerationCategoryScores(
     @com.fasterxml.jackson.annotation.JsonProperty("harassment/threatening")
     val harassmentThreatening: Double = 0.0,
     /** Non-graphic violence score. */
-    val violence: Double = 0.0
+    val violence: Double = 0.0,
 )

@@ -110,18 +110,18 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
     };
     let result = core_crate::create_client(
         api_key,
-        (if base_url.is_empty() { None } else { Some(base_url) }),
-        (if timeout_secs != 0 {
+        if base_url.is_empty() { None } else { Some(base_url) },
+        if timeout_secs != 0 {
             Some(timeout_secs as u64)
         } else {
             None
-        }),
-        (if max_retries != 0 {
+        },
+        if max_retries != 0 {
             Some(max_retries as u32)
         } else {
             None
-        }),
-        (if model_hint.is_empty() { None } else { Some(model_hint) }),
+        },
+        if model_hint.is_empty() { None } else { Some(model_hint) },
     );
     match result {
         Err(e) => {

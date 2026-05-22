@@ -26,5 +26,5 @@ data class ImageUrl(
     /** URL of the image (data URI or HTTP/HTTPS URL). */
     val url: String = "",
     /** Detail level: low (512x512), high (2x2 tiles), or auto (model-selected). */
-    val detail: ImageDetail? = null
+    val detail: ImageDetail? = null,
 )

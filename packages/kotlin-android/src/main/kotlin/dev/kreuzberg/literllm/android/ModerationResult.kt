@@ -28,5 +28,5 @@ data class ModerationResult(
     /** Boolean flags for each moderation category. */
     val categories: ModerationCategories,
     /** Confidence scores for each category. */
-    val categoryScores: ModerationCategoryScores
+    val categoryScores: ModerationCategoryScores,
 )

@@ -30,5 +30,5 @@ data class SearchResult(
     /** Text snippet or excerpt from the page. */
     val snippet: String,
     /** Publication or last-updated date, if available. */
-    val date: String? = null
+    val date: String? = null,
 )

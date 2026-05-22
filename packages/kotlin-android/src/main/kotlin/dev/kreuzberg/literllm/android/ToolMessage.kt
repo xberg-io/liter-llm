@@ -28,5 +28,5 @@ data class ToolMessage(
     /** ID of the tool call this result responds to. */
     val toolCallId: String = "",
     /** Optional tool/function name. */
-    val name: String? = null
+    val name: String? = null,
 )

@@ -3,6 +3,10 @@
   "version": "1.4.0-rc.27",
   "description": "Universal LLM API client with Rust-powered polyglot bindings.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kreuzberg-dev/liter-llm.git"
+  },
   "files": [
     "index.js",
     "index.d.ts",

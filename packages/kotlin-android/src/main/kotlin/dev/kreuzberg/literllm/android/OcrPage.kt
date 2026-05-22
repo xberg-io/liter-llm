@@ -30,5 +30,5 @@ data class OcrPage(
     /** Embedded images extracted from the page (if `include_image_base64` was true). */
     val images: List<OcrImage>? = null,
     /** Page dimensions in pixels, if available. */
-    val dimensions: PageDimensions? = null
+    val dimensions: PageDimensions? = null,
 )

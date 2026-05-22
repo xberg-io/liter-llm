@@ -50,5 +50,5 @@ data class BatchObject(
     /** Request processing counts. */
     val requestCounts: BatchRequestCounts? = null,
     /** Metadata attached to the batch. */
-    val metadata: Any? = null
+    val metadata: Any? = null,
 )

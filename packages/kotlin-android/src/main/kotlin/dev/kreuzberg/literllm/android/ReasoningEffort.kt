@@ -23,28 +23,27 @@ package dev.kreuzberg.literllm.android
 
 /** Controls how much reasoning effort the model should use. */
 enum class ReasoningEffort {
-    @com.fasterxml.jackson.annotation.JsonProperty("low")
-    LOW,
-    @com.fasterxml.jackson.annotation.JsonProperty("medium")
-    MEDIUM,
-    @com.fasterxml.jackson.annotation.JsonProperty("high")
-    HIGH;
+    @com.fasterxml.jackson.annotation.JsonProperty("low") LOW,
+    @com.fasterxml.jackson.annotation.JsonProperty("medium") MEDIUM,
+    @com.fasterxml.jackson.annotation.JsonProperty("high") HIGH;
 
     @com.fasterxml.jackson.annotation.JsonValue
-    fun toWire(): String = when (this) {
-        LOW -> "low"
-        MEDIUM -> "medium"
-        HIGH -> "high"
-    }
+    fun toWire(): String =
+        when (this) {
+            LOW -> "low"
+            MEDIUM -> "medium"
+            HIGH -> "high"
+        }
 
     companion object {
         @com.fasterxml.jackson.annotation.JsonCreator
         @JvmStatic
-        fun fromWire(value: String): ReasoningEffort = when (value) {
-            "low" -> LOW
-            "medium" -> MEDIUM
-            "high" -> HIGH
-            else -> throw IllegalArgumentException("Unknown ReasoningEffort value: $value")
-        }
+        fun fromWire(value: String): ReasoningEffort =
+            when (value) {
+                "low" -> LOW
+                "medium" -> MEDIUM
+                "high" -> HIGH
+                else -> throw IllegalArgumentException("Unknown ReasoningEffort value: $value")
+            }
     }
 }

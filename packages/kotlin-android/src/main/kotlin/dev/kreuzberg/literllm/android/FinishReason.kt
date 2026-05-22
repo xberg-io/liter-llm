@@ -23,50 +23,45 @@ package dev.kreuzberg.literllm.android
 
 /** Why a choice stopped generating tokens. */
 enum class FinishReason {
-    @com.fasterxml.jackson.annotation.JsonProperty("stop")
-    STOP,
-    @com.fasterxml.jackson.annotation.JsonProperty("length")
-    LENGTH,
-    @com.fasterxml.jackson.annotation.JsonProperty("tool_calls")
-    TOOL_CALLS,
-    @com.fasterxml.jackson.annotation.JsonProperty("content_filter")
-    CONTENT_FILTER,
+    @com.fasterxml.jackson.annotation.JsonProperty("stop") STOP,
+    @com.fasterxml.jackson.annotation.JsonProperty("length") LENGTH,
+    @com.fasterxml.jackson.annotation.JsonProperty("tool_calls") TOOL_CALLS,
+    @com.fasterxml.jackson.annotation.JsonProperty("content_filter") CONTENT_FILTER,
     /** Deprecated legacy finish reason; retained for API compatibility. */
-    @com.fasterxml.jackson.annotation.JsonProperty("function_call")
-    FUNCTION_CALL,
+    @com.fasterxml.jackson.annotation.JsonProperty("function_call") FUNCTION_CALL,
     /**
      * Catch-all for unknown finish reasons returned by non-OpenAI providers.
      *
-     * Note: this intentionally does **not** carry the original string (e.g.
-     * `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and
-     * switching to `#[serde(untagged)]` would change deserialization semantics
-     * for all variants.  The original value can be recovered by inspecting the
-     * raw JSON if needed.
+     * Note: this intentionally does **not** carry the original string (e.g. `Other(String)`). Using
+     * `#[serde(other)]` requires a unit variant, and switching to `#[serde(untagged)]` would change
+     * deserialization semantics for all variants. The original value can be recovered by inspecting
+     * the raw JSON if needed.
      */
-    @com.fasterxml.jackson.annotation.JsonProperty("other")
-    OTHER;
+    @com.fasterxml.jackson.annotation.JsonProperty("other") OTHER;
 
     @com.fasterxml.jackson.annotation.JsonValue
-    fun toWire(): String = when (this) {
-        STOP -> "stop"
-        LENGTH -> "length"
-        TOOL_CALLS -> "tool_calls"
-        CONTENT_FILTER -> "content_filter"
-        FUNCTION_CALL -> "function_call"
-        OTHER -> "other"
-    }
+    fun toWire(): String =
+        when (this) {
+            STOP -> "stop"
+            LENGTH -> "length"
+            TOOL_CALLS -> "tool_calls"
+            CONTENT_FILTER -> "content_filter"
+            FUNCTION_CALL -> "function_call"
+            OTHER -> "other"
+        }
 
     companion object {
         @com.fasterxml.jackson.annotation.JsonCreator
         @JvmStatic
-        fun fromWire(value: String): FinishReason = when (value) {
-            "stop" -> STOP
-            "length" -> LENGTH
-            "tool_calls" -> TOOL_CALLS
-            "content_filter" -> CONTENT_FILTER
-            "function_call" -> FUNCTION_CALL
-            "other" -> OTHER
-            else -> throw IllegalArgumentException("Unknown FinishReason value: $value")
-        }
+        fun fromWire(value: String): FinishReason =
+            when (value) {
+                "stop" -> STOP
+                "length" -> LENGTH
+                "tool_calls" -> TOOL_CALLS
+                "content_filter" -> CONTENT_FILTER
+                "function_call" -> FUNCTION_CALL
+                "other" -> OTHER
+                else -> throw IllegalArgumentException("Unknown FinishReason value: $value")
+            }
     }
 }

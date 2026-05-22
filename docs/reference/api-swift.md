@@ -125,23 +125,6 @@ public static func unregisterCustomProvider(name: String) throws -> Bool
 
 ---
 
-#### allProviders()
-
-Return all provider configs from the registry.
-
-Useful for tooling, documentation generation, or runtime enumeration.
-
-**Signature:**
-
-```swift
-public static func allProviders() throws -> [ProviderConfig]
-```
-
-**Returns:** `[ProviderConfig]`
-**Errors:** Throws `Error`.
-
----
-
 #### complexProviderNames()
 
 Return the set of complex provider names.

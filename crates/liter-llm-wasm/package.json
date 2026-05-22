@@ -16,9 +16,9 @@
     "README.md"
   ],
   "type": "module",
-  "main": "pkg/nodejs/liter-llm_wasm.js",
-  "module": "pkg/web/liter-llm_wasm.js",
-  "types": "pkg/nodejs/liter-llm_wasm.d.ts",
+  "main": "pkg/nodejs/liter_llm_wasm.js",
+  "module": "pkg/web/liter_llm_wasm.js",
+  "types": "pkg/nodejs/liter_llm_wasm.d.ts",
   "scripts": {
     "build": "wasm-pack build --target nodejs --out-dir pkg/nodejs",
     "build:ci": "wasm-pack build --release --target nodejs --out-dir pkg/nodejs",

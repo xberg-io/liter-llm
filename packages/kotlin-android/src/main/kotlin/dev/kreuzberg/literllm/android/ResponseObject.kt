@@ -38,5 +38,5 @@ data class ResponseObject(
     /** Token usage. */
     val usage: ResponseUsage? = null,
     /** Error details (if status is "failed"). */
-    val error: Any? = null
+    val error: Any? = null,
 )

@@ -27,5 +27,5 @@ data class SpecificToolChoice(
     @com.fasterxml.jackson.annotation.JsonProperty("type")
     val choiceType: ToolType = ToolType.FUNCTION,
     /** The specific function to invoke. */
-    val function: SpecificFunction = SpecificFunction()
+    val function: SpecificFunction = SpecificFunction(),
 )
