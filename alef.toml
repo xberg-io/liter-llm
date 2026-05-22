@@ -2112,6 +2112,11 @@ ocr = true
 [crates.readme.languages.zig.snippets]
 basic_chat = "getting-started/basic_chat.md"
 
+[crates.readme.languages.ffi]
+template = "ffi.md"
+output_path = "crates/liter-llm-ffi/README.md"
+name = "FFI (C/C++)"
+
 [[crates.adapters]]
 name = "chat"
 pattern = "async_method"
