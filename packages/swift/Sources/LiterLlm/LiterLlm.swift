@@ -3461,3 +3461,6 @@ public func countRequestTokens(model: String, req: ChatCompletionRequest) throws
 public func ensureCryptoProvider() {
     return RustBridge.ensureCryptoProvider()
 }
+
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.DefaultClient: @unchecked Sendable {}

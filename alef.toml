@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.17.28"
+alef_version = "0.17.30"
 languages = [
   "python",
   "node",
@@ -716,9 +716,6 @@ result_type = "ChatCompletionChunk"
 
 [crates.e2e.calls.chat_stream.overrides.csharp]
 options_type = "ChatCompletionRequest"
-
-[crates.e2e.calls.chat_stream.overrides.elixir]
-function = "defaultclient_chat_stream"
 
 [crates.e2e.calls.chat_stream.overrides.go]
 client_factory = "CreateClient"
