@@ -1231,18 +1231,23 @@ jobs:
           package: "@kreuzberg/liter-llm-wasm"
           version: ${{ needs.prepare.outputs.version }}
 
+      - name: WASM artifact summary
+        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
+        run: (echo "Dry run requested; WASM tarball staged:" && find dist -type f -print) >> "$GITHUB_STEP_SUMMARY"
+
       - name: Publish to npm
-        if: ${{ steps.npm_check.outputs.exists != 'true' }}
+        if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.npm_check.outputs.exists != 'true' }}
         uses: kreuzberg-dev/actions/publish-npm@v1
         with:
           package-dir: dist
           npm-tag: ${{ needs.prepare.outputs.npm_tag }}
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
           provenance: "true"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Wait for npm indexing
-        if: ${{ steps.npm_check.outputs.exists != 'true' }}
+        if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.npm_check.outputs.exists != 'true' }}
         uses: kreuzberg-dev/actions/wait-for-package@v1
         with:
           registry: npm
@@ -1251,6 +1256,7 @@ jobs:
           max-attempts: "25"
 
       - name: Publish summary
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         run: |
           if [ "${{ steps.npm_check.outputs.exists }}" = "true" ]; then
             echo "WASM package @kreuzberg/liter-llm-wasm@${{ needs.prepare.outputs.version }} already published on npm — skipped." >> "$GITHUB_STEP_SUMMARY"
