@@ -120,7 +120,6 @@ gem install liter_llm
 gem 'liter_llm'
 ```
 
-
 ### System Requirements
 
 - **Ruby 3.2+** required
@@ -151,7 +150,6 @@ puts result.choices[0].message.content
 
 ### Common Use Cases
 
-
 #### Streaming Responses
 
 Stream tokens in real time:
@@ -176,12 +174,10 @@ end
 puts
 ```
 
-
 ### Next Steps
 
 - **[Provider Registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)** - Full list of supported providers
 - **[GitHub Repository](https://github.com/kreuzberg-dev/liter-llm)** - Source, issues, and discussions
-
 
 ## Features
 
@@ -224,7 +220,6 @@ Built on a compiled Rust core for speed and safety:
 - **Zero-copy streaming** with SSE and AWS EventStream support
 - **API keys** wrapped in secure memory, zeroed on drop
 
-
 ## Provider Routing
 
 Route to 143+ providers using the `provider/model` prefix convention:
@@ -237,7 +232,6 @@ mistral/mistral-large-latest
 ```
 
 See the [provider registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json) for the full list.
-
 
 ## Proxy Server
 
