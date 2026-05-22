@@ -1,14 +1,14 @@
 [build-system]
 build-backend = "maturin"
-requires = ["maturin>=1.0,<2.0"]
+requires = [ "maturin>=1.0,<2.0" ]
 
 [project]
 name = "liter-llm"
 version = "1.4.0rc28"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
-keywords = ["anthropic", "api-client", "llm", "openai"]
+keywords = [ "anthropic", "api-client", "llm", "openai" ]
 license = "MIT"
-authors = [{ name = "Na'aman Hirschfeld" }]
+authors = [ { name = "Na'aman Hirschfeld" } ]
 requires-python = ">=3.10"
 classifiers = [
   "Programming Language :: Python :: 3 :: Only",
@@ -20,58 +20,39 @@ classifiers = [
 ]
 urls.repository = "https://github.com/kreuzberg-dev/liter-llm"
 [dependency-groups]
-dev = ["mypy>=1.19.0", "ruff>=0.14.8"]
+dev = [ "mypy>=1.19.0", "ruff>=0.14.8" ]
 
 [tool.maturin]
 module-name = "liter_llm._internal_bindings"
 manifest-path = "../../crates/liter-llm-py/Cargo.toml"
 # abi3-py310 produces a single wheel per platform that loads on Python 3.10+,
 # avoiding a per-Python-version build matrix.
-features = ["pyo3/extension-module", "pyo3/abi3-py310"]
-python-packages = ["liter_llm"]
+features = [ "pyo3/extension-module", "pyo3/abi3-py310" ]
+python-packages = [ "liter_llm" ]
 
 [tool.ruff]
 target-version = "py310"
 line-length = 120
 format.docstring-code-format = true
 format.docstring-code-line-length = 120
-lint.select = ["ALL"]
+lint.select = [ "ALL" ]
 lint.ignore = [
-  "ANN401",
-  "ASYNC109",
-  "ASYNC110",
-  "BLE001",
-  "COM812",
-  "D100",
-  "D104",
-  "D107",
-  "D205",
-  "E501",
-  "EM",
-  "FBT",
-  "FIX",
-  "ISC001",
-  "PD011",
-  "PGH003",
-  "PLR2004",
-  "PLW0603",
-  "S104",
-  "S110",
-  "S603",
-  "TD",
-  "TRY",
+  "ANN401", "ASYNC109", "ASYNC110", "BLE001", "COM812",
+  "D100", "D104", "D107", "D205", "E501", "EM",
+  "FBT", "FIX", "ISC001", "PD011", "PGH003", "PLR2004",
+  "PLW0603", "S104", "S110", "S603", "TD", "TRY",
 ]
 lint.mccabe.max-complexity = 15
-lint.per-file-ignores."tests/**" = ["ANN", "D103", "PLR2004", "S101"]
+lint.per-file-ignores."tests/**" = [ "ANN", "D103", "PLR2004", "S101" ]
 # The alef Python codegen still emits cosmetic warnings on the wrapper
 # modules: api.py keeps the legacy `from typing import AsyncIterator` and a
 # single-line import block, options.py carries # noqa: TC001 / F401 markers
 # that turn out unused on every regen, __init__.py star-imports re-sort with
 # a different convention. Silence these specific rules on the wrappers until
 # the codegen is updated to emit ruff-clean output.
-lint.per-file-ignores."liter_llm/api.py" = ["F401", "I001", "UP035"]
-lint.per-file-ignores."liter_llm/options.py" = ["F401", "RUF100"]
-lint.per-file-ignores."liter_llm/__init__.py" = ["I001"]
+lint.per-file-ignores."liter_llm/api.py" = [ "F401", "I001", "UP035" ]
+lint.per-file-ignores."liter_llm/options.py" = [ "F401", "RUF100" ]
+lint.per-file-ignores."liter_llm/__init__.py" = [ "I001" ]
 lint.pydocstyle.convention = "google"
 lint.pylint.max-args = 10
 lint.pylint.max-branches = 15
@@ -93,4 +74,4 @@ namespace_packages = true
 # casts the return values.
 [[tool.mypy.overrides]]
 module = "liter_llm.api"
-disable_error_code = ["call-arg", "arg-type", "return-value", "attr-defined"]
+disable_error_code = [ "call-arg", "arg-type", "return-value", "attr-defined" ]

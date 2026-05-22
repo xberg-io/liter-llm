@@ -6,10 +6,7 @@
 >
   <!-- Built with -->
   <a href="https://github.com/kreuzberg-dev/alef">
-    <img
-      src="https://img.shields.io/badge/Bindings-alef%20%D7%90-007ec6"
-      alt="Bindings"
-    />
+    <img src="https://img.shields.io/badge/Bindings-alef%20%D7%90-007ec6" alt="Bindings" />
   </a>
   <!-- Language Bindings -->
   <a href="https://crates.io/crates/liter-llm">
@@ -83,7 +80,10 @@
 </div>
 <div align="center" style="margin: 24px 0 0">
   <a href="https://kreuzberg.dev">
-    <img alt="kreuzberg.dev" src="https://github.com/user-attachments/assets/1b6c6ad7-3b6d-4171-b1c9-f2026cc9deb8" />
+    <img
+      alt="kreuzberg.dev"
+      src="https://github.com/user-attachments/assets/1b6c6ad7-3b6d-4171-b1c9-f2026cc9deb8"
+    />
   </a>
 </div>
 <div
@@ -129,7 +129,6 @@ Then run:
 mix deps.get
 ```
 
-
 ### System Requirements
 
 - **Elixir 1.14+** and **Erlang/OTP 25+** required
@@ -156,7 +155,6 @@ IO.puts(Enum.at(result.choices, 0).message.content)
 
 ### Common Use Cases
 
-
 #### Streaming Responses
 
 Stream tokens in real time:
@@ -181,12 +179,10 @@ end)
 IO.puts("")
 ```
 
-
 ### Next Steps
 
 - **[Provider Registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)** - Full list of supported providers
 - **[GitHub Repository](https://github.com/kreuzberg-dev/liter-llm)** - Source, issues, and discussions
-
 
 ## Features
 
@@ -229,7 +225,6 @@ Built on a compiled Rust core for speed and safety:
 - **Zero-copy streaming** with SSE and AWS EventStream support
 - **API keys** wrapped in secure memory, zeroed on drop
 
-
 ## Provider Routing
 
 Route to 143+ providers using the `provider/model` prefix convention:
@@ -242,7 +237,6 @@ mistral/mistral-large-latest
 ```
 
 See the [provider registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json) for the full list.
-
 
 ## Proxy Server
 

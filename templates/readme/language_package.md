@@ -12,35 +12,35 @@
 - **Provider/model routing** — call models with the `provider/model` convention and keep provider-specific request code out of application paths.
 - **Production controls** — retries, fallback, rate limits, cache layers, budgets, health checks, OpenTelemetry spans, and redacted secrets.
 - **Same core as every binding** — Rust, Python, Node.js, Go, Java, PHP, Ruby, .NET, Elixir, WASM, Kotlin Android, Swift, Dart, Zig, and C FFI use the same Rust implementation.
-{% if language == "typescript" %}
+  {% if language == "typescript" %}
 - **Node-first TypeScript API** — NAPI-RS package with typed requests/responses and async iterables for streaming.
-{% elif language == "python" %}
+  {% elif language == "python" %}
 - **Python package** — native async/await, streaming, and typed request/response objects.
-{% elif language == "rust" %}
+  {% elif language == "rust" %}
 - **Rust crate** — canonical async client with Tower middleware and Tokio integration.
-{% elif language == "go" %}
+  {% elif language == "go" %}
 - **Go module** — context-aware API over the shared native client.
-{% elif language == "java" %}
+  {% elif language == "java" %}
 - **Java package** — type-safe FFM binding for JVM services.
-{% elif language == "php" %}
+  {% elif language == "php" %}
 - **PHP package** — PHP 8.2+ API for unified provider calls.
-{% elif language == "ruby" %}
+  {% elif language == "ruby" %}
 - **Ruby package** — native extension with idiomatic Ruby request and response objects.
-{% elif language == "csharp" %}
+  {% elif language == "csharp" %}
 - **.NET package** — async/await API with nullable-aware generated types.
-{% elif language == "elixir" %}
+  {% elif language == "elixir" %}
 - **BEAM package** — Rustler NIF binding for OTP services.
-{% elif language == "wasm" %}
+  {% elif language == "wasm" %}
 - **WASM package** — browser and edge-compatible client for provider calls from WebAssembly runtimes.
-{% elif language == "kotlin_android" %}
+  {% elif language == "kotlin_android" %}
 - **Android AAR** — coroutine-friendly package for Android clients.
-{% elif language == "swift" %}
+  {% elif language == "swift" %}
 - **SwiftPM package** — Swift Concurrency API with Codable request/response types.
-{% elif language == "dart" %}
+  {% elif language == "dart" %}
 - **Dart package** — Future/Stream API for Dart and Flutter clients.
-{% elif language == "zig" %}
+  {% elif language == "zig" %}
 - **Zig package** — allocator-aware API with explicit error sets.
-{% endif %}
+  {% endif %}
 
 ## Installation
 

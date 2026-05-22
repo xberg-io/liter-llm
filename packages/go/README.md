@@ -6,10 +6,7 @@
 >
   <!-- Built with -->
   <a href="https://github.com/kreuzberg-dev/alef">
-    <img
-      src="https://img.shields.io/badge/Bindings-alef%20%D7%90-007ec6"
-      alt="Bindings"
-    />
+    <img src="https://img.shields.io/badge/Bindings-alef%20%D7%90-007ec6" alt="Bindings" />
   </a>
   <!-- Language Bindings -->
   <a href="https://crates.io/crates/liter-llm">
@@ -83,7 +80,10 @@
 </div>
 <div align="center" style="margin: 24px 0 0">
   <a href="https://kreuzberg.dev">
-    <img alt="kreuzberg.dev" src="https://github.com/user-attachments/assets/1b6c6ad7-3b6d-4171-b1c9-f2026cc9deb8" />
+    <img
+      alt="kreuzberg.dev"
+      src="https://github.com/user-attachments/assets/1b6c6ad7-3b6d-4171-b1c9-f2026cc9deb8"
+    />
   </a>
 </div>
 <div
@@ -184,7 +184,6 @@ CGO_LDFLAGS="-L$HOME/liter-llm/lib -lliter_llm_ffi" go build
 
 ## Quickstart
 
-
 ```go
 package main
 
@@ -213,7 +212,6 @@ func main() {
 }
 ```
 
-
 Build and run:
 
 ```bash
@@ -224,7 +222,6 @@ CGO_LDFLAGS="-L$HOME/liter-llm/lib -lliter_llm_ffi" go build
 ## Examples
 
 ### Streaming Responses
-
 
 ```go
 stream, err := client.ChatStream(ctx, literllm.ChatRequest{
@@ -241,9 +238,7 @@ for chunk := range stream.Chunks() {
 }
 ```
 
-
 ### Multiple Providers
-
 
 ```go
 // OpenAI
@@ -256,9 +251,7 @@ resp, _ = client.Chat(ctx, literllm.ChatRequest{Model: "anthropic/claude-3-5-son
 resp, _ = client.Chat(ctx, literllm.ChatRequest{Model: "groq/llama-3.1-70b-versatile", Messages: msgs})
 ```
 
-
 ### Context-Aware Requests
-
 
 ```go
 ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -273,7 +266,6 @@ if err != nil {
 }
 fmt.Println(resp.Content)
 ```
-
 
 ## Proxy Server
 
