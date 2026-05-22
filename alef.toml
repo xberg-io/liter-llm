@@ -1774,7 +1774,7 @@ keywords = ["llm", "api-client", "openai", "anthropic"]
 template_dir = "templates/readme"
 snippets_dir = "docs/snippets"
 output_pattern = "packages/{language}/README.md"
-discord_url = "https://discord.gg/pXxagNK2zN"
+discord_url = "https://discord.gg/xt9WY3GnKR"
 
 [crates.readme.languages.rust]
 template = "language_package.md"

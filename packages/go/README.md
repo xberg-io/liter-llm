@@ -81,21 +81,24 @@
     <img src="https://img.shields.io/badge/docs-kreuzberg.dev-007ec6" alt="Docs" />
   </a>
 </div>
-<div align="center" style="margin: 20px 0">
-  <picture>
+<div align="center" style="margin: 24px 0 0">
+  <a href="https://kreuzberg.dev">
     <img
       width="100%"
       alt="kreuzberg.dev"
       src="https://github.com/user-attachments/assets/1b6c6ad7-3b6d-4171-b1c9-f2026cc9deb8"
     />
-  </picture>
+  </a>
 </div>
-<div align="center" style="margin-bottom: 20px">
+<div
+  align="center"
+  style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 28px 0 24px"
+>
   <a href="https://discord.gg/xt9WY3GnKR">
     <img
-      height="22"
-      src="https://img.shields.io/badge/Discord-Join%20our%20community-7289da?logo=discord&logoColor=white"
-      alt="Discord"
+      height="32"
+      src="https://img.shields.io/badge/Discord-Join%20our%20community-007ec6?logo=discord&logoColor=white"
+      alt="Join Discord"
     />
   </a>
 </div>
@@ -104,6 +107,13 @@ Universal LLM API client for Go. Access 143+ LLM providers through a single inte
 
 > **Version 1.4.0-rc.28**
 > Report issues at [github.com/kreuzberg-dev/liter-llm](https://github.com/kreuzberg-dev/liter-llm/issues).
+
+## What This Package Provides
+
+- **Go module over the Rust client** — context-aware chat, streaming, embeddings, tool calls, search, and OCR.
+- **Provider/model routing** — call `provider/model` names without provider-specific client branches.
+- **Static-link workflow** — build against `liter-llm-ffi` and ship a self-contained Go binary.
+- **Cross-binding parity** — behavior matches the Rust, Python, Node.js, Java, .NET, Ruby, PHP, Elixir, Swift, Dart, Zig, WASM, and C FFI packages.
 
 ## Install
 
@@ -178,6 +188,7 @@ CGO_LDFLAGS="-L$HOME/liter-llm/lib -lliter_llm_ffi" go build
 
 ## Quickstart
 
+
 ```go
 package main
 
@@ -206,6 +217,7 @@ func main() {
 }
 ```
 
+
 Build and run:
 
 ```bash
@@ -216,6 +228,7 @@ CGO_LDFLAGS="-L$HOME/liter-llm/lib -lliter_llm_ffi" go build
 ## Examples
 
 ### Streaming Responses
+
 
 ```go
 stream, err := client.ChatStream(ctx, literllm.ChatRequest{
@@ -232,7 +245,9 @@ for chunk := range stream.Chunks() {
 }
 ```
 
+
 ### Multiple Providers
+
 
 ```go
 // OpenAI
@@ -245,7 +260,9 @@ resp, _ = client.Chat(ctx, literllm.ChatRequest{Model: "anthropic/claude-3-5-son
 resp, _ = client.Chat(ctx, literllm.ChatRequest{Model: "groq/llama-3.1-70b-versatile", Messages: msgs})
 ```
 
+
 ### Context-Aware Requests
+
 
 ```go
 ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -261,6 +278,7 @@ if err != nil {
 fmt.Println(resp.Content)
 ```
 
+
 ## Proxy Server
 
 liter-llm also ships as an OpenAI-compatible proxy server with Docker support:
@@ -269,7 +287,7 @@ liter-llm also ships as an OpenAI-compatible proxy server with Docker support:
 docker run -p 4000:4000 -e LITER_LLM_MASTER_KEY=sk-your-key ghcr.io/kreuzberg-dev/liter-llm
 ```
 
-See the [proxy server documentation](https://docs.liter-llm.kreuzberg.dev/server/proxy/) for configuration, CLI usage, and MCP integration.
+See the [proxy server documentation](https://docs.liter-llm.kreuzberg.dev/server/proxy-server/) for configuration, CLI usage, and MCP integration.
 
 ## API Reference
 

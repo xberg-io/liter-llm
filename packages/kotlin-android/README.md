@@ -81,27 +81,39 @@
     <img src="https://img.shields.io/badge/docs-kreuzberg.dev-007ec6" alt="Docs" />
   </a>
 </div>
-<div align="center" style="margin: 20px 0">
-  <picture>
+<div align="center" style="margin: 24px 0 0">
+  <a href="https://kreuzberg.dev">
     <img
       width="100%"
       alt="kreuzberg.dev"
       src="https://github.com/user-attachments/assets/1b6c6ad7-3b6d-4171-b1c9-f2026cc9deb8"
     />
-  </picture>
+  </a>
 </div>
-<div align="center" style="margin-bottom: 20px">
+<div
+  align="center"
+  style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 28px 0 24px"
+>
   <a href="https://discord.gg/xt9WY3GnKR">
     <img
-      height="22"
-      src="https://img.shields.io/badge/Discord-Join%20our%20community-7289da?logo=discord&logoColor=white"
-      alt="Discord"
+      height="32"
+      src="https://img.shields.io/badge/Discord-Join%20our%20community-007ec6?logo=discord&logoColor=white"
+      alt="Join Discord"
     />
   </a>
 </div>
 
 Universal LLM API client for Android, packaged as an AAR with bundled JNI libraries for `arm64-v8a` and `x86_64`.
 Server-side Kotlin/JVM consumers should use the `dev.kreuzberg.literllm:liter-llm` Java package directly — Panama FFM is unavailable on Android, which is why Android ships as its own artifact.
+
+
+## What This Package Provides
+
+- **One provider surface** — chat, streaming, embeddings, images, audio, search, OCR, tools, and structured output across the provider registry.
+- **Provider/model routing** — call models with the `provider/model` convention and keep provider-specific request code out of application paths.
+- **Production controls** — retries, fallback, rate limits, cache layers, budgets, health checks, OpenTelemetry spans, and redacted secrets.
+- **Same core as every binding** — Rust, Python, Node.js, Go, Java, PHP, Ruby, .NET, Elixir, WASM, Kotlin Android, Swift, Dart, Zig, and C FFI use the same Rust implementation.
+- **Android AAR** — coroutine-friendly package for Android clients.
 
 ## Installation
 
@@ -125,6 +137,7 @@ implementation 'dev.kreuzberg:liter-llm:1.4.0-rc.28'
 </dependency>
 ```
 
+
 ### System Requirements
 
 - See [Installation Guide](https://github.com/kreuzberg-dev/liter-llm#installation) for requirements
@@ -139,10 +152,12 @@ Send a message to any provider using the `provider/model` prefix:
 
 ### Common Use Cases
 
+
 ### Next Steps
 
 - **[Provider Registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)** - Full list of supported providers
 - **[GitHub Repository](https://github.com/kreuzberg-dev/liter-llm)** - Source, issues, and discussions
+
 
 ## Features
 
@@ -184,6 +199,7 @@ Built on a compiled Rust core for speed and safety:
 - **Zero-copy streaming** with SSE and AWS EventStream support
 - **API keys** wrapped in secure memory, zeroed on drop
 
+
 ## Provider Routing
 
 Route to 143+ providers using the `provider/model` prefix convention:
@@ -197,6 +213,7 @@ mistral/mistral-large-latest
 
 See the [provider registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json) for the full list.
 
+
 ## Proxy Server
 
 liter-llm also ships as an OpenAI-compatible proxy server with Docker support:
@@ -205,7 +222,7 @@ liter-llm also ships as an OpenAI-compatible proxy server with Docker support:
 docker run -p 4000:4000 -e LITER_LLM_MASTER_KEY=sk-your-key ghcr.io/kreuzberg-dev/liter-llm
 ```
 
-See the [proxy server documentation](https://docs.liter-llm.kreuzberg.dev/server/proxy/) for configuration, CLI usage, and MCP integration.
+See the [proxy server documentation](https://docs.liter-llm.kreuzberg.dev/server/proxy-server/) for configuration, CLI usage, and MCP integration.
 
 ## Documentation
 

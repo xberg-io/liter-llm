@@ -9,6 +9,13 @@ Universal LLM API client for Go. Access 143+ LLM providers through a single inte
 > **Version {{ version }}**
 > Report issues at [github.com/kreuzberg-dev/liter-llm](https://github.com/kreuzberg-dev/liter-llm/issues).
 
+## What This Package Provides
+
+- **Go module over the Rust client** — context-aware chat, streaming, embeddings, tool calls, search, and OCR.
+- **Provider/model routing** — call `provider/model` names without provider-specific client branches.
+- **Static-link workflow** — build against `liter-llm-ffi` and ship a self-contained Go binary.
+- **Cross-binding parity** — behavior matches the Rust, Python, Node.js, Java, .NET, Ruby, PHP, Elixir, Swift, Dart, Zig, WASM, and C FFI packages.
+
 ## Install
 
 ### Using Go Modules

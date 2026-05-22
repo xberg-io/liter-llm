@@ -6,6 +6,13 @@
 
 {{ description }}
 
+## What This Package Provides
+
+- **Python-native client** — async/await, streaming, tools, structured output, and typed request/response objects.
+- **Provider/model routing** — call `provider/model` names without provider-specific client branches.
+- **Production controls** — retries, fallback, rate limits, cache layers, budgets, health checks, OpenTelemetry spans, and redacted secrets.
+- **Same Rust core as every binding** — behavior matches the Rust, Node.js, Go, Java, .NET, Ruby, PHP, Elixir, Swift, Dart, Zig, WASM, and C FFI packages.
+
 ## Installation
 
 ```bash

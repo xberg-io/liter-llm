@@ -6,6 +6,13 @@
 
 {{ description }}
 
+## What This Package Provides
+
+- **Ruby-native client** — chat, streaming, tools, structured output, and provider routing through Ruby objects.
+- **Provider/model routing** — call `provider/model` names without provider-specific client branches.
+- **Production controls** — retries, fallback, rate limits, cache layers, budgets, health checks, OpenTelemetry spans, and redacted secrets.
+- **Same Rust core as every binding** — behavior matches the Rust, Python, Node.js, Go, Java, .NET, PHP, Elixir, Swift, Dart, Zig, WASM, and C FFI packages.
+
 ## Installation
 
 Add to your Gemfile:
