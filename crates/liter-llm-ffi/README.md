@@ -7,8 +7,8 @@
   <!-- Built with -->
   <a href="https://github.com/kreuzberg-dev/alef">
     <img
-      src="https://img.shields.io/badge/bindings%20by-alef%20%D7%90-007ec6"
-      alt="Bindings by alef"
+      src="https://img.shields.io/badge/Bindings-alef%20%D7%90-007ec6"
+      alt="Bindings"
     />
   </a>
   <!-- Language Bindings -->
@@ -78,7 +78,7 @@
     <img src="https://img.shields.io/badge/License-MIT-007ec6" alt="License" />
   </a>
   <a href="https://docs.liter-llm.kreuzberg.dev">
-    <img src="https://img.shields.io/badge/docs-kreuzberg.dev-007ec6" alt="Docs" />
+    <img src="https://img.shields.io/badge/Docs-liter--llm-007ec6" alt="Docs" />
   </a>
 </div>
 
