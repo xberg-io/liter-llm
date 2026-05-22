@@ -1,6 +1,6 @@
 [package]
 name = "liter-llm-rb"
-version = "1.4.0-rc.27"
+version = "1.4.0-rc.28"
 edition = "2024"
 license = "MIT"
 description = "Universal LLM API client with Rust-powered polyglot bindings."

@@ -24,7 +24,7 @@ base64 = { workspace = true }
 bytes = { workspace = true }
 dashmap = { workspace = true }
 futures-util = { workspace = true }
-liter-llm = { path = "../liter-llm", version = "1.4.0-rc.27", features = [
+liter-llm = { path = "../liter-llm", version = "1.4.0-rc.28", features = [
     "native-http",
     "tower",
     "tracing",

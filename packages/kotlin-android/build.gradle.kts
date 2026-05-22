@@ -75,7 +75,7 @@ publishing {
             }
             groupId = "dev.kreuzberg"
             artifactId = "liter-llm-android"
-            version = "1.4.0-rc.27"
+            version = "1.4.0-rc.28"
         }
     }
 }
