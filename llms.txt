@@ -13,7 +13,7 @@ model name prefixes (e.g. "openai/gpt-4o" routes to OpenAI).
 
 Part of the kreuzberg.dev ecosystem:
 - **kreuzberg.dev** — Organization: https://kreuzberg.dev
-- **Kreuzberg** — Document intelligence for 91+ formats: https://github.com/kreuzberg-dev/kreuzberg
+- **Kreuzberg** — Document intelligence for 90+ formats: https://github.com/kreuzberg-dev/kreuzberg
   - Kreuzberg docs: https://docs.kreuzberg.dev
 - **html-to-markdown** — HTML to Markdown converter: https://github.com/kreuzberg-dev/html-to-markdown
 - **tree-sitter-language-pack** — Multi-language parsing: https://github.com/kreuzberg-dev/tree-sitter-language-pack

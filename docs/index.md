@@ -137,7 +137,7 @@ A universal LLM API client with a Rust core and native bindings for 14 languages
 
 - :material-file-document-multiple:{ .lg .middle } **[Kreuzberg](https://docs.kreuzberg.dev)**
 
-  Document intelligence — text, tables, and metadata from 91+ file formats with optional OCR.
+  Document intelligence — text, tables, and metadata from 90+ file formats with optional OCR.
 
 - :material-cloud:{ .lg .middle } **[Kreuzberg Cloud](https://docs.kreuzberg.cloud)**
 
@@ -153,7 +153,7 @@ A universal LLM API client with a Rust core and native bindings for 14 languages
 
 - :material-code-tags:{ .lg .middle } **[tree-sitter-language-pack](https://docs.tree-sitter-language-pack.kreuzberg.dev)**
 
-  306 tree-sitter grammars and code-intelligence primitives.
+  300+ tree-sitter grammars and code-intelligence primitives.
 
 - :fontawesome-brands-discord:{ .lg .middle } **[Discord](https://discord.gg/xt9WY3GnKR)**
 
