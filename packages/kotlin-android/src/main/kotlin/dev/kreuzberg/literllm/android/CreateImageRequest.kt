@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -38,5 +39,5 @@ data class CreateImageRequest(
     /** Response format: `"url"` or `"b64_json"`. */
     val responseFormat: String? = null,
     /** User identifier for request tracking. */
-    val user: String? = null,
+    val user: String? = null
 )

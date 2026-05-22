@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -24,49 +25,55 @@ package dev.kreuzberg.literllm.android
 /** Status of a batch job. */
 enum class BatchStatus {
     /** Validating the input file. */
-    @com.fasterxml.jackson.annotation.JsonProperty("validating") VALIDATING,
+    @com.fasterxml.jackson.annotation.JsonProperty("validating")
+    VALIDATING,
     /** Job failed. */
-    @com.fasterxml.jackson.annotation.JsonProperty("failed") FAILED,
+    @com.fasterxml.jackson.annotation.JsonProperty("failed")
+    FAILED,
     /** Job is running. */
-    @com.fasterxml.jackson.annotation.JsonProperty("in_progress") IN_PROGRESS,
+    @com.fasterxml.jackson.annotation.JsonProperty("in_progress")
+    IN_PROGRESS,
     /** Finalizing results. */
-    @com.fasterxml.jackson.annotation.JsonProperty("finalizing") FINALIZING,
+    @com.fasterxml.jackson.annotation.JsonProperty("finalizing")
+    FINALIZING,
     /** Job completed successfully. */
-    @com.fasterxml.jackson.annotation.JsonProperty("completed") COMPLETED,
+    @com.fasterxml.jackson.annotation.JsonProperty("completed")
+    COMPLETED,
     /** Job expired before completion. */
-    @com.fasterxml.jackson.annotation.JsonProperty("expired") EXPIRED,
+    @com.fasterxml.jackson.annotation.JsonProperty("expired")
+    EXPIRED,
     /** Job is being cancelled. */
-    @com.fasterxml.jackson.annotation.JsonProperty("cancelling") CANCELLING,
+    @com.fasterxml.jackson.annotation.JsonProperty("cancelling")
+    CANCELLING,
     /** Job has been cancelled. */
-    @com.fasterxml.jackson.annotation.JsonProperty("cancelled") CANCELLED;
+    @com.fasterxml.jackson.annotation.JsonProperty("cancelled")
+    CANCELLED;
 
     @com.fasterxml.jackson.annotation.JsonValue
-    fun toWire(): String =
-        when (this) {
-            VALIDATING -> "validating"
-            FAILED -> "failed"
-            IN_PROGRESS -> "in_progress"
-            FINALIZING -> "finalizing"
-            COMPLETED -> "completed"
-            EXPIRED -> "expired"
-            CANCELLING -> "cancelling"
-            CANCELLED -> "cancelled"
-        }
+    fun toWire(): String = when (this) {
+        VALIDATING -> "validating"
+        FAILED -> "failed"
+        IN_PROGRESS -> "in_progress"
+        FINALIZING -> "finalizing"
+        COMPLETED -> "completed"
+        EXPIRED -> "expired"
+        CANCELLING -> "cancelling"
+        CANCELLED -> "cancelled"
+    }
 
     companion object {
         @com.fasterxml.jackson.annotation.JsonCreator
         @JvmStatic
-        fun fromWire(value: String): BatchStatus =
-            when (value) {
-                "validating" -> VALIDATING
-                "failed" -> FAILED
-                "in_progress" -> IN_PROGRESS
-                "finalizing" -> FINALIZING
-                "completed" -> COMPLETED
-                "expired" -> EXPIRED
-                "cancelling" -> CANCELLING
-                "cancelled" -> CANCELLED
-                else -> throw IllegalArgumentException("Unknown BatchStatus value: $value")
-            }
+        fun fromWire(value: String): BatchStatus = when (value) {
+            "validating" -> VALIDATING
+            "failed" -> FAILED
+            "in_progress" -> IN_PROGRESS
+            "finalizing" -> FINALIZING
+            "completed" -> COMPLETED
+            "expired" -> EXPIRED
+            "cancelling" -> CANCELLING
+            "cancelled" -> CANCELLED
+            else -> throw IllegalArgumentException("Unknown BatchStatus value: $value")
+        }
     }
 }

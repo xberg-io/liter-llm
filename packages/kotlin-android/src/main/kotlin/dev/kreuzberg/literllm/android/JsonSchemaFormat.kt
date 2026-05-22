@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -30,5 +31,5 @@ data class JsonSchemaFormat(
     /** JSON Schema object defining the output structure. */
     val schema: Any,
     /** If true, enforce strict schema validation. */
-    val strict: Boolean? = null,
+    val strict: Boolean? = null
 )

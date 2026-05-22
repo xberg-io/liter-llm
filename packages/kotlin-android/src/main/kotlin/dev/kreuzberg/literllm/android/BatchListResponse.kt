@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -32,5 +33,5 @@ data class BatchListResponse(
     /** First batch ID in the result set (for pagination). */
     val firstId: String? = null,
     /** Last batch ID in the result set (for pagination). */
-    val lastId: String? = null,
+    val lastId: String? = null
 )

@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -28,5 +29,5 @@ data class ModerationResponse(
     /** Model used for classification. */
     val model: String,
     /** Results for each input string. */
-    val results: List<ModerationResult> = emptyList(),
+    val results: List<ModerationResult> = emptyList()
 )

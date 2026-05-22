@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -27,15 +28,11 @@ package dev.kreuzberg.literllm.android
 sealed class StopSequence {
     /** Single stop sequence. */
     data class Single(val value: String) : StopSequence()
-
     /** Multiple stop sequences. */
     data class Multiple(val value: List<String>) : StopSequence()
 }
 
-private class StopSequenceDeserializer :
-    com.fasterxml.jackson.databind.deser.std.StdDeserializer<StopSequence>(
-        StopSequence::class.java
-    ) {
+private class StopSequenceDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<StopSequence>(StopSequence::class.java) {
     @Suppress("LongMethod")
     override fun deserialize(
         parser: com.fasterxml.jackson.core.JsonParser,
@@ -45,12 +42,9 @@ private class StopSequenceDeserializer :
         if (node.isTextual) return StopSequence.Single(node.asText())
         if (node.isArray)
             return run {
-                val javaType =
-                    ctx.typeFactory.constructCollectionType(List::class.java, String::class.java)
+                val javaType = ctx.typeFactory.constructCollectionType(List::class.java, String::class.java)
                 @Suppress("UNCHECKED_CAST")
-                StopSequence.Multiple(
-                    ctx.readTreeAsValue<List<String>>(node, javaType) as List<String>
-                )
+                StopSequence.Multiple(ctx.readTreeAsValue<List<String>>(node, javaType) as List<String>)
             }
         throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
             parser,
@@ -61,8 +55,7 @@ private class StopSequenceDeserializer :
     }
 }
 
-private class StopSequenceSerializer :
-    com.fasterxml.jackson.databind.ser.std.StdSerializer<StopSequence>(StopSequence::class.java) {
+private class StopSequenceSerializer : com.fasterxml.jackson.databind.ser.std.StdSerializer<StopSequence>(StopSequence::class.java) {
     @Suppress("LongMethod")
     override fun serialize(
         value: StopSequence,

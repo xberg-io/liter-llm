@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -28,5 +29,5 @@ data class OcrResponse(
     /** Model/provider used for OCR. */
     val model: String,
     /** Token usage, if reported by the provider. */
-    val usage: Usage? = null,
+    val usage: Usage? = null
 )

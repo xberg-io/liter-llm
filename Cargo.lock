@@ -2659,6 +2659,7 @@ dependencies = [
  "getrandom 0.4.2",
  "js-sys",
  "liter-llm",
+ "serde",
  "serde-wasm-bindgen",
  "serde_json",
  "wasm-bindgen",

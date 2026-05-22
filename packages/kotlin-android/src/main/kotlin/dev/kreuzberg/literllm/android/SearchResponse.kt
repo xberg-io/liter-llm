@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -26,5 +27,5 @@ data class SearchResponse(
     /** List of search results. */
     val results: List<SearchResult> = emptyList(),
     /** Model/provider that performed the search. */
-    val model: String,
+    val model: String
 )

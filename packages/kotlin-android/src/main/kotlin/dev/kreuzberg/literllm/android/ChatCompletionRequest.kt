@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -50,8 +51,8 @@ data class ChatCompletionRequest(
     /** Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens. */
     val frequencyPenalty: Double? = null,
     /**
-     * Token bias map. Uses `BTreeMap` (sorted keys) for deterministic serialization order —
-     * important when hashing or signing requests.
+     * Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic
+     * serialization order — important when hashing or signing requests.
      */
     val logitBias: Map<String, Double>? = null,
     /** User identifier for request tracking and abuse detection. */
@@ -73,8 +74,8 @@ data class ChatCompletionRequest(
     /** Reasoning effort level (low, medium, high) for extended-thinking models. */
     val reasoningEffort: ReasoningEffort? = null,
     /**
-     * Provider-specific extra parameters merged into the request body. Use for guardrails, safety
-     * settings, grounding config, etc.
+     * Provider-specific extra parameters merged into the request body.
+     * Use for guardrails, safety settings, grounding config, etc.
      */
-    val extraBody: Any? = null,
+    val extraBody: Any? = null
 )

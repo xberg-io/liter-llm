@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -30,5 +31,5 @@ data class FunctionDefinition(
     /** JSON Schema defining the function's parameters. */
     val parameters: Any? = null,
     /** If true, enforce strict JSON schema validation for arguments. */
-    val strict: Boolean? = null,
+    val strict: Boolean? = null
 )

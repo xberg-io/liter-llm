@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -28,12 +29,10 @@ data class RerankRequest(
     /** The search query. */
     val query: String = "",
     /** Documents to rerank. */
-    @field:com.fasterxml.jackson.databind.annotation.JsonSerialize(
-        contentAs = RerankDocument::class
-    )
+    @field:com.fasterxml.jackson.databind.annotation.JsonSerialize(contentAs = RerankDocument::class)
     val documents: List<RerankDocument> = emptyList(),
     /** Return only the top N results. Optional. */
     val topN: Int? = null,
     /** Include the document content in results. Defaults to false. */
-    val returnDocuments: Boolean? = null,
+    val returnDocuments: Boolean? = null
 )

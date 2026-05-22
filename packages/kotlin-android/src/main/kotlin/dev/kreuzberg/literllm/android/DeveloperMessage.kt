@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -26,5 +27,5 @@ data class DeveloperMessage(
     /** Developer-specific instructions or context. */
     val content: String = "",
     /** Optional name for the developer message source. */
-    val name: String? = null,
+    val name: String? = null
 )

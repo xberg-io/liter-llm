@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -28,5 +29,5 @@ data class FileListResponse(
     /** List of file objects. */
     val data: List<FileObject> = emptyList(),
     /** Whether more results are available. */
-    val hasMore: Boolean? = null,
+    val hasMore: Boolean? = null
 )

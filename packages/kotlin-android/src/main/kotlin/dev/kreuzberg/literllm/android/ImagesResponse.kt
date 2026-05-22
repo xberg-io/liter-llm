@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -26,5 +27,5 @@ data class ImagesResponse(
     /** Unix timestamp of image creation. */
     val created: Long = 0L,
     /** List of generated images. */
-    val data: List<Image> = emptyList(),
+    val data: List<Image> = emptyList()
 )

@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -36,5 +37,5 @@ data class CreateResponseRequest(
     /** Maximum output tokens. */
     val maxOutputTokens: Long? = null,
     /** Optional metadata. */
-    val metadata: Any? = null,
+    val metadata: Any? = null
 )

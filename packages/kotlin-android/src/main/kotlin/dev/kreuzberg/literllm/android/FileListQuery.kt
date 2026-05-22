@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -28,5 +29,5 @@ data class FileListQuery(
     /** Maximum number of results to return. Defaults to 20. */
     val limit: Int? = null,
     /** Pagination cursor: return results after this file ID. */
-    val after: String? = null,
+    val after: String? = null
 )

@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -26,5 +27,5 @@ data class SystemMessage(
     /** Instructions or context that apply throughout the conversation. */
     val content: String = "",
     /** Optional name for the system message source. */
-    val name: String? = null,
+    val name: String? = null
 )

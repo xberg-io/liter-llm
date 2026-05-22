@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -28,5 +29,5 @@ data class DeleteResponse(
     /** Object type. */
     val `object`: String = "",
     /** Confirmation that the resource was deleted. */
-    val deleted: Boolean = false,
+    val deleted: Boolean = false
 )

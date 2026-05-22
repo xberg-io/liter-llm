@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -28,5 +29,5 @@ data class ResponseUsage(
     /** Output tokens used. */
     val outputTokens: Long = 0L,
     /** Total tokens used. */
-    val totalTokens: Long = 0L,
+    val totalTokens: Long = 0L
 )

@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -30,5 +31,5 @@ data class TranscriptionResponse(
     /** Total audio duration in seconds. */
     val duration: Double? = null,
     /** Detailed segment-level transcription (if response_format is "verbose_json"). */
-    val segments: List<TranscriptionSegment>? = null,
+    val segments: List<TranscriptionSegment>? = null
 )

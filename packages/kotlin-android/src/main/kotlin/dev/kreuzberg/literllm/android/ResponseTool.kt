@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -25,7 +26,8 @@ package dev.kreuzberg.literllm.android
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 data class ResponseTool(
     /** Tool type (e.g., "extractor", "search"). */
-    @com.fasterxml.jackson.annotation.JsonProperty("type") val toolType: String = "",
+    @com.fasterxml.jackson.annotation.JsonProperty("type")
+    val toolType: String = "",
     /** Tool configuration (flattened into the object). */
-    val config: Any? = null,
+    val config: Any? = null
 )

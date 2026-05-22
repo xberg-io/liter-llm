@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -28,5 +29,5 @@ data class BatchRequestCounts(
     /** Completed requests. */
     val completed: Long = 0L,
     /** Failed requests. */
-    val failed: Long = 0L,
+    val failed: Long = 0L
 )

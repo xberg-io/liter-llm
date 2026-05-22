@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -24,29 +25,30 @@ package dev.kreuzberg.literllm.android
 /** Image detail level controlling token cost and processing. */
 enum class ImageDetail {
     /** Low detail: scales image to 512x512, uses fewer tokens. */
-    @com.fasterxml.jackson.annotation.JsonProperty("low") LOW,
+    @com.fasterxml.jackson.annotation.JsonProperty("low")
+    LOW,
     /** High detail: processes up to 2x2 grid of tiles, higher token cost. */
-    @com.fasterxml.jackson.annotation.JsonProperty("high") HIGH,
+    @com.fasterxml.jackson.annotation.JsonProperty("high")
+    HIGH,
     /** Auto: model chooses low or high based on image dimensions. */
-    @com.fasterxml.jackson.annotation.JsonProperty("auto") AUTO;
+    @com.fasterxml.jackson.annotation.JsonProperty("auto")
+    AUTO;
 
     @com.fasterxml.jackson.annotation.JsonValue
-    fun toWire(): String =
-        when (this) {
-            LOW -> "low"
-            HIGH -> "high"
-            AUTO -> "auto"
-        }
+    fun toWire(): String = when (this) {
+        LOW -> "low"
+        HIGH -> "high"
+        AUTO -> "auto"
+    }
 
     companion object {
         @com.fasterxml.jackson.annotation.JsonCreator
         @JvmStatic
-        fun fromWire(value: String): ImageDetail =
-            when (value) {
-                "low" -> LOW
-                "high" -> HIGH
-                "auto" -> AUTO
-                else -> throw IllegalArgumentException("Unknown ImageDetail value: $value")
-            }
+        fun fromWire(value: String): ImageDetail = when (value) {
+            "low" -> LOW
+            "high" -> HIGH
+            "auto" -> AUTO
+            else -> throw IllegalArgumentException("Unknown ImageDetail value: $value")
+        }
     }
 }

@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -33,5 +34,5 @@ data class EmbeddingRequest(
     /** Requested embedding dimensions (if supported by the model). */
     val dimensions: Int? = null,
     /** User identifier for request tracking. */
-    val user: String? = null,
+    val user: String? = null
 )

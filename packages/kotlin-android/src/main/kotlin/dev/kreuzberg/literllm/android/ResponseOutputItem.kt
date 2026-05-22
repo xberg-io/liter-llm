@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -25,7 +26,8 @@ package dev.kreuzberg.literllm.android
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 data class ResponseOutputItem(
     /** Output type (e.g., `"text"`, `"object"`, `"error"`). */
-    @com.fasterxml.jackson.annotation.JsonProperty("type") val itemType: String = "",
+    @com.fasterxml.jackson.annotation.JsonProperty("type")
+    val itemType: String = "",
     /** Output content (flattened into the object). */
-    val content: Any? = null,
+    val content: Any? = null
 )

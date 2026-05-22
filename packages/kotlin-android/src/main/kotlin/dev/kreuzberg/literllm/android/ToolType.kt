@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -24,25 +25,25 @@ package dev.kreuzberg.literllm.android
 /**
  * The type discriminator for tool/tool-call objects.
  *
- * Per the OpenAI spec this is always `"function"`. Using an enum enforces that constraint at the
- * type level and rejects any other value on deserialization.
+ * Per the OpenAI spec this is always `"function"`. Using an enum enforces
+ * that constraint at the type level and rejects any other value on
+ * deserialization.
  */
 enum class ToolType {
-    @com.fasterxml.jackson.annotation.JsonProperty("function") FUNCTION;
+    @com.fasterxml.jackson.annotation.JsonProperty("function")
+    FUNCTION;
 
     @com.fasterxml.jackson.annotation.JsonValue
-    fun toWire(): String =
-        when (this) {
-            FUNCTION -> "function"
-        }
+    fun toWire(): String = when (this) {
+        FUNCTION -> "function"
+    }
 
     companion object {
         @com.fasterxml.jackson.annotation.JsonCreator
         @JvmStatic
-        fun fromWire(value: String): ToolType =
-            when (value) {
-                "function" -> FUNCTION
-                else -> throw IllegalArgumentException("Unknown ToolType value: $value")
-            }
+        fun fromWire(value: String): ToolType = when (value) {
+            "function" -> FUNCTION
+            else -> throw IllegalArgumentException("Unknown ToolType value: $value")
+        }
     }
 }

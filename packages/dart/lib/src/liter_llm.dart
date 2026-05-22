@@ -204,7 +204,10 @@ class LiterLlmBridge {
     return await rust_bridge.ensureCryptoProvider();
   }
 
-  static Stream<ChatCompletionChunk> chatStream(ChatCompletionRequest req) {
-    return rust_bridge.chatStream(req: req);
+  static Stream<ChatCompletionChunk> chatStream(
+    DefaultClient defaultClient,
+    ChatCompletionRequest req,
+  ) {
+    return defaultClient.chatStream(req: req);
   }
 }

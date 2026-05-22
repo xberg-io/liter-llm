@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -32,5 +33,5 @@ data class SearchRequest(
     /** Domain filter — restrict results to specific domains. */
     val searchDomainFilter: List<String>? = null,
     /** Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). */
-    val country: String? = null,
+    val country: String? = null
 )

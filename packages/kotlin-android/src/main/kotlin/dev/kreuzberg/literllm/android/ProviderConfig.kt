@@ -17,6 +17,7 @@
     "FunctionParameterNaming",
     "LongParameterList",
     "CyclomaticComplexMethod",
+    "LongMethod",
 )
 
 package dev.kreuzberg.literllm.android
@@ -38,9 +39,9 @@ data class ProviderConfig(
     /**
      * Parameter key renaming for this provider.
      *
-     * Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this
-     * provider expects (e.g. `"max_tokens"`). Applied automatically by
-     * `ConfigDrivenProvider.transform_request`.
+     * Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`)
+     * to the name this provider expects (e.g. `"max_tokens"`).  Applied
+     * automatically by `ConfigDrivenProvider.transform_request`.
      */
-    val paramMappings: Map<String, String>? = null,
+    val paramMappings: Map<String, String>? = null
 )
