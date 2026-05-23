@@ -2,7 +2,7 @@
 title: "C# API Reference"
 ---
 
-## C# API Reference <span class="version-badge">v1.4.0-rc.27</span>
+## C# API Reference <span class="version-badge">v1.4.0-rc.30</span>
 
 ### Functions
 
@@ -27,13 +27,13 @@ public static DefaultClient CreateClient(string apiKey, string? baseUrl = null, 
 
 **Parameters:**
 
-| Name          | Type      | Required | Description      |
-| ------------- | --------- | -------- | ---------------- |
-| `ApiKey`      | `string`  | Yes      | The api key      |
-| `BaseUrl`     | `string?` | No       | The base url     |
-| `TimeoutSecs` | `ulong?`  | No       | The timeout secs |
-| `MaxRetries`  | `uint?`   | No       | The max retries  |
-| `ModelHint`   | `string?` | No       | The model hint   |
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `ApiKey` | `string` | Yes | The api key |
+| `BaseUrl` | `string?` | No | The base url |
+| `TimeoutSecs` | `ulong?` | No | The timeout secs |
+| `MaxRetries` | `uint?` | No | The max retries |
+| `ModelHint` | `string?` | No | The model hint |
 
 **Returns:** `DefaultClient`
 **Errors:** Throws `Error`.
@@ -59,9 +59,9 @@ public static DefaultClient CreateClientFromJson(string json)
 
 **Parameters:**
 
-| Name   | Type     | Required | Description |
-| ------ | -------- | -------- | ----------- |
-| `Json` | `string` | Yes      | The json    |
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Json` | `string` | Yes | The json |
 
 **Returns:** `DefaultClient`
 **Errors:** Throws `Error`.
@@ -88,9 +88,9 @@ public static void RegisterCustomProvider(CustomProviderConfig config)
 
 **Parameters:**
 
-| Name     | Type                   | Required | Description               |
-| -------- | ---------------------- | -------- | ------------------------- |
-| `Config` | `CustomProviderConfig` | Yes      | The configuration options |
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Config` | `CustomProviderConfig` | Yes | The configuration options |
 
 **Returns:** `void`
 **Errors:** Throws `Error`.
@@ -116,9 +116,9 @@ public static bool UnregisterCustomProvider(string name)
 
 **Parameters:**
 
-| Name   | Type     | Required | Description |
-| ------ | -------- | -------- | ----------- |
-| `Name` | `string` | Yes      | The name    |
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Name` | `string` | Yes | The name |
 
 **Returns:** `bool`
 **Errors:** Throws `Error`.
@@ -182,11 +182,11 @@ public static double? CompletionCost(string model, ulong promptTokens, ulong com
 
 **Parameters:**
 
-| Name               | Type     | Required | Description           |
-| ------------------ | -------- | -------- | --------------------- |
-| `Model`            | `string` | Yes      | The model             |
-| `PromptTokens`     | `ulong`  | Yes      | The prompt tokens     |
-| `CompletionTokens` | `ulong`  | Yes      | The completion tokens |
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Model` | `string` | Yes | The model |
+| `PromptTokens` | `ulong` | Yes | The prompt tokens |
+| `CompletionTokens` | `ulong` | Yes | The completion tokens |
 
 **Returns:** `double?`
 
@@ -215,12 +215,12 @@ public static double? CompletionCostWithCache(string model, ulong promptTokens, 
 
 **Parameters:**
 
-| Name               | Type     | Required | Description           |
-| ------------------ | -------- | -------- | --------------------- |
-| `Model`            | `string` | Yes      | The model             |
-| `PromptTokens`     | `ulong`  | Yes      | The prompt tokens     |
-| `CachedTokens`     | `ulong`  | Yes      | The cached tokens     |
-| `CompletionTokens` | `ulong`  | Yes      | The completion tokens |
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Model` | `string` | Yes | The model |
+| `PromptTokens` | `ulong` | Yes | The prompt tokens |
+| `CachedTokens` | `ulong` | Yes | The cached tokens |
+| `CompletionTokens` | `ulong` | Yes | The completion tokens |
 
 **Returns:** `double?`
 
@@ -247,10 +247,10 @@ public static nuint CountTokens(string model, string text)
 
 **Parameters:**
 
-| Name    | Type     | Required | Description |
-| ------- | -------- | -------- | ----------- |
-| `Model` | `string` | Yes      | The model   |
-| `Text`  | `string` | Yes      | The text    |
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Model` | `string` | Yes | The model |
+| `Text` | `string` | Yes | The text |
 
 **Returns:** `nuint`
 **Errors:** Throws `Error`.
@@ -279,10 +279,10 @@ public static nuint CountRequestTokens(string model, ChatCompletionRequest req)
 
 **Parameters:**
 
-| Name    | Type                    | Required | Description                 |
-| ------- | ----------------------- | -------- | --------------------------- |
-| `Model` | `string`                | Yes      | The model                   |
-| `Req`   | `ChatCompletionRequest` | Yes      | The chat completion request |
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Model` | `string` | Yes | The model |
+| `Req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
 **Returns:** `nuint`
 **Errors:** Throws `Error`.
@@ -321,13 +321,13 @@ public static void EnsureCryptoProvider()
 
 Assistant's response to a user message.
 
-| Field          | Type              | Default                | Description                                                               |
-| -------------- | ----------------- | ---------------------- | ------------------------------------------------------------------------- |
-| `Content`      | `string?`         | `null`                 | The assistant's text response. Absent if tool calls are returned instead. |
-| `Name`         | `string?`         | `null`                 | Optional name for the assistant.                                          |
-| `ToolCalls`    | `List<ToolCall>?` | `new List<ToolCall>()` | Tool calls the model wants to execute, if any.                            |
-| `Refusal`      | `string?`         | `null`                 | Refusal reason, if the model declined to respond per safety policies.     |
-| `FunctionCall` | `FunctionCall?`   | `null`                 | Deprecated legacy function_call field; retained for API compatibility.    |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Content` | `string?` | `null` | The assistant's text response. Absent if tool calls are returned instead. |
+| `Name` | `string?` | `null` | Optional name for the assistant. |
+| `ToolCalls` | `List<ToolCall>?` | `new List<ToolCall>()` | Tool calls the model wants to execute, if any. |
+| `Refusal` | `string?` | `null` | Refusal reason, if the model declined to respond per safety policies. |
+| `FunctionCall` | `FunctionCall?` | `null` | Deprecated legacy function_call field; retained for API compatibility. |
 
 ---
 
@@ -335,10 +335,10 @@ Assistant's response to a user message.
 
 Audio content part for speech-capable models.
 
-| Field    | Type     | Default | Description                               |
-| -------- | -------- | ------- | ----------------------------------------- |
-| `Data`   | `string` | —       | Base64-encoded audio data.                |
-| `Format` | `string` | —       | Audio format (e.g., "wav", "mp3", "ogg"). |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Data` | `string` | — | Base64-encoded audio data. |
+| `Format` | `string` | — | Audio format (e.g., "wav", "mp3", "ogg"). |
 
 ---
 
@@ -346,10 +346,10 @@ Audio content part for speech-capable models.
 
 Auth configuration block.
 
-| Field      | Type       | Default | Description                                                                                                                         |
-| ---------- | ---------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `AuthType` | `AuthType` | —       | Auth scheme classification.                                                                                                         |
-| `EnvVar`   | `string?`  | `null`  | Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`). Holds the variable name, never the secret value. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `AuthType` | `AuthType` | — | Auth scheme classification. |
+| `EnvVar` | `string?` | `null` | Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`). Holds the variable name, never the secret value. |
 
 ---
 
@@ -357,10 +357,10 @@ Auth configuration block.
 
 Query parameters for listing batches.
 
-| Field   | Type      | Default | Description                                            |
-| ------- | --------- | ------- | ------------------------------------------------------ |
-| `Limit` | `uint?`   | `null`  | Maximum number of results to return. Defaults to 20.   |
-| `After` | `string?` | `null`  | Pagination cursor: return results after this batch ID. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Limit` | `uint?` | `null` | Maximum number of results to return. Defaults to 20. |
+| `After` | `string?` | `null` | Pagination cursor: return results after this batch ID. |
 
 ---
 
@@ -368,13 +368,13 @@ Query parameters for listing batches.
 
 Response from listing batches.
 
-| Field     | Type                | Default                   | Description                                        |
-| --------- | ------------------- | ------------------------- | -------------------------------------------------- |
-| `Object`  | `string`            | —                         | Object type (always `"list"`).                     |
-| `Data`    | `List<BatchObject>` | `new List<BatchObject>()` | List of batch objects.                             |
-| `HasMore` | `bool?`             | `null`                    | Whether more results are available.                |
-| `FirstId` | `string?`           | `null`                    | First batch ID in the result set (for pagination). |
-| `LastId`  | `string?`           | `null`                    | Last batch ID in the result set (for pagination).  |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Object` | `string` | — | Object type (always `"list"`). |
+| `Data` | `List<BatchObject>` | `new List<BatchObject>()` | List of batch objects. |
+| `HasMore` | `bool?` | `null` | Whether more results are available. |
+| `FirstId` | `string?` | `null` | First batch ID in the result set (for pagination). |
+| `LastId` | `string?` | `null` | Last batch ID in the result set (for pagination). |
 
 ---
 
@@ -382,22 +382,22 @@ Response from listing batches.
 
 A batch job object.
 
-| Field              | Type                  | Default                  | Description                                             |
-| ------------------ | --------------------- | ------------------------ | ------------------------------------------------------- |
-| `Id`               | `string`              | —                        | Unique batch ID.                                        |
-| `Object`           | `string`              | —                        | Object type (always `"batch"`).                         |
-| `Endpoint`         | `string`              | —                        | API endpoint (e.g., `"/v1/chat/completions"`).          |
-| `InputFileId`      | `string`              | —                        | ID of the input file.                                   |
-| `CompletionWindow` | `string`              | —                        | Completion window (e.g., `"24h"`).                      |
-| `Status`           | `BatchStatus`         | `BatchStatus.Validating` | Current job status.                                     |
-| `OutputFileId`     | `string?`             | `null`                   | ID of the output file (present when completed).         |
-| `ErrorFileId`      | `string?`             | `null`                   | ID of the error file (present if some requests failed). |
-| `CreatedAt`        | `ulong`               | —                        | Unix timestamp of batch creation.                       |
-| `CompletedAt`      | `ulong?`              | `null`                   | Unix timestamp of completion (if completed).            |
-| `FailedAt`         | `ulong?`              | `null`                   | Unix timestamp of failure (if failed).                  |
-| `ExpiredAt`        | `ulong?`              | `null`                   | Unix timestamp of expiration (if expired).              |
-| `RequestCounts`    | `BatchRequestCounts?` | `null`                   | Request processing counts.                              |
-| `Metadata`         | `object?`             | `null`                   | Metadata attached to the batch.                         |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Id` | `string` | — | Unique batch ID. |
+| `Object` | `string` | — | Object type (always `"batch"`). |
+| `Endpoint` | `string` | — | API endpoint (e.g., `"/v1/chat/completions"`). |
+| `InputFileId` | `string` | — | ID of the input file. |
+| `CompletionWindow` | `string` | — | Completion window (e.g., `"24h"`). |
+| `Status` | `BatchStatus` | `BatchStatus.Validating` | Current job status. |
+| `OutputFileId` | `string?` | `null` | ID of the output file (present when completed). |
+| `ErrorFileId` | `string?` | `null` | ID of the error file (present if some requests failed). |
+| `CreatedAt` | `ulong` | — | Unix timestamp of batch creation. |
+| `CompletedAt` | `ulong?` | `null` | Unix timestamp of completion (if completed). |
+| `FailedAt` | `ulong?` | `null` | Unix timestamp of failure (if failed). |
+| `ExpiredAt` | `ulong?` | `null` | Unix timestamp of expiration (if expired). |
+| `RequestCounts` | `BatchRequestCounts?` | `null` | Request processing counts. |
+| `Metadata` | `object?` | `null` | Metadata attached to the batch. |
 
 ---
 
@@ -405,11 +405,11 @@ A batch job object.
 
 Request processing counts for a batch.
 
-| Field       | Type    | Default | Description                  |
-| ----------- | ------- | ------- | ---------------------------- |
-| `Total`     | `ulong` | —       | Total requests in the batch. |
-| `Completed` | `ulong` | —       | Completed requests.          |
-| `Failed`    | `ulong` | —       | Failed requests.             |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Total` | `ulong` | — | Total requests in the batch. |
+| `Completed` | `ulong` | — | Completed requests. |
+| `Failed` | `ulong` | — | Failed requests. |
 
 ---
 
@@ -417,11 +417,11 @@ Request processing counts for a batch.
 
 Configuration for budget enforcement.
 
-| Field         | Type                         | Default                            | Description                                                                                      |
-| ------------- | ---------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `GlobalLimit` | `double?`                    | `null`                             | Maximum total spend across all models, in USD. `null` means unlimited.                           |
-| `ModelLimits` | `Dictionary<string, double>` | `new Dictionary<string, double>()` | Per-model spending limits in USD. Models not listed here are only constrained by `global_limit`. |
-| `Enforcement` | `Enforcement`                | `Enforcement.Hard`                 | Whether to reject requests or merely warn when a limit is exceeded.                              |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `GlobalLimit` | `double?` | `null` | Maximum total spend across all models, in USD.  `null` means unlimited. |
+| `ModelLimits` | `Dictionary<string, double>` | `new Dictionary<string, double>()` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
+| `Enforcement` | `Enforcement` | `Enforcement.Hard` | Whether to reject requests or merely warn when a limit is exceeded. |
 
 ### Methods
 
@@ -439,11 +439,11 @@ public BudgetConfig CreateDefault()
 
 Configuration for the response cache.
 
-| Field        | Type           | Default               | Description                         |
-| ------------ | -------------- | --------------------- | ----------------------------------- |
-| `MaxEntries` | `nuint`        | `256`                 | Maximum number of cached entries.   |
-| `Ttl`        | `TimeSpan`     | `300000ms`            | Time-to-live for each cached entry. |
-| `Backend`    | `CacheBackend` | `CacheBackend.Memory` | Storage backend to use.             |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `MaxEntries` | `nuint` | `256` | Maximum number of cached entries. |
+| `Ttl` | `TimeSpan` | `300000ms` | Time-to-live for each cached entry. |
+| `Backend` | `CacheBackend` | `CacheBackend.Memory` | Storage backend to use. |
 
 ### Methods
 
@@ -461,16 +461,16 @@ public CacheConfig CreateDefault()
 
 A streamed chunk of a chat completion response.
 
-| Field               | Type                 | Default                    | Description                                                                                                                                   |
-| ------------------- | -------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Id`                | `string`             | —                          | Unique identifier for this stream.                                                                                                            |
-| `Object`            | `string`             | —                          | Always `"chat.completion.chunk"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not fail parsing. |
-| `Created`           | `ulong`              | —                          | Unix timestamp of chunk creation.                                                                                                             |
-| `Model`             | `string`             | —                          | Model used to generate the chunk.                                                                                                             |
-| `Choices`           | `List<StreamChoice>` | `new List<StreamChoice>()` | Streaming choices (delta updates).                                                                                                            |
-| `Usage`             | `Usage?`             | `null`                     | Token usage (typically only in the final chunk).                                                                                              |
-| `SystemFingerprint` | `string?`            | `null`                     | Fingerprint of the system configuration (OpenAI-specific).                                                                                    |
-| `ServiceTier`       | `string?`            | `null`                     | Service tier used (OpenAI-specific).                                                                                                          |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Id` | `string` | — | Unique identifier for this stream. |
+| `Object` | `string` | — | Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not fail parsing. |
+| `Created` | `ulong` | — | Unix timestamp of chunk creation. |
+| `Model` | `string` | — | Model used to generate the chunk. |
+| `Choices` | `List<StreamChoice>` | `new List<StreamChoice>()` | Streaming choices (delta updates). |
+| `Usage` | `Usage?` | `null` | Token usage (typically only in the final chunk). |
+| `SystemFingerprint` | `string?` | `null` | Fingerprint of the system configuration (OpenAI-specific). |
+| `ServiceTier` | `string?` | `null` | Service tier used (OpenAI-specific). |
 
 ---
 
@@ -478,28 +478,28 @@ A streamed chunk of a chat completion response.
 
 Chat completion request (compatible with OpenAI and similar APIs).
 
-| Field               | Type                          | Default                            | Description                                                                                                                       |
-| ------------------- | ----------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `Model`             | `string`                      | —                                  | Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`).                                                                          |
-| `Messages`          | `List<Message>`               | `new List<Message>()`              | Conversation history from oldest to newest.                                                                                       |
-| `Temperature`       | `double?`                     | `null`                             | Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0.                                               |
-| `TopP`              | `double?`                     | `null`                             | Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused.                                                                |
-| `N`                 | `uint?`                       | `null`                             | Number of chat completions to generate. Defaults to 1.                                                                            |
-| `Stream`            | `bool?`                       | `null`                             | Whether to stream the response. Managed by the client layer — do not set directly.                                                |
-| `Stop`              | `StopSequence?`               | `null`                             | Stop sequence(s) that halt token generation.                                                                                      |
-| `MaxTokens`         | `ulong?`                      | `null`                             | Max output tokens. Different from max_completion_tokens in some providers.                                                        |
-| `PresencePenalty`   | `double?`                     | `null`                             | Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics.                                                          |
-| `FrequencyPenalty`  | `double?`                     | `null`                             | Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens.                                                         |
-| `LogitBias`         | `Dictionary<string, double>?` | `new Dictionary<string, double>()` | Token bias map. Uses `BTreeMap` (sorted keys) for deterministic serialization order — important when hashing or signing requests. |
-| `User`              | `string?`                     | `null`                             | User identifier for request tracking and abuse detection.                                                                         |
-| `Tools`             | `List<ChatCompletionTool>?`   | `new List<ChatCompletionTool>()`   | Tools the model can invoke.                                                                                                       |
-| `ToolChoice`        | `ToolChoice?`                 | `null`                             | Tool usage mode (auto, required, none, or specific tool).                                                                         |
-| `ParallelToolCalls` | `bool?`                       | `null`                             | Whether the model can call multiple tools in parallel. Defaults to true.                                                          |
-| `ResponseFormat`    | `ResponseFormat?`             | `null`                             | Output format constraint (text, JSON, JSON schema).                                                                               |
-| `StreamOptions`     | `StreamOptions?`              | `null`                             | Streaming options (e.g., include_usage).                                                                                          |
-| `Seed`              | `long?`                       | `null`                             | Random seed for reproducible outputs. Provider support varies.                                                                    |
-| `ReasoningEffort`   | `ReasoningEffort?`            | `null`                             | Reasoning effort level (low, medium, high) for extended-thinking models.                                                          |
-| `ExtraBody`         | `object?`                     | `null`                             | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc.      |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Model` | `string` | — | Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`). |
+| `Messages` | `List<Message>` | `new List<Message>()` | Conversation history from oldest to newest. |
+| `Temperature` | `double?` | `null` | Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0. |
+| `TopP` | `double?` | `null` | Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused. |
+| `N` | `uint?` | `null` | Number of chat completions to generate. Defaults to 1. |
+| `Stream` | `bool?` | `null` | Whether to stream the response. Managed by the client layer — do not set directly. |
+| `Stop` | `StopSequence?` | `null` | Stop sequence(s) that halt token generation. |
+| `MaxTokens` | `ulong?` | `null` | Max output tokens. Different from max_completion_tokens in some providers. |
+| `PresencePenalty` | `double?` | `null` | Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics. |
+| `FrequencyPenalty` | `double?` | `null` | Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens. |
+| `LogitBias` | `Dictionary<string, double>?` | `new Dictionary<string, double>()` | Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic serialization order — important when hashing or signing requests. |
+| `User` | `string?` | `null` | User identifier for request tracking and abuse detection. |
+| `Tools` | `List<ChatCompletionTool>?` | `new List<ChatCompletionTool>()` | Tools the model can invoke. |
+| `ToolChoice` | `ToolChoice?` | `null` | Tool usage mode (auto, required, none, or specific tool). |
+| `ParallelToolCalls` | `bool?` | `null` | Whether the model can call multiple tools in parallel. Defaults to true. |
+| `ResponseFormat` | `ResponseFormat?` | `null` | Output format constraint (text, JSON, JSON schema). |
+| `StreamOptions` | `StreamOptions?` | `null` | Streaming options (e.g., include_usage). |
+| `Seed` | `long?` | `null` | Random seed for reproducible outputs. Provider support varies. |
+| `ReasoningEffort` | `ReasoningEffort?` | `null` | Reasoning effort level (low, medium, high) for extended-thinking models. |
+| `ExtraBody` | `object?` | `null` | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc. |
 
 ---
 
@@ -507,16 +507,16 @@ Chat completion request (compatible with OpenAI and similar APIs).
 
 Chat completion response from the API.
 
-| Field               | Type           | Default              | Description                                                                                                                                      |
-| ------------------- | -------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Id`                | `string`       | —                    | Unique identifier for this response.                                                                                                             |
-| `Object`            | `string`       | —                    | Always `"chat.completion"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `Created`           | `ulong`        | —                    | Unix timestamp of response creation.                                                                                                             |
-| `Model`             | `string`       | —                    | Model used to generate the response.                                                                                                             |
-| `Choices`           | `List<Choice>` | `new List<Choice>()` | List of completion choices.                                                                                                                      |
-| `Usage`             | `Usage?`       | `null`               | Token usage statistics.                                                                                                                          |
-| `SystemFingerprint` | `string?`      | `null`               | Fingerprint of the system configuration (OpenAI-specific).                                                                                       |
-| `ServiceTier`       | `string?`      | `null`               | Service tier used (OpenAI-specific).                                                                                                             |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Id` | `string` | — | Unique identifier for this response. |
+| `Object` | `string` | — | Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
+| `Created` | `ulong` | — | Unix timestamp of response creation. |
+| `Model` | `string` | — | Model used to generate the response. |
+| `Choices` | `List<Choice>` | `new List<Choice>()` | List of completion choices. |
+| `Usage` | `Usage?` | `null` | Token usage statistics. |
+| `SystemFingerprint` | `string?` | `null` | Fingerprint of the system configuration (OpenAI-specific). |
+| `ServiceTier` | `string?` | `null` | Service tier used (OpenAI-specific). |
 
 ---
 
@@ -524,10 +524,10 @@ Chat completion response from the API.
 
 A tool the model can invoke (currently, all tools are functions).
 
-| Field      | Type                 | Default | Description                                                             |
-| ---------- | -------------------- | ------- | ----------------------------------------------------------------------- |
-| `ToolType` | `ToolType`           | —       | Tool type (always "function" in OpenAI spec).                           |
-| `Function` | `FunctionDefinition` | —       | Function definition with name, description, and JSON schema parameters. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `ToolType` | `ToolType` | — | Tool type (always "function" in OpenAI spec). |
+| `Function` | `FunctionDefinition` | — | Function definition with name, description, and JSON schema parameters. |
 
 ---
 
@@ -535,11 +535,11 @@ A tool the model can invoke (currently, all tools are functions).
 
 A single completion choice.
 
-| Field          | Type               | Default | Description                                                                        |
-| -------------- | ------------------ | ------- | ---------------------------------------------------------------------------------- |
-| `Index`        | `uint`             | —       | Index of this choice in the choices array.                                         |
-| `Message`      | `AssistantMessage` | —       | The assistant's message response.                                                  |
-| `FinishReason` | `FinishReason?`    | `null`  | Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Index` | `uint` | — | Index of this choice in the choices array. |
+| `Message` | `AssistantMessage` | — | The assistant's message response. |
+| `FinishReason` | `FinishReason?` | `null` | Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). |
 
 ---
 
@@ -547,12 +547,12 @@ A single completion choice.
 
 Request to create a batch job.
 
-| Field              | Type      | Default | Description                                    |
-| ------------------ | --------- | ------- | ---------------------------------------------- |
-| `InputFileId`      | `string`  | —       | ID of the uploaded input file (JSONL format).  |
-| `Endpoint`         | `string`  | —       | API endpoint (e.g., `"/v1/chat/completions"`). |
-| `CompletionWindow` | `string`  | —       | Completion window (e.g., `"24h"`).             |
-| `Metadata`         | `object?` | `null`  | Optional metadata to attach to the batch.      |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `InputFileId` | `string` | — | ID of the uploaded input file (JSONL format). |
+| `Endpoint` | `string` | — | API endpoint (e.g., `"/v1/chat/completions"`). |
+| `CompletionWindow` | `string` | — | Completion window (e.g., `"24h"`). |
+| `Metadata` | `object?` | `null` | Optional metadata to attach to the batch. |
 
 ---
 
@@ -560,11 +560,11 @@ Request to create a batch job.
 
 Request to upload a file.
 
-| Field      | Type          | Default                  | Description                                     |
-| ---------- | ------------- | ------------------------ | ----------------------------------------------- |
-| `File`     | `string`      | —                        | Base64-encoded file data.                       |
-| `Purpose`  | `FilePurpose` | `FilePurpose.Assistants` | Purpose for the file.                           |
-| `Filename` | `string?`     | `null`                   | Optional filename to associate with the upload. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `File` | `string` | — | Base64-encoded file data. |
+| `Purpose` | `FilePurpose` | `FilePurpose.Assistants` | Purpose for the file. |
+| `Filename` | `string?` | `null` | Optional filename to associate with the upload. |
 
 ---
 
@@ -572,16 +572,16 @@ Request to upload a file.
 
 Request to create images from a text prompt.
 
-| Field            | Type      | Default | Description                                                            |
-| ---------------- | --------- | ------- | ---------------------------------------------------------------------- |
-| `Prompt`         | `string`  | —       | Text description of the image to generate.                             |
-| `Model`          | `string?` | `null`  | Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset. |
-| `N`              | `uint?`   | `null`  | Number of images to generate. Defaults to 1.                           |
-| `Size`           | `string?` | `null`  | Image size (e.g., `"1024x1024"`, `"1792x1024"`).                       |
-| `Quality`        | `string?` | `null`  | Image quality: `"standard"` or `"hd"`.                                 |
-| `Style`          | `string?` | `null`  | Style: `"natural"` or `"vivid"` (DALL-E 3 only).                       |
-| `ResponseFormat` | `string?` | `null`  | Response format: `"url"` or `"b64_json"`.                              |
-| `User`           | `string?` | `null`  | User identifier for request tracking.                                  |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Prompt` | `string` | — | Text description of the image to generate. |
+| `Model` | `string?` | `null` | Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset. |
+| `N` | `uint?` | `null` | Number of images to generate. Defaults to 1. |
+| `Size` | `string?` | `null` | Image size (e.g., `"1024x1024"`, `"1792x1024"`). |
+| `Quality` | `string?` | `null` | Image quality: `"standard"` or `"hd"`. |
+| `Style` | `string?` | `null` | Style: `"natural"` or `"vivid"` (DALL-E 3 only). |
+| `ResponseFormat` | `string?` | `null` | Response format: `"url"` or `"b64_json"`. |
+| `User` | `string?` | `null` | User identifier for request tracking. |
 
 ---
 
@@ -589,15 +589,15 @@ Request to create images from a text prompt.
 
 Request to create a structured response.
 
-| Field             | Type                  | Default                    | Description                                               |
-| ----------------- | --------------------- | -------------------------- | --------------------------------------------------------- |
-| `Model`           | `string`              | —                          | Model ID.                                                 |
-| `Input`           | `object`              | —                          | Input data to process (e.g., a document to extract from). |
-| `Instructions`    | `string?`             | `null`                     | Instructions for processing the input.                    |
-| `Tools`           | `List<ResponseTool>?` | `new List<ResponseTool>()` | Available tools the model can use.                        |
-| `Temperature`     | `double?`             | `null`                     | Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0.    |
-| `MaxOutputTokens` | `ulong?`              | `null`                     | Maximum output tokens.                                    |
-| `Metadata`        | `object?`             | `null`                     | Optional metadata.                                        |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Model` | `string` | — | Model ID. |
+| `Input` | `object` | — | Input data to process (e.g., a document to extract from). |
+| `Instructions` | `string?` | `null` | Instructions for processing the input. |
+| `Tools` | `List<ResponseTool>?` | `new List<ResponseTool>()` | Available tools the model can use. |
+| `Temperature` | `double?` | `null` | Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0. |
+| `MaxOutputTokens` | `ulong?` | `null` | Maximum output tokens. |
+| `Metadata` | `object?` | `null` | Optional metadata. |
 
 ---
 
@@ -605,13 +605,13 @@ Request to create a structured response.
 
 Request to generate speech audio from text.
 
-| Field            | Type      | Default | Description                                                                         |
-| ---------------- | --------- | ------- | ----------------------------------------------------------------------------------- |
-| `Model`          | `string`  | —       | Model ID (e.g., `"tts-1"`, `"tts-1-hd"`).                                           |
-| `Input`          | `string`  | —       | Text to synthesize into speech.                                                     |
-| `Voice`          | `string`  | —       | Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). |
-| `ResponseFormat` | `string?` | `null`  | Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`).        |
-| `Speed`          | `double?` | `null`  | Playback speed in `[0.25, 4.0]`. Defaults to 1.0.                                   |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Model` | `string` | — | Model ID (e.g., `"tts-1"`, `"tts-1-hd"`). |
+| `Input` | `string` | — | Text to synthesize into speech. |
+| `Voice` | `string` | — | Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). |
+| `ResponseFormat` | `string?` | `null` | Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`). |
+| `Speed` | `double?` | `null` | Playback speed in `[0.25, 4.0]`. Defaults to 1.0. |
 
 ---
 
@@ -619,14 +619,14 @@ Request to generate speech audio from text.
 
 Request to transcribe audio into text.
 
-| Field            | Type      | Default | Description                                                                           |
-| ---------------- | --------- | ------- | ------------------------------------------------------------------------------------- |
-| `Model`          | `string`  | —       | Model ID (e.g., `"whisper-1"`).                                                       |
-| `File`           | `string`  | —       | Base64-encoded audio file data.                                                       |
-| `Language`       | `string?` | `null`  | Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. |
-| `Prompt`         | `string?` | `null`  | Optional text to guide the model (improves accuracy for domain-specific terms).       |
-| `ResponseFormat` | `string?` | `null`  | Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`).         |
-| `Temperature`    | `double?` | `null`  | Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0.    |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Model` | `string` | — | Model ID (e.g., `"whisper-1"`). |
+| `File` | `string` | — | Base64-encoded audio file data. |
+| `Language` | `string?` | `null` | Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. |
+| `Prompt` | `string?` | `null` | Optional text to guide the model (improves accuracy for domain-specific terms). |
+| `ResponseFormat` | `string?` | `null` | Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`). |
+| `Temperature` | `double?` | `null` | Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0. |
 
 ---
 
@@ -634,12 +634,12 @@ Request to transcribe audio into text.
 
 Configuration for registering a custom LLM provider at runtime.
 
-| Field           | Type               | Default | Description                                                                 |
-| --------------- | ------------------ | ------- | --------------------------------------------------------------------------- |
-| `Name`          | `string`           | —       | Unique name for this provider (e.g., "my-provider").                        |
-| `BaseUrl`       | `string`           | —       | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
-| `AuthHeader`    | `AuthHeaderFormat` | —       | Authentication header format.                                               |
-| `ModelPrefixes` | `List<string>`     | —       | Model name prefixes that route to this provider (e.g., ["my-"]).            |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Name` | `string` | — | Unique name for this provider (e.g., "my-provider"). |
+| `BaseUrl` | `string` | — | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
+| `AuthHeader` | `AuthHeaderFormat` | — | Authentication header format. |
+| `ModelPrefixes` | `List<string>` | — | Model name prefixes that route to this provider (e.g., ["my-"]). |
 
 ---
 
@@ -853,11 +853,11 @@ public async Task<ResponseObject> CancelResponseAsync(string responseId)
 
 Response from a delete operation.
 
-| Field     | Type     | Default | Description                                 |
-| --------- | -------- | ------- | ------------------------------------------- |
-| `Id`      | `string` | —       | ID of the deleted resource.                 |
-| `Object`  | `string` | —       | Object type.                                |
-| `Deleted` | `bool`   | —       | Confirmation that the resource was deleted. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Id` | `string` | — | ID of the deleted resource. |
+| `Object` | `string` | — | Object type. |
+| `Deleted` | `bool` | — | Confirmation that the resource was deleted. |
 
 ---
 
@@ -865,10 +865,10 @@ Response from a delete operation.
 
 Developer message (system-like message for Claude models).
 
-| Field     | Type      | Default | Description                                     |
-| --------- | --------- | ------- | ----------------------------------------------- |
-| `Content` | `string`  | —       | Developer-specific instructions or context.     |
-| `Name`    | `string?` | `null`  | Optional name for the developer message source. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Content` | `string` | — | Developer-specific instructions or context. |
+| `Name` | `string?` | `null` | Optional name for the developer message source. |
 
 ---
 
@@ -876,10 +876,10 @@ Developer message (system-like message for Claude models).
 
 PDF/document content part for vision-capable models.
 
-| Field       | Type     | Default | Description                                      |
-| ----------- | -------- | ------- | ------------------------------------------------ |
-| `Data`      | `string` | —       | Base64-encoded document data or URL.             |
-| `MediaType` | `string` | —       | MIME type (e.g., "application/pdf", "text/csv"). |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Data` | `string` | — | Base64-encoded document data or URL. |
+| `MediaType` | `string` | — | MIME type (e.g., "application/pdf", "text/csv"). |
 
 ---
 
@@ -887,11 +887,11 @@ PDF/document content part for vision-capable models.
 
 A single embedding vector.
 
-| Field       | Type           | Default | Description                                                                                                                                |
-| ----------- | -------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Object`    | `string`       | —       | Always `"embedding"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `Embedding` | `List<double>` | —       | The embedding vector.                                                                                                                      |
-| `Index`     | `uint`         | —       | Index in the batch (corresponds to input order).                                                                                           |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Object` | `string` | — | Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
+| `Embedding` | `List<double>` | — | The embedding vector. |
+| `Index` | `uint` | — | Index in the batch (corresponds to input order). |
 
 ---
 
@@ -899,13 +899,13 @@ A single embedding vector.
 
 Embedding request.
 
-| Field            | Type               | Default                 | Description                                                 |
-| ---------------- | ------------------ | ----------------------- | ----------------------------------------------------------- |
-| `Model`          | `string`           | —                       | Model ID (e.g., `"text-embedding-3-small"`).                |
-| `Input`          | `EmbeddingInput`   | `EmbeddingInput.Single` | Text or texts to embed.                                     |
-| `EncodingFormat` | `EmbeddingFormat?` | `null`                  | Output format: float (native) or base64.                    |
-| `Dimensions`     | `uint?`            | `null`                  | Requested embedding dimensions (if supported by the model). |
-| `User`           | `string?`          | `null`                  | User identifier for request tracking.                       |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Model` | `string` | — | Model ID (e.g., `"text-embedding-3-small"`). |
+| `Input` | `EmbeddingInput` | `EmbeddingInput.Single` | Text or texts to embed. |
+| `EncodingFormat` | `EmbeddingFormat?` | `null` | Output format: float (native) or base64. |
+| `Dimensions` | `uint?` | `null` | Requested embedding dimensions (if supported by the model). |
+| `User` | `string?` | `null` | User identifier for request tracking. |
 
 ---
 
@@ -913,12 +913,12 @@ Embedding request.
 
 Embedding response.
 
-| Field    | Type                    | Default | Description                                                                                                                           |
-| -------- | ----------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `Object` | `string`                | —       | Always `"list"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `Data`   | `List<EmbeddingObject>` | —       | List of embeddings.                                                                                                                   |
-| `Model`  | `string`                | —       | Model used to generate embeddings.                                                                                                    |
-| `Usage`  | `Usage?`                | `null`  | Token usage (input tokens only; embeddings have zero output tokens).                                                                  |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Object` | `string` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
+| `Data` | `List<EmbeddingObject>` | — | List of embeddings. |
+| `Model` | `string` | — | Model used to generate embeddings. |
+| `Usage` | `Usage?` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -926,11 +926,11 @@ Embedding response.
 
 Query parameters for listing files.
 
-| Field     | Type      | Default | Description                                              |
-| --------- | --------- | ------- | -------------------------------------------------------- |
-| `Purpose` | `string?` | `null`  | Filter by file purpose (e.g., `"batch"`, `"fine-tune"`). |
-| `Limit`   | `uint?`   | `null`  | Maximum number of results to return. Defaults to 20.     |
-| `After`   | `string?` | `null`  | Pagination cursor: return results after this file ID.    |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Purpose` | `string?` | `null` | Filter by file purpose (e.g., `"batch"`, `"fine-tune"`). |
+| `Limit` | `uint?` | `null` | Maximum number of results to return. Defaults to 20. |
+| `After` | `string?` | `null` | Pagination cursor: return results after this file ID. |
 
 ---
 
@@ -938,11 +938,11 @@ Query parameters for listing files.
 
 Response from listing files.
 
-| Field     | Type               | Default                  | Description                         |
-| --------- | ------------------ | ------------------------ | ----------------------------------- |
-| `Object`  | `string`           | —                        | Object type (always `"list"`).      |
-| `Data`    | `List<FileObject>` | `new List<FileObject>()` | List of file objects.               |
-| `HasMore` | `bool?`            | `null`                   | Whether more results are available. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Object` | `string` | — | Object type (always `"list"`). |
+| `Data` | `List<FileObject>` | `new List<FileObject>()` | List of file objects. |
+| `HasMore` | `bool?` | `null` | Whether more results are available. |
 
 ---
 
@@ -950,15 +950,15 @@ Response from listing files.
 
 An uploaded file object.
 
-| Field       | Type      | Default | Description                                            |
-| ----------- | --------- | ------- | ------------------------------------------------------ |
-| `Id`        | `string`  | —       | Unique file ID.                                        |
-| `Object`    | `string`  | —       | Object type (always `"file"`).                         |
-| `Bytes`     | `ulong`   | —       | File size in bytes.                                    |
-| `CreatedAt` | `ulong`   | —       | Unix timestamp of file creation.                       |
-| `Filename`  | `string`  | —       | Filename.                                              |
-| `Purpose`   | `string`  | —       | File purpose.                                          |
-| `Status`    | `string?` | `null`  | Processing status (e.g., `"uploaded"`, `"processed"`). |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Id` | `string` | — | Unique file ID. |
+| `Object` | `string` | — | Object type (always `"file"`). |
+| `Bytes` | `ulong` | — | File size in bytes. |
+| `CreatedAt` | `ulong` | — | Unix timestamp of file creation. |
+| `Filename` | `string` | — | Filename. |
+| `Purpose` | `string` | — | File purpose. |
+| `Status` | `string?` | `null` | Processing status (e.g., `"uploaded"`, `"processed"`). |
 
 ---
 
@@ -966,10 +966,10 @@ An uploaded file object.
 
 Function call details.
 
-| Field       | Type     | Default | Description                                                  |
-| ----------- | -------- | ------- | ------------------------------------------------------------ |
-| `Name`      | `string` | —       | Function name.                                               |
-| `Arguments` | `string` | —       | Arguments as a JSON string (parse with serde_json.from_str). |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Name` | `string` | — | Function name. |
+| `Arguments` | `string` | — | Arguments as a JSON string (parse with serde_json.from_str). |
 
 ---
 
@@ -977,12 +977,12 @@ Function call details.
 
 Function definition exposed to the model.
 
-| Field         | Type      | Default | Description                                                            |
-| ------------- | --------- | ------- | ---------------------------------------------------------------------- |
-| `Name`        | `string`  | —       | Name of the function. Required and must be alphanumeric + underscores. |
-| `Description` | `string?` | `null`  | Human-readable description explaining what the function does.          |
-| `Parameters`  | `object?` | `null`  | JSON Schema defining the function's parameters.                        |
-| `Strict`      | `bool?`   | `null`  | If true, enforce strict JSON schema validation for arguments.          |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Name` | `string` | — | Name of the function. Required and must be alphanumeric + underscores. |
+| `Description` | `string?` | `/* serde(default) */` | Human-readable description explaining what the function does. |
+| `Parameters` | `object?` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
+| `Strict` | `bool?` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -990,10 +990,10 @@ Function definition exposed to the model.
 
 Deprecated legacy function-role message body.
 
-| Field     | Type     | Default | Description                |
-| --------- | -------- | ------- | -------------------------- |
-| `Content` | `string` | —       | The extracted text content |
-| `Name`    | `string` | —       | The name                   |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Content` | `string` | — | The extracted text content |
+| `Name` | `string` | — | The name |
 
 ---
 
@@ -1001,11 +1001,11 @@ Deprecated legacy function-role message body.
 
 A single generated image, returned as either a URL or base64 data.
 
-| Field           | Type      | Default | Description                                                    |
-| --------------- | --------- | ------- | -------------------------------------------------------------- |
-| `Url`           | `string?` | `null`  | Image URL (if response_format was "url").                      |
-| `B64Json`       | `string?` | `null`  | Base64-encoded image data (if response_format was "b64_json"). |
-| `RevisedPrompt` | `string?` | `null`  | The final prompt used to generate the image (DALL-E 3).        |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Url` | `string?` | `null` | Image URL (if response_format was "url"). |
+| `B64Json` | `string?` | `null` | Base64-encoded image data (if response_format was "b64_json"). |
+| `RevisedPrompt` | `string?` | `null` | The final prompt used to generate the image (DALL-E 3). |
 
 ---
 
@@ -1013,10 +1013,10 @@ A single generated image, returned as either a URL or base64 data.
 
 An image URL reference with optional detail level for processing.
 
-| Field    | Type           | Default | Description                                                              |
-| -------- | -------------- | ------- | ------------------------------------------------------------------------ |
-| `Url`    | `string`       | —       | URL of the image (data URI or HTTP/HTTPS URL).                           |
-| `Detail` | `ImageDetail?` | `null`  | Detail level: low (512x512), high (2x2 tiles), or auto (model-selected). |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Url` | `string` | — | URL of the image (data URI or HTTP/HTTPS URL). |
+| `Detail` | `ImageDetail?` | `null` | Detail level: low (512x512), high (2x2 tiles), or auto (model-selected). |
 
 ---
 
@@ -1024,10 +1024,10 @@ An image URL reference with optional detail level for processing.
 
 Response containing generated images.
 
-| Field     | Type          | Default             | Description                       |
-| --------- | ------------- | ------------------- | --------------------------------- |
-| `Created` | `ulong`       | —                   | Unix timestamp of image creation. |
-| `Data`    | `List<Image>` | `new List<Image>()` | List of generated images.         |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Created` | `ulong` | — | Unix timestamp of image creation. |
+| `Data` | `List<Image>` | `new List<Image>()` | List of generated images. |
 
 ---
 
@@ -1035,12 +1035,12 @@ Response containing generated images.
 
 JSON Schema specification for constrained output.
 
-| Field         | Type      | Default | Description                                         |
-| ------------- | --------- | ------- | --------------------------------------------------- |
-| `Name`        | `string`  | —       | Name of the schema (must be unique in the request). |
-| `Description` | `string?` | `null`  | Description of what the schema represents.          |
-| `Schema`      | `object`  | —       | JSON Schema object defining the output structure.   |
-| `Strict`      | `bool?`   | `null`  | If true, enforce strict schema validation.          |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Name` | `string` | — | Name of the schema (must be unique in the request). |
+| `Description` | `string?` | `null` | Description of what the schema represents. |
+| `Schema` | `object` | — | JSON Schema object defining the output structure. |
+| `Strict` | `bool?` | `null` | If true, enforce strict schema validation. |
 
 ---
 
@@ -1048,12 +1048,12 @@ JSON Schema specification for constrained output.
 
 A model available from the API.
 
-| Field     | Type     | Default | Description                                                                                                                            |
-| --------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `Id`      | `string` | —       | Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`).                                                                                    |
-| `Object`  | `string` | —       | Always `"model"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `Created` | `ulong`  | —       | Unix timestamp of model creation (or release date).                                                                                    |
-| `OwnedBy` | `string` | —       | Organization or entity that owns the model.                                                                                            |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Id` | `string` | — | Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`). |
+| `Object` | `string` | — | Always `"model"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
+| `Created` | `ulong` | — | Unix timestamp of model creation (or release date). |
+| `OwnedBy` | `string` | — | Organization or entity that owns the model. |
 
 ---
 
@@ -1061,10 +1061,10 @@ A model available from the API.
 
 Response listing available models.
 
-| Field    | Type                | Default                   | Description                                                                                                                           |
-| -------- | ------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `Object` | `string`            | —                         | Always `"list"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `Data`   | `List<ModelObject>` | `new List<ModelObject>()` | List of available models.                                                                                                             |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Object` | `string` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
+| `Data` | `List<ModelObject>` | `new List<ModelObject>()` | List of available models. |
 
 ---
 
@@ -1072,19 +1072,19 @@ Response listing available models.
 
 Boolean flags for each moderation category.
 
-| Field                   | Type   | Default | Description                          |
-| ----------------------- | ------ | ------- | ------------------------------------ |
-| `Sexual`                | `bool` | —       | Sexual content.                      |
-| `Hate`                  | `bool` | —       | Hate speech.                         |
-| `Harassment`            | `bool` | —       | Harassment.                          |
-| `SelfHarm`              | `bool` | —       | Self-harm content.                   |
-| `SexualMinors`          | `bool` | —       | Sexual content involving minors.     |
-| `HateThreatening`       | `bool` | —       | Hate speech that threatens violence. |
-| `ViolenceGraphic`       | `bool` | —       | Graphic violence.                    |
-| `SelfHarmIntent`        | `bool` | —       | Intent to self-harm.                 |
-| `SelfHarmInstructions`  | `bool` | —       | Instructions for self-harm.          |
-| `HarassmentThreatening` | `bool` | —       | Harassment that threatens violence.  |
-| `Violence`              | `bool` | —       | Non-graphic violence.                |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Sexual` | `bool` | — | Sexual content. |
+| `Hate` | `bool` | — | Hate speech. |
+| `Harassment` | `bool` | — | Harassment. |
+| `SelfHarm` | `bool` | — | Self-harm content. |
+| `SexualMinors` | `bool` | — | Sexual content involving minors. |
+| `HateThreatening` | `bool` | — | Hate speech that threatens violence. |
+| `ViolenceGraphic` | `bool` | — | Graphic violence. |
+| `SelfHarmIntent` | `bool` | — | Intent to self-harm. |
+| `SelfHarmInstructions` | `bool` | — | Instructions for self-harm. |
+| `HarassmentThreatening` | `bool` | — | Harassment that threatens violence. |
+| `Violence` | `bool` | — | Non-graphic violence. |
 
 ---
 
@@ -1092,19 +1092,19 @@ Boolean flags for each moderation category.
 
 Confidence scores for each moderation category.
 
-| Field                   | Type     | Default | Description                                |
-| ----------------------- | -------- | ------- | ------------------------------------------ |
-| `Sexual`                | `double` | —       | Sexual content score.                      |
-| `Hate`                  | `double` | —       | Hate speech score.                         |
-| `Harassment`            | `double` | —       | Harassment score.                          |
-| `SelfHarm`              | `double` | —       | Self-harm content score.                   |
-| `SexualMinors`          | `double` | —       | Sexual content involving minors score.     |
-| `HateThreatening`       | `double` | —       | Hate speech that threatens violence score. |
-| `ViolenceGraphic`       | `double` | —       | Graphic violence score.                    |
-| `SelfHarmIntent`        | `double` | —       | Intent to self-harm score.                 |
-| `SelfHarmInstructions`  | `double` | —       | Instructions for self-harm score.          |
-| `HarassmentThreatening` | `double` | —       | Harassment that threatens violence score.  |
-| `Violence`              | `double` | —       | Non-graphic violence score.                |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Sexual` | `double` | — | Sexual content score. |
+| `Hate` | `double` | — | Hate speech score. |
+| `Harassment` | `double` | — | Harassment score. |
+| `SelfHarm` | `double` | — | Self-harm content score. |
+| `SexualMinors` | `double` | — | Sexual content involving minors score. |
+| `HateThreatening` | `double` | — | Hate speech that threatens violence score. |
+| `ViolenceGraphic` | `double` | — | Graphic violence score. |
+| `SelfHarmIntent` | `double` | — | Intent to self-harm score. |
+| `SelfHarmInstructions` | `double` | — | Instructions for self-harm score. |
+| `HarassmentThreatening` | `double` | — | Harassment that threatens violence score. |
+| `Violence` | `double` | — | Non-graphic violence score. |
 
 ---
 
@@ -1112,10 +1112,10 @@ Confidence scores for each moderation category.
 
 Request to classify content for policy violations.
 
-| Field   | Type              | Default                  | Description                                                                       |
-| ------- | ----------------- | ------------------------ | --------------------------------------------------------------------------------- |
-| `Input` | `ModerationInput` | `ModerationInput.Single` | Text or texts to check.                                                           |
-| `Model` | `string?`         | `null`                   | Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Input` | `ModerationInput` | `ModerationInput.Single` | Text or texts to check. |
+| `Model` | `string?` | `null` | Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset. |
 
 ---
 
@@ -1123,11 +1123,11 @@ Request to classify content for policy violations.
 
 Response from the moderation endpoint.
 
-| Field     | Type                     | Default | Description                                    |
-| --------- | ------------------------ | ------- | ---------------------------------------------- |
-| `Id`      | `string`                 | —       | Unique identifier for this moderation request. |
-| `Model`   | `string`                 | —       | Model used for classification.                 |
-| `Results` | `List<ModerationResult>` | —       | Results for each input string.                 |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Id` | `string` | — | Unique identifier for this moderation request. |
+| `Model` | `string` | — | Model used for classification. |
+| `Results` | `List<ModerationResult>` | — | Results for each input string. |
 
 ---
 
@@ -1135,11 +1135,11 @@ Response from the moderation endpoint.
 
 A single moderation classification result.
 
-| Field            | Type                       | Default | Description                                 |
-| ---------------- | -------------------------- | ------- | ------------------------------------------- |
-| `Flagged`        | `bool`                     | —       | True if any category was flagged.           |
-| `Categories`     | `ModerationCategories`     | —       | Boolean flags for each moderation category. |
-| `CategoryScores` | `ModerationCategoryScores` | —       | Confidence scores for each category.        |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Flagged` | `bool` | — | True if any category was flagged. |
+| `Categories` | `ModerationCategories` | — | Boolean flags for each moderation category. |
+| `CategoryScores` | `ModerationCategoryScores` | — | Confidence scores for each category. |
 
 ---
 
@@ -1147,10 +1147,10 @@ A single moderation classification result.
 
 An image extracted from an OCR page.
 
-| Field         | Type      | Default | Description                                                     |
-| ------------- | --------- | ------- | --------------------------------------------------------------- |
-| `Id`          | `string`  | —       | Unique image identifier within the document.                    |
-| `ImageBase64` | `string?` | `null`  | Base64-encoded image data (if `include_image_base64` was true). |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Id` | `string` | — | Unique image identifier within the document. |
+| `ImageBase64` | `string?` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1158,12 +1158,12 @@ An image extracted from an OCR page.
 
 A single page of OCR output.
 
-| Field        | Type              | Default | Description                                                                   |
-| ------------ | ----------------- | ------- | ----------------------------------------------------------------------------- |
-| `Index`      | `uint`            | —       | Page index (0-based).                                                         |
-| `Markdown`   | `string`          | —       | Extracted page content as Markdown.                                           |
-| `Images`     | `List<OcrImage>?` | `null`  | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `Dimensions` | `PageDimensions?` | `null`  | Page dimensions in pixels, if available.                                      |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Index` | `uint` | — | Page index (0-based). |
+| `Markdown` | `string` | — | Extracted page content as Markdown. |
+| `Images` | `List<OcrImage>?` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `Dimensions` | `PageDimensions?` | `/* serde(default) */` | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1171,12 +1171,12 @@ A single page of OCR output.
 
 An OCR request.
 
-| Field                | Type          | Default            | Description                                                      |
-| -------------------- | ------------- | ------------------ | ---------------------------------------------------------------- |
-| `Model`              | `string`      | —                  | The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). |
-| `Document`           | `OcrDocument` | `OcrDocument.Url`  | The document to process (URL or base64).                         |
-| `Pages`              | `List<uint>?` | `new List<uint>()` | Specific pages to process (1-indexed). `null` means all pages.   |
-| `IncludeImageBase64` | `bool?`       | `null`             | Whether to include base64-encoded images of each processed page. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Model` | `string` | — | The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). |
+| `Document` | `OcrDocument` | `OcrDocument.Url` | The document to process (URL or base64). |
+| `Pages` | `List<uint>?` | `new List<uint>()` | Specific pages to process (1-indexed). `null` means all pages. |
+| `IncludeImageBase64` | `bool?` | `null` | Whether to include base64-encoded images of each processed page. |
 
 ---
 
@@ -1184,11 +1184,11 @@ An OCR request.
 
 An OCR response.
 
-| Field   | Type            | Default | Description                               |
-| ------- | --------------- | ------- | ----------------------------------------- |
-| `Pages` | `List<OcrPage>` | —       | Extracted pages in order.                 |
-| `Model` | `string`        | —       | Model/provider used for OCR.              |
-| `Usage` | `Usage?`        | `null`  | Token usage, if reported by the provider. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Pages` | `List<OcrPage>` | — | Extracted pages in order. |
+| `Model` | `string` | — | Model/provider used for OCR. |
+| `Usage` | `Usage?` | `/* serde(default) */` | Token usage, if reported by the provider. |
 
 ---
 
@@ -1196,10 +1196,10 @@ An OCR response.
 
 Page dimensions in pixels.
 
-| Field    | Type   | Default | Description       |
-| -------- | ------ | ------- | ----------------- |
-| `Width`  | `uint` | —       | Width in pixels.  |
-| `Height` | `uint` | —       | Height in pixels. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Width` | `uint` | — | Width in pixels. |
+| `Height` | `uint` | — | Height in pixels. |
 
 ---
 
@@ -1207,15 +1207,15 @@ Page dimensions in pixels.
 
 Breakdown of tokens used in the prompt portion of a request.
 
-`cached_tokens` is included in `Usage.prompt_tokens` — it is _not_ an
+`cached_tokens` is included in `Usage.prompt_tokens` — it is *not* an
 additional charge on top of the prompt token count. When pricing supports
 a `cache_read_input_token_cost`, the cached portion is billed at the
 discounted rate and the remainder at the regular input rate.
 
-| Field          | Type    | Default | Description                                                          |
-| -------------- | ------- | ------- | -------------------------------------------------------------------- |
-| `CachedTokens` | `ulong` | —       | Cached tokens present in the prompt. Defaults to 0 when absent.      |
-| `AudioTokens`  | `ulong` | —       | Audio input tokens present in the prompt. Defaults to 0 when absent. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `CachedTokens` | `ulong` | — | Cached tokens present in the prompt. Defaults to 0 when absent. |
+| `AudioTokens` | `ulong` | — | Audio input tokens present in the prompt. Defaults to 0 when absent. |
 
 ---
 
@@ -1223,15 +1223,15 @@ discounted rate and the remainder at the regular input rate.
 
 Static configuration for a single provider entry in providers.json.
 
-| Field           | Type                          | Default | Description                                                                                                                                                                                                                                      |
-| --------------- | ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Name`          | `string`                      | —       | Provider identifier (matches the entry key in providers.json).                                                                                                                                                                                   |
-| `DisplayName`   | `string?`                     | `null`  | Human-readable provider name shown in UIs.                                                                                                                                                                                                       |
-| `BaseUrl`       | `string?`                     | `null`  | Base URL used as the default for this provider's HTTP client.                                                                                                                                                                                    |
-| `Auth`          | `AuthConfig?`                 | `null`  | Authentication scheme metadata (auth type + env var holding the key).                                                                                                                                                                            |
-| `Endpoints`     | `List<string>?`               | `null`  | Supported endpoint kinds (e.g. `chat`, `embeddings`).                                                                                                                                                                                            |
-| `ModelPrefixes` | `List<string>?`               | `null`  | Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`).                                                                                                                                                                           |
-| `ParamMappings` | `Dictionary<string, string>?` | `null`  | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`). Applied automatically by `ConfigDrivenProvider.transform_request`. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Name` | `string` | — | Provider identifier (matches the entry key in providers.json). |
+| `DisplayName` | `string?` | `null` | Human-readable provider name shown in UIs. |
+| `BaseUrl` | `string?` | `null` | Base URL used as the default for this provider's HTTP client. |
+| `Auth` | `AuthConfig?` | `null` | Authentication scheme metadata (auth type + env var holding the key). |
+| `Endpoints` | `List<string>?` | `null` | Supported endpoint kinds (e.g. `chat`, `embeddings`). |
+| `ModelPrefixes` | `List<string>?` | `null` | Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`). |
+| `ParamMappings` | `Dictionary<string, string>?` | `null` | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`).  Applied automatically by `ConfigDrivenProvider.transform_request`. |
 
 ---
 
@@ -1239,11 +1239,11 @@ Static configuration for a single provider entry in providers.json.
 
 Configuration for per-model rate limits.
 
-| Field    | Type       | Default   | Description                                          |
-| -------- | ---------- | --------- | ---------------------------------------------------- |
-| `Rpm`    | `uint?`    | `null`    | Maximum requests per window. `null` means unlimited. |
-| `Tpm`    | `ulong?`   | `null`    | Maximum tokens per window. `null` means unlimited.   |
-| `Window` | `TimeSpan` | `60000ms` | Fixed window duration (defaults to 60 s).            |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Rpm` | `uint?` | `null` | Maximum requests per window.  `null` means unlimited. |
+| `Tpm` | `ulong?` | `null` | Maximum tokens per window.  `null` means unlimited. |
+| `Window` | `TimeSpan` | `60000ms` | Fixed window duration (defaults to 60 s). |
 
 ### Methods
 
@@ -1261,13 +1261,13 @@ public RateLimitConfig CreateDefault()
 
 Request to rerank documents by relevance to a query.
 
-| Field             | Type                   | Default                      | Description                                                 |
-| ----------------- | ---------------------- | ---------------------------- | ----------------------------------------------------------- |
-| `Model`           | `string`               | —                            | Model ID (e.g., `"cohere/rerank-english-v3.0"`).            |
-| `Query`           | `string`               | —                            | The search query.                                           |
-| `Documents`       | `List<RerankDocument>` | `new List<RerankDocument>()` | Documents to rerank.                                        |
-| `TopN`            | `uint?`                | `null`                       | Return only the top N results. Optional.                    |
-| `ReturnDocuments` | `bool?`                | `null`                       | Include the document content in results. Defaults to false. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Model` | `string` | — | Model ID (e.g., `"cohere/rerank-english-v3.0"`). |
+| `Query` | `string` | — | The search query. |
+| `Documents` | `List<RerankDocument>` | `new List<RerankDocument>()` | Documents to rerank. |
+| `TopN` | `uint?` | `null` | Return only the top N results. Optional. |
+| `ReturnDocuments` | `bool?` | `null` | Include the document content in results. Defaults to false. |
 
 ---
 
@@ -1275,11 +1275,11 @@ Request to rerank documents by relevance to a query.
 
 Response from the rerank endpoint.
 
-| Field     | Type                 | Default | Description                                      |
-| --------- | -------------------- | ------- | ------------------------------------------------ |
-| `Id`      | `string?`            | `null`  | Unique identifier for this rerank request.       |
-| `Results` | `List<RerankResult>` | —       | Reranked documents in order of relevance.        |
-| `Meta`    | `object?`            | `null`  | Optional metadata about the reranking operation. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Id` | `string?` | `null` | Unique identifier for this rerank request. |
+| `Results` | `List<RerankResult>` | — | Reranked documents in order of relevance. |
+| `Meta` | `object?` | `/* serde(default) */` | Optional metadata about the reranking operation. |
 
 ---
 
@@ -1287,11 +1287,11 @@ Response from the rerank endpoint.
 
 A single reranked document with its relevance score.
 
-| Field            | Type                    | Default | Description                                                  |
-| ---------------- | ----------------------- | ------- | ------------------------------------------------------------ |
-| `Index`          | `uint`                  | —       | Original document index in the input list.                   |
-| `RelevanceScore` | `double`                | —       | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `Document`       | `RerankResultDocument?` | `null`  | Original document content (if `return_documents` was true).  |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Index` | `uint` | — | Original document index in the input list. |
+| `RelevanceScore` | `double` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
+| `Document` | `RerankResultDocument?` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -1299,9 +1299,9 @@ A single reranked document with its relevance score.
 
 The text content of a reranked document, returned when `return_documents` is true.
 
-| Field  | Type     | Default | Description    |
-| ------ | -------- | ------- | -------------- |
-| `Text` | `string` | —       | Document text. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Text` | `string` | — | Document text. |
 
 ---
 
@@ -1309,16 +1309,16 @@ The text content of a reranked document, returned when `return_documents` is tru
 
 Response from a structured response request.
 
-| Field       | Type                       | Default                          | Description                               |
-| ----------- | -------------------------- | -------------------------------- | ----------------------------------------- |
-| `Id`        | `string`                   | —                                | Unique response ID.                       |
-| `Object`    | `string`                   | —                                | Object type (e.g., `"response"`).         |
-| `CreatedAt` | `ulong`                    | —                                | Unix timestamp of response creation.      |
-| `Model`     | `string`                   | —                                | Model used to generate the response.      |
-| `Status`    | `string`                   | —                                | Status (e.g., `"succeeded"`, `"failed"`). |
-| `Output`    | `List<ResponseOutputItem>` | `new List<ResponseOutputItem>()` | Output items from the response.           |
-| `Usage`     | `ResponseUsage?`           | `null`                           | Token usage.                              |
-| `Error`     | `object?`                  | `null`                           | Error details (if status is "failed").    |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Id` | `string` | — | Unique response ID. |
+| `Object` | `string` | — | Object type (e.g., `"response"`). |
+| `CreatedAt` | `ulong` | — | Unix timestamp of response creation. |
+| `Model` | `string` | — | Model used to generate the response. |
+| `Status` | `string` | — | Status (e.g., `"succeeded"`, `"failed"`). |
+| `Output` | `List<ResponseOutputItem>` | `new List<ResponseOutputItem>()` | Output items from the response. |
+| `Usage` | `ResponseUsage?` | `null` | Token usage. |
+| `Error` | `object?` | `null` | Error details (if status is "failed"). |
 
 ---
 
@@ -1326,10 +1326,10 @@ Response from a structured response request.
 
 A single output item from the response.
 
-| Field      | Type     | Default | Description                                          |
-| ---------- | -------- | ------- | ---------------------------------------------------- |
-| `ItemType` | `string` | —       | Output type (e.g., `"text"`, `"object"`, `"error"`). |
-| `Content`  | `object` | —       | Output content (flattened into the object).          |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `ItemType` | `string` | — | Output type (e.g., `"text"`, `"object"`, `"error"`). |
+| `Content` | `object` | — | Output content (flattened into the object). |
 
 ---
 
@@ -1337,10 +1337,10 @@ A single output item from the response.
 
 A tool available for the response request.
 
-| Field      | Type     | Default | Description                                     |
-| ---------- | -------- | ------- | ----------------------------------------------- |
-| `ToolType` | `string` | —       | Tool type (e.g., "extractor", "search").        |
-| `Config`   | `object` | —       | Tool configuration (flattened into the object). |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `ToolType` | `string` | — | Tool type (e.g., "extractor", "search"). |
+| `Config` | `object` | — | Tool configuration (flattened into the object). |
 
 ---
 
@@ -1348,11 +1348,11 @@ A tool available for the response request.
 
 Token usage for a response.
 
-| Field          | Type    | Default | Description         |
-| -------------- | ------- | ------- | ------------------- |
-| `InputTokens`  | `ulong` | —       | Input tokens used.  |
-| `OutputTokens` | `ulong` | —       | Output tokens used. |
-| `TotalTokens`  | `ulong` | —       | Total tokens used.  |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `InputTokens` | `ulong` | — | Input tokens used. |
+| `OutputTokens` | `ulong` | — | Output tokens used. |
+| `TotalTokens` | `ulong` | — | Total tokens used. |
 
 ---
 
@@ -1360,13 +1360,13 @@ Token usage for a response.
 
 A search request.
 
-| Field                | Type            | Default              | Description                                                                    |
-| -------------------- | --------------- | -------------------- | ------------------------------------------------------------------------------ |
-| `Model`              | `string`        | —                    | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`).      |
-| `Query`              | `string`        | —                    | The search query string.                                                       |
-| `MaxResults`         | `uint?`         | `null`               | Maximum number of results to return.                                           |
-| `SearchDomainFilter` | `List<string>?` | `new List<string>()` | Domain filter — restrict results to specific domains.                          |
-| `Country`            | `string?`       | `null`               | Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Model` | `string` | — | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). |
+| `Query` | `string` | — | The search query string. |
+| `MaxResults` | `uint?` | `null` | Maximum number of results to return. |
+| `SearchDomainFilter` | `List<string>?` | `new List<string>()` | Domain filter — restrict results to specific domains. |
+| `Country` | `string?` | `null` | Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). |
 
 ---
 
@@ -1374,10 +1374,10 @@ A search request.
 
 A search response.
 
-| Field     | Type                 | Default | Description                               |
-| --------- | -------------------- | ------- | ----------------------------------------- |
-| `Results` | `List<SearchResult>` | —       | List of search results.                   |
-| `Model`   | `string`             | —       | Model/provider that performed the search. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Results` | `List<SearchResult>` | — | List of search results. |
+| `Model` | `string` | — | Model/provider that performed the search. |
 
 ---
 
@@ -1385,12 +1385,12 @@ A search response.
 
 An individual search result.
 
-| Field     | Type      | Default | Description                                     |
-| --------- | --------- | ------- | ----------------------------------------------- |
-| `Title`   | `string`  | —       | Result title.                                   |
-| `Url`     | `string`  | —       | Result URL.                                     |
-| `Snippet` | `string`  | —       | Text snippet or excerpt from the page.          |
-| `Date`    | `string?` | `null`  | Publication or last-updated date, if available. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Title` | `string` | — | Result title. |
+| `Url` | `string` | — | Result URL. |
+| `Snippet` | `string` | — | Text snippet or excerpt from the page. |
+| `Date` | `string?` | `/* serde(default) */` | Publication or last-updated date, if available. |
 
 ---
 
@@ -1398,9 +1398,9 @@ An individual search result.
 
 Name of the specific function to invoke.
 
-| Field  | Type     | Default | Description    |
-| ------ | -------- | ------- | -------------- |
-| `Name` | `string` | —       | Function name. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Name` | `string` | — | Function name. |
 
 ---
 
@@ -1408,10 +1408,10 @@ Name of the specific function to invoke.
 
 Directive to call a specific tool.
 
-| Field        | Type               | Default             | Description                      |
-| ------------ | ------------------ | ------------------- | -------------------------------- |
-| `ChoiceType` | `ToolType`         | `ToolType.Function` | Tool type (always "function").   |
-| `Function`   | `SpecificFunction` | —                   | The specific function to invoke. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `ChoiceType` | `ToolType` | `ToolType.Function` | Tool type (always "function"). |
+| `Function` | `SpecificFunction` | — | The specific function to invoke. |
 
 ---
 
@@ -1419,11 +1419,11 @@ Directive to call a specific tool.
 
 A streaming choice with incremental delta.
 
-| Field          | Type            | Default | Description                                                    |
-| -------------- | --------------- | ------- | -------------------------------------------------------------- |
-| `Index`        | `uint`          | —       | Index of this choice in the choices array.                     |
-| `Delta`        | `StreamDelta`   | —       | Incremental update to the message (content, tool calls, etc.). |
-| `FinishReason` | `FinishReason?` | `null`  | Why the stream ended (present only in final chunk).            |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Index` | `uint` | — | Index of this choice in the choices array. |
+| `Delta` | `StreamDelta` | — | Incremental update to the message (content, tool calls, etc.). |
+| `FinishReason` | `FinishReason?` | `null` | Why the stream ended (present only in final chunk). |
 
 ---
 
@@ -1431,13 +1431,13 @@ A streaming choice with incremental delta.
 
 Incremental delta in a stream chunk.
 
-| Field          | Type                    | Default                      | Description                                                            |
-| -------------- | ----------------------- | ---------------------------- | ---------------------------------------------------------------------- |
-| `Role`         | `string?`               | `null`                       | Role (typically present only in the first chunk).                      |
-| `Content`      | `string?`               | `null`                       | Partial content chunk (e.g., a few words of the response).             |
-| `ToolCalls`    | `List<StreamToolCall>?` | `new List<StreamToolCall>()` | Partial tool calls being streamed.                                     |
-| `FunctionCall` | `StreamFunctionCall?`   | `null`                       | Deprecated legacy function_call delta; retained for API compatibility. |
-| `Refusal`      | `string?`               | `null`                       | Partial refusal message.                                               |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Role` | `string?` | `null` | Role (typically present only in the first chunk). |
+| `Content` | `string?` | `null` | Partial content chunk (e.g., a few words of the response). |
+| `ToolCalls` | `List<StreamToolCall>?` | `new List<StreamToolCall>()` | Partial tool calls being streamed. |
+| `FunctionCall` | `StreamFunctionCall?` | `null` | Deprecated legacy function_call delta; retained for API compatibility. |
+| `Refusal` | `string?` | `null` | Partial refusal message. |
 
 ---
 
@@ -1445,10 +1445,10 @@ Incremental delta in a stream chunk.
 
 Partial function call details in a stream.
 
-| Field       | Type      | Default | Description                                   |
-| ----------- | --------- | ------- | --------------------------------------------- |
-| `Name`      | `string?` | `null`  | Function name (typically in the first chunk). |
-| `Arguments` | `string?` | `null`  | Partial JSON arguments chunk.                 |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Name` | `string?` | `null` | Function name (typically in the first chunk). |
+| `Arguments` | `string?` | `null` | Partial JSON arguments chunk. |
 
 ---
 
@@ -1456,9 +1456,9 @@ Partial function call details in a stream.
 
 Options for streaming responses.
 
-| Field          | Type    | Default | Description                                             |
-| -------------- | ------- | ------- | ------------------------------------------------------- |
-| `IncludeUsage` | `bool?` | `null`  | If true, include token usage in the final stream chunk. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `IncludeUsage` | `bool?` | `null` | If true, include token usage in the final stream chunk. |
 
 ---
 
@@ -1466,12 +1466,12 @@ Options for streaming responses.
 
 A streaming tool call being built incrementally.
 
-| Field      | Type                  | Default | Description                                                |
-| ---------- | --------------------- | ------- | ---------------------------------------------------------- |
-| `Index`    | `uint`                | —       | Index of this tool call in the tool_calls array.           |
-| `Id`       | `string?`             | `null`  | Tool call ID (typically in the first chunk for this call). |
-| `CallType` | `ToolType?`           | `null`  | Tool type (typically "function").                          |
-| `Function` | `StreamFunctionCall?` | `null`  | Partial function name and arguments.                       |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Index` | `uint` | — | Index of this tool call in the tool_calls array. |
+| `Id` | `string?` | `null` | Tool call ID (typically in the first chunk for this call). |
+| `CallType` | `ToolType?` | `null` | Tool type (typically "function"). |
+| `Function` | `StreamFunctionCall?` | `null` | Partial function name and arguments. |
 
 ---
 
@@ -1479,10 +1479,10 @@ A streaming tool call being built incrementally.
 
 System message guiding model behavior for the entire conversation.
 
-| Field     | Type      | Default | Description                                                     |
-| --------- | --------- | ------- | --------------------------------------------------------------- |
-| `Content` | `string`  | —       | Instructions or context that apply throughout the conversation. |
-| `Name`    | `string?` | `null`  | Optional name for the system message source.                    |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Content` | `string` | — | Instructions or context that apply throughout the conversation. |
+| `Name` | `string?` | `null` | Optional name for the system message source. |
 
 ---
 
@@ -1490,11 +1490,11 @@ System message guiding model behavior for the entire conversation.
 
 A tool call the model wants to execute.
 
-| Field      | Type           | Default | Description                                                         |
-| ---------- | -------------- | ------- | ------------------------------------------------------------------- |
-| `Id`       | `string`       | —       | Unique ID for this call, used to reference in tool result messages. |
-| `CallType` | `ToolType`     | —       | Tool type (always "function").                                      |
-| `Function` | `FunctionCall` | —       | Function name and arguments.                                        |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Id` | `string` | — | Unique ID for this call, used to reference in tool result messages. |
+| `CallType` | `ToolType` | — | Tool type (always "function"). |
+| `Function` | `FunctionCall` | — | Function name and arguments. |
 
 ---
 
@@ -1502,11 +1502,11 @@ A tool call the model wants to execute.
 
 Tool execution result returned to the model.
 
-| Field        | Type      | Default | Description                                  |
-| ------------ | --------- | ------- | -------------------------------------------- |
-| `Content`    | `string`  | —       | Result of the tool execution.                |
-| `ToolCallId` | `string`  | —       | ID of the tool call this result responds to. |
-| `Name`       | `string?` | `null`  | Optional tool/function name.                 |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Content` | `string` | — | Result of the tool execution. |
+| `ToolCallId` | `string` | — | ID of the tool call this result responds to. |
+| `Name` | `string?` | `null` | Optional tool/function name. |
 
 ---
 
@@ -1514,11 +1514,11 @@ Tool execution result returned to the model.
 
 Response from a transcription request.
 
-| Field      | Type                          | Default                            | Description                                                                  |
-| ---------- | ----------------------------- | ---------------------------------- | ---------------------------------------------------------------------------- |
-| `Text`     | `string`                      | —                                  | The transcribed text.                                                        |
-| `Language` | `string?`                     | `null`                             | Detected language (ISO-639-1 code).                                          |
-| `Duration` | `double?`                     | `null`                             | Total audio duration in seconds.                                             |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Text` | `string` | — | The transcribed text. |
+| `Language` | `string?` | `null` | Detected language (ISO-639-1 code). |
+| `Duration` | `double?` | `null` | Total audio duration in seconds. |
 | `Segments` | `List<TranscriptionSegment>?` | `new List<TranscriptionSegment>()` | Detailed segment-level transcription (if response_format is "verbose_json"). |
 
 ---
@@ -1527,12 +1527,12 @@ Response from a transcription request.
 
 A segment of transcribed audio with timing information.
 
-| Field   | Type     | Default | Description                        |
-| ------- | -------- | ------- | ---------------------------------- |
-| `Id`    | `uint`   | —       | Segment index (0-based).           |
-| `Start` | `double` | —       | Start time in seconds.             |
-| `End`   | `double` | —       | End time in seconds.               |
-| `Text`  | `string` | —       | Transcribed text for this segment. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Id` | `uint` | — | Segment index (0-based). |
+| `Start` | `double` | — | Start time in seconds. |
+| `End` | `double` | — | End time in seconds. |
+| `Text` | `string` | — | Transcribed text for this segment. |
 
 ---
 
@@ -1540,12 +1540,12 @@ A segment of transcribed audio with timing information.
 
 Token-usage accounting returned by the provider on each completion / embedding call.
 
-| Field                 | Type                   | Default | Description                                                                                                                                                                         |
-| --------------------- | ---------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PromptTokens`        | `ulong`                | —       | Prompt tokens used. Defaults to 0 when absent (some providers omit this).                                                                                                           |
-| `CompletionTokens`    | `ulong`                | —       | Completion tokens used. Defaults to 0 when absent (e.g. embedding responses).                                                                                                       |
-| `TotalTokens`         | `ulong`                | —       | Total tokens used. Defaults to 0 when absent (some providers omit this).                                                                                                            |
-| `PromptTokensDetails` | `PromptTokensDetails?` | `null`  | Breakdown of tokens used in the prompt, including cached tokens served at the provider's discounted cache-read rate. Absent when the provider does not return prompt-token details. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `PromptTokens` | `ulong` | — | Prompt tokens used. Defaults to 0 when absent (some providers omit this). |
+| `CompletionTokens` | `ulong` | — | Completion tokens used. Defaults to 0 when absent (e.g. embedding responses). |
+| `TotalTokens` | `ulong` | — | Total tokens used. Defaults to 0 when absent (some providers omit this). |
+| `PromptTokensDetails` | `PromptTokensDetails?` | `null` | Breakdown of tokens used in the prompt, including cached tokens served at the provider's discounted cache-read rate. Absent when the provider does not return prompt-token details. |
 
 ---
 
@@ -1553,10 +1553,10 @@ Token-usage accounting returned by the provider on each completion / embedding c
 
 User message in the conversation.
 
-| Field     | Type          | Default            | Description                                                                               |
-| --------- | ------------- | ------------------ | ----------------------------------------------------------------------------------------- |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
 | `Content` | `UserContent` | `UserContent.Text` | Message content as plain text or array of content parts (text, images, documents, audio). |
-| `Name`    | `string?`     | `null`             | Optional name for the user.                                                               |
+| `Name` | `string?` | `null` | Optional name for the user. |
 
 ---
 
@@ -1566,14 +1566,14 @@ User message in the conversation.
 
 A chat message in a conversation.
 
-| Value       | Description                                                                                               |
-| ----------- | --------------------------------------------------------------------------------------------------------- |
-| `System`    | System — Fields: `0`: `SystemMessage`                                                                     |
-| `User`      | User — Fields: `0`: `UserMessage`                                                                         |
-| `Assistant` | Assistant — Fields: `0`: `AssistantMessage`                                                               |
-| `Tool`      | Tool — Fields: `0`: `ToolMessage`                                                                         |
-| `Developer` | Developer — Fields: `0`: `DeveloperMessage`                                                               |
-| `Function`  | Deprecated legacy function-role message; retained for API compatibility. — Fields: `0`: `FunctionMessage` |
+| Value | Description |
+|-------|-------------|
+| `System` | System — Fields: `0`: `SystemMessage` |
+| `User` | User — Fields: `0`: `UserMessage` |
+| `Assistant` | Assistant — Fields: `0`: `AssistantMessage` |
+| `Tool` | Tool — Fields: `0`: `ToolMessage` |
+| `Developer` | Developer — Fields: `0`: `DeveloperMessage` |
+| `Function` | Deprecated legacy function-role message; retained for API compatibility. — Fields: `0`: `FunctionMessage` |
 
 ---
 
@@ -1581,9 +1581,9 @@ A chat message in a conversation.
 
 User message content as either plain text or a list of multimodal parts.
 
-| Value   | Description                                                                                 |
-| ------- | ------------------------------------------------------------------------------------------- |
-| `Text`  | Plain text content. — Fields: `0`: `string`                                                 |
+| Value | Description |
+|-------|-------------|
+| `Text` | Plain text content. — Fields: `0`: `string` |
 | `Parts` | Array of content parts (text, images, documents, audio). — Fields: `0`: `List<ContentPart>` |
 
 ---
@@ -1592,12 +1592,12 @@ User message content as either plain text or a list of multimodal parts.
 
 A single content part in a user message — text, image, document, or audio.
 
-| Value        | Description                                                                              |
-| ------------ | ---------------------------------------------------------------------------------------- |
-| `Text`       | Plain text. — Fields: `Text`: `string`                                                   |
-| `ImageUrl`   | Image identified by URL (with optional detail level). — Fields: `ImageUrl`: `ImageUrl`   |
-| `Document`   | Document file (PDF, CSV, etc.) as base64 or URL. — Fields: `Document`: `DocumentContent` |
-| `InputAudio` | Audio input as base64. — Fields: `InputAudio`: `AudioContent`                            |
+| Value | Description |
+|-------|-------------|
+| `Text` | Plain text. — Fields: `Text`: `string` |
+| `ImageUrl` | Image identified by URL (with optional detail level). — Fields: `ImageUrl`: `ImageUrl` |
+| `Document` | Document file (PDF, CSV, etc.) as base64 or URL. — Fields: `Document`: `DocumentContent` |
+| `InputAudio` | Audio input as base64. — Fields: `InputAudio`: `AudioContent` |
 
 ---
 
@@ -1605,11 +1605,11 @@ A single content part in a user message — text, image, document, or audio.
 
 Image detail level controlling token cost and processing.
 
-| Value  | Description                                                        |
-| ------ | ------------------------------------------------------------------ |
-| `Low`  | Low detail: scales image to 512x512, uses fewer tokens.            |
+| Value | Description |
+|-------|-------------|
+| `Low` | Low detail: scales image to 512x512, uses fewer tokens. |
 | `High` | High detail: processes up to 2x2 grid of tiles, higher token cost. |
-| `Auto` | Auto: model chooses low or high based on image dimensions.         |
+| `Auto` | Auto: model chooses low or high based on image dimensions. |
 
 ---
 
@@ -1621,9 +1621,9 @@ Per the OpenAI spec this is always `"function"`. Using an enum enforces
 that constraint at the type level and rejects any other value on
 deserialization.
 
-| Value      | Description |
-| ---------- | ----------- |
-| `Function` | Function    |
+| Value | Description |
+|-------|-------------|
+| `Function` | Function |
 
 ---
 
@@ -1631,10 +1631,10 @@ deserialization.
 
 Tool usage mode or a specific tool to call.
 
-| Value      | Description                                                               |
-| ---------- | ------------------------------------------------------------------------- |
-| `Mode`     | Predefined mode: auto, required, or none. — Fields: `0`: `ToolChoiceMode` |
-| `Specific` | Force a specific tool to be called. — Fields: `0`: `SpecificToolChoice`   |
+| Value | Description |
+|-------|-------------|
+| `Mode` | Predefined mode: auto, required, or none. — Fields: `0`: `ToolChoiceMode` |
+| `Specific` | Force a specific tool to be called. — Fields: `0`: `SpecificToolChoice` |
 
 ---
 
@@ -1642,11 +1642,11 @@ Tool usage mode or a specific tool to call.
 
 Tool choice mode.
 
-| Value      | Description                                        |
-| ---------- | -------------------------------------------------- |
-| `Auto`     | Model may or may not call tools; default behavior. |
-| `Required` | Model must call at least one tool.                 |
-| `None`     | Model must not call any tools.                     |
+| Value | Description |
+|-------|-------------|
+| `Auto` | Model may or may not call tools; default behavior. |
+| `Required` | Model must call at least one tool. |
+| `None` | Model must not call any tools. |
 
 ---
 
@@ -1654,10 +1654,10 @@ Tool choice mode.
 
 Response format constraint.
 
-| Value        | Description                                                                                  |
-| ------------ | -------------------------------------------------------------------------------------------- |
-| `Text`       | Plain text output (default).                                                                 |
-| `JsonObject` | Output must be valid JSON object (no schema validation).                                     |
+| Value | Description |
+|-------|-------------|
+| `Text` | Plain text output (default). |
+| `JsonObject` | Output must be valid JSON object (no schema validation). |
 | `JsonSchema` | Output must conform to the specified JSON schema. — Fields: `JsonSchema`: `JsonSchemaFormat` |
 
 ---
@@ -1666,9 +1666,9 @@ Response format constraint.
 
 Stop sequence(s) that cause the model to stop generating.
 
-| Value      | Description                                            |
-| ---------- | ------------------------------------------------------ |
-| `Single`   | Single stop sequence. — Fields: `0`: `string`          |
+| Value | Description |
+|-------|-------------|
+| `Single` | Single stop sequence. — Fields: `0`: `string` |
 | `Multiple` | Multiple stop sequences. — Fields: `0`: `List<string>` |
 
 ---
@@ -1677,14 +1677,14 @@ Stop sequence(s) that cause the model to stop generating.
 
 Why a choice stopped generating tokens.
 
-| Value           | Description                                                                                                                                                                                                                                                                                                                                                                              |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Stop`          | Stop                                                                                                                                                                                                                                                                                                                                                                                     |
-| `Length`        | Length                                                                                                                                                                                                                                                                                                                                                                                   |
-| `ToolCalls`     | Tool calls                                                                                                                                                                                                                                                                                                                                                                               |
-| `ContentFilter` | Content filter                                                                                                                                                                                                                                                                                                                                                                           |
-| `FunctionCall`  | Deprecated legacy finish reason; retained for API compatibility.                                                                                                                                                                                                                                                                                                                         |
-| `Other`         | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`). Using `#[serde(other)]` requires a unit variant, and switching to `#[serde(untagged)]` would change deserialization semantics for all variants. The original value can be recovered by inspecting the raw JSON if needed. |
+| Value | Description |
+|-------|-------------|
+| `Stop` | Stop |
+| `Length` | Length |
+| `ToolCalls` | Tool calls |
+| `ContentFilter` | Content filter |
+| `FunctionCall` | Deprecated legacy finish reason; retained for API compatibility. |
+| `Other` | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and switching to `#[serde(untagged)]` would change deserialization semantics for all variants.  The original value can be recovered by inspecting the raw JSON if needed. |
 
 ---
 
@@ -1692,11 +1692,11 @@ Why a choice stopped generating tokens.
 
 Controls how much reasoning effort the model should use.
 
-| Value    | Description |
-| -------- | ----------- |
-| `Low`    | Low         |
-| `Medium` | Medium      |
-| `High`   | High        |
+| Value | Description |
+|-------|-------------|
+| `Low` | Low |
+| `Medium` | Medium |
+| `High` | High |
 
 ---
 
@@ -1704,9 +1704,9 @@ Controls how much reasoning effort the model should use.
 
 The format in which the embedding vectors are returned.
 
-| Value    | Description                                         |
-| -------- | --------------------------------------------------- |
-| `Float`  | 32-bit floating-point numbers (default).            |
+| Value | Description |
+|-------|-------------|
+| `Float` | 32-bit floating-point numbers (default). |
 | `Base64` | Base64-encoded string representation of the floats. |
 
 ---
@@ -1715,9 +1715,9 @@ The format in which the embedding vectors are returned.
 
 Text or texts to embed.
 
-| Value      | Description                                                            |
-| ---------- | ---------------------------------------------------------------------- |
-| `Single`   | Single text string. — Fields: `0`: `string`                            |
+| Value | Description |
+|-------|-------------|
+| `Single` | Single text string. — Fields: `0`: `string` |
 | `Multiple` | Multiple text strings (batch embedding). — Fields: `0`: `List<string>` |
 
 ---
@@ -1726,9 +1726,9 @@ Text or texts to embed.
 
 Input to the moderation endpoint — a single string or multiple strings.
 
-| Value      | Description                                                             |
-| ---------- | ----------------------------------------------------------------------- |
-| `Single`   | Single text string. — Fields: `0`: `string`                             |
+| Value | Description |
+|-------|-------------|
+| `Single` | Single text string. — Fields: `0`: `string` |
 | `Multiple` | Multiple text strings (batch moderation). — Fields: `0`: `List<string>` |
 
 ---
@@ -1737,9 +1737,9 @@ Input to the moderation endpoint — a single string or multiple strings.
 
 A document to be reranked — either a plain string or an object with a text field.
 
-| Value    | Description                                                                          |
-| -------- | ------------------------------------------------------------------------------------ |
-| `Text`   | Plain text document content. — Fields: `0`: `string`                                 |
+| Value | Description |
+|-------|-------------|
+| `Text` | Plain text document content. — Fields: `0`: `string` |
 | `Object` | Document with explicit text field (may include metadata). — Fields: `Text`: `string` |
 
 ---
@@ -1748,9 +1748,9 @@ A document to be reranked — either a plain string or an object with a text fie
 
 Document input for OCR — either a URL or inline base64 data.
 
-| Value    | Description                                                                            |
-| -------- | -------------------------------------------------------------------------------------- |
-| `Url`    | A publicly accessible document URL. — Fields: `Url`: `string`                          |
+| Value | Description |
+|-------|-------------|
+| `Url` | A publicly accessible document URL. — Fields: `Url`: `string` |
 | `Base64` | Inline base64-encoded document data. — Fields: `Data`: `string`, `MediaType`: `string` |
 
 ---
@@ -1759,12 +1759,12 @@ Document input for OCR — either a URL or inline base64 data.
 
 Purpose of an uploaded file.
 
-| Value        | Description                       |
-| ------------ | --------------------------------- |
+| Value | Description |
+|-------|-------------|
 | `Assistants` | File for use with Assistants API. |
-| `Batch`      | File for batch processing.        |
-| `FineTune`   | File for fine-tuning.             |
-| `Vision`     | File for vision/image tasks.      |
+| `Batch` | File for batch processing. |
+| `FineTune` | File for fine-tuning. |
+| `Vision` | File for vision/image tasks. |
 
 ---
 
@@ -1772,16 +1772,16 @@ Purpose of an uploaded file.
 
 Status of a batch job.
 
-| Value        | Description                    |
-| ------------ | ------------------------------ |
-| `Validating` | Validating the input file.     |
-| `Failed`     | Job failed.                    |
-| `InProgress` | Job is running.                |
-| `Finalizing` | Finalizing results.            |
-| `Completed`  | Job completed successfully.    |
-| `Expired`    | Job expired before completion. |
-| `Cancelling` | Job is being cancelled.        |
-| `Cancelled`  | Job has been cancelled.        |
+| Value | Description |
+|-------|-------------|
+| `Validating` | Validating the input file. |
+| `Failed` | Job failed. |
+| `InProgress` | Job is running. |
+| `Finalizing` | Finalizing results. |
+| `Completed` | Job completed successfully. |
+| `Expired` | Job expired before completion. |
+| `Cancelling` | Job is being cancelled. |
+| `Cancelled` | Job has been cancelled. |
 
 ---
 
@@ -1789,11 +1789,11 @@ Status of a batch job.
 
 How the API key is sent in the HTTP request.
 
-| Value    | Description                                                     |
-| -------- | --------------------------------------------------------------- |
-| `Bearer` | Bearer token: `Authorization: Bearer <key>`                     |
+| Value | Description |
+|-------|-------------|
+| `Bearer` | Bearer token: `Authorization: Bearer <key>` |
 | `ApiKey` | Custom header: e.g., `X-Api-Key: <key>` — Fields: `0`: `string` |
-| `None`   | No authentication required.                                     |
+| `None` | No authentication required. |
 
 ---
 
@@ -1801,12 +1801,12 @@ How the API key is sent in the HTTP request.
 
 Auth scheme used by a provider.
 
-| Value     | Description                                                                    |
-| --------- | ------------------------------------------------------------------------------ |
-| `Bearer`  | Standard `Authorization: Bearer <key>` header.                                 |
-| `ApiKey`  | `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). |
-| `None`    | No authentication header required.                                             |
-| `Unknown` | Unrecognised auth scheme — falls back to bearer.                               |
+| Value | Description |
+|-------|-------------|
+| `Bearer` | Standard `Authorization: Bearer <key>` header. |
+| `ApiKey` | `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). |
+| `None` | No authentication header required. |
+| `Unknown` | Unrecognised auth scheme — falls back to bearer. |
 
 ---
 
@@ -1814,10 +1814,10 @@ Auth scheme used by a provider.
 
 How budget limits are enforced.
 
-| Value  | Description                                                                       |
-| ------ | --------------------------------------------------------------------------------- |
+| Value | Description |
+|-------|-------------|
 | `Hard` | Reject requests that would exceed the budget with `LiterLlmError.BudgetExceeded`. |
-| `Soft` | Allow requests through but emit a `tracing.warn!` when the budget is exceeded.    |
+| `Soft` | Allow requests through but emit a `tracing.warn!` when the budget is exceeded. |
 
 ---
 
@@ -1825,9 +1825,9 @@ How budget limits are enforced.
 
 Storage backend for the response cache.
 
-| Value     | Description                                                                                                                                          |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Memory`  | In-memory LRU cache (default). No external dependencies.                                                                                             |
+| Value | Description |
+|-------|-------------|
+| `Memory` | In-memory LRU cache (default). No external dependencies. |
 | `OpenDal` | OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.). — Fields: `Scheme`: `string`, `Config`: `Dictionary<string, string>` |
 
 ---
@@ -1838,23 +1838,23 @@ Storage backend for the response cache.
 
 All errors that can occur when using `liter-llm`.
 
-| Variant                 | Description                                                                                                                                                                                                                                                                                                                                                      |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Authentication`        | `status` preserves the exact HTTP status code received (401 or 403).                                                                                                                                                                                                                                                                                             |
-| `RateLimited`           | rate limited: {message}                                                                                                                                                                                                                                                                                                                                          |
-| `BadRequest`            | `status` preserves the exact HTTP status code received (400, 405, 413, 422, …).                                                                                                                                                                                                                                                                                  |
-| `ContextWindowExceeded` | context window exceeded: {message}                                                                                                                                                                                                                                                                                                                               |
-| `ContentPolicy`         | content policy violation: {message}                                                                                                                                                                                                                                                                                                                              |
-| `NotFound`              | not found: {message}                                                                                                                                                                                                                                                                                                                                             |
-| `ServerError`           | `status` preserves the exact HTTP status code received (500, or other 5xx not covered by `ServiceUnavailable`).                                                                                                                                                                                                                                                  |
-| `ServiceUnavailable`    | `status` preserves the exact HTTP status code received (502, 503, or 504).                                                                                                                                                                                                                                                                                       |
-| `Timeout`               | request timeout                                                                                                                                                                                                                                                                                                                                                  |
-| `Streaming`             | A catch-all for errors that occur during streaming response processing. This variant covers multiple sub-conditions including UTF-8 decoding failures, CRC/checksum mismatches (AWS EventStream), JSON parse errors in individual SSE chunks, and buffer overflow conditions. The `message` field contains a human-readable description of the specific failure. |
-| `EndpointNotSupported`  | provider {provider} does not support {endpoint}                                                                                                                                                                                                                                                                                                                  |
-| `InvalidHeader`         | invalid header {name:?}: {reason}                                                                                                                                                                                                                                                                                                                                |
-| `Serialization`         | serialization error: {0}                                                                                                                                                                                                                                                                                                                                         |
-| `BudgetExceeded`        | budget exceeded: {message}                                                                                                                                                                                                                                                                                                                                       |
-| `HookRejected`          | hook rejected: {message}                                                                                                                                                                                                                                                                                                                                         |
-| `InternalError`         | An internal logic error (e.g. unexpected Tower response variant). This should never surface in normal operation — if it does, it indicates a bug in the library.                                                                                                                                                                                                 |
+| Variant | Description |
+|---------|-------------|
+| `Authentication` | `status` preserves the exact HTTP status code received (401 or 403). |
+| `RateLimited` | rate limited: {message} |
+| `BadRequest` | `status` preserves the exact HTTP status code received (400, 405, 413, 422, …). |
+| `ContextWindowExceeded` | context window exceeded: {message} |
+| `ContentPolicy` | content policy violation: {message} |
+| `NotFound` | not found: {message} |
+| `ServerError` | `status` preserves the exact HTTP status code received (500, or other 5xx not covered by `ServiceUnavailable`). |
+| `ServiceUnavailable` | `status` preserves the exact HTTP status code received (502, 503, or 504). |
+| `Timeout` | request timeout |
+| `Streaming` | A catch-all for errors that occur during streaming response processing. This variant covers multiple sub-conditions including UTF-8 decoding failures, CRC/checksum mismatches (AWS EventStream), JSON parse errors in individual SSE chunks, and buffer overflow conditions.  The `message` field contains a human-readable description of the specific failure. |
+| `EndpointNotSupported` | provider {provider} does not support {endpoint} |
+| `InvalidHeader` | invalid header {name:?}: {reason} |
+| `Serialization` | serialization error: {0} |
+| `BudgetExceeded` | budget exceeded: {message} |
+| `HookRejected` | hook rejected: {message} |
+| `InternalError` | An internal logic error (e.g. unexpected Tower response variant). This should never surface in normal operation — if it does, it indicates a bug in the library. |
 
 ---

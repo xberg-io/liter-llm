@@ -6,7 +6,12 @@ requires = ["maturin>=1.0,<2.0"]
 name = "liter-llm"
 version = "1.4.0rc30"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
-keywords = ["anthropic", "api-client", "llm", "openai"]
+keywords = [
+  "anthropic",
+  "api-client",
+  "llm",
+  "openai",
+]
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Na'aman Hirschfeld" }]
@@ -21,7 +26,10 @@ classifiers = [
 ]
 urls.repository = "https://github.com/kreuzberg-dev/liter-llm"
 [dependency-groups]
-dev = ["mypy>=1.19.0", "ruff>=0.14.8"]
+dev = [
+  "mypy>=1.19.0",
+  "ruff>=0.14.8",
+]
 
 [tool.maturin]
 module-name = "liter_llm._internal_bindings"
@@ -38,10 +46,29 @@ format.docstring-code-format = true
 format.docstring-code-line-length = 120
 lint.select = ["ALL"]
 lint.ignore = [
-  "ANN401", "ASYNC109", "ASYNC110", "BLE001", "COM812",
-  "D100", "D104", "D107", "D205", "E501", "EM",
-  "FBT", "FIX", "ISC001", "PD011", "PGH003", "PLR2004",
-  "PLW0603", "S104", "S110", "S603", "TD", "TRY",
+  "ANN401",
+  "ASYNC109",
+  "ASYNC110",
+  "BLE001",
+  "COM812",
+  "D100",
+  "D104",
+  "D107",
+  "D205",
+  "E501",
+  "EM",
+  "FBT",
+  "FIX",
+  "ISC001",
+  "PD011",
+  "PGH003",
+  "PLR2004",
+  "PLW0603",
+  "S104",
+  "S110",
+  "S603",
+  "TD",
+  "TRY",
 ]
 lint.mccabe.max-complexity = 15
 lint.per-file-ignores."tests/**" = ["ANN", "D103", "PLR2004", "S101"]
