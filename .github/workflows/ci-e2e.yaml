@@ -393,7 +393,7 @@ jobs:
         if: matrix.lang == 'kotlin_android'
         uses: gradle/actions/setup-gradle@v6.1.0
         with:
-          gradle-version: "8.9"
+          gradle-version: "8.13"
 
       - name: Setup .NET
         if: matrix.dotnet-version

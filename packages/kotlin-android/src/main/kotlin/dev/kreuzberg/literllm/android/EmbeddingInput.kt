@@ -23,18 +23,22 @@
 package dev.kreuzberg.literllm.android
 
 /** Text or texts to embed. */
-@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = EmbeddingInputDeserializer::class)
+@com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+    using = EmbeddingInputDeserializer::class
+)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = EmbeddingInputSerializer::class)
 sealed class EmbeddingInput {
     /** Single text string. */
     data class Single(val value: String) : EmbeddingInput()
+
     /** Multiple text strings (batch embedding). */
     data class Multiple(val value: List<String>) : EmbeddingInput()
 }
 
-private class EmbeddingInputDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<EmbeddingInput>(
-    EmbeddingInput::class.java
-) {
+private class EmbeddingInputDeserializer :
+    com.fasterxml.jackson.databind.deser.std.StdDeserializer<EmbeddingInput>(
+        EmbeddingInput::class.java
+    ) {
     @Suppress("LongMethod")
     override fun deserialize(
         parser: com.fasterxml.jackson.core.JsonParser,
@@ -44,9 +48,12 @@ private class EmbeddingInputDeserializer : com.fasterxml.jackson.databind.deser.
         if (node.isTextual) return EmbeddingInput.Single(node.asText())
         if (node.isArray)
             return run {
-                val javaType = ctx.typeFactory.constructCollectionType(List::class.java, String::class.java)
+                val javaType =
+                    ctx.typeFactory.constructCollectionType(List::class.java, String::class.java)
                 @Suppress("UNCHECKED_CAST")
-                EmbeddingInput.Multiple(ctx.readTreeAsValue<List<String>>(node, javaType) as List<String>)
+                EmbeddingInput.Multiple(
+                    ctx.readTreeAsValue<List<String>>(node, javaType) as List<String>
+                )
             }
         throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
             parser,
@@ -57,7 +64,10 @@ private class EmbeddingInputDeserializer : com.fasterxml.jackson.databind.deser.
     }
 }
 
-private class EmbeddingInputSerializer : com.fasterxml.jackson.databind.ser.std.StdSerializer<EmbeddingInput>(EmbeddingInput::class.java) {
+private class EmbeddingInputSerializer :
+    com.fasterxml.jackson.databind.ser.std.StdSerializer<EmbeddingInput>(
+        EmbeddingInput::class.java
+    ) {
     @Suppress("LongMethod")
     override fun serialize(
         value: EmbeddingInput,

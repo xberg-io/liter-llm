@@ -844,7 +844,7 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v6.1.0
         with:
-          gradle-version: "8.9"
+          gradle-version: "8.13"
       - name: Assemble Android library aar
         working-directory: packages/kotlin-android
         env:
@@ -1059,9 +1059,10 @@ jobs:
         shell: bash
       - name: Publish to PyPI
         if: needs.prepare.outputs.dry_run != 'true' && (steps.recheck.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true')
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: kreuzberg-dev/actions/publish-pypi@v1
         with:
           packages-dir: dist/
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   publish-node:
     name: Publish Node packages

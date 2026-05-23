@@ -37,5 +37,5 @@ data class FileObject(
     /** File purpose. */
     val purpose: String = "",
     /** Processing status (e.g., `"uploaded"`, `"processed"`). */
-    val status: String? = null
+    val status: String? = null,
 )

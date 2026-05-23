@@ -31,5 +31,5 @@ data class CreateBatchRequest(
     /** Completion window (e.g., `"24h"`). */
     val completionWindow: String = "",
     /** Optional metadata to attach to the batch. */
-    val metadata: Any? = null
+    val metadata: Any? = null,
 )
