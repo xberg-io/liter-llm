@@ -137,7 +137,6 @@ import os
 from liter_llm import create_client
 from liter_llm._internal_bindings import ChatCompletionRequest
 
-
 async def main() -> None:
     client = create_client(api_key=os.environ["OPENAI_API_KEY"])
     request = ChatCompletionRequest.from_json(
@@ -145,7 +144,6 @@ async def main() -> None:
     )
     response = await client.chat(request)
     print(response.choices[0].message.content)
-
 
 asyncio.run(main())
 ```
@@ -163,7 +161,6 @@ import os
 from liter_llm import create_client
 from liter_llm._internal_bindings import ChatCompletionRequest
 
-
 async def main() -> None:
     client = create_client(api_key=os.environ["OPENAI_API_KEY"])
     request = ChatCompletionRequest.from_json(
@@ -173,7 +170,6 @@ async def main() -> None:
         if chunk.choices and chunk.choices[0].delta.content:
             print(chunk.choices[0].delta.content, end="", flush=True)
     print()
-
 
 asyncio.run(main())
 ```
@@ -210,14 +206,12 @@ REQUEST = {
     "tool_choice": "auto",
 }
 
-
 async def main() -> None:
     client = create_client(api_key=os.environ["OPENAI_API_KEY"])
     request = ChatCompletionRequest.from_json(json.dumps(REQUEST))
     response = await client.chat(request)
     for call in response.choices[0].message.tool_calls or []:
         print(f"Tool: {call.function.name}, Args: {call.function.arguments}")
-
 
 asyncio.run(main())
 ```

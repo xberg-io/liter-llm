@@ -31,7 +31,8 @@ data class ModerationCategories(
     /** Harassment. */
     val harassment: Boolean = false,
     /** Self-harm content. */
-    @com.fasterxml.jackson.annotation.JsonProperty("self-harm") val selfHarm: Boolean = false,
+    @com.fasterxml.jackson.annotation.JsonProperty("self-harm")
+    val selfHarm: Boolean = false,
     /** Sexual content involving minors. */
     @com.fasterxml.jackson.annotation.JsonProperty("sexual/minors")
     val sexualMinors: Boolean = false,
@@ -51,5 +52,5 @@ data class ModerationCategories(
     @com.fasterxml.jackson.annotation.JsonProperty("harassment/threatening")
     val harassmentThreatening: Boolean = false,
     /** Non-graphic violence. */
-    val violence: Boolean = false,
+    val violence: Boolean = false
 )

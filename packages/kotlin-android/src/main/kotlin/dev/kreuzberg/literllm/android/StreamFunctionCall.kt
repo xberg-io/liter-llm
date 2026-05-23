@@ -27,5 +27,5 @@ data class StreamFunctionCall(
     /** Function name (typically in the first chunk). */
     val name: String? = null,
     /** Partial JSON arguments chunk. */
-    val arguments: String? = null,
+    val arguments: String? = null
 )

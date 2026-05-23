@@ -33,5 +33,5 @@ data class StreamDelta(
     /** Deprecated legacy function_call delta; retained for API compatibility. */
     val functionCall: StreamFunctionCall? = null,
     /** Partial refusal message. */
-    val refusal: String? = null,
+    val refusal: String? = null
 )
