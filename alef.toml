@@ -430,10 +430,15 @@ before = "cargo build -p liter-llm-ffi && cargo build --manifest-path e2e/rust/C
 e2e = "scripts/e2e/run-with-mock-server.sh 'cd e2e/zig && zig build test'"
 
 [crates.test.kotlin_android]
-# Android-only AAR — tests require an emulator runner (out of scope until a
-# kreuzberg-dev/actions/setup-android-emulator action exists). E2E excluded.
+# The e2e suite lives in e2e/kotlin_android/src/test/ (JVM unit tests via JNA
+# loading the JNI cdylib), NOT in src/androidTest/. They run on the host JVM
+# without an Android emulator. Instrumented tests on a managed emulator
+# (pixel6api34) are still configured but only exercised under
+# `./gradlew pixel6api34DebugAndroidTest` and not part of the canonical
+# `task e2e:test:all` flow yet.
 precondition = "command -v gradle >/dev/null 2>&1"
-before = "cargo build --release -p liter-llm-ffi"
+before = "cargo build --release -p liter-llm-ffi -p liter-llm-jni && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+e2e = "scripts/e2e/run-with-mock-server.sh 'cd e2e/kotlin_android && gradle test --no-daemon'"
 
 [crates.publish]
 core_crate = "crates/liter-llm"
