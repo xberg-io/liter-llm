@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.17.36"
+alef_version = "0.18.0"
 languages = [
   "python",
   "node",
@@ -317,13 +317,13 @@ before = "uv sync --no-install-project --no-install-workspace"
 
 [crates.lint.node]
 precondition = "command -v pnpm >/dev/null 2>&1"
-format = "pnpm dlx oxfmt packages/typescript"
-check = "pnpm dlx oxlint packages/typescript"
+format = "pnpm dlx oxfmt crates/liter-llm-node"
+check = "pnpm dlx oxlint crates/liter-llm-node"
 
 [crates.lint.wasm]
 precondition = "command -v pnpm >/dev/null 2>&1"
-format = "pnpm dlx oxfmt packages/wasm"
-check = "pnpm dlx oxlint packages/wasm"
+format = "pnpm dlx oxfmt crates/liter-llm-wasm"
+check = "pnpm dlx oxlint crates/liter-llm-wasm"
 
 [crates.lint.php]
 precondition = "command -v php >/dev/null 2>&1 && command -v composer >/dev/null 2>&1"

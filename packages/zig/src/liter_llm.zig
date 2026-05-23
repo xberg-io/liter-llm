@@ -1446,6 +1446,32 @@ pub fn ensure_crypto_provider() void {
     _ = c.literllm_ensure_crypto_provider();
 }
 
+/// Iterator over `ChatCompletionChunk` items in a streaming response.
+pub const ChatCompletionChunkStream = struct {
+    _handle: *c.LITERLLMChatCompletionChunkStream,
+
+    /// Fetch the next item from the stream, or null at end-of-stream.
+    /// Returns an error on mid-stream failure; null on clean EOS.
+    pub fn next(self: *ChatCompletionChunkStream) (LiterLlmError || error{OutOfMemory})!?ChatCompletionChunk {
+        const _chunk = c.literllm_default_client_chat_stream_next(self._handle);
+        if (_chunk == null) {
+            // Check errno: 0 = clean EOS, != 0 = error
+            if (c.literllm_last_error_code() != 0) return _first_error(LiterLlmError);
+            return null;
+        }
+        defer c.literllm_chat_completion_chunk_free(_chunk);
+        const _json = c.literllm_chat_completion_chunk_to_json(_chunk);
+        defer c.literllm_free_string(_json);
+        const _json_slice = std.mem.span(_json);
+        return try std.json.parseFromSliceLeaky(ChatCompletionChunk, std.heap.c_allocator, _json_slice, .{ .ignore_unknown_fields = true, .allocate = .alloc_always });
+    }
+
+    /// Release the underlying stream handle.
+    pub fn deinit(self: *ChatCompletionChunkStream) void {
+        c.literllm_default_client_chat_stream_free(self._handle);
+    }
+};
+
 /// Default client implementation backed by `reqwest`.
 ///
 /// Sends requests to 140+ LLM providers with automatic provider detection
@@ -1483,7 +1509,7 @@ pub const DefaultClient = struct {
         };
     }
 
-    pub fn chat_stream(self: *DefaultClient, req: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {
+    pub fn chat_stream(self: *DefaultClient, req: []const u8) (LiterLlmError || error{OutOfMemory})!ChatCompletionChunkStream {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
         const req_handle = c.literllm_chat_completion_request_from_json(req_z.ptr);
         std.heap.c_allocator.free(req_z);
@@ -1495,25 +1521,7 @@ pub const DefaultClient = struct {
         if (_stream_handle == null) {
             return _first_error(LiterLlmError);
         }
-        defer c.literllm_default_client_chat_stream_free(_stream_handle);
-        var _buf = try std.ArrayList(u8).initCapacity(std.heap.c_allocator, 0);
-        defer _buf.deinit(std.heap.c_allocator);
-        try _buf.append(std.heap.c_allocator, '[');
-        var _first = true;
-        while (true) {
-            const _chunk = c.literllm_default_client_chat_stream_next(_stream_handle);
-            if (_chunk == null) break;
-            const _chunk_json_ptr = c.literllm_chat_completion_chunk_to_json(_chunk);
-            c.literllm_chat_completion_chunk_free(_chunk);
-            if (_chunk_json_ptr == null) continue;
-            if (!_first) try _buf.append(std.heap.c_allocator, ',');
-            _first = false;
-            const _chunk_slice = std.mem.span(_chunk_json_ptr);
-            try _buf.appendSlice(std.heap.c_allocator, _chunk_slice);
-            c.literllm_free_string(_chunk_json_ptr);
-        }
-        try _buf.append(std.heap.c_allocator, ']');
-        return _buf.toOwnedSlice(std.heap.c_allocator);
+        return ChatCompletionChunkStream{ ._handle = _stream_handle };
     }
 
     pub fn embed(self: *DefaultClient, req: []const u8) (LiterLlmError || error{OutOfMemory})![]u8 {

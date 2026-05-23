@@ -18,7 +18,7 @@ defmodule LiterLlm.MixProject do
     [
       licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/kreuzberg-dev/liter-llm"},
-      files: ~w(.formatter.exs mix.exs README* native ../../packages/elixir/native/liter_llm_nif/src/*.ex)
+      files: ~w(.formatter.exs mix.exs README* native)
     ]
   end
 

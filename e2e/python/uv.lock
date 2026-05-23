@@ -43,7 +43,7 @@ wheels = [
 
 [[package]]
 name = "liter-llm"
-version = "1.4.0rc27"
+version = "1.4.0rc29"
 source = { directory = "../../packages/python" }
 
 [package.metadata]
