@@ -53,7 +53,7 @@ repos:
       - id: ruff-format
         exclude: ^packages/python/liter_llm/(__init__\.py|api\.py|exceptions\.py|options\.py|_internal_bindings\.pyi)$
   - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
-    rev: v1.1.17
+    rev: v1.1.18
     hooks:
       - id: cargo-sort
         args:
@@ -229,7 +229,7 @@ repos:
       - id: ktfmt
       - id: hadolint
   - repo: https://github.com/kreuzberg-dev/alef
-    rev: v0.17.30
+    rev: v0.18.1
     hooks:
       - id: alef-verify
       - id: alef-sync-versions
@@ -258,7 +258,7 @@ repos:
     hooks:
       - id: gh-actions-updater
   - repo: https://github.com/crate-ci/typos
-    rev: v1.46.2
+    rev: v1.46.3
     hooks:
       - id: typos
         args:
