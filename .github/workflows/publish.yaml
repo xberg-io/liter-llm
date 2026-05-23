@@ -1118,11 +1118,12 @@ jobs:
       - name: Install workspace dependencies
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         run: |
-          # e2e/wasm depends on file:../../crates/liter-llm-wasm/pkg (built by wasm-pack, gitignored).
-          # During the publish-node workspace scan that path must resolve, so stub a minimal package.
-          mkdir -p crates/liter-llm-wasm/pkg
-          if [ ! -f crates/liter-llm-wasm/pkg/package.json ]; then
-            cat > crates/liter-llm-wasm/pkg/package.json <<'JSON'
+          # e2e/wasm depends on file:../../crates/liter-llm-wasm/pkg/nodejs (built by wasm-pack
+          # --target nodejs, gitignored). During the publish-node workspace scan that path must
+          # resolve, so stub a minimal package.
+          mkdir -p crates/liter-llm-wasm/pkg/nodejs
+          if [ ! -f crates/liter-llm-wasm/pkg/nodejs/package.json ]; then
+            cat > crates/liter-llm-wasm/pkg/nodejs/package.json <<'JSON'
           {"name": "liter_llm", "version": "0.0.0", "private": true}
           JSON
           fi
@@ -1726,7 +1727,11 @@ jobs:
           - runner: ubuntu-24.04-arm
             bottle_tag: arm64_linux
     steps:
-      - uses: actions/checkout@v6.0.2
+      # actions/checkout@v6 regression on macos-15-intel: the includeIf-gated
+      # credential helper isn't honored by git 2.54 on that runner image, so
+      # the fetch falls back to interactive auth and fails. v5 writes the
+      # extraheader directly into .git/config and works on every runner.
+      - uses: actions/checkout@v5
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
