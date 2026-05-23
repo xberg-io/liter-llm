@@ -27,5 +27,5 @@ data class AudioContent(
     /** Base64-encoded audio data. */
     val data: String = "",
     /** Audio format (e.g., "wav", "mp3", "ogg"). */
-    val format: String = "",
+    val format: String = ""
 )

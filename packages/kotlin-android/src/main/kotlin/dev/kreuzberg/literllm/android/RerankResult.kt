@@ -29,5 +29,5 @@ data class RerankResult(
     /** Relevance score in `[0, 1]`. Higher indicates more relevant. */
     val relevanceScore: Double,
     /** Original document content (if `return_documents` was true). */
-    val document: RerankResultDocument? = null,
+    val document: RerankResultDocument? = null
 )

@@ -119,7 +119,7 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v6.1.0
         with:
-          gradle-version: "8.9"
+          gradle-version: "8.13"
       - name: Assemble Android library aar
         working-directory: packages/kotlin-android
         run: gradle assembleRelease

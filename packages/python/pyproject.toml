@@ -38,29 +38,10 @@ format.docstring-code-format = true
 format.docstring-code-line-length = 120
 lint.select = ["ALL"]
 lint.ignore = [
-  "ANN401",
-  "ASYNC109",
-  "ASYNC110",
-  "BLE001",
-  "COM812",
-  "D100",
-  "D104",
-  "D107",
-  "D205",
-  "E501",
-  "EM",
-  "FBT",
-  "FIX",
-  "ISC001",
-  "PD011",
-  "PGH003",
-  "PLR2004",
-  "PLW0603",
-  "S104",
-  "S110",
-  "S603",
-  "TD",
-  "TRY",
+  "ANN401", "ASYNC109", "ASYNC110", "BLE001", "COM812",
+  "D100", "D104", "D107", "D205", "E501", "EM",
+  "FBT", "FIX", "ISC001", "PD011", "PGH003", "PLR2004",
+  "PLW0603", "S104", "S110", "S603", "TD", "TRY",
 ]
 lint.mccabe.max-complexity = 15
 lint.per-file-ignores."tests/**" = ["ANN", "D103", "PLR2004", "S101"]

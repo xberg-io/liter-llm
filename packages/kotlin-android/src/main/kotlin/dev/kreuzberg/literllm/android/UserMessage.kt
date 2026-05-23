@@ -28,5 +28,5 @@ data class UserMessage(
     @field:com.fasterxml.jackson.databind.annotation.JsonSerialize(`as` = UserContent::class)
     val content: UserContent,
     /** Optional name for the user. */
-    val name: String? = null,
+    val name: String? = null
 )
