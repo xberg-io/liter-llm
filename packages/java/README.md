@@ -121,14 +121,14 @@ Install via one of the supported package managers:
 <dependency>
     <groupId>dev.kreuzberg</groupId>
     <artifactId>liter-llm</artifactId>
-    <version>1.4.0-rc.28</version>
+    <version>1.4.0-rc.29</version>
 </dependency>
 ```
 
 **Gradle:**
 
 ```gradle
-implementation 'dev.kreuzberg:liter-llm:1.4.0-rc.28'
+implementation 'dev.kreuzberg:liter-llm:1.4.0-rc.29'
 ```
 
 ### System Requirements

@@ -7,7 +7,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@kreuzberg/liter-llm-node": "1.4.0-rc.28",
+    "@kreuzberg/liter-llm-node": "1.4.0-rc.29",
     "vitest": "^3.0.0"
   }
 }

@@ -1,25 +1,12 @@
 [package]
 name = "liter-llm-py"
-version = "1.4.0-rc.28"
+version = "1.4.0-rc.29"
 edition = "2024"
 license = "MIT"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
 readme = false
 keywords = ["llm", "api-client", "openai", "anthropic"]
 categories = ["text-processing"]
-
-[lib]
-name = "_internal_bindings"
-crate-type = ["cdylib"]
-
-[dependencies]
-liter-llm = { path = "../liter-llm", features = ["native-http", "full"] }
-pyo3 = { version = "0.28" }
-pyo3-async-runtimes = { version = "0.28", features = ["tokio-runtime"] }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-tokio = { version = "1", features = ["rt-multi-thread", "sync"] }
-futures = "0.3"
 
 # `pyo3-async-runtimes` and `serde_json` are emitted unconditionally above so
 # the manifest is stable across regens, but for umbrella crates with no
@@ -30,5 +17,18 @@ futures = "0.3"
 [package.metadata.cargo-machete]
 ignored = ["pyo3-async-runtimes", "serde_json", "tokio", "futures"]
 
+[lib]
+name = "_internal_bindings"
+crate-type = ["cdylib"]
+
 [features]
 extension-module = ["pyo3/extension-module", "pyo3/abi3-py310"]
+
+[dependencies]
+futures = "0.3"
+liter-llm = { path = "../liter-llm", features = ["native-http", "full"] }
+pyo3 = { version = "0.28" }
+pyo3-async-runtimes = { version = "0.28", features = ["tokio-runtime"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "sync"] }

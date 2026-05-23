@@ -1,6 +1,6 @@
 {
   "name": "@kreuzberg/liter-llm-node",
-  "version": "1.4.0-rc.28",
+  "version": "1.4.0-rc.29",
   "description": "Universal LLM API client with Rust-powered polyglot bindings.",
   "license": "MIT",
   "repository": {
@@ -21,6 +21,14 @@
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.6.2"
+  },
+  "optionalDependencies": {
+    "@kreuzberg/liter-llm-node-darwin-arm64": "1.4.0-rc.28",
+    "@kreuzberg/liter-llm-node-darwin-x64": "1.4.0-rc.28",
+    "@kreuzberg/liter-llm-node-linux-arm64-gnu": "1.4.0-rc.28",
+    "@kreuzberg/liter-llm-node-linux-x64-gnu": "1.4.0-rc.28",
+    "@kreuzberg/liter-llm-node-win32-arm64-msvc": "1.4.0-rc.28",
+    "@kreuzberg/liter-llm-node-win32-x64-msvc": "1.4.0-rc.28"
   },
   "napi": {
     "binaryName": "liter-llm-node",
