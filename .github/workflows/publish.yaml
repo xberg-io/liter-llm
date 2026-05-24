@@ -253,6 +253,7 @@ jobs:
         with:
           package-dir: packages/python
           output-dir: dist
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: python-sdist
@@ -609,6 +610,7 @@ jobs:
           lib-name: liter_llm_php
           php-version: ${{ matrix.php }}
           php-ts: nts
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
 
       - name: Determine Windows compiler
         if: runner.os == 'Windows'
