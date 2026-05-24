@@ -28,7 +28,7 @@ bench = false
 [dependencies]
 async-trait = "0.1"
 futures-util = "0.3"
-liter_llm = { path = "../../../crates/liter-llm", features = [
+liter_llm = { version = "1.4.0-rc.30", path = "../../../crates/liter-llm", features = [
     "native-http",
     "full",
 ], package = "liter-llm" }

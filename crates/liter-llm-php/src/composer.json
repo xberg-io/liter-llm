@@ -13,7 +13,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Liter\\Llm\\": "crates/liter-llm-php/src//src/"
+      "Liter\\Llm\\": "src/"
     }
   },
   "scripts": {

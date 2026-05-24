@@ -7,4 +7,4 @@ require (
 	github.com/stretchr/testify v1.11.1
 )
 
-replace github.com/kreuzberg-dev/liter-llm/packages/go => ../../packages/go
+replace github.com/kreuzberg-dev/liter-llm/packages/go => ../../packages/go/
