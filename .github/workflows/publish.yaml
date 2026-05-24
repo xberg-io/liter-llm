@@ -409,6 +409,7 @@ jobs:
         uses: kreuzberg-dev/actions/install-task@v1
 
       - name: Rewrite native dependencies to registry versions
+        if: needs.prepare.outputs.dry_run != 'true'
         uses: kreuzberg-dev/actions/rewrite-native-deps@v1
         with:
           lang: ruby
@@ -505,6 +506,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
       - name: Rewrite native dependencies to registry versions
+        if: needs.prepare.outputs.dry_run != 'true'
         uses: kreuzberg-dev/actions/rewrite-native-deps@v1
         with:
           lang: elixir
@@ -1315,6 +1317,7 @@ jobs:
           bundle install --jobs 4
 
       - name: Rewrite native dependencies to registry versions
+        if: needs.prepare.outputs.dry_run != 'true'
         uses: kreuzberg-dev/actions/rewrite-native-deps@v1
         with:
           lang: ruby
