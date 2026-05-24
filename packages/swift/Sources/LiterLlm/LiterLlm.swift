@@ -2694,11 +2694,11 @@ extension ContentPart {
 /// Image detail level controlling token cost and processing.
 public enum ImageDetail: String, Codable, Sendable, Hashable {
     /// Low detail: scales image to 512x512, uses fewer tokens.
-    case low = "Low"
+    case low
     /// High detail: processes up to 2x2 grid of tiles, higher token cost.
-    case high = "High"
+    case high
     /// Auto: model chooses low or high based on image dimensions.
-    case auto = "Auto"
+    case auto
 }
 extension ImageDetail {
     func intoRust() throws -> RustBridge.ImageDetail {
@@ -2765,11 +2765,11 @@ extension ToolChoice {
 /// Tool choice mode.
 public enum ToolChoiceMode: String, Codable, Sendable, Hashable {
     /// Model may or may not call tools; default behavior.
-    case auto = "Auto"
+    case auto
     /// Model must call at least one tool.
-    case required = "Required"
+    case required
     /// Model must not call any tools.
-    case none = "None"
+    case none
 }
 extension ToolChoiceMode {
     func intoRust() throws -> RustBridge.ToolChoiceMode {
@@ -2847,9 +2847,9 @@ extension FinishReason {
 
 /// Controls how much reasoning effort the model should use.
 public enum ReasoningEffort: String, Codable, Sendable, Hashable {
-    case low = "Low"
-    case medium = "Medium"
-    case high = "High"
+    case low
+    case medium
+    case high
 }
 extension ReasoningEffort {
     func intoRust() throws -> RustBridge.ReasoningEffort {
@@ -2862,9 +2862,9 @@ extension ReasoningEffort {
 /// The format in which the embedding vectors are returned.
 public enum EmbeddingFormat: String, Codable, Sendable, Hashable {
     /// 32-bit floating-point numbers (default).
-    case float = "Float"
+    case float
     /// Base64-encoded string representation of the floats.
-    case base64 = "Base64"
+    case base64
 }
 extension EmbeddingFormat {
     func intoRust() throws -> RustBridge.EmbeddingFormat {
