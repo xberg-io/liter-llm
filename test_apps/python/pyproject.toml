@@ -19,7 +19,7 @@ dependencies = [
   "pytest>=7.4",
   "pytest-asyncio>=0.23",
   "pytest-timeout>=2.1",
-  "liter-llm1.4.0-rc.27",
+  "liter-llm==1.4.0rc31",
 ]
 
 [tool.setuptools]

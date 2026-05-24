@@ -16,6 +16,21 @@
     clippy::inherent_to_string
 )]
 
+/// Process-wide tokio runtime shared across every swift-bridge async wrapper.
+///
+/// alef-emitted; see shims.rs for the rationale (orphaned reqwest connection
+/// pools when each call creates and drops its own current-thread runtime).
+fn __alef_tokio_runtime() -> &'static ::tokio::runtime::Runtime {
+    use std::sync::OnceLock;
+    static RT: OnceLock<::tokio::runtime::Runtime> = OnceLock::new();
+    RT.get_or_init(|| {
+        ::tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .expect("build process-wide alef tokio runtime")
+    })
+}
+
 #[swift_bridge::bridge]
 mod ffi {
     extern "Rust" {
@@ -47,6 +62,7 @@ mod ffi {
         #[swift_bridge(init)]
         fn new(data: String, media_type: String) -> DocumentContent;
         fn data(&self) -> String;
+        #[swift_bridge(swift_name = "mediaType")]
         fn media_type(&self) -> String;
     }
 
@@ -70,8 +86,10 @@ mod ffi {
         ) -> AssistantMessage;
         fn content(&self) -> Option<String>;
         fn name(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "toolCalls")]
         fn tool_calls(&self) -> Option<Vec<ToolCall>>;
         fn refusal(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "functionCall")]
         fn function_call(&self) -> Option<FunctionCall>;
     }
 
@@ -80,6 +98,7 @@ mod ffi {
         #[swift_bridge(init)]
         fn new(content: String, tool_call_id: String, name: Option<String>) -> ToolMessage;
         fn content(&self) -> String;
+        #[swift_bridge(swift_name = "toolCallId")]
         fn tool_call_id(&self) -> String;
         fn name(&self) -> Option<String>;
     }
@@ -102,6 +121,7 @@ mod ffi {
 
     extern "Rust" {
         type ChatCompletionTool;
+        #[swift_bridge(swift_name = "toolType")]
         fn tool_type(&self) -> String;
         fn function(&self) -> FunctionDefinition;
     }
@@ -117,6 +137,7 @@ mod ffi {
     extern "Rust" {
         type ToolCall;
         fn id(&self) -> String;
+        #[swift_bridge(swift_name = "callType")]
         fn call_type(&self) -> String;
         fn function(&self) -> FunctionCall;
     }
@@ -131,6 +152,7 @@ mod ffi {
         type SpecificToolChoice;
         #[swift_bridge(init)]
         fn new(choice_type: ToolType, function: SpecificFunction) -> SpecificToolChoice;
+        #[swift_bridge(swift_name = "choiceType")]
         fn choice_type(&self) -> String;
         fn function(&self) -> SpecificFunction;
     }
@@ -161,9 +183,13 @@ mod ffi {
             total_tokens: u64,
             prompt_tokens_details: Option<PromptTokensDetails>,
         ) -> Usage;
+        #[swift_bridge(swift_name = "promptTokens")]
         fn prompt_tokens(&self) -> u64;
+        #[swift_bridge(swift_name = "completionTokens")]
         fn completion_tokens(&self) -> u64;
+        #[swift_bridge(swift_name = "totalTokens")]
         fn total_tokens(&self) -> u64;
+        #[swift_bridge(swift_name = "promptTokensDetails")]
         fn prompt_tokens_details(&self) -> Option<PromptTokensDetails>;
     }
 
@@ -171,7 +197,9 @@ mod ffi {
         type PromptTokensDetails;
         #[swift_bridge(init)]
         fn new(cached_tokens: u64, audio_tokens: u64) -> PromptTokensDetails;
+        #[swift_bridge(swift_name = "cachedTokens")]
         fn cached_tokens(&self) -> u64;
+        #[swift_bridge(swift_name = "audioTokens")]
         fn audio_tokens(&self) -> u64;
     }
 
@@ -203,22 +231,33 @@ mod ffi {
         fn model(&self) -> String;
         fn messages(&self) -> Vec<String>;
         fn temperature(&self) -> Option<f64>;
+        #[swift_bridge(swift_name = "topP")]
         fn top_p(&self) -> Option<f64>;
         fn n(&self) -> Option<u32>;
         fn stream(&self) -> Option<bool>;
         fn stop(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "maxTokens")]
         fn max_tokens(&self) -> Option<u64>;
+        #[swift_bridge(swift_name = "presencePenalty")]
         fn presence_penalty(&self) -> Option<f64>;
+        #[swift_bridge(swift_name = "frequencyPenalty")]
         fn frequency_penalty(&self) -> Option<f64>;
+        #[swift_bridge(swift_name = "logitBias")]
         fn logit_bias(&self) -> String;
         fn user(&self) -> Option<String>;
         fn tools(&self) -> Option<Vec<ChatCompletionTool>>;
+        #[swift_bridge(swift_name = "toolChoice")]
         fn tool_choice(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "parallelToolCalls")]
         fn parallel_tool_calls(&self) -> Option<bool>;
+        #[swift_bridge(swift_name = "responseFormat")]
         fn response_format(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "streamOptions")]
         fn stream_options(&self) -> Option<StreamOptions>;
         fn seed(&self) -> Option<i64>;
+        #[swift_bridge(swift_name = "reasoningEffort")]
         fn reasoning_effort(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "extraBody")]
         fn extra_body(&self) -> Option<String>;
     }
 
@@ -226,6 +265,7 @@ mod ffi {
         type StreamOptions;
         #[swift_bridge(init)]
         fn new(include_usage: Option<bool>) -> StreamOptions;
+        #[swift_bridge(swift_name = "includeUsage")]
         fn include_usage(&self) -> Option<bool>;
     }
 
@@ -248,7 +288,9 @@ mod ffi {
         fn model(&self) -> String;
         fn choices(&self) -> Vec<Choice>;
         fn usage(&self) -> Option<Usage>;
+        #[swift_bridge(swift_name = "systemFingerprint")]
         fn system_fingerprint(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "serviceTier")]
         fn service_tier(&self) -> Option<String>;
     }
 
@@ -258,6 +300,7 @@ mod ffi {
         fn new(index: u32, message: AssistantMessage, finish_reason: Option<FinishReason>) -> Choice;
         fn index(&self) -> u32;
         fn message(&self) -> AssistantMessage;
+        #[swift_bridge(swift_name = "finishReason")]
         fn finish_reason(&self) -> Option<String>;
     }
 
@@ -280,7 +323,9 @@ mod ffi {
         fn model(&self) -> String;
         fn choices(&self) -> Vec<StreamChoice>;
         fn usage(&self) -> Option<Usage>;
+        #[swift_bridge(swift_name = "systemFingerprint")]
         fn system_fingerprint(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "serviceTier")]
         fn service_tier(&self) -> Option<String>;
     }
 
@@ -290,6 +335,7 @@ mod ffi {
         fn new(index: u32, delta: StreamDelta, finish_reason: Option<FinishReason>) -> StreamChoice;
         fn index(&self) -> u32;
         fn delta(&self) -> StreamDelta;
+        #[swift_bridge(swift_name = "finishReason")]
         fn finish_reason(&self) -> Option<String>;
     }
 
@@ -305,7 +351,9 @@ mod ffi {
         ) -> StreamDelta;
         fn role(&self) -> Option<String>;
         fn content(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "toolCalls")]
         fn tool_calls(&self) -> Option<Vec<StreamToolCall>>;
+        #[swift_bridge(swift_name = "functionCall")]
         fn function_call(&self) -> Option<StreamFunctionCall>;
         fn refusal(&self) -> Option<String>;
     }
@@ -321,6 +369,7 @@ mod ffi {
         ) -> StreamToolCall;
         fn index(&self) -> u32;
         fn id(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "callType")]
         fn call_type(&self) -> Option<String>;
         fn function(&self) -> Option<StreamFunctionCall>;
     }
@@ -345,6 +394,7 @@ mod ffi {
         ) -> EmbeddingRequest;
         fn model(&self) -> String;
         fn input(&self) -> String;
+        #[swift_bridge(swift_name = "encodingFormat")]
         fn encoding_format(&self) -> Option<String>;
         fn dimensions(&self) -> Option<u32>;
         fn user(&self) -> Option<String>;
@@ -384,6 +434,7 @@ mod ffi {
         fn size(&self) -> Option<String>;
         fn quality(&self) -> Option<String>;
         fn style(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "responseFormat")]
         fn response_format(&self) -> Option<String>;
         fn user(&self) -> Option<String>;
     }
@@ -401,7 +452,9 @@ mod ffi {
         #[swift_bridge(init)]
         fn new(url: Option<String>, b64_json: Option<String>, revised_prompt: Option<String>) -> Image;
         fn url(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "b64Json")]
         fn b64_json(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "revisedPrompt")]
         fn revised_prompt(&self) -> Option<String>;
     }
 
@@ -418,6 +471,7 @@ mod ffi {
         fn model(&self) -> String;
         fn input(&self) -> String;
         fn voice(&self) -> String;
+        #[swift_bridge(swift_name = "responseFormat")]
         fn response_format(&self) -> Option<String>;
         fn speed(&self) -> Option<f64>;
     }
@@ -437,6 +491,7 @@ mod ffi {
         fn file(&self) -> String;
         fn language(&self) -> Option<String>;
         fn prompt(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "responseFormat")]
         fn response_format(&self) -> Option<String>;
         fn temperature(&self) -> Option<f64>;
     }
@@ -485,6 +540,7 @@ mod ffi {
         type ModerationResult;
         fn flagged(&self) -> bool;
         fn categories(&self) -> ModerationCategories;
+        #[swift_bridge(swift_name = "categoryScores")]
         fn category_scores(&self) -> ModerationCategoryScores;
     }
 
@@ -507,12 +563,19 @@ mod ffi {
         fn sexual(&self) -> bool;
         fn hate(&self) -> bool;
         fn harassment(&self) -> bool;
+        #[swift_bridge(swift_name = "selfHarm")]
         fn self_harm(&self) -> bool;
+        #[swift_bridge(swift_name = "sexualMinors")]
         fn sexual_minors(&self) -> bool;
+        #[swift_bridge(swift_name = "hateThreatening")]
         fn hate_threatening(&self) -> bool;
+        #[swift_bridge(swift_name = "violenceGraphic")]
         fn violence_graphic(&self) -> bool;
+        #[swift_bridge(swift_name = "selfHarmIntent")]
         fn self_harm_intent(&self) -> bool;
+        #[swift_bridge(swift_name = "selfHarmInstructions")]
         fn self_harm_instructions(&self) -> bool;
+        #[swift_bridge(swift_name = "harassmentThreatening")]
         fn harassment_threatening(&self) -> bool;
         fn violence(&self) -> bool;
     }
@@ -536,12 +599,19 @@ mod ffi {
         fn sexual(&self) -> f64;
         fn hate(&self) -> f64;
         fn harassment(&self) -> f64;
+        #[swift_bridge(swift_name = "selfHarm")]
         fn self_harm(&self) -> f64;
+        #[swift_bridge(swift_name = "sexualMinors")]
         fn sexual_minors(&self) -> f64;
+        #[swift_bridge(swift_name = "hateThreatening")]
         fn hate_threatening(&self) -> f64;
+        #[swift_bridge(swift_name = "violenceGraphic")]
         fn violence_graphic(&self) -> f64;
+        #[swift_bridge(swift_name = "selfHarmIntent")]
         fn self_harm_intent(&self) -> f64;
+        #[swift_bridge(swift_name = "selfHarmInstructions")]
         fn self_harm_instructions(&self) -> f64;
+        #[swift_bridge(swift_name = "harassmentThreatening")]
         fn harassment_threatening(&self) -> f64;
         fn violence(&self) -> f64;
     }
@@ -559,7 +629,9 @@ mod ffi {
         fn model(&self) -> String;
         fn query(&self) -> String;
         fn documents(&self) -> Vec<String>;
+        #[swift_bridge(swift_name = "topN")]
         fn top_n(&self) -> Option<u32>;
+        #[swift_bridge(swift_name = "returnDocuments")]
         fn return_documents(&self) -> Option<bool>;
     }
 
@@ -573,6 +645,7 @@ mod ffi {
     extern "Rust" {
         type RerankResult;
         fn index(&self) -> u32;
+        #[swift_bridge(swift_name = "relevanceScore")]
         fn relevance_score(&self) -> f64;
         fn document(&self) -> Option<RerankResultDocument>;
     }
@@ -594,7 +667,9 @@ mod ffi {
         ) -> SearchRequest;
         fn model(&self) -> String;
         fn query(&self) -> String;
+        #[swift_bridge(swift_name = "maxResults")]
         fn max_results(&self) -> Option<u32>;
+        #[swift_bridge(swift_name = "searchDomainFilter")]
         fn search_domain_filter(&self) -> Option<Vec<String>>;
         fn country(&self) -> Option<String>;
     }
@@ -625,6 +700,7 @@ mod ffi {
         fn model(&self) -> String;
         fn document(&self) -> String;
         fn pages(&self) -> Option<Vec<u32>>;
+        #[swift_bridge(swift_name = "includeImageBase64")]
         fn include_image_base64(&self) -> Option<bool>;
     }
 
@@ -646,6 +722,7 @@ mod ffi {
     extern "Rust" {
         type OcrImage;
         fn id(&self) -> String;
+        #[swift_bridge(swift_name = "imageBase64")]
         fn image_base64(&self) -> Option<String>;
     }
 
@@ -672,6 +749,7 @@ mod ffi {
         fn id(&self) -> String;
         fn object(&self) -> String;
         fn created(&self) -> u64;
+        #[swift_bridge(swift_name = "ownedBy")]
         fn owned_by(&self) -> String;
     }
 
@@ -699,6 +777,7 @@ mod ffi {
         fn id(&self) -> String;
         fn object(&self) -> String;
         fn bytes(&self) -> u64;
+        #[swift_bridge(swift_name = "createdAt")]
         fn created_at(&self) -> u64;
         fn filename(&self) -> String;
         fn purpose(&self) -> String;
@@ -711,6 +790,7 @@ mod ffi {
         fn new(object: String, data: Vec<FileObject>, has_more: Option<bool>) -> FileListResponse;
         fn object(&self) -> String;
         fn data(&self) -> Vec<FileObject>;
+        #[swift_bridge(swift_name = "hasMore")]
         fn has_more(&self) -> Option<bool>;
     }
 
@@ -741,8 +821,10 @@ mod ffi {
             completion_window: String,
             metadata: Option<String>,
         ) -> CreateBatchRequest;
+        #[swift_bridge(swift_name = "inputFileId")]
         fn input_file_id(&self) -> String;
         fn endpoint(&self) -> String;
+        #[swift_bridge(swift_name = "completionWindow")]
         fn completion_window(&self) -> String;
         fn metadata(&self) -> Option<String>;
     }
@@ -769,15 +851,24 @@ mod ffi {
         fn id(&self) -> String;
         fn object(&self) -> String;
         fn endpoint(&self) -> String;
+        #[swift_bridge(swift_name = "inputFileId")]
         fn input_file_id(&self) -> String;
+        #[swift_bridge(swift_name = "completionWindow")]
         fn completion_window(&self) -> String;
         fn status(&self) -> String;
+        #[swift_bridge(swift_name = "outputFileId")]
         fn output_file_id(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "errorFileId")]
         fn error_file_id(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "createdAt")]
         fn created_at(&self) -> u64;
+        #[swift_bridge(swift_name = "completedAt")]
         fn completed_at(&self) -> Option<u64>;
+        #[swift_bridge(swift_name = "failedAt")]
         fn failed_at(&self) -> Option<u64>;
+        #[swift_bridge(swift_name = "expiredAt")]
         fn expired_at(&self) -> Option<u64>;
+        #[swift_bridge(swift_name = "requestCounts")]
         fn request_counts(&self) -> Option<BatchRequestCounts>;
         fn metadata(&self) -> Option<String>;
     }
@@ -803,8 +894,11 @@ mod ffi {
         ) -> BatchListResponse;
         fn object(&self) -> String;
         fn data(&self) -> Vec<BatchObject>;
+        #[swift_bridge(swift_name = "hasMore")]
         fn has_more(&self) -> Option<bool>;
+        #[swift_bridge(swift_name = "firstId")]
         fn first_id(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "lastId")]
         fn last_id(&self) -> Option<String>;
     }
 
@@ -833,6 +927,7 @@ mod ffi {
         fn instructions(&self) -> Option<String>;
         fn tools(&self) -> Option<Vec<ResponseTool>>;
         fn temperature(&self) -> Option<f64>;
+        #[swift_bridge(swift_name = "maxOutputTokens")]
         fn max_output_tokens(&self) -> Option<u64>;
         fn metadata(&self) -> Option<String>;
     }
@@ -841,6 +936,7 @@ mod ffi {
         type ResponseTool;
         #[swift_bridge(init)]
         fn new(tool_type: String, config: String) -> ResponseTool;
+        #[swift_bridge(swift_name = "toolType")]
         fn tool_type(&self) -> String;
         fn config(&self) -> String;
     }
@@ -860,6 +956,7 @@ mod ffi {
         ) -> ResponseObject;
         fn id(&self) -> String;
         fn object(&self) -> String;
+        #[swift_bridge(swift_name = "createdAt")]
         fn created_at(&self) -> u64;
         fn model(&self) -> String;
         fn status(&self) -> String;
@@ -872,6 +969,7 @@ mod ffi {
         type ResponseOutputItem;
         #[swift_bridge(init)]
         fn new(item_type: String, content: String) -> ResponseOutputItem;
+        #[swift_bridge(swift_name = "itemType")]
         fn item_type(&self) -> String;
         fn content(&self) -> String;
     }
@@ -880,8 +978,11 @@ mod ffi {
         type ResponseUsage;
         #[swift_bridge(init)]
         fn new(input_tokens: u64, output_tokens: u64, total_tokens: u64) -> ResponseUsage;
+        #[swift_bridge(swift_name = "inputTokens")]
         fn input_tokens(&self) -> u64;
+        #[swift_bridge(swift_name = "outputTokens")]
         fn output_tokens(&self) -> u64;
+        #[swift_bridge(swift_name = "totalTokens")]
         fn total_tokens(&self) -> u64;
     }
 
@@ -957,17 +1058,79 @@ mod ffi {
             req: CreateResponseRequest,
         ) -> Result<ResponseObject, String>;
         #[swift_bridge(swift_name = "defaultClientRetrieveResponse")]
-        fn default_client_retrieve_response(client: &DefaultClient, id: String) -> Result<ResponseObject, String>;
+        fn default_client_retrieve_response(
+            client: &DefaultClient,
+            response_id: String,
+        ) -> Result<ResponseObject, String>;
         #[swift_bridge(swift_name = "defaultClientCancelResponse")]
-        fn default_client_cancel_response(client: &DefaultClient, id: String) -> Result<ResponseObject, String>;
+        fn default_client_cancel_response(
+            client: &DefaultClient,
+            response_id: String,
+        ) -> Result<ResponseObject, String>;
     }
 
     extern "Rust" {
         type CustomProviderConfig;
         fn name(&self) -> String;
+        #[swift_bridge(swift_name = "baseUrl")]
         fn base_url(&self) -> String;
+        #[swift_bridge(swift_name = "authHeader")]
         fn auth_header(&self) -> String;
+        #[swift_bridge(swift_name = "modelPrefixes")]
         fn model_prefixes(&self) -> Vec<String>;
+    }
+
+    extern "Rust" {
+        type ProviderConfig;
+        fn name(&self) -> String;
+        #[swift_bridge(swift_name = "displayName")]
+        fn display_name(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "baseUrl")]
+        fn base_url(&self) -> Option<String>;
+        fn auth(&self) -> Option<AuthConfig>;
+        fn endpoints(&self) -> Option<Vec<String>>;
+        #[swift_bridge(swift_name = "modelPrefixes")]
+        fn model_prefixes(&self) -> Option<Vec<String>>;
+        #[swift_bridge(swift_name = "paramMappings")]
+        fn param_mappings(&self) -> String;
+    }
+
+    extern "Rust" {
+        type AuthConfig;
+        #[swift_bridge(swift_name = "authType")]
+        fn auth_type(&self) -> String;
+        #[swift_bridge(swift_name = "envVar")]
+        fn env_var(&self) -> Option<String>;
+    }
+
+    extern "Rust" {
+        type BudgetConfig;
+        #[swift_bridge(init)]
+        fn new(global_limit: Option<f64>, model_limits: String, enforcement: Enforcement) -> BudgetConfig;
+        #[swift_bridge(swift_name = "globalLimit")]
+        fn global_limit(&self) -> Option<f64>;
+        #[swift_bridge(swift_name = "modelLimits")]
+        fn model_limits(&self) -> String;
+        fn enforcement(&self) -> String;
+    }
+
+    extern "Rust" {
+        type CacheConfig;
+        #[swift_bridge(init)]
+        fn new(max_entries: usize, ttl: u64, backend: CacheBackend) -> CacheConfig;
+        #[swift_bridge(swift_name = "maxEntries")]
+        fn max_entries(&self) -> usize;
+        fn ttl(&self) -> u64;
+        fn backend(&self) -> String;
+    }
+
+    extern "Rust" {
+        type RateLimitConfig;
+        #[swift_bridge(init)]
+        fn new(rpm: Option<u32>, tpm: Option<u64>, window: u64) -> RateLimitConfig;
+        fn rpm(&self) -> Option<u32>;
+        fn tpm(&self) -> Option<u64>;
+        fn window(&self) -> u64;
     }
 
     extern "Rust" {
@@ -1066,6 +1229,21 @@ mod ffi {
     }
 
     extern "Rust" {
+        type AuthType;
+        fn to_string(&self) -> String;
+    }
+
+    extern "Rust" {
+        type Enforcement;
+        fn to_string(&self) -> String;
+    }
+
+    extern "Rust" {
+        type CacheBackend;
+        fn to_string(&self) -> String;
+    }
+
+    extern "Rust" {
         #[swift_bridge(swift_name = "createClient")]
         fn create_client(
             api_key: String,
@@ -1076,6 +1254,27 @@ mod ffi {
         ) -> Result<DefaultClient, String>;
         #[swift_bridge(swift_name = "createClientFromJson")]
         fn create_client_from_json(json: String) -> Result<DefaultClient, String>;
+        #[swift_bridge(swift_name = "registerCustomProvider")]
+        fn register_custom_provider(config: CustomProviderConfig) -> Result<(), String>;
+        #[swift_bridge(swift_name = "unregisterCustomProvider")]
+        fn unregister_custom_provider(name: String) -> Result<bool, String>;
+        #[swift_bridge(swift_name = "complexProviderNames")]
+        fn complex_provider_names() -> Result<Vec<String>, String>;
+        #[swift_bridge(swift_name = "completionCost")]
+        fn completion_cost(model: String, prompt_tokens: u64, completion_tokens: u64) -> String;
+        #[swift_bridge(swift_name = "completionCostWithCache")]
+        fn completion_cost_with_cache(
+            model: String,
+            prompt_tokens: u64,
+            cached_tokens: u64,
+            completion_tokens: u64,
+        ) -> String;
+        #[swift_bridge(swift_name = "countTokens")]
+        fn count_tokens(model: String, text: String) -> Result<usize, String>;
+        #[swift_bridge(swift_name = "countRequestTokens")]
+        fn count_request_tokens(model: String, req: ChatCompletionRequest) -> Result<usize, String>;
+        #[swift_bridge(swift_name = "ensureCryptoProvider")]
+        fn ensure_crypto_provider() -> ();
     }
 
     extern "Rust" {
@@ -1119,6 +1318,8 @@ mod ffi {
         fn batch_list_query_from_json(json: String) -> Result<BatchListQuery, String>;
         #[swift_bridge(swift_name = "createResponseRequestFromJson")]
         fn create_response_request_from_json(json: String) -> Result<CreateResponseRequest, String>;
+        #[swift_bridge(swift_name = "customProviderConfigFromJson")]
+        fn custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String>;
     }
     extern "Rust" {
 
@@ -1127,6 +1328,24 @@ mod ffi {
     }
     extern "Rust" {
 
+        #[swift_bridge(swift_name = "systemMessageFromJson")]
+        fn system_message_from_json(json: String) -> Result<SystemMessage, String>;
+        #[swift_bridge(swift_name = "userMessageFromJson")]
+        fn user_message_from_json(json: String) -> Result<UserMessage, String>;
+        #[swift_bridge(swift_name = "imageUrlFromJson")]
+        fn image_url_from_json(json: String) -> Result<ImageUrl, String>;
+        #[swift_bridge(swift_name = "documentContentFromJson")]
+        fn document_content_from_json(json: String) -> Result<DocumentContent, String>;
+        #[swift_bridge(swift_name = "audioContentFromJson")]
+        fn audio_content_from_json(json: String) -> Result<AudioContent, String>;
+        #[swift_bridge(swift_name = "assistantMessageFromJson")]
+        fn assistant_message_from_json(json: String) -> Result<AssistantMessage, String>;
+        #[swift_bridge(swift_name = "toolMessageFromJson")]
+        fn tool_message_from_json(json: String) -> Result<ToolMessage, String>;
+        #[swift_bridge(swift_name = "developerMessageFromJson")]
+        fn developer_message_from_json(json: String) -> Result<DeveloperMessage, String>;
+        #[swift_bridge(swift_name = "functionMessageFromJson")]
+        fn function_message_from_json(json: String) -> Result<FunctionMessage, String>;
         #[swift_bridge(swift_name = "chatCompletionToolFromJson")]
         fn chat_completion_tool_from_json(json: String) -> Result<ChatCompletionTool, String>;
         #[swift_bridge(swift_name = "functionDefinitionFromJson")]
@@ -1135,14 +1354,50 @@ mod ffi {
         fn tool_call_from_json(json: String) -> Result<ToolCall, String>;
         #[swift_bridge(swift_name = "functionCallFromJson")]
         fn function_call_from_json(json: String) -> Result<FunctionCall, String>;
+        #[swift_bridge(swift_name = "specificToolChoiceFromJson")]
+        fn specific_tool_choice_from_json(json: String) -> Result<SpecificToolChoice, String>;
+        #[swift_bridge(swift_name = "specificFunctionFromJson")]
+        fn specific_function_from_json(json: String) -> Result<SpecificFunction, String>;
+        #[swift_bridge(swift_name = "jsonSchemaFormatFromJson")]
+        fn json_schema_format_from_json(json: String) -> Result<JsonSchemaFormat, String>;
+        #[swift_bridge(swift_name = "usageFromJson")]
+        fn usage_from_json(json: String) -> Result<Usage, String>;
+        #[swift_bridge(swift_name = "promptTokensDetailsFromJson")]
+        fn prompt_tokens_details_from_json(json: String) -> Result<PromptTokensDetails, String>;
+        #[swift_bridge(swift_name = "streamOptionsFromJson")]
+        fn stream_options_from_json(json: String) -> Result<StreamOptions, String>;
+        #[swift_bridge(swift_name = "chatCompletionResponseFromJson")]
+        fn chat_completion_response_from_json(json: String) -> Result<ChatCompletionResponse, String>;
+        #[swift_bridge(swift_name = "choiceFromJson")]
+        fn choice_from_json(json: String) -> Result<Choice, String>;
+        #[swift_bridge(swift_name = "streamChoiceFromJson")]
+        fn stream_choice_from_json(json: String) -> Result<StreamChoice, String>;
+        #[swift_bridge(swift_name = "streamDeltaFromJson")]
+        fn stream_delta_from_json(json: String) -> Result<StreamDelta, String>;
+        #[swift_bridge(swift_name = "streamToolCallFromJson")]
+        fn stream_tool_call_from_json(json: String) -> Result<StreamToolCall, String>;
+        #[swift_bridge(swift_name = "streamFunctionCallFromJson")]
+        fn stream_function_call_from_json(json: String) -> Result<StreamFunctionCall, String>;
         #[swift_bridge(swift_name = "embeddingResponseFromJson")]
         fn embedding_response_from_json(json: String) -> Result<EmbeddingResponse, String>;
         #[swift_bridge(swift_name = "embeddingObjectFromJson")]
         fn embedding_object_from_json(json: String) -> Result<EmbeddingObject, String>;
+        #[swift_bridge(swift_name = "imagesResponseFromJson")]
+        fn images_response_from_json(json: String) -> Result<ImagesResponse, String>;
+        #[swift_bridge(swift_name = "imageFromJson")]
+        fn image_from_json(json: String) -> Result<Image, String>;
+        #[swift_bridge(swift_name = "transcriptionResponseFromJson")]
+        fn transcription_response_from_json(json: String) -> Result<TranscriptionResponse, String>;
+        #[swift_bridge(swift_name = "transcriptionSegmentFromJson")]
+        fn transcription_segment_from_json(json: String) -> Result<TranscriptionSegment, String>;
         #[swift_bridge(swift_name = "moderationResponseFromJson")]
         fn moderation_response_from_json(json: String) -> Result<ModerationResponse, String>;
         #[swift_bridge(swift_name = "moderationResultFromJson")]
         fn moderation_result_from_json(json: String) -> Result<ModerationResult, String>;
+        #[swift_bridge(swift_name = "moderationCategoriesFromJson")]
+        fn moderation_categories_from_json(json: String) -> Result<ModerationCategories, String>;
+        #[swift_bridge(swift_name = "moderationCategoryScoresFromJson")]
+        fn moderation_category_scores_from_json(json: String) -> Result<ModerationCategoryScores, String>;
         #[swift_bridge(swift_name = "rerankResponseFromJson")]
         fn rerank_response_from_json(json: String) -> Result<RerankResponse, String>;
         #[swift_bridge(swift_name = "rerankResultFromJson")]
@@ -1159,8 +1414,89 @@ mod ffi {
         fn ocr_page_from_json(json: String) -> Result<OcrPage, String>;
         #[swift_bridge(swift_name = "ocrImageFromJson")]
         fn ocr_image_from_json(json: String) -> Result<OcrImage, String>;
-        #[swift_bridge(swift_name = "customProviderConfigFromJson")]
-        fn custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String>;
+        #[swift_bridge(swift_name = "pageDimensionsFromJson")]
+        fn page_dimensions_from_json(json: String) -> Result<PageDimensions, String>;
+        #[swift_bridge(swift_name = "modelsListResponseFromJson")]
+        fn models_list_response_from_json(json: String) -> Result<ModelsListResponse, String>;
+        #[swift_bridge(swift_name = "modelObjectFromJson")]
+        fn model_object_from_json(json: String) -> Result<ModelObject, String>;
+        #[swift_bridge(swift_name = "fileObjectFromJson")]
+        fn file_object_from_json(json: String) -> Result<FileObject, String>;
+        #[swift_bridge(swift_name = "fileListResponseFromJson")]
+        fn file_list_response_from_json(json: String) -> Result<FileListResponse, String>;
+        #[swift_bridge(swift_name = "deleteResponseFromJson")]
+        fn delete_response_from_json(json: String) -> Result<DeleteResponse, String>;
+        #[swift_bridge(swift_name = "batchObjectFromJson")]
+        fn batch_object_from_json(json: String) -> Result<BatchObject, String>;
+        #[swift_bridge(swift_name = "batchRequestCountsFromJson")]
+        fn batch_request_counts_from_json(json: String) -> Result<BatchRequestCounts, String>;
+        #[swift_bridge(swift_name = "batchListResponseFromJson")]
+        fn batch_list_response_from_json(json: String) -> Result<BatchListResponse, String>;
+        #[swift_bridge(swift_name = "responseToolFromJson")]
+        fn response_tool_from_json(json: String) -> Result<ResponseTool, String>;
+        #[swift_bridge(swift_name = "responseObjectFromJson")]
+        fn response_object_from_json(json: String) -> Result<ResponseObject, String>;
+        #[swift_bridge(swift_name = "responseOutputItemFromJson")]
+        fn response_output_item_from_json(json: String) -> Result<ResponseOutputItem, String>;
+        #[swift_bridge(swift_name = "responseUsageFromJson")]
+        fn response_usage_from_json(json: String) -> Result<ResponseUsage, String>;
+        #[swift_bridge(swift_name = "providerConfigFromJson")]
+        fn provider_config_from_json(json: String) -> Result<ProviderConfig, String>;
+        #[swift_bridge(swift_name = "authConfigFromJson")]
+        fn auth_config_from_json(json: String) -> Result<AuthConfig, String>;
+        #[swift_bridge(swift_name = "budgetConfigFromJson")]
+        fn budget_config_from_json(json: String) -> Result<BudgetConfig, String>;
+        #[swift_bridge(swift_name = "cacheConfigFromJson")]
+        fn cache_config_from_json(json: String) -> Result<CacheConfig, String>;
+        #[swift_bridge(swift_name = "rateLimitConfigFromJson")]
+        fn rate_limit_config_from_json(json: String) -> Result<RateLimitConfig, String>;
+    }
+    extern "Rust" {
+
+        #[swift_bridge(swift_name = "messageFromJson")]
+        fn message_from_json(json: String) -> Result<Message, String>;
+        #[swift_bridge(swift_name = "userContentFromJson")]
+        fn user_content_from_json(json: String) -> Result<UserContent, String>;
+        #[swift_bridge(swift_name = "contentPartFromJson")]
+        fn content_part_from_json(json: String) -> Result<ContentPart, String>;
+        #[swift_bridge(swift_name = "imageDetailFromJson")]
+        fn image_detail_from_json(json: String) -> Result<ImageDetail, String>;
+        #[swift_bridge(swift_name = "toolTypeFromJson")]
+        fn tool_type_from_json(json: String) -> Result<ToolType, String>;
+        #[swift_bridge(swift_name = "toolChoiceFromJson")]
+        fn tool_choice_from_json(json: String) -> Result<ToolChoice, String>;
+        #[swift_bridge(swift_name = "toolChoiceModeFromJson")]
+        fn tool_choice_mode_from_json(json: String) -> Result<ToolChoiceMode, String>;
+        #[swift_bridge(swift_name = "responseFormatFromJson")]
+        fn response_format_from_json(json: String) -> Result<ResponseFormat, String>;
+        #[swift_bridge(swift_name = "stopSequenceFromJson")]
+        fn stop_sequence_from_json(json: String) -> Result<StopSequence, String>;
+        #[swift_bridge(swift_name = "finishReasonFromJson")]
+        fn finish_reason_from_json(json: String) -> Result<FinishReason, String>;
+        #[swift_bridge(swift_name = "reasoningEffortFromJson")]
+        fn reasoning_effort_from_json(json: String) -> Result<ReasoningEffort, String>;
+        #[swift_bridge(swift_name = "embeddingFormatFromJson")]
+        fn embedding_format_from_json(json: String) -> Result<EmbeddingFormat, String>;
+        #[swift_bridge(swift_name = "embeddingInputFromJson")]
+        fn embedding_input_from_json(json: String) -> Result<EmbeddingInput, String>;
+        #[swift_bridge(swift_name = "moderationInputFromJson")]
+        fn moderation_input_from_json(json: String) -> Result<ModerationInput, String>;
+        #[swift_bridge(swift_name = "rerankDocumentFromJson")]
+        fn rerank_document_from_json(json: String) -> Result<RerankDocument, String>;
+        #[swift_bridge(swift_name = "ocrDocumentFromJson")]
+        fn ocr_document_from_json(json: String) -> Result<OcrDocument, String>;
+        #[swift_bridge(swift_name = "filePurposeFromJson")]
+        fn file_purpose_from_json(json: String) -> Result<FilePurpose, String>;
+        #[swift_bridge(swift_name = "batchStatusFromJson")]
+        fn batch_status_from_json(json: String) -> Result<BatchStatus, String>;
+        #[swift_bridge(swift_name = "authHeaderFormatFromJson")]
+        fn auth_header_format_from_json(json: String) -> Result<AuthHeaderFormat, String>;
+        #[swift_bridge(swift_name = "authTypeFromJson")]
+        fn auth_type_from_json(json: String) -> Result<AuthType, String>;
+        #[swift_bridge(swift_name = "enforcementFromJson")]
+        fn enforcement_from_json(json: String) -> Result<Enforcement, String>;
+        #[swift_bridge(swift_name = "cacheBackendFromJson")]
+        fn cache_backend_from_json(json: String) -> Result<CacheBackend, String>;
     }
 }
 
@@ -1168,16 +1504,25 @@ pub struct SystemMessage(pub liter_llm::types::SystemMessage);
 impl SystemMessage {
     pub fn new(content: String, name: Option<String>) -> SystemMessage {
         let mut __target: liter_llm::types::SystemMessage = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&content) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&content)
+                .unwrap_or(::serde_json::Value::String(content.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.content = t;
             }
         }
         if let Some(s) = name {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.name = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.name = Some(t);
             }
         }
         SystemMessage(__target)
@@ -1196,10 +1541,13 @@ impl UserMessage {
         let mut __target: liter_llm::types::UserMessage = ::std::default::Default::default();
         // alef: content (UserContent) is an enum; reverse From not generated — left at default
         if let Some(s) = name {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.name = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.name = Some(t);
             }
         }
         UserMessage(__target)
@@ -1216,8 +1564,14 @@ pub struct ImageUrl(pub liter_llm::types::ImageUrl);
 impl ImageUrl {
     pub fn new(url: String, detail: Option<ImageDetail>) -> ImageUrl {
         let mut __target: liter_llm::types::ImageUrl = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&url) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v =
+                ::serde_json::from_str::<::serde_json::Value>(&url).unwrap_or(::serde_json::Value::String(url.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.url = t;
             }
         }
@@ -1236,13 +1590,25 @@ pub struct DocumentContent(pub liter_llm::types::DocumentContent);
 impl DocumentContent {
     pub fn new(data: String, media_type: String) -> DocumentContent {
         let mut __target: liter_llm::types::DocumentContent = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&data) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&data)
+                .unwrap_or(::serde_json::Value::String(data.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.data = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&media_type) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&media_type)
+                .unwrap_or(::serde_json::Value::String(media_type.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.media_type = t;
             }
         }
@@ -1260,13 +1626,25 @@ pub struct AudioContent(pub liter_llm::types::AudioContent);
 impl AudioContent {
     pub fn new(data: String, format: String) -> AudioContent {
         let mut __target: liter_llm::types::AudioContent = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&data) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&data)
+                .unwrap_or(::serde_json::Value::String(data.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.data = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&format) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&format)
+                .unwrap_or(::serde_json::Value::String(format.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.format = t;
             }
         }
@@ -1291,27 +1669,36 @@ impl AssistantMessage {
     ) -> AssistantMessage {
         let mut __target: liter_llm::types::AssistantMessage = ::std::default::Default::default();
         if let Some(s) = content {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.content = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.content = Some(t);
             }
         }
         if let Some(s) = name {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.name = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.name = Some(t);
             }
         }
         if let Some(v) = tool_calls {
             __target.tool_calls = Some(v.into_iter().map(|w| w.0).collect());
         }
         if let Some(s) = refusal {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.refusal = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.refusal = Some(t);
             }
         }
         if let Some(w) = function_call {
@@ -1343,21 +1730,36 @@ pub struct ToolMessage(pub liter_llm::types::ToolMessage);
 impl ToolMessage {
     pub fn new(content: String, tool_call_id: String, name: Option<String>) -> ToolMessage {
         let mut __target: liter_llm::types::ToolMessage = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&content) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&content)
+                .unwrap_or(::serde_json::Value::String(content.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.content = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&tool_call_id) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&tool_call_id)
+                .unwrap_or(::serde_json::Value::String(tool_call_id.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.tool_call_id = t;
             }
         }
         if let Some(s) = name {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.name = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.name = Some(t);
             }
         }
         ToolMessage(__target)
@@ -1377,16 +1779,25 @@ pub struct DeveloperMessage(pub liter_llm::types::DeveloperMessage);
 impl DeveloperMessage {
     pub fn new(content: String, name: Option<String>) -> DeveloperMessage {
         let mut __target: liter_llm::types::DeveloperMessage = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&content) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&content)
+                .unwrap_or(::serde_json::Value::String(content.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.content = t;
             }
         }
         if let Some(s) = name {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.name = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.name = Some(t);
             }
         }
         DeveloperMessage(__target)
@@ -1403,13 +1814,25 @@ pub struct FunctionMessage(pub liter_llm::types::FunctionMessage);
 impl FunctionMessage {
     pub fn new(content: String, name: String) -> FunctionMessage {
         let mut __target: liter_llm::types::FunctionMessage = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&content) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&content)
+                .unwrap_or(::serde_json::Value::String(content.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.content = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&name) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&name)
+                .unwrap_or(::serde_json::Value::String(name.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.name = t;
             }
         }
@@ -1496,8 +1919,14 @@ pub struct SpecificFunction(pub liter_llm::types::SpecificFunction);
 impl SpecificFunction {
     pub fn new(name: String) -> SpecificFunction {
         let mut __target: liter_llm::types::SpecificFunction = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&name) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&name)
+                .unwrap_or(::serde_json::Value::String(name.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.name = t;
             }
         }
@@ -1512,20 +1941,35 @@ pub struct JsonSchemaFormat(pub liter_llm::types::JsonSchemaFormat);
 impl JsonSchemaFormat {
     pub fn new(name: String, description: Option<String>, schema: String, strict: Option<bool>) -> JsonSchemaFormat {
         let mut __target: liter_llm::types::JsonSchemaFormat = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&name) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&name)
+                .unwrap_or(::serde_json::Value::String(name.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.name = t;
             }
         }
         if let Some(s) = description {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.description = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.description = Some(t);
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&schema) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&schema)
+                .unwrap_or(::serde_json::Value::String(schema.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.schema = t;
             }
         }
@@ -1637,8 +2081,14 @@ impl ChatCompletionRequest {
         extra_body: Option<String>,
     ) -> ChatCompletionRequest {
         let mut __target: liter_llm::types::ChatCompletionRequest = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&model) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&model)
+                .unwrap_or(::serde_json::Value::String(model.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.model = t;
             }
         }
@@ -1657,10 +2107,13 @@ impl ChatCompletionRequest {
             }
         }
         if let Some(s) = user {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.user = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.user = Some(t);
             }
         }
         if let Some(v) = tools {
@@ -1675,10 +2128,13 @@ impl ChatCompletionRequest {
         __target.seed = seed;
         // alef: reasoning_effort (ReasoningEffort) is an enum; reverse From not generated — left at default
         if let Some(s) = extra_body {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.extra_body = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.extra_body = Some(t);
             }
         }
         ChatCompletionRequest(__target)
@@ -1821,19 +2277,37 @@ impl ChatCompletionResponse {
         service_tier: Option<String>,
     ) -> ChatCompletionResponse {
         let mut __target: liter_llm::types::ChatCompletionResponse = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&id) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v =
+                ::serde_json::from_str::<::serde_json::Value>(&id).unwrap_or(::serde_json::Value::String(id.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.id = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&object) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&object)
+                .unwrap_or(::serde_json::Value::String(object.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.object = t;
             }
         }
         __target.created = created;
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&model) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&model)
+                .unwrap_or(::serde_json::Value::String(model.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.model = t;
             }
         }
@@ -1842,17 +2316,23 @@ impl ChatCompletionResponse {
             __target.usage = Some(w.0);
         }
         if let Some(s) = system_fingerprint {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.system_fingerprint = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.system_fingerprint = Some(t);
             }
         }
         if let Some(s) = service_tier {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.service_tier = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.service_tier = Some(t);
             }
         }
         ChatCompletionResponse(__target)
@@ -1922,19 +2402,37 @@ impl ChatCompletionChunk {
         service_tier: Option<String>,
     ) -> ChatCompletionChunk {
         let mut __target: liter_llm::types::ChatCompletionChunk = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&id) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v =
+                ::serde_json::from_str::<::serde_json::Value>(&id).unwrap_or(::serde_json::Value::String(id.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.id = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&object) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&object)
+                .unwrap_or(::serde_json::Value::String(object.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.object = t;
             }
         }
         __target.created = created;
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&model) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&model)
+                .unwrap_or(::serde_json::Value::String(model.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.model = t;
             }
         }
@@ -1943,17 +2441,23 @@ impl ChatCompletionChunk {
             __target.usage = Some(w.0);
         }
         if let Some(s) = system_fingerprint {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.system_fingerprint = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.system_fingerprint = Some(t);
             }
         }
         if let Some(s) = service_tier {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.service_tier = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.service_tier = Some(t);
             }
         }
         ChatCompletionChunk(__target)
@@ -2021,17 +2525,23 @@ impl StreamDelta {
     ) -> StreamDelta {
         let mut __target: liter_llm::types::StreamDelta = ::std::default::Default::default();
         if let Some(s) = role {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.role = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.role = Some(t);
             }
         }
         if let Some(s) = content {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.content = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.content = Some(t);
             }
         }
         if let Some(v) = tool_calls {
@@ -2041,10 +2551,13 @@ impl StreamDelta {
             __target.function_call = Some(w.0);
         }
         if let Some(s) = refusal {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.refusal = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.refusal = Some(t);
             }
         }
         StreamDelta(__target)
@@ -2080,10 +2593,13 @@ impl StreamToolCall {
         let mut __target: liter_llm::types::StreamToolCall = ::std::default::Default::default();
         __target.index = index;
         if let Some(s) = id {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.id = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.id = Some(t);
             }
         }
         // alef: call_type (ToolType) is an enum; reverse From not generated — left at default
@@ -2114,17 +2630,23 @@ impl StreamFunctionCall {
     pub fn new(name: Option<String>, arguments: Option<String>) -> StreamFunctionCall {
         let mut __target: liter_llm::types::StreamFunctionCall = ::std::default::Default::default();
         if let Some(s) = name {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.name = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.name = Some(t);
             }
         }
         if let Some(s) = arguments {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.arguments = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.arguments = Some(t);
             }
         }
         StreamFunctionCall(__target)
@@ -2147,8 +2669,14 @@ impl EmbeddingRequest {
         user: Option<String>,
     ) -> EmbeddingRequest {
         let mut __target: liter_llm::types::EmbeddingRequest = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&model) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&model)
+                .unwrap_or(::serde_json::Value::String(model.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.model = t;
             }
         }
@@ -2156,10 +2684,13 @@ impl EmbeddingRequest {
         // alef: encoding_format (EmbeddingFormat) is an enum; reverse From not generated — left at default
         __target.dimensions = dimensions;
         if let Some(s) = user {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.user = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.user = Some(t);
             }
         }
         EmbeddingRequest(__target)
@@ -2236,52 +2767,76 @@ impl CreateImageRequest {
         user: Option<String>,
     ) -> CreateImageRequest {
         let mut __target: liter_llm::types::CreateImageRequest = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&prompt) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&prompt)
+                .unwrap_or(::serde_json::Value::String(prompt.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.prompt = t;
             }
         }
         if let Some(s) = model {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.model = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.model = Some(t);
             }
         }
         __target.n = n;
         if let Some(s) = size {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.size = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.size = Some(t);
             }
         }
         if let Some(s) = quality {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.quality = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.quality = Some(t);
             }
         }
         if let Some(s) = style {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.style = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.style = Some(t);
             }
         }
         if let Some(s) = response_format {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.response_format = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.response_format = Some(t);
             }
         }
         if let Some(s) = user {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.user = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.user = Some(t);
             }
         }
         CreateImageRequest(__target)
@@ -2340,24 +2895,33 @@ impl Image {
     pub fn new(url: Option<String>, b64_json: Option<String>, revised_prompt: Option<String>) -> Image {
         let mut __target: liter_llm::types::Image = ::std::default::Default::default();
         if let Some(s) = url {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.url = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.url = Some(t);
             }
         }
         if let Some(s) = b64_json {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.b64_json = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.b64_json = Some(t);
             }
         }
         if let Some(s) = revised_prompt {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.revised_prompt = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.revised_prompt = Some(t);
             }
         }
         Image(__target)
@@ -2383,26 +2947,47 @@ impl CreateSpeechRequest {
         speed: Option<f64>,
     ) -> CreateSpeechRequest {
         let mut __target: liter_llm::types::CreateSpeechRequest = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&model) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&model)
+                .unwrap_or(::serde_json::Value::String(model.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.model = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&input) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&input)
+                .unwrap_or(::serde_json::Value::String(input.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.input = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&voice) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&voice)
+                .unwrap_or(::serde_json::Value::String(voice.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.voice = t;
             }
         }
         if let Some(s) = response_format {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.response_format = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.response_format = Some(t);
             }
         }
         __target.speed = speed;
@@ -2440,35 +3025,56 @@ impl CreateTranscriptionRequest {
         temperature: Option<f64>,
     ) -> CreateTranscriptionRequest {
         let mut __target: liter_llm::types::CreateTranscriptionRequest = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&model) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&model)
+                .unwrap_or(::serde_json::Value::String(model.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.model = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&file) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&file)
+                .unwrap_or(::serde_json::Value::String(file.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.file = t;
             }
         }
         if let Some(s) = language {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.language = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.language = Some(t);
             }
         }
         if let Some(s) = prompt {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.prompt = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.prompt = Some(t);
             }
         }
         if let Some(s) = response_format {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.response_format = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.response_format = Some(t);
             }
         }
         __target.temperature = temperature;
@@ -2507,16 +3113,25 @@ impl TranscriptionResponse {
         segments: Option<Vec<TranscriptionSegment>>,
     ) -> TranscriptionResponse {
         let mut __target: liter_llm::types::TranscriptionResponse = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&text) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&text)
+                .unwrap_or(::serde_json::Value::String(text.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.text = t;
             }
         }
         if let Some(s) = language {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.language = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.language = Some(t);
             }
         }
         __target.duration = duration;
@@ -2553,8 +3168,14 @@ impl TranscriptionSegment {
         __target.id = id;
         __target.start = start;
         __target.end = end;
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&text) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&text)
+                .unwrap_or(::serde_json::Value::String(text.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.text = t;
             }
         }
@@ -2589,10 +3210,13 @@ impl ModerationRequest {
         let mut __target: liter_llm::types::ModerationRequest = ::std::default::Default::default();
         // alef: input (ModerationInput) is an enum; reverse From not generated — left at default
         if let Some(s) = model {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.model = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.model = Some(t);
             }
         }
         ModerationRequest(__target)
@@ -2842,13 +3466,25 @@ impl RerankRequest {
         return_documents: Option<bool>,
     ) -> RerankRequest {
         let mut __target: liter_llm::types::RerankRequest = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&model) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&model)
+                .unwrap_or(::serde_json::Value::String(model.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.model = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&query) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&query)
+                .unwrap_or(::serde_json::Value::String(query.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.query = t;
             }
         }
@@ -2935,13 +3571,25 @@ impl SearchRequest {
         country: Option<String>,
     ) -> SearchRequest {
         let mut __target: liter_llm::types::SearchRequest = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&model) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&model)
+                .unwrap_or(::serde_json::Value::String(model.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.model = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&query) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&query)
+                .unwrap_or(::serde_json::Value::String(query.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.query = t;
             }
         }
@@ -2952,10 +3600,13 @@ impl SearchRequest {
             }
         }
         if let Some(s) = country {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.country = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.country = Some(t);
             }
         }
         SearchRequest(__target)
@@ -3020,8 +3671,14 @@ impl OcrRequest {
         include_image_base64: Option<bool>,
     ) -> OcrRequest {
         let mut __target: liter_llm::types::OcrRequest = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&model) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&model)
+                .unwrap_or(::serde_json::Value::String(model.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.model = t;
             }
         }
@@ -3124,8 +3781,14 @@ pub struct ModelsListResponse(pub liter_llm::types::ModelsListResponse);
 impl ModelsListResponse {
     pub fn new(object: String, data: Vec<ModelObject>) -> ModelsListResponse {
         let mut __target: liter_llm::types::ModelsListResponse = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&object) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&object)
+                .unwrap_or(::serde_json::Value::String(object.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.object = t;
             }
         }
@@ -3144,19 +3807,37 @@ pub struct ModelObject(pub liter_llm::types::ModelObject);
 impl ModelObject {
     pub fn new(id: String, object: String, created: u64, owned_by: String) -> ModelObject {
         let mut __target: liter_llm::types::ModelObject = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&id) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v =
+                ::serde_json::from_str::<::serde_json::Value>(&id).unwrap_or(::serde_json::Value::String(id.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.id = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&object) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&object)
+                .unwrap_or(::serde_json::Value::String(object.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.object = t;
             }
         }
         __target.created = created;
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&owned_by) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&owned_by)
+                .unwrap_or(::serde_json::Value::String(owned_by.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.owned_by = t;
             }
         }
@@ -3183,17 +3864,26 @@ pub struct CreateFileRequest(pub liter_llm::types::CreateFileRequest);
 impl CreateFileRequest {
     pub fn new(file: String, purpose: FilePurpose, filename: Option<String>) -> CreateFileRequest {
         let mut __target: liter_llm::types::CreateFileRequest = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&file) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&file)
+                .unwrap_or(::serde_json::Value::String(file.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.file = t;
             }
         }
         // alef: purpose (FilePurpose) is an enum; reverse From not generated — left at default
         if let Some(s) = filename {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.filename = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.filename = Some(t);
             }
         }
         CreateFileRequest(__target)
@@ -3221,33 +3911,60 @@ impl FileObject {
         status: Option<String>,
     ) -> FileObject {
         let mut __target: liter_llm::types::FileObject = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&id) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v =
+                ::serde_json::from_str::<::serde_json::Value>(&id).unwrap_or(::serde_json::Value::String(id.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.id = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&object) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&object)
+                .unwrap_or(::serde_json::Value::String(object.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.object = t;
             }
         }
         __target.bytes = bytes;
         __target.created_at = created_at;
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&filename) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&filename)
+                .unwrap_or(::serde_json::Value::String(filename.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.filename = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&purpose) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&purpose)
+                .unwrap_or(::serde_json::Value::String(purpose.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.purpose = t;
             }
         }
         if let Some(s) = status {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.status = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.status = Some(t);
             }
         }
         FileObject(__target)
@@ -3285,8 +4002,14 @@ pub struct FileListResponse(pub liter_llm::types::FileListResponse);
 impl FileListResponse {
     pub fn new(object: String, data: Vec<FileObject>, has_more: Option<bool>) -> FileListResponse {
         let mut __target: liter_llm::types::FileListResponse = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&object) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&object)
+                .unwrap_or(::serde_json::Value::String(object.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.object = t;
             }
         }
@@ -3314,18 +4037,24 @@ impl FileListQuery {
     pub fn new(purpose: Option<String>, limit: Option<u32>, after: Option<String>) -> FileListQuery {
         let mut __target: liter_llm::types::FileListQuery = ::std::default::Default::default();
         if let Some(s) = purpose {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.purpose = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.purpose = Some(t);
             }
         }
         __target.limit = limit;
         if let Some(s) = after {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.after = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.after = Some(t);
             }
         }
         FileListQuery(__target)
@@ -3349,13 +4078,25 @@ pub struct DeleteResponse(pub liter_llm::types::DeleteResponse);
 impl DeleteResponse {
     pub fn new(id: String, object: String, deleted: bool) -> DeleteResponse {
         let mut __target: liter_llm::types::DeleteResponse = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&id) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v =
+                ::serde_json::from_str::<::serde_json::Value>(&id).unwrap_or(::serde_json::Value::String(id.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.id = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&object) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&object)
+                .unwrap_or(::serde_json::Value::String(object.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.object = t;
             }
         }
@@ -3385,26 +4126,47 @@ impl CreateBatchRequest {
         metadata: Option<String>,
     ) -> CreateBatchRequest {
         let mut __target: liter_llm::types::CreateBatchRequest = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&input_file_id) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&input_file_id)
+                .unwrap_or(::serde_json::Value::String(input_file_id.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.input_file_id = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&endpoint) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&endpoint)
+                .unwrap_or(::serde_json::Value::String(endpoint.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.endpoint = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&completion_window) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&completion_window)
+                .unwrap_or(::serde_json::Value::String(completion_window.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.completion_window = t;
             }
         }
         if let Some(s) = metadata {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.metadata = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.metadata = Some(t);
             }
         }
         CreateBatchRequest(__target)
@@ -3442,44 +4204,80 @@ impl BatchObject {
         metadata: Option<String>,
     ) -> BatchObject {
         let mut __target: liter_llm::types::BatchObject = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&id) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v =
+                ::serde_json::from_str::<::serde_json::Value>(&id).unwrap_or(::serde_json::Value::String(id.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.id = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&object) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&object)
+                .unwrap_or(::serde_json::Value::String(object.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.object = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&endpoint) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&endpoint)
+                .unwrap_or(::serde_json::Value::String(endpoint.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.endpoint = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&input_file_id) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&input_file_id)
+                .unwrap_or(::serde_json::Value::String(input_file_id.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.input_file_id = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&completion_window) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&completion_window)
+                .unwrap_or(::serde_json::Value::String(completion_window.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.completion_window = t;
             }
         }
         // alef: status (BatchStatus) is an enum; reverse From not generated — left at default
         if let Some(s) = output_file_id {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.output_file_id = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.output_file_id = Some(t);
             }
         }
         if let Some(s) = error_file_id {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.error_file_id = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.error_file_id = Some(t);
             }
         }
         __target.created_at = created_at;
@@ -3490,10 +4288,13 @@ impl BatchObject {
             __target.request_counts = Some(w.0);
         }
         if let Some(s) = metadata {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.metadata = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.metadata = Some(t);
             }
         }
         BatchObject(__target)
@@ -3596,25 +4397,37 @@ impl BatchListResponse {
         last_id: Option<String>,
     ) -> BatchListResponse {
         let mut __target: liter_llm::types::BatchListResponse = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&object) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&object)
+                .unwrap_or(::serde_json::Value::String(object.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.object = t;
             }
         }
         __target.data = data.into_iter().map(|w| w.0).collect();
         __target.has_more = has_more;
         if let Some(s) = first_id {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.first_id = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.first_id = Some(t);
             }
         }
         if let Some(s) = last_id {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.last_id = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.last_id = Some(t);
             }
         }
         BatchListResponse(__target)
@@ -3646,10 +4459,13 @@ impl BatchListQuery {
         let mut __target: liter_llm::types::BatchListQuery = ::std::default::Default::default();
         __target.limit = limit;
         if let Some(s) = after {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.after = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.after = Some(t);
             }
         }
         BatchListQuery(__target)
@@ -3678,21 +4494,36 @@ impl CreateResponseRequest {
         metadata: Option<String>,
     ) -> CreateResponseRequest {
         let mut __target: liter_llm::types::CreateResponseRequest = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&model) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&model)
+                .unwrap_or(::serde_json::Value::String(model.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.model = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&input) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&input)
+                .unwrap_or(::serde_json::Value::String(input.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.input = t;
             }
         }
         if let Some(s) = instructions {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.instructions = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.instructions = Some(t);
             }
         }
         if let Some(v) = tools {
@@ -3701,10 +4532,13 @@ impl CreateResponseRequest {
         __target.temperature = temperature;
         __target.max_output_tokens = max_output_tokens;
         if let Some(s) = metadata {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.metadata = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.metadata = Some(t);
             }
         }
         CreateResponseRequest(__target)
@@ -3747,13 +4581,25 @@ pub struct ResponseTool(pub liter_llm::types::ResponseTool);
 impl ResponseTool {
     pub fn new(tool_type: String, config: String) -> ResponseTool {
         let mut __target: liter_llm::types::ResponseTool = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&tool_type) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&tool_type)
+                .unwrap_or(::serde_json::Value::String(tool_type.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.tool_type = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&config) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&config)
+                .unwrap_or(::serde_json::Value::String(config.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.config = t;
             }
         }
@@ -3780,24 +4626,48 @@ impl ResponseObject {
         error: Option<String>,
     ) -> ResponseObject {
         let mut __target: liter_llm::types::ResponseObject = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&id) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v =
+                ::serde_json::from_str::<::serde_json::Value>(&id).unwrap_or(::serde_json::Value::String(id.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.id = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&object) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&object)
+                .unwrap_or(::serde_json::Value::String(object.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.object = t;
             }
         }
         __target.created_at = created_at;
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&model) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&model)
+                .unwrap_or(::serde_json::Value::String(model.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.model = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&status) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&status)
+                .unwrap_or(::serde_json::Value::String(status.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.status = t;
             }
         }
@@ -3806,10 +4676,13 @@ impl ResponseObject {
             __target.usage = Some(w.0);
         }
         if let Some(s) = error {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.error = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.error = Some(t);
             }
         }
         ResponseObject(__target)
@@ -3851,13 +4724,25 @@ pub struct ResponseOutputItem(pub liter_llm::types::ResponseOutputItem);
 impl ResponseOutputItem {
     pub fn new(item_type: String, content: String) -> ResponseOutputItem {
         let mut __target: liter_llm::types::ResponseOutputItem = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&item_type) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&item_type)
+                .unwrap_or(::serde_json::Value::String(item_type.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.item_type = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&content) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&content)
+                .unwrap_or(::serde_json::Value::String(content.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.content = t;
             }
         }
@@ -3925,320 +4810,233 @@ pub fn default_client_chat(
     client: &DefaultClient,
     req: ChatCompletionRequest,
 ) -> Result<ChatCompletionResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .chat(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(ChatCompletionResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .chat(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(ChatCompletionResponse)
+    })
 }
 pub fn default_client_embed(client: &DefaultClient, req: EmbeddingRequest) -> Result<EmbeddingResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .embed(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(EmbeddingResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .embed(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(EmbeddingResponse)
+    })
 }
 pub fn default_client_list_models(client: &DefaultClient) -> Result<ModelsListResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .list_models()
-                .await
-                .map_err(|e| e.to_string())
-                .map(ModelsListResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .list_models()
+            .await
+            .map_err(|e| e.to_string())
+            .map(ModelsListResponse)
+    })
 }
 pub fn default_client_image_generate(
     client: &DefaultClient,
     req: CreateImageRequest,
 ) -> Result<ImagesResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .image_generate(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(ImagesResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .image_generate(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(ImagesResponse)
+    })
 }
 pub fn default_client_speech(client: &DefaultClient, req: CreateSpeechRequest) -> Result<Vec<u8>, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .speech(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(|b| b.to_vec())
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .speech(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(|b| b.to_vec())
+    })
 }
 pub fn default_client_transcribe(
     client: &DefaultClient,
     req: CreateTranscriptionRequest,
 ) -> Result<TranscriptionResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .transcribe(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(TranscriptionResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .transcribe(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(TranscriptionResponse)
+    })
 }
 pub fn default_client_moderate(client: &DefaultClient, req: ModerationRequest) -> Result<ModerationResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .moderate(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(ModerationResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .moderate(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(ModerationResponse)
+    })
 }
 pub fn default_client_rerank(client: &DefaultClient, req: RerankRequest) -> Result<RerankResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .rerank(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(RerankResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .rerank(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(RerankResponse)
+    })
 }
 pub fn default_client_search(client: &DefaultClient, req: SearchRequest) -> Result<SearchResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .search(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(SearchResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .search(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(SearchResponse)
+    })
 }
 pub fn default_client_ocr(client: &DefaultClient, req: OcrRequest) -> Result<OcrResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
+    crate::__alef_tokio_runtime()
         .block_on(async { client.0.ocr(req.0).await.map_err(|e| e.to_string()).map(OcrResponse) })
 }
 pub fn default_client_create_file(client: &DefaultClient, req: CreateFileRequest) -> Result<FileObject, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .create_file(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(FileObject)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .create_file(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(FileObject)
+    })
 }
 pub fn default_client_retrieve_file(client: &DefaultClient, file_id: String) -> Result<FileObject, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .retrieve_file(&file_id)
-                .await
-                .map_err(|e| e.to_string())
-                .map(FileObject)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .retrieve_file(&file_id)
+            .await
+            .map_err(|e| e.to_string())
+            .map(FileObject)
+    })
 }
 pub fn default_client_delete_file(client: &DefaultClient, file_id: String) -> Result<DeleteResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .delete_file(&file_id)
-                .await
-                .map_err(|e| e.to_string())
-                .map(DeleteResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .delete_file(&file_id)
+            .await
+            .map_err(|e| e.to_string())
+            .map(DeleteResponse)
+    })
 }
 pub fn default_client_list_files(
     client: &DefaultClient,
     query: Option<FileListQuery>,
 ) -> Result<FileListResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .list_files(query.map(|v| v.0))
-                .await
-                .map_err(|e| e.to_string())
-                .map(FileListResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .list_files(query.map(|v| v.0))
+            .await
+            .map_err(|e| e.to_string())
+            .map(FileListResponse)
+    })
 }
 pub fn default_client_file_content(client: &DefaultClient, file_id: String) -> Result<Vec<u8>, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .file_content(&file_id)
-                .await
-                .map_err(|e| e.to_string())
-                .map(|b| b.to_vec())
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .file_content(&file_id)
+            .await
+            .map_err(|e| e.to_string())
+            .map(|b| b.to_vec())
+    })
 }
 pub fn default_client_create_batch(client: &DefaultClient, req: CreateBatchRequest) -> Result<BatchObject, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .create_batch(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(BatchObject)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .create_batch(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(BatchObject)
+    })
 }
 pub fn default_client_retrieve_batch(client: &DefaultClient, batch_id: String) -> Result<BatchObject, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .retrieve_batch(&batch_id)
-                .await
-                .map_err(|e| e.to_string())
-                .map(BatchObject)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .retrieve_batch(&batch_id)
+            .await
+            .map_err(|e| e.to_string())
+            .map(BatchObject)
+    })
 }
 pub fn default_client_list_batches(
     client: &DefaultClient,
     query: Option<BatchListQuery>,
 ) -> Result<BatchListResponse, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .list_batches(query.map(|v| v.0))
-                .await
-                .map_err(|e| e.to_string())
-                .map(BatchListResponse)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .list_batches(query.map(|v| v.0))
+            .await
+            .map_err(|e| e.to_string())
+            .map(BatchListResponse)
+    })
 }
 pub fn default_client_cancel_batch(client: &DefaultClient, batch_id: String) -> Result<BatchObject, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .cancel_batch(&batch_id)
-                .await
-                .map_err(|e| e.to_string())
-                .map(BatchObject)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .cancel_batch(&batch_id)
+            .await
+            .map_err(|e| e.to_string())
+            .map(BatchObject)
+    })
 }
 pub fn default_client_create_response(
     client: &DefaultClient,
     req: CreateResponseRequest,
 ) -> Result<ResponseObject, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .create_response(req.0)
-                .await
-                .map_err(|e| e.to_string())
-                .map(ResponseObject)
-        })
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .create_response(req.0)
+            .await
+            .map_err(|e| e.to_string())
+            .map(ResponseObject)
+    })
 }
-pub fn default_client_retrieve_response(client: &DefaultClient, id: String) -> Result<ResponseObject, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .retrieve_response(&id)
-                .await
-                .map_err(|e| e.to_string())
-                .map(ResponseObject)
-        })
+pub fn default_client_retrieve_response(client: &DefaultClient, response_id: String) -> Result<ResponseObject, String> {
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .retrieve_response(&response_id)
+            .await
+            .map_err(|e| e.to_string())
+            .map(ResponseObject)
+    })
 }
-pub fn default_client_cancel_response(client: &DefaultClient, id: String) -> Result<ResponseObject, String> {
-    ::tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("build tokio runtime")
-        .block_on(async {
-            client
-                .0
-                .cancel_response(&id)
-                .await
-                .map_err(|e| e.to_string())
-                .map(ResponseObject)
-        })
+pub fn default_client_cancel_response(client: &DefaultClient, response_id: String) -> Result<ResponseObject, String> {
+    crate::__alef_tokio_runtime().block_on(async {
+        client
+            .0
+            .cancel_response(&response_id)
+            .await
+            .map_err(|e| e.to_string())
+            .map(ResponseObject)
+    })
 }
 
 pub struct CustomProviderConfig(pub liter_llm::provider::custom::CustomProviderConfig);
@@ -4260,15 +5058,146 @@ impl CustomProviderConfig {
     }
 }
 
+pub struct ProviderConfig(pub liter_llm::provider::ProviderConfig);
+impl ProviderConfig {
+    pub fn name(&self) -> String {
+        self.0.name.clone()
+    }
+    pub fn display_name(&self) -> Option<String> {
+        self.0.display_name.clone()
+    }
+    pub fn base_url(&self) -> Option<String> {
+        self.0.base_url.clone()
+    }
+    pub fn auth(&self) -> Option<AuthConfig> {
+        self.0.auth.clone().map(AuthConfig)
+    }
+    pub fn endpoints(&self) -> Option<Vec<String>> {
+        self.0.endpoints.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+    pub fn model_prefixes(&self) -> Option<Vec<String>> {
+        self.0.model_prefixes.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+    pub fn param_mappings(&self) -> String {
+        serde_json::to_string(&self.0.param_mappings).expect("serializable param_mappings")
+    }
+}
+
+pub struct AuthConfig(pub liter_llm::provider::AuthConfig);
+impl AuthConfig {
+    pub fn auth_type(&self) -> String {
+        AuthType::from(self.0.auth_type.clone()).to_string()
+    }
+    pub fn env_var(&self) -> Option<String> {
+        self.0.env_var.clone()
+    }
+}
+
+pub struct BudgetConfig(pub liter_llm::BudgetConfig);
+impl BudgetConfig {
+    pub fn new(global_limit: Option<f64>, model_limits: String, enforcement: Enforcement) -> BudgetConfig {
+        let mut __target: liter_llm::BudgetConfig = ::std::default::Default::default();
+        __target.global_limit = global_limit;
+        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&model_limits) {
+            if let Ok(t) = ::serde_json::from_value(v) {
+                __target.model_limits = t;
+            }
+        }
+        // alef: enforcement (Enforcement) is an enum; reverse From not generated — left at default
+        BudgetConfig(__target)
+    }
+    pub fn global_limit(&self) -> Option<f64> {
+        self.0.global_limit.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+    pub fn model_limits(&self) -> String {
+        serde_json::to_string(&self.0.model_limits).expect("serializable model_limits")
+    }
+    pub fn enforcement(&self) -> String {
+        Enforcement::from(self.0.enforcement.clone()).to_string()
+    }
+}
+
+pub struct CacheConfig(pub liter_llm::CacheConfig);
+impl CacheConfig {
+    pub fn new(max_entries: usize, ttl: u64, backend: CacheBackend) -> CacheConfig {
+        let mut __target: liter_llm::CacheConfig = ::std::default::Default::default();
+        __target.max_entries = max_entries;
+        __target.ttl = std::time::Duration::from_millis(ttl);
+        // alef: backend (CacheBackend) is an enum; reverse From not generated — left at default
+        CacheConfig(__target)
+    }
+    pub fn max_entries(&self) -> usize {
+        ::serde_json::to_value(&self.0.max_entries)
+            .ok()
+            .and_then(|j| ::serde_json::from_value(j).ok())
+            .unwrap_or_default()
+    }
+    pub fn ttl(&self) -> u64 {
+        self.0.ttl.as_millis() as u64
+    }
+    pub fn backend(&self) -> String {
+        CacheBackend::from(self.0.backend.clone()).to_string()
+    }
+}
+
+pub struct RateLimitConfig(pub liter_llm::RateLimitConfig);
+impl RateLimitConfig {
+    pub fn new(rpm: Option<u32>, tpm: Option<u64>, window: u64) -> RateLimitConfig {
+        let mut __target: liter_llm::RateLimitConfig = ::std::default::Default::default();
+        __target.rpm = rpm;
+        __target.tpm = tpm;
+        __target.window = std::time::Duration::from_millis(window);
+        RateLimitConfig(__target)
+    }
+    pub fn rpm(&self) -> Option<u32> {
+        self.0.rpm.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+    pub fn tpm(&self) -> Option<u64> {
+        self.0.tpm.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+    pub fn window(&self) -> u64 {
+        self.0.window.as_millis() as u64
+    }
+}
+
 pub enum Message {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    System,
+    User,
+    Assistant,
+    Tool,
+    Developer,
+    Function,
 }
 
 impl From<liter_llm::types::Message> for Message {
     fn from(val: liter_llm::types::Message) -> Self {
         match val {
-            _ => Self::Unknown,
+            liter_llm::types::Message::System(..) => Self::System,
+            liter_llm::types::Message::User(..) => Self::User,
+            liter_llm::types::Message::Assistant(..) => Self::Assistant,
+            liter_llm::types::Message::Tool(..) => Self::Tool,
+            liter_llm::types::Message::Developer(..) => Self::Developer,
+            liter_llm::types::Message::Function(..) => Self::Function,
         }
     }
 }
@@ -4276,20 +5205,26 @@ impl From<liter_llm::types::Message> for Message {
 impl Message {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::System => "system".to_string(),
+            Self::User => "user".to_string(),
+            Self::Assistant => "assistant".to_string(),
+            Self::Tool => "tool".to_string(),
+            Self::Developer => "developer".to_string(),
+            Self::Function => "function".to_string(),
         }
     }
 }
 
 pub enum UserContent {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    Text,
+    Parts,
 }
 
 impl From<liter_llm::types::UserContent> for UserContent {
     fn from(val: liter_llm::types::UserContent) -> Self {
         match val {
-            _ => Self::Unknown,
+            liter_llm::types::UserContent::Text(..) => Self::Text,
+            liter_llm::types::UserContent::Parts(..) => Self::Parts,
         }
     }
 }
@@ -4297,20 +5232,26 @@ impl From<liter_llm::types::UserContent> for UserContent {
 impl UserContent {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::Text => "Text".to_string(),
+            Self::Parts => "Parts".to_string(),
         }
     }
 }
 
 pub enum ContentPart {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    Text,
+    ImageUrl,
+    Document,
+    InputAudio,
 }
 
 impl From<liter_llm::types::ContentPart> for ContentPart {
     fn from(val: liter_llm::types::ContentPart) -> Self {
         match val {
-            _ => Self::Unknown,
+            liter_llm::types::ContentPart::Text { .. } => Self::Text,
+            liter_llm::types::ContentPart::ImageUrl { .. } => Self::ImageUrl,
+            liter_llm::types::ContentPart::Document { .. } => Self::Document,
+            liter_llm::types::ContentPart::InputAudio { .. } => Self::InputAudio,
         }
     }
 }
@@ -4318,7 +5259,10 @@ impl From<liter_llm::types::ContentPart> for ContentPart {
 impl ContentPart {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::Text => "text".to_string(),
+            Self::ImageUrl => "image_url".to_string(),
+            Self::Document => "document".to_string(),
+            Self::InputAudio => "input_audio".to_string(),
         }
     }
 }
@@ -4370,14 +5314,15 @@ impl ToolType {
 }
 
 pub enum ToolChoice {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    Mode,
+    Specific,
 }
 
 impl From<liter_llm::types::ToolChoice> for ToolChoice {
     fn from(val: liter_llm::types::ToolChoice) -> Self {
         match val {
-            _ => Self::Unknown,
+            liter_llm::types::ToolChoice::Mode(..) => Self::Mode,
+            liter_llm::types::ToolChoice::Specific(..) => Self::Specific,
         }
     }
 }
@@ -4385,7 +5330,8 @@ impl From<liter_llm::types::ToolChoice> for ToolChoice {
 impl ToolChoice {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::Mode => "Mode".to_string(),
+            Self::Specific => "Specific".to_string(),
         }
     }
 }
@@ -4419,8 +5365,7 @@ impl ToolChoiceMode {
 pub enum ResponseFormat {
     Text,
     JsonObject,
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    JsonSchema,
 }
 
 impl From<liter_llm::types::ResponseFormat> for ResponseFormat {
@@ -4428,7 +5373,7 @@ impl From<liter_llm::types::ResponseFormat> for ResponseFormat {
         match val {
             liter_llm::types::ResponseFormat::Text => Self::Text,
             liter_llm::types::ResponseFormat::JsonObject => Self::JsonObject,
-            _ => Self::Unknown,
+            liter_llm::types::ResponseFormat::JsonSchema { .. } => Self::JsonSchema,
         }
     }
 }
@@ -4438,20 +5383,21 @@ impl ResponseFormat {
         match self {
             Self::Text => "text".to_string(),
             Self::JsonObject => "json_object".to_string(),
-            Self::Unknown => "unknown".to_string(),
+            Self::JsonSchema => "json_schema".to_string(),
         }
     }
 }
 
 pub enum StopSequence {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    Single,
+    Multiple,
 }
 
 impl From<liter_llm::types::StopSequence> for StopSequence {
     fn from(val: liter_llm::types::StopSequence) -> Self {
         match val {
-            _ => Self::Unknown,
+            liter_llm::types::StopSequence::Single(..) => Self::Single,
+            liter_llm::types::StopSequence::Multiple(..) => Self::Multiple,
         }
     }
 }
@@ -4459,7 +5405,8 @@ impl From<liter_llm::types::StopSequence> for StopSequence {
 impl StopSequence {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::Single => "Single".to_string(),
+            Self::Multiple => "Multiple".to_string(),
         }
     }
 }
@@ -4549,14 +5496,15 @@ impl EmbeddingFormat {
 }
 
 pub enum EmbeddingInput {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    Single,
+    Multiple,
 }
 
 impl From<liter_llm::types::EmbeddingInput> for EmbeddingInput {
     fn from(val: liter_llm::types::EmbeddingInput) -> Self {
         match val {
-            _ => Self::Unknown,
+            liter_llm::types::EmbeddingInput::Single(..) => Self::Single,
+            liter_llm::types::EmbeddingInput::Multiple(..) => Self::Multiple,
         }
     }
 }
@@ -4564,20 +5512,22 @@ impl From<liter_llm::types::EmbeddingInput> for EmbeddingInput {
 impl EmbeddingInput {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::Single => "Single".to_string(),
+            Self::Multiple => "Multiple".to_string(),
         }
     }
 }
 
 pub enum ModerationInput {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    Single,
+    Multiple,
 }
 
 impl From<liter_llm::types::ModerationInput> for ModerationInput {
     fn from(val: liter_llm::types::ModerationInput) -> Self {
         match val {
-            _ => Self::Unknown,
+            liter_llm::types::ModerationInput::Single(..) => Self::Single,
+            liter_llm::types::ModerationInput::Multiple(..) => Self::Multiple,
         }
     }
 }
@@ -4585,20 +5535,22 @@ impl From<liter_llm::types::ModerationInput> for ModerationInput {
 impl ModerationInput {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::Single => "Single".to_string(),
+            Self::Multiple => "Multiple".to_string(),
         }
     }
 }
 
 pub enum RerankDocument {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    Text,
+    Object,
 }
 
 impl From<liter_llm::types::RerankDocument> for RerankDocument {
     fn from(val: liter_llm::types::RerankDocument) -> Self {
         match val {
-            _ => Self::Unknown,
+            liter_llm::types::RerankDocument::Text(..) => Self::Text,
+            liter_llm::types::RerankDocument::Object { .. } => Self::Object,
         }
     }
 }
@@ -4606,20 +5558,22 @@ impl From<liter_llm::types::RerankDocument> for RerankDocument {
 impl RerankDocument {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::Text => "Text".to_string(),
+            Self::Object => "Object".to_string(),
         }
     }
 }
 
 pub enum OcrDocument {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    Url,
+    Base64,
 }
 
 impl From<liter_llm::types::OcrDocument> for OcrDocument {
     fn from(val: liter_llm::types::OcrDocument) -> Self {
         match val {
-            _ => Self::Unknown,
+            liter_llm::types::OcrDocument::Url { .. } => Self::Url,
+            liter_llm::types::OcrDocument::Base64 { .. } => Self::Base64,
         }
     }
 }
@@ -4627,7 +5581,8 @@ impl From<liter_llm::types::OcrDocument> for OcrDocument {
 impl OcrDocument {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::Url => "document_url".to_string(),
+            Self::Base64 => "base64".to_string(),
         }
     }
 }
@@ -4704,17 +5659,16 @@ impl BatchStatus {
 
 pub enum AuthHeaderFormat {
     Bearer,
+    ApiKey,
     None,
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
 }
 
 impl From<liter_llm::provider::custom::AuthHeaderFormat> for AuthHeaderFormat {
     fn from(val: liter_llm::provider::custom::AuthHeaderFormat) -> Self {
         match val {
             liter_llm::provider::custom::AuthHeaderFormat::Bearer => Self::Bearer,
+            liter_llm::provider::custom::AuthHeaderFormat::ApiKey(..) => Self::ApiKey,
             liter_llm::provider::custom::AuthHeaderFormat::None => Self::None,
-            _ => Self::Unknown,
         }
     }
 }
@@ -4723,8 +5677,83 @@ impl AuthHeaderFormat {
     pub fn to_string(&self) -> String {
         match self {
             Self::Bearer => "Bearer".to_string(),
+            Self::ApiKey => "ApiKey".to_string(),
             Self::None => "None".to_string(),
+        }
+    }
+}
+
+pub enum AuthType {
+    Bearer,
+    ApiKey,
+    None,
+    Unknown,
+}
+
+impl From<liter_llm::provider::AuthType> for AuthType {
+    fn from(val: liter_llm::provider::AuthType) -> Self {
+        match val {
+            liter_llm::provider::AuthType::Bearer => Self::Bearer,
+            liter_llm::provider::AuthType::ApiKey => Self::ApiKey,
+            liter_llm::provider::AuthType::None => Self::None,
+            liter_llm::provider::AuthType::Unknown => Self::Unknown,
+        }
+    }
+}
+
+impl AuthType {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Bearer => "bearer".to_string(),
+            Self::ApiKey => "api-key".to_string(),
+            Self::None => "none".to_string(),
             Self::Unknown => "unknown".to_string(),
+        }
+    }
+}
+
+pub enum Enforcement {
+    Hard,
+    Soft,
+}
+
+impl From<liter_llm::Enforcement> for Enforcement {
+    fn from(val: liter_llm::Enforcement) -> Self {
+        match val {
+            liter_llm::Enforcement::Hard => Self::Hard,
+            liter_llm::Enforcement::Soft => Self::Soft,
+        }
+    }
+}
+
+impl Enforcement {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Hard => "Hard".to_string(),
+            Self::Soft => "Soft".to_string(),
+        }
+    }
+}
+
+pub enum CacheBackend {
+    Memory,
+    OpenDal,
+}
+
+impl From<liter_llm::CacheBackend> for CacheBackend {
+    fn from(val: liter_llm::CacheBackend) -> Self {
+        match val {
+            liter_llm::CacheBackend::Memory => Self::Memory,
+            liter_llm::CacheBackend::OpenDal { .. } => Self::OpenDal,
+        }
+    }
+}
+
+impl CacheBackend {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Memory => "memory".to_string(),
+            Self::OpenDal => "open_dal".to_string(),
         }
     }
 }
@@ -4747,7 +5776,51 @@ pub fn create_client_from_json(json: String) -> Result<DefaultClient, String> {
         .map(DefaultClient)
 }
 
-/// Opaque handle owning a tokio runtime and a boxed `ChatCompletionChunk` stream.
+pub fn register_custom_provider(config: CustomProviderConfig) -> Result<(), String> {
+    liter_llm::provider::custom::register_custom_provider(config.0).map_err(|e| e.to_string())
+}
+
+pub fn unregister_custom_provider(name: String) -> Result<bool, String> {
+    liter_llm::provider::custom::unregister_custom_provider(&name).map_err(|e| e.to_string())
+}
+
+pub fn complex_provider_names() -> Result<Vec<String>, String> {
+    liter_llm::provider::complex_provider_names()
+        .map_err(|e| e.to_string())
+        .map(|v| v.into_iter().map(|s| s.to_string()).collect::<Vec<_>>())
+}
+
+pub fn completion_cost(model: String, prompt_tokens: u64, completion_tokens: u64) -> String {
+    serde_json::to_string(&(liter_llm::completion_cost(&model, prompt_tokens, completion_tokens)))
+        .expect("serializable return")
+}
+
+pub fn completion_cost_with_cache(
+    model: String,
+    prompt_tokens: u64,
+    cached_tokens: u64,
+    completion_tokens: u64,
+) -> String {
+    serde_json::to_string(
+        &(liter_llm::completion_cost_with_cache(&model, prompt_tokens, cached_tokens, completion_tokens)),
+    )
+    .expect("serializable return")
+}
+
+pub fn count_tokens(model: String, text: String) -> Result<usize, String> {
+    liter_llm::count_tokens(&model, &text).map_err(|e| e.to_string())
+}
+
+pub fn count_request_tokens(model: String, req: ChatCompletionRequest) -> Result<usize, String> {
+    liter_llm::count_request_tokens(&model, &req.0).map_err(|e| e.to_string())
+}
+
+pub fn ensure_crypto_provider() -> () {
+    liter_llm::ensure_crypto_provider()
+}
+
+/// Opaque handle holding a reference to the process-wide tokio runtime
+/// and a boxed `ChatCompletionChunk` stream.
 ///
 /// Created by `default_client_chat_stream_start`, advanced via `next()`. Drop runs when the
 /// Swift handle goes out of scope (swift-bridge generates the matching
@@ -4757,8 +5830,9 @@ pub fn create_client_from_json(json: String) -> Result<DefaultClient, String> {
 /// `Option<OpaqueRust>` support varies across versions, while `Result<String,
 /// String>` is well-tested. An empty string `""` is the EOF sentinel —
 /// no valid JSON value is the empty string.
+#[allow(clippy::type_complexity)]
 pub struct DefaultClientChatStreamStreamHandle {
-    rt: ::tokio::runtime::Runtime,
+    _rt: ::tokio::runtime::Handle,
     stream: ::std::sync::Mutex<
         Option<
             ::futures_util::stream::BoxStream<
@@ -4778,22 +5852,19 @@ pub fn default_client_chat_stream_start(
     req: &ChatCompletionRequest,
 ) -> Result<DefaultClientChatStreamStreamHandle, String> {
     use ::futures_util::StreamExt;
-    let rt = ::tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(1)
-        .enable_all()
-        .build()
-        .map_err(|e| format!("build tokio runtime: {e}"))?;
+    let rt = crate::__alef_tokio_runtime();
     let raw = rt.block_on(async { client.0.chat_stream(req.0.clone()).await.map_err(|e| e.to_string()) })?;
     let erased: ::futures_util::stream::BoxStream<
         'static,
         Result<liter_llm::ChatCompletionChunk, Box<dyn ::std::error::Error + Send + Sync + 'static>>,
     > = Box::pin(raw.map(|r| r.map_err(|e| Box::new(e) as Box<dyn ::std::error::Error + Send + Sync + 'static>)));
     Ok(DefaultClientChatStreamStreamHandle {
-        rt,
+        _rt: rt.handle().clone(),
         stream: ::std::sync::Mutex::new(Some(erased)),
     })
 }
 
+#[allow(clippy::should_implement_trait)]
 impl DefaultClientChatStreamStreamHandle {
     /// Advance the stream and return the next chunk JSON, or `""` on clean
     /// end-of-stream. Returns `Err(message)` on a stream-level error.
@@ -4807,7 +5878,7 @@ impl DefaultClientChatStreamStreamHandle {
             None => return Ok(String::new()),
         };
         use ::futures_util::StreamExt;
-        match self.rt.block_on(stream.next()) {
+        match crate::__alef_tokio_runtime().block_on(stream.next()) {
             Some(Ok(item)) => ::serde_json::to_string(&item).map_err(|e| e.to_string()),
             Some(Err(e)) => {
                 *guard = None;
@@ -4826,189 +5897,493 @@ pub fn chat_completion_request_from_json(json: String) -> Result<ChatCompletionR
         .map(ChatCompletionRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn embedding_request_from_json(json: String) -> Result<EmbeddingRequest, String> {
     serde_json::from_str::<liter_llm::types::EmbeddingRequest>(&json)
         .map(EmbeddingRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn create_image_request_from_json(json: String) -> Result<CreateImageRequest, String> {
     serde_json::from_str::<liter_llm::types::CreateImageRequest>(&json)
         .map(CreateImageRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn create_speech_request_from_json(json: String) -> Result<CreateSpeechRequest, String> {
     serde_json::from_str::<liter_llm::types::CreateSpeechRequest>(&json)
         .map(CreateSpeechRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn create_transcription_request_from_json(json: String) -> Result<CreateTranscriptionRequest, String> {
     serde_json::from_str::<liter_llm::types::CreateTranscriptionRequest>(&json)
         .map(CreateTranscriptionRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn moderation_request_from_json(json: String) -> Result<ModerationRequest, String> {
     serde_json::from_str::<liter_llm::types::ModerationRequest>(&json)
         .map(ModerationRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn rerank_request_from_json(json: String) -> Result<RerankRequest, String> {
     serde_json::from_str::<liter_llm::types::RerankRequest>(&json)
         .map(RerankRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn search_request_from_json(json: String) -> Result<SearchRequest, String> {
     serde_json::from_str::<liter_llm::types::SearchRequest>(&json)
         .map(SearchRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn ocr_request_from_json(json: String) -> Result<OcrRequest, String> {
     serde_json::from_str::<liter_llm::types::OcrRequest>(&json)
         .map(OcrRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn create_file_request_from_json(json: String) -> Result<CreateFileRequest, String> {
     serde_json::from_str::<liter_llm::types::CreateFileRequest>(&json)
         .map(CreateFileRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn file_list_query_from_json(json: String) -> Result<FileListQuery, String> {
     serde_json::from_str::<liter_llm::types::FileListQuery>(&json)
         .map(FileListQuery)
         .map_err(|e| e.to_string())
 }
-
 pub fn create_batch_request_from_json(json: String) -> Result<CreateBatchRequest, String> {
     serde_json::from_str::<liter_llm::types::CreateBatchRequest>(&json)
         .map(CreateBatchRequest)
         .map_err(|e| e.to_string())
 }
-
 pub fn batch_list_query_from_json(json: String) -> Result<BatchListQuery, String> {
     serde_json::from_str::<liter_llm::types::BatchListQuery>(&json)
         .map(BatchListQuery)
         .map_err(|e| e.to_string())
 }
-
 pub fn create_response_request_from_json(json: String) -> Result<CreateResponseRequest, String> {
     serde_json::from_str::<liter_llm::types::CreateResponseRequest>(&json)
         .map(CreateResponseRequest)
         .map_err(|e| e.to_string())
 }
-
+pub fn custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String> {
+    serde_json::from_str::<liter_llm::provider::custom::CustomProviderConfig>(&json)
+        .map(CustomProviderConfig)
+        .map_err(|e| e.to_string())
+}
 pub fn chat_completion_chunk_from_json(json: String) -> Result<ChatCompletionChunk, String> {
     serde_json::from_str::<liter_llm::types::ChatCompletionChunk>(&json)
         .map(ChatCompletionChunk)
         .map_err(|e| e.to_string())
 }
-
+pub fn system_message_from_json(json: String) -> Result<SystemMessage, String> {
+    serde_json::from_str::<liter_llm::types::SystemMessage>(&json)
+        .map(SystemMessage)
+        .map_err(|e| e.to_string())
+}
+pub fn user_message_from_json(json: String) -> Result<UserMessage, String> {
+    serde_json::from_str::<liter_llm::types::UserMessage>(&json)
+        .map(UserMessage)
+        .map_err(|e| e.to_string())
+}
+pub fn image_url_from_json(json: String) -> Result<ImageUrl, String> {
+    serde_json::from_str::<liter_llm::types::ImageUrl>(&json)
+        .map(ImageUrl)
+        .map_err(|e| e.to_string())
+}
+pub fn document_content_from_json(json: String) -> Result<DocumentContent, String> {
+    serde_json::from_str::<liter_llm::types::DocumentContent>(&json)
+        .map(DocumentContent)
+        .map_err(|e| e.to_string())
+}
+pub fn audio_content_from_json(json: String) -> Result<AudioContent, String> {
+    serde_json::from_str::<liter_llm::types::AudioContent>(&json)
+        .map(AudioContent)
+        .map_err(|e| e.to_string())
+}
+pub fn assistant_message_from_json(json: String) -> Result<AssistantMessage, String> {
+    serde_json::from_str::<liter_llm::types::AssistantMessage>(&json)
+        .map(AssistantMessage)
+        .map_err(|e| e.to_string())
+}
+pub fn tool_message_from_json(json: String) -> Result<ToolMessage, String> {
+    serde_json::from_str::<liter_llm::types::ToolMessage>(&json)
+        .map(ToolMessage)
+        .map_err(|e| e.to_string())
+}
+pub fn developer_message_from_json(json: String) -> Result<DeveloperMessage, String> {
+    serde_json::from_str::<liter_llm::types::DeveloperMessage>(&json)
+        .map(DeveloperMessage)
+        .map_err(|e| e.to_string())
+}
+pub fn function_message_from_json(json: String) -> Result<FunctionMessage, String> {
+    serde_json::from_str::<liter_llm::types::FunctionMessage>(&json)
+        .map(FunctionMessage)
+        .map_err(|e| e.to_string())
+}
 pub fn chat_completion_tool_from_json(json: String) -> Result<ChatCompletionTool, String> {
     serde_json::from_str::<liter_llm::types::ChatCompletionTool>(&json)
         .map(ChatCompletionTool)
         .map_err(|e| e.to_string())
 }
-
 pub fn function_definition_from_json(json: String) -> Result<FunctionDefinition, String> {
     serde_json::from_str::<liter_llm::types::FunctionDefinition>(&json)
         .map(FunctionDefinition)
         .map_err(|e| e.to_string())
 }
-
 pub fn tool_call_from_json(json: String) -> Result<ToolCall, String> {
     serde_json::from_str::<liter_llm::types::ToolCall>(&json)
         .map(ToolCall)
         .map_err(|e| e.to_string())
 }
-
 pub fn function_call_from_json(json: String) -> Result<FunctionCall, String> {
     serde_json::from_str::<liter_llm::types::FunctionCall>(&json)
         .map(FunctionCall)
         .map_err(|e| e.to_string())
 }
-
+pub fn specific_tool_choice_from_json(json: String) -> Result<SpecificToolChoice, String> {
+    serde_json::from_str::<liter_llm::types::SpecificToolChoice>(&json)
+        .map(SpecificToolChoice)
+        .map_err(|e| e.to_string())
+}
+pub fn specific_function_from_json(json: String) -> Result<SpecificFunction, String> {
+    serde_json::from_str::<liter_llm::types::SpecificFunction>(&json)
+        .map(SpecificFunction)
+        .map_err(|e| e.to_string())
+}
+pub fn json_schema_format_from_json(json: String) -> Result<JsonSchemaFormat, String> {
+    serde_json::from_str::<liter_llm::types::JsonSchemaFormat>(&json)
+        .map(JsonSchemaFormat)
+        .map_err(|e| e.to_string())
+}
+pub fn usage_from_json(json: String) -> Result<Usage, String> {
+    serde_json::from_str::<liter_llm::types::Usage>(&json)
+        .map(Usage)
+        .map_err(|e| e.to_string())
+}
+pub fn prompt_tokens_details_from_json(json: String) -> Result<PromptTokensDetails, String> {
+    serde_json::from_str::<liter_llm::types::PromptTokensDetails>(&json)
+        .map(PromptTokensDetails)
+        .map_err(|e| e.to_string())
+}
+pub fn stream_options_from_json(json: String) -> Result<StreamOptions, String> {
+    serde_json::from_str::<liter_llm::types::StreamOptions>(&json)
+        .map(StreamOptions)
+        .map_err(|e| e.to_string())
+}
+pub fn chat_completion_response_from_json(json: String) -> Result<ChatCompletionResponse, String> {
+    serde_json::from_str::<liter_llm::types::ChatCompletionResponse>(&json)
+        .map(ChatCompletionResponse)
+        .map_err(|e| e.to_string())
+}
+pub fn choice_from_json(json: String) -> Result<Choice, String> {
+    serde_json::from_str::<liter_llm::types::Choice>(&json)
+        .map(Choice)
+        .map_err(|e| e.to_string())
+}
+pub fn stream_choice_from_json(json: String) -> Result<StreamChoice, String> {
+    serde_json::from_str::<liter_llm::types::StreamChoice>(&json)
+        .map(StreamChoice)
+        .map_err(|e| e.to_string())
+}
+pub fn stream_delta_from_json(json: String) -> Result<StreamDelta, String> {
+    serde_json::from_str::<liter_llm::types::StreamDelta>(&json)
+        .map(StreamDelta)
+        .map_err(|e| e.to_string())
+}
+pub fn stream_tool_call_from_json(json: String) -> Result<StreamToolCall, String> {
+    serde_json::from_str::<liter_llm::types::StreamToolCall>(&json)
+        .map(StreamToolCall)
+        .map_err(|e| e.to_string())
+}
+pub fn stream_function_call_from_json(json: String) -> Result<StreamFunctionCall, String> {
+    serde_json::from_str::<liter_llm::types::StreamFunctionCall>(&json)
+        .map(StreamFunctionCall)
+        .map_err(|e| e.to_string())
+}
 pub fn embedding_response_from_json(json: String) -> Result<EmbeddingResponse, String> {
     serde_json::from_str::<liter_llm::types::EmbeddingResponse>(&json)
         .map(EmbeddingResponse)
         .map_err(|e| e.to_string())
 }
-
 pub fn embedding_object_from_json(json: String) -> Result<EmbeddingObject, String> {
     serde_json::from_str::<liter_llm::types::EmbeddingObject>(&json)
         .map(EmbeddingObject)
         .map_err(|e| e.to_string())
 }
-
+pub fn images_response_from_json(json: String) -> Result<ImagesResponse, String> {
+    serde_json::from_str::<liter_llm::types::ImagesResponse>(&json)
+        .map(ImagesResponse)
+        .map_err(|e| e.to_string())
+}
+pub fn image_from_json(json: String) -> Result<Image, String> {
+    serde_json::from_str::<liter_llm::types::Image>(&json)
+        .map(Image)
+        .map_err(|e| e.to_string())
+}
+pub fn transcription_response_from_json(json: String) -> Result<TranscriptionResponse, String> {
+    serde_json::from_str::<liter_llm::types::TranscriptionResponse>(&json)
+        .map(TranscriptionResponse)
+        .map_err(|e| e.to_string())
+}
+pub fn transcription_segment_from_json(json: String) -> Result<TranscriptionSegment, String> {
+    serde_json::from_str::<liter_llm::types::TranscriptionSegment>(&json)
+        .map(TranscriptionSegment)
+        .map_err(|e| e.to_string())
+}
 pub fn moderation_response_from_json(json: String) -> Result<ModerationResponse, String> {
     serde_json::from_str::<liter_llm::types::ModerationResponse>(&json)
         .map(ModerationResponse)
         .map_err(|e| e.to_string())
 }
-
 pub fn moderation_result_from_json(json: String) -> Result<ModerationResult, String> {
     serde_json::from_str::<liter_llm::types::ModerationResult>(&json)
         .map(ModerationResult)
         .map_err(|e| e.to_string())
 }
-
+pub fn moderation_categories_from_json(json: String) -> Result<ModerationCategories, String> {
+    serde_json::from_str::<liter_llm::types::ModerationCategories>(&json)
+        .map(ModerationCategories)
+        .map_err(|e| e.to_string())
+}
+pub fn moderation_category_scores_from_json(json: String) -> Result<ModerationCategoryScores, String> {
+    serde_json::from_str::<liter_llm::types::ModerationCategoryScores>(&json)
+        .map(ModerationCategoryScores)
+        .map_err(|e| e.to_string())
+}
 pub fn rerank_response_from_json(json: String) -> Result<RerankResponse, String> {
     serde_json::from_str::<liter_llm::types::RerankResponse>(&json)
         .map(RerankResponse)
         .map_err(|e| e.to_string())
 }
-
 pub fn rerank_result_from_json(json: String) -> Result<RerankResult, String> {
     serde_json::from_str::<liter_llm::types::RerankResult>(&json)
         .map(RerankResult)
         .map_err(|e| e.to_string())
 }
-
 pub fn rerank_result_document_from_json(json: String) -> Result<RerankResultDocument, String> {
     serde_json::from_str::<liter_llm::types::RerankResultDocument>(&json)
         .map(RerankResultDocument)
         .map_err(|e| e.to_string())
 }
-
 pub fn search_response_from_json(json: String) -> Result<SearchResponse, String> {
     serde_json::from_str::<liter_llm::types::SearchResponse>(&json)
         .map(SearchResponse)
         .map_err(|e| e.to_string())
 }
-
 pub fn search_result_from_json(json: String) -> Result<SearchResult, String> {
     serde_json::from_str::<liter_llm::types::SearchResult>(&json)
         .map(SearchResult)
         .map_err(|e| e.to_string())
 }
-
 pub fn ocr_response_from_json(json: String) -> Result<OcrResponse, String> {
     serde_json::from_str::<liter_llm::types::OcrResponse>(&json)
         .map(OcrResponse)
         .map_err(|e| e.to_string())
 }
-
 pub fn ocr_page_from_json(json: String) -> Result<OcrPage, String> {
     serde_json::from_str::<liter_llm::types::OcrPage>(&json)
         .map(OcrPage)
         .map_err(|e| e.to_string())
 }
-
 pub fn ocr_image_from_json(json: String) -> Result<OcrImage, String> {
     serde_json::from_str::<liter_llm::types::OcrImage>(&json)
         .map(OcrImage)
         .map_err(|e| e.to_string())
 }
-
-pub fn custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String> {
-    serde_json::from_str::<liter_llm::provider::custom::CustomProviderConfig>(&json)
-        .map(CustomProviderConfig)
+pub fn page_dimensions_from_json(json: String) -> Result<PageDimensions, String> {
+    serde_json::from_str::<liter_llm::types::PageDimensions>(&json)
+        .map(PageDimensions)
+        .map_err(|e| e.to_string())
+}
+pub fn models_list_response_from_json(json: String) -> Result<ModelsListResponse, String> {
+    serde_json::from_str::<liter_llm::types::ModelsListResponse>(&json)
+        .map(ModelsListResponse)
+        .map_err(|e| e.to_string())
+}
+pub fn model_object_from_json(json: String) -> Result<ModelObject, String> {
+    serde_json::from_str::<liter_llm::types::ModelObject>(&json)
+        .map(ModelObject)
+        .map_err(|e| e.to_string())
+}
+pub fn file_object_from_json(json: String) -> Result<FileObject, String> {
+    serde_json::from_str::<liter_llm::types::FileObject>(&json)
+        .map(FileObject)
+        .map_err(|e| e.to_string())
+}
+pub fn file_list_response_from_json(json: String) -> Result<FileListResponse, String> {
+    serde_json::from_str::<liter_llm::types::FileListResponse>(&json)
+        .map(FileListResponse)
+        .map_err(|e| e.to_string())
+}
+pub fn delete_response_from_json(json: String) -> Result<DeleteResponse, String> {
+    serde_json::from_str::<liter_llm::types::DeleteResponse>(&json)
+        .map(DeleteResponse)
+        .map_err(|e| e.to_string())
+}
+pub fn batch_object_from_json(json: String) -> Result<BatchObject, String> {
+    serde_json::from_str::<liter_llm::types::BatchObject>(&json)
+        .map(BatchObject)
+        .map_err(|e| e.to_string())
+}
+pub fn batch_request_counts_from_json(json: String) -> Result<BatchRequestCounts, String> {
+    serde_json::from_str::<liter_llm::types::BatchRequestCounts>(&json)
+        .map(BatchRequestCounts)
+        .map_err(|e| e.to_string())
+}
+pub fn batch_list_response_from_json(json: String) -> Result<BatchListResponse, String> {
+    serde_json::from_str::<liter_llm::types::BatchListResponse>(&json)
+        .map(BatchListResponse)
+        .map_err(|e| e.to_string())
+}
+pub fn response_tool_from_json(json: String) -> Result<ResponseTool, String> {
+    serde_json::from_str::<liter_llm::types::ResponseTool>(&json)
+        .map(ResponseTool)
+        .map_err(|e| e.to_string())
+}
+pub fn response_object_from_json(json: String) -> Result<ResponseObject, String> {
+    serde_json::from_str::<liter_llm::types::ResponseObject>(&json)
+        .map(ResponseObject)
+        .map_err(|e| e.to_string())
+}
+pub fn response_output_item_from_json(json: String) -> Result<ResponseOutputItem, String> {
+    serde_json::from_str::<liter_llm::types::ResponseOutputItem>(&json)
+        .map(ResponseOutputItem)
+        .map_err(|e| e.to_string())
+}
+pub fn response_usage_from_json(json: String) -> Result<ResponseUsage, String> {
+    serde_json::from_str::<liter_llm::types::ResponseUsage>(&json)
+        .map(ResponseUsage)
+        .map_err(|e| e.to_string())
+}
+pub fn provider_config_from_json(json: String) -> Result<ProviderConfig, String> {
+    serde_json::from_str::<liter_llm::provider::ProviderConfig>(&json)
+        .map(ProviderConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn auth_config_from_json(json: String) -> Result<AuthConfig, String> {
+    serde_json::from_str::<liter_llm::provider::AuthConfig>(&json)
+        .map(AuthConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn budget_config_from_json(json: String) -> Result<BudgetConfig, String> {
+    serde_json::from_str::<liter_llm::BudgetConfig>(&json)
+        .map(BudgetConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn cache_config_from_json(json: String) -> Result<CacheConfig, String> {
+    serde_json::from_str::<liter_llm::CacheConfig>(&json)
+        .map(CacheConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn rate_limit_config_from_json(json: String) -> Result<RateLimitConfig, String> {
+    serde_json::from_str::<liter_llm::RateLimitConfig>(&json)
+        .map(RateLimitConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn message_from_json(json: String) -> Result<Message, String> {
+    serde_json::from_str::<liter_llm::types::Message>(&json)
+        .map(Message::from)
+        .map_err(|e| e.to_string())
+}
+pub fn user_content_from_json(json: String) -> Result<UserContent, String> {
+    serde_json::from_str::<liter_llm::types::UserContent>(&json)
+        .map(UserContent::from)
+        .map_err(|e| e.to_string())
+}
+pub fn content_part_from_json(json: String) -> Result<ContentPart, String> {
+    serde_json::from_str::<liter_llm::types::ContentPart>(&json)
+        .map(ContentPart::from)
+        .map_err(|e| e.to_string())
+}
+pub fn image_detail_from_json(json: String) -> Result<ImageDetail, String> {
+    serde_json::from_str::<liter_llm::types::ImageDetail>(&json)
+        .map(ImageDetail::from)
+        .map_err(|e| e.to_string())
+}
+pub fn tool_type_from_json(json: String) -> Result<ToolType, String> {
+    serde_json::from_str::<liter_llm::types::ToolType>(&json)
+        .map(ToolType::from)
+        .map_err(|e| e.to_string())
+}
+pub fn tool_choice_from_json(json: String) -> Result<ToolChoice, String> {
+    serde_json::from_str::<liter_llm::types::ToolChoice>(&json)
+        .map(ToolChoice::from)
+        .map_err(|e| e.to_string())
+}
+pub fn tool_choice_mode_from_json(json: String) -> Result<ToolChoiceMode, String> {
+    serde_json::from_str::<liter_llm::types::ToolChoiceMode>(&json)
+        .map(ToolChoiceMode::from)
+        .map_err(|e| e.to_string())
+}
+pub fn response_format_from_json(json: String) -> Result<ResponseFormat, String> {
+    serde_json::from_str::<liter_llm::types::ResponseFormat>(&json)
+        .map(ResponseFormat::from)
+        .map_err(|e| e.to_string())
+}
+pub fn stop_sequence_from_json(json: String) -> Result<StopSequence, String> {
+    serde_json::from_str::<liter_llm::types::StopSequence>(&json)
+        .map(StopSequence::from)
+        .map_err(|e| e.to_string())
+}
+pub fn finish_reason_from_json(json: String) -> Result<FinishReason, String> {
+    serde_json::from_str::<liter_llm::types::FinishReason>(&json)
+        .map(FinishReason::from)
+        .map_err(|e| e.to_string())
+}
+pub fn reasoning_effort_from_json(json: String) -> Result<ReasoningEffort, String> {
+    serde_json::from_str::<liter_llm::types::ReasoningEffort>(&json)
+        .map(ReasoningEffort::from)
+        .map_err(|e| e.to_string())
+}
+pub fn embedding_format_from_json(json: String) -> Result<EmbeddingFormat, String> {
+    serde_json::from_str::<liter_llm::types::EmbeddingFormat>(&json)
+        .map(EmbeddingFormat::from)
+        .map_err(|e| e.to_string())
+}
+pub fn embedding_input_from_json(json: String) -> Result<EmbeddingInput, String> {
+    serde_json::from_str::<liter_llm::types::EmbeddingInput>(&json)
+        .map(EmbeddingInput::from)
+        .map_err(|e| e.to_string())
+}
+pub fn moderation_input_from_json(json: String) -> Result<ModerationInput, String> {
+    serde_json::from_str::<liter_llm::types::ModerationInput>(&json)
+        .map(ModerationInput::from)
+        .map_err(|e| e.to_string())
+}
+pub fn rerank_document_from_json(json: String) -> Result<RerankDocument, String> {
+    serde_json::from_str::<liter_llm::types::RerankDocument>(&json)
+        .map(RerankDocument::from)
+        .map_err(|e| e.to_string())
+}
+pub fn ocr_document_from_json(json: String) -> Result<OcrDocument, String> {
+    serde_json::from_str::<liter_llm::types::OcrDocument>(&json)
+        .map(OcrDocument::from)
+        .map_err(|e| e.to_string())
+}
+pub fn file_purpose_from_json(json: String) -> Result<FilePurpose, String> {
+    serde_json::from_str::<liter_llm::types::FilePurpose>(&json)
+        .map(FilePurpose::from)
+        .map_err(|e| e.to_string())
+}
+pub fn batch_status_from_json(json: String) -> Result<BatchStatus, String> {
+    serde_json::from_str::<liter_llm::types::BatchStatus>(&json)
+        .map(BatchStatus::from)
+        .map_err(|e| e.to_string())
+}
+pub fn auth_header_format_from_json(json: String) -> Result<AuthHeaderFormat, String> {
+    serde_json::from_str::<liter_llm::provider::custom::AuthHeaderFormat>(&json)
+        .map(AuthHeaderFormat::from)
+        .map_err(|e| e.to_string())
+}
+pub fn auth_type_from_json(json: String) -> Result<AuthType, String> {
+    serde_json::from_str::<liter_llm::provider::AuthType>(&json)
+        .map(AuthType::from)
+        .map_err(|e| e.to_string())
+}
+pub fn enforcement_from_json(json: String) -> Result<Enforcement, String> {
+    serde_json::from_str::<liter_llm::Enforcement>(&json)
+        .map(Enforcement::from)
+        .map_err(|e| e.to_string())
+}
+pub fn cache_backend_from_json(json: String) -> Result<CacheBackend, String> {
+    serde_json::from_str::<liter_llm::CacheBackend>(&json)
+        .map(CacheBackend::from)
         .map_err(|e| e.to_string())
 }

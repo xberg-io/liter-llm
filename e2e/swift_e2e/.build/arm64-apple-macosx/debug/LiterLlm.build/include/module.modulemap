@@ -1,3 +1,0 @@
-module LiterLlm {
-    header "/Users/naamanhirschfeld/workspace/kreuzberg-dev/liter-llm/e2e/swift_e2e/.build/arm64-apple-macosx/debug/LiterLlm.build/include/LiterLlm-Swift.h"
-}

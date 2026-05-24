@@ -87,7 +87,7 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
 
       - name: Setup Rust
         uses: kreuzberg-dev/actions/setup-rust@v1
@@ -112,7 +112,7 @@ jobs:
         run: cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release
 
       - name: Upload FFI artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: ffi-${{ matrix.target }}
           path: |
@@ -129,7 +129,14 @@ jobs:
     name: E2E (${{ matrix.lang }})
     if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
     needs: [build-ffi]
-    runs-on: ${{ matrix.lang == 'swift' && 'macos-latest' || 'ubuntu-24.04-arm' }}
+    # Swift e2e runs on macos-14 (Sonoma) rather than `macos-latest` (currently
+    # macos-15 Sequoia). macOS 15 added a "Local Network" privacy permission
+    # that silently denies 127.0.0.1 connections from sandboxed processes —
+    # SwiftPM test binaries linked against the Rust staticlib hit this. Plain
+    # reqwest from CLI on the same host works fine; only the swift-test launch
+    # context is affected. macos-14 predates the permission and reaches the
+    # mock-server without prompting.
+    runs-on: ${{ matrix.lang == 'swift' && 'macos-14' || 'ubuntu-24.04-arm' }}
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -139,7 +146,7 @@ jobs:
             test-cmd: "RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' task rust:e2e:test"
           - lang: python
             python-version: "3.13"
-            test-cmd: "cd packages/python && uv sync && uvx maturin develop --release && cd ../.. && task python:e2e:test"
+            test-cmd: "cd packages/python && uv sync --no-install-project --no-install-workspace && uvx maturin develop --release && cd ../.. && task python:e2e:test"
           - lang: node
             node-version: "24"
             test-cmd: "task node:build && task node:e2e:test"
@@ -171,8 +178,6 @@ jobs:
             dart-version: "stable"
             test-cmd: "alef test --lang dart --e2e"
           - lang: swift
-            # alef emits e2e/swift_e2e/ (non-colliding SwiftPM basename) so we run
-            # the suite directly without the prior temp-dir copy workaround.
             test-cmd: "cd e2e/swift_e2e && swift test"
           - lang: zig
             zig-version: "0.16.0"
@@ -186,7 +191,7 @@ jobs:
               LD_LIBRARY_PATH="$PWD/target/release-jni-lib:$LD_LIBRARY_PATH" \
                 bash -c 'cd e2e/kotlin_android && gradle test'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
 
       - name: Setup Rust
         uses: kreuzberg-dev/actions/setup-rust@v1
@@ -243,8 +248,19 @@ jobs:
           cp ffi-artifacts/e2e/rust/target/release/mock-server e2e/rust/target/release/mock-server
           chmod +x e2e/rust/target/release/mock-server
           # Start mock-server in background; capture its URL announcement from stdout.
+          # MOCK_SERVER_NO_STDIN_WATCH=1 makes the binary wait on SIGTERM instead of
+          # stdin EOF. Without it, when GitHub Actions ends this `Start mock-server`
+          # step the per-step bash exits, the inherited stdin FD closes, and the
+          # backgrounded mock-server reads EOF and exits before the test step can
+          # connect. Redirecting stdin from /dev/null avoids the inherited FD
+          # entirely; the env var swaps the lifetime watcher to ctrl_c().
           MOCK_URL_FILE=$(mktemp)
-          e2e/rust/target/release/mock-server > "$MOCK_URL_FILE" 2>/dev/null &
+          # `fixtures` resolves relative to the binary's CWD; we run from the repo
+          # root so pass the absolute path. mock-server's default of
+          # `../../fixtures` only matches the `cd e2e/<lang>` launch pattern that
+          # the other harnesses use.
+          MOCK_SERVER_NO_STDIN_WATCH=1 e2e/rust/target/release/mock-server \
+            "$GITHUB_WORKSPACE/fixtures" > "$MOCK_URL_FILE" 2>/dev/null </dev/null &
           # Wait until the server prints its URL (up to 10 s).
           n=0
           until grep -q "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" 2>/dev/null || [ "$n" -ge 100 ]; do
@@ -254,8 +270,41 @@ jobs:
           MOCK_SERVER_URL=$(grep "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" | head -1 | cut -d= -f2-)
           echo "MOCK_SERVER_URL=${MOCK_SERVER_URL}" >> "$GITHUB_ENV"
 
-      # swift runs on macos-latest: the linux-arm64 binary cannot run here, so build
-      # mock-server from source before swift test.
+      # macos-14 ships Swift 5.10 in /usr/bin/swift; alef-emitted Package.swift
+      # files pin `swift-tools-version: 6.0`, so we have to point xcode-select at
+      # the bundled Xcode 16+ before any `swift test`. The runner has multiple
+      # Xcode installs side-by-side; pick the newest with a Swift 6 toolchain.
+      - name: Select Xcode 16 (swift)
+        if: matrix.lang == 'swift'
+        shell: bash
+        run: |
+          # Find the newest /Applications/Xcode_*.app with Swift >= 6.0.
+          best_xcode=""
+          best_swift=""
+          for app in /Applications/Xcode_*.app; do
+            [ -d "$app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin" ] || continue
+            ver=$("$app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift" --version 2>/dev/null \
+              | head -1 | sed -E 's/.* version ([0-9.]+).*/\1/')
+            [ -z "$ver" ] && continue
+            major=$(echo "$ver" | cut -d. -f1)
+            if [ "$major" -ge 6 ]; then
+              if [ -z "$best_swift" ] || [ "$(printf '%s\n%s' "$ver" "$best_swift" | sort -V | tail -1)" = "$ver" ]; then
+                best_swift="$ver"
+                best_xcode="$app"
+              fi
+            fi
+          done
+          if [ -z "$best_xcode" ]; then
+            echo "No Xcode with Swift >= 6 found on this runner" >&2
+            ls -la /Applications/Xcode_*.app 2>&1 || true
+            exit 1
+          fi
+          echo "Using $best_xcode (Swift $best_swift)"
+          sudo xcode-select -s "$best_xcode/Contents/Developer"
+          swift --version
+
+      # swift runs on macos-14: the linux-arm64 mock-server binary cannot run
+      # here, so build mock-server from source before swift test.
       - name: Build mock-server (swift)
         if: matrix.lang == 'swift'
         shell: bash
@@ -266,8 +315,19 @@ jobs:
         shell: bash
         run: |
           # Start mock-server in background; capture its URL announcement from stdout.
+          # MOCK_SERVER_NO_STDIN_WATCH=1 makes the binary wait on SIGTERM instead of
+          # stdin EOF. Without it, when GitHub Actions ends this `Start mock-server`
+          # step the per-step bash exits, the inherited stdin FD closes, and the
+          # backgrounded mock-server reads EOF and exits before the test step can
+          # connect. Redirecting stdin from /dev/null avoids the inherited FD
+          # entirely; the env var swaps the lifetime watcher to ctrl_c().
           MOCK_URL_FILE=$(mktemp)
-          e2e/rust/target/release/mock-server > "$MOCK_URL_FILE" 2>/dev/null &
+          # `fixtures` resolves relative to the binary's CWD; we run from the repo
+          # root so pass the absolute path. mock-server's default of
+          # `../../fixtures` only matches the `cd e2e/<lang>` launch pattern that
+          # the other harnesses use.
+          MOCK_SERVER_NO_STDIN_WATCH=1 e2e/rust/target/release/mock-server \
+            "$GITHUB_WORKSPACE/fixtures" > "$MOCK_URL_FILE" 2>/dev/null </dev/null &
           # Wait until the server prints its URL (up to 10 s).
           n=0
           until grep -q "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" 2>/dev/null || [ "$n" -ge 100 ]; do
@@ -304,7 +364,7 @@ jobs:
 
       - name: Setup Go
         if: matrix.go-version
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v6.4.0
         with:
           go-version: ${{ matrix.go-version }}
 
@@ -318,20 +378,26 @@ jobs:
 
       - name: Setup Java
         if: matrix.java-version
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v5.2.0
         with:
           distribution: temurin
           java-version: ${{ matrix.java-version }}
 
+      - name: Setup Android SDK
+        if: matrix.lang == 'kotlin_android'
+        uses: android-actions/setup-android@v4.0.1
+        with:
+          packages: ""
+
       - name: Setup Gradle
         if: matrix.lang == 'kotlin_android'
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6.1.0
         with:
-          gradle-version: "8.9"
+          gradle-version: "8.13"
 
       - name: Setup .NET
         if: matrix.dotnet-version
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v5.2.0
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
 
@@ -351,7 +417,7 @@ jobs:
 
       - name: Setup Dart
         if: matrix.dart-version
-        uses: dart-lang/setup-dart@v1
+        uses: dart-lang/setup-dart@v1.7.2
         with:
           sdk: ${{ matrix.dart-version }}
 

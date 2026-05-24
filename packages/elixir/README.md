@@ -6,10 +6,7 @@
 >
   <!-- Built with -->
   <a href="https://github.com/kreuzberg-dev/alef">
-    <img
-      src="https://img.shields.io/badge/built%20with-alef%20%D7%90-007ec6"
-      alt="Built with alef"
-    />
+    <img src="https://img.shields.io/badge/Bindings-alef%20%D7%90-007ec6" alt="Bindings" />
   </a>
   <!-- Language Bindings -->
   <a href="https://crates.io/crates/liter-llm">
@@ -78,29 +75,39 @@
     <img src="https://img.shields.io/badge/License-MIT-007ec6" alt="License" />
   </a>
   <a href="https://docs.liter-llm.kreuzberg.dev">
-    <img src="https://img.shields.io/badge/docs-kreuzberg.dev-007ec6" alt="Docs" />
+    <img src="https://img.shields.io/badge/Docs-liter--llm-007ec6" alt="Docs" />
   </a>
 </div>
-<div align="center" style="margin: 20px 0">
-  <picture>
+<div align="center" style="margin: 24px 0 0">
+  <a href="https://kreuzberg.dev">
     <img
-      width="100%"
       alt="kreuzberg.dev"
       src="https://github.com/user-attachments/assets/1b6c6ad7-3b6d-4171-b1c9-f2026cc9deb8"
     />
-  </picture>
+  </a>
 </div>
-<div align="center" style="margin-bottom: 20px">
+<div
+  align="center"
+  style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 28px 0 24px"
+>
   <a href="https://discord.gg/xt9WY3GnKR">
     <img
       height="22"
-      src="https://img.shields.io/badge/Discord-Join%20our%20community-7289da?logo=discord&logoColor=white"
-      alt="Discord"
+      src="https://img.shields.io/badge/Discord-Chat-007ec6?logo=discord&logoColor=white"
+      alt="Join Discord"
     />
   </a>
 </div>
 
 Universal LLM API client for Elixir. Access 143+ LLM providers through a single interface with native BEAM concurrency, OTP integration, and idiomatic Elixir API.
+
+## What This Package Provides
+
+- **One provider surface** — chat, streaming, embeddings, images, audio, search, OCR, tools, and structured output across the provider registry.
+- **Provider/model routing** — call models with the `provider/model` convention and keep provider-specific request code out of application paths.
+- **Production controls** — retries, fallback, rate limits, cache layers, budgets, health checks, OpenTelemetry spans, and redacted secrets.
+- **Same core as every binding** — Rust, Python, Node.js, Go, Java, PHP, Ruby, .NET, Elixir, WASM, Kotlin Android, Swift, Dart, Zig, and C FFI use the same Rust implementation.
+- **BEAM package** — Rustler NIF binding for OTP services.
 
 ## Installation
 
@@ -111,7 +118,7 @@ Add to your `mix.exs` dependencies:
 ```elixir
 def deps do
   [
-    {:liter_llm, "~> 1.4.0-rc.27"}
+    {:liter_llm, "~> 1.4.0-rc.31"}
   ]
 end
 ```
@@ -202,11 +209,8 @@ Route to any provider using the `provider/model` prefix convention:
 - **Provider Routing** -- Single client for 143+ LLM providers via `provider/model` prefix
 - **Local LLMs** — Connect to locally-hosted models via Ollama, LM Studio, vLLM, llama.cpp, and other local inference servers
 - **Unified API** -- Consistent `chat`, `chat_stream`, `embeddings`, `list_models` interface
-
 - **Streaming** -- Real-time token streaming via `chat_stream`
-
 - **Tool Calling** -- Function calling and tool use across all supporting providers
-
 - **Type Safe** -- Schema-driven types compiled from JSON schemas
 - **Secure** -- API keys never logged or serialized, managed via environment variables
 - **Observability** -- Built-in [OpenTelemetry](https://opentelemetry.io/docs/specs/semconv/gen-ai/) with GenAI semantic conventions
@@ -242,7 +246,7 @@ liter-llm also ships as an OpenAI-compatible proxy server with Docker support:
 docker run -p 4000:4000 -e LITER_LLM_MASTER_KEY=sk-your-key ghcr.io/kreuzberg-dev/liter-llm
 ```
 
-See the [proxy server documentation](https://docs.liter-llm.kreuzberg.dev/server/proxy/) for configuration, CLI usage, and MCP integration.
+See the [proxy server documentation](https://docs.liter-llm.kreuzberg.dev/server/proxy-server/) for configuration, CLI usage, and MCP integration.
 
 ## Documentation
 
@@ -252,7 +256,7 @@ See the [proxy server documentation](https://docs.liter-llm.kreuzberg.dev/server
 
 ## Part of Kreuzberg.dev
 
-- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 90+ formats with optional OCR.
 - [Kreuzberg Cloud](https://github.com/kreuzberg-dev/kreuzberg-cloud) — managed extraction API with SDKs, dashboards, and observability.
 - [kreuzcrawl](https://github.com/kreuzberg-dev/kreuzcrawl) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
 - [html-to-markdown](https://github.com/kreuzberg-dev/html-to-markdown) — fast, lossless HTML→Markdown engine.

@@ -89,7 +89,7 @@ task format
 task lint
 
 # Generate READMEs from templates
-task generate-readme
+task generate:readme
 ```
 
 ```bash

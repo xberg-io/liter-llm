@@ -43,7 +43,7 @@ jobs:
       matrix:
         abi: [arm64-v8a, x86_64]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           cache-key-prefix: ci-mobile-android-${{ matrix.abi }}
@@ -63,7 +63,7 @@ jobs:
       matrix:
         target: [aarch64-apple-ios, aarch64-apple-ios-sim]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           target: ${{ matrix.target }}
@@ -79,7 +79,7 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - uses: kreuzberg-dev/actions/setup-rust@v1
       - uses: kreuzberg-dev/actions/build-ios-xcframework@v1
         with:
@@ -96,7 +96,7 @@ jobs:
       matrix:
         abi: [arm64-v8a, x86_64]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           cache-key-prefix: ci-mobile-android-${{ matrix.abi }}
@@ -113,13 +113,13 @@ jobs:
           esac
           cp "target/${RUST_TGT}/release/libliterllm_jni.so" \
              "packages/kotlin-android/src/main/jniLibs/${{ matrix.abi }}/"
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v5.2.0
         with:
           distribution: temurin
           java-version: "17"
-      - uses: gradle/actions/setup-gradle@v6
+      - uses: gradle/actions/setup-gradle@v6.1.0
         with:
-          gradle-version: "8.9"
+          gradle-version: "8.13"
       - name: Assemble Android library aar
         working-directory: packages/kotlin-android
         run: gradle assembleRelease

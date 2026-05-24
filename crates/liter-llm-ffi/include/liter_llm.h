@@ -10,29 +10,97 @@
 #include <stdint.h>
 #include <stdlib.h>
 /* Opaque type forward declarations */
+/**
+ * Assistant's response to a user message.
+ */
 typedef struct LITERLLMAssistantMessage LITERLLMAssistantMessage;
+/**
+ * Audio content part for speech-capable models.
+ */
 typedef struct LITERLLMAudioContent LITERLLMAudioContent;
+/**
+ * Auth configuration block.
+ */
+typedef struct LITERLLMAuthConfig LITERLLMAuthConfig;
 /**
  * How the API key is sent in the HTTP request.
  */
 typedef struct LITERLLMAuthHeaderFormat LITERLLMAuthHeaderFormat;
+/**
+ * Auth scheme used by a provider.
+ */
+typedef struct LITERLLMAuthType LITERLLMAuthType;
+/**
+ * Query parameters for listing batches.
+ */
 typedef struct LITERLLMBatchListQuery LITERLLMBatchListQuery;
+/**
+ * Response from listing batches.
+ */
 typedef struct LITERLLMBatchListResponse LITERLLMBatchListResponse;
+/**
+ * A batch job object.
+ */
 typedef struct LITERLLMBatchObject LITERLLMBatchObject;
+/**
+ * Request processing counts for a batch.
+ */
 typedef struct LITERLLMBatchRequestCounts LITERLLMBatchRequestCounts;
+/**
+ * Status of a batch job.
+ */
 typedef struct LITERLLMBatchStatus LITERLLMBatchStatus;
+/**
+ * Configuration for budget enforcement.
+ */
+typedef struct LITERLLMBudgetConfig LITERLLMBudgetConfig;
+/**
+ * Storage backend for the response cache.
+ */
+typedef struct LITERLLMCacheBackend LITERLLMCacheBackend;
+/**
+ * Configuration for the response cache.
+ */
+typedef struct LITERLLMCacheConfig LITERLLMCacheConfig;
+/**
+ * A streamed chunk of a chat completion response.
+ */
 typedef struct LITERLLMChatCompletionChunk LITERLLMChatCompletionChunk;
+/**
+ * Chat completion request (compatible with OpenAI and similar APIs).
+ */
 typedef struct LITERLLMChatCompletionRequest LITERLLMChatCompletionRequest;
+/**
+ * Chat completion response from the API.
+ */
 typedef struct LITERLLMChatCompletionResponse LITERLLMChatCompletionResponse;
+/**
+ * A tool the model can invoke (currently, all tools are functions).
+ */
 typedef struct LITERLLMChatCompletionTool LITERLLMChatCompletionTool;
+/**
+ * A single completion choice.
+ */
 typedef struct LITERLLMChoice LITERLLMChoice;
+/**
+ * A single content part in a user message â text, image, document, or audio.
+ */
 typedef struct LITERLLMContentPart LITERLLMContentPart;
+/**
+ * Request to create a batch job.
+ */
 typedef struct LITERLLMCreateBatchRequest LITERLLMCreateBatchRequest;
+/**
+ * Request to upload a file.
+ */
 typedef struct LITERLLMCreateFileRequest LITERLLMCreateFileRequest;
 /**
  * Request to create images from a text prompt.
  */
 typedef struct LITERLLMCreateImageRequest LITERLLMCreateImageRequest;
+/**
+ * Request to create a structured response.
+ */
 typedef struct LITERLLMCreateResponseRequest LITERLLMCreateResponseRequest;
 /**
  * Request to generate speech audio from text.
@@ -64,26 +132,69 @@ typedef struct LITERLLMCustomProviderConfig LITERLLMCustomProviderConfig;
  * headers are cached at construction to avoid redundant encoding on every request.
  */
 typedef struct LITERLLMDefaultClient LITERLLMDefaultClient;
+/**
+ * Response from a delete operation.
+ */
 typedef struct LITERLLMDeleteResponse LITERLLMDeleteResponse;
+/**
+ * Developer message (system-like message for Claude models).
+ */
 typedef struct LITERLLMDeveloperMessage LITERLLMDeveloperMessage;
+/**
+ * PDF/document content part for vision-capable models.
+ */
 typedef struct LITERLLMDocumentContent LITERLLMDocumentContent;
 /**
  * The format in which the embedding vectors are returned.
  */
 typedef struct LITERLLMEmbeddingFormat LITERLLMEmbeddingFormat;
+/**
+ * Text or texts to embed.
+ */
 typedef struct LITERLLMEmbeddingInput LITERLLMEmbeddingInput;
+/**
+ * A single embedding vector.
+ */
 typedef struct LITERLLMEmbeddingObject LITERLLMEmbeddingObject;
+/**
+ * Embedding request.
+ */
 typedef struct LITERLLMEmbeddingRequest LITERLLMEmbeddingRequest;
+/**
+ * Embedding response.
+ */
 typedef struct LITERLLMEmbeddingResponse LITERLLMEmbeddingResponse;
+/**
+ * How budget limits are enforced.
+ */
+typedef struct LITERLLMEnforcement LITERLLMEnforcement;
+/**
+ * Query parameters for listing files.
+ */
 typedef struct LITERLLMFileListQuery LITERLLMFileListQuery;
+/**
+ * Response from listing files.
+ */
 typedef struct LITERLLMFileListResponse LITERLLMFileListResponse;
+/**
+ * An uploaded file object.
+ */
 typedef struct LITERLLMFileObject LITERLLMFileObject;
+/**
+ * Purpose of an uploaded file.
+ */
 typedef struct LITERLLMFilePurpose LITERLLMFilePurpose;
 /**
  * Why a choice stopped generating tokens.
  */
 typedef struct LITERLLMFinishReason LITERLLMFinishReason;
+/**
+ * Function call details.
+ */
 typedef struct LITERLLMFunctionCall LITERLLMFunctionCall;
+/**
+ * Function definition exposed to the model.
+ */
 typedef struct LITERLLMFunctionDefinition LITERLLMFunctionDefinition;
 /**
  * Deprecated legacy function-role message body.
@@ -93,18 +204,37 @@ typedef struct LITERLLMFunctionMessage LITERLLMFunctionMessage;
  * A single generated image, returned as either a URL or base64 data.
  */
 typedef struct LITERLLMImage LITERLLMImage;
+/**
+ * Image detail level controlling token cost and processing.
+ */
 typedef struct LITERLLMImageDetail LITERLLMImageDetail;
+/**
+ * An image URL reference with optional detail level for processing.
+ */
 typedef struct LITERLLMImageUrl LITERLLMImageUrl;
 /**
  * Response containing generated images.
  */
 typedef struct LITERLLMImagesResponse LITERLLMImagesResponse;
+/**
+ * JSON Schema specification for constrained output.
+ */
 typedef struct LITERLLMJsonSchemaFormat LITERLLMJsonSchemaFormat;
+/**
+ * All errors that can occur when using `liter-llm`.
+ */
+typedef struct LITERLLMLiterLlmError LITERLLMLiterLlmError;
 /**
  * A chat message in a conversation.
  */
 typedef struct LITERLLMMessage LITERLLMMessage;
+/**
+ * A model available from the API.
+ */
 typedef struct LITERLLMModelObject LITERLLMModelObject;
+/**
+ * Response listing available models.
+ */
 typedef struct LITERLLMModelsListResponse LITERLLMModelsListResponse;
 /**
  * Boolean flags for each moderation category.
@@ -164,6 +294,14 @@ typedef struct LITERLLMPageDimensions LITERLLMPageDimensions;
  */
 typedef struct LITERLLMPromptTokensDetails LITERLLMPromptTokensDetails;
 /**
+ * Static configuration for a single provider entry in providers.json.
+ */
+typedef struct LITERLLMProviderConfig LITERLLMProviderConfig;
+/**
+ * Configuration for per-model rate limits.
+ */
+typedef struct LITERLLMRateLimitConfig LITERLLMRateLimitConfig;
+/**
  * Controls how much reasoning effort the model should use.
  */
 typedef struct LITERLLMReasoningEffort LITERLLMReasoningEffort;
@@ -187,10 +325,25 @@ typedef struct LITERLLMRerankResult LITERLLMRerankResult;
  * The text content of a reranked document, returned when `return_documents` is true.
  */
 typedef struct LITERLLMRerankResultDocument LITERLLMRerankResultDocument;
+/**
+ * Response format constraint.
+ */
 typedef struct LITERLLMResponseFormat LITERLLMResponseFormat;
+/**
+ * Response from a structured response request.
+ */
 typedef struct LITERLLMResponseObject LITERLLMResponseObject;
+/**
+ * A single output item from the response.
+ */
 typedef struct LITERLLMResponseOutputItem LITERLLMResponseOutputItem;
+/**
+ * A tool available for the response request.
+ */
 typedef struct LITERLLMResponseTool LITERLLMResponseTool;
+/**
+ * Token usage for a response.
+ */
 typedef struct LITERLLMResponseUsage LITERLLMResponseUsage;
 /**
  * A search request.
@@ -204,18 +357,57 @@ typedef struct LITERLLMSearchResponse LITERLLMSearchResponse;
  * An individual search result.
  */
 typedef struct LITERLLMSearchResult LITERLLMSearchResult;
+/**
+ * Name of the specific function to invoke.
+ */
 typedef struct LITERLLMSpecificFunction LITERLLMSpecificFunction;
+/**
+ * Directive to call a specific tool.
+ */
 typedef struct LITERLLMSpecificToolChoice LITERLLMSpecificToolChoice;
+/**
+ * Stop sequence(s) that cause the model to stop generating.
+ */
 typedef struct LITERLLMStopSequence LITERLLMStopSequence;
+/**
+ * A streaming choice with incremental delta.
+ */
 typedef struct LITERLLMStreamChoice LITERLLMStreamChoice;
+/**
+ * Incremental delta in a stream chunk.
+ */
 typedef struct LITERLLMStreamDelta LITERLLMStreamDelta;
+/**
+ * Partial function call details in a stream.
+ */
 typedef struct LITERLLMStreamFunctionCall LITERLLMStreamFunctionCall;
+/**
+ * Options for streaming responses.
+ */
 typedef struct LITERLLMStreamOptions LITERLLMStreamOptions;
+/**
+ * A streaming tool call being built incrementally.
+ */
 typedef struct LITERLLMStreamToolCall LITERLLMStreamToolCall;
+/**
+ * System message guiding model behavior for the entire conversation.
+ */
 typedef struct LITERLLMSystemMessage LITERLLMSystemMessage;
+/**
+ * A tool call the model wants to execute.
+ */
 typedef struct LITERLLMToolCall LITERLLMToolCall;
+/**
+ * Tool usage mode or a specific tool to call.
+ */
 typedef struct LITERLLMToolChoice LITERLLMToolChoice;
+/**
+ * Tool choice mode.
+ */
 typedef struct LITERLLMToolChoiceMode LITERLLMToolChoiceMode;
+/**
+ * Tool execution result returned to the model.
+ */
 typedef struct LITERLLMToolMessage LITERLLMToolMessage;
 /**
  * The type discriminator for tool/tool-call objects.
@@ -233,8 +425,17 @@ typedef struct LITERLLMTranscriptionResponse LITERLLMTranscriptionResponse;
  * A segment of transcribed audio with timing information.
  */
 typedef struct LITERLLMTranscriptionSegment LITERLLMTranscriptionSegment;
+/**
+ * Token-usage accounting returned by the provider on each completion / embedding call.
+ */
 typedef struct LITERLLMUsage LITERLLMUsage;
+/**
+ * User message content as either plain text or a list of multimodal parts.
+ */
 typedef struct LITERLLMUserContent LITERLLMUserContent;
+/**
+ * User message in the conversation.
+ */
 typedef struct LITERLLMUserMessage LITERLLMUserMessage;
 
 
@@ -4146,14 +4347,14 @@ LITERLLMResponseObject *literllm_default_client_create_response(const LITERLLMDe
  * freed with the appropriate free function.
  */
 LITERLLMResponseObject *literllm_default_client_retrieve_response(const LITERLLMDefaultClient *this_,
-                                                                  const char *id);
+                                                                  const char *response_id);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
 LITERLLMResponseObject *literllm_default_client_cancel_response(const LITERLLMDefaultClient *this_,
-                                                                const char *id);
+                                                                const char *response_id);
 
 /**
  * Create a `CustomProviderConfig` from a JSON string. Returns null on failure.
@@ -4205,6 +4406,265 @@ LITERLLMAuthHeaderFormat *literllm_custom_provider_config_auth_header(const LITE
  * Pointer must be a valid handle returned by this library.
  */
 char *literllm_custom_provider_config_model_prefixes(const LITERLLMCustomProviderConfig *ptr);
+
+/**
+ * Create a `ProviderConfig` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `literllm_provider_config_free`.
+ */
+LITERLLMProviderConfig *literllm_provider_config_from_json(const char *json);
+
+/**
+ * Serialize a `ProviderConfig` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_provider_config_to_json(const LITERLLMProviderConfig *ptr);
+
+/**
+ * Free a `ProviderConfig` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_provider_config_free(LITERLLMProviderConfig *ptr);
+
+/**
+ * Get the `name` field from a `ProviderConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_provider_config_name(const LITERLLMProviderConfig *ptr);
+
+/**
+ * Get the `display_name` field from a `ProviderConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_provider_config_display_name(const LITERLLMProviderConfig *ptr);
+
+/**
+ * Get the `base_url` field from a `ProviderConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_provider_config_base_url(const LITERLLMProviderConfig *ptr);
+
+/**
+ * Get the `auth` field from a `ProviderConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+LITERLLMAuthConfig *literllm_provider_config_auth(const LITERLLMProviderConfig *ptr);
+
+/**
+ * Get the `endpoints` field from a `ProviderConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_provider_config_endpoints(const LITERLLMProviderConfig *ptr);
+
+/**
+ * Get the `model_prefixes` field from a `ProviderConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_provider_config_model_prefixes(const LITERLLMProviderConfig *ptr);
+
+/**
+ * Get the `param_mappings` field from a `ProviderConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_provider_config_param_mappings(const LITERLLMProviderConfig *ptr);
+
+/**
+ * Create a `AuthConfig` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `literllm_auth_config_free`.
+ */
+LITERLLMAuthConfig *literllm_auth_config_from_json(const char *json);
+
+/**
+ * Serialize a `AuthConfig` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_auth_config_to_json(const LITERLLMAuthConfig *ptr);
+
+/**
+ * Free a `AuthConfig` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_auth_config_free(LITERLLMAuthConfig *ptr);
+
+/**
+ * Get the `auth_type` field from a `AuthConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+LITERLLMAuthType *literllm_auth_config_auth_type(const LITERLLMAuthConfig *ptr);
+
+/**
+ * Get the `env_var` field from a `AuthConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_auth_config_env_var(const LITERLLMAuthConfig *ptr);
+
+/**
+ * Create a `BudgetConfig` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `literllm_budget_config_free`.
+ */
+LITERLLMBudgetConfig *literllm_budget_config_from_json(const char *json);
+
+/**
+ * Serialize a `BudgetConfig` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_budget_config_to_json(const LITERLLMBudgetConfig *ptr);
+
+/**
+ * Free a `BudgetConfig` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_budget_config_free(LITERLLMBudgetConfig *ptr);
+
+/**
+ * Get the `global_limit` field from a `BudgetConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+double literllm_budget_config_global_limit(const LITERLLMBudgetConfig *ptr);
+
+/**
+ * Get the `model_limits` field from a `BudgetConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_budget_config_model_limits(const LITERLLMBudgetConfig *ptr);
+
+/**
+ * Get the `enforcement` field from a `BudgetConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+LITERLLMEnforcement *literllm_budget_config_enforcement(const LITERLLMBudgetConfig *ptr);
+
+/**
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+LITERLLMBudgetConfig *literllm_budget_config_default(void);
+
+/**
+ * Create a `CacheConfig` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `literllm_cache_config_free`.
+ */
+LITERLLMCacheConfig *literllm_cache_config_from_json(const char *json);
+
+/**
+ * Serialize a `CacheConfig` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_cache_config_to_json(const LITERLLMCacheConfig *ptr);
+
+/**
+ * Free a `CacheConfig` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_cache_config_free(LITERLLMCacheConfig *ptr);
+
+/**
+ * Get the `max_entries` field from a `CacheConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uintptr_t literllm_cache_config_max_entries(const LITERLLMCacheConfig *ptr);
+
+/**
+ * Get the `ttl` field from a `CacheConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint64_t literllm_cache_config_ttl(const LITERLLMCacheConfig *ptr);
+
+/**
+ * Get the `backend` field from a `CacheConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+LITERLLMCacheBackend *literllm_cache_config_backend(const LITERLLMCacheConfig *ptr);
+
+/**
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+LITERLLMCacheConfig *literllm_cache_config_default(void);
+
+/**
+ * Create a `RateLimitConfig` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `literllm_rate_limit_config_free`.
+ */
+LITERLLMRateLimitConfig *literllm_rate_limit_config_from_json(const char *json);
+
+/**
+ * Serialize a `RateLimitConfig` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_rate_limit_config_to_json(const LITERLLMRateLimitConfig *ptr);
+
+/**
+ * Free a `RateLimitConfig` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_rate_limit_config_free(LITERLLMRateLimitConfig *ptr);
+
+/**
+ * Get the `rpm` field from a `RateLimitConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint32_t literllm_rate_limit_config_rpm(const LITERLLMRateLimitConfig *ptr);
+
+/**
+ * Get the `tpm` field from a `RateLimitConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint64_t literllm_rate_limit_config_tpm(const LITERLLMRateLimitConfig *ptr);
+
+/**
+ * Get the `window` field from a `RateLimitConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint64_t literllm_rate_limit_config_window(const LITERLLMRateLimitConfig *ptr);
+
+/**
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+LITERLLMRateLimitConfig *literllm_rate_limit_config_default(void);
 
 /**
  * Convert an integer to a `Message` variant. Returns -1 on invalid input.
@@ -4490,6 +4950,51 @@ int32_t literllm_auth_header_format_from_i32(int32_t value);
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
 int32_t literllm_auth_header_format_from_str(const char *name);
+
+/**
+ * Convert an integer to a `AuthType` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t literllm_auth_type_from_i32(int32_t value);
+
+/**
+ * Convert a `AuthType` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t literllm_auth_type_from_str(const char *name);
+
+/**
+ * Convert an integer to a `Enforcement` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t literllm_enforcement_from_i32(int32_t value);
+
+/**
+ * Convert a `Enforcement` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t literllm_enforcement_from_str(const char *name);
+
+/**
+ * Convert an integer to a `CacheBackend` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t literllm_cache_backend_from_i32(int32_t value);
+
+/**
+ * Convert a `CacheBackend` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t literllm_cache_backend_from_str(const char *name);
 
 /**
  * Free a heap-allocated `UserContent` returned by a pointer-returning FFI function.
@@ -4867,6 +5372,81 @@ char *literllm_auth_header_format_to_json(const LITERLLMAuthHeaderFormat *ptr);
 char *literllm_auth_header_format_to_string(const LITERLLMAuthHeaderFormat *ptr);
 
 /**
+ * Free a heap-allocated `AuthType` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_auth_type_free(LITERLLMAuthType *ptr);
+
+/**
+ * Serialize a heap-allocated `AuthType` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_auth_type_to_json(const LITERLLMAuthType *ptr);
+
+/**
+ * Render a heap-allocated `AuthType` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_auth_type_to_string(const LITERLLMAuthType *ptr);
+
+/**
+ * Free a heap-allocated `Enforcement` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_enforcement_free(LITERLLMEnforcement *ptr);
+
+/**
+ * Serialize a heap-allocated `Enforcement` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_enforcement_to_json(const LITERLLMEnforcement *ptr);
+
+/**
+ * Render a heap-allocated `Enforcement` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_enforcement_to_string(const LITERLLMEnforcement *ptr);
+
+/**
+ * Free a heap-allocated `CacheBackend` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_cache_backend_free(LITERLLMCacheBackend *ptr);
+
+/**
+ * Serialize a heap-allocated `CacheBackend` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_cache_backend_to_json(const LITERLLMCacheBackend *ptr);
+
+/**
+ * Render a heap-allocated `CacheBackend` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_cache_backend_to_string(const LITERLLMCacheBackend *ptr);
+
+/**
  * Create a new LLM client with simple scalar configuration.
  *
  * This is the primary binding entry-point. All parameters except `api_key`
@@ -4893,5 +5473,185 @@ LITERLLMDefaultClient *literllm_create_client(const char *api_key,
  * freed with the appropriate free function.
  */
 LITERLLMDefaultClient *literllm_create_client_from_json(const char *json);
+
+/**
+ * Register a custom provider in the global runtime registry.
+ *
+ * The provider will be checked **before** all built-in providers during model
+ * detection. If a provider with the same `name` already exists it is replaced.
+ * \note Returns an error if the config is invalid (empty name, empty base_url, or
+ * no model prefixes).
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+int32_t literllm_register_custom_provider(const LITERLLMCustomProviderConfig *config);
+
+/**
+ * Remove a previously registered custom provider by name.
+ *
+ * Returns `true` if a provider with the given name was found and removed,
+ * `false` if no such provider existed.
+ * \note Returns an error only if the internal lock is poisoned.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+int32_t literllm_unregister_custom_provider(const char *name);
+
+/**
+ * Return all provider configs from the registry.
+ *
+ * Useful for tooling, documentation generation, or runtime enumeration.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+char *literllm_all_providers(void);
+
+/**
+ * Return the byte length of the C string that `literllm_all_providers` would return for the same
+ * arguments, without allocating. Returns 0 when the underlying value is None or an error occurs.
+ * Enables safe slice construction in Zig and Java FFM Panama without a NUL-scan.
+ * \note SAFETY: All pointer parameters obey the same validity rules as `literllm_all_providers`.
+ */
+uintptr_t literllm_all_providers_len(void);
+
+/**
+ * Return the set of complex provider names.
+ *
+ * Complex providers require custom auth/routing logic beyond simple bearer
+ * tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
+ *
+ * The returned reference points into the static registry â no allocation.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+char *literllm_complex_provider_names(void);
+
+/**
+ * Return the byte length of the C string that `literllm_complex_provider_names` would return for the
+ * same arguments, without allocating. Returns 0 when the underlying value is None or an error occurs.
+ * Enables safe slice construction in Zig and Java FFM Panama without a NUL-scan.
+ * \note SAFETY: All pointer parameters obey the same validity rules as
+ * `literllm_complex_provider_names`.
+ */
+uintptr_t literllm_complex_provider_names_len(void);
+
+/**
+ * Calculate the estimated cost of a completion given a model name and token
+ * counts.
+ *
+ * Returns `None` if the model is not present in the embedded pricing registry.
+ * Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
+ *
+ * When an exact model name match is not found, progressively shorter prefixes
+ * are tried by stripping from the last `-` or `.` separator.  For example,
+ * `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ * \code
+ * use liter_llm::cost;
+ *
+ * let usd = cost::completion_cost("gpt-4o", 1_000, 500).unwrap();
+ * // 1000 * 0.0000025 + 500 * 0.00001 = 0.0025 + 0.005 = 0.0075
+ * assert!((usd - 0.0075).abs() < 1e-9);
+ * \endcode
+ */
+double literllm_completion_cost(const char *model,
+                                uint64_t prompt_tokens,
+                                uint64_t completion_tokens);
+
+/**
+ * Calculate the estimated cost of a completion, accounting for cached
+ * (cache-hit) prompt tokens billed at the provider's discounted rate.
+ *
+ * `cached_tokens` is the count of prompt tokens served from the provider's
+ * prompt cache. It must be `<= prompt_tokens` (cached tokens are a subset of
+ * the prompt). The non-cached portion is billed at `input_cost_per_token`
+ * and the cached portion at `cache_read_input_token_cost` when the model
+ * has cache pricing; otherwise the entire prompt is billed at the regular
+ * input rate.
+ *
+ * Returns `None` if the model is not present in the embedded pricing
+ * registry, mirroring [`completion_cost`].
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+double literllm_completion_cost_with_cache(const char *model,
+                                           uint64_t prompt_tokens,
+                                           uint64_t cached_tokens,
+                                           uint64_t completion_tokens);
+
+/**
+ * Count tokens in a text string using the tokenizer for the given model.
+ *
+ * The tokenizer is resolved from the model name prefix (e.g. `"gpt-4o"` maps
+ * to the `Xenova/gpt-4o` HuggingFace tokenizer). Tokenizers are cached after
+ * first load.
+ * \note Returns [`LiterLlmError::BadRequest`] if the tokenizer cannot be loaded
+ * (e.g. network failure on first use) or if tokenization itself fails.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+uintptr_t literllm_count_tokens(const char *model,
+                                const char *text);
+
+/**
+ * Count tokens for a full [`ChatCompletionRequest`].
+ *
+ * Sums tokens across all message text contents plus a per-message overhead
+ * of ~4 tokens (for role, separators, and formatting metadata). Tool
+ * definitions and multimodal content parts (images, audio, documents) are
+ * not counted â only textual content contributes to the token total.
+ * \note Returns [`LiterLlmError::BadRequest`] if the tokenizer cannot be loaded or
+ * if tokenization fails for any message.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+uintptr_t literllm_count_request_tokens(const char *model,
+                                        const LITERLLMChatCompletionRequest *req);
+
+/**
+ * Install the `ring` crypto provider as the rustls process default, idempotently.
+ *
+ * rustls 0.23+ removed the implicit default provider. This function installs
+ * `ring` once per process. Subsequent calls are no-ops. Calling it from a
+ * downstream Rust app that has already installed `aws-lc-rs` is safe â the
+ * `Err` from `install_default()` is silently ignored.
+ *
+ * Called automatically by every internal `reqwest::Client` constructor
+ * (auth providers, default HTTP client). Bindings and downstream consumers
+ * reach those constructors transitively, so no manual init is required.
+ *
+ * WASM builds are exempt â the WASM target uses the browser/Node.js fetch
+ * API instead of rustls, so no crypto provider is needed.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+void literllm_ensure_crypto_provider(void);
+
+/**
+ * Return the HTTP status code for the error pointed to by `err`.
+ * Returns `0` if `err` is null.
+ */
+uint16_t literllm_liter_llm_error_status_code(const LITERLLMLiterLlmError *err);
+
+/**
+ * Return whether the error pointed to by `err` is transient.
+ * Returns `false` if `err` is null.
+ */
+bool literllm_liter_llm_error_is_transient(const LITERLLMLiterLlmError *err);
+
+/**
+ * Return the machine-readable error category string for the error pointed
+ * to by `err` as a heap-allocated, NUL-terminated C string.
+ * The caller must free the returned pointer with `literllm_liter_llm_error_error_type_free`.
+ * Returns a null pointer if `err` is null.
+ */
+char *literllm_liter_llm_error_error_type(const LITERLLMLiterLlmError *err);
+
+/**
+ * Free a string previously returned by `literllm_liter_llm_error_error_type`.
+ * Passing a null pointer is a no-op.
+ */
+void literllm_liter_llm_error_error_type_free(char *ptr);
 
 #endif  /* LITERLLM_H */

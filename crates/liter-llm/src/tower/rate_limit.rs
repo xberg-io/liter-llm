@@ -24,8 +24,7 @@ use crate::error::{LiterLlmError, Result};
 // ---- Config ----------------------------------------------------------------
 
 /// Configuration for per-model rate limits.
-#[derive(Debug, Clone)]
-#[cfg_attr(alef, alef(skip))]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct RateLimitConfig {
     /// Maximum requests per window.  `None` means unlimited.
     pub rpm: Option<u32>,
@@ -35,7 +34,6 @@ pub struct RateLimitConfig {
     pub window: Duration,
 }
 
-#[cfg_attr(alef, alef(skip))]
 impl Default for RateLimitConfig {
     fn default() -> Self {
         Self {

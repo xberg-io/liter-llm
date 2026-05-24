@@ -1,8 +1,14 @@
 packages:
   - "crates/liter-llm-node"
   - "crates/liter-llm-wasm"
-  - "packages/typescript"
   - "e2e/node"
   - "e2e/wasm"
 allowBuilds:
   esbuild: true
+minimumReleaseAgeExclude:
+  - "@kreuzberg/liter-llm-node-darwin-arm64@1.4.0-rc.28"
+  - "@kreuzberg/liter-llm-node-darwin-x64@1.4.0-rc.28"
+  - "@kreuzberg/liter-llm-node-linux-arm64-gnu@1.4.0-rc.28"
+  - "@kreuzberg/liter-llm-node-linux-x64-gnu@1.4.0-rc.28"
+  - "@kreuzberg/liter-llm-node-win32-arm64-msvc@1.4.0-rc.28"
+  - "@kreuzberg/liter-llm-node-win32-x64-msvc@1.4.0-rc.28"

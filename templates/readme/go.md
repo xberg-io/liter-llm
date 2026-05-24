@@ -9,6 +9,13 @@ Universal LLM API client for Go. Access 143+ LLM providers through a single inte
 > **Version {{ version }}**
 > Report issues at [github.com/kreuzberg-dev/liter-llm](https://github.com/kreuzberg-dev/liter-llm/issues).
 
+## What This Package Provides
+
+- **Go module over the Rust client** — context-aware chat, streaming, embeddings, tool calls, search, and OCR.
+- **Provider/model routing** — call `provider/model` names without provider-specific client branches.
+- **Static-link workflow** — build against `liter-llm-ffi` and ship a self-contained Go binary.
+- **Cross-binding parity** — behavior matches the Rust, Python, Node.js, Java, .NET, Ruby, PHP, Elixir, Swift, Dart, Zig, WASM, and C FFI packages.
+
 ## Install
 
 ### Using Go Modules
@@ -192,7 +199,7 @@ fmt.Println(resp.Content)
 
 ## Part of Kreuzberg.dev
 
-- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 90+ formats with optional OCR.
 - [Kreuzberg Cloud](https://github.com/kreuzberg-dev/kreuzberg-cloud) — managed extraction API with SDKs, dashboards, and observability.
 - [kreuzcrawl](https://github.com/kreuzberg-dev/kreuzcrawl) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
 - [html-to-markdown](https://github.com/kreuzberg-dev/html-to-markdown) — fast, lossless HTML→Markdown engine.

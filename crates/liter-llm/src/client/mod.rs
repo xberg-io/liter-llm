@@ -1,5 +1,9 @@
+/// Client builder configuration ([`ClientConfig`] and related helpers).
 pub mod config;
+/// On-disk client configuration schema (TOML / JSON / YAML).
+#[allow(missing_docs)]
 pub mod config_file;
+/// Tower-backed managed client wired with rate limit, cache, routing, etc.
 #[cfg(all(feature = "native-http", feature = "tower"))]
 pub mod managed;
 
@@ -400,10 +404,10 @@ pub trait ResponseClient: Send + Sync {
     fn create_response(&self, req: CreateResponseRequest) -> BoxFuture<'_, Result<ResponseObject>>;
 
     /// Retrieve a response by ID.
-    fn retrieve_response(&self, id: &str) -> BoxFuture<'_, Result<ResponseObject>>;
+    fn retrieve_response(&self, response_id: &str) -> BoxFuture<'_, Result<ResponseObject>>;
 
     /// Cancel an in-progress response.
-    fn cancel_response(&self, id: &str) -> BoxFuture<'_, Result<ResponseObject>>;
+    fn cancel_response(&self, response_id: &str) -> BoxFuture<'_, Result<ResponseObject>>;
 }
 
 /// Responses API operations (create, retrieve, cancel) (WASM variant).
@@ -414,10 +418,10 @@ pub trait ResponseClient {
     fn create_response(&self, req: CreateResponseRequest) -> BoxFuture<'_, Result<ResponseObject>>;
 
     /// Retrieve a response by ID.
-    fn retrieve_response(&self, id: &str) -> BoxFuture<'_, Result<ResponseObject>>;
+    fn retrieve_response(&self, response_id: &str) -> BoxFuture<'_, Result<ResponseObject>>;
 
     /// Cancel an in-progress response.
-    fn cancel_response(&self, id: &str) -> BoxFuture<'_, Result<ResponseObject>>;
+    fn cancel_response(&self, response_id: &str) -> BoxFuture<'_, Result<ResponseObject>>;
 }
 
 /// Default client implementation backed by `reqwest`.
@@ -500,6 +504,22 @@ impl DefaultClient {
                     });
                 }
             }
+        }
+
+        // Auto-install VertexAdcCredentialProvider when the resolved provider is
+        // Vertex AI and the caller supplied neither an explicit api_key nor a
+        // credential_provider. The ADC provider obtains short-lived OAuth2 tokens
+        // from the GKE / Compute Engine metadata server (or via gcp_auth's ADC
+        // discovery chain for local development), which is the canonical auth
+        // path for Workload Identity deployments. Callers that supply a
+        // pre-obtained access token via api_key or explicitly set a
+        // credential_provider continue to take precedence.
+        #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+        if config.credential_provider.is_none()
+            && config.api_key.expose_secret().is_empty()
+            && provider.name() == "vertex_ai"
+        {
+            config.credential_provider = Some(Arc::new(crate::auth::vertex_adc::VertexAdcCredentialProvider::new()));
         }
 
         // Build the header map from pre-validated headers stored in the config.
@@ -1718,10 +1738,14 @@ impl ResponseClient for DefaultClient {
         })
     }
 
-    fn retrieve_response(&self, id: &str) -> BoxFuture<'_, Result<ResponseObject>> {
-        let id = id.to_owned();
+    fn retrieve_response(&self, response_id: &str) -> BoxFuture<'_, Result<ResponseObject>> {
+        let response_id = response_id.to_owned();
         Box::pin(async move {
-            let url = format!("{}/{}", self.provider.build_url(self.provider.responses_path(), ""), id);
+            let url = format!(
+                "{}/{}",
+                self.provider.build_url(self.provider.responses_path(), ""),
+                response_id
+            );
             let auth_header = self.resolve_auth_header().await?;
             let auth = auth_header.as_ref().map(str_pair);
             let all_headers = self.all_headers("GET", &url, &serde_json::Value::Null, &[]);
@@ -1732,13 +1756,13 @@ impl ResponseClient for DefaultClient {
         })
     }
 
-    fn cancel_response(&self, id: &str) -> BoxFuture<'_, Result<ResponseObject>> {
-        let id = id.to_owned();
+    fn cancel_response(&self, response_id: &str) -> BoxFuture<'_, Result<ResponseObject>> {
+        let response_id = response_id.to_owned();
         Box::pin(async move {
             let url = format!(
                 "{}/{}/cancel",
                 self.provider.build_url(self.provider.responses_path(), ""),
-                id
+                response_id
             );
             let auth_header = self.resolve_auth_header().await?;
             let body_json = serde_json::Value::Null;
@@ -1798,5 +1822,166 @@ mod build_provider_tests {
         // detected — but base_url comes from env vars (likely empty in CI),
         // so validate() would fail. We only assert the name here.
         assert_eq!(p.name(), "azure");
+    }
+
+    // ── Vertex AI ADC auto-install ───────────────────────────────────────────
+
+    /// When the resolved provider is Vertex AI and the caller supplied neither
+    /// an explicit `api_key` nor a `credential_provider`, `DefaultClient::new`
+    /// auto-installs `VertexAdcCredentialProvider`. This is the canonical auth
+    /// path for GKE / Workload Identity deployments where short-lived OAuth2
+    /// tokens come from the metadata server.
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    #[serial_test::serial]
+    fn vertex_ai_auto_installs_adc_provider_when_no_credentials_configured() {
+        // SAFETY: serial_test::serial guarantees no other test mutates these
+        // env vars concurrently. We restore the prior values on drop below.
+        let prior_project = std::env::var("VERTEXAI_PROJECT").ok();
+        let prior_location = std::env::var("VERTEXAI_LOCATION").ok();
+        struct EnvGuard {
+            prior_project: Option<String>,
+            prior_location: Option<String>,
+        }
+        impl Drop for EnvGuard {
+            fn drop(&mut self) {
+                // SAFETY: single-threaded restoration during test teardown.
+                unsafe {
+                    match &self.prior_project {
+                        Some(v) => std::env::set_var("VERTEXAI_PROJECT", v),
+                        None => std::env::remove_var("VERTEXAI_PROJECT"),
+                    }
+                    match &self.prior_location {
+                        Some(v) => std::env::set_var("VERTEXAI_LOCATION", v),
+                        None => std::env::remove_var("VERTEXAI_LOCATION"),
+                    }
+                }
+            }
+        }
+        let _guard = EnvGuard {
+            prior_project,
+            prior_location,
+        };
+        // SAFETY: serial_test::serial ensures exclusive access.
+        unsafe {
+            std::env::set_var("VERTEXAI_PROJECT", "test-project");
+            std::env::set_var("VERTEXAI_LOCATION", "us-central1");
+        }
+
+        let config = ClientConfigBuilder::new("").load_env(false).build();
+        assert!(
+            config.credential_provider.is_none(),
+            "input config should have no credential_provider"
+        );
+
+        let client = DefaultClient::new(config, Some("vertex_ai/gemini-2.5-flash-lite"))
+            .expect("DefaultClient::new should succeed for vertex with empty api_key");
+
+        assert!(
+            client.config.credential_provider.is_some(),
+            "DefaultClient::new should auto-install VertexAdcCredentialProvider for vertex_ai when no credentials are configured"
+        );
+    }
+
+    /// When the caller already supplied an `api_key`, the auto-install does
+    /// not fire — pre-obtained tokens take precedence over ADC discovery.
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    #[serial_test::serial]
+    fn vertex_ai_explicit_api_key_skips_auto_install() {
+        let prior_project = std::env::var("VERTEXAI_PROJECT").ok();
+        struct EnvGuard(Option<String>);
+        impl Drop for EnvGuard {
+            fn drop(&mut self) {
+                unsafe {
+                    match &self.0 {
+                        Some(v) => std::env::set_var("VERTEXAI_PROJECT", v),
+                        None => std::env::remove_var("VERTEXAI_PROJECT"),
+                    }
+                }
+            }
+        }
+        let _guard = EnvGuard(prior_project);
+        unsafe {
+            std::env::set_var("VERTEXAI_PROJECT", "test-project");
+        }
+
+        let config = ClientConfigBuilder::new("ya29.pre-obtained-token")
+            .load_env(false)
+            .build();
+
+        let client = DefaultClient::new(config, Some("vertex_ai/gemini-2.5-flash-lite"))
+            .expect("DefaultClient::new should succeed");
+
+        assert!(
+            client.config.credential_provider.is_none(),
+            "auto-install must not fire when api_key is non-empty"
+        );
+    }
+
+    /// When the caller explicitly supplied a `credential_provider`, the
+    /// auto-install does not overwrite it.
+    #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
+    #[test]
+    #[serial_test::serial]
+    fn vertex_ai_explicit_credential_provider_skips_auto_install() {
+        use std::sync::Arc;
+
+        use crate::auth::{Credential, CredentialProvider, StaticTokenProvider};
+        use secrecy::SecretString;
+
+        let prior_project = std::env::var("VERTEXAI_PROJECT").ok();
+        struct EnvGuard(Option<String>);
+        impl Drop for EnvGuard {
+            fn drop(&mut self) {
+                unsafe {
+                    match &self.0 {
+                        Some(v) => std::env::set_var("VERTEXAI_PROJECT", v),
+                        None => std::env::remove_var("VERTEXAI_PROJECT"),
+                    }
+                }
+            }
+        }
+        let _guard = EnvGuard(prior_project);
+        unsafe {
+            std::env::set_var("VERTEXAI_PROJECT", "test-project");
+        }
+
+        let explicit: Arc<dyn CredentialProvider> =
+            Arc::new(StaticTokenProvider::new(SecretString::from("static-token".to_owned())));
+        let explicit_marker = Arc::as_ptr(&explicit) as *const ();
+
+        let config = ClientConfigBuilder::new("")
+            .load_env(false)
+            .credential_provider(Arc::clone(&explicit))
+            .build();
+
+        let client = DefaultClient::new(config, Some("vertex_ai/gemini-2.5-flash-lite"))
+            .expect("DefaultClient::new should succeed");
+
+        let installed = client
+            .config
+            .credential_provider
+            .as_ref()
+            .expect("explicit provider should survive auto-install path");
+        let installed_marker = Arc::as_ptr(installed) as *const ();
+        assert_eq!(
+            installed_marker, explicit_marker,
+            "auto-install must not overwrite an explicitly-supplied credential_provider"
+        );
+
+        // Sanity check: the explicit provider still resolves to its static token.
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("tokio runtime");
+        let credential = rt.block_on(installed.resolve()).expect("resolve");
+        match credential {
+            Credential::BearerToken(t) => {
+                use secrecy::ExposeSecret;
+                assert_eq!(t.expose_secret(), "static-token");
+            }
+            _ => panic!("expected BearerToken"),
+        }
     }
 }

@@ -109,10 +109,10 @@ packages:
     dependency: transitive
     description:
       name: freezed_annotation
-      sha256: c2e2d632dd9b8a2b7751117abcfc2b4888ecfe181bd9fca7170d9ef02e595fe2
+      sha256: "7294967ff0a6d98638e7acb774aac3af2550777accd8149c90af5b014e6d44d8"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.4"
+    version: "3.1.0"
   frontend_server_client:
     dependency: transitive
     description:
@@ -165,17 +165,17 @@ packages:
     dependency: transitive
     description:
       name: json_annotation
-      sha256: cb09e7dac6210041fad964ed7fbee004f14258b4eca4040f72d1234062ace4c8
+      sha256: "2a743920d81b7910627f68ee2c9ac1fc0bfee32b9fc3403587d7c6791ca12f80"
       url: "https://pub.dev"
     source: hosted
-    version: "4.11.0"
+    version: "4.12.0"
   liter_llm:
     dependency: "direct main"
     description:
       path: "../../packages/dart"
       relative: true
     source: path
-    version: "1.4.0-rc.27"
+    version: "1.4.0-rc.29"
   logging:
     dependency: transitive
     description:

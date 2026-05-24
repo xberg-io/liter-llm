@@ -4,7 +4,7 @@ description: "Configure Azure AD, AWS Bedrock STS, and Vertex AI OAuth2 authenti
 
 # Authentication
 
-liter-llm supports three enterprise credential flows in addition to plain API keys: Azure AD client credentials, AWS STS web identity (for Bedrock), and Google Vertex AI service-account OAuth2. Each provider implements the `CredentialProvider` trait, which resolves a fresh credential before each request and caches it until five minutes before expiry.
+Liter-llm supports three enterprise credential flows in addition plain API keys: Azure AD client credentials, AWS STS web identity (for Bedrock), and Google Vertex AI service-account OAuth2. Each provider implements the `CredentialProvider` trait, which resolves a fresh credential before each request and caches it until five minutes before expiry.
 
 Feature flags gate each provider at compile time:
 
@@ -99,7 +99,7 @@ let azure_client = DefaultClient::new(azure_config, None)?;
 
 Temporary credentials have a default lifetime of 3,600 seconds and are refreshed five minutes before expiry.
 
-!!! note "SigV4 signing"
+!!! Note "SigV4 signing"
 SigV4 request signing is handled by the Bedrock provider crate (`crates/liter-llm/src/provider/bedrock.rs`), not by this credential provider. `WebIdentityCredentialProvider` only supplies the `access_key_id`, `secret_access_key`, and `session_token`.
 
 ### Environment variables

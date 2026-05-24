@@ -117,6 +117,16 @@ e2e/elixir/deps/
 e2e/elixir/_build/
 e2e/php/vendor/
 
+# Swift Package Manager
+**/.build/
+**/.swiftpm/
+**/*.xcodeproj/xcuserdata/
+
+# Dart pub (test_apps)
+test_apps/dart/.dart_tool/
+test_apps/dart/.packages
+test_apps/dart/pubspec.lock
+
 # C FFI test binaries
 crates/liter-llm-ffi/tests/c/test_*
 !crates/liter-llm-ffi/tests/c/test_*.c
@@ -185,5 +195,63 @@ pkg/
 packages/php/var/
 
 # BEGIN ai-rulez (DO NOT EDIT - managed by ai-rulez)
-.agents/
+.agents/agents/code-reviewer.md
+.agents/agents/devops-engineer.md
+.agents/agents/docs-writer.md
+.agents/agents/ffi-engineer.md
+.agents/agents/performance-engineer.md
+.agents/agents/polyglot-architect.md
+.agents/agents/release-engineer.md
+.agents/agents/rust-core-engineer.md
+.agents/agents/security-auditor.md
+.agents/skills/alef/SKILL.md
+.agents/skills/alef/references/adapters.md
+.agents/skills/alef/references/backends.md
+.agents/skills/alef/references/cli-reference.md
+.agents/skills/alef/references/configuration.md
+.agents/skills/alef/references/designing-alef-toml.md
+.agents/skills/alef/references/e2e-testing.md
+.agents/skills/alef/references/troubleshooting.md
+.agents/skills/common-task-commands/SKILL.md
+.agents/skills/quick-start/SKILL.md
+.claude/agents/code-reviewer.md
+.claude/agents/devops-engineer.md
+.claude/agents/docs-writer.md
+.claude/agents/ffi-engineer.md
+.claude/agents/performance-engineer.md
+.claude/agents/polyglot-architect.md
+.claude/agents/release-engineer.md
+.claude/agents/rust-core-engineer.md
+.claude/agents/security-auditor.md
+.claude/settings.json
+.claude/skills/alef/SKILL.md
+.claude/skills/alef/references/adapters.md
+.claude/skills/alef/references/backends.md
+.claude/skills/alef/references/cli-reference.md
+.claude/skills/alef/references/configuration.md
+.claude/skills/alef/references/designing-alef-toml.md
+.claude/skills/alef/references/e2e-testing.md
+.claude/skills/alef/references/troubleshooting.md
+.claude/skills/common-task-commands/SKILL.md
+.claude/skills/quick-start/SKILL.md
+.codex/agents/code-reviewer.toml
+.codex/agents/devops-engineer.toml
+.codex/agents/docs-writer.toml
+.codex/agents/ffi-engineer.toml
+.codex/agents/performance-engineer.toml
+.codex/agents/polyglot-architect.toml
+.codex/agents/release-engineer.toml
+.codex/agents/rust-core-engineer.toml
+.codex/agents/security-auditor.toml
+.codex/skills/alef/SKILL.md
+.codex/skills/alef/references/adapters.md
+.codex/skills/alef/references/backends.md
+.codex/skills/alef/references/cli-reference.md
+.codex/skills/alef/references/configuration.md
+.codex/skills/alef/references/designing-alef-toml.md
+.codex/skills/alef/references/e2e-testing.md
+.codex/skills/alef/references/troubleshooting.md
+.codex/skills/common-task-commands/SKILL.md
+.codex/skills/quick-start/SKILL.md
+.gemini/settings.json
 # END ai-rulez

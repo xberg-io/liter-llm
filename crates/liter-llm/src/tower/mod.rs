@@ -39,23 +39,36 @@
 //!     .service(LlmService::new(client));
 //! ```
 
+/// Token / cost budget enforcement layer.
 pub mod budget;
+/// Response-cache layer with pluggable in-memory backend.
 pub mod cache;
 #[cfg(feature = "opendal-cache")]
+/// OpenDAL-backed cache backend for the response cache layer.
 pub mod cache_opendal;
+/// Cooldown layer that backs off after upstream failures.
 pub mod cooldown;
+/// Cost-tracking layer that attaches token / dollar accounting to each call.
 pub mod cost;
+/// Fallback layer that retries a failed call against a sibling provider.
 pub mod fallback;
+/// Health-probe layer used by the router to score upstream providers.
 pub mod health;
+/// User-supplied request/response hooks (mutators, observers).
 pub mod hooks;
+/// Per-provider rate limiter.
 pub mod rate_limit;
+/// Provider routing strategies (round-robin, weighted, latency-aware).
 pub mod router;
+/// Wired-up Tower service type alias plus the public [`service::ManagedService`] entry-point.
 pub mod service;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
 pub(crate) mod tests_common;
+/// Tracing spans / OpenTelemetry attributes attached at each Tower layer.
 pub mod tracing;
+/// Internal types shared by the Tower layers (errors, builder enums).
 pub mod types;
 
 // Re-export tower core types for convenient access

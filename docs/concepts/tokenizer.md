@@ -53,7 +53,7 @@ let n = tokenizer::count_request_tokens("gpt-4o", &req)?;
 
 ## Model-to-tokenizer mapping
 
-liter-llm maps model name prefixes to HuggingFace tokenizer repository IDs. When no prefix matches, the GPT-4o tokenizer is used as a reasonable approximation for modern LLMs.
+Liter-llm maps model name prefixes to HuggingFace tokenizer repository IDs. When no prefix matches, the GPT-4o tokenizer is used as a reasonable approximation for modern LLMs.
 
 | Model prefix                                    | HuggingFace tokenizer             | Notes                                       |
 | ----------------------------------------------- | --------------------------------- | ------------------------------------------- |

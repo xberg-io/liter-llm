@@ -29,8 +29,8 @@ use crate::types::{ChatCompletionResponse, EmbeddingResponse};
 // ---- Config ----------------------------------------------------------------
 
 /// Storage backend for the response cache.
-#[derive(Debug, Clone, Default)]
-#[cfg_attr(alef, alef(skip))]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
 pub enum CacheBackend {
     /// In-memory LRU cache (default). No external dependencies.
     #[default]
@@ -46,8 +46,7 @@ pub enum CacheBackend {
 }
 
 /// Configuration for the response cache.
-#[derive(Debug, Clone)]
-#[cfg_attr(alef, alef(skip))]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CacheConfig {
     /// Maximum number of cached entries.
     pub max_entries: usize,
@@ -57,7 +56,6 @@ pub struct CacheConfig {
     pub backend: CacheBackend,
 }
 
-#[cfg_attr(alef, alef(skip))]
 impl Default for CacheConfig {
     fn default() -> Self {
         Self {

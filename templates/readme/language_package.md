@@ -6,6 +6,42 @@
 
 {{ description }}
 
+## What This Package Provides
+
+- **One provider surface** — chat, streaming, embeddings, images, audio, search, OCR, tools, and structured output across the provider registry.
+- **Provider/model routing** — call models with the `provider/model` convention and keep provider-specific request code out of application paths.
+- **Production controls** — retries, fallback, rate limits, cache layers, budgets, health checks, OpenTelemetry spans, and redacted secrets.
+- **Same core as every binding** — Rust, Python, Node.js, Go, Java, PHP, Ruby, .NET, Elixir, WASM, Kotlin Android, Swift, Dart, Zig, and C FFI use the same Rust implementation.
+  {% if language == "typescript" %}
+- **Node-first TypeScript API** — NAPI-RS package with typed requests/responses and async iterables for streaming.
+  {% elif language == "python" %}
+- **Python package** — native async/await, streaming, and typed request/response objects.
+  {% elif language == "rust" %}
+- **Rust crate** — canonical async client with Tower middleware and Tokio integration.
+  {% elif language == "go" %}
+- **Go module** — context-aware API over the shared native client.
+  {% elif language == "java" %}
+- **Java package** — type-safe FFM binding for JVM services.
+  {% elif language == "php" %}
+- **PHP package** — PHP 8.2+ API for unified provider calls.
+  {% elif language == "ruby" %}
+- **Ruby package** — native extension with idiomatic Ruby request and response objects.
+  {% elif language == "csharp" %}
+- **.NET package** — async/await API with nullable-aware generated types.
+  {% elif language == "elixir" %}
+- **BEAM package** — Rustler NIF binding for OTP services.
+  {% elif language == "wasm" %}
+- **WASM package** — browser and edge-compatible client for provider calls from WebAssembly runtimes.
+  {% elif language == "kotlin_android" %}
+- **Android AAR** — coroutine-friendly package for Android clients.
+  {% elif language == "swift" %}
+- **SwiftPM package** — Swift Concurrency API with Codable request/response types.
+  {% elif language == "dart" %}
+- **Dart package** — Future/Stream API for Dart and Flutter clients.
+  {% elif language == "zig" %}
+- **Zig package** — allocator-aware API with explicit error sets.
+  {% endif %}
+
 ## Installation
 
 {% include 'partials/installation.md' %}
@@ -50,7 +86,7 @@ See the [provider registry](https://github.com/kreuzberg-dev/liter-llm/blob/main
 
 ## Part of Kreuzberg.dev
 
-- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 90+ formats with optional OCR.
 - [Kreuzberg Cloud](https://github.com/kreuzberg-dev/kreuzberg-cloud) — managed extraction API with SDKs, dashboards, and observability.
 - [kreuzcrawl](https://github.com/kreuzberg-dev/kreuzcrawl) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
 - [html-to-markdown](https://github.com/kreuzberg-dev/html-to-markdown) — fast, lossless HTML→Markdown engine.

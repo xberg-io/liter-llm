@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
 
@@ -56,9 +56,10 @@ jobs:
         uses: kreuzberg-dev/actions/build-docs@v1
         with:
           strict: "true"
+          docs-group: docs
 
       - name: Upload site artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: docs-site
           path: site/
@@ -70,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
 
       - name: Install Task
         uses: arduino/setup-task@v2
@@ -84,17 +85,17 @@ jobs:
           cache-key-prefix: ci-docs-snippets
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v6.2.0
         with:
           python-version: "3.13"
 
       - name: Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v6.4.0
         with:
           go-version: "1.24"
 
       - name: Setup Java
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@v5.2.0
         with:
           distribution: temurin
           java-version: "21"
@@ -105,26 +106,26 @@ jobs:
           ruby-version: "3.3"
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@v5.2.0
         with:
           dotnet-version: "9.0.x"
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@2.37.1
         with:
           php-version: "8.4"
 
       - name: Setup Elixir
-        uses: erlef/setup-beam@v1
+        uses: erlef/setup-beam@v1.24
         with:
           otp-version: "27"
           elixir-version: "1.17"
 
       - name: Setup Dart
-        uses: dart-lang/setup-dart@v1
+        uses: dart-lang/setup-dart@v1.7.2
 
       - name: Setup Zig
-        uses: mlugg/setup-zig@v2
+        uses: mlugg/setup-zig@v2.2.1
         with:
           version: "0.14.0"
 

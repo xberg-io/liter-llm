@@ -81,7 +81,7 @@ jobs:
       release_kotlin_android: ${{ steps.meta.outputs.release_kotlin_android }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
           ref: ${{ (inputs.republish == true && (inputs.ref || github.event.repository.default_branch)) || inputs.ref || github.ref }}
@@ -107,7 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
 
@@ -216,7 +216,7 @@ jobs:
           - label: windows-x86_64
             runner: windows-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/build-python-wheels@v1
@@ -234,28 +234,29 @@ jobs:
 
   build-python-sdist:
     name: Build Python sdist
-    needs: [prepare, registry-results]
+    needs: [prepare, registry-results, publish-crates]
     if: |
-      always() &&
+      !cancelled() && needs.publish-crates.result != 'failure' &&
       needs.prepare.outputs.release_python == 'true' &&
       (needs.registry-results.outputs.pypi != 'true' || needs.prepare.outputs.force_republish == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
-      - run: pip install maturin
-        shell: bash
-      - name: Build sdist
-        run: maturin sdist --out dist
-        working-directory: packages/python
-        shell: bash
-      - uses: actions/upload-artifact@v7
+      - uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.14"
+      - uses: kreuzberg-dev/actions/build-python-sdist@v1
+        with:
+          package-dir: packages/python
+          output-dir: dist
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: python-sdist
-          path: packages/python/dist/*.tar.gz
+          path: dist/*.tar.gz
           retention-days: 14
 
   # ── Node.js NAPI native ────────────────────────────────────────────────────
@@ -285,13 +286,13 @@ jobs:
             runner: windows-latest
             napi_target: x86_64-pc-windows-msvc
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           target: ${{ matrix.napi_target }}
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v6.4.0
         with:
           node-version: 22
       - run: npm install -g @napi-rs/cli
@@ -300,7 +301,7 @@ jobs:
         run: napi build --release --platform --target ${{ matrix.napi_target }}
         working-directory: crates/liter-llm-node
         shell: bash
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: node-native-${{ matrix.label }}
           path: crates/liter-llm-node/*.node
@@ -317,7 +318,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
@@ -349,7 +350,7 @@ jobs:
             json.dump(pkg, f, indent=2)
           EOF
         shell: bash
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: wasm-pkg
           path: crates/liter-llm-wasm/pkg/
@@ -358,9 +359,9 @@ jobs:
   # ── Ruby gems ──────────────────────────────────────────────────────────────
   build-ruby-gem:
     name: Build Ruby gem (${{ matrix.label }})
-    needs: [prepare, registry-results]
+    needs: [prepare, registry-results, publish-crates]
     if: |
-      always() &&
+      !cancelled() && needs.publish-crates.result != 'failure' &&
       needs.prepare.outputs.release_ruby == 'true' &&
       (needs.registry-results.outputs.rubygems != 'true' || needs.prepare.outputs.force_republish == 'true')
     runs-on: ${{ matrix.runner }}
@@ -381,7 +382,7 @@ jobs:
     env:
       RB_SYS_CARGO_PROFILE: release
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -406,13 +407,14 @@ jobs:
       - name: Install Task
         uses: kreuzberg-dev/actions/install-task@v1
 
+      - name: Rewrite native dependencies to registry versions
+        uses: kreuzberg-dev/actions/rewrite-native-deps@v1
+        with:
+          lang: ruby
+
       - name: Build FFI library
         run: cargo build -p liter-llm-ffi --release
         shell: bash
-
-      - name: Vendor liter-llm core crate
-        shell: bash
-        run: python3 scripts/ci/ruby/vendor-liter-llm-core.py
 
       - name: Install Ruby dependencies
         shell: bash
@@ -457,7 +459,7 @@ jobs:
           echo "Platform gem built successfully:"
           ls -lh pkg/*.gem
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: rubygems-${{ matrix.label }}
           path: packages/ruby/pkg/*.gem
@@ -467,9 +469,9 @@ jobs:
   # ── Elixir NIFs ────────────────────────────────────────────────────────────
   build-elixir-nifs:
     name: Build Elixir NIFs (${{ matrix.label }})
-    needs: [prepare, registry-results]
+    needs: [prepare, registry-results, publish-crates]
     if: |
-      always() &&
+      !cancelled() && needs.publish-crates.result != 'failure' &&
       needs.prepare.outputs.release_elixir == 'true' &&
       (needs.registry-results.outputs.hex != 'true' || needs.prepare.outputs.force_republish == 'true')
     runs-on: ${{ matrix.runner }}
@@ -495,12 +497,16 @@ jobs:
             target: x86_64-pc-windows-gnu
             lib_ext: dll
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           target: ${{ matrix.target }}
+      - name: Rewrite native dependencies to registry versions
+        uses: kreuzberg-dev/actions/rewrite-native-deps@v1
+        with:
+          lang: elixir
       - name: Build Rustler NIF
         run: >
           cargo build --release
@@ -534,7 +540,7 @@ jobs:
             echo "Created: $TARBALL"
           done
         shell: bash
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: elixir-nifs-${{ matrix.label }}
           path: nif-tarballs/*.tar.gz
@@ -543,9 +549,9 @@ jobs:
   # ── PHP extension ──────────────────────────────────────────────────────────
   build-php:
     name: Build PHP PIE binary (php${{ matrix.php }} ${{ matrix.platform.label }})
-    needs: [prepare]
+    needs: [prepare, publish-crates]
     if: |
-      always() &&
+      !cancelled() && needs.publish-crates.result != 'failure' &&
       needs.prepare.outputs.release_php == 'true'
     runs-on: ${{ matrix.platform.os }}
     timeout-minutes: 60
@@ -570,7 +576,7 @@ jobs:
             target: x86_64-pc-windows-msvc
     steps:
       - name: Checkout
-        uses: actions/checkout@v6 # v6
+        uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -583,21 +589,21 @@ jobs:
         shell: bash
 
       - name: Setup PHP
-        uses: kreuzberg-dev/actions/setup-php@v1 # v1
+        uses: kreuzberg-dev/actions/setup-php@v1
         with:
           php-version: ${{ matrix.php }}
 
       - name: Setup Rust
-        uses: kreuzberg-dev/actions/setup-rust@v1 # v1
+        uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           cache-key-prefix: publish-php-${{ matrix.platform.label }}-php${{ matrix.php }}
           toolchain: stable
 
       - name: Install alef
-        uses: kreuzberg-dev/actions/install-alef@v1 # v1
+        uses: kreuzberg-dev/actions/install-alef@v1
 
       - name: Build PHP extension
-        uses: kreuzberg-dev/actions/build-php-extension@v1 # v1
+        uses: kreuzberg-dev/actions/build-php-extension@v1
         with:
           crate-name: liter-llm-php
           lib-name: liter_llm_php
@@ -619,7 +625,7 @@ jobs:
           "compiler=$compiler" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Package PIE archive
-        uses: kreuzberg-dev/actions/package-php-pie@v1 # v1
+        uses: kreuzberg-dev/actions/package-php-pie@v1
         with:
           php-version: ${{ matrix.php }}
           php-ts: nts
@@ -629,7 +635,7 @@ jobs:
           output-dir: dist/php-package
 
       - name: Upload PHP PIE package artifact
-        uses: actions/upload-artifact@v7 # v7
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: php-package-${{ matrix.platform.label }}-php${{ matrix.php }}
           path: |
@@ -678,7 +684,7 @@ jobs:
             target: x86_64-pc-windows-msvc
             rid: win-x64
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Setup Rust
@@ -709,12 +715,12 @@ jobs:
             cp crates/liter-llm-ffi/liter_llm.h ffi-staging/include/
           fi
         shell: bash
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: ffi-${{ matrix.label }}
           path: ffi-staging/
           retention-days: 14
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: go-ffi-${{ matrix.label }}
           path: go-ffi-dist/
@@ -732,7 +738,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: actions/download-artifact@v7
@@ -748,7 +754,7 @@ jobs:
             find "ffi-artifacts/${rid}" -type f -print0 | xargs -0 -I{} cp {} "$dest/"
           done
         shell: bash
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v5.2.0
         with:
           java-version: "25"
           distribution: temurin
@@ -759,7 +765,7 @@ jobs:
         run: mvn clean package -DskipTests -q
         working-directory: packages/java
         shell: bash
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: maven-packages
           path: packages/java/target/*.jar
@@ -777,7 +783,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: actions/download-artifact@v7
@@ -788,18 +794,18 @@ jobs:
       - name: Stage native libs for C#
         run: |
           for rid in linux-x64 linux-arm64 osx-arm64 win-x64; do
-            dest="packages/csharp/runtimes/${rid}/native"
+            dest="packages/csharp/LiterLlm/runtimes/${rid}/native"
             mkdir -p "$dest"
             find "ffi-artifacts/${rid}" -type f -print0 | xargs -0 -I{} cp {} "$dest/"
           done
         shell: bash
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/setup-dotnet@v5.2.0
         with:
           dotnet-version: "10.0.x"
       - name: Pack NuGet package
-        run: dotnet pack packages/csharp/LiterLlm.csproj -c Release -o nuget-output
+        run: dotnet pack packages/csharp/LiterLlm/LiterLlm.csproj -c Release -o nuget-output
         shell: bash
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: nuget-packages
           path: nuget-output/*.nupkg
@@ -819,7 +825,7 @@ jobs:
       matrix:
         abi: [arm64-v8a, x86_64]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
@@ -838,19 +844,19 @@ jobs:
           esac
           cp "target/${RUST_TGT}/release/libliterllm_jni.so" \
              "packages/kotlin-android/src/main/jniLibs/${{ matrix.abi }}/"
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v5.2.0
         with:
           distribution: temurin
           java-version: "17"
-      - uses: gradle/actions/setup-gradle@v6
+      - uses: gradle/actions/setup-gradle@v6.1.0
         with:
-          gradle-version: "8.9"
+          gradle-version: "8.13"
       - name: Assemble Android library aar
         working-directory: packages/kotlin-android
         env:
           PROJECT_VERSION: ${{ needs.prepare.outputs.version }}
         run: gradle "assembleRelease" "-Pversion=${PROJECT_VERSION}"
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: kotlin-android-${{ matrix.abi }}
           path: packages/kotlin-android/build/outputs/aar/*.aar
@@ -873,7 +879,7 @@ jobs:
       contents: write
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Ensure GitHub release exists
@@ -881,6 +887,7 @@ jobs:
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           draft: "true"
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
       - uses: actions/download-artifact@v7
         with:
           pattern: go-ffi-*
@@ -891,6 +898,7 @@ jobs:
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           assets: go-ffi-release/*.tar.gz
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   upload-elixir-nifs:
     name: Upload Elixir NIF assets
@@ -901,7 +909,7 @@ jobs:
       contents: write
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Ensure GitHub release exists
@@ -909,6 +917,7 @@ jobs:
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           draft: "true"
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
       - uses: actions/download-artifact@v7
         with:
           pattern: elixir-nifs-*
@@ -919,6 +928,7 @@ jobs:
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           assets: elixir-nifs/*.tar.gz
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   upload-php-extensions:
     name: Upload PHP extension assets
@@ -929,7 +939,7 @@ jobs:
       contents: write
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Ensure GitHub release exists
@@ -937,6 +947,7 @@ jobs:
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           draft: "true"
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
       - uses: actions/download-artifact@v7
         with:
           pattern: php-package-*
@@ -952,6 +963,7 @@ jobs:
             dist/php-package/php_*.zip
             dist/php-package/php_*.zip.sha256
           fail-if-empty: "false"
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   upload-kotlin-android-aars:
     name: Upload Kotlin Android aars
@@ -962,7 +974,7 @@ jobs:
       contents: write
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Ensure GitHub release exists
@@ -970,6 +982,7 @@ jobs:
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           draft: "true"
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
       - uses: actions/download-artifact@v7
         with:
           pattern: kotlin-android-*
@@ -981,6 +994,7 @@ jobs:
           tag: ${{ needs.prepare.outputs.tag }}
           assets: kotlin-android-aars/*.aar
           fail-if-empty: "false"
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   # ─────────────────────────────────────────────────────────────────────────
   # Phase 6 — Publish jobs (conditional on check + build results)
@@ -1000,7 +1014,7 @@ jobs:
       id-token: write
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
@@ -1051,9 +1065,10 @@ jobs:
         shell: bash
       - name: Publish to PyPI
         if: needs.prepare.outputs.dry_run != 'true' && (steps.recheck.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true')
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: kreuzberg-dev/actions/publish-pypi@v1
         with:
           packages-dir: dist/
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   publish-node:
     name: Publish Node packages
@@ -1071,12 +1086,12 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v6.0.8
         with:
           package_json_file: package.json
 
@@ -1088,7 +1103,7 @@ jobs:
           merge-multiple: true
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v6.4.0
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org/
@@ -1110,11 +1125,12 @@ jobs:
       - name: Install workspace dependencies
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         run: |
-          # e2e/wasm depends on file:../../crates/liter-llm-wasm/pkg (built by wasm-pack, gitignored).
-          # During the publish-node workspace scan that path must resolve, so stub a minimal package.
-          mkdir -p crates/liter-llm-wasm/pkg
-          if [ ! -f crates/liter-llm-wasm/pkg/package.json ]; then
-            cat > crates/liter-llm-wasm/pkg/package.json <<'JSON'
+          # e2e/wasm depends on file:../../crates/liter-llm-wasm/pkg/nodejs (built by wasm-pack
+          # --target nodejs, gitignored). During the publish-node workspace scan that path must
+          # resolve, so stub a minimal package.
+          mkdir -p crates/liter-llm-wasm/pkg/nodejs
+          if [ ! -f crates/liter-llm-wasm/pkg/nodejs/package.json ]; then
+            cat > crates/liter-llm-wasm/pkg/nodejs/package.json <<'JSON'
           {"name": "liter_llm", "version": "0.0.0", "private": true}
           JSON
           fi
@@ -1143,8 +1159,6 @@ jobs:
           packages-dir: crates/liter-llm-node/npm
           npm-tag: ${{ needs.prepare.outputs.npm_tag }}
           dry-run: ${{ needs.prepare.outputs.dry_run }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Wait for npm indexing (x64)
         if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck.outputs.exists != 'true' }}
@@ -1172,8 +1186,6 @@ jobs:
           npm-tag: ${{ needs.prepare.outputs.npm_tag }}
           dry-run: ${{ needs.prepare.outputs.dry_run }}
           provenance: "true"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Wait for @kreuzberg/liter-llm-node to be available
         if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck.outputs.exists != 'true' }}
@@ -1184,21 +1196,9 @@ jobs:
           version: ${{ needs.prepare.outputs.version }}
           max-attempts: "25"
 
-      - name: Build and publish @kreuzberg/liter-llm (TypeScript)
-        if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck.outputs.exists != 'true' }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TAG: ${{ needs.prepare.outputs.npm_tag }}
-        run: |
-          pnpm install
-          pnpm --filter @kreuzberg/liter-llm build
-          npm publish --tag "$NPM_TAG" --access public --provenance
-        working-directory: packages/typescript
-        shell: bash
-
       - name: npm already published summary
         if: ${{ steps.recheck.outputs.exists == 'true' }}
-        run: echo "Node package @kreuzberg/liter-llm@${{ needs.prepare.outputs.version }} already published on npm — skipped." >> "$GITHUB_STEP_SUMMARY"
+        run: echo "Node package @kreuzberg/liter-llm-node@${{ needs.prepare.outputs.version }} already published on npm — skipped." >> "$GITHUB_STEP_SUMMARY"
 
   publish-wasm:
     name: Publish WASM package
@@ -1222,7 +1222,7 @@ jobs:
           path: dist
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v6.4.0
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org/
@@ -1235,18 +1235,21 @@ jobs:
           package: "@kreuzberg/liter-llm-wasm"
           version: ${{ needs.prepare.outputs.version }}
 
+      - name: WASM artifact summary
+        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
+        run: (echo "Dry run requested; WASM tarball staged:" && find dist -type f -print) >> "$GITHUB_STEP_SUMMARY"
+
       - name: Publish to npm
-        if: ${{ steps.npm_check.outputs.exists != 'true' }}
+        if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.npm_check.outputs.exists != 'true' }}
         uses: kreuzberg-dev/actions/publish-npm@v1
         with:
           package-dir: dist
           npm-tag: ${{ needs.prepare.outputs.npm_tag }}
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
           provenance: "true"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Wait for npm indexing
-        if: ${{ steps.npm_check.outputs.exists != 'true' }}
+        if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.npm_check.outputs.exists != 'true' }}
         uses: kreuzberg-dev/actions/wait-for-package@v1
         with:
           registry: npm
@@ -1255,6 +1258,7 @@ jobs:
           max-attempts: "25"
 
       - name: Publish summary
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         run: |
           if [ "${{ steps.npm_check.outputs.exists }}" = "true" ]; then
             echo "WASM package @kreuzberg/liter-llm-wasm@${{ needs.prepare.outputs.version }} already published on npm — skipped." >> "$GITHUB_STEP_SUMMARY"
@@ -1278,7 +1282,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -1308,9 +1312,10 @@ jobs:
           bundle config set --local path vendor/bundle
           bundle install --jobs 4
 
-      - name: Vendor liter-llm core crate
-        shell: bash
-        run: python3 scripts/ci/ruby/vendor-liter-llm-core.py
+      - name: Rewrite native dependencies to registry versions
+        uses: kreuzberg-dev/actions/rewrite-native-deps@v1
+        with:
+          lang: ruby
 
       - name: Build source gem (fallback for unsupported platforms)
         shell: bash
@@ -1355,7 +1360,7 @@ jobs:
 
       - name: Configure trusted publishing credentials
         if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck.outputs.exists != 'true' }}
-        uses: rubygems/configure-rubygems-credentials@v1.0.0
+        uses: rubygems/configure-rubygems-credentials@v2.0.0
 
       - name: Publish gems to RubyGems
         if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck.outputs.exists != 'true' }}
@@ -1382,7 +1387,7 @@ jobs:
       contents: read
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: actions/download-artifact@v7
@@ -1395,7 +1400,7 @@ jobs:
           MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v5.2.0
         with:
           distribution: temurin
           java-version: "25"
@@ -1447,12 +1452,13 @@ jobs:
       id-token: write
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
 
       - name: Generate checksums from GitHub release
+        if: needs.prepare.outputs.dry_run != 'true'
         uses: kreuzberg-dev/actions/generate-elixir-checksums@v1
         with:
           github-repo: kreuzberg-dev/liter-llm
@@ -1476,7 +1482,7 @@ jobs:
           fi
         shell: bash
 
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@v1.24
         with:
           elixir-version: "1.17"
           otp-version: "27"
@@ -1576,7 +1582,7 @@ jobs:
             target: x86_64-pc-windows-msvc
             archive: zip
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
@@ -1625,7 +1631,7 @@ jobs:
             shasum -a 256 "${archive_name}" > "${archive_name}.sha256"
           fi
           echo "archive=${archive_name}" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: cli-binary-${{ matrix.label }}
           path: |
@@ -1653,7 +1659,7 @@ jobs:
       contents: write
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - uses: actions/download-artifact@v7
         with:
           pattern: cli-binary-*
@@ -1723,7 +1729,11 @@ jobs:
           - runner: ubuntu-24.04-arm
             bottle_tag: arm64_linux
     steps:
-      - uses: actions/checkout@v6
+      # actions/checkout@v6 regression on macos-15-intel: the includeIf-gated
+      # credential helper isn't honored by git 2.54 on that runner image, so
+      # the fetch falls back to interactive auth and fails. v5 writes the
+      # extraheader directly into .git/config and works on every runner.
+      - uses: actions/checkout@v5
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
@@ -1739,7 +1749,7 @@ jobs:
           formula-name: liter-llm
           version: ${{ needs.prepare.outputs.version }}
           bottle-tag: ${{ matrix.bottle_tag }}
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: homebrew-bottle-${{ matrix.bottle_tag }}
           path: ${{ steps.bottle.outputs.filename }}
@@ -1757,7 +1767,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - uses: actions/download-artifact@v7
         with:
           pattern: homebrew-bottle-*
@@ -1776,14 +1786,15 @@ jobs:
     if: |
       always() &&
       needs.prepare.outputs.release_homebrew == 'true' &&
-      (needs.check-homebrew.outputs.exists != 'true' || needs.prepare.outputs.dry_run == 'true') &&
-      (needs.publish-crates.result == 'success' || needs.prepare.outputs.dry_run == 'true') &&
+      needs.prepare.outputs.dry_run != 'true' &&
+      needs.check-homebrew.outputs.exists != 'true' &&
+      needs.publish-crates.result != 'failure' &&
       needs.upload-homebrew-bottles.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: actions/download-artifact@v7
@@ -1820,29 +1831,33 @@ jobs:
   verify-install-python:
     name: Verify install Python
     needs: [prepare, build-python-wheels, build-python-sdist, publish-pypi]
+    # Dry-run is skipped: the synthetic `0.0.0-dryrun` tag becomes `0.0.0.dryrun`
+    # in the wheel filename (PEP 440 normalisation) and `pip install liter-llm==`
+    # cannot resolve a local pre-release without an index lookup. Verify-install
+    # is a real-run validation step only.
     if: |
       always() &&
       needs.prepare.outputs.release_python == 'true' &&
-      (needs.publish-pypi.result == 'success' || (needs.prepare.outputs.dry_run == 'true' && needs.build-python-wheels.result == 'success'))
+      needs.prepare.outputs.dry_run != 'true' &&
+      needs.publish-pypi.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Install uv (consumer toolchain)
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v7.6
         with:
           version: "latest"
-      - name: Download python wheels (dry-run)
-        if: needs.prepare.outputs.dry_run == 'true'
-        uses: actions/download-artifact@v7
-        with:
-          pattern: python-*
-          path: ./wheelhouse
-          merge-multiple: true
-      - name: Wait for PyPI indexing (real-run)
-        if: needs.prepare.outputs.dry_run != 'true'
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Build mock-server (smoke fixture)
+        # test_apps/python/conftest.py spawns the mock HTTP server binary from
+        # test_apps/rust/target/release/mock-server. Build it here so verify
+        # doesn't FileNotFoundError before any package code is exercised.
+        run: cargo build --release --bin mock-server --manifest-path test_apps/rust/Cargo.toml
+      - name: Wait for PyPI indexing
         uses: kreuzberg-dev/actions/wait-for-package@v1
         with:
           registry: pypi
@@ -1854,7 +1869,7 @@ jobs:
           language: python
           version: ${{ needs.prepare.outputs.version }}
           package-name: liter-llm
-          artifact-source: ${{ needs.prepare.outputs.dry_run == 'true' && 'wheelhouse' || 'registry' }}
+          artifact-source: registry
           local-path: ${{ needs.prepare.outputs.dry_run == 'true' && './wheelhouse' || '' }}
 
   release-finalize:
@@ -1880,7 +1895,7 @@ jobs:
       contents: write
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
 

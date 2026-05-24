@@ -282,10 +282,10 @@ dev = [
     { name = "jsonschema", specifier = ">=4" },
     { name = "mypy", specifier = ">=2.1.0" },
     { name = "prek", specifier = ">=0.4.0" },
-    { name = "pytest", specifier = ">=8" },
+    { name = "pytest", specifier = ">=9.0.3" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "ruff", specifier = ">=0.15.13" },
-    { name = "typing-extensions", specifier = ">=4" },
+    { name = "typing-extensions", specifier = ">=4.15.0" },
     { name = "uv-bump", git = "https://github.com/Goldziher/uv-bump" },
 ]
 docs = [{ name = "zensical" }]

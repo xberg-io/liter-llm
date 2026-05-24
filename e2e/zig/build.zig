@@ -4,7 +4,7 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
     const test_step = b.step("test", "Run tests");
-    const ffi_path = b.option([]const u8, "ffi_path", "Path to directory containing libliter_llm_ffi") orelse "../../target/debug";
+    const ffi_path = b.option([]const u8, "ffi_path", "Path to directory containing libliter_llm_ffi") orelse "../../target/release";
     const ffi_include = b.option([]const u8, "ffi_include_path", "Path to directory containing FFI header") orelse "../../crates/liter-llm-ffi/include";
 
     const liter_llm_module = b.addModule("liter_llm", .{
@@ -286,21 +286,6 @@ pub fn build(b: *std.Build) void {
     });
     const speech_run = b.addRunArtifact(speech_tests);
     test_step.dependOn(&speech_run.step);
-
-    const streaming_module = b.createModule(.{
-        .root_source_file = b.path("src/streaming_test.zig"),
-        .target = target,
-        .optimize = optimize,
-        .link_libc = true,
-    });
-    streaming_module.addImport("liter_llm", liter_llm_module);
-    const streaming_tests = b.addTest(.{
-        .name = "streaming_test",
-        .root_module = streaming_module,
-        .use_llvm = true,
-    });
-    const streaming_run = b.addRunArtifact(streaming_tests);
-    test_step.dependOn(&streaming_run.step);
 
     const tool_calling_module = b.createModule(.{
         .root_source_file = b.path("src/tool_calling_test.zig"),

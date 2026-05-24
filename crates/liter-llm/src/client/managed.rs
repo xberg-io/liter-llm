@@ -88,6 +88,7 @@ impl SyncService {
 ///
 /// `ManagedClient` implements [`LlmClient`] and can be used everywhere a
 /// `DefaultClient` is expected.
+#[cfg_attr(alef, alef(skip))]
 pub struct ManagedClient {
     /// The raw client — used directly when no middleware is configured, and
     /// also wrapped by the Tower service when middleware *is* configured.
@@ -537,12 +538,12 @@ impl ResponseClient for ManagedClient {
         self.inner.create_response(req)
     }
 
-    fn retrieve_response(&self, id: &str) -> BoxFuture<'_, Result<ResponseObject>> {
-        self.inner.retrieve_response(id)
+    fn retrieve_response(&self, response_id: &str) -> BoxFuture<'_, Result<ResponseObject>> {
+        self.inner.retrieve_response(response_id)
     }
 
-    fn cancel_response(&self, id: &str) -> BoxFuture<'_, Result<ResponseObject>> {
-        self.inner.cancel_response(id)
+    fn cancel_response(&self, response_id: &str) -> BoxFuture<'_, Result<ResponseObject>> {
+        self.inner.cancel_response(response_id)
     }
 }
 

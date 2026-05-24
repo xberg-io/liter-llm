@@ -10,12 +10,12 @@ use super::common::Usage;
 pub struct OcrRequest {
     /// The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`).
     pub model: String,
-    /// The document to process.
+    /// The document to process (URL or base64).
     pub document: OcrDocument,
     /// Specific pages to process (1-indexed). `None` means all pages.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pages: Option<Vec<u32>>,
-    /// Whether to include base64-encoded images of each page.
+    /// Whether to include base64-encoded images of each processed page.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub include_image_base64: Option<bool>,
 }
@@ -27,7 +27,7 @@ pub enum OcrDocument {
     /// A publicly accessible document URL.
     #[serde(rename = "document_url")]
     Url {
-        /// The document URL.
+        /// The document URL (HTTP/HTTPS).
         url: String,
     },
     /// Inline base64-encoded document data.
@@ -35,7 +35,7 @@ pub enum OcrDocument {
     Base64 {
         /// Base64-encoded document content.
         data: String,
-        /// MIME type (e.g. `"application/pdf"`, `"image/png"`).
+        /// MIME type (e.g. `"application/pdf"`, `"image/png"`, `"image/jpeg"`).
         media_type: String,
     },
 }
@@ -50,9 +50,9 @@ impl Default for OcrDocument {
 /// An OCR response.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OcrResponse {
-    /// Extracted pages.
+    /// Extracted pages in order.
     pub pages: Vec<OcrPage>,
-    /// The model used.
+    /// Model/provider used for OCR.
     pub model: String,
     /// Token usage, if reported by the provider.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -64,9 +64,9 @@ pub struct OcrResponse {
 pub struct OcrPage {
     /// Page index (0-based).
     pub index: u32,
-    /// Extracted content as Markdown.
+    /// Extracted page content as Markdown.
     pub markdown: String,
-    /// Extracted images, if `include_image_base64` was set.
+    /// Embedded images extracted from the page (if `include_image_base64` was true).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub images: Option<Vec<OcrImage>>,
     /// Page dimensions in pixels, if available.
@@ -77,9 +77,9 @@ pub struct OcrPage {
 /// An image extracted from an OCR page.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OcrImage {
-    /// Unique image identifier.
+    /// Unique image identifier within the document.
     pub id: String,
-    /// Base64-encoded image data.
+    /// Base64-encoded image data (if `include_image_base64` was true).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub image_base64: Option<String>,
 }

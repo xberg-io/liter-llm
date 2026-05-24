@@ -17,9 +17,9 @@ not list yet, or when liter-llm needs a different value. Edit OVERRIDES, not
 the generated JSON files.
 
 Usage:
-    uv run python scripts/generate_pricing.py             # write
-    uv run python scripts/generate_pricing.py --dry-run   # stdout only
-    uv run python scripts/generate_pricing.py --validate  # CI freshness check
+    uv run --no-sync python scripts/generate_pricing.py             # write
+    uv run --no-sync python scripts/generate_pricing.py --dry-run   # stdout only
+    uv run --no-sync python scripts/generate_pricing.py --validate  # CI check
 """
 
 from __future__ import annotations

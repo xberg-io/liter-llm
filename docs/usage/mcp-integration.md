@@ -195,7 +195,7 @@ export MISTRAL_API_KEY="..."
 export REPLICATE_API_KEY="..."
 ```
 
-!!! tip "Provider-specific keys"
+!!! Tip "Provider-specific keys"
 You only need to set keys for providers you plan to use. If you only use OpenAI, set `OPENAI_API_KEY` and liter-llm will automatically route requests to OpenAI based on the model prefix (e.g., `openai/gpt-4o`).
 
 ### Custom Config File
@@ -353,7 +353,7 @@ Or hardcode them in the IDE config (less secure):
 }
 ```
 
-!!! warning "Never commit API keys"
+!!! Warning "Never commit API keys"
 Use environment variables or a `.env` file (not committed to git). See [Secrets and API Key Handling](../getting-started/installation.md#api-key-setup) for best practices.
 
 ### Timeout Errors
@@ -403,7 +403,7 @@ liter-llm mcp --transport http --host 0.0.0.0 --port 3001 &
 curl http://127.0.0.1:3001/health
 ```
 
-!!! note
+!!! Note
 Use `0.0.0.0` to allow remote connections. For local development, `127.0.0.1` is safer.
 
 ## Next Steps

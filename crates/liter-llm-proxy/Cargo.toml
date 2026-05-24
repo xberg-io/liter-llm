@@ -24,10 +24,10 @@ base64 = { workspace = true }
 bytes = { workspace = true }
 dashmap = { workspace = true }
 futures-util = { workspace = true }
-liter-llm = { path = "../liter-llm", version = "1.4.0-rc.27", features = [
-  "native-http",
-  "tower",
-  "tracing",
+liter-llm = { path = "../liter-llm", version = "1.4.0-rc.31", features = [
+    "native-http",
+    "tower",
+    "tracing",
 ] }
 opendal = { workspace = true }
 
@@ -46,7 +46,7 @@ tracing-opentelemetry = { workspace = true, optional = true }
 utoipa = { workspace = true }
 
 [dev-dependencies]
-ctor = "0.2"
+ctor = "1.0"
 http-body-util = "0.1"
 reqwest = { workspace = true }
 tokio = { workspace = true, features = ["test-util"] }

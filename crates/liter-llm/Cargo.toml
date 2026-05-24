@@ -18,7 +18,14 @@ ignored = ["dashmap", "tower-http"]
 # Enable the native HTTP stack (reqwest + tokio).  Disable this feature when
 # compiling for WebAssembly, where the browser / Node.js fetch API is used
 # instead and the tokio multi-thread runtime is unavailable.
-native-http = ["dep:reqwest", "dep:rustls", "dep:tokio", "dep:memchr", "dep:base64"]
+native-http = [
+    "dep:reqwest",
+    "dep:rustls",
+    "dep:tokio",
+    "dep:memchr",
+    "dep:base64",
+    "dep:gcp_auth",
+]
 wasm-http = ["dep:reqwest", "dep:memchr", "dep:base64", "dep:gloo-timers"]
 # Structured tracing via the `tracing` crate.  Adds `#[instrument]` spans on
 # HTTP functions and SSE parser warnings.  Can be enabled independently of the
@@ -42,6 +49,11 @@ azure-auth = ["native-http"]
 copilot-auth = ["native-http"]
 # Google Vertex AI OAuth2 credential provider (service-account JWT flow).
 vertex-auth = ["native-http", "dep:jsonwebtoken"]
+# Google Vertex AI ADC credential provider (metadata server + gcp_auth fallback).
+# Back-compat alias: native-http already pulls in gcp_auth so the ADC provider
+# is reachable whenever native-http is on. ADC is the recommended auth path
+# for GKE / Workload Identity deployments — no service-account key file needed.
+vertex-adc = ["native-http"]
 # AWS STS Web Identity credential provider (EKS / IRSA token exchange).
 bedrock-auth = ["native-http"]
 # Full feature set: native HTTP + tower + tracing + otel + bedrock.
@@ -51,17 +63,18 @@ tokenizer = ["dep:tokenizers"]
 # Full feature set: native HTTP + tower + tracing + otel + bedrock + tokenizer + auth providers.
 opendal-cache = ["dep:opendal", "tower"]
 full = [
-  "native-http",
-  "tower",
-  "tracing",
-  "otel",
-  "bedrock",
-  "tokenizer",
-  "azure-auth",
-  "copilot-auth",
-  "vertex-auth",
-  "bedrock-auth",
-  "opendal-cache",
+    "native-http",
+    "tower",
+    "tracing",
+    "otel",
+    "bedrock",
+    "tokenizer",
+    "azure-auth",
+    "copilot-auth",
+    "vertex-auth",
+    "vertex-adc",
+    "bedrock-auth",
+    "opendal-cache",
 ]
 default = ["native-http"]
 
@@ -73,6 +86,7 @@ bytes = { workspace = true }
 dashmap = { workspace = true, optional = true }
 futures-core = { workspace = true }
 futures-util = { workspace = true, optional = true }
+gcp_auth = { workspace = true, optional = true }
 gloo-timers = { version = "0.4", features = ["futures"], optional = true }
 jsonwebtoken = { workspace = true, optional = true }
 memchr = { workspace = true, optional = true }
@@ -94,7 +108,7 @@ tracing = { workspace = true, optional = true }
 tracing-opentelemetry = { workspace = true, optional = true }
 
 [dev-dependencies]
-ctor = "0.2"
+ctor = "1.0"
 futures-util = { workspace = true }
 jsonschema = { workspace = true }
 serial_test = { workspace = true }

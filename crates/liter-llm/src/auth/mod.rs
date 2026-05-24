@@ -4,6 +4,8 @@ pub mod azure_ad;
 pub mod bedrock_sts;
 #[cfg(feature = "copilot-auth")]
 pub mod github_copilot;
+#[cfg(feature = "native-http")]
+pub mod vertex_adc;
 #[cfg(feature = "vertex-auth")]
 pub mod vertex_oauth;
 
@@ -46,8 +48,11 @@ pub enum Credential {
     BearerToken(SecretString),
     /// AWS credentials for SigV4 signing.
     AwsCredentials {
+        /// Access key ID half of the SigV4 credential pair.
         access_key_id: SecretString,
+        /// Secret access key half of the SigV4 credential pair.
         secret_access_key: SecretString,
+        /// Optional session token for STS-issued temporary credentials.
         session_token: Option<SecretString>,
     },
 }
@@ -60,6 +65,7 @@ pub struct StaticTokenProvider {
 }
 
 impl StaticTokenProvider {
+    /// Build a [`StaticTokenProvider`] that always resolves to `token`.
     #[must_use]
     pub fn new(token: SecretString) -> Self {
         Self { token }

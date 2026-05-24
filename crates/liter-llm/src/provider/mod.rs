@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::error::{LiterLlmError, Result};
 
@@ -70,27 +70,32 @@ where
 }
 
 /// Static configuration for a single provider entry in providers.json.
-#[derive(Debug, Clone, Deserialize)]
-#[cfg_attr(alef, alef(skip))]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProviderConfig {
+    /// Provider identifier (matches the entry key in providers.json).
     pub name: String,
+    /// Human-readable provider name shown in UIs.
     pub display_name: Option<String>,
+    /// Base URL used as the default for this provider's HTTP client.
     pub base_url: Option<String>,
-    pub(crate) auth: Option<AuthConfig>,
+    /// Authentication scheme metadata (auth type + env var holding the key).
+    pub auth: Option<AuthConfig>,
+    /// Supported endpoint kinds (e.g. `chat`, `embeddings`).
     pub endpoints: Option<Vec<String>>,
+    /// Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`).
     pub model_prefixes: Option<Vec<String>>,
     /// Parameter key renaming for this provider.
     ///
     /// Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`)
     /// to the name this provider expects (e.g. `"max_tokens"`).  Applied
     /// automatically by [`ConfigDrivenProvider::transform_request`].
-    pub(crate) param_mappings: Option<HashMap<String, String>>,
+    pub param_mappings: Option<HashMap<String, String>>,
 }
 
 /// Auth scheme used by a provider.
-#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
-pub(crate) enum AuthType {
+pub enum AuthType {
     /// Standard `Authorization: Bearer <key>` header.
     Bearer,
     /// `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases).
@@ -104,12 +109,15 @@ pub(crate) enum AuthType {
 }
 
 /// Auth configuration block.
-#[derive(Debug, Clone, Deserialize)]
-pub(crate) struct AuthConfig {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthConfig {
+    /// Auth scheme classification.
     #[serde(rename = "type")]
-    pub(crate) auth_type: AuthType,
+    pub auth_type: AuthType,
+    /// Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`).
+    /// Holds the variable name, never the secret value.
     #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
-    pub(crate) env_var: Option<String>,
+    pub env_var: Option<String>,
 }
 
 // ── Provider trait ───────────────────────────────────────────────────────────
@@ -636,7 +644,6 @@ pub(crate) fn detect_provider(model: &str) -> Option<Box<dyn Provider>> {
 /// Return all provider configs from the registry.
 ///
 /// Useful for tooling, documentation generation, or runtime enumeration.
-#[cfg_attr(alef, alef(skip))]
 pub fn all_providers() -> Result<&'static [ProviderConfig]> {
     Ok(&registry()?.providers)
 }
@@ -647,7 +654,6 @@ pub fn all_providers() -> Result<&'static [ProviderConfig]> {
 /// tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
 ///
 /// The returned reference points into the static registry — no allocation.
-#[cfg_attr(alef, alef(skip))]
 pub fn complex_provider_names() -> Result<&'static HashSet<String>> {
     Ok(&registry()?.complex_providers)
 }

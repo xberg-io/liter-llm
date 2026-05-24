@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.16.23"
+alef_version = "0.19.3"
 languages = [
   "python",
   "node",
@@ -26,6 +26,20 @@ extra_paths = [
   "packages/node/package.json",
 ]
 
+[workspace.citation]
+title = "liter-llm"
+abstract = "Universal LLM API client with native bindings for 14 languages and 143 providers."
+repository-code = "https://github.com/kreuzberg-dev/liter-llm"
+url = "https://kreuzberg.dev"
+license = "MIT"
+date-released = "2026-05-17"
+
+[[workspace.citation.authors]]
+family-names = "Hirschfeld"
+given-names = "Na'aman"
+email = "naaman@kreuzberg.dev"
+orcid = "https://orcid.org/0009-0000-2247-5072"
+
 [[crates]]
 name = "liter-llm"
 core_import = "liter_llm"
@@ -47,6 +61,19 @@ sources = [
   "crates/liter-llm/src/types/responses.rs",
   "crates/liter-llm/src/client/mod.rs",
   "crates/liter-llm/src/provider/custom.rs",
+  # Provider registry public surface: ProviderConfig struct + all_providers /
+  # complex_provider_names lookup functions. ensure_crypto_provider lives in
+  # lib.rs and is also pulled in for native-http builds.
+  "crates/liter-llm/src/provider/mod.rs",
+  "crates/liter-llm/src/lib.rs",
+  # Tower middleware: expose public config DTOs (BudgetConfig, CacheConfig,
+  # RateLimitConfig + their enums Enforcement, CacheBackend). The accompanying
+  # Layer/Service/State types in these files are kept out of bindings via the
+  # [crates.exclude] list above per the locked decision (middleware composition
+  # remains a Rust pattern).
+  "crates/liter-llm/src/tower/budget.rs",
+  "crates/liter-llm/src/tower/cache.rs",
+  "crates/liter-llm/src/tower/rate_limit.rs",
 ]
 version_from = "Cargo.toml"
 workspace_root = "."
@@ -65,6 +92,17 @@ package_name = "@kreuzberg/liter-llm-node"
 
 [crates.ruby]
 gem_name = "liter_llm"
+# TODO(alef): Magnus codegen has a known limitation around `Map<K, V>` fields inside
+# enum variants — `field_type_for_serde_inner` collapses them to `String` at the binding
+# struct level, but the shared conversion-arm codegen still emits
+# `.into_iter().map(...).collect()` for the core→binding direction, which fails to
+# type-check against a `String` field. Excluding `CacheBackend` (which has Map-in-variant)
+# also forces `CacheConfig` out of the Ruby surface because `CacheConfig.backend: CacheBackend`
+# still references the excluded type from a non-excluded struct context.
+# Track the proper Magnus codegen fix as part of the broader "expose everything in all
+# bindings" effort. Until then, Ruby ships with the other Tower configs (BudgetConfig,
+# RateLimitConfig, Enforcement) plus all the request/response DTOs.
+exclude_types = ["CacheBackend", "CacheConfig"]
 
 [crates.ruby.stubs]
 output = "packages/ruby/sig/"
@@ -77,6 +115,25 @@ futures-util = "0.3"
 
 [crates.wasm]
 features = ["wasm-http"]
+# Tower middleware config DTOs are exposed in every other binding, but the WASM
+# build uses the `wasm-http` feature which excludes `tower`. The configs aren't
+# reachable through `liter_llm::*` in that build, so skip them in the WASM
+# binding to avoid E0433 "cannot find `tower`" / "cannot find `BudgetConfig`" etc.
+exclude_types = ["BudgetConfig", "CacheConfig", "CacheBackend", "RateLimitConfig", "Enforcement"]
+# Token counting via HuggingFace `tokenizers` requires the optional `tokenizer`
+# feature on the core crate. That feature pulls in `hf-hub` (HTTP) and `fancy-regex`
+# which don't build cleanly for `wasm32-unknown-unknown` without the upstream
+# `unstable_wasm` feature. Excluding these functions keeps WASM lean — apps that
+# need token counting on the browser/edge should fetch counts from a server.
+exclude_functions = ["count_tokens", "count_request_tokens"]
+
+# JNI is a transitive language used by the Java and Kotlin Android bindings; it
+# has no standalone package directory. Its liter-llm dep uses default features
+# (no `tokenizer`), so the tokenizer-backed functions aren't reachable through
+# `liter_llm::*` in the JNI build. Token counting on Android is unusual; users
+# that need it can call a server-side endpoint.
+[crates.jni]
+exclude_functions = ["count_tokens", "count_request_tokens"]
 
 [crates.ffi]
 prefix = "literllm"
@@ -103,6 +160,14 @@ package_name = "liter_llm"
 
 [crates.swift]
 package_name = "LiterLlm"
+# all_providers returns Vec<ProviderConfig>; swift-bridge transports as
+# RustVec<ProviderConfig> whose iteration yields ProviderConfigRef. There is no
+# symmetric init for borrowed refs, so the alef-emitted forwarder cannot wrap
+# each element back into ProviderConfig without a per-element JSON roundtrip.
+# Until alef-backend-swift wires Vec<Named> through needs_json_bridge, exclude
+# the function from the Swift binding (consumers can still call
+# RustBridge.allProviders() directly if needed).
+exclude_functions = ["all_providers"]
 
 [crates.swift.client_constructor_body]
 DefaultClient = """    let mut config = liter_llm::ClientConfig::new(api_key);
@@ -123,6 +188,19 @@ namespace = "dev.kreuzberg.literllm.android"
 artifact_id = "liter-llm-android"
 group_id = "dev.kreuzberg"
 abis = ["arm64-v8a", "x86_64"]
+# Tower middleware config DTOs are excluded from the Android AAR for the same
+# reason they are excluded from the WASM binding: tower is not available in the
+# Android JNI build, so these types are unreachable and must not be emitted.
+exclude_types = ["BudgetConfig", "CacheConfig", "CacheBackend", "RateLimitConfig", "Enforcement"]
+# count_tokens/count_request_tokens are gated behind the core crate's
+# `tokenizer` feature (HuggingFace tokenizers). The JNI crate's liter-llm dep
+# uses default features (tokenizer off), so these functions aren't reachable
+# through `liter_llm::*` in the JNI build, and `tokenizers` itself doesn't
+# build cleanly on the Android NDK toolchain. Apps that need token counting on
+# Android should call a server-side endpoint. The alef-backend-jni emitter
+# reads exclude_functions from this kotlin_android config (not from
+# [crates.jni]), so this is the canonical location for both bindings.
+exclude_functions = ["count_tokens", "count_request_tokens"]
 
 [crates.output]
 python = "crates/liter-llm-py/src/"
@@ -157,18 +235,21 @@ types = [
   "PreparedRequest",
   "RawExchange",
   "RawStreamExchange",
-  # Internal error types
-  "ErrorResponse",
-  "ApiError",
-  # Tower-internal Service request/response enums (externally tagged, contain BoxStream/Bytes)
+  # Tower-internal Service request/response enums (externally tagged, contain
+  # BoxStream/Bytes). Listed under both bare and Tower-prefixed names — alef
+  # prefixes types extracted from the `tower::` module path with "Tower" to
+  # disambiguate, so both spellings must be excluded.
   "LlmRequest",
   "LlmResponse",
   "CachedResponse",
-  # Tower middleware (feature-gated, generic Service types)
-  "BudgetConfig",
+  "TowerLlmRequest",
+  "TowerLlmResponse",
+  "TowerCachedResponse",
+  # Tower middleware Layer/Service/State wrappers (Rust-only middleware composition).
+  # Public config DTOs (BudgetConfig, CacheConfig, RateLimitConfig, CacheBackend,
+  # Enforcement) are intentionally NOT excluded — they are exposed across all bindings.
   "BudgetState",
   "BudgetLayer",
-  "CacheConfig",
   "CacheStore",
   "InMemoryStore",
   "CacheLayer",
@@ -179,7 +260,6 @@ types = [
   "HealthCheckService",
   "LlmHook",
   "HooksLayer",
-  "RateLimitConfig",
   "ModelRateLimitLayer",
   "RouterState",
   "Router",
@@ -190,6 +270,7 @@ types = [
   "WebIdentityCredentialProvider",
   "GithubCopilotCredentialProvider",
   "VertexOAuthCredentialProvider",
+  "VertexAdcCredentialProvider",
   "CredentialProvider",
   "StaticTokenProvider",
   # File config (has provider Vec, enum fields)
@@ -223,35 +304,32 @@ methods = [
   "DefaultClient.all_headers",
   "DefaultClient.all_headers_for_provider",
   "DefaultClient.prepare_request",
-  # Error internal methods
+  # Error internal HTTP-status parser (private helper)
   "LiterLlmError.from_status",
   # Methods that require binding→core From on output types (not yet supported)
   "ChatCompletionResponse.estimated_cost",
   "EmbeddingResponse.estimated_cost",
-  # Internal error methods
-  "LiterLlmError.is_transient",
-  "LiterLlmError.error_type",
 ]
 functions = ["str_pair", "build_provider"]
 
 [crates.lint.python]
-before = "uv sync --no-install-project"
+before = "uv sync --no-install-project --no-install-workspace"
 
 [crates.lint.node]
 precondition = "command -v pnpm >/dev/null 2>&1"
-format = "pnpm dlx oxfmt packages/typescript"
-check = "pnpm dlx oxlint packages/typescript"
+format = "pnpm dlx oxfmt crates/liter-llm-node"
+check = "pnpm dlx oxlint crates/liter-llm-node"
 
 [crates.lint.wasm]
 precondition = "command -v pnpm >/dev/null 2>&1"
-format = "pnpm dlx oxfmt packages/wasm"
-check = "pnpm dlx oxlint packages/wasm"
+format = "pnpm dlx oxfmt crates/liter-llm-wasm"
+check = "pnpm dlx oxlint crates/liter-llm-wasm"
 
 [crates.lint.php]
 precondition = "command -v php >/dev/null 2>&1 && command -v composer >/dev/null 2>&1"
 before = "cd packages/php && composer install --no-interaction --quiet"
-format = "cd packages/php && PHP_CS_FIXER_IGNORE_ENV=1 php vendor/bin/php-cs-fixer fix --config php-cs-fixer.php src"
-check = "cd packages/php && PHP_CS_FIXER_IGNORE_ENV=1 php vendor/bin/php-cs-fixer fix --config php-cs-fixer.php --dry-run src"
+format = "cd packages/php && PHP_CS_FIXER_IGNORE_ENV=1 php vendor/bin/php-cs-fixer fix src"
+check = "cd packages/php && PHP_CS_FIXER_IGNORE_ENV=1 php vendor/bin/php-cs-fixer fix --dry-run src"
 
 [crates.lint.go]
 precondition = "command -v golangci-lint >/dev/null 2>&1"
@@ -271,7 +349,10 @@ e2e = "cargo test --manifest-path e2e/rust/Cargo.toml"
 
 [crates.test.python]
 precondition = "command -v uv >/dev/null 2>&1"
-e2e = ["cd e2e/python && uv sync", "cd e2e/python && uv run pytest tests/ -q"]
+e2e = [
+  "cd e2e/python && uv sync --no-install-project --no-install-workspace",
+  "cd e2e/python && uv run --no-sync pytest tests/ -q",
+]
 
 [crates.test.node]
 precondition = "command -v pnpm >/dev/null 2>&1"
@@ -323,11 +404,41 @@ precondition = "command -v make >/dev/null 2>&1"
 before = "cargo build -p liter-llm-ffi --release && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 e2e = "cd e2e/c && make test"
 
+[crates.test.dart]
+# `alef test --lang dart` defaults to `cd packages/dart && dart test`, which only
+# exercises the placeholder unit test. The real fixture-driven suite lives in
+# e2e/dart/ and needs the mock HTTP server up plus FRB pointed at the cdylib in
+# target/release.
+precondition = "command -v dart >/dev/null 2>&1"
+before = "cargo build --release -p liter-llm-dart && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+e2e = [
+  "cd e2e/dart && dart pub get",
+  "FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR=\"$PWD/target/release\" scripts/e2e/run-with-mock-server.sh 'cd e2e/dart && dart test'",
+]
+
+[crates.test.swift]
+# Same shape as dart — point the e2e step at e2e/swift_e2e/, not the
+# `packages/swift` placeholder, and start the mock HTTP server first.
+precondition = "command -v swift >/dev/null 2>&1"
+before = "cargo build --release -p liter-llm-swift && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+e2e = "scripts/e2e/run-with-mock-server.sh 'cd e2e/swift_e2e && swift test'"
+
+[crates.test.zig]
+# Same shape as dart/swift — point at e2e/zig, not the `packages/zig` placeholder.
+precondition = "command -v zig >/dev/null 2>&1"
+before = "cargo build -p liter-llm-ffi && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+e2e = "scripts/e2e/run-with-mock-server.sh 'cd e2e/zig && zig build test'"
+
 [crates.test.kotlin_android]
-# Android-only AAR — tests require an emulator runner (out of scope until a
-# kreuzberg-dev/actions/setup-android-emulator action exists). E2E excluded.
+# The e2e suite lives in e2e/kotlin_android/src/test/ (JVM unit tests via JNA
+# loading the JNI cdylib), NOT in src/androidTest/. They run on the host JVM
+# without an Android emulator. Instrumented tests on a managed emulator
+# (pixel6api34) are still configured but only exercised under
+# `./gradlew pixel6api34DebugAndroidTest` and not part of the canonical
+# `task e2e:test:all` flow yet.
 precondition = "command -v gradle >/dev/null 2>&1"
-before = "cargo build --release -p liter-llm-ffi"
+before = "cargo build --release -p liter-llm-ffi -p liter-llm-jni && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+e2e = "scripts/e2e/run-with-mock-server.sh 'cd e2e/kotlin_android && gradle test --no-daemon'"
 
 [crates.publish]
 core_crate = "crates/liter-llm"
@@ -596,6 +707,7 @@ function = "chat_stream"
 path = "/chat/completions"
 module = "liter_llm"
 async = true
+streaming = true
 
 [[crates.e2e.calls.chat_stream.args]]
 name = "request"
@@ -609,9 +721,6 @@ result_type = "ChatCompletionChunk"
 
 [crates.e2e.calls.chat_stream.overrides.csharp]
 options_type = "ChatCompletionRequest"
-
-[crates.e2e.calls.chat_stream.overrides.elixir]
-function = "defaultclient_chat_stream"
 
 [crates.e2e.calls.chat_stream.overrides.go]
 client_factory = "CreateClient"
@@ -1325,6 +1434,7 @@ result_enum_fields = { "status" = "WasmBatchStatus" }
 [crates.e2e.calls.create_batch.overrides.dart]
 options_type = "CreateBatchRequest"
 options_via = "from_json"
+enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.create_batch.overrides.swift]
 options_type = "CreateBatchRequest"
@@ -1368,6 +1478,9 @@ enum_fields = { "status" = "BatchStatus" }
 result_enum_fields = { "status" = "WasmBatchStatus" }
 
 [crates.e2e.calls.retrieve_batch.overrides.swift]
+enum_fields = { "status" = "BatchStatus" }
+
+[crates.e2e.calls.retrieve_batch.overrides.dart]
 enum_fields = { "status" = "BatchStatus" }
 
 [crates.e2e.calls.list_batches]
@@ -1452,6 +1565,9 @@ result_enum_fields = { "status" = "WasmBatchStatus" }
 [crates.e2e.calls.cancel_batch.overrides.swift]
 enum_fields = { "status" = "BatchStatus" }
 
+[crates.e2e.calls.cancel_batch.overrides.dart]
+enum_fields = { "status" = "BatchStatus" }
+
 [crates.e2e.calls.create_response]
 function = "create_response"
 path = "/responses"
@@ -1513,7 +1629,11 @@ async = true
 function = "defaultclient_retrieve_response"
 
 [[crates.e2e.calls.retrieve_response.args]]
-name = "id"
+# `response_id` (not bare `id`) — `id` shadows Python's `id` builtin
+# (rejected by ruff A002) and is ambiguous in languages like Ruby where
+# `id` is a common method name. Matches the parameter name in the Rust
+# trait `ResponseClient::retrieve_response(response_id: &str)`.
+name = "response_id"
 field = "input.response_id"
 type = "string"
 
@@ -1530,7 +1650,7 @@ async = true
 function = "defaultclient_cancel_response"
 
 [[crates.e2e.calls.cancel_response.args]]
-name = "id"
+name = "response_id"
 field = "input.response_id"
 type = "string"
 
@@ -1556,47 +1676,47 @@ output = "test_apps"
 
 [crates.e2e.registry.packages.python]
 name = "liter-llm"
-version = "1.4.0-rc.27"
+version = "1.4.0-rc.30"
 
 [crates.e2e.registry.packages.node]
 name = "@kreuzberg/liter-llm-node"
-version = "1.4.0-rc.27"
+version = "1.4.0-rc.30"
 
 [crates.e2e.registry.packages.wasm]
 name = "@kreuzberg/liter-llm-wasm"
-version = "1.4.0-rc.27"
+version = "1.4.0-rc.30"
 
 [crates.e2e.registry.packages.ruby]
 name = "liter_llm"
-version = "1.4.0-rc.27"
+version = "1.4.0-rc.30"
 
 [crates.e2e.registry.packages.go]
 module = "github.com/kreuzberg-dev/liter-llm/packages/go"
-version = "v1.4.0-rc.27"
+version = "v1.4.0-rc.30"
 
 [crates.e2e.registry.packages.java]
 name = "dev.kreuzberg.literllm:liter-llm"
-version = "1.4.0-rc.27"
+version = "1.4.0-rc.30"
 
 [crates.e2e.registry.packages.csharp]
 name = "LiterLlm"
-version = "1.4.0-rc.27"
+version = "1.4.0-rc.30"
 
 [crates.e2e.registry.packages.php]
 name = "kreuzberg-dev/liter-llm"
-version = "1.4.0-rc.27"
+version = "1.4.0-rc.30"
 
 [crates.e2e.registry.packages.elixir]
 name = "liter_llm"
-version = "~> 1.4.0-rc.27"
+version = "~> 1.4.0-rc.30"
 
 [crates.e2e.registry.packages.rust]
 name = "liter-llm"
-version = "1.4.0-rc.27"
+version = "1.4.0-rc.30"
 
 [crates.e2e.registry.packages.c]
 name = "liter_llm_ffi"
-version = "1.4.0-rc.27"
+version = "1.4.0-rc.30"
 
 # test_apps version sync — anchor on package-name strings so unrelated semver
 # tokens (junit, jackson, vitest, etc.) aren't clobbered. Mirrors the pattern
@@ -1614,7 +1734,7 @@ replace = '"@kreuzberg/liter-llm-wasm": "{version}"'
 [[workspace.sync.text_replacements]]
 path = "test_apps/python/pyproject.toml"
 search = '"liter-llm==[^"]*"'
-replace = '"liter-llm=={version}"'
+replace = '"liter-llm=={python_version}"'
 
 [[workspace.sync.text_replacements]]
 path = "test_apps/ruby/Gemfile"
@@ -1659,7 +1779,7 @@ keywords = ["llm", "api-client", "openai", "anthropic"]
 template_dir = "templates/readme"
 snippets_dir = "docs/snippets"
 output_pattern = "packages/{language}/README.md"
-discord_url = "https://discord.gg/pXxagNK2zN"
+discord_url = "https://discord.gg/xt9WY3GnKR"
 
 [crates.readme.languages.rust]
 template = "language_package.md"
@@ -1928,6 +2048,80 @@ ocr = true
 [crates.readme.languages.kotlin_android.snippets]
 basic_chat = "getting-started/basic_chat.md"
 
+[crates.readme.languages.swift]
+template = "language_package.md"
+name = "Swift"
+package_name = "LiterLlm"
+package_manager = ["swift_package_manager"]
+install_command = """
+.package(url: \"https://github.com/kreuzberg-dev/liter-llm.git\", from: \"{{ version }}\")"""
+description = """
+Universal LLM API client for Swift. Access 143+ LLM providers through a single Swift Concurrency-native interface (async/await, AsyncSequence streaming) with Codable request/response types.
+"""
+
+[crates.readme.languages.swift.features]
+streaming = true
+async = true
+tool_calling = true
+provider_routing = true
+cost_tracking = true
+search = true
+ocr = true
+
+[crates.readme.languages.swift.snippets]
+basic_chat = "getting-started/basic_chat.md"
+
+[crates.readme.languages.dart]
+template = "language_package.md"
+name = "Dart"
+package_name = "liter_llm"
+package_manager = ["pub"]
+install_command = """
+dart pub add liter_llm:{{ version }}"""
+description = """
+Universal LLM API client for Dart/Flutter. Access 143+ LLM providers through a Dart-idiomatic Future/Stream API with `json_serializable`-friendly types.
+"""
+
+[crates.readme.languages.dart.features]
+streaming = true
+async = true
+tool_calling = true
+provider_routing = true
+cost_tracking = true
+search = true
+ocr = true
+
+[crates.readme.languages.dart.snippets]
+basic_chat = "getting-started/basic_chat.md"
+
+[crates.readme.languages.zig]
+template = "language_package.md"
+name = "Zig"
+package_name = "liter_llm"
+package_manager = ["zig"]
+install_command = """
+zig fetch --save https://github.com/kreuzberg-dev/liter-llm/archive/refs/tags/v{{ version }}.tar.gz"""
+description = """
+Universal LLM API client for Zig. Access 143+ LLM providers through Zig's allocator-aware sync API with explicit error sets — no hidden allocations, no exceptions, deterministic resource lifetimes.
+"""
+
+[crates.readme.languages.zig.features]
+streaming = false
+async = false
+tool_calling = true
+provider_routing = true
+cost_tracking = true
+search = true
+ocr = true
+
+[crates.readme.languages.zig.snippets]
+basic_chat = "getting-started/basic_chat.md"
+
+[crates.readme.languages.ffi]
+template = "ffi.md"
+output_path = "crates/liter-llm-ffi/README.md"
+name = "FFI (C/C++)"
+
 [[crates.adapters]]
 name = "chat"
 pattern = "async_method"
@@ -2188,7 +2382,7 @@ returns = "ResponseObject"
 error_type = "LiterLlmError"
 
 [[crates.adapters.params]]
-name = "id"
+name = "response_id"
 type = "String"
 
 [[crates.adapters]]
@@ -2200,5 +2394,5 @@ returns = "ResponseObject"
 error_type = "LiterLlmError"
 
 [[crates.adapters.params]]
-name = "id"
+name = "response_id"
 type = "String"

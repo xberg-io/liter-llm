@@ -1,3 +1,8 @@
+// Error variants are documented through `thiserror`'s `#[error("...")]`
+// messages, which double as user-facing display strings and rustdoc-style
+// summaries. `missing_docs` would force us to duplicate those messages.
+#![allow(missing_docs)]
+
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};

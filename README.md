@@ -3,7 +3,7 @@
 <div align="center" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0;">
   <!-- Built with -->
   <a href="https://github.com/kreuzberg-dev/alef">
-    <img src="https://img.shields.io/badge/built%20with-alef%20%D7%90-007ec6" alt="Built with alef">
+    <img src="https://img.shields.io/badge/Bindings-alef%20%D7%90-007ec6" alt="Bindings">
   </a>
   <!-- Language Bindings -->
   <a href="https://crates.io/crates/liter-llm">
@@ -52,15 +52,19 @@
     <img src="https://img.shields.io/badge/License-MIT-007ec6.svg" alt="License">
   </a>
   <a href="https://docs.liter-llm.kreuzberg.dev">
-    <img src="https://img.shields.io/badge/docs-kreuzberg.dev-007ec6" alt="Docs">
+    <img src="https://img.shields.io/badge/Docs-liter--llm-007ec6" alt="Docs">
   </a>
 </div>
 
-<img width="3384" height="573" alt="kreuzberg.dev" src="https://github.com/user-attachments/assets/1b6c6ad7-3b6d-4171-b1c9-f2026cc9deb8" />
+<div align="center" style="margin: 24px 0 0;">
+  <a href="https://kreuzberg.dev">
+    <img alt="kreuzberg.dev" src="https://github.com/user-attachments/assets/1b6c6ad7-3b6d-4171-b1c9-f2026cc9deb8" />
+  </a>
+</div>
 
-<div align="center" style="margin-top: 20px;">
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 28px 0 24px;">
   <a href="https://discord.gg/xt9WY3GnKR">
-    <img height="22" src="https://img.shields.io/badge/Discord-Join%20our%20community-7289da?logo=discord&logoColor=white" alt="Discord">
+    <img height="22" src="https://img.shields.io/badge/Discord-Chat-007ec6?logo=discord&logoColor=white" alt="Join Discord">
   </a>
 </div>
 
@@ -210,23 +214,23 @@ liter-llm/
 
 Install in your language of choice:
 
-| Language         | Install                                                    |
-| ---------------- | ---------------------------------------------------------- |
-| Python           | `pip install liter-llm`                                    |
-| Node.js          | `pnpm add @kreuzberg/liter-llm`                            |
-| Rust             | `cargo add liter-llm`                                      |
-| Go               | `go get github.com/kreuzberg-dev/liter-llm/packages/go`    |
-| Java             | `dev.kreuzberg:liter-llm` (Maven/Gradle)                   |
-| Ruby             | `gem install liter_llm`                                    |
-| PHP              | `composer require kreuzberg/liter-llm`                     |
-| C#               | `dotnet add package LiterLlm`                              |
-| Elixir           | `{:liter_llm, "~> 1.4.0-rc.27"}` in mix.exs                |
-| Dart / Flutter   | `dart pub add liter_llm`                                   |
+| Language         | Install                                                                      |
+| ---------------- | ---------------------------------------------------------------------------- |
+| Python           | `pip install liter-llm`                                                      |
+| Node.js          | `pnpm add @kreuzberg/liter-llm`                                              |
+| Rust             | `cargo add liter-llm`                                                        |
+| Go               | `go get github.com/kreuzberg-dev/liter-llm/packages/go`                      |
+| Java             | `dev.kreuzberg:liter-llm` (Maven/Gradle)                                     |
+| Ruby             | `gem install liter_llm`                                                      |
+| PHP              | `composer require kreuzberg/liter-llm`                                       |
+| C#               | `dotnet add package LiterLlm`                                                |
+| Elixir           | `{:liter_llm, "~> 1.4.0-rc.27"}` in mix.exs                                  |
+| Dart / Flutter   | `dart pub add liter_llm`                                                     |
 | Swift            | `.package(url: "https://github.com/kreuzberg-dev/liter-llm", from: "1.4.0")` |
-| Kotlin (Android) | `dev.kreuzberg:liter-llm-android` (Maven Central)          |
-| Zig              | See [Zig package](packages/zig/README.md)                  |
-| WASM             | `pnpm add @kreuzberg/liter-llm-wasm`                       |
-| C/FFI            | Build from source -- see [FFI crate](crates/liter-llm-ffi) |
+| Kotlin (Android) | `dev.kreuzberg:liter-llm-android` (Maven Central)                            |
+| Zig              | See [Zig package](packages/zig/README.md)                                    |
+| WASM             | `pnpm add @kreuzberg/liter-llm-wasm`                                         |
+| C/FFI            | Build from source -- see [FFI crate](crates/liter-llm-ffi)                   |
 
 ### Usage
 
@@ -314,7 +318,7 @@ All bindings expose a unified `chat()` function:
 
 ## Part of Kreuzberg.dev
 
-- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 90+ formats with optional OCR.
 - [Kreuzberg Cloud](https://github.com/kreuzberg-dev/kreuzberg-cloud) — managed extraction API with SDKs, dashboards, and observability.
 - [kreuzcrawl](https://github.com/kreuzberg-dev/kreuzcrawl) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
 - [html-to-markdown](https://github.com/kreuzberg-dev/html-to-markdown) — fast, lossless HTML→Markdown engine.

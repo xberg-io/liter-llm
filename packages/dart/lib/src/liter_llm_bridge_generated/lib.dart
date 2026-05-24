@@ -8,7 +8,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Create a new LLM client with simple scalar configuration.
 ///
@@ -44,6 +44,134 @@ Future<DefaultClient> createClient({
 /// contains unknown fields.
 Future<DefaultClient> createClientFromJson({required String json}) =>
     RustLib.instance.api.crateCreateClientFromJson(json: json);
+
+/// Register a custom provider in the global runtime registry.
+///
+/// The provider will be checked **before** all built-in providers during model
+/// detection. If a provider with the same `name` already exists it is replaced.
+///
+/// **Errors:**
+///
+/// Returns an error if the config is invalid (empty name, empty base_url, or
+/// no model prefixes).
+Future<void> registerCustomProvider({required CustomProviderConfig config}) =>
+    RustLib.instance.api.crateRegisterCustomProvider(config: config);
+
+/// Remove a previously registered custom provider by name.
+///
+/// Returns `true` if a provider with the given name was found and removed,
+/// `false` if no such provider existed.
+///
+/// **Errors:**
+///
+/// Returns an error only if the internal lock is poisoned.
+Future<bool> unregisterCustomProvider({required String name}) =>
+    RustLib.instance.api.crateUnregisterCustomProvider(name: name);
+
+/// Return all provider configs from the registry.
+///
+/// Useful for tooling, documentation generation, or runtime enumeration.
+Future<List<ProviderConfig>> allProviders() =>
+    RustLib.instance.api.crateAllProviders();
+
+/// Return the set of complex provider names.
+///
+/// Complex providers require custom auth/routing logic beyond simple bearer
+/// tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
+///
+/// The returned reference points into the static registry — no allocation.
+Future<List<String>> complexProviderNames() =>
+    RustLib.instance.api.crateComplexProviderNames();
+
+/// Calculate the estimated cost of a completion given a model name and token
+/// counts.
+///
+/// Returns `null` if the model is not present in the embedded pricing registry.
+/// Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
+///
+/// When an exact model name match is not found, progressively shorter prefixes
+/// are tried by stripping from the last `-` or `.` separator.  For example,
+/// `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
+Future<double?> completionCost({
+  required String model,
+  required PlatformInt64 promptTokens,
+  required PlatformInt64 completionTokens,
+}) => RustLib.instance.api.crateCompletionCost(
+  model: model,
+  promptTokens: promptTokens,
+  completionTokens: completionTokens,
+);
+
+/// Calculate the estimated cost of a completion, accounting for cached
+/// (cache-hit) prompt tokens billed at the provider's discounted rate.
+///
+/// `cached_tokens` is the count of prompt tokens served from the provider's
+/// prompt cache. It must be `<= prompt_tokens` (cached tokens are a subset of
+/// the prompt). The non-cached portion is billed at `input_cost_per_token`
+/// and the cached portion at `cache_read_input_token_cost` when the model
+/// has cache pricing; otherwise the entire prompt is billed at the regular
+/// input rate.
+///
+/// Returns `null` if the model is not present in the embedded pricing
+/// registry, mirroring `completion_cost`.
+Future<double?> completionCostWithCache({
+  required String model,
+  required PlatformInt64 promptTokens,
+  required PlatformInt64 cachedTokens,
+  required PlatformInt64 completionTokens,
+}) => RustLib.instance.api.crateCompletionCostWithCache(
+  model: model,
+  promptTokens: promptTokens,
+  cachedTokens: cachedTokens,
+  completionTokens: completionTokens,
+);
+
+/// Count tokens in a text string using the tokenizer for the given model.
+///
+/// The tokenizer is resolved from the model name prefix (e.g. `"gpt-4o"` maps
+/// to the `Xenova/gpt-4o` HuggingFace tokenizer). Tokenizers are cached after
+/// first load.
+///
+/// **Errors:**
+///
+/// Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
+/// (e.g. network failure on first use) or if tokenization itself fails.
+Future<PlatformInt64> countTokens({
+  required String model,
+  required String text,
+}) => RustLib.instance.api.crateCountTokens(model: model, text: text);
+
+/// Count tokens for a full `ChatCompletionRequest`.
+///
+/// Sums tokens across all message text contents plus a per-message overhead
+/// of ~4 tokens (for role, separators, and formatting metadata). Tool
+/// definitions and multimodal content parts (images, audio, documents) are
+/// not counted — only textual content contributes to the token total.
+///
+/// **Errors:**
+///
+/// Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded or
+/// if tokenization fails for any message.
+Future<PlatformInt64> countRequestTokens({
+  required String model,
+  required ChatCompletionRequest req,
+}) => RustLib.instance.api.crateCountRequestTokens(model: model, req: req);
+
+/// Install the `ring` crypto provider as the rustls process default, idempotently.
+///
+/// rustls 0.23+ removed the implicit default provider. This function installs
+/// `ring` once per process. Subsequent calls are no-ops. Calling it from a
+/// downstream Rust app that has already installed `aws-lc-rs` is safe — the
+/// `Err` from `install_default()` is silently ignored.
+///
+/// Called automatically by every internal `reqwest.Client` constructor
+/// (auth providers, default HTTP client). Bindings and downstream consumers
+/// reach those constructors transitively, so no manual init is required.
+///
+/// WASM builds are exempt — the WASM target uses the browser/Node.js fetch
+/// API instead of rustls, so no crypto provider is needed.
+Future<void> ensureCryptoProvider() =>
+    RustLib.instance.api.crateEnsureCryptoProvider();
 
 Future<SystemMessage> createSystemMessageFromJson({required String json}) =>
     RustLib.instance.api.crateCreateSystemMessageFromJson(json: json);
@@ -300,11 +428,26 @@ Future<CustomProviderConfig> createCustomProviderConfigFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateCustomProviderConfigFromJson(json: json);
 
+Future<ProviderConfig> createProviderConfigFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateProviderConfigFromJson(json: json);
+
+Future<AuthConfig> createAuthConfigFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateAuthConfigFromJson(json: json);
+
+Future<BudgetConfig> createBudgetConfigFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateBudgetConfigFromJson(json: json);
+
+Future<CacheConfig> createCacheConfigFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateCacheConfigFromJson(json: json);
+
+Future<RateLimitConfig> createRateLimitConfigFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateRateLimitConfigFromJson(json: json);
+
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DefaultClient>>
 abstract class DefaultClient implements RustOpaqueInterface {
   Future<BatchObject> cancelBatch({required String batchId});
 
-  Future<ResponseObject> cancelResponse({required String id});
+  Future<ResponseObject> cancelResponse({required String responseId});
 
   Future<ChatCompletionResponse> chat({required ChatCompletionRequest req});
 
@@ -340,7 +483,7 @@ abstract class DefaultClient implements RustOpaqueInterface {
 
   Future<FileObject> retrieveFile({required String fileId});
 
-  Future<ResponseObject> retrieveResponse({required String id});
+  Future<ResponseObject> retrieveResponse({required String responseId});
 
   Future<SearchResponse> search({required SearchRequest req});
 
@@ -351,11 +494,21 @@ abstract class DefaultClient implements RustOpaqueInterface {
   });
 }
 
+/// Assistant's response to a user message.
 class AssistantMessage {
+  /// The assistant's text response. Absent if tool calls are returned instead.
   final String? content;
+
+  /// Optional name for the assistant.
   final String? name;
+
+  /// Tool calls the model wants to execute, if any.
   final List<ToolCall>? toolCalls;
+
+  /// Refusal reason, if the model declined to respond per safety policies.
   final String? refusal;
+
+  /// Deprecated legacy function_call field; retained for API compatibility.
   final FunctionCall? functionCall;
 
   const AssistantMessage({
@@ -386,8 +539,12 @@ class AssistantMessage {
           functionCall == other.functionCall;
 }
 
+/// Audio content part for speech-capable models.
 class AudioContent {
+  /// Base64-encoded audio data.
   final String data;
+
+  /// Audio format (e.g., "wav", "mp3", "ogg").
   final String format;
 
   const AudioContent({required this.data, required this.format});
@@ -404,18 +561,65 @@ class AudioContent {
           format == other.format;
 }
 
+/// Auth configuration block.
+class AuthConfig {
+  /// Auth scheme classification.
+  final AuthType authType;
+
+  /// Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`).
+  /// Holds the variable name, never the secret value.
+  final String? envVar;
+
+  const AuthConfig({required this.authType, this.envVar});
+
+  @override
+  int get hashCode => authType.hashCode ^ envVar.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AuthConfig &&
+          runtimeType == other.runtimeType &&
+          authType == other.authType &&
+          envVar == other.envVar;
+}
+
 @freezed
 sealed class AuthHeaderFormat with _$AuthHeaderFormat {
   const AuthHeaderFormat._();
 
+  /// Bearer token: `Authorization: Bearer <key>`
   const factory AuthHeaderFormat.bearer() = AuthHeaderFormat_Bearer;
+
+  /// Custom header: e.g., `X-Api-Key: <key>`
   const factory AuthHeaderFormat.apiKey({required String field0}) =
       AuthHeaderFormat_ApiKey;
+
+  /// No authentication required.
   const factory AuthHeaderFormat.none() = AuthHeaderFormat_None;
 }
 
+/// Auth scheme used by a provider.
+enum AuthType {
+  /// Standard `Authorization: Bearer <key>` header.
+  bearer,
+
+  /// `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases).
+  apiKey,
+
+  /// No authentication header required.
+  none,
+
+  /// Unrecognised auth scheme — falls back to bearer.
+  unknown,
+}
+
+/// Query parameters for listing batches.
 class BatchListQuery {
+  /// Maximum number of results to return. Defaults to 20.
   final PlatformInt64? limit;
+
+  /// Pagination cursor: return results after this batch ID.
   final String? after;
 
   const BatchListQuery({this.limit, this.after});
@@ -432,11 +636,21 @@ class BatchListQuery {
           after == other.after;
 }
 
+/// Response from listing batches.
 class BatchListResponse {
+  /// Object type (always `"list"`).
   final String object;
+
+  /// List of batch objects.
   final List<BatchObject> data;
+
+  /// Whether more results are available.
   final bool? hasMore;
+
+  /// First batch ID in the result set (for pagination).
   final String? firstId;
+
+  /// Last batch ID in the result set (for pagination).
   final String? lastId;
 
   const BatchListResponse({
@@ -467,20 +681,48 @@ class BatchListResponse {
           lastId == other.lastId;
 }
 
+/// A batch job object.
 class BatchObject {
+  /// Unique batch ID.
   final String id;
+
+  /// Object type (always `"batch"`).
   final String object;
+
+  /// API endpoint (e.g., `"/v1/chat/completions"`).
   final String endpoint;
+
+  /// ID of the input file.
   final String inputFileId;
+
+  /// Completion window (e.g., `"24h"`).
   final String completionWindow;
+
+  /// Current job status.
   final BatchStatus status;
+
+  /// ID of the output file (present when completed).
   final String? outputFileId;
+
+  /// ID of the error file (present if some requests failed).
   final String? errorFileId;
+
+  /// Unix timestamp of batch creation.
   final PlatformInt64 createdAt;
+
+  /// Unix timestamp of completion (if completed).
   final PlatformInt64? completedAt;
+
+  /// Unix timestamp of failure (if failed).
   final PlatformInt64? failedAt;
+
+  /// Unix timestamp of expiration (if expired).
   final PlatformInt64? expiredAt;
+
+  /// Request processing counts.
   final BatchRequestCounts? requestCounts;
+
+  /// Metadata attached to the batch.
   final String? metadata;
 
   const BatchObject({
@@ -538,9 +780,15 @@ class BatchObject {
           metadata == other.metadata;
 }
 
+/// Request processing counts for a batch.
 class BatchRequestCounts {
+  /// Total requests in the batch.
   final PlatformInt64 total;
+
+  /// Completed requests.
   final PlatformInt64 completed;
+
+  /// Failed requests.
   final PlatformInt64 failed;
 
   const BatchRequestCounts({
@@ -562,25 +810,137 @@ class BatchRequestCounts {
           failed == other.failed;
 }
 
+/// Status of a batch job.
 enum BatchStatus {
+  /// Validating the input file.
   validating,
+
+  /// Job failed.
   failed,
+
+  /// Job is running.
   inProgress,
+
+  /// Finalizing results.
   finalizing,
+
+  /// Job completed successfully.
   completed,
+
+  /// Job expired before completion.
   expired,
+
+  /// Job is being cancelled.
   cancelling,
+
+  /// Job has been cancelled.
   cancelled,
 }
 
+/// Configuration for budget enforcement.
+class BudgetConfig {
+  /// Maximum total spend across all models, in USD.  `None` means unlimited.
+  final double? globalLimit;
+
+  /// Per-model spending limits in USD.  Models not listed here are only
+  /// constrained by `global_limit`.
+  final Map<String, double> modelLimits;
+
+  /// Whether to reject requests or merely warn when a limit is exceeded.
+  final Enforcement enforcement;
+
+  const BudgetConfig({
+    this.globalLimit,
+    required this.modelLimits,
+    required this.enforcement,
+  });
+
+  @override
+  int get hashCode =>
+      globalLimit.hashCode ^ modelLimits.hashCode ^ enforcement.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BudgetConfig &&
+          runtimeType == other.runtimeType &&
+          globalLimit == other.globalLimit &&
+          modelLimits == other.modelLimits &&
+          enforcement == other.enforcement;
+}
+
+@freezed
+sealed class CacheBackend with _$CacheBackend {
+  const CacheBackend._();
+
+  /// In-memory LRU cache (default). No external dependencies.
+  const factory CacheBackend.memory() = CacheBackend_Memory;
+
+  /// OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.).
+  const factory CacheBackend.openDal({
+    /// OpenDAL scheme name (e.g. "s3", "redis", "fs", "gcs", "azblob").
+    required String scheme,
+
+    /// Backend-specific configuration as key-value pairs passed to OpenDAL.
+    required Map<String, String> config,
+  }) = CacheBackend_OpenDal;
+}
+
+/// Configuration for the response cache.
+class CacheConfig {
+  /// Maximum number of cached entries.
+  final PlatformInt64 maxEntries;
+
+  /// Time-to-live for each cached entry.
+  final PlatformInt64 ttl;
+
+  /// Storage backend to use.
+  final CacheBackend backend;
+
+  const CacheConfig({
+    required this.maxEntries,
+    required this.ttl,
+    required this.backend,
+  });
+
+  @override
+  int get hashCode => maxEntries.hashCode ^ ttl.hashCode ^ backend.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CacheConfig &&
+          runtimeType == other.runtimeType &&
+          maxEntries == other.maxEntries &&
+          ttl == other.ttl &&
+          backend == other.backend;
+}
+
+/// A streamed chunk of a chat completion response.
 class ChatCompletionChunk {
+  /// Unique identifier for this stream.
   final String id;
+
+  /// Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored
+  /// as a plain `String` so non-standard provider values do not fail parsing.
   final String object;
+
+  /// Unix timestamp of chunk creation.
   final PlatformInt64 created;
+
+  /// Model used to generate the chunk.
   final String model;
+
+  /// Streaming choices (delta updates).
   final List<StreamChoice> choices;
+
+  /// Token usage (typically only in the final chunk).
   final Usage? usage;
+
+  /// Fingerprint of the system configuration (OpenAI-specific).
   final String? systemFingerprint;
+
+  /// Service tier used (OpenAI-specific).
   final String? serviceTier;
 
   const ChatCompletionChunk({
@@ -620,26 +980,70 @@ class ChatCompletionChunk {
           serviceTier == other.serviceTier;
 }
 
+/// Chat completion request (compatible with OpenAI and similar APIs).
 class ChatCompletionRequest {
+  /// Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`).
   final String model;
+
+  /// Conversation history from oldest to newest.
   final List<Message> messages;
+
+  /// Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0.
   final double? temperature;
+
+  /// Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused.
   final double? topP;
+
+  /// Number of chat completions to generate. Defaults to 1.
   final PlatformInt64? n;
+
+  /// Whether to stream the response.
+  ///
+  /// Managed by the client layer — do not set directly.
   final bool? stream;
+
+  /// Stop sequence(s) that halt token generation.
   final StopSequence? stop;
+
+  /// Max output tokens. Different from max_completion_tokens in some providers.
   final PlatformInt64? maxTokens;
+
+  /// Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics.
   final double? presencePenalty;
+
+  /// Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens.
   final double? frequencyPenalty;
+
+  /// Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic
+  /// serialization order — important when hashing or signing requests.
   final Map<String, double>? logitBias;
+
+  /// User identifier for request tracking and abuse detection.
   final String? user;
+
+  /// Tools the model can invoke.
   final List<ChatCompletionTool>? tools;
+
+  /// Tool usage mode (auto, required, none, or specific tool).
   final ToolChoice? toolChoice;
+
+  /// Whether the model can call multiple tools in parallel. Defaults to true.
   final bool? parallelToolCalls;
+
+  /// Output format constraint (text, JSON, JSON schema).
   final ResponseFormat? responseFormat;
+
+  /// Streaming options (e.g., include_usage).
   final StreamOptions? streamOptions;
+
+  /// Random seed for reproducible outputs. Provider support varies.
   final PlatformInt64? seed;
+
+  /// Reasoning effort level (low, medium, high) for extended-thinking models.
   final ReasoningEffort? reasoningEffort;
+
+  /// Provider-specific extra parameters merged into the request body.
+  /// Use for guardrails, safety settings, grounding config, etc.
   final String? extraBody;
 
   const ChatCompletionRequest({
@@ -715,14 +1119,31 @@ class ChatCompletionRequest {
           extraBody == other.extraBody;
 }
 
+/// Chat completion response from the API.
 class ChatCompletionResponse {
+  /// Unique identifier for this response.
   final String id;
+
+  /// Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a
+  /// plain `String` so non-standard provider values do not break deserialization.
   final String object;
+
+  /// Unix timestamp of response creation.
   final PlatformInt64 created;
+
+  /// Model used to generate the response.
   final String model;
+
+  /// List of completion choices.
   final List<Choice> choices;
+
+  /// Token usage statistics.
   final Usage? usage;
+
+  /// Fingerprint of the system configuration (OpenAI-specific).
   final String? systemFingerprint;
+
+  /// Service tier used (OpenAI-specific).
   final String? serviceTier;
 
   const ChatCompletionResponse({
@@ -762,8 +1183,12 @@ class ChatCompletionResponse {
           serviceTier == other.serviceTier;
 }
 
+/// A tool the model can invoke (currently, all tools are functions).
 class ChatCompletionTool {
+  /// Tool type (always "function" in OpenAI spec).
   final ToolType toolType;
+
+  /// Function definition with name, description, and JSON schema parameters.
   final FunctionDefinition function;
 
   const ChatCompletionTool({required this.toolType, required this.function});
@@ -780,9 +1205,15 @@ class ChatCompletionTool {
           function == other.function;
 }
 
+/// A single completion choice.
 class Choice {
+  /// Index of this choice in the choices array.
   final PlatformInt64 index;
+
+  /// The assistant's message response.
   final AssistantMessage message;
+
+  /// Why the model stopped generating (stop, length, tool_calls, content_filter, etc.).
   final FinishReason? finishReason;
 
   const Choice({required this.index, required this.message, this.finishReason});
@@ -804,19 +1235,34 @@ class Choice {
 sealed class ContentPart with _$ContentPart {
   const ContentPart._();
 
+  /// Plain text.
   const factory ContentPart.text({required String text}) = ContentPart_Text;
+
+  /// Image identified by URL (with optional detail level).
   const factory ContentPart.imageUrl({required ImageUrl imageUrl}) =
       ContentPart_ImageUrl;
+
+  /// Document file (PDF, CSV, etc.) as base64 or URL.
   const factory ContentPart.document({required DocumentContent document}) =
       ContentPart_Document;
+
+  /// Audio input as base64.
   const factory ContentPart.inputAudio({required AudioContent inputAudio}) =
       ContentPart_InputAudio;
 }
 
+/// Request to create a batch job.
 class CreateBatchRequest {
+  /// ID of the uploaded input file (JSONL format).
   final String inputFileId;
+
+  /// API endpoint (e.g., `"/v1/chat/completions"`).
   final String endpoint;
+
+  /// Completion window (e.g., `"24h"`).
   final String completionWindow;
+
+  /// Optional metadata to attach to the batch.
   final String? metadata;
 
   const CreateBatchRequest({
@@ -844,9 +1290,15 @@ class CreateBatchRequest {
           metadata == other.metadata;
 }
 
+/// Request to upload a file.
 class CreateFileRequest {
+  /// Base64-encoded file data.
   final String file;
+
+  /// Purpose for the file.
   final FilePurpose purpose;
+
+  /// Optional filename to associate with the upload.
   final String? filename;
 
   const CreateFileRequest({
@@ -868,14 +1320,30 @@ class CreateFileRequest {
           filename == other.filename;
 }
 
+/// Request to create images from a text prompt.
 class CreateImageRequest {
+  /// Text description of the image to generate.
   final String prompt;
+
+  /// Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset.
   final String? model;
+
+  /// Number of images to generate. Defaults to 1.
   final PlatformInt64? n;
+
+  /// Image size (e.g., `"1024x1024"`, `"1792x1024"`).
   final String? size;
+
+  /// Image quality: `"standard"` or `"hd"`.
   final String? quality;
+
+  /// Style: `"natural"` or `"vivid"` (DALL-E 3 only).
   final String? style;
+
+  /// Response format: `"url"` or `"b64_json"`.
   final String? responseFormat;
+
+  /// User identifier for request tracking.
   final String? user;
 
   const CreateImageRequest({
@@ -915,13 +1383,27 @@ class CreateImageRequest {
           user == other.user;
 }
 
+/// Request to create a structured response.
 class CreateResponseRequest {
+  /// Model ID.
   final String model;
+
+  /// Input data to process (e.g., a document to extract from).
   final String input;
+
+  /// Instructions for processing the input.
   final String? instructions;
+
+  /// Available tools the model can use.
   final List<ResponseTool>? tools;
+
+  /// Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0.
   final double? temperature;
+
+  /// Maximum output tokens.
   final PlatformInt64? maxOutputTokens;
+
+  /// Optional metadata.
   final String? metadata;
 
   const CreateResponseRequest({
@@ -958,11 +1440,21 @@ class CreateResponseRequest {
           metadata == other.metadata;
 }
 
+/// Request to generate speech audio from text.
 class CreateSpeechRequest {
+  /// Model ID (e.g., `"tts-1"`, `"tts-1-hd"`).
   final String model;
+
+  /// Text to synthesize into speech.
   final String input;
+
+  /// Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`).
   final String voice;
+
+  /// Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`).
   final String? responseFormat;
+
+  /// Playback speed in `[0.25, 4.0]`. Defaults to 1.0.
   final double? speed;
 
   const CreateSpeechRequest({
@@ -993,12 +1485,24 @@ class CreateSpeechRequest {
           speed == other.speed;
 }
 
+/// Request to transcribe audio into text.
 class CreateTranscriptionRequest {
+  /// Model ID (e.g., `"whisper-1"`).
   final String model;
+
+  /// Base64-encoded audio file data.
   final String file;
+
+  /// Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects.
   final String? language;
+
+  /// Optional text to guide the model (improves accuracy for domain-specific terms).
   final String? prompt;
+
+  /// Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`).
   final String? responseFormat;
+
+  /// Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0.
   final double? temperature;
 
   const CreateTranscriptionRequest({
@@ -1032,10 +1536,18 @@ class CreateTranscriptionRequest {
           temperature == other.temperature;
 }
 
+/// Configuration for registering a custom LLM provider at runtime.
 class CustomProviderConfig {
+  /// Unique name for this provider (e.g., "my-provider").
   final String name;
+
+  /// Base URL for the provider's API (e.g., "https://api.my-provider.com/v1").
   final String baseUrl;
+
+  /// Authentication header format.
   final AuthHeaderFormat authHeader;
+
+  /// Model name prefixes that route to this provider (e.g., ["my-"]).
   final List<String> modelPrefixes;
 
   const CustomProviderConfig({
@@ -1063,9 +1575,15 @@ class CustomProviderConfig {
           modelPrefixes == other.modelPrefixes;
 }
 
+/// Response from a delete operation.
 class DeleteResponse {
+  /// ID of the deleted resource.
   final String id;
+
+  /// Object type.
   final String object;
+
+  /// Confirmation that the resource was deleted.
   final bool deleted;
 
   const DeleteResponse({
@@ -1087,8 +1605,12 @@ class DeleteResponse {
           deleted == other.deleted;
 }
 
+/// Developer message (system-like message for Claude models).
 class DeveloperMessage {
+  /// Developer-specific instructions or context.
   final String content;
+
+  /// Optional name for the developer message source.
   final String? name;
 
   const DeveloperMessage({required this.content, this.name});
@@ -1105,8 +1627,12 @@ class DeveloperMessage {
           name == other.name;
 }
 
+/// PDF/document content part for vision-capable models.
 class DocumentContent {
+  /// Base64-encoded document data or URL.
   final String data;
+
+  /// MIME type (e.g., "application/pdf", "text/csv").
   final String mediaType;
 
   const DocumentContent({required this.data, required this.mediaType});
@@ -1123,21 +1649,38 @@ class DocumentContent {
           mediaType == other.mediaType;
 }
 
-enum EmbeddingFormat { float, base64 }
+/// The format in which the embedding vectors are returned.
+enum EmbeddingFormat {
+  /// 32-bit floating-point numbers (default).
+  float,
+
+  /// Base64-encoded string representation of the floats.
+  base64,
+}
 
 @freezed
 sealed class EmbeddingInput with _$EmbeddingInput {
   const EmbeddingInput._();
 
+  /// Single text string.
   const factory EmbeddingInput.single({required String field0}) =
       EmbeddingInput_Single;
+
+  /// Multiple text strings (batch embedding).
   const factory EmbeddingInput.multiple({required List<String> field0}) =
       EmbeddingInput_Multiple;
 }
 
+/// A single embedding vector.
 class EmbeddingObject {
+  /// Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain
+  /// `String` so non-standard provider values do not break deserialization.
   final String object;
+
+  /// The embedding vector.
   final Float64List embedding;
+
+  /// Index in the batch (corresponds to input order).
   final PlatformInt64 index;
 
   const EmbeddingObject({
@@ -1159,11 +1702,21 @@ class EmbeddingObject {
           index == other.index;
 }
 
+/// Embedding request.
 class EmbeddingRequest {
+  /// Model ID (e.g., `"text-embedding-3-small"`).
   final String model;
+
+  /// Text or texts to embed.
   final EmbeddingInput input;
+
+  /// Output format: float (native) or base64.
   final EmbeddingFormat? encodingFormat;
+
+  /// Requested embedding dimensions (if supported by the model).
   final PlatformInt64? dimensions;
+
+  /// User identifier for request tracking.
   final String? user;
 
   const EmbeddingRequest({
@@ -1194,10 +1747,19 @@ class EmbeddingRequest {
           user == other.user;
 }
 
+/// Embedding response.
 class EmbeddingResponse {
+  /// Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
+  /// `String` so non-standard provider values do not break deserialization.
   final String object;
+
+  /// List of embeddings.
   final List<EmbeddingObject> data;
+
+  /// Model used to generate embeddings.
   final String model;
+
+  /// Token usage (input tokens only; embeddings have zero output tokens).
   final Usage? usage;
 
   const EmbeddingResponse({
@@ -1222,9 +1784,26 @@ class EmbeddingResponse {
           usage == other.usage;
 }
 
+/// How budget limits are enforced.
+enum Enforcement {
+  /// Reject requests that would exceed the budget with
+  /// [`LiterLlmError::BudgetExceeded`].
+  hard,
+
+  /// Allow requests through but emit a `tracing::warn!` when the budget is
+  /// exceeded.
+  soft,
+}
+
+/// Query parameters for listing files.
 class FileListQuery {
+  /// Filter by file purpose (e.g., `"batch"`, `"fine-tune"`).
   final String? purpose;
+
+  /// Maximum number of results to return. Defaults to 20.
   final PlatformInt64? limit;
+
+  /// Pagination cursor: return results after this file ID.
   final String? after;
 
   const FileListQuery({this.purpose, this.limit, this.after});
@@ -1242,9 +1821,15 @@ class FileListQuery {
           after == other.after;
 }
 
+/// Response from listing files.
 class FileListResponse {
+  /// Object type (always `"list"`).
   final String object;
+
+  /// List of file objects.
   final List<FileObject> data;
+
+  /// Whether more results are available.
   final bool? hasMore;
 
   const FileListResponse({
@@ -1266,13 +1851,27 @@ class FileListResponse {
           hasMore == other.hasMore;
 }
 
+/// An uploaded file object.
 class FileObject {
+  /// Unique file ID.
   final String id;
+
+  /// Object type (always `"file"`).
   final String object;
+
+  /// File size in bytes.
   final PlatformInt64 bytes;
+
+  /// Unix timestamp of file creation.
   final PlatformInt64 createdAt;
+
+  /// Filename.
   final String filename;
+
+  /// File purpose.
   final String purpose;
+
+  /// Processing status (e.g., `"uploaded"`, `"processed"`).
   final String? status;
 
   const FileObject({
@@ -1309,19 +1908,47 @@ class FileObject {
           status == other.status;
 }
 
-enum FilePurpose { assistants, batch, fineTune, vision }
+/// Purpose of an uploaded file.
+enum FilePurpose {
+  /// File for use with Assistants API.
+  assistants,
 
+  /// File for batch processing.
+  batch,
+
+  /// File for fine-tuning.
+  fineTune,
+
+  /// File for vision/image tasks.
+  vision,
+}
+
+/// Why a choice stopped generating tokens.
 enum FinishReason {
   stop,
   length,
   toolCalls,
   contentFilter,
+
+  /// Deprecated legacy finish reason; retained for API compatibility.
   functionCall,
+
+  /// Catch-all for unknown finish reasons returned by non-OpenAI providers.
+  ///
+  /// Note: this intentionally does **not** carry the original string (e.g.
+  /// `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and
+  /// switching to `#[serde(untagged)]` would change deserialization semantics
+  /// for all variants.  The original value can be recovered by inspecting the
+  /// raw JSON if needed.
   other,
 }
 
+/// Function call details.
 class FunctionCall {
+  /// Function name.
   final String name;
+
+  /// Arguments as a JSON string (parse with serde_json::from_str).
   final String arguments;
 
   const FunctionCall({required this.name, required this.arguments});
@@ -1338,10 +1965,18 @@ class FunctionCall {
           arguments == other.arguments;
 }
 
+/// Function definition exposed to the model.
 class FunctionDefinition {
+  /// Name of the function. Required and must be alphanumeric + underscores.
   final String name;
+
+  /// Human-readable description explaining what the function does.
   final String? description;
+
+  /// JSON Schema defining the function's parameters.
   final String? parameters;
+
+  /// If true, enforce strict JSON schema validation for arguments.
   final bool? strict;
 
   const FunctionDefinition({
@@ -1369,6 +2004,7 @@ class FunctionDefinition {
           strict == other.strict;
 }
 
+/// Deprecated legacy function-role message body.
 class FunctionMessage {
   final String content;
   final String name;
@@ -1387,9 +2023,15 @@ class FunctionMessage {
           name == other.name;
 }
 
+/// A single generated image, returned as either a URL or base64 data.
 class Image {
+  /// Image URL (if response_format was "url").
   final String? url;
+
+  /// Base64-encoded image data (if response_format was "b64_json").
   final String? b64Json;
+
+  /// The final prompt used to generate the image (DALL-E 3).
   final String? revisedPrompt;
 
   const Image({this.url, this.b64Json, this.revisedPrompt});
@@ -1407,10 +2049,24 @@ class Image {
           revisedPrompt == other.revisedPrompt;
 }
 
-enum ImageDetail { low, high, auto }
+/// Image detail level controlling token cost and processing.
+enum ImageDetail {
+  /// Low detail: scales image to 512x512, uses fewer tokens.
+  low,
 
+  /// High detail: processes up to 2x2 grid of tiles, higher token cost.
+  high,
+
+  /// Auto: model chooses low or high based on image dimensions.
+  auto,
+}
+
+/// An image URL reference with optional detail level for processing.
 class ImageUrl {
+  /// URL of the image (data URI or HTTP/HTTPS URL).
   final String url;
+
+  /// Detail level: low (512x512), high (2x2 tiles), or auto (model-selected).
   final ImageDetail? detail;
 
   const ImageUrl({required this.url, this.detail});
@@ -1427,8 +2083,12 @@ class ImageUrl {
           detail == other.detail;
 }
 
+/// Response containing generated images.
 class ImagesResponse {
+  /// Unix timestamp of image creation.
   final PlatformInt64 created;
+
+  /// List of generated images.
   final List<Image> data;
 
   const ImagesResponse({required this.created, required this.data});
@@ -1445,10 +2105,18 @@ class ImagesResponse {
           data == other.data;
 }
 
+/// JSON Schema specification for constrained output.
 class JsonSchemaFormat {
+  /// Name of the schema (must be unique in the request).
   final String name;
+
+  /// Description of what the schema represents.
   final String? description;
+
+  /// JSON Schema object defining the output structure.
   final String schema;
+
+  /// If true, enforce strict schema validation.
   final bool? strict;
 
   const JsonSchemaFormat({
@@ -1474,6 +2142,103 @@ class JsonSchemaFormat {
 }
 
 @freezed
+sealed class LiterLlmError with _$LiterLlmError {
+  const LiterLlmError._();
+
+  /// `status` preserves the exact HTTP status code received (401 or 403).
+  const factory LiterLlmError.authentication({
+    required String message,
+    required PlatformInt64 status,
+  }) = LiterLlmError_Authentication;
+  const factory LiterLlmError.rateLimited({
+    required String message,
+    required PlatformInt64 retryAfter,
+  }) = LiterLlmError_RateLimited;
+
+  /// `status` preserves the exact HTTP status code received (400, 405, 413, 422, …).
+  const factory LiterLlmError.badRequest({
+    required String message,
+    required PlatformInt64 status,
+  }) = LiterLlmError_BadRequest;
+  const factory LiterLlmError.contextWindowExceeded({required String message}) =
+      LiterLlmError_ContextWindowExceeded;
+  const factory LiterLlmError.contentPolicy({required String message}) =
+      LiterLlmError_ContentPolicy;
+  const factory LiterLlmError.notFound({required String message}) =
+      LiterLlmError_NotFound;
+
+  /// `status` preserves the exact HTTP status code received (500, or other 5xx not covered
+  /// by `ServiceUnavailable`).
+  const factory LiterLlmError.serverError({
+    required String message,
+    required PlatformInt64 status,
+  }) = LiterLlmError_ServerError;
+
+  /// `status` preserves the exact HTTP status code received (502, 503, or 504).
+  const factory LiterLlmError.serviceUnavailable({
+    required String message,
+    required PlatformInt64 status,
+  }) = LiterLlmError_ServiceUnavailable;
+  const factory LiterLlmError.timeout() = LiterLlmError_Timeout;
+
+  /// A catch-all for errors that occur during streaming response processing.
+  ///
+  /// This variant covers multiple sub-conditions including UTF-8 decoding
+  /// failures, CRC/checksum mismatches (AWS EventStream), JSON parse errors
+  /// in individual SSE chunks, and buffer overflow conditions.  The `message`
+  /// field contains a human-readable description of the specific failure.
+  const factory LiterLlmError.streaming({required String message}) =
+      LiterLlmError_Streaming;
+  const factory LiterLlmError.endpointNotSupported({
+    required String endpoint,
+    required String provider,
+  }) = LiterLlmError_EndpointNotSupported;
+  const factory LiterLlmError.invalidHeader({
+    required String name,
+    required String reason,
+  }) = LiterLlmError_InvalidHeader;
+  const factory LiterLlmError.serialization({required String field0}) =
+      LiterLlmError_Serialization;
+  const factory LiterLlmError.budgetExceeded({
+    required String message,
+    required String model,
+  }) = LiterLlmError_BudgetExceeded;
+  const factory LiterLlmError.hookRejected({required String message}) =
+      LiterLlmError_HookRejected;
+
+  /// An internal logic error (e.g. unexpected Tower response variant).
+  ///
+  /// This should never surface in normal operation — if it does, it
+  /// indicates a bug in the library.
+  const factory LiterLlmError.internalError({required String message}) =
+      LiterLlmError_InternalError;
+
+  /// Return the OpenTelemetry `error.type` string for this error variant.
+  ///
+  /// Used by the tracing middleware to record the `error.type` span attribute
+  /// on failed requests per the GenAI semantic conventions.
+  Future<String> errorType() =>
+      RustLib.instance.api.crateLiterLlmErrorErrorType(that: this);
+
+  /// Returns `true` for errors that are worth retrying on a different service
+  /// or deployment (transient failures).
+  ///
+  /// Used by `FallbackService` and
+  /// `Router` to decide whether to route to an
+  /// alternative endpoint.
+  Future<bool> isTransient() =>
+      RustLib.instance.api.crateLiterLlmErrorIsTransient(that: this);
+
+  /// Returns the canonical HTTP status code associated with this error.
+  ///
+  /// Maps error variants to their originating HTTP status code as set by
+  /// [`LiterLlmError::from_status`].  Used by e2e assertions that check
+  /// `error.status_code` against the expected HTTP status.
+  Future<PlatformInt64> statusCode() =>
+      RustLib.instance.api.crateLiterLlmErrorStatusCode(that: this);
+}
+
+@freezed
 sealed class Message with _$Message {
   const Message._();
 
@@ -1485,14 +2250,25 @@ sealed class Message with _$Message {
   const factory Message.tool({required ToolMessage field0}) = Message_Tool;
   const factory Message.developer({required DeveloperMessage field0}) =
       Message_Developer;
+
+  /// Deprecated legacy function-role message; retained for API compatibility.
   const factory Message.function({required FunctionMessage field0}) =
       Message_Function;
 }
 
+/// A model available from the API.
 class ModelObject {
+  /// Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`).
   final String id;
+
+  /// Always `"model"` from OpenAI-compatible APIs.  Stored as a plain
+  /// `String` so non-standard provider values do not break deserialization.
   final String object;
+
+  /// Unix timestamp of model creation (or release date).
   final PlatformInt64 created;
+
+  /// Organization or entity that owns the model.
   final String ownedBy;
 
   const ModelObject({
@@ -1517,8 +2293,13 @@ class ModelObject {
           ownedBy == other.ownedBy;
 }
 
+/// Response listing available models.
 class ModelsListResponse {
+  /// Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
+  /// `String` so non-standard provider values do not break deserialization.
   final String object;
+
+  /// List of available models.
   final List<ModelObject> data;
 
   const ModelsListResponse({required this.object, required this.data});
@@ -1535,17 +2316,39 @@ class ModelsListResponse {
           data == other.data;
 }
 
+/// Boolean flags for each moderation category.
 class ModerationCategories {
+  /// Sexual content.
   final bool sexual;
+
+  /// Hate speech.
   final bool hate;
+
+  /// Harassment.
   final bool harassment;
+
+  /// Self-harm content.
   final bool selfHarm;
+
+  /// Sexual content involving minors.
   final bool sexualMinors;
+
+  /// Hate speech that threatens violence.
   final bool hateThreatening;
+
+  /// Graphic violence.
   final bool violenceGraphic;
+
+  /// Intent to self-harm.
   final bool selfHarmIntent;
+
+  /// Instructions for self-harm.
   final bool selfHarmInstructions;
+
+  /// Harassment that threatens violence.
   final bool harassmentThreatening;
+
+  /// Non-graphic violence.
   final bool violence;
 
   const ModerationCategories({
@@ -1594,17 +2397,39 @@ class ModerationCategories {
           violence == other.violence;
 }
 
+/// Confidence scores for each moderation category.
 class ModerationCategoryScores {
+  /// Sexual content score.
   final double sexual;
+
+  /// Hate speech score.
   final double hate;
+
+  /// Harassment score.
   final double harassment;
+
+  /// Self-harm content score.
   final double selfHarm;
+
+  /// Sexual content involving minors score.
   final double sexualMinors;
+
+  /// Hate speech that threatens violence score.
   final double hateThreatening;
+
+  /// Graphic violence score.
   final double violenceGraphic;
+
+  /// Intent to self-harm score.
   final double selfHarmIntent;
+
+  /// Instructions for self-harm score.
   final double selfHarmInstructions;
+
+  /// Harassment that threatens violence score.
   final double harassmentThreatening;
+
+  /// Non-graphic violence score.
   final double violence;
 
   const ModerationCategoryScores({
@@ -1657,14 +2482,21 @@ class ModerationCategoryScores {
 sealed class ModerationInput with _$ModerationInput {
   const ModerationInput._();
 
+  /// Single text string.
   const factory ModerationInput.single({required String field0}) =
       ModerationInput_Single;
+
+  /// Multiple text strings (batch moderation).
   const factory ModerationInput.multiple({required List<String> field0}) =
       ModerationInput_Multiple;
 }
 
+/// Request to classify content for policy violations.
 class ModerationRequest {
+  /// Text or texts to check.
   final ModerationInput input;
+
+  /// Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset.
   final String? model;
 
   const ModerationRequest({required this.input, this.model});
@@ -1681,9 +2513,15 @@ class ModerationRequest {
           model == other.model;
 }
 
+/// Response from the moderation endpoint.
 class ModerationResponse {
+  /// Unique identifier for this moderation request.
   final String id;
+
+  /// Model used for classification.
   final String model;
+
+  /// Results for each input string.
   final List<ModerationResult> results;
 
   const ModerationResponse({
@@ -1705,9 +2543,15 @@ class ModerationResponse {
           results == other.results;
 }
 
+/// A single moderation classification result.
 class ModerationResult {
+  /// True if any category was flagged.
   final bool flagged;
+
+  /// Boolean flags for each moderation category.
   final ModerationCategories categories;
+
+  /// Confidence scores for each category.
   final ModerationCategoryScores categoryScores;
 
   const ModerationResult({
@@ -1734,15 +2578,28 @@ class ModerationResult {
 sealed class OcrDocument with _$OcrDocument {
   const OcrDocument._();
 
-  const factory OcrDocument.url({required String url}) = OcrDocument_Url;
+  /// A publicly accessible document URL.
+  const factory OcrDocument.url({
+    /// The document URL (HTTP/HTTPS).
+    required String url,
+  }) = OcrDocument_Url;
+
+  /// Inline base64-encoded document data.
   const factory OcrDocument.base64({
+    /// Base64-encoded document content.
     required String data,
+
+    /// MIME type (e.g. `"application/pdf"`, `"image/png"`, `"image/jpeg"`).
     required String mediaType,
   }) = OcrDocument_Base64;
 }
 
+/// An image extracted from an OCR page.
 class OcrImage {
+  /// Unique image identifier within the document.
   final String id;
+
+  /// Base64-encoded image data (if `include_image_base64` was true).
   final String? imageBase64;
 
   const OcrImage({required this.id, this.imageBase64});
@@ -1759,10 +2616,18 @@ class OcrImage {
           imageBase64 == other.imageBase64;
 }
 
+/// A single page of OCR output.
 class OcrPage {
+  /// Page index (0-based).
   final PlatformInt64 index;
+
+  /// Extracted page content as Markdown.
   final String markdown;
+
+  /// Embedded images extracted from the page (if `include_image_base64` was true).
   final List<OcrImage>? images;
+
+  /// Page dimensions in pixels, if available.
   final PageDimensions? dimensions;
 
   const OcrPage({
@@ -1790,10 +2655,18 @@ class OcrPage {
           dimensions == other.dimensions;
 }
 
+/// An OCR request.
 class OcrRequest {
+  /// The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`).
   final String model;
+
+  /// The document to process (URL or base64).
   final OcrDocument document;
+
+  /// Specific pages to process (1-indexed). `None` means all pages.
   final Int64List? pages;
+
+  /// Whether to include base64-encoded images of each processed page.
   final bool? includeImageBase64;
 
   const OcrRequest({
@@ -1821,9 +2694,15 @@ class OcrRequest {
           includeImageBase64 == other.includeImageBase64;
 }
 
+/// An OCR response.
 class OcrResponse {
+  /// Extracted pages in order.
   final List<OcrPage> pages;
+
+  /// Model/provider used for OCR.
   final String model;
+
+  /// Token usage, if reported by the provider.
   final Usage? usage;
 
   const OcrResponse({required this.pages, required this.model, this.usage});
@@ -1841,8 +2720,12 @@ class OcrResponse {
           usage == other.usage;
 }
 
+/// Page dimensions in pixels.
 class PageDimensions {
+  /// Width in pixels.
   final PlatformInt64 width;
+
+  /// Height in pixels.
   final PlatformInt64 height;
 
   const PageDimensions({required this.width, required this.height});
@@ -1859,8 +2742,17 @@ class PageDimensions {
           height == other.height;
 }
 
+/// Breakdown of tokens used in the prompt portion of a request.
+///
+/// `cached_tokens` is included in `Usage::prompt_tokens` — it is *not* an
+/// additional charge on top of the prompt token count. When pricing supports
+/// a `cache_read_input_token_cost`, the cached portion is billed at the
+/// discounted rate and the remainder at the regular input rate.
 class PromptTokensDetails {
+  /// Cached tokens present in the prompt. Defaults to 0 when absent.
   final PlatformInt64 cachedTokens;
+
+  /// Audio input tokens present in the prompt. Defaults to 0 when absent.
   final PlatformInt64 audioTokens;
 
   const PromptTokensDetails({
@@ -1880,23 +2772,124 @@ class PromptTokensDetails {
           audioTokens == other.audioTokens;
 }
 
+/// Static configuration for a single provider entry in providers.json.
+class ProviderConfig {
+  /// Provider identifier (matches the entry key in providers.json).
+  final String name;
+
+  /// Human-readable provider name shown in UIs.
+  final String? displayName;
+
+  /// Base URL used as the default for this provider's HTTP client.
+  final String? baseUrl;
+
+  /// Authentication scheme metadata (auth type + env var holding the key).
+  final AuthConfig? auth;
+
+  /// Supported endpoint kinds (e.g. `chat`, `embeddings`).
+  final List<String>? endpoints;
+
+  /// Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`).
+  final List<String>? modelPrefixes;
+
+  /// Parameter key renaming for this provider.
+  ///
+  /// Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`)
+  /// to the name this provider expects (e.g. `"max_tokens"`).  Applied
+  /// automatically by [`ConfigDrivenProvider::transform_request`].
+  final Map<String, String>? paramMappings;
+
+  const ProviderConfig({
+    required this.name,
+    this.displayName,
+    this.baseUrl,
+    this.auth,
+    this.endpoints,
+    this.modelPrefixes,
+    this.paramMappings,
+  });
+
+  @override
+  int get hashCode =>
+      name.hashCode ^
+      displayName.hashCode ^
+      baseUrl.hashCode ^
+      auth.hashCode ^
+      endpoints.hashCode ^
+      modelPrefixes.hashCode ^
+      paramMappings.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProviderConfig &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          displayName == other.displayName &&
+          baseUrl == other.baseUrl &&
+          auth == other.auth &&
+          endpoints == other.endpoints &&
+          modelPrefixes == other.modelPrefixes &&
+          paramMappings == other.paramMappings;
+}
+
+/// Configuration for per-model rate limits.
+class RateLimitConfig {
+  /// Maximum requests per window.  `None` means unlimited.
+  final PlatformInt64? rpm;
+
+  /// Maximum tokens per window.  `None` means unlimited.
+  final PlatformInt64? tpm;
+
+  /// Fixed window duration (defaults to 60 s).
+  final PlatformInt64 window;
+
+  const RateLimitConfig({this.rpm, this.tpm, required this.window});
+
+  @override
+  int get hashCode => rpm.hashCode ^ tpm.hashCode ^ window.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RateLimitConfig &&
+          runtimeType == other.runtimeType &&
+          rpm == other.rpm &&
+          tpm == other.tpm &&
+          window == other.window;
+}
+
+/// Controls how much reasoning effort the model should use.
 enum ReasoningEffort { low, medium, high }
 
 @freezed
 sealed class RerankDocument with _$RerankDocument {
   const RerankDocument._();
 
+  /// Plain text document content.
   const factory RerankDocument.text({required String field0}) =
       RerankDocument_Text;
+
+  /// Document with explicit text field (may include metadata).
   const factory RerankDocument.object({required String text}) =
       RerankDocument_Object;
 }
 
+/// Request to rerank documents by relevance to a query.
 class RerankRequest {
+  /// Model ID (e.g., `"cohere/rerank-english-v3.0"`).
   final String model;
+
+  /// The search query.
   final String query;
+
+  /// Documents to rerank.
   final List<RerankDocument> documents;
+
+  /// Return only the top N results. Optional.
   final PlatformInt64? topN;
+
+  /// Include the document content in results. Defaults to false.
   final bool? returnDocuments;
 
   const RerankRequest({
@@ -1927,9 +2920,15 @@ class RerankRequest {
           returnDocuments == other.returnDocuments;
 }
 
+/// Response from the rerank endpoint.
 class RerankResponse {
+  /// Unique identifier for this rerank request.
   final String? id;
+
+  /// Reranked documents in order of relevance.
   final List<RerankResult> results;
+
+  /// Optional metadata about the reranking operation.
   final String? meta;
 
   const RerankResponse({this.id, required this.results, this.meta});
@@ -1947,9 +2946,15 @@ class RerankResponse {
           meta == other.meta;
 }
 
+/// A single reranked document with its relevance score.
 class RerankResult {
+  /// Original document index in the input list.
   final PlatformInt64 index;
+
+  /// Relevance score in `[0, 1]`. Higher indicates more relevant.
   final double relevanceScore;
+
+  /// Original document content (if `return_documents` was true).
   final RerankResultDocument? document;
 
   const RerankResult({
@@ -1972,7 +2977,9 @@ class RerankResult {
           document == other.document;
 }
 
+/// The text content of a reranked document, returned when `return_documents` is true.
 class RerankResultDocument {
+  /// Document text.
   final String text;
 
   const RerankResultDocument({required this.text});
@@ -1992,21 +2999,42 @@ class RerankResultDocument {
 sealed class ResponseFormat with _$ResponseFormat {
   const ResponseFormat._();
 
+  /// Plain text output (default).
   const factory ResponseFormat.text() = ResponseFormat_Text;
+
+  /// Output must be valid JSON object (no schema validation).
   const factory ResponseFormat.jsonObject() = ResponseFormat_JsonObject;
+
+  /// Output must conform to the specified JSON schema.
   const factory ResponseFormat.jsonSchema({
     required JsonSchemaFormat jsonSchema,
   }) = ResponseFormat_JsonSchema;
 }
 
+/// Response from a structured response request.
 class ResponseObject {
+  /// Unique response ID.
   final String id;
+
+  /// Object type (e.g., `"response"`).
   final String object;
+
+  /// Unix timestamp of response creation.
   final PlatformInt64 createdAt;
+
+  /// Model used to generate the response.
   final String model;
+
+  /// Status (e.g., `"succeeded"`, `"failed"`).
   final String status;
+
+  /// Output items from the response.
   final List<ResponseOutputItem> output;
+
+  /// Token usage.
   final ResponseUsage? usage;
+
+  /// Error details (if status is "failed").
   final String? error;
 
   const ResponseObject({
@@ -2046,8 +3074,12 @@ class ResponseObject {
           error == other.error;
 }
 
+/// A single output item from the response.
 class ResponseOutputItem {
+  /// Output type (e.g., `"text"`, `"object"`, `"error"`).
   final String itemType;
+
+  /// Output content (flattened into the object).
   final String content;
 
   const ResponseOutputItem({required this.itemType, required this.content});
@@ -2064,8 +3096,12 @@ class ResponseOutputItem {
           content == other.content;
 }
 
+/// A tool available for the response request.
 class ResponseTool {
+  /// Tool type (e.g., "extractor", "search").
   final String toolType;
+
+  /// Tool configuration (flattened into the object).
   final String config;
 
   const ResponseTool({required this.toolType, required this.config});
@@ -2082,9 +3118,15 @@ class ResponseTool {
           config == other.config;
 }
 
+/// Token usage for a response.
 class ResponseUsage {
+  /// Input tokens used.
   final PlatformInt64 inputTokens;
+
+  /// Output tokens used.
   final PlatformInt64 outputTokens;
+
+  /// Total tokens used.
   final PlatformInt64 totalTokens;
 
   const ResponseUsage({
@@ -2107,11 +3149,21 @@ class ResponseUsage {
           totalTokens == other.totalTokens;
 }
 
+/// A search request.
 class SearchRequest {
+  /// The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`).
   final String model;
+
+  /// The search query string.
   final String query;
+
+  /// Maximum number of results to return.
   final PlatformInt64? maxResults;
+
+  /// Domain filter — restrict results to specific domains.
   final List<String>? searchDomainFilter;
+
+  /// Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`).
   final String? country;
 
   const SearchRequest({
@@ -2142,8 +3194,12 @@ class SearchRequest {
           country == other.country;
 }
 
+/// A search response.
 class SearchResponse {
+  /// List of search results.
   final List<SearchResult> results;
+
+  /// Model/provider that performed the search.
   final String model;
 
   const SearchResponse({required this.results, required this.model});
@@ -2160,10 +3216,18 @@ class SearchResponse {
           model == other.model;
 }
 
+/// An individual search result.
 class SearchResult {
+  /// Result title.
   final String title;
+
+  /// Result URL.
   final String url;
+
+  /// Text snippet or excerpt from the page.
   final String snippet;
+
+  /// Publication or last-updated date, if available.
   final String? date;
 
   const SearchResult({
@@ -2188,7 +3252,9 @@ class SearchResult {
           date == other.date;
 }
 
+/// Name of the specific function to invoke.
 class SpecificFunction {
+  /// Function name.
   final String name;
 
   const SpecificFunction({required this.name});
@@ -2204,8 +3270,12 @@ class SpecificFunction {
           name == other.name;
 }
 
+/// Directive to call a specific tool.
 class SpecificToolChoice {
+  /// Tool type (always "function").
   final ToolType choiceType;
+
+  /// The specific function to invoke.
   final SpecificFunction function;
 
   const SpecificToolChoice({required this.choiceType, required this.function});
@@ -2226,15 +3296,24 @@ class SpecificToolChoice {
 sealed class StopSequence with _$StopSequence {
   const StopSequence._();
 
+  /// Single stop sequence.
   const factory StopSequence.single({required String field0}) =
       StopSequence_Single;
+
+  /// Multiple stop sequences.
   const factory StopSequence.multiple({required List<String> field0}) =
       StopSequence_Multiple;
 }
 
+/// A streaming choice with incremental delta.
 class StreamChoice {
+  /// Index of this choice in the choices array.
   final PlatformInt64 index;
+
+  /// Incremental update to the message (content, tool calls, etc.).
   final StreamDelta delta;
+
+  /// Why the stream ended (present only in final chunk).
   final FinishReason? finishReason;
 
   const StreamChoice({
@@ -2256,11 +3335,21 @@ class StreamChoice {
           finishReason == other.finishReason;
 }
 
+/// Incremental delta in a stream chunk.
 class StreamDelta {
+  /// Role (typically present only in the first chunk).
   final String? role;
+
+  /// Partial content chunk (e.g., a few words of the response).
   final String? content;
+
+  /// Partial tool calls being streamed.
   final List<StreamToolCall>? toolCalls;
+
+  /// Deprecated legacy function_call delta; retained for API compatibility.
   final StreamFunctionCall? functionCall;
+
+  /// Partial refusal message.
   final String? refusal;
 
   const StreamDelta({
@@ -2291,8 +3380,12 @@ class StreamDelta {
           refusal == other.refusal;
 }
 
+/// Partial function call details in a stream.
 class StreamFunctionCall {
+  /// Function name (typically in the first chunk).
   final String? name;
+
+  /// Partial JSON arguments chunk.
   final String? arguments;
 
   const StreamFunctionCall({this.name, this.arguments});
@@ -2309,7 +3402,9 @@ class StreamFunctionCall {
           arguments == other.arguments;
 }
 
+/// Options for streaming responses.
 class StreamOptions {
+  /// If true, include token usage in the final stream chunk.
   final bool? includeUsage;
 
   const StreamOptions({this.includeUsage});
@@ -2325,10 +3420,18 @@ class StreamOptions {
           includeUsage == other.includeUsage;
 }
 
+/// A streaming tool call being built incrementally.
 class StreamToolCall {
+  /// Index of this tool call in the tool_calls array.
   final PlatformInt64 index;
+
+  /// Tool call ID (typically in the first chunk for this call).
   final String? id;
+
+  /// Tool type (typically "function").
   final ToolType? callType;
+
+  /// Partial function name and arguments.
   final StreamFunctionCall? function;
 
   const StreamToolCall({
@@ -2353,8 +3456,12 @@ class StreamToolCall {
           function == other.function;
 }
 
+/// System message guiding model behavior for the entire conversation.
 class SystemMessage {
+  /// Instructions or context that apply throughout the conversation.
   final String content;
+
+  /// Optional name for the system message source.
   final String? name;
 
   const SystemMessage({required this.content, this.name});
@@ -2371,9 +3478,15 @@ class SystemMessage {
           name == other.name;
 }
 
+/// A tool call the model wants to execute.
 class ToolCall {
+  /// Unique ID for this call, used to reference in tool result messages.
   final String id;
+
+  /// Tool type (always "function").
   final ToolType callType;
+
+  /// Function name and arguments.
   final FunctionCall function;
 
   const ToolCall({
@@ -2399,17 +3512,36 @@ class ToolCall {
 sealed class ToolChoice with _$ToolChoice {
   const ToolChoice._();
 
+  /// Predefined mode: auto, required, or none.
   const factory ToolChoice.mode({required ToolChoiceMode field0}) =
       ToolChoice_Mode;
+
+  /// Force a specific tool to be called.
   const factory ToolChoice.specific({required SpecificToolChoice field0}) =
       ToolChoice_Specific;
 }
 
-enum ToolChoiceMode { auto, required_, none }
+/// Tool choice mode.
+enum ToolChoiceMode {
+  /// Model may or may not call tools; default behavior.
+  auto,
 
+  /// Model must call at least one tool.
+  required_,
+
+  /// Model must not call any tools.
+  none,
+}
+
+/// Tool execution result returned to the model.
 class ToolMessage {
+  /// Result of the tool execution.
   final String content;
+
+  /// ID of the tool call this result responds to.
   final String toolCallId;
+
+  /// Optional tool/function name.
   final String? name;
 
   const ToolMessage({
@@ -2431,12 +3563,25 @@ class ToolMessage {
           name == other.name;
 }
 
+/// The type discriminator for tool/tool-call objects.
+///
+/// Per the OpenAI spec this is always `"function"`. Using an enum enforces
+/// that constraint at the type level and rejects any other value on
+/// deserialization.
 enum ToolType { function }
 
+/// Response from a transcription request.
 class TranscriptionResponse {
+  /// The transcribed text.
   final String text;
+
+  /// Detected language (ISO-639-1 code).
   final String? language;
+
+  /// Total audio duration in seconds.
   final double? duration;
+
+  /// Detailed segment-level transcription (if response_format is "verbose_json").
   final List<TranscriptionSegment>? segments;
 
   const TranscriptionResponse({
@@ -2461,10 +3606,18 @@ class TranscriptionResponse {
           segments == other.segments;
 }
 
+/// A segment of transcribed audio with timing information.
 class TranscriptionSegment {
+  /// Segment index (0-based).
   final PlatformInt64 id;
+
+  /// Start time in seconds.
   final double start;
+
+  /// End time in seconds.
   final double end;
+
+  /// Transcribed text for this segment.
   final String text;
 
   const TranscriptionSegment({
@@ -2489,10 +3642,20 @@ class TranscriptionSegment {
           text == other.text;
 }
 
+/// Token-usage accounting returned by the provider on each completion / embedding call.
 class Usage {
+  /// Prompt tokens used. Defaults to 0 when absent (some providers omit this).
   final PlatformInt64 promptTokens;
+
+  /// Completion tokens used. Defaults to 0 when absent (e.g. embedding responses).
   final PlatformInt64 completionTokens;
+
+  /// Total tokens used. Defaults to 0 when absent (some providers omit this).
   final PlatformInt64 totalTokens;
+
+  /// Breakdown of tokens used in the prompt, including cached tokens served
+  /// at the provider's discounted cache-read rate. Absent when the provider
+  /// does not return prompt-token details.
   final PromptTokensDetails? promptTokensDetails;
 
   const Usage({
@@ -2524,13 +3687,20 @@ class Usage {
 sealed class UserContent with _$UserContent {
   const UserContent._();
 
+  /// Plain text content.
   const factory UserContent.text({required String field0}) = UserContent_Text;
+
+  /// Array of content parts (text, images, documents, audio).
   const factory UserContent.parts({required List<ContentPart> field0}) =
       UserContent_Parts;
 }
 
+/// User message in the conversation.
 class UserMessage {
+  /// Message content as plain text or array of content parts (text, images, documents, audio).
   final UserContent content;
+
+  /// Optional name for the user.
   final String? name;
 
   const UserMessage({required this.content, this.name});

@@ -4,7 +4,7 @@ description: "Run LLMs locally with Ollama, LM Studio, vLLM, and llamafile — n
 
 # Local LLMs
 
-liter-llm routes to any local inference engine that exposes an OpenAI-compatible API. Run models on your own hardware with zero cloud dependencies and no API key.
+Liter-llm routes to any local inference engine that exposes an OpenAI-compatible API. Run models on your own hardware with zero cloud dependencies and no API key.
 
 ## Supported Providers
 
@@ -55,12 +55,12 @@ ollama pull qwen2:0.5b
 
     --8<-- "snippets/go/usage/local_llm.md"
 
-!!! tip "No API key required"
+!!! Tip "No API key required"
 Local providers do not require an API key. Pass an empty string (`""`) as the `api_key` parameter.
 
 ## Model Naming Convention
 
-liter-llm uses the standard `provider/model-name` prefix convention for local providers, just like cloud providers:
+Liter-llm uses the standard `provider/model-name` prefix convention for local providers, just like cloud providers:
 
 ```text
 ollama/llama3.2          -> Ollama running Llama 3.2
@@ -142,7 +142,7 @@ base_url = "http://localhost:11434/v1"
 model_prefixes = ["ollama/"]
 ```
 
-!!! note "Ollama model names"
+!!! Note "Ollama model names"
 Ollama uses its own model naming (e.g., `llama3.2`, `qwen2:0.5b`, `codellama:13b`). Use `ollama list` to see installed models.
 
 ### LM Studio
@@ -159,7 +159,7 @@ base_url = "http://localhost:1234/v1"
 model_prefixes = ["lm_studio/", "lmstudio/"]
 ```
 
-### vLLM
+### VLLM
 
 Start vLLM with the OpenAI-compatible server:
 
@@ -179,7 +179,7 @@ base_url = "http://localhost:8000/v1"
 model_prefixes = ["vllm/"]
 ```
 
-### llama.cpp
+### Llama.cpp
 
 Start the llama.cpp server:
 
@@ -213,7 +213,7 @@ base_url = "http://localhost:8080/v1"
 model_prefixes = ["localai/"]
 ```
 
-### llamafile
+### Llamafile
 
 Download and run a llamafile:
 
@@ -346,7 +346,7 @@ curl http://localhost:11434/v1/models
 lsof -i :11434
 ```
 
-!!! tip
+!!! Tip
 Make sure the server is started **before** making requests. Ollama starts automatically on macOS but may need `ollama serve` on Linux.
 
 ### Model Not Found

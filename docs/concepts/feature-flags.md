@@ -4,7 +4,7 @@ description: "Cargo feature flags for liter-llm , covering what each flag enable
 
 # Feature Flags
 
-liter-llm uses Cargo feature flags to keep the default binary small and avoid pulling in dependencies that are unused in most deployments. The default build includes only the native HTTP stack.
+Liter-llm uses Cargo feature flags to keep the default binary small and avoid pulling in dependencies that are unused in most deployments. The default build includes only the native HTTP stack.
 
 ## Reference
 

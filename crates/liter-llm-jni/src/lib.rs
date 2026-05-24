@@ -12,12 +12,13 @@
 #![allow(dead_code)]
 #![allow(clippy::let_unit_value)]
 #![allow(clippy::unused_unit)]
+#![allow(clippy::let_and_return)]
 
 use futures_util::StreamExt;
 use futures_util::stream::BoxStream;
-use jni::JNIEnv;
 use jni::objects::{JClass, JObject, JString};
 use jni::sys::{jboolean, jbyteArray, jlong, jstring};
+use jni::{AttachGuard, Env, EnvUnowned};
 use std::sync::Mutex;
 use std::sync::OnceLock;
 use tokio::runtime::Runtime;
@@ -32,28 +33,49 @@ fn runtime() -> &'static Runtime {
     RT.get_or_init(|| Runtime::new().expect("create tokio runtime"))
 }
 
-fn jstring_to_string(env: &mut JNIEnv, s: JString) -> std::result::Result<String, jni::errors::Error> {
-    let jstr = env.get_string(&s)?;
-    Ok(jstr.into())
+fn jstring_to_string(env: &mut Env<'_>, s: JString) -> std::result::Result<String, jni::errors::Error> {
+    s.try_to_string(env)
 }
 
-fn string_to_jstring(env: &mut JNIEnv, s: &str) -> jstring {
+fn string_to_jstring(env: &mut Env<'_>, s: &str) -> jstring {
     match env.new_string(s) {
         Ok(o) => o.into_raw(),
         Err(_) => std::ptr::null_mut(),
     }
 }
 
-fn throw_jni_error(env: &mut JNIEnv, msg: &str) {
+fn jni_call_string_method(
+    env: &mut Env<'_>,
+    obj: JObject,
+    method_name: &str,
+    method_sig: &str,
+) -> std::result::Result<String, jni::errors::Error> {
+    use std::str::FromStr;
+    let class = env.get_object_class(&obj)?;
+    let name_jni = jni::strings::JNIString::from(method_name);
+    let sig_runtime = jni::signature::RuntimeMethodSignature::from_str(method_sig)?;
+    let sig = sig_runtime.method_signature();
+    let method_id = env.get_method_id(&class, name_jni, sig)?;
+    // SAFETY: method_id is valid from the preceding get_method_id call, and the method exists on the class.
+    let result = unsafe { env.call_method_unchecked(&obj, method_id, jni::signature::ReturnType::Object, &[])? }.l()?;
+    // SAFETY: JNI return type guaranteed a String, so the raw jstring pointer is valid.
+    let jstring = unsafe { JString::from_raw(env, result.into_raw()) };
+    jstring_to_string(env, jstring)
+}
+
+fn throw_jni_error(env: &mut Env<'_>, msg: &str) {
     // If the error class cannot be found (misconfigured AAR), fall back to a
     // generic RuntimeException so the caller always gets *some* exception rather
     // than a silent null/zero return that looks like a valid result.
-    if env.throw_new(ERROR_CLASS, msg).is_err() {
-        let _ = env.throw_new("java/lang/RuntimeException", msg);
+    let class_jni = jni::strings::JNIString::from(ERROR_CLASS);
+    let msg_jni = jni::strings::JNIString::from(msg);
+    if env.throw_new(&class_jni, &msg_jni).is_err() {
+        let fallback = jni::strings::JNIString::from("java/lang/RuntimeException");
+        let _ = env.throw_new(&fallback, &msg_jni);
     }
 }
 
-fn run_or_throw<T, F>(env: &mut JNIEnv, f: F) -> Option<T>
+fn run_or_throw<T, F>(env: &mut Env<'_>, f: F) -> Option<T>
 where
     F: FnOnce() -> T + std::panic::UnwindSafe,
 {
@@ -73,7 +95,7 @@ where
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeCreateClient(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     api_key: JString,
     base_url: JString,
@@ -81,37 +103,48 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
     max_retries: jni::sys::jint,
     model_hint: JString,
 ) -> jlong {
-    let api_key = match jstring_to_string(&mut env, api_key) {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
+    let api_key = match jstring_to_string(env, api_key) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return 0;
         }
     };
-    let base_url = match jstring_to_string(&mut env, base_url) {
+    let base_url = match jstring_to_string(env, base_url) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return 0;
         }
     };
-    let model_hint = match jstring_to_string(&mut env, model_hint) {
+    let model_hint = match jstring_to_string(env, model_hint) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return 0;
         }
     };
     let result = core_crate::create_client(
         api_key,
-        Some(base_url),
-        Some(timeout_secs as u64),
-        Some(max_retries as u32),
-        Some(model_hint),
+        if base_url.is_empty() { None } else { Some(base_url) },
+        if timeout_secs != 0 {
+            Some(timeout_secs as u64)
+        } else {
+            None
+        },
+        if max_retries != 0 {
+            Some(max_retries as u32)
+        } else {
+            None
+        },
+        if model_hint.is_empty() { None } else { Some(model_hint) },
     );
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             0
         }
         Ok(v) => Box::into_raw(Box::new(v)) as jlong,
@@ -120,21 +153,24 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeCreateClientFromJson(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     json: JString,
 ) -> jlong {
-    let json = match jstring_to_string(&mut env, json) {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
+    let json = match jstring_to_string(env, json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return 0;
         }
     };
     let result = core_crate::create_client_from_json(&json);
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             0
         }
         Ok(v) => Box::into_raw(Box::new(v)) as jlong,
@@ -142,220 +178,433 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
 }
 
 #[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeRegisterCustomProvider(
+    mut env: EnvUnowned,
+    _class: JClass,
+    config: JString,
+) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
+    let config_str = match jstring_to_string(env, config) {
+        Ok(s) => s,
+        Err(e) => {
+            throw_jni_error(env, &format!("{e}"));
+            return std::ptr::null_mut();
+        }
+    };
+    let config: core_crate::CustomProviderConfig = match serde_json::from_str(&config_str) {
+        Ok(v) => v,
+        Err(e) => {
+            throw_jni_error(env, &format!("deserialize: {e}"));
+            return std::ptr::null_mut();
+        }
+    };
+    let result = core_crate::register_custom_provider(config);
+    match result {
+        Err(e) => {
+            throw_jni_error(env, &format!("{e}"));
+            std::ptr::null_mut()
+        }
+        Ok(v) => string_to_jstring(env, "null"),
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeUnregisterCustomProvider(
+    mut env: EnvUnowned,
+    _class: JClass,
+    name: JString,
+) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
+    let name = match jstring_to_string(env, name) {
+        Ok(s) => s,
+        Err(e) => {
+            throw_jni_error(env, &format!("{e}"));
+            return std::ptr::null_mut();
+        }
+    };
+    let result = core_crate::unregister_custom_provider(&name);
+    match result {
+        Err(e) => {
+            throw_jni_error(env, &format!("{e}"));
+            std::ptr::null_mut()
+        }
+        Ok(v) => {
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
+            string_to_jstring(env, &s)
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeAllProviders(
+    mut env: EnvUnowned,
+    _class: JClass,
+) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
+    let result = core_crate::all_providers();
+    match result {
+        Err(e) => {
+            throw_jni_error(env, &format!("{e}"));
+            std::ptr::null_mut()
+        }
+        Ok(v) => {
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
+            string_to_jstring(env, &s)
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeComplexProviderNames(
+    mut env: EnvUnowned,
+    _class: JClass,
+) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
+    let result = core_crate::complex_provider_names();
+    match result {
+        Err(e) => {
+            throw_jni_error(env, &format!("{e}"));
+            std::ptr::null_mut()
+        }
+        Ok(v) => {
+            let s = match serde_json::to_string(&v) {
+                Ok(s) => s,
+                Err(e) => {
+                    throw_jni_error(env, &format!("serialize: {e}"));
+                    return std::ptr::null_mut();
+                }
+            };
+            string_to_jstring(env, &s)
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeCompletionCost(
+    mut env: EnvUnowned,
+    _class: JClass,
+    model: JString,
+    prompt_tokens: jlong,
+    completion_tokens: jlong,
+) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
+    let model = match jstring_to_string(env, model) {
+        Ok(s) => s,
+        Err(e) => {
+            throw_jni_error(env, &format!("{e}"));
+            return std::ptr::null_mut();
+        }
+    };
+    let v = core_crate::completion_cost(&model, prompt_tokens as u64, completion_tokens as u64);
+    let s = match serde_json::to_string(&v) {
+        Ok(s) => s,
+        Err(e) => {
+            throw_jni_error(env, &format!("serialize: {e}"));
+            return std::ptr::null_mut();
+        }
+    };
+    string_to_jstring(env, &s)
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeCompletionCostWithCache(
+    mut env: EnvUnowned,
+    _class: JClass,
+    model: JString,
+    prompt_tokens: jlong,
+    cached_tokens: jlong,
+    completion_tokens: jlong,
+) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
+    let model = match jstring_to_string(env, model) {
+        Ok(s) => s,
+        Err(e) => {
+            throw_jni_error(env, &format!("{e}"));
+            return std::ptr::null_mut();
+        }
+    };
+    let v = core_crate::completion_cost_with_cache(
+        &model,
+        prompt_tokens as u64,
+        cached_tokens as u64,
+        completion_tokens as u64,
+    );
+    let s = match serde_json::to_string(&v) {
+        Ok(s) => s,
+        Err(e) => {
+            throw_jni_error(env, &format!("serialize: {e}"));
+            return std::ptr::null_mut();
+        }
+    };
+    string_to_jstring(env, &s)
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeEnsureCryptoProvider(
+    mut env: EnvUnowned,
+    _class: JClass,
+) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
+    let v = core_crate::ensure_crypto_provider();
+    string_to_jstring(env, "null")
+}
+
+#[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientChat(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
     let req: core_crate::ChatCompletionRequest = match serde_json::from_str(&req_str) {
         Ok(v) => v,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("request deserialize: {e}"));
+            throw_jni_error(env, &format!("request deserialize: {e}"));
             return std::ptr::null_mut();
         }
     };
     let Some(result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(client.chat(req))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientEmbed(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
     let req: core_crate::EmbeddingRequest = match serde_json::from_str(&req_str) {
         Ok(v) => v,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("request deserialize: {e}"));
+            throw_jni_error(env, &format!("request deserialize: {e}"));
             return std::ptr::null_mut();
         }
     };
     let Some(result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(client.embed(req))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientListModels(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
     let Some(result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(client.list_models())),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientImageGenerate(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
     let req: core_crate::CreateImageRequest = match serde_json::from_str(&req_str) {
         Ok(v) => v,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("request deserialize: {e}"));
+            throw_jni_error(env, &format!("request deserialize: {e}"));
             return std::ptr::null_mut();
         }
     };
     let Some(result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(client.image_generate(req))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientSpeech(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jbyteArray {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
     let req: core_crate::CreateSpeechRequest = match serde_json::from_str(&req_str) {
         Ok(v) => v,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("request deserialize: {e}"));
+            throw_jni_error(env, &format!("request deserialize: {e}"));
             return std::ptr::null_mut();
         }
     };
     let Some(result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(client.speech(req))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => match env.byte_array_from_slice(v.as_ref()) {
@@ -370,313 +619,334 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientTranscribe(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
     let req: core_crate::CreateTranscriptionRequest = match serde_json::from_str(&req_str) {
         Ok(v) => v,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("request deserialize: {e}"));
+            throw_jni_error(env, &format!("request deserialize: {e}"));
             return std::ptr::null_mut();
         }
     };
     let Some(result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(client.transcribe(req))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientModerate(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
     let req: core_crate::ModerationRequest = match serde_json::from_str(&req_str) {
         Ok(v) => v,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("request deserialize: {e}"));
+            throw_jni_error(env, &format!("request deserialize: {e}"));
             return std::ptr::null_mut();
         }
     };
     let Some(result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(client.moderate(req))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientRerank(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
     let req: core_crate::RerankRequest = match serde_json::from_str(&req_str) {
         Ok(v) => v,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("request deserialize: {e}"));
+            throw_jni_error(env, &format!("request deserialize: {e}"));
             return std::ptr::null_mut();
         }
     };
     let Some(result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(client.rerank(req))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientSearch(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
     let req: core_crate::SearchRequest = match serde_json::from_str(&req_str) {
         Ok(v) => v,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("request deserialize: {e}"));
+            throw_jni_error(env, &format!("request deserialize: {e}"));
             return std::ptr::null_mut();
         }
     };
     let Some(result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(client.search(req))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientOcr(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
     let req: core_crate::OcrRequest = match serde_json::from_str(&req_str) {
         Ok(v) => v,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("request deserialize: {e}"));
+            throw_jni_error(env, &format!("request deserialize: {e}"));
             return std::ptr::null_mut();
         }
     };
     let Some(result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(client.ocr(req))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientCreateFile(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
     let req: core_crate::CreateFileRequest = match serde_json::from_str(&req_str) {
         Ok(v) => v,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("request deserialize: {e}"));
+            throw_jni_error(env, &format!("request deserialize: {e}"));
             return std::ptr::null_mut();
         }
     };
     let Some(result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(client.create_file(req))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientRetrieveFile(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
@@ -685,44 +955,47 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         Err(_) => req_str,
     };
     let Some(result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(client.retrieve_file(&file_id))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientDeleteFile(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
@@ -731,93 +1004,103 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         Err(_) => req_str,
     };
     let Some(result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(client.delete_file(&file_id))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientListFiles(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
-    let query: core_crate::FileListQuery = match serde_json::from_str(&req_str) {
-        Ok(v) => v,
-        Err(e) => {
-            throw_jni_error(&mut env, &format!("request deserialize: {e}"));
-            return std::ptr::null_mut();
+    let query: Option<core_crate::FileListQuery> = if req_str.is_empty() {
+        None
+    } else {
+        match serde_json::from_str(&req_str) {
+            Ok(v) => Some(v),
+            Err(e) => {
+                throw_jni_error(env, &format!("request deserialize: {e}"));
+                return std::ptr::null_mut();
+            }
         }
     };
     let Some(result) = run_or_throw(
-        &mut env,
-        std::panic::AssertUnwindSafe(|| runtime().block_on(client.list_files(Some(query)))),
+        env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.list_files(query))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientFileContent(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jbyteArray {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
@@ -826,14 +1109,14 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         Err(_) => req_str,
     };
     let Some(result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(client.file_content(&file_id))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => match env.byte_array_from_slice(v.as_ref()) {
@@ -848,68 +1131,74 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientCreateBatch(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
     let req: core_crate::CreateBatchRequest = match serde_json::from_str(&req_str) {
         Ok(v) => v,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("request deserialize: {e}"));
+            throw_jni_error(env, &format!("request deserialize: {e}"));
             return std::ptr::null_mut();
         }
     };
     let Some(result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(client.create_batch(req))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientRetrieveBatch(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
@@ -918,93 +1207,103 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         Err(_) => req_str,
     };
     let Some(result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(client.retrieve_batch(&batch_id))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientListBatches(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
-    let query: core_crate::BatchListQuery = match serde_json::from_str(&req_str) {
-        Ok(v) => v,
-        Err(e) => {
-            throw_jni_error(&mut env, &format!("request deserialize: {e}"));
-            return std::ptr::null_mut();
+    let query: Option<core_crate::BatchListQuery> = if req_str.is_empty() {
+        None
+    } else {
+        match serde_json::from_str(&req_str) {
+            Ok(v) => Some(v),
+            Err(e) => {
+                throw_jni_error(env, &format!("request deserialize: {e}"));
+                return std::ptr::null_mut();
+            }
         }
     };
     let Some(result) = run_or_throw(
-        &mut env,
-        std::panic::AssertUnwindSafe(|| runtime().block_on(client.list_batches(Some(query)))),
+        env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.list_batches(query))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientCancelBatch(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
@@ -1013,173 +1312,182 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         Err(_) => req_str,
     };
     let Some(result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(client.cancel_batch(&batch_id))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientCreateResponse(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
     let req: core_crate::CreateResponseRequest = match serde_json::from_str(&req_str) {
         Ok(v) => v,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("request deserialize: {e}"));
+            throw_jni_error(env, &format!("request deserialize: {e}"));
             return std::ptr::null_mut();
         }
     };
     let Some(result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(client.create_response(req))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientRetrieveResponse(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
-    let id: String = match serde_json::from_str(&req_str) {
+    let response_id: String = match serde_json::from_str(&req_str) {
         Ok(s) => s,
         Err(_) => req_str,
     };
     let Some(result) = run_or_throw(
-        &mut env,
-        std::panic::AssertUnwindSafe(|| runtime().block_on(client.retrieve_response(&id))),
+        env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.retrieve_response(&response_id))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientCancelResponse(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     handle: jlong,
     request_json: JString,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: handle was allocated by the matching constructor shim and remains
     // valid until nativeFree is called. The Kotlin AutoCloseable.close() guarantee
     // ensures the handle outlives this call.
     let client: &core_crate::DefaultClient = unsafe { &*(handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return std::ptr::null_mut();
         }
     };
-    let id: String = match serde_json::from_str(&req_str) {
+    let response_id: String = match serde_json::from_str(&req_str) {
         Ok(s) => s,
         Err(_) => req_str,
     };
     let Some(result) = run_or_throw(
-        &mut env,
-        std::panic::AssertUnwindSafe(|| runtime().block_on(client.cancel_response(&id))),
+        env,
+        std::panic::AssertUnwindSafe(|| runtime().block_on(client.cancel_response(&response_id))),
     ) else {
         return std::ptr::null_mut();
     };
     match result {
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Ok(v) => {
             let s = match serde_json::to_string(&v) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeFreeDefaultClient(
-    _env: JNIEnv,
+    _env: EnvUnowned,
     _class: JClass,
     handle: jlong,
 ) {
@@ -1204,29 +1512,32 @@ struct DefaultClientChatStreamStreamHandle {
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientChatStreamStart(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     client_handle: jlong,
     request_json: JString,
 ) -> jlong {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     // SAFETY: client_handle was produced by the matching constructor shim.
     let client: &core_crate::DefaultClient = unsafe { &*(client_handle as *const core_crate::DefaultClient) };
-    let req_str = match jstring_to_string(&mut env, request_json) {
+    let req_str = match jstring_to_string(env, request_json) {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return 0;
         }
     };
     let request: core_crate::ChatCompletionRequest = match serde_json::from_str(&req_str) {
         Ok(v) => v,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return 0;
         }
     };
     let Some(stream_result) = run_or_throw(
-        &mut env,
+        env,
         std::panic::AssertUnwindSafe(|| runtime().block_on(async { client.chat_stream(request).await })),
     ) else {
         return 0;
@@ -1234,7 +1545,7 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
     let stream = match stream_result {
         Ok(s) => s,
         Err(e) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             return 0;
         }
     };
@@ -1253,10 +1564,13 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientChatStreamNext(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     stream_handle: jlong,
 ) -> jstring {
+    // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
+    let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
+    let env = __jni_attach_guard.borrow_env_mut();
     if stream_handle == 0 {
         return std::ptr::null_mut();
     }
@@ -1269,31 +1583,31 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
     let Some(stream) = guard.as_mut() else {
         return std::ptr::null_mut();
     };
-    let Some(next) = run_or_throw(&mut env, std::panic::AssertUnwindSafe(|| h.rt.block_on(stream.next()))) else {
+    let Some(next) = run_or_throw(env, std::panic::AssertUnwindSafe(|| h.rt.block_on(stream.next()))) else {
         return std::ptr::null_mut();
     };
     match next {
         None => std::ptr::null_mut(),
         Some(Err(e)) => {
-            throw_jni_error(&mut env, &format!("{e}"));
+            throw_jni_error(env, &format!("{e}"));
             std::ptr::null_mut()
         }
         Some(Ok(chunk)) => {
             let s = match serde_json::to_string(&chunk) {
                 Ok(s) => s,
                 Err(e) => {
-                    throw_jni_error(&mut env, &format!("serialize: {e}"));
+                    throw_jni_error(env, &format!("serialize: {e}"));
                     return std::ptr::null_mut();
                 }
             };
-            string_to_jstring(&mut env, &s)
+            string_to_jstring(env, &s)
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientChatStreamFree(
-    _env: JNIEnv,
+    _env: EnvUnowned,
     _class: JClass,
     stream_handle: jlong,
 ) {

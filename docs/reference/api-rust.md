@@ -2,7 +2,7 @@
 title: "Rust API Reference"
 ---
 
-## Rust API Reference <span class="version-badge">v1.4.0-rc.27</span>
+## Rust API Reference <span class="version-badge">v1.4.0-rc.30</span>
 
 ### Functions
 
@@ -68,21 +68,272 @@ pub fn create_client_from_json(json: &str) -> Result<DefaultClient, Error>
 
 ---
 
+#### register_custom_provider()
+
+Register a custom provider in the global runtime registry.
+
+The provider will be checked **before** all built-in providers during model
+detection. If a provider with the same `name` already exists it is replaced.
+
+**Errors:**
+
+Returns an error if the config is invalid (empty name, empty base_url, or
+no model prefixes).
+
+**Signature:**
+
+```rust
+pub fn register_custom_provider(config: CustomProviderConfig) -> Result<(), Error>
+```
+
+**Parameters:**
+
+| Name     | Type                   | Required | Description               |
+| -------- | ---------------------- | -------- | ------------------------- |
+| `config` | `CustomProviderConfig` | Yes      | The configuration options |
+
+**Returns:** `()`
+**Errors:** Returns `Err(Error)`.
+
+---
+
+#### unregister_custom_provider()
+
+Remove a previously registered custom provider by name.
+
+Returns `true` if a provider with the given name was found and removed,
+`false` if no such provider existed.
+
+**Errors:**
+
+Returns an error only if the internal lock is poisoned.
+
+**Signature:**
+
+```rust
+pub fn unregister_custom_provider(name: &str) -> Result<bool, Error>
+```
+
+**Parameters:**
+
+| Name   | Type     | Required | Description |
+| ------ | -------- | -------- | ----------- |
+| `name` | `String` | Yes      | The name    |
+
+**Returns:** `bool`
+**Errors:** Returns `Err(Error)`.
+
+---
+
+#### all_providers()
+
+Return all provider configs from the registry.
+
+Useful for tooling, documentation generation, or runtime enumeration.
+
+**Signature:**
+
+```rust
+pub fn all_providers() -> Result<Vec<ProviderConfig>, Error>
+```
+
+**Returns:** `Vec<ProviderConfig>`
+**Errors:** Returns `Err(Error)`.
+
+---
+
+#### complex_provider_names()
+
+Return the set of complex provider names.
+
+Complex providers require custom auth/routing logic beyond simple bearer
+tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
+
+The returned reference points into the static registry — no allocation.
+
+**Signature:**
+
+```rust
+pub fn complex_provider_names() -> Result<Vec<String>, Error>
+```
+
+**Returns:** `Vec<String>`
+**Errors:** Returns `Err(Error)`.
+
+---
+
+#### completion_cost()
+
+Calculate the estimated cost of a completion given a model name and token
+counts.
+
+Returns `None` if the model is not present in the embedded pricing registry.
+Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
+
+When an exact model name match is not found, progressively shorter prefixes
+are tried by stripping from the last `-` or `.` separator. For example,
+`gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
+
+**Signature:**
+
+```rust
+pub fn completion_cost(model: &str, prompt_tokens: u64, completion_tokens: u64) -> Option<f64>
+```
+
+**Parameters:**
+
+| Name                | Type     | Required | Description           |
+| ------------------- | -------- | -------- | --------------------- |
+| `model`             | `String` | Yes      | The model             |
+| `prompt_tokens`     | `u64`    | Yes      | The prompt tokens     |
+| `completion_tokens` | `u64`    | Yes      | The completion tokens |
+
+**Returns:** `Option<f64>`
+
+---
+
+#### completion_cost_with_cache()
+
+Calculate the estimated cost of a completion, accounting for cached
+(cache-hit) prompt tokens billed at the provider's discounted rate.
+
+`cached_tokens` is the count of prompt tokens served from the provider's
+prompt cache. It must be `<= prompt_tokens` (cached tokens are a subset of
+the prompt). The non-cached portion is billed at `input_cost_per_token`
+and the cached portion at `cache_read_input_token_cost` when the model
+has cache pricing; otherwise the entire prompt is billed at the regular
+input rate.
+
+Returns `None` if the model is not present in the embedded pricing
+registry, mirroring `completion_cost`.
+
+**Signature:**
+
+```rust
+pub fn completion_cost_with_cache(model: &str, prompt_tokens: u64, cached_tokens: u64, completion_tokens: u64) -> Option<f64>
+```
+
+**Parameters:**
+
+| Name                | Type     | Required | Description           |
+| ------------------- | -------- | -------- | --------------------- |
+| `model`             | `String` | Yes      | The model             |
+| `prompt_tokens`     | `u64`    | Yes      | The prompt tokens     |
+| `cached_tokens`     | `u64`    | Yes      | The cached tokens     |
+| `completion_tokens` | `u64`    | Yes      | The completion tokens |
+
+**Returns:** `Option<f64>`
+
+---
+
+#### count_tokens()
+
+Count tokens in a text string using the tokenizer for the given model.
+
+The tokenizer is resolved from the model name prefix (e.g. `"gpt-4o"` maps
+to the `Xenova/gpt-4o` HuggingFace tokenizer). Tokenizers are cached after
+first load.
+
+**Errors:**
+
+Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
+(e.g. network failure on first use) or if tokenization itself fails.
+
+**Signature:**
+
+```rust
+pub fn count_tokens(model: &str, text: &str) -> Result<usize, Error>
+```
+
+**Parameters:**
+
+| Name    | Type     | Required | Description |
+| ------- | -------- | -------- | ----------- |
+| `model` | `String` | Yes      | The model   |
+| `text`  | `String` | Yes      | The text    |
+
+**Returns:** `usize`
+**Errors:** Returns `Err(Error)`.
+
+---
+
+#### count_request_tokens()
+
+Count tokens for a full `ChatCompletionRequest`.
+
+Sums tokens across all message text contents plus a per-message overhead
+of ~4 tokens (for role, separators, and formatting metadata). Tool
+definitions and multimodal content parts (images, audio, documents) are
+not counted — only textual content contributes to the token total.
+
+**Errors:**
+
+Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded or
+if tokenization fails for any message.
+
+**Signature:**
+
+```rust
+pub fn count_request_tokens(model: &str, req: ChatCompletionRequest) -> Result<usize, Error>
+```
+
+**Parameters:**
+
+| Name    | Type                    | Required | Description                 |
+| ------- | ----------------------- | -------- | --------------------------- |
+| `model` | `String`                | Yes      | The model                   |
+| `req`   | `ChatCompletionRequest` | Yes      | The chat completion request |
+
+**Returns:** `usize`
+**Errors:** Returns `Err(Error)`.
+
+---
+
+#### ensure_crypto_provider()
+
+Install the `ring` crypto provider as the rustls process default, idempotently.
+
+rustls 0.23+ removed the implicit default provider. This function installs
+`ring` once per process. Subsequent calls are no-ops. Calling it from a
+downstream Rust app that has already installed `aws-lc-rs` is safe — the
+`Err` from `install_default()` is silently ignored.
+
+Called automatically by every internal `reqwest.Client` constructor
+(auth providers, default HTTP client). Bindings and downstream consumers
+reach those constructors transitively, so no manual init is required.
+
+WASM builds are exempt — the WASM target uses the browser/Node.js fetch
+API instead of rustls, so no crypto provider is needed.
+
+**Signature:**
+
+```rust
+pub fn ensure_crypto_provider()
+```
+
+**Returns:** `()`
+
+---
+
 ### Types
 
 #### AssistantMessage
 
-| Field           | Type                    | Default              | Description                                                            |
-| --------------- | ----------------------- | -------------------- | ---------------------------------------------------------------------- |
-| `content`       | `Option<String>`        | `Default::default()` | The extracted text content                                             |
-| `name`          | `Option<String>`        | `Default::default()` | The name                                                               |
-| `tool_calls`    | `Option<Vec<ToolCall>>` | `vec![]`             | Tool calls                                                             |
-| `refusal`       | `Option<String>`        | `Default::default()` | Refusal                                                                |
-| `function_call` | `Option<FunctionCall>`  | `Default::default()` | Deprecated legacy function_call field; retained for API compatibility. |
+Assistant's response to a user message.
+
+| Field           | Type                    | Default              | Description                                                               |
+| --------------- | ----------------------- | -------------------- | ------------------------------------------------------------------------- |
+| `content`       | `Option<String>`        | `Default::default()` | The assistant's text response. Absent if tool calls are returned instead. |
+| `name`          | `Option<String>`        | `Default::default()` | Optional name for the assistant.                                          |
+| `tool_calls`    | `Option<Vec<ToolCall>>` | `vec![]`             | Tool calls the model wants to execute, if any.                            |
+| `refusal`       | `Option<String>`        | `Default::default()` | Refusal reason, if the model declined to respond per safety policies.     |
+| `function_call` | `Option<FunctionCall>`  | `Default::default()` | Deprecated legacy function_call field; retained for API compatibility.    |
 
 ---
 
 #### AudioContent
+
+Audio content part for speech-capable models.
 
 | Field    | Type     | Default | Description                               |
 | -------- | -------- | ------- | ----------------------------------------- |
@@ -91,152 +342,229 @@ pub fn create_client_from_json(json: &str) -> Result<DefaultClient, Error>
 
 ---
 
+#### AuthConfig
+
+Auth configuration block.
+
+| Field       | Type             | Default | Description                                                                                                                         |
+| ----------- | ---------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `auth_type` | `AuthType`       | —       | Auth scheme classification.                                                                                                         |
+| `env_var`   | `Option<String>` | `None`  | Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`). Holds the variable name, never the secret value. |
+
+---
+
 #### BatchListQuery
 
-| Field   | Type             | Default              | Description |
-| ------- | ---------------- | -------------------- | ----------- |
-| `limit` | `Option<u32>`    | `Default::default()` | Limit       |
-| `after` | `Option<String>` | `Default::default()` | After       |
+Query parameters for listing batches.
+
+| Field   | Type             | Default              | Description                                            |
+| ------- | ---------------- | -------------------- | ------------------------------------------------------ |
+| `limit` | `Option<u32>`    | `Default::default()` | Maximum number of results to return. Defaults to 20.   |
+| `after` | `Option<String>` | `Default::default()` | Pagination cursor: return results after this batch ID. |
 
 ---
 
 #### BatchListResponse
 
-| Field      | Type               | Default              | Description  |
-| ---------- | ------------------ | -------------------- | ------------ |
-| `object`   | `String`           | —                    | Object       |
-| `data`     | `Vec<BatchObject>` | `vec![]`             | Data         |
-| `has_more` | `Option<bool>`     | `Default::default()` | Whether more |
-| `first_id` | `Option<String>`   | `Default::default()` | First id     |
-| `last_id`  | `Option<String>`   | `Default::default()` | Last id      |
+Response from listing batches.
+
+| Field      | Type               | Default              | Description                                        |
+| ---------- | ------------------ | -------------------- | -------------------------------------------------- |
+| `object`   | `String`           | —                    | Object type (always `"list"`).                     |
+| `data`     | `Vec<BatchObject>` | `vec![]`             | List of batch objects.                             |
+| `has_more` | `Option<bool>`     | `Default::default()` | Whether more results are available.                |
+| `first_id` | `Option<String>`   | `Default::default()` | First batch ID in the result set (for pagination). |
+| `last_id`  | `Option<String>`   | `Default::default()` | Last batch ID in the result set (for pagination).  |
 
 ---
 
 #### BatchObject
 
-| Field               | Type                         | Default                   | Description                           |
-| ------------------- | ---------------------------- | ------------------------- | ------------------------------------- |
-| `id`                | `String`                     | —                         | Unique identifier                     |
-| `object`            | `String`                     | —                         | Object                                |
-| `endpoint`          | `String`                     | —                         | Endpoint                              |
-| `input_file_id`     | `String`                     | —                         | Input file id                         |
-| `completion_window` | `String`                     | —                         | Completion window                     |
-| `status`            | `BatchStatus`                | `BatchStatus::Validating` | Status (batch status)                 |
-| `output_file_id`    | `Option<String>`             | `Default::default()`      | Output file id                        |
-| `error_file_id`     | `Option<String>`             | `Default::default()`      | Error file id                         |
-| `created_at`        | `u64`                        | —                         | Created at                            |
-| `completed_at`      | `Option<u64>`                | `Default::default()`      | Completed at                          |
-| `failed_at`         | `Option<u64>`                | `Default::default()`      | Failed at                             |
-| `expired_at`        | `Option<u64>`                | `Default::default()`      | Expired at                            |
-| `request_counts`    | `Option<BatchRequestCounts>` | `Default::default()`      | Request counts (batch request counts) |
-| `metadata`          | `Option<serde_json::Value>`  | `Default::default()`      | Document metadata                     |
+A batch job object.
+
+| Field               | Type                         | Default                   | Description                                             |
+| ------------------- | ---------------------------- | ------------------------- | ------------------------------------------------------- |
+| `id`                | `String`                     | —                         | Unique batch ID.                                        |
+| `object`            | `String`                     | —                         | Object type (always `"batch"`).                         |
+| `endpoint`          | `String`                     | —                         | API endpoint (e.g., `"/v1/chat/completions"`).          |
+| `input_file_id`     | `String`                     | —                         | ID of the input file.                                   |
+| `completion_window` | `String`                     | —                         | Completion window (e.g., `"24h"`).                      |
+| `status`            | `BatchStatus`                | `BatchStatus::Validating` | Current job status.                                     |
+| `output_file_id`    | `Option<String>`             | `Default::default()`      | ID of the output file (present when completed).         |
+| `error_file_id`     | `Option<String>`             | `Default::default()`      | ID of the error file (present if some requests failed). |
+| `created_at`        | `u64`                        | —                         | Unix timestamp of batch creation.                       |
+| `completed_at`      | `Option<u64>`                | `Default::default()`      | Unix timestamp of completion (if completed).            |
+| `failed_at`         | `Option<u64>`                | `Default::default()`      | Unix timestamp of failure (if failed).                  |
+| `expired_at`        | `Option<u64>`                | `Default::default()`      | Unix timestamp of expiration (if expired).              |
+| `request_counts`    | `Option<BatchRequestCounts>` | `Default::default()`      | Request processing counts.                              |
+| `metadata`          | `Option<serde_json::Value>`  | `Default::default()`      | Metadata attached to the batch.                         |
 
 ---
 
 #### BatchRequestCounts
 
-| Field       | Type  | Default | Description |
-| ----------- | ----- | ------- | ----------- |
-| `total`     | `u64` | —       | Total       |
-| `completed` | `u64` | —       | Completed   |
-| `failed`    | `u64` | —       | Failed      |
+Request processing counts for a batch.
+
+| Field       | Type  | Default | Description                  |
+| ----------- | ----- | ------- | ---------------------------- |
+| `total`     | `u64` | —       | Total requests in the batch. |
+| `completed` | `u64` | —       | Completed requests.          |
+| `failed`    | `u64` | —       | Failed requests.             |
+
+---
+
+#### BudgetConfig
+
+Configuration for budget enforcement.
+
+| Field          | Type                   | Default             | Description                                                                                      |
+| -------------- | ---------------------- | ------------------- | ------------------------------------------------------------------------------------------------ |
+| `global_limit` | `Option<f64>`          | `None`              | Maximum total spend across all models, in USD. `None` means unlimited.                           |
+| `model_limits` | `HashMap<String, f64>` | `HashMap::new()`    | Per-model spending limits in USD. Models not listed here are only constrained by `global_limit`. |
+| `enforcement`  | `Enforcement`          | `Enforcement::Hard` | Whether to reject requests or merely warn when a limit is exceeded.                              |
+
+### Methods
+
+#### default()
+
+**Signature:**
+
+```rust
+pub fn default() -> BudgetConfig
+```
+
+---
+
+#### CacheConfig
+
+Configuration for the response cache.
+
+| Field         | Type                  | Default                | Description                         |
+| ------------- | --------------------- | ---------------------- | ----------------------------------- |
+| `max_entries` | `usize`               | `256`                  | Maximum number of cached entries.   |
+| `ttl`         | `std::time::Duration` | `300000ms`             | Time-to-live for each cached entry. |
+| `backend`     | `CacheBackend`        | `CacheBackend::Memory` | Storage backend to use.             |
+
+### Methods
+
+#### default()
+
+**Signature:**
+
+```rust
+pub fn default() -> CacheConfig
+```
 
 ---
 
 #### ChatCompletionChunk
 
+A streamed chunk of a chat completion response.
+
 | Field                | Type                | Default              | Description                                                                                                                                   |
 | -------------------- | ------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                 | `String`            | —                    | Unique identifier                                                                                                                             |
+| `id`                 | `String`            | —                    | Unique identifier for this stream.                                                                                                            |
 | `object`             | `String`            | —                    | Always `"chat.completion.chunk"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not fail parsing. |
-| `created`            | `u64`               | —                    | Created                                                                                                                                       |
-| `model`              | `String`            | —                    | Model                                                                                                                                         |
-| `choices`            | `Vec<StreamChoice>` | `vec![]`             | Choices                                                                                                                                       |
-| `usage`              | `Option<Usage>`     | `Default::default()` | Usage (usage)                                                                                                                                 |
-| `system_fingerprint` | `Option<String>`    | `Default::default()` | System fingerprint                                                                                                                            |
-| `service_tier`       | `Option<String>`    | `Default::default()` | Service tier                                                                                                                                  |
+| `created`            | `u64`               | —                    | Unix timestamp of chunk creation.                                                                                                             |
+| `model`              | `String`            | —                    | Model used to generate the chunk.                                                                                                             |
+| `choices`            | `Vec<StreamChoice>` | `vec![]`             | Streaming choices (delta updates).                                                                                                            |
+| `usage`              | `Option<Usage>`     | `Default::default()` | Token usage (typically only in the final chunk).                                                                                              |
+| `system_fingerprint` | `Option<String>`    | `Default::default()` | Fingerprint of the system configuration (OpenAI-specific).                                                                                    |
+| `service_tier`       | `Option<String>`    | `Default::default()` | Service tier used (OpenAI-specific).                                                                                                          |
 
 ---
 
 #### ChatCompletionRequest
 
+Chat completion request (compatible with OpenAI and similar APIs).
+
 | Field                 | Type                              | Default              | Description                                                                                                                       |
 | --------------------- | --------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `model`               | `String`                          | —                    | Model                                                                                                                             |
-| `messages`            | `Vec<Message>`                    | `vec![]`             | Messages                                                                                                                          |
-| `temperature`         | `Option<f64>`                     | `Default::default()` | Temperature                                                                                                                       |
-| `top_p`               | `Option<f64>`                     | `Default::default()` | Top p                                                                                                                             |
-| `n`                   | `Option<u32>`                     | `Default::default()` | N                                                                                                                                 |
+| `model`               | `String`                          | —                    | Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`).                                                                          |
+| `messages`            | `Vec<Message>`                    | `vec![]`             | Conversation history from oldest to newest.                                                                                       |
+| `temperature`         | `Option<f64>`                     | `Default::default()` | Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0.                                               |
+| `top_p`               | `Option<f64>`                     | `Default::default()` | Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused.                                                                |
+| `n`                   | `Option<u32>`                     | `Default::default()` | Number of chat completions to generate. Defaults to 1.                                                                            |
 | `stream`              | `Option<bool>`                    | `Default::default()` | Whether to stream the response. Managed by the client layer — do not set directly.                                                |
-| `stop`                | `Option<StopSequence>`            | `Default::default()` | Stop (stop sequence)                                                                                                              |
-| `max_tokens`          | `Option<u64>`                     | `Default::default()` | Maximum tokens                                                                                                                    |
-| `presence_penalty`    | `Option<f64>`                     | `Default::default()` | Presence penalty                                                                                                                  |
-| `frequency_penalty`   | `Option<f64>`                     | `Default::default()` | Frequency penalty                                                                                                                 |
+| `stop`                | `Option<StopSequence>`            | `Default::default()` | Stop sequence(s) that halt token generation.                                                                                      |
+| `max_tokens`          | `Option<u64>`                     | `Default::default()` | Max output tokens. Different from max_completion_tokens in some providers.                                                        |
+| `presence_penalty`    | `Option<f64>`                     | `Default::default()` | Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics.                                                          |
+| `frequency_penalty`   | `Option<f64>`                     | `Default::default()` | Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens.                                                         |
 | `logit_bias`          | `Option<HashMap<String, f64>>`    | `HashMap::new()`     | Token bias map. Uses `BTreeMap` (sorted keys) for deterministic serialization order — important when hashing or signing requests. |
-| `user`                | `Option<String>`                  | `Default::default()` | User                                                                                                                              |
-| `tools`               | `Option<Vec<ChatCompletionTool>>` | `vec![]`             | Tools                                                                                                                             |
-| `tool_choice`         | `Option<ToolChoice>`              | `Default::default()` | Tool choice (tool choice)                                                                                                         |
-| `parallel_tool_calls` | `Option<bool>`                    | `Default::default()` | Parallel tool calls                                                                                                               |
-| `response_format`     | `Option<ResponseFormat>`          | `Default::default()` | Response format (response format)                                                                                                 |
-| `stream_options`      | `Option<StreamOptions>`           | `Default::default()` | Stream options (stream options)                                                                                                   |
-| `seed`                | `Option<i64>`                     | `Default::default()` | Seed                                                                                                                              |
-| `reasoning_effort`    | `Option<ReasoningEffort>`         | `Default::default()` | Reasoning effort (reasoning effort)                                                                                               |
+| `user`                | `Option<String>`                  | `Default::default()` | User identifier for request tracking and abuse detection.                                                                         |
+| `tools`               | `Option<Vec<ChatCompletionTool>>` | `vec![]`             | Tools the model can invoke.                                                                                                       |
+| `tool_choice`         | `Option<ToolChoice>`              | `Default::default()` | Tool usage mode (auto, required, none, or specific tool).                                                                         |
+| `parallel_tool_calls` | `Option<bool>`                    | `Default::default()` | Whether the model can call multiple tools in parallel. Defaults to true.                                                          |
+| `response_format`     | `Option<ResponseFormat>`          | `Default::default()` | Output format constraint (text, JSON, JSON schema).                                                                               |
+| `stream_options`      | `Option<StreamOptions>`           | `Default::default()` | Streaming options (e.g., include_usage).                                                                                          |
+| `seed`                | `Option<i64>`                     | `Default::default()` | Random seed for reproducible outputs. Provider support varies.                                                                    |
+| `reasoning_effort`    | `Option<ReasoningEffort>`         | `Default::default()` | Reasoning effort level (low, medium, high) for extended-thinking models.                                                          |
 | `extra_body`          | `Option<serde_json::Value>`       | `Default::default()` | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc.      |
 
 ---
 
 #### ChatCompletionResponse
 
+Chat completion response from the API.
+
 | Field                | Type             | Default              | Description                                                                                                                                      |
 | -------------------- | ---------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `id`                 | `String`         | —                    | Unique identifier                                                                                                                                |
+| `id`                 | `String`         | —                    | Unique identifier for this response.                                                                                                             |
 | `object`             | `String`         | —                    | Always `"chat.completion"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `created`            | `u64`            | —                    | Created                                                                                                                                          |
-| `model`              | `String`         | —                    | Model                                                                                                                                            |
-| `choices`            | `Vec<Choice>`    | `vec![]`             | Choices                                                                                                                                          |
-| `usage`              | `Option<Usage>`  | `Default::default()` | Usage (usage)                                                                                                                                    |
-| `system_fingerprint` | `Option<String>` | `Default::default()` | System fingerprint                                                                                                                               |
-| `service_tier`       | `Option<String>` | `Default::default()` | Service tier                                                                                                                                     |
+| `created`            | `u64`            | —                    | Unix timestamp of response creation.                                                                                                             |
+| `model`              | `String`         | —                    | Model used to generate the response.                                                                                                             |
+| `choices`            | `Vec<Choice>`    | `vec![]`             | List of completion choices.                                                                                                                      |
+| `usage`              | `Option<Usage>`  | `Default::default()` | Token usage statistics.                                                                                                                          |
+| `system_fingerprint` | `Option<String>` | `Default::default()` | Fingerprint of the system configuration (OpenAI-specific).                                                                                       |
+| `service_tier`       | `Option<String>` | `Default::default()` | Service tier used (OpenAI-specific).                                                                                                             |
 
 ---
 
 #### ChatCompletionTool
 
-| Field       | Type                 | Default | Description                    |
-| ----------- | -------------------- | ------- | ------------------------------ |
-| `tool_type` | `ToolType`           | —       | Tool type (tool type)          |
-| `function`  | `FunctionDefinition` | —       | Function (function definition) |
+A tool the model can invoke (currently, all tools are functions).
+
+| Field       | Type                 | Default | Description                                                             |
+| ----------- | -------------------- | ------- | ----------------------------------------------------------------------- |
+| `tool_type` | `ToolType`           | —       | Tool type (always "function" in OpenAI spec).                           |
+| `function`  | `FunctionDefinition` | —       | Function definition with name, description, and JSON schema parameters. |
 
 ---
 
 #### Choice
 
-| Field           | Type                   | Default              | Description                   |
-| --------------- | ---------------------- | -------------------- | ----------------------------- |
-| `index`         | `u32`                  | —                    | Index                         |
-| `message`       | `AssistantMessage`     | —                    | Message (assistant message)   |
-| `finish_reason` | `Option<FinishReason>` | `Default::default()` | Finish reason (finish reason) |
+A single completion choice.
+
+| Field           | Type                   | Default              | Description                                                                        |
+| --------------- | ---------------------- | -------------------- | ---------------------------------------------------------------------------------- |
+| `index`         | `u32`                  | —                    | Index of this choice in the choices array.                                         |
+| `message`       | `AssistantMessage`     | —                    | The assistant's message response.                                                  |
+| `finish_reason` | `Option<FinishReason>` | `Default::default()` | Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). |
 
 ---
 
 #### CreateBatchRequest
 
-| Field               | Type                        | Default              | Description       |
-| ------------------- | --------------------------- | -------------------- | ----------------- |
-| `input_file_id`     | `String`                    | —                    | Input file id     |
-| `endpoint`          | `String`                    | —                    | Endpoint          |
-| `completion_window` | `String`                    | —                    | Completion window |
-| `metadata`          | `Option<serde_json::Value>` | `Default::default()` | Document metadata |
+Request to create a batch job.
+
+| Field               | Type                        | Default              | Description                                    |
+| ------------------- | --------------------------- | -------------------- | ---------------------------------------------- |
+| `input_file_id`     | `String`                    | —                    | ID of the uploaded input file (JSONL format).  |
+| `endpoint`          | `String`                    | —                    | API endpoint (e.g., `"/v1/chat/completions"`). |
+| `completion_window` | `String`                    | —                    | Completion window (e.g., `"24h"`).             |
+| `metadata`          | `Option<serde_json::Value>` | `Default::default()` | Optional metadata to attach to the batch.      |
 
 ---
 
 #### CreateFileRequest
 
-| Field      | Type             | Default                   | Description               |
-| ---------- | ---------------- | ------------------------- | ------------------------- |
-| `file`     | `String`         | —                         | Base64-encoded file data. |
-| `purpose`  | `FilePurpose`    | `FilePurpose::Assistants` | Purpose (file purpose)    |
-| `filename` | `Option<String>` | `Default::default()`      | Filename                  |
+Request to upload a file.
+
+| Field      | Type             | Default                   | Description                                     |
+| ---------- | ---------------- | ------------------------- | ----------------------------------------------- |
+| `file`     | `String`         | —                         | Base64-encoded file data.                       |
+| `purpose`  | `FilePurpose`    | `FilePurpose::Assistants` | Purpose for the file.                           |
+| `filename` | `Option<String>` | `Default::default()`      | Optional filename to associate with the upload. |
 
 ---
 
@@ -244,30 +572,32 @@ pub fn create_client_from_json(json: &str) -> Result<DefaultClient, Error>
 
 Request to create images from a text prompt.
 
-| Field             | Type             | Default              | Description     |
-| ----------------- | ---------------- | -------------------- | --------------- |
-| `prompt`          | `String`         | —                    | Prompt          |
-| `model`           | `Option<String>` | `Default::default()` | Model           |
-| `n`               | `Option<u32>`    | `Default::default()` | N               |
-| `size`            | `Option<String>` | `Default::default()` | Size in bytes   |
-| `quality`         | `Option<String>` | `Default::default()` | Quality         |
-| `style`           | `Option<String>` | `Default::default()` | Style           |
-| `response_format` | `Option<String>` | `Default::default()` | Response format |
-| `user`            | `Option<String>` | `Default::default()` | User            |
+| Field             | Type             | Default              | Description                                                            |
+| ----------------- | ---------------- | -------------------- | ---------------------------------------------------------------------- |
+| `prompt`          | `String`         | —                    | Text description of the image to generate.                             |
+| `model`           | `Option<String>` | `Default::default()` | Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset. |
+| `n`               | `Option<u32>`    | `Default::default()` | Number of images to generate. Defaults to 1.                           |
+| `size`            | `Option<String>` | `Default::default()` | Image size (e.g., `"1024x1024"`, `"1792x1024"`).                       |
+| `quality`         | `Option<String>` | `Default::default()` | Image quality: `"standard"` or `"hd"`.                                 |
+| `style`           | `Option<String>` | `Default::default()` | Style: `"natural"` or `"vivid"` (DALL-E 3 only).                       |
+| `response_format` | `Option<String>` | `Default::default()` | Response format: `"url"` or `"b64_json"`.                              |
+| `user`            | `Option<String>` | `Default::default()` | User identifier for request tracking.                                  |
 
 ---
 
 #### CreateResponseRequest
 
-| Field               | Type                        | Default              | Description           |
-| ------------------- | --------------------------- | -------------------- | --------------------- |
-| `model`             | `String`                    | —                    | Model                 |
-| `input`             | `serde_json::Value`         | —                    | Input                 |
-| `instructions`      | `Option<String>`            | `Default::default()` | Instructions          |
-| `tools`             | `Option<Vec<ResponseTool>>` | `vec![]`             | Tools                 |
-| `temperature`       | `Option<f64>`               | `Default::default()` | Temperature           |
-| `max_output_tokens` | `Option<u64>`               | `Default::default()` | Maximum output tokens |
-| `metadata`          | `Option<serde_json::Value>` | `Default::default()` | Document metadata     |
+Request to create a structured response.
+
+| Field               | Type                        | Default              | Description                                               |
+| ------------------- | --------------------------- | -------------------- | --------------------------------------------------------- |
+| `model`             | `String`                    | —                    | Model ID.                                                 |
+| `input`             | `serde_json::Value`         | —                    | Input data to process (e.g., a document to extract from). |
+| `instructions`      | `Option<String>`            | `Default::default()` | Instructions for processing the input.                    |
+| `tools`             | `Option<Vec<ResponseTool>>` | `vec![]`             | Available tools the model can use.                        |
+| `temperature`       | `Option<f64>`               | `Default::default()` | Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0.    |
+| `max_output_tokens` | `Option<u64>`               | `Default::default()` | Maximum output tokens.                                    |
+| `metadata`          | `Option<serde_json::Value>` | `Default::default()` | Optional metadata.                                        |
 
 ---
 
@@ -275,13 +605,13 @@ Request to create images from a text prompt.
 
 Request to generate speech audio from text.
 
-| Field             | Type             | Default              | Description     |
-| ----------------- | ---------------- | -------------------- | --------------- |
-| `model`           | `String`         | —                    | Model           |
-| `input`           | `String`         | —                    | Input           |
-| `voice`           | `String`         | —                    | Voice           |
-| `response_format` | `Option<String>` | `Default::default()` | Response format |
-| `speed`           | `Option<f64>`    | `Default::default()` | Speed           |
+| Field             | Type             | Default              | Description                                                                         |
+| ----------------- | ---------------- | -------------------- | ----------------------------------------------------------------------------------- |
+| `model`           | `String`         | —                    | Model ID (e.g., `"tts-1"`, `"tts-1-hd"`).                                           |
+| `input`           | `String`         | —                    | Text to synthesize into speech.                                                     |
+| `voice`           | `String`         | —                    | Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). |
+| `response_format` | `Option<String>` | `Default::default()` | Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`).        |
+| `speed`           | `Option<f64>`    | `Default::default()` | Playback speed in `[0.25, 4.0]`. Defaults to 1.0.                                   |
 
 ---
 
@@ -289,14 +619,14 @@ Request to generate speech audio from text.
 
 Request to transcribe audio into text.
 
-| Field             | Type             | Default              | Description                     |
-| ----------------- | ---------------- | -------------------- | ------------------------------- |
-| `model`           | `String`         | —                    | Model                           |
-| `file`            | `String`         | —                    | Base64-encoded audio file data. |
-| `language`        | `Option<String>` | `Default::default()` | Language                        |
-| `prompt`          | `Option<String>` | `Default::default()` | Prompt                          |
-| `response_format` | `Option<String>` | `Default::default()` | Response format                 |
-| `temperature`     | `Option<f64>`    | `Default::default()` | Temperature                     |
+| Field             | Type             | Default              | Description                                                                           |
+| ----------------- | ---------------- | -------------------- | ------------------------------------------------------------------------------------- |
+| `model`           | `String`         | —                    | Model ID (e.g., `"whisper-1"`).                                                       |
+| `file`            | `String`         | —                    | Base64-encoded audio file data.                                                       |
+| `language`        | `Option<String>` | `Default::default()` | Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. |
+| `prompt`          | `Option<String>` | `Default::default()` | Optional text to guide the model (improves accuracy for domain-specific terms).       |
+| `response_format` | `Option<String>` | `Default::default()` | Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`).         |
+| `temperature`     | `Option<f64>`    | `Default::default()` | Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0.    |
 
 ---
 
@@ -331,9 +661,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-##### Methods
+### Methods
 
-###### chat()
+#### chat()
 
 **Signature:**
 
@@ -341,7 +671,7 @@ headers are cached at construction to avoid redundant encoding on every request.
 pub fn chat(&self, req: ChatCompletionRequest) -> ChatCompletionResponse
 ```
 
-###### chat_stream()
+#### chat_stream()
 
 **Signature:**
 
@@ -349,7 +679,7 @@ pub fn chat(&self, req: ChatCompletionRequest) -> ChatCompletionResponse
 pub fn chat_stream(&self, req: ChatCompletionRequest) -> String
 ```
 
-###### embed()
+#### embed()
 
 **Signature:**
 
@@ -357,7 +687,7 @@ pub fn chat_stream(&self, req: ChatCompletionRequest) -> String
 pub fn embed(&self, req: EmbeddingRequest) -> EmbeddingResponse
 ```
 
-###### list_models()
+#### list_models()
 
 **Signature:**
 
@@ -365,7 +695,7 @@ pub fn embed(&self, req: EmbeddingRequest) -> EmbeddingResponse
 pub fn list_models(&self) -> ModelsListResponse
 ```
 
-###### image_generate()
+#### image_generate()
 
 **Signature:**
 
@@ -373,7 +703,7 @@ pub fn list_models(&self) -> ModelsListResponse
 pub fn image_generate(&self, req: CreateImageRequest) -> ImagesResponse
 ```
 
-###### speech()
+#### speech()
 
 **Signature:**
 
@@ -381,7 +711,7 @@ pub fn image_generate(&self, req: CreateImageRequest) -> ImagesResponse
 pub fn speech(&self, req: CreateSpeechRequest) -> Vec<u8>
 ```
 
-###### transcribe()
+#### transcribe()
 
 **Signature:**
 
@@ -389,7 +719,7 @@ pub fn speech(&self, req: CreateSpeechRequest) -> Vec<u8>
 pub fn transcribe(&self, req: CreateTranscriptionRequest) -> TranscriptionResponse
 ```
 
-###### moderate()
+#### moderate()
 
 **Signature:**
 
@@ -397,7 +727,7 @@ pub fn transcribe(&self, req: CreateTranscriptionRequest) -> TranscriptionRespon
 pub fn moderate(&self, req: ModerationRequest) -> ModerationResponse
 ```
 
-###### rerank()
+#### rerank()
 
 **Signature:**
 
@@ -405,7 +735,7 @@ pub fn moderate(&self, req: ModerationRequest) -> ModerationResponse
 pub fn rerank(&self, req: RerankRequest) -> RerankResponse
 ```
 
-###### search()
+#### search()
 
 **Signature:**
 
@@ -413,7 +743,7 @@ pub fn rerank(&self, req: RerankRequest) -> RerankResponse
 pub fn search(&self, req: SearchRequest) -> SearchResponse
 ```
 
-###### ocr()
+#### ocr()
 
 **Signature:**
 
@@ -421,7 +751,7 @@ pub fn search(&self, req: SearchRequest) -> SearchResponse
 pub fn ocr(&self, req: OcrRequest) -> OcrResponse
 ```
 
-###### create_file()
+#### create_file()
 
 **Signature:**
 
@@ -429,7 +759,7 @@ pub fn ocr(&self, req: OcrRequest) -> OcrResponse
 pub fn create_file(&self, req: CreateFileRequest) -> FileObject
 ```
 
-###### retrieve_file()
+#### retrieve_file()
 
 **Signature:**
 
@@ -437,7 +767,7 @@ pub fn create_file(&self, req: CreateFileRequest) -> FileObject
 pub fn retrieve_file(&self, file_id: &str) -> FileObject
 ```
 
-###### delete_file()
+#### delete_file()
 
 **Signature:**
 
@@ -445,7 +775,7 @@ pub fn retrieve_file(&self, file_id: &str) -> FileObject
 pub fn delete_file(&self, file_id: &str) -> DeleteResponse
 ```
 
-###### list_files()
+#### list_files()
 
 **Signature:**
 
@@ -453,7 +783,7 @@ pub fn delete_file(&self, file_id: &str) -> DeleteResponse
 pub fn list_files(&self, query: Option<FileListQuery>) -> FileListResponse
 ```
 
-###### file_content()
+#### file_content()
 
 **Signature:**
 
@@ -461,7 +791,7 @@ pub fn list_files(&self, query: Option<FileListQuery>) -> FileListResponse
 pub fn file_content(&self, file_id: &str) -> Vec<u8>
 ```
 
-###### create_batch()
+#### create_batch()
 
 **Signature:**
 
@@ -469,7 +799,7 @@ pub fn file_content(&self, file_id: &str) -> Vec<u8>
 pub fn create_batch(&self, req: CreateBatchRequest) -> BatchObject
 ```
 
-###### retrieve_batch()
+#### retrieve_batch()
 
 **Signature:**
 
@@ -477,7 +807,7 @@ pub fn create_batch(&self, req: CreateBatchRequest) -> BatchObject
 pub fn retrieve_batch(&self, batch_id: &str) -> BatchObject
 ```
 
-###### list_batches()
+#### list_batches()
 
 **Signature:**
 
@@ -485,7 +815,7 @@ pub fn retrieve_batch(&self, batch_id: &str) -> BatchObject
 pub fn list_batches(&self, query: Option<BatchListQuery>) -> BatchListResponse
 ```
 
-###### cancel_batch()
+#### cancel_batch()
 
 **Signature:**
 
@@ -493,7 +823,7 @@ pub fn list_batches(&self, query: Option<BatchListQuery>) -> BatchListResponse
 pub fn cancel_batch(&self, batch_id: &str) -> BatchObject
 ```
 
-###### create_response()
+#### create_response()
 
 **Signature:**
 
@@ -501,44 +831,50 @@ pub fn cancel_batch(&self, batch_id: &str) -> BatchObject
 pub fn create_response(&self, req: CreateResponseRequest) -> ResponseObject
 ```
 
-###### retrieve_response()
+#### retrieve_response()
 
 **Signature:**
 
 ```rust
-pub fn retrieve_response(&self, id: &str) -> ResponseObject
+pub fn retrieve_response(&self, response_id: &str) -> ResponseObject
 ```
 
-###### cancel_response()
+#### cancel_response()
 
 **Signature:**
 
 ```rust
-pub fn cancel_response(&self, id: &str) -> ResponseObject
+pub fn cancel_response(&self, response_id: &str) -> ResponseObject
 ```
 
 ---
 
 #### DeleteResponse
 
-| Field     | Type     | Default | Description       |
-| --------- | -------- | ------- | ----------------- |
-| `id`      | `String` | —       | Unique identifier |
-| `object`  | `String` | —       | Object            |
-| `deleted` | `bool`   | —       | Deleted           |
+Response from a delete operation.
+
+| Field     | Type     | Default | Description                                 |
+| --------- | -------- | ------- | ------------------------------------------- |
+| `id`      | `String` | —       | ID of the deleted resource.                 |
+| `object`  | `String` | —       | Object type.                                |
+| `deleted` | `bool`   | —       | Confirmation that the resource was deleted. |
 
 ---
 
 #### DeveloperMessage
 
-| Field     | Type             | Default              | Description                |
-| --------- | ---------------- | -------------------- | -------------------------- |
-| `content` | `String`         | —                    | The extracted text content |
-| `name`    | `Option<String>` | `Default::default()` | The name                   |
+Developer message (system-like message for Claude models).
+
+| Field     | Type             | Default              | Description                                     |
+| --------- | ---------------- | -------------------- | ----------------------------------------------- |
+| `content` | `String`         | —                    | Developer-specific instructions or context.     |
+| `name`    | `Option<String>` | `Default::default()` | Optional name for the developer message source. |
 
 ---
 
 #### DocumentContent
+
+PDF/document content part for vision-capable models.
 
 | Field        | Type     | Default | Description                                      |
 | ------------ | -------- | ------- | ------------------------------------------------ |
@@ -549,88 +885,104 @@ pub fn cancel_response(&self, id: &str) -> ResponseObject
 
 #### EmbeddingObject
 
+A single embedding vector.
+
 | Field       | Type       | Default | Description                                                                                                                                |
 | ----------- | ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `object`    | `String`   | —       | Always `"embedding"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `embedding` | `Vec<f64>` | —       | Embedding                                                                                                                                  |
-| `index`     | `u32`      | —       | Index                                                                                                                                      |
+| `embedding` | `Vec<f64>` | —       | The embedding vector.                                                                                                                      |
+| `index`     | `u32`      | —       | Index in the batch (corresponds to input order).                                                                                           |
 
 ---
 
 #### EmbeddingRequest
 
-| Field             | Type                      | Default                  | Description                        |
-| ----------------- | ------------------------- | ------------------------ | ---------------------------------- |
-| `model`           | `String`                  | —                        | Model                              |
-| `input`           | `EmbeddingInput`          | `EmbeddingInput::Single` | Input (embedding input)            |
-| `encoding_format` | `Option<EmbeddingFormat>` | `Default::default()`     | Encoding format (embedding format) |
-| `dimensions`      | `Option<u32>`             | `Default::default()`     | Dimensions                         |
-| `user`            | `Option<String>`          | `Default::default()`     | User                               |
+Embedding request.
+
+| Field             | Type                      | Default                  | Description                                                 |
+| ----------------- | ------------------------- | ------------------------ | ----------------------------------------------------------- |
+| `model`           | `String`                  | —                        | Model ID (e.g., `"text-embedding-3-small"`).                |
+| `input`           | `EmbeddingInput`          | `EmbeddingInput::Single` | Text or texts to embed.                                     |
+| `encoding_format` | `Option<EmbeddingFormat>` | `Default::default()`     | Output format: float (native) or base64.                    |
+| `dimensions`      | `Option<u32>`             | `Default::default()`     | Requested embedding dimensions (if supported by the model). |
+| `user`            | `Option<String>`          | `Default::default()`     | User identifier for request tracking.                       |
 
 ---
 
 #### EmbeddingResponse
 
-| Field    | Type                   | Default | Description                                                                                                                           |
-| -------- | ---------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `object` | `String`               | —       | Always `"list"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `data`   | `Vec<EmbeddingObject>` | —       | Data                                                                                                                                  |
-| `model`  | `String`               | —       | Model                                                                                                                                 |
-| `usage`  | `Option<Usage>`        | `None`  | Usage (usage)                                                                                                                         |
+Embedding response.
+
+| Field    | Type                   | Default                | Description                                                                                                                           |
+| -------- | ---------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `object` | `String`               | —                      | Always `"list"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
+| `data`   | `Vec<EmbeddingObject>` | —                      | List of embeddings.                                                                                                                   |
+| `model`  | `String`               | —                      | Model used to generate embeddings.                                                                                                    |
+| `usage`  | `Option<Usage>`        | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens).                                                                  |
 
 ---
 
 #### FileListQuery
 
-| Field     | Type             | Default              | Description |
-| --------- | ---------------- | -------------------- | ----------- |
-| `purpose` | `Option<String>` | `Default::default()` | Purpose     |
-| `limit`   | `Option<u32>`    | `Default::default()` | Limit       |
-| `after`   | `Option<String>` | `Default::default()` | After       |
+Query parameters for listing files.
+
+| Field     | Type             | Default              | Description                                              |
+| --------- | ---------------- | -------------------- | -------------------------------------------------------- |
+| `purpose` | `Option<String>` | `Default::default()` | Filter by file purpose (e.g., `"batch"`, `"fine-tune"`). |
+| `limit`   | `Option<u32>`    | `Default::default()` | Maximum number of results to return. Defaults to 20.     |
+| `after`   | `Option<String>` | `Default::default()` | Pagination cursor: return results after this file ID.    |
 
 ---
 
 #### FileListResponse
 
-| Field      | Type              | Default              | Description  |
-| ---------- | ----------------- | -------------------- | ------------ |
-| `object`   | `String`          | —                    | Object       |
-| `data`     | `Vec<FileObject>` | `vec![]`             | Data         |
-| `has_more` | `Option<bool>`    | `Default::default()` | Whether more |
+Response from listing files.
+
+| Field      | Type              | Default              | Description                         |
+| ---------- | ----------------- | -------------------- | ----------------------------------- |
+| `object`   | `String`          | —                    | Object type (always `"list"`).      |
+| `data`     | `Vec<FileObject>` | `vec![]`             | List of file objects.               |
+| `has_more` | `Option<bool>`    | `Default::default()` | Whether more results are available. |
 
 ---
 
 #### FileObject
 
-| Field        | Type             | Default              | Description       |
-| ------------ | ---------------- | -------------------- | ----------------- |
-| `id`         | `String`         | —                    | Unique identifier |
-| `object`     | `String`         | —                    | Object            |
-| `bytes`      | `u64`            | —                    | Bytes             |
-| `created_at` | `u64`            | —                    | Created at        |
-| `filename`   | `String`         | —                    | Filename          |
-| `purpose`    | `String`         | —                    | Purpose           |
-| `status`     | `Option<String>` | `Default::default()` | Status            |
+An uploaded file object.
+
+| Field        | Type             | Default              | Description                                            |
+| ------------ | ---------------- | -------------------- | ------------------------------------------------------ |
+| `id`         | `String`         | —                    | Unique file ID.                                        |
+| `object`     | `String`         | —                    | Object type (always `"file"`).                         |
+| `bytes`      | `u64`            | —                    | File size in bytes.                                    |
+| `created_at` | `u64`            | —                    | Unix timestamp of file creation.                       |
+| `filename`   | `String`         | —                    | Filename.                                              |
+| `purpose`    | `String`         | —                    | File purpose.                                          |
+| `status`     | `Option<String>` | `Default::default()` | Processing status (e.g., `"uploaded"`, `"processed"`). |
 
 ---
 
 #### FunctionCall
 
-| Field       | Type     | Default | Description |
-| ----------- | -------- | ------- | ----------- |
-| `name`      | `String` | —       | The name    |
-| `arguments` | `String` | —       | Arguments   |
+Function call details.
+
+| Field       | Type     | Default | Description                                                  |
+| ----------- | -------- | ------- | ------------------------------------------------------------ |
+| `name`      | `String` | —       | Function name.                                               |
+| `arguments` | `String` | —       | Arguments as a JSON string (parse with serde_json.from_str). |
 
 ---
 
 #### FunctionDefinition
 
-| Field         | Type                        | Default | Description                |
-| ------------- | --------------------------- | ------- | -------------------------- |
-| `name`        | `String`                    | —       | The name                   |
-| `description` | `Option<String>`            | `None`  | Human-readable description |
-| `parameters`  | `Option<serde_json::Value>` | `None`  | Parameters                 |
-| `strict`      | `Option<bool>`              | `None`  | Strict                     |
+Function definition exposed to the model.
+
+| Field         | Type                        | Default                | Description                                                            |
+| ------------- | --------------------------- | ---------------------- | ---------------------------------------------------------------------- |
+| `name`        | `String`                    | —                      | Name of the function. Required and must be alphanumeric + underscores. |
+| `description` | `Option<String>`            | `/* serde(default) */` | Human-readable description explaining what the function does.          |
+| `parameters`  | `Option<serde_json::Value>` | `/* serde(default) */` | JSON Schema defining the function's parameters.                        |
+| `strict`      | `Option<bool>`              | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments.          |
 
 ---
 
@@ -649,20 +1001,22 @@ Deprecated legacy function-role message body.
 
 A single generated image, returned as either a URL or base64 data.
 
-| Field            | Type             | Default              | Description    |
-| ---------------- | ---------------- | -------------------- | -------------- |
-| `url`            | `Option<String>` | `Default::default()` | Url            |
-| `b64_json`       | `Option<String>` | `Default::default()` | B64 json       |
-| `revised_prompt` | `Option<String>` | `Default::default()` | Revised prompt |
+| Field            | Type             | Default              | Description                                                    |
+| ---------------- | ---------------- | -------------------- | -------------------------------------------------------------- |
+| `url`            | `Option<String>` | `Default::default()` | Image URL (if response_format was "url").                      |
+| `b64_json`       | `Option<String>` | `Default::default()` | Base64-encoded image data (if response_format was "b64_json"). |
+| `revised_prompt` | `Option<String>` | `Default::default()` | The final prompt used to generate the image (DALL-E 3).        |
 
 ---
 
 #### ImageUrl
 
-| Field    | Type                  | Default              | Description           |
-| -------- | --------------------- | -------------------- | --------------------- |
-| `url`    | `String`              | —                    | Url                   |
-| `detail` | `Option<ImageDetail>` | `Default::default()` | Detail (image detail) |
+An image URL reference with optional detail level for processing.
+
+| Field    | Type                  | Default              | Description                                                              |
+| -------- | --------------------- | -------------------- | ------------------------------------------------------------------------ |
+| `url`    | `String`              | —                    | URL of the image (data URI or HTTP/HTTPS URL).                           |
+| `detail` | `Option<ImageDetail>` | `Default::default()` | Detail level: low (512x512), high (2x2 tiles), or auto (model-selected). |
 
 ---
 
@@ -670,41 +1024,47 @@ A single generated image, returned as either a URL or base64 data.
 
 Response containing generated images.
 
-| Field     | Type         | Default  | Description |
-| --------- | ------------ | -------- | ----------- |
-| `created` | `u64`        | —        | Created     |
-| `data`    | `Vec<Image>` | `vec![]` | Data        |
+| Field     | Type         | Default  | Description                       |
+| --------- | ------------ | -------- | --------------------------------- |
+| `created` | `u64`        | —        | Unix timestamp of image creation. |
+| `data`    | `Vec<Image>` | `vec![]` | List of generated images.         |
 
 ---
 
 #### JsonSchemaFormat
 
-| Field         | Type                | Default              | Description                |
-| ------------- | ------------------- | -------------------- | -------------------------- |
-| `name`        | `String`            | —                    | The name                   |
-| `description` | `Option<String>`    | `Default::default()` | Human-readable description |
-| `schema`      | `serde_json::Value` | —                    | Schema                     |
-| `strict`      | `Option<bool>`      | `Default::default()` | Strict                     |
+JSON Schema specification for constrained output.
+
+| Field         | Type                | Default              | Description                                         |
+| ------------- | ------------------- | -------------------- | --------------------------------------------------- |
+| `name`        | `String`            | —                    | Name of the schema (must be unique in the request). |
+| `description` | `Option<String>`    | `Default::default()` | Description of what the schema represents.          |
+| `schema`      | `serde_json::Value` | —                    | JSON Schema object defining the output structure.   |
+| `strict`      | `Option<bool>`      | `Default::default()` | If true, enforce strict schema validation.          |
 
 ---
 
 #### ModelObject
 
+A model available from the API.
+
 | Field      | Type     | Default | Description                                                                                                                            |
 | ---------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`       | `String` | —       | Unique identifier                                                                                                                      |
+| `id`       | `String` | —       | Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`).                                                                                    |
 | `object`   | `String` | —       | Always `"model"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `created`  | `u64`    | —       | Created                                                                                                                                |
-| `owned_by` | `String` | —       | Owned by                                                                                                                               |
+| `created`  | `u64`    | —       | Unix timestamp of model creation (or release date).                                                                                    |
+| `owned_by` | `String` | —       | Organization or entity that owns the model.                                                                                            |
 
 ---
 
 #### ModelsListResponse
 
+Response listing available models.
+
 | Field    | Type               | Default  | Description                                                                                                                           |
 | -------- | ------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `object` | `String`           | —        | Always `"list"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `data`   | `Vec<ModelObject>` | `vec![]` | Data                                                                                                                                  |
+| `data`   | `Vec<ModelObject>` | `vec![]` | List of available models.                                                                                                             |
 
 ---
 
@@ -712,19 +1072,19 @@ Response containing generated images.
 
 Boolean flags for each moderation category.
 
-| Field                    | Type   | Default | Description            |
-| ------------------------ | ------ | ------- | ---------------------- |
-| `sexual`                 | `bool` | —       | Sexual                 |
-| `hate`                   | `bool` | —       | Hate                   |
-| `harassment`             | `bool` | —       | Harassment             |
-| `self_harm`              | `bool` | —       | Self harm              |
-| `sexual_minors`          | `bool` | —       | Sexual minors          |
-| `hate_threatening`       | `bool` | —       | Hate threatening       |
-| `violence_graphic`       | `bool` | —       | Violence graphic       |
-| `self_harm_intent`       | `bool` | —       | Self harm intent       |
-| `self_harm_instructions` | `bool` | —       | Self harm instructions |
-| `harassment_threatening` | `bool` | —       | Harassment threatening |
-| `violence`               | `bool` | —       | Violence               |
+| Field                    | Type   | Default | Description                          |
+| ------------------------ | ------ | ------- | ------------------------------------ |
+| `sexual`                 | `bool` | —       | Sexual content.                      |
+| `hate`                   | `bool` | —       | Hate speech.                         |
+| `harassment`             | `bool` | —       | Harassment.                          |
+| `self_harm`              | `bool` | —       | Self-harm content.                   |
+| `sexual_minors`          | `bool` | —       | Sexual content involving minors.     |
+| `hate_threatening`       | `bool` | —       | Hate speech that threatens violence. |
+| `violence_graphic`       | `bool` | —       | Graphic violence.                    |
+| `self_harm_intent`       | `bool` | —       | Intent to self-harm.                 |
+| `self_harm_instructions` | `bool` | —       | Instructions for self-harm.          |
+| `harassment_threatening` | `bool` | —       | Harassment that threatens violence.  |
+| `violence`               | `bool` | —       | Non-graphic violence.                |
 
 ---
 
@@ -732,19 +1092,19 @@ Boolean flags for each moderation category.
 
 Confidence scores for each moderation category.
 
-| Field                    | Type  | Default | Description            |
-| ------------------------ | ----- | ------- | ---------------------- |
-| `sexual`                 | `f64` | —       | Sexual                 |
-| `hate`                   | `f64` | —       | Hate                   |
-| `harassment`             | `f64` | —       | Harassment             |
-| `self_harm`              | `f64` | —       | Self harm              |
-| `sexual_minors`          | `f64` | —       | Sexual minors          |
-| `hate_threatening`       | `f64` | —       | Hate threatening       |
-| `violence_graphic`       | `f64` | —       | Violence graphic       |
-| `self_harm_intent`       | `f64` | —       | Self harm intent       |
-| `self_harm_instructions` | `f64` | —       | Self harm instructions |
-| `harassment_threatening` | `f64` | —       | Harassment threatening |
-| `violence`               | `f64` | —       | Violence               |
+| Field                    | Type  | Default | Description                                |
+| ------------------------ | ----- | ------- | ------------------------------------------ |
+| `sexual`                 | `f64` | —       | Sexual content score.                      |
+| `hate`                   | `f64` | —       | Hate speech score.                         |
+| `harassment`             | `f64` | —       | Harassment score.                          |
+| `self_harm`              | `f64` | —       | Self-harm content score.                   |
+| `sexual_minors`          | `f64` | —       | Sexual content involving minors score.     |
+| `hate_threatening`       | `f64` | —       | Hate speech that threatens violence score. |
+| `violence_graphic`       | `f64` | —       | Graphic violence score.                    |
+| `self_harm_intent`       | `f64` | —       | Intent to self-harm score.                 |
+| `self_harm_instructions` | `f64` | —       | Instructions for self-harm score.          |
+| `harassment_threatening` | `f64` | —       | Harassment that threatens violence score.  |
+| `violence`               | `f64` | —       | Non-graphic violence score.                |
 
 ---
 
@@ -752,10 +1112,10 @@ Confidence scores for each moderation category.
 
 Request to classify content for policy violations.
 
-| Field   | Type              | Default                   | Description              |
-| ------- | ----------------- | ------------------------- | ------------------------ |
-| `input` | `ModerationInput` | `ModerationInput::Single` | Input (moderation input) |
-| `model` | `Option<String>`  | `Default::default()`      | Model                    |
+| Field   | Type              | Default                   | Description                                                                       |
+| ------- | ----------------- | ------------------------- | --------------------------------------------------------------------------------- |
+| `input` | `ModerationInput` | `ModerationInput::Single` | Text or texts to check.                                                           |
+| `model` | `Option<String>`  | `Default::default()`      | Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset. |
 
 ---
 
@@ -763,11 +1123,11 @@ Request to classify content for policy violations.
 
 Response from the moderation endpoint.
 
-| Field     | Type                    | Default | Description       |
-| --------- | ----------------------- | ------- | ----------------- |
-| `id`      | `String`                | —       | Unique identifier |
-| `model`   | `String`                | —       | Model             |
-| `results` | `Vec<ModerationResult>` | —       | Results           |
+| Field     | Type                    | Default | Description                                    |
+| --------- | ----------------------- | ------- | ---------------------------------------------- |
+| `id`      | `String`                | —       | Unique identifier for this moderation request. |
+| `model`   | `String`                | —       | Model used for classification.                 |
+| `results` | `Vec<ModerationResult>` | —       | Results for each input string.                 |
 
 ---
 
@@ -775,11 +1135,11 @@ Response from the moderation endpoint.
 
 A single moderation classification result.
 
-| Field             | Type                       | Default | Description                                  |
-| ----------------- | -------------------------- | ------- | -------------------------------------------- |
-| `flagged`         | `bool`                     | —       | Flagged                                      |
-| `categories`      | `ModerationCategories`     | —       | Categories (moderation categories)           |
-| `category_scores` | `ModerationCategoryScores` | —       | Category scores (moderation category scores) |
+| Field             | Type                       | Default | Description                                 |
+| ----------------- | -------------------------- | ------- | ------------------------------------------- |
+| `flagged`         | `bool`                     | —       | True if any category was flagged.           |
+| `categories`      | `ModerationCategories`     | —       | Boolean flags for each moderation category. |
+| `category_scores` | `ModerationCategoryScores` | —       | Confidence scores for each category.        |
 
 ---
 
@@ -787,10 +1147,10 @@ A single moderation classification result.
 
 An image extracted from an OCR page.
 
-| Field          | Type             | Default | Description                |
-| -------------- | ---------------- | ------- | -------------------------- |
-| `id`           | `String`         | —       | Unique image identifier.   |
-| `image_base64` | `Option<String>` | `None`  | Base64-encoded image data. |
+| Field          | Type             | Default                | Description                                                     |
+| -------------- | ---------------- | ---------------------- | --------------------------------------------------------------- |
+| `id`           | `String`         | —                      | Unique image identifier within the document.                    |
+| `image_base64` | `Option<String>` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -798,12 +1158,12 @@ An image extracted from an OCR page.
 
 A single page of OCR output.
 
-| Field        | Type                     | Default | Description                                          |
-| ------------ | ------------------------ | ------- | ---------------------------------------------------- |
-| `index`      | `u32`                    | —       | Page index (0-based).                                |
-| `markdown`   | `String`                 | —       | Extracted content as Markdown.                       |
-| `images`     | `Option<Vec<OcrImage>>`  | `None`  | Extracted images, if `include_image_base64` was set. |
-| `dimensions` | `Option<PageDimensions>` | `None`  | Page dimensions in pixels, if available.             |
+| Field        | Type                     | Default                | Description                                                                   |
+| ------------ | ------------------------ | ---------------------- | ----------------------------------------------------------------------------- |
+| `index`      | `u32`                    | —                      | Page index (0-based).                                                         |
+| `markdown`   | `String`                 | —                      | Extracted page content as Markdown.                                           |
+| `images`     | `Option<Vec<OcrImage>>`  | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `Option<PageDimensions>` | `/* serde(default) */` | Page dimensions in pixels, if available.                                      |
 
 ---
 
@@ -814,9 +1174,9 @@ An OCR request.
 | Field                  | Type               | Default              | Description                                                      |
 | ---------------------- | ------------------ | -------------------- | ---------------------------------------------------------------- |
 | `model`                | `String`           | —                    | The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). |
-| `document`             | `OcrDocument`      | `OcrDocument::Url`   | The document to process.                                         |
+| `document`             | `OcrDocument`      | `OcrDocument::Url`   | The document to process (URL or base64).                         |
 | `pages`                | `Option<Vec<u32>>` | `vec![]`             | Specific pages to process (1-indexed). `None` means all pages.   |
-| `include_image_base64` | `Option<bool>`     | `Default::default()` | Whether to include base64-encoded images of each page.           |
+| `include_image_base64` | `Option<bool>`     | `Default::default()` | Whether to include base64-encoded images of each processed page. |
 
 ---
 
@@ -824,11 +1184,11 @@ An OCR request.
 
 An OCR response.
 
-| Field   | Type            | Default | Description                               |
-| ------- | --------------- | ------- | ----------------------------------------- |
-| `pages` | `Vec<OcrPage>`  | —       | Extracted pages.                          |
-| `model` | `String`        | —       | The model used.                           |
-| `usage` | `Option<Usage>` | `None`  | Token usage, if reported by the provider. |
+| Field   | Type            | Default                | Description                               |
+| ------- | --------------- | ---------------------- | ----------------------------------------- |
+| `pages` | `Vec<OcrPage>`  | —                      | Extracted pages in order.                 |
+| `model` | `String`        | —                      | Model/provider used for OCR.              |
+| `usage` | `Option<Usage>` | `/* serde(default) */` | Token usage, if reported by the provider. |
 
 ---
 
@@ -859,17 +1219,55 @@ discounted rate and the remainder at the regular input rate.
 
 ---
 
+#### ProviderConfig
+
+Static configuration for a single provider entry in providers.json.
+
+| Field            | Type                              | Default | Description                                                                                                                                                                                                                                      |
+| ---------------- | --------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`           | `String`                          | —       | Provider identifier (matches the entry key in providers.json).                                                                                                                                                                                   |
+| `display_name`   | `Option<String>`                  | `None`  | Human-readable provider name shown in UIs.                                                                                                                                                                                                       |
+| `base_url`       | `Option<String>`                  | `None`  | Base URL used as the default for this provider's HTTP client.                                                                                                                                                                                    |
+| `auth`           | `Option<AuthConfig>`              | `None`  | Authentication scheme metadata (auth type + env var holding the key).                                                                                                                                                                            |
+| `endpoints`      | `Option<Vec<String>>`             | `None`  | Supported endpoint kinds (e.g. `chat`, `embeddings`).                                                                                                                                                                                            |
+| `model_prefixes` | `Option<Vec<String>>`             | `None`  | Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`).                                                                                                                                                                           |
+| `param_mappings` | `Option<HashMap<String, String>>` | `None`  | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`). Applied automatically by `ConfigDrivenProvider.transform_request`. |
+
+---
+
+#### RateLimitConfig
+
+Configuration for per-model rate limits.
+
+| Field    | Type                  | Default   | Description                                          |
+| -------- | --------------------- | --------- | ---------------------------------------------------- |
+| `rpm`    | `Option<u32>`         | `None`    | Maximum requests per window. `None` means unlimited. |
+| `tpm`    | `Option<u64>`         | `None`    | Maximum tokens per window. `None` means unlimited.   |
+| `window` | `std::time::Duration` | `60000ms` | Fixed window duration (defaults to 60 s).            |
+
+### Methods
+
+#### default()
+
+**Signature:**
+
+```rust
+pub fn default() -> RateLimitConfig
+```
+
+---
+
 #### RerankRequest
 
 Request to rerank documents by relevance to a query.
 
-| Field              | Type                  | Default              | Description      |
-| ------------------ | --------------------- | -------------------- | ---------------- |
-| `model`            | `String`              | —                    | Model            |
-| `query`            | `String`              | —                    | Query            |
-| `documents`        | `Vec<RerankDocument>` | `vec![]`             | Documents        |
-| `top_n`            | `Option<u32>`         | `Default::default()` | Top n            |
-| `return_documents` | `Option<bool>`        | `Default::default()` | Return documents |
+| Field              | Type                  | Default              | Description                                                 |
+| ------------------ | --------------------- | -------------------- | ----------------------------------------------------------- |
+| `model`            | `String`              | —                    | Model ID (e.g., `"cohere/rerank-english-v3.0"`).            |
+| `query`            | `String`              | —                    | The search query.                                           |
+| `documents`        | `Vec<RerankDocument>` | `vec![]`             | Documents to rerank.                                        |
+| `top_n`            | `Option<u32>`         | `Default::default()` | Return only the top N results. Optional.                    |
+| `return_documents` | `Option<bool>`        | `Default::default()` | Include the document content in results. Defaults to false. |
 
 ---
 
@@ -877,11 +1275,11 @@ Request to rerank documents by relevance to a query.
 
 Response from the rerank endpoint.
 
-| Field     | Type                        | Default | Description       |
-| --------- | --------------------------- | ------- | ----------------- |
-| `id`      | `Option<String>`            | `None`  | Unique identifier |
-| `results` | `Vec<RerankResult>`         | —       | Results           |
-| `meta`    | `Option<serde_json::Value>` | `None`  | Meta              |
+| Field     | Type                        | Default                | Description                                      |
+| --------- | --------------------------- | ---------------------- | ------------------------------------------------ |
+| `id`      | `Option<String>`            | `None`                 | Unique identifier for this rerank request.       |
+| `results` | `Vec<RerankResult>`         | —                      | Reranked documents in order of relevance.        |
+| `meta`    | `Option<serde_json::Value>` | `/* serde(default) */` | Optional metadata about the reranking operation. |
 
 ---
 
@@ -889,11 +1287,11 @@ Response from the rerank endpoint.
 
 A single reranked document with its relevance score.
 
-| Field             | Type                           | Default | Description                       |
-| ----------------- | ------------------------------ | ------- | --------------------------------- |
-| `index`           | `u32`                          | —       | Index                             |
-| `relevance_score` | `f64`                          | —       | Relevance score                   |
-| `document`        | `Option<RerankResultDocument>` | `None`  | Document (rerank result document) |
+| Field             | Type                           | Default                | Description                                                  |
+| ----------------- | ------------------------------ | ---------------------- | ------------------------------------------------------------ |
+| `index`           | `u32`                          | —                      | Original document index in the input list.                   |
+| `relevance_score` | `f64`                          | —                      | Relevance score in `[0, 1]`. Higher indicates more relevant. |
+| `document`        | `Option<RerankResultDocument>` | `/* serde(default) */` | Original document content (if `return_documents` was true).  |
 
 ---
 
@@ -901,52 +1299,60 @@ A single reranked document with its relevance score.
 
 The text content of a reranked document, returned when `return_documents` is true.
 
-| Field  | Type     | Default | Description |
-| ------ | -------- | ------- | ----------- |
-| `text` | `String` | —       | Text        |
+| Field  | Type     | Default | Description    |
+| ------ | -------- | ------- | -------------- |
+| `text` | `String` | —       | Document text. |
 
 ---
 
 #### ResponseObject
 
-| Field        | Type                        | Default              | Description            |
-| ------------ | --------------------------- | -------------------- | ---------------------- |
-| `id`         | `String`                    | —                    | Unique identifier      |
-| `object`     | `String`                    | —                    | Object                 |
-| `created_at` | `u64`                       | —                    | Created at             |
-| `model`      | `String`                    | —                    | Model                  |
-| `status`     | `String`                    | —                    | Status                 |
-| `output`     | `Vec<ResponseOutputItem>`   | `vec![]`             | Output                 |
-| `usage`      | `Option<ResponseUsage>`     | `Default::default()` | Usage (response usage) |
-| `error`      | `Option<serde_json::Value>` | `Default::default()` | Error                  |
+Response from a structured response request.
+
+| Field        | Type                        | Default              | Description                               |
+| ------------ | --------------------------- | -------------------- | ----------------------------------------- |
+| `id`         | `String`                    | —                    | Unique response ID.                       |
+| `object`     | `String`                    | —                    | Object type (e.g., `"response"`).         |
+| `created_at` | `u64`                       | —                    | Unix timestamp of response creation.      |
+| `model`      | `String`                    | —                    | Model used to generate the response.      |
+| `status`     | `String`                    | —                    | Status (e.g., `"succeeded"`, `"failed"`). |
+| `output`     | `Vec<ResponseOutputItem>`   | `vec![]`             | Output items from the response.           |
+| `usage`      | `Option<ResponseUsage>`     | `Default::default()` | Token usage.                              |
+| `error`      | `Option<serde_json::Value>` | `Default::default()` | Error details (if status is "failed").    |
 
 ---
 
 #### ResponseOutputItem
 
-| Field       | Type                | Default | Description                |
-| ----------- | ------------------- | ------- | -------------------------- |
-| `item_type` | `String`            | —       | Item type                  |
-| `content`   | `serde_json::Value` | —       | The extracted text content |
+A single output item from the response.
+
+| Field       | Type                | Default | Description                                          |
+| ----------- | ------------------- | ------- | ---------------------------------------------------- |
+| `item_type` | `String`            | —       | Output type (e.g., `"text"`, `"object"`, `"error"`). |
+| `content`   | `serde_json::Value` | —       | Output content (flattened into the object).          |
 
 ---
 
 #### ResponseTool
 
-| Field       | Type                | Default | Description |
-| ----------- | ------------------- | ------- | ----------- |
-| `tool_type` | `String`            | —       | Tool type   |
-| `config`    | `serde_json::Value` | —       | Config      |
+A tool available for the response request.
+
+| Field       | Type                | Default | Description                                     |
+| ----------- | ------------------- | ------- | ----------------------------------------------- |
+| `tool_type` | `String`            | —       | Tool type (e.g., "extractor", "search").        |
+| `config`    | `serde_json::Value` | —       | Tool configuration (flattened into the object). |
 
 ---
 
 #### ResponseUsage
 
-| Field           | Type  | Default | Description   |
-| --------------- | ----- | ------- | ------------- |
-| `input_tokens`  | `u64` | —       | Input tokens  |
-| `output_tokens` | `u64` | —       | Output tokens |
-| `total_tokens`  | `u64` | —       | Total tokens  |
+Token usage for a response.
+
+| Field           | Type  | Default | Description         |
+| --------------- | ----- | ------- | ------------------- |
+| `input_tokens`  | `u64` | —       | Input tokens used.  |
+| `output_tokens` | `u64` | —       | Output tokens used. |
+| `total_tokens`  | `u64` | —       | Total tokens used.  |
 
 ---
 
@@ -954,13 +1360,13 @@ The text content of a reranked document, returned when `return_documents` is tru
 
 A search request.
 
-| Field                  | Type                  | Default              | Description                                                               |
-| ---------------------- | --------------------- | -------------------- | ------------------------------------------------------------------------- |
-| `model`                | `String`              | —                    | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). |
-| `query`                | `String`              | —                    | The search query.                                                         |
-| `max_results`          | `Option<u32>`         | `Default::default()` | Maximum number of results to return.                                      |
-| `search_domain_filter` | `Option<Vec<String>>` | `vec![]`             | Domain filter — restrict results to specific domains.                     |
-| `country`              | `Option<String>`      | `Default::default()` | Country code for localized results (ISO 3166-1 alpha-2).                  |
+| Field                  | Type                  | Default              | Description                                                                    |
+| ---------------------- | --------------------- | -------------------- | ------------------------------------------------------------------------------ |
+| `model`                | `String`              | —                    | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`).      |
+| `query`                | `String`              | —                    | The search query string.                                                       |
+| `max_results`          | `Option<u32>`         | `Default::default()` | Maximum number of results to return.                                           |
+| `search_domain_filter` | `Option<Vec<String>>` | `vec![]`             | Domain filter — restrict results to specific domains.                          |
+| `country`              | `Option<String>`      | `Default::default()` | Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). |
 
 ---
 
@@ -968,10 +1374,10 @@ A search request.
 
 A search response.
 
-| Field     | Type                | Default | Description         |
-| --------- | ------------------- | ------- | ------------------- |
-| `results` | `Vec<SearchResult>` | —       | The search results. |
-| `model`   | `String`            | —       | The model used.     |
+| Field     | Type                | Default | Description                               |
+| --------- | ------------------- | ------- | ----------------------------------------- |
+| `results` | `Vec<SearchResult>` | —       | List of search results.                   |
+| `model`   | `String`            | —       | Model/provider that performed the search. |
 
 ---
 
@@ -979,108 +1385,128 @@ A search response.
 
 An individual search result.
 
-| Field     | Type             | Default | Description                                     |
-| --------- | ---------------- | ------- | ----------------------------------------------- |
-| `title`   | `String`         | —       | Title of the result.                            |
-| `url`     | `String`         | —       | URL of the result.                              |
-| `snippet` | `String`         | —       | Text snippet / excerpt.                         |
-| `date`    | `Option<String>` | `None`  | Publication or last-updated date, if available. |
+| Field     | Type             | Default                | Description                                     |
+| --------- | ---------------- | ---------------------- | ----------------------------------------------- |
+| `title`   | `String`         | —                      | Result title.                                   |
+| `url`     | `String`         | —                      | Result URL.                                     |
+| `snippet` | `String`         | —                      | Text snippet or excerpt from the page.          |
+| `date`    | `Option<String>` | `/* serde(default) */` | Publication or last-updated date, if available. |
 
 ---
 
 #### SpecificFunction
 
-| Field  | Type     | Default | Description |
-| ------ | -------- | ------- | ----------- |
-| `name` | `String` | —       | The name    |
+Name of the specific function to invoke.
+
+| Field  | Type     | Default | Description    |
+| ------ | -------- | ------- | -------------- |
+| `name` | `String` | —       | Function name. |
 
 ---
 
 #### SpecificToolChoice
 
-| Field         | Type               | Default              | Description                  |
-| ------------- | ------------------ | -------------------- | ---------------------------- |
-| `choice_type` | `ToolType`         | `ToolType::Function` | Choice type (tool type)      |
-| `function`    | `SpecificFunction` | —                    | Function (specific function) |
+Directive to call a specific tool.
+
+| Field         | Type               | Default              | Description                      |
+| ------------- | ------------------ | -------------------- | -------------------------------- |
+| `choice_type` | `ToolType`         | `ToolType::Function` | Tool type (always "function").   |
+| `function`    | `SpecificFunction` | —                    | The specific function to invoke. |
 
 ---
 
 #### StreamChoice
 
-| Field           | Type                   | Default              | Description                   |
-| --------------- | ---------------------- | -------------------- | ----------------------------- |
-| `index`         | `u32`                  | —                    | Index                         |
-| `delta`         | `StreamDelta`          | —                    | Delta (stream delta)          |
-| `finish_reason` | `Option<FinishReason>` | `Default::default()` | Finish reason (finish reason) |
+A streaming choice with incremental delta.
+
+| Field           | Type                   | Default              | Description                                                    |
+| --------------- | ---------------------- | -------------------- | -------------------------------------------------------------- |
+| `index`         | `u32`                  | —                    | Index of this choice in the choices array.                     |
+| `delta`         | `StreamDelta`          | —                    | Incremental update to the message (content, tool calls, etc.). |
+| `finish_reason` | `Option<FinishReason>` | `Default::default()` | Why the stream ended (present only in final chunk).            |
 
 ---
 
 #### StreamDelta
 
+Incremental delta in a stream chunk.
+
 | Field           | Type                          | Default              | Description                                                            |
 | --------------- | ----------------------------- | -------------------- | ---------------------------------------------------------------------- |
-| `role`          | `Option<String>`              | `Default::default()` | Role                                                                   |
-| `content`       | `Option<String>`              | `Default::default()` | The extracted text content                                             |
-| `tool_calls`    | `Option<Vec<StreamToolCall>>` | `vec![]`             | Tool calls                                                             |
+| `role`          | `Option<String>`              | `Default::default()` | Role (typically present only in the first chunk).                      |
+| `content`       | `Option<String>`              | `Default::default()` | Partial content chunk (e.g., a few words of the response).             |
+| `tool_calls`    | `Option<Vec<StreamToolCall>>` | `vec![]`             | Partial tool calls being streamed.                                     |
 | `function_call` | `Option<StreamFunctionCall>`  | `Default::default()` | Deprecated legacy function_call delta; retained for API compatibility. |
-| `refusal`       | `Option<String>`              | `Default::default()` | Refusal                                                                |
+| `refusal`       | `Option<String>`              | `Default::default()` | Partial refusal message.                                               |
 
 ---
 
 #### StreamFunctionCall
 
-| Field       | Type             | Default              | Description |
-| ----------- | ---------------- | -------------------- | ----------- |
-| `name`      | `Option<String>` | `Default::default()` | The name    |
-| `arguments` | `Option<String>` | `Default::default()` | Arguments   |
+Partial function call details in a stream.
+
+| Field       | Type             | Default              | Description                                   |
+| ----------- | ---------------- | -------------------- | --------------------------------------------- |
+| `name`      | `Option<String>` | `Default::default()` | Function name (typically in the first chunk). |
+| `arguments` | `Option<String>` | `Default::default()` | Partial JSON arguments chunk.                 |
 
 ---
 
 #### StreamOptions
 
-| Field           | Type           | Default              | Description   |
-| --------------- | -------------- | -------------------- | ------------- |
-| `include_usage` | `Option<bool>` | `Default::default()` | Include usage |
+Options for streaming responses.
+
+| Field           | Type           | Default              | Description                                             |
+| --------------- | -------------- | -------------------- | ------------------------------------------------------- |
+| `include_usage` | `Option<bool>` | `Default::default()` | If true, include token usage in the final stream chunk. |
 
 ---
 
 #### StreamToolCall
 
-| Field       | Type                         | Default              | Description                     |
-| ----------- | ---------------------------- | -------------------- | ------------------------------- |
-| `index`     | `u32`                        | —                    | Index                           |
-| `id`        | `Option<String>`             | `Default::default()` | Unique identifier               |
-| `call_type` | `Option<ToolType>`           | `Default::default()` | Call type (tool type)           |
-| `function`  | `Option<StreamFunctionCall>` | `Default::default()` | Function (stream function call) |
+A streaming tool call being built incrementally.
+
+| Field       | Type                         | Default              | Description                                                |
+| ----------- | ---------------------------- | -------------------- | ---------------------------------------------------------- |
+| `index`     | `u32`                        | —                    | Index of this tool call in the tool_calls array.           |
+| `id`        | `Option<String>`             | `Default::default()` | Tool call ID (typically in the first chunk for this call). |
+| `call_type` | `Option<ToolType>`           | `Default::default()` | Tool type (typically "function").                          |
+| `function`  | `Option<StreamFunctionCall>` | `Default::default()` | Partial function name and arguments.                       |
 
 ---
 
 #### SystemMessage
 
-| Field     | Type             | Default              | Description                |
-| --------- | ---------------- | -------------------- | -------------------------- |
-| `content` | `String`         | —                    | The extracted text content |
-| `name`    | `Option<String>` | `Default::default()` | The name                   |
+System message guiding model behavior for the entire conversation.
+
+| Field     | Type             | Default              | Description                                                     |
+| --------- | ---------------- | -------------------- | --------------------------------------------------------------- |
+| `content` | `String`         | —                    | Instructions or context that apply throughout the conversation. |
+| `name`    | `Option<String>` | `Default::default()` | Optional name for the system message source.                    |
 
 ---
 
 #### ToolCall
 
-| Field       | Type           | Default | Description              |
-| ----------- | -------------- | ------- | ------------------------ |
-| `id`        | `String`       | —       | Unique identifier        |
-| `call_type` | `ToolType`     | —       | Call type (tool type)    |
-| `function`  | `FunctionCall` | —       | Function (function call) |
+A tool call the model wants to execute.
+
+| Field       | Type           | Default | Description                                                         |
+| ----------- | -------------- | ------- | ------------------------------------------------------------------- |
+| `id`        | `String`       | —       | Unique ID for this call, used to reference in tool result messages. |
+| `call_type` | `ToolType`     | —       | Tool type (always "function").                                      |
+| `function`  | `FunctionCall` | —       | Function name and arguments.                                        |
 
 ---
 
 #### ToolMessage
 
-| Field          | Type             | Default              | Description                |
-| -------------- | ---------------- | -------------------- | -------------------------- |
-| `content`      | `String`         | —                    | The extracted text content |
-| `tool_call_id` | `String`         | —                    | Tool call id               |
-| `name`         | `Option<String>` | `Default::default()` | The name                   |
+Tool execution result returned to the model.
+
+| Field          | Type             | Default              | Description                                  |
+| -------------- | ---------------- | -------------------- | -------------------------------------------- |
+| `content`      | `String`         | —                    | Result of the tool execution.                |
+| `tool_call_id` | `String`         | —                    | ID of the tool call this result responds to. |
+| `name`         | `Option<String>` | `Default::default()` | Optional tool/function name.                 |
 
 ---
 
@@ -1088,12 +1514,12 @@ An individual search result.
 
 Response from a transcription request.
 
-| Field      | Type                                | Default              | Description |
-| ---------- | ----------------------------------- | -------------------- | ----------- |
-| `text`     | `String`                            | —                    | Text        |
-| `language` | `Option<String>`                    | `Default::default()` | Language    |
-| `duration` | `Option<f64>`                       | `Default::default()` | Duration    |
-| `segments` | `Option<Vec<TranscriptionSegment>>` | `vec![]`             | Segments    |
+| Field      | Type                                | Default              | Description                                                                  |
+| ---------- | ----------------------------------- | -------------------- | ---------------------------------------------------------------------------- |
+| `text`     | `String`                            | —                    | The transcribed text.                                                        |
+| `language` | `Option<String>`                    | `Default::default()` | Detected language (ISO-639-1 code).                                          |
+| `duration` | `Option<f64>`                       | `Default::default()` | Total audio duration in seconds.                                             |
+| `segments` | `Option<Vec<TranscriptionSegment>>` | `vec![]`             | Detailed segment-level transcription (if response_format is "verbose_json"). |
 
 ---
 
@@ -1101,16 +1527,18 @@ Response from a transcription request.
 
 A segment of transcribed audio with timing information.
 
-| Field   | Type     | Default | Description       |
-| ------- | -------- | ------- | ----------------- |
-| `id`    | `u32`    | —       | Unique identifier |
-| `start` | `f64`    | —       | Start             |
-| `end`   | `f64`    | —       | End               |
-| `text`  | `String` | —       | Text              |
+| Field   | Type     | Default | Description                        |
+| ------- | -------- | ------- | ---------------------------------- |
+| `id`    | `u32`    | —       | Segment index (0-based).           |
+| `start` | `f64`    | —       | Start time in seconds.             |
+| `end`   | `f64`    | —       | End time in seconds.               |
+| `text`  | `String` | —       | Transcribed text for this segment. |
 
 ---
 
 #### Usage
+
+Token-usage accounting returned by the provider on each completion / embedding call.
 
 | Field                   | Type                          | Default              | Description                                                                                                                                                                         |
 | ----------------------- | ----------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1123,10 +1551,12 @@ A segment of transcribed audio with timing information.
 
 #### UserMessage
 
-| Field     | Type             | Default              | Description                |
-| --------- | ---------------- | -------------------- | -------------------------- |
-| `content` | `UserContent`    | `UserContent::Text`  | The extracted text content |
-| `name`    | `Option<String>` | `Default::default()` | The name                   |
+User message in the conversation.
+
+| Field     | Type             | Default              | Description                                                                               |
+| --------- | ---------------- | -------------------- | ----------------------------------------------------------------------------------------- |
+| `content` | `UserContent`    | `UserContent::Text`  | Message content as plain text or array of content parts (text, images, documents, audio). |
+| `name`    | `Option<String>` | `Default::default()` | Optional name for the user.                                                               |
 
 ---
 
@@ -1149,31 +1579,37 @@ A chat message in a conversation.
 
 #### UserContent
 
-| Value   | Description                             |
-| ------- | --------------------------------------- |
-| `Text`  | Text format — Fields: `0`: `String`     |
-| `Parts` | Parts — Fields: `0`: `Vec<ContentPart>` |
+User message content as either plain text or a list of multimodal parts.
+
+| Value   | Description                                                                                |
+| ------- | ------------------------------------------------------------------------------------------ |
+| `Text`  | Plain text content. — Fields: `0`: `String`                                                |
+| `Parts` | Array of content parts (text, images, documents, audio). — Fields: `0`: `Vec<ContentPart>` |
 
 ---
 
 #### ContentPart
 
-| Value        | Description                                         |
-| ------------ | --------------------------------------------------- |
-| `Text`       | Text format — Fields: `text`: `String`              |
-| `ImageUrl`   | Image url — Fields: `image_url`: `ImageUrl`         |
-| `Document`   | Document — Fields: `document`: `DocumentContent`    |
-| `InputAudio` | Input audio — Fields: `input_audio`: `AudioContent` |
+A single content part in a user message — text, image, document, or audio.
+
+| Value        | Description                                                                              |
+| ------------ | ---------------------------------------------------------------------------------------- |
+| `Text`       | Plain text. — Fields: `text`: `String`                                                   |
+| `ImageUrl`   | Image identified by URL (with optional detail level). — Fields: `image_url`: `ImageUrl`  |
+| `Document`   | Document file (PDF, CSV, etc.) as base64 or URL. — Fields: `document`: `DocumentContent` |
+| `InputAudio` | Audio input as base64. — Fields: `input_audio`: `AudioContent`                           |
 
 ---
 
 #### ImageDetail
 
-| Value  | Description |
-| ------ | ----------- |
-| `Low`  | Low         |
-| `High` | High        |
-| `Auto` | Auto        |
+Image detail level controlling token cost and processing.
+
+| Value  | Description                                                        |
+| ------ | ------------------------------------------------------------------ |
+| `Low`  | Low detail: scales image to 512x512, uses fewer tokens.            |
+| `High` | High detail: processes up to 2x2 grid of tiles, higher token cost. |
+| `Auto` | Auto: model chooses low or high based on image dimensions.         |
 
 ---
 
@@ -1193,39 +1629,47 @@ deserialization.
 
 #### ToolChoice
 
-| Value      | Description                                  |
-| ---------- | -------------------------------------------- |
-| `Mode`     | Mode — Fields: `0`: `ToolChoiceMode`         |
-| `Specific` | Specific — Fields: `0`: `SpecificToolChoice` |
+Tool usage mode or a specific tool to call.
+
+| Value      | Description                                                               |
+| ---------- | ------------------------------------------------------------------------- |
+| `Mode`     | Predefined mode: auto, required, or none. — Fields: `0`: `ToolChoiceMode` |
+| `Specific` | Force a specific tool to be called. — Fields: `0`: `SpecificToolChoice`   |
 
 ---
 
 #### ToolChoiceMode
 
-| Value      | Description |
-| ---------- | ----------- |
-| `Auto`     | Auto        |
-| `Required` | Required    |
-| `None`     | None        |
+Tool choice mode.
+
+| Value      | Description                                        |
+| ---------- | -------------------------------------------------- |
+| `Auto`     | Model may or may not call tools; default behavior. |
+| `Required` | Model must call at least one tool.                 |
+| `None`     | Model must not call any tools.                     |
 
 ---
 
 #### ResponseFormat
 
-| Value        | Description                                             |
-| ------------ | ------------------------------------------------------- |
-| `Text`       | Text format                                             |
-| `JsonObject` | Json object                                             |
-| `JsonSchema` | Json schema — Fields: `json_schema`: `JsonSchemaFormat` |
+Response format constraint.
+
+| Value        | Description                                                                                   |
+| ------------ | --------------------------------------------------------------------------------------------- |
+| `Text`       | Plain text output (default).                                                                  |
+| `JsonObject` | Output must be valid JSON object (no schema validation).                                      |
+| `JsonSchema` | Output must conform to the specified JSON schema. — Fields: `json_schema`: `JsonSchemaFormat` |
 
 ---
 
 #### StopSequence
 
-| Value      | Description                           |
-| ---------- | ------------------------------------- |
-| `Single`   | Single — Fields: `0`: `String`        |
-| `Multiple` | Multiple — Fields: `0`: `Vec<String>` |
+Stop sequence(s) that cause the model to stop generating.
+
+| Value      | Description                                           |
+| ---------- | ----------------------------------------------------- |
+| `Single`   | Single stop sequence. — Fields: `0`: `String`         |
+| `Multiple` | Multiple stop sequences. — Fields: `0`: `Vec<String>` |
 
 ---
 
@@ -1269,10 +1713,12 @@ The format in which the embedding vectors are returned.
 
 #### EmbeddingInput
 
-| Value      | Description                           |
-| ---------- | ------------------------------------- |
-| `Single`   | Single — Fields: `0`: `String`        |
-| `Multiple` | Multiple — Fields: `0`: `Vec<String>` |
+Text or texts to embed.
+
+| Value      | Description                                                           |
+| ---------- | --------------------------------------------------------------------- |
+| `Single`   | Single text string. — Fields: `0`: `String`                           |
+| `Multiple` | Multiple text strings (batch embedding). — Fields: `0`: `Vec<String>` |
 
 ---
 
@@ -1280,10 +1726,10 @@ The format in which the embedding vectors are returned.
 
 Input to the moderation endpoint — a single string or multiple strings.
 
-| Value      | Description                           |
-| ---------- | ------------------------------------- |
-| `Single`   | Single — Fields: `0`: `String`        |
-| `Multiple` | Multiple — Fields: `0`: `Vec<String>` |
+| Value      | Description                                                            |
+| ---------- | ---------------------------------------------------------------------- |
+| `Single`   | Single text string. — Fields: `0`: `String`                            |
+| `Multiple` | Multiple text strings (batch moderation). — Fields: `0`: `Vec<String>` |
 
 ---
 
@@ -1291,10 +1737,10 @@ Input to the moderation endpoint — a single string or multiple strings.
 
 A document to be reranked — either a plain string or an object with a text field.
 
-| Value    | Description                         |
-| -------- | ----------------------------------- |
-| `Text`   | Text format — Fields: `0`: `String` |
-| `Object` | Object — Fields: `text`: `String`   |
+| Value    | Description                                                                          |
+| -------- | ------------------------------------------------------------------------------------ |
+| `Text`   | Plain text document content. — Fields: `0`: `String`                                 |
+| `Object` | Document with explicit text field (may include metadata). — Fields: `text`: `String` |
 
 ---
 
@@ -1311,27 +1757,31 @@ Document input for OCR — either a URL or inline base64 data.
 
 #### FilePurpose
 
-| Value        | Description |
-| ------------ | ----------- |
-| `Assistants` | Assistants  |
-| `Batch`      | Batch       |
-| `FineTune`   | Fine tune   |
-| `Vision`     | Vision      |
+Purpose of an uploaded file.
+
+| Value        | Description                       |
+| ------------ | --------------------------------- |
+| `Assistants` | File for use with Assistants API. |
+| `Batch`      | File for batch processing.        |
+| `FineTune`   | File for fine-tuning.             |
+| `Vision`     | File for vision/image tasks.      |
 
 ---
 
 #### BatchStatus
 
-| Value        | Description |
-| ------------ | ----------- |
-| `Validating` | Validating  |
-| `Failed`     | Failed      |
-| `InProgress` | In progress |
-| `Finalizing` | Finalizing  |
-| `Completed`  | Completed   |
-| `Expired`    | Expired     |
-| `Cancelling` | Cancelling  |
-| `Cancelled`  | Cancelled   |
+Status of a batch job.
+
+| Value        | Description                    |
+| ------------ | ------------------------------ |
+| `Validating` | Validating the input file.     |
+| `Failed`     | Job failed.                    |
+| `InProgress` | Job is running.                |
+| `Finalizing` | Finalizing results.            |
+| `Completed`  | Job completed successfully.    |
+| `Expired`    | Job expired before completion. |
+| `Cancelling` | Job is being cancelled.        |
+| `Cancelled`  | Job has been cancelled.        |
 
 ---
 
@@ -1344,6 +1794,41 @@ How the API key is sent in the HTTP request.
 | `Bearer` | Bearer token: `Authorization: Bearer <key>`                     |
 | `ApiKey` | Custom header: e.g., `X-Api-Key: <key>` — Fields: `0`: `String` |
 | `None`   | No authentication required.                                     |
+
+---
+
+#### AuthType
+
+Auth scheme used by a provider.
+
+| Value     | Description                                                                    |
+| --------- | ------------------------------------------------------------------------------ |
+| `Bearer`  | Standard `Authorization: Bearer <key>` header.                                 |
+| `ApiKey`  | `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). |
+| `None`    | No authentication header required.                                             |
+| `Unknown` | Unrecognised auth scheme — falls back to bearer.                               |
+
+---
+
+#### Enforcement
+
+How budget limits are enforced.
+
+| Value  | Description                                                                       |
+| ------ | --------------------------------------------------------------------------------- |
+| `Hard` | Reject requests that would exceed the budget with `LiterLlmError.BudgetExceeded`. |
+| `Soft` | Allow requests through but emit a `tracing.warn!` when the budget is exceeded.    |
+
+---
+
+#### CacheBackend
+
+Storage backend for the response cache.
+
+| Value     | Description                                                                                                                                       |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Memory`  | In-memory LRU cache (default). No external dependencies.                                                                                          |
+| `OpenDal` | OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.). — Fields: `scheme`: `String`, `config`: `HashMap<String, String>` |
 
 ---
 

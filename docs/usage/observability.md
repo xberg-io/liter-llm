@@ -4,7 +4,7 @@ description: "OpenTelemetry tracing and cost tracking for liter-llm requests."
 
 # Observability
 
-liter-llm emits OpenTelemetry-compatible tracing spans for every LLM request via two Tower middleware layers: `TracingLayer` and `CostTrackingLayer`. Spans follow the [OpenTelemetry GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/).
+Liter-llm emits OpenTelemetry-compatible tracing spans for every LLM request via two Tower middleware layers: `TracingLayer` and `CostTrackingLayer`. Spans follow the [OpenTelemetry GenAI semantic conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/).
 
 ## Feature flags
 

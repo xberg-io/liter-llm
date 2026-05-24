@@ -28,24 +28,33 @@ impl Default for Message {
     }
 }
 
+/// System message guiding model behavior for the entire conversation.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct SystemMessage {
+    /// Instructions or context that apply throughout the conversation.
     pub content: String,
+    /// Optional name for the system message source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
+/// User message in the conversation.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct UserMessage {
+    /// Message content as plain text or array of content parts (text, images, documents, audio).
     pub content: UserContent,
+    /// Optional name for the user.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
+/// User message content as either plain text or a list of multimodal parts.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum UserContent {
+    /// Plain text content.
     Text(String),
+    /// Array of content parts (text, images, documents, audio).
     Parts(Vec<ContentPart>),
 }
 
@@ -56,15 +65,20 @@ impl Default for UserContent {
     }
 }
 
+/// A single content part in a user message — text, image, document, or audio.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum ContentPart {
+    /// Plain text.
     #[serde(rename = "text")]
     Text { text: String },
+    /// Image identified by URL (with optional detail level).
     #[serde(rename = "image_url")]
     ImageUrl { image_url: ImageUrl },
+    /// Document file (PDF, CSV, etc.) as base64 or URL.
     #[serde(rename = "document")]
     Document { document: DocumentContent },
+    /// Audio input as base64.
     #[serde(rename = "input_audio")]
     InputAudio { input_audio: AudioContent },
 }
@@ -76,22 +90,30 @@ impl Default for ContentPart {
     }
 }
 
+/// An image URL reference with optional detail level for processing.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ImageUrl {
+    /// URL of the image (data URI or HTTP/HTTPS URL).
     pub url: String,
+    /// Detail level: low (512x512), high (2x2 tiles), or auto (model-selected).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub detail: Option<ImageDetail>,
 }
 
+/// Image detail level controlling token cost and processing.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ImageDetail {
+    /// Low detail: scales image to 512x512, uses fewer tokens.
     Low,
+    /// High detail: processes up to 2x2 grid of tiles, higher token cost.
     High,
+    /// Auto: model chooses low or high based on image dimensions.
     Auto,
 }
 
+/// PDF/document content part for vision-capable models.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct DocumentContent {
@@ -101,6 +123,7 @@ pub struct DocumentContent {
     pub media_type: String,
 }
 
+/// Audio content part for speech-capable models.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AudioContent {
@@ -110,14 +133,19 @@ pub struct AudioContent {
     pub format: String,
 }
 
+/// Assistant's response to a user message.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct AssistantMessage {
+    /// The assistant's text response. Absent if tool calls are returned instead.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub content: Option<String>,
+    /// Optional name for the assistant.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    /// Tool calls the model wants to execute, if any.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tool_calls: Option<Vec<ToolCall>>,
+    /// Refusal reason, if the model declined to respond per safety policies.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub refusal: Option<String>,
     /// Deprecated legacy function_call field; retained for API compatibility.
@@ -125,17 +153,24 @@ pub struct AssistantMessage {
     pub function_call: Option<FunctionCall>,
 }
 
+/// Tool execution result returned to the model.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ToolMessage {
+    /// Result of the tool execution.
     pub content: String,
+    /// ID of the tool call this result responds to.
     pub tool_call_id: String,
+    /// Optional tool/function name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
 
+/// Developer message (system-like message for Claude models).
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct DeveloperMessage {
+    /// Developer-specific instructions or context.
     pub content: String,
+    /// Optional name for the developer message source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 }
@@ -161,46 +196,64 @@ pub enum ToolType {
     Function,
 }
 
+/// A tool the model can invoke (currently, all tools are functions).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ChatCompletionTool {
+    /// Tool type (always "function" in OpenAI spec).
     #[serde(rename = "type")]
     pub tool_type: ToolType,
+    /// Function definition with name, description, and JSON schema parameters.
     pub function: FunctionDefinition,
 }
 
+/// Function definition exposed to the model.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct FunctionDefinition {
+    /// Name of the function. Required and must be alphanumeric + underscores.
     pub name: String,
+    /// Human-readable description explaining what the function does.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    /// JSON Schema defining the function's parameters.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parameters: Option<serde_json::Value>,
+    /// If true, enforce strict JSON schema validation for arguments.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub strict: Option<bool>,
 }
 
+/// A tool call the model wants to execute.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ToolCall {
+    /// Unique ID for this call, used to reference in tool result messages.
     pub id: String,
+    /// Tool type (always "function").
     #[serde(rename = "type")]
     pub call_type: ToolType,
+    /// Function name and arguments.
     pub function: FunctionCall,
 }
 
+/// Function call details.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FunctionCall {
+    /// Function name.
     pub name: String,
+    /// Arguments as a JSON string (parse with serde_json::from_str).
     pub arguments: String,
 }
 
 // ─── Tool Choice ─────────────────────────────────────────────────────────────
 
+/// Tool usage mode or a specific tool to call.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ToolChoice {
+    /// Predefined mode: auto, required, or none.
     Mode(ToolChoiceMode),
+    /// Force a specific tool to be called.
     Specific(SpecificToolChoice),
 }
 
@@ -211,54 +264,73 @@ impl Default for ToolChoice {
     }
 }
 
+/// Tool choice mode.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ToolChoiceMode {
+    /// Model may or may not call tools; default behavior.
     #[default]
     Auto,
+    /// Model must call at least one tool.
     Required,
+    /// Model must not call any tools.
     None,
 }
 
+/// Directive to call a specific tool.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct SpecificToolChoice {
+    /// Tool type (always "function").
     #[serde(rename = "type")]
     pub choice_type: ToolType,
+    /// The specific function to invoke.
     pub function: SpecificFunction,
 }
 
+/// Name of the specific function to invoke.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct SpecificFunction {
+    /// Function name.
     pub name: String,
 }
 
 // ─── Response Format ─────────────────────────────────────────────────────────
 
+/// Response format constraint.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum ResponseFormat {
+    /// Plain text output (default).
     #[default]
     #[serde(rename = "text")]
     Text,
+    /// Output must be valid JSON object (no schema validation).
     #[serde(rename = "json_object")]
     JsonObject,
+    /// Output must conform to the specified JSON schema.
     #[serde(rename = "json_schema")]
     JsonSchema { json_schema: JsonSchemaFormat },
 }
 
+/// JSON Schema specification for constrained output.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct JsonSchemaFormat {
+    /// Name of the schema (must be unique in the request).
     pub name: String,
+    /// Description of what the schema represents.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    /// JSON Schema object defining the output structure.
     pub schema: serde_json::Value,
+    /// If true, enforce strict schema validation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub strict: Option<bool>,
 }
 
 // ─── Usage ───────────────────────────────────────────────────────────────────
 
+/// Token-usage accounting returned by the provider on each completion / embedding call.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Usage {
     /// Prompt tokens used. Defaults to 0 when absent (some providers omit this).
@@ -295,10 +367,13 @@ pub struct PromptTokensDetails {
 
 // ─── Stop Sequence ───────────────────────────────────────────────────────────
 
+/// Stop sequence(s) that cause the model to stop generating.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum StopSequence {
+    /// Single stop sequence.
     Single(String),
+    /// Multiple stop sequences.
     Multiple(Vec<String>),
 }
 

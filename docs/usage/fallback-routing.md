@@ -4,7 +4,7 @@ description: "Configure fallback and multi-deployment routing strategies for lit
 
 # Fallback and Routing
 
-liter-llm provides two composable Tower layers for multi-deployment scenarios: `FallbackLayer` for primary-plus-backup patterns, and `Router` for distributing load across a fleet of deployments with five selectable strategies.
+Liter-llm provides two composable Tower layers for multi-deployment scenarios: `FallbackLayer` for primary-plus-backup patterns, and `Router` for distributing load across a fleet of deployments with five selectable strategies.
 
 ## Fallback
 
@@ -24,7 +24,7 @@ let backup  = LlmService::new(anthropic_client);
 let service = FallbackLayer::new(backup).layer(primary);
 ```
 
-!!! warning "Streaming buffer"
+!!! Warning "Streaming buffer"
 When `LlmService` is used inside the Tower stack, streaming responses (`ChatStream`) are fully buffered in memory before being yielded. This is required by Tower's `Service` trait, which mandates `'static` futures. All chunks are collected into a `VecDeque` and replayed. If unbuffered streaming is required, call `LlmClient::chat_stream()` directly, bypassing the Tower stack.
 
 ## Router

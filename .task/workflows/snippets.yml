@@ -1,17 +1,17 @@
 version: "3"
 
 vars:
-  RUNNER: "alef-snippets"
+  RUNNER: "alef snippets"
   SNIPPETS_DIR: "docs/snippets"
-  ALEF_VERSION: "0.16.23"
+  ALEF_VERSION: "0.16.72"
 
 tasks:
   install:
-    desc: Install alef-snippets (matched to the alef version pinned in alef.toml)
+    desc: Install alef (snippets is now an alef subcommand)
     status:
-      - command -v {{.RUNNER}}
+      - command -v alef
     cmds:
-      - cargo install --git https://github.com/kreuzberg-dev/alef --tag v{{.ALEF_VERSION}} alef-snippets --features cli --locked --force
+      - cargo install --git https://github.com/kreuzberg-dev/alef --tag v{{.ALEF_VERSION}} alef-cli --locked --force
 
   list:
     desc: List all documentation snippets
