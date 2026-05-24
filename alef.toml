@@ -1734,7 +1734,7 @@ replace = '"@kreuzberg/liter-llm-wasm": "{version}"'
 [[workspace.sync.text_replacements]]
 path = "test_apps/python/pyproject.toml"
 search = '"liter-llm==[^"]*"'
-replace = '"liter-llm=={version}"'
+replace = '"liter-llm=={python_version}"'
 
 [[workspace.sync.text_replacements]]
 path = "test_apps/ruby/Gemfile"
