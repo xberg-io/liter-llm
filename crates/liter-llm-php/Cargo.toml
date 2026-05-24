@@ -8,17 +8,6 @@ readme = false
 keywords = ["llm", "api-client", "openai", "anthropic"]
 categories = ["text-processing"]
 
-[lib]
-crate-type = ["cdylib"]
-
-[dependencies]
-liter-llm = { version = "1.4.0-rc.31", path = "../liter-llm", features = ["native-http", "full"] }
-ext-php-rs = "0.15"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-tokio = { version = "1", features = ["full"] }
-futures-util = "0.3"
-
 # `serde_json` and `tokio` are emitted unconditionally above so the manifest
 # is stable across regens, but for umbrella crates with no async fns and no
 # JSON-marshalled return types they are genuinely unused. The conditional
@@ -28,5 +17,16 @@ futures-util = "0.3"
 [package.metadata.cargo-machete]
 ignored = ["serde_json", "tokio", "futures-util"]
 
+[lib]
+crate-type = ["cdylib"]
+
 [features]
 extension-module = []
+
+[dependencies]
+ext-php-rs = "0.15"
+futures-util = "0.3"
+liter-llm = { version = "1.4.0-rc.31", path = "../liter-llm", features = ["native-http", "full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
