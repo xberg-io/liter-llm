@@ -60,7 +60,7 @@ public struct UserMessage: Codable, Sendable, Hashable {
 // MARK: - Internal FFI conversions for UserMessage
 internal extension UserMessage {
     init(_ rb: RustBridge.UserMessageRef) throws {
-        self.content = try UserContent(rb.content())
+        self.content = try JSONDecoder().decode(UserContent.self, from: (rb.content().toString().data(using: .utf8) ?? Data("null".utf8)))
         self.name = rb.name()?.toString()
     }
     func intoRust() throws -> RustBridge.UserMessage {
@@ -950,7 +950,7 @@ public struct EmbeddingRequest: Codable, Sendable, Hashable {
 internal extension EmbeddingRequest {
     init(_ rb: RustBridge.EmbeddingRequestRef) throws {
         self.model = rb.model().toString()
-        self.input = try EmbeddingInput(rb.input())
+        self.input = try JSONDecoder().decode(EmbeddingInput.self, from: (rb.input().toString().data(using: .utf8) ?? Data("null".utf8)))
         self.encodingFormat = rb.encodingFormat().flatMap { EmbeddingFormat(rawValue: $0.toString()) }
         self.dimensions = rb.dimensions()
         self.user = rb.user()?.toString()
@@ -1386,7 +1386,7 @@ public struct ModerationRequest: Codable, Sendable, Hashable {
 // MARK: - Internal FFI conversions for ModerationRequest
 internal extension ModerationRequest {
     init(_ rb: RustBridge.ModerationRequestRef) throws {
-        self.input = try ModerationInput(rb.input())
+        self.input = try JSONDecoder().decode(ModerationInput.self, from: (rb.input().toString().data(using: .utf8) ?? Data("null".utf8)))
         self.model = rb.model()?.toString()
     }
     func intoRust() throws -> RustBridge.ModerationRequest {
@@ -1670,7 +1670,7 @@ internal extension RerankRequest {
     init(_ rb: RustBridge.RerankRequestRef) throws {
         self.model = rb.model().toString()
         self.query = rb.query().toString()
-        self.documents = try rb.documents().map { try RerankDocument($0) }
+        self.documents = try rb.documents().map { (s: RustString) -> RerankDocument in let d = s.toString().data(using: .utf8) ?? Data(); return try JSONDecoder().decode(RerankDocument.self, from: d) }
         self.topN = rb.topN()
         self.returnDocuments = rb.returnDocuments()
     }
@@ -1884,7 +1884,7 @@ public struct OcrRequest: Codable, Sendable, Hashable {
 internal extension OcrRequest {
     init(_ rb: RustBridge.OcrRequestRef) throws {
         self.model = rb.model().toString()
-        self.document = try OcrDocument(rb.document())
+        self.document = try JSONDecoder().decode(OcrDocument.self, from: (rb.document().toString().data(using: .utf8) ?? Data("null".utf8)))
         self.pages = rb.pages().map { Array($0) }
         self.includeImageBase64 = rb.includeImageBase64()
     }
@@ -2463,7 +2463,7 @@ internal extension CustomProviderConfig {
     init(_ rb: RustBridge.CustomProviderConfigRef) throws {
         self.name = rb.name().toString()
         self.baseUrl = rb.baseUrl().toString()
-        self.authHeader = try AuthHeaderFormat(rb.authHeader())
+        self.authHeader = try JSONDecoder().decode(AuthHeaderFormat.self, from: (rb.authHeader().toString().data(using: .utf8) ?? Data("null".utf8)))
         self.modelPrefixes = rb.modelPrefixes().map { $0.as_str().toString() }
     }
     func intoRust() throws -> RustBridge.CustomProviderConfig {
@@ -2524,6 +2524,60 @@ public enum Message: Codable, Sendable, Hashable {
     case developer(field0: DeveloperMessage)
     /// Deprecated legacy function-role message; retained for API compatibility.
     case function(field0: FunctionMessage)
+
+    private enum CodingKeys: String, CodingKey {
+        case role
+        case field0 = "_0"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let type = try container.decode(String.self, forKey: .role)
+        switch type {
+        case "system":
+            self = .system(field0: try container.decode(SystemMessage.self, forKey: .field0))
+        case "user":
+            self = .user(field0: try container.decode(UserMessage.self, forKey: .field0))
+        case "assistant":
+            self = .assistant(field0: try container.decode(AssistantMessage.self, forKey: .field0))
+        case "tool":
+            self = .tool(field0: try container.decode(ToolMessage.self, forKey: .field0))
+        case "developer":
+            self = .developer(field0: try container.decode(DeveloperMessage.self, forKey: .field0))
+        case "function":
+            self = .function(field0: try container.decode(FunctionMessage.self, forKey: .field0))
+        default:
+            throw DecodingError.dataCorruptedError(
+                forKey: .role,
+                in: container,
+                debugDescription: "Unknown Message type: \(type)"
+            )
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .system(let field0):
+            try container.encode("system", forKey: .role)
+            try container.encode(field0, forKey: .field0)
+        case .user(let field0):
+            try container.encode("user", forKey: .role)
+            try container.encode(field0, forKey: .field0)
+        case .assistant(let field0):
+            try container.encode("assistant", forKey: .role)
+            try container.encode(field0, forKey: .field0)
+        case .tool(let field0):
+            try container.encode("tool", forKey: .role)
+            try container.encode(field0, forKey: .field0)
+        case .developer(let field0):
+            try container.encode("developer", forKey: .role)
+            try container.encode(field0, forKey: .field0)
+        case .function(let field0):
+            try container.encode("function", forKey: .role)
+            try container.encode(field0, forKey: .field0)
+        }
+    }
 }
 extension Message {
     func intoRust() throws -> RustBridge.Message {
@@ -2558,6 +2612,53 @@ public enum ContentPart: Codable, Sendable, Hashable {
     case document(document: DocumentContent)
     /// Audio input as base64.
     case inputAudio(inputAudio: AudioContent)
+
+    private enum CodingKeys: String, CodingKey {
+        case type
+        case document
+        case imageUrl = "image_url"
+        case inputAudio = "input_audio"
+        case text
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let type = try container.decode(String.self, forKey: .type)
+        switch type {
+        case "text":
+            self = .text(text: try container.decode(String.self, forKey: .text))
+        case "image_url":
+            self = .imageUrl(imageUrl: try container.decode(ImageUrl.self, forKey: .imageUrl))
+        case "document":
+            self = .document(document: try container.decode(DocumentContent.self, forKey: .document))
+        case "input_audio":
+            self = .inputAudio(inputAudio: try container.decode(AudioContent.self, forKey: .inputAudio))
+        default:
+            throw DecodingError.dataCorruptedError(
+                forKey: .type,
+                in: container,
+                debugDescription: "Unknown ContentPart type: \(type)"
+            )
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .text(let text):
+            try container.encode("text", forKey: .type)
+            try container.encode(text, forKey: .text)
+        case .imageUrl(let imageUrl):
+            try container.encode("image_url", forKey: .type)
+            try container.encode(imageUrl, forKey: .imageUrl)
+        case .document(let document):
+            try container.encode("document", forKey: .type)
+            try container.encode(document, forKey: .document)
+        case .inputAudio(let inputAudio):
+            try container.encode("input_audio", forKey: .type)
+            try container.encode(inputAudio, forKey: .inputAudio)
+        }
+    }
 }
 extension ContentPart {
     func intoRust() throws -> RustBridge.ContentPart {
@@ -2755,6 +2856,43 @@ public enum OcrDocument: Codable, Sendable, Hashable {
     case url(url: String)
     /// Inline base64-encoded document data.
     case base64(data: String, mediaType: String)
+
+    private enum CodingKeys: String, CodingKey {
+        case type
+        case data
+        case mediaType = "media_type"
+        case url
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let type = try container.decode(String.self, forKey: .type)
+        switch type {
+        case "document_url":
+            self = .url(url: try container.decode(String.self, forKey: .url))
+        case "base64":
+            self = .base64(data: try container.decode(String.self, forKey: .data), mediaType: try container.decode(String.self, forKey: .mediaType))
+        default:
+            throw DecodingError.dataCorruptedError(
+                forKey: .type,
+                in: container,
+                debugDescription: "Unknown OcrDocument type: \(type)"
+            )
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .url(let url):
+            try container.encode("document_url", forKey: .type)
+            try container.encode(url, forKey: .url)
+        case .base64(let data, let mediaType):
+            try container.encode("base64", forKey: .type)
+            try container.encode(data, forKey: .data)
+            try container.encode(mediaType, forKey: .mediaType)
+        }
+    }
 }
 extension OcrDocument {
     func intoRust() throws -> RustBridge.OcrDocument {
@@ -2869,6 +3007,41 @@ public enum CacheBackend: Codable, Sendable, Hashable {
     case memory
     /// OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.).
     case openDal(scheme: String, config: [String: String])
+
+    private enum CodingKeys: String, CodingKey {
+        case type
+        case config
+        case scheme
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let type = try container.decode(String.self, forKey: .type)
+        switch type {
+        case "memory":
+            self = .memory
+        case "open_dal":
+            self = .openDal(scheme: try container.decode(String.self, forKey: .scheme), config: try container.decode([String: String].self, forKey: .config))
+        default:
+            throw DecodingError.dataCorruptedError(
+                forKey: .type,
+                in: container,
+                debugDescription: "Unknown CacheBackend type: \(type)"
+            )
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .memory:
+            try container.encode("memory", forKey: .type)
+        case .openDal(let scheme, let config):
+            try container.encode("open_dal", forKey: .type)
+            try container.encode(scheme, forKey: .scheme)
+            try container.encode(config, forKey: .config)
+        }
+    }
 }
 extension CacheBackend {
     func intoRust() throws -> RustBridge.CacheBackend {
