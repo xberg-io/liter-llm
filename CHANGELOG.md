@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Ruby publish jobs now vendor core crates exclusively via the shared `kreuzberg-dev/actions/rewrite-native-deps@v1` action (alef `publish prepare`, `vendor_mode = "core-only"`), and the bespoke `scripts/ci/ruby/vendor-liter-llm-core.py` is removed. In `build-ruby-gem` the script step was redundant and harmful — it re-added a workspace `path=` dep, reverting the preceding `rewrite-native-deps` step. In `publish-rubygems` the script step is replaced with a `rewrite-native-deps@v1` (lang: ruby) step before `gem build`, so the source gem ships registry version-deps instead of an unresolvable workspace `path=` dep. The dead local `ruby:vendor` Task and its `ruby:build` dependency are dropped accordingly.
 - Bump alef pin to `0.17.10` and regenerate all 15 language bindings + reference docs + e2e suites. Picks up alef-side codegen and formatter fixes shipped between `0.17.2` and `0.17.10`; Cargo manifests reformatted to 2-space indent by the workspace formatter.
 - Regenerate all bindings against a locally-built alef with seven codegen fixes (queued for an upstream `0.17.11` release):
   - **php**: drop the hardcoded "chunks"/"imports"/"structure" allowlist that silently swallowed array-binding accessors (e.g. `$choices0MessageToolCalls`, `$segments`). Every entry collected into `fields_array_bindings` is now emitted, so generated PHP tests no longer reference undefined variables.

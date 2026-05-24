@@ -416,10 +416,6 @@ jobs:
         run: cargo build -p liter-llm-ffi --release
         shell: bash
 
-      - name: Vendor liter-llm core crate
-        shell: bash
-        run: python3 scripts/ci/ruby/vendor-liter-llm-core.py
-
       - name: Install Ruby dependencies
         shell: bash
         working-directory: packages/ruby
@@ -1316,9 +1312,10 @@ jobs:
           bundle config set --local path vendor/bundle
           bundle install --jobs 4
 
-      - name: Vendor liter-llm core crate
-        shell: bash
-        run: python3 scripts/ci/ruby/vendor-liter-llm-core.py
+      - name: Rewrite native dependencies to registry versions
+        uses: kreuzberg-dev/actions/rewrite-native-deps@v1
+        with:
+          lang: ruby
 
       - name: Build source gem (fallback for unsupported platforms)
         shell: bash
