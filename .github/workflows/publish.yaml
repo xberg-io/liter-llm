@@ -234,9 +234,9 @@ jobs:
 
   build-python-sdist:
     name: Build Python sdist
-    needs: [prepare, registry-results]
+    needs: [prepare, registry-results, publish-crates]
     if: |
-      always() &&
+      !cancelled() && needs.publish-crates.result != 'failure' &&
       needs.prepare.outputs.release_python == 'true' &&
       (needs.registry-results.outputs.pypi != 'true' || needs.prepare.outputs.force_republish == 'true')
     runs-on: ubuntu-latest
@@ -246,16 +246,17 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
-      - run: pip install maturin
-        shell: bash
-      - name: Build sdist
-        run: maturin sdist --out dist
-        working-directory: packages/python
-        shell: bash
+      - uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.14"
+      - uses: kreuzberg-dev/actions/build-python-sdist@v1
+        with:
+          package-dir: packages/python
+          output-dir: dist
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: python-sdist
-          path: packages/python/dist/*.tar.gz
+          path: dist/*.tar.gz
           retention-days: 14
 
   # ── Node.js NAPI native ────────────────────────────────────────────────────
@@ -358,9 +359,9 @@ jobs:
   # ── Ruby gems ──────────────────────────────────────────────────────────────
   build-ruby-gem:
     name: Build Ruby gem (${{ matrix.label }})
-    needs: [prepare, registry-results]
+    needs: [prepare, registry-results, publish-crates]
     if: |
-      always() &&
+      !cancelled() && needs.publish-crates.result != 'failure' &&
       needs.prepare.outputs.release_ruby == 'true' &&
       (needs.registry-results.outputs.rubygems != 'true' || needs.prepare.outputs.force_republish == 'true')
     runs-on: ${{ matrix.runner }}
@@ -405,6 +406,11 @@ jobs:
 
       - name: Install Task
         uses: kreuzberg-dev/actions/install-task@v1
+
+      - name: Rewrite native dependencies to registry versions
+        uses: kreuzberg-dev/actions/rewrite-native-deps@v1
+        with:
+          lang: ruby
 
       - name: Build FFI library
         run: cargo build -p liter-llm-ffi --release
@@ -467,9 +473,9 @@ jobs:
   # ── Elixir NIFs ────────────────────────────────────────────────────────────
   build-elixir-nifs:
     name: Build Elixir NIFs (${{ matrix.label }})
-    needs: [prepare, registry-results]
+    needs: [prepare, registry-results, publish-crates]
     if: |
-      always() &&
+      !cancelled() && needs.publish-crates.result != 'failure' &&
       needs.prepare.outputs.release_elixir == 'true' &&
       (needs.registry-results.outputs.hex != 'true' || needs.prepare.outputs.force_republish == 'true')
     runs-on: ${{ matrix.runner }}
@@ -501,6 +507,10 @@ jobs:
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           target: ${{ matrix.target }}
+      - name: Rewrite native dependencies to registry versions
+        uses: kreuzberg-dev/actions/rewrite-native-deps@v1
+        with:
+          lang: elixir
       - name: Build Rustler NIF
         run: >
           cargo build --release
@@ -543,9 +553,9 @@ jobs:
   # ── PHP extension ──────────────────────────────────────────────────────────
   build-php:
     name: Build PHP PIE binary (php${{ matrix.php }} ${{ matrix.platform.label }})
-    needs: [prepare]
+    needs: [prepare, publish-crates]
     if: |
-      always() &&
+      !cancelled() && needs.publish-crates.result != 'failure' &&
       needs.prepare.outputs.release_php == 'true'
     runs-on: ${{ matrix.platform.os }}
     timeout-minutes: 60

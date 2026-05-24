@@ -1670,7 +1670,7 @@ internal extension RerankRequest {
     init(_ rb: RustBridge.RerankRequestRef) throws {
         self.model = rb.model().toString()
         self.query = rb.query().toString()
-        self.documents = try rb.documents().map { (s: RustString) -> RerankDocument in let d = s.toString().data(using: .utf8) ?? Data(); return try JSONDecoder().decode(RerankDocument.self, from: d) }
+        self.documents = try rb.documents().map { (s: RustStringRef) -> RerankDocument in let d = s.as_str().toString().data(using: .utf8) ?? Data(); return try JSONDecoder().decode(RerankDocument.self, from: d) }
         self.topN = rb.topN()
         self.returnDocuments = rb.returnDocuments()
     }
