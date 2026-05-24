@@ -1697,7 +1697,16 @@ jobs:
           artifacts: "dist/cli/*"
           draft: "false"
 
-  # ── Homebrew ─────────────────────────────────────────────────────────────
+  # ── Homebrew (formula update + bottles) ──────────────────────────────────
+  #
+  # Topology (mirrors kreuzberg / html-to-markdown):
+  #   1. publish-homebrew-formula — bump Formula/liter-llm.rb source url+sha
+  #      in the tap (no bottle DSL).
+  #   2. homebrew-bottles         — real `brew install --build-bottle` per
+  #      platform via homebrew-build-bottles@v1, uploads bottle tarballs to
+  #      the GitHub release and saves JSON manifests as artifacts.
+  #   3. publish-homebrew-bottles — homebrew-merge-bottles@v1 aggregates the
+  #      JSON manifests into a `bottle do` block and commits it to the tap.
   check-homebrew:
     name: Check Homebrew tap for formula
     needs: [prepare]
@@ -1714,25 +1723,72 @@ jobs:
           version: ${{ needs.prepare.outputs.version }}
           tap-repo: kreuzberg-dev/homebrew-tap
 
-  homebrew-bottles:
-    name: Build Homebrew bottles (${{ matrix.bottle_tag }})
-    needs: [prepare, check-homebrew]
+  publish-homebrew-formula:
+    name: Update Homebrew formula
+    needs: [prepare, check-homebrew, publish-crates]
     if: |
       needs.prepare.outputs.release_homebrew == 'true' &&
-      needs.check-homebrew.outputs.exists != 'true'
-    runs-on: ${{ matrix.runner }}
+      needs.prepare.outputs.dry_run != 'true' &&
+      needs.check-homebrew.outputs.exists != 'true' &&
+      needs.publish-crates.result != 'failure'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout source repo
+        uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+
+      - name: Checkout homebrew-tap
+        uses: actions/checkout@v6.0.2
+        with:
+          repository: kreuzberg-dev/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TOKEN }}
+          path: homebrew-tap
+
+      - name: Update formula source url+sha
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+          TAP_DIR: ${{ github.workspace }}/homebrew-tap
+          DRY_RUN: ${{ needs.prepare.outputs.dry_run }}
+        run: scripts/publish/update-homebrew-formula.sh
+
+      - name: Commit and push to tap
+        working-directory: homebrew-tap
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
+        run: |
+          git config user.name "kreuzberg-bot"
+          git config user.email "bot@kreuzberg.dev"
+          if git diff --quiet Formula/; then
+            echo "No formula changes; skipping commit."
+            exit 0
+          fi
+          git add Formula/liter-llm.rb
+          git commit -m "liter-llm ${{ needs.prepare.outputs.version }}"
+          git push origin HEAD
+
+  homebrew-bottles:
+    name: Build Homebrew bottle (${{ matrix.bottle_tag }})
+    needs: [prepare, publish-homebrew-formula]
+    if: |
+      needs.prepare.outputs.release_homebrew == 'true' &&
+      needs.prepare.outputs.dry_run != 'true' &&
+      needs.publish-homebrew-formula.result == 'success'
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
         include:
-          - runner: macos-latest
-            bottle_tag: arm64_sequoia
-          - runner: macos-15-intel
-            bottle_tag: sequoia
-          - runner: ubuntu-latest
-            bottle_tag: x86_64_linux
-          - runner: ubuntu-24.04-arm
-            bottle_tag: arm64_linux
+          - { os: macos-latest, bottle_tag: arm64_sequoia, install_brew: false }
+          - { os: macos-15-intel, bottle_tag: sequoia, install_brew: false }
+          - { os: ubuntu-latest, bottle_tag: x86_64_linux, install_brew: true }
+          - { os: ubuntu-24.04-arm, bottle_tag: arm64_linux, install_brew: true }
     steps:
       # actions/checkout@v6 regression on macos-15-intel: the includeIf-gated
       # credential helper isn't honored by git 2.54 on that runner image, so
@@ -1741,60 +1797,38 @@ jobs:
       - uses: actions/checkout@v5
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/setup-rust@v1
-        with:
-          cache-key-prefix: publish-homebrew-${{ matrix.bottle_tag }}
-      - name: Build CLI
-        run: cargo build --release -p liter-llm-cli
-      - name: Create Homebrew bottle
-        id: bottle
-        uses: kreuzberg-dev/actions/build-homebrew-bottle@v1
-        with:
-          binary-path: target/release/liter-llm
-          formula-name: liter-llm
-          version: ${{ needs.prepare.outputs.version }}
-          bottle-tag: ${{ matrix.bottle_tag }}
-      - uses: actions/upload-artifact@v7.0.1
-        with:
-          name: homebrew-bottle-${{ matrix.bottle_tag }}
-          path: ${{ steps.bottle.outputs.filename }}
-          retention-days: 14
 
-  upload-homebrew-bottles:
-    name: Upload Homebrew bottles
-    needs: [prepare, check-homebrew, homebrew-bottles]
-    if: |
-      always() &&
-      needs.prepare.outputs.release_homebrew == 'true' &&
-      (needs.check-homebrew.outputs.exists != 'true' || needs.prepare.outputs.dry_run == 'true') &&
-      needs.homebrew-bottles.result == 'success'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v6.0.2
-      - uses: actions/download-artifact@v7
-        with:
-          pattern: homebrew-bottle-*
-          path: dist/homebrew
-          merge-multiple: true
-      - uses: kreuzberg-dev/actions/publish-github-release@v1
+      - name: Install Homebrew (Linux)
+        if: ${{ matrix.install_brew }}
+        uses: kreuzberg-dev/actions/install-homebrew-linux@v1
+
+      - name: Build bottles
+        uses: kreuzberg-dev/actions/homebrew-build-bottles@v1
         with:
           tag: ${{ needs.prepare.outputs.tag }}
-          artifacts: "dist/homebrew/*.tar.gz"
-          draft: "false"
-          dry-run: ${{ needs.prepare.outputs.dry_run }}
+          version: ${{ needs.prepare.outputs.version }}
+          tap: kreuzberg-dev/homebrew-tap
+          formulas: |
+            liter-llm
+          out-dir: ${{ github.workspace }}/bottle-json
+          github-repo: kreuzberg-dev/liter-llm
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-  publish-homebrew:
-    name: Update Homebrew formula
-    needs: [prepare, validate-versions, check-homebrew, publish-crates, upload-homebrew-bottles]
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: homebrew-bottle-json-${{ matrix.bottle_tag }}
+          path: ${{ github.workspace }}/bottle-json/*.json
+          if-no-files-found: error
+          retention-days: 14
+
+  publish-homebrew-bottles:
+    name: Merge Homebrew bottle DSL
+    needs: [prepare, publish-homebrew-formula, homebrew-bottles]
     if: |
-      always() &&
       needs.prepare.outputs.release_homebrew == 'true' &&
       needs.prepare.outputs.dry_run != 'true' &&
-      needs.check-homebrew.outputs.exists != 'true' &&
-      needs.publish-crates.result != 'failure' &&
-      needs.upload-homebrew-bottles.result == 'success'
+      needs.publish-homebrew-formula.result == 'success' &&
+      needs.homebrew-bottles.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -1802,28 +1836,43 @@ jobs:
       - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
+
+      - uses: actions/checkout@v6.0.2
+        with:
+          repository: kreuzberg-dev/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TOKEN }}
+          path: homebrew-tap
+
       - uses: actions/download-artifact@v7
         with:
-          pattern: homebrew-bottle-*
-          path: dist/homebrew
+          path: ${{ github.workspace }}/bottle-json
+          pattern: homebrew-bottle-json-*
           merge-multiple: true
-      - name: Setup Git credentials
+
+      - uses: kreuzberg-dev/actions/homebrew-merge-bottles@v1
+        with:
+          tag: ${{ needs.prepare.outputs.tag }}
+          version: ${{ needs.prepare.outputs.version }}
+          tap-dir: ${{ github.workspace }}/homebrew-tap
+          json-dir: ${{ github.workspace }}/bottle-json
+          formulas: |
+            liter-llm
+          github-repo: kreuzberg-dev/liter-llm
+
+      - name: Commit and push bottle DSL
+        working-directory: homebrew-tap
         env:
           GH_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
         run: |
-          git config --global credential.helper store
-          echo "https://x-access-token:${GH_TOKEN}@github.com" > ~/.git-credentials
-          git config --global user.name "kreuzberg-bot"
-          git config --global user.email "bot@kreuzberg.dev"
-      - uses: kreuzberg-dev/actions/publish-homebrew@v1
-        with:
-          bottles-dir: dist/homebrew
-          formula-name: liter-llm
-          tap-repo: kreuzberg-dev/homebrew-tap
-          tag: ${{ needs.prepare.outputs.tag }}
-          version: ${{ needs.prepare.outputs.version }}
-          github-repo: kreuzberg-dev/liter-llm
-          dry-run: ${{ needs.prepare.outputs.dry_run }}
+          git config user.name "kreuzberg-bot"
+          git config user.email "bot@kreuzberg.dev"
+          if git diff --quiet Formula/; then
+            echo "No bottle DSL changes; skipping commit."
+            exit 0
+          fi
+          git add Formula/liter-llm.rb
+          git commit -m "liter-llm ${{ needs.prepare.outputs.version }}: add bottle DSL"
+          git push origin HEAD
 
   # ─────────────────────────────────────────────────────────────────────────
   # Phase 7 — Finalize
@@ -1892,7 +1941,7 @@ jobs:
       - publish-hex
       - publish-nuget
       - publish-packagist
-      - publish-homebrew
+      - publish-homebrew-bottles
       - verify-install-python
     if: always()
     runs-on: ubuntu-latest
@@ -1941,7 +1990,7 @@ jobs:
             report "Packagist"   "${{ needs.publish-packagist.result }}"
             report "Go FFI"      "${{ needs.upload-go-ffi.result }}"
             report "PHP ext"     "${{ needs.upload-php-extensions.result }}"
-            report "Homebrew"    "${{ needs.publish-homebrew.result }}"
+            report "Homebrew"    "${{ needs.publish-homebrew-bottles.result }}"
           } >> "$GITHUB_STEP_SUMMARY"
         shell: bash
 
@@ -1958,12 +2007,11 @@ jobs:
       - publish-hex
       - publish-nuget
       - publish-packagist
-      - publish-homebrew
+      - publish-homebrew-bottles
       - upload-go-ffi
       - upload-elixir-nifs
       - upload-php-extensions
       - upload-cli-binaries
-      - upload-homebrew-bottles
       - release-finalize
     if: |
       always() &&
