@@ -37,7 +37,36 @@ internal extension SystemMessage {
 }
 
 /// User message in the conversation.
-public typealias UserMessage = RustBridge.UserMessage
+public struct UserMessage: Codable, Sendable, Hashable {
+    /// Message content as plain text or array of content parts (text, images, documents, audio).
+    public let content: UserContent
+    /// Optional name for the user.
+    public let name: String?
+    public init(content: UserContent, name: String? = nil) {
+        self.content = content
+        self.name = name
+    }
+    private enum CodingKeys: String, CodingKey {
+        case content = "content"
+        case name = "name"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.content = try container.decode(UserContent.self, forKey: .content)
+        self.name = try container.decodeIfPresent(String.self, forKey: .name) ?? nil
+    }
+}
+
+// MARK: - Internal FFI conversions for UserMessage
+internal extension UserMessage {
+    init(_ rb: RustBridge.UserMessageRef) throws {
+        self.content = try UserContent(rb.content())
+        self.name = rb.name()?.toString()
+    }
+    func intoRust() throws -> RustBridge.UserMessage {
+        return RustBridge.UserMessage(try self.content.intoRust(), self.name.map(RustString.init))
+    }
+}
 
 /// An image URL reference with optional detail level for processing.
 public struct ImageUrl: Codable, Sendable, Hashable {
@@ -882,7 +911,56 @@ internal extension StreamFunctionCall {
 }
 
 /// Embedding request.
-public typealias EmbeddingRequest = RustBridge.EmbeddingRequest
+public struct EmbeddingRequest: Codable, Sendable, Hashable {
+    /// Model ID (e.g., `"text-embedding-3-small"`).
+    public let model: String
+    /// Text or texts to embed.
+    public let input: EmbeddingInput
+    /// Output format: float (native) or base64.
+    public let encodingFormat: EmbeddingFormat?
+    /// Requested embedding dimensions (if supported by the model).
+    public let dimensions: UInt32?
+    /// User identifier for request tracking.
+    public let user: String?
+    public init(model: String, input: EmbeddingInput, encodingFormat: EmbeddingFormat? = nil, dimensions: UInt32? = nil, user: String? = nil) {
+        self.model = model
+        self.input = input
+        self.encodingFormat = encodingFormat
+        self.dimensions = dimensions
+        self.user = user
+    }
+    private enum CodingKeys: String, CodingKey {
+        case model = "model"
+        case input = "input"
+        case encodingFormat = "encoding_format"
+        case dimensions = "dimensions"
+        case user = "user"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.model = try container.decodeIfPresent(String.self, forKey: .model) ?? ""
+        self.input = try container.decode(EmbeddingInput.self, forKey: .input)
+        self.encodingFormat = try container.decodeIfPresent(EmbeddingFormat.self, forKey: .encodingFormat) ?? nil
+        self.dimensions = try container.decodeIfPresent(UInt32.self, forKey: .dimensions) ?? nil
+        self.user = try container.decodeIfPresent(String.self, forKey: .user) ?? nil
+    }
+}
+
+// MARK: - Internal FFI conversions for EmbeddingRequest
+internal extension EmbeddingRequest {
+    init(_ rb: RustBridge.EmbeddingRequestRef) throws {
+        self.model = rb.model().toString()
+        self.input = try EmbeddingInput(rb.input())
+        self.encodingFormat = rb.encodingFormat().flatMap { EmbeddingFormat(rawValue: $0.toString()) }
+        self.dimensions = rb.dimensions()
+        self.user = rb.user()?.toString()
+    }
+    func intoRust() throws -> RustBridge.EmbeddingRequest {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.embeddingRequestFromJson(json)
+    }
+}
 
 /// Embedding response.
 public struct EmbeddingResponse: Codable, Sendable, Hashable {
@@ -1285,7 +1363,36 @@ internal extension TranscriptionSegment {
 }
 
 /// Request to classify content for policy violations.
-public typealias ModerationRequest = RustBridge.ModerationRequest
+public struct ModerationRequest: Codable, Sendable, Hashable {
+    /// Text or texts to check.
+    public let input: ModerationInput
+    /// Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset.
+    public let model: String?
+    public init(input: ModerationInput, model: String? = nil) {
+        self.input = input
+        self.model = model
+    }
+    private enum CodingKeys: String, CodingKey {
+        case input = "input"
+        case model = "model"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.input = try container.decode(ModerationInput.self, forKey: .input)
+        self.model = try container.decodeIfPresent(String.self, forKey: .model) ?? nil
+    }
+}
+
+// MARK: - Internal FFI conversions for ModerationRequest
+internal extension ModerationRequest {
+    init(_ rb: RustBridge.ModerationRequestRef) throws {
+        self.input = try ModerationInput(rb.input())
+        self.model = rb.model()?.toString()
+    }
+    func intoRust() throws -> RustBridge.ModerationRequest {
+        return RustBridge.ModerationRequest(try self.input.intoRust(), self.model.map(RustString.init))
+    }
+}
 
 /// Response from the moderation endpoint.
 public struct ModerationResponse: Codable, Sendable, Hashable {
@@ -1523,7 +1630,56 @@ internal extension ModerationCategoryScores {
 }
 
 /// Request to rerank documents by relevance to a query.
-public typealias RerankRequest = RustBridge.RerankRequest
+public struct RerankRequest: Codable, Sendable, Hashable {
+    /// Model ID (e.g., `"cohere/rerank-english-v3.0"`).
+    public let model: String
+    /// The search query.
+    public let query: String
+    /// Documents to rerank.
+    public let documents: [RerankDocument]
+    /// Return only the top N results. Optional.
+    public let topN: UInt32?
+    /// Include the document content in results. Defaults to false.
+    public let returnDocuments: Bool?
+    public init(model: String, query: String, documents: [RerankDocument], topN: UInt32? = nil, returnDocuments: Bool? = nil) {
+        self.model = model
+        self.query = query
+        self.documents = documents
+        self.topN = topN
+        self.returnDocuments = returnDocuments
+    }
+    private enum CodingKeys: String, CodingKey {
+        case model = "model"
+        case query = "query"
+        case documents = "documents"
+        case topN = "top_n"
+        case returnDocuments = "return_documents"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.model = try container.decodeIfPresent(String.self, forKey: .model) ?? ""
+        self.query = try container.decodeIfPresent(String.self, forKey: .query) ?? ""
+        self.documents = try container.decodeIfPresent([RerankDocument].self, forKey: .documents) ?? []
+        self.topN = try container.decodeIfPresent(UInt32.self, forKey: .topN) ?? nil
+        self.returnDocuments = try container.decodeIfPresent(Bool.self, forKey: .returnDocuments) ?? nil
+    }
+}
+
+// MARK: - Internal FFI conversions for RerankRequest
+internal extension RerankRequest {
+    init(_ rb: RustBridge.RerankRequestRef) throws {
+        self.model = rb.model().toString()
+        self.query = rb.query().toString()
+        self.documents = try rb.documents().map { try RerankDocument($0) }
+        self.topN = rb.topN()
+        self.returnDocuments = rb.returnDocuments()
+    }
+    func intoRust() throws -> RustBridge.RerankRequest {
+        let __documents = RustVec<RustBridge.RerankDocument>()
+        for __elem in self.documents { __documents.push(value: try __elem.intoRust()) }
+        return RustBridge.RerankRequest(RustString(self.model), RustString(self.query), __documents, self.topN, self.returnDocuments)
+    }
+}
 
 /// Response from the rerank endpoint.
 public typealias RerankResponse = RustBridge.RerankResponse
@@ -1694,7 +1850,50 @@ internal extension SearchResult {
 }
 
 /// An OCR request.
-public typealias OcrRequest = RustBridge.OcrRequest
+public struct OcrRequest: Codable, Sendable, Hashable {
+    /// The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`).
+    public let model: String
+    /// The document to process (URL or base64).
+    public let document: OcrDocument
+    /// Specific pages to process (1-indexed). `None` means all pages.
+    public let pages: [UInt32]?
+    /// Whether to include base64-encoded images of each processed page.
+    public let includeImageBase64: Bool?
+    public init(model: String, document: OcrDocument, pages: [UInt32]? = nil, includeImageBase64: Bool? = nil) {
+        self.model = model
+        self.document = document
+        self.pages = pages
+        self.includeImageBase64 = includeImageBase64
+    }
+    private enum CodingKeys: String, CodingKey {
+        case model = "model"
+        case document = "document"
+        case pages = "pages"
+        case includeImageBase64 = "include_image_base64"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.model = try container.decodeIfPresent(String.self, forKey: .model) ?? ""
+        self.document = try container.decode(OcrDocument.self, forKey: .document)
+        self.pages = try container.decodeIfPresent([UInt32].self, forKey: .pages) ?? nil
+        self.includeImageBase64 = try container.decodeIfPresent(Bool.self, forKey: .includeImageBase64) ?? nil
+    }
+}
+
+// MARK: - Internal FFI conversions for OcrRequest
+internal extension OcrRequest {
+    init(_ rb: RustBridge.OcrRequestRef) throws {
+        self.model = rb.model().toString()
+        self.document = try OcrDocument(rb.document())
+        self.pages = rb.pages().map { Array($0) }
+        self.includeImageBase64 = rb.includeImageBase64()
+    }
+    func intoRust() throws -> RustBridge.OcrRequest {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.ocrRequestFromJson(json)
+    }
+}
 
 /// An OCR response.
 public struct OcrResponse: Codable, Sendable, Hashable {
@@ -2236,7 +2435,43 @@ internal extension ResponseUsage {
 }
 
 /// Configuration for registering a custom LLM provider at runtime.
-public typealias CustomProviderConfig = RustBridge.CustomProviderConfig
+public struct CustomProviderConfig: Codable, Sendable, Hashable {
+    /// Unique name for this provider (e.g., "my-provider").
+    public let name: String
+    /// Base URL for the provider's API (e.g., "https://api.my-provider.com/v1").
+    public let baseUrl: String
+    /// Authentication header format.
+    public let authHeader: AuthHeaderFormat
+    /// Model name prefixes that route to this provider (e.g., ["my-"]).
+    public let modelPrefixes: [String]
+    public init(name: String, baseUrl: String, authHeader: AuthHeaderFormat, modelPrefixes: [String]) {
+        self.name = name
+        self.baseUrl = baseUrl
+        self.authHeader = authHeader
+        self.modelPrefixes = modelPrefixes
+    }
+    private enum CodingKeys: String, CodingKey {
+        case name = "name"
+        case baseUrl = "base_url"
+        case authHeader = "auth_header"
+        case modelPrefixes = "model_prefixes"
+    }
+}
+
+// MARK: - Internal FFI conversions for CustomProviderConfig
+internal extension CustomProviderConfig {
+    init(_ rb: RustBridge.CustomProviderConfigRef) throws {
+        self.name = rb.name().toString()
+        self.baseUrl = rb.baseUrl().toString()
+        self.authHeader = try AuthHeaderFormat(rb.authHeader())
+        self.modelPrefixes = rb.modelPrefixes().map { $0.as_str().toString() }
+    }
+    func intoRust() throws -> RustBridge.CustomProviderConfig {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.customProviderConfigFromJson(json)
+    }
+}
 
 /// Static configuration for a single provider entry in providers.json.
 public typealias ProviderConfig = RustBridge.ProviderConfig
@@ -2281,10 +2516,37 @@ public typealias CacheConfig = RustBridge.CacheConfig
 public typealias RateLimitConfig = RustBridge.RateLimitConfig
 
 /// A chat message in a conversation.
-public typealias Message = RustBridge.Message
+public enum Message: Codable, Sendable, Hashable {
+    case system(field0: SystemMessage)
+    case user(field0: UserMessage)
+    case assistant(field0: AssistantMessage)
+    case tool(field0: ToolMessage)
+    case developer(field0: DeveloperMessage)
+    /// Deprecated legacy function-role message; retained for API compatibility.
+    case function(field0: FunctionMessage)
+}
+extension Message {
+    func intoRust() throws -> RustBridge.Message {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "null"
+        return try RustBridge.messageFromJson(json)
+    }
+}
 
 /// User message content as either plain text or a list of multimodal parts.
-public typealias UserContent = RustBridge.UserContent
+public enum UserContent: Codable, Sendable, Hashable {
+    /// Plain text content.
+    case text(field0: String)
+    /// Array of content parts (text, images, documents, audio).
+    case parts(field0: [ContentPart])
+}
+extension UserContent {
+    func intoRust() throws -> RustBridge.UserContent {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "null"
+        return try RustBridge.userContentFromJson(json)
+    }
+}
 
 /// A single content part in a user message — text, image, document, or audio.
 public enum ContentPart: Codable, Sendable, Hashable {
@@ -2726,7 +2988,7 @@ public final class DefaultClient {
         return try ChatCompletionResponse(try await RustBridge.defaultClientChat(self.inner, req))
     }
     public func embed(_ req: EmbeddingRequest) async throws -> EmbeddingResponse {
-        return try EmbeddingResponse(try await RustBridge.defaultClientEmbed(self.inner, req))
+        return try EmbeddingResponse(try await RustBridge.defaultClientEmbed(self.inner, try req.intoRust()))
     }
     public func listModels() async throws -> ModelsListResponse {
         return try ModelsListResponse(try await RustBridge.defaultClientListModels(self.inner))
@@ -2742,16 +3004,16 @@ public final class DefaultClient {
         return try TranscriptionResponse(try await RustBridge.defaultClientTranscribe(self.inner, try req.intoRust()))
     }
     public func moderate(_ req: ModerationRequest) async throws -> ModerationResponse {
-        return try ModerationResponse(try await RustBridge.defaultClientModerate(self.inner, req))
+        return try ModerationResponse(try await RustBridge.defaultClientModerate(self.inner, try req.intoRust()))
     }
     public func rerank(_ req: RerankRequest) async throws -> RerankResponse {
-        return try await RustBridge.defaultClientRerank(self.inner, req)
+        return try await RustBridge.defaultClientRerank(self.inner, try req.intoRust())
     }
     public func search(_ req: SearchRequest) async throws -> SearchResponse {
         return try SearchResponse(try await RustBridge.defaultClientSearch(self.inner, try req.intoRust()))
     }
     public func ocr(_ req: OcrRequest) async throws -> OcrResponse {
-        return try OcrResponse(try await RustBridge.defaultClientOcr(self.inner, req))
+        return try OcrResponse(try await RustBridge.defaultClientOcr(self.inner, try req.intoRust()))
     }
     public func createFile(_ req: CreateFileRequest) async throws -> FileObject {
         return try FileObject(try await RustBridge.defaultClientCreateFile(self.inner, try req.intoRust()))
@@ -2840,7 +3102,8 @@ public func systemMessageFromJson(_ json: String) throws -> SystemMessage {
 }
 
 public func userMessageFromJson(_ json: String) throws -> UserMessage {
-    return try RustBridge.userMessageFromJson(json)
+    let data = json.data(using: .utf8) ?? Data()
+    return try JSONDecoder().decode(UserMessage.self, from: data)
 }
 
 public func imageUrlFromJson(_ json: String) throws -> ImageUrl {
@@ -2965,7 +3228,8 @@ public func streamFunctionCallFromJson(_ json: String) throws -> StreamFunctionC
 }
 
 public func embeddingRequestFromJson(_ json: String) throws -> EmbeddingRequest {
-    return try RustBridge.embeddingRequestFromJson(json)
+    let data = json.data(using: .utf8) ?? Data()
+    return try JSONDecoder().decode(EmbeddingRequest.self, from: data)
 }
 
 public func embeddingResponseFromJson(_ json: String) throws -> EmbeddingResponse {
@@ -3014,7 +3278,8 @@ public func transcriptionSegmentFromJson(_ json: String) throws -> Transcription
 }
 
 public func moderationRequestFromJson(_ json: String) throws -> ModerationRequest {
-    return try RustBridge.moderationRequestFromJson(json)
+    let data = json.data(using: .utf8) ?? Data()
+    return try JSONDecoder().decode(ModerationRequest.self, from: data)
 }
 
 public func moderationResponseFromJson(_ json: String) throws -> ModerationResponse {
@@ -3038,7 +3303,8 @@ public func moderationCategoryScoresFromJson(_ json: String) throws -> Moderatio
 }
 
 public func rerankRequestFromJson(_ json: String) throws -> RerankRequest {
-    return try RustBridge.rerankRequestFromJson(json)
+    let data = json.data(using: .utf8) ?? Data()
+    return try JSONDecoder().decode(RerankRequest.self, from: data)
 }
 
 public func rerankResponseFromJson(_ json: String) throws -> RerankResponse {
@@ -3071,7 +3337,8 @@ public func searchResultFromJson(_ json: String) throws -> SearchResult {
 }
 
 public func ocrRequestFromJson(_ json: String) throws -> OcrRequest {
-    return try RustBridge.ocrRequestFromJson(json)
+    let data = json.data(using: .utf8) ?? Data()
+    return try JSONDecoder().decode(OcrRequest.self, from: data)
 }
 
 public func ocrResponseFromJson(_ json: String) throws -> OcrResponse {
@@ -3173,7 +3440,8 @@ public func responseUsageFromJson(_ json: String) throws -> ResponseUsage {
 }
 
 public func customProviderConfigFromJson(_ json: String) throws -> CustomProviderConfig {
-    return try RustBridge.customProviderConfigFromJson(json)
+    let data = json.data(using: .utf8) ?? Data()
+    return try JSONDecoder().decode(CustomProviderConfig.self, from: data)
 }
 
 public func providerConfigFromJson(_ json: String) throws -> ProviderConfig {
@@ -3198,11 +3466,13 @@ public func rateLimitConfigFromJson(_ json: String) throws -> RateLimitConfig {
 }
 
 public func messageFromJson(_ json: String) throws -> Message {
-    return try RustBridge.messageFromJson(json)
+    let data = json.data(using: .utf8) ?? Data()
+    return try JSONDecoder().decode(Message.self, from: data)
 }
 
 public func userContentFromJson(_ json: String) throws -> UserContent {
-    return try RustBridge.userContentFromJson(json)
+    let data = json.data(using: .utf8) ?? Data()
+    return try JSONDecoder().decode(UserContent.self, from: data)
 }
 
 public func contentPartFromJson(_ json: String) throws -> ContentPart {
@@ -3348,7 +3618,8 @@ public func createClientFromJson(json: String) throws -> DefaultClient {
 /// Returns an error if the config is invalid (empty name, empty base_url, or
 /// no model prefixes).
 public func registerCustomProvider(config: CustomProviderConfig) throws {
-    return try RustBridge.registerCustomProvider(config)
+    let _rb_config = try config.intoRust()
+    return try RustBridge.registerCustomProvider(_rb_config)
 }
 
 /// Remove a previously registered custom provider by name.

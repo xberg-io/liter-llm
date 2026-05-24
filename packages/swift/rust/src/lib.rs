@@ -5181,14 +5181,23 @@ impl RateLimitConfig {
 }
 
 pub enum Message {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    System,
+    User,
+    Assistant,
+    Tool,
+    Developer,
+    Function,
 }
 
 impl From<liter_llm::types::Message> for Message {
     fn from(val: liter_llm::types::Message) -> Self {
         match val {
-            _ => Self::Unknown,
+            liter_llm::types::Message::System(..) => Self::System,
+            liter_llm::types::Message::User(..) => Self::User,
+            liter_llm::types::Message::Assistant(..) => Self::Assistant,
+            liter_llm::types::Message::Tool(..) => Self::Tool,
+            liter_llm::types::Message::Developer(..) => Self::Developer,
+            liter_llm::types::Message::Function(..) => Self::Function,
         }
     }
 }
@@ -5196,20 +5205,26 @@ impl From<liter_llm::types::Message> for Message {
 impl Message {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::System => "system".to_string(),
+            Self::User => "user".to_string(),
+            Self::Assistant => "assistant".to_string(),
+            Self::Tool => "tool".to_string(),
+            Self::Developer => "developer".to_string(),
+            Self::Function => "function".to_string(),
         }
     }
 }
 
 pub enum UserContent {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    Text,
+    Parts,
 }
 
 impl From<liter_llm::types::UserContent> for UserContent {
     fn from(val: liter_llm::types::UserContent) -> Self {
         match val {
-            _ => Self::Unknown,
+            liter_llm::types::UserContent::Text(..) => Self::Text,
+            liter_llm::types::UserContent::Parts(..) => Self::Parts,
         }
     }
 }
@@ -5217,20 +5232,26 @@ impl From<liter_llm::types::UserContent> for UserContent {
 impl UserContent {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::Text => "Text".to_string(),
+            Self::Parts => "Parts".to_string(),
         }
     }
 }
 
 pub enum ContentPart {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    Text,
+    ImageUrl,
+    Document,
+    InputAudio,
 }
 
 impl From<liter_llm::types::ContentPart> for ContentPart {
     fn from(val: liter_llm::types::ContentPart) -> Self {
         match val {
-            _ => Self::Unknown,
+            liter_llm::types::ContentPart::Text { .. } => Self::Text,
+            liter_llm::types::ContentPart::ImageUrl { .. } => Self::ImageUrl,
+            liter_llm::types::ContentPart::Document { .. } => Self::Document,
+            liter_llm::types::ContentPart::InputAudio { .. } => Self::InputAudio,
         }
     }
 }
@@ -5238,7 +5259,10 @@ impl From<liter_llm::types::ContentPart> for ContentPart {
 impl ContentPart {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::Text => "text".to_string(),
+            Self::ImageUrl => "image_url".to_string(),
+            Self::Document => "document".to_string(),
+            Self::InputAudio => "input_audio".to_string(),
         }
     }
 }
@@ -5290,14 +5314,15 @@ impl ToolType {
 }
 
 pub enum ToolChoice {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    Mode,
+    Specific,
 }
 
 impl From<liter_llm::types::ToolChoice> for ToolChoice {
     fn from(val: liter_llm::types::ToolChoice) -> Self {
         match val {
-            _ => Self::Unknown,
+            liter_llm::types::ToolChoice::Mode(..) => Self::Mode,
+            liter_llm::types::ToolChoice::Specific(..) => Self::Specific,
         }
     }
 }
@@ -5305,7 +5330,8 @@ impl From<liter_llm::types::ToolChoice> for ToolChoice {
 impl ToolChoice {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::Mode => "Mode".to_string(),
+            Self::Specific => "Specific".to_string(),
         }
     }
 }
@@ -5339,8 +5365,7 @@ impl ToolChoiceMode {
 pub enum ResponseFormat {
     Text,
     JsonObject,
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    JsonSchema,
 }
 
 impl From<liter_llm::types::ResponseFormat> for ResponseFormat {
@@ -5348,7 +5373,7 @@ impl From<liter_llm::types::ResponseFormat> for ResponseFormat {
         match val {
             liter_llm::types::ResponseFormat::Text => Self::Text,
             liter_llm::types::ResponseFormat::JsonObject => Self::JsonObject,
-            _ => Self::Unknown,
+            liter_llm::types::ResponseFormat::JsonSchema { .. } => Self::JsonSchema,
         }
     }
 }
@@ -5358,20 +5383,21 @@ impl ResponseFormat {
         match self {
             Self::Text => "text".to_string(),
             Self::JsonObject => "json_object".to_string(),
-            Self::Unknown => "unknown".to_string(),
+            Self::JsonSchema => "json_schema".to_string(),
         }
     }
 }
 
 pub enum StopSequence {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    Single,
+    Multiple,
 }
 
 impl From<liter_llm::types::StopSequence> for StopSequence {
     fn from(val: liter_llm::types::StopSequence) -> Self {
         match val {
-            _ => Self::Unknown,
+            liter_llm::types::StopSequence::Single(..) => Self::Single,
+            liter_llm::types::StopSequence::Multiple(..) => Self::Multiple,
         }
     }
 }
@@ -5379,7 +5405,8 @@ impl From<liter_llm::types::StopSequence> for StopSequence {
 impl StopSequence {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::Single => "Single".to_string(),
+            Self::Multiple => "Multiple".to_string(),
         }
     }
 }
@@ -5469,14 +5496,15 @@ impl EmbeddingFormat {
 }
 
 pub enum EmbeddingInput {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    Single,
+    Multiple,
 }
 
 impl From<liter_llm::types::EmbeddingInput> for EmbeddingInput {
     fn from(val: liter_llm::types::EmbeddingInput) -> Self {
         match val {
-            _ => Self::Unknown,
+            liter_llm::types::EmbeddingInput::Single(..) => Self::Single,
+            liter_llm::types::EmbeddingInput::Multiple(..) => Self::Multiple,
         }
     }
 }
@@ -5484,20 +5512,22 @@ impl From<liter_llm::types::EmbeddingInput> for EmbeddingInput {
 impl EmbeddingInput {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::Single => "Single".to_string(),
+            Self::Multiple => "Multiple".to_string(),
         }
     }
 }
 
 pub enum ModerationInput {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    Single,
+    Multiple,
 }
 
 impl From<liter_llm::types::ModerationInput> for ModerationInput {
     fn from(val: liter_llm::types::ModerationInput) -> Self {
         match val {
-            _ => Self::Unknown,
+            liter_llm::types::ModerationInput::Single(..) => Self::Single,
+            liter_llm::types::ModerationInput::Multiple(..) => Self::Multiple,
         }
     }
 }
@@ -5505,20 +5535,22 @@ impl From<liter_llm::types::ModerationInput> for ModerationInput {
 impl ModerationInput {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::Single => "Single".to_string(),
+            Self::Multiple => "Multiple".to_string(),
         }
     }
 }
 
 pub enum RerankDocument {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    Text,
+    Object,
 }
 
 impl From<liter_llm::types::RerankDocument> for RerankDocument {
     fn from(val: liter_llm::types::RerankDocument) -> Self {
         match val {
-            _ => Self::Unknown,
+            liter_llm::types::RerankDocument::Text(..) => Self::Text,
+            liter_llm::types::RerankDocument::Object { .. } => Self::Object,
         }
     }
 }
@@ -5526,20 +5558,22 @@ impl From<liter_llm::types::RerankDocument> for RerankDocument {
 impl RerankDocument {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::Text => "Text".to_string(),
+            Self::Object => "Object".to_string(),
         }
     }
 }
 
 pub enum OcrDocument {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    Url,
+    Base64,
 }
 
 impl From<liter_llm::types::OcrDocument> for OcrDocument {
     fn from(val: liter_llm::types::OcrDocument) -> Self {
         match val {
-            _ => Self::Unknown,
+            liter_llm::types::OcrDocument::Url { .. } => Self::Url,
+            liter_llm::types::OcrDocument::Base64 { .. } => Self::Base64,
         }
     }
 }
@@ -5547,7 +5581,8 @@ impl From<liter_llm::types::OcrDocument> for OcrDocument {
 impl OcrDocument {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::Url => "document_url".to_string(),
+            Self::Base64 => "base64".to_string(),
         }
     }
 }
@@ -5624,17 +5659,16 @@ impl BatchStatus {
 
 pub enum AuthHeaderFormat {
     Bearer,
+    ApiKey,
     None,
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
 }
 
 impl From<liter_llm::provider::custom::AuthHeaderFormat> for AuthHeaderFormat {
     fn from(val: liter_llm::provider::custom::AuthHeaderFormat) -> Self {
         match val {
             liter_llm::provider::custom::AuthHeaderFormat::Bearer => Self::Bearer,
+            liter_llm::provider::custom::AuthHeaderFormat::ApiKey(..) => Self::ApiKey,
             liter_llm::provider::custom::AuthHeaderFormat::None => Self::None,
-            _ => Self::Unknown,
         }
     }
 }
@@ -5643,8 +5677,8 @@ impl AuthHeaderFormat {
     pub fn to_string(&self) -> String {
         match self {
             Self::Bearer => "Bearer".to_string(),
+            Self::ApiKey => "ApiKey".to_string(),
             Self::None => "None".to_string(),
-            Self::Unknown => "unknown".to_string(),
         }
     }
 }
@@ -5703,15 +5737,14 @@ impl Enforcement {
 
 pub enum CacheBackend {
     Memory,
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    OpenDal,
 }
 
 impl From<liter_llm::CacheBackend> for CacheBackend {
     fn from(val: liter_llm::CacheBackend) -> Self {
         match val {
             liter_llm::CacheBackend::Memory => Self::Memory,
-            _ => Self::Unknown,
+            liter_llm::CacheBackend::OpenDal { .. } => Self::OpenDal,
         }
     }
 }
@@ -5720,7 +5753,7 @@ impl CacheBackend {
     pub fn to_string(&self) -> String {
         match self {
             Self::Memory => "memory".to_string(),
-            Self::Unknown => "unknown".to_string(),
+            Self::OpenDal => "open_dal".to_string(),
         }
     }
 }
@@ -5786,7 +5819,8 @@ pub fn ensure_crypto_provider() -> () {
     liter_llm::ensure_crypto_provider()
 }
 
-/// Opaque handle owning a tokio runtime and a boxed `ChatCompletionChunk` stream.
+/// Opaque handle holding a reference to the process-wide tokio runtime
+/// and a boxed `ChatCompletionChunk` stream.
 ///
 /// Created by `default_client_chat_stream_start`, advanced via `next()`. Drop runs when the
 /// Swift handle goes out of scope (swift-bridge generates the matching
@@ -5798,7 +5832,7 @@ pub fn ensure_crypto_provider() -> () {
 /// no valid JSON value is the empty string.
 #[allow(clippy::type_complexity)]
 pub struct DefaultClientChatStreamStreamHandle {
-    rt: ::tokio::runtime::Runtime,
+    _rt: ::tokio::runtime::Handle,
     stream: ::std::sync::Mutex<
         Option<
             ::futures_util::stream::BoxStream<
@@ -5818,18 +5852,14 @@ pub fn default_client_chat_stream_start(
     req: &ChatCompletionRequest,
 ) -> Result<DefaultClientChatStreamStreamHandle, String> {
     use ::futures_util::StreamExt;
-    let rt = ::tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(1)
-        .enable_all()
-        .build()
-        .map_err(|e| format!("build tokio runtime: {e}"))?;
+    let rt = crate::__alef_tokio_runtime();
     let raw = rt.block_on(async { client.0.chat_stream(req.0.clone()).await.map_err(|e| e.to_string()) })?;
     let erased: ::futures_util::stream::BoxStream<
         'static,
         Result<liter_llm::ChatCompletionChunk, Box<dyn ::std::error::Error + Send + Sync + 'static>>,
     > = Box::pin(raw.map(|r| r.map_err(|e| Box::new(e) as Box<dyn ::std::error::Error + Send + Sync + 'static>)));
     Ok(DefaultClientChatStreamStreamHandle {
-        rt,
+        _rt: rt.handle().clone(),
         stream: ::std::sync::Mutex::new(Some(erased)),
     })
 }
@@ -5848,7 +5878,7 @@ impl DefaultClientChatStreamStreamHandle {
             None => return Ok(String::new()),
         };
         use ::futures_util::StreamExt;
-        match self.rt.block_on(stream.next()) {
+        match crate::__alef_tokio_runtime().block_on(stream.next()) {
             Some(Ok(item)) => ::serde_json::to_string(&item).map_err(|e| e.to_string()),
             Some(Err(e)) => {
                 *guard = None;

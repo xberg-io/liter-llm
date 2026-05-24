@@ -29,5 +29,5 @@ data class DeleteResponse(
     /** Object type. */
     val `object`: String = "",
     /** Confirmation that the resource was deleted. */
-    val deleted: Boolean = false
+    val deleted: Boolean = false,
 )

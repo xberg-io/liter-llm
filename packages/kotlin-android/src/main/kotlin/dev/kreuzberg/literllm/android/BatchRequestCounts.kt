@@ -29,5 +29,5 @@ data class BatchRequestCounts(
     /** Completed requests. */
     val completed: Long = 0L,
     /** Failed requests. */
-    val failed: Long = 0L
+    val failed: Long = 0L,
 )
