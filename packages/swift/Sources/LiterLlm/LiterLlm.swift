@@ -2593,6 +2593,29 @@ public enum UserContent: Codable, Sendable, Hashable {
     case text(field0: String)
     /// Array of content parts (text, images, documents, audio).
     case parts(field0: [ContentPart])
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(String.self) {
+            self = .text(field0: value)
+            return
+        }
+        if let value = try? container.decode([ContentPart].self) {
+            self = .parts(field0: value)
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "no matching untagged variant")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .text(let field0):
+            try container.encode(field0)
+        case .parts(let field0):
+            try container.encode(field0)
+        }
+    }
 }
 extension UserContent {
     func intoRust() throws -> RustBridge.UserContent {
@@ -2707,6 +2730,29 @@ public enum ToolChoice: Codable, Sendable, Hashable {
     case mode(field0: ToolChoiceMode)
     /// Force a specific tool to be called.
     case specific(field0: SpecificToolChoice)
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(ToolChoiceMode.self) {
+            self = .mode(field0: value)
+            return
+        }
+        if let value = try? container.decode(SpecificToolChoice.self) {
+            self = .specific(field0: value)
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "no matching untagged variant")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .mode(let field0):
+            try container.encode(field0)
+        case .specific(let field0):
+            try container.encode(field0)
+        }
+    }
 }
 extension ToolChoice {
     func intoRust() throws -> RustBridge.ToolChoice {
@@ -2742,6 +2788,29 @@ public enum StopSequence: Codable, Sendable, Hashable {
     case single(field0: String)
     /// Multiple stop sequences.
     case multiple(field0: [String])
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(String.self) {
+            self = .single(field0: value)
+            return
+        }
+        if let value = try? container.decode([String].self) {
+            self = .multiple(field0: value)
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "no matching untagged variant")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .single(let field0):
+            try container.encode(field0)
+        case .multiple(let field0):
+            try container.encode(field0)
+        }
+    }
 }
 extension StopSequence {
     func intoRust() throws -> RustBridge.StopSequence {
@@ -2811,6 +2880,29 @@ public enum EmbeddingInput: Codable, Sendable, Hashable {
     case single(field0: String)
     /// Multiple text strings (batch embedding).
     case multiple(field0: [String])
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(String.self) {
+            self = .single(field0: value)
+            return
+        }
+        if let value = try? container.decode([String].self) {
+            self = .multiple(field0: value)
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "no matching untagged variant")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .single(let field0):
+            try container.encode(field0)
+        case .multiple(let field0):
+            try container.encode(field0)
+        }
+    }
 }
 extension EmbeddingInput {
     func intoRust() throws -> RustBridge.EmbeddingInput {
@@ -2826,6 +2918,29 @@ public enum ModerationInput: Codable, Sendable, Hashable {
     case single(field0: String)
     /// Multiple text strings (batch moderation).
     case multiple(field0: [String])
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(String.self) {
+            self = .single(field0: value)
+            return
+        }
+        if let value = try? container.decode([String].self) {
+            self = .multiple(field0: value)
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "no matching untagged variant")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .single(let field0):
+            try container.encode(field0)
+        case .multiple(let field0):
+            try container.encode(field0)
+        }
+    }
 }
 extension ModerationInput {
     func intoRust() throws -> RustBridge.ModerationInput {
@@ -2841,6 +2956,29 @@ public enum RerankDocument: Codable, Sendable, Hashable {
     case text(field0: String)
     /// Document with explicit text field (may include metadata).
     case object(text: String)
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(String.self) {
+            self = .text(field0: value)
+            return
+        }
+        if let value = try? container.decode(String.self) {
+            self = .object(text: value)
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "no matching untagged variant")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .text(let field0):
+            try container.encode(field0)
+        case .object(let text):
+            try container.encode(text)
+        }
+    }
 }
 extension RerankDocument {
     func intoRust() throws -> RustBridge.RerankDocument {
