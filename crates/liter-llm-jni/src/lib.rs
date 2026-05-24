@@ -50,15 +50,17 @@ fn jni_call_string_method(
     method_name: &str,
     method_sig: &str,
 ) -> std::result::Result<String, jni::errors::Error> {
+    use std::str::FromStr;
     let class = env.get_object_class(obj)?;
     let name_jni = jni::strings::JNIString::from(method_name);
-    let sig_jni = jni::strings::JNIString::from(method_sig);
-    let method_id = env.get_method_id(&class, name_jni, sig_jni)?;
+    let sig_runtime = jni::signature::RuntimeMethodSignature::from_str(method_sig)?;
+    let sig = sig_runtime.method_signature();
+    let method_id = env.get_method_id(&class, name_jni, sig)?;
     let result = env
         .call_method_unchecked(obj, method_id, jni::signature::ReturnType::Object, &[])?
         .l()?;
-    // SAFETY: JNI return type guaranteed a String, so the raw jstring cast is sound.
-    let jstring = unsafe { JString::from_raw(result.into_raw()) };
+    // SAFETY: JNI return type guaranteed a String, so the raw jstring pointer is valid.
+    let jstring = unsafe { JString::from_raw(env, result.into_raw()) };
     jstring_to_string(env, jstring)
 }
 
