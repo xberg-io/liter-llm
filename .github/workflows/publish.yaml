@@ -1843,6 +1843,13 @@ jobs:
         uses: astral-sh/setup-uv@v7.6
         with:
           version: "latest"
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Build mock-server (smoke fixture)
+        # test_apps/python/conftest.py spawns the mock HTTP server binary from
+        # test_apps/rust/target/release/mock-server. Build it here so verify
+        # doesn't FileNotFoundError before any package code is exercised.
+        run: cargo build --release --bin mock-server --manifest-path test_apps/rust/Cargo.toml
       - name: Wait for PyPI indexing
         uses: kreuzberg-dev/actions/wait-for-package@v1
         with:
