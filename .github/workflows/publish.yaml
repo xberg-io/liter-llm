@@ -1791,7 +1791,7 @@ jobs:
       needs.prepare.outputs.release_homebrew == 'true' &&
       needs.prepare.outputs.dry_run != 'true' &&
       needs.check-homebrew.outputs.exists != 'true' &&
-      needs.publish-crates.result == 'success' &&
+      needs.publish-crates.result != 'failure' &&
       needs.upload-homebrew-bottles.result == 'success'
     runs-on: ubuntu-latest
     permissions:
