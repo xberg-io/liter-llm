@@ -1,6 +1,6 @@
 [package]
 name = "liter-llm-ffi"
-version = "1.4.0-rc.30"
+version = "1.4.0-rc.31"
 edition = "2021"
 license = "MIT"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
@@ -8,6 +8,15 @@ readme = false
 keywords = ["llm", "api-client", "openai", "anthropic"]
 categories = ["text-processing"]
 repository = "https://github.com/kreuzberg-dev/liter-llm"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+liter-llm = { path = "../liter-llm", version = "1.4.0-rc.31", features = ["native-http", "full"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+futures-util = "0.3"
 
 # `serde_json` and `tokio` are emitted unconditionally above so the manifest
 # is stable across regens (and so the C FFI codegen can pull them in when an
@@ -20,17 +29,8 @@ repository = "https://github.com/kreuzberg-dev/liter-llm"
 [package.metadata.cargo-machete]
 ignored = ["serde_json", "tokio", "futures-util"]
 
-[lib]
-crate-type = ["cdylib", "staticlib"]
-
 [features]
 default = []
-
-[dependencies]
-futures-util = "0.3"
-liter-llm = { path = "../liter-llm", version = "1.4.0-rc.30", features = ["native-http", "full"] }
-serde_json = "1"
-tokio = { version = "1", features = ["full"] }
 
 [build-dependencies]
 cbindgen = "0.29"

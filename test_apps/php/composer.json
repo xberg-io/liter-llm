@@ -3,7 +3,7 @@
   "description": "E2e tests for PHP bindings",
   "type": "project",
   "require": {
-    "kreuzberg-dev/liter-llm": "1.4.0-rc.30"
+    "kreuzberg-dev/liter-llm": "1.4.0-rc.31"
   },
   "require-dev": {
     "phpunit/phpunit": "^13.1",

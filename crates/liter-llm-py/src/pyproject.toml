@@ -4,7 +4,7 @@ requires = [ "maturin>=1,<2" ]
 
 [project]
 name = "liter-llm"
-version = "1.4.0rc30"
+version = "1.4.0rc31"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
 keywords = [ "anthropic", "api-client", "llm", "openai" ]
 license = "MIT"
@@ -93,10 +93,5 @@ overrides = [
   # sees only the static-type discrepancy. Disable the four error codes the
   # discrepancy raises until the codegen emits matching `_to_rust_*` calls and
   # casts the return values.
-  { module = "liter_llm.api", disable_error_code = [
-    "call-arg",
-    "arg-type",
-    "return-value",
-    "attr-defined",
-  ] },
+  { module = "liter_llm.api", disable_error_code = [ "call-arg", "arg-type", "return-value", "attr-defined" ] },
 ]
