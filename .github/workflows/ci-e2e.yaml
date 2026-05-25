@@ -87,7 +87,7 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6
 
       - name: Setup Rust
         uses: kreuzberg-dev/actions/setup-rust@v1
