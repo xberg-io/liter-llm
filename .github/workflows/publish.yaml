@@ -227,6 +227,27 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  check-zig:
+    name: Check Zig package presence
+    needs: prepare
+    if: ${{ (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.prepare.outputs.release_zig == 'true' }}
+    runs-on: ubuntu-latest
+    outputs:
+      exists: ${{ steps.check.outputs.exists }}
+    steps:
+      - id: check
+        # `registry: github-release` (not `registry: zig`) — alef check-registry's
+        # zig path only verifies the release tag exists. On a real release that's
+        # always true, so it short-circuits `publish-zig` to skipped. Verify
+        # the actual asset is present instead.
+        uses: kreuzberg-dev/actions/check-registry@v1
+        with:
+          registry: github-release
+          package: liter-llm-zig-v${{ needs.prepare.outputs.version }}.tar.gz
+          version: ${{ needs.prepare.outputs.version }}
+          repo: ${{ github.repository }}
+          assets: liter-llm-zig-v${{ needs.prepare.outputs.version }}.tar.gz
+
   # ─────────────────────────────────────────────────────────────────────────
   # Phase 4 — Build jobs
   # ─────────────────────────────────────────────────────────────────────────
@@ -1663,8 +1684,8 @@ jobs:
 
   publish-zig:
     name: Publish Zig package metadata
-    needs: [prepare]
-    if: ${{ needs.prepare.outputs.release_zig == 'true' && (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') }}
+    needs: [prepare, check-zig]
+    if: ${{ needs.prepare.outputs.release_zig == 'true' && needs.prepare.outputs.is_tag == 'true' && (needs.check-zig.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -1674,6 +1695,13 @@ jobs:
         with:
           working-directory: packages/zig
           tag: ${{ needs.prepare.outputs.tag }}
+          # Override the auto-detected package-name (`liter_llm` from
+          # build.zig.zon) to match the alef-emitted test_app URL pattern
+          # `{crate-name}-zig-v{version}.tar.gz`. Without this, the asset
+          # uploads as `liter_llm-v{version}.tar.gz` while
+          # test_apps/zig fetches `liter-llm-zig-v{version}.tar.gz`
+          # → 404 + consumer build.zig.zon TODO hash.
+          package-name: liter-llm-zig
           update-release-notes: "true"
           dry-run: ${{ needs.prepare.outputs.dry_run }}
           update-existing: "true"
