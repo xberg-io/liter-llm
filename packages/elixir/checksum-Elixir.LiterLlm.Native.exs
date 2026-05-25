@@ -1,10 +1,10 @@
 %{
-  "libliter_llm_nif-v1.4.0-rc.30-nif-2.16-aarch64-apple-darwin.dylib.tar.gz" => "sha256:4e8b70478f22bb304901b08fd2e913fd0cca975acb9f701182c856b8984d2dbe",
-  "libliter_llm_nif-v1.4.0-rc.30-nif-2.16-aarch64-unknown-linux-gnu.so.tar.gz" => "sha256:cdfbe515125d1a977b76e9217b50742219260da1cebba98a2867cda51f34e25c",
-  "libliter_llm_nif-v1.4.0-rc.30-nif-2.16-x86_64-pc-windows-gnu.dll.tar.gz" => "sha256:c0bf91003c3c9c4497a5644d9c8ccee47d68db5a15c1b5a18257817f30dc74fe",
-  "libliter_llm_nif-v1.4.0-rc.30-nif-2.16-x86_64-unknown-linux-gnu.so.tar.gz" => "sha256:5b821172b821d15d588144c09a0c1961bbd397896ff4d8c386206bba0bbd61af",
-  "libliter_llm_nif-v1.4.0-rc.30-nif-2.17-aarch64-apple-darwin.dylib.tar.gz" => "sha256:243fde327dbe87b1795711fee1bf0074f0887a43f4ec0cead7b8d648c32208a6",
-  "libliter_llm_nif-v1.4.0-rc.30-nif-2.17-aarch64-unknown-linux-gnu.so.tar.gz" => "sha256:cdfbe515125d1a977b76e9217b50742219260da1cebba98a2867cda51f34e25c",
-  "libliter_llm_nif-v1.4.0-rc.30-nif-2.17-x86_64-pc-windows-gnu.dll.tar.gz" => "sha256:5a5a6bb644818f479166b170a7e5cdc8b1c02beaf422d9ea919f3f1dcf0b8c82",
-  "libliter_llm_nif-v1.4.0-rc.30-nif-2.17-x86_64-unknown-linux-gnu.so.tar.gz" => "sha256:548e7b60787d46a0b340958868726e82b0f4691197de37015d17c3b08bb3ae68",
+  "libliter_llm_nif-v1.4.0-rc.31-nif-2.16-aarch64-apple-darwin.dylib.tar.gz" => "sha256:30d9a9050a44958573d18f40504a2035d84aa78c6fcb45119b869fce78e4d8c6",
+  "libliter_llm_nif-v1.4.0-rc.31-nif-2.16-aarch64-unknown-linux-gnu.so.tar.gz" => "sha256:26636291d4e879262c567693b645491f67d2a52f4a1b16192dc9129aec613bcf",
+  "libliter_llm_nif-v1.4.0-rc.31-nif-2.16-x86_64-pc-windows-gnu.dll.tar.gz" => "sha256:61638b2fc334d70e5684318a033b0ac305617008ba059d674f112623817777a6",
+  "libliter_llm_nif-v1.4.0-rc.31-nif-2.16-x86_64-unknown-linux-gnu.so.tar.gz" => "sha256:b436a9050c9198e3c60ccc4f7129c9cf39b1fcef3e57a384adc877230a531bfd",
+  "libliter_llm_nif-v1.4.0-rc.31-nif-2.17-aarch64-apple-darwin.dylib.tar.gz" => "sha256:30d9a9050a44958573d18f40504a2035d84aa78c6fcb45119b869fce78e4d8c6",
+  "libliter_llm_nif-v1.4.0-rc.31-nif-2.17-aarch64-unknown-linux-gnu.so.tar.gz" => "sha256:3e630eaa816f7239b4ba8ad01782f7a9b33d514ffd82111fd3bb5c6773c208b6",
+  "libliter_llm_nif-v1.4.0-rc.31-nif-2.17-x86_64-pc-windows-gnu.dll.tar.gz" => "sha256:3a48fbcb0fbf9bf1dd1840c95e6d6166ebaefe922bcc561a0badc1eb0286f6ca",
+  "libliter_llm_nif-v1.4.0-rc.31-nif-2.17-x86_64-unknown-linux-gnu.so.tar.gz" => "sha256:3a17a655e46c8a82e640d285ac837fcb2aca0ff882675fa9a07970d9bf250190",
 }
