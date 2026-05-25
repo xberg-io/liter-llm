@@ -63,6 +63,7 @@ jobs:
       # so downstream checkouts would 404. Fall back to the dispatch ref.
       checkout_ref: ${{ steps.meta.outputs.dry_run == 'true' && (inputs.ref || github.ref) || steps.meta.outputs.checkout_ref }}
       version: ${{ steps.meta.outputs.version }}
+      is_tag: ${{ steps.meta.outputs.is_tag }}
       npm_tag: ${{ steps.meta.outputs.npm_tag }}
       dry_run: ${{ steps.meta.outputs.dry_run }}
       force_republish: ${{ steps.meta.outputs.force_republish }}
@@ -791,10 +792,20 @@ jobs:
           merge-multiple: true
       - name: Stage native libs for Java
         run: |
-          for rid in linux-x64 linux-arm64 osx-arm64 win-x64; do
-            dest="packages/java/src/main/resources/natives/${rid}"
+          # Map runtime IDs (RID) to Java native directory structure.
+          # FFI build uses osx/win prefixes (compatibility with Go/.NET);
+          # Java NativeLib resolver expects macos/windows prefixes.
+          declare -A rid_map=(
+            [linux-x64]="linux-x64"
+            [linux-arm64]="linux-arm64"
+            [osx-arm64]="macos-arm64"
+            [win-x64]="windows-x64"
+          )
+          for ffi_rid in "${!rid_map[@]}"; do
+            java_rid="${rid_map[$ffi_rid]}"
+            dest="packages/java/src/main/resources/natives/${java_rid}"
             mkdir -p "$dest"
-            find "ffi-artifacts/${rid}" -type f -print0 | xargs -0 -I{} cp {} "$dest/"
+            find "ffi-artifacts/${ffi_rid}" -type f -print0 | xargs -0 -I{} cp {} "$dest/"
           done
         shell: bash
       - uses: actions/setup-java@v5.2.0
