@@ -24,6 +24,7 @@
   },
   "napi": {
     "binaryName": "liter-llm-node",
+    "packageName": "@kreuzberg/liter-llm-node",
     "targets": [
       "x86_64-unknown-linux-gnu",
       "aarch64-unknown-linux-gnu",

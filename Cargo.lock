@@ -2550,6 +2550,7 @@ dependencies = [
 name = "liter-llm-ffi"
 version = "1.4.0-rc.32"
 dependencies = [
+ "ahash",
  "cbindgen",
  "futures-util",
  "liter-llm",
@@ -2639,6 +2640,7 @@ dependencies = [
 name = "liter-llm-swift"
 version = "1.4.0-rc.32"
 dependencies = [
+ "ahash",
  "async-trait",
  "futures-util",
  "liter-llm",
