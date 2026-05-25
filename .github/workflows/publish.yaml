@@ -79,6 +79,8 @@ jobs:
       release_php: ${{ steps.meta.outputs.release_php }}
       release_homebrew: ${{ steps.meta.outputs.release_homebrew }}
       release_kotlin: ${{ steps.meta.outputs.release_kotlin }}
+      release_dart: ${{ steps.meta.outputs.release_dart }}
+      release_zig: ${{ steps.meta.outputs.release_zig }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6.0.2
@@ -96,7 +98,7 @@ jobs:
         id: meta
         uses: kreuzberg-dev/actions/prepare-release-metadata@v1
         with:
-          available-targets: "crates,python,node,wasm,ruby,go,java,elixir,csharp,php,homebrew,kotlin"
+          available-targets: "crates,python,node,wasm,ruby,go,java,elixir,csharp,php,homebrew,kotlin,dart,zig"
 
   # ─────────────────────────────────────────────────────────────────────────
   # Phase 2 — Validate version consistency
@@ -188,6 +190,41 @@ jobs:
           "
           fi
         shell: bash
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Phase 3b — Pub.dev registry checks
+  # ─────────────────────────────────────────────────────────────────────────
+  check-pub:
+    name: Check pub.dev for Dart package
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_dart == 'true' && (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') }}
+    runs-on: ubuntu-latest
+    outputs:
+      exists: ${{ steps.check.outputs.exists }}
+    steps:
+      - id: check
+        uses: kreuzberg-dev/actions/check-registry@v1
+        with:
+          registry: pub
+          package: liter_llm
+          version: ${{ needs.prepare.outputs.version }}
+
+  assemble-dart-package:
+    name: Assemble Dart package artifact
+    needs: [prepare, check-pub]
+    if: ${{ needs.prepare.outputs.release_dart == 'true' && (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && (needs.check-pub.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dart-package-assembled
+          path: packages/dart
+          if-no-files-found: error
+          retention-days: 7
 
   # ─────────────────────────────────────────────────────────────────────────
   # Phase 4 — Build jobs
@@ -1435,6 +1472,44 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
+  publish-kotlin-android-maven:
+    name: Publish Kotlin Android AAR to Maven Central
+    needs: [prepare, build-kotlin-android-natives, upload-kotlin-android-aars]
+    if: |
+      always() &&
+      needs.prepare.outputs.release_kotlin == 'true' &&
+      (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: kotlin-android-*
+          path: packages/kotlin-android/build/outputs/aar/
+          merge-multiple: true
+      - uses: actions/setup-java@v5.2.0
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+      - uses: kreuzberg-dev/actions/setup-maven@v1
+      - uses: kreuzberg-dev/actions/configure-maven-gpg@v1
+      - uses: kreuzberg-dev/actions/publish-maven-gradle@v1
+        with:
+          working-directory: packages/kotlin-android
+          gradle-task: publishAndReleaseToMavenCentral
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+        env:
+          MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+
   publish-hex:
     name: Publish Hex.pm
     needs:
@@ -1557,6 +1632,40 @@ jobs:
           dry-run: ${{ needs.prepare.outputs.dry_run }}
         env:
           PACKAGIST_API_TOKEN: ${{ secrets.PACKAGIST_API_TOKEN }}
+
+  trigger-pubdev:
+    name: Trigger pub.dev publish workflow
+    needs: [prepare, check-pub, assemble-dart-package]
+    if: ${{ needs.prepare.outputs.release_dart == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && (needs.check-pub.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Dispatch publish-pubdev workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh workflow run publish-pubdev.yaml \
+            --ref ${{ github.ref_name }} \
+            -f run_id=${{ github.run_id }}
+
+  publish-zig:
+    name: Publish Zig package metadata
+    needs: [prepare]
+    if: ${{ needs.prepare.outputs.release_zig == 'true' && (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/publish-zig@v1
+        with:
+          working-directory: packages/zig
+          tag: ${{ needs.prepare.outputs.tag }}
+          update-release-notes: "true"
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+          update-existing: "true"
 
   # ── CLI binary tarballs (for direct download, non-brew/non-docker users) ─
   build-cli-binaries:
@@ -1897,10 +2006,13 @@ jobs:
       - publish-wasm
       - publish-rubygems
       - publish-maven
+      - publish-kotlin-android-maven
       - publish-hex
       - publish-nuget
       - publish-packagist
       - publish-homebrew-bottles
+      - trigger-pubdev
+      - publish-zig
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -1943,9 +2055,12 @@ jobs:
             report "npm (WASM)"  "${{ needs.publish-wasm.result }}"
             report "RubyGems"    "${{ needs.publish-rubygems.result }}"
             report "Maven"       "${{ needs.publish-maven.result }}"
+            report "Maven (Kotlin Android)" "${{ needs.publish-kotlin-android-maven.result }}"
             report "Hex.pm"      "${{ needs.publish-hex.result }}"
             report "NuGet"       "${{ needs.publish-nuget.result }}"
             report "Packagist"   "${{ needs.publish-packagist.result }}"
+            report "pub.dev"     "${{ needs.trigger-pubdev.result }}"
+            report "Zig"         "${{ needs.publish-zig.result }}"
             report "Go FFI"      "${{ needs.upload-go-ffi.result }}"
             report "PHP ext"     "${{ needs.upload-php-extensions.result }}"
             report "Homebrew"    "${{ needs.publish-homebrew-bottles.result }}"
