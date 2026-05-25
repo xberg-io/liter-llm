@@ -127,6 +127,28 @@ test_apps/dart/.dart_tool/
 test_apps/dart/.packages
 test_apps/dart/pubspec.lock
 
+# Install state for test_apps trees — alef regenerates the source manifests,
+# but lockfiles and downloaded deps belong to the running install, not the
+# checked-in tree. Each `verify-install` run pulls fresh from registries.
+test_apps/*/node_modules/
+test_apps/*/pnpm-lock.yaml
+test_apps/*/vendor/
+test_apps/*/composer.lock
+test_apps/*/Gemfile.lock
+test_apps/*/.bundle/
+test_apps/*/.venv/
+test_apps/*/deps/
+test_apps/*/mix.lock
+test_apps/*/.gradle/
+test_apps/*/build/
+test_apps/*/.dart_tool/
+test_apps/*/.pub-cache/
+test_apps/*/target/
+test_apps/*/bin/
+test_apps/*/obj/
+test_apps/*/.swiftpm/
+test_apps/*/.build/
+
 # C FFI test binaries
 crates/liter-llm-ffi/tests/c/test_*
 !crates/liter-llm-ffi/tests/c/test_*.c

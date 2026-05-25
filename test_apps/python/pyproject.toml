@@ -1,6 +1,9 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["setuptools>=68", "wheel"]
+requires = [
+  "setuptools>=68",
+  "wheel",
+]
 
 [project]
 name = "liter-llm-e2e"
@@ -16,10 +19,10 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
+  "liter-llm==1.4.0-rc.32",
   "pytest>=7.4",
   "pytest-asyncio>=0.23",
   "pytest-timeout>=2.1",
-  "liter-llm==1.4.0rc32",
 ]
 
 [tool.setuptools]
@@ -27,7 +30,12 @@ packages = []
 
 [tool.ruff]
 lint.ignore = ["PLR2004"]
-lint.per-file-ignores."tests/**" = ["B017", "PT011", "S101", "S108"]
+lint.per-file-ignores."tests/**" = [
+  "B017",
+  "PT011",
+  "S101",
+  "S108",
+]
 
 [tool.pytest]
 ini_options.asyncio_mode = "auto"

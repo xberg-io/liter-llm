@@ -1,41 +1,54 @@
+import com.android.build.api.dsl.ManagedVirtualDevice
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("jvm") version "2.3.21"
-    java
+    id("com.android.library") version "8.13.0"
+    kotlin("android") version "2.3.21"
 }
 
 group = "dev.kreuzberg.literllm.android"
 version = "0.1.0"
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+android {
+    namespace = "dev.kreuzberg.literllm.android.e2e"
+    compileSdk = 35
+
+    defaultConfig {
+        minSdk = 21
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    testOptions {
+        // Gradle Managed Virtual Devices for on-device instrumented tests.
+        // Run: ./gradlew pixel6api34DebugAndroidTest
+        managedDevices {
+            devices {
+                create<ManagedVirtualDevice>("pixel6api34") {
+                    device = "Pixel 6"
+                    apiLevel = 34
+                    systemImageSource = "aosp"
+                }
+            }
+        }
+    }
 }
 
 kotlin {
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
+        jvmTarget = JvmTarget.JVM_17
     }
 }
 
-repositories {
-    mavenCentral()
-}
-
-sourceSets {
-    test {
-        // Include the AAR-bundled Java facade as test sources
-        java.srcDir("../../packages/kotlin-android/src/main/java")
-        // Include the AAR-bundled Kotlin wrapper as test sources
-        kotlin.srcDir("../../packages/kotlin-android/src/main/kotlin")
-    }
-}
+// Repositories declared in settings.gradle.kts via
+// dependencyResolutionManagement (FAIL_ON_PROJECT_REPOS). Re-declaring them
+// here triggers Gradle "repository was added by build file" errors.
 
 dependencies {
-    // JNA for loading libkreuzberg_ffi from java.library.path
-    testImplementation("net.java.dev.jna:jna:5.18.1")
-
+    // Published Android AAR from Maven Central
+    testImplementation("dev.kreuzberg:liter-llm-android:1.4.0-rc.32")
     // Jackson for JSON assertion helpers
     testImplementation("com.fasterxml.jackson.core:jackson-annotations:2.18.2")
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")
@@ -53,22 +66,14 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
 
     // JUnit 5 API and engine
-    testImplementation("org.junit.jupiter:junit-jupiter-api:6.0.3")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:6.0.3")
-    testImplementation("org.junit.platform:junit-platform-launcher:6.0.3")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:6.1.0")
+    testImplementation("org.junit.platform:junit-platform-launcher:6.1.0")
 
     // Kotlin stdlib test helpers
     testImplementation(kotlin("test"))
 }
 
-tasks.test {
+tasks.withType<Test> {
     useJUnitPlatform()
-
-    // Resolve libkreuzberg_ffi location (e.g., ../../target/release)
-    val libPath = System.getProperty("kb.lib.path") ?: "${rootDir}/../../target/release"
-    systemProperty("java.library.path", libPath)
-    systemProperty("jna.library.path", libPath)
-
-    // Resolve fixture paths (e.g. "docx/fake.docx") against test_documents/
-    workingDir = file("${rootDir}/../../test_documents")
 }
