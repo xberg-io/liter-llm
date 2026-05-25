@@ -5,8 +5,8 @@
     .minimum_zig_version = "0.16.0",
     .dependencies = .{
         .liter_llm = .{
-            .url = "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.32/liter-llm-zig-v1.4.0-rc.32.tar.gz",
-            // alef: hash not pinned — run `zig fetch --save https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.32/liter-llm-zig-v1.4.0-rc.32.tar.gz` once to populate,
+            .url = "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.33/liter-llm-zig-v1.4.0-rc.33.tar.gz",
+            // alef: hash not pinned — run `zig fetch --save https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.33/liter-llm-zig-v1.4.0-rc.33.tar.gz` once to populate,
             //       then set `hash` under [crates.e2e.registry.packages.zig] in alef.toml.
             .hash = "TODO",
         },
