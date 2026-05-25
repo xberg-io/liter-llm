@@ -155,8 +155,7 @@ crates/liter-llm-ffi/tests/c/test_*
 crates/liter-llm-ffi/tests/c/*.o
 crates/liter-llm-ffi/tests/c/*.dSYM/
 
-# NAPI-RS generated files (index.d.ts is committed for TypeScript type resolution)
-crates/liter-llm-node/index.js
+# NAPI-RS generated files (both index.js and index.d.ts are committed for npm packaging)
 
 # Transient lockfiles produced when alef runs package managers inside crate
 # source dirs during `task update`/`task upgrade`. Canonical lockfiles live
