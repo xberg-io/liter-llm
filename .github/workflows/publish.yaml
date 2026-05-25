@@ -1879,54 +1879,11 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────
   # Phase 7 — Finalize
   # ─────────────────────────────────────────────────────────────────────────
-  # ─────────────────────────────────────────────────────────────────────────
-  # Verify-install: install from registry (real-run) or local artifact
-  # (dry-run) and execute the alef-generated test_app smoke test against it.
-  # Backed by kreuzberg-dev/actions/verify-install@v1.
-  # ─────────────────────────────────────────────────────────────────────────
-  verify-install-python:
-    name: Verify install Python
-    needs: [prepare, build-python-wheels, build-python-sdist, publish-pypi]
-    # Dry-run is skipped: the synthetic `0.0.0-dryrun` tag becomes `0.0.0.dryrun`
-    # in the wheel filename (PEP 440 normalisation) and `pip install liter-llm==`
-    # cannot resolve a local pre-release without an index lookup. Verify-install
-    # is a real-run validation step only.
-    if: |
-      always() &&
-      needs.prepare.outputs.release_python == 'true' &&
-      needs.prepare.outputs.dry_run != 'true' &&
-      needs.publish-pypi.result == 'success'
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v6.0.2
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - name: Install uv (consumer toolchain)
-        uses: astral-sh/setup-uv@v7.6
-        with:
-          version: "latest"
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-      - name: Build mock-server (smoke fixture)
-        # e2e/python/conftest.py spawns the mock HTTP server binary from
-        # e2e/rust/target/release/mock-server. Build it here so verify
-        # doesn't FileNotFoundError before any package code is exercised.
-        run: cargo build --release --bin mock-server --manifest-path e2e/rust/Cargo.toml
-      - name: Wait for PyPI indexing
-        uses: kreuzberg-dev/actions/wait-for-package@v1
-        with:
-          registry: pypi
-          package: liter-llm
-          version: ${{ needs.prepare.outputs.version }}
-          max-attempts: "20"
-      - uses: kreuzberg-dev/actions/verify-install@v1
-        with:
-          language: python
-          version: ${{ needs.prepare.outputs.version }}
-          package-name: liter-llm
-          artifact-source: registry
-          local-path: ${{ needs.prepare.outputs.dry_run == 'true' && './wheelhouse' || '' }}
+  # NOTE: per-channel verify-install jobs are rebuilt in the test_apps plan
+  # (Phase 3). The previous `verify-install-python` was wired against an
+  # empty `test_apps/python` stub and consistently red post-publish; it is
+  # removed here and re-introduced alongside its 11 siblings once alef
+  # emits a real registry-mode `test_apps/` tree.
 
   release-finalize:
     name: Finalize release
@@ -1944,7 +1901,6 @@ jobs:
       - publish-nuget
       - publish-packagist
       - publish-homebrew-bottles
-      - verify-install-python
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -2014,7 +1970,6 @@ jobs:
       - upload-elixir-nifs
       - upload-php-extensions
       - upload-cli-binaries
-      - release-finalize
     if: |
       always() &&
       !cancelled() &&
