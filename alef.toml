@@ -440,6 +440,22 @@ precondition = "command -v gradle >/dev/null 2>&1"
 before = "cargo build --release -p liter-llm-ffi -p liter-llm-jni && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 e2e = "scripts/e2e/run-with-mock-server.sh 'cd e2e/kotlin_android && gradle test --no-daemon'"
 
+[crates.update.python]
+# Override alef's default (which cds into crates/liter-llm-py/src/ and triggers
+# a maturin build with a wrong manifest-path). Run from repo root with the
+# project/workspace install skipped — we just want the dep graph resolved/upgraded.
+precondition = "command -v uv >/dev/null 2>&1"
+update = "uv sync --upgrade --no-install-project --no-install-workspace"
+upgrade = "uv sync --all-packages --all-extras --upgrade --no-install-project --no-install-workspace"
+
+[crates.update.kotlin_android]
+# `gradle dependencyUpdates` is a report-only command (does not bump versions)
+# and ben-manes versions plugin v0.52.0 throws ConcurrentModificationException
+# on Gradle 9.x. Make it a no-op until alef bumps the plugin upstream.
+precondition = "command -v gradle >/dev/null 2>&1"
+update = "echo 'kotlin-android: dependencyUpdates skipped (plugin v0.52.0 incompatible with Gradle 9; report-only no-op)'"
+upgrade = "echo 'kotlin-android: dependencyUpdates skipped (plugin v0.52.0 incompatible with Gradle 9; report-only no-op)'"
+
 [crates.publish]
 core_crate = "crates/liter-llm"
 
