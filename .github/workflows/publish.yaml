@@ -78,7 +78,7 @@ jobs:
       release_csharp: ${{ steps.meta.outputs.release_csharp }}
       release_php: ${{ steps.meta.outputs.release_php }}
       release_homebrew: ${{ steps.meta.outputs.release_homebrew }}
-      release_kotlin_android: ${{ steps.meta.outputs.release_kotlin_android }}
+      release_kotlin: ${{ steps.meta.outputs.release_kotlin }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6.0.2
@@ -96,7 +96,7 @@ jobs:
         id: meta
         uses: kreuzberg-dev/actions/prepare-release-metadata@v1
         with:
-          available-targets: "crates,python,node,wasm,ruby,go,java,elixir,csharp,php,homebrew"
+          available-targets: "crates,python,node,wasm,ruby,go,java,elixir,csharp,php,homebrew,kotlin"
 
   # ─────────────────────────────────────────────────────────────────────────
   # Phase 2 — Validate version consistency
@@ -823,7 +823,7 @@ jobs:
     needs: [prepare, registry-results]
     if: |
       always() &&
-      needs.prepare.outputs.release_kotlin_android == 'true'
+      needs.prepare.outputs.release_kotlin == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -974,7 +974,7 @@ jobs:
   upload-kotlin-android-aars:
     name: Upload Kotlin Android aars
     needs: [prepare, build-kotlin-android-natives]
-    if: always() && needs.prepare.outputs.release_kotlin_android == 'true' && needs.build-kotlin-android-natives.result == 'success'
+    if: always() && needs.prepare.outputs.release_kotlin == 'true' && needs.build-kotlin-android-natives.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -1909,10 +1909,10 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Build mock-server (smoke fixture)
-        # test_apps/python/conftest.py spawns the mock HTTP server binary from
-        # test_apps/rust/target/release/mock-server. Build it here so verify
+        # e2e/python/conftest.py spawns the mock HTTP server binary from
+        # e2e/rust/target/release/mock-server. Build it here so verify
         # doesn't FileNotFoundError before any package code is exercised.
-        run: cargo build --release --bin mock-server --manifest-path test_apps/rust/Cargo.toml
+        run: cargo build --release --bin mock-server --manifest-path e2e/rust/Cargo.toml
       - name: Wait for PyPI indexing
         uses: kreuzberg-dev/actions/wait-for-package@v1
         with:
