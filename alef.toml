@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.19.8"
+alef_version = "0.19.9"
 languages = [
   "python",
   "node",
@@ -459,11 +459,7 @@ upgrade = "echo 'kotlin-android: dependencyUpdates skipped (plugin v0.52.0 incom
 [crates.publish]
 core_crate = "crates/liter-llm"
 
-[crates.publish.languages.ruby]
-vendor_mode = "core-only"
-
 [crates.publish.languages.elixir]
-vendor_mode = "core-only"
 nif_versions = ["2.16", "2.17"]
 
 [crates.publish.languages.ffi]
@@ -1689,6 +1685,7 @@ path = "../../packages/kotlin-android"
 
 [crates.e2e.registry]
 output = "test_apps"
+github_repo = "https://github.com/kreuzberg-dev/liter-llm"
 
 [crates.e2e.registry.packages.python]
 name = "liter-llm"

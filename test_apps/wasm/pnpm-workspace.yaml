@@ -1,4 +1,2 @@
 packages:
   - "."
-minimumReleaseAgeExclude:
-  - '@kreuzberg/liter-llm-wasm@1.4.0-rc.32'

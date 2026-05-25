@@ -38,12 +38,5 @@
     "api-client",
     "openai",
     "anthropic"
-  ],
-  "extra": {
-    "pie": {
-      "binary": {
-        "url-template": "https://github.com/kreuzberg-dev/liter-llm/releases/download/v{Version}/php_liter_llm-{Version}_php{PhpVersion}-{Arch}-{OS}-{Libc}-{TSMode}.tgz"
-      }
-    }
-  }
+  ]
 }
