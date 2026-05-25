@@ -3,6 +3,8 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'dart:isolate';
+import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
@@ -18,6 +20,34 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
   RustLib._();
 
+  /// Resolve the prebuilt native library from this package's own installed
+  /// location so the load works from any working directory and under hardened
+  /// runtimes. Returns `null` to defer to flutter_rust_bridge's default loader.
+  static Future<ExternalLibrary?> _alefResolveExternalLibrary() async {
+    try {
+      final packageRoot = await Isolate.resolvePackageUri(
+        Uri.parse('package:liter_llm/liter_llm.dart'),
+      );
+      if (packageRoot != null) {
+        final libDir = packageRoot.resolve('src/liter_llm_bridge_generated/');
+        const candidates = <String>[
+          'libliter_llm.dylib',
+          'libliter_llm.so',
+          'liter_llm.dll',
+        ];
+        for (final candidate in candidates) {
+          final libPath = libDir.resolve(candidate).toFilePath();
+          if (File(libPath).existsSync()) {
+            return ExternalLibrary.open(libPath);
+          }
+        }
+      }
+    } catch (_) {
+      // Fall through to the default loader on any resolution failure.
+    }
+    return null;
+  }
+
   /// Initialize flutter_rust_bridge
   static Future<void> init({
     RustLibApi? api,
@@ -25,6 +55,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
     ExternalLibrary? externalLibrary,
     bool forceSameCodegenVersion = true,
   }) async {
+    externalLibrary ??= await _alefResolveExternalLibrary();
     await instance.initImpl(
       api: api,
       handler: handler,
