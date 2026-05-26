@@ -4,7 +4,7 @@ defmodule LiterLlm.MixProject do
   def project do
     [
       app: :liter_llm,
-      version: "1.4.0-rc.33",
+      version: "1.4.0-rc.34",
       elixir: "~> 1.14",
       elixirc_paths: ["lib", Path.expand("../../packages/elixir/native/liter_llm_nif/src", __DIR__)],
       rustler_crates: [liter_llm_nif: [mode: :release]],
@@ -19,7 +19,7 @@ defmodule LiterLlm.MixProject do
       licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/kreuzberg-dev/liter-llm"},
       files:
-        ~w(lib .formatter.exs mix.exs README* checksum-*.exs native/liter_llm_nif/Cargo.toml native/liter_llm_nif/Cargo.lock ../../packages/elixir/native/liter_llm_nif/src)
+        ~w(lib .formatter.exs mix.exs README* LICENSE checksum-*.exs native/liter_llm_nif/Cargo.toml native/liter_llm_nif/Cargo.lock native/liter_llm_nif/src)
     ]
   end
 
