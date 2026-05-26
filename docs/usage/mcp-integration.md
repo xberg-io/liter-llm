@@ -184,7 +184,7 @@ Configuration is identical to the proxy server — see [Configuration](./configu
 
 ### Environment Variables
 
-The MCP server reads API keys and provider configuration from environment variables, identical to the [main liter-llm client](./configuration.md#environment-variables):
+The MCP server reads API keys and provider configuration from environment variables, identical to the [main liter-llm client](./configuration.md#api-key-environment-variables):
 
 ```bash
 export OPENAI_API_KEY="sk-..."

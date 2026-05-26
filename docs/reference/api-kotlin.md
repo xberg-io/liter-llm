@@ -366,7 +366,7 @@ Configuration for registering a custom LLM provider at runtime.
 | `name`          | `String`           | —       | Unique name for this provider (e.g., "my-provider").                        |
 | `baseUrl`       | `String`           | —       | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
 | `authHeader`    | `AuthHeaderFormat` | —       | Authentication header format.                                               |
-| `modelPrefixes` | `List<String>`     | —       | Model name prefixes that route to this provider (e.g., ["my-"]).            |
+| `modelPrefixes` | `List<String>`     | —       | Model name prefixes that route to this provider (e.g., `["my-"]`).          |
 
 ---
 

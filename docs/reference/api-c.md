@@ -27,13 +27,13 @@ LiterllmDefaultClient* literllm_create_client(const char* api_key, const char* b
 
 **Parameters:**
 
-| Name           | Type           | Required | Description      |
-| -------------- | -------------- | -------- | ---------------- |
-| `api_key`      | `const char*`  | Yes      | The api key      |
-| `base_url`     | `const char**` | No       | The base url     |
-| `timeout_secs` | `uint64_t*`    | No       | The timeout secs |
-| `max_retries`  | `uint32_t*`    | No       | The max retries  |
-| `model_hint`   | `const char**` | No       | The model hint   |
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `api_key` | `const char*` | Yes | The api key |
+| `base_url` | `const char**` | No | The base url |
+| `timeout_secs` | `uint64_t*` | No | The timeout secs |
+| `max_retries` | `uint32_t*` | No | The max retries |
+| `model_hint` | `const char**` | No | The model hint |
 
 **Returns:** `LiterllmDefaultClient`
 **Errors:** Returns `NULL` on error.
@@ -59,9 +59,9 @@ LiterllmDefaultClient* literllm_create_client_from_json(const char* json);
 
 **Parameters:**
 
-| Name   | Type          | Required | Description |
-| ------ | ------------- | -------- | ----------- |
-| `json` | `const char*` | Yes      | The json    |
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `json` | `const char*` | Yes | The json |
 
 **Returns:** `LiterllmDefaultClient`
 **Errors:** Returns `NULL` on error.
@@ -88,9 +88,9 @@ void literllm_register_custom_provider(LiterllmCustomProviderConfig config);
 
 **Parameters:**
 
-| Name     | Type                           | Required | Description               |
-| -------- | ------------------------------ | -------- | ------------------------- |
-| `config` | `LiterllmCustomProviderConfig` | Yes      | The configuration options |
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `config` | `LiterllmCustomProviderConfig` | Yes | The configuration options |
 
 **Returns:** `void`
 **Errors:** Returns `NULL` on error.
@@ -116,9 +116,9 @@ bool literllm_unregister_custom_provider(const char* name);
 
 **Parameters:**
 
-| Name   | Type          | Required | Description |
-| ------ | ------------- | -------- | ----------- |
-| `name` | `const char*` | Yes      | The name    |
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `const char*` | Yes | The name |
 
 **Returns:** `bool`
 **Errors:** Returns `NULL` on error.
@@ -182,11 +182,11 @@ double* literllm_completion_cost(const char* model, uint64_t prompt_tokens, uint
 
 **Parameters:**
 
-| Name                | Type          | Required | Description           |
-| ------------------- | ------------- | -------- | --------------------- |
-| `model`             | `const char*` | Yes      | The model             |
-| `prompt_tokens`     | `uint64_t`    | Yes      | The prompt tokens     |
-| `completion_tokens` | `uint64_t`    | Yes      | The completion tokens |
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `model` | `const char*` | Yes | The model |
+| `prompt_tokens` | `uint64_t` | Yes | The prompt tokens |
+| `completion_tokens` | `uint64_t` | Yes | The completion tokens |
 
 **Returns:** `double*`
 
@@ -215,12 +215,12 @@ double* literllm_completion_cost_with_cache(const char* model, uint64_t prompt_t
 
 **Parameters:**
 
-| Name                | Type          | Required | Description           |
-| ------------------- | ------------- | -------- | --------------------- |
-| `model`             | `const char*` | Yes      | The model             |
-| `prompt_tokens`     | `uint64_t`    | Yes      | The prompt tokens     |
-| `cached_tokens`     | `uint64_t`    | Yes      | The cached tokens     |
-| `completion_tokens` | `uint64_t`    | Yes      | The completion tokens |
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `model` | `const char*` | Yes | The model |
+| `prompt_tokens` | `uint64_t` | Yes | The prompt tokens |
+| `cached_tokens` | `uint64_t` | Yes | The cached tokens |
+| `completion_tokens` | `uint64_t` | Yes | The completion tokens |
 
 **Returns:** `double*`
 
@@ -247,10 +247,10 @@ uintptr_t literllm_count_tokens(const char* model, const char* text);
 
 **Parameters:**
 
-| Name    | Type          | Required | Description |
-| ------- | ------------- | -------- | ----------- |
-| `model` | `const char*` | Yes      | The model   |
-| `text`  | `const char*` | Yes      | The text    |
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `model` | `const char*` | Yes | The model |
+| `text` | `const char*` | Yes | The text |
 
 **Returns:** `uintptr_t`
 **Errors:** Returns `NULL` on error.
@@ -279,10 +279,10 @@ uintptr_t literllm_count_request_tokens(const char* model, LiterllmChatCompletio
 
 **Parameters:**
 
-| Name    | Type                            | Required | Description                 |
-| ------- | ------------------------------- | -------- | --------------------------- |
-| `model` | `const char*`                   | Yes      | The model                   |
-| `req`   | `LiterllmChatCompletionRequest` | Yes      | The chat completion request |
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `model` | `const char*` | Yes | The model |
+| `req` | `LiterllmChatCompletionRequest` | Yes | The chat completion request |
 
 **Returns:** `uintptr_t`
 **Errors:** Returns `NULL` on error.
@@ -321,13 +321,13 @@ void literllm_ensure_crypto_provider();
 
 Assistant's response to a user message.
 
-| Field           | Type                    | Default | Description                                                               |
-| --------------- | ----------------------- | ------- | ------------------------------------------------------------------------- |
-| `content`       | `const char**`          | `NULL`  | The assistant's text response. Absent if tool calls are returned instead. |
-| `name`          | `const char**`          | `NULL`  | Optional name for the assistant.                                          |
-| `tool_calls`    | `LiterllmToolCall**`    | `NULL`  | Tool calls the model wants to execute, if any.                            |
-| `refusal`       | `const char**`          | `NULL`  | Refusal reason, if the model declined to respond per safety policies.     |
-| `function_call` | `LiterllmFunctionCall*` | `NULL`  | Deprecated legacy function_call field; retained for API compatibility.    |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `content` | `const char**` | `NULL` | The assistant's text response. Absent if tool calls are returned instead. |
+| `name` | `const char**` | `NULL` | Optional name for the assistant. |
+| `tool_calls` | `LiterllmToolCall**` | `NULL` | Tool calls the model wants to execute, if any. |
+| `refusal` | `const char**` | `NULL` | Refusal reason, if the model declined to respond per safety policies. |
+| `function_call` | `LiterllmFunctionCall*` | `NULL` | Deprecated legacy function_call field; retained for API compatibility. |
 
 ---
 
@@ -335,10 +335,10 @@ Assistant's response to a user message.
 
 Audio content part for speech-capable models.
 
-| Field    | Type          | Default | Description                               |
-| -------- | ------------- | ------- | ----------------------------------------- |
-| `data`   | `const char*` | —       | Base64-encoded audio data.                |
-| `format` | `const char*` | —       | Audio format (e.g., "wav", "mp3", "ogg"). |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `data` | `const char*` | — | Base64-encoded audio data. |
+| `format` | `const char*` | — | Audio format (e.g., "wav", "mp3", "ogg"). |
 
 ---
 
@@ -346,10 +346,10 @@ Audio content part for speech-capable models.
 
 Auth configuration block.
 
-| Field       | Type               | Default | Description                                                                                                                         |
-| ----------- | ------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `auth_type` | `LiterllmAuthType` | —       | Auth scheme classification.                                                                                                         |
-| `env_var`   | `const char**`     | `NULL`  | Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`). Holds the variable name, never the secret value. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `auth_type` | `LiterllmAuthType` | — | Auth scheme classification. |
+| `env_var` | `const char**` | `NULL` | Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`). Holds the variable name, never the secret value. |
 
 ---
 
@@ -357,10 +357,10 @@ Auth configuration block.
 
 Query parameters for listing batches.
 
-| Field   | Type           | Default | Description                                            |
-| ------- | -------------- | ------- | ------------------------------------------------------ |
-| `limit` | `uint32_t*`    | `NULL`  | Maximum number of results to return. Defaults to 20.   |
-| `after` | `const char**` | `NULL`  | Pagination cursor: return results after this batch ID. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `limit` | `uint32_t*` | `NULL` | Maximum number of results to return. Defaults to 20. |
+| `after` | `const char**` | `NULL` | Pagination cursor: return results after this batch ID. |
 
 ---
 
@@ -368,13 +368,13 @@ Query parameters for listing batches.
 
 Response from listing batches.
 
-| Field      | Type                   | Default | Description                                        |
-| ---------- | ---------------------- | ------- | -------------------------------------------------- |
-| `object`   | `const char*`          | —       | Object type (always `"list"`).                     |
-| `data`     | `LiterllmBatchObject*` | `NULL`  | List of batch objects.                             |
-| `has_more` | `bool*`                | `NULL`  | Whether more results are available.                |
-| `first_id` | `const char**`         | `NULL`  | First batch ID in the result set (for pagination). |
-| `last_id`  | `const char**`         | `NULL`  | Last batch ID in the result set (for pagination).  |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `object` | `const char*` | — | Object type (always `"list"`). |
+| `data` | `LiterllmBatchObject*` | `NULL` | List of batch objects. |
+| `has_more` | `bool*` | `NULL` | Whether more results are available. |
+| `first_id` | `const char**` | `NULL` | First batch ID in the result set (for pagination). |
+| `last_id` | `const char**` | `NULL` | Last batch ID in the result set (for pagination). |
 
 ---
 
@@ -382,22 +382,22 @@ Response from listing batches.
 
 A batch job object.
 
-| Field               | Type                          | Default                        | Description                                             |
-| ------------------- | ----------------------------- | ------------------------------ | ------------------------------------------------------- |
-| `id`                | `const char*`                 | —                              | Unique batch ID.                                        |
-| `object`            | `const char*`                 | —                              | Object type (always `"batch"`).                         |
-| `endpoint`          | `const char*`                 | —                              | API endpoint (e.g., `"/v1/chat/completions"`).          |
-| `input_file_id`     | `const char*`                 | —                              | ID of the input file.                                   |
-| `completion_window` | `const char*`                 | —                              | Completion window (e.g., `"24h"`).                      |
-| `status`            | `LiterllmBatchStatus`         | `LITERLLM_LITERLLM_VALIDATING` | Current job status.                                     |
-| `output_file_id`    | `const char**`                | `NULL`                         | ID of the output file (present when completed).         |
-| `error_file_id`     | `const char**`                | `NULL`                         | ID of the error file (present if some requests failed). |
-| `created_at`        | `uint64_t`                    | —                              | Unix timestamp of batch creation.                       |
-| `completed_at`      | `uint64_t*`                   | `NULL`                         | Unix timestamp of completion (if completed).            |
-| `failed_at`         | `uint64_t*`                   | `NULL`                         | Unix timestamp of failure (if failed).                  |
-| `expired_at`        | `uint64_t*`                   | `NULL`                         | Unix timestamp of expiration (if expired).              |
-| `request_counts`    | `LiterllmBatchRequestCounts*` | `NULL`                         | Request processing counts.                              |
-| `metadata`          | `void**`                      | `NULL`                         | Metadata attached to the batch.                         |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `const char*` | — | Unique batch ID. |
+| `object` | `const char*` | — | Object type (always `"batch"`). |
+| `endpoint` | `const char*` | — | API endpoint (e.g., `"/v1/chat/completions"`). |
+| `input_file_id` | `const char*` | — | ID of the input file. |
+| `completion_window` | `const char*` | — | Completion window (e.g., `"24h"`). |
+| `status` | `LiterllmBatchStatus` | `LITERLLM_LITERLLM_VALIDATING` | Current job status. |
+| `output_file_id` | `const char**` | `NULL` | ID of the output file (present when completed). |
+| `error_file_id` | `const char**` | `NULL` | ID of the error file (present if some requests failed). |
+| `created_at` | `uint64_t` | — | Unix timestamp of batch creation. |
+| `completed_at` | `uint64_t*` | `NULL` | Unix timestamp of completion (if completed). |
+| `failed_at` | `uint64_t*` | `NULL` | Unix timestamp of failure (if failed). |
+| `expired_at` | `uint64_t*` | `NULL` | Unix timestamp of expiration (if expired). |
+| `request_counts` | `LiterllmBatchRequestCounts*` | `NULL` | Request processing counts. |
+| `metadata` | `void**` | `NULL` | Metadata attached to the batch. |
 
 ---
 
@@ -405,11 +405,11 @@ A batch job object.
 
 Request processing counts for a batch.
 
-| Field       | Type       | Default | Description                  |
-| ----------- | ---------- | ------- | ---------------------------- |
-| `total`     | `uint64_t` | —       | Total requests in the batch. |
-| `completed` | `uint64_t` | —       | Completed requests.          |
-| `failed`    | `uint64_t` | —       | Failed requests.             |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `total` | `uint64_t` | — | Total requests in the batch. |
+| `completed` | `uint64_t` | — | Completed requests. |
+| `failed` | `uint64_t` | — | Failed requests. |
 
 ---
 
@@ -417,11 +417,11 @@ Request processing counts for a batch.
 
 Configuration for budget enforcement.
 
-| Field          | Type                  | Default                  | Description                                                                                      |
-| -------------- | --------------------- | ------------------------ | ------------------------------------------------------------------------------------------------ |
-| `global_limit` | `double*`             | `NULL`                   | Maximum total spend across all models, in USD. `NULL` means unlimited.                           |
-| `model_limits` | `void*`               | `NULL`                   | Per-model spending limits in USD. Models not listed here are only constrained by `global_limit`. |
-| `enforcement`  | `LiterllmEnforcement` | `LITERLLM_LITERLLM_HARD` | Whether to reject requests or merely warn when a limit is exceeded.                              |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `global_limit` | `double*` | `NULL` | Maximum total spend across all models, in USD.  `NULL` means unlimited. |
+| `model_limits` | `void*` | `NULL` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
+| `enforcement` | `LiterllmEnforcement` | `LITERLLM_LITERLLM_HARD` | Whether to reject requests or merely warn when a limit is exceeded. |
 
 ### Methods
 
@@ -439,11 +439,11 @@ LiterllmBudgetConfig literllm_default();
 
 Configuration for the response cache.
 
-| Field         | Type                   | Default                    | Description                         |
-| ------------- | ---------------------- | -------------------------- | ----------------------------------- |
-| `max_entries` | `uintptr_t`            | `256`                      | Maximum number of cached entries.   |
-| `ttl`         | `uint64_t`             | `300000ms`                 | Time-to-live for each cached entry. |
-| `backend`     | `LiterllmCacheBackend` | `LITERLLM_LITERLLM_MEMORY` | Storage backend to use.             |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `max_entries` | `uintptr_t` | `256` | Maximum number of cached entries. |
+| `ttl` | `uint64_t` | `300000ms` | Time-to-live for each cached entry. |
+| `backend` | `LiterllmCacheBackend` | `LITERLLM_LITERLLM_MEMORY` | Storage backend to use. |
 
 ### Methods
 
@@ -461,16 +461,16 @@ LiterllmCacheConfig literllm_default();
 
 A streamed chunk of a chat completion response.
 
-| Field                | Type                    | Default | Description                                                                                                                                   |
-| -------------------- | ----------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                 | `const char*`           | —       | Unique identifier for this stream.                                                                                                            |
-| `object`             | `const char*`           | —       | Always `"chat.completion.chunk"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not fail parsing. |
-| `created`            | `uint64_t`              | —       | Unix timestamp of chunk creation.                                                                                                             |
-| `model`              | `const char*`           | —       | Model used to generate the chunk.                                                                                                             |
-| `choices`            | `LiterllmStreamChoice*` | `NULL`  | Streaming choices (delta updates).                                                                                                            |
-| `usage`              | `LiterllmUsage*`        | `NULL`  | Token usage (typically only in the final chunk).                                                                                              |
-| `system_fingerprint` | `const char**`          | `NULL`  | Fingerprint of the system configuration (OpenAI-specific).                                                                                    |
-| `service_tier`       | `const char**`          | `NULL`  | Service tier used (OpenAI-specific).                                                                                                          |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `const char*` | — | Unique identifier for this stream. |
+| `object` | `const char*` | — | Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not fail parsing. |
+| `created` | `uint64_t` | — | Unix timestamp of chunk creation. |
+| `model` | `const char*` | — | Model used to generate the chunk. |
+| `choices` | `LiterllmStreamChoice*` | `NULL` | Streaming choices (delta updates). |
+| `usage` | `LiterllmUsage*` | `NULL` | Token usage (typically only in the final chunk). |
+| `system_fingerprint` | `const char**` | `NULL` | Fingerprint of the system configuration (OpenAI-specific). |
+| `service_tier` | `const char**` | `NULL` | Service tier used (OpenAI-specific). |
 
 ---
 
@@ -478,28 +478,28 @@ A streamed chunk of a chat completion response.
 
 Chat completion request (compatible with OpenAI and similar APIs).
 
-| Field                 | Type                           | Default | Description                                                                                                                       |
-| --------------------- | ------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `model`               | `const char*`                  | —       | Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`).                                                                          |
-| `messages`            | `LiterllmMessage*`             | `NULL`  | Conversation history from oldest to newest.                                                                                       |
-| `temperature`         | `double*`                      | `NULL`  | Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0.                                               |
-| `top_p`               | `double*`                      | `NULL`  | Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused.                                                                |
-| `n`                   | `uint32_t*`                    | `NULL`  | Number of chat completions to generate. Defaults to 1.                                                                            |
-| `stream`              | `bool*`                        | `NULL`  | Whether to stream the response. Managed by the client layer — do not set directly.                                                |
-| `stop`                | `LiterllmStopSequence*`        | `NULL`  | Stop sequence(s) that halt token generation.                                                                                      |
-| `max_tokens`          | `uint64_t*`                    | `NULL`  | Max output tokens. Different from max_completion_tokens in some providers.                                                        |
-| `presence_penalty`    | `double*`                      | `NULL`  | Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics.                                                          |
-| `frequency_penalty`   | `double*`                      | `NULL`  | Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens.                                                         |
-| `logit_bias`          | `void**`                       | `NULL`  | Token bias map. Uses `BTreeMap` (sorted keys) for deterministic serialization order — important when hashing or signing requests. |
-| `user`                | `const char**`                 | `NULL`  | User identifier for request tracking and abuse detection.                                                                         |
-| `tools`               | `LiterllmChatCompletionTool**` | `NULL`  | Tools the model can invoke.                                                                                                       |
-| `tool_choice`         | `LiterllmToolChoice*`          | `NULL`  | Tool usage mode (auto, required, none, or specific tool).                                                                         |
-| `parallel_tool_calls` | `bool*`                        | `NULL`  | Whether the model can call multiple tools in parallel. Defaults to true.                                                          |
-| `response_format`     | `LiterllmResponseFormat*`      | `NULL`  | Output format constraint (text, JSON, JSON schema).                                                                               |
-| `stream_options`      | `LiterllmStreamOptions*`       | `NULL`  | Streaming options (e.g., include_usage).                                                                                          |
-| `seed`                | `int64_t*`                     | `NULL`  | Random seed for reproducible outputs. Provider support varies.                                                                    |
-| `reasoning_effort`    | `LiterllmReasoningEffort*`     | `NULL`  | Reasoning effort level (low, medium, high) for extended-thinking models.                                                          |
-| `extra_body`          | `void**`                       | `NULL`  | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc.      |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `model` | `const char*` | — | Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`). |
+| `messages` | `LiterllmMessage*` | `NULL` | Conversation history from oldest to newest. |
+| `temperature` | `double*` | `NULL` | Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0. |
+| `top_p` | `double*` | `NULL` | Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused. |
+| `n` | `uint32_t*` | `NULL` | Number of chat completions to generate. Defaults to 1. |
+| `stream` | `bool*` | `NULL` | Whether to stream the response. Managed by the client layer — do not set directly. |
+| `stop` | `LiterllmStopSequence*` | `NULL` | Stop sequence(s) that halt token generation. |
+| `max_tokens` | `uint64_t*` | `NULL` | Max output tokens. Different from max_completion_tokens in some providers. |
+| `presence_penalty` | `double*` | `NULL` | Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics. |
+| `frequency_penalty` | `double*` | `NULL` | Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens. |
+| `logit_bias` | `void**` | `NULL` | Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic serialization order — important when hashing or signing requests. |
+| `user` | `const char**` | `NULL` | User identifier for request tracking and abuse detection. |
+| `tools` | `LiterllmChatCompletionTool**` | `NULL` | Tools the model can invoke. |
+| `tool_choice` | `LiterllmToolChoice*` | `NULL` | Tool usage mode (auto, required, none, or specific tool). |
+| `parallel_tool_calls` | `bool*` | `NULL` | Whether the model can call multiple tools in parallel. Defaults to true. |
+| `response_format` | `LiterllmResponseFormat*` | `NULL` | Output format constraint (text, JSON, JSON schema). |
+| `stream_options` | `LiterllmStreamOptions*` | `NULL` | Streaming options (e.g., include_usage). |
+| `seed` | `int64_t*` | `NULL` | Random seed for reproducible outputs. Provider support varies. |
+| `reasoning_effort` | `LiterllmReasoningEffort*` | `NULL` | Reasoning effort level (low, medium, high) for extended-thinking models. |
+| `extra_body` | `void**` | `NULL` | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc. |
 
 ---
 
@@ -507,16 +507,16 @@ Chat completion request (compatible with OpenAI and similar APIs).
 
 Chat completion response from the API.
 
-| Field                | Type              | Default | Description                                                                                                                                      |
-| -------------------- | ----------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `id`                 | `const char*`     | —       | Unique identifier for this response.                                                                                                             |
-| `object`             | `const char*`     | —       | Always `"chat.completion"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `created`            | `uint64_t`        | —       | Unix timestamp of response creation.                                                                                                             |
-| `model`              | `const char*`     | —       | Model used to generate the response.                                                                                                             |
-| `choices`            | `LiterllmChoice*` | `NULL`  | List of completion choices.                                                                                                                      |
-| `usage`              | `LiterllmUsage*`  | `NULL`  | Token usage statistics.                                                                                                                          |
-| `system_fingerprint` | `const char**`    | `NULL`  | Fingerprint of the system configuration (OpenAI-specific).                                                                                       |
-| `service_tier`       | `const char**`    | `NULL`  | Service tier used (OpenAI-specific).                                                                                                             |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `const char*` | — | Unique identifier for this response. |
+| `object` | `const char*` | — | Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
+| `created` | `uint64_t` | — | Unix timestamp of response creation. |
+| `model` | `const char*` | — | Model used to generate the response. |
+| `choices` | `LiterllmChoice*` | `NULL` | List of completion choices. |
+| `usage` | `LiterllmUsage*` | `NULL` | Token usage statistics. |
+| `system_fingerprint` | `const char**` | `NULL` | Fingerprint of the system configuration (OpenAI-specific). |
+| `service_tier` | `const char**` | `NULL` | Service tier used (OpenAI-specific). |
 
 ---
 
@@ -524,10 +524,10 @@ Chat completion response from the API.
 
 A tool the model can invoke (currently, all tools are functions).
 
-| Field       | Type                         | Default | Description                                                             |
-| ----------- | ---------------------------- | ------- | ----------------------------------------------------------------------- |
-| `tool_type` | `LiterllmToolType`           | —       | Tool type (always "function" in OpenAI spec).                           |
-| `function`  | `LiterllmFunctionDefinition` | —       | Function definition with name, description, and JSON schema parameters. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `tool_type` | `LiterllmToolType` | — | Tool type (always "function" in OpenAI spec). |
+| `function` | `LiterllmFunctionDefinition` | — | Function definition with name, description, and JSON schema parameters. |
 
 ---
 
@@ -535,11 +535,11 @@ A tool the model can invoke (currently, all tools are functions).
 
 A single completion choice.
 
-| Field           | Type                       | Default | Description                                                                        |
-| --------------- | -------------------------- | ------- | ---------------------------------------------------------------------------------- |
-| `index`         | `uint32_t`                 | —       | Index of this choice in the choices array.                                         |
-| `message`       | `LiterllmAssistantMessage` | —       | The assistant's message response.                                                  |
-| `finish_reason` | `LiterllmFinishReason*`    | `NULL`  | Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `index` | `uint32_t` | — | Index of this choice in the choices array. |
+| `message` | `LiterllmAssistantMessage` | — | The assistant's message response. |
+| `finish_reason` | `LiterllmFinishReason*` | `NULL` | Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). |
 
 ---
 
@@ -547,12 +547,12 @@ A single completion choice.
 
 Request to create a batch job.
 
-| Field               | Type          | Default | Description                                    |
-| ------------------- | ------------- | ------- | ---------------------------------------------- |
-| `input_file_id`     | `const char*` | —       | ID of the uploaded input file (JSONL format).  |
-| `endpoint`          | `const char*` | —       | API endpoint (e.g., `"/v1/chat/completions"`). |
-| `completion_window` | `const char*` | —       | Completion window (e.g., `"24h"`).             |
-| `metadata`          | `void**`      | `NULL`  | Optional metadata to attach to the batch.      |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `input_file_id` | `const char*` | — | ID of the uploaded input file (JSONL format). |
+| `endpoint` | `const char*` | — | API endpoint (e.g., `"/v1/chat/completions"`). |
+| `completion_window` | `const char*` | — | Completion window (e.g., `"24h"`). |
+| `metadata` | `void**` | `NULL` | Optional metadata to attach to the batch. |
 
 ---
 
@@ -560,11 +560,11 @@ Request to create a batch job.
 
 Request to upload a file.
 
-| Field      | Type                  | Default                        | Description                                     |
-| ---------- | --------------------- | ------------------------------ | ----------------------------------------------- |
-| `file`     | `const char*`         | —                              | Base64-encoded file data.                       |
-| `purpose`  | `LiterllmFilePurpose` | `LITERLLM_LITERLLM_ASSISTANTS` | Purpose for the file.                           |
-| `filename` | `const char**`        | `NULL`                         | Optional filename to associate with the upload. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `file` | `const char*` | — | Base64-encoded file data. |
+| `purpose` | `LiterllmFilePurpose` | `LITERLLM_LITERLLM_ASSISTANTS` | Purpose for the file. |
+| `filename` | `const char**` | `NULL` | Optional filename to associate with the upload. |
 
 ---
 
@@ -572,16 +572,16 @@ Request to upload a file.
 
 Request to create images from a text prompt.
 
-| Field             | Type           | Default | Description                                                            |
-| ----------------- | -------------- | ------- | ---------------------------------------------------------------------- |
-| `prompt`          | `const char*`  | —       | Text description of the image to generate.                             |
-| `model`           | `const char**` | `NULL`  | Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset. |
-| `n`               | `uint32_t*`    | `NULL`  | Number of images to generate. Defaults to 1.                           |
-| `size`            | `const char**` | `NULL`  | Image size (e.g., `"1024x1024"`, `"1792x1024"`).                       |
-| `quality`         | `const char**` | `NULL`  | Image quality: `"standard"` or `"hd"`.                                 |
-| `style`           | `const char**` | `NULL`  | Style: `"natural"` or `"vivid"` (DALL-E 3 only).                       |
-| `response_format` | `const char**` | `NULL`  | Response format: `"url"` or `"b64_json"`.                              |
-| `user`            | `const char**` | `NULL`  | User identifier for request tracking.                                  |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `prompt` | `const char*` | — | Text description of the image to generate. |
+| `model` | `const char**` | `NULL` | Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset. |
+| `n` | `uint32_t*` | `NULL` | Number of images to generate. Defaults to 1. |
+| `size` | `const char**` | `NULL` | Image size (e.g., `"1024x1024"`, `"1792x1024"`). |
+| `quality` | `const char**` | `NULL` | Image quality: `"standard"` or `"hd"`. |
+| `style` | `const char**` | `NULL` | Style: `"natural"` or `"vivid"` (DALL-E 3 only). |
+| `response_format` | `const char**` | `NULL` | Response format: `"url"` or `"b64_json"`. |
+| `user` | `const char**` | `NULL` | User identifier for request tracking. |
 
 ---
 
@@ -589,15 +589,15 @@ Request to create images from a text prompt.
 
 Request to create a structured response.
 
-| Field               | Type                     | Default | Description                                               |
-| ------------------- | ------------------------ | ------- | --------------------------------------------------------- |
-| `model`             | `const char*`            | —       | Model ID.                                                 |
-| `input`             | `void*`                  | —       | Input data to process (e.g., a document to extract from). |
-| `instructions`      | `const char**`           | `NULL`  | Instructions for processing the input.                    |
-| `tools`             | `LiterllmResponseTool**` | `NULL`  | Available tools the model can use.                        |
-| `temperature`       | `double*`                | `NULL`  | Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0.    |
-| `max_output_tokens` | `uint64_t*`              | `NULL`  | Maximum output tokens.                                    |
-| `metadata`          | `void**`                 | `NULL`  | Optional metadata.                                        |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `model` | `const char*` | — | Model ID. |
+| `input` | `void*` | — | Input data to process (e.g., a document to extract from). |
+| `instructions` | `const char**` | `NULL` | Instructions for processing the input. |
+| `tools` | `LiterllmResponseTool**` | `NULL` | Available tools the model can use. |
+| `temperature` | `double*` | `NULL` | Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0. |
+| `max_output_tokens` | `uint64_t*` | `NULL` | Maximum output tokens. |
+| `metadata` | `void**` | `NULL` | Optional metadata. |
 
 ---
 
@@ -605,13 +605,13 @@ Request to create a structured response.
 
 Request to generate speech audio from text.
 
-| Field             | Type           | Default | Description                                                                         |
-| ----------------- | -------------- | ------- | ----------------------------------------------------------------------------------- |
-| `model`           | `const char*`  | —       | Model ID (e.g., `"tts-1"`, `"tts-1-hd"`).                                           |
-| `input`           | `const char*`  | —       | Text to synthesize into speech.                                                     |
-| `voice`           | `const char*`  | —       | Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). |
-| `response_format` | `const char**` | `NULL`  | Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`).        |
-| `speed`           | `double*`      | `NULL`  | Playback speed in `[0.25, 4.0]`. Defaults to 1.0.                                   |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `model` | `const char*` | — | Model ID (e.g., `"tts-1"`, `"tts-1-hd"`). |
+| `input` | `const char*` | — | Text to synthesize into speech. |
+| `voice` | `const char*` | — | Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). |
+| `response_format` | `const char**` | `NULL` | Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`). |
+| `speed` | `double*` | `NULL` | Playback speed in `[0.25, 4.0]`. Defaults to 1.0. |
 
 ---
 
@@ -619,14 +619,14 @@ Request to generate speech audio from text.
 
 Request to transcribe audio into text.
 
-| Field             | Type           | Default | Description                                                                           |
-| ----------------- | -------------- | ------- | ------------------------------------------------------------------------------------- |
-| `model`           | `const char*`  | —       | Model ID (e.g., `"whisper-1"`).                                                       |
-| `file`            | `const char*`  | —       | Base64-encoded audio file data.                                                       |
-| `language`        | `const char**` | `NULL`  | Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. |
-| `prompt`          | `const char**` | `NULL`  | Optional text to guide the model (improves accuracy for domain-specific terms).       |
-| `response_format` | `const char**` | `NULL`  | Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`).         |
-| `temperature`     | `double*`      | `NULL`  | Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0.    |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `model` | `const char*` | — | Model ID (e.g., `"whisper-1"`). |
+| `file` | `const char*` | — | Base64-encoded audio file data. |
+| `language` | `const char**` | `NULL` | Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. |
+| `prompt` | `const char**` | `NULL` | Optional text to guide the model (improves accuracy for domain-specific terms). |
+| `response_format` | `const char**` | `NULL` | Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`). |
+| `temperature` | `double*` | `NULL` | Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0. |
 
 ---
 
@@ -634,12 +634,12 @@ Request to transcribe audio into text.
 
 Configuration for registering a custom LLM provider at runtime.
 
-| Field            | Type                       | Default | Description                                                                 |
-| ---------------- | -------------------------- | ------- | --------------------------------------------------------------------------- |
-| `name`           | `const char*`              | —       | Unique name for this provider (e.g., "my-provider").                        |
-| `base_url`       | `const char*`              | —       | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
-| `auth_header`    | `LiterllmAuthHeaderFormat` | —       | Authentication header format.                                               |
-| `model_prefixes` | `const char**`             | —       | Model name prefixes that route to this provider (e.g., ["my-"]).            |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `const char*` | — | Unique name for this provider (e.g., "my-provider"). |
+| `base_url` | `const char*` | — | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
+| `auth_header` | `LiterllmAuthHeaderFormat` | — | Authentication header format. |
+| `model_prefixes` | `const char**` | — | Model name prefixes that route to this provider (e.g., `["my-"]`). |
 
 ---
 
@@ -853,11 +853,11 @@ LiterllmResponseObject literllm_cancel_response(const char* response_id);
 
 Response from a delete operation.
 
-| Field     | Type          | Default | Description                                 |
-| --------- | ------------- | ------- | ------------------------------------------- |
-| `id`      | `const char*` | —       | ID of the deleted resource.                 |
-| `object`  | `const char*` | —       | Object type.                                |
-| `deleted` | `bool`        | —       | Confirmation that the resource was deleted. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `const char*` | — | ID of the deleted resource. |
+| `object` | `const char*` | — | Object type. |
+| `deleted` | `bool` | — | Confirmation that the resource was deleted. |
 
 ---
 
@@ -865,10 +865,10 @@ Response from a delete operation.
 
 Developer message (system-like message for Claude models).
 
-| Field     | Type           | Default | Description                                     |
-| --------- | -------------- | ------- | ----------------------------------------------- |
-| `content` | `const char*`  | —       | Developer-specific instructions or context.     |
-| `name`    | `const char**` | `NULL`  | Optional name for the developer message source. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `content` | `const char*` | — | Developer-specific instructions or context. |
+| `name` | `const char**` | `NULL` | Optional name for the developer message source. |
 
 ---
 
@@ -876,10 +876,10 @@ Developer message (system-like message for Claude models).
 
 PDF/document content part for vision-capable models.
 
-| Field        | Type          | Default | Description                                      |
-| ------------ | ------------- | ------- | ------------------------------------------------ |
-| `data`       | `const char*` | —       | Base64-encoded document data or URL.             |
-| `media_type` | `const char*` | —       | MIME type (e.g., "application/pdf", "text/csv"). |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `data` | `const char*` | — | Base64-encoded document data or URL. |
+| `media_type` | `const char*` | — | MIME type (e.g., "application/pdf", "text/csv"). |
 
 ---
 
@@ -887,11 +887,11 @@ PDF/document content part for vision-capable models.
 
 A single embedding vector.
 
-| Field       | Type          | Default | Description                                                                                                                                |
-| ----------- | ------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `object`    | `const char*` | —       | Always `"embedding"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `embedding` | `double*`     | —       | The embedding vector.                                                                                                                      |
-| `index`     | `uint32_t`    | —       | Index in the batch (corresponds to input order).                                                                                           |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `object` | `const char*` | — | Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
+| `embedding` | `double*` | — | The embedding vector. |
+| `index` | `uint32_t` | — | Index in the batch (corresponds to input order). |
 
 ---
 
@@ -899,13 +899,13 @@ A single embedding vector.
 
 Embedding request.
 
-| Field             | Type                       | Default                    | Description                                                 |
-| ----------------- | -------------------------- | -------------------------- | ----------------------------------------------------------- |
-| `model`           | `const char*`              | —                          | Model ID (e.g., `"text-embedding-3-small"`).                |
-| `input`           | `LiterllmEmbeddingInput`   | `LITERLLM_LITERLLM_SINGLE` | Text or texts to embed.                                     |
-| `encoding_format` | `LiterllmEmbeddingFormat*` | `NULL`                     | Output format: float (native) or base64.                    |
-| `dimensions`      | `uint32_t*`                | `NULL`                     | Requested embedding dimensions (if supported by the model). |
-| `user`            | `const char**`             | `NULL`                     | User identifier for request tracking.                       |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `model` | `const char*` | — | Model ID (e.g., `"text-embedding-3-small"`). |
+| `input` | `LiterllmEmbeddingInput` | `LITERLLM_LITERLLM_SINGLE` | Text or texts to embed. |
+| `encoding_format` | `LiterllmEmbeddingFormat*` | `NULL` | Output format: float (native) or base64. |
+| `dimensions` | `uint32_t*` | `NULL` | Requested embedding dimensions (if supported by the model). |
+| `user` | `const char**` | `NULL` | User identifier for request tracking. |
 
 ---
 
@@ -913,12 +913,12 @@ Embedding request.
 
 Embedding response.
 
-| Field    | Type                       | Default                | Description                                                                                                                           |
-| -------- | -------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `object` | `const char*`              | —                      | Always `"list"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `data`   | `LiterllmEmbeddingObject*` | —                      | List of embeddings.                                                                                                                   |
-| `model`  | `const char*`              | —                      | Model used to generate embeddings.                                                                                                    |
-| `usage`  | `LiterllmUsage*`           | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens).                                                                  |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `object` | `const char*` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
+| `data` | `LiterllmEmbeddingObject*` | — | List of embeddings. |
+| `model` | `const char*` | — | Model used to generate embeddings. |
+| `usage` | `LiterllmUsage*` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -926,11 +926,11 @@ Embedding response.
 
 Query parameters for listing files.
 
-| Field     | Type           | Default | Description                                              |
-| --------- | -------------- | ------- | -------------------------------------------------------- |
-| `purpose` | `const char**` | `NULL`  | Filter by file purpose (e.g., `"batch"`, `"fine-tune"`). |
-| `limit`   | `uint32_t*`    | `NULL`  | Maximum number of results to return. Defaults to 20.     |
-| `after`   | `const char**` | `NULL`  | Pagination cursor: return results after this file ID.    |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `purpose` | `const char**` | `NULL` | Filter by file purpose (e.g., `"batch"`, `"fine-tune"`). |
+| `limit` | `uint32_t*` | `NULL` | Maximum number of results to return. Defaults to 20. |
+| `after` | `const char**` | `NULL` | Pagination cursor: return results after this file ID. |
 
 ---
 
@@ -938,11 +938,11 @@ Query parameters for listing files.
 
 Response from listing files.
 
-| Field      | Type                  | Default | Description                         |
-| ---------- | --------------------- | ------- | ----------------------------------- |
-| `object`   | `const char*`         | —       | Object type (always `"list"`).      |
-| `data`     | `LiterllmFileObject*` | `NULL`  | List of file objects.               |
-| `has_more` | `bool*`               | `NULL`  | Whether more results are available. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `object` | `const char*` | — | Object type (always `"list"`). |
+| `data` | `LiterllmFileObject*` | `NULL` | List of file objects. |
+| `has_more` | `bool*` | `NULL` | Whether more results are available. |
 
 ---
 
@@ -950,15 +950,15 @@ Response from listing files.
 
 An uploaded file object.
 
-| Field        | Type           | Default | Description                                            |
-| ------------ | -------------- | ------- | ------------------------------------------------------ |
-| `id`         | `const char*`  | —       | Unique file ID.                                        |
-| `object`     | `const char*`  | —       | Object type (always `"file"`).                         |
-| `bytes`      | `uint64_t`     | —       | File size in bytes.                                    |
-| `created_at` | `uint64_t`     | —       | Unix timestamp of file creation.                       |
-| `filename`   | `const char*`  | —       | Filename.                                              |
-| `purpose`    | `const char*`  | —       | File purpose.                                          |
-| `status`     | `const char**` | `NULL`  | Processing status (e.g., `"uploaded"`, `"processed"`). |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `const char*` | — | Unique file ID. |
+| `object` | `const char*` | — | Object type (always `"file"`). |
+| `bytes` | `uint64_t` | — | File size in bytes. |
+| `created_at` | `uint64_t` | — | Unix timestamp of file creation. |
+| `filename` | `const char*` | — | Filename. |
+| `purpose` | `const char*` | — | File purpose. |
+| `status` | `const char**` | `NULL` | Processing status (e.g., `"uploaded"`, `"processed"`). |
 
 ---
 
@@ -966,10 +966,10 @@ An uploaded file object.
 
 Function call details.
 
-| Field       | Type          | Default | Description                                                  |
-| ----------- | ------------- | ------- | ------------------------------------------------------------ |
-| `name`      | `const char*` | —       | Function name.                                               |
-| `arguments` | `const char*` | —       | Arguments as a JSON string (parse with serde_json.from_str). |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `const char*` | — | Function name. |
+| `arguments` | `const char*` | — | Arguments as a JSON string (parse with serde_json.from_str). |
 
 ---
 
@@ -977,12 +977,12 @@ Function call details.
 
 Function definition exposed to the model.
 
-| Field         | Type           | Default                | Description                                                            |
-| ------------- | -------------- | ---------------------- | ---------------------------------------------------------------------- |
-| `name`        | `const char*`  | —                      | Name of the function. Required and must be alphanumeric + underscores. |
-| `description` | `const char**` | `/* serde(default) */` | Human-readable description explaining what the function does.          |
-| `parameters`  | `void**`       | `/* serde(default) */` | JSON Schema defining the function's parameters.                        |
-| `strict`      | `bool*`        | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments.          |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `const char*` | — | Name of the function. Required and must be alphanumeric + underscores. |
+| `description` | `const char**` | `/* serde(default) */` | Human-readable description explaining what the function does. |
+| `parameters` | `void**` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
+| `strict` | `bool*` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -990,10 +990,10 @@ Function definition exposed to the model.
 
 Deprecated legacy function-role message body.
 
-| Field     | Type          | Default | Description                |
-| --------- | ------------- | ------- | -------------------------- |
-| `content` | `const char*` | —       | The extracted text content |
-| `name`    | `const char*` | —       | The name                   |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `content` | `const char*` | — | The extracted text content |
+| `name` | `const char*` | — | The name |
 
 ---
 
@@ -1001,11 +1001,11 @@ Deprecated legacy function-role message body.
 
 A single generated image, returned as either a URL or base64 data.
 
-| Field            | Type           | Default | Description                                                    |
-| ---------------- | -------------- | ------- | -------------------------------------------------------------- |
-| `url`            | `const char**` | `NULL`  | Image URL (if response_format was "url").                      |
-| `b64_json`       | `const char**` | `NULL`  | Base64-encoded image data (if response_format was "b64_json"). |
-| `revised_prompt` | `const char**` | `NULL`  | The final prompt used to generate the image (DALL-E 3).        |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `url` | `const char**` | `NULL` | Image URL (if response_format was "url"). |
+| `b64_json` | `const char**` | `NULL` | Base64-encoded image data (if response_format was "b64_json"). |
+| `revised_prompt` | `const char**` | `NULL` | The final prompt used to generate the image (DALL-E 3). |
 
 ---
 
@@ -1013,10 +1013,10 @@ A single generated image, returned as either a URL or base64 data.
 
 An image URL reference with optional detail level for processing.
 
-| Field    | Type                   | Default | Description                                                              |
-| -------- | ---------------------- | ------- | ------------------------------------------------------------------------ |
-| `url`    | `const char*`          | —       | URL of the image (data URI or HTTP/HTTPS URL).                           |
-| `detail` | `LiterllmImageDetail*` | `NULL`  | Detail level: low (512x512), high (2x2 tiles), or auto (model-selected). |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `url` | `const char*` | — | URL of the image (data URI or HTTP/HTTPS URL). |
+| `detail` | `LiterllmImageDetail*` | `NULL` | Detail level: low (512x512), high (2x2 tiles), or auto (model-selected). |
 
 ---
 
@@ -1024,10 +1024,10 @@ An image URL reference with optional detail level for processing.
 
 Response containing generated images.
 
-| Field     | Type             | Default | Description                       |
-| --------- | ---------------- | ------- | --------------------------------- |
-| `created` | `uint64_t`       | —       | Unix timestamp of image creation. |
-| `data`    | `LiterllmImage*` | `NULL`  | List of generated images.         |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `created` | `uint64_t` | — | Unix timestamp of image creation. |
+| `data` | `LiterllmImage*` | `NULL` | List of generated images. |
 
 ---
 
@@ -1035,12 +1035,12 @@ Response containing generated images.
 
 JSON Schema specification for constrained output.
 
-| Field         | Type           | Default | Description                                         |
-| ------------- | -------------- | ------- | --------------------------------------------------- |
-| `name`        | `const char*`  | —       | Name of the schema (must be unique in the request). |
-| `description` | `const char**` | `NULL`  | Description of what the schema represents.          |
-| `schema`      | `void*`        | —       | JSON Schema object defining the output structure.   |
-| `strict`      | `bool*`        | `NULL`  | If true, enforce strict schema validation.          |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `const char*` | — | Name of the schema (must be unique in the request). |
+| `description` | `const char**` | `NULL` | Description of what the schema represents. |
+| `schema` | `void*` | — | JSON Schema object defining the output structure. |
+| `strict` | `bool*` | `NULL` | If true, enforce strict schema validation. |
 
 ---
 
@@ -1048,12 +1048,12 @@ JSON Schema specification for constrained output.
 
 A model available from the API.
 
-| Field      | Type          | Default | Description                                                                                                                            |
-| ---------- | ------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`       | `const char*` | —       | Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`).                                                                                    |
-| `object`   | `const char*` | —       | Always `"model"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `created`  | `uint64_t`    | —       | Unix timestamp of model creation (or release date).                                                                                    |
-| `owned_by` | `const char*` | —       | Organization or entity that owns the model.                                                                                            |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `const char*` | — | Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`). |
+| `object` | `const char*` | — | Always `"model"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
+| `created` | `uint64_t` | — | Unix timestamp of model creation (or release date). |
+| `owned_by` | `const char*` | — | Organization or entity that owns the model. |
 
 ---
 
@@ -1061,10 +1061,10 @@ A model available from the API.
 
 Response listing available models.
 
-| Field    | Type                   | Default | Description                                                                                                                           |
-| -------- | ---------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `object` | `const char*`          | —       | Always `"list"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `data`   | `LiterllmModelObject*` | `NULL`  | List of available models.                                                                                                             |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `object` | `const char*` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
+| `data` | `LiterllmModelObject*` | `NULL` | List of available models. |
 
 ---
 
@@ -1072,19 +1072,19 @@ Response listing available models.
 
 Boolean flags for each moderation category.
 
-| Field                    | Type   | Default | Description                          |
-| ------------------------ | ------ | ------- | ------------------------------------ |
-| `sexual`                 | `bool` | —       | Sexual content.                      |
-| `hate`                   | `bool` | —       | Hate speech.                         |
-| `harassment`             | `bool` | —       | Harassment.                          |
-| `self_harm`              | `bool` | —       | Self-harm content.                   |
-| `sexual_minors`          | `bool` | —       | Sexual content involving minors.     |
-| `hate_threatening`       | `bool` | —       | Hate speech that threatens violence. |
-| `violence_graphic`       | `bool` | —       | Graphic violence.                    |
-| `self_harm_intent`       | `bool` | —       | Intent to self-harm.                 |
-| `self_harm_instructions` | `bool` | —       | Instructions for self-harm.          |
-| `harassment_threatening` | `bool` | —       | Harassment that threatens violence.  |
-| `violence`               | `bool` | —       | Non-graphic violence.                |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `sexual` | `bool` | — | Sexual content. |
+| `hate` | `bool` | — | Hate speech. |
+| `harassment` | `bool` | — | Harassment. |
+| `self_harm` | `bool` | — | Self-harm content. |
+| `sexual_minors` | `bool` | — | Sexual content involving minors. |
+| `hate_threatening` | `bool` | — | Hate speech that threatens violence. |
+| `violence_graphic` | `bool` | — | Graphic violence. |
+| `self_harm_intent` | `bool` | — | Intent to self-harm. |
+| `self_harm_instructions` | `bool` | — | Instructions for self-harm. |
+| `harassment_threatening` | `bool` | — | Harassment that threatens violence. |
+| `violence` | `bool` | — | Non-graphic violence. |
 
 ---
 
@@ -1092,19 +1092,19 @@ Boolean flags for each moderation category.
 
 Confidence scores for each moderation category.
 
-| Field                    | Type     | Default | Description                                |
-| ------------------------ | -------- | ------- | ------------------------------------------ |
-| `sexual`                 | `double` | —       | Sexual content score.                      |
-| `hate`                   | `double` | —       | Hate speech score.                         |
-| `harassment`             | `double` | —       | Harassment score.                          |
-| `self_harm`              | `double` | —       | Self-harm content score.                   |
-| `sexual_minors`          | `double` | —       | Sexual content involving minors score.     |
-| `hate_threatening`       | `double` | —       | Hate speech that threatens violence score. |
-| `violence_graphic`       | `double` | —       | Graphic violence score.                    |
-| `self_harm_intent`       | `double` | —       | Intent to self-harm score.                 |
-| `self_harm_instructions` | `double` | —       | Instructions for self-harm score.          |
-| `harassment_threatening` | `double` | —       | Harassment that threatens violence score.  |
-| `violence`               | `double` | —       | Non-graphic violence score.                |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `sexual` | `double` | — | Sexual content score. |
+| `hate` | `double` | — | Hate speech score. |
+| `harassment` | `double` | — | Harassment score. |
+| `self_harm` | `double` | — | Self-harm content score. |
+| `sexual_minors` | `double` | — | Sexual content involving minors score. |
+| `hate_threatening` | `double` | — | Hate speech that threatens violence score. |
+| `violence_graphic` | `double` | — | Graphic violence score. |
+| `self_harm_intent` | `double` | — | Intent to self-harm score. |
+| `self_harm_instructions` | `double` | — | Instructions for self-harm score. |
+| `harassment_threatening` | `double` | — | Harassment that threatens violence score. |
+| `violence` | `double` | — | Non-graphic violence score. |
 
 ---
 
@@ -1112,10 +1112,10 @@ Confidence scores for each moderation category.
 
 Request to classify content for policy violations.
 
-| Field   | Type                      | Default                    | Description                                                                       |
-| ------- | ------------------------- | -------------------------- | --------------------------------------------------------------------------------- |
-| `input` | `LiterllmModerationInput` | `LITERLLM_LITERLLM_SINGLE` | Text or texts to check.                                                           |
-| `model` | `const char**`            | `NULL`                     | Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `input` | `LiterllmModerationInput` | `LITERLLM_LITERLLM_SINGLE` | Text or texts to check. |
+| `model` | `const char**` | `NULL` | Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset. |
 
 ---
 
@@ -1123,11 +1123,11 @@ Request to classify content for policy violations.
 
 Response from the moderation endpoint.
 
-| Field     | Type                        | Default | Description                                    |
-| --------- | --------------------------- | ------- | ---------------------------------------------- |
-| `id`      | `const char*`               | —       | Unique identifier for this moderation request. |
-| `model`   | `const char*`               | —       | Model used for classification.                 |
-| `results` | `LiterllmModerationResult*` | —       | Results for each input string.                 |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `const char*` | — | Unique identifier for this moderation request. |
+| `model` | `const char*` | — | Model used for classification. |
+| `results` | `LiterllmModerationResult*` | — | Results for each input string. |
 
 ---
 
@@ -1135,11 +1135,11 @@ Response from the moderation endpoint.
 
 A single moderation classification result.
 
-| Field             | Type                               | Default | Description                                 |
-| ----------------- | ---------------------------------- | ------- | ------------------------------------------- |
-| `flagged`         | `bool`                             | —       | True if any category was flagged.           |
-| `categories`      | `LiterllmModerationCategories`     | —       | Boolean flags for each moderation category. |
-| `category_scores` | `LiterllmModerationCategoryScores` | —       | Confidence scores for each category.        |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `flagged` | `bool` | — | True if any category was flagged. |
+| `categories` | `LiterllmModerationCategories` | — | Boolean flags for each moderation category. |
+| `category_scores` | `LiterllmModerationCategoryScores` | — | Confidence scores for each category. |
 
 ---
 
@@ -1147,9 +1147,9 @@ A single moderation classification result.
 
 An image extracted from an OCR page.
 
-| Field          | Type           | Default                | Description                                                     |
-| -------------- | -------------- | ---------------------- | --------------------------------------------------------------- |
-| `id`           | `const char*`  | —                      | Unique image identifier within the document.                    |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `const char*` | — | Unique image identifier within the document. |
 | `image_base64` | `const char**` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
@@ -1158,12 +1158,12 @@ An image extracted from an OCR page.
 
 A single page of OCR output.
 
-| Field        | Type                      | Default                | Description                                                                   |
-| ------------ | ------------------------- | ---------------------- | ----------------------------------------------------------------------------- |
-| `index`      | `uint32_t`                | —                      | Page index (0-based).                                                         |
-| `markdown`   | `const char*`             | —                      | Extracted page content as Markdown.                                           |
-| `images`     | `LiterllmOcrImage**`      | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `dimensions` | `LiterllmPageDimensions*` | `/* serde(default) */` | Page dimensions in pixels, if available.                                      |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `index` | `uint32_t` | — | Page index (0-based). |
+| `markdown` | `const char*` | — | Extracted page content as Markdown. |
+| `images` | `LiterllmOcrImage**` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `LiterllmPageDimensions*` | `/* serde(default) */` | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1171,12 +1171,12 @@ A single page of OCR output.
 
 An OCR request.
 
-| Field                  | Type                  | Default                 | Description                                                      |
-| ---------------------- | --------------------- | ----------------------- | ---------------------------------------------------------------- |
-| `model`                | `const char*`         | —                       | The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). |
-| `document`             | `LiterllmOcrDocument` | `LITERLLM_LITERLLM_URL` | The document to process (URL or base64).                         |
-| `pages`                | `uint32_t**`          | `NULL`                  | Specific pages to process (1-indexed). `NULL` means all pages.   |
-| `include_image_base64` | `bool*`               | `NULL`                  | Whether to include base64-encoded images of each processed page. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `model` | `const char*` | — | The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). |
+| `document` | `LiterllmOcrDocument` | `LITERLLM_LITERLLM_URL` | The document to process (URL or base64). |
+| `pages` | `uint32_t**` | `NULL` | Specific pages to process (1-indexed). `NULL` means all pages. |
+| `include_image_base64` | `bool*` | `NULL` | Whether to include base64-encoded images of each processed page. |
 
 ---
 
@@ -1184,11 +1184,11 @@ An OCR request.
 
 An OCR response.
 
-| Field   | Type               | Default                | Description                               |
-| ------- | ------------------ | ---------------------- | ----------------------------------------- |
-| `pages` | `LiterllmOcrPage*` | —                      | Extracted pages in order.                 |
-| `model` | `const char*`      | —                      | Model/provider used for OCR.              |
-| `usage` | `LiterllmUsage*`   | `/* serde(default) */` | Token usage, if reported by the provider. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `pages` | `LiterllmOcrPage*` | — | Extracted pages in order. |
+| `model` | `const char*` | — | Model/provider used for OCR. |
+| `usage` | `LiterllmUsage*` | `/* serde(default) */` | Token usage, if reported by the provider. |
 
 ---
 
@@ -1196,10 +1196,10 @@ An OCR response.
 
 Page dimensions in pixels.
 
-| Field    | Type       | Default | Description       |
-| -------- | ---------- | ------- | ----------------- |
-| `width`  | `uint32_t` | —       | Width in pixels.  |
-| `height` | `uint32_t` | —       | Height in pixels. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `width` | `uint32_t` | — | Width in pixels. |
+| `height` | `uint32_t` | — | Height in pixels. |
 
 ---
 
@@ -1207,15 +1207,15 @@ Page dimensions in pixels.
 
 Breakdown of tokens used in the prompt portion of a request.
 
-`cached_tokens` is included in `Usage.prompt_tokens` — it is _not_ an
+`cached_tokens` is included in `Usage.prompt_tokens` — it is *not* an
 additional charge on top of the prompt token count. When pricing supports
 a `cache_read_input_token_cost`, the cached portion is billed at the
 discounted rate and the remainder at the regular input rate.
 
-| Field           | Type       | Default | Description                                                          |
-| --------------- | ---------- | ------- | -------------------------------------------------------------------- |
-| `cached_tokens` | `uint64_t` | —       | Cached tokens present in the prompt. Defaults to 0 when absent.      |
-| `audio_tokens`  | `uint64_t` | —       | Audio input tokens present in the prompt. Defaults to 0 when absent. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `cached_tokens` | `uint64_t` | — | Cached tokens present in the prompt. Defaults to 0 when absent. |
+| `audio_tokens` | `uint64_t` | — | Audio input tokens present in the prompt. Defaults to 0 when absent. |
 
 ---
 
@@ -1223,15 +1223,15 @@ discounted rate and the remainder at the regular input rate.
 
 Static configuration for a single provider entry in providers.json.
 
-| Field            | Type                  | Default | Description                                                                                                                                                                                                                                      |
-| ---------------- | --------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `name`           | `const char*`         | —       | Provider identifier (matches the entry key in providers.json).                                                                                                                                                                                   |
-| `display_name`   | `const char**`        | `NULL`  | Human-readable provider name shown in UIs.                                                                                                                                                                                                       |
-| `base_url`       | `const char**`        | `NULL`  | Base URL used as the default for this provider's HTTP client.                                                                                                                                                                                    |
-| `auth`           | `LiterllmAuthConfig*` | `NULL`  | Authentication scheme metadata (auth type + env var holding the key).                                                                                                                                                                            |
-| `endpoints`      | `const char***`       | `NULL`  | Supported endpoint kinds (e.g. `chat`, `embeddings`).                                                                                                                                                                                            |
-| `model_prefixes` | `const char***`       | `NULL`  | Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`).                                                                                                                                                                           |
-| `param_mappings` | `void**`              | `NULL`  | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`). Applied automatically by `ConfigDrivenProvider.transform_request`. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `const char*` | — | Provider identifier (matches the entry key in providers.json). |
+| `display_name` | `const char**` | `NULL` | Human-readable provider name shown in UIs. |
+| `base_url` | `const char**` | `NULL` | Base URL used as the default for this provider's HTTP client. |
+| `auth` | `LiterllmAuthConfig*` | `NULL` | Authentication scheme metadata (auth type + env var holding the key). |
+| `endpoints` | `const char***` | `NULL` | Supported endpoint kinds (e.g. `chat`, `embeddings`). |
+| `model_prefixes` | `const char***` | `NULL` | Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`). |
+| `param_mappings` | `void**` | `NULL` | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`).  Applied automatically by `ConfigDrivenProvider.transform_request`. |
 
 ---
 
@@ -1239,11 +1239,11 @@ Static configuration for a single provider entry in providers.json.
 
 Configuration for per-model rate limits.
 
-| Field    | Type        | Default   | Description                                          |
-| -------- | ----------- | --------- | ---------------------------------------------------- |
-| `rpm`    | `uint32_t*` | `NULL`    | Maximum requests per window. `NULL` means unlimited. |
-| `tpm`    | `uint64_t*` | `NULL`    | Maximum tokens per window. `NULL` means unlimited.   |
-| `window` | `uint64_t`  | `60000ms` | Fixed window duration (defaults to 60 s).            |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `rpm` | `uint32_t*` | `NULL` | Maximum requests per window.  `NULL` means unlimited. |
+| `tpm` | `uint64_t*` | `NULL` | Maximum tokens per window.  `NULL` means unlimited. |
+| `window` | `uint64_t` | `60000ms` | Fixed window duration (defaults to 60 s). |
 
 ### Methods
 
@@ -1261,13 +1261,13 @@ LiterllmRateLimitConfig literllm_default();
 
 Request to rerank documents by relevance to a query.
 
-| Field              | Type                      | Default | Description                                                 |
-| ------------------ | ------------------------- | ------- | ----------------------------------------------------------- |
-| `model`            | `const char*`             | —       | Model ID (e.g., `"cohere/rerank-english-v3.0"`).            |
-| `query`            | `const char*`             | —       | The search query.                                           |
-| `documents`        | `LiterllmRerankDocument*` | `NULL`  | Documents to rerank.                                        |
-| `top_n`            | `uint32_t*`               | `NULL`  | Return only the top N results. Optional.                    |
-| `return_documents` | `bool*`                   | `NULL`  | Include the document content in results. Defaults to false. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `model` | `const char*` | — | Model ID (e.g., `"cohere/rerank-english-v3.0"`). |
+| `query` | `const char*` | — | The search query. |
+| `documents` | `LiterllmRerankDocument*` | `NULL` | Documents to rerank. |
+| `top_n` | `uint32_t*` | `NULL` | Return only the top N results. Optional. |
+| `return_documents` | `bool*` | `NULL` | Include the document content in results. Defaults to false. |
 
 ---
 
@@ -1275,11 +1275,11 @@ Request to rerank documents by relevance to a query.
 
 Response from the rerank endpoint.
 
-| Field     | Type                    | Default                | Description                                      |
-| --------- | ----------------------- | ---------------------- | ------------------------------------------------ |
-| `id`      | `const char**`          | `NULL`                 | Unique identifier for this rerank request.       |
-| `results` | `LiterllmRerankResult*` | —                      | Reranked documents in order of relevance.        |
-| `meta`    | `void**`                | `/* serde(default) */` | Optional metadata about the reranking operation. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `const char**` | `NULL` | Unique identifier for this rerank request. |
+| `results` | `LiterllmRerankResult*` | — | Reranked documents in order of relevance. |
+| `meta` | `void**` | `/* serde(default) */` | Optional metadata about the reranking operation. |
 
 ---
 
@@ -1287,11 +1287,11 @@ Response from the rerank endpoint.
 
 A single reranked document with its relevance score.
 
-| Field             | Type                            | Default                | Description                                                  |
-| ----------------- | ------------------------------- | ---------------------- | ------------------------------------------------------------ |
-| `index`           | `uint32_t`                      | —                      | Original document index in the input list.                   |
-| `relevance_score` | `double`                        | —                      | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `document`        | `LiterllmRerankResultDocument*` | `/* serde(default) */` | Original document content (if `return_documents` was true).  |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `index` | `uint32_t` | — | Original document index in the input list. |
+| `relevance_score` | `double` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
+| `document` | `LiterllmRerankResultDocument*` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -1299,9 +1299,9 @@ A single reranked document with its relevance score.
 
 The text content of a reranked document, returned when `return_documents` is true.
 
-| Field  | Type          | Default | Description    |
-| ------ | ------------- | ------- | -------------- |
-| `text` | `const char*` | —       | Document text. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `text` | `const char*` | — | Document text. |
 
 ---
 
@@ -1309,16 +1309,16 @@ The text content of a reranked document, returned when `return_documents` is tru
 
 Response from a structured response request.
 
-| Field        | Type                          | Default | Description                               |
-| ------------ | ----------------------------- | ------- | ----------------------------------------- |
-| `id`         | `const char*`                 | —       | Unique response ID.                       |
-| `object`     | `const char*`                 | —       | Object type (e.g., `"response"`).         |
-| `created_at` | `uint64_t`                    | —       | Unix timestamp of response creation.      |
-| `model`      | `const char*`                 | —       | Model used to generate the response.      |
-| `status`     | `const char*`                 | —       | Status (e.g., `"succeeded"`, `"failed"`). |
-| `output`     | `LiterllmResponseOutputItem*` | `NULL`  | Output items from the response.           |
-| `usage`      | `LiterllmResponseUsage*`      | `NULL`  | Token usage.                              |
-| `error`      | `void**`                      | `NULL`  | Error details (if status is "failed").    |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `const char*` | — | Unique response ID. |
+| `object` | `const char*` | — | Object type (e.g., `"response"`). |
+| `created_at` | `uint64_t` | — | Unix timestamp of response creation. |
+| `model` | `const char*` | — | Model used to generate the response. |
+| `status` | `const char*` | — | Status (e.g., `"succeeded"`, `"failed"`). |
+| `output` | `LiterllmResponseOutputItem*` | `NULL` | Output items from the response. |
+| `usage` | `LiterllmResponseUsage*` | `NULL` | Token usage. |
+| `error` | `void**` | `NULL` | Error details (if status is "failed"). |
 
 ---
 
@@ -1326,10 +1326,10 @@ Response from a structured response request.
 
 A single output item from the response.
 
-| Field       | Type          | Default | Description                                          |
-| ----------- | ------------- | ------- | ---------------------------------------------------- |
-| `item_type` | `const char*` | —       | Output type (e.g., `"text"`, `"object"`, `"error"`). |
-| `content`   | `void*`       | —       | Output content (flattened into the object).          |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `item_type` | `const char*` | — | Output type (e.g., `"text"`, `"object"`, `"error"`). |
+| `content` | `void*` | — | Output content (flattened into the object). |
 
 ---
 
@@ -1337,10 +1337,10 @@ A single output item from the response.
 
 A tool available for the response request.
 
-| Field       | Type          | Default | Description                                     |
-| ----------- | ------------- | ------- | ----------------------------------------------- |
-| `tool_type` | `const char*` | —       | Tool type (e.g., "extractor", "search").        |
-| `config`    | `void*`       | —       | Tool configuration (flattened into the object). |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `tool_type` | `const char*` | — | Tool type (e.g., "extractor", "search"). |
+| `config` | `void*` | — | Tool configuration (flattened into the object). |
 
 ---
 
@@ -1348,11 +1348,11 @@ A tool available for the response request.
 
 Token usage for a response.
 
-| Field           | Type       | Default | Description         |
-| --------------- | ---------- | ------- | ------------------- |
-| `input_tokens`  | `uint64_t` | —       | Input tokens used.  |
-| `output_tokens` | `uint64_t` | —       | Output tokens used. |
-| `total_tokens`  | `uint64_t` | —       | Total tokens used.  |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `input_tokens` | `uint64_t` | — | Input tokens used. |
+| `output_tokens` | `uint64_t` | — | Output tokens used. |
+| `total_tokens` | `uint64_t` | — | Total tokens used. |
 
 ---
 
@@ -1360,13 +1360,13 @@ Token usage for a response.
 
 A search request.
 
-| Field                  | Type            | Default | Description                                                                    |
-| ---------------------- | --------------- | ------- | ------------------------------------------------------------------------------ |
-| `model`                | `const char*`   | —       | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`).      |
-| `query`                | `const char*`   | —       | The search query string.                                                       |
-| `max_results`          | `uint32_t*`     | `NULL`  | Maximum number of results to return.                                           |
-| `search_domain_filter` | `const char***` | `NULL`  | Domain filter — restrict results to specific domains.                          |
-| `country`              | `const char**`  | `NULL`  | Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `model` | `const char*` | — | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). |
+| `query` | `const char*` | — | The search query string. |
+| `max_results` | `uint32_t*` | `NULL` | Maximum number of results to return. |
+| `search_domain_filter` | `const char***` | `NULL` | Domain filter — restrict results to specific domains. |
+| `country` | `const char**` | `NULL` | Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). |
 
 ---
 
@@ -1374,10 +1374,10 @@ A search request.
 
 A search response.
 
-| Field     | Type                    | Default | Description                               |
-| --------- | ----------------------- | ------- | ----------------------------------------- |
-| `results` | `LiterllmSearchResult*` | —       | List of search results.                   |
-| `model`   | `const char*`           | —       | Model/provider that performed the search. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `results` | `LiterllmSearchResult*` | — | List of search results. |
+| `model` | `const char*` | — | Model/provider that performed the search. |
 
 ---
 
@@ -1385,12 +1385,12 @@ A search response.
 
 An individual search result.
 
-| Field     | Type           | Default                | Description                                     |
-| --------- | -------------- | ---------------------- | ----------------------------------------------- |
-| `title`   | `const char*`  | —                      | Result title.                                   |
-| `url`     | `const char*`  | —                      | Result URL.                                     |
-| `snippet` | `const char*`  | —                      | Text snippet or excerpt from the page.          |
-| `date`    | `const char**` | `/* serde(default) */` | Publication or last-updated date, if available. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `title` | `const char*` | — | Result title. |
+| `url` | `const char*` | — | Result URL. |
+| `snippet` | `const char*` | — | Text snippet or excerpt from the page. |
+| `date` | `const char**` | `/* serde(default) */` | Publication or last-updated date, if available. |
 
 ---
 
@@ -1398,9 +1398,9 @@ An individual search result.
 
 Name of the specific function to invoke.
 
-| Field  | Type          | Default | Description    |
-| ------ | ------------- | ------- | -------------- |
-| `name` | `const char*` | —       | Function name. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `const char*` | — | Function name. |
 
 ---
 
@@ -1408,10 +1408,10 @@ Name of the specific function to invoke.
 
 Directive to call a specific tool.
 
-| Field         | Type                       | Default                      | Description                      |
-| ------------- | -------------------------- | ---------------------------- | -------------------------------- |
-| `choice_type` | `LiterllmToolType`         | `LITERLLM_LITERLLM_FUNCTION` | Tool type (always "function").   |
-| `function`    | `LiterllmSpecificFunction` | —                            | The specific function to invoke. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `choice_type` | `LiterllmToolType` | `LITERLLM_LITERLLM_FUNCTION` | Tool type (always "function"). |
+| `function` | `LiterllmSpecificFunction` | — | The specific function to invoke. |
 
 ---
 
@@ -1419,11 +1419,11 @@ Directive to call a specific tool.
 
 A streaming choice with incremental delta.
 
-| Field           | Type                    | Default | Description                                                    |
-| --------------- | ----------------------- | ------- | -------------------------------------------------------------- |
-| `index`         | `uint32_t`              | —       | Index of this choice in the choices array.                     |
-| `delta`         | `LiterllmStreamDelta`   | —       | Incremental update to the message (content, tool calls, etc.). |
-| `finish_reason` | `LiterllmFinishReason*` | `NULL`  | Why the stream ended (present only in final chunk).            |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `index` | `uint32_t` | — | Index of this choice in the choices array. |
+| `delta` | `LiterllmStreamDelta` | — | Incremental update to the message (content, tool calls, etc.). |
+| `finish_reason` | `LiterllmFinishReason*` | `NULL` | Why the stream ended (present only in final chunk). |
 
 ---
 
@@ -1431,13 +1431,13 @@ A streaming choice with incremental delta.
 
 Incremental delta in a stream chunk.
 
-| Field           | Type                          | Default | Description                                                            |
-| --------------- | ----------------------------- | ------- | ---------------------------------------------------------------------- |
-| `role`          | `const char**`                | `NULL`  | Role (typically present only in the first chunk).                      |
-| `content`       | `const char**`                | `NULL`  | Partial content chunk (e.g., a few words of the response).             |
-| `tool_calls`    | `LiterllmStreamToolCall**`    | `NULL`  | Partial tool calls being streamed.                                     |
-| `function_call` | `LiterllmStreamFunctionCall*` | `NULL`  | Deprecated legacy function_call delta; retained for API compatibility. |
-| `refusal`       | `const char**`                | `NULL`  | Partial refusal message.                                               |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `role` | `const char**` | `NULL` | Role (typically present only in the first chunk). |
+| `content` | `const char**` | `NULL` | Partial content chunk (e.g., a few words of the response). |
+| `tool_calls` | `LiterllmStreamToolCall**` | `NULL` | Partial tool calls being streamed. |
+| `function_call` | `LiterllmStreamFunctionCall*` | `NULL` | Deprecated legacy function_call delta; retained for API compatibility. |
+| `refusal` | `const char**` | `NULL` | Partial refusal message. |
 
 ---
 
@@ -1445,10 +1445,10 @@ Incremental delta in a stream chunk.
 
 Partial function call details in a stream.
 
-| Field       | Type           | Default | Description                                   |
-| ----------- | -------------- | ------- | --------------------------------------------- |
-| `name`      | `const char**` | `NULL`  | Function name (typically in the first chunk). |
-| `arguments` | `const char**` | `NULL`  | Partial JSON arguments chunk.                 |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `const char**` | `NULL` | Function name (typically in the first chunk). |
+| `arguments` | `const char**` | `NULL` | Partial JSON arguments chunk. |
 
 ---
 
@@ -1456,9 +1456,9 @@ Partial function call details in a stream.
 
 Options for streaming responses.
 
-| Field           | Type    | Default | Description                                             |
-| --------------- | ------- | ------- | ------------------------------------------------------- |
-| `include_usage` | `bool*` | `NULL`  | If true, include token usage in the final stream chunk. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `include_usage` | `bool*` | `NULL` | If true, include token usage in the final stream chunk. |
 
 ---
 
@@ -1466,12 +1466,12 @@ Options for streaming responses.
 
 A streaming tool call being built incrementally.
 
-| Field       | Type                          | Default | Description                                                |
-| ----------- | ----------------------------- | ------- | ---------------------------------------------------------- |
-| `index`     | `uint32_t`                    | —       | Index of this tool call in the tool_calls array.           |
-| `id`        | `const char**`                | `NULL`  | Tool call ID (typically in the first chunk for this call). |
-| `call_type` | `LiterllmToolType*`           | `NULL`  | Tool type (typically "function").                          |
-| `function`  | `LiterllmStreamFunctionCall*` | `NULL`  | Partial function name and arguments.                       |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `index` | `uint32_t` | — | Index of this tool call in the tool_calls array. |
+| `id` | `const char**` | `NULL` | Tool call ID (typically in the first chunk for this call). |
+| `call_type` | `LiterllmToolType*` | `NULL` | Tool type (typically "function"). |
+| `function` | `LiterllmStreamFunctionCall*` | `NULL` | Partial function name and arguments. |
 
 ---
 
@@ -1479,10 +1479,10 @@ A streaming tool call being built incrementally.
 
 System message guiding model behavior for the entire conversation.
 
-| Field     | Type           | Default | Description                                                     |
-| --------- | -------------- | ------- | --------------------------------------------------------------- |
-| `content` | `const char*`  | —       | Instructions or context that apply throughout the conversation. |
-| `name`    | `const char**` | `NULL`  | Optional name for the system message source.                    |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `content` | `const char*` | — | Instructions or context that apply throughout the conversation. |
+| `name` | `const char**` | `NULL` | Optional name for the system message source. |
 
 ---
 
@@ -1490,11 +1490,11 @@ System message guiding model behavior for the entire conversation.
 
 A tool call the model wants to execute.
 
-| Field       | Type                   | Default | Description                                                         |
-| ----------- | ---------------------- | ------- | ------------------------------------------------------------------- |
-| `id`        | `const char*`          | —       | Unique ID for this call, used to reference in tool result messages. |
-| `call_type` | `LiterllmToolType`     | —       | Tool type (always "function").                                      |
-| `function`  | `LiterllmFunctionCall` | —       | Function name and arguments.                                        |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `const char*` | — | Unique ID for this call, used to reference in tool result messages. |
+| `call_type` | `LiterllmToolType` | — | Tool type (always "function"). |
+| `function` | `LiterllmFunctionCall` | — | Function name and arguments. |
 
 ---
 
@@ -1502,11 +1502,11 @@ A tool call the model wants to execute.
 
 Tool execution result returned to the model.
 
-| Field          | Type           | Default | Description                                  |
-| -------------- | -------------- | ------- | -------------------------------------------- |
-| `content`      | `const char*`  | —       | Result of the tool execution.                |
-| `tool_call_id` | `const char*`  | —       | ID of the tool call this result responds to. |
-| `name`         | `const char**` | `NULL`  | Optional tool/function name.                 |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `content` | `const char*` | — | Result of the tool execution. |
+| `tool_call_id` | `const char*` | — | ID of the tool call this result responds to. |
+| `name` | `const char**` | `NULL` | Optional tool/function name. |
 
 ---
 
@@ -1514,12 +1514,12 @@ Tool execution result returned to the model.
 
 Response from a transcription request.
 
-| Field      | Type                             | Default | Description                                                                  |
-| ---------- | -------------------------------- | ------- | ---------------------------------------------------------------------------- |
-| `text`     | `const char*`                    | —       | The transcribed text.                                                        |
-| `language` | `const char**`                   | `NULL`  | Detected language (ISO-639-1 code).                                          |
-| `duration` | `double*`                        | `NULL`  | Total audio duration in seconds.                                             |
-| `segments` | `LiterllmTranscriptionSegment**` | `NULL`  | Detailed segment-level transcription (if response_format is "verbose_json"). |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `text` | `const char*` | — | The transcribed text. |
+| `language` | `const char**` | `NULL` | Detected language (ISO-639-1 code). |
+| `duration` | `double*` | `NULL` | Total audio duration in seconds. |
+| `segments` | `LiterllmTranscriptionSegment**` | `NULL` | Detailed segment-level transcription (if response_format is "verbose_json"). |
 
 ---
 
@@ -1527,12 +1527,12 @@ Response from a transcription request.
 
 A segment of transcribed audio with timing information.
 
-| Field   | Type          | Default | Description                        |
-| ------- | ------------- | ------- | ---------------------------------- |
-| `id`    | `uint32_t`    | —       | Segment index (0-based).           |
-| `start` | `double`      | —       | Start time in seconds.             |
-| `end`   | `double`      | —       | End time in seconds.               |
-| `text`  | `const char*` | —       | Transcribed text for this segment. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `uint32_t` | — | Segment index (0-based). |
+| `start` | `double` | — | Start time in seconds. |
+| `end` | `double` | — | End time in seconds. |
+| `text` | `const char*` | — | Transcribed text for this segment. |
 
 ---
 
@@ -1540,12 +1540,12 @@ A segment of transcribed audio with timing information.
 
 Token-usage accounting returned by the provider on each completion / embedding call.
 
-| Field                   | Type                           | Default | Description                                                                                                                                                                         |
-| ----------------------- | ------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `prompt_tokens`         | `uint64_t`                     | —       | Prompt tokens used. Defaults to 0 when absent (some providers omit this).                                                                                                           |
-| `completion_tokens`     | `uint64_t`                     | —       | Completion tokens used. Defaults to 0 when absent (e.g. embedding responses).                                                                                                       |
-| `total_tokens`          | `uint64_t`                     | —       | Total tokens used. Defaults to 0 when absent (some providers omit this).                                                                                                            |
-| `prompt_tokens_details` | `LiterllmPromptTokensDetails*` | `NULL`  | Breakdown of tokens used in the prompt, including cached tokens served at the provider's discounted cache-read rate. Absent when the provider does not return prompt-token details. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `prompt_tokens` | `uint64_t` | — | Prompt tokens used. Defaults to 0 when absent (some providers omit this). |
+| `completion_tokens` | `uint64_t` | — | Completion tokens used. Defaults to 0 when absent (e.g. embedding responses). |
+| `total_tokens` | `uint64_t` | — | Total tokens used. Defaults to 0 when absent (some providers omit this). |
+| `prompt_tokens_details` | `LiterllmPromptTokensDetails*` | `NULL` | Breakdown of tokens used in the prompt, including cached tokens served at the provider's discounted cache-read rate. Absent when the provider does not return prompt-token details. |
 
 ---
 
@@ -1553,10 +1553,10 @@ Token-usage accounting returned by the provider on each completion / embedding c
 
 User message in the conversation.
 
-| Field     | Type                  | Default                  | Description                                                                               |
-| --------- | --------------------- | ------------------------ | ----------------------------------------------------------------------------------------- |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
 | `content` | `LiterllmUserContent` | `LITERLLM_LITERLLM_TEXT` | Message content as plain text or array of content parts (text, images, documents, audio). |
-| `name`    | `const char**`        | `NULL`                   | Optional name for the user.                                                               |
+| `name` | `const char**` | `NULL` | Optional name for the user. |
 
 ---
 
@@ -1566,14 +1566,14 @@ User message in the conversation.
 
 A chat message in a conversation.
 
-| Value                | Description                                                                                                       |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `LITERLLM_SYSTEM`    | System — Fields: `0`: `LiterllmSystemMessage`                                                                     |
-| `LITERLLM_USER`      | User — Fields: `0`: `LiterllmUserMessage`                                                                         |
-| `LITERLLM_ASSISTANT` | Assistant — Fields: `0`: `LiterllmAssistantMessage`                                                               |
-| `LITERLLM_TOOL`      | Tool — Fields: `0`: `LiterllmToolMessage`                                                                         |
-| `LITERLLM_DEVELOPER` | Developer — Fields: `0`: `LiterllmDeveloperMessage`                                                               |
-| `LITERLLM_FUNCTION`  | Deprecated legacy function-role message; retained for API compatibility. — Fields: `0`: `LiterllmFunctionMessage` |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_SYSTEM` | System — Fields: `0`: `LiterllmSystemMessage` |
+| `LITERLLM_USER` | User — Fields: `0`: `LiterllmUserMessage` |
+| `LITERLLM_ASSISTANT` | Assistant — Fields: `0`: `LiterllmAssistantMessage` |
+| `LITERLLM_TOOL` | Tool — Fields: `0`: `LiterllmToolMessage` |
+| `LITERLLM_DEVELOPER` | Developer — Fields: `0`: `LiterllmDeveloperMessage` |
+| `LITERLLM_FUNCTION` | Deprecated legacy function-role message; retained for API compatibility. — Fields: `0`: `LiterllmFunctionMessage` |
 
 ---
 
@@ -1581,9 +1581,9 @@ A chat message in a conversation.
 
 User message content as either plain text or a list of multimodal parts.
 
-| Value            | Description                                                                                    |
-| ---------------- | ---------------------------------------------------------------------------------------------- |
-| `LITERLLM_TEXT`  | Plain text content. — Fields: `0`: `const char*`                                               |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_TEXT` | Plain text content. — Fields: `0`: `const char*` |
 | `LITERLLM_PARTS` | Array of content parts (text, images, documents, audio). — Fields: `0`: `LiterllmContentPart*` |
 
 ---
@@ -1592,12 +1592,12 @@ User message content as either plain text or a list of multimodal parts.
 
 A single content part in a user message — text, image, document, or audio.
 
-| Value                  | Description                                                                                      |
-| ---------------------- | ------------------------------------------------------------------------------------------------ |
-| `LITERLLM_TEXT`        | Plain text. — Fields: `text`: `const char*`                                                      |
-| `LITERLLM_IMAGE_URL`   | Image identified by URL (with optional detail level). — Fields: `image_url`: `LiterllmImageUrl`  |
-| `LITERLLM_DOCUMENT`    | Document file (PDF, CSV, etc.) as base64 or URL. — Fields: `document`: `LiterllmDocumentContent` |
-| `LITERLLM_INPUT_AUDIO` | Audio input as base64. — Fields: `input_audio`: `LiterllmAudioContent`                           |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_TEXT` | Plain text. — Fields: `text`: `const char*` |
+| `LITERLLM_IMAGE_URL` | Image identified by URL (with optional detail level). — Fields: `image_url`: `LiterllmImageUrl` |
+| `LITERLLM_DOCUMENT` | Document file (PDF, CSV, etc.) as base64 or URL. — Fields: `document`: `LiterllmDocumentContent` |
+| `LITERLLM_INPUT_AUDIO` | Audio input as base64. — Fields: `input_audio`: `LiterllmAudioContent` |
 
 ---
 
@@ -1605,11 +1605,11 @@ A single content part in a user message — text, image, document, or audio.
 
 Image detail level controlling token cost and processing.
 
-| Value           | Description                                                        |
-| --------------- | ------------------------------------------------------------------ |
-| `LITERLLM_LOW`  | Low detail: scales image to 512x512, uses fewer tokens.            |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_LOW` | Low detail: scales image to 512x512, uses fewer tokens. |
 | `LITERLLM_HIGH` | High detail: processes up to 2x2 grid of tiles, higher token cost. |
-| `LITERLLM_AUTO` | Auto: model chooses low or high based on image dimensions.         |
+| `LITERLLM_AUTO` | Auto: model chooses low or high based on image dimensions. |
 
 ---
 
@@ -1621,9 +1621,9 @@ Per the OpenAI spec this is always `"function"`. Using an enum enforces
 that constraint at the type level and rejects any other value on
 deserialization.
 
-| Value               | Description |
-| ------------------- | ----------- |
-| `LITERLLM_FUNCTION` | Function    |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_FUNCTION` | Function |
 
 ---
 
@@ -1631,10 +1631,10 @@ deserialization.
 
 Tool usage mode or a specific tool to call.
 
-| Value               | Description                                                                       |
-| ------------------- | --------------------------------------------------------------------------------- |
-| `LITERLLM_MODE`     | Predefined mode: auto, required, or none. — Fields: `0`: `LiterllmToolChoiceMode` |
-| `LITERLLM_SPECIFIC` | Force a specific tool to be called. — Fields: `0`: `LiterllmSpecificToolChoice`   |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_MODE` | Predefined mode: auto, required, or none. — Fields: `0`: `LiterllmToolChoiceMode` |
+| `LITERLLM_SPECIFIC` | Force a specific tool to be called. — Fields: `0`: `LiterllmSpecificToolChoice` |
 
 ---
 
@@ -1642,11 +1642,11 @@ Tool usage mode or a specific tool to call.
 
 Tool choice mode.
 
-| Value               | Description                                        |
-| ------------------- | -------------------------------------------------- |
-| `LITERLLM_AUTO`     | Model may or may not call tools; default behavior. |
-| `LITERLLM_REQUIRED` | Model must call at least one tool.                 |
-| `LITERLLM_NONE`     | Model must not call any tools.                     |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_AUTO` | Model may or may not call tools; default behavior. |
+| `LITERLLM_REQUIRED` | Model must call at least one tool. |
+| `LITERLLM_NONE` | Model must not call any tools. |
 
 ---
 
@@ -1654,10 +1654,10 @@ Tool choice mode.
 
 Response format constraint.
 
-| Value                  | Description                                                                                           |
-| ---------------------- | ----------------------------------------------------------------------------------------------------- |
-| `LITERLLM_TEXT`        | Plain text output (default).                                                                          |
-| `LITERLLM_JSON_OBJECT` | Output must be valid JSON object (no schema validation).                                              |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_TEXT` | Plain text output (default). |
+| `LITERLLM_JSON_OBJECT` | Output must be valid JSON object (no schema validation). |
 | `LITERLLM_JSON_SCHEMA` | Output must conform to the specified JSON schema. — Fields: `json_schema`: `LiterllmJsonSchemaFormat` |
 
 ---
@@ -1666,9 +1666,9 @@ Response format constraint.
 
 Stop sequence(s) that cause the model to stop generating.
 
-| Value               | Description                                            |
-| ------------------- | ------------------------------------------------------ |
-| `LITERLLM_SINGLE`   | Single stop sequence. — Fields: `0`: `const char*`     |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_SINGLE` | Single stop sequence. — Fields: `0`: `const char*` |
 | `LITERLLM_MULTIPLE` | Multiple stop sequences. — Fields: `0`: `const char**` |
 
 ---
@@ -1677,14 +1677,14 @@ Stop sequence(s) that cause the model to stop generating.
 
 Why a choice stopped generating tokens.
 
-| Value                     | Description                                                                                                                                                                                                                                                                                                                                                                              |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `LITERLLM_STOP`           | Stop                                                                                                                                                                                                                                                                                                                                                                                     |
-| `LITERLLM_LENGTH`         | Length                                                                                                                                                                                                                                                                                                                                                                                   |
-| `LITERLLM_TOOL_CALLS`     | Tool calls                                                                                                                                                                                                                                                                                                                                                                               |
-| `LITERLLM_CONTENT_FILTER` | Content filter                                                                                                                                                                                                                                                                                                                                                                           |
-| `LITERLLM_FUNCTION_CALL`  | Deprecated legacy finish reason; retained for API compatibility.                                                                                                                                                                                                                                                                                                                         |
-| `LITERLLM_OTHER`          | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`). Using `#[serde(other)]` requires a unit variant, and switching to `#[serde(untagged)]` would change deserialization semantics for all variants. The original value can be recovered by inspecting the raw JSON if needed. |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_STOP` | Stop |
+| `LITERLLM_LENGTH` | Length |
+| `LITERLLM_TOOL_CALLS` | Tool calls |
+| `LITERLLM_CONTENT_FILTER` | Content filter |
+| `LITERLLM_FUNCTION_CALL` | Deprecated legacy finish reason; retained for API compatibility. |
+| `LITERLLM_OTHER` | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and switching to `#[serde(untagged)]` would change deserialization semantics for all variants.  The original value can be recovered by inspecting the raw JSON if needed. |
 
 ---
 
@@ -1692,11 +1692,11 @@ Why a choice stopped generating tokens.
 
 Controls how much reasoning effort the model should use.
 
-| Value             | Description |
-| ----------------- | ----------- |
-| `LITERLLM_LOW`    | Low         |
-| `LITERLLM_MEDIUM` | Medium      |
-| `LITERLLM_HIGH`   | High        |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_LOW` | Low |
+| `LITERLLM_MEDIUM` | Medium |
+| `LITERLLM_HIGH` | High |
 
 ---
 
@@ -1704,9 +1704,9 @@ Controls how much reasoning effort the model should use.
 
 The format in which the embedding vectors are returned.
 
-| Value             | Description                                         |
-| ----------------- | --------------------------------------------------- |
-| `LITERLLM_FLOAT`  | 32-bit floating-point numbers (default).            |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_FLOAT` | 32-bit floating-point numbers (default). |
 | `LITERLLM_BASE64` | Base64-encoded string representation of the floats. |
 
 ---
@@ -1715,9 +1715,9 @@ The format in which the embedding vectors are returned.
 
 Text or texts to embed.
 
-| Value               | Description                                                            |
-| ------------------- | ---------------------------------------------------------------------- |
-| `LITERLLM_SINGLE`   | Single text string. — Fields: `0`: `const char*`                       |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_SINGLE` | Single text string. — Fields: `0`: `const char*` |
 | `LITERLLM_MULTIPLE` | Multiple text strings (batch embedding). — Fields: `0`: `const char**` |
 
 ---
@@ -1726,9 +1726,9 @@ Text or texts to embed.
 
 Input to the moderation endpoint — a single string or multiple strings.
 
-| Value               | Description                                                             |
-| ------------------- | ----------------------------------------------------------------------- |
-| `LITERLLM_SINGLE`   | Single text string. — Fields: `0`: `const char*`                        |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_SINGLE` | Single text string. — Fields: `0`: `const char*` |
 | `LITERLLM_MULTIPLE` | Multiple text strings (batch moderation). — Fields: `0`: `const char**` |
 
 ---
@@ -1737,9 +1737,9 @@ Input to the moderation endpoint — a single string or multiple strings.
 
 A document to be reranked — either a plain string or an object with a text field.
 
-| Value             | Description                                                                               |
-| ----------------- | ----------------------------------------------------------------------------------------- |
-| `LITERLLM_TEXT`   | Plain text document content. — Fields: `0`: `const char*`                                 |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_TEXT` | Plain text document content. — Fields: `0`: `const char*` |
 | `LITERLLM_OBJECT` | Document with explicit text field (may include metadata). — Fields: `text`: `const char*` |
 
 ---
@@ -1748,9 +1748,9 @@ A document to be reranked — either a plain string or an object with a text fie
 
 Document input for OCR — either a URL or inline base64 data.
 
-| Value             | Description                                                                                       |
-| ----------------- | ------------------------------------------------------------------------------------------------- |
-| `LITERLLM_URL`    | A publicly accessible document URL. — Fields: `url`: `const char*`                                |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_URL` | A publicly accessible document URL. — Fields: `url`: `const char*` |
 | `LITERLLM_BASE64` | Inline base64-encoded document data. — Fields: `data`: `const char*`, `media_type`: `const char*` |
 
 ---
@@ -1759,12 +1759,12 @@ Document input for OCR — either a URL or inline base64 data.
 
 Purpose of an uploaded file.
 
-| Value                 | Description                       |
-| --------------------- | --------------------------------- |
+| Value | Description |
+|-------|-------------|
 | `LITERLLM_ASSISTANTS` | File for use with Assistants API. |
-| `LITERLLM_BATCH`      | File for batch processing.        |
-| `LITERLLM_FINE_TUNE`  | File for fine-tuning.             |
-| `LITERLLM_VISION`     | File for vision/image tasks.      |
+| `LITERLLM_BATCH` | File for batch processing. |
+| `LITERLLM_FINE_TUNE` | File for fine-tuning. |
+| `LITERLLM_VISION` | File for vision/image tasks. |
 
 ---
 
@@ -1772,16 +1772,16 @@ Purpose of an uploaded file.
 
 Status of a batch job.
 
-| Value                  | Description                    |
-| ---------------------- | ------------------------------ |
-| `LITERLLM_VALIDATING`  | Validating the input file.     |
-| `LITERLLM_FAILED`      | Job failed.                    |
-| `LITERLLM_IN_PROGRESS` | Job is running.                |
-| `LITERLLM_FINALIZING`  | Finalizing results.            |
-| `LITERLLM_COMPLETED`   | Job completed successfully.    |
-| `LITERLLM_EXPIRED`     | Job expired before completion. |
-| `LITERLLM_CANCELLING`  | Job is being cancelled.        |
-| `LITERLLM_CANCELLED`   | Job has been cancelled.        |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_VALIDATING` | Validating the input file. |
+| `LITERLLM_FAILED` | Job failed. |
+| `LITERLLM_IN_PROGRESS` | Job is running. |
+| `LITERLLM_FINALIZING` | Finalizing results. |
+| `LITERLLM_COMPLETED` | Job completed successfully. |
+| `LITERLLM_EXPIRED` | Job expired before completion. |
+| `LITERLLM_CANCELLING` | Job is being cancelled. |
+| `LITERLLM_CANCELLED` | Job has been cancelled. |
 
 ---
 
@@ -1789,11 +1789,11 @@ Status of a batch job.
 
 How the API key is sent in the HTTP request.
 
-| Value              | Description                                                          |
-| ------------------ | -------------------------------------------------------------------- |
-| `LITERLLM_BEARER`  | Bearer token: `Authorization: Bearer <key>`                          |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_BEARER` | Bearer token: `Authorization: Bearer <key>` |
 | `LITERLLM_API_KEY` | Custom header: e.g., `X-Api-Key: <key>` — Fields: `0`: `const char*` |
-| `LITERLLM_NONE`    | No authentication required.                                          |
+| `LITERLLM_NONE` | No authentication required. |
 
 ---
 
@@ -1801,12 +1801,12 @@ How the API key is sent in the HTTP request.
 
 Auth scheme used by a provider.
 
-| Value              | Description                                                                    |
-| ------------------ | ------------------------------------------------------------------------------ |
-| `LITERLLM_BEARER`  | Standard `Authorization: Bearer <key>` header.                                 |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_BEARER` | Standard `Authorization: Bearer <key>` header. |
 | `LITERLLM_API_KEY` | `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). |
-| `LITERLLM_NONE`    | No authentication header required.                                             |
-| `LITERLLM_UNKNOWN` | Unrecognised auth scheme — falls back to bearer.                               |
+| `LITERLLM_NONE` | No authentication header required. |
+| `LITERLLM_UNKNOWN` | Unrecognised auth scheme — falls back to bearer. |
 
 ---
 
@@ -1814,10 +1814,10 @@ Auth scheme used by a provider.
 
 How budget limits are enforced.
 
-| Value           | Description                                                                       |
-| --------------- | --------------------------------------------------------------------------------- |
+| Value | Description |
+|-------|-------------|
 | `LITERLLM_HARD` | Reject requests that would exceed the budget with `LiterLlmError.BudgetExceeded`. |
-| `LITERLLM_SOFT` | Allow requests through but emit a `tracing.warn!` when the budget is exceeded.    |
+| `LITERLLM_SOFT` | Allow requests through but emit a `tracing.warn!` when the budget is exceeded. |
 
 ---
 
@@ -1825,9 +1825,9 @@ How budget limits are enforced.
 
 Storage backend for the response cache.
 
-| Value               | Description                                                                                                                          |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `LITERLLM_MEMORY`   | In-memory LRU cache (default). No external dependencies.                                                                             |
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_MEMORY` | In-memory LRU cache (default). No external dependencies. |
 | `LITERLLM_OPEN_DAL` | OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.). — Fields: `scheme`: `const char*`, `config`: `void*` |
 
 ---
@@ -1838,23 +1838,23 @@ Storage backend for the response cache.
 
 All errors that can occur when using `liter-llm`.
 
-| Variant                            | Description                                                                                                                                                                                                                                                                                                                                                      |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `LITERLLM_AUTHENTICATION`          | `status` preserves the exact HTTP status code received (401 or 403).                                                                                                                                                                                                                                                                                             |
-| `LITERLLM_RATE_LIMITED`            | rate limited: {message}                                                                                                                                                                                                                                                                                                                                          |
-| `LITERLLM_BAD_REQUEST`             | `status` preserves the exact HTTP status code received (400, 405, 413, 422, …).                                                                                                                                                                                                                                                                                  |
-| `LITERLLM_CONTEXT_WINDOW_EXCEEDED` | context window exceeded: {message}                                                                                                                                                                                                                                                                                                                               |
-| `LITERLLM_CONTENT_POLICY`          | content policy violation: {message}                                                                                                                                                                                                                                                                                                                              |
-| `LITERLLM_NOT_FOUND`               | not found: {message}                                                                                                                                                                                                                                                                                                                                             |
-| `LITERLLM_SERVER_ERROR`            | `status` preserves the exact HTTP status code received (500, or other 5xx not covered by `ServiceUnavailable`).                                                                                                                                                                                                                                                  |
-| `LITERLLM_SERVICE_UNAVAILABLE`     | `status` preserves the exact HTTP status code received (502, 503, or 504).                                                                                                                                                                                                                                                                                       |
-| `LITERLLM_TIMEOUT`                 | request timeout                                                                                                                                                                                                                                                                                                                                                  |
-| `LITERLLM_STREAMING`               | A catch-all for errors that occur during streaming response processing. This variant covers multiple sub-conditions including UTF-8 decoding failures, CRC/checksum mismatches (AWS EventStream), JSON parse errors in individual SSE chunks, and buffer overflow conditions. The `message` field contains a human-readable description of the specific failure. |
-| `LITERLLM_ENDPOINT_NOT_SUPPORTED`  | provider {provider} does not support {endpoint}                                                                                                                                                                                                                                                                                                                  |
-| `LITERLLM_INVALID_HEADER`          | invalid header {name:?}: {reason}                                                                                                                                                                                                                                                                                                                                |
-| `LITERLLM_SERIALIZATION`           | serialization error: {0}                                                                                                                                                                                                                                                                                                                                         |
-| `LITERLLM_BUDGET_EXCEEDED`         | budget exceeded: {message}                                                                                                                                                                                                                                                                                                                                       |
-| `LITERLLM_HOOK_REJECTED`           | hook rejected: {message}                                                                                                                                                                                                                                                                                                                                         |
-| `LITERLLM_INTERNAL_ERROR`          | An internal logic error (e.g. unexpected Tower response variant). This should never surface in normal operation — if it does, it indicates a bug in the library.                                                                                                                                                                                                 |
+| Variant | Description |
+|---------|-------------|
+| `LITERLLM_AUTHENTICATION` | `status` preserves the exact HTTP status code received (401 or 403). |
+| `LITERLLM_RATE_LIMITED` | rate limited: {message} |
+| `LITERLLM_BAD_REQUEST` | `status` preserves the exact HTTP status code received (400, 405, 413, 422, …). |
+| `LITERLLM_CONTEXT_WINDOW_EXCEEDED` | context window exceeded: {message} |
+| `LITERLLM_CONTENT_POLICY` | content policy violation: {message} |
+| `LITERLLM_NOT_FOUND` | not found: {message} |
+| `LITERLLM_SERVER_ERROR` | `status` preserves the exact HTTP status code received (500, or other 5xx not covered by `ServiceUnavailable`). |
+| `LITERLLM_SERVICE_UNAVAILABLE` | `status` preserves the exact HTTP status code received (502, 503, or 504). |
+| `LITERLLM_TIMEOUT` | request timeout |
+| `LITERLLM_STREAMING` | A catch-all for errors that occur during streaming response processing. This variant covers multiple sub-conditions including UTF-8 decoding failures, CRC/checksum mismatches (AWS EventStream), JSON parse errors in individual SSE chunks, and buffer overflow conditions.  The `message` field contains a human-readable description of the specific failure. |
+| `LITERLLM_ENDPOINT_NOT_SUPPORTED` | provider {provider} does not support {endpoint} |
+| `LITERLLM_INVALID_HEADER` | invalid header {name:?}: {reason} |
+| `LITERLLM_SERIALIZATION` | serialization error: {0} |
+| `LITERLLM_BUDGET_EXCEEDED` | budget exceeded: {message} |
+| `LITERLLM_HOOK_REJECTED` | hook rejected: {message} |
+| `LITERLLM_INTERNAL_ERROR` | An internal logic error (e.g. unexpected Tower response variant). This should never surface in normal operation — if it does, it indicates a bug in the library. |
 
 ---
