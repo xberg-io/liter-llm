@@ -4,18 +4,11 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
     const test_step = b.step("test", "Run tests");
-    const ffi_path = b.option([]const u8, "ffi_path", "Path to directory containing libliter_llm_ffi") orelse "../../target/release";
-    const ffi_include = b.option([]const u8, "ffi_include_path", "Path to directory containing FFI header") orelse "../../crates/liter-llm-ffi/include";
 
-    const liter_llm_module = b.addModule("liter_llm", .{
-        .root_source_file = b.path("../../packages/zig/src/liter_llm.zig"),
+    const liter_llm_module = b.dependency("liter_llm", .{
         .target = target,
         .optimize = optimize,
-        .link_libc = true,
-    });
-    liter_llm_module.addLibraryPath(.{ .cwd_relative = ffi_path });
-    liter_llm_module.addIncludePath(.{ .cwd_relative = ffi_include });
-    liter_llm_module.linkSystemLibrary("liter_llm_ffi", .{});
+    }).module("liter_llm");
 
     const _alloc = b.allocator;
     var mock_server_url: ?[]const u8 = b.graph.environ_map.get("MOCK_SERVER_URL");

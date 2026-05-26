@@ -1,6 +1,6 @@
 {
   "name": "@kreuzberg/liter-llm-node-linux-x64-gnu",
-  "version": "1.4.0-rc.33",
+  "version": "1.4.0-rc.34",
   "description": "Native NAPI-RS bindings for liter-llm — high-performance LLM client powered by Rust",
   "keywords": [
     "anthropic",

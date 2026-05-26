@@ -149,7 +149,7 @@ jobs:
           {"name": "hex", "registry": "hex", "package": "liter_llm"},
           {"name": "packagist", "registry": "packagist", "package": "kreuzberg/liter-llm"},
           {"name": "nuget", "registry": "nuget", "package": "LiterLlm"},
-          {"name": "go", "registry": "github-release", "package": "liter-llm-ffi", "repo": "kreuzberg-dev/liter-llm", "asset-prefix": "liter-llm-ffi-v"}
+          {"name": "go", "registry": "github-release", "package": "liter-llm", "repo": "kreuzberg-dev/liter-llm", "asset-prefix": "liter-llm-go-v"}
         ]
 
   registry-results:

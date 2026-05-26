@@ -48,20 +48,52 @@ fn main() {
 const FRB_GENERATED_DART: &str = "../lib/src/liter_llm_bridge_generated/frb_generated.dart";
 const LOADER_MARKER: &str = "_alefResolveExternalLibrary";
 const FRB_INIT_PROLOGUE: &str = "  /// Initialize flutter_rust_bridge\n  static Future<void> init({\n    RustLibApi? api,\n    BaseHandler? handler,\n    ExternalLibrary? externalLibrary,\n    bool forceSameCodegenVersion = true,\n  }) async {\n";
-const FRB_INIT_REPLACEMENT: &str = r#"  /// Resolve the prebuilt native library from this package's own installed
-  /// location so the load works from any working directory and under hardened
-  /// runtimes. Returns `null` to defer to flutter_rust_bridge's default loader.
+const FRB_INIT_REPLACEMENT: &str = r#"  /// Resolve the prebuilt native library from environment variable,
+  /// package-relative location, or defer to flutter_rust_bridge's default loader.
+  /// Returns `null` to defer to flutter_rust_bridge's default loader.
+  ///
+  /// Checks in order:
+  /// 1. FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR environment variable
+  ///    (allows test harnesses to point to development build paths)
+  /// 2. Package-installed location (lib/src/liter_llm_bridge_generated/)
+  ///    (for published pub.dev packages with bundled native libraries)
+  /// 3. Returns null (flutter_rust_bridge falls back to its default loader)
   static Future<ExternalLibrary?> _alefResolveExternalLibrary() async {
     try {
+      // On Linux the published package ships arch-specific .so files named
+      // libliter_llm_dart_x86_64.so and libliter_llm_dart_aarch64.so.
+      // Detect arch from Platform.version (e.g. "linux_x64", "linux_arm64").
+      final linuxArch = Platform.version.contains('arm64') ||
+              Platform.version.contains('aarch64')
+          ? '_aarch64'
+          : '_x86_64';
+      final candidates = <String>[
+        if (Platform.isMacOS) 'libliter_llm_dart.dylib',
+        if (Platform.isLinux) 'libliter_llm_dart$linuxArch.so',
+        if (Platform.isLinux) 'libliter_llm_dart.so',
+        if (Platform.isWindows) 'liter_llm_dart.dll',
+      ];
+
+      // Check FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR env var first.
+      // This allows test harnesses to override library location for development.
+      final envDir = Platform.environment['FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR'];
+      if (envDir != null && envDir.isNotEmpty) {
+        final libDir = Directory(envDir);
+        if (libDir.existsSync()) {
+          for (final candidate in candidates) {
+            final libPath = '$envDir/$candidate';
+            if (File(libPath).existsSync()) {
+              return ExternalLibrary.open(libPath);
+            }
+          }
+        }
+      }
+
+      // Check package-installed location.
       final packageRoot =
           await Isolate.resolvePackageUri(Uri.parse('package:liter_llm/liter_llm.dart'));
       if (packageRoot != null) {
         final libDir = packageRoot.resolve('src/liter_llm_bridge_generated/');
-        const candidates = <String>[
-          'libliter_llm.dylib',
-          'libliter_llm.so',
-          'liter_llm.dll',
-        ];
         for (final candidate in candidates) {
           final libPath = libDir.resolve(candidate).toFilePath();
           if (File(libPath).existsSync()) {
