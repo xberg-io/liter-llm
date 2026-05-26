@@ -53,7 +53,7 @@ repos:
       - id: ruff-format
         exclude: ^packages/python/liter_llm/(__init__\.py|api\.py|exceptions\.py|options\.py|_internal_bindings\.pyi)$
   - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
-    rev: v1.1.19
+    rev: v1.1.20
     hooks:
       - id: cargo-sort
         args:
