@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.19.9"
+alef_version = "0.19.12"
 languages = [
   "python",
   "node",
@@ -1723,6 +1723,9 @@ name = "liter-llm"
 [crates.e2e.registry.packages.c]
 name = "liter_llm_ffi"
 
+[crates.e2e.registry.packages.swift]
+name = "LiterLlm"
+
 # test_apps version sync — anchor on package-name strings so unrelated semver
 # tokens (junit, jackson, vitest, etc.) aren't clobbered. Mirrors the pattern
 # used by ../html-to-markdown.
@@ -1770,6 +1773,11 @@ replace = "github.com/kreuzberg-dev/liter-llm/packages/go v{version}"
 path = "test_apps/rust/Cargo.toml"
 search = 'package = "liter-llm", version = "[^"]*"'
 replace = 'package = "liter-llm", version = "{version}"'
+
+[[workspace.sync.text_replacements]]
+path = "test_apps/swift_e2e/Package.swift"
+search = '\.package\(url: "https://github\.com/kreuzberg-dev/liter-llm\.git", from: "[^"]*"\)'
+replace = '.package(url: "https://github.com/kreuzberg-dev/liter-llm.git", from: "{version}")'
 
 [crates.scaffold]
 description = "Universal LLM API client with Rust-powered polyglot bindings."

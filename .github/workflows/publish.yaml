@@ -82,6 +82,7 @@ jobs:
       release_kotlin: ${{ steps.meta.outputs.release_kotlin }}
       release_dart: ${{ steps.meta.outputs.release_dart }}
       release_zig: ${{ steps.meta.outputs.release_zig }}
+      release_swift: ${{ steps.meta.outputs.release_swift }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6.0.2
@@ -99,7 +100,7 @@ jobs:
         id: meta
         uses: kreuzberg-dev/actions/prepare-release-metadata@v1
         with:
-          available-targets: "crates,python,node,wasm,ruby,go,java,elixir,csharp,php,homebrew,kotlin,dart,zig"
+          available-targets: "crates,python,node,wasm,ruby,go,java,elixir,csharp,php,homebrew,kotlin,dart,zig,swift"
 
   # ─────────────────────────────────────────────────────────────────────────
   # Phase 2 — Validate version consistency
@@ -210,15 +211,91 @@ jobs:
           package: liter_llm
           version: ${{ needs.prepare.outputs.version }}
 
+  build-dart-native:
+    name: Build Dart native lib (${{ matrix.label }})
+    needs: [prepare, check-pub]
+    if: ${{ needs.prepare.outputs.release_dart == 'true' && (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && (needs.check-pub.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: macos-arm64
+            runner: macos-latest
+            lib_name: libliter_llm_dart.dylib
+            # Published name inside lib/src/liter_llm_bridge_generated/
+            pub_name: libliter_llm_dart.dylib
+          - label: linux-x86_64
+            runner: ubuntu-latest
+            lib_name: libliter_llm_dart.so
+            pub_name: libliter_llm_dart_x86_64.so
+          - label: linux-arm64
+            runner: ubuntu-24.04-arm
+            lib_name: libliter_llm_dart.so
+            pub_name: libliter_llm_dart_aarch64.so
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+
+      - name: Setup Rust
+        uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          cache-key-prefix: dart-native-${{ matrix.label }}
+
+      - name: Build liter-llm-dart cdylib
+        run: cargo build -p liter-llm-dart --release
+
+      - name: Rename lib to publish name
+        shell: bash
+        run: |
+          cp target/release/${{ matrix.lib_name }} ${{ matrix.pub_name }}
+
+      - name: Upload native lib
+        uses: actions/upload-artifact@v7
+        with:
+          name: dart-native-${{ matrix.label }}
+          path: ${{ matrix.pub_name }}
+          if-no-files-found: error
+          retention-days: 7
+
   assemble-dart-package:
     name: Assemble Dart package artifact
-    needs: [prepare, check-pub]
+    needs: [prepare, check-pub, build-dart-native]
     if: ${{ needs.prepare.outputs.release_dart == 'true' && (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && (needs.check-pub.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
+
+      - name: Download macOS arm64 native lib
+        uses: actions/download-artifact@v7
+        with:
+          name: dart-native-macos-arm64
+          path: dart-natives
+
+      - name: Download Linux x86_64 native lib
+        uses: actions/download-artifact@v7
+        with:
+          name: dart-native-linux-x86_64
+          path: dart-natives
+
+      - name: Download Linux arm64 native lib
+        uses: actions/download-artifact@v7
+        with:
+          name: dart-native-linux-arm64
+          path: dart-natives
+
+      - name: Bundle native libs into Dart package
+        shell: bash
+        run: |
+          BRIDGE_DIR="packages/dart/lib/src/liter_llm_bridge_generated"
+          ls dart-natives/
+          cp dart-natives/libliter_llm_dart.dylib "$BRIDGE_DIR/"
+          cp dart-natives/libliter_llm_dart_x86_64.so "$BRIDGE_DIR/"
+          cp dart-natives/libliter_llm_dart_aarch64.so "$BRIDGE_DIR/"
 
       - uses: actions/upload-artifact@v7
         with:
@@ -975,6 +1052,117 @@ jobs:
           assets: go-ffi-release/*.tar.gz
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
+  # Commit the prebuilt shared libraries into packages/go/.lib/<platform>/ so
+  # that `go get github.com/kreuzberg-dev/liter-llm/packages/go@v{version}` ships
+  # a self-contained cgo module.  cgo LDFLAGS use Go arch names (amd64/arm64) for
+  # directories; alef release tarballs use its own names (x86_64/aarch64).
+  # The mapping table below bridges the two naming conventions.
+  publish-go-module:
+    name: Bundle Go FFI libs and publish Go module tag
+    needs: [prepare, validate-versions, registry-results, build-ffi, upload-go-ffi]
+    if: |
+      always() &&
+      needs.prepare.outputs.release_go == 'true' &&
+      needs.validate-versions.result == 'success' &&
+      needs.build-ffi.result == 'success' &&
+      needs.upload-go-ffi.result == 'success' &&
+      (needs.registry-results.outputs.go != 'true' || needs.prepare.outputs.force_republish == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+
+      - name: Setup Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+        shell: bash
+
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: go-ffi-*
+          path: go-ffi-artifacts
+          merge-multiple: true
+
+      - name: Extract shared libs into packages/go/.lib/
+        env:
+          DRY_RUN: ${{ needs.prepare.outputs.dry_run }}
+        shell: bash
+        run: |
+          # Mapping from alef platform suffix → cgo LDFLAGS dir name (Go arch names)
+          declare -A platform_map
+          platform_map["linux-x86_64"]="linux-amd64"
+          platform_map["linux-aarch64"]="linux-arm64"
+          platform_map["macos-arm64"]="macos-arm64"
+          platform_map["macos-x86_64"]="macos-amd64"
+          platform_map["windows-x86_64"]="windows-amd64"
+
+          for tarball in go-ffi-artifacts/*.tar.gz; do
+            base=$(basename "$tarball" .tar.gz)
+            # Strip the longest "liter-llm-go-v{version}-" prefix (## for longest match)
+            # e.g. "liter-llm-go-v1.4.0-rc.34-linux-x86_64" → "linux-x86_64"
+            platform="${base##liter-llm-go-v*-}"
+            lib_dir="${platform_map[$platform]:-}"
+            if [ -z "$lib_dir" ]; then
+              echo "WARNING: unknown platform '$platform' from '$base', skipping"
+              continue
+            fi
+            echo "Extracting $tarball → packages/go/.lib/$lib_dir/"
+            mkdir -p "packages/go/.lib/$lib_dir"
+            # Tarballs structure: {pkg_name}/lib/{shared_lib} {pkg_name}/include/{header}
+            # Extract to a temp dir, then copy only the shared lib (.so/.dylib/.dll).
+            tmp_dir=$(mktemp -d)
+            tar xzf "$tarball" -C "$tmp_dir"
+            find "$tmp_dir" -maxdepth 3 -type f \
+              \( -name '*.so' -o -name '*.dylib' -o -name '*.dll' \) \
+              -exec cp {} "packages/go/.lib/$lib_dir/" \;
+            rm -rf "$tmp_dir"
+            ls -la "packages/go/.lib/$lib_dir/" || true
+          done
+
+      - name: Commit .lib/ files and create Go module tag
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          git add packages/go/.lib/
+          if git diff --cached --quiet; then
+            echo "No .lib/ changes to commit — skipping"
+          else
+            git commit -m "chore(go): bundle prebuilt FFI libs for v${VERSION} [ci skip]"
+            # Retry push with rebase on conflict (other jobs may have pushed to main)
+            for i in 1 2 3; do
+              if git push origin HEAD:refs/heads/main; then
+                break
+              fi
+              echo "Push attempt $i failed; pulling and retrying..."
+              git pull --rebase origin main
+            done
+          fi
+          HEAD_SHA=$(git rev-parse HEAD)
+          # Create the packages/go/{tag} module tag on the new commit.
+          # The Go module proxy resolves github.com/kreuzberg-dev/liter-llm/packages/go@v{version}
+          # from this tag, which now includes the prebuilt .lib/ shared libraries.
+          MODULE_TAG="packages/go/${TAG}"
+          EXISTING=$(gh api "repos/${REPO}/git/refs/tags/${MODULE_TAG}" --jq '.ref' 2>/dev/null || echo "")
+          if [ -n "$EXISTING" ]; then
+            echo "Go module tag $MODULE_TAG already exists — skipping"
+          else
+            gh api "repos/${REPO}/git/refs" \
+              -f "ref=refs/tags/${MODULE_TAG}" \
+              -f "sha=${HEAD_SHA}"
+            echo "Created Go module tag: $MODULE_TAG → $HEAD_SHA"
+          fi
+
   upload-elixir-nifs:
     name: Upload Elixir NIF assets
     needs: [prepare, build-elixir-nifs]
@@ -1708,6 +1896,148 @@ jobs:
           dry-run: ${{ needs.prepare.outputs.dry_run }}
           update-existing: "true"
 
+  # ── Swift Artifact Bundle (pre-built XCFramework for .binaryTarget consumers) ─
+  swift-artifactbundle:
+    name: Build Swift Artifact Bundle
+    needs: [prepare]
+    if: ${{ (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.prepare.outputs.release_swift == 'true' }}
+    runs-on: macos-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          cache-key-prefix: publish-swift-artifactbundle
+
+      - uses: kreuzberg-dev/actions/build-swift-artifactbundle@v1
+        id: build
+        with:
+          crate-name: liter-llm-swift
+          artifact-name: LiterLlm-rs
+          header-path: target/release/build/liter-llm-swift-*/out
+          output-dir: dist/swift-artifactbundle
+          build-profile: release
+
+      - name: Record checksum
+        id: checksum
+        run: |
+          CHECKSUM=$(cat "${{ steps.build.outputs.bundle-zip }}.sha256" 2>/dev/null || swift package compute-checksum "${{ steps.build.outputs.bundle-zip }}")
+          echo "checksum=${CHECKSUM}" >> "$GITHUB_OUTPUT"
+          echo "Artifact bundle checksum: ${CHECKSUM}"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: swift-artifactbundle
+          path: dist/swift-artifactbundle
+          retention-days: 14
+
+      - name: Save checksum as artifact
+        run: |
+          mkdir -p dist/swift-checksums
+          echo "${{ steps.checksum.outputs.checksum }}" > dist/swift-checksums/LiterLlm-rs.artifactbundle.zip.checksum
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: swift-checksum
+          path: dist/swift-checksums/
+          retention-days: 14
+
+  upload-swift-release:
+    name: Upload Swift Artifact Bundle to GitHub Release
+    needs: [prepare, swift-artifactbundle]
+    if: ${{ (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.swift-artifactbundle.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: swift-*
+          path: dist/swift
+          merge-multiple: true
+
+      - uses: kreuzberg-dev/actions/upload-release-assets@v1
+        with:
+          tag: ${{ needs.prepare.outputs.tag }}
+          working-directory: dist/swift
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+          assets: |
+            **/*.zip
+            **/*.checksum
+
+  update-swift-package-manifest:
+    name: Update Swift Package.swift manifest with artifact URL and checksum
+    needs: [prepare, upload-swift-release]
+    if: ${{ (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.upload-swift-release.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: swift-checksum
+          path: swift-checksums
+
+      - name: Update Package.swift with version and checksum
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          CHECKSUM=$(cat swift-checksums/*.checksum | tr -d '[:space:]')
+
+          # Replace placeholders in Package.swift
+          sed -i "s/__ALEF_SWIFT_VERSION__/${VERSION}/g" Package.swift
+          sed -i "s/__ALEF_SWIFT_CHECKSUM__/${CHECKSUM}/g" Package.swift
+
+          echo "Updated Package.swift:"
+          head -30 Package.swift
+
+      - name: Commit updated Package.swift
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet Package.swift; then
+            echo "No changes to Package.swift"
+          else
+            git add Package.swift
+            git commit -m "chore: update Swift Package.swift checksum for v${VERSION}"
+            git push origin HEAD:main
+          fi
+
+      - name: Update release notes with artifact URL
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          CHECKSUM=$(cat swift-checksums/*.checksum | tr -d '[:space:]')
+          ASSET_URL="https://github.com/kreuzberg-dev/liter-llm/releases/download/v${VERSION}/LiterLlm-rs.artifactbundle.zip"
+
+          cat > /tmp/swift-notes.md << EOF
+          ## Swift Package Manager
+
+          Add to your \`Package.swift\`:
+
+          \`\`\`swift
+          .package(url: "https://github.com/kreuzberg-dev/liter-llm", from: "${VERSION}")
+          \`\`\`
+
+          The Swift binding is distributed as a pre-built artifact bundle. No Rust toolchain required.
+
+          **Artifact**: [LiterLlm-rs.artifactbundle.zip](${ASSET_URL})
+          **Checksum**: \`${CHECKSUM}\`
+          EOF
+
+          gh release edit "v${VERSION}" --notes-file /tmp/swift-notes.md
+
   # ── CLI binary tarballs (for direct download, non-brew/non-docker users) ─
   build-cli-binaries:
     name: Build CLI binary (${{ matrix.label }})
@@ -2040,6 +2370,7 @@ jobs:
     needs:
       - prepare
       - upload-go-ffi
+      - publish-go-module
       - upload-php-extensions
       - publish-crates
       - publish-pypi
@@ -2054,6 +2385,8 @@ jobs:
       - publish-homebrew-bottles
       - trigger-pubdev
       - publish-zig
+      - upload-swift-release
+      - update-swift-package-manifest
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -2069,7 +2402,8 @@ jobs:
         uses: kreuzberg-dev/actions/finalize-release@v1
         with:
           tag: ${{ needs.prepare.outputs.tag }}
-          go-module-path: packages/go
+          # go-module-path omitted: publish-go-module creates packages/go/{tag}
+          # on a commit that includes the bundled .lib/ prebuilt libraries.
 
       - name: Publish summary
         env:
@@ -2105,6 +2439,7 @@ jobs:
             report "Go FFI"      "${{ needs.upload-go-ffi.result }}"
             report "PHP ext"     "${{ needs.upload-php-extensions.result }}"
             report "Homebrew"    "${{ needs.publish-homebrew-bottles.result }}"
+            report "Swift"       "${{ needs.upload-swift-release.result }}"
           } >> "$GITHUB_STEP_SUMMARY"
         shell: bash
 
@@ -2123,6 +2458,7 @@ jobs:
       - publish-packagist
       - publish-homebrew-bottles
       - upload-go-ffi
+      - publish-go-module
       - upload-elixir-nifs
       - upload-php-extensions
       - upload-cli-binaries

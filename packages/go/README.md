@@ -101,7 +101,7 @@
 
 Universal LLM API client for Go. Access 143+ LLM providers through a single interface backed by the Rust core.
 
-> **Version 1.4.0-rc.33**
+> **Version 1.4.0-rc.34**
 > Report issues at [github.com/kreuzberg-dev/liter-llm](https://github.com/kreuzberg-dev/liter-llm/issues).
 
 ## What This Package Provides
@@ -144,7 +144,7 @@ Download from [GitHub Releases](https://github.com/kreuzberg-dev/liter-llm/relea
 
 ```bash
 # Example: Linux x86_64
-curl -LO https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.33/go-ffi-linux-x86_64.tar.gz
+curl -LO https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.34/go-ffi-linux-x86_64.tar.gz
 tar -xzf go-ffi-linux-x86_64.tar.gz
 
 mkdir -p ~/liter-llm/lib

@@ -67,11 +67,10 @@ TestResults/
 packages/csharp/**/runtimes/
 
 # Go
-# Note: packages/go/include/liter_llm.h is the cgo header referenced by
-# binding.go via `#cgo CFLAGS: -I${SRCDIR}/include`; it must ship in the
-# Go module's git tag so consumers can `go get` + build. Track it.
-# Native libs (lib/*.so, *.dylib, *.a) are not bundled — consumers fetch
-# them as release assets via download_ffi.sh.
+# packages/go/include/liter_llm.h and packages/go/.lib/<platform>/ are tracked:
+# they ship in the Go module git tag so `go get + build` is self-contained.
+# publish-go-module CI job populates .lib/ before creating the packages/go/{tag}.
+# The legacy packages/go/lib/ path (no leading dot) remains ignored.
 packages/go/lib/
 coverage.out
 
