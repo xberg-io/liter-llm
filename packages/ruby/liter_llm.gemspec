@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.metadata["keywords"] = %w[llm api-client openai anthropic].join(",")
   spec.metadata["rubygems_mfa_required"] = "true"
 
-  spec.files         = Dir.glob(%w[lib/**/* ext/**/* sig/**/* Steepfile])
+  spec.files         = Dir.glob(%w[lib/**/* ext/**/* sig/**/* Steepfile]).reject { |f| f.include?("/native/target/") || f.include?("/native/tmp/") }
   spec.require_paths = ["lib"]
   spec.extensions    = ["ext/liter_llm_rb/extconf.rb"]
 
