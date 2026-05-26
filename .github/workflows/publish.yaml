@@ -1658,6 +1658,33 @@ jobs:
         with:
           name: maven-packages
           path: packages/java/target
+      # The publish-maven composite action runs `mvn clean deploy`, which
+      # wipes packages/java/target before rebuilding the jar from source.
+      # Re-stage the per-platform FFI native libraries into
+      # packages/java/src/main/resources/natives/{rid}/ so the deploy-time
+      # rebuild includes them as JAR resources — otherwise the central jar
+      # ships with no bundled natives and NativeLib.loadNativeLibrary fails
+      # at runtime with UnsatisfiedLinkError. See rc.33 java test-app failure.
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: ffi-*
+          path: ffi-artifacts
+          merge-multiple: true
+      - name: Stage native libs for Java publish
+        run: |
+          declare -A rid_map=(
+            [linux-x64]="linux-x64"
+            [linux-arm64]="linux-arm64"
+            [osx-arm64]="macos-arm64"
+            [win-x64]="windows-x64"
+          )
+          for ffi_rid in "${!rid_map[@]}"; do
+            java_rid="${rid_map[$ffi_rid]}"
+            dest="packages/java/src/main/resources/natives/${java_rid}"
+            mkdir -p "$dest"
+            find "ffi-artifacts/${ffi_rid}" -type f -print0 | xargs -0 -I{} cp {} "$dest/"
+          done
+        shell: bash
       - name: Setup Java
         id: setup-java
         env:
