@@ -1,5 +1,5 @@
 {
-	"version": "1.4.0-rc.34",
+	"version": "1.4.0-rc.35",
 	"private": true,
 	"workspaces": [
 		"crates/liter-llm-node",
