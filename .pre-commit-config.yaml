@@ -165,9 +165,12 @@ repos:
           - id: phpstan
             files: ^packages/php/.*\.php$
             exclude: ^packages/php/(\.?php-cs-fixer(\.dist)?\.php|vendor/)
+            args:
+                - analyse
+                - --configuration=packages/php/phpstan.neon
           - id: mix-format
             files: ^packages/elixir/
-            exclude: ^packages/elixir/lib/liter_llm\.ex$
+            exclude: ^packages/elixir/lib/liter_llm(/native)?\.ex$
           - id: mix-credo
             files: ^packages/elixir/
           - id: java-verify
