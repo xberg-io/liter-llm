@@ -857,10 +857,43 @@ jobs:
                     cp crates/liter-llm-ffi/liter_llm.h ffi-staging/include/
                   fi
               shell: bash
+            - name: Package C FFI tarball
+              env:
+                  TARGET: ${{ matrix.target }}
+                  LABEL: ${{ matrix.label }}
+                  VERSION: ${{ needs.prepare.outputs.version }}
+              run: |
+                  declare -A triple_map=(
+                    ["linux-x86_64"]="x86_64-unknown-linux-gnu"
+                    ["linux-aarch64"]="aarch64-unknown-linux-gnu"
+                    ["macos-arm64"]="aarch64-apple-darwin"
+                    ["windows-x86_64"]="x86_64-pc-windows-msvc"
+                  )
+                  TRIPLE="${triple_map[$LABEL]}"
+                  STAGE_DIR="liter_llm_ffi-v${VERSION}-${TRIPLE}"
+                  mkdir -p "$STAGE_DIR/lib" "$STAGE_DIR/include"
+                  find "target/${TARGET}/release" -maxdepth 1 -type f \
+                    \( -name '*.so' -o -name '*.dylib' -o -name '*.dll' -o -name '*.dll.lib' \) \
+                    -name '*liter_llm_ffi*' \
+                    -exec cp {} "$STAGE_DIR/lib/" \;
+                  if [ -f crates/liter-llm-ffi/include/liter_llm.h ]; then
+                    cp crates/liter-llm-ffi/include/liter_llm.h "$STAGE_DIR/include/"
+                  elif [ -f crates/liter-llm-ffi/liter_llm.h ]; then
+                    cp crates/liter-llm-ffi/liter_llm.h "$STAGE_DIR/include/"
+                  fi
+                  mkdir -p dist/c-ffi
+                  tar -czf "dist/c-ffi/${STAGE_DIR}.tar.gz" "$STAGE_DIR"
+              shell: bash
             - uses: actions/upload-artifact@v7.0.1
               with:
                   name: ffi-${{ matrix.label }}
                   path: ffi-staging/
+                  retention-days: 14
+            - uses: actions/upload-artifact@v7.0.1
+              with:
+                  name: c-ffi-${{ matrix.label }}
+                  path: dist/c-ffi/*.tar.gz
+                  if-no-files-found: error
                   retention-days: 14
             - uses: actions/upload-artifact@v7.0.1
               with:
@@ -1017,6 +1050,39 @@ jobs:
     # ─────────────────────────────────────────────────────────────────────────
     # Phase 5 — Upload release assets (Go FFI, C FFI, Elixir NIFs)
     # ─────────────────────────────────────────────────────────────────────────
+    upload-c-ffi:
+        name: Upload C FFI assets
+        needs: [prepare, validate-versions, build-ffi]
+        if: |
+            always() &&
+            needs.build-ffi.result == 'success' &&
+            needs.validate-versions.result == 'success'
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        timeout-minutes: 15
+        steps:
+            - uses: actions/checkout@v6.0.2
+              with:
+                  ref: ${{ needs.prepare.outputs.checkout_ref }}
+            - name: Ensure GitHub release exists
+              uses: kreuzberg-dev/actions/publish-github-release@v1
+              with:
+                  tag: ${{ needs.prepare.outputs.tag }}
+                  draft: "true"
+                  dry-run: ${{ needs.prepare.outputs.dry_run }}
+            - uses: actions/download-artifact@v7
+              with:
+                  pattern: c-ffi-*
+                  path: c-ffi-release
+                  merge-multiple: true
+            - name: Upload to GitHub Release
+              uses: kreuzberg-dev/actions/upload-release-assets@v1
+              with:
+                  tag: ${{ needs.prepare.outputs.tag }}
+                  assets: c-ffi-release/*.tar.gz
+                  dry-run: ${{ needs.prepare.outputs.dry_run }}
+
     upload-go-ffi:
         name: Upload Go FFI assets
         needs: [prepare, validate-versions, registry-results, build-ffi]
