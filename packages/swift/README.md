@@ -86,6 +86,28 @@ Universal LLM API client for Swift. Access 143+ LLM providers through a single S
 
 ### Package Installation
 
+The Swift binding ships as a pre-built binary artifact. No Rust toolchain required.
+
+**Each release attaches**:
+
+- `LiterLlm-rs.artifactbundle.zip` -- the prebuilt artifact bundle
+- `LiterLlm-rs.artifactbundle.zip.checksum` -- the SwiftPM checksum
+- `Package.swift` -- a `Package.swift` with version + checksum already substituted for that release
+
+**Recommended**: add a `.binaryTarget` to your own `Package.swift`, copying the URL and checksum from the release notes at <https://github.com/kreuzberg-dev/liter-llm/releases>:
+
+```swift
+.binaryTarget(
+    name: "LiterLlm",
+    url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v<VERSION>/LiterLlm-rs.artifactbundle.zip",
+    checksum: "<CHECKSUM-FROM-RELEASE-NOTES>"
+)
+```
+
+**Alternative**: download the release-attached `Package.swift` and copy it into your project root.
+
+> The repository's checked-in `Package.swift` on `main` uses placeholder values (`__ALEF_SWIFT_VERSION__`, `__ALEF_SWIFT_CHECKSUM__`) and is not usable as-is. The SwiftPM `.package(url:..., from:...)` pattern is **not supported** because release tags carry the placeholder file; pull the release-attached `Package.swift` or use `.binaryTarget` directly.
+
 ### System Requirements
 
 - See [Installation Guide](https://github.com/kreuzberg-dev/liter-llm#installation) for requirements

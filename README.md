@@ -226,7 +226,7 @@ Install in your language of choice:
 | C#               | `dotnet add package LiterLlm`                                                |
 | Elixir           | `{:liter_llm, "~> 1.4.0-rc.27"}` in mix.exs                                  |
 | Dart / Flutter   | `dart pub add liter_llm`                                                     |
-| Swift            | `.package(url: "https://github.com/kreuzberg-dev/liter-llm", from: "1.4.0")` |
+| Swift            | See [Swift package](packages/swift/README.md) -- `.binaryTarget` from release notes |
 | Kotlin (Android) | `dev.kreuzberg:liter-llm-android` (Maven Central)                            |
 | Zig              | See [Zig package](packages/zig/README.md)                                    |
 | WASM             | `pnpm add @kreuzberg/liter-llm-wasm`                                         |

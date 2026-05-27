@@ -2066,6 +2066,10 @@ jobs:
         permissions:
             contents: write
         steps:
+            - uses: actions/checkout@v6.0.2
+              with:
+                  ref: ${{ needs.prepare.outputs.checkout_ref }}
+
             - uses: actions/download-artifact@v7
               with:
                   pattern: swift-*
@@ -2081,72 +2085,59 @@ jobs:
                       **/*.zip
                       **/*.checksum
 
-    update-swift-package-manifest:
-        name: Update Swift Package.swift manifest with artifact URL and checksum
-        needs: [prepare, swift-artifactbundle, upload-swift-release]
-        if: ${{ (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && always() && needs.swift-artifactbundle.result == 'success' }}
-        runs-on: ubuntu-latest
-        permissions:
-            contents: write
-        steps:
-            - uses: actions/checkout@v6.0.2
-              with:
-                  ref: ${{ needs.prepare.outputs.checkout_ref }}
-                  fetch-depth: 0
-
-            - uses: actions/download-artifact@v7
-              with:
-                  name: swift-checksum
-                  path: swift-checksums
-
-            - name: Update Package.swift with version and checksum
-              run: |
-                  VERSION="${{ needs.prepare.outputs.version }}"
-                  CHECKSUM=$(cat swift-checksums/*.checksum | tr -d '[:space:]')
-
-                  # Replace placeholders in Package.swift
-                  sed -i "s/__ALEF_SWIFT_VERSION__/${VERSION}/g" Package.swift
-                  sed -i "s/__ALEF_SWIFT_CHECKSUM__/${CHECKSUM}/g" Package.swift
-
-                  echo "Updated Package.swift:"
-                  head -30 Package.swift
-
-            - name: Commit updated Package.swift
+            - name: Generate substituted Package.swift artifact
               env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   VERSION: ${{ needs.prepare.outputs.version }}
               run: |
-                  git config user.name "github-actions[bot]"
-                  git config user.email "github-actions[bot]@users.noreply.github.com"
-                  if git diff --quiet Package.swift; then
-                    echo "No changes to Package.swift"
-                  else
-                    git add Package.swift
-                    git commit -m "chore: update Swift Package.swift checksum for v${VERSION}"
-                    git push origin HEAD:main
-                  fi
+                  CHECKSUM=$(cat dist/swift/*.checksum | tr -d '[:space:]')
+                  cp Package.swift /tmp/Package.swift
+                  sed -i "s/__ALEF_SWIFT_VERSION__/${VERSION}/g" /tmp/Package.swift
+                  sed -i "s/__ALEF_SWIFT_CHECKSUM__/${CHECKSUM}/g" /tmp/Package.swift
+                  echo "Substituted Package.swift:"
+                  head -30 /tmp/Package.swift
 
-            - name: Update release notes with artifact URL
+            - name: Upload substituted Package.swift to GitHub Release
               if: ${{ needs.prepare.outputs.dry_run != 'true' }}
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   VERSION: ${{ needs.prepare.outputs.version }}
               run: |
-                  CHECKSUM=$(cat swift-checksums/*.checksum | tr -d '[:space:]')
+                  gh release upload "v${VERSION}" /tmp/Package.swift \
+                    --clobber \
+                    --repo "${{ github.repository }}"
+
+            - name: Update release notes with Swift install instructions
+              if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  VERSION: ${{ needs.prepare.outputs.version }}
+              run: |
+                  CHECKSUM=$(cat dist/swift/*.checksum | tr -d '[:space:]')
                   ASSET_URL="https://github.com/kreuzberg-dev/liter-llm/releases/download/v${VERSION}/LiterLlm-rs.artifactbundle.zip"
+                  PKG_SWIFT_URL="https://github.com/kreuzberg-dev/liter-llm/releases/download/v${VERSION}/Package.swift"
 
                   cat > /tmp/swift-notes.md << EOF
                   ## Swift Package Manager
 
-                  Add to your \`Package.swift\`:
-
-                  \`\`\`swift
-                  .package(url: "https://github.com/kreuzberg-dev/liter-llm", from: "${VERSION}")
-                  \`\`\`
-
                   The Swift binding is distributed as a pre-built artifact bundle. No Rust toolchain required.
 
-                  **Artifact**: [LiterLlm-rs.artifactbundle.zip](${ASSET_URL})
+                  **Recommended — use \`.binaryTarget\` directly in your \`Package.swift\`:**
+
+                  \`\`\`swift
+                  .binaryTarget(
+                      name: "LiterLlm",
+                      url: "${ASSET_URL}",
+                      checksum: "${CHECKSUM}"
+                  )
+                  \`\`\`
+
+                  **Alternative — download the prebuilt \`Package.swift\` for this release:**
+
+                  - [Package.swift](${PKG_SWIFT_URL}) (with version + checksum substituted)
+
+                  > The repository's checked-in \`Package.swift\` uses placeholder values on \`main\`; the release-attached \`Package.swift\` above has them substituted for this version. SPM tag-URL pinning (\`.package(url: ..., from: "${VERSION}")\`) is not supported because tags carry the placeholder file.
+
+                  **Artifact bundle**: [LiterLlm-rs.artifactbundle.zip](${ASSET_URL})
                   **Checksum**: \`${CHECKSUM}\`
                   EOF
 
@@ -2501,7 +2492,6 @@ jobs:
             - trigger-pubdev
             - publish-zig
             - upload-swift-release
-            - update-swift-package-manifest
         if: always()
         runs-on: ubuntu-latest
         permissions:
