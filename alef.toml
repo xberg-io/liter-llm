@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.19.22"
+alef_version = "0.19.25"
 languages = [
   "python",
   "node",
@@ -17,6 +17,9 @@ languages = [
   "kotlin_android",
   "jni",
 ]
+
+[workspace.format]
+enabled = false
 
 [workspace.sync]
 extra_paths = [
