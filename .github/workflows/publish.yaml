@@ -1990,8 +1990,8 @@ jobs:
 
     update-swift-package-manifest:
         name: Update Swift Package.swift manifest with artifact URL and checksum
-        needs: [prepare, upload-swift-release]
-        if: ${{ (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.upload-swift-release.result == 'success' }}
+        needs: [prepare, swift-artifactbundle, upload-swift-release]
+        if: ${{ (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && always() && needs.swift-artifactbundle.result == 'success' }}
         runs-on: ubuntu-latest
         permissions:
             contents: write
