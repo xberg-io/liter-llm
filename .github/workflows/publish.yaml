@@ -1131,8 +1131,7 @@ jobs:
             needs.prepare.outputs.release_go == 'true' &&
             needs.validate-versions.result == 'success' &&
             needs.build-ffi.result == 'success' &&
-            needs.upload-go-ffi.result == 'success' &&
-            (needs.registry-results.outputs.go != 'true' || needs.prepare.outputs.force_republish == 'true')
+            (needs.upload-go-ffi.result == 'success' || needs.upload-go-ffi.result == 'skipped')
         runs-on: ubuntu-latest
         permissions:
             contents: write
@@ -2456,6 +2455,7 @@ jobs:
         name: Finalize release
         needs:
             - prepare
+            - upload-c-ffi
             - upload-go-ffi
             - publish-go-module
             - upload-php-extensions
@@ -2544,6 +2544,7 @@ jobs:
             - publish-nuget
             - publish-packagist
             - publish-homebrew-bottles
+            - upload-c-ffi
             - upload-go-ffi
             - publish-go-module
             - upload-elixir-nifs
