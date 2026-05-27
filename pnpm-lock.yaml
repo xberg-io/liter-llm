@@ -27,7 +27,7 @@ importers:
 
   e2e/wasm:
     devDependencies:
-      liter_llm:
+      '@kreuzberg/liter-llm-wasm':
         specifier: file:../../crates/liter-llm-wasm/pkg/nodejs
         version: liter-llm-wasm@file:crates/liter-llm-wasm/pkg/nodejs
       rollup:
