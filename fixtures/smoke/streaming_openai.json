@@ -1,94 +1,92 @@
 {
-  "id": "smoke_streaming_openai",
-  "description": "Chat streaming against real OpenAI API, verifies chunks received",
-  "category": "smoke",
-  "tags": ["smoke", "openai", "streaming"],
-  "call": "chat_stream",
-  "input": {
-    "model": "openai/gpt-4o-mini",
-    "messages": [
-      {
-        "role": "user",
-        "content": "Count from 1 to 5."
-      }
-    ],
-    "max_tokens": 50
-  },
-  "env": {
-    "api_key_var": "OPENAI_API_KEY"
-  },
-  "mock_response": {
-    "status": 200,
-    "stream_chunks": [
-      {
-        "id": "chatcmpl-smoke-stream",
-        "object": "chat.completion.chunk",
-        "created": 1711000000,
-        "model": "gpt-4o-mini",
-        "choices": [
-          { "index": 0, "delta": { "role": "assistant", "content": "" }, "finish_reason": null }
-        ]
-      },
-      {
-        "id": "chatcmpl-smoke-stream",
-        "object": "chat.completion.chunk",
-        "created": 1711000000,
-        "model": "gpt-4o-mini",
-        "choices": [{ "index": 0, "delta": { "content": "1" }, "finish_reason": null }]
-      },
-      {
-        "id": "chatcmpl-smoke-stream",
-        "object": "chat.completion.chunk",
-        "created": 1711000000,
-        "model": "gpt-4o-mini",
-        "choices": [{ "index": 0, "delta": { "content": " 2" }, "finish_reason": null }]
-      },
-      {
-        "id": "chatcmpl-smoke-stream",
-        "object": "chat.completion.chunk",
-        "created": 1711000000,
-        "model": "gpt-4o-mini",
-        "choices": [{ "index": 0, "delta": { "content": " 3" }, "finish_reason": null }]
-      },
-      {
-        "id": "chatcmpl-smoke-stream",
-        "object": "chat.completion.chunk",
-        "created": 1711000000,
-        "model": "gpt-4o-mini",
-        "choices": [{ "index": 0, "delta": { "content": " 4" }, "finish_reason": null }]
-      },
-      {
-        "id": "chatcmpl-smoke-stream",
-        "object": "chat.completion.chunk",
-        "created": 1711000000,
-        "model": "gpt-4o-mini",
-        "choices": [{ "index": 0, "delta": { "content": " 5" }, "finish_reason": null }]
-      },
-      {
-        "id": "chatcmpl-smoke-stream",
-        "object": "chat.completion.chunk",
-        "created": 1711000000,
-        "model": "gpt-4o-mini",
-        "choices": [{ "index": 0, "delta": {}, "finish_reason": "stop" }]
-      }
-    ],
-    "stream_terminator": "[DONE]"
-  },
-  "assertions": [
-    {
-      "type": "not_error"
-    },
-    {
-      "type": "not_error"
-    },
-    {
-      "type": "count_min",
-      "field": "chunks",
-      "value": 1
-    }
-  ],
-  "skip": {
-    "languages": ["rust"],
-    "reason": "requires live API credentials not available in mock-based test environment"
-  }
+	"id": "smoke_streaming_openai",
+	"description": "Chat streaming against real OpenAI API, verifies chunks received",
+	"category": "smoke",
+	"tags": ["smoke", "openai", "streaming"],
+	"call": "chat_stream",
+	"input": {
+		"model": "openai/gpt-4o-mini",
+		"messages": [
+			{
+				"role": "user",
+				"content": "Count from 1 to 5."
+			}
+		],
+		"max_tokens": 50
+	},
+	"env": {
+		"api_key_var": "OPENAI_API_KEY"
+	},
+	"mock_response": {
+		"status": 200,
+		"stream_chunks": [
+			{
+				"id": "chatcmpl-smoke-stream",
+				"object": "chat.completion.chunk",
+				"created": 1711000000,
+				"model": "gpt-4o-mini",
+				"choices": [{ "index": 0, "delta": { "role": "assistant", "content": "" }, "finish_reason": null }]
+			},
+			{
+				"id": "chatcmpl-smoke-stream",
+				"object": "chat.completion.chunk",
+				"created": 1711000000,
+				"model": "gpt-4o-mini",
+				"choices": [{ "index": 0, "delta": { "content": "1" }, "finish_reason": null }]
+			},
+			{
+				"id": "chatcmpl-smoke-stream",
+				"object": "chat.completion.chunk",
+				"created": 1711000000,
+				"model": "gpt-4o-mini",
+				"choices": [{ "index": 0, "delta": { "content": " 2" }, "finish_reason": null }]
+			},
+			{
+				"id": "chatcmpl-smoke-stream",
+				"object": "chat.completion.chunk",
+				"created": 1711000000,
+				"model": "gpt-4o-mini",
+				"choices": [{ "index": 0, "delta": { "content": " 3" }, "finish_reason": null }]
+			},
+			{
+				"id": "chatcmpl-smoke-stream",
+				"object": "chat.completion.chunk",
+				"created": 1711000000,
+				"model": "gpt-4o-mini",
+				"choices": [{ "index": 0, "delta": { "content": " 4" }, "finish_reason": null }]
+			},
+			{
+				"id": "chatcmpl-smoke-stream",
+				"object": "chat.completion.chunk",
+				"created": 1711000000,
+				"model": "gpt-4o-mini",
+				"choices": [{ "index": 0, "delta": { "content": " 5" }, "finish_reason": null }]
+			},
+			{
+				"id": "chatcmpl-smoke-stream",
+				"object": "chat.completion.chunk",
+				"created": 1711000000,
+				"model": "gpt-4o-mini",
+				"choices": [{ "index": 0, "delta": {}, "finish_reason": "stop" }]
+			}
+		],
+		"stream_terminator": "[DONE]"
+	},
+	"assertions": [
+		{
+			"type": "not_error"
+		},
+		{
+			"type": "not_error"
+		},
+		{
+			"type": "count_min",
+			"field": "chunks",
+			"value": 1
+		}
+	],
+	"skip": {
+		"languages": ["rust"],
+		"reason": "requires live API credentials not available in mock-based test environment"
+	}
 }

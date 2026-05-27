@@ -12,174 +12,174 @@ version: "3"
 # from a local workflow artifact in dry-run CI).
 
 tasks:
-  smoke:
-    desc: Run all test_app smoke tests
-    cmds:
-      - task: smoke:rust
-      - task: smoke:python
-      - task: smoke:node
-      - task: smoke:wasm
-      - task: smoke:ruby
-      - task: smoke:go
-      - task: smoke:java
-      - task: smoke:elixir
-      - task: smoke:php
-      - task: smoke:csharp
-      - task: smoke:c
+    smoke:
+        desc: Run all test_app smoke tests
+        cmds:
+            - task: smoke:rust
+            - task: smoke:python
+            - task: smoke:node
+            - task: smoke:wasm
+            - task: smoke:ruby
+            - task: smoke:go
+            - task: smoke:java
+            - task: smoke:elixir
+            - task: smoke:php
+            - task: smoke:csharp
+            - task: smoke:c
 
-  smoke:rust:
-    desc: Run Rust test_app smoke test
-    dir: test_apps/rust
-    cmds:
-      - cargo run
+    smoke:rust:
+        desc: Run Rust test_app smoke test
+        dir: test_apps/rust
+        cmds:
+            - cargo run
 
-  smoke:python:
-    desc: Run Python test_app smoke test
-    dir: test_apps/python
-    cmds:
-      - uv sync
-      - uv run pytest tests/test_smoke.py -v
+    smoke:python:
+        desc: Run Python test_app smoke test
+        dir: test_apps/python
+        cmds:
+            - uv sync
+            - uv run pytest tests/test_smoke.py -v
 
-  smoke:node:
-    desc: Run Node.js test_app smoke test
-    dir: test_apps/node
-    cmds:
-      - pnpm install
-      - pnpm exec vitest run tests/smoke.test.ts
+    smoke:node:
+        desc: Run Node.js test_app smoke test
+        dir: test_apps/node
+        cmds:
+            - pnpm install
+            - pnpm exec vitest run tests/smoke.test.ts
 
-  smoke:wasm:
-    desc: Run WASM test_app smoke test
-    dir: test_apps/wasm
-    cmds:
-      - pnpm install
-      - pnpm exec vitest run tests/smoke.test.ts
+    smoke:wasm:
+        desc: Run WASM test_app smoke test
+        dir: test_apps/wasm
+        cmds:
+            - pnpm install
+            - pnpm exec vitest run tests/smoke.test.ts
 
-  smoke:ruby:
-    desc: Run Ruby test_app smoke test
-    dir: test_apps/ruby
-    cmds:
-      - bundle install
-      - bundle exec rspec spec/smoke_spec.rb
+    smoke:ruby:
+        desc: Run Ruby test_app smoke test
+        dir: test_apps/ruby
+        cmds:
+            - bundle install
+            - bundle exec rspec spec/smoke_spec.rb
 
-  smoke:go:
-    desc: Run Go test_app smoke test
-    dir: test_apps/go
-    cmds:
-      - go mod download
-      - go test -v -run "Test_Smoke"
+    smoke:go:
+        desc: Run Go test_app smoke test
+        dir: test_apps/go
+        cmds:
+            - go mod download
+            - go test -v -run "Test_Smoke"
 
-  smoke:java:
-    desc: Run Java test_app smoke test
-    dir: test_apps/java
-    cmds:
-      - mvn test -Dtest=SmokeTest
+    smoke:java:
+        desc: Run Java test_app smoke test
+        dir: test_apps/java
+        cmds:
+            - mvn test -Dtest=SmokeTest
 
-  smoke:elixir:
-    desc: Run Elixir test_app smoke test
-    dir: test_apps/elixir
-    cmds:
-      - mix deps.get
-      - mix test test/smoke_test.exs
+    smoke:elixir:
+        desc: Run Elixir test_app smoke test
+        dir: test_apps/elixir
+        cmds:
+            - mix deps.get
+            - mix test test/smoke_test.exs
 
-  smoke:php:
-    desc: Run PHP test_app smoke test
-    dir: test_apps/php
-    cmds:
-      - composer install
-      - vendor/bin/phpunit tests/SmokeTest.php
+    smoke:php:
+        desc: Run PHP test_app smoke test
+        dir: test_apps/php
+        cmds:
+            - composer install
+            - vendor/bin/phpunit tests/SmokeTest.php
 
-  smoke:csharp:
-    desc: Run C# test_app smoke test
-    dir: test_apps/csharp
-    cmds:
-      - dotnet restore
-      - dotnet test --filter FullyQualifiedName~SmokeTests
+    smoke:csharp:
+        desc: Run C# test_app smoke test
+        dir: test_apps/csharp
+        cmds:
+            - dotnet restore
+            - dotnet test --filter FullyQualifiedName~SmokeTests
 
-  smoke:c:
-    desc: Run C test_app smoke test
-    dir: test_apps/c
-    cmds:
-      - bash download_ffi.sh
-      - make
-      - ./run_tests --smoke
+    smoke:c:
+        desc: Run C test_app smoke test
+        dir: test_apps/c
+        cmds:
+            - bash download_ffi.sh
+            - make
+            - ./run_tests --smoke
 
-  comprehensive:
-    desc: Run all test_app comprehensive tests
-    cmds:
-      - task: comprehensive:python
-      - task: comprehensive:node
-      - task: comprehensive:wasm
-      - task: comprehensive:ruby
-      - task: comprehensive:go
-      - task: comprehensive:java
-      - task: comprehensive:csharp
-      - task: comprehensive:php
-      - task: comprehensive:elixir
+    comprehensive:
+        desc: Run all test_app comprehensive tests
+        cmds:
+            - task: comprehensive:python
+            - task: comprehensive:node
+            - task: comprehensive:wasm
+            - task: comprehensive:ruby
+            - task: comprehensive:go
+            - task: comprehensive:java
+            - task: comprehensive:csharp
+            - task: comprehensive:php
+            - task: comprehensive:elixir
 
-  comprehensive:python:
-    desc: Run Python test_app comprehensive tests
-    dir: test_apps/python
-    cmds:
-      - uv sync
-      - uv run pytest tests/ -v
+    comprehensive:python:
+        desc: Run Python test_app comprehensive tests
+        dir: test_apps/python
+        cmds:
+            - uv sync
+            - uv run pytest tests/ -v
 
-  comprehensive:node:
-    desc: Run Node.js test_app comprehensive tests
-    dir: test_apps/node
-    cmds:
-      - pnpm install
-      - pnpm exec vitest run
+    comprehensive:node:
+        desc: Run Node.js test_app comprehensive tests
+        dir: test_apps/node
+        cmds:
+            - pnpm install
+            - pnpm exec vitest run
 
-  comprehensive:wasm:
-    desc: Run WASM test_app comprehensive tests
-    dir: test_apps/wasm
-    cmds:
-      - pnpm install
-      - pnpm exec vitest run
+    comprehensive:wasm:
+        desc: Run WASM test_app comprehensive tests
+        dir: test_apps/wasm
+        cmds:
+            - pnpm install
+            - pnpm exec vitest run
 
-  comprehensive:ruby:
-    desc: Run Ruby test_app comprehensive tests
-    dir: test_apps/ruby
-    cmds:
-      - bundle install
-      - bundle exec rspec spec/
+    comprehensive:ruby:
+        desc: Run Ruby test_app comprehensive tests
+        dir: test_apps/ruby
+        cmds:
+            - bundle install
+            - bundle exec rspec spec/
 
-  comprehensive:go:
-    desc: Run Go test_app comprehensive tests
-    dir: test_apps/go
-    cmds:
-      - go mod download
-      - go test -v ./...
+    comprehensive:go:
+        desc: Run Go test_app comprehensive tests
+        dir: test_apps/go
+        cmds:
+            - go mod download
+            - go test -v ./...
 
-  comprehensive:java:
-    desc: Run Java test_app comprehensive tests
-    dir: test_apps/java
-    cmds:
-      - mvn test
+    comprehensive:java:
+        desc: Run Java test_app comprehensive tests
+        dir: test_apps/java
+        cmds:
+            - mvn test
 
-  comprehensive:csharp:
-    desc: Run C# test_app comprehensive tests
-    dir: test_apps/csharp
-    cmds:
-      - dotnet restore
-      - dotnet test
+    comprehensive:csharp:
+        desc: Run C# test_app comprehensive tests
+        dir: test_apps/csharp
+        cmds:
+            - dotnet restore
+            - dotnet test
 
-  comprehensive:php:
-    desc: Run PHP test_app comprehensive tests
-    dir: test_apps/php
-    cmds:
-      - composer install
-      - vendor/bin/phpunit
+    comprehensive:php:
+        desc: Run PHP test_app comprehensive tests
+        dir: test_apps/php
+        cmds:
+            - composer install
+            - vendor/bin/phpunit
 
-  comprehensive:elixir:
-    desc: Run Elixir test_app comprehensive tests
-    dir: test_apps/elixir
-    cmds:
-      - mix deps.get
-      - mix test
+    comprehensive:elixir:
+        desc: Run Elixir test_app comprehensive tests
+        dir: test_apps/elixir
+        cmds:
+            - mix deps.get
+            - mix test
 
-  regenerate:
-    desc: Regenerate test_apps/ via alef and re-sync versions
-    cmds:
-      - alef e2e generate --registry
-      - alef sync-versions
+    regenerate:
+        desc: Regenerate test_apps/ via alef and re-sync versions
+        cmds:
+            - alef e2e generate --registry
+            - alef sync-versions

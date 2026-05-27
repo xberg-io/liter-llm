@@ -932,7 +932,7 @@ pub const CustomProviderConfig = struct {
     base_url: []const u8,
     /// Authentication header format.
     auth_header: AuthHeaderFormat,
-    /// Model name prefixes that route to this provider (e.g., ["my-"]).
+    /// Model name prefixes that route to this provider (e.g., `["my-"]`).
     model_prefixes: []const []const u8,
 };
 

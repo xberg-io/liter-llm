@@ -1,88 +1,88 @@
 name: CI Rust
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - crates/**
-      - Cargo.toml
-      - Cargo.lock
-      - rustfmt.toml
-      - .task/**
-      - Taskfile.yml
-      - .github/workflows/ci-rust.yaml
-  pull_request:
-    branches: [main]
-    paths:
-      - crates/**
-      - Cargo.toml
-      - Cargo.lock
-      - rustfmt.toml
-      - .task/**
-      - Taskfile.yml
-      - .github/workflows/ci-rust.yaml
-  workflow_dispatch:
+    push:
+        branches: [main]
+        paths:
+            - crates/**
+            - Cargo.toml
+            - Cargo.lock
+            - rustfmt.toml
+            - .task/**
+            - Taskfile.yml
+            - .github/workflows/ci-rust.yaml
+    pull_request:
+        branches: [main]
+        paths:
+            - crates/**
+            - Cargo.toml
+            - Cargo.lock
+            - rustfmt.toml
+            - .task/**
+            - Taskfile.yml
+            - .github/workflows/ci-rust.yaml
+    workflow_dispatch:
 
 concurrency:
-  group: ci-rust-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+    group: ci-rust-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
 
 env:
-  CARGO_TERM_COLOR: always
-  CARGO_INCREMENTAL: 0
-  CARGO_PROFILE_DEV_DEBUG: 0
-  RUST_BACKTRACE: short
-  BUILD_PROFILE: ci
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+    CARGO_TERM_COLOR: always
+    CARGO_INCREMENTAL: 0
+    CARGO_PROFILE_DEV_DEBUG: 0
+    RUST_BACKTRACE: short
+    BUILD_PROFILE: ci
+    FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 permissions:
-  contents: read
+    contents: read
 
 jobs:
-  rust:
-    name: Rust (${{ matrix.os }})
-    if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-24.04-arm
-          - os: macos-latest
-    steps:
-      - uses: actions/checkout@v6
+    rust:
+        name: Rust (${{ matrix.os }})
+        if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
+        runs-on: ${{ matrix.os }}
+        timeout-minutes: 60
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - os: ubuntu-24.04-arm
+                    - os: macos-latest
+        steps:
+            - uses: actions/checkout@v6
 
-      - name: Free disk space
-        if: runner.os == 'Linux'
-        uses: kreuzberg-dev/actions/free-disk-space-linux@v1
-        with:
-          show-initial: "false"
-          show-final: "true"
+            - name: Free disk space
+              if: runner.os == 'Linux'
+              uses: kreuzberg-dev/actions/free-disk-space-linux@v1
+              with:
+                  show-initial: "false"
+                  show-final: "true"
 
-      - name: Setup Rust
-        uses: kreuzberg-dev/actions/setup-rust@v1
-        with:
-          cache-key-prefix: rust-${{ matrix.os }}
-          use-sccache: "true"
-          components: rustfmt, clippy, llvm-tools-preview
+            - name: Setup Rust
+              uses: kreuzberg-dev/actions/setup-rust@v1
+              with:
+                  cache-key-prefix: rust-${{ matrix.os }}
+                  use-sccache: "true"
+                  components: rustfmt, clippy, llvm-tools-preview
 
-      - name: Setup PHP (required by ext-php-rs build script)
-        uses: kreuzberg-dev/actions/setup-php@v1
+            - name: Setup PHP (required by ext-php-rs build script)
+              uses: kreuzberg-dev/actions/setup-php@v1
 
-      - name: Install Task
-        uses: kreuzberg-dev/actions/install-task@v1
+            - name: Install Task
+              uses: kreuzberg-dev/actions/install-task@v1
 
-      - name: Run Rust tests
-        run: task rust:test
-        shell: bash
+            - name: Run Rust tests
+              run: task rust:test
+              shell: bash
 
-      - name: Run clippy (Linux only)
-        if: runner.os == 'Linux'
-        run: task rust:lint:check
-        shell: bash
+            - name: Run clippy (Linux only)
+              if: runner.os == 'Linux'
+              run: task rust:lint:check
+              shell: bash
 
-      - name: Check Rust formatting (Linux only)
-        if: runner.os == 'Linux'
-        run: task rust:format:check
-        shell: bash
+            - name: Check Rust formatting (Linux only)
+              if: runner.os == 'Linux'
+              run: task rust:format:check
+              shell: bash

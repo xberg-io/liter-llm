@@ -1,84 +1,84 @@
 version: "3"
 
 tasks:
-  deps:
-    desc: Install Elixir dependencies
-    dir: packages/elixir
-    cmds:
-      - mix deps.get
+    deps:
+        desc: Install Elixir dependencies
+        dir: packages/elixir
+        cmds:
+            - mix deps.get
 
-  build:
-    desc: Compile Elixir project (includes Rustler NIF)
-    dir: packages/elixir
-    env:
-      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
-      LITER_LLM_BUILD: "1"
-    cmds:
-      - mix compile
+    build:
+        desc: Compile Elixir project (includes Rustler NIF)
+        dir: packages/elixir
+        env:
+            PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+            LITER_LLM_BUILD: "1"
+        cmds:
+            - mix compile
 
-  test:
-    desc: Run Elixir tests
-    dir: packages/elixir
-    env:
-      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
-      MIX_ENV: test
-      LITER_LLM_BUILD: "1"
-    cmds:
-      - mix test
+    test:
+        desc: Run Elixir tests
+        dir: packages/elixir
+        env:
+            PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+            MIX_ENV: test
+            LITER_LLM_BUILD: "1"
+        cmds:
+            - mix test
 
-  format:
-    desc: Format Elixir code
-    dir: packages/elixir
-    cmds:
-      - mix format
+    format:
+        desc: Format Elixir code
+        dir: packages/elixir
+        cmds:
+            - mix format
 
-  format:check:
-    desc: Check Elixir formatting (CI)
-    dir: packages/elixir
-    cmds:
-      - mix format --check-formatted
+    format:check:
+        desc: Check Elixir formatting (CI)
+        dir: packages/elixir
+        cmds:
+            - mix format --check-formatted
 
-  lint:
-    desc: Lint Elixir code (credo, requires NIF built first)
-    dir: packages/elixir
-    env:
-      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
-    cmds:
-      - mix credo --strict
+    lint:
+        desc: Lint Elixir code (credo, requires NIF built first)
+        dir: packages/elixir
+        env:
+            PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+        cmds:
+            - mix credo --strict
 
-  lint:check:
-    desc: Check Elixir linting without modifications (CI)
-    dir: packages/elixir
-    env:
-      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
-    cmds:
-      - mix credo --strict
+    lint:check:
+        desc: Check Elixir linting without modifications (CI)
+        dir: packages/elixir
+        env:
+            PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+        cmds:
+            - mix credo --strict
 
-  update:
-    desc: Update Elixir dependencies to latest versions
-    dir: packages/elixir
-    cmds:
-      - echo "Updating Elixir dependencies to latest versions..."
-      - cmd: echo "Note - Elixir requires manual mix.exs edits for major version updates"
-      - mix hex.outdated || true
-      - mix deps.update --all
-      - echo "Checking remaining outdated dependencies..."
-      - mix hex.outdated || true
+    update:
+        desc: Update Elixir dependencies to latest versions
+        dir: packages/elixir
+        cmds:
+            - echo "Updating Elixir dependencies to latest versions..."
+            - cmd: echo "Note - Elixir requires manual mix.exs edits for major version updates"
+            - mix hex.outdated || true
+            - mix deps.update --all
+            - echo "Checking remaining outdated dependencies..."
+            - mix hex.outdated || true
 
-  clean:
-    desc: Clean Elixir build artifacts
-    dir: packages/elixir
-    cmds:
-      - mix clean
+    clean:
+        desc: Clean Elixir build artifacts
+        dir: packages/elixir
+        cmds:
+            - mix clean
 
-  e2e:generate:
-    desc: Generate Elixir E2E tests from fixtures
-    env:
-      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
-    cmds:
-      - alef e2e generate --lang elixir
+    e2e:generate:
+        desc: Generate Elixir E2E tests from fixtures
+        env:
+            PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+        cmds:
+            - alef e2e generate --lang elixir
 
-  e2e:test:
-    desc: Run Elixir E2E tests using Alef-configured test commands
-    cmds:
-      - alef test --lang elixir --e2e
+    e2e:test:
+        desc: Run Elixir E2E tests using Alef-configured test commands
+        cmds:
+            - alef test --lang elixir --e2e

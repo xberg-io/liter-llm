@@ -1,180 +1,180 @@
 name: Publish Docker Images
 
 on:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Release tag to build (e.g., v1.1.0)"
-        required: true
-        type: string
-      dry_run:
-        description: "Build without pushing"
-        required: false
-        type: boolean
-        default: false
-      ref:
-        description: "Git ref to build (defaults to the tag)"
-        required: false
-        type: string
-      force_republish:
-        description: "Force re-publish even if image already exists"
-        required: false
-        type: boolean
-        default: false
-  release:
-    types: [published]
-  repository_dispatch:
-    types: [publish-docker]
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: "Release tag to build (e.g., v1.1.0)"
+                required: true
+                type: string
+            dry_run:
+                description: "Build without pushing"
+                required: false
+                type: boolean
+                default: false
+            ref:
+                description: "Git ref to build (defaults to the tag)"
+                required: false
+                type: string
+            force_republish:
+                description: "Force re-publish even if image already exists"
+                required: false
+                type: boolean
+                default: false
+    release:
+        types: [published]
+    repository_dispatch:
+        types: [publish-docker]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ (github.event_name == 'workflow_dispatch' && (github.event.inputs.ref || github.event.inputs.tag)) || github.ref || github.run_id }}
-  cancel-in-progress: false
+    group: ${{ github.workflow }}-${{ (github.event_name == 'workflow_dispatch' && (github.event.inputs.ref || github.event.inputs.tag)) || github.ref || github.run_id }}
+    cancel-in-progress: false
 
 permissions:
-  contents: read
+    contents: read
 
 jobs:
-  prepare:
-    name: Prepare metadata
-    if: ${{ github.event_name != 'release' || !github.event.release.prerelease }}
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-      tag: ${{ steps.version.outputs.tag }}
-      should_publish: ${{ steps.check.outputs.should_publish }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
+    prepare:
+        name: Prepare metadata
+        if: ${{ github.event_name != 'release' || !github.event.release.prerelease }}
+        runs-on: ubuntu-latest
+        outputs:
+            version: ${{ steps.version.outputs.version }}
+            tag: ${{ steps.version.outputs.tag }}
+            should_publish: ${{ steps.check.outputs.should_publish }}
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
 
-      - name: Determine version
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" = "release" ]; then
-            TAG="${{ github.event.release.tag_name }}"
-          elif [ "${{ github.event_name }}" = "repository_dispatch" ]; then
-            TAG="${{ github.event.client_payload.tag }}"
-          else
-            TAG="${{ inputs.tag }}"
-          fi
-          VERSION="${TAG#v}"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Version: $VERSION (tag: $TAG)"
+            - name: Determine version
+              id: version
+              run: |
+                  if [ "${{ github.event_name }}" = "release" ]; then
+                    TAG="${{ github.event.release.tag_name }}"
+                  elif [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+                    TAG="${{ github.event.client_payload.tag }}"
+                  else
+                    TAG="${{ inputs.tag }}"
+                  fi
+                  VERSION="${TAG#v}"
+                  echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+                  echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+                  echo "Version: $VERSION (tag: $TAG)"
 
-      - name: Check if image exists
-        id: check
-        run: |
-          TAG="${{ steps.version.outputs.tag }}"
-          if [ "${{ inputs.force_republish }}" = "true" ]; then
-            echo "should_publish=true" >> "$GITHUB_OUTPUT"
-            echo "Force republish requested"
-          elif docker manifest inspect ghcr.io/kreuzberg-dev/liter-llm:$TAG > /dev/null 2>&1; then
-            echo "should_publish=false" >> "$GITHUB_OUTPUT"
-            echo "Image already exists for $TAG"
-          else
-            echo "should_publish=true" >> "$GITHUB_OUTPUT"
-            echo "Image does not exist for $TAG, will publish"
-          fi
+            - name: Check if image exists
+              id: check
+              run: |
+                  TAG="${{ steps.version.outputs.tag }}"
+                  if [ "${{ inputs.force_republish }}" = "true" ]; then
+                    echo "should_publish=true" >> "$GITHUB_OUTPUT"
+                    echo "Force republish requested"
+                  elif docker manifest inspect ghcr.io/kreuzberg-dev/liter-llm:$TAG > /dev/null 2>&1; then
+                    echo "should_publish=false" >> "$GITHUB_OUTPUT"
+                    echo "Image already exists for $TAG"
+                  else
+                    echo "should_publish=true" >> "$GITHUB_OUTPUT"
+                    echo "Image does not exist for $TAG, will publish"
+                  fi
 
-  publish:
-    name: Build and push
-    needs: prepare
-    if: needs.prepare.outputs.should_publish == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
+    publish:
+        name: Build and push
+        needs: prepare
+        if: needs.prepare.outputs.should_publish == 'true'
+        runs-on: ubuntu-latest
+        timeout-minutes: 360
+        permissions:
+            contents: read
+            packages: write
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v4
 
-      - name: Set up QEMU (multi-arch)
-        uses: docker/setup-qemu-action@v4
+            - name: Set up QEMU (multi-arch)
+              uses: docker/setup-qemu-action@v4
 
-      - name: Log in to GHCR
-        if: ${{ !inputs.dry_run }}
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+            - name: Log in to GHCR
+              if: ${{ !inputs.dry_run }}
+              uses: docker/login-action@v4
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build test image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: docker/Dockerfile
-          platforms: linux/amd64
-          push: false
-          load: true
-          tags: liter-llm-test:${{ needs.prepare.outputs.tag }}
-          cache-from: type=gha
+            - name: Build test image
+              uses: docker/build-push-action@v7
+              with:
+                  context: .
+                  file: docker/Dockerfile
+                  platforms: linux/amd64
+                  push: false
+                  load: true
+                  tags: liter-llm-test:${{ needs.prepare.outputs.tag }}
+                  cache-from: type=gha
 
-      - name: Functional smoke test
-        run: |
-          # Start the container in the background
-          docker run --detach --name liter-llm-smoke --publish 4000:4000 liter-llm-test:${{ needs.prepare.outputs.tag }}
+            - name: Functional smoke test
+              run: |
+                  # Start the container in the background
+                  docker run --detach --name liter-llm-smoke --publish 4000:4000 liter-llm-test:${{ needs.prepare.outputs.tag }}
 
-          # Wait for the API to be ready (up to 30 seconds)
-          for i in {1..30}; do
-            if curl -s http://localhost:4000/health > /dev/null 2>&1; then
-              echo "API is ready"
-              break
-            fi
-            echo "Waiting for API to be ready... ($i/30)"
-            sleep 1
-          done
+                  # Wait for the API to be ready (up to 30 seconds)
+                  for i in {1..30}; do
+                    if curl -s http://localhost:4000/health > /dev/null 2>&1; then
+                      echo "API is ready"
+                      break
+                    fi
+                    echo "Waiting for API to be ready... ($i/30)"
+                    sleep 1
+                  done
 
-          # Verify the API responds
-          response=$(curl -s http://localhost:4000/health)
-          echo "API response: $response"
+                  # Verify the API responds
+                  response=$(curl -s http://localhost:4000/health)
+                  echo "API response: $response"
 
-          # Check response is valid JSON
-          if echo "$response" | jq . > /dev/null 2>&1; then
-            echo "Smoke test passed: API is functional"
-          else
-            echo "Smoke test failed: API returned invalid response"
-            docker logs liter-llm-smoke
-            exit 1
-          fi
+                  # Check response is valid JSON
+                  if echo "$response" | jq . > /dev/null 2>&1; then
+                    echo "Smoke test passed: API is functional"
+                  else
+                    echo "Smoke test failed: API returned invalid response"
+                    docker logs liter-llm-smoke
+                    exit 1
+                  fi
 
-          # Clean up
-          docker stop liter-llm-smoke
-          docker rm liter-llm-smoke
-        shell: bash
+                  # Clean up
+                  docker stop liter-llm-smoke
+                  docker rm liter-llm-smoke
+              shell: bash
 
-      - name: Build and push
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: docker/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: ${{ !inputs.dry_run }}
-          tags: |
-            ghcr.io/kreuzberg-dev/liter-llm:${{ needs.prepare.outputs.tag }}
-            ghcr.io/kreuzberg-dev/liter-llm:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max,scope=publish-docker
-          labels: |
-            org.opencontainers.image.source=https://github.com/kreuzberg-dev/liter-llm
-            org.opencontainers.image.version=${{ needs.prepare.outputs.version }}
-            org.opencontainers.image.description=LiterLLM — OpenAI-compatible LLM proxy server
-            org.opencontainers.image.licenses=MIT
+            - name: Build and push
+              uses: docker/build-push-action@v7
+              with:
+                  context: .
+                  file: docker/Dockerfile
+                  platforms: linux/amd64,linux/arm64
+                  push: ${{ !inputs.dry_run }}
+                  tags: |
+                      ghcr.io/kreuzberg-dev/liter-llm:${{ needs.prepare.outputs.tag }}
+                      ghcr.io/kreuzberg-dev/liter-llm:latest
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max,scope=publish-docker
+                  labels: |
+                      org.opencontainers.image.source=https://github.com/kreuzberg-dev/liter-llm
+                      org.opencontainers.image.version=${{ needs.prepare.outputs.version }}
+                      org.opencontainers.image.description=LiterLLM — OpenAI-compatible LLM proxy server
+                      org.opencontainers.image.licenses=MIT
 
-      - name: Pull published image for size check
-        if: ${{ !inputs.dry_run }}
-        run: docker pull ghcr.io/kreuzberg-dev/liter-llm:${{ needs.prepare.outputs.tag }}
-        shell: bash
+            - name: Pull published image for size check
+              if: ${{ !inputs.dry_run }}
+              run: docker pull ghcr.io/kreuzberg-dev/liter-llm:${{ needs.prepare.outputs.tag }}
+              shell: bash
 
-      - name: Check image size
-        if: ${{ !inputs.dry_run }}
-        uses: kreuzberg-dev/actions/check-docker-image-size@v1
-        with:
-          image: ghcr.io/kreuzberg-dev/liter-llm:${{ needs.prepare.outputs.tag }}
-          label: liter-llm published
+            - name: Check image size
+              if: ${{ !inputs.dry_run }}
+              uses: kreuzberg-dev/actions/check-docker-image-size@v1
+              with:
+                  image: ghcr.io/kreuzberg-dev/liter-llm:${{ needs.prepare.outputs.tag }}
+                  label: liter-llm published

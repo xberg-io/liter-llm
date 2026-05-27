@@ -1,57 +1,57 @@
 version: "3"
 
 tasks:
-  build:
-    desc: Build documentation
-    cmds:
-      - uv run --no-sync --group docs zensical build --clean
+    build:
+        desc: Build documentation
+        cmds:
+            - uv run --no-sync --group docs zensical build --clean
 
-  build:strict:
-    desc: Build documentation in strict mode (CI-equivalent)
-    cmds:
-      - uv run --no-sync --group docs zensical build --strict --clean
+    build:strict:
+        desc: Build documentation in strict mode (CI-equivalent)
+        cmds:
+            - uv run --no-sync --group docs zensical build --strict --clean
 
-  serve:
-    desc: Serve documentation locally with live reload
-    cmds:
-      - uv run --no-sync --group docs zensical serve
+    serve:
+        desc: Serve documentation locally with live reload
+        cmds:
+            - uv run --no-sync --group docs zensical serve
 
-  lint:links:
-    desc: Check links with lychee
-    cmds:
-      - lychee --offline --root-dir "$PWD/docs" --exclude-path "docs/overrides" docs/ README.md
+    lint:links:
+        desc: Check links with lychee
+        cmds:
+            - lychee --offline --root-dir "$PWD/docs" --exclude-path "docs/overrides" docs/ README.md
 
-  lint:prose:
-    desc: Lint prose with textlint
-    cmds:
-      - npx textlint 'docs/**/*.md'
+    lint:prose:
+        desc: Lint prose with textlint
+        cmds:
+            - npx textlint 'docs/**/*.md'
 
-  snippets:list:
-    desc: List all documentation snippets discovered under docs/snippets
-    cmds:
-      - alef snippets list --snippets docs/snippets
+    snippets:list:
+        desc: List all documentation snippets discovered under docs/snippets
+        cmds:
+            - alef snippets list --snippets docs/snippets
 
-  snippets:gaps:
-    desc: Report snippet coverage gaps (missing variants, unreferenced files, etc.)
-    cmds:
-      - alef snippets gaps --snippets docs/snippets --docs docs --required-languages rust,python,typescript,go,ruby,php,java,csharp,elixir,c,swift,dart,kotlin,zig
+    snippets:gaps:
+        desc: Report snippet coverage gaps (missing variants, unreferenced files, etc.)
+        cmds:
+            - alef snippets gaps --snippets docs/snippets --docs docs --required-languages rust,python,typescript,go,ruby,php,java,csharp,elixir,c,swift,dart,kotlin,zig
 
-  snippets:audit:
-    desc: Run structural audit (frontmatter, fences, includes)
-    cmds:
-      - alef snippets audit --snippets docs/snippets --docs docs
+    snippets:audit:
+        desc: Run structural audit (frontmatter, fences, includes)
+        cmds:
+            - alef snippets audit --snippets docs/snippets --docs docs
 
-  snippets:validate:
-    desc: Validate every snippet at syntax level (alias of snippets:validate:syntax for ../actions/lint-docs)
-    cmds:
-      - task: snippets:validate:syntax
+    snippets:validate:
+        desc: Validate every snippet at syntax level (alias of snippets:validate:syntax for ../actions/lint-docs)
+        cmds:
+            - task: snippets:validate:syntax
 
-  snippets:validate:syntax:
-    desc: Validate every snippet at syntax level
-    cmds:
-      - alef snippets validate --snippets docs/snippets --level syntax --timeout 120
+    snippets:validate:syntax:
+        desc: Validate every snippet at syntax level
+        cmds:
+            - alef snippets validate --snippets docs/snippets --level syntax --timeout 120
 
-  snippets:validate:compile:
-    desc: Validate every snippet at compile level
-    cmds:
-      - alef snippets validate --snippets docs/snippets --level compile --timeout 300
+    snippets:validate:compile:
+        desc: Validate every snippet at compile level
+        cmds:
+            - alef snippets validate --snippets docs/snippets --level compile --timeout 300

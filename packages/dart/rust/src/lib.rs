@@ -999,7 +999,7 @@ pub struct CustomProviderConfig {
     pub base_url: String,
     /// Authentication header format.
     pub auth_header: AuthHeaderFormat,
-    /// Model name prefixes that route to this provider (e.g., ["my-"]).
+    /// Model name prefixes that route to this provider (e.g., `["my-"]`).
     pub model_prefixes: Vec<String>,
 }
 

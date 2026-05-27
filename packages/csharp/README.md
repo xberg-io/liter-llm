@@ -1,102 +1,75 @@
 # C\#
 
-<div
-  align="center"
-  style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0"
->
-  <!-- Built with -->
-  <a href="https://github.com/kreuzberg-dev/alef">
-    <img src="https://img.shields.io/badge/Bindings-alef%20%D7%90-007ec6" alt="Bindings" />
-  </a>
-  <!-- Language Bindings -->
-  <a href="https://crates.io/crates/liter-llm">
-    <img src="https://img.shields.io/crates/v/liter-llm?label=Rust&color=007ec6" alt="Rust" />
-  </a>
-  <a href="https://pypi.org/project/liter-llm/">
-    <img src="https://img.shields.io/pypi/v/liter-llm?label=Python&color=007ec6" alt="Python" />
-  </a>
-  <a href="https://www.npmjs.com/package/@kreuzberg/liter-llm">
-    <img
-      src="https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=Node.js&color=007ec6"
-      alt="Node.js"
-    />
-  </a>
-  <a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-wasm">
-    <img
-      src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6"
-      alt="WASM"
-    />
-  </a>
-  <a href="https://central.sonatype.com/artifact/dev.kreuzberg/liter-llm">
-    <img
-      src="https://img.shields.io/maven-central/v/dev.kreuzberg/liter-llm?label=Java&color=007ec6"
-      alt="Java"
-    />
-  </a>
-  <a href="https://github.com/kreuzberg-dev/liter-llm/tree/main/packages/go">
-    <img
-      src="https://img.shields.io/github/v/tag/kreuzberg-dev/liter-llm?label=Go&color=007ec6"
-      alt="Go"
-    />
-  </a>
-  <a href="https://www.nuget.org/packages/LiterLlm">
-    <img src="https://img.shields.io/nuget/v/LiterLlm?label=C%23&color=007ec6" alt="C#" />
-  </a>
-  <a href="https://packagist.org/packages/kreuzberg/liter-llm">
-    <img
-      src="https://img.shields.io/packagist/v/kreuzberg/liter-llm?label=PHP&color=007ec6"
-      alt="PHP"
-    />
-  </a>
-  <a href="https://rubygems.org/gems/liter_llm">
-    <img src="https://img.shields.io/gem/v/liter_llm?label=Ruby&color=007ec6" alt="Ruby" />
-  </a>
-  <a href="https://hex.pm/packages/liter_llm">
-    <img src="https://img.shields.io/hexpm/v/liter_llm?label=Elixir&color=007ec6" alt="Elixir" />
-  </a>
-  <a href="https://github.com/kreuzberg-dev/liter-llm/pkgs/container/liter-llm">
-    <img
-      src="https://img.shields.io/badge/Docker-007ec6?logo=docker&logoColor=white"
-      alt="Docker"
-    />
-  </a>
-  <a href="https://github.com/kreuzberg-dev/homebrew-tap/blob/main/Formula/liter-llm.rb">
-    <img
-      src="https://img.shields.io/badge/Homebrew-007ec6?logo=homebrew&logoColor=white"
-      alt="Homebrew"
-    />
-  </a>
-  <a href="https://github.com/kreuzberg-dev/liter-llm/tree/main/crates/liter-llm-ffi">
-    <img src="https://img.shields.io/badge/C-FFI-007ec6" alt="C FFI" />
-  </a>
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0">
+	<!-- Built with -->
+	<a href="https://github.com/kreuzberg-dev/alef">
+		<img src="https://img.shields.io/badge/Bindings-alef%20%D7%90-007ec6" alt="Bindings" />
+	</a>
+	<!-- Language Bindings -->
+	<a href="https://crates.io/crates/liter-llm">
+		<img src="https://img.shields.io/crates/v/liter-llm?label=Rust&color=007ec6" alt="Rust" />
+	</a>
+	<a href="https://pypi.org/project/liter-llm/">
+		<img src="https://img.shields.io/pypi/v/liter-llm?label=Python&color=007ec6" alt="Python" />
+	</a>
+	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm">
+		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=Node.js&color=007ec6" alt="Node.js" />
+	</a>
+	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-wasm">
+		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6" alt="WASM" />
+	</a>
+	<a href="https://central.sonatype.com/artifact/dev.kreuzberg/liter-llm">
+		<img src="https://img.shields.io/maven-central/v/dev.kreuzberg/liter-llm?label=Java&color=007ec6" alt="Java" />
+	</a>
+	<a href="https://github.com/kreuzberg-dev/liter-llm/tree/main/packages/go">
+		<img src="https://img.shields.io/github/v/tag/kreuzberg-dev/liter-llm?label=Go&color=007ec6" alt="Go" />
+	</a>
+	<a href="https://www.nuget.org/packages/LiterLlm">
+		<img src="https://img.shields.io/nuget/v/LiterLlm?label=C%23&color=007ec6" alt="C#" />
+	</a>
+	<a href="https://packagist.org/packages/kreuzberg/liter-llm">
+		<img src="https://img.shields.io/packagist/v/kreuzberg/liter-llm?label=PHP&color=007ec6" alt="PHP" />
+	</a>
+	<a href="https://rubygems.org/gems/liter_llm">
+		<img src="https://img.shields.io/gem/v/liter_llm?label=Ruby&color=007ec6" alt="Ruby" />
+	</a>
+	<a href="https://hex.pm/packages/liter_llm">
+		<img src="https://img.shields.io/hexpm/v/liter_llm?label=Elixir&color=007ec6" alt="Elixir" />
+	</a>
+	<a href="https://github.com/kreuzberg-dev/liter-llm/pkgs/container/liter-llm">
+		<img src="https://img.shields.io/badge/Docker-007ec6?logo=docker&logoColor=white" alt="Docker" />
+	</a>
+	<a href="https://github.com/kreuzberg-dev/homebrew-tap/blob/main/Formula/liter-llm.rb">
+		<img src="https://img.shields.io/badge/Homebrew-007ec6?logo=homebrew&logoColor=white" alt="Homebrew" />
+	</a>
+	<a href="https://github.com/kreuzberg-dev/liter-llm/tree/main/crates/liter-llm-ffi">
+		<img src="https://img.shields.io/badge/C-FFI-007ec6" alt="C FFI" />
+	</a>
 
-  <!-- Project Info -->
-  <a href="https://github.com/kreuzberg-dev/liter-llm/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-007ec6" alt="License" />
-  </a>
-  <a href="https://docs.liter-llm.kreuzberg.dev">
-    <img src="https://img.shields.io/badge/Docs-liter--llm-007ec6" alt="Docs" />
-  </a>
+	<!-- Project Info -->
+	<a href="https://github.com/kreuzberg-dev/liter-llm/blob/main/LICENSE">
+		<img src="https://img.shields.io/badge/License-MIT-007ec6" alt="License" />
+	</a>
+	<a href="https://docs.liter-llm.kreuzberg.dev">
+		<img src="https://img.shields.io/badge/Docs-liter--llm-007ec6" alt="Docs" />
+	</a>
 </div>
 <div align="center" style="margin: 24px 0 0">
-  <a href="https://kreuzberg.dev">
-    <img
-      alt="kreuzberg.dev"
-      src="https://github.com/user-attachments/assets/1b6c6ad7-3b6d-4171-b1c9-f2026cc9deb8"
-    />
-  </a>
+	<a href="https://kreuzberg.dev">
+		<img
+			alt="kreuzberg.dev"
+			src="https://github.com/user-attachments/assets/1b6c6ad7-3b6d-4171-b1c9-f2026cc9deb8"
+		/>
+	</a>
 </div>
-<div
-  align="center"
-  style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 28px 0 24px"
->
-  <a href="https://discord.gg/xt9WY3GnKR">
-    <img
-      height="22"
-      src="https://img.shields.io/badge/Discord-Chat-007ec6?logo=discord&logoColor=white"
-      alt="Join Discord"
-    />
-  </a>
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 28px 0 24px">
+	<a href="https://discord.gg/xt9WY3GnKR">
+		<img
+			height="22"
+			src="https://img.shields.io/badge/Discord-Chat-007ec6?logo=discord&logoColor=white"
+			alt="Join Discord"
+		/>
+	</a>
 </div>
 
 Universal LLM API client for .NET. Access 143+ LLM providers through a single type-safe interface with full async/await support and .NET 8.0+ compatibility.

@@ -1,76 +1,76 @@
 version: "3"
 
 tasks:
-  install:
-    desc: Install Python dependencies via uv
-    cmds:
-      - echo "Checking Python and uv..."
-      - python3 --version
-      - uv --version
-      - uv sync --no-install-project
+    install:
+        desc: Install Python dependencies via uv
+        cmds:
+            - echo "Checking Python and uv..."
+            - python3 --version
+            - uv --version
+            - uv sync --no-install-project
 
-  build:
-    desc: Build Python wheel via maturin (uv sync)
-    dir: packages/python
-    cmds:
-      - uv sync
+    build:
+        desc: Build Python wheel via maturin (uv sync)
+        dir: packages/python
+        cmds:
+            - uv sync
 
-  format:
-    desc: Format Python code
-    cmds:
-      - uv run --no-sync ruff format
-      - uv run --no-sync ruff check --fix --unsafe-fixes
+    format:
+        desc: Format Python code
+        cmds:
+            - uv run --no-sync ruff format
+            - uv run --no-sync ruff check --fix --unsafe-fixes
 
-  format:check:
-    desc: Check Python formatting (CI)
-    cmds:
-      - uv run --no-sync ruff format --check
-      - uv run --no-sync ruff check
+    format:check:
+        desc: Check Python formatting (CI)
+        cmds:
+            - uv run --no-sync ruff format --check
+            - uv run --no-sync ruff check
 
-  lint:
-    desc: Lint Python code
-    cmds:
-      - uv run --no-sync ruff check --fix --unsafe-fixes
-      - uv run --no-sync ruff format
+    lint:
+        desc: Lint Python code
+        cmds:
+            - uv run --no-sync ruff check --fix --unsafe-fixes
+            - uv run --no-sync ruff format
 
-  lint:check:
-    desc: Check Python linting without modifications
-    cmds:
-      - uv run --no-sync ruff check
+    lint:check:
+        desc: Check Python linting without modifications
+        cmds:
+            - uv run --no-sync ruff check
 
-  clean:
-    desc: Clean Python build artifacts
-    cmds:
-      - rm -rf build/ dist/ *.egg-info __pycache__
+    clean:
+        desc: Clean Python build artifacts
+        cmds:
+            - rm -rf build/ dist/ *.egg-info __pycache__
 
-  update:
-    desc: Update Python dependencies to latest versions (including major versions)
-    cmds:
-      - echo "Updating Python dependencies to latest versions..."
-      - uv sync --all-packages --all-extras --upgrade --no-install-workspace --no-install-project
-      - echo "Checking remaining outdated dependencies..."
-      - uv pip list --outdated || true
+    update:
+        desc: Update Python dependencies to latest versions (including major versions)
+        cmds:
+            - echo "Updating Python dependencies to latest versions..."
+            - uv sync --all-packages --all-extras --upgrade --no-install-workspace --no-install-project
+            - echo "Checking remaining outdated dependencies..."
+            - uv pip list --outdated || true
 
-  e2e:generate:
-    desc: Generate Python E2E tests from fixtures
-    env:
-      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
-    cmds:
-      - alef e2e generate --lang python
+    e2e:generate:
+        desc: Generate Python E2E tests from fixtures
+        env:
+            PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+        cmds:
+            - alef e2e generate --lang python
 
-  e2e:lint:
-    desc: Lint Python bindings using Alef-configured lint commands
-    cmds:
-      - alef lint --lang python
+    e2e:lint:
+        desc: Lint Python bindings using Alef-configured lint commands
+        cmds:
+            - alef lint --lang python
 
-  e2e:test:
-    desc: Run Python E2E tests using Alef-configured test commands
-    cmds:
-      - alef test --lang python --e2e
+    e2e:test:
+        desc: Run Python E2E tests using Alef-configured test commands
+        cmds:
+            - alef test --lang python --e2e
 
-  e2e:verify:
-    desc: Regenerate and validate Python E2E suite (generate + lint + test)
-    cmds:
-      - task: e2e:generate
-      - task: e2e:lint
-      - task: e2e:test
+    e2e:verify:
+        desc: Regenerate and validate Python E2E suite (generate + lint + test)
+        cmds:
+            - task: e2e:generate
+            - task: e2e:lint
+            - task: e2e:test

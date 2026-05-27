@@ -1,14 +1,14 @@
 {
-  "name": "@kreuzberg/liter-llm-wasm-e2e-wasm",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "test": "vitest run"
-  },
-  "devDependencies": {
-    "@kreuzberg/liter-llm-wasm": "1.4.0-rc.34",
-    "rollup": "^4.53.3",
-    "vitest": "^4.1.5"
-  }
+	"name": "@kreuzberg/liter-llm-wasm-e2e-wasm",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"test": "vitest run"
+	},
+	"devDependencies": {
+		"@kreuzberg/liter-llm-wasm": "1.4.0-rc.34",
+		"rollup": "^4.53.3",
+		"vitest": "^4.1.5"
+	}
 }

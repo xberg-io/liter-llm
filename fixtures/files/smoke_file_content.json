@@ -1,31 +1,31 @@
 {
-  "id": "smoke_file_content",
-  "description": "Retrieve the content of an uploaded file",
-  "category": "files",
-  "tags": ["smoke", "files"],
-  "skip": {
-    "languages": ["wasm"],
-    "reason": "WASM: codegen asserts .content on a Uint8Array return value, which is undefined and the binary mock response is not handled"
-  },
-  "call": "file_content",
-  "input": {
-    "file_id": "file-abc123"
-  },
-  "mock_response": {
-    "status": 200,
-    "body": {
-      "_binary": true,
-      "_content_type": "application/octet-stream",
-      "_description": "Mock file content bytes"
-    }
-  },
-  "assertions": [
-    {
-      "type": "not_error"
-    },
-    {
-      "type": "not_empty",
-      "field": "content"
-    }
-  ]
+	"id": "smoke_file_content",
+	"description": "Retrieve the content of an uploaded file",
+	"category": "files",
+	"tags": ["smoke", "files"],
+	"skip": {
+		"languages": ["wasm"],
+		"reason": "WASM: codegen asserts .content on a Uint8Array return value, which is undefined and the binary mock response is not handled"
+	},
+	"call": "file_content",
+	"input": {
+		"file_id": "file-abc123"
+	},
+	"mock_response": {
+		"status": 200,
+		"body": {
+			"_binary": true,
+			"_content_type": "application/octet-stream",
+			"_description": "Mock file content bytes"
+		}
+	},
+	"assertions": [
+		{
+			"type": "not_error"
+		},
+		{
+			"type": "not_empty",
+			"field": "content"
+		}
+	]
 }

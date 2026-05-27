@@ -6,16 +6,16 @@
 #     `liter_llm` package which may not exist locally during prek runs.
 #   - packages/dart/   — has its own per-package analysis_options.yaml.
 analyzer:
-  exclude:
-    - test_apps/**
-    - packages/dart/lib/src/frb/**
-    - packages/dart/lib/src/liter_llm_bridge_generated/**
-    - packages/dart/example/**
-    - packages/dart/lib/src/traits.dart
-  errors:
-    # alef-e2e dart codegen emits `result.choices[0].message.toolCalls[0]`
-    # without a `!` unwrap on the nullable `toolCalls` list. Tracked as an
-    # alef codegen bug — downgrade to warning until field_to_dart_accessor
-    # is wired through the assertion emitter for chained `.list[N]` accesses
-    # on optional collections.
-    unchecked_use_of_nullable_value: ignore
+    exclude:
+        - test_apps/**
+        - packages/dart/lib/src/frb/**
+        - packages/dart/lib/src/liter_llm_bridge_generated/**
+        - packages/dart/example/**
+        - packages/dart/lib/src/traits.dart
+    errors:
+        # alef-e2e dart codegen emits `result.choices[0].message.toolCalls[0]`
+        # without a `!` unwrap on the nullable `toolCalls` list. Tracked as an
+        # alef codegen bug — downgrade to warning until field_to_dart_accessor
+        # is wired through the assertion emitter for chained `.list[N]` accesses
+        # on optional collections.
+        unchecked_use_of_nullable_value: ignore

@@ -2442,7 +2442,7 @@ public struct CustomProviderConfig: Codable, Sendable, Hashable {
     public let baseUrl: String
     /// Authentication header format.
     public let authHeader: AuthHeaderFormat
-    /// Model name prefixes that route to this provider (e.g., ["my-"]).
+    /// Model name prefixes that route to this provider (e.g., `["my-"]`).
     public let modelPrefixes: [String]
     public init(name: String, baseUrl: String, authHeader: AuthHeaderFormat, modelPrefixes: [String]) {
         self.name = name

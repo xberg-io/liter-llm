@@ -6,9 +6,7 @@
     .dependencies = .{
         .liter_llm = .{
             .url = "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.34/liter-llm-zig-v1.4.0-rc.34.tar.gz",
-            // alef: hash not pinned — run `zig fetch --save https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.34/liter-llm-zig-v1.4.0-rc.34.tar.gz` once to populate,
-            //       then set `hash` under [crates.e2e.registry.packages.zig] in alef.toml.
-            .hash = "TODO",
+            .hash = "liter_llm-1.4.0-rc.34-Jfgk_DAsAQC4KHHbsxxkut8eH7-J8CZ6RDRm83r8k_i9",
         },
     },
     .paths = .{

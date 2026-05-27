@@ -1,84 +1,84 @@
 version: "3"
 
 vars:
-  WASM_DIR: "{{.PROJECT_ROOT}}/crates/liter-llm-wasm"
-  # Homebrew LLVM clang supports wasm32 target; system clang on macOS does not
-  WASM_CC: '{{.WASM_CC | default "/opt/homebrew/opt/llvm/bin/clang"}}'
-  WASM_SYSROOT: '{{.WASM_SYSROOT | default "/opt/homebrew/share/wasi-sysroot"}}'
+    WASM_DIR: "{{.PROJECT_ROOT}}/crates/liter-llm-wasm"
+    # Homebrew LLVM clang supports wasm32 target; system clang on macOS does not
+    WASM_CC: '{{.WASM_CC | default "/opt/homebrew/opt/llvm/bin/clang"}}'
+    WASM_SYSROOT: '{{.WASM_SYSROOT | default "/opt/homebrew/share/wasi-sysroot"}}'
 
 tasks:
-  deps:
-    desc: Install WASM build tools
-    cmds:
-      - rustup target add wasm32-unknown-unknown
-      - which wasm-pack || cargo install wasm-pack
-      - brew list wasi-libc >/dev/null 2>&1 || brew install wasi-libc
-      - brew list llvm >/dev/null 2>&1 || brew install llvm
+    deps:
+        desc: Install WASM build tools
+        cmds:
+            - rustup target add wasm32-unknown-unknown
+            - which wasm-pack || cargo install wasm-pack
+            - brew list wasi-libc >/dev/null 2>&1 || brew install wasi-libc
+            - brew list llvm >/dev/null 2>&1 || brew install llvm
 
-  build:
-    desc: Build WASM package (web target)
-    env:
-      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
-      CC_wasm32_unknown_unknown: "{{.WASM_CC}}"
-      WASI_SYSROOT: "{{.WASM_SYSROOT}}"
-    cmds:
-      - wasm-pack build "{{.WASM_DIR}}" --target web --release
+    build:
+        desc: Build WASM package (web target)
+        env:
+            PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+            CC_wasm32_unknown_unknown: "{{.WASM_CC}}"
+            WASI_SYSROOT: "{{.WASM_SYSROOT}}"
+        cmds:
+            - wasm-pack build "{{.WASM_DIR}}" --target web --release
 
-  build:bundler:
-    desc: Build WASM package (bundler target)
-    env:
-      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
-      CC_wasm32_unknown_unknown: "{{.WASM_CC}}"
-      WASI_SYSROOT: "{{.WASM_SYSROOT}}"
-    cmds:
-      - wasm-pack build "{{.WASM_DIR}}" --target bundler --release
+    build:bundler:
+        desc: Build WASM package (bundler target)
+        env:
+            PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+            CC_wasm32_unknown_unknown: "{{.WASM_CC}}"
+            WASI_SYSROOT: "{{.WASM_SYSROOT}}"
+        cmds:
+            - wasm-pack build "{{.WASM_DIR}}" --target bundler --release
 
-  build:node:
-    desc: Build WASM package (Node.js target → pkg/nodejs/)
-    env:
-      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
-      CC_wasm32_unknown_unknown: "{{.WASM_CC}}"
-      WASI_SYSROOT: "{{.WASM_SYSROOT}}"
-    cmds:
-      - wasm-pack build "{{.WASM_DIR}}" --target nodejs --release --out-dir pkg/nodejs
+    build:node:
+        desc: Build WASM package (Node.js target → pkg/nodejs/)
+        env:
+            PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+            CC_wasm32_unknown_unknown: "{{.WASM_CC}}"
+            WASI_SYSROOT: "{{.WASM_SYSROOT}}"
+        cmds:
+            - wasm-pack build "{{.WASM_DIR}}" --target nodejs --release --out-dir pkg/nodejs
 
-  build:nodejs:
-    desc: Alias for build:node — produces a Node.js (CJS, self-initializing) pkg/ artifact
-    cmds:
-      - task: build:node
+    build:nodejs:
+        desc: Alias for build:node — produces a Node.js (CJS, self-initializing) pkg/ artifact
+        cmds:
+            - task: build:node
 
-  test:
-    desc: Run WASM tests
-    dir: "{{.WASM_DIR}}"
-    cmds:
-      - wasm-pack test --headless --firefox
+    test:
+        desc: Run WASM tests
+        dir: "{{.WASM_DIR}}"
+        cmds:
+            - wasm-pack test --headless --firefox
 
-  clean:
-    desc: Clean WASM build artifacts
-    dir: "{{.WASM_DIR}}"
-    cmds:
-      - rm -rf pkg target
+    clean:
+        desc: Clean WASM build artifacts
+        dir: "{{.WASM_DIR}}"
+        cmds:
+            - rm -rf pkg target
 
-  e2e:generate:
-    desc: Generate WASM E2E tests from fixtures
-    env:
-      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
-    cmds:
-      - alef e2e generate --lang wasm
+    e2e:generate:
+        desc: Generate WASM E2E tests from fixtures
+        env:
+            PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+        cmds:
+            - alef e2e generate --lang wasm
 
-  e2e:setup:
-    desc: Build the Node.js-target WASM pkg and install e2e deps
-    deps: [build:node]
-    dir: "{{.PROJECT_ROOT}}/e2e/wasm"
-    cmds:
-      - pnpm install
+    e2e:setup:
+        desc: Build the Node.js-target WASM pkg and install e2e deps
+        deps: [build:node]
+        dir: "{{.PROJECT_ROOT}}/e2e/wasm"
+        cmds:
+            - pnpm install
 
-  update:
-    desc: Update WASM dependencies
-    cmds:
-      - echo "WASM dependencies updated via node:update (pnpm workspace)"
+    update:
+        desc: Update WASM dependencies
+        cmds:
+            - echo "WASM dependencies updated via node:update (pnpm workspace)"
 
-  e2e:test:
-    desc: Run WASM E2E tests using Alef-configured test commands
-    cmds:
-      - alef test --lang wasm --e2e
+    e2e:test:
+        desc: Run WASM E2E tests using Alef-configured test commands
+        cmds:
+            - alef test --lang wasm --e2e

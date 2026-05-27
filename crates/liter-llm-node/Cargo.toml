@@ -8,17 +8,6 @@ readme = false
 keywords = ["llm", "api-client", "openai", "anthropic"]
 categories = ["text-processing"]
 
-[lib]
-crate-type = ["cdylib"]
-
-[dependencies]
-liter-llm = { version = "1.4.0-rc.34", path = "../liter-llm", features = ["native-http", "full"] }
-napi = { version = "3", features = ["async", "serde-json"] }
-napi-derive = "3"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-futures-util = "0.3"
-
 # `serde_json` is emitted unconditionally above so the manifest is stable
 # across regens, but for umbrella crates with no JSON-marshalled return types
 # it is genuinely unused. The conditional `async-trait` / `futures-util` deps
@@ -26,6 +15,17 @@ futures-util = "0.3"
 # adapters configured but no actual async-trait callsite in this binding.
 [package.metadata.cargo-machete]
 ignored = ["serde_json", "futures-util"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+futures-util = "0.3"
+liter-llm = { version = "1.4.0-rc.34", path = "../liter-llm", features = ["native-http", "full"] }
+napi = { version = "3", features = ["async", "serde-json"] }
+napi-derive = "3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 
 [build-dependencies]
 napi-build = "2"

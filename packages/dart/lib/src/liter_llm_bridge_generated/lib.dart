@@ -1547,7 +1547,7 @@ class CustomProviderConfig {
   /// Authentication header format.
   final AuthHeaderFormat authHeader;
 
-  /// Model name prefixes that route to this provider (e.g., ["my-"]).
+  /// Model name prefixes that route to this provider (e.g., `["my-"]`).
   final List<String> modelPrefixes;
 
   const CustomProviderConfig({
