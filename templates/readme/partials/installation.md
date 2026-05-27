@@ -110,6 +110,29 @@ Or via NuGet Package Manager:
 Install-Package {{ package_name }}
 ```
 
+{% elif pm == "swift_package_manager" %}
+The Swift binding ships as a pre-built artifact bundle. No Rust toolchain required.
+
+Each release at <https://github.com/kreuzberg-dev/liter-llm/releases> attaches:
+
+- `LiterLlm-rs.artifactbundle.zip` — the prebuilt artifact bundle
+- `LiterLlm-rs.artifactbundle.zip.checksum` — the SwiftPM checksum
+- `Package.swift` — `Package.swift` with version + checksum already substituted
+
+**Recommended** — add a `.binaryTarget` to your own `Package.swift`, copying the URL and checksum from the release notes:
+
+```swift
+.binaryTarget(
+    name: "LiterLlm",
+    url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v{{ version }}/LiterLlm-rs.artifactbundle.zip",
+    checksum: "<CHECKSUM-FROM-RELEASE-NOTES>"
+)
+```
+
+**Alternative** — download the release-attached `Package.swift` and copy it into your project root.
+
+> The repository's checked-in `Package.swift` on `main` uses placeholder values and is not usable as-is. The `.package(url: ..., from: ...)` SwiftPM pattern is **not supported** because release tags carry the placeholder file; pull the release-attached `Package.swift` or use `.binaryTarget` directly.
+
 {% endif %}
 {% else %}
 Install via one of the supported package managers:
@@ -251,6 +274,10 @@ Pre-built binaries available for:
   {% elif language == "wasm" %}
 - Modern browser with WebAssembly support, or Deno 1.0+, or Cloudflare Workers
 - API keys via environment variables or runtime configuration
+  {% elif language == "swift" %}
+- **Swift 6.0+** with SwiftPM
+- Pre-built artifact bundle for macOS (arm64, x86_64), iOS, iOS Simulator
+- API keys via environment variables (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
   {% else %}
 - See [Installation Guide](https://github.com/kreuzberg-dev/liter-llm#installation) for requirements
   {% endif %}

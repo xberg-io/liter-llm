@@ -1,28 +1,28 @@
 {
-	"name": "@kreuzberg/liter-llm-node-linux-x64-musl",
-	"version": "1.4.0-rc.36",
-	"license": "MIT",
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/kreuzberg-dev/liter-llm.git"
-	},
-	"files": [
-		"liter-llm-node.linux-x64-musl.node"
-	],
-	"os": [
-		"linux"
-	],
-	"cpu": [
-		"x64"
-	],
-	"libc": [
-		"musl"
-	],
-	"main": "liter-llm-node.linux-x64-musl.node",
-	"publishConfig": {
-		"access": "public"
-	},
-	"engines": {
-		"node": ">= 18"
-	}
+  "name": "@kreuzberg/liter-llm-node-linux-x64-musl",
+  "version": "1.4.0-rc.37",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kreuzberg-dev/liter-llm.git"
+  },
+  "files": [
+    "liter-llm-node.linux-x64-musl.node"
+  ],
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "libc": [
+    "musl"
+  ],
+  "main": "liter-llm-node.linux-x64-musl.node",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">= 18"
+  }
 }

@@ -86,31 +86,33 @@ Universal LLM API client for Swift. Access 143+ LLM providers through a single S
 
 ### Package Installation
 
-The Swift binding ships as a pre-built binary artifact. No Rust toolchain required.
+The Swift binding ships as a pre-built artifact bundle. No Rust toolchain required.
 
-**Each release attaches**:
+Each release at <https://github.com/kreuzberg-dev/liter-llm/releases> attaches:
 
-- `LiterLlm-rs.artifactbundle.zip` -- the prebuilt artifact bundle
-- `LiterLlm-rs.artifactbundle.zip.checksum` -- the SwiftPM checksum
-- `Package.swift` -- a `Package.swift` with version + checksum already substituted for that release
+- `LiterLlm-rs.artifactbundle.zip` — the prebuilt artifact bundle
+- `LiterLlm-rs.artifactbundle.zip.checksum` — the SwiftPM checksum
+- `Package.swift` — `Package.swift` with version + checksum already substituted
 
-**Recommended**: add a `.binaryTarget` to your own `Package.swift`, copying the URL and checksum from the release notes at <https://github.com/kreuzberg-dev/liter-llm/releases>:
+**Recommended** — add a `.binaryTarget` to your own `Package.swift`, copying the URL and checksum from the release notes:
 
 ```swift
 .binaryTarget(
     name: "LiterLlm",
-    url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v<VERSION>/LiterLlm-rs.artifactbundle.zip",
+    url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.37/LiterLlm-rs.artifactbundle.zip",
     checksum: "<CHECKSUM-FROM-RELEASE-NOTES>"
 )
 ```
 
-**Alternative**: download the release-attached `Package.swift` and copy it into your project root.
+**Alternative** — download the release-attached `Package.swift` and copy it into your project root.
 
-> The repository's checked-in `Package.swift` on `main` uses placeholder values (`__ALEF_SWIFT_VERSION__`, `__ALEF_SWIFT_CHECKSUM__`) and is not usable as-is. The SwiftPM `.package(url:..., from:...)` pattern is **not supported** because release tags carry the placeholder file; pull the release-attached `Package.swift` or use `.binaryTarget` directly.
+> The repository's checked-in `Package.swift` on `main` uses placeholder values and is not usable as-is. The `.package(url: ..., from: ...)` SwiftPM pattern is **not supported** because release tags carry the placeholder file; pull the release-attached `Package.swift` or use `.binaryTarget` directly.
 
 ### System Requirements
 
-- See [Installation Guide](https://github.com/kreuzberg-dev/liter-llm#installation) for requirements
+- **Swift 6.0+** with SwiftPM
+- Pre-built artifact bundle for macOS (arm64, x86_64), iOS, iOS Simulator
+- API keys via environment variables (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
 
 ## Quick Start
 

@@ -31,7 +31,7 @@
         <dependency>
             <groupId>dev.kreuzberg.literllm</groupId>
             <artifactId>liter-llm</artifactId>
-            <version>1.4.0-rc.36</version>
+            <version>1.4.0-rc.37</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -87,7 +87,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.2</version>
                 <configuration>
-                    <argLine>--enable-preview --enable-native-access=ALL-UNNAMED -Djava.library.path=${project.basedir}/../../target/release</argLine>
+                    <argLine>--enable-preview --enable-native-access=ALL-UNNAMED</argLine>
                     <workingDirectory>${project.basedir}/../../test_documents</workingDirectory>
                 </configuration>
             </plugin>

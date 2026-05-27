@@ -5,7 +5,13 @@
 // Issues & docs: https://github.com/kreuzberg-dev/alef
 /* eslint-disable */
 
-export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
 
 /**
  * Return all provider configs from the registry.
@@ -25,7 +31,11 @@ export declare function allProviders(): Array<ProviderConfig>;
  * are tried by stripping from the last `-` or `.` separator.  For example,
  * `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
  */
-export declare function completionCost(model: string, promptTokens: number, completionTokens: number): number | null;
+export declare function completionCost(
+  model: string,
+  promptTokens: number,
+  completionTokens: number,
+): number | null;
 
 /**
  * Calculate the estimated cost of a completion, accounting for cached
@@ -42,10 +52,10 @@ export declare function completionCost(model: string, promptTokens: number, comp
  * registry, mirroring [`completion_cost`].
  */
 export declare function completionCostWithCache(
-	model: string,
-	promptTokens: number,
-	cachedTokens: number,
-	completionTokens: number,
+  model: string,
+  promptTokens: number,
+  cachedTokens: number,
+  completionTokens: number,
 ): number | null;
 
 /**
@@ -91,11 +101,11 @@ export declare function countTokens(model: string, text: string): number;
  * constructed, or if the resolved provider configuration is invalid.
  */
 export declare function createClient(
-	apiKey: string,
-	baseUrl?: string | undefined | null,
-	timeoutSecs?: number | undefined | null,
-	maxRetries?: number | undefined | null,
-	modelHint?: string | undefined | null,
+  apiKey: string,
+  baseUrl?: string | undefined | null,
+  timeoutSecs?: number | undefined | null,
+  maxRetries?: number | undefined | null,
+  modelHint?: string | undefined | null,
 ): DefaultClient;
 
 /**
@@ -126,394 +136,396 @@ export declare function ensureCryptoProvider(): void;
 
 /** Assistant's response to a user message. */
 export interface AssistantMessage {
-	/** The assistant's text response. Absent if tool calls are returned instead. */
-	readonly content?: string;
-	/** Optional name for the assistant. */
-	readonly name?: string;
-	/** Tool calls the model wants to execute, if any. */
-	readonly toolCalls?: Array<ToolCall>;
-	/** Refusal reason, if the model declined to respond per safety policies. */
-	readonly refusal?: string;
-	/** Deprecated legacy function_call field; retained for API compatibility. */
-	readonly functionCall?: FunctionCall;
+  /** The assistant's text response. Absent if tool calls are returned instead. */
+  readonly content?: string;
+  /** Optional name for the assistant. */
+  readonly name?: string;
+  /** Tool calls the model wants to execute, if any. */
+  readonly toolCalls?: Array<ToolCall>;
+  /** Refusal reason, if the model declined to respond per safety policies. */
+  readonly refusal?: string;
+  /** Deprecated legacy function_call field; retained for API compatibility. */
+  readonly functionCall?: FunctionCall;
 }
 
 /** Audio content part for speech-capable models. */
 export interface AudioContent {
-	/** Base64-encoded audio data. */
-	readonly data?: string;
-	/** Audio format (e.g., "wav", "mp3", "ogg"). */
-	readonly format?: string;
+  /** Base64-encoded audio data. */
+  readonly data?: string;
+  /** Audio format (e.g., "wav", "mp3", "ogg"). */
+  readonly format?: string;
 }
 
 /** Auth configuration block. */
 export interface AuthConfig {
-	/** Auth scheme classification. */
-	readonly authType: AuthType;
-	/**
-	 * Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`).
-	 * Holds the variable name, never the secret value.
-	 */
-	readonly envVar?: string;
+  /** Auth scheme classification. */
+  readonly authType: AuthType;
+  /**
+   * Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`).
+   * Holds the variable name, never the secret value.
+   */
+  readonly envVar?: string;
 }
 
 /** How the API key is sent in the HTTP request. */
 export declare enum AuthHeaderFormat {
-	/** Bearer token: `Authorization: Bearer <key>` */
-	Bearer = "Bearer",
-	/** Custom header: e.g., `X-Api-Key: <key>` */
-	ApiKey = "ApiKey",
-	/** No authentication required. */
-	None = "None",
+  /** Bearer token: `Authorization: Bearer <key>` */
+  Bearer = "Bearer",
+  /** Custom header: e.g., `X-Api-Key: <key>` */
+  ApiKey = "ApiKey",
+  /** No authentication required. */
+  None = "None",
 }
 
 /** Auth scheme used by a provider. */
 export declare enum AuthType {
-	/** Standard `Authorization: Bearer <key>` header. */
-	Bearer = "bearer",
-	/** `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). */
-	ApiKey = "api-key",
-	/** No authentication header required. */
-	None = "none",
-	/** Unrecognised auth scheme — falls back to bearer. */
-	Unknown = "unknown",
+  /** Standard `Authorization: Bearer <key>` header. */
+  Bearer = "bearer",
+  /** `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). */
+  ApiKey = "api-key",
+  /** No authentication header required. */
+  None = "none",
+  /** Unrecognised auth scheme — falls back to bearer. */
+  Unknown = "unknown",
 }
 
 /** Query parameters for listing batches. */
 export interface BatchListQuery {
-	/** Maximum number of results to return. Defaults to 20. */
-	readonly limit?: number;
-	/** Pagination cursor: return results after this batch ID. */
-	readonly after?: string;
+  /** Maximum number of results to return. Defaults to 20. */
+  readonly limit?: number;
+  /** Pagination cursor: return results after this batch ID. */
+  readonly after?: string;
 }
 
 /** Response from listing batches. */
 export interface BatchListResponse {
-	/** Object type (always `"list"`). */
-	readonly object?: string;
-	/** List of batch objects. */
-	readonly data?: Array<BatchObject>;
-	/** Whether more results are available. */
-	readonly hasMore?: boolean;
-	/** First batch ID in the result set (for pagination). */
-	readonly firstId?: string;
-	/** Last batch ID in the result set (for pagination). */
-	readonly lastId?: string;
+  /** Object type (always `"list"`). */
+  readonly object?: string;
+  /** List of batch objects. */
+  readonly data?: Array<BatchObject>;
+  /** Whether more results are available. */
+  readonly hasMore?: boolean;
+  /** First batch ID in the result set (for pagination). */
+  readonly firstId?: string;
+  /** Last batch ID in the result set (for pagination). */
+  readonly lastId?: string;
 }
 
 /** A batch job object. */
 export interface BatchObject {
-	/** Unique batch ID. */
-	readonly id?: string;
-	/** Object type (always `"batch"`). */
-	readonly object?: string;
-	/** API endpoint (e.g., `"/v1/chat/completions"`). */
-	readonly endpoint?: string;
-	/** ID of the input file. */
-	readonly inputFileId?: string;
-	/** Completion window (e.g., `"24h"`). */
-	readonly completionWindow?: string;
-	/** Current job status. */
-	readonly status?: BatchStatus;
-	/** ID of the output file (present when completed). */
-	readonly outputFileId?: string;
-	/** ID of the error file (present if some requests failed). */
-	readonly errorFileId?: string;
-	/** Unix timestamp of batch creation. */
-	readonly createdAt?: number;
-	/** Unix timestamp of completion (if completed). */
-	readonly completedAt?: number;
-	/** Unix timestamp of failure (if failed). */
-	readonly failedAt?: number;
-	/** Unix timestamp of expiration (if expired). */
-	readonly expiredAt?: number;
-	/** Request processing counts. */
-	readonly requestCounts?: BatchRequestCounts;
-	/** Metadata attached to the batch. */
-	readonly metadata?: JsonValue;
+  /** Unique batch ID. */
+  readonly id?: string;
+  /** Object type (always `"batch"`). */
+  readonly object?: string;
+  /** API endpoint (e.g., `"/v1/chat/completions"`). */
+  readonly endpoint?: string;
+  /** ID of the input file. */
+  readonly inputFileId?: string;
+  /** Completion window (e.g., `"24h"`). */
+  readonly completionWindow?: string;
+  /** Current job status. */
+  readonly status?: BatchStatus;
+  /** ID of the output file (present when completed). */
+  readonly outputFileId?: string;
+  /** ID of the error file (present if some requests failed). */
+  readonly errorFileId?: string;
+  /** Unix timestamp of batch creation. */
+  readonly createdAt?: number;
+  /** Unix timestamp of completion (if completed). */
+  readonly completedAt?: number;
+  /** Unix timestamp of failure (if failed). */
+  readonly failedAt?: number;
+  /** Unix timestamp of expiration (if expired). */
+  readonly expiredAt?: number;
+  /** Request processing counts. */
+  readonly requestCounts?: BatchRequestCounts;
+  /** Metadata attached to the batch. */
+  readonly metadata?: JsonValue;
 }
 
 /** Request processing counts for a batch. */
 export interface BatchRequestCounts {
-	/** Total requests in the batch. */
-	readonly total?: number;
-	/** Completed requests. */
-	readonly completed?: number;
-	/** Failed requests. */
-	readonly failed?: number;
+  /** Total requests in the batch. */
+  readonly total?: number;
+  /** Completed requests. */
+  readonly completed?: number;
+  /** Failed requests. */
+  readonly failed?: number;
 }
 
 /** Status of a batch job. */
 export declare enum BatchStatus {
-	/** Validating the input file. */
-	Validating = "validating",
-	/** Job failed. */
-	Failed = "failed",
-	/** Job is running. */
-	InProgress = "in_progress",
-	/** Finalizing results. */
-	Finalizing = "finalizing",
-	/** Job completed successfully. */
-	Completed = "completed",
-	/** Job expired before completion. */
-	Expired = "expired",
-	/** Job is being cancelled. */
-	Cancelling = "cancelling",
-	/** Job has been cancelled. */
-	Cancelled = "cancelled",
+  /** Validating the input file. */
+  Validating = "validating",
+  /** Job failed. */
+  Failed = "failed",
+  /** Job is running. */
+  InProgress = "in_progress",
+  /** Finalizing results. */
+  Finalizing = "finalizing",
+  /** Job completed successfully. */
+  Completed = "completed",
+  /** Job expired before completion. */
+  Expired = "expired",
+  /** Job is being cancelled. */
+  Cancelling = "cancelling",
+  /** Job has been cancelled. */
+  Cancelled = "cancelled",
 }
 
 /** Configuration for budget enforcement. */
 export interface BudgetConfig {
-	/** Maximum total spend across all models, in USD.  `None` means unlimited. */
-	readonly globalLimit?: number;
-	/**
-	 * Per-model spending limits in USD.  Models not listed here are only
-	 * constrained by `global_limit`.
-	 */
-	readonly modelLimits?: Record<string, number>;
-	/** Whether to reject requests or merely warn when a limit is exceeded. */
-	readonly enforcement?: Enforcement;
+  /** Maximum total spend across all models, in USD.  `None` means unlimited. */
+  readonly globalLimit?: number;
+  /**
+   * Per-model spending limits in USD.  Models not listed here are only
+   * constrained by `global_limit`.
+   */
+  readonly modelLimits?: Record<string, number>;
+  /** Whether to reject requests or merely warn when a limit is exceeded. */
+  readonly enforcement?: Enforcement;
 }
 
 /** Storage backend for the response cache. */
-export type CacheBackend = { type: "memory" } | { type: "open_dal"; scheme: string; config: Record<string, string> };
+export type CacheBackend =
+  | { type: "memory" }
+  | { type: "open_dal"; scheme: string; config: Record<string, string> };
 
 /** Configuration for the response cache. */
 export interface CacheConfig {
-	/** Maximum number of cached entries. */
-	readonly maxEntries?: number;
-	/** Time-to-live for each cached entry. */
-	readonly ttl?: number;
-	/** Storage backend to use. */
-	readonly backend?: CacheBackend;
+  /** Maximum number of cached entries. */
+  readonly maxEntries?: number;
+  /** Time-to-live for each cached entry. */
+  readonly ttl?: number;
+  /** Storage backend to use. */
+  readonly backend?: CacheBackend;
 }
 
 /** A streamed chunk of a chat completion response. */
 export interface ChatCompletionChunk {
-	/** Unique identifier for this stream. */
-	readonly id?: string;
-	/**
-	 * Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored
-	 * as a plain `String` so non-standard provider values do not fail parsing.
-	 */
-	readonly object?: string;
-	/** Unix timestamp of chunk creation. */
-	readonly created?: number;
-	/** Model used to generate the chunk. */
-	readonly model?: string;
-	/** Streaming choices (delta updates). */
-	readonly choices?: Array<StreamChoice>;
-	/** Token usage (typically only in the final chunk). */
-	readonly usage?: Usage;
-	/** Fingerprint of the system configuration (OpenAI-specific). */
-	readonly systemFingerprint?: string;
-	/** Service tier used (OpenAI-specific). */
-	readonly serviceTier?: string;
+  /** Unique identifier for this stream. */
+  readonly id?: string;
+  /**
+   * Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored
+   * as a plain `String` so non-standard provider values do not fail parsing.
+   */
+  readonly object?: string;
+  /** Unix timestamp of chunk creation. */
+  readonly created?: number;
+  /** Model used to generate the chunk. */
+  readonly model?: string;
+  /** Streaming choices (delta updates). */
+  readonly choices?: Array<StreamChoice>;
+  /** Token usage (typically only in the final chunk). */
+  readonly usage?: Usage;
+  /** Fingerprint of the system configuration (OpenAI-specific). */
+  readonly systemFingerprint?: string;
+  /** Service tier used (OpenAI-specific). */
+  readonly serviceTier?: string;
 }
 
 /** Chat completion request (compatible with OpenAI and similar APIs). */
 export interface ChatCompletionRequest {
-	/** Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`). */
-	readonly model?: string;
-	/** Conversation history from oldest to newest. */
-	readonly messages?: Array<Message>;
-	/** Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0. */
-	readonly temperature?: number;
-	/** Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused. */
-	readonly topP?: number;
-	/** Number of chat completions to generate. Defaults to 1. */
-	readonly n?: number;
-	/**
-	 * Whether to stream the response.
-	 *
-	 * Managed by the client layer — do not set directly.
-	 */
-	readonly stream?: boolean;
-	/** Stop sequence(s) that halt token generation. */
-	readonly stop?: StopSequence;
-	/** Max output tokens. Different from max_completion_tokens in some providers. */
-	readonly maxTokens?: number;
-	/** Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics. */
-	readonly presencePenalty?: number;
-	/** Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens. */
-	readonly frequencyPenalty?: number;
-	/**
-	 * Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic
-	 * serialization order — important when hashing or signing requests.
-	 */
-	readonly logitBias?: Record<string, number>;
-	/** User identifier for request tracking and abuse detection. */
-	readonly user?: string;
-	/** Tools the model can invoke. */
-	readonly tools?: Array<ChatCompletionTool>;
-	/** Tool usage mode (auto, required, none, or specific tool). */
-	readonly toolChoice?: ToolChoice;
-	/** Whether the model can call multiple tools in parallel. Defaults to true. */
-	readonly parallelToolCalls?: boolean;
-	/** Output format constraint (text, JSON, JSON schema). */
-	readonly responseFormat?: ResponseFormat;
-	/** Streaming options (e.g., include_usage). */
-	readonly streamOptions?: StreamOptions;
-	/** Random seed for reproducible outputs. Provider support varies. */
-	readonly seed?: number;
-	/** Reasoning effort level (low, medium, high) for extended-thinking models. */
-	readonly reasoningEffort?: ReasoningEffort;
-	/**
-	 * Provider-specific extra parameters merged into the request body.
-	 * Use for guardrails, safety settings, grounding config, etc.
-	 */
-	readonly extraBody?: JsonValue;
+  /** Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`). */
+  readonly model?: string;
+  /** Conversation history from oldest to newest. */
+  readonly messages?: Array<Message>;
+  /** Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0. */
+  readonly temperature?: number;
+  /** Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused. */
+  readonly topP?: number;
+  /** Number of chat completions to generate. Defaults to 1. */
+  readonly n?: number;
+  /**
+   * Whether to stream the response.
+   *
+   * Managed by the client layer — do not set directly.
+   */
+  readonly stream?: boolean;
+  /** Stop sequence(s) that halt token generation. */
+  readonly stop?: StopSequence;
+  /** Max output tokens. Different from max_completion_tokens in some providers. */
+  readonly maxTokens?: number;
+  /** Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics. */
+  readonly presencePenalty?: number;
+  /** Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens. */
+  readonly frequencyPenalty?: number;
+  /**
+   * Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic
+   * serialization order — important when hashing or signing requests.
+   */
+  readonly logitBias?: Record<string, number>;
+  /** User identifier for request tracking and abuse detection. */
+  readonly user?: string;
+  /** Tools the model can invoke. */
+  readonly tools?: Array<ChatCompletionTool>;
+  /** Tool usage mode (auto, required, none, or specific tool). */
+  readonly toolChoice?: ToolChoice;
+  /** Whether the model can call multiple tools in parallel. Defaults to true. */
+  readonly parallelToolCalls?: boolean;
+  /** Output format constraint (text, JSON, JSON schema). */
+  readonly responseFormat?: ResponseFormat;
+  /** Streaming options (e.g., include_usage). */
+  readonly streamOptions?: StreamOptions;
+  /** Random seed for reproducible outputs. Provider support varies. */
+  readonly seed?: number;
+  /** Reasoning effort level (low, medium, high) for extended-thinking models. */
+  readonly reasoningEffort?: ReasoningEffort;
+  /**
+   * Provider-specific extra parameters merged into the request body.
+   * Use for guardrails, safety settings, grounding config, etc.
+   */
+  readonly extraBody?: JsonValue;
 }
 
 /** Chat completion response from the API. */
 export interface ChatCompletionResponse {
-	/** Unique identifier for this response. */
-	readonly id?: string;
-	/**
-	 * Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a
-	 * plain `String` so non-standard provider values do not break deserialization.
-	 */
-	readonly object?: string;
-	/** Unix timestamp of response creation. */
-	readonly created?: number;
-	/** Model used to generate the response. */
-	readonly model?: string;
-	/** List of completion choices. */
-	readonly choices?: Array<Choice>;
-	/** Token usage statistics. */
-	readonly usage?: Usage;
-	/** Fingerprint of the system configuration (OpenAI-specific). */
-	readonly systemFingerprint?: string;
-	/** Service tier used (OpenAI-specific). */
-	readonly serviceTier?: string;
+  /** Unique identifier for this response. */
+  readonly id?: string;
+  /**
+   * Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a
+   * plain `String` so non-standard provider values do not break deserialization.
+   */
+  readonly object?: string;
+  /** Unix timestamp of response creation. */
+  readonly created?: number;
+  /** Model used to generate the response. */
+  readonly model?: string;
+  /** List of completion choices. */
+  readonly choices?: Array<Choice>;
+  /** Token usage statistics. */
+  readonly usage?: Usage;
+  /** Fingerprint of the system configuration (OpenAI-specific). */
+  readonly systemFingerprint?: string;
+  /** Service tier used (OpenAI-specific). */
+  readonly serviceTier?: string;
 }
 
 /** A tool the model can invoke (currently, all tools are functions). */
 export interface ChatCompletionTool {
-	/** Tool type (always "function" in OpenAI spec). */
-	readonly toolType: ToolType;
-	/** Function definition with name, description, and JSON schema parameters. */
-	readonly function: FunctionDefinition;
+  /** Tool type (always "function" in OpenAI spec). */
+  readonly toolType: ToolType;
+  /** Function definition with name, description, and JSON schema parameters. */
+  readonly function: FunctionDefinition;
 }
 
 /** A single completion choice. */
 export interface Choice {
-	/** Index of this choice in the choices array. */
-	readonly index?: number;
-	/** The assistant's message response. */
-	readonly message?: AssistantMessage;
-	/** Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). */
-	readonly finishReason?: FinishReason;
+  /** Index of this choice in the choices array. */
+  readonly index?: number;
+  /** The assistant's message response. */
+  readonly message?: AssistantMessage;
+  /** Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). */
+  readonly finishReason?: FinishReason;
 }
 
 /** A single content part in a user message — text, image, document, or audio. */
 export type ContentPart =
-	| { type: "text"; text: string }
-	| { type: "image_url"; imageUrl: ImageUrl }
-	| { type: "document"; document: DocumentContent }
-	| { type: "input_audio"; inputAudio: AudioContent };
+  | { type: "text"; text: string }
+  | { type: "image_url"; imageUrl: ImageUrl }
+  | { type: "document"; document: DocumentContent }
+  | { type: "input_audio"; inputAudio: AudioContent };
 
 /** Request to create a batch job. */
 export interface CreateBatchRequest {
-	/** ID of the uploaded input file (JSONL format). */
-	readonly inputFileId?: string;
-	/** API endpoint (e.g., `"/v1/chat/completions"`). */
-	readonly endpoint?: string;
-	/** Completion window (e.g., `"24h"`). */
-	readonly completionWindow?: string;
-	/** Optional metadata to attach to the batch. */
-	readonly metadata?: JsonValue;
+  /** ID of the uploaded input file (JSONL format). */
+  readonly inputFileId?: string;
+  /** API endpoint (e.g., `"/v1/chat/completions"`). */
+  readonly endpoint?: string;
+  /** Completion window (e.g., `"24h"`). */
+  readonly completionWindow?: string;
+  /** Optional metadata to attach to the batch. */
+  readonly metadata?: JsonValue;
 }
 
 /** Request to upload a file. */
 export interface CreateFileRequest {
-	/** Base64-encoded file data. */
-	readonly file?: string;
-	/** Purpose for the file. */
-	readonly purpose?: FilePurpose;
-	/** Optional filename to associate with the upload. */
-	readonly filename?: string;
+  /** Base64-encoded file data. */
+  readonly file?: string;
+  /** Purpose for the file. */
+  readonly purpose?: FilePurpose;
+  /** Optional filename to associate with the upload. */
+  readonly filename?: string;
 }
 
 /** Request to create images from a text prompt. */
 export interface CreateImageRequest {
-	/** Text description of the image to generate. */
-	readonly prompt?: string;
-	/** Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset. */
-	readonly model?: string;
-	/** Number of images to generate. Defaults to 1. */
-	readonly n?: number;
-	/** Image size (e.g., `"1024x1024"`, `"1792x1024"`). */
-	readonly size?: string;
-	/** Image quality: `"standard"` or `"hd"`. */
-	readonly quality?: string;
-	/** Style: `"natural"` or `"vivid"` (DALL-E 3 only). */
-	readonly style?: string;
-	/** Response format: `"url"` or `"b64_json"`. */
-	readonly responseFormat?: string;
-	/** User identifier for request tracking. */
-	readonly user?: string;
+  /** Text description of the image to generate. */
+  readonly prompt?: string;
+  /** Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset. */
+  readonly model?: string;
+  /** Number of images to generate. Defaults to 1. */
+  readonly n?: number;
+  /** Image size (e.g., `"1024x1024"`, `"1792x1024"`). */
+  readonly size?: string;
+  /** Image quality: `"standard"` or `"hd"`. */
+  readonly quality?: string;
+  /** Style: `"natural"` or `"vivid"` (DALL-E 3 only). */
+  readonly style?: string;
+  /** Response format: `"url"` or `"b64_json"`. */
+  readonly responseFormat?: string;
+  /** User identifier for request tracking. */
+  readonly user?: string;
 }
 
 /** Request to create a structured response. */
 export interface CreateResponseRequest {
-	/** Model ID. */
-	readonly model?: string;
-	/** Input data to process (e.g., a document to extract from). */
-	readonly input?: JsonValue;
-	/** Instructions for processing the input. */
-	readonly instructions?: string;
-	/** Available tools the model can use. */
-	readonly tools?: Array<ResponseTool>;
-	/** Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0. */
-	readonly temperature?: number;
-	/** Maximum output tokens. */
-	readonly maxOutputTokens?: number;
-	/** Optional metadata. */
-	readonly metadata?: JsonValue;
+  /** Model ID. */
+  readonly model?: string;
+  /** Input data to process (e.g., a document to extract from). */
+  readonly input?: JsonValue;
+  /** Instructions for processing the input. */
+  readonly instructions?: string;
+  /** Available tools the model can use. */
+  readonly tools?: Array<ResponseTool>;
+  /** Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0. */
+  readonly temperature?: number;
+  /** Maximum output tokens. */
+  readonly maxOutputTokens?: number;
+  /** Optional metadata. */
+  readonly metadata?: JsonValue;
 }
 
 /** Request to generate speech audio from text. */
 export interface CreateSpeechRequest {
-	/** Model ID (e.g., `"tts-1"`, `"tts-1-hd"`). */
-	readonly model?: string;
-	/** Text to synthesize into speech. */
-	readonly input?: string;
-	/** Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). */
-	readonly voice?: string;
-	/** Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`). */
-	readonly responseFormat?: string;
-	/** Playback speed in `[0.25, 4.0]`. Defaults to 1.0. */
-	readonly speed?: number;
+  /** Model ID (e.g., `"tts-1"`, `"tts-1-hd"`). */
+  readonly model?: string;
+  /** Text to synthesize into speech. */
+  readonly input?: string;
+  /** Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). */
+  readonly voice?: string;
+  /** Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`). */
+  readonly responseFormat?: string;
+  /** Playback speed in `[0.25, 4.0]`. Defaults to 1.0. */
+  readonly speed?: number;
 }
 
 /** Request to transcribe audio into text. */
 export interface CreateTranscriptionRequest {
-	/** Model ID (e.g., `"whisper-1"`). */
-	readonly model?: string;
-	/** Base64-encoded audio file data. */
-	readonly file?: string;
-	/** Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. */
-	readonly language?: string;
-	/** Optional text to guide the model (improves accuracy for domain-specific terms). */
-	readonly prompt?: string;
-	/** Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`). */
-	readonly responseFormat?: string;
-	/** Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0. */
-	readonly temperature?: number;
+  /** Model ID (e.g., `"whisper-1"`). */
+  readonly model?: string;
+  /** Base64-encoded audio file data. */
+  readonly file?: string;
+  /** Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. */
+  readonly language?: string;
+  /** Optional text to guide the model (improves accuracy for domain-specific terms). */
+  readonly prompt?: string;
+  /** Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`). */
+  readonly responseFormat?: string;
+  /** Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0. */
+  readonly temperature?: number;
 }
 
 /** Configuration for registering a custom LLM provider at runtime. */
 export interface CustomProviderConfig {
-	/** Unique name for this provider (e.g., "my-provider"). */
-	readonly name: string;
-	/** Base URL for the provider's API (e.g., "https://api.my-provider.com/v1"). */
-	readonly baseUrl: string;
-	/** Authentication header format. */
-	readonly authHeader: AuthHeaderFormat;
-	/** Model name prefixes that route to this provider (e.g., `["my-"]`). */
-	readonly modelPrefixes: Array<string>;
+  /** Unique name for this provider (e.g., "my-provider"). */
+  readonly name: string;
+  /** Base URL for the provider's API (e.g., "https://api.my-provider.com/v1"). */
+  readonly baseUrl: string;
+  /** Authentication header format. */
+  readonly authHeader: AuthHeaderFormat;
+  /** Model name prefixes that route to this provider (e.g., `["my-"]`). */
+  readonly modelPrefixes: Array<string>;
 }
 
 /**
@@ -534,447 +546,451 @@ export interface CustomProviderConfig {
  * headers are cached at construction to avoid redundant encoding on every request.
  */
 export declare class DefaultClient {
-	chat(req: ChatCompletionRequest): Promise<ChatCompletionResponse>;
-	chatStream(req: ChatCompletionRequest): Promise<AsyncGenerator<ChatCompletionChunk, void, undefined>>;
-	embed(req: EmbeddingRequest): Promise<EmbeddingResponse>;
-	listModels(): Promise<ModelsListResponse>;
-	imageGenerate(req: CreateImageRequest): Promise<ImagesResponse>;
-	speech(req: CreateSpeechRequest): Promise<Uint8Array>;
-	transcribe(req: CreateTranscriptionRequest): Promise<TranscriptionResponse>;
-	moderate(req: ModerationRequest): Promise<ModerationResponse>;
-	rerank(req: RerankRequest): Promise<RerankResponse>;
-	search(req: SearchRequest): Promise<SearchResponse>;
-	ocr(req: OcrRequest): Promise<OcrResponse>;
-	createFile(req: CreateFileRequest): Promise<FileObject>;
-	retrieveFile(fileId: string): Promise<FileObject>;
-	deleteFile(fileId: string): Promise<DeleteResponse>;
-	listFiles(query?: FileListQuery | undefined | null): Promise<FileListResponse>;
-	fileContent(fileId: string): Promise<Uint8Array>;
-	createBatch(req: CreateBatchRequest): Promise<BatchObject>;
-	retrieveBatch(batchId: string): Promise<BatchObject>;
-	listBatches(query?: BatchListQuery | undefined | null): Promise<BatchListResponse>;
-	cancelBatch(batchId: string): Promise<BatchObject>;
-	createResponse(req: CreateResponseRequest): Promise<ResponseObject>;
-	retrieveResponse(responseId: string): Promise<ResponseObject>;
-	cancelResponse(responseId: string): Promise<ResponseObject>;
+  chat(req: ChatCompletionRequest): Promise<ChatCompletionResponse>;
+  chatStream(
+    req: ChatCompletionRequest,
+  ): Promise<AsyncGenerator<ChatCompletionChunk, void, undefined>>;
+  embed(req: EmbeddingRequest): Promise<EmbeddingResponse>;
+  listModels(): Promise<ModelsListResponse>;
+  imageGenerate(req: CreateImageRequest): Promise<ImagesResponse>;
+  speech(req: CreateSpeechRequest): Promise<Uint8Array>;
+  transcribe(req: CreateTranscriptionRequest): Promise<TranscriptionResponse>;
+  moderate(req: ModerationRequest): Promise<ModerationResponse>;
+  rerank(req: RerankRequest): Promise<RerankResponse>;
+  search(req: SearchRequest): Promise<SearchResponse>;
+  ocr(req: OcrRequest): Promise<OcrResponse>;
+  createFile(req: CreateFileRequest): Promise<FileObject>;
+  retrieveFile(fileId: string): Promise<FileObject>;
+  deleteFile(fileId: string): Promise<DeleteResponse>;
+  listFiles(query?: FileListQuery | undefined | null): Promise<FileListResponse>;
+  fileContent(fileId: string): Promise<Uint8Array>;
+  createBatch(req: CreateBatchRequest): Promise<BatchObject>;
+  retrieveBatch(batchId: string): Promise<BatchObject>;
+  listBatches(query?: BatchListQuery | undefined | null): Promise<BatchListResponse>;
+  cancelBatch(batchId: string): Promise<BatchObject>;
+  createResponse(req: CreateResponseRequest): Promise<ResponseObject>;
+  retrieveResponse(responseId: string): Promise<ResponseObject>;
+  cancelResponse(responseId: string): Promise<ResponseObject>;
 }
 
 /** Response from a delete operation. */
 export interface DeleteResponse {
-	/** ID of the deleted resource. */
-	readonly id?: string;
-	/** Object type. */
-	readonly object?: string;
-	/** Confirmation that the resource was deleted. */
-	readonly deleted?: boolean;
+  /** ID of the deleted resource. */
+  readonly id?: string;
+  /** Object type. */
+  readonly object?: string;
+  /** Confirmation that the resource was deleted. */
+  readonly deleted?: boolean;
 }
 
 /** Developer message (system-like message for Claude models). */
 export interface DeveloperMessage {
-	/** Developer-specific instructions or context. */
-	readonly content?: string;
-	/** Optional name for the developer message source. */
-	readonly name?: string;
+  /** Developer-specific instructions or context. */
+  readonly content?: string;
+  /** Optional name for the developer message source. */
+  readonly name?: string;
 }
 
 /** PDF/document content part for vision-capable models. */
 export interface DocumentContent {
-	/** Base64-encoded document data or URL. */
-	readonly data?: string;
-	/** MIME type (e.g., "application/pdf", "text/csv"). */
-	readonly mediaType?: string;
+  /** Base64-encoded document data or URL. */
+  readonly data?: string;
+  /** MIME type (e.g., "application/pdf", "text/csv"). */
+  readonly mediaType?: string;
 }
 
 /** The format in which the embedding vectors are returned. */
 export declare enum EmbeddingFormat {
-	/** 32-bit floating-point numbers (default). */
-	Float = "float",
-	/** Base64-encoded string representation of the floats. */
-	Base64 = "base64",
+  /** 32-bit floating-point numbers (default). */
+  Float = "float",
+  /** Base64-encoded string representation of the floats. */
+  Base64 = "base64",
 }
 
 /** Text or texts to embed. */
 export declare enum EmbeddingInput {
-	/** Single text string. */
-	Single = "Single",
-	/** Multiple text strings (batch embedding). */
-	Multiple = "Multiple",
+  /** Single text string. */
+  Single = "Single",
+  /** Multiple text strings (batch embedding). */
+  Multiple = "Multiple",
 }
 
 /** A single embedding vector. */
 export interface EmbeddingObject {
-	/**
-	 * Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain
-	 * `String` so non-standard provider values do not break deserialization.
-	 */
-	readonly object: string;
-	/** The embedding vector. */
-	readonly embedding: Array<number>;
-	/** Index in the batch (corresponds to input order). */
-	readonly index: number;
+  /**
+   * Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain
+   * `String` so non-standard provider values do not break deserialization.
+   */
+  readonly object: string;
+  /** The embedding vector. */
+  readonly embedding: Array<number>;
+  /** Index in the batch (corresponds to input order). */
+  readonly index: number;
 }
 
 /** Embedding request. */
 export interface EmbeddingRequest {
-	/** Model ID (e.g., `"text-embedding-3-small"`). */
-	readonly model?: string;
-	/** Text or texts to embed. */
-	readonly input?: EmbeddingInput;
-	/** Output format: float (native) or base64. */
-	readonly encodingFormat?: EmbeddingFormat;
-	/** Requested embedding dimensions (if supported by the model). */
-	readonly dimensions?: number;
-	/** User identifier for request tracking. */
-	readonly user?: string;
+  /** Model ID (e.g., `"text-embedding-3-small"`). */
+  readonly model?: string;
+  /** Text or texts to embed. */
+  readonly input?: EmbeddingInput;
+  /** Output format: float (native) or base64. */
+  readonly encodingFormat?: EmbeddingFormat;
+  /** Requested embedding dimensions (if supported by the model). */
+  readonly dimensions?: number;
+  /** User identifier for request tracking. */
+  readonly user?: string;
 }
 
 /** Embedding response. */
 export interface EmbeddingResponse {
-	/**
-	 * Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
-	 * `String` so non-standard provider values do not break deserialization.
-	 */
-	readonly object: string;
-	/** List of embeddings. */
-	readonly data: Array<EmbeddingObject>;
-	/** Model used to generate embeddings. */
-	readonly model: string;
-	/** Token usage (input tokens only; embeddings have zero output tokens). */
-	readonly usage?: Usage;
+  /**
+   * Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
+   * `String` so non-standard provider values do not break deserialization.
+   */
+  readonly object: string;
+  /** List of embeddings. */
+  readonly data: Array<EmbeddingObject>;
+  /** Model used to generate embeddings. */
+  readonly model: string;
+  /** Token usage (input tokens only; embeddings have zero output tokens). */
+  readonly usage?: Usage;
 }
 
 /** How budget limits are enforced. */
 export declare enum Enforcement {
-	/**
-	 * Reject requests that would exceed the budget with
-	 * [`LiterLlmError::BudgetExceeded`].
-	 */
-	Hard = "Hard",
-	/**
-	 * Allow requests through but emit a `tracing::warn!` when the budget is
-	 * exceeded.
-	 */
-	Soft = "Soft",
+  /**
+   * Reject requests that would exceed the budget with
+   * [`LiterLlmError::BudgetExceeded`].
+   */
+  Hard = "Hard",
+  /**
+   * Allow requests through but emit a `tracing::warn!` when the budget is
+   * exceeded.
+   */
+  Soft = "Soft",
 }
 
 /** Query parameters for listing files. */
 export interface FileListQuery {
-	/** Filter by file purpose (e.g., `"batch"`, `"fine-tune"`). */
-	readonly purpose?: string;
-	/** Maximum number of results to return. Defaults to 20. */
-	readonly limit?: number;
-	/** Pagination cursor: return results after this file ID. */
-	readonly after?: string;
+  /** Filter by file purpose (e.g., `"batch"`, `"fine-tune"`). */
+  readonly purpose?: string;
+  /** Maximum number of results to return. Defaults to 20. */
+  readonly limit?: number;
+  /** Pagination cursor: return results after this file ID. */
+  readonly after?: string;
 }
 
 /** Response from listing files. */
 export interface FileListResponse {
-	/** Object type (always `"list"`). */
-	readonly object?: string;
-	/** List of file objects. */
-	readonly data?: Array<FileObject>;
-	/** Whether more results are available. */
-	readonly hasMore?: boolean;
+  /** Object type (always `"list"`). */
+  readonly object?: string;
+  /** List of file objects. */
+  readonly data?: Array<FileObject>;
+  /** Whether more results are available. */
+  readonly hasMore?: boolean;
 }
 
 /** An uploaded file object. */
 export interface FileObject {
-	/** Unique file ID. */
-	readonly id?: string;
-	/** Object type (always `"file"`). */
-	readonly object?: string;
-	/** File size in bytes. */
-	readonly bytes?: number;
-	/** Unix timestamp of file creation. */
-	readonly createdAt?: number;
-	/** Filename. */
-	readonly filename?: string;
-	/** File purpose. */
-	readonly purpose?: string;
-	/** Processing status (e.g., `"uploaded"`, `"processed"`). */
-	readonly status?: string;
+  /** Unique file ID. */
+  readonly id?: string;
+  /** Object type (always `"file"`). */
+  readonly object?: string;
+  /** File size in bytes. */
+  readonly bytes?: number;
+  /** Unix timestamp of file creation. */
+  readonly createdAt?: number;
+  /** Filename. */
+  readonly filename?: string;
+  /** File purpose. */
+  readonly purpose?: string;
+  /** Processing status (e.g., `"uploaded"`, `"processed"`). */
+  readonly status?: string;
 }
 
 /** Purpose of an uploaded file. */
 export declare enum FilePurpose {
-	/** File for use with Assistants API. */
-	Assistants = "assistants",
-	/** File for batch processing. */
-	Batch = "batch",
-	/** File for fine-tuning. */
-	FineTune = "fine-tune",
-	/** File for vision/image tasks. */
-	Vision = "vision",
+  /** File for use with Assistants API. */
+  Assistants = "assistants",
+  /** File for batch processing. */
+  Batch = "batch",
+  /** File for fine-tuning. */
+  FineTune = "fine-tune",
+  /** File for vision/image tasks. */
+  Vision = "vision",
 }
 
 /** Why a choice stopped generating tokens. */
 export declare enum FinishReason {
-	Stop = "stop",
-	Length = "length",
-	ToolCalls = "tool_calls",
-	ContentFilter = "content_filter",
-	/** Deprecated legacy finish reason; retained for API compatibility. */
-	FunctionCall = "function_call",
-	/**
-	 * Catch-all for unknown finish reasons returned by non-OpenAI providers.
-	 *
-	 * Note: this intentionally does **not** carry the original string (e.g.
-	 * `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and
-	 * switching to `#[serde(untagged)]` would change deserialization semantics
-	 * for all variants.  The original value can be recovered by inspecting the
-	 * raw JSON if needed.
-	 */
-	Other = "other",
+  Stop = "stop",
+  Length = "length",
+  ToolCalls = "tool_calls",
+  ContentFilter = "content_filter",
+  /** Deprecated legacy finish reason; retained for API compatibility. */
+  FunctionCall = "function_call",
+  /**
+   * Catch-all for unknown finish reasons returned by non-OpenAI providers.
+   *
+   * Note: this intentionally does **not** carry the original string (e.g.
+   * `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and
+   * switching to `#[serde(untagged)]` would change deserialization semantics
+   * for all variants.  The original value can be recovered by inspecting the
+   * raw JSON if needed.
+   */
+  Other = "other",
 }
 
 /** Function call details. */
 export interface FunctionCall {
-	/** Function name. */
-	readonly name: string;
-	/** Arguments as a JSON string (parse with serde_json::from_str). */
-	readonly arguments: string;
+  /** Function name. */
+  readonly name: string;
+  /** Arguments as a JSON string (parse with serde_json::from_str). */
+  readonly arguments: string;
 }
 
 /** Function definition exposed to the model. */
 export interface FunctionDefinition {
-	/** Name of the function. Required and must be alphanumeric + underscores. */
-	readonly name: string;
-	/** Human-readable description explaining what the function does. */
-	readonly description?: string;
-	/** JSON Schema defining the function's parameters. */
-	readonly parameters?: JsonValue;
-	/** If true, enforce strict JSON schema validation for arguments. */
-	readonly strict?: boolean;
+  /** Name of the function. Required and must be alphanumeric + underscores. */
+  readonly name: string;
+  /** Human-readable description explaining what the function does. */
+  readonly description?: string;
+  /** JSON Schema defining the function's parameters. */
+  readonly parameters?: JsonValue;
+  /** If true, enforce strict JSON schema validation for arguments. */
+  readonly strict?: boolean;
 }
 
 /** Deprecated legacy function-role message body. */
 export interface FunctionMessage {
-	readonly content?: string;
-	readonly name?: string;
+  readonly content?: string;
+  readonly name?: string;
 }
 
 /** A single generated image, returned as either a URL or base64 data. */
 export interface Image {
-	/** Image URL (if response_format was "url"). */
-	readonly url?: string;
-	/** Base64-encoded image data (if response_format was "b64_json"). */
-	readonly b64Json?: string;
-	/** The final prompt used to generate the image (DALL-E 3). */
-	readonly revisedPrompt?: string;
+  /** Image URL (if response_format was "url"). */
+  readonly url?: string;
+  /** Base64-encoded image data (if response_format was "b64_json"). */
+  readonly b64Json?: string;
+  /** The final prompt used to generate the image (DALL-E 3). */
+  readonly revisedPrompt?: string;
 }
 
 /** Image detail level controlling token cost and processing. */
 export declare enum ImageDetail {
-	/** Low detail: scales image to 512x512, uses fewer tokens. */
-	Low = "low",
-	/** High detail: processes up to 2x2 grid of tiles, higher token cost. */
-	High = "high",
-	/** Auto: model chooses low or high based on image dimensions. */
-	Auto = "auto",
+  /** Low detail: scales image to 512x512, uses fewer tokens. */
+  Low = "low",
+  /** High detail: processes up to 2x2 grid of tiles, higher token cost. */
+  High = "high",
+  /** Auto: model chooses low or high based on image dimensions. */
+  Auto = "auto",
 }
 
 /** Response containing generated images. */
 export interface ImagesResponse {
-	/** Unix timestamp of image creation. */
-	readonly created?: number;
-	/** List of generated images. */
-	readonly data?: Array<Image>;
+  /** Unix timestamp of image creation. */
+  readonly created?: number;
+  /** List of generated images. */
+  readonly data?: Array<Image>;
 }
 
 /** An image URL reference with optional detail level for processing. */
 export interface ImageUrl {
-	/** URL of the image (data URI or HTTP/HTTPS URL). */
-	readonly url?: string;
-	/** Detail level: low (512x512), high (2x2 tiles), or auto (model-selected). */
-	readonly detail?: ImageDetail;
+  /** URL of the image (data URI or HTTP/HTTPS URL). */
+  readonly url?: string;
+  /** Detail level: low (512x512), high (2x2 tiles), or auto (model-selected). */
+  readonly detail?: ImageDetail;
 }
 
 /** JSON Schema specification for constrained output. */
 export interface JsonSchemaFormat {
-	/** Name of the schema (must be unique in the request). */
-	readonly name?: string;
-	/** Description of what the schema represents. */
-	readonly description?: string;
-	/** JSON Schema object defining the output structure. */
-	readonly schema?: JsonValue;
-	/** If true, enforce strict schema validation. */
-	readonly strict?: boolean;
+  /** Name of the schema (must be unique in the request). */
+  readonly name?: string;
+  /** Description of what the schema represents. */
+  readonly description?: string;
+  /** JSON Schema object defining the output structure. */
+  readonly schema?: JsonValue;
+  /** If true, enforce strict schema validation. */
+  readonly strict?: boolean;
 }
 
 /** A chat message in a conversation. */
 export type Message =
-	| { role: "system"; 0: SystemMessage }
-	| { role: "user"; 0: UserMessage }
-	| { role: "assistant"; 0: AssistantMessage }
-	| { role: "tool"; 0: ToolMessage }
-	| { role: "developer"; 0: DeveloperMessage }
-	| { role: "function"; 0: FunctionMessage };
+  | { role: "system"; 0: SystemMessage }
+  | { role: "user"; 0: UserMessage }
+  | { role: "assistant"; 0: AssistantMessage }
+  | { role: "tool"; 0: ToolMessage }
+  | { role: "developer"; 0: DeveloperMessage }
+  | { role: "function"; 0: FunctionMessage };
 
 /** A model available from the API. */
 export interface ModelObject {
-	/** Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`). */
-	readonly id?: string;
-	/**
-	 * Always `"model"` from OpenAI-compatible APIs.  Stored as a plain
-	 * `String` so non-standard provider values do not break deserialization.
-	 */
-	readonly object?: string;
-	/** Unix timestamp of model creation (or release date). */
-	readonly created?: number;
-	/** Organization or entity that owns the model. */
-	readonly ownedBy?: string;
+  /** Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`). */
+  readonly id?: string;
+  /**
+   * Always `"model"` from OpenAI-compatible APIs.  Stored as a plain
+   * `String` so non-standard provider values do not break deserialization.
+   */
+  readonly object?: string;
+  /** Unix timestamp of model creation (or release date). */
+  readonly created?: number;
+  /** Organization or entity that owns the model. */
+  readonly ownedBy?: string;
 }
 
 /** Response listing available models. */
 export interface ModelsListResponse {
-	/**
-	 * Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
-	 * `String` so non-standard provider values do not break deserialization.
-	 */
-	readonly object?: string;
-	/** List of available models. */
-	readonly data?: Array<ModelObject>;
+  /**
+   * Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
+   * `String` so non-standard provider values do not break deserialization.
+   */
+  readonly object?: string;
+  /** List of available models. */
+  readonly data?: Array<ModelObject>;
 }
 
 /** Boolean flags for each moderation category. */
 export interface ModerationCategories {
-	/** Sexual content. */
-	readonly sexual?: boolean;
-	/** Hate speech. */
-	readonly hate?: boolean;
-	/** Harassment. */
-	readonly harassment?: boolean;
-	/** Self-harm content. */
-	readonly selfHarm?: boolean;
-	/** Sexual content involving minors. */
-	readonly sexualMinors?: boolean;
-	/** Hate speech that threatens violence. */
-	readonly hateThreatening?: boolean;
-	/** Graphic violence. */
-	readonly violenceGraphic?: boolean;
-	/** Intent to self-harm. */
-	readonly selfHarmIntent?: boolean;
-	/** Instructions for self-harm. */
-	readonly selfHarmInstructions?: boolean;
-	/** Harassment that threatens violence. */
-	readonly harassmentThreatening?: boolean;
-	/** Non-graphic violence. */
-	readonly violence?: boolean;
+  /** Sexual content. */
+  readonly sexual?: boolean;
+  /** Hate speech. */
+  readonly hate?: boolean;
+  /** Harassment. */
+  readonly harassment?: boolean;
+  /** Self-harm content. */
+  readonly selfHarm?: boolean;
+  /** Sexual content involving minors. */
+  readonly sexualMinors?: boolean;
+  /** Hate speech that threatens violence. */
+  readonly hateThreatening?: boolean;
+  /** Graphic violence. */
+  readonly violenceGraphic?: boolean;
+  /** Intent to self-harm. */
+  readonly selfHarmIntent?: boolean;
+  /** Instructions for self-harm. */
+  readonly selfHarmInstructions?: boolean;
+  /** Harassment that threatens violence. */
+  readonly harassmentThreatening?: boolean;
+  /** Non-graphic violence. */
+  readonly violence?: boolean;
 }
 
 /** Confidence scores for each moderation category. */
 export interface ModerationCategoryScores {
-	/** Sexual content score. */
-	readonly sexual?: number;
-	/** Hate speech score. */
-	readonly hate?: number;
-	/** Harassment score. */
-	readonly harassment?: number;
-	/** Self-harm content score. */
-	readonly selfHarm?: number;
-	/** Sexual content involving minors score. */
-	readonly sexualMinors?: number;
-	/** Hate speech that threatens violence score. */
-	readonly hateThreatening?: number;
-	/** Graphic violence score. */
-	readonly violenceGraphic?: number;
-	/** Intent to self-harm score. */
-	readonly selfHarmIntent?: number;
-	/** Instructions for self-harm score. */
-	readonly selfHarmInstructions?: number;
-	/** Harassment that threatens violence score. */
-	readonly harassmentThreatening?: number;
-	/** Non-graphic violence score. */
-	readonly violence?: number;
+  /** Sexual content score. */
+  readonly sexual?: number;
+  /** Hate speech score. */
+  readonly hate?: number;
+  /** Harassment score. */
+  readonly harassment?: number;
+  /** Self-harm content score. */
+  readonly selfHarm?: number;
+  /** Sexual content involving minors score. */
+  readonly sexualMinors?: number;
+  /** Hate speech that threatens violence score. */
+  readonly hateThreatening?: number;
+  /** Graphic violence score. */
+  readonly violenceGraphic?: number;
+  /** Intent to self-harm score. */
+  readonly selfHarmIntent?: number;
+  /** Instructions for self-harm score. */
+  readonly selfHarmInstructions?: number;
+  /** Harassment that threatens violence score. */
+  readonly harassmentThreatening?: number;
+  /** Non-graphic violence score. */
+  readonly violence?: number;
 }
 
 /** Input to the moderation endpoint — a single string or multiple strings. */
 export declare enum ModerationInput {
-	/** Single text string. */
-	Single = "Single",
-	/** Multiple text strings (batch moderation). */
-	Multiple = "Multiple",
+  /** Single text string. */
+  Single = "Single",
+  /** Multiple text strings (batch moderation). */
+  Multiple = "Multiple",
 }
 
 /** Request to classify content for policy violations. */
 export interface ModerationRequest {
-	/** Text or texts to check. */
-	readonly input?: ModerationInput;
-	/** Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset. */
-	readonly model?: string;
+  /** Text or texts to check. */
+  readonly input?: ModerationInput;
+  /** Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset. */
+  readonly model?: string;
 }
 
 /** Response from the moderation endpoint. */
 export interface ModerationResponse {
-	/** Unique identifier for this moderation request. */
-	readonly id: string;
-	/** Model used for classification. */
-	readonly model: string;
-	/** Results for each input string. */
-	readonly results: Array<ModerationResult>;
+  /** Unique identifier for this moderation request. */
+  readonly id: string;
+  /** Model used for classification. */
+  readonly model: string;
+  /** Results for each input string. */
+  readonly results: Array<ModerationResult>;
 }
 
 /** A single moderation classification result. */
 export interface ModerationResult {
-	/** True if any category was flagged. */
-	readonly flagged: boolean;
-	/** Boolean flags for each moderation category. */
-	readonly categories: ModerationCategories;
-	/** Confidence scores for each category. */
-	readonly categoryScores: ModerationCategoryScores;
+  /** True if any category was flagged. */
+  readonly flagged: boolean;
+  /** Boolean flags for each moderation category. */
+  readonly categories: ModerationCategories;
+  /** Confidence scores for each category. */
+  readonly categoryScores: ModerationCategoryScores;
 }
 
 /** Document input for OCR — either a URL or inline base64 data. */
-export type OcrDocument = { type: "document_url"; url: string } | { type: "base64"; data: string; mediaType: string };
+export type OcrDocument =
+  | { type: "document_url"; url: string }
+  | { type: "base64"; data: string; mediaType: string };
 
 /** An image extracted from an OCR page. */
 export interface OcrImage {
-	/** Unique image identifier within the document. */
-	readonly id: string;
-	/** Base64-encoded image data (if `include_image_base64` was true). */
-	readonly imageBase64?: string;
+  /** Unique image identifier within the document. */
+  readonly id: string;
+  /** Base64-encoded image data (if `include_image_base64` was true). */
+  readonly imageBase64?: string;
 }
 
 /** A single page of OCR output. */
 export interface OcrPage {
-	/** Page index (0-based). */
-	readonly index: number;
-	/** Extracted page content as Markdown. */
-	readonly markdown: string;
-	/** Embedded images extracted from the page (if `include_image_base64` was true). */
-	readonly images?: Array<OcrImage>;
-	/** Page dimensions in pixels, if available. */
-	readonly dimensions?: PageDimensions;
+  /** Page index (0-based). */
+  readonly index: number;
+  /** Extracted page content as Markdown. */
+  readonly markdown: string;
+  /** Embedded images extracted from the page (if `include_image_base64` was true). */
+  readonly images?: Array<OcrImage>;
+  /** Page dimensions in pixels, if available. */
+  readonly dimensions?: PageDimensions;
 }
 
 /** An OCR request. */
 export interface OcrRequest {
-	/** The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). */
-	readonly model?: string;
-	/** The document to process (URL or base64). */
-	readonly document?: OcrDocument;
-	/** Specific pages to process (1-indexed). `None` means all pages. */
-	readonly pages?: Array<number>;
-	/** Whether to include base64-encoded images of each processed page. */
-	readonly includeImageBase64?: boolean;
+  /** The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). */
+  readonly model?: string;
+  /** The document to process (URL or base64). */
+  readonly document?: OcrDocument;
+  /** Specific pages to process (1-indexed). `None` means all pages. */
+  readonly pages?: Array<number>;
+  /** Whether to include base64-encoded images of each processed page. */
+  readonly includeImageBase64?: boolean;
 }
 
 /** An OCR response. */
 export interface OcrResponse {
-	/** Extracted pages in order. */
-	readonly pages: Array<OcrPage>;
-	/** Model/provider used for OCR. */
-	readonly model: string;
-	/** Token usage, if reported by the provider. */
-	readonly usage?: Usage;
+  /** Extracted pages in order. */
+  readonly pages: Array<OcrPage>;
+  /** Model/provider used for OCR. */
+  readonly model: string;
+  /** Token usage, if reported by the provider. */
+  readonly usage?: Usage;
 }
 
 /** Page dimensions in pixels. */
 export interface PageDimensions {
-	/** Width in pixels. */
-	readonly width: number;
-	/** Height in pixels. */
-	readonly height: number;
+  /** Width in pixels. */
+  readonly width: number;
+  /** Height in pixels. */
+  readonly height: number;
 }
 
 /**
@@ -986,303 +1002,303 @@ export interface PageDimensions {
  * discounted rate and the remainder at the regular input rate.
  */
 export interface PromptTokensDetails {
-	/** Cached tokens present in the prompt. Defaults to 0 when absent. */
-	readonly cachedTokens?: number;
-	/** Audio input tokens present in the prompt. Defaults to 0 when absent. */
-	readonly audioTokens?: number;
+  /** Cached tokens present in the prompt. Defaults to 0 when absent. */
+  readonly cachedTokens?: number;
+  /** Audio input tokens present in the prompt. Defaults to 0 when absent. */
+  readonly audioTokens?: number;
 }
 
 /** Static configuration for a single provider entry in providers.json. */
 export interface ProviderConfig {
-	/** Provider identifier (matches the entry key in providers.json). */
-	readonly name: string;
-	/** Human-readable provider name shown in UIs. */
-	readonly displayName?: string;
-	/** Base URL used as the default for this provider's HTTP client. */
-	readonly baseUrl?: string;
-	/** Authentication scheme metadata (auth type + env var holding the key). */
-	readonly auth?: AuthConfig;
-	/** Supported endpoint kinds (e.g. `chat`, `embeddings`). */
-	readonly endpoints?: Array<string>;
-	/** Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`). */
-	readonly modelPrefixes?: Array<string>;
-	/**
-	 * Parameter key renaming for this provider.
-	 *
-	 * Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`)
-	 * to the name this provider expects (e.g. `"max_tokens"`).  Applied
-	 * automatically by [`ConfigDrivenProvider::transform_request`].
-	 */
-	readonly paramMappings?: Record<string, string>;
+  /** Provider identifier (matches the entry key in providers.json). */
+  readonly name: string;
+  /** Human-readable provider name shown in UIs. */
+  readonly displayName?: string;
+  /** Base URL used as the default for this provider's HTTP client. */
+  readonly baseUrl?: string;
+  /** Authentication scheme metadata (auth type + env var holding the key). */
+  readonly auth?: AuthConfig;
+  /** Supported endpoint kinds (e.g. `chat`, `embeddings`). */
+  readonly endpoints?: Array<string>;
+  /** Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`). */
+  readonly modelPrefixes?: Array<string>;
+  /**
+   * Parameter key renaming for this provider.
+   *
+   * Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`)
+   * to the name this provider expects (e.g. `"max_tokens"`).  Applied
+   * automatically by [`ConfigDrivenProvider::transform_request`].
+   */
+  readonly paramMappings?: Record<string, string>;
 }
 
 /** Configuration for per-model rate limits. */
 export interface RateLimitConfig {
-	/** Maximum requests per window.  `None` means unlimited. */
-	readonly rpm?: number;
-	/** Maximum tokens per window.  `None` means unlimited. */
-	readonly tpm?: number;
-	/** Fixed window duration (defaults to 60 s). */
-	readonly window?: number;
+  /** Maximum requests per window.  `None` means unlimited. */
+  readonly rpm?: number;
+  /** Maximum tokens per window.  `None` means unlimited. */
+  readonly tpm?: number;
+  /** Fixed window duration (defaults to 60 s). */
+  readonly window?: number;
 }
 
 /** Controls how much reasoning effort the model should use. */
 export declare enum ReasoningEffort {
-	Low = "low",
-	Medium = "medium",
-	High = "high",
+  Low = "low",
+  Medium = "medium",
+  High = "high",
 }
 
 /** A document to be reranked — either a plain string or an object with a text field. */
 export declare enum RerankDocument {
-	/** Plain text document content. */
-	Text = "Text",
-	/** Document with explicit text field (may include metadata). */
-	Object = "Object",
+  /** Plain text document content. */
+  Text = "Text",
+  /** Document with explicit text field (may include metadata). */
+  Object = "Object",
 }
 
 /** Request to rerank documents by relevance to a query. */
 export interface RerankRequest {
-	/** Model ID (e.g., `"cohere/rerank-english-v3.0"`). */
-	readonly model?: string;
-	/** The search query. */
-	readonly query?: string;
-	/** Documents to rerank. */
-	readonly documents?: Array<RerankDocument>;
-	/** Return only the top N results. Optional. */
-	readonly topN?: number;
-	/** Include the document content in results. Defaults to false. */
-	readonly returnDocuments?: boolean;
+  /** Model ID (e.g., `"cohere/rerank-english-v3.0"`). */
+  readonly model?: string;
+  /** The search query. */
+  readonly query?: string;
+  /** Documents to rerank. */
+  readonly documents?: Array<RerankDocument>;
+  /** Return only the top N results. Optional. */
+  readonly topN?: number;
+  /** Include the document content in results. Defaults to false. */
+  readonly returnDocuments?: boolean;
 }
 
 /** Response from the rerank endpoint. */
 export interface RerankResponse {
-	/** Unique identifier for this rerank request. */
-	readonly id?: string;
-	/** Reranked documents in order of relevance. */
-	readonly results: Array<RerankResult>;
-	/** Optional metadata about the reranking operation. */
-	readonly meta?: JsonValue;
+  /** Unique identifier for this rerank request. */
+  readonly id?: string;
+  /** Reranked documents in order of relevance. */
+  readonly results: Array<RerankResult>;
+  /** Optional metadata about the reranking operation. */
+  readonly meta?: JsonValue;
 }
 
 /** A single reranked document with its relevance score. */
 export interface RerankResult {
-	/** Original document index in the input list. */
-	readonly index: number;
-	/** Relevance score in `[0, 1]`. Higher indicates more relevant. */
-	readonly relevanceScore: number;
-	/** Original document content (if `return_documents` was true). */
-	readonly document?: RerankResultDocument;
+  /** Original document index in the input list. */
+  readonly index: number;
+  /** Relevance score in `[0, 1]`. Higher indicates more relevant. */
+  readonly relevanceScore: number;
+  /** Original document content (if `return_documents` was true). */
+  readonly document?: RerankResultDocument;
 }
 
 /** The text content of a reranked document, returned when `return_documents` is true. */
 export interface RerankResultDocument {
-	/** Document text. */
-	readonly text: string;
+  /** Document text. */
+  readonly text: string;
 }
 
 /** Response format constraint. */
 export type ResponseFormat =
-	| { type: "text" }
-	| { type: "json_object" }
-	| { type: "json_schema"; jsonSchema: JsonSchemaFormat };
+  | { type: "text" }
+  | { type: "json_object" }
+  | { type: "json_schema"; jsonSchema: JsonSchemaFormat };
 
 /** Response from a structured response request. */
 export interface ResponseObject {
-	/** Unique response ID. */
-	readonly id?: string;
-	/** Object type (e.g., `"response"`). */
-	readonly object?: string;
-	/** Unix timestamp of response creation. */
-	readonly createdAt?: number;
-	/** Model used to generate the response. */
-	readonly model?: string;
-	/** Status (e.g., `"succeeded"`, `"failed"`). */
-	readonly status?: string;
-	/** Output items from the response. */
-	readonly output?: Array<ResponseOutputItem>;
-	/** Token usage. */
-	readonly usage?: ResponseUsage;
-	/** Error details (if status is "failed"). */
-	readonly error?: JsonValue;
+  /** Unique response ID. */
+  readonly id?: string;
+  /** Object type (e.g., `"response"`). */
+  readonly object?: string;
+  /** Unix timestamp of response creation. */
+  readonly createdAt?: number;
+  /** Model used to generate the response. */
+  readonly model?: string;
+  /** Status (e.g., `"succeeded"`, `"failed"`). */
+  readonly status?: string;
+  /** Output items from the response. */
+  readonly output?: Array<ResponseOutputItem>;
+  /** Token usage. */
+  readonly usage?: ResponseUsage;
+  /** Error details (if status is "failed"). */
+  readonly error?: JsonValue;
 }
 
 /** A single output item from the response. */
 export interface ResponseOutputItem {
-	/** Output type (e.g., `"text"`, `"object"`, `"error"`). */
-	readonly itemType?: string;
-	/** Output content (flattened into the object). */
-	readonly content?: JsonValue;
+  /** Output type (e.g., `"text"`, `"object"`, `"error"`). */
+  readonly itemType?: string;
+  /** Output content (flattened into the object). */
+  readonly content?: JsonValue;
 }
 
 /** A tool available for the response request. */
 export interface ResponseTool {
-	/** Tool type (e.g., "extractor", "search"). */
-	readonly toolType?: string;
-	/** Tool configuration (flattened into the object). */
-	readonly config?: JsonValue;
+  /** Tool type (e.g., "extractor", "search"). */
+  readonly toolType?: string;
+  /** Tool configuration (flattened into the object). */
+  readonly config?: JsonValue;
 }
 
 /** Token usage for a response. */
 export interface ResponseUsage {
-	/** Input tokens used. */
-	readonly inputTokens?: number;
-	/** Output tokens used. */
-	readonly outputTokens?: number;
-	/** Total tokens used. */
-	readonly totalTokens?: number;
+  /** Input tokens used. */
+  readonly inputTokens?: number;
+  /** Output tokens used. */
+  readonly outputTokens?: number;
+  /** Total tokens used. */
+  readonly totalTokens?: number;
 }
 
 /** A search request. */
 export interface SearchRequest {
-	/** The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). */
-	readonly model?: string;
-	/** The search query string. */
-	readonly query?: string;
-	/** Maximum number of results to return. */
-	readonly maxResults?: number;
-	/** Domain filter — restrict results to specific domains. */
-	readonly searchDomainFilter?: Array<string>;
-	/** Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). */
-	readonly country?: string;
+  /** The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). */
+  readonly model?: string;
+  /** The search query string. */
+  readonly query?: string;
+  /** Maximum number of results to return. */
+  readonly maxResults?: number;
+  /** Domain filter — restrict results to specific domains. */
+  readonly searchDomainFilter?: Array<string>;
+  /** Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). */
+  readonly country?: string;
 }
 
 /** A search response. */
 export interface SearchResponse {
-	/** List of search results. */
-	readonly results: Array<SearchResult>;
-	/** Model/provider that performed the search. */
-	readonly model: string;
+  /** List of search results. */
+  readonly results: Array<SearchResult>;
+  /** Model/provider that performed the search. */
+  readonly model: string;
 }
 
 /** An individual search result. */
 export interface SearchResult {
-	/** Result title. */
-	readonly title: string;
-	/** Result URL. */
-	readonly url: string;
-	/** Text snippet or excerpt from the page. */
-	readonly snippet: string;
-	/** Publication or last-updated date, if available. */
-	readonly date?: string;
+  /** Result title. */
+  readonly title: string;
+  /** Result URL. */
+  readonly url: string;
+  /** Text snippet or excerpt from the page. */
+  readonly snippet: string;
+  /** Publication or last-updated date, if available. */
+  readonly date?: string;
 }
 
 /** Name of the specific function to invoke. */
 export interface SpecificFunction {
-	/** Function name. */
-	readonly name?: string;
+  /** Function name. */
+  readonly name?: string;
 }
 
 /** Directive to call a specific tool. */
 export interface SpecificToolChoice {
-	/** Tool type (always "function"). */
-	readonly choiceType?: ToolType;
-	/** The specific function to invoke. */
-	readonly function?: SpecificFunction;
+  /** Tool type (always "function"). */
+  readonly choiceType?: ToolType;
+  /** The specific function to invoke. */
+  readonly function?: SpecificFunction;
 }
 
 /** Stop sequence(s) that cause the model to stop generating. */
 export declare enum StopSequence {
-	/** Single stop sequence. */
-	Single = "Single",
-	/** Multiple stop sequences. */
-	Multiple = "Multiple",
+  /** Single stop sequence. */
+  Single = "Single",
+  /** Multiple stop sequences. */
+  Multiple = "Multiple",
 }
 
 /** A streaming choice with incremental delta. */
 export interface StreamChoice {
-	/** Index of this choice in the choices array. */
-	readonly index?: number;
-	/** Incremental update to the message (content, tool calls, etc.). */
-	readonly delta?: StreamDelta;
-	/** Why the stream ended (present only in final chunk). */
-	readonly finishReason?: FinishReason;
+  /** Index of this choice in the choices array. */
+  readonly index?: number;
+  /** Incremental update to the message (content, tool calls, etc.). */
+  readonly delta?: StreamDelta;
+  /** Why the stream ended (present only in final chunk). */
+  readonly finishReason?: FinishReason;
 }
 
 /** Incremental delta in a stream chunk. */
 export interface StreamDelta {
-	/** Role (typically present only in the first chunk). */
-	readonly role?: string;
-	/** Partial content chunk (e.g., a few words of the response). */
-	readonly content?: string;
-	/** Partial tool calls being streamed. */
-	readonly toolCalls?: Array<StreamToolCall>;
-	/** Deprecated legacy function_call delta; retained for API compatibility. */
-	readonly functionCall?: StreamFunctionCall;
-	/** Partial refusal message. */
-	readonly refusal?: string;
+  /** Role (typically present only in the first chunk). */
+  readonly role?: string;
+  /** Partial content chunk (e.g., a few words of the response). */
+  readonly content?: string;
+  /** Partial tool calls being streamed. */
+  readonly toolCalls?: Array<StreamToolCall>;
+  /** Deprecated legacy function_call delta; retained for API compatibility. */
+  readonly functionCall?: StreamFunctionCall;
+  /** Partial refusal message. */
+  readonly refusal?: string;
 }
 
 /** Partial function call details in a stream. */
 export interface StreamFunctionCall {
-	/** Function name (typically in the first chunk). */
-	readonly name?: string;
-	/** Partial JSON arguments chunk. */
-	readonly arguments?: string;
+  /** Function name (typically in the first chunk). */
+  readonly name?: string;
+  /** Partial JSON arguments chunk. */
+  readonly arguments?: string;
 }
 
 /** Options for streaming responses. */
 export interface StreamOptions {
-	/** If true, include token usage in the final stream chunk. */
-	readonly includeUsage?: boolean;
+  /** If true, include token usage in the final stream chunk. */
+  readonly includeUsage?: boolean;
 }
 
 /** A streaming tool call being built incrementally. */
 export interface StreamToolCall {
-	/** Index of this tool call in the tool_calls array. */
-	readonly index?: number;
-	/** Tool call ID (typically in the first chunk for this call). */
-	readonly id?: string;
-	/** Tool type (typically "function"). */
-	readonly callType?: ToolType;
-	/** Partial function name and arguments. */
-	readonly function?: StreamFunctionCall;
+  /** Index of this tool call in the tool_calls array. */
+  readonly index?: number;
+  /** Tool call ID (typically in the first chunk for this call). */
+  readonly id?: string;
+  /** Tool type (typically "function"). */
+  readonly callType?: ToolType;
+  /** Partial function name and arguments. */
+  readonly function?: StreamFunctionCall;
 }
 
 /** System message guiding model behavior for the entire conversation. */
 export interface SystemMessage {
-	/** Instructions or context that apply throughout the conversation. */
-	readonly content?: string;
-	/** Optional name for the system message source. */
-	readonly name?: string;
+  /** Instructions or context that apply throughout the conversation. */
+  readonly content?: string;
+  /** Optional name for the system message source. */
+  readonly name?: string;
 }
 
 /** A tool call the model wants to execute. */
 export interface ToolCall {
-	/** Unique ID for this call, used to reference in tool result messages. */
-	readonly id: string;
-	/** Tool type (always "function"). */
-	readonly callType: ToolType;
-	/** Function name and arguments. */
-	readonly function: FunctionCall;
+  /** Unique ID for this call, used to reference in tool result messages. */
+  readonly id: string;
+  /** Tool type (always "function"). */
+  readonly callType: ToolType;
+  /** Function name and arguments. */
+  readonly function: FunctionCall;
 }
 
 /** Tool usage mode or a specific tool to call. */
 export declare enum ToolChoice {
-	/** Predefined mode: auto, required, or none. */
-	Mode = "Mode",
-	/** Force a specific tool to be called. */
-	Specific = "Specific",
+  /** Predefined mode: auto, required, or none. */
+  Mode = "Mode",
+  /** Force a specific tool to be called. */
+  Specific = "Specific",
 }
 
 /** Tool choice mode. */
 export declare enum ToolChoiceMode {
-	/** Model may or may not call tools; default behavior. */
-	Auto = "auto",
-	/** Model must call at least one tool. */
-	Required = "required",
-	/** Model must not call any tools. */
-	None = "none",
+  /** Model may or may not call tools; default behavior. */
+  Auto = "auto",
+  /** Model must call at least one tool. */
+  Required = "required",
+  /** Model must not call any tools. */
+  None = "none",
 }
 
 /** Tool execution result returned to the model. */
 export interface ToolMessage {
-	/** Result of the tool execution. */
-	readonly content?: string;
-	/** ID of the tool call this result responds to. */
-	readonly toolCallId?: string;
-	/** Optional tool/function name. */
-	readonly name?: string;
+  /** Result of the tool execution. */
+  readonly content?: string;
+  /** ID of the tool call this result responds to. */
+  readonly toolCallId?: string;
+  /** Optional tool/function name. */
+  readonly name?: string;
 }
 
 /**
@@ -1293,63 +1309,63 @@ export interface ToolMessage {
  * deserialization.
  */
 export declare enum ToolType {
-	Function = "function",
+  Function = "function",
 }
 
 /** Response from a transcription request. */
 export interface TranscriptionResponse {
-	/** The transcribed text. */
-	readonly text?: string;
-	/** Detected language (ISO-639-1 code). */
-	readonly language?: string;
-	/** Total audio duration in seconds. */
-	readonly duration?: number;
-	/** Detailed segment-level transcription (if response_format is "verbose_json"). */
-	readonly segments?: Array<TranscriptionSegment>;
+  /** The transcribed text. */
+  readonly text?: string;
+  /** Detected language (ISO-639-1 code). */
+  readonly language?: string;
+  /** Total audio duration in seconds. */
+  readonly duration?: number;
+  /** Detailed segment-level transcription (if response_format is "verbose_json"). */
+  readonly segments?: Array<TranscriptionSegment>;
 }
 
 /** A segment of transcribed audio with timing information. */
 export interface TranscriptionSegment {
-	/** Segment index (0-based). */
-	readonly id?: number;
-	/** Start time in seconds. */
-	readonly start?: number;
-	/** End time in seconds. */
-	readonly end?: number;
-	/** Transcribed text for this segment. */
-	readonly text?: string;
+  /** Segment index (0-based). */
+  readonly id?: number;
+  /** Start time in seconds. */
+  readonly start?: number;
+  /** End time in seconds. */
+  readonly end?: number;
+  /** Transcribed text for this segment. */
+  readonly text?: string;
 }
 
 /** Token-usage accounting returned by the provider on each completion / embedding call. */
 export interface Usage {
-	/** Prompt tokens used. Defaults to 0 when absent (some providers omit this). */
-	readonly promptTokens?: number;
-	/** Completion tokens used. Defaults to 0 when absent (e.g. embedding responses). */
-	readonly completionTokens?: number;
-	/** Total tokens used. Defaults to 0 when absent (some providers omit this). */
-	readonly totalTokens?: number;
-	/**
-	 * Breakdown of tokens used in the prompt, including cached tokens served
-	 * at the provider's discounted cache-read rate. Absent when the provider
-	 * does not return prompt-token details.
-	 */
-	readonly promptTokensDetails?: PromptTokensDetails;
+  /** Prompt tokens used. Defaults to 0 when absent (some providers omit this). */
+  readonly promptTokens?: number;
+  /** Completion tokens used. Defaults to 0 when absent (e.g. embedding responses). */
+  readonly completionTokens?: number;
+  /** Total tokens used. Defaults to 0 when absent (some providers omit this). */
+  readonly totalTokens?: number;
+  /**
+   * Breakdown of tokens used in the prompt, including cached tokens served
+   * at the provider's discounted cache-read rate. Absent when the provider
+   * does not return prompt-token details.
+   */
+  readonly promptTokensDetails?: PromptTokensDetails;
 }
 
 /** User message content as either plain text or a list of multimodal parts. */
 export declare enum UserContent {
-	/** Plain text content. */
-	Text = "Text",
-	/** Array of content parts (text, images, documents, audio). */
-	Parts = "Parts",
+  /** Plain text content. */
+  Text = "Text",
+  /** Array of content parts (text, images, documents, audio). */
+  Parts = "Parts",
 }
 
 /** User message in the conversation. */
 export interface UserMessage {
-	/** Message content as plain text or array of content parts (text, images, documents, audio). */
-	readonly content?: UserContent;
-	/** Optional name for the user. */
-	readonly name?: string;
+  /** Message content as plain text or array of content parts (text, images, documents, audio). */
+  readonly content?: UserContent;
+  /** Optional name for the user. */
+  readonly name?: string;
 }
 
 /**
@@ -1372,12 +1388,12 @@ export declare function registerCustomProvider(config: CustomProviderConfig): vo
 export declare function unregisterCustomProvider(name: string): boolean;
 
 export declare class ChatStreamIterator {
-	next(value?: undefined): Promise<IteratorResult<ChatCompletionChunk, void>>;
-	[Symbol.asyncIterator](): AsyncGenerator<ChatCompletionChunk, void, undefined>;
+  next(value?: undefined): Promise<IteratorResult<ChatCompletionChunk, void>>;
+  [Symbol.asyncIterator](): AsyncGenerator<ChatCompletionChunk, void, undefined>;
 }
 
 export declare class LiterLlmErrorInfo {
-	statusCode(): number;
-	isTransient(): boolean;
-	errorType(): string;
+  statusCode(): number;
+  isTransient(): boolean;
+  errorType(): string;
 }
