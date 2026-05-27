@@ -204,10 +204,10 @@ repos:
                 - .textlintrc.json
           - id: oxlint
             require_serial: true
-            exclude: ^(crates/liter-llm-node/index\.d\.ts|packages/(typescript|wasm)/src/index\.ts)$
+            exclude: ^(crates/liter-llm-node/index\.(d\.ts|js)|packages/(typescript|wasm)/src/index\.ts)$
           - id: oxfmt
             require_serial: true
-            exclude: ^(crates/liter-llm-node/index\.d\.ts|packages/(typescript|wasm)/src/index\.ts)$
+            exclude: ^(crates/liter-llm-node/index\.(d\.ts|js)|packages/(typescript|wasm)/src/index\.ts)$
           - id: cppcheck
             args:
                 - --suppress=unusedStructMember
