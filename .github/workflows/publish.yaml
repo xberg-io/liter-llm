@@ -1970,6 +1970,8 @@ jobs:
         needs: [prepare, swift-artifactbundle]
         if: ${{ (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.swift-artifactbundle.result == 'success' }}
         runs-on: ubuntu-latest
+        permissions:
+            contents: write
         steps:
             - uses: actions/download-artifact@v7
               with:
