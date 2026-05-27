@@ -5,7 +5,7 @@ edition = "2021"
 license = "MIT"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
 readme = false
-keywords = ["llm", "api-client", "openai", "anthropic"]
+keywords = ["anthropic", "api-client", "llm", "openai"]
 categories = ["text-processing"]
 repository = "https://github.com/kreuzberg-dev/liter-llm"
 

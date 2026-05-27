@@ -5,7 +5,7 @@ edition = "2024"
 license = "MIT"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
 readme = false
-keywords = ["llm", "api-client", "openai", "anthropic"]
+keywords = ["anthropic", "api-client", "llm", "openai"]
 categories = ["text-processing"]
 
 # `serde_json` is emitted unconditionally above so the manifest is stable

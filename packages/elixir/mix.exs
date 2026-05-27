@@ -7,7 +7,12 @@ defmodule LiterLlm.MixProject do
       version: "1.4.0-rc.34",
       elixir: "~> 1.14",
       elixirc_paths: ["lib", Path.expand("../../packages/elixir/native/liter_llm_nif/src", __DIR__)],
-      rustler_crates: [liter_llm_nif: [mode: :release]],
+      rustler_crates: [
+        liter_llm_nif: [
+          mode: :release,
+          targets: ~w(aarch64-apple-darwin aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu x86_64-pc-windows-gnu)
+        ]
+      ],
       description: "Universal LLM API client with Rust-powered polyglot bindings.",
       package: package(),
       deps: deps()
