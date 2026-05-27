@@ -1,6 +1,6 @@
 {
   "name": "@kreuzberg/liter-llm-node",
-  "version": "1.4.0-rc.37",
+  "version": "1.4.0-rc.38",
   "description": "Universal LLM API client with Rust-powered polyglot bindings.",
   "license": "MIT",
   "repository": {
@@ -28,8 +28,6 @@
     "targets": [
       "x86_64-unknown-linux-gnu",
       "aarch64-unknown-linux-gnu",
-      "x86_64-unknown-linux-musl",
-      "aarch64-unknown-linux-musl",
       "x86_64-apple-darwin",
       "aarch64-apple-darwin",
       "x86_64-pc-windows-msvc",

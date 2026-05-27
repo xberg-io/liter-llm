@@ -416,12 +416,6 @@ jobs:
                     - label: linux-arm64-gnu
                       runner: ubuntu-24.04-arm
                       napi_target: aarch64-unknown-linux-gnu
-                    - label: linux-x64-musl
-                      runner: ubuntu-latest
-                      napi_target: x86_64-unknown-linux-musl
-                    - label: linux-arm64-musl
-                      runner: ubuntu-latest
-                      napi_target: aarch64-unknown-linux-musl
                     - label: darwin-arm64
                       runner: macos-latest
                       napi_target: aarch64-apple-darwin
@@ -432,10 +426,6 @@ jobs:
             - uses: actions/checkout@v6.0.2
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
-            - name: Install musl tools
-              if: ${{ contains(matrix.napi_target, 'musl') }}
-              run: sudo apt-get update && sudo apt-get install -y musl-tools
-              shell: bash
             - uses: kreuzberg-dev/actions/setup-rust@v1
               with:
                   target: ${{ matrix.napi_target }}
@@ -1513,24 +1503,6 @@ jobs:
               with:
                   registry: npm
                   package: "@kreuzberg/liter-llm-node-linux-arm64-gnu"
-                  version: ${{ needs.prepare.outputs.version }}
-                  max-attempts: "25"
-
-            - name: Wait for npm indexing (x64-musl)
-              if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck.outputs.exists != 'true' }}
-              uses: kreuzberg-dev/actions/wait-for-package@v1
-              with:
-                  registry: npm
-                  package: "@kreuzberg/liter-llm-node-linux-x64-musl"
-                  version: ${{ needs.prepare.outputs.version }}
-                  max-attempts: "25"
-
-            - name: Wait for npm indexing (ARM64-musl)
-              if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck.outputs.exists != 'true' }}
-              uses: kreuzberg-dev/actions/wait-for-package@v1
-              with:
-                  registry: npm
-                  package: "@kreuzberg/liter-llm-node-linux-arm64-musl"
                   version: ${{ needs.prepare.outputs.version }}
                   max-attempts: "25"
 
