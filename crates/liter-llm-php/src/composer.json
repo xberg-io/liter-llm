@@ -30,15 +30,5 @@
     "support-nts": true,
     "download-url-method": ["pre-packaged-binary", "composer-default"]
   },
-  "keywords": ["llm", "api-client", "openai", "anthropic"],
-  "archive": {
-    "exclude": [
-      "/.php-cs-fixer.cache",
-      "/.php-cs-fixer.dist.php",
-      "/phpstan-baseline.neon",
-      "/phpstan.neon",
-      "/var",
-      "/vendor"
-    ]
-  }
+  "keywords": ["anthropic", "api-client", "llm", "openai"]
 }

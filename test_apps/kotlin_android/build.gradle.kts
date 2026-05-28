@@ -70,3 +70,7 @@ dependencies {
     testImplementation("net.java.dev.jna:jna:5.18.1")
 
 }
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
