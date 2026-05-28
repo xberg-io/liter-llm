@@ -12,6 +12,16 @@ version: "3"
 # from a local workflow artifact in dry-run CI).
 
 tasks:
+    run:
+        desc: Run alef test-apps for every registry-mode language + brew + homebrew
+        cmds:
+            - alef test-apps run {{.CLI_ARGS}}
+
+    regenerate:scaffold:
+        desc: Regenerate alef test-app scaffolds for a single language (usage - task test-apps:regenerate:scaffold -- python)
+        cmds:
+            - alef test-apps generate {{.CLI_ARGS}}
+
     smoke:
         desc: Run all test_app smoke tests
         cmds:
