@@ -667,12 +667,18 @@ jobs:
                   else
                     LIB_SRC="${NIF_TARGET_DIR}/${TARGET}/release/libliter_llm_nif.${LIB_EXT}"
                   fi
+                  # rustler_precompiled 0.9.0 hardcodes `.so` for every non-Windows target
+                  # in `lib_name_with_ext/2`. Normalize darwin output to `.so` so the
+                  # release asset name matches what `generate-elixir-checksums` and
+                  # consumer `mix deps.get` look up. Windows stays `.dll`.
+                  case "$LIB_EXT" in
+                    dylib) PUBLISH_EXT="so" ;;
+                    *)     PUBLISH_EXT="$LIB_EXT" ;;
+                  esac
                   mkdir -p nif-tarballs
                   for NIF_VER in 2.16 2.17; do
-                    # RustlerPrecompiled expects platform-specific extensions:
-                    #   linux → .so.tar.gz, darwin → .dylib.tar.gz, windows → .dll.tar.gz
-                    TARBALL="nif-tarballs/libliter_llm_nif-v${VERSION}-nif-${NIF_VER}-${TARGET}.${LIB_EXT}.tar.gz"
-                    INNER="liter_llm_nif.${LIB_EXT}"
+                    TARBALL="nif-tarballs/libliter_llm_nif-v${VERSION}-nif-${NIF_VER}-${TARGET}.${PUBLISH_EXT}.tar.gz"
+                    INNER="liter_llm_nif.${PUBLISH_EXT}"
                     cp "$LIB_SRC" "$INNER"
                     tar -czf "$TARBALL" "$INNER"
                     rm "$INNER"

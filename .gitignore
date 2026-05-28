@@ -291,3 +291,4 @@ packages/php/var/
 .codex/skills/quick-start/SKILL.md
 .gemini/settings.json
 # END ai-rulez
+test_apps/zig/zig-pkg/

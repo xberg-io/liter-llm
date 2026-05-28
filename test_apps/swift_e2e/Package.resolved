@@ -1,13 +1,13 @@
 {
-  "originHash" : "a6748cb48fac1a5008a85f69ac6c953eca401742c5174b9040b3b204ffd21122",
+  "originHash" : "924392fface4e98c40cce866618dd86ad2bea16bc3e0ea68c4c67969aa04f571",
   "pins" : [
     {
       "identity" : "liter-llm",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kreuzberg-dev/liter-llm.git",
       "state" : {
-        "revision" : "c3c330349380206d2fedeba1ac5c50ccb7ef3dde",
-        "version" : "1.4.0-rc.33"
+        "revision" : "6e2038ea2f61825a06b8b13422069001079296b0",
+        "version" : "1.4.0-rc.42"
       }
     }
   ],
