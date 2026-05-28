@@ -1,7 +1,7 @@
 //go:build ignore
 // +build ignore
 
-package tspack
+package literllm
 
 import (
 	"embed"

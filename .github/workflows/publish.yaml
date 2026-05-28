@@ -1159,24 +1159,22 @@ jobs:
                   DRY_RUN: ${{ needs.prepare.outputs.dry_run }}
               shell: bash
               run: |
-                  # Mapping from alef platform suffix → cgo LDFLAGS dir name (Go arch names)
-                  declare -A platform_map
-                  platform_map["linux-x86_64"]="linux-amd64"
-                  platform_map["linux-aarch64"]="linux-arm64"
-                  platform_map["macos-arm64"]="macos-arm64"
-                  platform_map["macos-x86_64"]="macos-amd64"
-                  platform_map["windows-x86_64"]="windows-amd64"
-
+                  # Match the platform suffix explicitly; the version string contains
+                  # hyphens (e.g. v1.4.0-rc.39) so glob-strip with `##` over-strips and
+                  # drops the OS prefix. Anchored case matches at the END only.
                   for tarball in go-ffi-artifacts/*.tar.gz; do
                     base=$(basename "$tarball" .tar.gz)
-                    # Strip the longest "liter-llm-go-v{version}-" prefix (## for longest match)
-                    # e.g. "liter-llm-go-v1.4.0-rc.34-linux-x86_64" → "linux-x86_64"
-                    platform="${base##liter-llm-go-v*-}"
-                    lib_dir="${platform_map[$platform]:-}"
-                    if [ -z "$lib_dir" ]; then
-                      echo "WARNING: unknown platform '$platform' from '$base', skipping"
-                      continue
-                    fi
+                    case "$base" in
+                      *-linux-x86_64)   lib_dir="linux-amd64"   ;;
+                      *-linux-aarch64)  lib_dir="linux-arm64"   ;;
+                      *-macos-arm64)    lib_dir="macos-arm64"   ;;
+                      *-macos-x86_64)   lib_dir="macos-amd64"   ;;
+                      *-windows-x86_64) lib_dir="windows-amd64" ;;
+                      *)
+                        echo "WARNING: unknown platform suffix on '$base', skipping"
+                        continue
+                        ;;
+                    esac
                     echo "Extracting $tarball → packages/go/.lib/$lib_dir/"
                     mkdir -p "packages/go/.lib/$lib_dir"
                     # Tarballs structure: {pkg_name}/lib/{shared_lib} {pkg_name}/include/{header}
