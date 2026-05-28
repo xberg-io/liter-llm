@@ -25,33 +25,35 @@ package dev.kreuzberg.literllm.android
 /** Auth scheme used by a provider. */
 enum class AuthType {
     /** Standard `Authorization: Bearer <key>` header. */
-    @com.fasterxml.jackson.annotation.JsonProperty("bearer") BEARER,
+    @com.fasterxml.jackson.annotation.JsonProperty("bearer")
+    BEARER,
     /** `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). */
-    @com.fasterxml.jackson.annotation.JsonProperty("api-key") API_KEY,
+    @com.fasterxml.jackson.annotation.JsonProperty("api-key")
+    API_KEY,
     /** No authentication header required. */
-    @com.fasterxml.jackson.annotation.JsonProperty("none") NONE,
+    @com.fasterxml.jackson.annotation.JsonProperty("none")
+    NONE,
     /** Unrecognised auth scheme — falls back to bearer. */
-    @com.fasterxml.jackson.annotation.JsonProperty("unknown") UNKNOWN;
+    @com.fasterxml.jackson.annotation.JsonProperty("unknown")
+    UNKNOWN;
 
     @com.fasterxml.jackson.annotation.JsonValue
-    fun toWire(): String =
-        when (this) {
-            BEARER -> "bearer"
-            API_KEY -> "api-key"
-            NONE -> "none"
-            UNKNOWN -> "unknown"
-        }
+    fun toWire(): String = when (this) {
+        BEARER -> "bearer"
+        API_KEY -> "api-key"
+        NONE -> "none"
+        UNKNOWN -> "unknown"
+    }
 
     companion object {
         @com.fasterxml.jackson.annotation.JsonCreator
         @JvmStatic
-        fun fromWire(value: String): AuthType =
-            when (value) {
-                "bearer" -> BEARER
-                "api-key" -> API_KEY
-                "none" -> NONE
-                "unknown" -> UNKNOWN
-                else -> throw IllegalArgumentException("Unknown AuthType value: $value")
-            }
+        fun fromWire(value: String): AuthType = when (value) {
+            "bearer" -> BEARER
+            "api-key" -> API_KEY
+            "none" -> NONE
+            "unknown" -> UNKNOWN
+            else -> throw IllegalArgumentException("Unknown AuthType value: $value")
+        }
     }
 }
