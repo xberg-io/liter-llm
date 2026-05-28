@@ -1734,7 +1734,7 @@ name = "liter_llm_ffi"
 name = "LiterLlm"
 
 [crates.e2e.registry.packages.zig]
-hash = "liter_llm-1.4.0-rc.39-Jfgk_NcsAQADDVFAN2v5akUsB45XiB79M5lww7kFbEDGE"
+hash = "liter_llm-1.4.0-rc.42-Jfgk_NcsAQBpkv3XrckgE9vZmwDERDOandv0Ud6LXpHH"
 
 # test_apps version sync — anchor on package-name strings so unrelated semver
 # tokens (junit, jackson, vitest, etc.) aren't clobbered. Mirrors the pattern
