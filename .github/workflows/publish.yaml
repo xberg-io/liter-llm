@@ -2088,6 +2088,35 @@ jobs:
                     --clobber \
                     --repo "${{ github.repository }}"
 
+            - name: Substitute Package.swift at tag (so SPM tag-URL pinning resolves)
+              # SwiftPM `.package(url: ..., from: "1.4.0-rc.X")` resolves by cloning
+              # the git tag and reading Package.swift from the tree. The checked-in
+              # main-branch Package.swift carries `__ALEF_SWIFT_VERSION__` /
+              # `__ALEF_SWIFT_CHECKSUM__` placeholders that the consumer can't
+              # resolve, so we substitute them on a one-off commit that the tag
+              # gets force-moved onto. Main branch keeps the placeholders so the
+              # next-release flow still works.
+              if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  VERSION: ${{ needs.prepare.outputs.version }}
+                  TAG: ${{ needs.prepare.outputs.tag }}
+              run: |
+                  CHECKSUM=$(cat dist/swift/*.checksum | tr -d '[:space:]')
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  # Detach onto the tagged commit, substitute, recommit, force-move tag.
+                  git fetch --tags origin
+                  git checkout --detach "${TAG}"
+                  sed -i "s/__ALEF_SWIFT_VERSION__/${VERSION}/g" Package.swift
+                  sed -i "s/__ALEF_SWIFT_CHECKSUM__/${CHECKSUM}/g" Package.swift
+                  git add Package.swift
+                  git commit -m "chore(swift): substitute Package.swift placeholders for ${TAG} [ci skip]"
+                  NEW_SHA=$(git rev-parse HEAD)
+                  git tag -f "${TAG}" "${NEW_SHA}"
+                  git push --force origin "refs/tags/${TAG}"
+                  echo "Tag ${TAG} now points at ${NEW_SHA} with substituted Package.swift"
+
             - name: Update release notes with Swift install instructions
               if: ${{ needs.prepare.outputs.dry_run != 'true' }}
               env:
