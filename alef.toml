@@ -1729,6 +1729,9 @@ name = "liter_llm_ffi"
 [crates.e2e.registry.packages.swift]
 name = "LiterLlm"
 
+[crates.e2e.registry.packages.zig]
+hash = "liter_llm-1.4.0-rc.38-Jfgk_NcsAQBFA1KveQMpsL0vaomjK8rYbl9nKW63m9jc"
+
 # test_apps version sync — anchor on package-name strings so unrelated semver
 # tokens (junit, jackson, vitest, etc.) aren't clobbered. Mirrors the pattern
 # used by ../html-to-markdown.

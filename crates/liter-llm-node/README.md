@@ -46,14 +46,13 @@
 		<img src="https://img.shields.io/badge/C-FFI-007ec6" alt="C FFI" />
 	</a>
 
-    <!-- Project Info -->
-    <a href="https://github.com/kreuzberg-dev/liter-llm/blob/main/LICENSE">
-    	<img src="https://img.shields.io/badge/License-MIT-007ec6" alt="License" />
-    </a>
-    <a href="https://docs.liter-llm.kreuzberg.dev">
-    	<img src="https://img.shields.io/badge/Docs-liter--llm-007ec6" alt="Docs" />
-    </a>
-
+	<!-- Project Info -->
+	<a href="https://github.com/kreuzberg-dev/liter-llm/blob/main/LICENSE">
+		<img src="https://img.shields.io/badge/License-MIT-007ec6" alt="License" />
+	</a>
+	<a href="https://docs.liter-llm.kreuzberg.dev">
+		<img src="https://img.shields.io/badge/Docs-liter--llm-007ec6" alt="Docs" />
+	</a>
 </div>
 <div align="center" style="margin: 24px 0 0">
 	<a href="https://kreuzberg.dev">
