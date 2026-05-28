@@ -23,8 +23,8 @@ let package = Package(
     // The binary includes C headers for swift-bridge interop.
     .binaryTarget(
       name: "RustBridge",
-      url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v__ALEF_SWIFT_VERSION__/LiterLlm-rs.artifactbundle.zip",
-      checksum: "__ALEF_SWIFT_CHECKSUM__"
+      url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.43/LiterLlm-rs.artifactbundle.zip",
+      checksum: "aa6bda263b97ab0cb9083c6813676e4a82e6b4091a9eb66367b4564cf8baa6f5"
     ),
     .target(
       name: "LiterLlm",
