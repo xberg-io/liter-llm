@@ -72,6 +72,12 @@ packages/csharp/**/runtimes/
 # publish-go-module CI job populates .lib/ before creating the packages/go/{tag}.
 # The legacy packages/go/lib/ path (no leading dot) remains ignored.
 packages/go/lib/
+# Unignore the prebuilt shared libs under packages/go/.lib/<platform>/ that the
+# publish workflow bundles into the Go module tag (root *.so/*.dylib/*.dll
+# rules above otherwise hide them from `git add`).
+!packages/go/.lib/**/*.so
+!packages/go/.lib/**/*.dylib
+!packages/go/.lib/**/*.dll
 coverage.out
 
 # Elixir

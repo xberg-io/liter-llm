@@ -5,7 +5,7 @@
 # Issues & docs: https://github.com/sample_crate-dev/alef
 """Public API for the conversion library.
 
-Version: 1.4.0-rc.41
+Version: 1.4.0-rc.42
 """
 
 from ._internal_bindings import (
@@ -322,4 +322,4 @@ __all__ = [
     "unregister_custom_provider",
 ]
 
-__version__ = "1.4.0-rc.41"
+__version__ = "1.4.0-rc.42"

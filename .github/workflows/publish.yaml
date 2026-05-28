@@ -1216,18 +1216,19 @@ jobs:
                   # The Go module proxy resolves github.com/kreuzberg-dev/liter-llm/packages/go@v{version}
                   # from this tag, which now includes the prebuilt .lib/ shared libraries.
                   MODULE_TAG="packages/go/${TAG}"
-                  # Use singular `git/ref/...` (exact-match) instead of `git/refs/...`
-                  # (prefix-match): the plural endpoint returns ALL refs matching the
-                  # prefix, so a query for "packages/go/v1.4.0-rc.38" would return
-                  # every "packages/go/*" tag and incorrectly report the new tag as
-                  # already existing. The singular endpoint returns 404 when the
-                  # exact ref does not exist.
+                  # Use git CLI for tag creation. `gh api git/refs` returns 403
+                  # "Resource not accessible by integration" even with the job-level
+                  # `contents: write` permission on release-triggered runs; `git push`
+                  # using the GITHUB_TOKEN that actions/checkout configures works.
+                  # Existence check still uses singular `git/ref/...` (exact-match):
+                  # the plural endpoint returns ALL refs matching the prefix, so a
+                  # query for "packages/go/v1.4.0-rc.38" would return every
+                  # "packages/go/*" tag and incorrectly report new tags as existing.
                   if gh api "repos/${REPO}/git/ref/tags/${MODULE_TAG}" --silent 2>/dev/null; then
                     echo "Go module tag $MODULE_TAG already exists — skipping"
                   else
-                    gh api "repos/${REPO}/git/refs" \
-                      -f "ref=refs/tags/${MODULE_TAG}" \
-                      -f "sha=${HEAD_SHA}"
+                    git tag "${MODULE_TAG}" "${HEAD_SHA}"
+                    git push origin "refs/tags/${MODULE_TAG}"
                     echo "Created Go module tag: $MODULE_TAG → $HEAD_SHA"
                   fi
 
