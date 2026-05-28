@@ -1218,8 +1218,13 @@ jobs:
                   # The Go module proxy resolves github.com/kreuzberg-dev/liter-llm/packages/go@v{version}
                   # from this tag, which now includes the prebuilt .lib/ shared libraries.
                   MODULE_TAG="packages/go/${TAG}"
-                  EXISTING=$(gh api "repos/${REPO}/git/refs/tags/${MODULE_TAG}" --jq '.ref' 2>/dev/null || echo "")
-                  if [ -n "$EXISTING" ]; then
+                  # Use singular `git/ref/...` (exact-match) instead of `git/refs/...`
+                  # (prefix-match): the plural endpoint returns ALL refs matching the
+                  # prefix, so a query for "packages/go/v1.4.0-rc.38" would return
+                  # every "packages/go/*" tag and incorrectly report the new tag as
+                  # already existing. The singular endpoint returns 404 when the
+                  # exact ref does not exist.
+                  if gh api "repos/${REPO}/git/ref/tags/${MODULE_TAG}" --silent 2>/dev/null; then
                     echo "Go module tag $MODULE_TAG already exists — skipping"
                   else
                     gh api "repos/${REPO}/git/refs" \
