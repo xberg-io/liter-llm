@@ -50,24 +50,10 @@ const tryLoadBinding = () => {
     ],
     [
       "linux",
-      "x64",
-      "musl",
-      "./liter-llm-node.linux-x64-musl.node",
-      "@kreuzberg/liter-llm-node-linux-x64-musl",
-    ],
-    [
-      "linux",
       "arm64",
       "gnu",
       "./liter-llm-node.linux-arm64-gnu.node",
       "@kreuzberg/liter-llm-node-linux-arm64-gnu",
-    ],
-    [
-      "linux",
-      "arm64",
-      "musl",
-      "./liter-llm-node.linux-arm64-musl.node",
-      "@kreuzberg/liter-llm-node-linux-arm64-musl",
     ],
     [
       "darwin",

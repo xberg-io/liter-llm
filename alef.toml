@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.20.5"
+alef_version = "0.20.7"
 languages = [
   "python",
   "node",
@@ -95,6 +95,7 @@ output = "packages/python/liter_llm/"
 
 [crates.node]
 package_name = "@kreuzberg/liter-llm-node"
+exclude_platforms = ["linux-x64-musl", "linux-arm64-musl"]
 
 [crates.ruby]
 gem_name = "liter_llm"
