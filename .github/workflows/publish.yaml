@@ -1203,18 +1203,42 @@ jobs:
                   REPO: ${{ github.repository }}
               shell: bash
               run: |
+                  # Stage the .lib/ files (binary blobs from build matrix).
+                  # We cannot use `git pull --rebase` to recover from non-fast-forward
+                  # pushes because binary files cannot be auto-merged; rebase fails with
+                  # "Cannot merge binary files". Instead, snapshot the staged .lib/
+                  # directory, reset hard to origin/main, re-stage, and re-commit.
+                  # Binary files are replaced wholesale, not merged.
                   git add packages/go/.lib/
                   if git diff --cached --quiet; then
                     echo "No .lib/ changes to commit — skipping"
                   else
+                    LIB_SNAPSHOT="$(mktemp -d)/lib-bundle"
+                    mkdir -p "$LIB_SNAPSHOT"
+                    cp -R packages/go/.lib/. "$LIB_SNAPSHOT/"
                     git commit -m "chore(go): bundle prebuilt FFI libs for v${VERSION} [ci skip]"
-                    # Retry push with rebase on conflict (other jobs may have pushed to main)
-                    for i in 1 2 3; do
+                    for i in 1 2 3 4 5; do
                       if git push origin HEAD:refs/heads/main; then
+                        echo "Push succeeded on attempt $i"
                         break
                       fi
-                      echo "Push attempt $i failed; pulling and retrying..."
-                      git pull --rebase origin main
+                      if [ "$i" -eq 5 ]; then
+                        echo "Push failed after 5 attempts; aborting"
+                        exit 1
+                      fi
+                      echo "Push attempt $i failed; resyncing onto origin/main..."
+                      git fetch origin main
+                      git reset --hard origin/main
+                      rm -rf packages/go/.lib/
+                      mkdir -p packages/go/.lib/
+                      cp -R "$LIB_SNAPSHOT/." packages/go/.lib/
+                      git add packages/go/.lib/
+                      if git diff --cached --quiet; then
+                        echo ".lib/ already current on origin/main — skipping commit"
+                        break
+                      fi
+                      git commit -m "chore(go): bundle prebuilt FFI libs for v${VERSION} [ci skip]"
+                      sleep $((i * 2))
                     done
                   fi
                   HEAD_SHA=$(git rev-parse HEAD)

@@ -230,6 +230,8 @@ obj/
 pkg/
 packages/php/var/
 
+test_apps/zig/zig-pkg/
+
 # BEGIN ai-rulez (DO NOT EDIT - managed by ai-rulez)
 .agents/agents/code-reviewer.md
 .agents/agents/devops-engineer.md
@@ -291,4 +293,3 @@ packages/php/var/
 .codex/skills/quick-start/SKILL.md
 .gemini/settings.json
 # END ai-rulez
-test_apps/zig/zig-pkg/
