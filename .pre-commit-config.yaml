@@ -37,6 +37,14 @@ repos:
           - id: check-case-conflict
           - id: pyproject-fmt
             exclude: ^packages/python/pyproject\.toml$
+            # Pin toml-fmt-common < 1.3.3: 1.3.3 (released 2026-05-28) renamed
+            # `build_cli` → `_build_cli`, breaking pyproject-fmt 2.21.2 which
+            # still imports the old public name. Upstream fix pending in
+            # pyproject-fmt. Without this constraint, prek installs the latest
+            # toml-fmt-common and pyproject-fmt fails with ImportError.
+            additional_dependencies:
+                - pyproject-fmt==2.21.2
+                - toml-fmt-common<1.3.3
           - id: ruff
             exclude: ^packages/python/liter_llm/(__init__\.py|api\.py|exceptions\.py|options\.py|_internal_bindings\.pyi)$
           - id: ruff-format
