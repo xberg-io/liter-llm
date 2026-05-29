@@ -26,10 +26,8 @@ package dev.kreuzberg.literllm.android
 sealed class AuthHeaderFormat {
     /** Bearer token: `Authorization: Bearer <key>` */
     object Bearer : AuthHeaderFormat()
-
     /** Custom header: e.g., `X-Api-Key: <key>` */
     data class ApiKey(val value: String) : AuthHeaderFormat()
-
     /** No authentication required. */
     object None : AuthHeaderFormat()
 }

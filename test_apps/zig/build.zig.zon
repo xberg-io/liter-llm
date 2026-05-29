@@ -4,27 +4,10 @@
     .fingerprint = 0xf16334c0592376fc,
     .minimum_zig_version = "0.16.0",
     .dependencies = .{
-        .liter_llm_linux_x86_64 = .{
-            .url = "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.45/liter-llm-zig-v1.4.0-rc.45-linux-x86_64.tar.gz",
+        .liter_llm = .{
+            .url = "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.45/liter-llm-zig-v1.4.0-rc.45.tar.gz",
             .hash = "liter_llm-1.4.0-rc.42-Jfgk_NcsAQBpkv3XrckgE9vZmwDERDOandv0Ud6LXpHH",
         },
-        .liter_llm_linux_aarch64 = .{
-            .url = "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.45/liter-llm-zig-v1.4.0-rc.45-linux-aarch64.tar.gz",
-            .hash = "liter_llm-1.4.0-rc.42-Jfgk_NcsAQBpkv3XrckgE9vZmwDERDOandv0Ud6LXpHH",
-        },
-        .liter_llm_macos_x86_64 = .{
-            .url = "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.45/liter-llm-zig-v1.4.0-rc.45-macos-x86_64.tar.gz",
-            .hash = "liter_llm-1.4.0-rc.42-Jfgk_NcsAQBpkv3XrckgE9vZmwDERDOandv0Ud6LXpHH",
-        },
-        .liter_llm_macos_arm64 = .{
-            .url = "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.45/liter-llm-zig-v1.4.0-rc.45-macos-arm64.tar.gz",
-            .hash = "liter_llm-1.4.0-rc.42-Jfgk_NcsAQBpkv3XrckgE9vZmwDERDOandv0Ud6LXpHH",
-        },
-        .liter_llm_windows_x86_64 = .{
-            .url = "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.45/liter-llm-zig-v1.4.0-rc.45-windows-x86_64.tar.gz",
-            .hash = "liter_llm-1.4.0-rc.42-Jfgk_NcsAQBpkv3XrckgE9vZmwDERDOandv0Ud6LXpHH",
-        },
-
     },
     .paths = .{
         "build.zig",

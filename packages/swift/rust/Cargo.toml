@@ -28,14 +28,14 @@ doctest = false
 bench = false
 
 [dependencies]
-liter_llm = { version = "1.4.0-rc.44", path = "../../../crates/liter-llm", features = ["native-http", "full"], package = "liter-llm" }
 ahash = "0.8"
 async-trait = "0.1"
+futures-util = "0.3"
+liter_llm = { version = "1.4.0-rc.45", path = "../../../crates/liter-llm", features = ["native-http", "full"], package = "liter-llm" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
-futures-util = "0.3"
 swift-bridge = "0.1.59"
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
 
 [build-dependencies]
 swift-bridge-build = "0.1.59"

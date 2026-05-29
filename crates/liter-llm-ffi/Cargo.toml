@@ -9,16 +9,6 @@ keywords = ["anthropic", "api-client", "llm", "openai"]
 categories = ["text-processing"]
 repository = "https://github.com/kreuzberg-dev/liter-llm"
 
-[lib]
-crate-type = ["cdylib", "staticlib"]
-
-[dependencies]
-liter-llm = { path = "../liter-llm", version = "1.4.0-rc.45", features = ["native-http", "full"] }
-ahash = "0.8"
-serde_json = "1"
-tokio = { version = "1", features = ["full"] }
-futures-util = "0.3"
-
 # `serde_json`, `ahash`, and `tokio` are emitted unconditionally above so the
 # manifest is stable across regens (and so the C FFI codegen can pull them in
 # when an async / Result-typed function appears in the API surface), but for
@@ -30,8 +20,18 @@ futures-util = "0.3"
 [package.metadata.cargo-machete]
 ignored = ["ahash", "serde_json", "tokio", "futures-util"]
 
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
 [features]
 default = []
+
+[dependencies]
+ahash = "0.8"
+futures-util = "0.3"
+liter-llm = { path = "../liter-llm", version = "1.4.0-rc.45", features = ["native-http", "full"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
 
 [build-dependencies]
 cbindgen = "0.29"

@@ -75,6 +75,7 @@ func determinePaths() (string, string, error) {
 	return libDir, libPath, nil
 }
 
+
 func libFilename(libName, goos string) string {
 	switch goos {
 	case "windows":

@@ -32,6 +32,7 @@ packages = []
 sources.liter-llm = { path = "../../packages/python" }
 
 [tool.ruff]
+line-length = 120
 lint.ignore = ["PLR2004"]
 lint.per-file-ignores."tests/**" = [
   "B017",
