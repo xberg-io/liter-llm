@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	moduleVersion = "1.4.0-rc.44"
+	moduleVersion = "1.4.0-rc.45"
 	repoURL       = "https://github.com/kreuzberg-dev/liter-llm"
 	assetPrefix   = "liter-llm"
 )
@@ -74,6 +74,7 @@ func determinePaths() (string, string, error) {
 
 	return libDir, libPath, nil
 }
+
 
 func libFilename(libName, goos string) string {
 	switch goos {
