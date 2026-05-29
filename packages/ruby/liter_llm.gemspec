@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name = "liter_llm"
-  spec.version = "1.4.0.pre.rc.47"
+  spec.version = "1.4.0.pre.rc.48"
   spec.authors       = ["Na'aman Hirschfeld"]
   spec.summary       = "Universal LLM API client with Rust-powered polyglot bindings."
   spec.description   = "Universal LLM API client with Rust-powered polyglot bindings."
@@ -12,11 +12,11 @@ Gem::Specification.new do |spec|
   spec.metadata["keywords"] = %w[anthropic api-client llm openai].join(",")
   spec.metadata["rubygems_mfa_required"] = "true"
 
-  spec.files = Dir.glob(%w[README* LICENSE* lib/**/* ext/**/* sig/**/* Steepfile]).reject do |f|
-    f.include?("/native/target/") || f.include?("/native/tmp/")
-  end
+  spec.files = Dir.glob(%w[README* LICENSE* lib/**/* ext/**/* sig/**/* Steepfile]).select do |f|
+    File.file?(f)
+  end.reject { |f| f.include?("/native/target/") || f.include?("/native/tmp/") }
   spec.require_paths = ["lib"]
-  spec.extensions    = ["ext/liter_llm_rb/extconf.rb"]
+  spec.extensions    = ["ext/liter_llm_rb/native/extconf.rb"]
 
   spec.add_dependency "rb_sys", "~> 0.9"
   spec.add_dependency "sorbet-runtime", "~> 0.5"

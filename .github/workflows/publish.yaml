@@ -678,7 +678,7 @@ jobs:
                   mkdir -p nif-tarballs
                   for NIF_VER in 2.16 2.17; do
                     TARBALL="nif-tarballs/libliter_llm_nif-v${VERSION}-nif-${NIF_VER}-${TARGET}.${PUBLISH_EXT}.tar.gz"
-                    INNER="liter_llm_nif.${PUBLISH_EXT}"
+                    INNER="libliter_llm_nif-v${VERSION}-nif-${NIF_VER}-${TARGET}.${PUBLISH_EXT}"
                     cp "$LIB_SRC" "$INNER"
                     tar -czf "$TARBALL" "$INNER"
                     rm "$INNER"

@@ -1,6 +1,6 @@
 [package]
 name = "liter-llm-node"
-version = "1.4.0-rc.47"
+version = "1.4.0-rc.48"
 edition = "2024"
 license = "MIT"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
@@ -21,7 +21,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 futures-util = "0.3"
-liter-llm = { version = "1.4.0-rc.47", path = "../liter-llm", features = ["native-http", "full"] }
+liter-llm = { version = "1.4.0-rc.48", path = "../liter-llm", features = ["native-http", "full"] }
 napi = { version = "3", features = ["async", "serde-json"] }
 napi-derive = "3"
 serde = { version = "1", features = ["derive"] }
