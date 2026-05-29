@@ -83,7 +83,7 @@ mavenPublishing {
     coordinates(
         groupId = "dev.kreuzberg",
         artifactId = "liter-llm-android",
-        version = "1.4.0-rc.45",
+        version = "1.4.0-rc.46",
     )
 
     pom {
