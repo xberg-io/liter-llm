@@ -28,7 +28,7 @@ doctest = false
 bench = false
 
 [dependencies]
-liter_llm = { version = "1.4.0-rc.42", path = "../../../crates/liter-llm", features = ["native-http", "full"], package = "liter-llm" }
+liter_llm = { version = "1.4.0-rc.44", path = "../../../crates/liter-llm", features = ["native-http", "full"], package = "liter-llm" }
 ahash = "0.8"
 async-trait = "0.1"
 serde = { version = "1", features = ["derive"] }

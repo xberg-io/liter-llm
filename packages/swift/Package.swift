@@ -43,7 +43,11 @@ let package = Package(
         .linkedFramework("SystemConfiguration", .when(platforms: [.macOS])),
       ]
     ),
-    .target(name: "LiterLlm", dependencies: ["RustBridge"], path: "Sources/LiterLlm"),
-    .testTarget(name: "LiterLlmTests", dependencies: ["LiterLlm"], path: "Tests/LiterLlmTests"),
+    .target(
+      name: "LiterLlm", dependencies: ["RustBridge"],
+      path: "Sources/LiterLlm"),
+    .testTarget(
+      name: "LiterLlmTests", dependencies: ["LiterLlm"],
+      path: "Tests/LiterLlmTests"),
   ]
 )

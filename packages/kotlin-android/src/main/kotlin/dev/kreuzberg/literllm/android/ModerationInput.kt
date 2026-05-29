@@ -23,18 +23,22 @@
 package dev.kreuzberg.literllm.android
 
 /** Input to the moderation endpoint — a single string or multiple strings. */
-@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = ModerationInputDeserializer::class)
+@com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+    using = ModerationInputDeserializer::class
+)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = ModerationInputSerializer::class)
 sealed class ModerationInput {
     /** Single text string. */
     data class Single(val value: String) : ModerationInput()
+
     /** Multiple text strings (batch moderation). */
     data class Multiple(val value: List<String>) : ModerationInput()
 }
 
-private class ModerationInputDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<ModerationInput>(
-    ModerationInput::class.java
-) {
+private class ModerationInputDeserializer :
+    com.fasterxml.jackson.databind.deser.std.StdDeserializer<ModerationInput>(
+        ModerationInput::class.java
+    ) {
     @Suppress("LongMethod")
     override fun deserialize(
         parser: com.fasterxml.jackson.core.JsonParser,
@@ -44,9 +48,12 @@ private class ModerationInputDeserializer : com.fasterxml.jackson.databind.deser
         if (node.isTextual) return ModerationInput.Single(node.asText())
         if (node.isArray)
             return run {
-                val javaType = ctx.typeFactory.constructCollectionType(List::class.java, String::class.java)
+                val javaType =
+                    ctx.typeFactory.constructCollectionType(List::class.java, String::class.java)
                 @Suppress("UNCHECKED_CAST")
-                ModerationInput.Multiple(ctx.readTreeAsValue<List<String>>(node, javaType) as List<String>)
+                ModerationInput.Multiple(
+                    ctx.readTreeAsValue<List<String>>(node, javaType) as List<String>
+                )
             }
         throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
             parser,
@@ -57,9 +64,10 @@ private class ModerationInputDeserializer : com.fasterxml.jackson.databind.deser
     }
 }
 
-private class ModerationInputSerializer : com.fasterxml.jackson.databind.ser.std.StdSerializer<ModerationInput>(
-    ModerationInput::class.java
-) {
+private class ModerationInputSerializer :
+    com.fasterxml.jackson.databind.ser.std.StdSerializer<ModerationInput>(
+        ModerationInput::class.java
+    ) {
     @Suppress("LongMethod")
     override fun serialize(
         value: ModerationInput,
