@@ -25,30 +25,29 @@ package dev.kreuzberg.literllm.android
 /** Tool choice mode. */
 enum class ToolChoiceMode {
     /** Model may or may not call tools; default behavior. */
-    @com.fasterxml.jackson.annotation.JsonProperty("auto")
-    AUTO,
+    @com.fasterxml.jackson.annotation.JsonProperty("auto") AUTO,
     /** Model must call at least one tool. */
-    @com.fasterxml.jackson.annotation.JsonProperty("required")
-    REQUIRED,
+    @com.fasterxml.jackson.annotation.JsonProperty("required") REQUIRED,
     /** Model must not call any tools. */
-    @com.fasterxml.jackson.annotation.JsonProperty("none")
-    NONE;
+    @com.fasterxml.jackson.annotation.JsonProperty("none") NONE;
 
     @com.fasterxml.jackson.annotation.JsonValue
-    fun toWire(): String = when (this) {
-        AUTO -> "auto"
-        REQUIRED -> "required"
-        NONE -> "none"
-    }
+    fun toWire(): String =
+        when (this) {
+            AUTO -> "auto"
+            REQUIRED -> "required"
+            NONE -> "none"
+        }
 
     companion object {
         @com.fasterxml.jackson.annotation.JsonCreator
         @JvmStatic
-        fun fromWire(value: String): ToolChoiceMode = when (value) {
-            "auto" -> AUTO
-            "required" -> REQUIRED
-            "none" -> NONE
-            else -> throw IllegalArgumentException("Unknown ToolChoiceMode value: $value")
-        }
+        fun fromWire(value: String): ToolChoiceMode =
+            when (value) {
+                "auto" -> AUTO
+                "required" -> REQUIRED
+                "none" -> NONE
+                else -> throw IllegalArgumentException("Unknown ToolChoiceMode value: $value")
+            }
     }
 }
