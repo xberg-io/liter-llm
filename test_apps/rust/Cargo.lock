@@ -1658,9 +1658,9 @@ checksum = "92daf443525c4cce67b150400bc2316076100ce0b3686209eb8cf3c31612e6f0"
 
 [[package]]
 name = "liter-llm"
-version = "1.4.0-rc.45"
+version = "1.4.0-rc.46"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c661d8d90f26d377b800d258e3d6bd88df2f10570e79b81f51e8fd1c71478017"
+checksum = "131e975b22d79de0562a8e5f3d74a3192ef8e5599c3ea05423cb04a8a2410465"
 dependencies = [
  "aws-credential-types",
  "aws-sigv4",
@@ -1692,7 +1692,7 @@ dependencies = [
 
 [[package]]
 name = "liter_llm-e2e-rust"
-version = "1.4.0-rc.45"
+version = "1.4.0-rc.46"
 dependencies = [
  "axum",
  "liter-llm",
