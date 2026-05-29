@@ -2,7 +2,7 @@
 title: "Dart API Reference"
 ---
 
-## Dart API Reference <span class="version-badge">v1.4.0-rc.46</span>
+## Dart API Reference <span class="version-badge">v1.4.0-rc.47</span>
 
 ### Functions
 

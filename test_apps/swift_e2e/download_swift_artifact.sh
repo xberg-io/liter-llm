@@ -4,7 +4,7 @@ set -euo pipefail
 # Download the Swift artifact bundle and compute its checksum.
 # SwiftPM requires a stable SHA256 checksum for binary targets.
 
-ARTIFACT_URL="https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.46/LiterLlm-rs.artifactbundle.zip"
+ARTIFACT_URL="https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.47/LiterLlm-rs.artifactbundle.zip"
 ARTIFACT_FILE="LiterLlm-rs.artifactbundle.zip"
 PACKAGE_SWIFT="Package.swift"
 

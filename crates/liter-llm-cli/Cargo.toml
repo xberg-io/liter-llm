@@ -20,8 +20,8 @@ otel = ["liter-llm-proxy/otel"]
 [dependencies]
 axum = { workspace = true }
 clap = { workspace = true }
-liter-llm = { path = "../liter-llm", version = "1.4.0-rc.46" }
-liter-llm-proxy = { path = "../liter-llm-proxy", version = "1.4.0-rc.46" }
+liter-llm = { path = "../liter-llm", version = "1.4.0-rc.47" }
+liter-llm-proxy = { path = "../liter-llm-proxy", version = "1.4.0-rc.47" }
 rmcp = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }

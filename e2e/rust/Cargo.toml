@@ -8,7 +8,7 @@
 
 [package]
 name = "liter_llm-e2e-rust"
-version = "1.4.0-rc.46"
+version = "1.4.0-rc.47"
 edition = "2021"
 license = "MIT"
 publish = false
