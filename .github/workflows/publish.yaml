@@ -1902,11 +1902,33 @@ jobs:
                   git config user.email "github-actions[bot]@users.noreply.github.com"
                   git add packages/elixir/checksum-Elixir.LiterLlm.Native.exs
                   if git diff --cached --quiet; then
-                    echo "No checksum changes to commit"
-                  else
-                    git commit -m "chore: update Elixir NIF checksums for v${{ needs.prepare.outputs.version }}"
-                    git push origin HEAD:refs/heads/main || echo "Push failed (non-critical)"
+                    echo "No checksum changes to commit — skipping"
+                    exit 0
                   fi
+                  CHECKSUM_SNAPSHOT="$(mktemp)"
+                  cp packages/elixir/checksum-Elixir.LiterLlm.Native.exs "$CHECKSUM_SNAPSHOT"
+                  git commit -m "chore: update Elixir NIF checksums for v${{ needs.prepare.outputs.version }}"
+                  for i in 1 2 3 4 5; do
+                    if git push origin HEAD:refs/heads/main; then
+                      echo "Push succeeded on attempt $i"
+                      exit 0
+                    fi
+                    echo "Push attempt $i failed; retrying after rebase"
+                    if [ "$i" -eq 5 ]; then
+                      echo "ERROR: push failed after 5 attempts" >&2
+                      exit 1
+                    fi
+                    git fetch origin main
+                    git reset --hard origin/main
+                    cp "$CHECKSUM_SNAPSHOT" packages/elixir/checksum-Elixir.LiterLlm.Native.exs
+                    git add packages/elixir/checksum-Elixir.LiterLlm.Native.exs
+                    if git diff --cached --quiet; then
+                      echo "Remote already has these checksums — done"
+                      exit 0
+                    fi
+                    git commit -m "chore: update Elixir NIF checksums for v${{ needs.prepare.outputs.version }}"
+                    sleep $((i * 2))
+                  done
               shell: bash
 
             - uses: erlef/setup-beam@v1.24
