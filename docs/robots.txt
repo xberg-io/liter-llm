@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://docs.liter-llm.kreuzberg.dev/sitemap.xml
