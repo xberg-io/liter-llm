@@ -13,25 +13,6 @@ importers:
       '@napi-rs/cli':
         specifier: ^3.6.2
         version: 3.6.2(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@22.19.19)
-    optionalDependencies:
-      '@kreuzberg/liter-llm-node-darwin-arm64':
-        specifier: 1.4.0-rc.48
-        version: 1.4.0-rc.48
-      '@kreuzberg/liter-llm-node-darwin-x64':
-        specifier: 1.4.0-rc.48
-        version: 1.4.0-rc.48
-      '@kreuzberg/liter-llm-node-linux-arm64-gnu':
-        specifier: 1.4.0-rc.48
-        version: 1.4.0-rc.48
-      '@kreuzberg/liter-llm-node-linux-x64-gnu':
-        specifier: 1.4.0-rc.48
-        version: 1.4.0-rc.48
-      '@kreuzberg/liter-llm-node-win32-arm64-msvc':
-        specifier: 1.4.0-rc.48
-        version: 1.4.0-rc.48
-      '@kreuzberg/liter-llm-node-win32-x64-msvc':
-        specifier: 1.4.0-rc.48
-        version: 1.4.0-rc.48
 
   crates/liter-llm-wasm: {}
 
@@ -362,44 +343,6 @@ packages:
 
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
-
-  '@kreuzberg/liter-llm-node-darwin-arm64@1.4.0-rc.48':
-    resolution: {integrity: sha512-5fbkkz1LO7/az+Ine/9j3xz8sm7pNB8lMGNOdyubc4xq0osy3WpGf30lvkdY4ZnbLcK9lJn+koGCcbJx5DdKZQ==}
-    engines: {node: '>= 18'}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@kreuzberg/liter-llm-node-darwin-x64@1.4.0-rc.48':
-    resolution: {integrity: sha512-JMJ9veNP5z4RygXqYiKUc53mbiRluy45ykXJBKpEOBE2PJdLPdDwPnqVmBpbk+hTMbsSx56f/egFzFWyDycRLQ==}
-    engines: {node: '>= 18'}
-    cpu: [x64]
-    os: [darwin]
-
-  '@kreuzberg/liter-llm-node-linux-arm64-gnu@1.4.0-rc.48':
-    resolution: {integrity: sha512-Vh0IIEikmgmKbEJv/rH6rx/IOjC+JRpSxlX00MB8dT070VQ3yTRpXsUO8/Y/R1ftJUJonyUrWOgFMubw1BuTXg==}
-    engines: {node: '>= 18'}
-    cpu: [arm64]
-    os: [linux]
-    libc: [glibc]
-
-  '@kreuzberg/liter-llm-node-linux-x64-gnu@1.4.0-rc.48':
-    resolution: {integrity: sha512-z51YnDxLoPvlx6G60HT6b+Fk0K47MJLaDBAVn7gpAr5eZ1BZgnV2MZ5cNj0yyWqTW2NZu6cP0KjD+nOWS8EC2g==}
-    engines: {node: '>= 18'}
-    cpu: [x64]
-    os: [linux]
-    libc: [glibc]
-
-  '@kreuzberg/liter-llm-node-win32-arm64-msvc@1.4.0-rc.48':
-    resolution: {integrity: sha512-ea/wa5lnL+1SUlZIQ9EH9uGmAhYbe9Cz2uWToK+C374BNDZ3tHxOUnJahvJjCHC5ruvb3lYBWtkCdfmei77h7g==}
-    engines: {node: '>= 18'}
-    cpu: [arm64]
-    os: [win32]
-
-  '@kreuzberg/liter-llm-node-win32-x64-msvc@1.4.0-rc.48':
-    resolution: {integrity: sha512-baAwm0u3T1WXDB/AB/xY/kq9W01+CJJ7ufxnVkIR+E4EUZKuq+gI2m6aT8Sr5qnlSYMwyxwN5BB7Vc4CbUdbWA==}
-    engines: {node: '>= 18'}
-    cpu: [x64]
-    os: [win32]
 
   '@napi-rs/cli@3.6.2':
     resolution: {integrity: sha512-jy5rABUh9tbE/vPRzw9kGzGuqZiVslyDQUV8LkvjzqVX/oJMN7g0U1uhtr9L3W1H+iRM/urXHXUf+CE4n8FvLA==}
@@ -1639,24 +1582,6 @@ snapshots:
       '@types/node': 22.19.19
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
-
-  '@kreuzberg/liter-llm-node-darwin-arm64@1.4.0-rc.48':
-    optional: true
-
-  '@kreuzberg/liter-llm-node-darwin-x64@1.4.0-rc.48':
-    optional: true
-
-  '@kreuzberg/liter-llm-node-linux-arm64-gnu@1.4.0-rc.48':
-    optional: true
-
-  '@kreuzberg/liter-llm-node-linux-x64-gnu@1.4.0-rc.48':
-    optional: true
-
-  '@kreuzberg/liter-llm-node-win32-arm64-msvc@1.4.0-rc.48':
-    optional: true
-
-  '@kreuzberg/liter-llm-node-win32-x64-msvc@1.4.0-rc.48':
-    optional: true
 
   '@napi-rs/cli@3.6.2(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@22.19.19)':
     dependencies:

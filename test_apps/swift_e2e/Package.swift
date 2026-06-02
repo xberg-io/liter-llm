@@ -8,7 +8,7 @@ let package = Package(
         .iOS(.v16),
     ],
     targets: [
-                .binaryTarget(name: "LiterLlm", url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.48/LiterLlm-rs.artifactbundle.zip", checksum: "__ALEF_SWIFT_CHECKSUM__"),
+                .binaryTarget(name: "LiterLlm", url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.49/LiterLlm-rs.artifactbundle.zip", checksum: "__ALEF_SWIFT_CHECKSUM__"),
         .testTarget(
             name: "LiterLlmE2ETests",
             dependencies: [.target(name: "LiterLlm")]

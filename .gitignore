@@ -236,7 +236,8 @@ test_apps/zig/zig-pkg/
 test_apps/swift_e2e/*.artifactbundle.zip
 
 # Kotlin compiler daemon sessions
-.kotlin/sessions/
+**/.kotlin/
+.kotlin/
 
 # BEGIN ai-rulez (DO NOT EDIT - managed by ai-rulez)
 .agents/
