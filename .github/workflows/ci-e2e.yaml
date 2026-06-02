@@ -421,6 +421,12 @@ jobs:
               with:
                   sdk: ${{ matrix.dart-version }}
 
+            - name: Install flutter_rust_bridge_codegen
+              if: matrix.lang == 'dart'
+              run: |
+                  dart pub global activate flutter_rust_bridge_codegen
+                  echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
+
             - name: Setup Zig
               if: matrix.zig-version
               uses: kreuzberg-dev/actions/setup-zig@v1
