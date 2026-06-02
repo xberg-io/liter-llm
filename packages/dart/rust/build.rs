@@ -48,7 +48,7 @@ fn main() {
         Ok(status) => panic!("flutter_rust_bridge_codegen generate failed (exit code: {status})"),
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
             println!(
-                "cargo:warning=flutter_rust_bridge_codegen not on PATH — skipping codegen. Install via `dart pub global activate flutter_rust_bridge_codegen` to regenerate FRB artifacts at build time."
+                "cargo:warning=flutter_rust_bridge_codegen not on PATH — skipping codegen. Install via `cargo install flutter_rust_bridge_codegen --locked` to regenerate FRB artifacts at build time."
             );
         }
         Err(err) => panic!("failed to spawn flutter_rust_bridge_codegen: {err}"),
