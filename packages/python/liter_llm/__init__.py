@@ -5,7 +5,7 @@
 # Issues & docs: https://github.com/kreuzberg-dev/alef
 """Public API for _internal_bindings.
 
-Version: 1.4.0-rc.48
+Version: 1.4.0-rc.49
 """
 
 from ._internal_bindings import (
