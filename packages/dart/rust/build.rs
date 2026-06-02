@@ -34,6 +34,16 @@ fn main() {
             // Patch the generated Dart entrypoint so the published package resolves
             // its native library from its own installed location.
             patch_published_loader();
+
+            // Rewrite FRB-generated handler.executeSync/handler.executeNormal calls
+            // to use the GeneralizedFrbRustBinding receiver. FRB emits these calls
+            // assuming `handler` is a BaseHandler field, but in service-API methods
+            // `handler` is a user-supplied function parameter (FutureOr<R> Function(T))
+            // which does not expose those methods, so the generated Dart fails to
+            // compile. The rewrite is idempotent (marker-gated) and runs after every
+            // FRB invocation — including the rebuild that fires during `dart pub get`
+            // in e2e flows, which is when this otherwise reverts.
+            fix_handler_executor_calls();
         }
         Ok(status) => panic!("flutter_rust_bridge_codegen generate failed (exit code: {status})"),
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
@@ -46,6 +56,7 @@ fn main() {
 }
 
 const FRB_GENERATED_DART: &str = "../lib/src/liter_llm_bridge_generated/frb_generated.dart";
+const FRB_HANDLER_EXECUTOR_CALLS_MARKER: &str = "handler.executeSync";
 const LOADER_MARKER: &str = "_alefResolveExternalLibrary";
 const FRB_INIT_PROLOGUE: &str = "  /// Initialize flutter_rust_bridge\n  static Future<void> init({\n    RustLibApi? api,\n    BaseHandler? handler,\n    ExternalLibrary? externalLibrary,\n    bool forceSameCodegenVersion = true,\n  }) async {\n";
 const FRB_INIT_REPLACEMENT: &str = r#"  /// Resolve the prebuilt native library from this package's own installed
@@ -167,6 +178,42 @@ fn patch_published_loader() {
                 );
             }
             Err(err) => println!("cargo:warning=failed to spawn dart format: {err}"),
+        }
+    }
+}
+
+/// Rewrite the FRB-generated `handler.executeSync(...)` and
+/// `handler.executeNormal(...)` calls so the receiver is the
+/// `generalizedFrbRustBinding` instance instead of a method-shadowed
+/// `handler` parameter.
+///
+/// FRB 2.x emits `handler.executeSync(SyncTask(...))` inside service-API
+/// methods that take a user-supplied `handler` callback parameter; those
+/// methods don't exist on the callback function type, so the generated
+/// Dart fails to compile. `GeneralizedFrbRustBinding` exposes the
+/// equivalent task-execution methods, so swap the receiver.
+///
+/// Idempotent: when the broken pattern is absent the function is a no-op.
+fn fix_handler_executor_calls() {
+    let path = Path::new(FRB_GENERATED_DART);
+    let Ok(source) = std::fs::read_to_string(path) else {
+        return;
+    };
+
+    if !source.contains(FRB_HANDLER_EXECUTOR_CALLS_MARKER) {
+        return;
+    }
+
+    let fixed = source
+        .replace("handler.executeSync(", "generalizedFrbRustBinding.executeSync(")
+        .replace("handler.executeNormal(", "generalizedFrbRustBinding.executeNormal(");
+
+    if fixed != source {
+        if let Err(err) = std::fs::write(path, &fixed) {
+            println!(
+                "cargo:warning=failed to fix handler executor calls in {}: {err}",
+                FRB_GENERATED_DART
+            );
         }
     }
 }
