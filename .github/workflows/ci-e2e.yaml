@@ -423,9 +423,7 @@ jobs:
 
             - name: Install flutter_rust_bridge_codegen
               if: matrix.lang == 'dart'
-              run: |
-                  dart pub global activate flutter_rust_bridge_codegen
-                  echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
+              run: cargo install flutter_rust_bridge_codegen --locked
 
             - name: Setup Zig
               if: matrix.zig-version
