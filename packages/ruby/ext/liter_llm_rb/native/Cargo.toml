@@ -1,6 +1,6 @@
 [package]
 name = "liter-llm-rb"
-version = "1.4.0-rc.49"
+version = "1.4.0-rc.50"
 edition = "2024"
 license = "MIT"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
@@ -18,7 +18,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 futures = "0.3"
-liter-llm = { version = "1.4.0-rc.49", path = "../../../../../crates/liter-llm", features = ["native-http", "full"] }
+liter-llm = { version = "1.4.0-rc.50", path = "../../../../../crates/liter-llm", features = ["native-http", "full"] }
 magnus = "0.8"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
