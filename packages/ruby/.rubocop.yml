@@ -28,9 +28,6 @@ Style/StringLiteralsInInterpolation:
 Style/Documentation:
   Enabled: false
 
-Style/MultilineBlockChain:
-  Enabled: false
-
 Layout/LineLength:
   Max: 120
   AllowedPatterns:

@@ -8,32 +8,29 @@ require "rspec/core/rake_task"
 GEM_ROOT = __dir__
 GEMSPEC = Gem::Specification.load(File.expand_path("liter_llm.gemspec", GEM_ROOT))
 
-# RbSys::ExtensionTask runs `cargo metadata` from Dir.pwd to look up the
-# native crate. The native binding crate at ext/liter_llm_rb/native is excluded
-# from the parent Cargo workspace (so the parent does not pull in rb_sys
-# deps), so the lookup raises PackageNotFoundError when the Rakefile runs
-# from the gem root. Change to the native dir for ExtensionTask initialization
-# to allow cargo metadata to find the standalone Cargo.toml. Pre-declare the
-# Cargo.lock file task with absolute path so rake finds it regardless of CWD.
-EXT_NATIVE_DIR = File.expand_path("ext/liter_llm_rb/native", GEM_ROOT)
+CROSS_PLATFORMS = %w[
+  x86_64-linux
+  aarch64-linux
+  arm64-darwin
+  x86_64-darwin
+  x64-mingw-ucrt
+].freeze
 
-Dir.chdir(EXT_NATIVE_DIR) do
-  # Declare Cargo.lock and Cargo.toml file tasks here (within chdir context)
-  # so they are resolved relative to the native dir where rake will access them.
-  file "Cargo.lock"
-  file "Cargo.toml"
+# rb_sys 0.9.x runs `cargo metadata` from the current working directory. When
+# the gem lives inside a Cargo workspace that excludes this crate (monorepo
+# layout), the metadata lookup resolves to the parent workspace and fails to
+# locate the crate. Chdir into the manifest directory for the duration of the
+# task construction so the metadata lookup finds the crate's own Cargo.toml.
+MANIFEST_DIR = File.expand_path("ext/liter_llm_rb", GEM_ROOT)
 
+Dir.chdir(MANIFEST_DIR) do
   RbSys::ExtensionTask.new("liter-llm-rb", GEMSPEC) do |ext|
     ext.lib_dir = "lib"
+    ext.ext_dir = "ext/liter_llm_rb/native"
+    ext.source_pattern = "*.{}"
+    ext.platform = "ruby"
     ext.cross_compile = true
-    ext.cross_platform = %w[
-      x86_64-linux
-      aarch64-linux
-      x86_64-darwin
-      arm64-darwin
-      x64-mingw32
-      x64-mingw-ucrt
-    ]
+    ext.cross_platform = CROSS_PLATFORMS
   end
 end
 

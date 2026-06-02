@@ -3,6 +3,7 @@
 import 'dart:async' show Stream;
 
 export 'liter_llm_bridge_generated/lib.dart';
+export 'traits.dart';
 import 'liter_llm_bridge_generated/lib.dart' as rust_bridge;
 // ignore: duplicate_import
 import 'liter_llm_bridge_generated/lib.dart';

@@ -26,7 +26,7 @@ pub fn _last_error() ?[]const u8 {
 /// will replace this once the IR exposes per-variant numeric codes.
 inline fn _first_error(comptime E: type) E {
     const fields = @typeInfo(E).error_set orelse return @as(E, error.Unknown);
-    if (fields.len == 0) unreachable;
+    if (fields.len == 0) return @as(E, error.Unknown);
     return @field(E, fields[0].name);
 }
 
@@ -1282,11 +1282,12 @@ pub fn register_custom_provider(config: []const u8) LiterLlmError!void {
     const config_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{config}, 0);
     defer std.heap.c_allocator.free(config_z);
     const config_handle = c.literllm_custom_provider_config_from_json(config_z);
+    if (config_handle == null) return _first_error(LiterLlmError);
+    defer c.literllm_custom_provider_config_free(config_handle);
     _ = c.literllm_register_custom_provider(config_handle);
     if (c.literllm_last_error_code() != 0) {
         return _first_error(LiterLlmError);
     }
-    if (config_handle) |h| c.literllm_custom_provider_config_free(h);
     return;
 }
 
@@ -1313,10 +1314,10 @@ pub fn unregister_custom_provider(name: []const u8) LiterLlmError!bool {
 /// Useful for tooling, documentation generation, or runtime enumeration.
 pub fn all_providers() LiterLlmError![]u8 {
     const _result = c.literllm_all_providers();
-    const _result_len = c.literllm_all_providers_len();
     if (c.literllm_last_error_code() != 0) {
         return _first_error(LiterLlmError);
     }
+    const _result_len = c.literllm_all_providers_len();
     return blk: {
         if (_result == null) return _first_error(LiterLlmError);
         const slice = _result[0.._result_len];
@@ -1334,10 +1335,10 @@ pub fn all_providers() LiterLlmError![]u8 {
 /// The returned reference points into the static registry — no allocation.
 pub fn complex_provider_names() LiterLlmError![]u8 {
     const _result = c.literllm_complex_provider_names();
-    const _result_len = c.literllm_complex_provider_names_len();
     if (c.literllm_last_error_code() != 0) {
         return _first_error(LiterLlmError);
     }
+    const _result_len = c.literllm_complex_provider_names_len();
     return blk: {
         if (_result == null) return _first_error(LiterLlmError);
         const slice = _result[0.._result_len];
@@ -1421,11 +1422,12 @@ pub fn count_request_tokens(model: []const u8, req: []const u8) LiterLlmError!u6
     const req_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{req}, 0);
     defer std.heap.c_allocator.free(req_z);
     const req_handle = c.literllm_chat_completion_request_from_json(req_z);
+    if (req_handle == null) return _first_error(LiterLlmError);
+    defer c.literllm_chat_completion_request_free(req_handle);
     const _result = c.literllm_count_request_tokens(model_z, req_handle);
     if (c.literllm_last_error_code() != 0) {
         return _first_error(LiterLlmError);
     }
-    if (req_handle) |h| c.literllm_chat_completion_request_free(h);
     return _result;
 }
 
@@ -1494,11 +1496,12 @@ pub const DefaultClient = struct {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
         defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_chat_completion_request_from_json(req_z.ptr);
+        if (req_handle == null) return _first_error(LiterLlmError);
+        defer c.literllm_chat_completion_request_free(req_handle);
         const _result = c.literllm_default_client_chat(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        c.literllm_chat_completion_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_chat_completion_response_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);
@@ -1528,11 +1531,12 @@ pub const DefaultClient = struct {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
         defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_embedding_request_from_json(req_z.ptr);
+        if (req_handle == null) return _first_error(LiterLlmError);
+        defer c.literllm_embedding_request_free(req_handle);
         const _result = c.literllm_default_client_embed(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        c.literllm_embedding_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_embedding_response_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);
@@ -1562,11 +1566,12 @@ pub const DefaultClient = struct {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
         defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_create_image_request_from_json(req_z.ptr);
+        if (req_handle == null) return _first_error(LiterLlmError);
+        defer c.literllm_create_image_request_free(req_handle);
         const _result = c.literllm_default_client_image_generate(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        c.literllm_create_image_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_images_response_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);
@@ -1581,6 +1586,8 @@ pub const DefaultClient = struct {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
         defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_create_speech_request_from_json(req_z.ptr);
+        if (req_handle == null) return _first_error(LiterLlmError);
+        defer c.literllm_create_speech_request_free(req_handle);
         var _out_ptr: [*c]u8 = undefined;
         var _out_len: usize = 0;
         var _out_cap: usize = 0;
@@ -1588,7 +1595,6 @@ pub const DefaultClient = struct {
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        c.literllm_create_speech_request_free(req_handle);
         const _owned = try std.heap.c_allocator.dupe(u8, _out_ptr[0.._out_len]);
         c.literllm_free_bytes(_out_ptr, _out_len, _out_cap);
         return _owned;
@@ -1598,11 +1604,12 @@ pub const DefaultClient = struct {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
         defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_create_transcription_request_from_json(req_z.ptr);
+        if (req_handle == null) return _first_error(LiterLlmError);
+        defer c.literllm_create_transcription_request_free(req_handle);
         const _result = c.literllm_default_client_transcribe(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        c.literllm_create_transcription_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_transcription_response_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);
@@ -1617,11 +1624,12 @@ pub const DefaultClient = struct {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
         defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_moderation_request_from_json(req_z.ptr);
+        if (req_handle == null) return _first_error(LiterLlmError);
+        defer c.literllm_moderation_request_free(req_handle);
         const _result = c.literllm_default_client_moderate(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        c.literllm_moderation_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_moderation_response_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);
@@ -1636,11 +1644,12 @@ pub const DefaultClient = struct {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
         defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_rerank_request_from_json(req_z.ptr);
+        if (req_handle == null) return _first_error(LiterLlmError);
+        defer c.literllm_rerank_request_free(req_handle);
         const _result = c.literllm_default_client_rerank(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        c.literllm_rerank_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_rerank_response_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);
@@ -1655,11 +1664,12 @@ pub const DefaultClient = struct {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
         defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_search_request_from_json(req_z.ptr);
+        if (req_handle == null) return _first_error(LiterLlmError);
+        defer c.literllm_search_request_free(req_handle);
         const _result = c.literllm_default_client_search(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        c.literllm_search_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_search_response_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);
@@ -1674,11 +1684,12 @@ pub const DefaultClient = struct {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
         defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_ocr_request_from_json(req_z.ptr);
+        if (req_handle == null) return _first_error(LiterLlmError);
+        defer c.literllm_ocr_request_free(req_handle);
         const _result = c.literllm_default_client_ocr(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        c.literllm_ocr_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_ocr_response_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);
@@ -1693,11 +1704,12 @@ pub const DefaultClient = struct {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
         defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_create_file_request_from_json(req_z.ptr);
+        if (req_handle == null) return _first_error(LiterLlmError);
+        defer c.literllm_create_file_request_free(req_handle);
         const _result = c.literllm_default_client_create_file(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        c.literllm_create_file_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_file_object_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);
@@ -1746,11 +1758,12 @@ pub const DefaultClient = struct {
         const query_z: ?[:0]u8 = if (query) |v| try std.heap.c_allocator.dupeZ(u8, v) else null;
         defer if (query_z) |z| std.heap.c_allocator.free(z);
         const query_handle = if (query_z) |z| c.literllm_file_list_query_from_json(z.ptr) else null;
+        if (query_z != null and query_handle == null) return _first_error(LiterLlmError);
+        defer if (query_handle) |h| c.literllm_file_list_query_free(h);
         const _result = c.literllm_default_client_list_files(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), query_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        if (query_handle != null) c.literllm_file_list_query_free(query_handle);
         return blk: {
             const _json_ptr = c.literllm_file_list_response_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);
@@ -1780,11 +1793,12 @@ pub const DefaultClient = struct {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
         defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_create_batch_request_from_json(req_z.ptr);
+        if (req_handle == null) return _first_error(LiterLlmError);
+        defer c.literllm_create_batch_request_free(req_handle);
         const _result = c.literllm_default_client_create_batch(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        c.literllm_create_batch_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_batch_object_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);
@@ -1816,11 +1830,12 @@ pub const DefaultClient = struct {
         const query_z: ?[:0]u8 = if (query) |v| try std.heap.c_allocator.dupeZ(u8, v) else null;
         defer if (query_z) |z| std.heap.c_allocator.free(z);
         const query_handle = if (query_z) |z| c.literllm_batch_list_query_from_json(z.ptr) else null;
+        if (query_z != null and query_handle == null) return _first_error(LiterLlmError);
+        defer if (query_handle) |h| c.literllm_batch_list_query_free(h);
         const _result = c.literllm_default_client_list_batches(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), query_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        if (query_handle != null) c.literllm_batch_list_query_free(query_handle);
         return blk: {
             const _json_ptr = c.literllm_batch_list_response_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);
@@ -1852,11 +1867,12 @@ pub const DefaultClient = struct {
         const req_z = try std.heap.c_allocator.dupeZ(u8, req);
         defer std.heap.c_allocator.free(req_z);
         const req_handle = c.literllm_create_response_request_from_json(req_z.ptr);
+        if (req_handle == null) return _first_error(LiterLlmError);
+        defer c.literllm_create_response_request_free(req_handle);
         const _result = c.literllm_default_client_create_response(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
         if (c.literllm_last_error_code() != 0) {
             return _first_error(LiterLlmError);
         }
-        c.literllm_create_response_request_free(req_handle);
         return blk: {
             const _json_ptr = c.literllm_response_object_to_json(_result);
             const _json_slice = std.mem.span(_json_ptr);

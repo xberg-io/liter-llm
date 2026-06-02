@@ -21,7 +21,7 @@ repository = "https://github.com/kreuzberg-dev/liter-llm"
 ignored = ["ahash", "serde_json", "tokio", "futures-util"]
 
 [lib]
-crate-type = ["cdylib", "staticlib"]
+crate-type = ["cdylib", "staticlib", "rlib"]
 
 [features]
 default = []

@@ -458,15 +458,15 @@ typedef void (*LITERLLMLiterllmStreamCallback)(const char *chunk_json,
  * Return the last error code (0 means no error).
  * # Safety
  * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * This function does not allocate and returns no owned pointer.
  */
 int32_t literllm_last_error_code(void);
 
 /**
- * Return the last error message. The pointer is valid until the next FFI call on this thread.
+ * Return the last error message. The pointer is borrowed and valid until the next FFI call on this thread.
  * # Safety
  * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * The returned pointer is borrowed from thread-local storage and must NOT be freed.
  */
 const char *literllm_last_error_context(void);
 
@@ -5507,10 +5507,11 @@ int32_t literllm_unregister_custom_provider(const char *name);
 char *literllm_all_providers(void);
 
 /**
- * Return the byte length of the C string that `literllm_all_providers` would return for the same
- * arguments, without allocating. Returns 0 when the underlying value is None or an error occurs.
- * Enables safe slice construction in Zig and Java FFM Panama without a NUL-scan.
- * \note SAFETY: All pointer parameters obey the same validity rules as `literllm_all_providers`.
+ * Return the byte length of the C string most recently returned by `literllm_all_providers` on this
+ * thread. Returns 0 when the primary call returned null or failed before producing a string. Enables
+ * safe slice construction in Zig and Java FFM Panama without a NUL-scan.
+ * \note SAFETY: Pointer arguments are ignored and are present only to keep the companion ABI aligned
+ * with `literllm_all_providers`.
  */
 uintptr_t literllm_all_providers_len(void);
 
@@ -5527,11 +5528,11 @@ uintptr_t literllm_all_providers_len(void);
 char *literllm_complex_provider_names(void);
 
 /**
- * Return the byte length of the C string that `literllm_complex_provider_names` would return for the
- * same arguments, without allocating. Returns 0 when the underlying value is None or an error occurs.
+ * Return the byte length of the C string most recently returned by `literllm_complex_provider_names`
+ * on this thread. Returns 0 when the primary call returned null or failed before producing a string.
  * Enables safe slice construction in Zig and Java FFM Panama without a NUL-scan.
- * \note SAFETY: All pointer parameters obey the same validity rules as
- * `literllm_complex_provider_names`.
+ * \note SAFETY: Pointer arguments are ignored and are present only to keep the companion ABI aligned
+ * with `literllm_complex_provider_names`.
  */
 uintptr_t literllm_complex_provider_names_len(void);
 

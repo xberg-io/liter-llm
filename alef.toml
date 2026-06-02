@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.20.14"
+alef_version = "0.21.4"
 languages = [
   "python",
   "node",
@@ -370,8 +370,11 @@ e2e = [
 
 [crates.test.go]
 precondition = "command -v go >/dev/null 2>&1"
-before = "cargo build -p liter-llm-ffi --release"
-e2e = "cd e2e/go && go test -v ./..."
+before = "cargo build -p liter-llm-ffi --release && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+# Tests read `os.Getenv("MOCK_SERVER_URL")` to compose per-fixture base URLs;
+# without the mock-server wrapper that env var is empty and every test fails
+# with "builder error" (reqwest URL parse on scheme-less paths).
+e2e = "scripts/e2e/run-with-mock-server.sh 'cd e2e/go && go test -v ./...'"
 
 [crates.test.java]
 precondition = "command -v mvn >/dev/null 2>&1"
@@ -389,6 +392,10 @@ e2e = ["cd e2e/ruby && bundle install", "cd e2e/ruby && bundle exec rspec"]
 
 [crates.test.php]
 precondition = "command -v php >/dev/null 2>&1 && command -v composer >/dev/null 2>&1"
+# Build the php cdylib (libliter_llm_php.dylib/so/dll) before the e2e suite —
+# `create-ci-php-ini.sh` reads `target/release/libliter_llm_php.*` and fails
+# fast with "Built extension not found" if it's missing.
+before = "cargo build --release -p liter-llm-php"
 e2e = [
   "cd e2e/php && bash ../../scripts/ci/php/create-ci-php-ini.sh",
   "cd e2e/php && composer install --no-progress --prefer-dist",
@@ -432,8 +439,10 @@ e2e = "scripts/e2e/run-with-mock-server.sh 'cd e2e/swift_e2e && swift test'"
 
 [crates.test.zig]
 # Same shape as dart/swift — point at e2e/zig, not the `packages/zig` placeholder.
+# Build the FFI cdylib in --release because the generated zig project links against
+# target/release/libliter_llm_ffi.* (see e2e/zig/build.zig).
 precondition = "command -v zig >/dev/null 2>&1"
-before = "cargo build -p liter-llm-ffi && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+before = "cargo build -p liter-llm-ffi --release && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 e2e = "scripts/e2e/run-with-mock-server.sh 'cd e2e/zig && zig build test'"
 
 [crates.test.kotlin_android]

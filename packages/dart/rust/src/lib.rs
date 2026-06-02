@@ -1294,7 +1294,7 @@ impl DefaultClient {
 }
 
 /// A chat message in a conversation.
-#[frb(mirror(Message))]
+#[frb(mirror(Message), unignore)]
 pub enum Message {
     System {
         field0: SystemMessage,
@@ -1318,7 +1318,7 @@ pub enum Message {
 }
 
 /// User message content as either plain text or a list of multimodal parts.
-#[frb(mirror(UserContent))]
+#[frb(mirror(UserContent), unignore)]
 pub enum UserContent {
     /// Plain text content.
     Text { field0: String },
@@ -1327,7 +1327,7 @@ pub enum UserContent {
 }
 
 /// A single content part in a user message — text, image, document, or audio.
-#[frb(mirror(ContentPart))]
+#[frb(mirror(ContentPart), unignore)]
 pub enum ContentPart {
     /// Plain text.
     Text { text: String },
@@ -1340,7 +1340,7 @@ pub enum ContentPart {
 }
 
 /// Image detail level controlling token cost and processing.
-#[frb(mirror(ImageDetail))]
+#[frb(mirror(ImageDetail), unignore)]
 pub enum ImageDetail {
     /// Low detail: scales image to 512x512, uses fewer tokens.
     Low,
@@ -1355,13 +1355,13 @@ pub enum ImageDetail {
 /// Per the OpenAI spec this is always `"function"`. Using an enum enforces
 /// that constraint at the type level and rejects any other value on
 /// deserialization.
-#[frb(mirror(ToolType))]
+#[frb(mirror(ToolType), unignore)]
 pub enum ToolType {
     Function,
 }
 
 /// Tool usage mode or a specific tool to call.
-#[frb(mirror(ToolChoice))]
+#[frb(mirror(ToolChoice), unignore)]
 pub enum ToolChoice {
     /// Predefined mode: auto, required, or none.
     Mode { field0: ToolChoiceMode },
@@ -1370,7 +1370,7 @@ pub enum ToolChoice {
 }
 
 /// Tool choice mode.
-#[frb(mirror(ToolChoiceMode))]
+#[frb(mirror(ToolChoiceMode), unignore)]
 pub enum ToolChoiceMode {
     /// Model may or may not call tools; default behavior.
     Auto,
@@ -1381,7 +1381,7 @@ pub enum ToolChoiceMode {
 }
 
 /// Response format constraint.
-#[frb(mirror(ResponseFormat))]
+#[frb(mirror(ResponseFormat), unignore)]
 pub enum ResponseFormat {
     /// Plain text output (default).
     Text,
@@ -1392,7 +1392,7 @@ pub enum ResponseFormat {
 }
 
 /// Stop sequence(s) that cause the model to stop generating.
-#[frb(mirror(StopSequence))]
+#[frb(mirror(StopSequence), unignore)]
 pub enum StopSequence {
     /// Single stop sequence.
     Single { field0: String },
@@ -1401,7 +1401,7 @@ pub enum StopSequence {
 }
 
 /// Why a choice stopped generating tokens.
-#[frb(mirror(FinishReason))]
+#[frb(mirror(FinishReason), unignore)]
 pub enum FinishReason {
     Stop,
     Length,
@@ -1420,7 +1420,7 @@ pub enum FinishReason {
 }
 
 /// Controls how much reasoning effort the model should use.
-#[frb(mirror(ReasoningEffort))]
+#[frb(mirror(ReasoningEffort), unignore)]
 pub enum ReasoningEffort {
     Low,
     Medium,
@@ -1428,7 +1428,7 @@ pub enum ReasoningEffort {
 }
 
 /// The format in which the embedding vectors are returned.
-#[frb(mirror(EmbeddingFormat))]
+#[frb(mirror(EmbeddingFormat), unignore)]
 pub enum EmbeddingFormat {
     /// 32-bit floating-point numbers (default).
     Float,
@@ -1437,7 +1437,7 @@ pub enum EmbeddingFormat {
 }
 
 /// Text or texts to embed.
-#[frb(mirror(EmbeddingInput))]
+#[frb(mirror(EmbeddingInput), unignore)]
 pub enum EmbeddingInput {
     /// Single text string.
     Single { field0: String },
@@ -1446,7 +1446,7 @@ pub enum EmbeddingInput {
 }
 
 /// Input to the moderation endpoint — a single string or multiple strings.
-#[frb(mirror(ModerationInput))]
+#[frb(mirror(ModerationInput), unignore)]
 pub enum ModerationInput {
     /// Single text string.
     Single { field0: String },
@@ -1455,7 +1455,7 @@ pub enum ModerationInput {
 }
 
 /// A document to be reranked — either a plain string or an object with a text field.
-#[frb(mirror(RerankDocument))]
+#[frb(mirror(RerankDocument), unignore)]
 pub enum RerankDocument {
     /// Plain text document content.
     Text { field0: String },
@@ -1464,7 +1464,7 @@ pub enum RerankDocument {
 }
 
 /// Document input for OCR — either a URL or inline base64 data.
-#[frb(mirror(OcrDocument))]
+#[frb(mirror(OcrDocument), unignore)]
 pub enum OcrDocument {
     /// A publicly accessible document URL.
     Url {
@@ -1481,7 +1481,7 @@ pub enum OcrDocument {
 }
 
 /// Purpose of an uploaded file.
-#[frb(mirror(FilePurpose))]
+#[frb(mirror(FilePurpose), unignore)]
 pub enum FilePurpose {
     /// File for use with Assistants API.
     Assistants,
@@ -1494,7 +1494,7 @@ pub enum FilePurpose {
 }
 
 /// Status of a batch job.
-#[frb(mirror(BatchStatus))]
+#[frb(mirror(BatchStatus), unignore)]
 pub enum BatchStatus {
     /// Validating the input file.
     Validating,
@@ -1515,7 +1515,7 @@ pub enum BatchStatus {
 }
 
 /// How the API key is sent in the HTTP request.
-#[frb(mirror(AuthHeaderFormat))]
+#[frb(mirror(AuthHeaderFormat), unignore)]
 pub enum AuthHeaderFormat {
     /// Bearer token: `Authorization: Bearer <key>`
     Bearer,
@@ -1526,7 +1526,7 @@ pub enum AuthHeaderFormat {
 }
 
 /// Auth scheme used by a provider.
-#[frb(mirror(AuthType))]
+#[frb(mirror(AuthType), unignore)]
 pub enum AuthType {
     /// Standard `Authorization: Bearer <key>` header.
     Bearer,
@@ -1539,7 +1539,7 @@ pub enum AuthType {
 }
 
 /// How budget limits are enforced.
-#[frb(mirror(Enforcement))]
+#[frb(mirror(Enforcement), unignore)]
 pub enum Enforcement {
     /// Reject requests that would exceed the budget with
     /// [`LiterLlmError::BudgetExceeded`].
@@ -1550,7 +1550,7 @@ pub enum Enforcement {
 }
 
 /// Storage backend for the response cache.
-#[frb(mirror(CacheBackend))]
+#[frb(mirror(CacheBackend), unignore)]
 pub enum CacheBackend {
     /// In-memory LRU cache (default). No external dependencies.
     Memory,
@@ -1564,7 +1564,7 @@ pub enum CacheBackend {
 }
 
 /// All errors that can occur when using `liter-llm`.
-#[frb(mirror(LiterLlmError))]
+#[frb(mirror(LiterLlmError), unignore)]
 pub enum LiterLlmError {
     /// `status` preserves the exact HTTP status code received (401 or 403).
     Authentication {

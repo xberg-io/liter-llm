@@ -1,4 +1,4 @@
-module e2e_go
+module github.com/kreuzberg-dev/liter-llm/packages/go/e2e
 
 go 1.26
 

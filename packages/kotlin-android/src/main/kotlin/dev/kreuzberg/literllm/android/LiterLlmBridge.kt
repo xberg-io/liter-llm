@@ -61,6 +61,9 @@ object LiterLlmBridge {
     external fun nativeDefaultClientChat(handle: Long, requestJson: String): String
 
     @Throws(LiterLlmBridgeException::class)
+    external fun nativeDefaultClientChatStream(handle: Long, requestJson: String): String
+
+    @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientEmbed(handle: Long, requestJson: String): String
 
     @Throws(LiterLlmBridgeException::class)

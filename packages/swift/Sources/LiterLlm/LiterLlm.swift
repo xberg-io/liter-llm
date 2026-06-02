@@ -60,7 +60,7 @@ public struct UserMessage: Codable, Sendable, Hashable {
 // MARK: - Internal FFI conversions for UserMessage
 internal extension UserMessage {
     init(_ rb: RustBridge.UserMessageRef) throws {
-        self.content = try JSONDecoder().decode(UserContent.self, from: (rb.content().toString().data(using: .utf8) ?? Data("null".utf8)))
+        self.content = try JSONDecoder().decode(UserContent.self, from: ((rb.content().toString()).data(using: .utf8) ?? Data("null".utf8)))
         self.name = rb.name()?.toString()
     }
     func intoRust() throws -> RustBridge.UserMessage {
@@ -950,7 +950,7 @@ public struct EmbeddingRequest: Codable, Sendable, Hashable {
 internal extension EmbeddingRequest {
     init(_ rb: RustBridge.EmbeddingRequestRef) throws {
         self.model = rb.model().toString()
-        self.input = try JSONDecoder().decode(EmbeddingInput.self, from: (rb.input().toString().data(using: .utf8) ?? Data("null".utf8)))
+        self.input = try JSONDecoder().decode(EmbeddingInput.self, from: ((rb.input().toString()).data(using: .utf8) ?? Data("null".utf8)))
         self.encodingFormat = rb.encodingFormat().flatMap { EmbeddingFormat(rawValue: $0.toString()) }
         self.dimensions = rb.dimensions()
         self.user = rb.user()?.toString()
@@ -1386,7 +1386,7 @@ public struct ModerationRequest: Codable, Sendable, Hashable {
 // MARK: - Internal FFI conversions for ModerationRequest
 internal extension ModerationRequest {
     init(_ rb: RustBridge.ModerationRequestRef) throws {
-        self.input = try JSONDecoder().decode(ModerationInput.self, from: (rb.input().toString().data(using: .utf8) ?? Data("null".utf8)))
+        self.input = try JSONDecoder().decode(ModerationInput.self, from: ((rb.input().toString()).data(using: .utf8) ?? Data("null".utf8)))
         self.model = rb.model()?.toString()
     }
     func intoRust() throws -> RustBridge.ModerationRequest {
@@ -1884,7 +1884,7 @@ public struct OcrRequest: Codable, Sendable, Hashable {
 internal extension OcrRequest {
     init(_ rb: RustBridge.OcrRequestRef) throws {
         self.model = rb.model().toString()
-        self.document = try JSONDecoder().decode(OcrDocument.self, from: (rb.document().toString().data(using: .utf8) ?? Data("null".utf8)))
+        self.document = try JSONDecoder().decode(OcrDocument.self, from: ((rb.document().toString()).data(using: .utf8) ?? Data("null".utf8)))
         self.pages = rb.pages().map { Array($0) }
         self.includeImageBase64 = rb.includeImageBase64()
     }
@@ -2463,7 +2463,7 @@ internal extension CustomProviderConfig {
     init(_ rb: RustBridge.CustomProviderConfigRef) throws {
         self.name = rb.name().toString()
         self.baseUrl = rb.baseUrl().toString()
-        self.authHeader = try JSONDecoder().decode(AuthHeaderFormat.self, from: (rb.authHeader().toString().data(using: .utf8) ?? Data("null".utf8)))
+        self.authHeader = try JSONDecoder().decode(AuthHeaderFormat.self, from: ((rb.authHeader().toString()).data(using: .utf8) ?? Data("null".utf8)))
         self.modelPrefixes = rb.modelPrefixes().map { $0.as_str().toString() }
     }
     func intoRust() throws -> RustBridge.CustomProviderConfig {
@@ -3402,6 +3402,47 @@ extension RustBridge.DefaultClientChatStreamStreamHandle: @unchecked Sendable {}
 // swift-bridge opaque types are not automatically Sendable.
 // Passed into Task.detached for streaming — Rust type is Send + Sync.
 extension RustBridge.ChatCompletionRequest: @unchecked Sendable {}
+// MARK: - JSON-String Convenience Overloads
+// These overloads accept JSON-encoded config parameters and decode them automatically.
+// Enables e2e tests to pass JSON strings directly without typed config construction.
+
+/// Resolves a string argument as either a file path or literal UTF-8 content.
+/// Searches: current working directory, ALEF_TEST_DOCUMENTS_DIR env var,
+/// and ancestor `test_documents/` or `fixtures/` directories (up to 16 levels).
+/// If no file is found, treats the string as UTF-8 content and returns its bytes.
+private func _loadBytesFromPathOrUtf8(_ pathOrContent: String) throws -> [UInt8] {
+    let fm = FileManager.default
+    var roots: [String] = [fm.currentDirectoryPath]
+    if let envRoot = ProcessInfo.processInfo.environment["ALEF_TEST_DOCUMENTS_DIR"] {
+        roots.append(envRoot)
+    }
+    var walker = URL(fileURLWithPath: fm.currentDirectoryPath)
+    for _ in 0..<16 {
+        roots.append(walker.appendingPathComponent("test_documents").path)
+        roots.append(walker.appendingPathComponent("fixtures").path)
+        let parent = walker.deletingLastPathComponent()
+        if parent.path == walker.path { break }
+        walker = parent
+    }
+    let candidates = [pathOrContent] + roots.map { ($0 as NSString).appendingPathComponent(pathOrContent) }
+    for path in candidates {
+        if fm.fileExists(atPath: path), let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {
+            return [UInt8](data)
+        }
+    }
+    return [UInt8](pathOrContent.utf8)
+}
+
+public func registerCustomProvider(_ configJson: String) throws -> Void {
+    let config = try customProviderConfigFromJson(configJson)
+    return try registerCustomProvider(config: config)
+}
+
+public func countRequestTokens(_ model: String, _ configJson: String) throws -> UInt {
+    let config = try chatCompletionRequestFromJson(configJson)
+    return try countRequestTokens(model: model, req: config)
+}
+
 // MARK: - From-JSON Helpers
 // Public helpers that decode JSON into first-class Swift types.
 // First-class struct types (Codable) use JSONDecoder directly.
@@ -4045,37 +4086,151 @@ public func ensureCryptoProvider() {
 }
 
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.SystemMessage: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.UserMessage: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.ImageUrl: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.DocumentContent: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.AudioContent: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.AssistantMessage: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.ToolMessage: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.DeveloperMessage: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.FunctionMessage: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.ChatCompletionTool: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.FunctionDefinition: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.ToolCall: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.FunctionCall: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.SpecificToolChoice: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.SpecificFunction: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.JsonSchemaFormat: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.Usage: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.PromptTokensDetails: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.StreamOptions: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.ChatCompletionResponse: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.Choice: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.ChatCompletionChunk: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.StreamChoice: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.StreamDelta: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.StreamToolCall: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.StreamFunctionCall: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.EmbeddingRequest: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.EmbeddingResponse: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.EmbeddingObject: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.CreateImageRequest: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.ImagesResponse: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.Image: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.CreateSpeechRequest: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.CreateTranscriptionRequest: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.TranscriptionResponse: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.TranscriptionSegment: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.ModerationRequest: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.ModerationResponse: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.ModerationResult: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.ModerationCategories: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.ModerationCategoryScores: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.RerankRequest: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.RerankResponse: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.RerankResult: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.RerankResultDocument: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.SearchRequest: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.SearchResponse: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.SearchResult: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.OcrRequest: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.OcrResponse: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.OcrPage: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.OcrImage: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.PageDimensions: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.ModelsListResponse: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.ModelObject: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.CreateFileRequest: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.FileObject: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.FileListResponse: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.FileListQuery: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.DeleteResponse: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.CreateBatchRequest: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.BatchObject: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.BatchRequestCounts: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.BatchListResponse: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.BatchListQuery: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.CreateResponseRequest: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.ResponseTool: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.ResponseObject: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.ResponseOutputItem: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.ResponseUsage: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.CustomProviderConfig: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.ProviderConfig: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.AuthConfig: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.BudgetConfig: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.

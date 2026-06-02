@@ -1289,7 +1289,6 @@ mod ffi {
     }
 
     extern "Rust" {
-
         #[swift_bridge(swift_name = "chatCompletionRequestFromJson")]
         fn chat_completion_request_from_json(json: String) -> Result<ChatCompletionRequest, String>;
         #[swift_bridge(swift_name = "embeddingRequestFromJson")]
@@ -1322,12 +1321,10 @@ mod ffi {
         fn custom_provider_config_from_json(json: String) -> Result<CustomProviderConfig, String>;
     }
     extern "Rust" {
-
         #[swift_bridge(swift_name = "chatCompletionChunkFromJson")]
         fn chat_completion_chunk_from_json(json: String) -> Result<ChatCompletionChunk, String>;
     }
     extern "Rust" {
-
         #[swift_bridge(swift_name = "systemMessageFromJson")]
         fn system_message_from_json(json: String) -> Result<SystemMessage, String>;
         #[swift_bridge(swift_name = "userMessageFromJson")]
@@ -1452,7 +1449,6 @@ mod ffi {
         fn rate_limit_config_from_json(json: String) -> Result<RateLimitConfig, String>;
     }
     extern "Rust" {
-
         #[swift_bridge(swift_name = "messageFromJson")]
         fn message_from_json(json: String) -> Result<Message, String>;
         #[swift_bridge(swift_name = "userContentFromJson")]

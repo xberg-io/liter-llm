@@ -43,14 +43,14 @@ wheels = [
 
 [[package]]
 name = "liter-llm"
-version = "1.4.0rc29"
+version = "1.4.0rc48"
 source = { directory = "../../packages/python" }
 
 [package.metadata]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "mypy", specifier = ">=1.19.0" },
+    { name = "mypy", specifier = ">=1.19" },
     { name = "ruff", specifier = ">=0.14.8" },
 ]
 
