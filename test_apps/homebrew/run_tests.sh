@@ -6,7 +6,7 @@
 # Tests the Homebrew CLI formula.
 set -euo pipefail
 
-VERSION="1.4.0-rc.52"
+VERSION="1.4.0-rc.53"
 TAP="kreuzberg-dev/homebrew-tap"
 CLI_FORMULA="liter-llm"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

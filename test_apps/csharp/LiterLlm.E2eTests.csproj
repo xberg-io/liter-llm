@@ -15,6 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="LiterLlm" Version="1.4.0-rc.52" />
+    <PackageReference Include="LiterLlm" Version="1.4.0-rc.53" />
   </ItemGroup>
 </Project>
