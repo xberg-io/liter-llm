@@ -6,11 +6,23 @@
     "type": "git",
     "url": "git+https://github.com/kreuzberg-dev/liter-llm.git"
   },
+  "files": [
+    "liter-llm-node.linux-arm64-gnu.node"
+  ],
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "libc": [
+    "glibc"
+  ],
   "main": "liter-llm-node.linux-arm64-gnu.node",
-  "files": ["liter-llm-node.linux-arm64-gnu.node"],
-  "os": ["linux"],
-  "cpu": ["arm64"],
-  "libc": ["glibc"],
-  "engines": { "node": ">= 18" },
-  "publishConfig": { "access": "public" }
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">= 18"
+  }
 }
