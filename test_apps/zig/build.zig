@@ -7,10 +7,16 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run tests");
 
     // Fetch the published Zig package from the registry.
-    const liter_llm_module = b.dependency("liter_llm", .{
+    const liter_llm_dep = b.dependency("liter_llm", .{
         .target = target,
         .optimize = optimize,
-    }).module("liter_llm");
+    });
+    const liter_llm_module = liter_llm_dep.module("liter_llm");
+    const liter_llm_lib_path = liter_llm_dep.path("lib");
+    const liter_llm_include_path = liter_llm_dep.path("include");
+    liter_llm_module.addLibraryPath(liter_llm_lib_path);
+    liter_llm_module.addIncludePath(liter_llm_include_path);
+    liter_llm_module.linkSystemLibrary("liter_llm_ffi", .{});
 
     const _alloc = b.allocator;
     var mock_server_url: ?[]const u8 = b.graph.environ_map.get("MOCK_SERVER_URL");

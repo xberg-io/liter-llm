@@ -71,6 +71,63 @@ dependencies {
 
 }
 
+tasks.register("verifyAarPublished") {
+    description = "Verify the published Android AAR contains jniLibs and classes.jar"
+    doLast {
+        val aarCoord = "dev.kreuzberg:liter-llm-android:1.4.0-rc.50"
+        val (groupId, artifactId, version) = run {
+            val parts = aarCoord.split(':')
+            Triple(parts[0], parts[1], parts[2])
+        }
+        val aarFileName = "${artifactId}-${version}.aar"
+        val mavenUrl = "https://repo1.maven.org/maven2/${groupId.replace('.', '/')}//${artifactId}//${version}//${aarFileName}"
+        val aarFile = layout.buildDirectory.file("tmp/${aarFileName}").get().asFile
+
+        println("Downloading AAR from Maven Central: ${mavenUrl}")
+        aarFile.parentFile.mkdirs()
+
+        val connection = java.net.URL(mavenUrl).openConnection() as java.net.HttpURLConnection
+        connection.requestMethod = "GET"
+        connection.connect()
+
+        if (connection.responseCode != 200) {
+            throw GradleException("Failed to download AAR: HTTP ${connection.responseCode}")
+        }
+
+        connection.inputStream.use { input ->
+            aarFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+
+        println("Verifying AAR contents...")
+        java.util.zip.ZipFile(aarFile).use { zip ->
+            val entries = zip.entries().toList()
+            val hasJniLibs = entries.any { it.name.startsWith("jniLibs/") }
+            val hasClasses = entries.any { it.name == "classes.jar" }
+
+            if (!hasJniLibs) {
+                throw GradleException("AAR missing jniLibs directory")
+            }
+            if (!hasClasses) {
+                throw GradleException("AAR missing classes.jar")
+            }
+
+            val abiDirs = entries
+                .filter { it.name.startsWith("jniLibs/") }
+                .map { it.name.substringAfter("jniLibs/").substringBefore("/") }
+                .filter { it.isNotEmpty() }
+                .distinct()
+
+            println("  + jniLibs: YES")
+            println("  + classes.jar: YES")
+            println("  + Android ABIs: ${abiDirs.sorted().joinToString(\", \")}")
+            println("\nAAR verification PASSED!")
+        }
+    }
+}
+
 tasks.withType<Test> {
     useJUnitPlatform()
+    dependsOn("verifyAarPublished")
 }
