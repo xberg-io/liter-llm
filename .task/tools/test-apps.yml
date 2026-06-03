@@ -120,8 +120,7 @@ tasks:
         dir: test_apps/c
         cmds:
             - bash download_ffi.sh
-            - make
-            - ./run_tests --smoke
+            - make smoke
 
     smoke:dart:
         desc: Run Dart test_app smoke test
@@ -242,8 +241,7 @@ tasks:
         dir: test_apps/c
         cmds:
             - bash download_ffi.sh
-            - make
-            - ./run_tests
+            - make test
 
     comprehensive:dart:
         desc: Run Dart test_app comprehensive tests

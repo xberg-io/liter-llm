@@ -13,7 +13,7 @@ let package = Package(
     targets: [
         .testTarget(
             name: "LiterLlmE2ETests",
-            dependencies: [.product(name: "LiterLlm", package: "swift")]
+            dependencies: [.product(name: "LiterLlm", package: "liter-llm")]
         ),
     ]
 )

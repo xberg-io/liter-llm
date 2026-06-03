@@ -3,12 +3,14 @@ package e2e_test
 import (
 	"bufio"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestMain(m *testing.M) {
@@ -63,6 +65,24 @@ func TestMain(m *testing.M) {
 	}
 	// Drain remaining stdout asynchronously so the pipe doesn't fill.
 	go func() { for scanner.Scan() { } }()
+
+	// Poll the mock-server URL until it answers (axum::serve start race).
+	{
+		url := os.Getenv("MOCK_SERVER_URL")
+		ready := false
+		for i := 0; i < 100; i++ {
+			resp, err := http.Get(url)
+			if err == nil {
+				_ = resp.Body.Close()
+				ready = true
+				break
+			}
+			time.Sleep(50 * time.Millisecond)
+		}
+		if !ready {
+			panic("mock-server did not become ready within 5s")
+		}
+	}
 
 	os.Exit(m.Run())
 }
