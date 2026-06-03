@@ -4,13 +4,18 @@ defmodule LiterLlm.MixProject do
   def project do
     [
       app: :liter_llm,
-      version: "1.4.0-rc.54",
+      version: "1.4.0-rc.55",
       elixir: "~> 1.14",
       elixirc_paths: ["lib", Path.expand("../../packages/elixir/native/liter_llm_nif/src", __DIR__)],
       rustler_crates: [
         liter_llm_nif: [
           mode: :release,
-          targets: ~w(aarch64-apple-darwin aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu x86_64-pc-windows-gnu)
+          targets: [
+            "aarch64-apple-darwin",
+            "aarch64-unknown-linux-gnu",
+            "x86_64-unknown-linux-gnu",
+            "x86_64-pc-windows-gnu"
+          ]
         ]
       ],
       description: "Universal LLM API client with Rust-powered polyglot bindings.",
@@ -31,7 +36,7 @@ defmodule LiterLlm.MixProject do
   defp deps do
     [
       {:jason, "~> 1.4"},
-      {:rustler, ">= 0.37", runtime: false},
+      {:rustler, "~> 0.37", runtime: false},
       {:rustler_precompiled, "~> 0.9"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.40", only: :dev, runtime: false}

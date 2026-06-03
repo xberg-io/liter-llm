@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name = "liter_llm"
-  spec.version = "1.4.0.pre.rc.54"
+  spec.version = "1.4.0.pre.rc.55"
   spec.authors       = ["Na'aman Hirschfeld"]
   spec.summary       = "Universal LLM API client with Rust-powered polyglot bindings."
   spec.description   = "Universal LLM API client with Rust-powered polyglot bindings."
