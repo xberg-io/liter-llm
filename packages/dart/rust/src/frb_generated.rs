@@ -4044,6 +4044,9 @@ const _: fn() = || {
             let _: String = name;
             let _: String = reason;
         }
+        crate::LiterLlmError::Serialization { field0 } => {
+            let _: String = field0;
+        }
         crate::LiterLlmError::BudgetExceeded { message, model } => {
             let _: String = message;
             let _: String = model;
@@ -5734,6 +5737,10 @@ impl SseDecode for crate::LiterLlmError {
                 };
             }
             12 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::LiterLlmError::Serialization { field0: var_field0 };
+            }
+            13 => {
                 let mut var_message = <String>::sse_decode(deserializer);
                 let mut var_model = <String>::sse_decode(deserializer);
                 return crate::LiterLlmError::BudgetExceeded {
@@ -5741,11 +5748,11 @@ impl SseDecode for crate::LiterLlmError {
                     model: var_model,
                 };
             }
-            13 => {
+            14 => {
                 let mut var_message = <String>::sse_decode(deserializer);
                 return crate::LiterLlmError::HookRejected { message: var_message };
             }
-            14 => {
+            15 => {
                 let mut var_message = <String>::sse_decode(deserializer);
                 return crate::LiterLlmError::InternalError { message: var_message };
             }
@@ -8107,17 +8114,20 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::LiterLlmError> {
                 reason.into_into_dart().into_dart(),
             ]
             .into_dart(),
+            crate::LiterLlmError::Serialization { field0 } => {
+                [12.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
             crate::LiterLlmError::BudgetExceeded { message, model } => [
-                12.into_dart(),
+                13.into_dart(),
                 message.into_into_dart().into_dart(),
                 model.into_into_dart().into_dart(),
             ]
             .into_dart(),
             crate::LiterLlmError::HookRejected { message } => {
-                [13.into_dart(), message.into_into_dart().into_dart()].into_dart()
+                [14.into_dart(), message.into_into_dart().into_dart()].into_dart()
             }
             crate::LiterLlmError::InternalError { message } => {
-                [14.into_dart(), message.into_into_dart().into_dart()].into_dart()
+                [15.into_dart(), message.into_into_dart().into_dart()].into_dart()
             }
             _ => {
                 unimplemented!("");
@@ -10060,17 +10070,21 @@ impl SseEncode for crate::LiterLlmError {
                 <String>::sse_encode(name, serializer);
                 <String>::sse_encode(reason, serializer);
             }
-            crate::LiterLlmError::BudgetExceeded { message, model } => {
+            crate::LiterLlmError::Serialization { field0 } => {
                 <i32>::sse_encode(12, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::LiterLlmError::BudgetExceeded { message, model } => {
+                <i32>::sse_encode(13, serializer);
                 <String>::sse_encode(message, serializer);
                 <String>::sse_encode(model, serializer);
             }
             crate::LiterLlmError::HookRejected { message } => {
-                <i32>::sse_encode(13, serializer);
+                <i32>::sse_encode(14, serializer);
                 <String>::sse_encode(message, serializer);
             }
             crate::LiterLlmError::InternalError { message } => {
-                <i32>::sse_encode(14, serializer);
+                <i32>::sse_encode(15, serializer);
                 <String>::sse_encode(message, serializer);
             }
             _ => {

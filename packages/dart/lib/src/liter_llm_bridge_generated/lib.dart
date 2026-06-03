@@ -2197,6 +2197,8 @@ sealed class LiterLlmError with _$LiterLlmError {
     required String name,
     required String reason,
   }) = LiterLlmError_InvalidHeader;
+  const factory LiterLlmError.serialization({required String field0}) =
+      LiterLlmError_Serialization;
   const factory LiterLlmError.budgetExceeded({
     required String message,
     required String model,

@@ -1618,6 +1618,9 @@ pub enum LiterLlmError {
         name: String,
         reason: String,
     },
+    Serialization {
+        field0: String,
+    },
     BudgetExceeded {
         message: String,
         model: String,
@@ -1700,6 +1703,7 @@ impl From<&LiterLlmError> for liter_llm::error::LiterLlmError {
                 name: f_name.clone(),
                 reason: f_reason.clone(),
             },
+            LiterLlmError::Serialization { field0: _ } => Self::Serialization(Default::default()),
             LiterLlmError::BudgetExceeded {
                 message: f_message,
                 model: f_model,

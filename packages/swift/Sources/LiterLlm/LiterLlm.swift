@@ -3214,6 +3214,7 @@ public enum LiterLlmError: Swift.Error {
     case streaming(message: String)
     case endpointNotSupported(message: String, endpoint: String, provider: String)
     case invalidHeader(message: String, name: String, reason: String)
+    case serialization(message: String, field0: String)
     case budgetExceeded(message: String, model: String?)
     case hookRejected(message: String)
     /// An internal logic error (e.g. unexpected Tower response variant).
@@ -3238,6 +3239,7 @@ extension LiterLlmError {
         case .streaming(message: _): return 0
         case .endpointNotSupported(message: _, endpoint: _, provider: _): return 0
         case .invalidHeader(message: _, name: _, reason: _): return 0
+        case .serialization(message: _, field0: _): return 0
         case .budgetExceeded(message: _, model: _): return 0
         case .hookRejected(message: _): return 0
         case .internalError(message: _): return 0
@@ -3257,6 +3259,7 @@ extension LiterLlmError {
         case .streaming(message: _): return false
         case .endpointNotSupported(message: _, endpoint: _, provider: _): return false
         case .invalidHeader(message: _, name: _, reason: _): return false
+        case .serialization(message: _, field0: _): return false
         case .budgetExceeded(message: _, model: _): return false
         case .hookRejected(message: _): return false
         case .internalError(message: _): return false
@@ -3276,6 +3279,7 @@ extension LiterLlmError {
         case .streaming(message: _): return ""
         case .endpointNotSupported(message: _, endpoint: _, provider: _): return ""
         case .invalidHeader(message: _, name: _, reason: _): return ""
+        case .serialization(message: _, field0: _): return ""
         case .budgetExceeded(message: _, model: _): return ""
         case .hookRejected(message: _): return ""
         case .internalError(message: _): return ""
