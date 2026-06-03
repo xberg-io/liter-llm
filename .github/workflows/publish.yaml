@@ -2019,8 +2019,8 @@ jobs:
 
     publish-zig:
         name: Publish Zig package metadata
-        needs: [prepare, check-zig]
-        if: ${{ needs.prepare.outputs.release_zig == 'true' && needs.prepare.outputs.is_tag == 'true' && (needs.check-zig.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+        needs: [prepare, check-zig, build-ffi]
+        if: ${{ needs.prepare.outputs.release_zig == 'true' && needs.prepare.outputs.is_tag == 'true' && (needs.check-zig.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') && needs.build-ffi.result == 'success' }}
         runs-on: ubuntu-latest
         permissions:
             contents: write
@@ -2028,6 +2028,38 @@ jobs:
             - uses: actions/checkout@v6.0.2
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
+            - uses: actions/download-artifact@v7
+              with:
+                  pattern: c-ffi-*
+                  path: ffi-artifacts
+                  merge-multiple: true
+            - name: Bundle FFI libs into Zig package
+              shell: bash
+              run: |
+                  mkdir -p packages/zig/lib
+                  # The build-ffi job produces ffi-staging artifacts organized by RID:
+                  # ffi-{linux-x64,linux-arm64,osx-arm64,win-x64}/{*.so|*.dylib|*.dll}
+                  # Map RID to the lib subdirectories Zig consumers expect in packages/zig/lib.
+                  declare -A rid_to_libdir=(
+                    ["linux-x64"]="x86_64-linux-gnu"
+                    ["linux-arm64"]="aarch64-linux-gnu"
+                    ["osx-arm64"]="aarch64-darwin"
+                    ["win-x64"]="x86_64-windows-msvc"
+                  )
+                  for rid in "${!rid_to_libdir[@]}"; do
+                    libdir="${rid_to_libdir[$rid]}"
+                    src_dir="ffi-artifacts/$rid"
+                    if [ -d "$src_dir" ]; then
+                      dst_dir="packages/zig/lib/$libdir"
+                      mkdir -p "$dst_dir"
+                      # Copy all shared libraries and static libs (but not headers or .dll.lib)
+                      find "$src_dir" -maxdepth 1 -type f \( -name '*.so' -o -name '*.dylib' -o -name '*.dll' \) -exec cp {} "$dst_dir/" \;
+                      echo "Bundled FFI libs for $rid → $libdir:"
+                      ls -lh "$dst_dir/" || true
+                    fi
+                  done
+                  echo "Final Zig lib structure:"
+                  find packages/zig/lib -type f 2>/dev/null | sort || echo "(no libs bundled)"
             - uses: kreuzberg-dev/actions/publish-zig@v1
               with:
                   working-directory: packages/zig
