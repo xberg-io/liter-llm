@@ -36,6 +36,11 @@ tasks:
             - task: smoke:php
             - task: smoke:csharp
             - task: smoke:c
+            - task: smoke:dart
+            - task: smoke:zig
+            - task: smoke:kotlin_android
+            - task: smoke:swift_e2e
+            - task: smoke:homebrew
 
     smoke:rust:
         desc: Run Rust test_app smoke test
@@ -113,6 +118,38 @@ tasks:
             - make
             - ./run_tests --smoke
 
+    smoke:dart:
+        desc: Run Dart test_app smoke test
+        dir: test_apps/dart
+        cmds:
+            - dart pub get
+            - dart test test/smoke_test.dart
+
+    smoke:zig:
+        desc: Run Zig test_app smoke test
+        dir: test_apps/zig
+        cmds:
+            - zig build test
+
+    smoke:kotlin_android:
+        desc: Run Kotlin/Android test_app smoke test (host JVM)
+        dir: test_apps/kotlin_android
+        cmds:
+            - ./gradlew test
+
+    smoke:swift_e2e:
+        desc: Run Swift test_app smoke test (binaryTarget artifact bundle)
+        dir: test_apps/swift_e2e
+        cmds:
+            - bash download_swift_artifact.sh
+            - swift test
+
+    smoke:homebrew:
+        desc: Run Homebrew CLI formula smoke test
+        dir: test_apps/homebrew
+        cmds:
+            - ./run_tests.sh
+
     comprehensive:
         desc: Run all test_app comprehensive tests
         cmds:
@@ -125,6 +162,11 @@ tasks:
             - task: comprehensive:csharp
             - task: comprehensive:php
             - task: comprehensive:elixir
+            - task: comprehensive:c
+            - task: comprehensive:dart
+            - task: comprehensive:zig
+            - task: comprehensive:kotlin_android
+            - task: comprehensive:swift_e2e
 
     comprehensive:python:
         desc: Run Python test_app comprehensive tests
@@ -187,6 +229,40 @@ tasks:
         cmds:
             - mix deps.get
             - mix test
+
+    comprehensive:c:
+        desc: Run C test_app comprehensive tests
+        dir: test_apps/c
+        cmds:
+            - bash download_ffi.sh
+            - make
+            - ./run_tests
+
+    comprehensive:dart:
+        desc: Run Dart test_app comprehensive tests
+        dir: test_apps/dart
+        cmds:
+            - dart pub get
+            - dart test
+
+    comprehensive:zig:
+        desc: Run Zig test_app comprehensive tests
+        dir: test_apps/zig
+        cmds:
+            - zig build test
+
+    comprehensive:kotlin_android:
+        desc: Run Kotlin/Android test_app comprehensive tests (host JVM)
+        dir: test_apps/kotlin_android
+        cmds:
+            - ./gradlew test
+
+    comprehensive:swift_e2e:
+        desc: Run Swift test_app comprehensive tests (binaryTarget artifact bundle)
+        dir: test_apps/swift_e2e
+        cmds:
+            - bash download_swift_artifact.sh
+            - swift test
 
     regenerate:
         desc: Regenerate test_apps/ via alef and re-sync versions

@@ -1,0 +1,3 @@
+# Brewfile — managed by alef. DO NOT EDIT.
+tap "kreuzberg-dev/homebrew-tap"
+brew "kreuzberg-dev/homebrew-tap/liter-llm"
