@@ -105,8 +105,9 @@ tasks:
         desc: Run PHP test_app smoke test
         dir: test_apps/php
         cmds:
+            - bash install.sh
             - composer install
-            - vendor/bin/phpunit tests/SmokeTest.php
+            - php -dextension=liter_llm vendor/bin/phpunit tests/SmokeTest.php
 
     smoke:csharp:
         desc: Run C# test_app smoke test
@@ -226,8 +227,9 @@ tasks:
         desc: Run PHP test_app comprehensive tests
         dir: test_apps/php
         cmds:
+            - bash install.sh
             - composer install
-            - vendor/bin/phpunit
+            - php -dextension=liter_llm vendor/bin/phpunit
 
     comprehensive:elixir:
         desc: Run Elixir test_app comprehensive tests
