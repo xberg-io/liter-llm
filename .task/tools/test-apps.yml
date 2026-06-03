@@ -140,7 +140,12 @@ tasks:
         desc: Run Kotlin/Android test_app smoke test (host JVM)
         dir: test_apps/kotlin_android
         cmds:
-            - ./gradlew test
+            - |
+                if [ -z "${ANDROID_HOME:-}${ANDROID_SDK_ROOT:-}" ]; then
+                  echo "SKIP: kotlin_android smoke requires ANDROID_HOME or ANDROID_SDK_ROOT"
+                  exit 0
+                fi
+                ./gradlew test
 
     smoke:swift_e2e:
         desc: Run Swift test_app smoke test (binaryTarget artifact bundle)
@@ -262,7 +267,12 @@ tasks:
         desc: Run Kotlin/Android test_app comprehensive tests (host JVM)
         dir: test_apps/kotlin_android
         cmds:
-            - ./gradlew test
+            - |
+                if [ -z "${ANDROID_HOME:-}${ANDROID_SDK_ROOT:-}" ]; then
+                  echo "SKIP: kotlin_android comprehensive requires ANDROID_HOME or ANDROID_SDK_ROOT"
+                  exit 0
+                fi
+                ./gradlew test
 
     comprehensive:swift_e2e:
         desc: Run Swift test_app comprehensive tests (binaryTarget artifact bundle)

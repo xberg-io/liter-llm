@@ -5663,15 +5663,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           reason: dco_decode_String(raw[2]),
         );
       case 12:
-        return LiterLlmError_Serialization(field0: dco_decode_String(raw[1]));
-      case 13:
         return LiterLlmError_BudgetExceeded(
           message: dco_decode_String(raw[1]),
           model: dco_decode_String(raw[2]),
         );
-      case 14:
+      case 13:
         return LiterLlmError_HookRejected(message: dco_decode_String(raw[1]));
-      case 15:
+      case 14:
         return LiterLlmError_InternalError(message: dco_decode_String(raw[1]));
       default:
         throw Exception("unreachable");
@@ -8243,19 +8241,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_reason = sse_decode_String(deserializer);
         return LiterLlmError_InvalidHeader(name: var_name, reason: var_reason);
       case 12:
-        var var_field0 = sse_decode_String(deserializer);
-        return LiterLlmError_Serialization(field0: var_field0);
-      case 13:
         var var_message = sse_decode_String(deserializer);
         var var_model = sse_decode_String(deserializer);
         return LiterLlmError_BudgetExceeded(
           message: var_message,
           model: var_model,
         );
-      case 14:
+      case 13:
         var var_message = sse_decode_String(deserializer);
         return LiterLlmError_HookRejected(message: var_message);
-      case 15:
+      case 14:
         var var_message = sse_decode_String(deserializer);
         return LiterLlmError_InternalError(message: var_message);
       default:
@@ -10921,21 +10916,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(11, serializer);
         sse_encode_String(name, serializer);
         sse_encode_String(reason, serializer);
-      case LiterLlmError_Serialization(field0: final field0):
-        sse_encode_i_32(12, serializer);
-        sse_encode_String(field0, serializer);
       case LiterLlmError_BudgetExceeded(
         message: final message,
         model: final model,
       ):
-        sse_encode_i_32(13, serializer);
+        sse_encode_i_32(12, serializer);
         sse_encode_String(message, serializer);
         sse_encode_String(model, serializer);
       case LiterLlmError_HookRejected(message: final message):
-        sse_encode_i_32(14, serializer);
+        sse_encode_i_32(13, serializer);
         sse_encode_String(message, serializer);
       case LiterLlmError_InternalError(message: final message):
-        sse_encode_i_32(15, serializer);
+        sse_encode_i_32(14, serializer);
         sse_encode_String(message, serializer);
     }
   }

@@ -60,8 +60,6 @@ sealed class LiterLlmError(message: String) : Exception(message) {
     data class InvalidHeader(val name: String, val reason: String) :
         LiterLlmError("invalid header {name:?}: {reason}")
 
-    data class Serialization(val field0: String) : LiterLlmError("serialization error: $field0")
-
     data class BudgetExceeded(override val message: String, val model: String?) :
         LiterLlmError("budget exceeded: {message}")
 

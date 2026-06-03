@@ -44,7 +44,6 @@ pub const LiterLlmError = error{
     Streaming,
     EndpointNotSupported,
     InvalidHeader,
-    Serialization,
     BudgetExceeded,
     HookRejected,
     InternalError,

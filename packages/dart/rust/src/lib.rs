@@ -1618,9 +1618,6 @@ pub enum LiterLlmError {
         name: String,
         reason: String,
     },
-    Serialization {
-        field0: String,
-    },
     BudgetExceeded {
         message: String,
         model: String,
@@ -1716,7 +1713,6 @@ impl From<&LiterLlmError> for liter_llm::error::LiterLlmError {
             LiterLlmError::InternalError { message: f_message } => Self::InternalError {
                 message: f_message.clone(),
             },
-            _ => unreachable!("mirror variant has sanitized fields and cannot be converted to the core error type"),
         }
     }
 }
@@ -1806,7 +1802,9 @@ impl From<liter_llm::types::AssistantMessage> for AssistantMessage {
         AssistantMessage {
             content: v.content.map(|s| s.into()),
             name: v.name.map(|s| s.into()),
-            tool_calls: v.tool_calls.map(|vec| vec.into_iter().map(ToolCall::from).collect()),
+            tool_calls: v
+                .tool_calls
+                .map(|vec| vec.into_iter().map(ToolCall::from).collect::<Vec<_>>()),
             refusal: v.refusal.map(|s| s.into()),
             function_call: v.function_call.map(FunctionCall::from),
         }
@@ -1930,7 +1928,7 @@ impl From<liter_llm::types::ChatCompletionRequest> for ChatCompletionRequest {
     fn from(v: liter_llm::types::ChatCompletionRequest) -> Self {
         ChatCompletionRequest {
             model: v.model.into(),
-            messages: v.messages.into_iter().map(Message::from).collect(),
+            messages: v.messages.into_iter().map(Message::from).collect::<Vec<_>>(),
             temperature: v.temperature.map(|x| x as _),
             top_p: v.top_p.map(|x| x as _),
             n: v.n.map(|x| x as _),
@@ -1945,7 +1943,7 @@ impl From<liter_llm::types::ChatCompletionRequest> for ChatCompletionRequest {
             user: v.user.map(|s| s.into()),
             tools: v
                 .tools
-                .map(|vec| vec.into_iter().map(ChatCompletionTool::from).collect()),
+                .map(|vec| vec.into_iter().map(ChatCompletionTool::from).collect::<Vec<_>>()),
             tool_choice: v.tool_choice.map(ToolChoice::from),
             parallel_tool_calls: v.parallel_tool_calls.map(|x| x as _),
             response_format: v.response_format.map(ResponseFormat::from),
@@ -1972,7 +1970,7 @@ impl From<liter_llm::types::ChatCompletionResponse> for ChatCompletionResponse {
             object: v.object.into(),
             created: v.created as _,
             model: v.model.into(),
-            choices: v.choices.into_iter().map(Choice::from).collect(),
+            choices: v.choices.into_iter().map(Choice::from).collect::<Vec<_>>(),
             usage: v.usage.map(Usage::from),
             system_fingerprint: v.system_fingerprint.map(|s| s.into()),
             service_tier: v.service_tier.map(|s| s.into()),
@@ -1997,7 +1995,7 @@ impl From<liter_llm::types::ChatCompletionChunk> for ChatCompletionChunk {
             object: v.object.into(),
             created: v.created as _,
             model: v.model.into(),
-            choices: v.choices.into_iter().map(StreamChoice::from).collect(),
+            choices: v.choices.into_iter().map(StreamChoice::from).collect::<Vec<_>>(),
             usage: v.usage.map(Usage::from),
             system_fingerprint: v.system_fingerprint.map(|s| s.into()),
             service_tier: v.service_tier.map(|s| s.into()),
@@ -2022,7 +2020,7 @@ impl From<liter_llm::types::StreamDelta> for StreamDelta {
             content: v.content.map(|s| s.into()),
             tool_calls: v
                 .tool_calls
-                .map(|vec| vec.into_iter().map(StreamToolCall::from).collect()),
+                .map(|vec| vec.into_iter().map(StreamToolCall::from).collect::<Vec<_>>()),
             function_call: v.function_call.map(StreamFunctionCall::from),
             refusal: v.refusal.map(|s| s.into()),
         }
@@ -2065,7 +2063,7 @@ impl From<liter_llm::types::EmbeddingResponse> for EmbeddingResponse {
     fn from(v: liter_llm::types::EmbeddingResponse) -> Self {
         EmbeddingResponse {
             object: v.object.into(),
-            data: v.data.into_iter().map(EmbeddingObject::from).collect(),
+            data: v.data.into_iter().map(EmbeddingObject::from).collect::<Vec<_>>(),
             model: v.model.into(),
             usage: v.usage.map(Usage::from),
         }
@@ -2076,7 +2074,7 @@ impl From<liter_llm::types::EmbeddingObject> for EmbeddingObject {
     fn from(v: liter_llm::types::EmbeddingObject) -> Self {
         EmbeddingObject {
             object: v.object.into(),
-            embedding: v.embedding.into_iter().map(|x| x as _).collect(),
+            embedding: v.embedding.into_iter().map(|x| x as _).collect::<Vec<_>>(),
             index: v.index as _,
         }
     }
@@ -2101,7 +2099,7 @@ impl From<liter_llm::types::ImagesResponse> for ImagesResponse {
     fn from(v: liter_llm::types::ImagesResponse) -> Self {
         ImagesResponse {
             created: v.created as _,
-            data: v.data.into_iter().map(Image::from).collect(),
+            data: v.data.into_iter().map(Image::from).collect::<Vec<_>>(),
         }
     }
 }
@@ -2149,7 +2147,7 @@ impl From<liter_llm::types::TranscriptionResponse> for TranscriptionResponse {
             duration: v.duration.map(|x| x as _),
             segments: v
                 .segments
-                .map(|vec| vec.into_iter().map(TranscriptionSegment::from).collect()),
+                .map(|vec| vec.into_iter().map(TranscriptionSegment::from).collect::<Vec<_>>()),
         }
     }
 }
@@ -2179,7 +2177,7 @@ impl From<liter_llm::types::ModerationResponse> for ModerationResponse {
         ModerationResponse {
             id: v.id.into(),
             model: v.model.into(),
-            results: v.results.into_iter().map(ModerationResult::from).collect(),
+            results: v.results.into_iter().map(ModerationResult::from).collect::<Vec<_>>(),
         }
     }
 }
@@ -2235,7 +2233,7 @@ impl From<liter_llm::types::RerankRequest> for RerankRequest {
         RerankRequest {
             model: v.model.into(),
             query: v.query.into(),
-            documents: v.documents.into_iter().map(RerankDocument::from).collect(),
+            documents: v.documents.into_iter().map(RerankDocument::from).collect::<Vec<_>>(),
             top_n: v.top_n.map(|x| x as _),
             return_documents: v.return_documents.map(|x| x as _),
         }
@@ -2246,7 +2244,7 @@ impl From<liter_llm::types::RerankResponse> for RerankResponse {
     fn from(v: liter_llm::types::RerankResponse) -> Self {
         RerankResponse {
             id: v.id.map(|s| s.into()),
-            results: v.results.into_iter().map(RerankResult::from).collect(),
+            results: v.results.into_iter().map(RerankResult::from).collect::<Vec<_>>(),
             meta: v.meta.map(|j| serde_json::to_string(&j).unwrap_or_default()),
         }
     }
@@ -2276,7 +2274,7 @@ impl From<liter_llm::types::SearchRequest> for SearchRequest {
             max_results: v.max_results.map(|x| x as _),
             search_domain_filter: v
                 .search_domain_filter
-                .map(|vec| vec.into_iter().map(|s| s.into()).collect()),
+                .map(|vec| vec.into_iter().map(|s| s.into()).collect::<Vec<_>>()),
             country: v.country.map(|s| s.into()),
         }
     }
@@ -2285,7 +2283,7 @@ impl From<liter_llm::types::SearchRequest> for SearchRequest {
 impl From<liter_llm::types::SearchResponse> for SearchResponse {
     fn from(v: liter_llm::types::SearchResponse) -> Self {
         SearchResponse {
-            results: v.results.into_iter().map(SearchResult::from).collect(),
+            results: v.results.into_iter().map(SearchResult::from).collect::<Vec<_>>(),
             model: v.model.into(),
         }
     }
@@ -2307,7 +2305,7 @@ impl From<liter_llm::types::OcrRequest> for OcrRequest {
         OcrRequest {
             model: v.model.into(),
             document: OcrDocument::from(v.document),
-            pages: v.pages.map(|vec| vec.into_iter().map(|x| x as _).collect()),
+            pages: v.pages.map(|vec| vec.into_iter().map(|x| x as _).collect::<Vec<_>>()),
             include_image_base64: v.include_image_base64.map(|x| x as _),
         }
     }
@@ -2316,7 +2314,7 @@ impl From<liter_llm::types::OcrRequest> for OcrRequest {
 impl From<liter_llm::types::OcrResponse> for OcrResponse {
     fn from(v: liter_llm::types::OcrResponse) -> Self {
         OcrResponse {
-            pages: v.pages.into_iter().map(OcrPage::from).collect(),
+            pages: v.pages.into_iter().map(OcrPage::from).collect::<Vec<_>>(),
             model: v.model.into(),
             usage: v.usage.map(Usage::from),
         }
@@ -2328,7 +2326,9 @@ impl From<liter_llm::types::OcrPage> for OcrPage {
         OcrPage {
             index: v.index as _,
             markdown: v.markdown.into(),
-            images: v.images.map(|vec| vec.into_iter().map(OcrImage::from).collect()),
+            images: v
+                .images
+                .map(|vec| vec.into_iter().map(OcrImage::from).collect::<Vec<_>>()),
             dimensions: v.dimensions.map(PageDimensions::from),
         }
     }
@@ -2356,7 +2356,7 @@ impl From<liter_llm::types::ModelsListResponse> for ModelsListResponse {
     fn from(v: liter_llm::types::ModelsListResponse) -> Self {
         ModelsListResponse {
             object: v.object.into(),
-            data: v.data.into_iter().map(ModelObject::from).collect(),
+            data: v.data.into_iter().map(ModelObject::from).collect::<Vec<_>>(),
         }
     }
 }
@@ -2400,7 +2400,7 @@ impl From<liter_llm::types::FileListResponse> for FileListResponse {
     fn from(v: liter_llm::types::FileListResponse) -> Self {
         FileListResponse {
             object: v.object.into(),
-            data: v.data.into_iter().map(FileObject::from).collect(),
+            data: v.data.into_iter().map(FileObject::from).collect::<Vec<_>>(),
             has_more: v.has_more.map(|x| x as _),
         }
     }
@@ -2472,7 +2472,7 @@ impl From<liter_llm::types::BatchListResponse> for BatchListResponse {
     fn from(v: liter_llm::types::BatchListResponse) -> Self {
         BatchListResponse {
             object: v.object.into(),
-            data: v.data.into_iter().map(BatchObject::from).collect(),
+            data: v.data.into_iter().map(BatchObject::from).collect::<Vec<_>>(),
             has_more: v.has_more.map(|x| x as _),
             first_id: v.first_id.map(|s| s.into()),
             last_id: v.last_id.map(|s| s.into()),
@@ -2495,7 +2495,9 @@ impl From<liter_llm::types::CreateResponseRequest> for CreateResponseRequest {
             model: v.model.into(),
             input: serde_json::to_string(&v.input).unwrap_or_default(),
             instructions: v.instructions.map(|s| s.into()),
-            tools: v.tools.map(|vec| vec.into_iter().map(ResponseTool::from).collect()),
+            tools: v
+                .tools
+                .map(|vec| vec.into_iter().map(ResponseTool::from).collect::<Vec<_>>()),
             temperature: v.temperature.map(|x| x as _),
             max_output_tokens: v.max_output_tokens.map(|x| x as _),
             metadata: v.metadata.map(|j| serde_json::to_string(&j).unwrap_or_default()),
@@ -2520,7 +2522,7 @@ impl From<liter_llm::types::ResponseObject> for ResponseObject {
             created_at: v.created_at as _,
             model: v.model.into(),
             status: v.status.into(),
-            output: v.output.into_iter().map(ResponseOutputItem::from).collect(),
+            output: v.output.into_iter().map(ResponseOutputItem::from).collect::<Vec<_>>(),
             usage: v.usage.map(ResponseUsage::from),
             error: v.error.map(|j| serde_json::to_string(&j).unwrap_or_default()),
         }
@@ -2552,7 +2554,7 @@ impl From<liter_llm::provider::custom::CustomProviderConfig> for CustomProviderC
             name: v.name.into(),
             base_url: v.base_url.into(),
             auth_header: AuthHeaderFormat::from(v.auth_header),
-            model_prefixes: v.model_prefixes.into_iter().map(|s| s.into()).collect(),
+            model_prefixes: v.model_prefixes.into_iter().map(|s| s.into()).collect::<Vec<_>>(),
         }
     }
 }
@@ -2564,8 +2566,12 @@ impl From<liter_llm::provider::ProviderConfig> for ProviderConfig {
             display_name: v.display_name.map(|s| s.into()),
             base_url: v.base_url.map(|s| s.into()),
             auth: v.auth.map(AuthConfig::from),
-            endpoints: v.endpoints.map(|vec| vec.into_iter().map(|s| s.into()).collect()),
-            model_prefixes: v.model_prefixes.map(|vec| vec.into_iter().map(|s| s.into()).collect()),
+            endpoints: v
+                .endpoints
+                .map(|vec| vec.into_iter().map(|s| s.into()).collect::<Vec<_>>()),
+            model_prefixes: v
+                .model_prefixes
+                .map(|vec| vec.into_iter().map(|s| s.into()).collect::<Vec<_>>()),
             param_mappings: v
                 .param_mappings
                 .map(|m| m.into_iter().map(|(k, v)| (k.into(), v.into())).collect()),

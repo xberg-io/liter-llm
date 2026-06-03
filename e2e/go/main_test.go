@@ -2,14 +2,14 @@ package e2e_test
 
 import (
 	"bufio"
-	"fmt"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
+	"fmt"
+	"net/http"
+	"strings"
 	"time"
 )
 

@@ -1,3 +1,8 @@
+# Start a named Finch pool before ExUnit. When tests call Req with
+# connect_options: [protocols: [:http1]], they bypass Req's default lazy
+# init and require an explicit Finch supervisor to be running.
+{:ok, _} = Finch.start_link(name: AlefE2EFinch)
+
 ExUnit.start()
 
 # Spawn mock-server binary and set MOCK_SERVER_URL for all tests.
