@@ -2030,16 +2030,18 @@ jobs:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
             - uses: actions/download-artifact@v7
               with:
-                  pattern: c-ffi-*
+                  pattern: ffi-*
                   path: ffi-artifacts
                   merge-multiple: true
             - name: Bundle FFI libs into Zig package
               shell: bash
               run: |
                   mkdir -p packages/zig/lib
-                  # The build-ffi job produces ffi-staging artifacts organized by RID:
-                  # ffi-{linux-x64,linux-arm64,osx-arm64,win-x64}/{*.so|*.dylib|*.dll}
-                  # Map RID to the lib subdirectories Zig consumers expect in packages/zig/lib.
+                  # build-ffi uploads `ffi-<label>` artifacts whose contents are the
+                  # ffi-staging/ directory: `<rid>/<*.so|*.dylib|*.dll>` plus optional
+                  # `include/`. merge-multiple flattens the 4 artifacts so we get
+                  # ffi-artifacts/{linux-x64,linux-arm64,osx-arm64,win-x64}/ + include/.
+                  # Map each RID to the lib subdir Zig consumers expect under packages/zig/lib.
                   declare -A rid_to_libdir=(
                     ["linux-x64"]="x86_64-linux-gnu"
                     ["linux-arm64"]="aarch64-linux-gnu"
