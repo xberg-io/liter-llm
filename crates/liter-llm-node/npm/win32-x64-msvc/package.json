@@ -1,25 +1,15 @@
 {
   "name": "@kreuzberg/liter-llm-node-win32-x64-msvc",
-  "version": "1.4.0-rc.50",
+  "version": "1.4.0-rc.52",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kreuzberg-dev/liter-llm.git"
   },
-  "files": [
-    "liter-llm-node.win32-x64-msvc.node"
-  ],
-  "os": [
-    "win32"
-  ],
-  "cpu": [
-    "x64"
-  ],
   "main": "liter-llm-node.win32-x64-msvc.node",
-  "publishConfig": {
-    "access": "public"
-  },
-  "engines": {
-    "node": ">= 18"
-  }
+  "files": ["liter-llm-node.win32-x64-msvc.node"],
+  "os": ["win32"],
+  "cpu": ["x64"],
+  "engines": { "node": ">= 18" },
+  "publishConfig": { "access": "public" }
 }

@@ -8,7 +8,7 @@ let package = Package(
         .iOS(.v16),
     ],
     dependencies: [
-        .package(url: "https://github.com/kreuzberg-dev/liter-llm", from: "1.4.0-rc.50"),
+        .package(url: "https://github.com/kreuzberg-dev/liter-llm", from: "1.4.0-rc.52"),
     ],
     targets: [
         .testTarget(

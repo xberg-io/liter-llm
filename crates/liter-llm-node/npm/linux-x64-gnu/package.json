@@ -1,28 +1,16 @@
 {
   "name": "@kreuzberg/liter-llm-node-linux-x64-gnu",
-  "version": "1.4.0-rc.50",
+  "version": "1.4.0-rc.52",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kreuzberg-dev/liter-llm.git"
   },
-  "files": [
-    "liter-llm-node.linux-x64-gnu.node"
-  ],
-  "os": [
-    "linux"
-  ],
-  "cpu": [
-    "x64"
-  ],
-  "libc": [
-    "glibc"
-  ],
   "main": "liter-llm-node.linux-x64-gnu.node",
-  "publishConfig": {
-    "access": "public"
-  },
-  "engines": {
-    "node": ">= 18"
-  }
+  "files": ["liter-llm-node.linux-x64-gnu.node"],
+  "os": ["linux"],
+  "cpu": ["x64"],
+  "libc": ["glibc"],
+  "engines": { "node": ">= 18" },
+  "publishConfig": { "access": "public" }
 }

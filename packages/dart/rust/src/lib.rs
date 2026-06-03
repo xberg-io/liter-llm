@@ -3394,7 +3394,7 @@ pub fn unregister_custom_provider(name: String) -> Result<bool, String> {
 /// Useful for tooling, documentation generation, or runtime enumeration.
 pub fn all_providers() -> Result<Vec<ProviderConfig>, String> {
     liter_llm::provider::all_providers()
-        .map(|v| v.iter().map(|x| ProviderConfig::from(x.clone())).collect())
+        .map(|v| v.iter().map(|x| ProviderConfig::from(x.clone())).collect::<Vec<_>>())
         .map_err(|e| e.to_string())
 }
 

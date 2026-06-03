@@ -2,6 +2,6 @@
 
 All notable changes to this package will be documented in this file.
 
-## 1.4.0-rc.50
+## 1.4.0-rc.52
 
 - Initial release.

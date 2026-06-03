@@ -36,12 +36,12 @@ fn main() {
             patch_published_loader();
 
             // Rewrite FRB-generated handler.executeSync/handler.executeNormal calls
-            // to use the GeneralizedFrbRustBinding receiver. FRB emits these calls
-            // assuming `handler` is a BaseHandler field, but in service-API methods
-            // `handler` is a user-supplied function parameter (FutureOr<R> Function(T))
-            // which does not expose those methods, so the generated Dart fails to
-            // compile. The rewrite is idempotent (marker-gated) and runs after every
-            // FRB invocation — including the rebuild that fires during `dart pub get`
+            // into direct handler invocations. FRB 2.x emits these calls assuming
+            // `handler` is a BaseHandler field, but in service-API methods `handler`
+            // is a user-supplied function parameter (FutureOr<R> Function(T)) which
+            // does not expose those methods, so the generated Dart fails to compile.
+            // The rewrite is idempotent (marker-gated) and runs after every FRB
+            // invocation — including the rebuild that fires during `dart pub get`
             // in e2e flows, which is when this otherwise reverts.
             fix_handler_executor_calls();
         }
@@ -183,15 +183,12 @@ fn patch_published_loader() {
 }
 
 /// Rewrite the FRB-generated `handler.executeSync(...)` and
-/// `handler.executeNormal(...)` calls so the receiver is the
-/// `generalizedFrbRustBinding` instance instead of a method-shadowed
-/// `handler` parameter.
+/// `handler.executeNormal(...)` calls on callback function parameters.
 ///
 /// FRB 2.x emits `handler.executeSync(SyncTask(...))` inside service-API
 /// methods that take a user-supplied `handler` callback parameter; those
-/// methods don't exist on the callback function type, so the generated
-/// Dart fails to compile. `GeneralizedFrbRustBinding` exposes the
-/// equivalent task-execution methods, so swap the receiver.
+/// methods don't exist on plain function types. This rewrite strips the
+/// erroneous method calls, calling the handler directly as a function.
 ///
 /// Idempotent: when the broken pattern is absent the function is a no-op.
 fn fix_handler_executor_calls() {
@@ -204,9 +201,12 @@ fn fix_handler_executor_calls() {
         return;
     }
 
-    let fixed = source
-        .replace("handler.executeSync(", "generalizedFrbRustBinding.executeSync(")
-        .replace("handler.executeNormal(", "generalizedFrbRustBinding.executeNormal(");
+    let mut fixed = source
+        .replace("handler.executeSync(", "await handler(")
+        .replace("handler.executeNormal(", "await handler(");
+
+    // Collapse `return await` + `await handler(` → `return await handler(`.
+    fixed = fixed.replace("await await handler", "await handler");
 
     if fixed != source {
         if let Err(err) = std::fs::write(path, &fixed) {
