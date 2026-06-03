@@ -79,6 +79,11 @@ tasks:
     smoke:go:
         desc: Run Go test_app smoke test
         dir: test_apps/go
+        # GOWORK=off bypasses the root go.work (which lists ./e2e/go + ./packages/go).
+        # test_apps/go pulls the *published* module from pkg.go.dev and must NOT be
+        # shadowed by the local workspace.
+        env:
+            GOWORK: "off"
         cmds:
             - go mod download
             - go test -v -run "Test_Smoke"
@@ -199,6 +204,8 @@ tasks:
     comprehensive:go:
         desc: Run Go test_app comprehensive tests
         dir: test_apps/go
+        env:
+            GOWORK: "off"
         cmds:
             - go mod download
             - go test -v ./...
