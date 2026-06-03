@@ -2,7 +2,7 @@
 title: "C API Reference"
 ---
 
-## C API Reference <span class="version-badge">v1.4.0-rc.53</span>
+## C API Reference <span class="version-badge">v1.4.0-rc.54</span>
 
 ### Functions
 

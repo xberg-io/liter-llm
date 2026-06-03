@@ -2,11 +2,12 @@
 
 Gem::Specification.new do |spec|
   spec.name = "liter_llm"
-  spec.version = "1.4.0.pre.rc.53"
+  spec.version = "1.4.0.pre.rc.54"
   spec.authors       = ["Na'aman Hirschfeld"]
   spec.summary       = "Universal LLM API client with Rust-powered polyglot bindings."
   spec.description   = "Universal LLM API client with Rust-powered polyglot bindings."
   spec.homepage      = "https://github.com/kreuzberg-dev/liter-llm"
+
   spec.license       = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
   spec.metadata["keywords"] = %w[anthropic api-client llm openai].join(",")

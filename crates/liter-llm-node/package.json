@@ -1,6 +1,6 @@
 {
   "name": "@kreuzberg/liter-llm-node",
-  "version": "1.4.0-rc.53",
+  "version": "1.4.0-rc.54",
   "description": "Universal LLM API client with Rust-powered polyglot bindings.",
   "license": "MIT",
   "repository": {
@@ -18,12 +18,12 @@
   },
   "files": ["index.js", "index.d.ts", "*.node"],
   "optionalDependencies": {
-    "@kreuzberg/liter-llm-node-linux-x64-gnu": "1.4.0-rc.53",
-    "@kreuzberg/liter-llm-node-linux-arm64-gnu": "1.4.0-rc.53",
-    "@kreuzberg/liter-llm-node-darwin-x64": "1.4.0-rc.53",
-    "@kreuzberg/liter-llm-node-darwin-arm64": "1.4.0-rc.53",
-    "@kreuzberg/liter-llm-node-win32-x64-msvc": "1.4.0-rc.53",
-    "@kreuzberg/liter-llm-node-win32-arm64-msvc": "1.4.0-rc.53"
+    "@kreuzberg/liter-llm-node-linux-x64-gnu": "1.4.0-rc.54",
+    "@kreuzberg/liter-llm-node-linux-arm64-gnu": "1.4.0-rc.54",
+    "@kreuzberg/liter-llm-node-darwin-x64": "1.4.0-rc.54",
+    "@kreuzberg/liter-llm-node-darwin-arm64": "1.4.0-rc.54",
+    "@kreuzberg/liter-llm-node-win32-x64-msvc": "1.4.0-rc.54",
+    "@kreuzberg/liter-llm-node-win32-arm64-msvc": "1.4.0-rc.54"
   },
   "napi": {
     "packageName": "@kreuzberg/liter-llm-node",

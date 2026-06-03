@@ -1,6 +1,6 @@
 [package]
 name = "liter-llm-ffi"
-version = "1.4.0-rc.53"
+version = "1.4.0-rc.54"
 edition = "2021"
 license = "MIT"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
@@ -8,6 +8,7 @@ readme = false
 keywords = ["anthropic", "api-client", "llm", "openai"]
 categories = ["text-processing"]
 repository = "https://github.com/kreuzberg-dev/liter-llm"
+
 
 # `serde_json`, `ahash`, and `tokio` are emitted unconditionally above so the
 # manifest is stable across regens (and so the C FFI codegen can pull them in
@@ -29,7 +30,7 @@ default = []
 [dependencies]
 ahash = "0.8"
 futures-util = "0.3"
-liter-llm = { path = "../liter-llm", version = "1.4.0-rc.53", features = ["native-http", "full"] }
+liter-llm = { path = "../liter-llm", version = "1.4.0-rc.54", features = ["native-http", "full"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
 
