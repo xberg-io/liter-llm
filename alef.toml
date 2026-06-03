@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.22.8"
+alef_version = "0.22.15"
 languages = [
   "python",
   "node",
@@ -113,6 +113,9 @@ exclude_types = ["CacheBackend", "CacheConfig"]
 
 [crates.ruby.stubs]
 output = "packages/ruby/sig/"
+
+[crates.php]
+composer_package = "kreuzberg/liter-llm"
 
 [crates.elixir]
 app_name = "liter_llm"

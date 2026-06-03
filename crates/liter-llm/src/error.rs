@@ -79,12 +79,8 @@ pub enum LiterLlmError {
     #[error("invalid header {name:?}: {reason}")]
     InvalidHeader { name: String, reason: String },
 
-    #[cfg(not(alef))]
     #[error("serialization error: {0}")]
-    Serialization(#[from] serde_json::Error),
-    #[cfg(alef)]
-    #[error("serialization error: {0}")]
-    Serialization(String),
+    Serialization(#[from] #[cfg_attr(alef, alef(skip))] serde_json::Error),
 
     #[error("budget exceeded: {message}")]
     BudgetExceeded { message: String, model: Option<String> },

@@ -70,7 +70,7 @@ func TestMain(m *testing.M) {
 	{
 		url := os.Getenv("MOCK_SERVER_URL")
 		ready := false
-		for i := 0; i < 100; i++ {
+		for i := 0; i < 400; i++ {
 			resp, err := http.Get(url)
 			if err == nil {
 				_ = resp.Body.Close()
@@ -80,7 +80,7 @@ func TestMain(m *testing.M) {
 			time.Sleep(50 * time.Millisecond)
 		}
 		if !ready {
-			panic("mock-server did not become ready within 5s")
+			panic("mock-server did not become ready within 20s")
 		}
 	}
 

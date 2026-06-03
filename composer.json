@@ -1,5 +1,5 @@
 {
-  "name": "kreuzberg-dev/liter-llm",
+  "name": "kreuzberg/liter-llm",
   "description": "Universal LLM API client with Rust-powered polyglot bindings.",
   "license": "MIT",
   "type": "php-ext",

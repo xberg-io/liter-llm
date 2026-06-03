@@ -171,7 +171,7 @@ Returns `None` if the model is not present in the embedded pricing registry.
 Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
 
 When an exact model name match is not found, progressively shorter prefixes
-are tried by stripping from the last `-` or `.` separator. For example,
+are tried by stripping from the last `-` or `.` separator.  For example,
 `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 
 **Signature:**
@@ -1857,6 +1857,7 @@ All errors that can occur when using `liter-llm`.
 | `Streaming(LiterLlmError)` | A catch-all for errors that occur during streaming response processing. This variant covers multiple sub-conditions including UTF-8 decoding failures, CRC/checksum mismatches (AWS EventStream), JSON parse errors in individual SSE chunks, and buffer overflow conditions.  The `message` field contains a human-readable description of the specific failure. |
 | `EndpointNotSupported(LiterLlmError)` | provider {provider} does not support {endpoint} |
 | `InvalidHeader(LiterLlmError)` | invalid header {name:?}: {reason} |
+| `Serialization(LiterLlmError)` | serialization error: {0} |
 | `BudgetExceeded(LiterLlmError)` | budget exceeded: {message} |
 | `HookRejected(LiterLlmError)` | hook rejected: {message} |
 | `InternalError(LiterLlmError)` | An internal logic error (e.g. unexpected Tower response variant). This should never surface in normal operation — if it does, it indicates a bug in the library. |
