@@ -2014,7 +2014,7 @@ jobs:
                   GH_REPO: ${{ github.repository }}
               run: |
                   gh workflow run publish-pubdev.yaml \
-                    --ref ${{ github.ref_name }} \
+                    --ref ${{ needs.prepare.outputs.tag }} \
                     -f run_id=${{ github.run_id }}
 
     publish-zig:
