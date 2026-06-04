@@ -99,7 +99,7 @@ Each release at <https://github.com/kreuzberg-dev/liter-llm/releases> attaches:
 ```swift
 .binaryTarget(
     name: "LiterLlm",
-    url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.58/LiterLlm-rs.artifactbundle.zip",
+    url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.59/LiterLlm-rs.artifactbundle.zip",
     checksum: "<CHECKSUM-FROM-RELEASE-NOTES>"
 )
 ```
