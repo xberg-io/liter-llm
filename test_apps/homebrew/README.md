@@ -1,6 +1,6 @@
 # homebrew test_app
 
-Exercises the configured Homebrew formulae from tap `kreuzberg-dev/homebrew-tap` at version `1.4.0-rc.57`.
+Exercises the configured Homebrew formulae from tap `kreuzberg-dev/homebrew-tap` at version `1.4.0-rc.59`.
 
 | Formula | Purpose |
 |---------|--------|

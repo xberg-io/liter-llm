@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.23.1"
+alef_version = "0.23.2"
 languages = [
   "python",
   "node",
@@ -763,9 +763,11 @@ path = "/chat/completions"
 module = "liter_llm"
 async = true
 streaming = true
-# Streaming chat fixtures assert on `chunks` (chunk shape, content, count).
-# Alef >= 0.23.0 requires explicit `chunks` recipe opt-in for these checks.
-assertion_recipes = ["chunks"]
+# Streaming chat fixtures assert on `chunks`, `chunks.length`, `stream_complete`,
+# and other virtual stream fields. Alef >= 0.23.0 requires explicit opt-in via
+# the `streaming` recipe (the `chunks` recipe gates non-virtual chunked-content
+# fields like `chunks_have_content`, not the virtual chunk-list itself).
+assertion_recipes = ["streaming", "chunks"]
 
 [[crates.e2e.calls.chat_stream.args]]
 name = "request"
@@ -1773,7 +1775,7 @@ name = "liter_llm_ffi"
 name = "LiterLlm"
 
 [crates.e2e.registry.packages.zig]
-hash = "liter_llm-1.4.0-rc.57-Jfgk_AUyAQBbTyxL3cXbYrKTzDA1rUfWXtpKzBZl8FF5"
+hash = "liter_llm-1.4.0-rc.59-Jfgk_CektR0hvAr-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
 
 [crates.e2e.registry.packages.homebrew]
 tap = "kreuzberg-dev/homebrew-tap"
