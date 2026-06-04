@@ -8,31 +8,29 @@ PHP_ARG_ENABLE([liter_llm],
   [yes])
 
 if test "$PHP_LITER_LLM_ENABLED" = "yes"; then
-  dnl Recognize the extension directory for phpize/make
+  dnl Register the extension directory so phpize creates modules/ and sets up build rules.
   PHP_NEW_EXTENSION(liter_llm, [], $ext_shared)
 
-  dnl Invoke cargo build to compile the Rust FFI library
+  dnl Invoke cargo build to compile the Rust FFI library and copy it to modules/.
   AC_CONFIG_COMMANDS([cargo-build], [
     if test -f "crates/liter-llm-php/Cargo.toml"; then
-      cargo build --release --manifest-path crates/liter-llm-php/Cargo.toml || exit 1
-      cargo_output_dir="crates/liter-llm-php/target/release"
-      ext_soname="liter_llm"
+      (cd crates/liter-llm-php && cargo build --release) || exit 1
 
       dnl Detect output filename based on platform
-      if test -f "${cargo_output_dir}/libliter-llm_php.dylib"; then
-        cargo_lib="${cargo_output_dir}/libliter-llm_php.dylib"
-      elif test -f "${cargo_output_dir}/libliter-llm_php.so"; then
-        cargo_lib="${cargo_output_dir}/libliter-llm_php.so"
+      if test -f "crates/liter-llm-php/target/release/libliter-llm_php.dylib"; then
+        cargo_lib="crates/liter-llm-php/target/release/libliter-llm_php.dylib"
+      elif test -f "crates/liter-llm-php/target/release/libliter-llm_php.so"; then
+        cargo_lib="crates/liter-llm-php/target/release/libliter-llm_php.so"
       else
-        AC_MSG_ERROR([cargo build succeeded but .so/.dylib not found])
+        echo "ERROR: cargo build succeeded but .so/.dylib not found in crates/liter_llm-php/target/release" >&2
+        exit 1
       fi
 
-      dnl Copy the compiled library to modules/ directory for phpize to install
-      cp "${cargo_lib}" "modules/${ext_soname}.so" || exit 1
+      mkdir -p modules
+      cp "$cargo_lib" "modules/liter-llm.so" || exit 1
     else
-      AC_MSG_ERROR([crates/liter-llm-php/Cargo.toml not found])
+      echo "ERROR: crates/liter_llm-php/Cargo.toml not found" >&2
+      exit 1
     fi
-  ], [
-    extension_name=liter_llm
-  ])
+  ], [])
 fi
