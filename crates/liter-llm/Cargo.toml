@@ -20,6 +20,9 @@ ignored = ["dashmap", "tower-http"]
 # instead and the tokio multi-thread runtime is unavailable.
 native-http = [
     "dep:reqwest",
+    # dep:rustls is only satisfied on non-Windows (see target-conditional deps below).
+    # Cargo silently ignores feature activations for optional deps that are absent on
+    # the current target, so this entry is a no-op on Windows without causing an error.
     "dep:rustls",
     "dep:tokio",
     "dep:memchr",
@@ -93,8 +96,6 @@ memchr = { workspace = true, optional = true }
 opendal = { workspace = true, optional = true }
 opentelemetry = { workspace = true, optional = true }
 pin-project-lite = { workspace = true }
-reqwest = { workspace = true, optional = true }
-rustls = { workspace = true, optional = true }
 secrecy = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -106,6 +107,17 @@ tower = { workspace = true, optional = true }
 tower-http = { workspace = true, optional = true }
 tracing = { workspace = true, optional = true }
 tracing-opentelemetry = { workspace = true, optional = true }
+
+# Non-Windows: use rustls + ring (avoids aws-lc-sys, the only provider bundled by default on Linux/macOS).
+# The workspace reqwest base declares TLS-agnostic features; we layer the TLS provider here.
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+reqwest = { workspace = true, optional = true, features = ["rustls-no-provider"] }
+rustls = { workspace = true, optional = true }
+
+# Windows: use SChannel via native-tls; this avoids the aws-lc-sys MSVC build failure.
+# rustls is intentionally not pulled in on Windows.
+[target.'cfg(target_os = "windows")'.dependencies]
+reqwest = { workspace = true, optional = true, features = ["native-tls"] }
 
 [dev-dependencies]
 ctor = "1.0"

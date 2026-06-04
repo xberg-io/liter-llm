@@ -89,7 +89,10 @@ pub use types::*;
 ///
 /// WASM builds are exempt — the WASM target uses the browser/Node.js fetch
 /// API instead of rustls, so no crypto provider is needed.
-#[cfg(feature = "native-http")]
+///
+/// Windows builds use native-tls (SChannel) via reqwest, so rustls is not
+/// present and no crypto provider installation is needed.
+#[cfg(all(feature = "native-http", not(target_os = "windows")))]
 pub fn ensure_crypto_provider() {
     use std::sync::Once;
     static INIT: Once = Once::new();
@@ -100,3 +103,9 @@ pub fn ensure_crypto_provider() {
         let _ = rustls::crypto::ring::default_provider().install_default();
     });
 }
+
+/// No-op on Windows: reqwest uses native-tls (SChannel), so no rustls provider
+/// installation is needed. All callers use the same call site regardless of
+/// platform.
+#[cfg(all(feature = "native-http", target_os = "windows"))]
+pub fn ensure_crypto_provider() {}

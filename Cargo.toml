@@ -68,11 +68,10 @@ pyo3 = { version = "0.28", features = ["abi3-py310", "multiple-pymethods"] }
 pyo3-async-runtimes = { version = "0.28", features = ["tokio-runtime"] }
 rayon = "1"
 rb-sys = "0.9"
-# Async / HTTP
+# Async / HTTP — TLS-agnostic base only; each crate adds TLS features target-conditionally
 reqwest = { version = "0.13", default-features = false, features = [
     "json",
     "stream",
-    "rustls-no-provider",
     "multipart",
     "form",
 ] }
