@@ -2161,27 +2161,31 @@ jobs:
                       **/*.zip
                       **/*.checksum
 
-            - name: Substitute checksum in Package.swift and commit
+            - name: Create swift-release tag with substituted checksum
               if: ${{ needs.prepare.outputs.dry_run != 'true' }}
               env:
                   VERSION: ${{ needs.prepare.outputs.version }}
                   CHECKSUM: ${{ needs.swift-artifactbundle.outputs.checksum }}
+                  TAG: ${{ needs.prepare.outputs.tag }}
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   set -euo pipefail
 
-                  # Check if Package.swift already has the real checksum (idempotent guard)
-                  if grep -q "${CHECKSUM}" Package.swift 2>/dev/null; then
-                    echo "Package.swift already has the real checksum — skipping patch and commit"
+                  SWIFT_TAG="swift-${VERSION}"
+
+                  # Idempotent guard: if the swift tag already exists on origin, skip.
+                  if git ls-remote --tags origin "refs/tags/${SWIFT_TAG}" 2>/dev/null | grep -q "${SWIFT_TAG}"; then
+                    echo "Swift tag ${SWIFT_TAG} already exists on origin; skipping."
                     exit 0
                   fi
 
                   # Patch Package.swift with the real checksum
                   sed -i.bak "s/__ALEF_SWIFT_CHECKSUM__/${CHECKSUM}/g" Package.swift
+                  rm -f Package.swift.bak
 
                   # Verify the substitution
-                  if ! grep -q "${CHECKSUM}" Package.swift; then
-                    echo "ERROR: checksum substitution failed" >&2
+                  if grep -q "__ALEF_SWIFT_CHECKSUM__" Package.swift; then
+                    echo "ERROR: checksum placeholder not substituted" >&2
                     exit 1
                   fi
 
@@ -2189,22 +2193,20 @@ jobs:
                   git config user.name "github-actions[bot]"
                   git config user.email "github-actions[bot]@users.noreply.github.com"
 
-                  # Stage and commit the patched Package.swift
+                  # Commit the patched Package.swift to a temporary release branch
                   git add Package.swift
-                  git commit -m "chore(swift): substitute checksum for v${VERSION}" --no-verify
+                  git commit -m "chore(swift): pin checksum for ${SWIFT_TAG}"
 
-                  # Get the new commit SHA
-                  NEW_SHA=$(git rev-parse HEAD)
-                  echo "Created commit with substituted checksum: ${NEW_SHA}"
+                  # Create a new tag in the swift namespace (NOT --force, NOT modifying main tag)
+                  git tag "${SWIFT_TAG}"
 
-                  # Delete and re-create the tag on this new commit
-                  git tag --force "${{ needs.prepare.outputs.tag }}" "${NEW_SHA}"
+                  # Push the release branch (not to main, to avoid modifying main)
+                  git push origin "HEAD:refs/heads/release/swift/${VERSION}"
 
-                  # Push the commit and tag
-                  git push origin HEAD:refs/heads/main
-                  git push origin "refs/tags/${{ needs.prepare.outputs.tag }}" --force
+                  # Push the swift tag
+                  git push origin "refs/tags/${SWIFT_TAG}"
 
-                  echo "Tag ${{ needs.prepare.outputs.tag }} now points to commit with real checksum"
+                  echo "Created ${SWIFT_TAG} tag on release/swift/${VERSION} branch with real checksum"
               shell: bash
 
             - name: Generate substituted Package.swift artifact
@@ -2236,7 +2238,6 @@ jobs:
               run: |
                   CHECKSUM=${{ needs.swift-artifactbundle.outputs.checksum }}
                   ASSET_URL="https://github.com/kreuzberg-dev/liter-llm/releases/download/v${VERSION}/LiterLlm-rs.artifactbundle.zip"
-                  PKG_SWIFT_URL="https://github.com/kreuzberg-dev/liter-llm/releases/download/v${VERSION}/Package.swift"
 
                   cat > /tmp/swift-notes.md << EOF
                   ## Swift Package Manager
@@ -2253,11 +2254,13 @@ jobs:
                   )
                   \`\`\`
 
-                  **Alternative — download the prebuilt \`Package.swift\` for this release:**
+                  **Alternative — pin via tag-specific Swift package release:**
 
-                  - [Package.swift](${PKG_SWIFT_URL}) (with version + checksum substituted)
+                  \`\`\`swift
+                  .package(url: "https://github.com/kreuzberg-dev/liter-llm", from: "swift-${VERSION}")
+                  \`\`\`
 
-                  > The repository's checked-in \`Package.swift\` uses placeholder values on \`main\`; the release-attached \`Package.swift\` above has them substituted for this version. Tag-URL pinning (\`.package(url: ..., from: "${VERSION}")\`) now works correctly because the tag includes the real checksum.
+                  > The main repository's \`Package.swift\` uses placeholder values. Swift consumers pin to a tag-specific release in the \`swift-\` namespace (e.g. \`from: "swift-${VERSION}"\`), which includes the real artifact bundle checksum. Other languages continue to pin to \`from: "${VERSION}"\`.
 
                   **Artifact bundle**: [LiterLlm-rs.artifactbundle.zip](${ASSET_URL})
                   **Checksum**: \`${CHECKSUM}\`
