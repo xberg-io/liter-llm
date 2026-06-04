@@ -185,20 +185,12 @@ tasks:
                 if [ -n "$JDK_HOME" ]; then
                   export JAVA_HOME="$JDK_HOME"
                   export PATH="$JDK_HOME/bin:$PATH"
-                elif command -v java >/dev/null 2>&1; then
-                  # If detection failed but java is available, try running anyway
-                  # (user might have JDK 17/21 as default).
-                  :
                 else
                   echo "SKIP: kotlin_android smoke requires JDK 17 or 21. Install with: brew install openjdk@17 (macOS) or sdk install java 17.0.13-zulu (sdkman)"
                   exit 0
                 fi
 
-                # Run gradle test, but skip gracefully if gradle/AGP version incompatibility occurs
-                if ! ./gradlew test; then
-                  echo "SKIP: kotlin_android smoke failed - likely gradle or AGP version incompatibility"
-                  exit 0
-                fi
+                ./gradlew test
 
     smoke:swift_e2e:
         desc: Run Swift test_app smoke test (binaryTarget artifact bundle)
@@ -365,20 +357,12 @@ tasks:
                 if [ -n "$JDK_HOME" ]; then
                   export JAVA_HOME="$JDK_HOME"
                   export PATH="$JDK_HOME/bin:$PATH"
-                elif command -v java >/dev/null 2>&1; then
-                  # If detection failed but java is available, try running anyway
-                  # (user might have JDK 17/21 as default).
-                  :
                 else
                   echo "SKIP: kotlin_android comprehensive requires JDK 17 or 21. Install with: brew install openjdk@17 (macOS) or sdk install java 17.0.13-zulu (sdkman)"
                   exit 0
                 fi
 
-                # Run gradle test, but skip gracefully if gradle/AGP version incompatibility occurs
-                if ! ./gradlew test; then
-                  echo "SKIP: kotlin_android comprehensive failed - likely gradle or AGP version incompatibility"
-                  exit 0
-                fi
+                ./gradlew test
 
     comprehensive:swift_e2e:
         desc: Run Swift test_app comprehensive tests (binaryTarget artifact bundle)
