@@ -6,7 +6,7 @@
 
     <groupId>dev.kreuzberg.literllm</groupId>
     <artifactId>liter-llm</artifactId>
-    <version>1.4.0-rc.59</version>
+    <version>1.4.0-rc.60</version>
     <packaging>jar</packaging>
 
     <name>liter-llm</name>
@@ -28,7 +28,7 @@
 
     <scm>
         <connection>scm:git:git://github.com/kreuzberg-dev/liter-llm.git</connection>
-        <developerConnection>scm:git:ssh://github.com:kreuzberg-dev/liter-llm.git</developerConnection>
+        <developerConnection>scm:git:ssh://git@github.com/kreuzberg-dev/liter-llm.git</developerConnection>
         <url>https://github.com/kreuzberg-dev/liter-llm</url>
     </scm>
 

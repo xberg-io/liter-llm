@@ -31,9 +31,9 @@
         <dependency>
             <groupId>dev.kreuzberg.literllm</groupId>
             <artifactId>liter-llm</artifactId>
-            <version>1.4.0-rc.59</version>
+            <version>1.4.0-rc.60</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/../../packages/java/target/liter-llm-1.4.0-rc.59.jar</systemPath>
+            <systemPath>${project.basedir}/../../packages/java/target/liter-llm-1.4.0-rc.60.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
