@@ -24,7 +24,7 @@ let package = Package(
     .binaryTarget(
       name: "RustBridge",
       url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.4.0-rc.57/LiterLlm-rs.artifactbundle.zip",
-      checksum: "__ALEF_SWIFT_CHECKSUM__"
+      checksum: "bf98da0481256153d2b7e3067ed31a9a7a4afc7e2e0040aab913853292cd0c0e"
     ),
     .target(
       name: "LiterLlm",
