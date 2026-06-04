@@ -21,6 +21,7 @@ pub struct FallbackLayer<F> {
     fallback: F,
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl<F> FallbackLayer<F> {
     /// Create a new fallback layer with the given fallback service.
     #[must_use]

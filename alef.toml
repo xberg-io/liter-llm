@@ -266,6 +266,8 @@ types = [
   "OpenDalCacheStore",
   "CooldownLayer",
   "CostTrackingLayer",
+  "FallbackLayer",
+  "FallbackService",
   "HealthCheckLayer",
   "HealthCheckService",
   "LlmHook",
