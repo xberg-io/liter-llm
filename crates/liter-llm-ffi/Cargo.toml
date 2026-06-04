@@ -9,7 +9,6 @@ keywords = ["anthropic", "api-client", "llm", "openai"]
 categories = ["text-processing"]
 repository = "https://github.com/kreuzberg-dev/liter-llm"
 
-
 # `serde_json`, `ahash`, and `tokio` are emitted unconditionally above so the
 # manifest is stable across regens (and so the C FFI codegen can pull them in
 # when an async / Result-typed function appears in the API surface), but for

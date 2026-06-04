@@ -9,7 +9,7 @@ keywords = ["anthropic", "api-client", "llm", "openai"]
 categories = ["text-processing"]
 
 [package.metadata.cargo-machete]
-ignored = ["tokio", "futures"]
+ignored = ["rb-sys"]
 
 [lib]
 name = "liter_llm_rb"

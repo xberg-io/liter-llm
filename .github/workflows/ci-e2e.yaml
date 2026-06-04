@@ -112,7 +112,7 @@ jobs:
               run: cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release
 
             - name: Upload FFI artifacts
-              uses: actions/upload-artifact@v7.0.1
+              uses: actions/upload-artifact@v7
               with:
                   name: ffi-${{ matrix.target }}
                   path: |
@@ -191,7 +191,7 @@ jobs:
                           LD_LIBRARY_PATH="$PWD/target/release-jni-lib:$LD_LIBRARY_PATH" \
                             bash -c 'cd e2e/kotlin_android && gradle test'
         steps:
-            - uses: actions/checkout@v6.0.2
+            - uses: actions/checkout@v6
 
             - name: Setup Rust
               uses: kreuzberg-dev/actions/setup-rust@v1
@@ -364,7 +364,7 @@ jobs:
 
             - name: Setup Go
               if: matrix.go-version
-              uses: actions/setup-go@v6.4.0
+              uses: actions/setup-go@v6
               with:
                   go-version: ${{ matrix.go-version }}
 
@@ -378,26 +378,26 @@ jobs:
 
             - name: Setup Java
               if: matrix.java-version
-              uses: actions/setup-java@v5.2.0
+              uses: actions/setup-java@v5
               with:
                   distribution: temurin
                   java-version: ${{ matrix.java-version }}
 
             - name: Setup Android SDK
               if: matrix.lang == 'kotlin_android'
-              uses: android-actions/setup-android@v4.0.1
+              uses: android-actions/setup-android@v4
               with:
                   packages: ""
 
             - name: Setup Gradle
               if: matrix.lang == 'kotlin_android'
-              uses: gradle/actions/setup-gradle@v6.1.0
+              uses: gradle/actions/setup-gradle@v6
               with:
                   gradle-version: "8.13"
 
             - name: Setup .NET
               if: matrix.dotnet-version
-              uses: actions/setup-dotnet@v5.2.0
+              uses: actions/setup-dotnet@v5
               with:
                   dotnet-version: ${{ matrix.dotnet-version }}
 
@@ -417,7 +417,7 @@ jobs:
 
             - name: Setup Dart
               if: matrix.dart-version
-              uses: dart-lang/setup-dart@v1.7.2
+              uses: dart-lang/setup-dart@v1
               with:
                   sdk: ${{ matrix.dart-version }}
 

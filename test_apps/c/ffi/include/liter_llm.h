@@ -5624,6 +5624,9 @@ uintptr_t literllm_count_request_tokens(const char *model,
  *
  * WASM builds are exempt â the WASM target uses the browser/Node.js fetch
  * API instead of rustls, so no crypto provider is needed.
+ *
+ * Windows builds use native-tls (SChannel) via reqwest, so rustls is not
+ * present and no crypto provider installation is needed.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */

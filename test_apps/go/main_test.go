@@ -45,6 +45,7 @@ func TestMain(m *testing.M) {
 
 	fixturesDir := filepath.Join(dir, "..", "..", "fixtures")
 	cmd := exec.Command(mockBin, fixturesDir)
+	cmd.Env = append(os.Environ(), "MOCK_SERVER_NO_STDIN_WATCH=1")
 	stdout, err := cmd.StdoutPipe()
 	if err != nil { panic(err) }
 	cmd.Stderr = os.Stderr

@@ -9,6 +9,7 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/kreuzberg-dev/liter-llm"
 
   spec.license       = "MIT"
+
   spec.required_ruby_version = ">= 3.2.0"
   spec.metadata["keywords"] = %w[anthropic api-client llm openai].join(",")
   spec.metadata["rubygems_mfa_required"] = "true"
