@@ -1627,7 +1627,7 @@ checksum = "92daf443525c4cce67b150400bc2316076100ce0b3686209eb8cf3c31612e6f0"
 
 [[package]]
 name = "liter-llm"
-version = "1.4.0-rc.56"
+version = "1.4.0-rc.57"
 dependencies = [
  "aws-credential-types",
  "aws-sigv4",
@@ -1659,7 +1659,7 @@ dependencies = [
 
 [[package]]
 name = "liter_llm_nif"
-version = "1.4.0-rc.56"
+version = "1.4.0-rc.57"
 dependencies = [
  "futures-util",
  "liter-llm",

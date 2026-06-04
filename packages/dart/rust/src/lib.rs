@@ -3507,6 +3507,9 @@ pub fn count_request_tokens(model: String, req: ChatCompletionRequest) -> Result
 ///
 /// WASM builds are exempt — the WASM target uses the browser/Node.js fetch
 /// API instead of rustls, so no crypto provider is needed.
+///
+/// Windows builds use native-tls (SChannel) via reqwest, so rustls is not
+/// present and no crypto provider installation is needed.
 pub fn ensure_crypto_provider() -> () {
     liter_llm::ensure_crypto_provider()
 }

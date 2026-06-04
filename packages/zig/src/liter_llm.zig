@@ -1444,6 +1444,9 @@ pub fn count_request_tokens(model: []const u8, req: []const u8) LiterLlmError!u6
 ///
 /// WASM builds are exempt — the WASM target uses the browser/Node.js fetch
 /// API instead of rustls, so no crypto provider is needed.
+///
+/// Windows builds use native-tls (SChannel) via reqwest, so rustls is not
+/// present and no crypto provider installation is needed.
 pub fn ensure_crypto_provider() void {
     _ = c.literllm_ensure_crypto_provider();
 }

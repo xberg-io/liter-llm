@@ -2,7 +2,7 @@
 title: "PHP API Reference"
 ---
 
-## PHP API Reference <span class="version-badge">v1.4.0-rc.56</span>
+## PHP API Reference <span class="version-badge">v1.4.0-rc.57</span>
 
 ### Functions
 
@@ -304,6 +304,9 @@ reach those constructors transitively, so no manual init is required.
 
 WASM builds are exempt — the WASM target uses the browser/Node.js fetch
 API instead of rustls, so no crypto provider is needed.
+
+Windows builds use native-tls (SChannel) via reqwest, so rustls is not
+present and no crypto provider installation is needed.
 
 **Signature:**
 

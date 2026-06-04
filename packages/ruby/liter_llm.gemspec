@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name = "liter_llm"
-  spec.version = "1.4.0.pre.rc.56"
+  spec.version = "1.4.0.pre.rc.57"
   spec.authors       = ["Na'aman Hirschfeld"]
   spec.summary       = "Universal LLM API client with Rust-powered polyglot bindings."
   spec.description   = "Universal LLM API client with Rust-powered polyglot bindings."
@@ -18,6 +18,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
   spec.extensions    = ["ext/liter_llm_rb/native/extconf.rb"]
 
-  spec.add_dependency "rb_sys", ">= 0.9"
+  spec.add_dependency "rb_sys", ">= 0.9", "< 0.9.128"
   spec.add_dependency "sorbet-runtime", "~> 0.5"
 end

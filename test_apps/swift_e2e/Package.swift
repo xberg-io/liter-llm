@@ -8,10 +8,7 @@ let package = Package(
         .iOS(.v16),
     ],
     dependencies: [
-        // Swift consumers pin to the swift-specific tag namespace (swift-X.Y.Z)
-        // which includes the precomputed artifact bundle checksum.
-        // This must be updated after the swift-X.Y.Z tag is published.
-        .package(url: "https://github.com/kreuzberg-dev/liter-llm", from: "swift-1.4.0-rc.56"),
+        .package(url: "https://github.com/kreuzberg-dev/liter-llm", from: "1.4.0-rc.57"),
     ],
     targets: [
         .testTarget(

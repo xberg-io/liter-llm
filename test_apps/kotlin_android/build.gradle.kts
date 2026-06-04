@@ -48,7 +48,7 @@ kotlin {
 
 dependencies {
     // Published Android AAR from Maven Central (verifies artifact resolution)
-    implementation("dev.kreuzberg:liter-llm-android:1.4.0-rc.56")
+    implementation("dev.kreuzberg:liter-llm-android:1.4.0-rc.57")
     // Jackson for JSON assertion helpers
     testImplementation("com.fasterxml.jackson.core:jackson-annotations:2.18.2")
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")
@@ -81,13 +81,13 @@ dependencies {
 tasks.register("verifyAarPublished") {
     description = "Verify the published Android AAR contains jniLibs and classes.jar"
     doLast {
-        val aarCoord = "dev.kreuzberg:liter-llm-android:1.4.0-rc.56"
+        val aarCoord = "dev.kreuzberg:liter-llm-android:1.4.0-rc.57"
         val (groupId, artifactId, version) = run {
             val parts = aarCoord.split(':')
             Triple(parts[0], parts[1], parts[2])
         }
         val aarFileName = "${artifactId}-${version}.aar"
-        val mavenUrl = "https://repo1.maven.org/maven2/${groupId.replace('.', '/')}//${artifactId}//${version}//${aarFileName}"
+        val mavenUrl = "https://repo1.maven.org/maven2/${groupId.replace('.', '/')}/${artifactId}/${version}/${aarFileName}"
         val aarFile = layout.buildDirectory.file("tmp/${aarFileName}").get().asFile
 
         println("Downloading AAR from Maven Central: ${mavenUrl}")
@@ -128,7 +128,7 @@ tasks.register("verifyAarPublished") {
 
             println("  + jniLibs: YES")
             println("  + classes.jar: YES")
-            println("  + Android ABIs: ${abiDirs.sorted().joinToString(\", \")}")
+            println("  + Android ABIs: " + abiDirs.sorted().joinToString(", "))
             println("\nAAR verification PASSED!")
         }
     }

@@ -201,6 +201,9 @@ class LiterLlmBridge {
   ///
   /// WASM builds are exempt — the WASM target uses the browser/Node.js fetch
   /// API instead of rustls, so no crypto provider is needed.
+  ///
+  /// Windows builds use native-tls (SChannel) via reqwest, so rustls is not
+  /// present and no crypto provider installation is needed.
   static Future<void> ensureCryptoProvider() async {
     return await rust_bridge.ensureCryptoProvider();
   }

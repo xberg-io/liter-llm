@@ -4081,6 +4081,9 @@ public func countRequestTokens(model: String, req: ChatCompletionRequest) throws
 ///
 /// WASM builds are exempt — the WASM target uses the browser/Node.js fetch
 /// API instead of rustls, so no crypto provider is needed.
+///
+/// Windows builds use native-tls (SChannel) via reqwest, so rustls is not
+/// present and no crypto provider installation is needed.
 public func ensureCryptoProvider() {
     return RustBridge.ensureCryptoProvider()
 }

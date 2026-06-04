@@ -2020,6 +2020,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "hyper-tls"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70206fc6890eaca9fde8a0bf71caa2ddfc9fe045ac9e5c70df101a7dbde866e0"
+dependencies = [
+ "bytes",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "native-tls",
+ "tokio",
+ "tokio-native-tls",
+ "tower-service",
+]
+
+[[package]]
 name = "hyper-util"
 version = "0.1.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2489,7 +2505,7 @@ checksum = "92daf443525c4cce67b150400bc2316076100ce0b3686209eb8cf3c31612e6f0"
 
 [[package]]
 name = "liter-llm"
-version = "1.4.0-rc.56"
+version = "1.4.0-rc.57"
 dependencies = [
  "aws-credential-types",
  "aws-sigv4",
@@ -2525,7 +2541,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-cli"
-version = "1.4.0-rc.56"
+version = "1.4.0-rc.57"
 dependencies = [
  "axum",
  "clap",
@@ -2539,7 +2555,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-dart"
-version = "1.4.0-rc.56"
+version = "1.4.0-rc.57"
 dependencies = [
  "flutter_rust_bridge",
  "futures-util",
@@ -2550,7 +2566,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-ffi"
-version = "1.4.0-rc.56"
+version = "1.4.0-rc.57"
 dependencies = [
  "ahash",
  "cbindgen",
@@ -2563,7 +2579,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-jni"
-version = "1.4.0-rc.56"
+version = "1.4.0-rc.57"
 dependencies = [
  "futures-util",
  "jni",
@@ -2574,7 +2590,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-node"
-version = "1.4.0-rc.56"
+version = "1.4.0-rc.57"
 dependencies = [
  "futures-util",
  "liter-llm",
@@ -2587,7 +2603,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-php"
-version = "1.4.0-rc.56"
+version = "1.4.0-rc.57"
 dependencies = [
  "ext-php-rs",
  "futures-util",
@@ -2599,7 +2615,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-proxy"
-version = "1.4.0-rc.56"
+version = "1.4.0-rc.57"
 dependencies = [
  "axum",
  "base64 0.22.1",
@@ -2627,7 +2643,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-py"
-version = "1.4.0-rc.56"
+version = "1.4.0-rc.57"
 dependencies = [
  "futures",
  "liter-llm",
@@ -2640,7 +2656,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-swift"
-version = "1.4.0-rc.56"
+version = "1.4.0-rc.57"
 dependencies = [
  "ahash",
  "async-trait",
@@ -2656,7 +2672,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-wasm"
-version = "1.4.0-rc.56"
+version = "1.4.0-rc.57"
 dependencies = [
  "futures",
  "futures-util",
@@ -3820,10 +3836,12 @@ dependencies = [
  "http-body-util",
  "hyper",
  "hyper-rustls",
+ "hyper-tls",
  "hyper-util",
  "js-sys",
  "log",
  "mime_guess",
+ "native-tls",
  "percent-encoding",
  "pin-project-lite",
  "rustls",
@@ -3834,6 +3852,7 @@ dependencies = [
  "serde_urlencoded",
  "sync_wrapper",
  "tokio",
+ "tokio-native-tls",
  "tokio-rustls",
  "tokio-util",
  "tower",
@@ -4726,6 +4745,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.117",
+]
+
+[[package]]
+name = "tokio-native-tls"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbae76ab933c85776efabc971569dd6119c580d8f5d448769dec1764bf796ef2"
+dependencies = [
+ "native-tls",
+ "tokio",
 ]
 
 [[package]]
