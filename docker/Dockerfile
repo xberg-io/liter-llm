@@ -9,7 +9,6 @@ WORKDIR /build
 COPY Cargo.toml Cargo.lock ./
 COPY crates/ crates/
 COPY packages/ packages/
-COPY tools/ tools/
 
 # Per-platform cache IDs prevent race conditions in multi-arch builds.
 RUN --mount=type=cache,id=cargo-registry-${TARGETARCH},target=/usr/local/cargo/registry \
