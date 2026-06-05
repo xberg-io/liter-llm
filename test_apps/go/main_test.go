@@ -51,6 +51,10 @@ func TestMain(m *testing.M) {
 	if err != nil { panic(err) }
 	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil { panic(err) }
+	// Defer covers panics during bootstrap (scanner / readiness poll).
+	// The happy path explicitly kills before `os.Exit` below — without
+	// that, `os.Exit` skips this defer, leaves the child running, and
+	// `go test` reports "Test I/O incomplete" / WaitDelay expired.
 	defer func() { _ = cmd.Process.Kill() }()
 
 	scanner := bufio.NewScanner(stdout)
@@ -107,5 +111,12 @@ func TestMain(m *testing.M) {
 		}
 	}
 
-	os.Exit(m.Run())
+	code := m.Run()
+	// Kill the mock-server BEFORE os.Exit so the child stops writing to
+	// the stderr pipe inherited from the test process. Without this the
+	// Go test runner waits for the pipe to close and reports
+	// "exec: WaitDelay expired before I/O complete".
+	_ = cmd.Process.Kill()
+	_, _ = cmd.Process.Wait()
+	os.Exit(code)
 }

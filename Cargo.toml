@@ -56,7 +56,7 @@ memchr = "2"
 napi = { version = "3", features = ["napi4", "serde-json", "async"] }
 napi-build = "2"
 napi-derive = "3"
-opendal = { version = "0.56", default-features = false, features = [
+opendal = { version = "0.57", default-features = false, features = [
     "services-memory",
     "services-redis",
     "services-fs",
@@ -82,7 +82,7 @@ rmcp = { version = "1.7", features = [
     "transport-streamable-http-server",
     "server-side-http",
 ] }
-rustler = "0.37"
+rustler = "0.38"
 rustls = { version = "0.23", default-features = false, features = [
     "ring",
     "logging",
@@ -128,7 +128,7 @@ tower-http = { version = "0.6", features = [
 tower-layer = "0.3"
 tower-service = "0.3"
 tracing = "0.1"
-tracing-opentelemetry = "0.32"
+tracing-opentelemetry = "0.33"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 utoipa = { version = "5.5", features = ["axum_extras"] }
 walkdir = "2.5"
@@ -140,7 +140,7 @@ which = "8"
 lto = "thin"
 codegen-units = 1
 opt-level = 3
-strip = true
+strip = false
 
 [profile.dev]
 opt-level = 0

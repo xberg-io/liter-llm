@@ -14,7 +14,7 @@ repos:
             stages:
                 - commit-msg
     - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
-      rev: v1.2.4
+      rev: v1.2.6
       hooks:
           - id: ai-rulez-validate
           - id: ai-rulez-generate
