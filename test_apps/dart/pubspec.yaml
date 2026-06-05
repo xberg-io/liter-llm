@@ -6,7 +6,7 @@ environment:
   sdk: ">=3.11.0 <4.0.0"
 
 dependencies:
-  liter_llm: ^1.4.0-rc.60
+  liter_llm: ^1.4.0-rc.61
 
 dev_dependencies:
   test: ^1.25.0

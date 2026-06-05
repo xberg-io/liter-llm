@@ -321,4 +321,4 @@ __all__ = [
     "unregister_custom_provider",
 ]
 
-__version__ = "1.4.0-rc.60"
+__version__ = "1.4.0-rc.61"

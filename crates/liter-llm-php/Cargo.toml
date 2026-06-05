@@ -1,6 +1,6 @@
 [package]
 name = "liter-llm-php"
-version = "1.4.0-rc.60"
+version = "1.4.0-rc.61"
 edition = "2024"
 license = "MIT"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
@@ -21,7 +21,7 @@ extension-module = []
 [dependencies]
 ext-php-rs = "0.15"
 futures-util = "0.3"
-liter-llm = { version = "1.4.0-rc.60", path = "../liter-llm", features = ["native-http", "full"] }
+liter-llm = { version = "1.4.0-rc.61", path = "../liter-llm", features = ["native-http", "full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }

@@ -5,5 +5,5 @@
 # frozen_string_literal: true
 
 module LiterLlm
-  VERSION = "1.4.0.pre.rc.60"
+  VERSION = "1.4.0.pre.rc.61"
 end

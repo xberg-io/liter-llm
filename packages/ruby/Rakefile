@@ -64,7 +64,9 @@ RbSys::ExtensionTask.new("liter-llm-rb", GEMSPEC) do |ext|
   # This overrides the container's RUBY_CC_VERSION env var at rake task definition time.
   # The setter was added in a later rb_sys version; guard against older gem installations
   # where the method does not exist (e.g., rb_sys 0.9.127 locked to avoid mingw bug in 0.9.128).
-  ext.cross_compile_versions = %w[3.4.9 3.3.11 3.2.11 3.1.7] if ext.respond_to?(:cross_compile_versions=)
+  if ext.respond_to?(:cross_compile_versions=)
+    ext.cross_compile_versions = %w[3.4.9 3.3.11 3.2.11 3.1.7]
+  end
 end
 
 RSpec::Core::RakeTask.new(:spec)
