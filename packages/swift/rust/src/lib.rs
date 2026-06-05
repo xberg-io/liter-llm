@@ -5783,7 +5783,7 @@ pub fn unregister_custom_provider(name: String) -> Result<bool, String> {
 pub fn complex_provider_names() -> Result<Vec<String>, String> {
     liter_llm::provider::complex_provider_names()
         .map_err(|e| e.to_string())
-        .map(|v| v.into_iter().map(|s| s.to_string()).collect::<Vec<_>>())
+        .map(|v| v.iter().map(|s| s.to_string()).collect::<Vec<_>>())
 }
 
 pub fn completion_cost(model: String, prompt_tokens: u64, completion_tokens: u64) -> String {

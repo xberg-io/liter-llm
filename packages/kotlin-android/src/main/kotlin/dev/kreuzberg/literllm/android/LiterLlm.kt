@@ -39,105 +39,80 @@ object LiterLlm {
     // / matching how Rust serde encodes Vec<u8> on the wire.
     // / Jackson's default writes ByteArray as a Base64 string, which Rust serde rejects
     // / with "invalid type: string, expected a sequence".
-    private val byteArrayModule =
-        com.fasterxml.jackson.databind.module.SimpleModule().apply {
-            addSerializer(
-                ByteArray::class.java,
-                object :
-                    com.fasterxml.jackson.databind.ser.std.StdSerializer<ByteArray>(
-                        ByteArray::class.java
-                    ) {
-                    override fun serialize(
-                        value: ByteArray,
-                        gen: com.fasterxml.jackson.core.JsonGenerator,
-                        provider: com.fasterxml.jackson.databind.SerializerProvider,
-                    ) {
-                        gen.writeStartArray()
-                        for (b in value) gen.writeNumber(b.toInt() and 0xff)
-                        gen.writeEndArray()
+    private val byteArrayModule = com.fasterxml.jackson.databind.module.SimpleModule().apply {
+        addSerializer(
+            ByteArray::class.java,
+            object : com.fasterxml.jackson.databind.ser.std.StdSerializer<ByteArray>(ByteArray::class.java) {
+                override fun serialize(
+                    value: ByteArray,
+                    gen: com.fasterxml.jackson.core.JsonGenerator,
+                    provider: com.fasterxml.jackson.databind.SerializerProvider,
+                ) {
+                    gen.writeStartArray()
+                    for (b in value) gen.writeNumber(b.toInt() and 0xff)
+                    gen.writeEndArray()
+                }
+            },
+        )
+        addDeserializer(
+            ByteArray::class.java,
+            object : com.fasterxml.jackson.databind.deser.std.StdDeserializer<ByteArray>(ByteArray::class.java) {
+                override fun deserialize(
+                    parser: com.fasterxml.jackson.core.JsonParser,
+                    ctx: com.fasterxml.jackson.databind.DeserializationContext,
+                ): ByteArray {
+                    val node = parser.codec.readTree<com.fasterxml.jackson.databind.JsonNode>(parser)
+                    return when {
+                        node.isArray -> ByteArray(node.size()) { i -> node.get(i).asInt().toByte() }
+                        node.isTextual -> java.util.Base64.getDecoder().decode(node.asText())
+                        else -> ByteArray(0)
                     }
-                },
-            )
-            addDeserializer(
-                ByteArray::class.java,
-                object :
-                    com.fasterxml.jackson.databind.deser.std.StdDeserializer<ByteArray>(
-                        ByteArray::class.java
-                    ) {
-                    override fun deserialize(
-                        parser: com.fasterxml.jackson.core.JsonParser,
-                        ctx: com.fasterxml.jackson.databind.DeserializationContext,
-                    ): ByteArray {
-                        val node =
-                            parser.codec.readTree<com.fasterxml.jackson.databind.JsonNode>(parser)
-                        return when {
-                            node.isArray ->
-                                ByteArray(node.size()) { i -> node.get(i).asInt().toByte() }
-                            node.isTextual -> java.util.Base64.getDecoder().decode(node.asText())
-                            else -> ByteArray(0)
-                        }
-                    }
-                },
-            )
-        }
+                }
+            },
+        )
+    }
 
-    private val mapper =
-        jacksonObjectMapper()
-            .registerModule(com.fasterxml.jackson.datatype.jdk8.Jdk8Module())
-            .registerModule(byteArrayModule)
-            .registerModule(
-                com.fasterxml.jackson.module.kotlin.KotlinModule.Builder()
-                    .configure(
-                        com.fasterxml.jackson.module.kotlin.KotlinFeature.NullIsSameAsDefault,
-                        true,
-                    )
-                    .configure(
-                        com.fasterxml.jackson.module.kotlin.KotlinFeature.NullToEmptyCollection,
-                        true,
-                    )
-                    .configure(
-                        com.fasterxml.jackson.module.kotlin.KotlinFeature.NullToEmptyMap,
-                        true,
-                    )
-                    .build()
-            )
-            .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
-            .setSerializationInclusion(
-                com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY
-            )
-            .configure(
-                com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-                false,
-            )
+    private val mapper = jacksonObjectMapper()
+        .registerModule(com.fasterxml.jackson.datatype.jdk8.Jdk8Module())
+        .registerModule(byteArrayModule)
+        .registerModule(
+            com.fasterxml.jackson.module.kotlin.KotlinModule.Builder()
+                .configure(com.fasterxml.jackson.module.kotlin.KotlinFeature.NullIsSameAsDefault, true)
+                .configure(com.fasterxml.jackson.module.kotlin.KotlinFeature.NullToEmptyCollection, true)
+                .configure(com.fasterxml.jackson.module.kotlin.KotlinFeature.NullToEmptyMap, true)
+                .build(),
+        )
+        .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+        .setSerializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
+        .configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
     /**
      * Create a new LLM client with simple scalar configuration.
      *
-     * This is the primary binding entry-point. All parameters except `api_key` are optional —
-     * omitting them uses the same defaults as `ClientConfigBuilder`.
+     * This is the primary binding entry-point. All parameters except `api_key`
+     * are optional — omitting them uses the same defaults as
+     * `ClientConfigBuilder`.
      *
      * **Errors:**
      *
-     * Returns `LiterLlmError` if the underlying HTTP client cannot be constructed, or if the
-     * resolved provider configuration is invalid.
+     * Returns `LiterLlmError` if the underlying HTTP client cannot be
+     * constructed, or if the resolved provider configuration is invalid.
      */
     fun createClient(
         apiKey: String,
         baseUrl: String? = null,
         timeoutSecs: Long? = null,
         maxRetries: Int? = null,
-        modelHint: String? = null,
-    ): DefaultClient =
-        DefaultClient(
-            LiterLlmBridge.nativeCreateClient(
-                apiKey,
-                baseUrl ?: "",
-                timeoutSecs ?: 0L,
-                maxRetries ?: 0,
-                modelHint ?: "",
-            )
+        modelHint: String? = null
+    ): DefaultClient = DefaultClient(
+        LiterLlmBridge.nativeCreateClient(
+            apiKey,
+        baseUrl ?: "",
+            timeoutSecs ?: 0L,
+            maxRetries ?: 0,
+            modelHint ?: ""
         )
-
+    )
     /**
      * Create a new LLM client from a JSON string.
      *
@@ -145,37 +120,35 @@ object LiterLlm {
      *
      * **Errors:**
      *
-     * Returns `LiterLlmError.BadRequest` if `json` is not valid JSON or contains unknown fields.
+     * Returns `LiterLlmError.BadRequest` if `json` is not valid JSON or
+     * contains unknown fields.
      */
-    fun createClientFromJson(json: String): DefaultClient =
-        DefaultClient(LiterLlmBridge.nativeCreateClientFromJson(json))
-
+    fun createClientFromJson(json: String): DefaultClient = DefaultClient(LiterLlmBridge.nativeCreateClientFromJson(json))
     /**
      * Register a custom provider in the global runtime registry.
      *
-     * The provider will be checked **before** all built-in providers during model detection. If a
-     * provider with the same `name` already exists it is replaced.
+     * The provider will be checked **before** all built-in providers during model
+     * detection. If a provider with the same `name` already exists it is replaced.
      *
      * **Errors:**
      *
-     * Returns an error if the config is invalid (empty name, empty base_url, or no model prefixes).
+     * Returns an error if the config is invalid (empty name, empty base_url, or
+     * no model prefixes).
      */
-    fun registerCustomProvider(config: CustomProviderConfig): Unit =
-        LiterLlmBridge.nativeRegisterCustomProvider(mapper.writeValueAsString(config))
-
+    fun registerCustomProvider(
+        config: CustomProviderConfig
+    ): Unit = LiterLlmBridge.nativeRegisterCustomProvider(mapper.writeValueAsString(config))
     /**
      * Remove a previously registered custom provider by name.
      *
-     * Returns `true` if a provider with the given name was found and removed, `false` if no such
-     * provider existed.
+     * Returns `true` if a provider with the given name was found and removed,
+     * `false` if no such provider existed.
      *
      * **Errors:**
      *
      * Returns an error only if the internal lock is poisoned.
      */
-    fun unregisterCustomProvider(name: String): Boolean =
-        LiterLlmBridge.nativeUnregisterCustomProvider(name)
-
+    fun unregisterCustomProvider(name: String): Boolean = LiterLlmBridge.nativeUnregisterCustomProvider(name)
     /**
      * Return all provider configs from the registry.
      *
@@ -197,8 +170,8 @@ object LiterLlm {
     /**
      * Return the set of complex provider names.
      *
-     * Complex providers require custom auth/routing logic beyond simple bearer tokens (e.g. AWS
-     * Bedrock SigV4, Vertex AI OAuth2).
+     * Complex providers require custom auth/routing logic beyond simple bearer
+     * tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
      *
      * The returned reference points into the static registry — no allocation.
      */
@@ -210,8 +183,8 @@ object LiterLlm {
     /**
      * Return the set of complex provider names.
      *
-     * Complex providers require custom auth/routing logic beyond simple bearer tokens (e.g. AWS
-     * Bedrock SigV4, Vertex AI OAuth2).
+     * Complex providers require custom auth/routing logic beyond simple bearer
+     * tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
      *
      * The returned reference points into the static registry — no allocation.
      */
@@ -219,60 +192,58 @@ object LiterLlm {
         withContext(Dispatchers.IO) { complexProviderNames() }
 
     /**
-     * Calculate the estimated cost of a completion given a model name and token counts.
+     * Calculate the estimated cost of a completion given a model name and token
+     * counts.
      *
-     * Returns `null` if the model is not present in the embedded pricing registry. Returns
-     * `Some(cost_usd)` otherwise, where the value is in US dollars.
+     * Returns `null` if the model is not present in the embedded pricing registry.
+     * Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
      *
-     * When an exact model name match is not found, progressively shorter prefixes are tried by
-     * stripping from the last `-` or `.` separator. For example, `gpt-4-0613` will match `gpt-4` if
-     * no `gpt-4-0613` entry exists.
+     * When an exact model name match is not found, progressively shorter prefixes
+     * are tried by stripping from the last `-` or `.` separator.  For example,
+     * `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
      */
-    fun completionCost(model: String, promptTokens: Long, completionTokens: Long): String? =
-        LiterLlmBridge.nativeCompletionCost(model, promptTokens, completionTokens)
-
+    fun completionCost(
+        model: String,
+        promptTokens: Long,
+        completionTokens: Long
+    ): String? = LiterLlmBridge.nativeCompletionCost(model, promptTokens, completionTokens)
     /**
-     * Calculate the estimated cost of a completion, accounting for cached (cache-hit) prompt tokens
-     * billed at the provider's discounted rate.
+     * Calculate the estimated cost of a completion, accounting for cached
+     * (cache-hit) prompt tokens billed at the provider's discounted rate.
      *
-     * `cached_tokens` is the count of prompt tokens served from the provider's prompt cache. It
-     * must be `<= prompt_tokens` (cached tokens are a subset of the prompt). The non-cached portion
-     * is billed at `input_cost_per_token` and the cached portion at `cache_read_input_token_cost`
-     * when the model has cache pricing; otherwise the entire prompt is billed at the regular input
-     * rate.
+     * `cached_tokens` is the count of prompt tokens served from the provider's
+     * prompt cache. It must be `<= prompt_tokens` (cached tokens are a subset of
+     * the prompt). The non-cached portion is billed at `input_cost_per_token`
+     * and the cached portion at `cache_read_input_token_cost` when the model
+     * has cache pricing; otherwise the entire prompt is billed at the regular
+     * input rate.
      *
-     * Returns `null` if the model is not present in the embedded pricing registry, mirroring
-     * `completion_cost`.
+     * Returns `null` if the model is not present in the embedded pricing
+     * registry, mirroring `completion_cost`.
      */
     fun completionCostWithCache(
         model: String,
         promptTokens: Long,
         cachedTokens: Long,
-        completionTokens: Long,
-    ): String? =
-        LiterLlmBridge.nativeCompletionCostWithCache(
-            model,
-            promptTokens,
-            cachedTokens,
-            completionTokens,
-        )
-
+        completionTokens: Long
+    ): String? = LiterLlmBridge.nativeCompletionCostWithCache(model, promptTokens, cachedTokens, completionTokens)
     /**
      * Install the `ring` crypto provider as the rustls process default, idempotently.
      *
-     * rustls 0.23+ removed the implicit default provider. This function installs `ring` once per
-     * process. Subsequent calls are no-ops. Calling it from a downstream Rust app that has already
-     * installed `aws-lc-rs` is safe — the `Err` from `install_default()` is silently ignored.
+     * rustls 0.23+ removed the implicit default provider. This function installs
+     * `ring` once per process. Subsequent calls are no-ops. Calling it from a
+     * downstream Rust app that has already installed `aws-lc-rs` is safe — the
+     * `Err` from `install_default()` is silently ignored.
      *
-     * Called automatically by every internal `reqwest.Client` constructor (auth providers, default
-     * HTTP client). Bindings and downstream consumers reach those constructors transitively, so no
-     * manual init is required.
+     * Called automatically by every internal `reqwest.Client` constructor
+     * (auth providers, default HTTP client). Bindings and downstream consumers
+     * reach those constructors transitively, so no manual init is required.
      *
-     * WASM builds are exempt — the WASM target uses the browser/Node.js fetch API instead of
-     * rustls, so no crypto provider is needed.
+     * WASM builds are exempt — the WASM target uses the browser/Node.js fetch
+     * API instead of rustls, so no crypto provider is needed.
      *
-     * Windows builds use native-tls (SChannel) via reqwest, so rustls is not present and no crypto
-     * provider installation is needed.
+     * Windows builds use native-tls (SChannel) via reqwest, so rustls is not
+     * present and no crypto provider installation is needed.
      */
     fun ensureCryptoProvider(): Unit = LiterLlmBridge.nativeEnsureCryptoProvider()
 }

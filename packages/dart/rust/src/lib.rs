@@ -3406,7 +3406,7 @@ pub fn unregister_custom_provider(name: String) -> Result<bool, String> {
 /// Useful for tooling, documentation generation, or runtime enumeration.
 pub fn all_providers() -> Result<Vec<ProviderConfig>, String> {
     liter_llm::provider::all_providers()
-        .map(|v: &[_]| v.iter().map(|x| ProviderConfig::from(x.clone())).collect::<Vec<_>>())
+        .map(|v| v.iter().map(|x| ProviderConfig::from(x.clone())).collect::<Vec<_>>())
         .map_err(|e| e.to_string())
 }
 
@@ -3418,7 +3418,7 @@ pub fn all_providers() -> Result<Vec<ProviderConfig>, String> {
 /// The returned reference points into the static registry — no allocation.
 pub fn complex_provider_names() -> Result<Vec<String>, String> {
     liter_llm::provider::complex_provider_names()
-        .map(|v| v.into_iter().map(|s| s.to_string()).collect::<Vec<_>>())
+        .map(|v| v.iter().map(|s| s.to_string()).collect::<Vec<_>>())
         .map_err(|e| e.to_string())
 }
 

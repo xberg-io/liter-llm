@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2026-06-05
+
+### Fixed
+
+- **Docker build**: removed stale `COPY tools/ tools/` from `docker/Dockerfile` — the `tools/` directory was deleted in v1.3.0 and the unfixed copy was failing every Docker image build since.
+- **`publish-crates` job timeout**: bumped `.github/workflows/publish.yaml` `publish-crates` `timeout-minutes` from 30 to 60. The 30-minute ceiling was cancelling mid-publish on busy `crates.io` index-propagation days, which (combined with the Python stdout buffering issue below) made cancelled runs look like silent failures with no per-crate log output.
+- **Upstream `kreuzberg-dev/actions` to v1.8.29**: `publish-crates/scripts/publish.py` now line-buffers stdout/stderr (`sys.stdout.reconfigure(line_buffering=True)`), so per-crate "Publishing X (n/total)..." progress survives job cancellation. Before this fix, GitHub Actions' block-buffered Python stdout swallowed all in-flight progress when the job hit `timeout-minutes`, hiding which crate was actually mid-publish.
+
+### Notes
+
+- v1.4.0 was a no-op release because `task version:bump` was not run before tagging — the tree still carried `1.4.0-rc.61` in `Cargo.toml`, so every publish job either re-shipped `rc.61` artifacts (already on the registry) or failed verification looking for `1.4.0`. v1.4.1 is the first real `1.4.x` release.
+- alef pin advanced to `0.23.16` (was `0.23.12`) — no functional codegen changes vs. `0.23.12`; bump tracks the latest released `0.23.x`.
+
 ## [1.4.0] - 2026-06-05
 
 ### Added
