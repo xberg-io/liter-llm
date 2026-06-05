@@ -216,12 +216,12 @@ fn fix_handler_executor_calls() {
     // class RustLibApiImpl implements RustLibApi async { ... becomes class RustLibApiImpl implements RustLibApi { ...
     fixed = fixed.replace(" implements RustLibApi async {", " implements RustLibApi {");
 
-    if fixed != source {
-        if let Err(err) = std::fs::write(path, &fixed) {
-            println!(
-                "cargo:warning=failed to fix handler executor calls in {}: {err}",
-                FRB_GENERATED_DART
-            );
-        }
+    if fixed != source
+        && let Err(err) = std::fs::write(path, &fixed)
+    {
+        println!(
+            "cargo:warning=failed to fix handler executor calls in {}: {err}",
+            FRB_GENERATED_DART
+        );
     }
 }

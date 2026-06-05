@@ -212,9 +212,9 @@ tasks:
             - alef extract
 
     alef:generate:
-        desc: Generate all language bindings
+        desc: Fast regeneration of all alef-managed files (bindings, stubs, scaffolding, READMEs, e2e, test_apps, docs). Runs `alef all --clean --format=false` so post-generation formatters stay opt-in via `task alef:format`.
         cmds:
-            - alef generate
+            - alef all --clean --format=false
 
     alef:all:
         desc: Run full alef pipeline (extract + generate + stubs + scaffold + readme + docs + e2e)

@@ -865,44 +865,6 @@ Configuration for per-model rate limits.
 
 ---
 
-### OCR Types
-
-#### OcrResponse
-
-An OCR response.
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `pages` | `Vec<OcrPage>` | — | Extracted pages in order. |
-| `model` | `String` | — | Model/provider used for OCR. |
-| `usage` | `Option<Usage>` | `/* serde(default) */` | Token usage, if reported by the provider. |
-
----
-
-#### OcrPage
-
-A single page of OCR output.
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `index` | `u32` | — | Page index (0-based). |
-| `markdown` | `String` | — | Extracted page content as Markdown. |
-| `images` | `Vec<OcrImage>` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `dimensions` | `Option<PageDimensions>` | `/* serde(default) */` | Page dimensions in pixels, if available. |
-
----
-
-#### OcrImage
-
-An image extracted from an OCR page.
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `id` | `String` | — | Unique image identifier within the document. |
-| `image_base64` | `Option<String>` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
-
----
-
 ### Other Types
 
 #### ChatCompletionTool
@@ -1009,6 +971,42 @@ A search response.
 |-------|------|---------|-------------|
 | `results` | `Vec<SearchResult>` | — | List of search results. |
 | `model` | `String` | — | Model/provider that performed the search. |
+
+---
+
+#### OcrResponse
+
+An OCR response.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `pages` | `Vec<OcrPage>` | — | Extracted pages in order. |
+| `model` | `String` | — | Model/provider used for OCR. |
+| `usage` | `Option<Usage>` | `/* serde(default) */` | Token usage, if reported by the provider. |
+
+---
+
+#### OcrPage
+
+A single page of OCR output.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `index` | `u32` | — | Page index (0-based). |
+| `markdown` | `String` | — | Extracted page content as Markdown. |
+| `images` | `Vec<OcrImage>` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `Option<PageDimensions>` | `/* serde(default) */` | Page dimensions in pixels, if available. |
+
+---
+
+#### OcrImage
+
+An image extracted from an OCR page.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `String` | — | Unique image identifier within the document. |
+| `image_base64` | `Option<String>` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
