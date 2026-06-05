@@ -3942,7 +3942,7 @@ public func cacheBackendFromJson(_ json: String) throws -> CacheBackend {
 ///
 /// Returns [`LiterLlmError`] if the underlying HTTP client cannot be
 /// constructed, or if the resolved provider configuration is invalid.
-public func createClient(apiKey: String, baseUrl: String?, timeoutSecs: UInt64?, maxRetries: UInt32?, modelHint: String?) throws -> DefaultClient {
+public func createClient(apiKey: String, baseUrl: String? = nil, timeoutSecs: UInt64? = nil, maxRetries: UInt32? = nil, modelHint: String? = nil) throws -> DefaultClient {
     let _rb = try RustBridge.createClient(apiKey, baseUrl, timeoutSecs, maxRetries, modelHint)
     return DefaultClient(_rb)
 }

@@ -2,7 +2,7 @@ PATH
   remote: ../../packages/ruby
   specs:
     liter_llm (1.4.0.pre.rc.60)
-      rb_sys (~> 0.9)
+      rb_sys (>= 0.9, < 0.9.128)
       sorbet-runtime (~> 0.5)
 
 GEM

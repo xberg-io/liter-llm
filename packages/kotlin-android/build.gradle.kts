@@ -30,10 +30,7 @@ android {
     sourceSets { getByName("main") { jniLibs.srcDirs("src/main/jniLibs") } }
 }
 
-kotlin {
-    jvmToolchain(21)
-    compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
-}
+kotlin { compilerOptions { jvmTarget.set(JvmTarget.JVM_17) } }
 
 ktlint {
     version.set("1.8.0")

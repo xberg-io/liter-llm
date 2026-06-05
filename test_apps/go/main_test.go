@@ -2,6 +2,7 @@ package e2e_test
 
 import (
 	"bufio"
+	"encoding/json"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -54,10 +55,31 @@ func TestMain(m *testing.M) {
 
 	scanner := bufio.NewScanner(stdout)
 	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	// The mock-server emits two sentinel lines on stdout: MOCK_SERVER_URL=<url>
+	// (always) and MOCK_SERVERS={"<fixture_id>":"<per-fixture-url>",...} (when
+	// any fixture has origin-root routes that need a per-fixture listener). We
+	// read until we have seen MOCK_SERVER_URL and either MOCK_SERVERS or a non
+	// MOCK_SERVER line, then drain the rest in the background.
+	haveURL := false
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.HasPrefix(line, "MOCK_SERVER_URL=") {
 			_ = os.Setenv("MOCK_SERVER_URL", strings.TrimPrefix(line, "MOCK_SERVER_URL="))
+			haveURL = true
+			continue
+		}
+		if strings.HasPrefix(line, "MOCK_SERVERS=") {
+			payload := strings.TrimPrefix(line, "MOCK_SERVERS=")
+			_ = os.Setenv("MOCK_SERVERS", payload)
+			var servers map[string]string
+			if err := json.Unmarshal([]byte(payload), &servers); err == nil {
+				for fid, furl := range servers {
+					_ = os.Setenv("MOCK_SERVER_"+strings.ToUpper(fid), furl)
+				}
+			}
+			break
+		}
+		if haveURL {
 			break
 		}
 	}
