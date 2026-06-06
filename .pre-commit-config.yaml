@@ -14,10 +14,12 @@ repos:
             stages:
                 - commit-msg
     - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
-      rev: v1.2.6
+      rev: v2.1.0
       hooks:
-          - id: ai-rulez-validate
+          # AI governance
           - id: ai-rulez-generate
+
+          # File safety
           - id: trailing-whitespace
             exclude: ^packages/dart/lib/src/liter_llm_bridge_generated/lib\.freezed\.dart$
           - id: end-of-file-fixer
@@ -28,47 +30,47 @@ repos:
                 - --maxkb=500
             exclude: Cargo.lock|docs/assets/
           - id: detect-private-key
+          - id: check-case-conflict
+          - id: check-executables-have-shebangs
+          - id: check-shebang-scripts-are-executable
+          - id: mixed-line-ending
+          - id: typos
+            args: ["--force-exclude"]
           - id: check-json
           - id: check-yaml
             args:
                 - --allow-multiple-documents
                 - --unsafe
           - id: check-toml
-          - id: check-case-conflict
-          - id: pyproject-fmt
-            exclude: ^packages/python/pyproject\.toml$
-            # Pin toml-fmt-common < 1.3.3: 1.3.3 (released 2026-05-28) renamed
-            # `build_cli` → `_build_cli`, breaking pyproject-fmt 2.21.2 which
-            # still imports the old public name. Upstream fix pending in
-            # pyproject-fmt. Without this constraint, prek installs the latest
-            # toml-fmt-common and pyproject-fmt fails with ImportError.
-            additional_dependencies:
-                - pyproject-fmt==2.21.2
-                - toml-fmt-common<1.3.3
-          - id: ruff
-            exclude: ^packages/python/liter_llm/(__init__\.py|api\.py|exceptions\.py|options\.py|_internal_bindings\.pyi)$
-          - id: ruff-format
-            exclude: ^packages/python/liter_llm/(__init__\.py|api\.py|exceptions\.py|options\.py|_internal_bindings\.pyi)$
-          - id: cargo-sort
+
+          # GitHub Actions
+          - id: actionlint
+          - id: gh-actions-updater
+
+          # Shell
+          - id: shfmt
+            args: ["-w", "-i", "2"]
+          - id: shellcheck
             args:
-                - -w
-            exclude: ^(crates/liter-llm-(ffi|node|php|py|wasm|swift|dart|rb)/Cargo\.toml|packages/(dart|swift|elixir/native/liter_llm_nif|ruby/ext/liter_llm_rb/native)/Cargo\.toml|packages/(go|java|csharp|python|elixir|php|zig|wasm|typescript|swift|dart|ruby)/.*/Cargo\.toml|e2e/rust/Cargo\.toml)$
+                - -x
+
+          # Markdown
+          - id: rumdl-fmt
+            exclude: ^docs/providers\.md$
+          - id: markdownlint-rumdl-strict
+          - id: textlint
+            files: ^docs/.*\.md$
+            exclude: ^docs/(reference/|api-|snippets/|migration/)
+            args:
+                - --fix
+                - --config
+                - .textlintrc.json
+
+          # Rust — cargo-check dropped in v2.0.0; cargo-clippy with -D warnings supersedes it
           - id: cargo-fmt
-            args:
-                - --all
-          - id: cargo-check
-            name: cargo check (workspace)
-            args:
-                - --workspace
-                - --exclude=liter-llm-php
-                - --all-features
-                - --all-targets
-            files: ^(crates/|tools/|Cargo\.(toml|lock))
-            types_or:
-                - rust
-                - toml
+            args: ["--all"]
           - id: cargo-clippy
-            name: "clippy (workspace \u2014 core, cli, proxy, ffi, bindings)"
+            name: "clippy (workspace — core, cli, proxy, ffi, bindings)"
             args:
                 - --fix
                 - --allow-dirty
@@ -86,55 +88,40 @@ repos:
             types_or:
                 - rust
                 - toml
+          - id: cargo-sort
+            args:
+                - -w
+            exclude: ^(crates/liter-llm-(ffi|node|php|py|wasm|swift|dart|rb)/Cargo\.toml|packages/(dart|swift|elixir/native/liter_llm_nif|ruby/ext/liter_llm_rb/native)/Cargo\.toml|packages/(go|java|csharp|python|elixir|php|zig|wasm|typescript|swift|dart|ruby)/.*/Cargo\.toml|e2e/rust/Cargo\.toml)$
           - id: cargo-machete
             args:
                 - crates/
             exclude: ^(e2e/|test_apps/)
           - id: cargo-deny
-            args:
-                - check
+            args: ["check"]
           - id: rustdoc-lint
             files: ^crates/liter-llm/src/.*\.rs$
             exclude: /tests/
             args:
                 - -p
                 - liter-llm
-          - id: pydocstyle
-            files: ^packages/python/.*\.py$
-            exclude: ^packages/python/(tests/|.*_native\.py$)
-          - id: alef-docs-fresh
-          - id: roxygen2-check
-            files: ^packages/r/R/.*\.R$
-          - id: javadoc-lint
-            files: ^packages/java/src/main/.*\.java$
-          - id: cs-xmldoc-lint
-            files: ^packages/csharp/LiterLlm/.*\.cs$
-          - id: phpdoc-lint
-            files: ^packages/php/src/.*\.php$
-          - id: dart-doc-lint
-            files: ^packages/dart/lib/.*\.dart$
-            exclude: ^packages/dart/lib/src/rust/
-          - id: swift-doc-coverage
-            files: ^packages/swift/Sources/LiterLlm/.*\.swift$
-          - id: swift-format
-            files: ^packages/swift/.*\.swift$
-          - id: swiftlint
-            files: ^packages/swift/.*\.swift$
-          - id: shfmt
-            args:
-                - -w
-                - -i
-                - "2"
-          - id: shellcheck
-            args:
-                - -x
-          - id: checkstyle
-            args:
-                - -c
-                - packages/java/checkstyle.xml
-                - -p
-                - packages/java/checkstyle.properties
-            exclude: ^(\.mvn/wrapper/|e2e/|packages/java/src/)
+          - id: rust-max-lines
+            args: ["--max=1000"]
+
+          # Python
+          - id: pyproject-fmt
+            exclude: ^packages/python/pyproject\.toml$
+            # Pin toml-fmt-common < 1.3.3: 1.3.3 (released 2026-05-28) renamed
+            # `build_cli` → `_build_cli`, breaking pyproject-fmt 2.21.2 which
+            # still imports the old public name. Upstream fix pending in
+            # pyproject-fmt. Without this constraint, prek installs the latest
+            # toml-fmt-common and pyproject-fmt fails with ImportError.
+            additional_dependencies:
+                - pyproject-fmt==2.21.2
+                - toml-fmt-common<1.3.3
+          - id: ruff
+            exclude: ^packages/python/liter_llm/(__init__\.py|api\.py|exceptions\.py|options\.py|_internal_bindings\.pyi)$
+          - id: ruff-format
+            exclude: ^packages/python/liter_llm/(__init__\.py|api\.py|exceptions\.py|options\.py|_internal_bindings\.pyi)$
           - id: mypy
             args:
                 - --strict
@@ -142,6 +129,21 @@ repos:
                 - packages/python/pyproject.toml
                 - packages/python/liter_llm/
             exclude: ^(e2e/|scripts/|test_apps/|tests/|benchmarks/)
+          - id: pydocstyle
+            files: ^packages/python/.*\.py$
+            exclude: ^packages/python/(tests/|.*_native\.py$)
+
+          # JS/TS
+          - id: oxlint
+            require_serial: true
+            exclude: ^(crates/liter-llm-node/index\.(d\.ts|js)|packages/(typescript|wasm)/src/index\.ts)$
+          - id: oxfmt
+            require_serial: true
+            exclude: ^(crates/liter-llm-node/index\.(d\.ts|js)|packages/(typescript|wasm)/src/index\.ts)$
+          - id: tsc-typecheck
+          - id: tsdoc-lint
+
+          # Go
           - id: go-fmt
             exclude: ^(e2e/|test_apps/)
           - id: golangci-lint
@@ -152,6 +154,35 @@ repos:
             exclude: ^(e2e/|test_apps/)
             env:
                 KREUZBERG_GO_MOD_DIRS: packages/go
+          - id: godoc-lint
+
+          # Java
+          - id: palantir-java-format
+          - id: checkstyle
+            args:
+                - -c
+                - packages/java/checkstyle.xml
+                - -p
+                - packages/java/checkstyle.properties
+            exclude: ^(\.mvn/wrapper/|e2e/|packages/java/src/)
+          - id: pmd
+          - id: cpd
+          - id: java-verify
+            files: ^packages/java/
+          - id: javadoc-lint
+            files: ^packages/java/src/main/.*\.java$
+
+          # Kotlin
+          - id: ktfmt
+          - id: detekt
+            files: ^packages/kotlin-android/.*\.kts?$
+          - id: ktlint
+            files: ^packages/kotlin-android/.*\.kts?$
+            args:
+                - --format
+          - id: kotlin-dokka
+
+          # Ruby
           - id: rubocop
             files: ^packages/ruby/(?!ext/).*\.rb$
             exclude: ^packages/ruby/lib/liter_llm/native\.rb$
@@ -160,10 +191,17 @@ repos:
             exclude: ^packages/ruby/lib/liter_llm/native\.rb$
           - id: steep
             files: ^packages/ruby/.*\.(rb|rbs)$
+          - id: yard-coverage
+
+          # C#
           - id: dotnet-format
             files: ^packages/csharp/.*\.cs$
           - id: dotnet-format-check
             files: ^packages/csharp/.*\.cs$
+          - id: cs-xmldoc-lint
+            files: ^packages/csharp/LiterLlm/.*\.cs$
+
+          # PHP
           - id: php-cs-fixer
             files: ^packages/php/.*\.php$
             exclude: ^packages/php/(src/(DefaultClient|LiterLlm)\.php|stubs/liter_llm_extension\.php)$
@@ -177,62 +215,60 @@ repos:
                 - analyse
                 - --configuration=packages/php/phpstan.neon
                 - --memory-limit=1G
+          - id: phpdoc-lint
+            files: ^packages/php/src/.*\.php$
+
+          # Elixir
           - id: mix-format
             files: ^packages/elixir/
             exclude: ^packages/elixir/lib/liter_llm(/native)?\.ex$
           - id: mix-credo
             files: ^packages/elixir/
-          - id: java-verify
-            files: ^packages/java/
+          - id: ex-doc-coverage
+
+          # Dart
           - id: dart-format
             files: ^packages/dart/.*\.dart$
           - id: dart-analyze
             files: ^packages/dart/.*\.dart$
+          - id: dart-doc-lint
+            files: ^packages/dart/lib/.*\.dart$
+            exclude: ^packages/dart/lib/src/rust/
+
+          # Zig
           - id: zig-fmt
             files: ^packages/zig/.*\.zig$
           - id: zig-build-check
             files: ^packages/zig/.*\.zig$
-          - id: detekt
-            files: ^packages/kotlin-android/.*\.kts?$
-          - id: ktlint
-            files: ^packages/kotlin-android/.*\.kts?$
-            args:
-                - --format
+          - id: zig-doc-lint
+
+          # Alef bindings (this repo consumes alef-generated bindings)
+          - id: alef-verify
+          - id: alef-sync-versions
+          - id: alef-docs-fresh
+          - id: alef-snippets-validate
+
+          # preserved from prior config
+          - id: ai-rulez-validate
+          - id: roxygen2-check
+            files: ^packages/r/R/.*\.R$
+          - id: swift-doc-coverage
+            files: ^packages/swift/Sources/LiterLlm/.*\.swift$
+          - id: swift-format
+            files: ^packages/swift/.*\.swift$
+          - id: swiftlint
+            files: ^packages/swift/.*\.swift$
           - id: clang-format
             args:
                 - --style=file
             files: ^crates/liter-llm-ffi/tests/c/
           - id: clang-tidy
             files: ^crates/liter-llm-ffi/tests/c/
-          - id: textlint
-            files: ^docs/.*\.md$
-            exclude: ^docs/(reference/|api-|snippets/|migration/)
-            args:
-                - --fix
-                - --config
-                - .textlintrc.json
-          - id: oxlint
-            require_serial: true
-            exclude: ^(crates/liter-llm-node/index\.(d\.ts|js)|packages/(typescript|wasm)/src/index\.ts)$
-          - id: oxfmt
-            require_serial: true
-            exclude: ^(crates/liter-llm-node/index\.(d\.ts|js)|packages/(typescript|wasm)/src/index\.ts)$
           - id: cppcheck
             args:
                 - --suppress=unusedStructMember
             require_serial: true
-          - id: rumdl-fmt
-            exclude: ^docs/providers\.md$
-          - id: cpd
-          - id: ktfmt
           - id: hadolint
-          - id: alef-verify
-          - id: alef-sync-versions
-          - id: actionlint
-          - id: gh-actions-updater
-          - id: typos
-            args:
-                - --force-exclude
     - repo: local
       hooks:
           - id: alef-snippets-audit
