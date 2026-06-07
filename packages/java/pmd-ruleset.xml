@@ -4,24 +4,27 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
                              https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
-    <description>PMD ruleset for liter-llm Java bindings — based on quickstart.xml with alef-generated-code exclusions</description>
+    <description>PMD ruleset for Java bindings</description>
 
-    <rule ref="rulesets/java/quickstart.xml">
-        <!-- alef-generated FFI bindings catch Throwable from MethodHandle.invoke; this is unavoidable for FFM boundary code. -->
-        <exclude name="AvoidCatchingGenericException"/>
-        <!-- alef-generated try-with-resources sometimes declares `arena` for scope without explicitly reading it in the body. -->
-        <exclude name="UnusedLocalVariable"/>
-        <!-- alef-generated FFI rethrow paths wrap as a binding-specific exception; cause is preserved via constructor on the throwing path. -->
-        <exclude name="PreserveStackTrace"/>
-        <!-- alef-generated FFI: Arena lifecycle managed in caller context, not always closed inline. -->
-        <exclude name="CloseResource"/>
-        <!-- alef-generated code emits java.util.List FQNs in some contexts. -->
-        <exclude name="UnnecessaryFullyQualifiedName"/>
-        <!-- alef-generated wrappers store the FFI result in a local before returning for debuggability. -->
-        <exclude name="VariableCanBeInlined"/>
-        <!-- alef-generated mapping of Rust `Option<Vec<T>>` produces nullable List<T> getters. -->
-        <exclude name="ReturnEmptyCollectionRatherThanNull"/>
-        <!-- Existing exclusions retained from prior ruleset. -->
+    <rule ref="category/java/bestpractices.xml">
+        <exclude name="LooseCoupling"/>
+    </rule>
+    <rule ref="category/java/codestyle.xml">
+        <exclude name="AtLeastOneConstructor"/>
+        <exclude name="CommentDefaultAccessModifier"/>
+        <exclude name="OnlyOneReturn"/>
+    </rule>
+    <rule ref="category/java/design.xml">
+        <exclude name="LawOfDemeter"/>
+        <exclude name="DataClass"/>
+    </rule>
+    <rule ref="category/java/documentation.xml">
+        <exclude name="CommentSize"/>
+    </rule>
+    <rule ref="category/java/errorprone.xml">
         <exclude name="EmptyCatchBlock"/>
     </rule>
+    <rule ref="category/java/multithreading.xml"/>
+    <rule ref="category/java/performance.xml"/>
+    <rule ref="category/java/security.xml"/>
 </ruleset>

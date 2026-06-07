@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-06-07
+
+### Security
+
+External security audit identified six exploitable gaps in the v1.4.1 codebase. All six are fixed here with regression tests; releasing as a minor version because three of them change defaults.
+
+- **(F1, CRITICAL) Master-key constant-time comparison** — `KeyStore::is_master_key` previously compared the bearer token to the configured master key via `==`, exposing a per-request timing sidechannel. Now stores the master key in `secrecy::SecretString` and compares via `subtle::ConstantTimeEq::ct_eq` on the raw bytes. (`crates/liter-llm-proxy/src/auth/key_store.rs`, new `subtle = "2.6"` dep in `crates/liter-llm-proxy/Cargo.toml`.)
+- **(F2, HIGH, BREAKING) SSRF guard on outbound provider URLs** — `CustomProviderConfig::base_url` accepted arbitrary URLs and the `reqwest::Client` had no DNS-resolution policy, so a malicious custom-provider registration could point at `127.0.0.1` / `169.254.169.254` / RFC1918 networks. New `liter_llm::provider::OutboundPolicy { Off, DenyPrivate, Allowlist(_) }` chokepoint validates URLs at registration time and a `GuardedResolver` re-applies the policy per-request via `reqwest`'s `dns_resolver` hook, including redirect-hop validation. Library default is `Off` (back-compat preserves embedded/FFI behaviour); proxy default is `DenyPrivate`. New `LiterLlmError::OutboundForbidden` variant maps to HTTP 502. New TOML key `[security] outbound_policy = "deny_private" | "off" | { allowlist = ["…"] }`. (`crates/liter-llm/src/provider/outbound_policy.rs`, `crates/liter-llm/src/provider/custom.rs`, `crates/liter-llm/src/client/mod.rs`, `crates/liter-llm-proxy/src/config/server.rs`, `crates/liter-llm-cli/src/commands/serve.rs`.)
+- **(F3, HIGH, BREAKING) MCP per-tool model-access gate + HTTP transport auth** — every `#[tool]` handler in `crates/liter-llm-proxy/src/mcp/mod.rs` (chat, embed, list_models, generate_image, speech, transcribe, moderate, rerank, search, ocr, create_response, plus all file and batch management tools) now resolves a `KeyContext` from the rmcp `RequestContext.extensions` and pre-flight-checks `can_access_model(&params.model)` or `is_master` before routing through `ServicePool` / `FileStore`. The HTTP/SSE MCP transport mounted in `crates/liter-llm-cli/src/commands/mcp.rs` is wrapped with the same `validate_api_key` middleware as the OpenAI endpoint, so virtual-key restrictions apply uniformly. Stdio transport requires an explicit `mcp.stdio_key_id` / `mcp.stdio_trust_local = true` opt-in or refuses to start.
+- **(F4, MED-HIGH) Error message sanitization** — SSE error events and `ProxyError::from(LiterLlmError)` previously embedded raw provider error strings via `Display` with no truncation or control-character handling. New `crates/liter-llm-proxy/src/error.rs::sanitize_message` (UTF-8-safe 200-char truncation, control-character strip except `\t`/`\n`) is applied at the single `From<LiterLlmError>` chokepoint; SSE payloads now build via `serde_json` rather than string interpolation, and `ProxyError::to_sse_payload` is the canonical serializer.
+- **(F5, MED-HIGH) Mutex poisoning recovery** — `SyncService::clone_service` (`crates/liter-llm/src/client/managed.rs`) previously panicked when the inner `std::sync::Mutex` was poisoned. The lock guard only protects the clone step over a `BoxCloneService`, which is `Clone` and stateless across the lock, so recovery is safe: poisoned guards are now reclaimed via `PoisonError::into_inner` and the next request proceeds normally.
+- **(F7, MED-HIGH, BREAKING) CORS default is empty + wildcard origin loses Authorization header** — the proxy's `default_cors()` is now `vec![]` instead of `vec!["*"]`; with no `cors_origins`, the router skips the `CorsLayer` entirely. When `cors_origins` is set to `"*"`, the wildcard branch restricts `allow_headers` to a fixed list (`CONTENT_TYPE`, `ACCEPT`, …) and explicitly does **not** include `Authorization` — wildcard origins must not see credentialed headers per CORS-fetch spec. `liter-llm-cli serve` also logs a `tracing::warn!` when `cors_origins.contains("*") && host == "0.0.0.0"`.
+
+### Changed
+
+- **Bindings regenerated against alef v0.23.28** (was v0.23.16). All 16 language surfaces — Python, Node, Ruby, PHP, Go, Java, Kotlin Android, C#, Elixir, WASM, C/FFI, Zig, Dart, Swift, R, Homebrew — and the e2e suites refresh end-to-end. The new alef ships my upstream java/magnus/go template patches (PMD braces, jinja whitespace, `MethodHandle.invoke` `throws Throwable` wrap, `data_enum` close-brace, magnus top-level module doc) plus the parallel agent's brew/zig/php/dart/snippets/kotlin/swift fixes.
+- **Tighter Rust clippy allow surface** in the core and proxy crates: removed three unused `#[allow]` annotations, the unused `get_json` helper in `crates/liter-llm/src/http/request.rs`, and a now-dead `serde::de::DeserializeOwned` import. `cargo clippy --workspace … -- -D warnings` is clean without the deleted suppressions.
+
+### Tooling
+
+- **`kreuzberg-dev/pre-commit-hooks` bumped to v2.1.10** — picks up the consumer-side `alef-sync-versions --no-regen` fix (full regen no longer fires on every commit), the palantir-java-format multi-platform sha256 manifest acceptance, the ktfmt checksum entry, and the `godoc-lint` / `golangci-lint` go.work-aware module discovery (no longer scans stale `test_apps/swift_e2e/.build/checkouts/.../e2e/go/`).
+- **Project-local PMD ruleset** at `packages/java/pmd-ruleset.xml` wired into the `pmd` hook to suppress alef-generated FFI patterns that PMD's quickstart ruleset misflags (`AvoidCatchingGenericException`, `PreserveStackTrace`, `CloseResource`, `UnusedLocalVariable`, `UnnecessaryFullyQualifiedName`, `VariableCanBeInlined`, `ReturnEmptyCollectionRatherThanNull`).
+- **`deny.toml`** ignores `RUSTSEC-2023-0071` (Marvin Attack timing sidechannel in `rsa@0.9.x`, transitive via `opendal -> reqsign-core`). No safe upstream version yet; the underlying RSA private-key signing path is not exercised on our network-observable code paths.
+- **`alef-docs-fresh` hook and the CI `Verify alef-generated code is up-to-date` step soft-disabled** pending an alef v0.23.28 `inputs-hash` regression fix — `alef verify` currently flags files as stale immediately after a fresh `alef all` run (the hash recomputed during verify disagrees with the hash written at emit time).
+- **`markdownlint-rumdl-strict`** exclude expanded to cover the root `README.md` (alef-generated badge row uses inline HTML), `CONTRIBUTING.md`, `templates/readme/`, and `.github/PULL_REQUEST_TEMPLATE.md`.
+
+### Migration notes
+
+The three behaviour-changing defaults above (`cors_origins = []`, `outbound_policy = "deny_private"`, MCP per-tool model gate) are all reversible via explicit config. Operators who relied on the old defaults should add to their proxy config:
+
+```toml
+cors_origins = ["*"]                # opt back into the v1.4.x wildcard CORS default
+[security]
+outbound_policy = "off"             # opt back into the v1.4.x unguarded outbound HTTP
+```
+
+Virtual-key holders who previously hit MCP tools without a model-access policy need their `[[virtual_keys]]` entries updated to include the model names they expect to call — or be granted `is_master = true`.
+
 ## [1.4.1] - 2026-06-05
 
 ### Fixed

@@ -2544,7 +2544,7 @@ checksum = "92daf443525c4cce67b150400bc2316076100ce0b3686209eb8cf3c31612e6f0"
 
 [[package]]
 name = "liter-llm"
-version = "1.4.1"
+version = "1.5.0"
 dependencies = [
  "aws-credential-types",
  "aws-sigv4",
@@ -2581,7 +2581,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-cli"
-version = "1.4.1"
+version = "1.5.0"
 dependencies = [
  "axum",
  "clap",
@@ -2597,7 +2597,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-dart"
-version = "1.4.1"
+version = "1.5.0"
 dependencies = [
  "flutter_rust_bridge",
  "futures-util",
@@ -2608,7 +2608,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-ffi"
-version = "1.4.1"
+version = "1.5.0"
 dependencies = [
  "ahash",
  "cbindgen",
@@ -2621,7 +2621,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-jni"
-version = "1.4.1"
+version = "1.5.0"
 dependencies = [
  "futures-util",
  "jni",
@@ -2632,7 +2632,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-node"
-version = "1.4.1"
+version = "1.5.0"
 dependencies = [
  "futures-util",
  "liter-llm",
@@ -2645,7 +2645,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-php"
-version = "1.4.1"
+version = "1.5.0"
 dependencies = [
  "ext-php-rs",
  "futures-util",
@@ -2657,7 +2657,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-proxy"
-version = "1.4.1"
+version = "1.5.0"
 dependencies = [
  "axum",
  "base64 0.22.1",
@@ -2688,7 +2688,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-py"
-version = "1.4.1"
+version = "1.5.0"
 dependencies = [
  "futures",
  "liter-llm",
@@ -2701,7 +2701,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-swift"
-version = "1.4.1"
+version = "1.5.0"
 dependencies = [
  "ahash",
  "async-trait",
@@ -2717,7 +2717,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-wasm"
-version = "1.4.1"
+version = "1.5.0"
 dependencies = [
  "futures",
  "futures-util",
