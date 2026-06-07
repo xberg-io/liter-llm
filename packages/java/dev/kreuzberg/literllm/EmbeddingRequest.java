@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -20,68 +20,64 @@ public record EmbeddingRequest(
     @JsonProperty("input") EmbeddingInput input,
     @Nullable @JsonProperty("encoding_format") EmbeddingFormat encodingFormat,
     @Nullable @JsonProperty("dimensions") Integer dimensions,
-    @Nullable @JsonProperty("user") String user
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("user") String user) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String model = "";
+    private EmbeddingInput input = null;
+
+    @JsonProperty("encoding_format")
+    @Nullable
+    private EmbeddingFormat encodingFormat = null;
+
+    private Integer dimensions = null;
+    private String user = null;
+
+    /** Sets the model field. */
+    @JsonProperty("model")
+    public Builder withModel(final String value) {
+      this.model = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String model = "";
-private EmbeddingInput input = null;
-        @JsonProperty("encoding_format")
-        @Nullable private EmbeddingFormat encodingFormat = null;
-private Integer dimensions = null;
-private String user = null;
-
-        /** Sets the model field. */
-        @JsonProperty("model")
-        public Builder withModel(final String value) {
-            this.model = value;
-            return this;
-        }
-
-        /** Sets the input field. */
-        @JsonProperty("input")
-        public Builder withInput(final EmbeddingInput value) {
-            this.input = value;
-            return this;
-        }
-
-        /** Sets the encodingFormat field. */
-        @JsonProperty("encoding_format")
-        public Builder withEncodingFormat(final @Nullable EmbeddingFormat value) {
-            this.encodingFormat = value;
-            return this;
-        }
-
-        /** Sets the dimensions field. */
-        @JsonProperty("dimensions")
-        public Builder withDimensions(final @Nullable Integer value) {
-            this.dimensions = value;
-            return this;
-        }
-
-        /** Sets the user field. */
-        @JsonProperty("user")
-        public Builder withUser(final @Nullable String value) {
-            this.user = value;
-            return this;
-        }
-
-        /** Builds the EmbeddingRequest instance. */
-        public EmbeddingRequest build() {
-            return new EmbeddingRequest(
-                model,
-                input,
-                encodingFormat,
-                dimensions,
-                user
-            );
-        }
+    /** Sets the input field. */
+    @JsonProperty("input")
+    public Builder withInput(final EmbeddingInput value) {
+      this.input = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the encodingFormat field. */
+    @JsonProperty("encoding_format")
+    public Builder withEncodingFormat(final @Nullable EmbeddingFormat value) {
+      this.encodingFormat = value;
+      return this;
+    }
+
+    /** Sets the dimensions field. */
+    @JsonProperty("dimensions")
+    public Builder withDimensions(final @Nullable Integer value) {
+      this.dimensions = value;
+      return this;
+    }
+
+    /** Sets the user field. */
+    @JsonProperty("user")
+    public Builder withUser(final @Nullable String value) {
+      this.user = value;
+      return this;
+    }
+
+    /** Builds the EmbeddingRequest instance. */
+    public EmbeddingRequest build() {
+      return new EmbeddingRequest(model, input, encodingFormat, dimensions, user);
+    }
+  }
+  // CPD-ON
 }

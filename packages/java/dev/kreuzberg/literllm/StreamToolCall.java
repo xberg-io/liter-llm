@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -19,59 +19,57 @@ public record StreamToolCall(
     @JsonProperty("index") int index,
     @Nullable @JsonProperty("id") String id,
     @Nullable @JsonProperty("type") ToolType callType,
-    @Nullable @JsonProperty("function") StreamFunctionCall function
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("function") StreamFunctionCall function) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private int index = 0;
+    private String id = null;
+
+    @JsonProperty("type")
+    @Nullable
+    private ToolType callType = null;
+
+    @Nullable
+    private StreamFunctionCall function = null;
+
+    /** Sets the index field. */
+    @JsonProperty("index")
+    public Builder withIndex(final int value) {
+      this.index = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private int index = 0;
-private String id = null;
-        @JsonProperty("type")
-        @Nullable private ToolType callType = null;
-        @Nullable private StreamFunctionCall function = null;
-
-        /** Sets the index field. */
-        @JsonProperty("index")
-        public Builder withIndex(final int value) {
-            this.index = value;
-            return this;
-        }
-
-        /** Sets the id field. */
-        @JsonProperty("id")
-        public Builder withId(final @Nullable String value) {
-            this.id = value;
-            return this;
-        }
-
-        /** Sets the callType field. */
-        @JsonProperty("type")
-        public Builder withCallType(final @Nullable ToolType value) {
-            this.callType = value;
-            return this;
-        }
-
-        /** Sets the function field. */
-        @JsonProperty("function")
-        public Builder withFunction(final @Nullable StreamFunctionCall value) {
-            this.function = value;
-            return this;
-        }
-
-        /** Builds the StreamToolCall instance. */
-        public StreamToolCall build() {
-            return new StreamToolCall(
-                index,
-                id,
-                callType,
-                function
-            );
-        }
+    /** Sets the id field. */
+    @JsonProperty("id")
+    public Builder withId(final @Nullable String value) {
+      this.id = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the callType field. */
+    @JsonProperty("type")
+    public Builder withCallType(final @Nullable ToolType value) {
+      this.callType = value;
+      return this;
+    }
+
+    /** Sets the function field. */
+    @JsonProperty("function")
+    public Builder withFunction(final @Nullable StreamFunctionCall value) {
+      this.function = value;
+      return this;
+    }
+
+    /** Builds the StreamToolCall instance. */
+    public StreamToolCall build() {
+      return new StreamToolCall(index, id, callType, function);
+    }
+  }
+  // CPD-ON
 }

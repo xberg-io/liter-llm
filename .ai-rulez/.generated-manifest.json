@@ -49,6 +49,7 @@
     ".codex/agents/release-engineer.toml",
     ".codex/agents/rust-core-engineer.toml",
     ".codex/agents/security-auditor.toml",
+    ".codex/config.toml",
     ".codex/skills/alef/SKILL.md",
     ".codex/skills/alef/references/adapters.md",
     ".codex/skills/alef/references/backends.md",

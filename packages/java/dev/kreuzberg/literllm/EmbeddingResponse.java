@@ -4,11 +4,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import java.util.List;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -20,58 +20,54 @@ public record EmbeddingResponse(
     @JsonProperty("object") String object,
     @JsonProperty("data") List<EmbeddingObject> data,
     @JsonProperty("model") String model,
-    @Nullable @JsonProperty("usage") Usage usage
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("usage") Usage usage) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String object = "";
+    private List<EmbeddingObject> data = List.of();
+    private String model = "";
+
+    @Nullable
+    private Usage usage = null;
+
+    /** Sets the object field. */
+    @JsonProperty("object")
+    public Builder withObject(final String value) {
+      this.object = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String object = "";
-private List<EmbeddingObject> data = List.of();
-private String model = "";
-        @Nullable private Usage usage = null;
-
-        /** Sets the object field. */
-        @JsonProperty("object")
-        public Builder withObject(final String value) {
-            this.object = value;
-            return this;
-        }
-
-        /** Sets the data field. */
-        @JsonProperty("data")
-        public Builder withData(final List<EmbeddingObject> value) {
-            this.data = value;
-            return this;
-        }
-
-        /** Sets the model field. */
-        @JsonProperty("model")
-        public Builder withModel(final String value) {
-            this.model = value;
-            return this;
-        }
-
-        /** Sets the usage field. */
-        @JsonProperty("usage")
-        public Builder withUsage(final @Nullable Usage value) {
-            this.usage = value;
-            return this;
-        }
-
-        /** Builds the EmbeddingResponse instance. */
-        public EmbeddingResponse build() {
-            return new EmbeddingResponse(
-                object,
-                data,
-                model,
-                usage
-            );
-        }
+    /** Sets the data field. */
+    @JsonProperty("data")
+    public Builder withData(final List<EmbeddingObject> value) {
+      this.data = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the model field. */
+    @JsonProperty("model")
+    public Builder withModel(final String value) {
+      this.model = value;
+      return this;
+    }
+
+    /** Sets the usage field. */
+    @JsonProperty("usage")
+    public Builder withUsage(final @Nullable Usage value) {
+      this.usage = value;
+      return this;
+    }
+
+    /** Builds the EmbeddingResponse instance. */
+    public EmbeddingResponse build() {
+      return new EmbeddingResponse(object, data, model, usage);
+    }
+  }
+  // CPD-ON
 }

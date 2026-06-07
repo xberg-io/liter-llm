@@ -9,13 +9,13 @@ package dev.kreuzberg.literllm;
  * indicates a bug in the library.
  */
 public class InternalErrorException extends LiterLlmErrorException {
-    /** Creates a new InternalErrorException with the given message. */
-    public InternalErrorException(final String message) {
-        super(message);
-    }
+  /** Creates a new InternalErrorException with the given message. */
+  public InternalErrorException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new InternalErrorException with the given message and cause. */
-    public InternalErrorException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new InternalErrorException with the given message and cause. */
+  public InternalErrorException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

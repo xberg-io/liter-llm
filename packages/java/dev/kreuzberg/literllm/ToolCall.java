@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
@@ -17,50 +17,47 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 public record ToolCall(
     @JsonProperty("id") String id,
     @JsonProperty("type") ToolType callType,
-    @JsonProperty("function") FunctionCall function
-) {
-    public static Builder builder() {
-        return new Builder();
+    @JsonProperty("function") FunctionCall function) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String id = "";
+
+    @JsonProperty("type")
+    private ToolType callType = null;
+
+    private FunctionCall function = null;
+
+    /** Sets the id field. */
+    @JsonProperty("id")
+    public Builder withId(final String value) {
+      this.id = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String id = "";
-        @JsonProperty("type")
-private ToolType callType = null;
-private FunctionCall function = null;
-
-        /** Sets the id field. */
-        @JsonProperty("id")
-        public Builder withId(final String value) {
-            this.id = value;
-            return this;
-        }
-
-        /** Sets the callType field. */
-        @JsonProperty("type")
-        public Builder withCallType(final ToolType value) {
-            this.callType = value;
-            return this;
-        }
-
-        /** Sets the function field. */
-        @JsonProperty("function")
-        public Builder withFunction(final FunctionCall value) {
-            this.function = value;
-            return this;
-        }
-
-        /** Builds the ToolCall instance. */
-        public ToolCall build() {
-            return new ToolCall(
-                id,
-                callType,
-                function
-            );
-        }
+    /** Sets the callType field. */
+    @JsonProperty("type")
+    public Builder withCallType(final ToolType value) {
+      this.callType = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the function field. */
+    @JsonProperty("function")
+    public Builder withFunction(final FunctionCall value) {
+      this.function = value;
+      return this;
+    }
+
+    /** Builds the ToolCall instance. */
+    public ToolCall build() {
+      return new ToolCall(id, callType, function);
+    }
+  }
+  // CPD-ON
 }

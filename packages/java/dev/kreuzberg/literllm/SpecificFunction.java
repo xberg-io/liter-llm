@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
@@ -15,29 +15,27 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
 @JsonDeserialize(builder = SpecificFunction.Builder.class)
 public record SpecificFunction(@JsonProperty("name") String name) {
-    public static Builder builder() {
-        return new Builder();
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String name = "";
+
+    /** Sets the name field. */
+    @JsonProperty("name")
+    public Builder withName(final String value) {
+      this.name = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String name = "";
-
-        /** Sets the name field. */
-        @JsonProperty("name")
-        public Builder withName(final String value) {
-            this.name = value;
-            return this;
-        }
-
-        /** Builds the SpecificFunction instance. */
-        public SpecificFunction build() {
-            return new SpecificFunction(
-                name
-            );
-        }
+    /** Builds the SpecificFunction instance. */
+    public SpecificFunction build() {
+      return new SpecificFunction(name);
     }
-    // CPD-ON
+  }
+  // CPD-ON
 }

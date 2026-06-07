@@ -13,27 +13,26 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", visible = false)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = ResponseFormat.Text.class, name = "text"),
-    @JsonSubTypes.Type(value = ResponseFormat.JsonObject.class, name = "json_object"),
-    @JsonSubTypes.Type(value = ResponseFormat.JsonSchema.class, name = "json_schema")
+  @JsonSubTypes.Type(value = ResponseFormat.Text.class, name = "text"),
+  @JsonSubTypes.Type(value = ResponseFormat.JsonObject.class, name = "json_object"),
+  @JsonSubTypes.Type(value = ResponseFormat.JsonSchema.class, name = "json_schema")
 })
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 public sealed interface ResponseFormat {
 
-    /**
-     * Plain text output (default).
-     */
-    record Text() implements ResponseFormat {
-    }
+  /**
+   * Plain text output (default).
+   */
+  record Text() implements ResponseFormat {}
 
-    /**
-     * Output must be valid JSON object (no schema validation).
-     */
-    record JsonObject() implements ResponseFormat {
-    }
+  /**
+   * Output must be valid JSON object (no schema validation).
+   */
+  record JsonObject() implements ResponseFormat {}
 
-    /**
-     * Output must conform to the specified JSON schema.
-     */
-    record JsonSchema(@JsonProperty("json_schema") JsonSchemaFormat jsonSchema) implements ResponseFormat { }
+  /**
+   * Output must conform to the specified JSON schema.
+   */
+  record JsonSchema(@JsonProperty("json_schema") JsonSchemaFormat jsonSchema)
+      implements ResponseFormat {}
 }

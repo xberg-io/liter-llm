@@ -28,21 +28,29 @@ package dev.kreuzberg.literllm.android
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = OcrDocumentSerializer::class)
 sealed class OcrDocument {
     /** A publicly accessible document URL. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
-    data class Url(
-        val url: String,
-    ) : OcrDocument()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
+    data class Url(val url: String) : OcrDocument()
+
     /** Inline base64-encoded document data. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
     data class Base64(
         val data: String,
         val mediaType: String,
     ) : OcrDocument()
 }
 
-private class OcrDocumentDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<OcrDocument>(OcrDocument::class.java) {
+private class OcrDocumentDeserializer :
+    com.fasterxml.jackson.databind.deser.std.StdDeserializer<OcrDocument>(OcrDocument::class.java) {
     @Suppress("LongMethod")
     override fun deserialize(
         parser: com.fasterxml.jackson.core.JsonParser,
@@ -51,18 +59,28 @@ private class OcrDocumentDeserializer : com.fasterxml.jackson.databind.deser.std
         val node = parser.codec.readTree<com.fasterxml.jackson.databind.node.ObjectNode>(parser)
         val tag = node.get("type")?.asText()
         @Suppress("UNCHECKED_CAST")
-        val payload = (node.deepCopy() as com.fasterxml.jackson.databind.node.ObjectNode).apply { remove("type") }
+        val payload =
+            (node.deepCopy() as com.fasterxml.jackson.databind.node.ObjectNode).apply {
+                remove("type")
+            }
         return when (tag) {
-            "document_url" -> ctx.readTreeAsValue<OcrDocument.Url>(payload, OcrDocument.Url::class.java)
-            "base64" -> ctx.readTreeAsValue<OcrDocument.Base64>(payload, OcrDocument.Base64::class.java)
-            else -> throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
-                parser, "Unknown OcrDocument tag", tag, OcrDocument::class.java,
-            )
+            "document_url" ->
+                ctx.readTreeAsValue<OcrDocument.Url>(payload, OcrDocument.Url::class.java)
+            "base64" ->
+                ctx.readTreeAsValue<OcrDocument.Base64>(payload, OcrDocument.Base64::class.java)
+            else ->
+                throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
+                    parser,
+                    "Unknown OcrDocument tag",
+                    tag,
+                    OcrDocument::class.java,
+                )
         }
     }
 }
 
-private class OcrDocumentSerializer : com.fasterxml.jackson.databind.ser.std.StdSerializer<OcrDocument>(OcrDocument::class.java) {
+private class OcrDocumentSerializer :
+    com.fasterxml.jackson.databind.ser.std.StdSerializer<OcrDocument>(OcrDocument::class.java) {
     @Suppress("LongMethod")
     override fun serialize(
         value: OcrDocument,
@@ -70,21 +88,30 @@ private class OcrDocumentSerializer : com.fasterxml.jackson.databind.ser.std.Std
         provider: com.fasterxml.jackson.databind.SerializerProvider,
     ) {
         @Suppress("UNCHECKED_CAST")
-        val mapper = (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper) ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
-        val node: com.fasterxml.jackson.databind.node.ObjectNode = when (value) {
-            is OcrDocument.Url -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as OcrDocument.Url) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "document_url")
-                n
+        val mapper =
+            (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper)
+                ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
+        val node: com.fasterxml.jackson.databind.node.ObjectNode =
+            when (value) {
+                is OcrDocument.Url -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as OcrDocument.Url
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "document_url")
+                    n
+                }
+                is OcrDocument.Base64 -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as OcrDocument.Base64
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "base64")
+                    n
+                }
             }
-            is OcrDocument.Base64 -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as OcrDocument.Base64) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "base64")
-                n
-            }
-        }
         mapper.writeTree(gen, node)
     }
 }

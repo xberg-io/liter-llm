@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -19,60 +19,57 @@ public record CreateBatchRequest(
     @JsonProperty("input_file_id") String inputFileId,
     @JsonProperty("endpoint") String endpoint,
     @JsonProperty("completion_window") String completionWindow,
-    @Nullable @JsonProperty("metadata") Object metadata
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("metadata") Object metadata) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    @JsonProperty("input_file_id")
+    private String inputFileId = "";
+
+    private String endpoint = "";
+
+    @JsonProperty("completion_window")
+    private String completionWindow = "";
+
+    private Object metadata = null;
+
+    /** Sets the inputFileId field. */
+    @JsonProperty("input_file_id")
+    public Builder withInputFileId(final String value) {
+      this.inputFileId = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-        @JsonProperty("input_file_id")
-private String inputFileId = "";
-private String endpoint = "";
-        @JsonProperty("completion_window")
-private String completionWindow = "";
-private Object metadata = null;
-
-        /** Sets the inputFileId field. */
-        @JsonProperty("input_file_id")
-        public Builder withInputFileId(final String value) {
-            this.inputFileId = value;
-            return this;
-        }
-
-        /** Sets the endpoint field. */
-        @JsonProperty("endpoint")
-        public Builder withEndpoint(final String value) {
-            this.endpoint = value;
-            return this;
-        }
-
-        /** Sets the completionWindow field. */
-        @JsonProperty("completion_window")
-        public Builder withCompletionWindow(final String value) {
-            this.completionWindow = value;
-            return this;
-        }
-
-        /** Sets the metadata field. */
-        @JsonProperty("metadata")
-        public Builder withMetadata(final @Nullable Object value) {
-            this.metadata = value;
-            return this;
-        }
-
-        /** Builds the CreateBatchRequest instance. */
-        public CreateBatchRequest build() {
-            return new CreateBatchRequest(
-                inputFileId,
-                endpoint,
-                completionWindow,
-                metadata
-            );
-        }
+    /** Sets the endpoint field. */
+    @JsonProperty("endpoint")
+    public Builder withEndpoint(final String value) {
+      this.endpoint = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the completionWindow field. */
+    @JsonProperty("completion_window")
+    public Builder withCompletionWindow(final String value) {
+      this.completionWindow = value;
+      return this;
+    }
+
+    /** Sets the metadata field. */
+    @JsonProperty("metadata")
+    public Builder withMetadata(final @Nullable Object value) {
+      this.metadata = value;
+      return this;
+    }
+
+    /** Builds the CreateBatchRequest instance. */
+    public CreateBatchRequest build() {
+      return new CreateBatchRequest(inputFileId, endpoint, completionWindow, metadata);
+    }
+  }
+  // CPD-ON
 }

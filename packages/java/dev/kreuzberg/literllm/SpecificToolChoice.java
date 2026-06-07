@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
@@ -16,41 +16,38 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 @JsonDeserialize(builder = SpecificToolChoice.Builder.class)
 public record SpecificToolChoice(
     @JsonProperty("type") ToolType choiceType,
-    @JsonProperty("function") SpecificFunction function
-) {
-    public static Builder builder() {
-        return new Builder();
+    @JsonProperty("function") SpecificFunction function) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    @JsonProperty("type")
+    private ToolType choiceType = null;
+
+    private SpecificFunction function = null;
+
+    /** Sets the choiceType field. */
+    @JsonProperty("type")
+    public Builder withChoiceType(final ToolType value) {
+      this.choiceType = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-        @JsonProperty("type")
-private ToolType choiceType = null;
-private SpecificFunction function = null;
-
-        /** Sets the choiceType field. */
-        @JsonProperty("type")
-        public Builder withChoiceType(final ToolType value) {
-            this.choiceType = value;
-            return this;
-        }
-
-        /** Sets the function field. */
-        @JsonProperty("function")
-        public Builder withFunction(final SpecificFunction value) {
-            this.function = value;
-            return this;
-        }
-
-        /** Builds the SpecificToolChoice instance. */
-        public SpecificToolChoice build() {
-            return new SpecificToolChoice(
-                choiceType,
-                function
-            );
-        }
+    /** Sets the function field. */
+    @JsonProperty("function")
+    public Builder withFunction(final SpecificFunction value) {
+      this.function = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Builds the SpecificToolChoice instance. */
+    public SpecificToolChoice build() {
+      return new SpecificToolChoice(choiceType, function);
+    }
+  }
+  // CPD-ON
 }

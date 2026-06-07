@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -18,57 +18,61 @@ import org.jspecify.annotations.Nullable;
 public record CacheConfig(
     @JsonProperty("max_entries") long maxEntries,
     @Nullable @JsonProperty("ttl") Long ttl,
-    @JsonProperty("backend") CacheBackend backend
-) {
-    public static Builder builder() {
-        return new Builder();
+    @JsonProperty("backend") CacheBackend backend) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public CacheConfig {
+    if (maxEntries == 0) {
+      maxEntries = 256;
     }
-    public CacheConfig{
-        if (maxEntries == 0) { maxEntries = 256; }
-        if (ttl == null) { ttl = 300000L; }
+    if (ttl == null) {
+      ttl = 300000L;
+    }
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    @JsonProperty("max_entries")
+    private long maxEntries = 0;
+
+    @Nullable
+    private Long ttl = null;
+
+    private CacheBackend backend = null;
+
+    /** Sets the maxEntries field. */
+    @JsonProperty("max_entries")
+    public Builder withMaxEntries(final long value) {
+      this.maxEntries = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-        @JsonProperty("max_entries")
-private long maxEntries = 0;
-        @Nullable private Long ttl = null;
-private CacheBackend backend = null;
-
-        /** Sets the maxEntries field. */
-        @JsonProperty("max_entries")
-        public Builder withMaxEntries(final long value) {
-            this.maxEntries = value;
-            return this;
-        }
-
-        /** Sets the ttl field. */
-        @JsonProperty("ttl")
-        public Builder withTtl(final @Nullable Long value) {
-            this.ttl = value;
-            return this;
-        }
-
-        /** Sets the backend field. */
-        @JsonProperty("backend")
-        public Builder withBackend(final CacheBackend value) {
-            this.backend = value;
-            return this;
-        }
-
-        /** Builds the CacheConfig instance. */
-        public CacheConfig build() {
-            return new CacheConfig(
-                maxEntries,
-                ttl,
-                backend
-            );
-        }
+    /** Sets the ttl field. */
+    @JsonProperty("ttl")
+    public Builder withTtl(final @Nullable Long value) {
+      this.ttl = value;
+      return this;
     }
-    // CPD-ON
-    public static CacheConfig defaultInstance() {
-        throw new UnsupportedOperationException("defaultInstance is not yet bridged via JNI; use the Builder instead.");
+
+    /** Sets the backend field. */
+    @JsonProperty("backend")
+    public Builder withBackend(final CacheBackend value) {
+      this.backend = value;
+      return this;
     }
+
+    /** Builds the CacheConfig instance. */
+    public CacheConfig build() {
+      return new CacheConfig(maxEntries, ttl, backend);
+    }
+  }
+  // CPD-ON
+  public static CacheConfig defaultInstance() {
+    throw new UnsupportedOperationException(
+        "defaultInstance is not yet bridged via JNI; use the Builder instead.");
+  }
 }

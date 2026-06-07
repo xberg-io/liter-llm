@@ -4,11 +4,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import java.util.List;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -20,58 +20,52 @@ public record TranscriptionResponse(
     @JsonProperty("text") String text,
     @Nullable @JsonProperty("language") String language,
     @Nullable @JsonProperty("duration") Double duration,
-    @Nullable @JsonProperty("segments") List<TranscriptionSegment> segments
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("segments") List<TranscriptionSegment> segments) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String text = "";
+    private String language = null;
+    private Double duration = null;
+    private List<TranscriptionSegment> segments = null;
+
+    /** Sets the text field. */
+    @JsonProperty("text")
+    public Builder withText(final String value) {
+      this.text = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String text = "";
-private String language = null;
-private Double duration = null;
-private List<TranscriptionSegment> segments = null;
-
-        /** Sets the text field. */
-        @JsonProperty("text")
-        public Builder withText(final String value) {
-            this.text = value;
-            return this;
-        }
-
-        /** Sets the language field. */
-        @JsonProperty("language")
-        public Builder withLanguage(final @Nullable String value) {
-            this.language = value;
-            return this;
-        }
-
-        /** Sets the duration field. */
-        @JsonProperty("duration")
-        public Builder withDuration(final @Nullable Double value) {
-            this.duration = value;
-            return this;
-        }
-
-        /** Sets the segments field. */
-        @JsonProperty("segments")
-        public Builder withSegments(final @Nullable List<TranscriptionSegment> value) {
-            this.segments = value;
-            return this;
-        }
-
-        /** Builds the TranscriptionResponse instance. */
-        public TranscriptionResponse build() {
-            return new TranscriptionResponse(
-                text,
-                language,
-                duration,
-                segments
-            );
-        }
+    /** Sets the language field. */
+    @JsonProperty("language")
+    public Builder withLanguage(final @Nullable String value) {
+      this.language = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the duration field. */
+    @JsonProperty("duration")
+    public Builder withDuration(final @Nullable Double value) {
+      this.duration = value;
+      return this;
+    }
+
+    /** Sets the segments field. */
+    @JsonProperty("segments")
+    public Builder withSegments(final @Nullable List<TranscriptionSegment> value) {
+      this.segments = value;
+      return this;
+    }
+
+    /** Builds the TranscriptionResponse instance. */
+    public TranscriptionResponse build() {
+      return new TranscriptionResponse(text, language, duration, segments);
+    }
+  }
+  // CPD-ON
 }

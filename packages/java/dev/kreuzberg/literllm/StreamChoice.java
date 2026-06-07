@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -18,50 +18,46 @@ import org.jspecify.annotations.Nullable;
 public record StreamChoice(
     @JsonProperty("index") int index,
     @JsonProperty("delta") StreamDelta delta,
-    @Nullable @JsonProperty("finish_reason") FinishReason finishReason
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("finish_reason") FinishReason finishReason) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private int index = 0;
+    private StreamDelta delta = null;
+
+    @JsonProperty("finish_reason")
+    private FinishReason finishReason = null;
+
+    /** Sets the index field. */
+    @JsonProperty("index")
+    public Builder withIndex(final int value) {
+      this.index = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private int index = 0;
-private StreamDelta delta = null;
-        @JsonProperty("finish_reason")
-private FinishReason finishReason = null;
-
-        /** Sets the index field. */
-        @JsonProperty("index")
-        public Builder withIndex(final int value) {
-            this.index = value;
-            return this;
-        }
-
-        /** Sets the delta field. */
-        @JsonProperty("delta")
-        public Builder withDelta(final StreamDelta value) {
-            this.delta = value;
-            return this;
-        }
-
-        /** Sets the finishReason field. */
-        @JsonProperty("finish_reason")
-        public Builder withFinishReason(final @Nullable FinishReason value) {
-            this.finishReason = value;
-            return this;
-        }
-
-        /** Builds the StreamChoice instance. */
-        public StreamChoice build() {
-            return new StreamChoice(
-                index,
-                delta,
-                finishReason
-            );
-        }
+    /** Sets the delta field. */
+    @JsonProperty("delta")
+    public Builder withDelta(final StreamDelta value) {
+      this.delta = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the finishReason field. */
+    @JsonProperty("finish_reason")
+    public Builder withFinishReason(final @Nullable FinishReason value) {
+      this.finishReason = value;
+      return this;
+    }
+
+    /** Builds the StreamChoice instance. */
+    public StreamChoice build() {
+      return new StreamChoice(index, delta, finishReason);
+    }
+  }
+  // CPD-ON
 }

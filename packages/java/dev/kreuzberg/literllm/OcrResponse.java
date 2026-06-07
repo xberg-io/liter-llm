@@ -4,11 +4,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import java.util.List;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -19,49 +19,46 @@ import org.jspecify.annotations.Nullable;
 public record OcrResponse(
     @JsonProperty("pages") List<OcrPage> pages,
     @JsonProperty("model") String model,
-    @Nullable @JsonProperty("usage") Usage usage
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("usage") Usage usage) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private List<OcrPage> pages = List.of();
+    private String model = "";
+
+    @Nullable
+    private Usage usage = null;
+
+    /** Sets the pages field. */
+    @JsonProperty("pages")
+    public Builder withPages(final List<OcrPage> value) {
+      this.pages = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private List<OcrPage> pages = List.of();
-private String model = "";
-        @Nullable private Usage usage = null;
-
-        /** Sets the pages field. */
-        @JsonProperty("pages")
-        public Builder withPages(final List<OcrPage> value) {
-            this.pages = value;
-            return this;
-        }
-
-        /** Sets the model field. */
-        @JsonProperty("model")
-        public Builder withModel(final String value) {
-            this.model = value;
-            return this;
-        }
-
-        /** Sets the usage field. */
-        @JsonProperty("usage")
-        public Builder withUsage(final @Nullable Usage value) {
-            this.usage = value;
-            return this;
-        }
-
-        /** Builds the OcrResponse instance. */
-        public OcrResponse build() {
-            return new OcrResponse(
-                pages,
-                model,
-                usage
-            );
-        }
+    /** Sets the model field. */
+    @JsonProperty("model")
+    public Builder withModel(final String value) {
+      this.model = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the usage field. */
+    @JsonProperty("usage")
+    public Builder withUsage(final @Nullable Usage value) {
+      this.usage = value;
+      return this;
+    }
+
+    /** Builds the OcrResponse instance. */
+    public OcrResponse build() {
+      return new OcrResponse(pages, model, usage);
+    }
+  }
+  // CPD-ON
 }

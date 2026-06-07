@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -20,68 +20,63 @@ public record CreateSpeechRequest(
     @JsonProperty("input") String input,
     @JsonProperty("voice") String voice,
     @Nullable @JsonProperty("response_format") String responseFormat,
-    @Nullable @JsonProperty("speed") Double speed
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("speed") Double speed) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String model = "";
+    private String input = "";
+    private String voice = "";
+
+    @JsonProperty("response_format")
+    private String responseFormat = null;
+
+    private Double speed = null;
+
+    /** Sets the model field. */
+    @JsonProperty("model")
+    public Builder withModel(final String value) {
+      this.model = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String model = "";
-private String input = "";
-private String voice = "";
-        @JsonProperty("response_format")
-private String responseFormat = null;
-private Double speed = null;
-
-        /** Sets the model field. */
-        @JsonProperty("model")
-        public Builder withModel(final String value) {
-            this.model = value;
-            return this;
-        }
-
-        /** Sets the input field. */
-        @JsonProperty("input")
-        public Builder withInput(final String value) {
-            this.input = value;
-            return this;
-        }
-
-        /** Sets the voice field. */
-        @JsonProperty("voice")
-        public Builder withVoice(final String value) {
-            this.voice = value;
-            return this;
-        }
-
-        /** Sets the responseFormat field. */
-        @JsonProperty("response_format")
-        public Builder withResponseFormat(final @Nullable String value) {
-            this.responseFormat = value;
-            return this;
-        }
-
-        /** Sets the speed field. */
-        @JsonProperty("speed")
-        public Builder withSpeed(final @Nullable Double value) {
-            this.speed = value;
-            return this;
-        }
-
-        /** Builds the CreateSpeechRequest instance. */
-        public CreateSpeechRequest build() {
-            return new CreateSpeechRequest(
-                model,
-                input,
-                voice,
-                responseFormat,
-                speed
-            );
-        }
+    /** Sets the input field. */
+    @JsonProperty("input")
+    public Builder withInput(final String value) {
+      this.input = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the voice field. */
+    @JsonProperty("voice")
+    public Builder withVoice(final String value) {
+      this.voice = value;
+      return this;
+    }
+
+    /** Sets the responseFormat field. */
+    @JsonProperty("response_format")
+    public Builder withResponseFormat(final @Nullable String value) {
+      this.responseFormat = value;
+      return this;
+    }
+
+    /** Sets the speed field. */
+    @JsonProperty("speed")
+    public Builder withSpeed(final @Nullable Double value) {
+      this.speed = value;
+      return this;
+    }
+
+    /** Builds the CreateSpeechRequest instance. */
+    public CreateSpeechRequest build() {
+      return new CreateSpeechRequest(model, input, voice, responseFormat, speed);
+    }
+  }
+  // CPD-ON
 }

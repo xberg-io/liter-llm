@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -18,51 +18,48 @@ import org.jspecify.annotations.Nullable;
 public record Image(
     @Nullable @JsonProperty("url") String url,
     @Nullable @JsonProperty("b64_json") String b64Json,
-    @Nullable @JsonProperty("revised_prompt") String revisedPrompt
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("revised_prompt") String revisedPrompt) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String url = null;
+
+    @JsonProperty("b64_json")
+    private String b64Json = null;
+
+    @JsonProperty("revised_prompt")
+    private String revisedPrompt = null;
+
+    /** Sets the url field. */
+    @JsonProperty("url")
+    public Builder withUrl(final @Nullable String value) {
+      this.url = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String url = null;
-        @JsonProperty("b64_json")
-private String b64Json = null;
-        @JsonProperty("revised_prompt")
-private String revisedPrompt = null;
-
-        /** Sets the url field. */
-        @JsonProperty("url")
-        public Builder withUrl(final @Nullable String value) {
-            this.url = value;
-            return this;
-        }
-
-        /** Sets the b64Json field. */
-        @JsonProperty("b64_json")
-        public Builder withB64Json(final @Nullable String value) {
-            this.b64Json = value;
-            return this;
-        }
-
-        /** Sets the revisedPrompt field. */
-        @JsonProperty("revised_prompt")
-        public Builder withRevisedPrompt(final @Nullable String value) {
-            this.revisedPrompt = value;
-            return this;
-        }
-
-        /** Builds the Image instance. */
-        public Image build() {
-            return new Image(
-                url,
-                b64Json,
-                revisedPrompt
-            );
-        }
+    /** Sets the b64Json field. */
+    @JsonProperty("b64_json")
+    public Builder withB64Json(final @Nullable String value) {
+      this.b64Json = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the revisedPrompt field. */
+    @JsonProperty("revised_prompt")
+    public Builder withRevisedPrompt(final @Nullable String value) {
+      this.revisedPrompt = value;
+      return this;
+    }
+
+    /** Builds the Image instance. */
+    public Image build() {
+      return new Image(url, b64Json, revisedPrompt);
+    }
+  }
+  // CPD-ON
 }

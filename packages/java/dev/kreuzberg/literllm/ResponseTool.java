@@ -4,11 +4,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.Map;
 
 /**
  * A tool available for the response request.
@@ -17,48 +17,45 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 @JsonDeserialize(builder = ResponseTool.Builder.class)
 public record ResponseTool(
     @JsonProperty("type") String toolType,
-    @com.fasterxml.jackson.annotation.JsonAnyGetter Map<String, Object> config
-) {
-    public static Builder builder() {
-        return new Builder();
+    @com.fasterxml.jackson.annotation.JsonAnyGetter Map<String, Object> config) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    @JsonProperty("type")
+    private String toolType = "";
+
+    private Map<String, Object> config = new java.util.HashMap<>();
+
+    /** Sets the toolType field. */
+    @JsonProperty("type")
+    public Builder withToolType(final String value) {
+      this.toolType = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-        @JsonProperty("type")
-private String toolType = "";
-private Map<String, Object> config = new java.util.HashMap<>();
-
-        /** Sets the toolType field. */
-        @JsonProperty("type")
-        public Builder withToolType(final String value) {
-            this.toolType = value;
-            return this;
-        }
-
-        /** Sets the config field. */
-        @com.fasterxml.jackson.annotation.JsonIgnore
-        public Builder withConfig(final Map<String, Object> value) {
-            this.config = value;
-            return this;
-        }
-
-        /** Absorbs unknown sibling fields (serde flatten). */
-        @com.fasterxml.jackson.annotation.JsonAnySetter
-        public Builder configEntry(final String key, final Object value) {
-            this.config.put(key, value);
-            return this;
-        }
-
-        /** Builds the ResponseTool instance. */
-        public ResponseTool build() {
-            return new ResponseTool(
-                toolType,
-                config
-            );
-        }
+    /** Sets the config field. */
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public Builder withConfig(final Map<String, Object> value) {
+      this.config = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Absorbs unknown sibling fields (serde flatten). */
+    @com.fasterxml.jackson.annotation.JsonAnySetter
+    public Builder configEntry(final String key, final Object value) {
+      this.config.put(key, value);
+      return this;
+    }
+
+    /** Builds the ResponseTool instance. */
+    public ResponseTool build() {
+      return new ResponseTool(toolType, config);
+    }
+  }
+  // CPD-ON
 }

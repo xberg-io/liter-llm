@@ -4,11 +4,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import java.util.List;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -20,58 +20,54 @@ public record OcrPage(
     @JsonProperty("index") int index,
     @JsonProperty("markdown") String markdown,
     @Nullable @JsonProperty("images") List<OcrImage> images,
-    @Nullable @JsonProperty("dimensions") PageDimensions dimensions
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("dimensions") PageDimensions dimensions) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private int index = 0;
+    private String markdown = "";
+    private List<OcrImage> images = null;
+
+    @Nullable
+    private PageDimensions dimensions = null;
+
+    /** Sets the index field. */
+    @JsonProperty("index")
+    public Builder withIndex(final int value) {
+      this.index = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private int index = 0;
-private String markdown = "";
-private List<OcrImage> images = null;
-        @Nullable private PageDimensions dimensions = null;
-
-        /** Sets the index field. */
-        @JsonProperty("index")
-        public Builder withIndex(final int value) {
-            this.index = value;
-            return this;
-        }
-
-        /** Sets the markdown field. */
-        @JsonProperty("markdown")
-        public Builder withMarkdown(final String value) {
-            this.markdown = value;
-            return this;
-        }
-
-        /** Sets the images field. */
-        @JsonProperty("images")
-        public Builder withImages(final @Nullable List<OcrImage> value) {
-            this.images = value;
-            return this;
-        }
-
-        /** Sets the dimensions field. */
-        @JsonProperty("dimensions")
-        public Builder withDimensions(final @Nullable PageDimensions value) {
-            this.dimensions = value;
-            return this;
-        }
-
-        /** Builds the OcrPage instance. */
-        public OcrPage build() {
-            return new OcrPage(
-                index,
-                markdown,
-                images,
-                dimensions
-            );
-        }
+    /** Sets the markdown field. */
+    @JsonProperty("markdown")
+    public Builder withMarkdown(final String value) {
+      this.markdown = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the images field. */
+    @JsonProperty("images")
+    public Builder withImages(final @Nullable List<OcrImage> value) {
+      this.images = value;
+      return this;
+    }
+
+    /** Sets the dimensions field. */
+    @JsonProperty("dimensions")
+    public Builder withDimensions(final @Nullable PageDimensions value) {
+      this.dimensions = value;
+      return this;
+    }
+
+    /** Builds the OcrPage instance. */
+    public OcrPage build() {
+      return new OcrPage(index, markdown, images, dimensions);
+    }
+  }
+  // CPD-ON
 }

@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
@@ -16,40 +16,36 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 @JsonDeserialize(builder = FunctionMessage.Builder.class)
 public record FunctionMessage(
     @JsonProperty("content") String content,
-    @JsonProperty("name") String name
-) {
-    public static Builder builder() {
-        return new Builder();
+    @JsonProperty("name") String name) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String content = "";
+    private String name = "";
+
+    /** Sets the content field. */
+    @JsonProperty("content")
+    public Builder withContent(final String value) {
+      this.content = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String content = "";
-private String name = "";
-
-        /** Sets the content field. */
-        @JsonProperty("content")
-        public Builder withContent(final String value) {
-            this.content = value;
-            return this;
-        }
-
-        /** Sets the name field. */
-        @JsonProperty("name")
-        public Builder withName(final String value) {
-            this.name = value;
-            return this;
-        }
-
-        /** Builds the FunctionMessage instance. */
-        public FunctionMessage build() {
-            return new FunctionMessage(
-                content,
-                name
-            );
-        }
+    /** Sets the name field. */
+    @JsonProperty("name")
+    public Builder withName(final String value) {
+      this.name = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Builds the FunctionMessage instance. */
+    public FunctionMessage build() {
+      return new FunctionMessage(content, name);
+    }
+  }
+  // CPD-ON
 }

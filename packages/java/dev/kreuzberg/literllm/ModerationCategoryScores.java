@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -26,128 +26,134 @@ public record ModerationCategoryScores(
     @Nullable @JsonProperty("self-harm/intent") Double selfHarmIntent,
     @Nullable @JsonProperty("self-harm/instructions") Double selfHarmInstructions,
     @Nullable @JsonProperty("harassment/threatening") Double harassmentThreatening,
-    @Nullable @JsonProperty("violence") Double violence
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("violence") Double violence) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private Double sexual = null;
+    private Double hate = null;
+    private Double harassment = null;
+
+    @JsonProperty("self-harm")
+    private Double selfHarm = null;
+
+    @JsonProperty("sexual/minors")
+    private Double sexualMinors = null;
+
+    @JsonProperty("hate/threatening")
+    private Double hateThreatening = null;
+
+    @JsonProperty("violence/graphic")
+    private Double violenceGraphic = null;
+
+    @JsonProperty("self-harm/intent")
+    private Double selfHarmIntent = null;
+
+    @JsonProperty("self-harm/instructions")
+    private Double selfHarmInstructions = null;
+
+    @JsonProperty("harassment/threatening")
+    private Double harassmentThreatening = null;
+
+    private Double violence = null;
+
+    /** Sets the sexual field. */
+    @JsonProperty("sexual")
+    public Builder withSexual(final @Nullable Double value) {
+      this.sexual = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private Double sexual = null;
-private Double hate = null;
-private Double harassment = null;
-        @JsonProperty("self-harm")
-private Double selfHarm = null;
-        @JsonProperty("sexual/minors")
-private Double sexualMinors = null;
-        @JsonProperty("hate/threatening")
-private Double hateThreatening = null;
-        @JsonProperty("violence/graphic")
-private Double violenceGraphic = null;
-        @JsonProperty("self-harm/intent")
-private Double selfHarmIntent = null;
-        @JsonProperty("self-harm/instructions")
-private Double selfHarmInstructions = null;
-        @JsonProperty("harassment/threatening")
-private Double harassmentThreatening = null;
-private Double violence = null;
-
-        /** Sets the sexual field. */
-        @JsonProperty("sexual")
-        public Builder withSexual(final @Nullable Double value) {
-            this.sexual = value;
-            return this;
-        }
-
-        /** Sets the hate field. */
-        @JsonProperty("hate")
-        public Builder withHate(final @Nullable Double value) {
-            this.hate = value;
-            return this;
-        }
-
-        /** Sets the harassment field. */
-        @JsonProperty("harassment")
-        public Builder withHarassment(final @Nullable Double value) {
-            this.harassment = value;
-            return this;
-        }
-
-        /** Sets the selfHarm field. */
-        @JsonProperty("self-harm")
-        public Builder withSelfHarm(final @Nullable Double value) {
-            this.selfHarm = value;
-            return this;
-        }
-
-        /** Sets the sexualMinors field. */
-        @JsonProperty("sexual/minors")
-        public Builder withSexualMinors(final @Nullable Double value) {
-            this.sexualMinors = value;
-            return this;
-        }
-
-        /** Sets the hateThreatening field. */
-        @JsonProperty("hate/threatening")
-        public Builder withHateThreatening(final @Nullable Double value) {
-            this.hateThreatening = value;
-            return this;
-        }
-
-        /** Sets the violenceGraphic field. */
-        @JsonProperty("violence/graphic")
-        public Builder withViolenceGraphic(final @Nullable Double value) {
-            this.violenceGraphic = value;
-            return this;
-        }
-
-        /** Sets the selfHarmIntent field. */
-        @JsonProperty("self-harm/intent")
-        public Builder withSelfHarmIntent(final @Nullable Double value) {
-            this.selfHarmIntent = value;
-            return this;
-        }
-
-        /** Sets the selfHarmInstructions field. */
-        @JsonProperty("self-harm/instructions")
-        public Builder withSelfHarmInstructions(final @Nullable Double value) {
-            this.selfHarmInstructions = value;
-            return this;
-        }
-
-        /** Sets the harassmentThreatening field. */
-        @JsonProperty("harassment/threatening")
-        public Builder withHarassmentThreatening(final @Nullable Double value) {
-            this.harassmentThreatening = value;
-            return this;
-        }
-
-        /** Sets the violence field. */
-        @JsonProperty("violence")
-        public Builder withViolence(final @Nullable Double value) {
-            this.violence = value;
-            return this;
-        }
-
-        /** Builds the ModerationCategoryScores instance. */
-        public ModerationCategoryScores build() {
-            return new ModerationCategoryScores(
-                sexual,
-                hate,
-                harassment,
-                selfHarm,
-                sexualMinors,
-                hateThreatening,
-                violenceGraphic,
-                selfHarmIntent,
-                selfHarmInstructions,
-                harassmentThreatening,
-                violence
-            );
-        }
+    /** Sets the hate field. */
+    @JsonProperty("hate")
+    public Builder withHate(final @Nullable Double value) {
+      this.hate = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the harassment field. */
+    @JsonProperty("harassment")
+    public Builder withHarassment(final @Nullable Double value) {
+      this.harassment = value;
+      return this;
+    }
+
+    /** Sets the selfHarm field. */
+    @JsonProperty("self-harm")
+    public Builder withSelfHarm(final @Nullable Double value) {
+      this.selfHarm = value;
+      return this;
+    }
+
+    /** Sets the sexualMinors field. */
+    @JsonProperty("sexual/minors")
+    public Builder withSexualMinors(final @Nullable Double value) {
+      this.sexualMinors = value;
+      return this;
+    }
+
+    /** Sets the hateThreatening field. */
+    @JsonProperty("hate/threatening")
+    public Builder withHateThreatening(final @Nullable Double value) {
+      this.hateThreatening = value;
+      return this;
+    }
+
+    /** Sets the violenceGraphic field. */
+    @JsonProperty("violence/graphic")
+    public Builder withViolenceGraphic(final @Nullable Double value) {
+      this.violenceGraphic = value;
+      return this;
+    }
+
+    /** Sets the selfHarmIntent field. */
+    @JsonProperty("self-harm/intent")
+    public Builder withSelfHarmIntent(final @Nullable Double value) {
+      this.selfHarmIntent = value;
+      return this;
+    }
+
+    /** Sets the selfHarmInstructions field. */
+    @JsonProperty("self-harm/instructions")
+    public Builder withSelfHarmInstructions(final @Nullable Double value) {
+      this.selfHarmInstructions = value;
+      return this;
+    }
+
+    /** Sets the harassmentThreatening field. */
+    @JsonProperty("harassment/threatening")
+    public Builder withHarassmentThreatening(final @Nullable Double value) {
+      this.harassmentThreatening = value;
+      return this;
+    }
+
+    /** Sets the violence field. */
+    @JsonProperty("violence")
+    public Builder withViolence(final @Nullable Double value) {
+      this.violence = value;
+      return this;
+    }
+
+    /** Builds the ModerationCategoryScores instance. */
+    public ModerationCategoryScores build() {
+      return new ModerationCategoryScores(
+          sexual,
+          hate,
+          harassment,
+          selfHarm,
+          sexualMinors,
+          hateThreatening,
+          violenceGraphic,
+          selfHarmIntent,
+          selfHarmInstructions,
+          harassmentThreatening,
+          violence);
+    }
+  }
+  // CPD-ON
 }

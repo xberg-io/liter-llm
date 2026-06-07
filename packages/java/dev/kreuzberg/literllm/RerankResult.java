@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -18,50 +18,48 @@ import org.jspecify.annotations.Nullable;
 public record RerankResult(
     @JsonProperty("index") int index,
     @JsonProperty("relevance_score") double relevanceScore,
-    @Nullable @JsonProperty("document") RerankResultDocument document
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("document") RerankResultDocument document) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private int index = 0;
+
+    @JsonProperty("relevance_score")
+    private double relevanceScore = 0.0;
+
+    @Nullable
+    private RerankResultDocument document = null;
+
+    /** Sets the index field. */
+    @JsonProperty("index")
+    public Builder withIndex(final int value) {
+      this.index = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private int index = 0;
-        @JsonProperty("relevance_score")
-private double relevanceScore = 0.0;
-        @Nullable private RerankResultDocument document = null;
-
-        /** Sets the index field. */
-        @JsonProperty("index")
-        public Builder withIndex(final int value) {
-            this.index = value;
-            return this;
-        }
-
-        /** Sets the relevanceScore field. */
-        @JsonProperty("relevance_score")
-        public Builder withRelevanceScore(final double value) {
-            this.relevanceScore = value;
-            return this;
-        }
-
-        /** Sets the document field. */
-        @JsonProperty("document")
-        public Builder withDocument(final @Nullable RerankResultDocument value) {
-            this.document = value;
-            return this;
-        }
-
-        /** Builds the RerankResult instance. */
-        public RerankResult build() {
-            return new RerankResult(
-                index,
-                relevanceScore,
-                document
-            );
-        }
+    /** Sets the relevanceScore field. */
+    @JsonProperty("relevance_score")
+    public Builder withRelevanceScore(final double value) {
+      this.relevanceScore = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the document field. */
+    @JsonProperty("document")
+    public Builder withDocument(final @Nullable RerankResultDocument value) {
+      this.document = value;
+      return this;
+    }
+
+    /** Builds the RerankResult instance. */
+    public RerankResult build() {
+      return new RerankResult(index, relevanceScore, document);
+    }
+  }
+  // CPD-ON
 }

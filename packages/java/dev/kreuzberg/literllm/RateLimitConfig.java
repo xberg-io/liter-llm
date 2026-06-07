@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -18,55 +18,56 @@ import org.jspecify.annotations.Nullable;
 public record RateLimitConfig(
     @Nullable @JsonProperty("rpm") Integer rpm,
     @Nullable @JsonProperty("tpm") Long tpm,
-    @Nullable @JsonProperty("window") Long window
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("window") Long window) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public RateLimitConfig {
+    if (window == null) {
+      window = 60000L;
     }
-    public RateLimitConfig{
-        if (window == null) { window = 60000L; }
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private Integer rpm = null;
+    private Long tpm = null;
+
+    @Nullable
+    private Long window = null;
+
+    /** Sets the rpm field. */
+    @JsonProperty("rpm")
+    public Builder withRpm(final @Nullable int value) {
+      this.rpm = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private Integer rpm = null;
-private Long tpm = null;
-        @Nullable private Long window = null;
-
-        /** Sets the rpm field. */
-        @JsonProperty("rpm")
-        public Builder withRpm(final @Nullable int value) {
-            this.rpm = value;
-            return this;
-        }
-
-        /** Sets the tpm field. */
-        @JsonProperty("tpm")
-        public Builder withTpm(final @Nullable long value) {
-            this.tpm = value;
-            return this;
-        }
-
-        /** Sets the window field. */
-        @JsonProperty("window")
-        public Builder withWindow(final @Nullable Long value) {
-            this.window = value;
-            return this;
-        }
-
-        /** Builds the RateLimitConfig instance. */
-        public RateLimitConfig build() {
-            return new RateLimitConfig(
-                rpm,
-                tpm,
-                window
-            );
-        }
+    /** Sets the tpm field. */
+    @JsonProperty("tpm")
+    public Builder withTpm(final @Nullable long value) {
+      this.tpm = value;
+      return this;
     }
-    // CPD-ON
-    public static RateLimitConfig defaultInstance() {
-        throw new UnsupportedOperationException("defaultInstance is not yet bridged via JNI; use the Builder instead.");
+
+    /** Sets the window field. */
+    @JsonProperty("window")
+    public Builder withWindow(final @Nullable Long value) {
+      this.window = value;
+      return this;
     }
+
+    /** Builds the RateLimitConfig instance. */
+    public RateLimitConfig build() {
+      return new RateLimitConfig(rpm, tpm, window);
+    }
+  }
+  // CPD-ON
+  public static RateLimitConfig defaultInstance() {
+    throw new UnsupportedOperationException(
+        "defaultInstance is not yet bridged via JNI; use the Builder instead.");
+  }
 }

@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -18,49 +18,44 @@ import org.jspecify.annotations.Nullable;
 public record FileListQuery(
     @Nullable @JsonProperty("purpose") String purpose,
     @Nullable @JsonProperty("limit") Integer limit,
-    @Nullable @JsonProperty("after") String after
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("after") String after) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String purpose = null;
+    private Integer limit = null;
+    private String after = null;
+
+    /** Sets the purpose field. */
+    @JsonProperty("purpose")
+    public Builder withPurpose(final @Nullable String value) {
+      this.purpose = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String purpose = null;
-private Integer limit = null;
-private String after = null;
-
-        /** Sets the purpose field. */
-        @JsonProperty("purpose")
-        public Builder withPurpose(final @Nullable String value) {
-            this.purpose = value;
-            return this;
-        }
-
-        /** Sets the limit field. */
-        @JsonProperty("limit")
-        public Builder withLimit(final @Nullable Integer value) {
-            this.limit = value;
-            return this;
-        }
-
-        /** Sets the after field. */
-        @JsonProperty("after")
-        public Builder withAfter(final @Nullable String value) {
-            this.after = value;
-            return this;
-        }
-
-        /** Builds the FileListQuery instance. */
-        public FileListQuery build() {
-            return new FileListQuery(
-                purpose,
-                limit,
-                after
-            );
-        }
+    /** Sets the limit field. */
+    @JsonProperty("limit")
+    public Builder withLimit(final @Nullable Integer value) {
+      this.limit = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the after field. */
+    @JsonProperty("after")
+    public Builder withAfter(final @Nullable String value) {
+      this.after = value;
+      return this;
+    }
+
+    /** Builds the FileListQuery instance. */
+    public FileListQuery build() {
+      return new FileListQuery(purpose, limit, after);
+    }
+  }
+  // CPD-ON
 }

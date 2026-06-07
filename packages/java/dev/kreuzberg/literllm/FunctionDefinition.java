@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -19,58 +19,52 @@ public record FunctionDefinition(
     @JsonProperty("name") String name,
     @Nullable @JsonProperty("description") String description,
     @Nullable @JsonProperty("parameters") Object parameters,
-    @Nullable @JsonProperty("strict") Boolean strict
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("strict") Boolean strict) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String name = "";
+    private String description = null;
+    private Object parameters = null;
+    private Boolean strict = null;
+
+    /** Sets the name field. */
+    @JsonProperty("name")
+    public Builder withName(final String value) {
+      this.name = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String name = "";
-private String description = null;
-private Object parameters = null;
-private Boolean strict = null;
-
-        /** Sets the name field. */
-        @JsonProperty("name")
-        public Builder withName(final String value) {
-            this.name = value;
-            return this;
-        }
-
-        /** Sets the description field. */
-        @JsonProperty("description")
-        public Builder withDescription(final @Nullable String value) {
-            this.description = value;
-            return this;
-        }
-
-        /** Sets the parameters field. */
-        @JsonProperty("parameters")
-        public Builder withParameters(final @Nullable Object value) {
-            this.parameters = value;
-            return this;
-        }
-
-        /** Sets the strict field. */
-        @JsonProperty("strict")
-        public Builder withStrict(final @Nullable Boolean value) {
-            this.strict = value;
-            return this;
-        }
-
-        /** Builds the FunctionDefinition instance. */
-        public FunctionDefinition build() {
-            return new FunctionDefinition(
-                name,
-                description,
-                parameters,
-                strict
-            );
-        }
+    /** Sets the description field. */
+    @JsonProperty("description")
+    public Builder withDescription(final @Nullable String value) {
+      this.description = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the parameters field. */
+    @JsonProperty("parameters")
+    public Builder withParameters(final @Nullable Object value) {
+      this.parameters = value;
+      return this;
+    }
+
+    /** Sets the strict field. */
+    @JsonProperty("strict")
+    public Builder withStrict(final @Nullable Boolean value) {
+      this.strict = value;
+      return this;
+    }
+
+    /** Builds the FunctionDefinition instance. */
+    public FunctionDefinition build() {
+      return new FunctionDefinition(name, description, parameters, strict);
+    }
+  }
+  // CPD-ON
 }

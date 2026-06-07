@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
@@ -16,41 +16,38 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 @JsonDeserialize(builder = ChatCompletionTool.Builder.class)
 public record ChatCompletionTool(
     @JsonProperty("type") ToolType toolType,
-    @JsonProperty("function") FunctionDefinition function
-) {
-    public static Builder builder() {
-        return new Builder();
+    @JsonProperty("function") FunctionDefinition function) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    @JsonProperty("type")
+    private ToolType toolType = null;
+
+    private FunctionDefinition function = null;
+
+    /** Sets the toolType field. */
+    @JsonProperty("type")
+    public Builder withToolType(final ToolType value) {
+      this.toolType = value;
+      return this;
     }
 
-    // CPD-OFF
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-        @JsonProperty("type")
-private ToolType toolType = null;
-private FunctionDefinition function = null;
-
-        /** Sets the toolType field. */
-        @JsonProperty("type")
-        public Builder withToolType(final ToolType value) {
-            this.toolType = value;
-            return this;
-        }
-
-        /** Sets the function field. */
-        @JsonProperty("function")
-        public Builder withFunction(final FunctionDefinition value) {
-            this.function = value;
-            return this;
-        }
-
-        /** Builds the ChatCompletionTool instance. */
-        public ChatCompletionTool build() {
-            return new ChatCompletionTool(
-                toolType,
-                function
-            );
-        }
+    /** Sets the function field. */
+    @JsonProperty("function")
+    public Builder withFunction(final FunctionDefinition value) {
+      this.function = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Builds the ChatCompletionTool instance. */
+    public ChatCompletionTool build() {
+      return new ChatCompletionTool(toolType, function);
+    }
+  }
+  // CPD-ON
 }

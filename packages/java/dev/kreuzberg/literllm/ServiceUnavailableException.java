@@ -6,13 +6,13 @@ package dev.kreuzberg.literllm;
  * `status` preserves the exact HTTP status code received (502, 503, or 504).
  */
 public class ServiceUnavailableException extends LiterLlmErrorException {
-    /** Creates a new ServiceUnavailableException with the given message. */
-    public ServiceUnavailableException(final String message) {
-        super(message);
-    }
+  /** Creates a new ServiceUnavailableException with the given message. */
+  public ServiceUnavailableException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new ServiceUnavailableException with the given message and cause. */
-    public ServiceUnavailableException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new ServiceUnavailableException with the given message and cause. */
+  public ServiceUnavailableException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

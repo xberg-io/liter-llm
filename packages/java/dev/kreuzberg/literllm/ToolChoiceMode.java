@@ -11,47 +11,46 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * Tool choice mode.
  */
 public enum ToolChoiceMode {
-    /**
-     * Model may or may not call tools; default behavior.
-     */
-    Auto("auto"),
-    /**
-     * Model must call at least one tool.
-     */
-    Required("required"),
-    /**
-     * Model must not call any tools.
-     */
-    None("none");
+  /**
+   * Model may or may not call tools; default behavior.
+   */
+  Auto("auto"),
+  /**
+   * Model must call at least one tool.
+   */
+  Required("required"),
+  /**
+   * Model must not call any tools.
+   */
+  None("none");
 
+  /** The string value. */
+  private final String value;
 
-    /** The string value. */
-    private final String value;
+  ToolChoiceMode(final String value) {
+    this.value = value;
+  }
 
-    ToolChoiceMode(final String value) {
-        this.value = value;
+  /** Returns the string value. */
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  /** Creates an instance from a string value. */
+  @JsonCreator
+  public static ToolChoiceMode fromValue(final String value) {
+    for (ToolChoiceMode e : values()) {
+      if (e.value.equalsIgnoreCase(value)) {
+        return e;
+      }
     }
+    throw new IllegalArgumentException("Unknown ToolChoiceMode value: " + value);
+  }
 
-    /** Returns the string value. */
-    @JsonValue
-    public String getValue() {
-        return value;
-    }
-
-    /** Creates an instance from a string value. */
-    @JsonCreator
-    public static ToolChoiceMode fromValue(final String value) {
-        for (ToolChoiceMode e : values()) {
-            if (e.value.equalsIgnoreCase(value)) {
-                return e;
-            }
-        }
-        throw new IllegalArgumentException("Unknown ToolChoiceMode value: " + value);
-    }
-
-    /** Returns the wire-format string value (matches JSON serialization). */
-    @Override
-    public String toString() {
-        return value;
-    }
+  /** Returns the wire-format string value (matches JSON serialization). */
+  @Override
+  public String toString() {
+    return value;
+  }
 }
