@@ -106,6 +106,9 @@ repos:
                 - liter-llm
           - id: rust-max-lines
             args: ["--max=1000"]
+            # Remediation backlog: existing files over the 1,000-LOC ceiling. New
+            # files are subject to the cap. Shrink this list when files are split.
+            exclude: ^(crates/liter-llm-ffi/src/lib\.rs|crates/liter-llm-jni/src/lib\.rs|crates/liter-llm-node/src/lib\.rs|crates/liter-llm-php/src/lib\.rs|crates/liter-llm-py/src/lib\.rs|crates/liter-llm-wasm/src/lib\.rs|crates/liter-llm/src/client/mod\.rs|crates/liter-llm/src/provider/anthropic\.rs|crates/liter-llm/src/provider/bedrock\.rs|crates/liter-llm/src/provider/vertex\.rs|packages/dart/rust/src/frb_generated\.rs|packages/dart/rust/src/lib\.rs|packages/elixir/native/liter_llm_nif/src/lib\.rs|packages/ruby/ext/liter_llm_rb/src/lib\.rs|packages/swift/rust/src/lib\.rs)$
 
           # Python
           - id: pyproject-fmt
