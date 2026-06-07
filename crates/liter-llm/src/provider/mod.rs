@@ -268,7 +268,7 @@ pub(crate) trait Provider: Send + Sync {
     }
 
     /// Whether streaming is supported.
-    #[allow(dead_code)] // reserved for future provider-capability checking
+    #[allow(dead_code)]
     fn supports_streaming(&self) -> bool {
         true
     }
@@ -367,8 +367,7 @@ pub mod outbound_policy;
 pub(crate) mod vertex;
 
 pub use outbound_policy::{
-    OutboundPolicy, current_policy, set_outbound_policy, validate_outbound_url,
-    validate_outbound_url_sync,
+    OutboundPolicy, current_policy, set_outbound_policy, validate_outbound_url, validate_outbound_url_sync,
 };
 
 // ── Built-in providers ───────────────────────────────────────────────────────

@@ -94,7 +94,6 @@ fn percent_encode_model(model: &str) -> String {
 /// let client = DefaultClient::new(config, Some("bedrock/anthropic.claude-3-sonnet-20240229-v1:0"))?;
 /// ```
 pub struct BedrockProvider {
-    #[allow(dead_code)] // used by region() accessor and in sigv4_sign
     region: String,
     /// Cached base URL: `https://bedrock-runtime.{region}.{dns_suffix}`.
     base_url: String,
@@ -150,7 +149,7 @@ impl BedrockProvider {
 
     /// Return the AWS region this provider is configured for.
     #[must_use]
-    #[allow(dead_code)] // useful for consumers of the library
+    #[allow(dead_code)]
     pub fn region(&self) -> &str {
         &self.region
     }

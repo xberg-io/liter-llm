@@ -136,7 +136,7 @@ impl GithubCopilotProvider {
     /// Use this when the Copilot OAuth token exchange returns a dynamic
     /// endpoint URL that differs from the default.
     #[must_use]
-    #[allow(dead_code)] // public API — used by callers that obtain a dynamic URL from the OAuth flow
+    #[allow(dead_code)]
     pub fn with_api_base(base: String) -> Self {
         Self { api_base: base }
     }

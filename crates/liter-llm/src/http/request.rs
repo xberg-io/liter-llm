@@ -1,7 +1,6 @@
 use std::future::Future;
 
 use bytes::Bytes;
-use serde::de::DeserializeOwned;
 
 use crate::error::{LiterLlmError, Result};
 use crate::http::retry;
@@ -179,61 +178,6 @@ pub async fn post_binary(
     resp.bytes().await.map_err(LiterLlmError::from)
 }
 
-/// Send a GET request and deserialize the JSON response.
-///
-/// Retries on 429 / 5xx according to `max_retries`, honouring any
-/// `Retry-After` header from the server.
-///
-/// `auth_header` is `Some((name, value))` when the provider requires
-/// authentication, or `None` when no auth header should be added.
-///
-/// `extra_headers` carries provider-specific mandatory headers beyond the
-/// single auth header.
-#[cfg_attr(
-    feature = "tracing",
-    tracing::instrument(
-        skip_all,
-        fields(
-            http.method = "GET",
-            http.url = %url,
-            http.status_code = tracing::field::Empty,
-            http.retry_count = tracing::field::Empty,
-        )
-    )
-)]
-#[allow(dead_code)]
-pub async fn get_json<T: DeserializeOwned>(
-    client: &reqwest::Client,
-    url: &str,
-    auth_header: Option<(&str, &str)>,
-    extra_headers: &[(&str, &str)],
-    max_retries: u32,
-) -> Result<T> {
-    let mut retry_count = 0u32;
-
-    let resp = with_retry(max_retries, || {
-        let mut builder = client.get(url);
-        if let Some((name, value)) = auth_header {
-            builder = builder.header(name, value);
-        }
-        for (name, value) in extra_headers {
-            builder = builder.header(*name, *value);
-        }
-        retry_count += 1;
-        builder.send()
-    })
-    .await?;
-
-    #[cfg(feature = "tracing")]
-    {
-        let span = tracing::Span::current();
-        span.record("http.status_code", resp.status().as_u16());
-        span.record("http.retry_count", retry_count.saturating_sub(1));
-    }
-
-    resp.json::<T>().await.map_err(LiterLlmError::from)
-}
-
 /// Send a POST request with a multipart form body and return the raw response JSON.
 ///
 /// Used for file uploads (Files API, audio transcription).  Multipart forms are
@@ -291,10 +235,9 @@ pub async fn post_multipart(
 
 /// Send a GET request and return the raw response JSON as `serde_json::Value`.
 ///
-/// Like [`get_json`] but returns a raw `serde_json::Value` instead of
-/// deserializing into a typed `T`.  Useful for endpoints where the caller
-/// needs to inspect or transform the response before deserialization
-/// (e.g. GET /files/{id}, GET /batches/{id}).
+/// Returns a raw `serde_json::Value` without deserializing into a typed `T`.
+/// Useful for endpoints where the caller needs to inspect or transform the
+/// response before deserialization (e.g. GET /files/{id}, GET /batches/{id}).
 ///
 /// Retries on 429 / 5xx according to `max_retries`.
 #[cfg_attr(
@@ -343,7 +286,7 @@ pub async fn get_json_raw(
 
 /// Send a DELETE request and return the raw response JSON.
 ///
-/// Same retry/auth/header pattern as [`get_json`] but uses the HTTP DELETE method.
+/// Same retry/auth/header pattern as `get_json_raw` but uses the HTTP DELETE method.
 /// Used for resource deletion endpoints (e.g. DELETE /files/{id}).
 ///
 /// Retries on 429 / 5xx according to `max_retries`.
