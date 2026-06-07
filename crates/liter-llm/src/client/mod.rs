@@ -548,7 +548,9 @@ impl DefaultClient {
             // Off.  This provides defense-in-depth against DNS rebinding: even
             // if a hostname initially passed the sync registration-time check,
             // the resolver re-validates every resolved address at connect time.
-            #[cfg(any(feature = "native-http", feature = "wasm-http"))]
+            // WASM uses the browser fetch API; DNS happens in the browser and
+            // cannot be intercepted from Rust, so this is native-only.
+            #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
             let builder = {
                 if !matches!(crate::provider::current_policy(), crate::provider::OutboundPolicy::Off) {
                     builder.dns_resolver(crate::provider::outbound_policy::guarded_resolver())

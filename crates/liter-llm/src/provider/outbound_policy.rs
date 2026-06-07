@@ -104,6 +104,14 @@ pub async fn validate_outbound_url(raw_url: &str) -> Result<(), LiterLlmError> {
     }
 }
 
+#[cfg(target_arch = "wasm32")]
+async fn check_deny_private(_url: &Url, _raw: &str) -> Result<(), LiterLlmError> {
+    // WASM has no DNS resolver — the sync literal-IP check above is the only
+    // SSRF guard available.  Hostname resolution defense in depth lives in the
+    // GuardedResolver path which is native-only.
+    Ok(())
+}
+
 /// Synchronous URL validation — parse + scheme check + literal-IP private range
 /// check only.  Does not perform DNS resolution.
 ///
@@ -164,6 +172,7 @@ pub fn validate_outbound_url_sync(raw_url: &str) -> Result<(), LiterLlmError> {
     Ok(())
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 async fn check_deny_private(url: &Url, raw: &str) -> Result<(), LiterLlmError> {
     let host = url.host_str().ok_or_else(|| LiterLlmError::OutboundForbidden {
         url: raw.to_string(),
@@ -266,7 +275,7 @@ fn is_link_local_v6(ip: std::net::Ipv6Addr) -> bool {
 #[cfg_attr(alef, alef(skip))]
 pub struct GuardedResolver;
 
-#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+#[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
 mod resolver_impl {
     use std::sync::Arc;
 
@@ -316,7 +325,7 @@ mod resolver_impl {
     }
 }
 
-#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+#[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
 pub use resolver_impl::guarded_resolver;
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
