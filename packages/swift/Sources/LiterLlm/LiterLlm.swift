@@ -3963,7 +3963,7 @@ public func registerCustomProvider(config: CustomProviderConfig) throws {
 /// # Errors
 ///
 /// Returns an error only if the internal lock is poisoned.
-public func unregisterCustomProvider(name: String) throws -> Int {
+public func unregisterCustomProvider(name: String) throws -> Bool {
         let _rb_name = RustString(name)
     return try RustBridge.unregisterCustomProvider(_rb_name)
 }
@@ -4029,7 +4029,7 @@ public func completionCostWithCache(model: String, promptTokens: UInt64, cachedT
 ///
 /// Returns [`LiterLlmError::BadRequest`] if the tokenizer cannot be loaded
 /// (e.g. network failure on first use) or if tokenization itself fails.
-public func countTokens(model: String, text: String) throws -> Int {
+public func countTokens(model: String, text: String) throws -> UInt {
         let _rb_model = RustString(model)
         let _rb_text = RustString(text)
     return try RustBridge.countTokens(_rb_model, _rb_text)
@@ -4045,7 +4045,7 @@ public func countTokens(model: String, text: String) throws -> Int {
 ///
 /// Returns [`LiterLlmError::BadRequest`] if the tokenizer cannot be loaded or
 /// if tokenization fails for any message.
-public func countRequestTokens(model: String, req: ChatCompletionRequest) throws -> Int {
+public func countRequestTokens(model: String, req: ChatCompletionRequest) throws -> UInt {
         let _rb_model = RustString(model)
     return try RustBridge.countRequestTokens(_rb_model, req)
 }

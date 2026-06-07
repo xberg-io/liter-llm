@@ -98,7 +98,9 @@
                                     <matches string="${os.name}" pattern="(?i).*win.*" />
                                 </condition>
                                 <condition property="os.name.detected" value="linux">
-                                    <equals arg1="${os.name.detected}" arg2="" />
+                                    <not>
+                                        <isset property="os.name.detected" />
+                                    </not>
                                 </condition>
                                 <!-- Detect architecture -->
                                 <condition property="arch.detected" value="arm64">
