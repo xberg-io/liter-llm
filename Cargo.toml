@@ -46,6 +46,7 @@ clap = { version = "4", features = ["derive", "env"] }
 dashmap = "6"
 futures-core = "0.3"
 futures-util = "0.3"
+http = "1"
 gcp_auth = { version = "0.12", default-features = false, features = ["ring"] }
 jsonschema = "0.46"
 jsonwebtoken = { version = "10", default-features = false, features = ["use_pem"] }

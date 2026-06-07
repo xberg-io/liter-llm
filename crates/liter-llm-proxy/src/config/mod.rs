@@ -1,10 +1,12 @@
 pub mod files;
 pub mod key;
+pub mod mcp;
 pub mod model;
 pub mod server;
 
 pub use files::FileStorageConfig;
 pub use key::VirtualKeyConfig;
+pub use mcp::McpConfig;
 pub use model::{AliasEntry, ModelEntry};
 pub use server::ServerConfig;
 
@@ -148,6 +150,8 @@ pub struct ProxyConfig {
     pub keys: Vec<VirtualKeyConfig>,
     pub health: Option<HealthConfig>,
     pub cooldown: Option<CooldownConfig>,
+    #[serde(default)]
+    pub mcp: McpConfig,
 }
 
 // ---------------------------------------------------------------------------

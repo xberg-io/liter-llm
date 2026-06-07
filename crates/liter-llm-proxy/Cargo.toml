@@ -24,6 +24,7 @@ base64 = { workspace = true }
 bytes = { workspace = true }
 dashmap = { workspace = true }
 futures-util = { workspace = true }
+http = { workspace = true }
 liter-llm = { path = "../liter-llm", version = "1.4.1", features = [
     "native-http",
     "tower",
