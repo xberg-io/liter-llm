@@ -1,8 +1,9 @@
 use std::path::PathBuf;
 
 use clap::Args;
+use liter_llm::provider::{OutboundPolicy, set_outbound_policy};
 use liter_llm_proxy::ProxyServer;
-use liter_llm_proxy::config::ProxyConfig;
+use liter_llm_proxy::config::{OutboundPolicyKind, ProxyConfig};
 use secrecy::SecretString;
 
 #[derive(Args)]
@@ -56,5 +57,39 @@ pub async fn run(args: ApiArgs) -> Result<(), String> {
         );
     }
 
+    // Apply the outbound policy BEFORE any custom providers are registered or
+    // requests are accepted.  The library default is Off; the proxy default
+    // (via SecurityConfig) is DenyPrivate, blocking SSRF into metadata services
+    // and private networks.
+    let policy = build_outbound_policy(&config)?;
+    set_outbound_policy(policy);
+
     ProxyServer::new(config).serve().await
+}
+
+/// Translate the proxy security config into a [`OutboundPolicy`].
+fn build_outbound_policy(config: &ProxyConfig) -> Result<OutboundPolicy, String> {
+    let security = &config.security;
+    match security.outbound_policy {
+        OutboundPolicyKind::Off => Ok(OutboundPolicy::Off),
+        OutboundPolicyKind::DenyPrivate => Ok(OutboundPolicy::DenyPrivate),
+        OutboundPolicyKind::Allowlist => {
+            if security.outbound_allowlist.is_empty() {
+                return Err(
+                    "security.outbound_policy = \"allowlist\" requires at least one entry in \
+                     security.outbound_allowlist"
+                        .into(),
+                );
+            }
+            let urls = security
+                .outbound_allowlist
+                .iter()
+                .map(|s| {
+                    url::Url::parse(s)
+                        .map_err(|e| format!("invalid URL in outbound_allowlist ({s:?}): {e}"))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(OutboundPolicy::Allowlist(urls))
+        }
+    }
 }

@@ -2,12 +2,14 @@ pub mod files;
 pub mod key;
 pub mod mcp;
 pub mod model;
+pub mod security;
 pub mod server;
 
 pub use files::FileStorageConfig;
 pub use key::VirtualKeyConfig;
 pub use mcp::McpConfig;
 pub use model::{AliasEntry, ModelEntry};
+pub use security::{OutboundPolicyKind, SecurityConfig};
 pub use server::ServerConfig;
 
 use std::collections::HashMap;
@@ -152,6 +154,8 @@ pub struct ProxyConfig {
     pub cooldown: Option<CooldownConfig>,
     #[serde(default)]
     pub mcp: McpConfig,
+    #[serde(default)]
+    pub security: SecurityConfig,
 }
 
 // ---------------------------------------------------------------------------

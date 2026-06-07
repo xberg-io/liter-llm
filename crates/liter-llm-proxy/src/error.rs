@@ -178,6 +178,10 @@ impl From<LiterLlmError> for ProxyError {
             LiterLlmError::InvalidHeader { .. } => StatusCode::BAD_REQUEST,
             LiterLlmError::Serialization(_) => StatusCode::BAD_REQUEST,
             LiterLlmError::InternalError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+            // A custom-provider base_url that violates the outbound policy
+            // (e.g. points at a cloud-metadata or private-network address) is
+            // mapped to 502 Bad Gateway — the upstream destination is invalid.
+            LiterLlmError::OutboundForbidden { .. } => StatusCode::BAD_GATEWAY,
             // LiterLlmError is #[non_exhaustive]; treat unknown future variants
             // as internal server errors.
             _ => StatusCode::INTERNAL_SERVER_ERROR,

@@ -59,6 +59,12 @@ pub enum AuthHeaderFormat {
 /// no model prefixes).
 pub fn register_custom_provider(config: CustomProviderConfig) -> Result<()> {
     validate_config(&config)?;
+    // Validate the base_url against the current outbound policy.  This uses
+    // the synchronous helper so the function stays sync (no async callers to
+    // update, no tokio runtime assumption).  Literal-IP private addresses are
+    // caught here; hostname-based SSRF is caught at connect time by the
+    // GuardedResolver installed in the reqwest client.
+    crate::provider::validate_outbound_url_sync(&config.base_url)?;
 
     let mut providers = CUSTOM_PROVIDERS.write().map_err(|e| LiterLlmError::ServerError {
         message: format!("custom provider registry lock poisoned: {e}"),

@@ -363,7 +363,13 @@ pub mod custom;
 pub(crate) mod github_copilot;
 pub(crate) mod google_ai;
 pub(crate) mod mistral;
+pub mod outbound_policy;
 pub(crate) mod vertex;
+
+pub use outbound_policy::{
+    OutboundPolicy, current_policy, set_outbound_policy, validate_outbound_url,
+    validate_outbound_url_sync,
+};
 
 // ── Built-in providers ───────────────────────────────────────────────────────
 

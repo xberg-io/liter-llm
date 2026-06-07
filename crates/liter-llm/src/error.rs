@@ -98,6 +98,14 @@ pub enum LiterLlmError {
     /// indicates a bug in the library.
     #[error("internal error: {message}")]
     InternalError { message: String },
+
+    /// An outbound request was blocked by the active [`crate::provider::OutboundPolicy`].
+    ///
+    /// Returned when `register_custom_provider` is called with a `base_url` that
+    /// violates the policy (e.g. a private-range IP under `DenyPrivate`), or when
+    /// the per-connection DNS resolver detects a forbidden address at connect time.
+    #[error("outbound request to {url} forbidden: {reason}")]
+    OutboundForbidden { url: String, reason: String },
 }
 
 impl LiterLlmError {
@@ -127,6 +135,7 @@ impl LiterLlmError {
             Self::BudgetExceeded { .. } => 0,
             Self::HookRejected { .. } => 0,
             Self::InternalError { .. } => 0,
+            Self::OutboundForbidden { .. } => 0,
         }
     }
 
@@ -173,6 +182,7 @@ impl LiterLlmError {
             Self::BudgetExceeded { .. } => "BudgetExceeded",
             Self::HookRejected { .. } => "HookRejected",
             Self::InternalError { .. } => "InternalError",
+            Self::OutboundForbidden { .. } => "OutboundForbidden",
         }
     }
 

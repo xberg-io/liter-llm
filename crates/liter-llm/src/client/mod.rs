@@ -544,6 +544,23 @@ impl DefaultClient {
             #[cfg(feature = "native-http")]
             crate::ensure_crypto_provider();
             let builder = reqwest::Client::builder().default_headers(header_map);
+            // Install the guarded DNS resolver when the outbound policy is not
+            // Off.  This provides defense-in-depth against DNS rebinding: even
+            // if a hostname initially passed the sync registration-time check,
+            // the resolver re-validates every resolved address at connect time.
+            #[cfg(any(feature = "native-http", feature = "wasm-http"))]
+            let builder = {
+                if !matches!(
+                    crate::provider::current_policy(),
+                    crate::provider::OutboundPolicy::Off
+                ) {
+                    builder.dns_resolver(
+                        crate::provider::outbound_policy::guarded_resolver(),
+                    )
+                } else {
+                    builder
+                }
+            };
             // reqwest's WASM backend uses the browser fetch API and does not
             // support per-client timeout configuration.
             #[cfg(not(target_arch = "wasm32"))]
