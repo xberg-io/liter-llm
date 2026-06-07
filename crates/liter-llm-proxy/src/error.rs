@@ -38,15 +38,37 @@ pub struct ProxyError {
     retry_after: Option<Duration>,
 }
 
+/// Maximum number of UTF-8 characters included in a sanitized error message
+/// sent to clients.  This prevents upstream provider responses from leaking
+/// unbounded content through the proxy.
+const MAX_ERROR_MESSAGE_CHARS: usize = 200;
+
+/// Truncate and strip control characters from a raw upstream error message
+/// before it is exposed to the client.  This prevents provider responses
+/// from leaking unbounded content and from injecting control characters
+/// into log lines.
+///
+/// Tab (`\t`) and newline (`\n`) are preserved; all other control characters
+/// (including NUL, BEL, ESC, etc.) are removed.
+fn sanitize_message(raw: &str) -> String {
+    raw.chars()
+        .filter(|c| !c.is_control() || matches!(*c, '\t' | '\n'))
+        .take(MAX_ERROR_MESSAGE_CHARS)
+        .collect()
+}
+
 impl ProxyError {
     /// Create a `ProxyError` from a status code and an error type / message
     /// pair.
+    ///
+    /// The `message` is passed through [`sanitize_message`] to strip control
+    /// characters and truncate to [`MAX_ERROR_MESSAGE_CHARS`] before storage.
     fn new(status: StatusCode, error_type: impl Into<String>, message: impl Into<String>) -> Self {
         Self {
             status,
             body: ErrorResponse {
                 error: ApiError {
-                    message: message.into(),
+                    message: sanitize_message(&message.into()),
                     error_type: error_type.into(),
                     param: None,
                     code: None,
@@ -54,6 +76,20 @@ impl ProxyError {
             },
             retry_after: None,
         }
+    }
+
+    /// Return the error type string (e.g. `"Authentication"`, `"Streaming"`).
+    pub fn error_type(&self) -> &str {
+        &self.body.error.error_type
+    }
+
+    /// Serialize the structured error body for inclusion in an SSE `data:`
+    /// event.  Uses `serde_json` so any character in the message is escaped
+    /// correctly — never interpolate the error into a JSON string by hand.
+    pub fn to_sse_payload(&self) -> String {
+        serde_json::to_string(&self.body).unwrap_or_else(|_| {
+            r#"{"error":{"message":"serialization failed","type":"InternalError"}}"#.to_string()
+        })
     }
 
     /// 401 Unauthorized.
@@ -115,7 +151,7 @@ impl IntoResponse for ProxyError {
 impl From<LiterLlmError> for ProxyError {
     fn from(err: LiterLlmError) -> Self {
         let error_type = err.error_type().to_owned();
-        let message = err.to_string();
+        let message = sanitize_message(&err.to_string());
 
         // Extract retry_after before we lose access to the variant fields.
         let retry_after = if let LiterLlmError::RateLimited { retry_after, .. } = &err {
@@ -445,5 +481,76 @@ mod tests {
         }
         .into();
         assert!(err.to_string().contains("model gone"));
+    }
+
+    // ── sanitize_message / truncation / control-char stripping ───────────
+
+    #[test]
+    fn long_message_is_truncated_to_max_chars() {
+        let err: ProxyError = LiterLlmError::BadRequest {
+            message: "x".repeat(500),
+            status: 400,
+        }
+        .into();
+        assert!(
+            err.body.error.message.chars().count() <= 200,
+            "message was not truncated: {} chars",
+            err.body.error.message.chars().count()
+        );
+    }
+
+    #[test]
+    fn control_characters_are_stripped() {
+        let err: ProxyError = LiterLlmError::ServerError {
+            message: "before\x00\x07after".to_string(),
+            status: 500,
+        }
+        .into();
+        let msg = &err.body.error.message;
+        assert!(msg.contains("before"), "expected 'before' in: {msg:?}");
+        assert!(msg.contains("after"), "expected 'after' in: {msg:?}");
+        assert!(!msg.contains('\x00'), "NUL should be stripped: {msg:?}");
+        assert!(!msg.contains('\x07'), "BEL should be stripped: {msg:?}");
+    }
+
+    #[test]
+    fn tab_and_newline_survive_sanitization() {
+        let err: ProxyError = LiterLlmError::ServerError {
+            message: "line1\nline2\ttabbed".to_string(),
+            status: 500,
+        }
+        .into();
+        let msg = &err.body.error.message;
+        assert!(msg.contains('\n'), "newline should survive: {msg:?}");
+        assert!(msg.contains('\t'), "tab should survive: {msg:?}");
+    }
+
+    // ── to_sse_payload ───────────────────────────────────────────────────
+
+    #[test]
+    fn to_sse_payload_is_valid_json() {
+        let err = ProxyError::authentication("test");
+        let payload = err.to_sse_payload();
+        let value: serde_json::Value = serde_json::from_str(&payload)
+            .expect("to_sse_payload must produce valid JSON");
+        assert_eq!(value["error"]["type"], "Authentication");
+        assert_eq!(value["error"]["message"], "test");
+    }
+
+    #[test]
+    fn to_sse_payload_escapes_quotes() {
+        let err = ProxyError::bad_request(r#"msg with "quotes" inside"#);
+        let payload = err.to_sse_payload();
+        let value: serde_json::Value = serde_json::from_str(&payload)
+            .expect("to_sse_payload must produce valid JSON even with embedded quotes");
+        assert_eq!(value["error"]["message"], r#"msg with "quotes" inside"#);
+    }
+
+    #[test]
+    fn error_type_accessor_returns_correct_value() {
+        let err = ProxyError::authentication("test");
+        assert_eq!(err.error_type(), "Authentication");
+        let err2 = ProxyError::bad_request("oops");
+        assert_eq!(err2.error_type(), "BadRequest");
     }
 }

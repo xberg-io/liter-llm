@@ -17,13 +17,14 @@ pub fn sse_response(stream: BoxStream<'static, LlmResult<ChatCompletionChunk>>) 
     let sse_stream = stream
         .map(|result| -> std::result::Result<Event, Infallible> {
             match result {
-                Ok(chunk) => {
-                    let json = serde_json::to_string(&chunk).unwrap_or_else(|e| format!(r#"{{"error":"{}"}}"#, e));
-                    Ok(Event::default().data(json))
-                }
+                Ok(chunk) => Ok(Event::default().json_data(&chunk).unwrap_or_else(|_| {
+                    Event::default().data(
+                        r#"{"error":{"message":"chunk serialization failed","type":"InternalError"}}"#,
+                    )
+                })),
                 Err(e) => {
-                    let json = format!(r#"{{"error":"{}"}}"#, e);
-                    Ok(Event::default().data(json))
+                    let proxy_err: crate::error::ProxyError = e.into();
+                    Ok(Event::default().data(proxy_err.to_sse_payload()))
                 }
             }
         })
@@ -142,7 +143,7 @@ mod tests {
         // 1 ok chunk + 1 error chunk + 1 [DONE]
         assert_eq!(events.len(), 3, "expected 3 events, got: {events:?}");
 
-        // The error event should contain the error message.
+        // The error event should contain the error message (back-compat substring check).
         assert!(
             events[1].contains("connection reset"),
             "error event should contain the error message, got: {}",
@@ -150,5 +151,32 @@ mod tests {
         );
 
         assert_eq!(events[2], "[DONE]");
+    }
+
+    #[tokio::test]
+    async fn sse_error_payload_is_valid_json() {
+        let chunks: Vec<LlmResult<ChatCompletionChunk>> = vec![Err(LiterLlmError::Streaming {
+            message: "connection reset".into(),
+        })];
+        let mock_stream: BoxStream<'static, LlmResult<ChatCompletionChunk>> = Box::pin(stream::iter(chunks));
+
+        let response = sse_response(mock_stream);
+        let body = body_string(response).await;
+        let events = parse_sse_data(&body);
+
+        // 1 error event + 1 [DONE]
+        assert_eq!(events.len(), 2, "expected 2 events, got: {events:?}");
+
+        let value: serde_json::Value = serde_json::from_str(&events[0])
+            .expect("SSE error payload must be valid JSON");
+
+        assert_eq!(value["error"]["type"], "Streaming", "error type mismatch: {value:?}");
+
+        let msg_len = value["error"]["message"]
+            .as_str()
+            .expect("message must be a string")
+            .chars()
+            .count();
+        assert!(msg_len <= 200, "message length {msg_len} exceeds 200 chars");
     }
 }
