@@ -113,8 +113,24 @@ pub fn build_router(state: AppState) -> Router {
         .route("/health/readiness", get(health::readiness))
         .route("/openapi.json", get(crate::openapi::openapi_schema));
 
-    let cors_layer = if state.config.server.cors_origins.iter().any(|o| o == "*") {
-        CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any)
+    // Build an optional CORS layer.  Empty cors_origins means CORS is disabled
+    // entirely — no CorsLayer is added to the router.  A wildcard origin ("*")
+    // is allowed but must NOT expose the Authorization header, which would
+    // permit credentialed cross-origin requests from any origin.
+    let cors_layer: Option<CorsLayer> = if state.config.server.cors_origins.is_empty() {
+        None
+    } else if state.config.server.cors_origins.iter().any(|o| o == "*") {
+        Some(
+            CorsLayer::new()
+                .allow_origin(Any)
+                .allow_methods(Any)
+                // Deliberately exclude Authorization — wildcard origins must not
+                // receive credentialed cross-origin access.
+                .allow_headers([
+                    axum::http::header::CONTENT_TYPE,
+                    axum::http::header::ACCEPT,
+                ]),
+        )
     } else {
         let origins: Vec<HeaderValue> = state
             .config
@@ -123,20 +139,27 @@ pub fn build_router(state: AppState) -> Router {
             .iter()
             .filter_map(|o| o.parse().ok())
             .collect();
-        CorsLayer::new()
-            .allow_origin(AllowOrigin::list(origins))
-            .allow_methods(Any)
-            .allow_headers(Any)
+        Some(
+            CorsLayer::new()
+                .allow_origin(AllowOrigin::list(origins))
+                .allow_methods(Any)
+                .allow_headers(Any),
+        )
     };
 
-    Router::new()
+    let mut router = Router::new()
         .merge(v1_routes)
         .merge(health_routes)
         .layer(SetSensitiveHeadersLayer::new([AUTHORIZATION]))
         .layer(DefaultBodyLimit::max(state.config.server.body_limit_bytes))
-        .layer(cors_layer)
         .layer(CompressionLayer::new())
         .layer(CatchPanicLayer::new())
         .layer(TraceLayer::new_for_http())
-        .with_state(state)
+        .with_state(state);
+
+    if let Some(layer) = cors_layer {
+        router = router.layer(layer);
+    }
+
+    router
 }

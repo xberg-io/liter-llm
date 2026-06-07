@@ -17,7 +17,7 @@ fn default_body_limit() -> usize {
 }
 
 fn default_cors() -> Vec<String> {
-    vec!["*".to_string()]
+    vec![]
 }
 
 /// HTTP server configuration for the proxy.
@@ -43,7 +43,7 @@ impl Default for ServerConfig {
             port: default_port(),
             request_timeout_secs: default_request_timeout(),
             body_limit_bytes: default_body_limit(),
-            cors_origins: default_cors(),
+            cors_origins: default_cors(), // empty — CORS disabled by default
         }
     }
 }

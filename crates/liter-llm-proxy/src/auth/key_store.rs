@@ -1,4 +1,6 @@
 use dashmap::DashMap;
+use secrecy::{ExposeSecret, SecretString};
+use subtle::ConstantTimeEq;
 
 use crate::config::VirtualKeyConfig;
 
@@ -46,12 +48,12 @@ impl KeyContext {
 /// In-memory virtual key store backed by `DashMap` for concurrent access.
 pub struct KeyStore {
     keys: DashMap<String, VirtualKeyConfig>,
-    master_key: Option<String>,
+    master_key: Option<SecretString>,
 }
 
 impl KeyStore {
     /// Build a key store from the proxy configuration values.
-    pub fn from_config(master_key: Option<String>, keys: &[VirtualKeyConfig]) -> Self {
+    pub fn from_config(master_key: Option<SecretString>, keys: &[VirtualKeyConfig]) -> Self {
         let map = DashMap::new();
         for k in keys {
             map.insert(k.key.clone(), k.clone());
@@ -59,9 +61,19 @@ impl KeyStore {
         Self { keys: map, master_key }
     }
 
-    /// Check whether `token` matches the configured master key.
+    /// Check whether `token` matches the configured master key using a
+    /// constant-time comparison to prevent timing side-channel attacks.
+    ///
+    /// The master key length is deployment-static configuration, not
+    /// user-controlled per request, so the length-check short-circuit is
+    /// acceptable.
     pub fn is_master_key(&self, token: &str) -> bool {
-        self.master_key.as_deref() == Some(token)
+        let Some(master) = self.master_key.as_ref() else {
+            return false;
+        };
+        let master_bytes = master.expose_secret().as_bytes();
+        let token_bytes = token.as_bytes();
+        master_bytes.ct_eq(token_bytes).into()
     }
 
     /// Look up a virtual key configuration by its token string.
@@ -72,6 +84,8 @@ impl KeyStore {
 
 #[cfg(test)]
 mod tests {
+    use secrecy::SecretString;
+
     use super::*;
 
     fn sample_key_config(key: &str, models: Vec<String>) -> VirtualKeyConfig {
@@ -89,13 +103,13 @@ mod tests {
 
     #[test]
     fn master_key_match_returns_true() {
-        let store = KeyStore::from_config(Some("sk-master".into()), &[]);
+        let store = KeyStore::from_config(Some(SecretString::from("sk-master".to_string())), &[]);
         assert!(store.is_master_key("sk-master"));
     }
 
     #[test]
     fn master_key_mismatch_returns_false() {
-        let store = KeyStore::from_config(Some("sk-master".into()), &[]);
+        let store = KeyStore::from_config(Some(SecretString::from("sk-master".to_string())), &[]);
         assert!(!store.is_master_key("sk-wrong"));
     }
 
@@ -103,6 +117,13 @@ mod tests {
     fn no_master_key_always_returns_false() {
         let store = KeyStore::from_config(None, &[]);
         assert!(!store.is_master_key("sk-anything"));
+    }
+
+    #[test]
+    fn master_key_near_miss_returns_false() {
+        // Same length, one character different — ensures ct_eq compares content, not just length.
+        let store = KeyStore::from_config(Some(SecretString::from("sk-master".to_string())), &[]);
+        assert!(!store.is_master_key("sk-mastex"));
     }
 
     #[test]

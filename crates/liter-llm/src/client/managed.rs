@@ -68,8 +68,16 @@ struct SyncService {
 impl SyncService {
     /// Clone the inner service out of the mutex, returning an owned mutable
     /// service that can be `.call()`-ed.
+    ///
+    /// If a previous call panicked while holding the lock, the mutex is
+    /// poisoned.  Recovery is safe here because the lock guards only the
+    /// `Clone::clone` step — the inner `BoxCloneService` state is unchanged
+    /// by a panic during cloning.
     fn clone_service(&self) -> tower::util::BoxCloneService<LlmRequest, LlmResponse, LiterLlmError> {
-        self.inner.lock().expect("ManagedClient service mutex poisoned").clone()
+        match self.inner.lock() {
+            Ok(guard) => guard.clone(),
+            Err(poisoned) => poisoned.into_inner().clone(),
+        }
     }
 }
 
@@ -622,5 +630,36 @@ mod tests {
             .build();
         let client = ManagedClient::new(config, None).expect("should build");
         assert!(!client.has_middleware());
+    }
+
+    /// Verify the poisoned-mutex recovery pattern used in `clone_service`.
+    ///
+    /// This documents and proves that `Err(PoisonError).into_inner()` safely
+    /// recovers the guarded value after a panic while holding the lock.
+    #[test]
+    fn poisoned_mutex_recovers_clone() {
+        use std::sync::Arc;
+        use std::sync::Mutex;
+        use std::thread;
+
+        let m = Arc::new(Mutex::new(String::from("inner")));
+        let m2 = Arc::clone(&m);
+
+        // Poison the mutex by panicking while holding the lock.
+        let _ = thread::spawn(move || {
+            let _guard = m2.lock().unwrap();
+            panic!("intentional panic to poison the mutex");
+        })
+        .join();
+
+        assert!(m.is_poisoned(), "mutex should be poisoned after thread panic");
+
+        // Mirror the recovery pattern used in `clone_service`.
+        let cloned = match m.lock() {
+            Ok(guard) => guard.clone(),
+            Err(poisoned) => poisoned.into_inner().clone(),
+        };
+
+        assert_eq!(cloned, "inner", "recovered value must match original");
     }
 }

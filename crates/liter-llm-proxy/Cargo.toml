@@ -35,6 +35,8 @@ opendal = { workspace = true }
 opentelemetry = { workspace = true, optional = true }
 rmcp = { workspace = true }
 schemars = { workspace = true }
+secrecy = { workspace = true }
+subtle = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true }

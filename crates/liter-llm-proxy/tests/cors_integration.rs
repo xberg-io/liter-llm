@@ -4,12 +4,104 @@ use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use tower::ServiceExt;
 
-#[tokio::test]
-async fn cors_allows_any_origin_by_default() {
-    let upstream = common::mock_upstream::MockUpstream::start(vec![]).await;
-    let proxy = common::test_proxy::TestProxy::new(&upstream.url);
+use liter_llm_proxy::config::ProxyConfig;
 
-    // Send a simple GET request with an Origin header to trigger CORS handling.
+// ---------------------------------------------------------------------------
+// Helper: build a proxy config with given cors_origins
+// ---------------------------------------------------------------------------
+
+fn config_with_cors(mock_url: &str, cors_origins: &[&str]) -> ProxyConfig {
+    let origins_toml = cors_origins
+        .iter()
+        .map(|o| format!(r#""{o}""#))
+        .collect::<Vec<_>>()
+        .join(", ");
+    ProxyConfig::from_toml_str(&format!(
+        r#"
+[server]
+cors_origins = [{origins_toml}]
+
+[general]
+master_key = "sk-master"
+
+[[models]]
+name = "test-model"
+provider_model = "openai/gpt-4o"
+api_key = "sk-upstream"
+base_url = "{mock_url}"
+"#
+    ))
+    .expect("cors config TOML")
+}
+
+// ---------------------------------------------------------------------------
+// F7 — empty cors_origins (new strict default) → no CORS headers
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn empty_cors_origins_produces_no_allow_origin_header() {
+    let upstream = common::mock_upstream::MockUpstream::start(vec![]).await;
+    let proxy = common::test_proxy::TestProxy::with_config(config_with_cors(&upstream.url, &[]));
+
+    let resp = proxy
+        .router()
+        .oneshot(
+            Request::builder()
+                .method("GET")
+                .uri("/health")
+                .header("origin", "https://evil.example.com")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(resp.status(), StatusCode::OK);
+    assert!(
+        resp.headers().get("access-control-allow-origin").is_none(),
+        "default (empty) cors_origins must not produce access-control-allow-origin"
+    );
+
+    upstream.shutdown();
+}
+
+#[tokio::test]
+async fn empty_cors_origins_preflight_returns_no_cors_headers() {
+    let upstream = common::mock_upstream::MockUpstream::start(vec![]).await;
+    let proxy = common::test_proxy::TestProxy::with_config(config_with_cors(&upstream.url, &[]));
+
+    let resp = proxy
+        .router()
+        .oneshot(
+            Request::builder()
+                .method("OPTIONS")
+                .uri("/v1/chat/completions")
+                .header("origin", "https://evil.example.com")
+                .header("access-control-request-method", "POST")
+                .header("access-control-request-headers", "authorization,content-type")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert!(
+        resp.headers().get("access-control-allow-origin").is_none(),
+        "empty cors_origins: no access-control-allow-origin on preflight"
+    );
+
+    upstream.shutdown();
+}
+
+// ---------------------------------------------------------------------------
+// F7 — wildcard cors_origins → allow-origin=* but NO Authorization header
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn wildcard_cors_allows_any_origin() {
+    let upstream = common::mock_upstream::MockUpstream::start(vec![]).await;
+    let proxy = common::test_proxy::TestProxy::with_config(config_with_cors(&upstream.url, &["*"]));
+
     let resp = proxy
         .router()
         .oneshot(
@@ -24,24 +116,24 @@ async fn cors_allows_any_origin_by_default() {
         .unwrap();
 
     assert_eq!(resp.status(), StatusCode::OK);
-
-    // The default config uses cors_origins = ["*"], so the server should echo
-    // the wildcard or the specific origin.
     let allow_origin = resp
         .headers()
         .get("access-control-allow-origin")
         .map(|v| v.to_str().unwrap_or(""));
-    assert!(allow_origin.is_some(), "expected access-control-allow-origin header");
+    assert!(
+        allow_origin.is_some(),
+        "cors_origins=[\"*\"] must set access-control-allow-origin"
+    );
 
     upstream.shutdown();
 }
 
 #[tokio::test]
-async fn cors_preflight_returns_headers() {
+async fn wildcard_cors_does_not_allow_authorization_header() {
     let upstream = common::mock_upstream::MockUpstream::start(vec![]).await;
-    let proxy = common::test_proxy::TestProxy::new(&upstream.url);
+    let proxy = common::test_proxy::TestProxy::with_config(config_with_cors(&upstream.url, &["*"]));
 
-    // Send an OPTIONS preflight request.
+    // An OPTIONS preflight requesting the Authorization header.
     let resp = proxy
         .router()
         .oneshot(
@@ -57,20 +149,51 @@ async fn cors_preflight_returns_headers() {
         .await
         .unwrap();
 
-    // Preflight should return 200 (or 204) with CORS headers.
-    let status = resp.status().as_u16();
-    assert!(
-        status == 200 || status == 204,
-        "expected 200 or 204 for preflight, got {status}"
-    );
+    let allowed_headers = resp
+        .headers()
+        .get("access-control-allow-headers")
+        .map(|v| v.to_str().unwrap_or("").to_ascii_lowercase())
+        .unwrap_or_default();
 
     assert!(
-        resp.headers().get("access-control-allow-origin").is_some(),
-        "missing access-control-allow-origin"
+        !allowed_headers.contains("authorization"),
+        "wildcard CORS must not allow the Authorization header; got: {allowed_headers}"
     );
-    assert!(
-        resp.headers().get("access-control-allow-methods").is_some(),
-        "missing access-control-allow-methods"
+
+    upstream.shutdown();
+}
+
+// ---------------------------------------------------------------------------
+// F7 — explicit cors_origins → echoes the specific origin
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn explicit_origin_is_echoed() {
+    let upstream = common::mock_upstream::MockUpstream::start(vec![]).await;
+    let proxy = common::test_proxy::TestProxy::with_config(config_with_cors(&upstream.url, &["https://example.com"]));
+
+    let resp = proxy
+        .router()
+        .oneshot(
+            Request::builder()
+                .method("GET")
+                .uri("/health")
+                .header("origin", "https://example.com")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(resp.status(), StatusCode::OK);
+    let allow_origin = resp
+        .headers()
+        .get("access-control-allow-origin")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+    assert_eq!(
+        allow_origin, "https://example.com",
+        "explicit cors_origins must echo the allowed origin"
     );
 
     upstream.shutdown();

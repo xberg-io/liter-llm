@@ -11,6 +11,7 @@ pub use server::ServerConfig;
 use std::collections::HashMap;
 use std::path::Path;
 
+use secrecy::SecretString;
 use serde::Deserialize;
 
 // ---------------------------------------------------------------------------
@@ -34,10 +35,12 @@ fn default_cache_backend() -> String {
 // ---------------------------------------------------------------------------
 
 /// General proxy behaviour: master key, timeouts, retries, feature flags.
-#[derive(Debug, Clone, Deserialize)]
+///
+/// Note: `master_key` is a [`SecretString`]; its `Debug` output is redacted.
+#[derive(Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct GeneralConfig {
-    pub master_key: Option<String>,
+    pub master_key: Option<SecretString>,
     #[serde(default = "default_timeout")]
     pub default_timeout_secs: u64,
     #[serde(default = "default_retries")]
@@ -126,9 +129,8 @@ pub struct CooldownConfig {
 /// Loaded from a `liter-llm-proxy.toml` file. After deserialization all
 /// `${VAR_NAME}` patterns in string values are replaced with the
 /// corresponding environment variable.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
-#[derive(Default)]
 pub struct ProxyConfig {
     #[serde(default)]
     pub server: ServerConfig,
@@ -236,6 +238,8 @@ impl ProxyConfig {
 
 #[cfg(test)]
 mod tests {
+    use secrecy::ExposeSecret;
+
     use super::*;
 
     // 1. Parse minimal config (empty string)
@@ -338,7 +342,10 @@ duration_secs = 60
         assert_eq!(config.server.cors_origins, vec!["https://example.com"]);
 
         // General
-        assert_eq!(config.general.master_key.as_deref(), Some("sk-master"));
+        assert_eq!(
+            config.general.master_key.as_ref().map(|s| s.expose_secret()),
+            Some("sk-master")
+        );
         assert_eq!(config.general.default_timeout_secs, 60);
         assert_eq!(config.general.max_retries, 5);
         assert!(config.general.enable_cost_tracking);
@@ -414,7 +421,10 @@ master_key = "${LITER_TEST_KEY}"
 "#;
         let config = ProxyConfig::from_toml_str(toml).unwrap();
         assert_eq!(config.server.host, "10.0.0.1");
-        assert_eq!(config.general.master_key.as_deref(), Some("sk-from-env"));
+        assert_eq!(
+            config.general.master_key.as_ref().map(|s| s.expose_secret()),
+            Some("sk-from-env")
+        );
 
         // SAFETY: cleaning up test-only env vars.
         unsafe {
@@ -475,7 +485,7 @@ unknown_option = true
         assert_eq!(config.server.port, 4000);
         assert_eq!(config.server.request_timeout_secs, 600);
         assert_eq!(config.server.body_limit_bytes, 10_485_760);
-        assert_eq!(config.server.cors_origins, vec!["*"]);
+        assert!(config.server.cors_origins.is_empty());
         assert_eq!(config.general.default_timeout_secs, 120);
         assert_eq!(config.general.max_retries, 3);
         assert!(!config.general.enable_cost_tracking);
