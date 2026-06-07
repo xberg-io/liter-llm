@@ -263,7 +263,7 @@ impl LiterLlmMcp {
     async fn list_models(
         &self,
         ctx: RequestContext<RoleServer>,
-        #[allow(unused_variables)] Parameters(_params): Parameters<params::EmptyParams>,
+        Parameters(_params): Parameters<params::EmptyParams>,
     ) -> Result<CallToolResult, rmcp::ErrorData> {
         // Any authenticated key may list models — just ensure auth ran.
         let _key_ctx = self.resolve_ctx(&ctx);
