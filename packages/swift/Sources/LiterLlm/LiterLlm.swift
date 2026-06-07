@@ -3,7 +3,6 @@
 
 import Foundation
 import RustBridge
-
 /// System message guiding model behavior for the entire conversation.
 public struct SystemMessage: Codable, Sendable, Hashable {
     /// Instructions or context that apply throughout the conversation.
@@ -31,6 +30,7 @@ internal extension SystemMessage {
         self.content = rb.content().toString()
         self.name = rb.name()?.toString()
     }
+
     func intoRust() throws -> RustBridge.SystemMessage {
         return RustBridge.SystemMessage(RustString(self.content), self.name.map(RustString.init))
     }
@@ -63,6 +63,7 @@ internal extension UserMessage {
         self.content = try JSONDecoder().decode(UserContent.self, from: ((rb.content().toString()).data(using: .utf8) ?? Data("null".utf8)))
         self.name = rb.name()?.toString()
     }
+
     func intoRust() throws -> RustBridge.UserMessage {
         return RustBridge.UserMessage(try self.content.intoRust(), self.name.map(RustString.init))
     }
@@ -95,6 +96,7 @@ internal extension ImageUrl {
         self.url = rb.url().toString()
         self.detail = rb.detail().flatMap { ImageDetail(rawValue: $0.toString()) }
     }
+
     func intoRust() throws -> RustBridge.ImageUrl {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -129,6 +131,7 @@ internal extension DocumentContent {
         self.data = rb.data().toString()
         self.mediaType = rb.mediaType().toString()
     }
+
     func intoRust() throws -> RustBridge.DocumentContent {
         return RustBridge.DocumentContent(RustString(self.data), RustString(self.mediaType))
     }
@@ -161,6 +164,7 @@ internal extension AudioContent {
         self.data = rb.data().toString()
         self.format = rb.format().toString()
     }
+
     func intoRust() throws -> RustBridge.AudioContent {
         return RustBridge.AudioContent(RustString(self.data), RustString(self.format))
     }
@@ -211,6 +215,7 @@ internal extension AssistantMessage {
         self.refusal = rb.refusal()?.toString()
         self.functionCall = try rb.functionCall().map { try FunctionCall($0) }
     }
+
     func intoRust() throws -> RustBridge.AssistantMessage {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -251,6 +256,7 @@ internal extension ToolMessage {
         self.toolCallId = rb.toolCallId().toString()
         self.name = rb.name()?.toString()
     }
+
     func intoRust() throws -> RustBridge.ToolMessage {
         return RustBridge.ToolMessage(RustString(self.content), RustString(self.toolCallId), self.name.map(RustString.init))
     }
@@ -283,6 +289,7 @@ internal extension DeveloperMessage {
         self.content = rb.content().toString()
         self.name = rb.name()?.toString()
     }
+
     func intoRust() throws -> RustBridge.DeveloperMessage {
         return RustBridge.DeveloperMessage(RustString(self.content), self.name.map(RustString.init))
     }
@@ -313,6 +320,7 @@ internal extension FunctionMessage {
         self.content = rb.content().toString()
         self.name = rb.name().toString()
     }
+
     func intoRust() throws -> RustBridge.FunctionMessage {
         return RustBridge.FunctionMessage(RustString(self.content), RustString(self.name))
     }
@@ -351,6 +359,7 @@ internal extension ToolCall {
         self.callType = ToolType(rawValue: rb.callType().toString()) ?? { fatalError("Unknown ToolType: \(rb.callType().toString())") }()
         self.function = try FunctionCall(rb.function())
     }
+
     func intoRust() throws -> RustBridge.ToolCall {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -376,6 +385,7 @@ internal extension FunctionCall {
         self.name = rb.name().toString()
         self.arguments = rb.arguments().toString()
     }
+
     func intoRust() throws -> RustBridge.FunctionCall {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -410,6 +420,7 @@ internal extension SpecificToolChoice {
         self.choiceType = ToolType(rawValue: rb.choiceType().toString()) ?? { fatalError("Unknown ToolType: \(rb.choiceType().toString())") }()
         self.function = try SpecificFunction(rb.function())
     }
+
     func intoRust() throws -> RustBridge.SpecificToolChoice {
         return RustBridge.SpecificToolChoice(try self.choiceType.intoRust(), try self.function.intoRust())
     }
@@ -436,6 +447,7 @@ internal extension SpecificFunction {
     init(_ rb: RustBridge.SpecificFunctionRef) throws {
         self.name = rb.name().toString()
     }
+
     func intoRust() throws -> RustBridge.SpecificFunction {
         return RustBridge.SpecificFunction(RustString(self.name))
     }
@@ -485,6 +497,7 @@ internal extension Usage {
         self.totalTokens = rb.totalTokens()
         self.promptTokensDetails = try rb.promptTokensDetails().map { try PromptTokensDetails($0) }
     }
+
     func intoRust() throws -> RustBridge.Usage {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -524,6 +537,7 @@ internal extension PromptTokensDetails {
         self.cachedTokens = rb.cachedTokens()
         self.audioTokens = rb.audioTokens()
     }
+
     func intoRust() throws -> RustBridge.PromptTokensDetails {
         return RustBridge.PromptTokensDetails(self.cachedTokens, self.audioTokens)
     }
@@ -553,6 +567,7 @@ internal extension StreamOptions {
     init(_ rb: RustBridge.StreamOptionsRef) throws {
         self.includeUsage = rb.includeUsage()
     }
+
     func intoRust() throws -> RustBridge.StreamOptions {
         return RustBridge.StreamOptions(self.includeUsage)
     }
@@ -622,6 +637,7 @@ internal extension ChatCompletionResponse {
         self.systemFingerprint = rb.systemFingerprint()?.toString()
         self.serviceTier = rb.serviceTier()?.toString()
     }
+
     func intoRust() throws -> RustBridge.ChatCompletionResponse {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -662,6 +678,7 @@ internal extension Choice {
         self.message = try AssistantMessage(rb.message())
         self.finishReason = rb.finishReason().flatMap { FinishReason(rawValue: $0.toString()) }
     }
+
     func intoRust() throws -> RustBridge.Choice {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -733,6 +750,7 @@ internal extension ChatCompletionChunk {
         self.systemFingerprint = rb.systemFingerprint()?.toString()
         self.serviceTier = rb.serviceTier()?.toString()
     }
+
     func intoRust() throws -> RustBridge.ChatCompletionChunk {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -773,6 +791,7 @@ internal extension StreamChoice {
         self.delta = try StreamDelta(rb.delta())
         self.finishReason = rb.finishReason().flatMap { FinishReason(rawValue: $0.toString()) }
     }
+
     func intoRust() throws -> RustBridge.StreamChoice {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -825,6 +844,7 @@ internal extension StreamDelta {
         self.functionCall = try rb.functionCall().map { try StreamFunctionCall($0) }
         self.refusal = rb.refusal()?.toString()
     }
+
     func intoRust() throws -> RustBridge.StreamDelta {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -871,6 +891,7 @@ internal extension StreamToolCall {
         self.callType = rb.callType().flatMap { ToolType(rawValue: $0.toString()) }
         self.function = try rb.function().map { try StreamFunctionCall($0) }
     }
+
     func intoRust() throws -> RustBridge.StreamToolCall {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -905,6 +926,7 @@ internal extension StreamFunctionCall {
         self.name = rb.name()?.toString()
         self.arguments = rb.arguments()?.toString()
     }
+
     func intoRust() throws -> RustBridge.StreamFunctionCall {
         return RustBridge.StreamFunctionCall(self.name.map(RustString.init), self.arguments.map(RustString.init))
     }
@@ -955,6 +977,7 @@ internal extension EmbeddingRequest {
         self.dimensions = rb.dimensions()
         self.user = rb.user()?.toString()
     }
+
     func intoRust() throws -> RustBridge.EmbeddingRequest {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -989,6 +1012,7 @@ internal extension EmbeddingResponse {
         self.model = rb.model().toString()
         self.usage = try rb.usage().map { try Usage($0) }
     }
+
     func intoRust() throws -> RustBridge.EmbeddingResponse {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -1019,6 +1043,7 @@ internal extension EmbeddingObject {
         self.embedding = Array(rb.embedding())
         self.index = rb.index()
     }
+
     func intoRust() throws -> RustBridge.EmbeddingObject {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -1089,6 +1114,7 @@ internal extension CreateImageRequest {
         self.responseFormat = rb.responseFormat()?.toString()
         self.user = rb.user()?.toString()
     }
+
     func intoRust() throws -> RustBridge.CreateImageRequest {
         return RustBridge.CreateImageRequest(RustString(self.prompt), self.model.map(RustString.init), self.n, self.size.map(RustString.init), self.quality.map(RustString.init), self.style.map(RustString.init), self.responseFormat.map(RustString.init), self.user.map(RustString.init))
     }
@@ -1121,6 +1147,7 @@ internal extension ImagesResponse {
         self.created = rb.created()
         self.data = try rb.data().map { try Image($0) }
     }
+
     func intoRust() throws -> RustBridge.ImagesResponse {
         let __data = RustVec<RustBridge.Image>()
         for __elem in self.data { __data.push(value: try __elem.intoRust()) }
@@ -1161,6 +1188,7 @@ internal extension Image {
         self.b64Json = rb.b64Json()?.toString()
         self.revisedPrompt = rb.revisedPrompt()?.toString()
     }
+
     func intoRust() throws -> RustBridge.Image {
         return RustBridge.Image(self.url.map(RustString.init), self.b64Json.map(RustString.init), self.revisedPrompt.map(RustString.init))
     }
@@ -1211,6 +1239,7 @@ internal extension CreateSpeechRequest {
         self.responseFormat = rb.responseFormat()?.toString()
         self.speed = rb.speed()
     }
+
     func intoRust() throws -> RustBridge.CreateSpeechRequest {
         return RustBridge.CreateSpeechRequest(RustString(self.model), RustString(self.input), RustString(self.voice), self.responseFormat.map(RustString.init), self.speed)
     }
@@ -1267,6 +1296,7 @@ internal extension CreateTranscriptionRequest {
         self.responseFormat = rb.responseFormat()?.toString()
         self.temperature = rb.temperature()
     }
+
     func intoRust() throws -> RustBridge.CreateTranscriptionRequest {
         return RustBridge.CreateTranscriptionRequest(RustString(self.model), RustString(self.file), self.language.map(RustString.init), self.prompt.map(RustString.init), self.responseFormat.map(RustString.init), self.temperature)
     }
@@ -1311,6 +1341,7 @@ internal extension TranscriptionResponse {
         self.duration = rb.duration()
         self.segments = try rb.segments()?.map { try TranscriptionSegment($0) }
     }
+
     func intoRust() throws -> RustBridge.TranscriptionResponse {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -1357,6 +1388,7 @@ internal extension TranscriptionSegment {
         self.end = rb.end()
         self.text = rb.text().toString()
     }
+
     func intoRust() throws -> RustBridge.TranscriptionSegment {
         return RustBridge.TranscriptionSegment(self.id, self.start, self.end, RustString(self.text))
     }
@@ -1389,6 +1421,7 @@ internal extension ModerationRequest {
         self.input = try JSONDecoder().decode(ModerationInput.self, from: ((rb.input().toString()).data(using: .utf8) ?? Data("null".utf8)))
         self.model = rb.model()?.toString()
     }
+
     func intoRust() throws -> RustBridge.ModerationRequest {
         return RustBridge.ModerationRequest(try self.input.intoRust(), self.model.map(RustString.init))
     }
@@ -1416,6 +1449,7 @@ internal extension ModerationResponse {
         self.model = rb.model().toString()
         self.results = try rb.results().map { try ModerationResult($0) }
     }
+
     func intoRust() throws -> RustBridge.ModerationResponse {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -1450,6 +1484,7 @@ internal extension ModerationResult {
         self.categories = try ModerationCategories(rb.categories())
         self.categoryScores = try ModerationCategoryScores(rb.categoryScores())
     }
+
     func intoRust() throws -> RustBridge.ModerationResult {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -1538,6 +1573,7 @@ internal extension ModerationCategories {
         self.harassmentThreatening = rb.harassmentThreatening()
         self.violence = rb.violence()
     }
+
     func intoRust() throws -> RustBridge.ModerationCategories {
         return RustBridge.ModerationCategories(self.sexual, self.hate, self.harassment, self.selfHarm, self.sexualMinors, self.hateThreatening, self.violenceGraphic, self.selfHarmIntent, self.selfHarmInstructions, self.harassmentThreatening, self.violence)
     }
@@ -1624,6 +1660,7 @@ internal extension ModerationCategoryScores {
         self.harassmentThreatening = rb.harassmentThreatening()
         self.violence = rb.violence()
     }
+
     func intoRust() throws -> RustBridge.ModerationCategoryScores {
         return RustBridge.ModerationCategoryScores(self.sexual, self.hate, self.harassment, self.selfHarm, self.sexualMinors, self.hateThreatening, self.violenceGraphic, self.selfHarmIntent, self.selfHarmInstructions, self.harassmentThreatening, self.violence)
     }
@@ -1674,6 +1711,7 @@ internal extension RerankRequest {
         self.topN = rb.topN()
         self.returnDocuments = rb.returnDocuments()
     }
+
     func intoRust() throws -> RustBridge.RerankRequest {
         let __documents = RustVec<RustBridge.RerankDocument>()
         for __elem in self.documents { __documents.push(value: try __elem.intoRust()) }
@@ -1711,6 +1749,7 @@ internal extension RerankResult {
         self.relevanceScore = rb.relevanceScore()
         self.document = try rb.document().map { try RerankResultDocument($0) }
     }
+
     func intoRust() throws -> RustBridge.RerankResult {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -1732,6 +1771,7 @@ internal extension RerankResultDocument {
     init(_ rb: RustBridge.RerankResultDocumentRef) throws {
         self.text = rb.text().toString()
     }
+
     func intoRust() throws -> RustBridge.RerankResultDocument {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -1784,6 +1824,7 @@ internal extension SearchRequest {
         self.searchDomainFilter = rb.searchDomainFilter()?.map { $0.as_str().toString() }
         self.country = rb.country()?.toString()
     }
+
     func intoRust() throws -> RustBridge.SearchRequest {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -1809,6 +1850,7 @@ internal extension SearchResponse {
         self.results = try rb.results().map { try SearchResult($0) }
         self.model = rb.model().toString()
     }
+
     func intoRust() throws -> RustBridge.SearchResponse {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -1842,6 +1884,7 @@ internal extension SearchResult {
         self.snippet = rb.snippet().toString()
         self.date = rb.date()?.toString()
     }
+
     func intoRust() throws -> RustBridge.SearchResult {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -1888,6 +1931,7 @@ internal extension OcrRequest {
         self.pages = rb.pages().map { Array($0) }
         self.includeImageBase64 = rb.includeImageBase64()
     }
+
     func intoRust() throws -> RustBridge.OcrRequest {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -1917,6 +1961,7 @@ internal extension OcrResponse {
         self.model = rb.model().toString()
         self.usage = try rb.usage().map { try Usage($0) }
     }
+
     func intoRust() throws -> RustBridge.OcrResponse {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -1950,6 +1995,7 @@ internal extension OcrPage {
         self.images = try rb.images()?.map { try OcrImage($0) }
         self.dimensions = try rb.dimensions().map { try PageDimensions($0) }
     }
+
     func intoRust() throws -> RustBridge.OcrPage {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -1979,6 +2025,7 @@ internal extension OcrImage {
         self.id = rb.id().toString()
         self.imageBase64 = rb.imageBase64()?.toString()
     }
+
     func intoRust() throws -> RustBridge.OcrImage {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -2004,6 +2051,7 @@ internal extension PageDimensions {
         self.width = rb.width()
         self.height = rb.height()
     }
+
     func intoRust() throws -> RustBridge.PageDimensions {
         return RustBridge.PageDimensions(self.width, self.height)
     }
@@ -2037,6 +2085,7 @@ internal extension ModelsListResponse {
         self.object = rb.object().toString()
         self.data = try rb.data().map { try ModelObject($0) }
     }
+
     func intoRust() throws -> RustBridge.ModelsListResponse {
         let __data = RustVec<RustBridge.ModelObject>()
         for __elem in self.data { __data.push(value: try __elem.intoRust()) }
@@ -2084,6 +2133,7 @@ internal extension ModelObject {
         self.created = rb.created()
         self.ownedBy = rb.ownedBy().toString()
     }
+
     func intoRust() throws -> RustBridge.ModelObject {
         return RustBridge.ModelObject(RustString(self.id), RustString(self.object), self.created, RustString(self.ownedBy))
     }
@@ -2122,6 +2172,7 @@ internal extension CreateFileRequest {
         self.purpose = FilePurpose(rawValue: rb.purpose().toString()) ?? { fatalError("Unknown FilePurpose: \(rb.purpose().toString())") }()
         self.filename = rb.filename()?.toString()
     }
+
     func intoRust() throws -> RustBridge.CreateFileRequest {
         return RustBridge.CreateFileRequest(RustString(self.file), try self.purpose.intoRust(), self.filename.map(RustString.init))
     }
@@ -2184,6 +2235,7 @@ internal extension FileObject {
         self.purpose = rb.purpose().toString()
         self.status = rb.status()?.toString()
     }
+
     func intoRust() throws -> RustBridge.FileObject {
         return RustBridge.FileObject(RustString(self.id), RustString(self.object), self.bytes, self.createdAt, RustString(self.filename), RustString(self.purpose), self.status.map(RustString.init))
     }
@@ -2222,6 +2274,7 @@ internal extension FileListResponse {
         self.data = try rb.data().map { try FileObject($0) }
         self.hasMore = rb.hasMore()
     }
+
     func intoRust() throws -> RustBridge.FileListResponse {
         let __data = RustVec<RustBridge.FileObject>()
         for __elem in self.data { __data.push(value: try __elem.intoRust()) }
@@ -2262,6 +2315,7 @@ internal extension FileListQuery {
         self.limit = rb.limit()
         self.after = rb.after()?.toString()
     }
+
     func intoRust() throws -> RustBridge.FileListQuery {
         return RustBridge.FileListQuery(self.purpose.map(RustString.init), self.limit, self.after.map(RustString.init))
     }
@@ -2300,6 +2354,7 @@ internal extension DeleteResponse {
         self.object = rb.object().toString()
         self.deleted = rb.deleted()
     }
+
     func intoRust() throws -> RustBridge.DeleteResponse {
         return RustBridge.DeleteResponse(RustString(self.id), RustString(self.object), self.deleted)
     }
@@ -2344,6 +2399,7 @@ internal extension BatchRequestCounts {
         self.completed = rb.completed()
         self.failed = rb.failed()
     }
+
     func intoRust() throws -> RustBridge.BatchRequestCounts {
         return RustBridge.BatchRequestCounts(self.total, self.completed, self.failed)
     }
@@ -2379,6 +2435,7 @@ internal extension BatchListQuery {
         self.limit = rb.limit()
         self.after = rb.after()?.toString()
     }
+
     func intoRust() throws -> RustBridge.BatchListQuery {
         return RustBridge.BatchListQuery(self.limit, self.after.map(RustString.init))
     }
@@ -2429,6 +2486,7 @@ internal extension ResponseUsage {
         self.outputTokens = rb.outputTokens()
         self.totalTokens = rb.totalTokens()
     }
+
     func intoRust() throws -> RustBridge.ResponseUsage {
         return RustBridge.ResponseUsage(self.inputTokens, self.outputTokens, self.totalTokens)
     }
@@ -2466,6 +2524,7 @@ internal extension CustomProviderConfig {
         self.authHeader = try JSONDecoder().decode(AuthHeaderFormat.self, from: ((rb.authHeader().toString()).data(using: .utf8) ?? Data("null".utf8)))
         self.modelPrefixes = rb.modelPrefixes().map { $0.as_str().toString() }
     }
+
     func intoRust() throws -> RustBridge.CustomProviderConfig {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -2499,6 +2558,7 @@ internal extension AuthConfig {
         self.authType = AuthType(rawValue: rb.authType().toString()) ?? { fatalError("Unknown AuthType: \(rb.authType().toString())") }()
         self.envVar = rb.envVar()?.toString()
     }
+
     func intoRust() throws -> RustBridge.AuthConfig {
         let data = try JSONEncoder().encode(self)
         let json = String(data: data, encoding: .utf8) ?? "{}"
@@ -2527,8 +2587,8 @@ public enum Message: Codable, Sendable, Hashable {
 
     private enum CodingKeys: String, CodingKey {
         case role
-        case field0 = "_0"
-    }
+
+        case field0 = "_0"    }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -2561,21 +2621,27 @@ public enum Message: Codable, Sendable, Hashable {
         case .system(let field0):
             try container.encode("system", forKey: .role)
             try container.encode(field0, forKey: .field0)
+
         case .user(let field0):
             try container.encode("user", forKey: .role)
             try container.encode(field0, forKey: .field0)
+
         case .assistant(let field0):
             try container.encode("assistant", forKey: .role)
             try container.encode(field0, forKey: .field0)
+
         case .tool(let field0):
             try container.encode("tool", forKey: .role)
             try container.encode(field0, forKey: .field0)
+
         case .developer(let field0):
             try container.encode("developer", forKey: .role)
             try container.encode(field0, forKey: .field0)
+
         case .function(let field0):
             try container.encode("function", forKey: .role)
             try container.encode(field0, forKey: .field0)
+
         }
     }
 }
@@ -2638,11 +2704,11 @@ public enum ContentPart: Codable, Sendable, Hashable {
 
     private enum CodingKeys: String, CodingKey {
         case type
+
         case document
         case imageUrl = "image_url"
         case inputAudio = "input_audio"
-        case text
-    }
+        case text    }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -2671,15 +2737,19 @@ public enum ContentPart: Codable, Sendable, Hashable {
         case .text(let text):
             try container.encode("text", forKey: .type)
             try container.encode(text, forKey: .text)
+
         case .imageUrl(let imageUrl):
             try container.encode("image_url", forKey: .type)
             try container.encode(imageUrl, forKey: .imageUrl)
+
         case .document(let document):
             try container.encode("document", forKey: .type)
             try container.encode(document, forKey: .document)
+
         case .inputAudio(let inputAudio):
             try container.encode("input_audio", forKey: .type)
             try container.encode(inputAudio, forKey: .inputAudio)
+
         }
     }
 }
@@ -2997,10 +3067,10 @@ public enum OcrDocument: Codable, Sendable, Hashable {
 
     private enum CodingKeys: String, CodingKey {
         case type
+
         case data
         case mediaType = "media_type"
-        case url
-    }
+        case url    }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -3025,10 +3095,12 @@ public enum OcrDocument: Codable, Sendable, Hashable {
         case .url(let url):
             try container.encode("document_url", forKey: .type)
             try container.encode(url, forKey: .url)
+
         case .base64(let data, let mediaType):
             try container.encode("base64", forKey: .type)
             try container.encode(data, forKey: .data)
             try container.encode(mediaType, forKey: .mediaType)
+
         }
     }
 }
@@ -3148,9 +3220,9 @@ public enum CacheBackend: Codable, Sendable, Hashable {
 
     private enum CodingKeys: String, CodingKey {
         case type
+
         case config
-        case scheme
-    }
+        case scheme    }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -3178,6 +3250,7 @@ public enum CacheBackend: Codable, Sendable, Hashable {
             try container.encode("open_dal", forKey: .type)
             try container.encode(scheme, forKey: .scheme)
             try container.encode(config, forKey: .config)
+
         }
     }
 }
@@ -3222,6 +3295,12 @@ public enum LiterLlmError: Swift.Error {
     /// This should never surface in normal operation — if it does, it
     /// indicates a bug in the library.
     case internalError(message: String)
+    /// An outbound request was blocked by the active `OutboundPolicy`.
+    ///
+    /// Returned when `register_custom_provider` is called with a `base_url` that
+    /// violates the policy (e.g. a private-range IP under `DenyPrivate`), or when
+    /// the per-connection DNS resolver detects a forbidden address at connect time.
+    case outboundForbidden(message: String, url: String, reason: String)
 }
 
 extension LiterLlmError {
@@ -3243,6 +3322,7 @@ extension LiterLlmError {
         case .budgetExceeded(message: _, model: _): return 0
         case .hookRejected(message: _): return 0
         case .internalError(message: _): return 0
+        case .outboundForbidden(message: _, url: _, reason: _): return 0
         }
     }
     public var isTransient: Bool {
@@ -3263,6 +3343,7 @@ extension LiterLlmError {
         case .budgetExceeded(message: _, model: _): return false
         case .hookRejected(message: _): return false
         case .internalError(message: _): return false
+        case .outboundForbidden(message: _, url: _, reason: _): return false
         }
     }
     public var errorType: String {
@@ -3283,6 +3364,7 @@ extension LiterLlmError {
         case .budgetExceeded(message: _, model: _): return ""
         case .hookRejected(message: _): return ""
         case .internalError(message: _): return ""
+        case .outboundForbidden(message: _, url: _, reason: _): return ""
         }
     }
 }
@@ -3393,7 +3475,6 @@ public final class DefaultClient {
 // swift-bridge opaque types are not automatically Sendable.
 // Captured by Task.detached in streaming methods — Rust type is Send + Sync.
 extension RustBridge.DefaultClient: @unchecked Sendable {}
-// MARK: - Sendable conformance for DefaultClientChatStreamStreamHandle
 // swift-bridge opaque types are not automatically Sendable.  The Rust
 // side uses Mutex<stream> + tokio Runtime — both Send + Sync — so
 // @unchecked is correct: thread-safety is enforced by Rust.
@@ -3437,12 +3518,10 @@ public func registerCustomProvider(_ configJson: String) throws -> Void {
     let config = try customProviderConfigFromJson(configJson)
     return try registerCustomProvider(config: config)
 }
-
-public func countRequestTokens(_ model: String, _ configJson: String) throws -> UInt {
-    let config = try chatCompletionRequestFromJson(configJson)
-    return try countRequestTokens(model: model, req: config)
+public func countRequestTokens(_ model: String, _ reqJson: String) throws -> UInt {
+    let req = try chatCompletionRequestFromJson(reqJson)
+    return try countRequestTokens(model: model, req: req)
 }
-
 // MARK: - From-JSON Helpers
 // Public helpers that decode JSON into first-class Swift types.
 // First-class struct types (Codable) use JSONDecoder directly.
@@ -3452,480 +3531,381 @@ public func systemMessageFromJson(_ json: String) throws -> SystemMessage {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(SystemMessage.self, from: data)
 }
-
 public func userMessageFromJson(_ json: String) throws -> UserMessage {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(UserMessage.self, from: data)
 }
-
 public func imageUrlFromJson(_ json: String) throws -> ImageUrl {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ImageUrl.self, from: data)
 }
-
 public func documentContentFromJson(_ json: String) throws -> DocumentContent {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(DocumentContent.self, from: data)
 }
-
 public func audioContentFromJson(_ json: String) throws -> AudioContent {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(AudioContent.self, from: data)
 }
-
 public func assistantMessageFromJson(_ json: String) throws -> AssistantMessage {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(AssistantMessage.self, from: data)
 }
-
 public func toolMessageFromJson(_ json: String) throws -> ToolMessage {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ToolMessage.self, from: data)
 }
-
 public func developerMessageFromJson(_ json: String) throws -> DeveloperMessage {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(DeveloperMessage.self, from: data)
 }
-
 public func functionMessageFromJson(_ json: String) throws -> FunctionMessage {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(FunctionMessage.self, from: data)
 }
-
 public func chatCompletionToolFromJson(_ json: String) throws -> ChatCompletionTool {
     return try RustBridge.chatCompletionToolFromJson(json)
 }
-
 public func functionDefinitionFromJson(_ json: String) throws -> FunctionDefinition {
     return try RustBridge.functionDefinitionFromJson(json)
 }
-
 public func toolCallFromJson(_ json: String) throws -> ToolCall {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ToolCall.self, from: data)
 }
-
 public func functionCallFromJson(_ json: String) throws -> FunctionCall {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(FunctionCall.self, from: data)
 }
-
 public func specificToolChoiceFromJson(_ json: String) throws -> SpecificToolChoice {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(SpecificToolChoice.self, from: data)
 }
-
 public func specificFunctionFromJson(_ json: String) throws -> SpecificFunction {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(SpecificFunction.self, from: data)
 }
-
 public func jsonSchemaFormatFromJson(_ json: String) throws -> JsonSchemaFormat {
     return try RustBridge.jsonSchemaFormatFromJson(json)
 }
-
 public func usageFromJson(_ json: String) throws -> Usage {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(Usage.self, from: data)
 }
-
 public func promptTokensDetailsFromJson(_ json: String) throws -> PromptTokensDetails {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(PromptTokensDetails.self, from: data)
 }
-
 public func chatCompletionRequestFromJson(_ json: String) throws -> ChatCompletionRequest {
     return try RustBridge.chatCompletionRequestFromJson(json)
 }
-
 public func streamOptionsFromJson(_ json: String) throws -> StreamOptions {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(StreamOptions.self, from: data)
 }
-
 public func chatCompletionResponseFromJson(_ json: String) throws -> ChatCompletionResponse {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ChatCompletionResponse.self, from: data)
 }
-
 public func choiceFromJson(_ json: String) throws -> Choice {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(Choice.self, from: data)
 }
-
 public func chatCompletionChunkFromJson(_ json: String) throws -> ChatCompletionChunk {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ChatCompletionChunk.self, from: data)
 }
-
 public func streamChoiceFromJson(_ json: String) throws -> StreamChoice {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(StreamChoice.self, from: data)
 }
-
 public func streamDeltaFromJson(_ json: String) throws -> StreamDelta {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(StreamDelta.self, from: data)
 }
-
 public func streamToolCallFromJson(_ json: String) throws -> StreamToolCall {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(StreamToolCall.self, from: data)
 }
-
 public func streamFunctionCallFromJson(_ json: String) throws -> StreamFunctionCall {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(StreamFunctionCall.self, from: data)
 }
-
 public func embeddingRequestFromJson(_ json: String) throws -> EmbeddingRequest {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(EmbeddingRequest.self, from: data)
 }
-
 public func embeddingResponseFromJson(_ json: String) throws -> EmbeddingResponse {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(EmbeddingResponse.self, from: data)
 }
-
 public func embeddingObjectFromJson(_ json: String) throws -> EmbeddingObject {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(EmbeddingObject.self, from: data)
 }
-
 public func createImageRequestFromJson(_ json: String) throws -> CreateImageRequest {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(CreateImageRequest.self, from: data)
 }
-
 public func imagesResponseFromJson(_ json: String) throws -> ImagesResponse {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ImagesResponse.self, from: data)
 }
-
 public func imageFromJson(_ json: String) throws -> Image {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(Image.self, from: data)
 }
-
 public func createSpeechRequestFromJson(_ json: String) throws -> CreateSpeechRequest {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(CreateSpeechRequest.self, from: data)
 }
-
 public func createTranscriptionRequestFromJson(_ json: String) throws -> CreateTranscriptionRequest {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(CreateTranscriptionRequest.self, from: data)
 }
-
 public func transcriptionResponseFromJson(_ json: String) throws -> TranscriptionResponse {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(TranscriptionResponse.self, from: data)
 }
-
 public func transcriptionSegmentFromJson(_ json: String) throws -> TranscriptionSegment {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(TranscriptionSegment.self, from: data)
 }
-
 public func moderationRequestFromJson(_ json: String) throws -> ModerationRequest {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ModerationRequest.self, from: data)
 }
-
 public func moderationResponseFromJson(_ json: String) throws -> ModerationResponse {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ModerationResponse.self, from: data)
 }
-
 public func moderationResultFromJson(_ json: String) throws -> ModerationResult {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ModerationResult.self, from: data)
 }
-
 public func moderationCategoriesFromJson(_ json: String) throws -> ModerationCategories {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ModerationCategories.self, from: data)
 }
-
 public func moderationCategoryScoresFromJson(_ json: String) throws -> ModerationCategoryScores {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ModerationCategoryScores.self, from: data)
 }
-
 public func rerankRequestFromJson(_ json: String) throws -> RerankRequest {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(RerankRequest.self, from: data)
 }
-
 public func rerankResponseFromJson(_ json: String) throws -> RerankResponse {
     return try RustBridge.rerankResponseFromJson(json)
 }
-
 public func rerankResultFromJson(_ json: String) throws -> RerankResult {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(RerankResult.self, from: data)
 }
-
 public func rerankResultDocumentFromJson(_ json: String) throws -> RerankResultDocument {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(RerankResultDocument.self, from: data)
 }
-
 public func searchRequestFromJson(_ json: String) throws -> SearchRequest {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(SearchRequest.self, from: data)
 }
-
 public func searchResponseFromJson(_ json: String) throws -> SearchResponse {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(SearchResponse.self, from: data)
 }
-
 public func searchResultFromJson(_ json: String) throws -> SearchResult {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(SearchResult.self, from: data)
 }
-
 public func ocrRequestFromJson(_ json: String) throws -> OcrRequest {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(OcrRequest.self, from: data)
 }
-
 public func ocrResponseFromJson(_ json: String) throws -> OcrResponse {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(OcrResponse.self, from: data)
 }
-
 public func ocrPageFromJson(_ json: String) throws -> OcrPage {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(OcrPage.self, from: data)
 }
-
 public func ocrImageFromJson(_ json: String) throws -> OcrImage {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(OcrImage.self, from: data)
 }
-
 public func pageDimensionsFromJson(_ json: String) throws -> PageDimensions {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(PageDimensions.self, from: data)
 }
-
 public func modelsListResponseFromJson(_ json: String) throws -> ModelsListResponse {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ModelsListResponse.self, from: data)
 }
-
 public func modelObjectFromJson(_ json: String) throws -> ModelObject {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ModelObject.self, from: data)
 }
-
 public func createFileRequestFromJson(_ json: String) throws -> CreateFileRequest {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(CreateFileRequest.self, from: data)
 }
-
 public func fileObjectFromJson(_ json: String) throws -> FileObject {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(FileObject.self, from: data)
 }
-
 public func fileListResponseFromJson(_ json: String) throws -> FileListResponse {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(FileListResponse.self, from: data)
 }
-
 public func fileListQueryFromJson(_ json: String) throws -> FileListQuery {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(FileListQuery.self, from: data)
 }
-
 public func deleteResponseFromJson(_ json: String) throws -> DeleteResponse {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(DeleteResponse.self, from: data)
 }
-
 public func createBatchRequestFromJson(_ json: String) throws -> CreateBatchRequest {
     return try RustBridge.createBatchRequestFromJson(json)
 }
-
 public func batchObjectFromJson(_ json: String) throws -> BatchObject {
     return try RustBridge.batchObjectFromJson(json)
 }
-
 public func batchRequestCountsFromJson(_ json: String) throws -> BatchRequestCounts {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(BatchRequestCounts.self, from: data)
 }
-
 public func batchListResponseFromJson(_ json: String) throws -> BatchListResponse {
     return try RustBridge.batchListResponseFromJson(json)
 }
-
 public func batchListQueryFromJson(_ json: String) throws -> BatchListQuery {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(BatchListQuery.self, from: data)
 }
-
 public func createResponseRequestFromJson(_ json: String) throws -> CreateResponseRequest {
     return try RustBridge.createResponseRequestFromJson(json)
 }
-
 public func responseToolFromJson(_ json: String) throws -> ResponseTool {
     return try RustBridge.responseToolFromJson(json)
 }
-
 public func responseObjectFromJson(_ json: String) throws -> ResponseObject {
     return try RustBridge.responseObjectFromJson(json)
 }
-
 public func responseOutputItemFromJson(_ json: String) throws -> ResponseOutputItem {
     return try RustBridge.responseOutputItemFromJson(json)
 }
-
 public func responseUsageFromJson(_ json: String) throws -> ResponseUsage {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ResponseUsage.self, from: data)
 }
-
 public func customProviderConfigFromJson(_ json: String) throws -> CustomProviderConfig {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(CustomProviderConfig.self, from: data)
 }
-
 public func providerConfigFromJson(_ json: String) throws -> ProviderConfig {
     return try RustBridge.providerConfigFromJson(json)
 }
-
 public func authConfigFromJson(_ json: String) throws -> AuthConfig {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(AuthConfig.self, from: data)
 }
-
 public func budgetConfigFromJson(_ json: String) throws -> BudgetConfig {
     return try RustBridge.budgetConfigFromJson(json)
 }
-
 public func cacheConfigFromJson(_ json: String) throws -> CacheConfig {
     return try RustBridge.cacheConfigFromJson(json)
 }
-
 public func rateLimitConfigFromJson(_ json: String) throws -> RateLimitConfig {
     return try RustBridge.rateLimitConfigFromJson(json)
 }
-
 public func messageFromJson(_ json: String) throws -> Message {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(Message.self, from: data)
 }
-
 public func userContentFromJson(_ json: String) throws -> UserContent {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(UserContent.self, from: data)
 }
-
 public func contentPartFromJson(_ json: String) throws -> ContentPart {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ContentPart.self, from: data)
 }
-
 public func imageDetailFromJson(_ json: String) throws -> ImageDetail {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ImageDetail.self, from: data)
 }
-
 public func toolTypeFromJson(_ json: String) throws -> ToolType {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ToolType.self, from: data)
 }
-
 public func toolChoiceFromJson(_ json: String) throws -> ToolChoice {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ToolChoice.self, from: data)
 }
-
 public func toolChoiceModeFromJson(_ json: String) throws -> ToolChoiceMode {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ToolChoiceMode.self, from: data)
 }
-
 public func responseFormatFromJson(_ json: String) throws -> ResponseFormat {
     return try RustBridge.responseFormatFromJson(json)
 }
-
 public func stopSequenceFromJson(_ json: String) throws -> StopSequence {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(StopSequence.self, from: data)
 }
-
 public func finishReasonFromJson(_ json: String) throws -> FinishReason {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(FinishReason.self, from: data)
 }
-
 public func reasoningEffortFromJson(_ json: String) throws -> ReasoningEffort {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ReasoningEffort.self, from: data)
 }
-
 public func embeddingFormatFromJson(_ json: String) throws -> EmbeddingFormat {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(EmbeddingFormat.self, from: data)
 }
-
 public func embeddingInputFromJson(_ json: String) throws -> EmbeddingInput {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(EmbeddingInput.self, from: data)
 }
-
 public func moderationInputFromJson(_ json: String) throws -> ModerationInput {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(ModerationInput.self, from: data)
 }
-
 public func rerankDocumentFromJson(_ json: String) throws -> RerankDocument {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(RerankDocument.self, from: data)
 }
-
 public func ocrDocumentFromJson(_ json: String) throws -> OcrDocument {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(OcrDocument.self, from: data)
 }
-
 public func filePurposeFromJson(_ json: String) throws -> FilePurpose {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(FilePurpose.self, from: data)
 }
-
 public func batchStatusFromJson(_ json: String) throws -> BatchStatus {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(BatchStatus.self, from: data)
 }
-
 public func authHeaderFormatFromJson(_ json: String) throws -> AuthHeaderFormat {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(AuthHeaderFormat.self, from: data)
 }
-
 public func authTypeFromJson(_ json: String) throws -> AuthType {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(AuthType.self, from: data)
 }
-
 public func enforcementFromJson(_ json: String) throws -> Enforcement {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(Enforcement.self, from: data)
 }
-
 public func cacheBackendFromJson(_ json: String) throws -> CacheBackend {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(CacheBackend.self, from: data)
 }
-
 // MARK: - Free-function Forwarders
 // Re-export every public free function on the source Rust crate as a
 // top-level `public func` on the host module so consumers do not need to
@@ -3943,10 +3923,12 @@ public func cacheBackendFromJson(_ json: String) throws -> CacheBackend {
 /// Returns [`LiterLlmError`] if the underlying HTTP client cannot be
 /// constructed, or if the resolved provider configuration is invalid.
 public func createClient(apiKey: String, baseUrl: String? = nil, timeoutSecs: UInt64? = nil, maxRetries: UInt32? = nil, modelHint: String? = nil) throws -> DefaultClient {
-    let _rb = try RustBridge.createClient(apiKey, baseUrl, timeoutSecs, maxRetries, modelHint)
+        let _rb_apiKey = RustString(apiKey)
+        let _rb_baseUrl = baseUrl.map { RustString($0) }
+        let _rb_modelHint = modelHint.map { RustString($0) }
+    let _rb = try RustBridge.createClient(_rb_apiKey, _rb_baseUrl, timeoutSecs, maxRetries, _rb_modelHint)
     return DefaultClient(_rb)
 }
-
 /// Create a new LLM client from a JSON string.
 ///
 /// The JSON object accepts the same fields as `liter-llm.toml` (snake_case).
@@ -3956,10 +3938,10 @@ public func createClient(apiKey: String, baseUrl: String? = nil, timeoutSecs: UI
 /// Returns [`LiterLlmError::BadRequest`] if `json` is not valid JSON or
 /// contains unknown fields.
 public func createClientFromJson(json: String) throws -> DefaultClient {
-    let _rb = try RustBridge.createClientFromJson(json)
+        let _rb_json = RustString(json)
+    let _rb = try RustBridge.createClientFromJson(_rb_json)
     return DefaultClient(_rb)
 }
-
 /// Register a custom provider in the global runtime registry.
 ///
 /// The provider will be checked **before** all built-in providers during model
@@ -3970,10 +3952,9 @@ public func createClientFromJson(json: String) throws -> DefaultClient {
 /// Returns an error if the config is invalid (empty name, empty base_url, or
 /// no model prefixes).
 public func registerCustomProvider(config: CustomProviderConfig) throws {
-    let _rb_config = try config.intoRust()
+        let _rb_config = try config.intoRust()
     return try RustBridge.registerCustomProvider(_rb_config)
 }
-
 /// Remove a previously registered custom provider by name.
 ///
 /// Returns `true` if a provider with the given name was found and removed,
@@ -3982,10 +3963,10 @@ public func registerCustomProvider(config: CustomProviderConfig) throws {
 /// # Errors
 ///
 /// Returns an error only if the internal lock is poisoned.
-public func unregisterCustomProvider(name: String) throws -> Bool {
-    return try RustBridge.unregisterCustomProvider(name)
+public func unregisterCustomProvider(name: String) throws -> Int {
+        let _rb_name = RustString(name)
+    return try RustBridge.unregisterCustomProvider(_rb_name)
 }
-
 /// Return the set of complex provider names.
 ///
 /// Complex providers require custom auth/routing logic beyond simple bearer
@@ -3995,7 +3976,6 @@ public func unregisterCustomProvider(name: String) throws -> Bool {
 public func complexProviderNames() throws -> [String] {
     return try RustBridge.complexProviderNames().map { $0.as_str().toString() }
 }
-
 /// Calculate the estimated cost of a completion given a model name and token
 /// counts.
 ///
@@ -4015,12 +3995,12 @@ public func complexProviderNames() throws -> [String] {
 /// // 1000 * 0.0000025 + 500 * 0.00001 = 0.0025 + 0.005 = 0.0075
 /// assert!((usd - 0.0075).abs() < 1e-9);
 /// ```
-public func completionCost(model: String, promptTokens: UInt64, completionTokens: UInt64) -> Double? {
-    let _rb_json = RustBridge.completionCost(model, promptTokens, completionTokens).toString()
+public func completionCost(model: String, promptTokens: UInt64, completionTokens: UInt64) -> Int? {
+        let _rb_model = RustString(model)
+    let _rb_json = RustBridge.completionCost(_rb_model, promptTokens, completionTokens).toString()
     let _rb_data = _rb_json.data(using: .utf8) ?? Data()
-    return (try? JSONDecoder().decode(Double?.self, from: _rb_data)) ?? nil
+    return (try? JSONDecoder().decode(Int?.self, from: _rb_data)) ?? nil
 }
-
 /// Calculate the estimated cost of a completion, accounting for cached
 /// (cache-hit) prompt tokens billed at the provider's discounted rate.
 ///
@@ -4033,12 +4013,12 @@ public func completionCost(model: String, promptTokens: UInt64, completionTokens
 ///
 /// Returns `None` if the model is not present in the embedded pricing
 /// registry, mirroring [`completion_cost`].
-public func completionCostWithCache(model: String, promptTokens: UInt64, cachedTokens: UInt64, completionTokens: UInt64) -> Double? {
-    let _rb_json = RustBridge.completionCostWithCache(model, promptTokens, cachedTokens, completionTokens).toString()
+public func completionCostWithCache(model: String, promptTokens: UInt64, cachedTokens: UInt64, completionTokens: UInt64) -> Int? {
+        let _rb_model = RustString(model)
+    let _rb_json = RustBridge.completionCostWithCache(_rb_model, promptTokens, cachedTokens, completionTokens).toString()
     let _rb_data = _rb_json.data(using: .utf8) ?? Data()
-    return (try? JSONDecoder().decode(Double?.self, from: _rb_data)) ?? nil
+    return (try? JSONDecoder().decode(Int?.self, from: _rb_data)) ?? nil
 }
-
 /// Count tokens in a text string using the tokenizer for the given model.
 ///
 /// The tokenizer is resolved from the model name prefix (e.g. `"gpt-4o"` maps
@@ -4049,10 +4029,11 @@ public func completionCostWithCache(model: String, promptTokens: UInt64, cachedT
 ///
 /// Returns [`LiterLlmError::BadRequest`] if the tokenizer cannot be loaded
 /// (e.g. network failure on first use) or if tokenization itself fails.
-public func countTokens(model: String, text: String) throws -> UInt {
-    return try RustBridge.countTokens(model, text)
+public func countTokens(model: String, text: String) throws -> Int {
+        let _rb_model = RustString(model)
+        let _rb_text = RustString(text)
+    return try RustBridge.countTokens(_rb_model, _rb_text)
 }
-
 /// Count tokens for a full [`ChatCompletionRequest`].
 ///
 /// Sums tokens across all message text contents plus a per-message overhead
@@ -4064,10 +4045,10 @@ public func countTokens(model: String, text: String) throws -> UInt {
 ///
 /// Returns [`LiterLlmError::BadRequest`] if the tokenizer cannot be loaded or
 /// if tokenization fails for any message.
-public func countRequestTokens(model: String, req: ChatCompletionRequest) throws -> UInt {
-    return try RustBridge.countRequestTokens(model, req)
+public func countRequestTokens(model: String, req: ChatCompletionRequest) throws -> Int {
+        let _rb_model = RustString(model)
+    return try RustBridge.countRequestTokens(_rb_model, req)
 }
-
 /// Install the `ring` crypto provider as the rustls process default, idempotently.
 ///
 /// rustls 0.23+ removed the implicit default provider. This function installs
@@ -4087,7 +4068,6 @@ public func countRequestTokens(model: String, req: ChatCompletionRequest) throws
 public func ensureCryptoProvider() {
     return RustBridge.ensureCryptoProvider()
 }
-
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.SystemMessage: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.

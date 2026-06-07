@@ -101,13 +101,13 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 tokenizers = { workspace = true, optional = true }
-url = { workspace = true }
 tokio = { workspace = true, features = ["time", "rt", "macros"], optional = true }
 toml = { workspace = true }
 tower = { workspace = true, optional = true }
 tower-http = { workspace = true, optional = true }
 tracing = { workspace = true, optional = true }
 tracing-opentelemetry = { workspace = true, optional = true }
+url = { workspace = true }
 
 # Non-Windows: use rustls + ring (avoids aws-lc-sys, the only provider bundled by default on Linux/macOS).
 # The workspace reqwest base declares TLS-agnostic features; we layer the TLS provider here.

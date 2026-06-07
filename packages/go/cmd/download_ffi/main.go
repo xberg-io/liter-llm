@@ -31,8 +31,8 @@ func main() {
 }
 
 func run() error {
-	// Determine cache and library paths
-	cacheBase, libPath, err := determinePaths()
+	// Determine download cache and library paths
+	cacheBase, libPath, bindingLibDir, err := determinePaths()
 	if err != nil {
 		return err
 	}
@@ -48,10 +48,16 @@ func run() error {
 		return fmt.Errorf("failed to download FFI library: %w", err)
 	}
 
+	// Copy library from cache to binding package directory so that cgo LDFLAGS
+	// can find it via ${SRCDIR}/.lib/ whether in module cache or vendored.
+	if err := copyLibraryToBindingPackage(cacheBase, bindingLibDir); err != nil {
+		return fmt.Errorf("failed to copy library to binding package: %w", err)
+	}
+
 	return nil
 }
 
-func determinePaths() (string, string, error) {
+func determinePaths() (string, string, string, error) {
 	goos := runtime.GOOS
 	goarch := runtime.GOARCH
 
@@ -62,17 +68,21 @@ func determinePaths() (string, string, error) {
 	}
 
 	libName := "liter_llm_ffi"
-	// Use the current working directory as the module root (where this script is run from)
-	// and place libraries in .lib/{os}-{arch}/
+	// go generate changes to the module directory before running directives.
+	// cwd is the module's root (binding.go is at this level).
 	moduleRoot, err := os.Getwd()
 	if err != nil {
-		return "", "", fmt.Errorf("cannot determine module root: %w", err)
+		return "", "", "", fmt.Errorf("cannot determine module root: %w", err)
 	}
 
-	libDir := filepath.Join(moduleRoot, ".lib", fmt.Sprintf("%s-%s", osName, goarch))
+	platformDir := fmt.Sprintf("%s-%s", osName, goarch)
+	libDir := filepath.Join(moduleRoot, ".lib", platformDir)
 	libPath := filepath.Join(libDir, libFilename(libName, goos))
 
-	return libDir, libPath, nil
+	// Binding package directory is the same as module root (where binding.go lives).
+	bindingLibDir := filepath.Join(moduleRoot, ".lib", platformDir)
+
+	return libDir, libPath, bindingLibDir, nil
 }
 
 func libFilename(libName, goos string) string {
@@ -110,9 +120,9 @@ func downloadAndExtractLibrary(cacheDir string) error {
 		}
 	}
 
-	// Clean version for asset name
+	// Clean version for the download URL path; asset name itself is unversioned.
 	version := strings.TrimPrefix(moduleVersion, "v")
-	assetName := fmt.Sprintf("%s-go-v%s-%s-%s.tar.gz", assetPrefix, version, osName, archName)
+	assetName := fmt.Sprintf("%s-go-%s-%s.tar.gz", assetPrefix, osName, archName)
 	downloadURL := fmt.Sprintf("%s/releases/download/v%s/%s", repoURL, version, assetName)
 
 	// Create cache directory
@@ -177,6 +187,47 @@ func extractTarGz(src io.Reader, dstDir string) error {
 			if err := os.MkdirAll(targetPath, os.FileMode(header.Mode)); err != nil {
 				return err
 			}
+		}
+	}
+
+	return nil
+}
+
+func copyLibraryToBindingPackage(srcDir, dstDir string) error {
+	// Create destination directory
+	if err := os.MkdirAll(dstDir, 0755); err != nil {
+		return fmt.Errorf("mkdir %s: %w", dstDir, err)
+	}
+
+	// List files in source directory
+	entries, err := os.ReadDir(srcDir)
+	if err != nil {
+		return fmt.Errorf("read directory %s: %w", srcDir, err)
+	}
+
+	// Copy each library file
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		srcPath := filepath.Join(srcDir, entry.Name())
+		dstPath := filepath.Join(dstDir, entry.Name())
+
+		// Copy file
+		src, err := os.Open(srcPath)
+		if err != nil {
+			return fmt.Errorf("open %s: %w", srcPath, err)
+		}
+		defer src.Close()
+
+		dst, err := os.Create(dstPath)
+		if err != nil {
+			return fmt.Errorf("create %s: %w", dstPath, err)
+		}
+		defer dst.Close()
+
+		if _, err := io.Copy(dst, src); err != nil {
+			return fmt.Errorf("copy %s -> %s: %w", srcPath, dstPath, err)
 		}
 	}
 

@@ -12,6 +12,11 @@ feature-depth = 1
 ignore = [
   "RUSTSEC-2025-0119", # number_prefix unmaintained; transitive via tokenizers -> indicatif
   "RUSTSEC-2024-0436", # paste unmaintained; transitive via tokenizers
+  # Marvin Attack timing sidechannel in rsa@0.9.x. Transitive via opendal -> reqsign-core.
+  # No safe upstream version yet (https://github.com/RustCrypto/RSA/issues/626).
+  # opendal is used here for object-store backed file storage; RSA private keys are never
+  # signed locally on a network-observable code path in our usage. Revisit when patched.
+  "RUSTSEC-2023-0071",
 ]
 
 [licenses]

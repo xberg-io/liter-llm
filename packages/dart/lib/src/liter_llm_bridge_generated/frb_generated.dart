@@ -71,8 +71,14 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   static List<String> _alefHostLibNames() {
     // The Dart-binding Rust crate is `{stem}-dart` (per the cargo manifest
     // template), which produces a cdylib named `lib{stem}_dart.{ext}` on Unix
-    // and `{stem}_dart.dll` on Windows.
-    if (Platform.isMacOS) return const ['libliter_llm_dart.dylib'];
+    // and `{stem}_dart.dll` on Windows. On macOS, pub.dev-published packages
+    // may ship the binary as a Framework bundle (preferred modern packaging)
+    // — list that first so the loader finds it before the bare dylib.
+    if (Platform.isMacOS)
+      return const [
+        'liter_llm_dart.framework/liter_llm_dart',
+        'libliter_llm_dart.dylib',
+      ];
     if (Platform.isWindows) return const ['liter_llm_dart.dll'];
     return const ['libliter_llm_dart.so'];
   }
@@ -5673,6 +5679,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return LiterLlmError_HookRejected(message: dco_decode_String(raw[1]));
       case 15:
         return LiterLlmError_InternalError(message: dco_decode_String(raw[1]));
+      case 16:
+        return LiterLlmError_OutboundForbidden(
+          url: dco_decode_String(raw[1]),
+          reason: dco_decode_String(raw[2]),
+        );
       default:
         throw Exception("unreachable");
     }
@@ -8258,6 +8269,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 15:
         var var_message = sse_decode_String(deserializer);
         return LiterLlmError_InternalError(message: var_message);
+      case 16:
+        var var_url = sse_decode_String(deserializer);
+        var var_reason = sse_decode_String(deserializer);
+        return LiterLlmError_OutboundForbidden(
+          url: var_url,
+          reason: var_reason,
+        );
       default:
         throw UnimplementedError('');
     }
@@ -10937,6 +10955,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case LiterLlmError_InternalError(message: final message):
         sse_encode_i_32(15, serializer);
         sse_encode_String(message, serializer);
+      case LiterLlmError_OutboundForbidden(
+        url: final url,
+        reason: final reason,
+      ):
+        sse_encode_i_32(16, serializer);
+        sse_encode_String(url, serializer);
+        sse_encode_String(reason, serializer);
     }
   }
 

@@ -1826,5 +1826,6 @@ All errors that can occur when using `liter-llm`.
 | `budget_exceeded` | budget exceeded: {message} |
 | `hook_rejected` | hook rejected: {message} |
 | `internal_error` | An internal logic error (e.g. unexpected Tower response variant). This should never surface in normal operation — if it does, it indicates a bug in the library. |
+| `outbound_forbidden` | An outbound request was blocked by the active `OutboundPolicy`. Returned when `register_custom_provider` is called with a `base_url` that violates the policy (e.g. a private-range IP under `DenyPrivate`), or when the per-connection DNS resolver detects a forbidden address at connect time. |
 
 ---

@@ -4057,6 +4057,10 @@ const _: fn() = || {
         crate::LiterLlmError::InternalError { message } => {
             let _: String = message;
         }
+        crate::LiterLlmError::OutboundForbidden { url, reason } => {
+            let _: String = url;
+            let _: String = reason;
+        }
     }
     match None::<crate::Message>.unwrap() {
         crate::Message::System { field0 } => {
@@ -5755,6 +5759,14 @@ impl SseDecode for crate::LiterLlmError {
             15 => {
                 let mut var_message = <String>::sse_decode(deserializer);
                 return crate::LiterLlmError::InternalError { message: var_message };
+            }
+            16 => {
+                let mut var_url = <String>::sse_decode(deserializer);
+                let mut var_reason = <String>::sse_decode(deserializer);
+                return crate::LiterLlmError::OutboundForbidden {
+                    url: var_url,
+                    reason: var_reason,
+                };
             }
             _ => {
                 unimplemented!("");
@@ -8129,6 +8141,12 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::LiterLlmError> {
             crate::LiterLlmError::InternalError { message } => {
                 [15.into_dart(), message.into_into_dart().into_dart()].into_dart()
             }
+            crate::LiterLlmError::OutboundForbidden { url, reason } => [
+                16.into_dart(),
+                url.into_into_dart().into_dart(),
+                reason.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             _ => {
                 unimplemented!("");
             }
@@ -10086,6 +10104,11 @@ impl SseEncode for crate::LiterLlmError {
             crate::LiterLlmError::InternalError { message } => {
                 <i32>::sse_encode(15, serializer);
                 <String>::sse_encode(message, serializer);
+            }
+            crate::LiterLlmError::OutboundForbidden { url, reason } => {
+                <i32>::sse_encode(16, serializer);
+                <String>::sse_encode(url, serializer);
+                <String>::sse_encode(reason, serializer);
             }
             _ => {
                 unimplemented!("");

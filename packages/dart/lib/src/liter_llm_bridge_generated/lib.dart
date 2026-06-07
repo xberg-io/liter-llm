@@ -2216,6 +2216,16 @@ sealed class LiterLlmError with _$LiterLlmError {
   const factory LiterLlmError.internalError({required String message}) =
       LiterLlmError_InternalError;
 
+  /// An outbound request was blocked by the active `OutboundPolicy`.
+  ///
+  /// Returned when `register_custom_provider` is called with a `base_url` that
+  /// violates the policy (e.g. a private-range IP under `DenyPrivate`), or when
+  /// the per-connection DNS resolver detects a forbidden address at connect time.
+  const factory LiterLlmError.outboundForbidden({
+    required String url,
+    required String reason,
+  }) = LiterLlmError_OutboundForbidden;
+
   /// Return the OpenTelemetry `error.type` string for this error variant.
   ///
   /// Used by the tracing middleware to record the `error.type` span attribute

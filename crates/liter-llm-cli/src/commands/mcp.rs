@@ -67,13 +67,11 @@ pub async fn run(args: McpArgs) -> Result<(), String> {
                 }
                 (None, true) => KeyContext::master(),
                 (None, false) => {
-                    return Err(
-                        "stdio MCP transport requires authentication configuration; set either \
+                    return Err("stdio MCP transport requires authentication configuration; set either \
                          `mcp.stdio_key_id` (to bind a specific virtual key) or \
                          `mcp.stdio_trust_local = true` (for fully trusted local environments) \
                          in your liter-llm-proxy.toml"
-                            .into(),
-                    );
+                        .into());
                 }
             };
 
@@ -116,12 +114,7 @@ pub async fn run(args: McpArgs) -> Result<(), String> {
                 move || {
                     let sp = service_pool.clone();
                     let fs = file_store.clone();
-                    Ok(LiterLlmMcp::new(
-                        sp,
-                        fs,
-                        KeyContext::master(),
-                        McpTransportKind::Http,
-                    ))
+                    Ok(LiterLlmMcp::new(sp, fs, KeyContext::master(), McpTransportKind::Http))
                 },
                 LocalSessionManager::default().into(),
                 Default::default(),

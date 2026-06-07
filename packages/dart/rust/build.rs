@@ -107,8 +107,14 @@ const FRB_INIT_REPLACEMENT: &str = r#"  /// Resolve the prebuilt native library 
   static List<String> _alefHostLibNames() {
     // The Dart-binding Rust crate is `{stem}-dart` (per the cargo manifest
     // template), which produces a cdylib named `lib{stem}_dart.{ext}` on Unix
-    // and `{stem}_dart.dll` on Windows.
-    if (Platform.isMacOS) return const ['libliter_llm_dart.dylib'];
+    // and `{stem}_dart.dll` on Windows. On macOS, pub.dev-published packages
+    // may ship the binary as a Framework bundle (preferred modern packaging)
+    // — list that first so the loader finds it before the bare dylib.
+    if (Platform.isMacOS)
+      return const [
+        'liter_llm_dart.framework/liter_llm_dart',
+        'libliter_llm_dart.dylib',
+      ];
     if (Platform.isWindows) return const ['liter_llm_dart.dll'];
     return const ['libliter_llm_dart.so'];
   }
@@ -190,11 +196,8 @@ fn patch_published_loader() {
 /// methods don't exist on plain function types. This rewrite strips the
 /// erroneous method calls, calling the handler directly as a function.
 ///
-/// Also fixes FRB 2.x bug where class declarations incorrectly include the
-/// `async` keyword (e.g. `class RustLibApiImpl implements RustLibApi async ...`).
-/// The `async` keyword is only valid on functions, not class declarations.
-///
-/// Idempotent: when the broken patterns are absent the function is a no-op.
+/// Idempotent: when the broken pattern is absent the function is a no-op.
+#[allow(clippy::collapsible_if)]
 fn fix_handler_executor_calls() {
     let path = Path::new(FRB_GENERATED_DART);
     let Ok(source) = std::fs::read_to_string(path) else {
@@ -212,16 +215,12 @@ fn fix_handler_executor_calls() {
     // Collapse `return await` + `await handler(` → `return await handler(`.
     fixed = fixed.replace("await await handler", "await handler");
 
-    // Fix FRB 2.x bug where class declarations have invalid `async` keyword.
-    // class RustLibApiImpl implements RustLibApi async { ... becomes class RustLibApiImpl implements RustLibApi { ...
-    fixed = fixed.replace(" implements RustLibApi async {", " implements RustLibApi {");
-
-    if fixed != source
-        && let Err(err) = std::fs::write(path, &fixed)
-    {
-        println!(
-            "cargo:warning=failed to fix handler executor calls in {}: {err}",
-            FRB_GENERATED_DART
-        );
+    if fixed != source {
+        if let Err(err) = std::fs::write(path, &fixed) {
+            println!(
+                "cargo:warning=failed to fix handler executor calls in {}: {err}",
+                FRB_GENERATED_DART
+            );
+        }
     }
 }

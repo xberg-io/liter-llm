@@ -46,7 +46,8 @@ let package = Package(
     ),
     .target(
       name: "LiterLlm", dependencies: ["RustBridge"],
-      path: "Sources/LiterLlm"),
+      path: "Sources/LiterLlm",
+      exclude: ["LICENSE"]),
     .testTarget(
       name: "LiterLlmTests", dependencies: ["LiterLlm"],
       path: "Tests/LiterLlmTests"),

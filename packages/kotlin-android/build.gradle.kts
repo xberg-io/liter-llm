@@ -71,10 +71,10 @@ dependencies {
 mavenPublishing {
     configure(
         AndroidSingleVariantLibrary(
-        variant = "release",
-        sourcesJar = com.vanniktech.maven.publish.SourcesJar.Sources(),
-        javadocJar = com.vanniktech.maven.publish.JavadocJar.Empty(),
-    )
+            variant = "release",
+            sourcesJar = com.vanniktech.maven.publish.SourcesJar.Sources(),
+            javadocJar = com.vanniktech.maven.publish.JavadocJar.Empty(),
+        )
     )
 
     publishToMavenCentral()

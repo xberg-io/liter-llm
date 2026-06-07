@@ -42,9 +42,15 @@ fi
 EXT_DIR="$(php -r 'echo ini_get("extension_dir");')"
 test -f "$EXT_DIR/liter_llm.so" || test -f "$EXT_DIR/liter_llm.dylib" || test -f "$EXT_DIR/liter_llm.dll"
 
-# Load it explicitly for the smoke test (the verify-install action runs
-# phpunit with this same `-dextension=` flag in CI).
-if ! php -dextension=liter_llm -m | grep -qi liter_llm; then
+# Export the installed extension path for downstream test runners (composer test).
+# The test app's run_tests.php checks for PIE_INSTALLED_EXTENSION_PATH and loads the extension via `-d`.
+export PIE_INSTALLED_EXTENSION_PATH="$EXT_DIR/liter_llm.so"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  export PIE_INSTALLED_EXTENSION_PATH="$EXT_DIR/liter_llm.dylib"
+fi
+
+# Verify the extension loads via explicit `-d` flag (same mechanism run_tests.php uses).
+if ! php -d extension=liter_llm -m | grep -qi "liter_llm"; then
   echo "::error::liter_llm extension failed to load after PIE install" >&2
   exit 1
 fi

@@ -3,3 +3,5 @@ packages:
 allowBuilds:
   esbuild: true
   tree-sitter: true
+minimumReleaseAgeExclude:
+  - '@kreuzberg/liter-llm-wasm@1.4.1'

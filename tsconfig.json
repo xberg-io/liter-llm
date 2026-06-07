@@ -35,5 +35,5 @@
 
 		"noEmit": true
 	},
-	"include": ["packages/typescript/src/**/*.ts"]
+	"include": ["packages/node/src/**/*.ts", "packages/node/index.d.ts"]
 }

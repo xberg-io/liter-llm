@@ -550,13 +550,8 @@ impl DefaultClient {
             // the resolver re-validates every resolved address at connect time.
             #[cfg(any(feature = "native-http", feature = "wasm-http"))]
             let builder = {
-                if !matches!(
-                    crate::provider::current_policy(),
-                    crate::provider::OutboundPolicy::Off
-                ) {
-                    builder.dns_resolver(
-                        crate::provider::outbound_policy::guarded_resolver(),
-                    )
+                if !matches!(crate::provider::current_policy(), crate::provider::OutboundPolicy::Off) {
+                    builder.dns_resolver(crate::provider::outbound_policy::guarded_resolver())
                 } else {
                     builder
                 }

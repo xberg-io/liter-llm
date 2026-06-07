@@ -400,6 +400,306 @@ public func enforcementFromJson<GenericIntoRustString: IntoRustString>(_ json: G
 public func cacheBackendFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> CacheBackend {
     try { let val = __swift_bridge__$cache_backend_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return CacheBackend(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
+public func __alef_phantom_vec_system_message() -> RustVec<SystemMessage> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_system_message())
+}
+public func __alef_phantom_vec_user_message() -> RustVec<UserMessage> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_user_message())
+}
+public func __alef_phantom_vec_image_url() -> RustVec<ImageUrl> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_image_url())
+}
+public func __alef_phantom_vec_document_content() -> RustVec<DocumentContent> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_document_content())
+}
+public func __alef_phantom_vec_audio_content() -> RustVec<AudioContent> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_audio_content())
+}
+public func __alef_phantom_vec_assistant_message() -> RustVec<AssistantMessage> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_assistant_message())
+}
+public func __alef_phantom_vec_tool_message() -> RustVec<ToolMessage> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_tool_message())
+}
+public func __alef_phantom_vec_developer_message() -> RustVec<DeveloperMessage> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_developer_message())
+}
+public func __alef_phantom_vec_function_message() -> RustVec<FunctionMessage> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_function_message())
+}
+public func __alef_phantom_vec_chat_completion_tool() -> RustVec<ChatCompletionTool> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_chat_completion_tool())
+}
+public func __alef_phantom_vec_function_definition() -> RustVec<FunctionDefinition> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_function_definition())
+}
+public func __alef_phantom_vec_tool_call() -> RustVec<ToolCall> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_tool_call())
+}
+public func __alef_phantom_vec_function_call() -> RustVec<FunctionCall> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_function_call())
+}
+public func __alef_phantom_vec_specific_tool_choice() -> RustVec<SpecificToolChoice> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_specific_tool_choice())
+}
+public func __alef_phantom_vec_specific_function() -> RustVec<SpecificFunction> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_specific_function())
+}
+public func __alef_phantom_vec_json_schema_format() -> RustVec<JsonSchemaFormat> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_json_schema_format())
+}
+public func __alef_phantom_vec_usage() -> RustVec<Usage> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_usage())
+}
+public func __alef_phantom_vec_prompt_tokens_details() -> RustVec<PromptTokensDetails> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_prompt_tokens_details())
+}
+public func __alef_phantom_vec_chat_completion_request() -> RustVec<ChatCompletionRequest> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_chat_completion_request())
+}
+public func __alef_phantom_vec_stream_options() -> RustVec<StreamOptions> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_stream_options())
+}
+public func __alef_phantom_vec_chat_completion_response() -> RustVec<ChatCompletionResponse> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_chat_completion_response())
+}
+public func __alef_phantom_vec_choice() -> RustVec<Choice> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_choice())
+}
+public func __alef_phantom_vec_chat_completion_chunk() -> RustVec<ChatCompletionChunk> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_chat_completion_chunk())
+}
+public func __alef_phantom_vec_stream_choice() -> RustVec<StreamChoice> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_stream_choice())
+}
+public func __alef_phantom_vec_stream_delta() -> RustVec<StreamDelta> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_stream_delta())
+}
+public func __alef_phantom_vec_stream_tool_call() -> RustVec<StreamToolCall> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_stream_tool_call())
+}
+public func __alef_phantom_vec_stream_function_call() -> RustVec<StreamFunctionCall> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_stream_function_call())
+}
+public func __alef_phantom_vec_embedding_request() -> RustVec<EmbeddingRequest> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_embedding_request())
+}
+public func __alef_phantom_vec_embedding_response() -> RustVec<EmbeddingResponse> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_embedding_response())
+}
+public func __alef_phantom_vec_embedding_object() -> RustVec<EmbeddingObject> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_embedding_object())
+}
+public func __alef_phantom_vec_create_image_request() -> RustVec<CreateImageRequest> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_create_image_request())
+}
+public func __alef_phantom_vec_images_response() -> RustVec<ImagesResponse> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_images_response())
+}
+public func __alef_phantom_vec_image() -> RustVec<Image> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_image())
+}
+public func __alef_phantom_vec_create_speech_request() -> RustVec<CreateSpeechRequest> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_create_speech_request())
+}
+public func __alef_phantom_vec_create_transcription_request() -> RustVec<CreateTranscriptionRequest> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_create_transcription_request())
+}
+public func __alef_phantom_vec_transcription_response() -> RustVec<TranscriptionResponse> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_transcription_response())
+}
+public func __alef_phantom_vec_transcription_segment() -> RustVec<TranscriptionSegment> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_transcription_segment())
+}
+public func __alef_phantom_vec_moderation_request() -> RustVec<ModerationRequest> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_moderation_request())
+}
+public func __alef_phantom_vec_moderation_response() -> RustVec<ModerationResponse> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_moderation_response())
+}
+public func __alef_phantom_vec_moderation_result() -> RustVec<ModerationResult> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_moderation_result())
+}
+public func __alef_phantom_vec_moderation_categories() -> RustVec<ModerationCategories> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_moderation_categories())
+}
+public func __alef_phantom_vec_moderation_category_scores() -> RustVec<ModerationCategoryScores> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_moderation_category_scores())
+}
+public func __alef_phantom_vec_rerank_request() -> RustVec<RerankRequest> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_rerank_request())
+}
+public func __alef_phantom_vec_rerank_response() -> RustVec<RerankResponse> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_rerank_response())
+}
+public func __alef_phantom_vec_rerank_result() -> RustVec<RerankResult> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_rerank_result())
+}
+public func __alef_phantom_vec_rerank_result_document() -> RustVec<RerankResultDocument> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_rerank_result_document())
+}
+public func __alef_phantom_vec_search_request() -> RustVec<SearchRequest> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_search_request())
+}
+public func __alef_phantom_vec_search_response() -> RustVec<SearchResponse> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_search_response())
+}
+public func __alef_phantom_vec_search_result() -> RustVec<SearchResult> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_search_result())
+}
+public func __alef_phantom_vec_ocr_request() -> RustVec<OcrRequest> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_ocr_request())
+}
+public func __alef_phantom_vec_ocr_response() -> RustVec<OcrResponse> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_ocr_response())
+}
+public func __alef_phantom_vec_ocr_page() -> RustVec<OcrPage> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_ocr_page())
+}
+public func __alef_phantom_vec_ocr_image() -> RustVec<OcrImage> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_ocr_image())
+}
+public func __alef_phantom_vec_page_dimensions() -> RustVec<PageDimensions> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_page_dimensions())
+}
+public func __alef_phantom_vec_models_list_response() -> RustVec<ModelsListResponse> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_models_list_response())
+}
+public func __alef_phantom_vec_model_object() -> RustVec<ModelObject> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_model_object())
+}
+public func __alef_phantom_vec_create_file_request() -> RustVec<CreateFileRequest> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_create_file_request())
+}
+public func __alef_phantom_vec_file_object() -> RustVec<FileObject> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_file_object())
+}
+public func __alef_phantom_vec_file_list_response() -> RustVec<FileListResponse> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_file_list_response())
+}
+public func __alef_phantom_vec_file_list_query() -> RustVec<FileListQuery> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_file_list_query())
+}
+public func __alef_phantom_vec_delete_response() -> RustVec<DeleteResponse> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_delete_response())
+}
+public func __alef_phantom_vec_create_batch_request() -> RustVec<CreateBatchRequest> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_create_batch_request())
+}
+public func __alef_phantom_vec_batch_object() -> RustVec<BatchObject> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_batch_object())
+}
+public func __alef_phantom_vec_batch_request_counts() -> RustVec<BatchRequestCounts> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_batch_request_counts())
+}
+public func __alef_phantom_vec_batch_list_response() -> RustVec<BatchListResponse> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_batch_list_response())
+}
+public func __alef_phantom_vec_batch_list_query() -> RustVec<BatchListQuery> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_batch_list_query())
+}
+public func __alef_phantom_vec_create_response_request() -> RustVec<CreateResponseRequest> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_create_response_request())
+}
+public func __alef_phantom_vec_response_tool() -> RustVec<ResponseTool> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_response_tool())
+}
+public func __alef_phantom_vec_response_object() -> RustVec<ResponseObject> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_response_object())
+}
+public func __alef_phantom_vec_response_output_item() -> RustVec<ResponseOutputItem> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_response_output_item())
+}
+public func __alef_phantom_vec_response_usage() -> RustVec<ResponseUsage> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_response_usage())
+}
+public func __alef_phantom_vec_default_client() -> RustVec<DefaultClient> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_default_client())
+}
+public func __alef_phantom_vec_custom_provider_config() -> RustVec<CustomProviderConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_custom_provider_config())
+}
+public func __alef_phantom_vec_provider_config() -> RustVec<ProviderConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_provider_config())
+}
+public func __alef_phantom_vec_auth_config() -> RustVec<AuthConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_auth_config())
+}
+public func __alef_phantom_vec_budget_config() -> RustVec<BudgetConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_budget_config())
+}
+public func __alef_phantom_vec_cache_config() -> RustVec<CacheConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_cache_config())
+}
+public func __alef_phantom_vec_rate_limit_config() -> RustVec<RateLimitConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_rate_limit_config())
+}
+public func __alef_phantom_vec_message() -> RustVec<Message> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_message())
+}
+public func __alef_phantom_vec_user_content() -> RustVec<UserContent> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_user_content())
+}
+public func __alef_phantom_vec_content_part() -> RustVec<ContentPart> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_content_part())
+}
+public func __alef_phantom_vec_image_detail() -> RustVec<ImageDetail> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_image_detail())
+}
+public func __alef_phantom_vec_tool_type() -> RustVec<ToolType> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_tool_type())
+}
+public func __alef_phantom_vec_tool_choice() -> RustVec<ToolChoice> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_tool_choice())
+}
+public func __alef_phantom_vec_tool_choice_mode() -> RustVec<ToolChoiceMode> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_tool_choice_mode())
+}
+public func __alef_phantom_vec_response_format() -> RustVec<ResponseFormat> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_response_format())
+}
+public func __alef_phantom_vec_stop_sequence() -> RustVec<StopSequence> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_stop_sequence())
+}
+public func __alef_phantom_vec_finish_reason() -> RustVec<FinishReason> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_finish_reason())
+}
+public func __alef_phantom_vec_reasoning_effort() -> RustVec<ReasoningEffort> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_reasoning_effort())
+}
+public func __alef_phantom_vec_embedding_format() -> RustVec<EmbeddingFormat> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_embedding_format())
+}
+public func __alef_phantom_vec_embedding_input() -> RustVec<EmbeddingInput> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_embedding_input())
+}
+public func __alef_phantom_vec_moderation_input() -> RustVec<ModerationInput> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_moderation_input())
+}
+public func __alef_phantom_vec_rerank_document() -> RustVec<RerankDocument> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_rerank_document())
+}
+public func __alef_phantom_vec_ocr_document() -> RustVec<OcrDocument> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_ocr_document())
+}
+public func __alef_phantom_vec_file_purpose() -> RustVec<FilePurpose> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_file_purpose())
+}
+public func __alef_phantom_vec_batch_status() -> RustVec<BatchStatus> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_batch_status())
+}
+public func __alef_phantom_vec_auth_header_format() -> RustVec<AuthHeaderFormat> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_auth_header_format())
+}
+public func __alef_phantom_vec_auth_type() -> RustVec<AuthType> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_auth_type())
+}
+public func __alef_phantom_vec_enforcement() -> RustVec<Enforcement> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_enforcement())
+}
+public func __alef_phantom_vec_cache_backend() -> RustVec<CacheBackend> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_cache_backend())
+}
 
 public class SystemMessage: SystemMessageRefMut {
     public var isOwned: Bool = true

@@ -29,11 +29,13 @@ package dev.kreuzberg.literllm.android
 sealed class UserContent {
     /** Plain text content. */
     data class Text(val value: String) : UserContent()
+
     /** Array of content parts (text, images, documents, audio). */
     data class Parts(val value: List<ContentPart>) : UserContent()
 }
 
-private class UserContentDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<UserContent>(UserContent::class.java) {
+private class UserContentDeserializer :
+    com.fasterxml.jackson.databind.deser.std.StdDeserializer<UserContent>(UserContent::class.java) {
     @Suppress("LongMethod")
     override fun deserialize(
         parser: com.fasterxml.jackson.core.JsonParser,
@@ -43,9 +45,15 @@ private class UserContentDeserializer : com.fasterxml.jackson.databind.deser.std
         if (node.isTextual) return UserContent.Text(node.asText())
         if (node.isArray)
             return run {
-                val javaType = ctx.typeFactory.constructCollectionType(List::class.java, ContentPart::class.java)
+                val javaType =
+                    ctx.typeFactory.constructCollectionType(
+                        List::class.java,
+                        ContentPart::class.java,
+                    )
                 @Suppress("UNCHECKED_CAST")
-                UserContent.Parts(ctx.readTreeAsValue<List<ContentPart>>(node, javaType) as List<ContentPart>)
+                UserContent.Parts(
+                    ctx.readTreeAsValue<List<ContentPart>>(node, javaType) as List<ContentPart>
+                )
             }
         throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
             parser,
@@ -56,7 +64,8 @@ private class UserContentDeserializer : com.fasterxml.jackson.databind.deser.std
     }
 }
 
-private class UserContentSerializer : com.fasterxml.jackson.databind.ser.std.StdSerializer<UserContent>(UserContent::class.java) {
+private class UserContentSerializer :
+    com.fasterxml.jackson.databind.ser.std.StdSerializer<UserContent>(UserContent::class.java) {
     @Suppress("LongMethod")
     override fun serialize(
         value: UserContent,

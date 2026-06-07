@@ -87,9 +87,8 @@ impl ProxyError {
     /// event.  Uses `serde_json` so any character in the message is escaped
     /// correctly — never interpolate the error into a JSON string by hand.
     pub fn to_sse_payload(&self) -> String {
-        serde_json::to_string(&self.body).unwrap_or_else(|_| {
-            r#"{"error":{"message":"serialization failed","type":"InternalError"}}"#.to_string()
-        })
+        serde_json::to_string(&self.body)
+            .unwrap_or_else(|_| r#"{"error":{"message":"serialization failed","type":"InternalError"}}"#.to_string())
     }
 
     /// 401 Unauthorized.
@@ -535,8 +534,7 @@ mod tests {
     fn to_sse_payload_is_valid_json() {
         let err = ProxyError::authentication("test");
         let payload = err.to_sse_payload();
-        let value: serde_json::Value = serde_json::from_str(&payload)
-            .expect("to_sse_payload must produce valid JSON");
+        let value: serde_json::Value = serde_json::from_str(&payload).expect("to_sse_payload must produce valid JSON");
         assert_eq!(value["error"]["type"], "Authentication");
         assert_eq!(value["error"]["message"], "test");
     }
@@ -545,8 +543,8 @@ mod tests {
     fn to_sse_payload_escapes_quotes() {
         let err = ProxyError::bad_request(r#"msg with "quotes" inside"#);
         let payload = err.to_sse_payload();
-        let value: serde_json::Value = serde_json::from_str(&payload)
-            .expect("to_sse_payload must produce valid JSON even with embedded quotes");
+        let value: serde_json::Value =
+            serde_json::from_str(&payload).expect("to_sse_payload must produce valid JSON even with embedded quotes");
         assert_eq!(value["error"]["message"], r#"msg with "quotes" inside"#);
     }
 

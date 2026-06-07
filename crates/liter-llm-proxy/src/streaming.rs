@@ -18,9 +18,8 @@ pub fn sse_response(stream: BoxStream<'static, LlmResult<ChatCompletionChunk>>) 
         .map(|result| -> std::result::Result<Event, Infallible> {
             match result {
                 Ok(chunk) => Ok(Event::default().json_data(&chunk).unwrap_or_else(|_| {
-                    Event::default().data(
-                        r#"{"error":{"message":"chunk serialization failed","type":"InternalError"}}"#,
-                    )
+                    Event::default()
+                        .data(r#"{"error":{"message":"chunk serialization failed","type":"InternalError"}}"#)
                 })),
                 Err(e) => {
                     let proxy_err: crate::error::ProxyError = e.into();
@@ -167,8 +166,7 @@ mod tests {
         // 1 error event + 1 [DONE]
         assert_eq!(events.len(), 2, "expected 2 events, got: {events:?}");
 
-        let value: serde_json::Value = serde_json::from_str(&events[0])
-            .expect("SSE error payload must be valid JSON");
+        let value: serde_json::Value = serde_json::from_str(&events[0]).expect("SSE error payload must be valid JSON");
 
         assert_eq!(value["error"]["type"], "Streaming", "error type mismatch: {value:?}");
 

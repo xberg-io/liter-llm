@@ -138,11 +138,7 @@ impl LiterLlmMcp {
     /// These tools bypass model routing via `first_client()`.  Restricting
     /// them to master keys prevents a virtual key from seeing another
     /// tenant's batches or files.
-    fn require_master(
-        &self,
-        ctx: &RequestContext<RoleServer>,
-        tool: &str,
-    ) -> Result<KeyContext, rmcp::ErrorData> {
+    fn require_master(&self, ctx: &RequestContext<RoleServer>, tool: &str) -> Result<KeyContext, rmcp::ErrorData> {
         let key_ctx = self.resolve_ctx(ctx);
         Self::check_master_access(&key_ctx, tool)?;
         Ok(key_ctx)
@@ -155,10 +151,7 @@ impl LiterLlmMcp {
     fn check_model_access(key_ctx: &KeyContext, model: &str) -> Result<(), rmcp::ErrorData> {
         if !key_ctx.can_access_model(model) {
             return Err(rmcp::ErrorData::invalid_params(
-                format!(
-                    "key '{}' is not allowed to access model '{model}'",
-                    key_ctx.key_id
-                ),
+                format!("key '{}' is not allowed to access model '{model}'", key_ctx.key_id),
                 None,
             ));
         }

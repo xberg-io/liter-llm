@@ -84,10 +84,7 @@ fn build_outbound_policy(config: &ProxyConfig) -> Result<OutboundPolicy, String>
             let urls = security
                 .outbound_allowlist
                 .iter()
-                .map(|s| {
-                    url::Url::parse(s)
-                        .map_err(|e| format!("invalid URL in outbound_allowlist ({s:?}): {e}"))
-                })
+                .map(|s| url::Url::parse(s).map_err(|e| format!("invalid URL in outbound_allowlist ({s:?}): {e}")))
                 .collect::<Result<Vec<_>, _>>()?;
             Ok(OutboundPolicy::Allowlist(urls))
         }

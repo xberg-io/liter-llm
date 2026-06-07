@@ -27,7 +27,6 @@ use core_crate::*;
 use liter_llm as core_crate; // bring trait methods into scope
 
 const ERROR_CLASS: &str = "dev/kreuzberg/literllm/android/LiterLlmBridgeException";
-
 fn runtime() -> &'static Runtime {
     static RT: OnceLock<Runtime> = OnceLock::new();
     RT.get_or_init(|| Runtime::new().expect("create tokio runtime"))
@@ -92,7 +91,6 @@ where
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeCreateClient(
     mut env: EnvUnowned,
@@ -150,7 +148,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         Ok(v) => Box::into_raw(Box::new(v)) as jlong,
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeCreateClientFromJson(
     mut env: EnvUnowned,
@@ -176,7 +173,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         Ok(v) => Box::into_raw(Box::new(v)) as jlong,
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeRegisterCustomProvider(
     mut env: EnvUnowned,
@@ -209,7 +205,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         Ok(v) => {}
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeUnregisterCustomProvider(
     mut env: EnvUnowned,
@@ -235,7 +230,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         Ok(v) => v,
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeAllProviders(
     mut env: EnvUnowned,
@@ -262,7 +256,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeComplexProviderNames(
     mut env: EnvUnowned,
@@ -289,7 +282,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeCompletionCost(
     mut env: EnvUnowned,
@@ -318,7 +310,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
     };
     string_to_jstring(env, &s)
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeCompletionCostWithCache(
     mut env: EnvUnowned,
@@ -353,7 +344,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
     };
     string_to_jstring(env, &s)
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeEnsureCryptoProvider(
     mut env: EnvUnowned,
@@ -364,7 +354,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
     let env = __jni_attach_guard.borrow_env_mut();
     let v = core_crate::ensure_crypto_provider();
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientChat(
     mut env: EnvUnowned,
@@ -416,7 +405,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientEmbed(
     mut env: EnvUnowned,
@@ -468,7 +456,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientListModels(
     mut env: EnvUnowned,
@@ -505,7 +492,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientImageGenerate(
     mut env: EnvUnowned,
@@ -557,7 +543,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientSpeech(
     mut env: EnvUnowned,
@@ -606,7 +591,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         },
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientTranscribe(
     mut env: EnvUnowned,
@@ -658,7 +642,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientModerate(
     mut env: EnvUnowned,
@@ -710,7 +693,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientRerank(
     mut env: EnvUnowned,
@@ -762,7 +744,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientSearch(
     mut env: EnvUnowned,
@@ -814,7 +795,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientOcr(
     mut env: EnvUnowned,
@@ -866,7 +846,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientCreateFile(
     mut env: EnvUnowned,
@@ -918,7 +897,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientRetrieveFile(
     mut env: EnvUnowned,
@@ -967,7 +945,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientDeleteFile(
     mut env: EnvUnowned,
@@ -1016,7 +993,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientListFiles(
     mut env: EnvUnowned,
@@ -1072,7 +1048,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientFileContent(
     mut env: EnvUnowned,
@@ -1118,7 +1093,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         },
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientCreateBatch(
     mut env: EnvUnowned,
@@ -1170,7 +1144,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientRetrieveBatch(
     mut env: EnvUnowned,
@@ -1219,7 +1192,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientListBatches(
     mut env: EnvUnowned,
@@ -1275,7 +1247,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientCancelBatch(
     mut env: EnvUnowned,
@@ -1324,7 +1295,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientCreateResponse(
     mut env: EnvUnowned,
@@ -1376,7 +1346,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientRetrieveResponse(
     mut env: EnvUnowned,
@@ -1425,7 +1394,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientCancelResponse(
     mut env: EnvUnowned,
@@ -1474,7 +1442,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         }
     }
 }
-
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeFreeDefaultClient(
     _env: EnvUnowned,
@@ -1490,7 +1457,6 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
         let _ = Box::from_raw(handle as *mut core_crate::DefaultClient);
     }
 }
-
 type DefaultClientChatStreamStreamHandleItem =
     std::result::Result<core_crate::ChatCompletionChunk, Box<dyn std::error::Error + Send + Sync + 'static>>;
 type DefaultClientChatStreamStreamHandleStream = BoxStream<'static, DefaultClientChatStreamStreamHandleItem>;

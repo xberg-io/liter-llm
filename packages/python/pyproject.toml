@@ -25,6 +25,7 @@ urls.repository = "https://github.com/kreuzberg-dev/liter-llm"
 dev = [ "mypy>=1.19", "ruff>=0.14.8" ]
 
 [tool.maturin]
+profile = "release"
 module-name = "liter_llm._internal_bindings"
 manifest-path = "../../crates/liter-llm-py/Cargo.toml"
 # abi3-py310 produces a single wheel per platform that loads on Python 3.10+,

@@ -89,6 +89,7 @@ erl_crash.dump
 packages/ruby/.bundle/
 packages/ruby/vendor/
 packages/ruby/tmp/
+.yardoc/
 
 # PHP
 vendor/

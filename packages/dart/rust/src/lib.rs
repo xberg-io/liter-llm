@@ -1635,6 +1635,15 @@ pub enum LiterLlmError {
     InternalError {
         message: String,
     },
+    /// An outbound request was blocked by the active `OutboundPolicy`.
+    ///
+    /// Returned when `register_custom_provider` is called with a `base_url` that
+    /// violates the policy (e.g. a private-range IP under `DenyPrivate`), or when
+    /// the per-connection DNS resolver detects a forbidden address at connect time.
+    OutboundForbidden {
+        url: String,
+        reason: String,
+    },
 }
 
 #[allow(unreachable_patterns)]
@@ -1718,6 +1727,13 @@ impl From<&LiterLlmError> for liter_llm::error::LiterLlmError {
             },
             LiterLlmError::InternalError { message: f_message } => Self::InternalError {
                 message: f_message.clone(),
+            },
+            LiterLlmError::OutboundForbidden {
+                url: f_url,
+                reason: f_reason,
+            } => Self::OutboundForbidden {
+                url: f_url.clone(),
+                reason: f_reason.clone(),
             },
         }
     }

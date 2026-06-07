@@ -48,6 +48,7 @@ pub const LiterLlmError = error{
     BudgetExceeded,
     HookRejected,
     InternalError,
+    OutboundForbidden,
     OutOfMemory,
 };
 
@@ -1245,7 +1246,7 @@ pub fn create_client(api_key: []const u8, base_url: ?[]const u8, timeout_secs: ?
     const model_hint_z: ?[:0]u8 = if (model_hint) |v| try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{v}, 0) else null;
     defer if (model_hint_z) |z| std.heap.c_allocator.free(z);
     const _result = c.literllm_create_client(api_key_z, if (base_url_z) |z| z.ptr else null, if (timeout_secs) |v| v else std.math.maxInt(u64), if (max_retries) |v| v else std.math.maxInt(u32), if (model_hint_z) |z| z.ptr else null);
-    if (c.literllm_last_error_code() != 0) {
+    if (_result == null) {
         return _first_error(LiterLlmError);
     }
     return DefaultClient{ ._handle = _result.? };
@@ -1263,7 +1264,7 @@ pub fn create_client_from_json(json: []const u8) LiterLlmError!DefaultClient {
     const json_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{json}, 0);
     defer std.heap.c_allocator.free(json_z);
     const _result = c.literllm_create_client_from_json(json_z);
-    if (c.literllm_last_error_code() != 0) {
+    if (_result == null) {
         return _first_error(LiterLlmError);
     }
     return DefaultClient{ ._handle = _result.? };
@@ -1303,7 +1304,7 @@ pub fn unregister_custom_provider(name: []const u8) LiterLlmError!bool {
     const name_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{name}, 0);
     defer std.heap.c_allocator.free(name_z);
     const _result = c.literllm_unregister_custom_provider(name_z);
-    if (c.literllm_last_error_code() != 0) {
+    if (_result == null) {
         return _first_error(LiterLlmError);
     }
     return _result != 0;
@@ -1314,7 +1315,7 @@ pub fn unregister_custom_provider(name: []const u8) LiterLlmError!bool {
 /// Useful for tooling, documentation generation, or runtime enumeration.
 pub fn all_providers() LiterLlmError![]u8 {
     const _result = c.literllm_all_providers();
-    if (c.literllm_last_error_code() != 0) {
+    if (_result == null) {
         return _first_error(LiterLlmError);
     }
     const _result_len = c.literllm_all_providers_len();
@@ -1335,7 +1336,7 @@ pub fn all_providers() LiterLlmError![]u8 {
 /// The returned reference points into the static registry — no allocation.
 pub fn complex_provider_names() LiterLlmError![]u8 {
     const _result = c.literllm_complex_provider_names();
-    if (c.literllm_last_error_code() != 0) {
+    if (_result == null) {
         return _first_error(LiterLlmError);
     }
     const _result_len = c.literllm_complex_provider_names_len();
@@ -1399,7 +1400,7 @@ pub fn count_tokens(model: []const u8, text: []const u8) LiterLlmError!u64 {
     const text_z = try std.fmt.allocPrintSentinel(std.heap.c_allocator, "{s}", .{text}, 0);
     defer std.heap.c_allocator.free(text_z);
     const _result = c.literllm_count_tokens(model_z, text_z);
-    if (c.literllm_last_error_code() != 0) {
+    if (_result == null) {
         return _first_error(LiterLlmError);
     }
     return _result;
@@ -1425,7 +1426,7 @@ pub fn count_request_tokens(model: []const u8, req: []const u8) LiterLlmError!u6
     if (req_handle == null) return _first_error(LiterLlmError);
     defer c.literllm_chat_completion_request_free(req_handle);
     const _result = c.literllm_count_request_tokens(model_z, req_handle);
-    if (c.literllm_last_error_code() != 0) {
+    if (_result == null) {
         return _first_error(LiterLlmError);
     }
     return _result;
@@ -1502,7 +1503,7 @@ pub const DefaultClient = struct {
         if (req_handle == null) return _first_error(LiterLlmError);
         defer c.literllm_chat_completion_request_free(req_handle);
         const _result = c.literllm_default_client_chat(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1537,7 +1538,7 @@ pub const DefaultClient = struct {
         if (req_handle == null) return _first_error(LiterLlmError);
         defer c.literllm_embedding_request_free(req_handle);
         const _result = c.literllm_default_client_embed(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1552,7 +1553,7 @@ pub const DefaultClient = struct {
 
     pub fn list_models(self: *DefaultClient) (LiterLlmError || error{OutOfMemory})![]u8 {
         const _result = c.literllm_default_client_list_models(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)));
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1572,7 +1573,7 @@ pub const DefaultClient = struct {
         if (req_handle == null) return _first_error(LiterLlmError);
         defer c.literllm_create_image_request_free(req_handle);
         const _result = c.literllm_default_client_image_generate(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1610,7 +1611,7 @@ pub const DefaultClient = struct {
         if (req_handle == null) return _first_error(LiterLlmError);
         defer c.literllm_create_transcription_request_free(req_handle);
         const _result = c.literllm_default_client_transcribe(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1630,7 +1631,7 @@ pub const DefaultClient = struct {
         if (req_handle == null) return _first_error(LiterLlmError);
         defer c.literllm_moderation_request_free(req_handle);
         const _result = c.literllm_default_client_moderate(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1650,7 +1651,7 @@ pub const DefaultClient = struct {
         if (req_handle == null) return _first_error(LiterLlmError);
         defer c.literllm_rerank_request_free(req_handle);
         const _result = c.literllm_default_client_rerank(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1670,7 +1671,7 @@ pub const DefaultClient = struct {
         if (req_handle == null) return _first_error(LiterLlmError);
         defer c.literllm_search_request_free(req_handle);
         const _result = c.literllm_default_client_search(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1690,7 +1691,7 @@ pub const DefaultClient = struct {
         if (req_handle == null) return _first_error(LiterLlmError);
         defer c.literllm_ocr_request_free(req_handle);
         const _result = c.literllm_default_client_ocr(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1710,7 +1711,7 @@ pub const DefaultClient = struct {
         if (req_handle == null) return _first_error(LiterLlmError);
         defer c.literllm_create_file_request_free(req_handle);
         const _result = c.literllm_default_client_create_file(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1727,7 +1728,7 @@ pub const DefaultClient = struct {
         const file_id_z = try std.heap.c_allocator.dupeZ(u8, file_id);
         defer std.heap.c_allocator.free(file_id_z);
         const _result = c.literllm_default_client_retrieve_file(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), file_id_z);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1744,7 +1745,7 @@ pub const DefaultClient = struct {
         const file_id_z = try std.heap.c_allocator.dupeZ(u8, file_id);
         defer std.heap.c_allocator.free(file_id_z);
         const _result = c.literllm_default_client_delete_file(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), file_id_z);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1764,7 +1765,7 @@ pub const DefaultClient = struct {
         if (query_z != null and query_handle == null) return _first_error(LiterLlmError);
         defer if (query_handle) |h| c.literllm_file_list_query_free(h);
         const _result = c.literllm_default_client_list_files(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), query_handle);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1799,7 +1800,7 @@ pub const DefaultClient = struct {
         if (req_handle == null) return _first_error(LiterLlmError);
         defer c.literllm_create_batch_request_free(req_handle);
         const _result = c.literllm_default_client_create_batch(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1816,7 +1817,7 @@ pub const DefaultClient = struct {
         const batch_id_z = try std.heap.c_allocator.dupeZ(u8, batch_id);
         defer std.heap.c_allocator.free(batch_id_z);
         const _result = c.literllm_default_client_retrieve_batch(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), batch_id_z);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1836,7 +1837,7 @@ pub const DefaultClient = struct {
         if (query_z != null and query_handle == null) return _first_error(LiterLlmError);
         defer if (query_handle) |h| c.literllm_batch_list_query_free(h);
         const _result = c.literllm_default_client_list_batches(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), query_handle);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1853,7 +1854,7 @@ pub const DefaultClient = struct {
         const batch_id_z = try std.heap.c_allocator.dupeZ(u8, batch_id);
         defer std.heap.c_allocator.free(batch_id_z);
         const _result = c.literllm_default_client_cancel_batch(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), batch_id_z);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1873,7 +1874,7 @@ pub const DefaultClient = struct {
         if (req_handle == null) return _first_error(LiterLlmError);
         defer c.literllm_create_response_request_free(req_handle);
         const _result = c.literllm_default_client_create_response(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), req_handle);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1890,7 +1891,7 @@ pub const DefaultClient = struct {
         const response_id_z = try std.heap.c_allocator.dupeZ(u8, response_id);
         defer std.heap.c_allocator.free(response_id_z);
         const _result = c.literllm_default_client_retrieve_response(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), response_id_z);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {
@@ -1907,7 +1908,7 @@ pub const DefaultClient = struct {
         const response_id_z = try std.heap.c_allocator.dupeZ(u8, response_id);
         defer std.heap.c_allocator.free(response_id_z);
         const _result = c.literllm_default_client_cancel_response(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), response_id_z);
-        if (c.literllm_last_error_code() != 0) {
+        if (_result == null) {
             return _first_error(LiterLlmError);
         }
         return blk: {

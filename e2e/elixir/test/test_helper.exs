@@ -11,8 +11,9 @@ ExUnit.start()
 #
 # Two execution modes:
 # 1. External mode (`alef test-apps run` parent): MOCK_SERVER_URL is already set.
-#    Use it as-is together with any MOCK_SERVERS / MOCK_SERVER_<FIXTURE_ID> vars
-#    that the parent exported. Do NOT spawn our own server.
+#    Parse any MOCK_SERVERS JSON and set each MOCK_SERVER_<FIXTURE_ID> env var
+#    so tests reading `MOCK_SERVER_<UPPER>` find the dedicated per-fixture URL.
+#    Do NOT spawn our own server.
 # 2. Standalone mode (direct `mix test` / `task elixir:smoke`): Build the
 #    mock-server binary if it is missing, then spawn it, capture its URL, and
 #    let it run for the duration of the test suite.
@@ -73,5 +74,22 @@ unless System.get_env("MOCK_SERVER_URL") do
 
   if url != nil do
     System.put_env("MOCK_SERVER_URL", url)
+  end
+end
+
+# If MOCK_SERVER_URL was preset by a parent (alef test-apps run), expand its
+# MOCK_SERVERS JSON into per-fixture MOCK_SERVER_<FIXTURE_ID> env vars so
+# tests reading `MOCK_SERVER_<UPPER>` find the dedicated per-fixture URL
+# (without this, tests fall back to the shared-server namespaced URL where
+# origin-relative asset paths 404).
+if System.get_env("MOCK_SERVERS") do
+  case Jason.decode(System.get_env("MOCK_SERVERS")) do
+    {:ok, servers} ->
+      Enum.each(servers, fn {fid, furl} ->
+        System.put_env("MOCK_SERVER_#{String.upcase(fid)}", furl)
+      end)
+
+    _ ->
+      :ok
   end
 end

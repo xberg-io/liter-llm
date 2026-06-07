@@ -36,6 +36,7 @@ kotlin {
     // Set JVM target for compilation. gradle.properties enables auto-detection
     // of host JDK installations so Gradle uses the available JDK version on the
     // build machine, preventing provisioning failures when the target version is not installed.
+    jvmToolchain(17)
     compilerOptions {
         jvmTarget = JvmTarget.JVM_17
     }
@@ -78,7 +79,7 @@ dependencies {
 }
 
 tasks.register("verifyAarPublished") {
-    description = "Verify the published Android AAR contains jniLibs and classes.jar"
+    description = "Verify the published Android AAR contains jni and classes.jar"
     doLast {
         val aarCoord = "dev.kreuzberg:liter-llm-android:1.4.1"
         val (groupId, artifactId, version) = run {
@@ -92,7 +93,7 @@ tasks.register("verifyAarPublished") {
         println("Downloading AAR from Maven Central: ${mavenUrl}")
         aarFile.parentFile.mkdirs()
 
-        val connection = java.net.URL(mavenUrl).openConnection() as java.net.HttpURLConnection
+        val connection = URL(mavenUrl).openConnection() as HttpURLConnection
         connection.requestMethod = "GET"
         connection.connect()
 
@@ -107,25 +108,25 @@ tasks.register("verifyAarPublished") {
         }
 
         println("Verifying AAR contents...")
-        java.util.zip.ZipFile(aarFile).use { zip ->
+        ZipFile(aarFile).use { zip ->
             val entries = zip.entries().toList()
-            val hasJniLibs = entries.any { it.name.startsWith("jniLibs/") }
+            val hasJni = entries.any { it.name.startsWith("jni/") }
             val hasClasses = entries.any { it.name == "classes.jar" }
 
-            if (!hasJniLibs) {
-                throw GradleException("AAR missing jniLibs directory")
+            if (!hasJni) {
+                throw GradleException("AAR missing jni directory")
             }
             if (!hasClasses) {
                 throw GradleException("AAR missing classes.jar")
             }
 
             val abiDirs = entries
-                .filter { it.name.startsWith("jniLibs/") }
-                .map { it.name.substringAfter("jniLibs/").substringBefore("/") }
+                .filter { it.name.startsWith("jni/") }
+                .map { it.name.substringAfter("jni/").substringBefore("/") }
                 .filter { it.isNotEmpty() }
                 .distinct()
 
-            println("  + jniLibs: YES")
+            println("  + jni: YES")
             println("  + classes.jar: YES")
             println("  + Android ABIs: " + abiDirs.sorted().joinToString(", "))
             println("\nAAR verification PASSED!")

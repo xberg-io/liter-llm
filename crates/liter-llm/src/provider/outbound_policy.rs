@@ -24,6 +24,7 @@ use crate::error::LiterLlmError;
 /// `reqwest`, at every TCP connection attempt (defense in depth against DNS
 /// rebinding).
 #[derive(Debug, Clone, Default)]
+#[cfg_attr(alef, alef(skip))]
 pub enum OutboundPolicy {
     /// No restrictions — library default.  Use only when the application is
     /// the sole registrar of provider URLs and trusts itself.
@@ -52,16 +53,15 @@ fn policy_lock() -> &'static RwLock<OutboundPolicy> {
 /// Subsequent calls to [`validate_outbound_url`] and the per-connection DNS
 /// resolver use this policy.  Intended to be called once at application
 /// startup before any provider is registered.
+#[cfg_attr(alef, alef(skip))]
 pub fn set_outbound_policy(policy: OutboundPolicy) {
     *policy_lock().write().expect("outbound policy lock poisoned") = policy;
 }
 
 /// Read a snapshot of the current outbound policy.
+#[cfg_attr(alef, alef(skip))]
 pub fn current_policy() -> OutboundPolicy {
-    policy_lock()
-        .read()
-        .expect("outbound policy lock poisoned")
-        .clone()
+    policy_lock().read().expect("outbound policy lock poisoned").clone()
 }
 
 // ── URL validation ────────────────────────────────────────────────────────────
@@ -75,6 +75,7 @@ pub fn current_policy() -> OutboundPolicy {
 ///
 /// Under [`OutboundPolicy::Off`] the function is a no-op and always returns
 /// `Ok(())`.
+#[cfg_attr(alef, alef(skip))]
 pub async fn validate_outbound_url(raw_url: &str) -> Result<(), LiterLlmError> {
     let policy = current_policy();
     if matches!(policy, OutboundPolicy::Off) {
@@ -110,6 +111,7 @@ pub async fn validate_outbound_url(raw_url: &str) -> Result<(), LiterLlmError> {
 /// `http://169.254.169.254/` literal-IP case without requiring an async
 /// context.  DNS-based checks still happen at connect time via
 /// [`GuardedResolver`].
+#[cfg_attr(alef, alef(skip))]
 pub fn validate_outbound_url_sync(raw_url: &str) -> Result<(), LiterLlmError> {
     let policy = current_policy();
     if matches!(policy, OutboundPolicy::Off) {
@@ -163,21 +165,20 @@ pub fn validate_outbound_url_sync(raw_url: &str) -> Result<(), LiterLlmError> {
 }
 
 async fn check_deny_private(url: &Url, raw: &str) -> Result<(), LiterLlmError> {
-    let host = url
-        .host_str()
-        .ok_or_else(|| LiterLlmError::OutboundForbidden {
-            url: raw.to_string(),
-            reason: "URL has no host".into(),
-        })?;
+    let host = url.host_str().ok_or_else(|| LiterLlmError::OutboundForbidden {
+        url: raw.to_string(),
+        reason: "URL has no host".into(),
+    })?;
 
     let port = url.port_or_known_default().unwrap_or(0);
 
-    let addrs = tokio::net::lookup_host(format!("{host}:{port}"))
-        .await
-        .map_err(|e| LiterLlmError::OutboundForbidden {
-            url: raw.to_string(),
-            reason: format!("DNS resolution failed: {e}"),
-        })?;
+    let addrs =
+        tokio::net::lookup_host(format!("{host}:{port}"))
+            .await
+            .map_err(|e| LiterLlmError::OutboundForbidden {
+                url: raw.to_string(),
+                reason: format!("DNS resolution failed: {e}"),
+            })?;
 
     for sa in addrs {
         if is_forbidden(sa.ip()) {
@@ -214,6 +215,7 @@ fn check_allowlist(url: &Url, raw: &str, allowed: &[Url]) -> Result<(), LiterLlm
 /// Covers loopback, unspecified, private (RFC 1918), link-local, multicast,
 /// broadcast, CGNAT (100.64/10), IPv4-mapped IPv6, ULA (fc00::/7), and IPv6
 /// link-local (fe80::/10).
+#[cfg_attr(alef, alef(skip))]
 pub fn is_forbidden(ip: IpAddr) -> bool {
     match ip {
         IpAddr::V4(v4) => {
@@ -231,7 +233,8 @@ pub fn is_forbidden(ip: IpAddr) -> bool {
                 || v6.is_multicast()
                 || is_unique_local_v6(v6)
                 || is_link_local_v6(v6)
-                || v6.to_ipv4_mapped()
+                || v6
+                    .to_ipv4_mapped()
                     .map(|m| is_forbidden(IpAddr::V4(m)))
                     .unwrap_or(false)
         }
@@ -260,6 +263,7 @@ fn is_link_local_v6(ip: std::net::Ipv6Addr) -> bool {
 /// Only active when the policy is not [`OutboundPolicy::Off`].  When the
 /// policy is `Off` the resolver skips filtering entirely, falling back to
 /// standard system behaviour.
+#[cfg_attr(alef, alef(skip))]
 pub struct GuardedResolver;
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
@@ -306,6 +310,7 @@ mod resolver_impl {
 
     /// Build an [`Arc`]-wrapped [`GuardedResolver`] ready for use with
     /// `reqwest::Client::builder().dns_resolver(...)`.
+    #[cfg_attr(alef, alef(skip))]
     pub fn guarded_resolver() -> Arc<GuardedResolver> {
         Arc::new(GuardedResolver)
     }
@@ -340,20 +345,16 @@ mod tests {
             ("192.168.1.1", true),
             ("127.0.0.1", true),
             ("169.254.0.1", true),
-            ("100.100.0.1", true),   // CGNAT
-            ("0.0.0.0", true),       // unspecified
+            ("100.100.0.1", true),     // CGNAT
+            ("0.0.0.0", true),         // unspecified
             ("255.255.255.255", true), // broadcast
-            ("224.0.0.1", true),     // multicast
-            ("8.8.8.8", false),      // public DNS — allowed
-            ("1.1.1.1", false),      // Cloudflare — allowed
+            ("224.0.0.1", true),       // multicast
+            ("8.8.8.8", false),        // public DNS — allowed
+            ("1.1.1.1", false),        // Cloudflare — allowed
         ];
         for (addr, expected) in cases {
             let ip: IpAddr = addr.parse().expect("valid IP");
-            assert_eq!(
-                is_forbidden(ip),
-                *expected,
-                "is_forbidden({addr}) should be {expected}"
-            );
+            assert_eq!(is_forbidden(ip), *expected, "is_forbidden({addr}) should be {expected}");
         }
     }
 
@@ -402,7 +403,10 @@ mod tests {
             let result = validate_outbound_url_sync("http://127.0.0.1/");
             assert!(result.is_err(), "loopback should be rejected");
             let err = result.unwrap_err().to_string();
-            assert!(err.contains("forbidden"), "error message should mention 'forbidden': {err}");
+            assert!(
+                err.contains("forbidden"),
+                "error message should mention 'forbidden': {err}"
+            );
         });
     }
 
