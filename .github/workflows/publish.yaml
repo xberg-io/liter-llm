@@ -54,8 +54,6 @@ jobs:
         name: Prepare
         runs-on: ubuntu-latest
         timeout-minutes: 15
-        permissions:
-            contents: write
         outputs:
             tag: ${{ steps.meta.outputs.tag }}
             # In dry-run dispatches, the tag from alef's release-metadata
@@ -84,17 +82,28 @@ jobs:
             release_zig: ${{ steps.meta.outputs.release_zig }}
             release_swift: ${{ steps.meta.outputs.release_swift }}
         steps:
+            - uses: actions/create-github-app-token@v2
+              id: app-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
+
             - name: Checkout
               uses: actions/checkout@v6
               with:
                   fetch-depth: 0
                   ref: ${{ (inputs.republish == true && (inputs.ref || github.event.repository.default_branch)) || inputs.ref || github.ref }}
+                  token: ${{ steps.app-token.outputs.token }}
+                  persist-credentials: true
 
             - name: Retag for republish
               if: ${{ inputs.republish == true || github.event.client_payload.republish == true }}
               uses: kreuzberg-dev/actions/retag-for-republish@v1
               with:
                   tag: ${{ inputs.tag || github.event.client_payload.tag }}
+              env:
+                  GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
             - name: Extract release metadata
               id: meta
@@ -1064,10 +1073,14 @@ jobs:
             needs.build-ffi.result == 'success' &&
             needs.validate-versions.result == 'success'
         runs-on: ubuntu-latest
-        permissions:
-            contents: write
         timeout-minutes: 15
         steps:
+            - uses: actions/create-github-app-token@v2
+              id: app-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
@@ -1077,6 +1090,7 @@ jobs:
                   tag: ${{ needs.prepare.outputs.tag }}
                   draft: "true"
                   dry-run: ${{ needs.prepare.outputs.dry_run }}
+                  token: ${{ steps.app-token.outputs.token }}
             - uses: actions/download-artifact@v7
               with:
                   pattern: c-ffi-*
@@ -1088,6 +1102,7 @@ jobs:
                   tag: ${{ needs.prepare.outputs.tag }}
                   assets: c-ffi-release/*.tar.gz
                   dry-run: ${{ needs.prepare.outputs.dry_run }}
+                  token: ${{ steps.app-token.outputs.token }}
 
     upload-go-ffi:
         name: Upload Go FFI assets
@@ -1099,10 +1114,14 @@ jobs:
             needs.build-ffi.result == 'success' &&
             (needs.registry-results.outputs.go != 'true' || needs.prepare.outputs.force_republish == 'true')
         runs-on: ubuntu-latest
-        permissions:
-            contents: write
         timeout-minutes: 15
         steps:
+            - uses: actions/create-github-app-token@v2
+              id: app-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
@@ -1112,6 +1131,7 @@ jobs:
                   tag: ${{ needs.prepare.outputs.tag }}
                   draft: "true"
                   dry-run: ${{ needs.prepare.outputs.dry_run }}
+                  token: ${{ steps.app-token.outputs.token }}
             - uses: actions/download-artifact@v7
               with:
                   pattern: go-ffi-*
@@ -1123,6 +1143,7 @@ jobs:
                   tag: ${{ needs.prepare.outputs.tag }}
                   assets: go-ffi-release/*.tar.gz
                   dry-run: ${{ needs.prepare.outputs.dry_run }}
+                  token: ${{ steps.app-token.outputs.token }}
 
     # Commit the prebuilt shared libraries into packages/go/.lib/<platform>/ so
     # that `go get github.com/kreuzberg-dev/liter-llm/packages/go@v{version}` ships
@@ -1139,19 +1160,26 @@ jobs:
             needs.build-ffi.result == 'success' &&
             (needs.upload-go-ffi.result == 'success' || needs.upload-go-ffi.result == 'skipped')
         runs-on: ubuntu-latest
-        permissions:
-            contents: write
         timeout-minutes: 15
         steps:
+            - uses: actions/create-github-app-token@v2
+              id: app-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
+
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
                   fetch-depth: 0
+                  token: ${{ steps.app-token.outputs.token }}
+                  persist-credentials: true
 
             - name: Setup Git
               run: |
-                  git config user.name "github-actions[bot]"
-                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git config user.name "kreuzberg-dev-publisher[bot]"
+                  git config user.email "291994444+kreuzberg-dev-publisher[bot]@users.noreply.github.com"
               shell: bash
 
             - uses: actions/download-artifact@v7
@@ -1197,7 +1225,7 @@ jobs:
             - name: Commit .lib/ files and create Go module tag
               if: ${{ needs.prepare.outputs.dry_run != 'true' }}
               env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GH_TOKEN: ${{ steps.app-token.outputs.token }}
                   TAG: ${{ needs.prepare.outputs.tag }}
                   VERSION: ${{ needs.prepare.outputs.version }}
                   REPO: ${{ github.repository }}
@@ -1267,10 +1295,14 @@ jobs:
         needs: [prepare, build-elixir-nifs]
         if: always() && needs.prepare.outputs.release_elixir == 'true' && needs.build-elixir-nifs.result == 'success'
         runs-on: ubuntu-latest
-        permissions:
-            contents: write
         timeout-minutes: 15
         steps:
+            - uses: actions/create-github-app-token@v2
+              id: app-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
@@ -1280,6 +1312,7 @@ jobs:
                   tag: ${{ needs.prepare.outputs.tag }}
                   draft: "true"
                   dry-run: ${{ needs.prepare.outputs.dry_run }}
+                  token: ${{ steps.app-token.outputs.token }}
             - uses: actions/download-artifact@v7
               with:
                   pattern: elixir-nifs-*
@@ -1291,16 +1324,21 @@ jobs:
                   tag: ${{ needs.prepare.outputs.tag }}
                   assets: elixir-nifs/*.tar.gz
                   dry-run: ${{ needs.prepare.outputs.dry_run }}
+                  token: ${{ steps.app-token.outputs.token }}
 
     upload-php-extensions:
         name: Upload PHP extension assets
         needs: [prepare, build-php]
         if: always() && needs.prepare.outputs.release_php == 'true' && needs.build-php.result == 'success'
         runs-on: ubuntu-latest
-        permissions:
-            contents: write
         timeout-minutes: 15
         steps:
+            - uses: actions/create-github-app-token@v2
+              id: app-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
@@ -1310,6 +1348,7 @@ jobs:
                   tag: ${{ needs.prepare.outputs.tag }}
                   draft: "true"
                   dry-run: ${{ needs.prepare.outputs.dry_run }}
+                  token: ${{ steps.app-token.outputs.token }}
             - uses: actions/download-artifact@v7
               with:
                   pattern: php-package-*
@@ -1326,16 +1365,21 @@ jobs:
                       dist/php-package/php_*.zip.sha256
                   fail-if-empty: "false"
                   dry-run: ${{ needs.prepare.outputs.dry_run }}
+                  token: ${{ steps.app-token.outputs.token }}
 
     upload-kotlin-android-aars:
         name: Upload Kotlin Android aars
         needs: [prepare, build-kotlin-android-natives]
         if: always() && needs.prepare.outputs.release_kotlin == 'true' && needs.build-kotlin-android-natives.result == 'success'
         runs-on: ubuntu-latest
-        permissions:
-            contents: write
         timeout-minutes: 15
         steps:
+            - uses: actions/create-github-app-token@v2
+              id: app-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
@@ -1345,6 +1389,7 @@ jobs:
                   tag: ${{ needs.prepare.outputs.tag }}
                   draft: "true"
                   dry-run: ${{ needs.prepare.outputs.dry_run }}
+                  token: ${{ steps.app-token.outputs.token }}
             - uses: actions/download-artifact@v7
               with:
                   pattern: kotlin-android-*
@@ -1357,6 +1402,7 @@ jobs:
                   assets: kotlin-android-aars/*.aar
                   fail-if-empty: "false"
                   dry-run: ${{ needs.prepare.outputs.dry_run }}
+                  token: ${{ steps.app-token.outputs.token }}
 
     # ─────────────────────────────────────────────────────────────────────────
     # Phase 6 — Publish jobs (conditional on check + build results)
@@ -1875,14 +1921,22 @@ jobs:
         runs-on: ubuntu-latest
         environment: hex
         permissions:
-            contents: write
             id-token: write
         timeout-minutes: 30
         steps:
+            - uses: actions/create-github-app-token@v2
+              id: app-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
+
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
                   fetch-depth: 0
+                  token: ${{ steps.app-token.outputs.token }}
+                  persist-credentials: true
 
             - name: Generate checksums from GitHub release
               if: needs.prepare.outputs.dry_run != 'true'
@@ -1898,8 +1952,8 @@ jobs:
             - name: Commit updated checksum file to main
               if: needs.prepare.outputs.dry_run != 'true'
               run: |
-                  git config user.name "github-actions[bot]"
-                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git config user.name "kreuzberg-dev-publisher[bot]"
+                  git config user.email "291994444+kreuzberg-dev-publisher[bot]@users.noreply.github.com"
                   git add packages/elixir/checksum-Elixir.LiterLlm.Native.exs
                   if git diff --cached --quiet; then
                     echo "No checksum changes to commit — skipping"
@@ -1986,7 +2040,6 @@ jobs:
             (needs.registry-results.outputs.packagist != 'true' || needs.prepare.outputs.force_republish == 'true')
         runs-on: ubuntu-latest
         permissions:
-            contents: write
             id-token: write
         timeout-minutes: 15
         steps:
@@ -2005,12 +2058,16 @@ jobs:
         needs: [prepare, check-pub, assemble-dart-package]
         if: ${{ needs.prepare.outputs.release_dart == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && (needs.check-pub.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
         runs-on: ubuntu-latest
-        permissions:
-            actions: write
         steps:
+            - uses: actions/create-github-app-token@v2
+              id: app-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
             - name: Dispatch publish-pubdev workflow
               env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GH_TOKEN: ${{ steps.app-token.outputs.token }}
                   GH_REPO: ${{ github.repository }}
               run: |
                   gh workflow run publish-pubdev.yaml \
@@ -2022,9 +2079,13 @@ jobs:
         needs: [prepare, check-zig, build-ffi]
         if: ${{ needs.prepare.outputs.release_zig == 'true' && needs.prepare.outputs.is_tag == 'true' && (needs.check-zig.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') && needs.build-ffi.result == 'success' }}
         runs-on: ubuntu-latest
-        permissions:
-            contents: write
         steps:
+            - uses: actions/create-github-app-token@v2
+              id: app-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
@@ -2037,6 +2098,7 @@ jobs:
               with:
                   working-directory: packages/zig
                   tag: ${{ needs.prepare.outputs.tag }}
+                  token: ${{ steps.app-token.outputs.token }}
                   # Override the auto-detected package-name (`liter_llm` from
                   # build.zig.zon) to match the alef-emitted test_app URL pattern
                   # `{crate-name}-zig-v{version}.tar.gz`. Without this, the asset
@@ -2119,13 +2181,20 @@ jobs:
         needs: [prepare, swift-artifactbundle]
         if: ${{ (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.swift-artifactbundle.result == 'success' }}
         runs-on: ubuntu-latest
-        permissions:
-            contents: write
         steps:
+            - uses: actions/create-github-app-token@v2
+              id: app-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
+
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
                   fetch-depth: 0
+                  token: ${{ steps.app-token.outputs.token }}
+                  persist-credentials: true
 
             - uses: actions/download-artifact@v7
               with:
@@ -2141,6 +2210,7 @@ jobs:
                   assets: |
                       **/*.zip
                       **/*.checksum
+                  token: ${{ steps.app-token.outputs.token }}
 
             - name: Create swift-release tag with substituted checksum
               if: ${{ needs.prepare.outputs.dry_run != 'true' }}
@@ -2148,7 +2218,7 @@ jobs:
                   VERSION: ${{ needs.prepare.outputs.version }}
                   CHECKSUM: ${{ needs.swift-artifactbundle.outputs.checksum }}
                   TAG: ${{ needs.prepare.outputs.tag }}
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GH_TOKEN: ${{ steps.app-token.outputs.token }}
               run: |
                   set -euo pipefail
 
@@ -2171,8 +2241,8 @@ jobs:
                   fi
 
                   # Configure git
-                  git config user.name "github-actions[bot]"
-                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git config user.name "kreuzberg-dev-publisher[bot]"
+                  git config user.email "291994444+kreuzberg-dev-publisher[bot]@users.noreply.github.com"
 
                   # Commit the patched Package.swift to a temporary release branch
                   git add Package.swift
@@ -2204,7 +2274,7 @@ jobs:
             - name: Upload substituted Package.swift to GitHub Release
               if: ${{ needs.prepare.outputs.dry_run != 'true' }}
               env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GH_TOKEN: ${{ steps.app-token.outputs.token }}
                   VERSION: ${{ needs.prepare.outputs.version }}
               run: |
                   gh release upload "v${VERSION}" /tmp/Package.swift \
@@ -2214,7 +2284,7 @@ jobs:
             - name: Update release notes with Swift install instructions
               if: ${{ needs.prepare.outputs.dry_run != 'true' }}
               env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GH_TOKEN: ${{ steps.app-token.outputs.token }}
                   VERSION: ${{ needs.prepare.outputs.version }}
               run: |
                   CHECKSUM=${{ needs.swift-artifactbundle.outputs.checksum }}
@@ -2353,10 +2423,14 @@ jobs:
             needs.build-cli-binaries.result != 'cancelled' &&
             needs.build-cli-binaries.result != 'skipped'
         runs-on: ubuntu-latest
-        permissions:
-            contents: write
         timeout-minutes: 10
         steps:
+            - uses: actions/create-github-app-token@v2
+              id: app-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
             - uses: actions/checkout@v6
             - uses: actions/download-artifact@v7
               with:
@@ -2389,6 +2463,7 @@ jobs:
                   tag: ${{ needs.prepare.outputs.tag }}
                   artifacts: "dist/cli/*"
                   draft: "false"
+                  token: ${{ steps.app-token.outputs.token }}
 
     # ── Homebrew (formula update + bottles) ──────────────────────────────────
     #
@@ -2425,9 +2500,22 @@ jobs:
             needs.check-homebrew.outputs.exists != 'true' &&
             needs.publish-crates.result != 'failure'
         runs-on: ubuntu-latest
-        permissions:
-            contents: write
         steps:
+            - uses: actions/create-github-app-token@v2
+              id: app-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
+
+            - uses: actions/create-github-app-token@v2
+              id: tap-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
+                  repositories: homebrew-tap
+
             - name: Checkout source repo
               uses: actions/checkout@v6
               with:
@@ -2437,12 +2525,13 @@ jobs:
               uses: actions/checkout@v6
               with:
                   repository: kreuzberg-dev/homebrew-tap
-                  token: ${{ secrets.HOMEBREW_TOKEN }}
+                  token: ${{ steps.tap-token.outputs.token }}
                   path: homebrew-tap
+                  persist-credentials: true
 
             - name: Update formula source url+sha
               env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GH_TOKEN: ${{ steps.app-token.outputs.token }}
                   TAG: ${{ needs.prepare.outputs.tag }}
                   VERSION: ${{ needs.prepare.outputs.version }}
                   TAP_DIR: ${{ github.workspace }}/homebrew-tap
@@ -2452,10 +2541,10 @@ jobs:
             - name: Commit and push to tap
               working-directory: homebrew-tap
               env:
-                  GH_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
+                  GH_TOKEN: ${{ steps.tap-token.outputs.token }}
               run: |
-                  git config user.name "kreuzberg-bot"
-                  git config user.email "bot@kreuzberg.dev"
+                  git config user.name "kreuzberg-dev-publisher[bot]"
+                  git config user.email "291994444+kreuzberg-dev-publisher[bot]@users.noreply.github.com"
                   if git diff --quiet Formula/; then
                     echo "No formula changes; skipping commit."
                     exit 0
@@ -2472,8 +2561,6 @@ jobs:
             needs.prepare.outputs.dry_run != 'true' &&
             needs.publish-homebrew-formula.result == 'success'
         runs-on: ${{ matrix.os }}
-        permissions:
-            contents: write
         strategy:
             fail-fast: false
             matrix:
@@ -2483,6 +2570,13 @@ jobs:
                     - { os: ubuntu-latest, bottle_tag: x86_64_linux, install_brew: true }
                     - { os: ubuntu-24.04-arm, bottle_tag: arm64_linux, install_brew: true }
         steps:
+            - uses: actions/create-github-app-token@v2
+              id: app-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
+
             # actions/checkout@v6 regression on macos-15-intel: the includeIf-gated
             # credential helper isn't honored by git 2.54 on that runner image, so
             # the fetch falls back to interactive auth and fails. v5 writes the
@@ -2505,7 +2599,7 @@ jobs:
                       liter-llm
                   out-dir: ${{ github.workspace }}/bottle-json
                   github-repo: kreuzberg-dev/liter-llm
-                  token: ${{ secrets.GITHUB_TOKEN }}
+                  token: ${{ steps.app-token.outputs.token }}
 
             - uses: actions/upload-artifact@v7
               with:
@@ -2523,9 +2617,15 @@ jobs:
             needs.publish-homebrew-formula.result == 'success' &&
             needs.homebrew-bottles.result == 'success'
         runs-on: ubuntu-latest
-        permissions:
-            contents: write
         steps:
+            - uses: actions/create-github-app-token@v2
+              id: tap-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
+                  repositories: homebrew-tap
+
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
@@ -2533,8 +2633,9 @@ jobs:
             - uses: actions/checkout@v6
               with:
                   repository: kreuzberg-dev/homebrew-tap
-                  token: ${{ secrets.HOMEBREW_TOKEN }}
+                  token: ${{ steps.tap-token.outputs.token }}
                   path: homebrew-tap
+                  persist-credentials: true
 
             - uses: actions/download-artifact@v7
               with:
@@ -2555,10 +2656,10 @@ jobs:
             - name: Commit and push bottle DSL
               working-directory: homebrew-tap
               env:
-                  GH_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
+                  GH_TOKEN: ${{ steps.tap-token.outputs.token }}
               run: |
-                  git config user.name "kreuzberg-bot"
-                  git config user.email "bot@kreuzberg.dev"
+                  git config user.name "kreuzberg-dev-publisher[bot]"
+                  git config user.email "291994444+kreuzberg-dev-publisher[bot]@users.noreply.github.com"
                   if git diff --quiet Formula/; then
                     echo "No bottle DSL changes; skipping commit."
                     exit 0
@@ -2600,10 +2701,15 @@ jobs:
             - upload-swift-release
         if: always()
         runs-on: ubuntu-latest
-        permissions:
-            contents: write
         timeout-minutes: 15
         steps:
+            - uses: actions/create-github-app-token@v2
+              id: app-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
+
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
@@ -2613,6 +2719,7 @@ jobs:
               uses: kreuzberg-dev/actions/finalize-release@v1
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
+                  token: ${{ steps.app-token.outputs.token }}
                   # go-module-path omitted: publish-go-module creates packages/go/{tag}
                   # on a commit that includes the bundled .lib/ prebuilt libraries.
 
@@ -2680,11 +2787,16 @@ jobs:
             needs.prepare.outputs.dry_run != 'true' &&
             !contains(needs.*.result, 'failure')
         runs-on: ubuntu-latest
-        permissions:
-            contents: write
         steps:
+            - uses: actions/create-github-app-token@v2
+              id: app-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
             - uses: kreuzberg-dev/actions/announce-release-discord@v1
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
                   webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
                   project-name: liter-llm
+                  token: ${{ steps.app-token.outputs.token }}

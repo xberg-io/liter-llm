@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **publish workflow**: migrate every push, release-asset upload, and homebrew-tap commit to the `kreuzberg-dev-publisher[bot]` GitHub App via `actions/create-github-app-token@v2`, replacing `secrets.GITHUB_TOKEN` and `secrets.HOMEBREW_TOKEN` with scoped app installation tokens.
+
 ## [1.5.0] - 2026-06-07
 
 ### Security
