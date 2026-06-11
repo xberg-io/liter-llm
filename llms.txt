@@ -1,10 +1,10 @@
 # liter-llm
 
-> Universal LLM API client for 142+ providers with native bindings for 11 languages.
+> Universal LLM API client for 143 providers with native bindings for 16 languages.
 
 ## About
 
-liter-llm provides unified access to 142+ LLM providers through a single API.
+liter-llm provides unified access to 143 LLM providers through a single API.
 Built in Rust with native bindings for Python, TypeScript, Go, Java, Ruby, PHP,
 C#, Elixir, WebAssembly, and C/FFI. Provider routing is automatic based on
 model name prefixes (e.g. "openai/gpt-4o" routes to OpenAI).
@@ -13,7 +13,7 @@ model name prefixes (e.g. "openai/gpt-4o" routes to OpenAI).
 
 Part of the kreuzberg.dev ecosystem:
 - **kreuzberg.dev** — Organization: https://kreuzberg.dev
-- **Kreuzberg** — Document intelligence for 90+ formats: https://github.com/kreuzberg-dev/kreuzberg
+- **Kreuzberg** — Document intelligence for 92 formats: https://github.com/kreuzberg-dev/kreuzberg
   - Kreuzberg docs: https://docs.kreuzberg.dev
 - **html-to-markdown** — HTML to Markdown converter: https://github.com/kreuzberg-dev/html-to-markdown
 - **tree-sitter-language-pack** — Multi-language parsing: https://github.com/kreuzberg-dev/tree-sitter-language-pack
@@ -134,7 +134,7 @@ Docker quickstart (35MB Chainguard image):
 CLI:
   liter-llm api --config liter-llm-proxy.toml
 
-Features: model routing (142+ providers), virtual API keys, rate limiting (RPM/TPM), cost tracking, budget enforcement, response caching, SSE streaming, OpenAPI 3.1 at /openapi.json.
+Features: model routing (143 providers), virtual API keys, rate limiting (RPM/TPM), cost tracking, budget enforcement, response caching, SSE streaming, OpenAPI 3.1 at /openapi.json.
 
 Config format: TOML with ${ENV_VAR} interpolation. Auto-discovers liter-llm-proxy.toml.
 
@@ -166,7 +166,7 @@ CLI:
 
 Tools: chat completions, streaming, embeddings, image generation, speech, transcription, moderation, search, OCR, reranking, file operations, batch operations, responses, model listing.
 
-## Supported Providers (142+)
+## Supported Providers (143)
 
 OpenAI, Anthropic, Google Gemini, Google Vertex AI, AWS Bedrock, Azure OpenAI,
 Groq, Mistral, Cohere, Together AI, Fireworks AI, Perplexity, DeepSeek,

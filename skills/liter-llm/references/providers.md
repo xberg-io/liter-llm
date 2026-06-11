@@ -1,6 +1,6 @@
 # Providers Reference
 
-Liter-LLM supports 142 providers out of the box via an embedded provider registry (`schemas/providers.json`).
+Liter-LLM supports 143 providers out of the box via an embedded provider registry (`schemas/providers.json`).
 
 ## Routing Convention
 
