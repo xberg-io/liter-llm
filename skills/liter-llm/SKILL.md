@@ -1,8 +1,8 @@
 ---
 name: liter-llm
 description: >-
-  Universal LLM API client for 142+ providers with native bindings for
-  11 languages. Use when writing code that calls LLM APIs via liter-llm
+  Universal LLM API client for 143 providers with native bindings for
+  16 languages. Use when writing code that calls LLM APIs via liter-llm
   in Python, TypeScript, Rust, Go, Java, C#, Ruby, PHP, Elixir, WASM, or C.
   Covers chat, streaming, embeddings, image generation, speech, transcription,
   moderation, reranking, search, OCR, tool calling, and configuration.
@@ -15,7 +15,7 @@ metadata:
 
 # Liter-LLM Universal LLM Client
 
-Liter-LLM is a universal LLM API client with a Rust core and native bindings for Python, TypeScript/Node.js, Go, Java, C#, Ruby, PHP, Elixir, WebAssembly, and C (FFI). It provides a unified interface to 142+ LLM providers (OpenAI, Anthropic, Google Gemini, Groq, Mistral, Cohere, AWS Bedrock, Azure, and many more) with built-in caching, budgets, rate limiting, hooks, streaming, cost tracking, health checks, and tracing.
+Liter-LLM is a universal LLM API client with a Rust core and native bindings for Python, TypeScript/Node.js, Go, Java, C#, Ruby, PHP, Elixir, WebAssembly, and C (FFI). It provides a unified interface to 143 LLM providers (OpenAI, Anthropic, Google Gemini, Groq, Mistral, Cohere, AWS Bedrock, Azure, and many more) with built-in caching, budgets, rate limiting, hooks, streaming, cost tracking, health checks, and tracing.
 
 Use this skill when writing code that:
 
@@ -25,7 +25,7 @@ Use this skill when writing code that:
 - Implements streaming responses from LLMs
 - Uses search, OCR, image generation, speech, transcription, moderation, or reranking APIs
 - Routes requests to specific providers using model prefixes
-- Handles LLM API errors across any of the 11 supported languages
+- Handles LLM API errors across any of the 16 supported languages
 
 ## Installation
 
@@ -634,7 +634,7 @@ docker pull ghcr.io/kreuzberg-dev/liter-llm
 
 ## Proxy Server
 
-liter-llm includes an OpenAI-compatible API gateway with 22 endpoints. It acts as a drop-in replacement for litellm proxy, routing requests to 142+ LLM providers.
+liter-llm includes an OpenAI-compatible API gateway with 22 endpoints. It acts as a drop-in replacement for litellm proxy, routing requests to 143 LLM providers.
 
 ### Features
 

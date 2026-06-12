@@ -31,7 +31,7 @@ license = "MIT"
 repository = "https://github.com/kreuzberg-dev/liter-llm"
 homepage = "https://kreuzberg.dev"
 authors = ["Na'aman Hirschfeld <naaman@kreuzberg.dev>"]
-description = "Universal LLM API client — 142+ providers, streaming, tool calling. Rust-powered with polyglot bindings."
+description = "Universal LLM API client — 143 providers, streaming, tool calling. Rust-powered with polyglot bindings."
 keywords = ["llm", "openai", "api-client", "ai", "kreuzberg"]
 
 [workspace.dependencies]

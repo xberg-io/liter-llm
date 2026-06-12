@@ -1,6 +1,6 @@
 [project]
 site_name = "liter-llm"
-site_description = "Universal LLM API client for 142+ providers with polyglot bindings."
+site_description = "Universal LLM API client for 143 providers with polyglot bindings."
 site_url = "https://docs.liter-llm.kreuzberg.dev"
 site_author = "kreuzberg.dev"
 repo_name = "kreuzberg-dev/liter-llm"
