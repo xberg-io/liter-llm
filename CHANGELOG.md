@@ -7,9 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-06-13
+
 ### Changed
 
 - **publish workflow**: migrate every push, release-asset upload, and homebrew-tap commit to the `kreuzberg-dev-publisher[bot]` GitHub App via `actions/create-github-app-token@v2`, replacing `secrets.GITHUB_TOKEN` and `secrets.HOMEBREW_TOKEN` with scoped app installation tokens.
+- **Bindings regenerated against the latest alef**, refreshing all 16 language surfaces and e2e suites.
+
+### Fixed
+
+- **Dart binding**: named parameters and null-safety annotations, plus per-language README sync and updated method/type counts (#133).
+- **PyO3 0.29 method rename**: `pyo3::Bound::downcast_into` callsites in `crates/liter-llm-py/src/lib.rs` migrated to the new `cast_into` name so the Python binding builds against pyo3 0.29.
+- **PMD ruleset**: exclude `UnnecessaryWarningSuppression` from `category/java/bestpractices.xml`. Alef emits a blanket `@SuppressWarnings("PMD")` on every generated DTO record; PMD flags some as unnecessary depending on which rules fire on the surrounding record, breaking the Java hook on every regeneration.
 
 ## [1.5.0] - 2026-06-07
 
