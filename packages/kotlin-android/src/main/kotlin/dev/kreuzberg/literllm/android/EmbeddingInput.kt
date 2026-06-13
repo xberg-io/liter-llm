@@ -19,27 +19,22 @@
     "CyclomaticComplexMethod",
     "LongMethod",
     "MagicNumber",
+    "NestedBlockDepth",
 )
 
 package dev.kreuzberg.literllm.android
 
 /** Text or texts to embed. */
-@com.fasterxml.jackson.databind.annotation.JsonDeserialize(
-    using = EmbeddingInputDeserializer::class
-)
+@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = EmbeddingInputDeserializer::class)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = EmbeddingInputSerializer::class)
 sealed class EmbeddingInput {
     /** Single text string. */
     data class Single(val value: String) : EmbeddingInput()
-
     /** Multiple text strings (batch embedding). */
     data class Multiple(val value: List<String>) : EmbeddingInput()
 }
 
-private class EmbeddingInputDeserializer :
-    com.fasterxml.jackson.databind.deser.std.StdDeserializer<EmbeddingInput>(
-        EmbeddingInput::class.java
-    ) {
+private class EmbeddingInputDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<EmbeddingInput>(EmbeddingInput::class.java) {
     @Suppress("LongMethod")
     override fun deserialize(
         parser: com.fasterxml.jackson.core.JsonParser,
@@ -47,28 +42,18 @@ private class EmbeddingInputDeserializer :
     ): EmbeddingInput {
         val node = parser.codec.readTree<com.fasterxml.jackson.databind.JsonNode>(parser)
         if (node.isTextual) return EmbeddingInput.Single(node.asText())
-        if (node.isArray)
-            return run {
-                val javaType =
-                    ctx.typeFactory.constructCollectionType(List::class.java, String::class.java)
+        if (node.isArray) return run {
+                val javaType = ctx.typeFactory.constructCollectionType(List::class.java, String::class.java)
                 @Suppress("UNCHECKED_CAST")
-                EmbeddingInput.Multiple(
-                    ctx.readTreeAsValue<List<String>>(node, javaType) as List<String>
-                )
+                EmbeddingInput.Multiple(ctx.readTreeAsValue<List<String>>(node, javaType) as List<String>)
             }
         throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
-            parser,
-            "Cannot deserialize EmbeddingInput: no matching variant for JSON shape",
-            null,
-            EmbeddingInput::class.java,
+            parser, "Cannot deserialize EmbeddingInput: no matching variant for JSON shape", null, EmbeddingInput::class.java,
         )
     }
 }
 
-private class EmbeddingInputSerializer :
-    com.fasterxml.jackson.databind.ser.std.StdSerializer<EmbeddingInput>(
-        EmbeddingInput::class.java
-    ) {
+private class EmbeddingInputSerializer : com.fasterxml.jackson.databind.ser.std.StdSerializer<EmbeddingInput>(EmbeddingInput::class.java) {
     @Suppress("LongMethod")
     override fun serialize(
         value: EmbeddingInput,
@@ -76,9 +61,7 @@ private class EmbeddingInputSerializer :
         provider: com.fasterxml.jackson.databind.SerializerProvider,
     ) {
         @Suppress("UNCHECKED_CAST")
-        val mapper =
-            (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper)
-                ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
+        val mapper = (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper) ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
         when (value) {
             is EmbeddingInput.Single -> mapper.writeValue(gen, value.value)
             is EmbeddingInput.Multiple -> mapper.writeValue(gen, value.value)

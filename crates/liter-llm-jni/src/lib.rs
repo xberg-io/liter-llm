@@ -125,7 +125,7 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return 0;
         }
     };
-    let result = core_crate::create_client(
+    let result = liter_llm::create_client(
         api_key,
         if base_url.is_empty() { None } else { Some(base_url) },
         if timeout_secs != 0 {
@@ -164,7 +164,7 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return 0;
         }
     };
-    let result = core_crate::create_client_from_json(&json);
+    let result = liter_llm::create_client_from_json(&json);
     match result {
         Err(e) => {
             throw_jni_error(env, &format!("{e}"));
@@ -196,7 +196,7 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return ();
         }
     };
-    let result = core_crate::register_custom_provider(config);
+    let result = liter_llm::provider::custom::register_custom_provider(config);
     match result {
         Err(e) => {
             throw_jni_error(env, &format!("{e}"));
@@ -221,7 +221,7 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return false;
         }
     };
-    let result = core_crate::unregister_custom_provider(&name);
+    let result = liter_llm::provider::custom::unregister_custom_provider(&name);
     match result {
         Err(e) => {
             throw_jni_error(env, &format!("{e}"));
@@ -238,7 +238,7 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
     // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
     let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
     let env = __jni_attach_guard.borrow_env_mut();
-    let result = core_crate::all_providers();
+    let result = liter_llm::provider::all_providers();
     match result {
         Err(e) => {
             throw_jni_error(env, &format!("{e}"));
@@ -264,7 +264,7 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
     // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
     let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
     let env = __jni_attach_guard.borrow_env_mut();
-    let result = core_crate::complex_provider_names();
+    let result = liter_llm::provider::complex_provider_names();
     match result {
         Err(e) => {
             throw_jni_error(env, &format!("{e}"));
@@ -300,7 +300,7 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let v = core_crate::completion_cost(&model, prompt_tokens as u64, completion_tokens as u64);
+    let v = liter_llm::completion_cost(&model, prompt_tokens as u64, completion_tokens as u64);
     let s = match serde_json::to_string(&v) {
         Ok(s) => s,
         Err(e) => {
@@ -329,7 +329,7 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
             return std::ptr::null_mut();
         }
     };
-    let v = core_crate::completion_cost_with_cache(
+    let v = liter_llm::completion_cost_with_cache(
         &model,
         prompt_tokens as u64,
         cached_tokens as u64,
@@ -352,7 +352,7 @@ pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge
     // SAFETY: env is a valid EnvUnowned passed by the JVM for this native call frame.
     let mut __jni_attach_guard = unsafe { jni::AttachGuard::from_unowned(env.as_raw()) };
     let env = __jni_attach_guard.borrow_env_mut();
-    let v = core_crate::ensure_crypto_provider();
+    let v = liter_llm::ensure_crypto_provider();
 }
 #[unsafe(no_mangle)]
 pub unsafe extern "system" fn Java_dev_kreuzberg_literllm_android_LiterLlmBridge_nativeDefaultClientChat(

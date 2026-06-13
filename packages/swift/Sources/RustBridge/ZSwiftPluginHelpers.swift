@@ -2,7 +2,7 @@
 // swift-format-ignore-file
 
 import Foundation
-import RustBridgeC
+import RustBridge
 
 // MARK: - JSON Envelope
 
@@ -27,27 +27,26 @@ enum InboundEnvelope<T: Encodable>: Encodable {
 }
 
 /// Encode a successful `()` result as `{"ok":null}`.
-func encodeOkVoidEnvelope() -> RustString {
-  return RustString("{\"ok\":null}")
+func encodeOkVoidEnvelope() -> String {
+  return "{\"ok\":null}"
 }
 
 /// Encode a successful `T: Encodable` result as `{"ok": <T>}`.
-func encodeOkEnvelope<T: Encodable>(_ value: T) -> RustString {
+func encodeOkEnvelope<T: Encodable>(_ value: T) -> String {
   do {
     let payload = InboundEnvelope.ok(value)
     let data = try JSONEncoder().encode(payload)
-    return RustString(
-      String(data: data, encoding: .utf8) ?? "{\"err\":\"swift: invalid utf8 in envelope\"}")
+    return String(data: data, encoding: .utf8) ?? "{\"err\":\"swift: invalid utf8 in envelope\"}"
   } catch {
     return encodeErrEnvelope("swift: failed to encode ok envelope: \(error)")
   }
 }
 
 /// Encode a failure as `{"err": "<message>"}`.
-func encodeErrEnvelope(_ message: String) -> RustString {
+func encodeErrEnvelope(_ message: String) -> String {
   let escaped = message.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(
     of: "\"", with: "\\\"")
-  return RustString("{\"err\":\"\(escaped)\"}")
+  return "{\"err\":\"\(escaped)\"}"
 }
 
 /// Decode a JSON-encoded payload into a `Decodable` type.

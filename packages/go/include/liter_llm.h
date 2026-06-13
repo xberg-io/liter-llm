@@ -127,7 +127,7 @@ typedef struct LITERLLMCustomProviderConfig LITERLLMCustomProviderConfig;
  * provider is used as the fallback. This enables seamless migration between
  * providers by changing only the model name.
  *
- * The provider is stored behind an [`Arc`] so it can be shared cheaply into
+ * The provider is stored behind an `Arc` so it can be shared cheaply into
  * async closures and streaming tasks. Pre-computed auth headers and extra
  * headers are cached at construction to avoid redundant encoding on every request.
  */
@@ -5451,8 +5451,8 @@ char *literllm_cache_backend_to_string(const LITERLLMCacheBackend *ptr);
  *
  * This is the primary binding entry-point. All parameters except `api_key`
  * are optional â omitting them uses the same defaults as
- * [`ClientConfigBuilder`].
- * \note Returns [`LiterLlmError`] if the underlying HTTP client cannot be
+ * `ClientConfigBuilder`.
+ * \note Returns `LiterLlmError` if the underlying HTTP client cannot be
  * constructed, or if the resolved provider configuration is invalid.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
@@ -5467,7 +5467,7 @@ LITERLLMDefaultClient *literllm_create_client(const char *api_key,
  * Create a new LLM client from a JSON string.
  *
  * The JSON object accepts the same fields as `liter-llm.toml` (snake_case).
- * \note Returns [`LiterLlmError::BadRequest`] if `json` is not valid JSON or
+ * \note Returns `LiterLlmError.BadRequest` if `json` is not valid JSON or
  * contains unknown fields.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
@@ -5572,7 +5572,7 @@ double literllm_completion_cost(const char *model,
  * input rate.
  *
  * Returns `None` if the model is not present in the embedded pricing
- * registry, mirroring [`completion_cost`].
+ * registry, mirroring `completion_cost`.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
@@ -5587,7 +5587,7 @@ double literllm_completion_cost_with_cache(const char *model,
  * The tokenizer is resolved from the model name prefix (e.g. `"gpt-4o"` maps
  * to the `Xenova/gpt-4o` HuggingFace tokenizer). Tokenizers are cached after
  * first load.
- * \note Returns [`LiterLlmError::BadRequest`] if the tokenizer cannot be loaded
+ * \note Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
  * (e.g. network failure on first use) or if tokenization itself fails.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
@@ -5596,13 +5596,13 @@ uintptr_t literllm_count_tokens(const char *model,
                                 const char *text);
 
 /**
- * Count tokens for a full [`ChatCompletionRequest`].
+ * Count tokens for a full `ChatCompletionRequest`.
  *
  * Sums tokens across all message text contents plus a per-message overhead
  * of ~4 tokens (for role, separators, and formatting metadata). Tool
  * definitions and multimodal content parts (images, audio, documents) are
  * not counted â only textual content contributes to the token total.
- * \note Returns [`LiterLlmError::BadRequest`] if the tokenizer cannot be loaded or
+ * \note Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded or
  * if tokenization fails for any message.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.

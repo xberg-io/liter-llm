@@ -19,33 +19,26 @@
     "CyclomaticComplexMethod",
     "LongMethod",
     "MagicNumber",
+    "NestedBlockDepth",
 )
 
 package dev.kreuzberg.literllm.android
 
 /** A document to be reranked — either a plain string or an object with a text field. */
-@com.fasterxml.jackson.databind.annotation.JsonDeserialize(
-    using = RerankDocumentDeserializer::class
-)
+@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = RerankDocumentDeserializer::class)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = RerankDocumentSerializer::class)
 sealed class RerankDocument {
     /** Plain text document content. */
     data class Text(val value: String) : RerankDocument()
-
     /** Document with explicit text field (may include metadata). */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
-        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
-    )
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
-        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
-    )
-    data class Object(val text: String) : RerankDocument()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
+    data class Object(
+        val text: String,
+    ) : RerankDocument()
 }
 
-private class RerankDocumentDeserializer :
-    com.fasterxml.jackson.databind.deser.std.StdDeserializer<RerankDocument>(
-        RerankDocument::class.java
-    ) {
+private class RerankDocumentDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<RerankDocument>(RerankDocument::class.java) {
     @Suppress("LongMethod")
     override fun deserialize(
         parser: com.fasterxml.jackson.core.JsonParser,
@@ -53,24 +46,14 @@ private class RerankDocumentDeserializer :
     ): RerankDocument {
         val node = parser.codec.readTree<com.fasterxml.jackson.databind.JsonNode>(parser)
         if (node.isTextual) return RerankDocument.Text(node.asText())
-        if (node.isObject)
-            return ctx.readTreeAsValue<RerankDocument.Object>(
-                node,
-                RerankDocument.Object::class.java,
-            )
+        if (node.isObject) return ctx.readTreeAsValue<RerankDocument.Object>(node, RerankDocument.Object::class.java)
         throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
-            parser,
-            "Cannot deserialize RerankDocument: no matching variant for JSON shape",
-            null,
-            RerankDocument::class.java,
+            parser, "Cannot deserialize RerankDocument: no matching variant for JSON shape", null, RerankDocument::class.java,
         )
     }
 }
 
-private class RerankDocumentSerializer :
-    com.fasterxml.jackson.databind.ser.std.StdSerializer<RerankDocument>(
-        RerankDocument::class.java
-    ) {
+private class RerankDocumentSerializer : com.fasterxml.jackson.databind.ser.std.StdSerializer<RerankDocument>(RerankDocument::class.java) {
     @Suppress("LongMethod")
     override fun serialize(
         value: RerankDocument,
@@ -78,9 +61,7 @@ private class RerankDocumentSerializer :
         provider: com.fasterxml.jackson.databind.SerializerProvider,
     ) {
         @Suppress("UNCHECKED_CAST")
-        val mapper =
-            (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper)
-                ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
+        val mapper = (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper) ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
         when (value) {
             is RerankDocument.Text -> mapper.writeValue(gen, value.value)
             is RerankDocument.Object -> mapper.writeValue(gen, value as RerankDocument.Object)

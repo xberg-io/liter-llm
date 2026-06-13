@@ -19,6 +19,7 @@
     "CyclomaticComplexMethod",
     "LongMethod",
     "MagicNumber",
+    "NestedBlockDepth",
 )
 
 package dev.kreuzberg.literllm.android
@@ -26,8 +27,8 @@ package dev.kreuzberg.literllm.android
 /** Response listing available models. */
 data class ModelsListResponse(
     /**
-     * Always `"list"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard
-     * provider values do not break deserialization.
+     * Always `"list"` from OpenAI-compatible APIs.  Stored as a plain
+     * `String` so non-standard provider values do not break deserialization.
      */
     val `object`: String = "",
     /** List of available models. */

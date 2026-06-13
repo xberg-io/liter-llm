@@ -19,6 +19,7 @@
     "CyclomaticComplexMethod",
     "LongMethod",
     "MagicNumber",
+    "NestedBlockDepth",
 )
 
 package dev.kreuzberg.literllm.android
@@ -34,10 +35,11 @@ enum class FinishReason {
     /**
      * Catch-all for unknown finish reasons returned by non-OpenAI providers.
      *
-     * Note: this intentionally does **not** carry the original string (e.g. `Other(String)`). Using
-     * `#[serde(other)]` requires a unit variant, and switching to `#[serde(untagged)]` would change
-     * deserialization semantics for all variants. The original value can be recovered by inspecting
-     * the raw JSON if needed.
+     * Note: this intentionally does **not** carry the original string (e.g.
+     * `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and
+     * switching to `#[serde(untagged)]` would change deserialization semantics
+     * for all variants.  The original value can be recovered by inspecting the
+     * raw JSON if needed.
      */
     @com.fasterxml.jackson.annotation.JsonProperty("other") OTHER;
 

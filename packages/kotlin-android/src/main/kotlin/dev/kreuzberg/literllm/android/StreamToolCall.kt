@@ -19,6 +19,7 @@
     "CyclomaticComplexMethod",
     "LongMethod",
     "MagicNumber",
+    "NestedBlockDepth",
 )
 
 package dev.kreuzberg.literllm.android
@@ -30,7 +31,8 @@ data class StreamToolCall(
     /** Tool call ID (typically in the first chunk for this call). */
     val id: String? = null,
     /** Tool type (typically "function"). */
-    @com.fasterxml.jackson.annotation.JsonProperty("type") val callType: ToolType? = null,
+    @com.fasterxml.jackson.annotation.JsonProperty("type")
+    val callType: ToolType? = null,
     /** Partial function name and arguments. */
     val function: StreamFunctionCall? = null,
 )

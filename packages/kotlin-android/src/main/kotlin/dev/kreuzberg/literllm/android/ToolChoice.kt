@@ -19,6 +19,7 @@
     "CyclomaticComplexMethod",
     "LongMethod",
     "MagicNumber",
+    "NestedBlockDepth",
 )
 
 package dev.kreuzberg.literllm.android
@@ -29,13 +30,11 @@ package dev.kreuzberg.literllm.android
 sealed class ToolChoice {
     /** Predefined mode: auto, required, or none. */
     data class Mode(val value: ToolChoiceMode) : ToolChoice()
-
     /** Force a specific tool to be called. */
     data class Specific(val toolChoice: SpecificToolChoice) : ToolChoice()
 }
 
-private class ToolChoiceDeserializer :
-    com.fasterxml.jackson.databind.deser.std.StdDeserializer<ToolChoice>(ToolChoice::class.java) {
+private class ToolChoiceDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<ToolChoice>(ToolChoice::class.java) {
     @Suppress("LongMethod")
     override fun deserialize(
         parser: com.fasterxml.jackson.core.JsonParser,
@@ -43,38 +42,20 @@ private class ToolChoiceDeserializer :
     ): ToolChoice {
         val node = parser.codec.readTree<com.fasterxml.jackson.databind.JsonNode>(parser)
         if (true) {
-            val result =
-                try {
-                    ToolChoice.Mode(ctx.readTreeAsValue(node, ToolChoiceMode::class.java))
-                } catch (_: com.fasterxml.jackson.databind.exc.MismatchedInputException) {
-                    null as? ToolChoice
-                } catch (_: com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException) {
-                    null as? ToolChoice
-                }
+            val result = try { ToolChoice.Mode(ctx.readTreeAsValue(node, ToolChoiceMode::class.java)) } catch (_: com.fasterxml.jackson.databind.exc.MismatchedInputException) { null as? ToolChoice } catch (_: com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException) { null as? ToolChoice }
             if (result != null) return result
         }
         if (true) {
-            val result =
-                try {
-                    ToolChoice.Specific(ctx.readTreeAsValue(node, SpecificToolChoice::class.java))
-                } catch (_: com.fasterxml.jackson.databind.exc.MismatchedInputException) {
-                    null as? ToolChoice
-                } catch (_: com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException) {
-                    null as? ToolChoice
-                }
+            val result = try { ToolChoice.Specific(ctx.readTreeAsValue(node, SpecificToolChoice::class.java)) } catch (_: com.fasterxml.jackson.databind.exc.MismatchedInputException) { null as? ToolChoice } catch (_: com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException) { null as? ToolChoice }
             if (result != null) return result
         }
         throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
-            parser,
-            "Cannot deserialize ToolChoice: no matching variant for JSON shape",
-            null,
-            ToolChoice::class.java,
+            parser, "Cannot deserialize ToolChoice: no matching variant for JSON shape", null, ToolChoice::class.java,
         )
     }
 }
 
-private class ToolChoiceSerializer :
-    com.fasterxml.jackson.databind.ser.std.StdSerializer<ToolChoice>(ToolChoice::class.java) {
+private class ToolChoiceSerializer : com.fasterxml.jackson.databind.ser.std.StdSerializer<ToolChoice>(ToolChoice::class.java) {
     @Suppress("LongMethod")
     override fun serialize(
         value: ToolChoice,
@@ -82,9 +63,7 @@ private class ToolChoiceSerializer :
         provider: com.fasterxml.jackson.databind.SerializerProvider,
     ) {
         @Suppress("UNCHECKED_CAST")
-        val mapper =
-            (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper)
-                ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
+        val mapper = (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper) ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
         when (value) {
             is ToolChoice.Mode -> mapper.writeValue(gen, value.value)
             is ToolChoice.Specific -> mapper.writeValue(gen, value.toolChoice)

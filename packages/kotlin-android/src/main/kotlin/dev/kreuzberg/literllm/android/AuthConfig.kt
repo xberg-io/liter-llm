@@ -19,6 +19,7 @@
     "CyclomaticComplexMethod",
     "LongMethod",
     "MagicNumber",
+    "NestedBlockDepth",
 )
 
 package dev.kreuzberg.literllm.android
@@ -26,10 +27,11 @@ package dev.kreuzberg.literllm.android
 /** Auth configuration block. */
 data class AuthConfig(
     /** Auth scheme classification. */
-    @com.fasterxml.jackson.annotation.JsonProperty("type") val authType: AuthType,
+    @com.fasterxml.jackson.annotation.JsonProperty("type")
+    val authType: AuthType,
     /**
-     * Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`). Holds the
-     * variable name, never the secret value.
+     * Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`).
+     * Holds the variable name, never the secret value.
      */
     val envVar: String? = null,
 )

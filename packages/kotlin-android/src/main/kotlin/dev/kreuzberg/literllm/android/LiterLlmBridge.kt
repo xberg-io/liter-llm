@@ -13,18 +13,10 @@ package dev.kreuzberg.literllm.android
 
 @Suppress("TooManyFunctions")
 object LiterLlmBridge {
-    init {
-        System.loadLibrary("literllm_jni")
-    }
+    init { System.loadLibrary("literllm_jni") }
 
     @Throws(LiterLlmBridgeException::class)
-    external fun nativeCreateClient(
-        apiKey: String,
-        baseUrl: String,
-        timeoutSecs: Long,
-        maxRetries: Int,
-        modelHint: String,
-    ): Long
+    external fun nativeCreateClient(apiKey: String, baseUrl: String, timeoutSecs: Long, maxRetries: Int, modelHint: String): Long
 
     @Throws(LiterLlmBridgeException::class)
     external fun nativeCreateClientFromJson(json: String): Long
@@ -35,97 +27,68 @@ object LiterLlmBridge {
     @Throws(LiterLlmBridgeException::class)
     external fun nativeUnregisterCustomProvider(name: String): Boolean
 
-    @Throws(LiterLlmBridgeException::class) external fun nativeAllProviders(): String
-
-    @Throws(LiterLlmBridgeException::class) external fun nativeComplexProviderNames(): String
+    @Throws(LiterLlmBridgeException::class)
+    external fun nativeAllProviders(): String
 
     @Throws(LiterLlmBridgeException::class)
-    external fun nativeCompletionCost(
-        model: String,
-        promptTokens: Long,
-        completionTokens: Long,
-    ): String?
+    external fun nativeComplexProviderNames(): String
 
     @Throws(LiterLlmBridgeException::class)
-    external fun nativeCompletionCostWithCache(
-        model: String,
-        promptTokens: Long,
-        cachedTokens: Long,
-        completionTokens: Long,
-    ): String?
+    external fun nativeCompletionCost(model: String, promptTokens: Long, completionTokens: Long): String?
 
-    @Throws(LiterLlmBridgeException::class) external fun nativeEnsureCryptoProvider()
+    @Throws(LiterLlmBridgeException::class)
+    external fun nativeCompletionCostWithCache(model: String, promptTokens: Long, cachedTokens: Long, completionTokens: Long): String?
+
+    @Throws(LiterLlmBridgeException::class)
+    external fun nativeEnsureCryptoProvider()
 
     // JNI external funs for client instance methods.
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientChat(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientChatStream(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientEmbed(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientListModels(handle: Long): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientImageGenerate(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientSpeech(handle: Long, requestJson: String): ByteArray
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientTranscribe(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientModerate(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientRerank(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientSearch(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientOcr(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientCreateFile(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientRetrieveFile(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientDeleteFile(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientListFiles(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientFileContent(handle: Long, requestJson: String): ByteArray
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientCreateBatch(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientRetrieveBatch(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientListBatches(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientCancelBatch(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientCreateResponse(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientRetrieveResponse(handle: Long, requestJson: String): String
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientCancelResponse(handle: Long, requestJson: String): String
-
     external fun nativeFreeDefaultClient(handle: Long)
 
     // JNI streaming external funs — implementations are Rust JNI shims.
@@ -133,9 +96,7 @@ object LiterLlmBridge {
     // Streaming JNI externs for DefaultClient.chatStream
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientChatStreamStart(clientHandle: Long, requestJson: String): Long
-
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientChatStreamNext(streamHandle: Long): String?
-
     external fun nativeDefaultClientChatStreamFree(streamHandle: Long)
 }

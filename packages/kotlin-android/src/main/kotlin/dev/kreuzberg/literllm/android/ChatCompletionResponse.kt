@@ -19,6 +19,7 @@
     "CyclomaticComplexMethod",
     "LongMethod",
     "MagicNumber",
+    "NestedBlockDepth",
 )
 
 package dev.kreuzberg.literllm.android
@@ -28,8 +29,8 @@ data class ChatCompletionResponse(
     /** Unique identifier for this response. */
     val id: String = "",
     /**
-     * Always `"chat.completion"` from OpenAI-compatible APIs. Stored as a plain `String` so
-     * non-standard provider values do not break deserialization.
+     * Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a
+     * plain `String` so non-standard provider values do not break deserialization.
      */
     val `object`: String = "",
     /** Unix timestamp of response creation. */

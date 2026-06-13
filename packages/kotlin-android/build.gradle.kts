@@ -68,14 +68,73 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
 }
 
-mavenPublishing {
-    configure(
-        AndroidSingleVariantLibrary(
-            variant = "release",
-            sourcesJar = com.vanniktech.maven.publish.SourcesJar.Sources(),
-            javadocJar = com.vanniktech.maven.publish.JavadocJar.Empty(),
+// Build host JNI library for JVM unit tests (macOS/Linux/Windows).
+// The generated Kotlin Bridge object calls System.loadLibrary("literllm_jni") for JVM
+// unit tests running on developer machines. This task builds the host-platform binary
+// and stages it into src/test/resources/host-jni/<platform>/ for the test loader.
+// Set alef.skipHostJni=true to disable this (e.g., in publish-only builds).
+tasks.register("buildHostJni", Exec::class) {
+    if (project.properties["alef.skipHostJni"] != "true") {
+        val jniCargoPath = "../../crates/liter-llm-jni/Cargo.toml"
+        description = "Build host-platform JNI library from ../../crates/liter-llm-jni"
+        commandLine("cargo", "build", "--release", "--manifest-path", jniCargoPath)
+        errorOutput = System.err
+    } else {
+        description = "Build host JNI (disabled via alef.skipHostJni=true)"
+        commandLine("true")
+    }
+}
+
+tasks.register("copyHostJni", Copy::class) {
+    if (project.properties["alef.skipHostJni"] != "true") {
+        description = "Copy host JNI library to test resources"
+        dependsOn("buildHostJni")
+
+        val hostPlatform = "darwin"
+        val jniCratePath = file("../../crates/liter-llm-jni")
+        val buildDir = jniCratePath.resolve("target/release")
+
+        // Map host platform to library filename
+        val libName = when (hostPlatform) {
+            "darwin" -> "libliterllm_jni.dylib"
+            "windows" -> "literllm_jni.dll"
+            else -> "libliterllm_jni.so"  // linux
+        }
+
+        from(buildDir) {
+            include(libName)
+        }
+        into(layout.projectDirectory.dir("src/test/resources/host-jni/$hostPlatform"))
+    }
+}
+
+tasks.withType<Test> {
+    if (project.properties["alef.skipHostJni"] != "true") {
+        val hostPlatform = "darwin"
+        systemProperty(
+            "java.library.path",
+            project.layout.projectDirectory.dir("src/test/resources/host-jni/$hostPlatform").asFile.absolutePath
         )
-    )
+        dependsOn("copyHostJni")
+    }
+}
+
+// `processDebugUnitTestJavaRes` and `processReleaseUnitTestJavaRes` package the
+// `src/test/resources` tree into the unit-test runtime classpath. They consume
+// the dylib emitted by `copyHostJni`, so AGP 8.10+ requires an explicit
+// dependency declaration to satisfy Gradle's task-output validation.
+tasks.matching { it.name.startsWith("processDebug") || it.name.startsWith("processRelease") }.configureEach {
+    if (project.properties["alef.skipHostJni"] != "true" && name.contains("UnitTestJavaRes")) {
+        dependsOn("copyHostJni")
+    }
+}
+
+mavenPublishing {
+    configure(AndroidSingleVariantLibrary(
+        variant = "release",
+        sourcesJar = com.vanniktech.maven.publish.SourcesJar.Sources(),
+        javadocJar = com.vanniktech.maven.publish.JavadocJar.Empty(),
+    ))
 
     publishToMavenCentral()
     signAllPublications()

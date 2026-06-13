@@ -19,6 +19,7 @@
     "CyclomaticComplexMethod",
     "LongMethod",
     "MagicNumber",
+    "NestedBlockDepth",
 )
 
 package dev.kreuzberg.literllm.android
@@ -26,5 +27,5 @@ package dev.kreuzberg.literllm.android
 /** The text content of a reranked document, returned when `return_documents` is true. */
 data class RerankResultDocument(
     /** Document text. */
-    val text: String
+    val text: String,
 )

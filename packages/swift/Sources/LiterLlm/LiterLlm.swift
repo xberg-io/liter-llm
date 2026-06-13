@@ -356,7 +356,7 @@ public struct ToolCall: Codable, Sendable, Hashable {
 internal extension ToolCall {
     init(_ rb: RustBridge.ToolCallRef) throws {
         self.id = rb.id().toString()
-        self.callType = ToolType(rawValue: rb.callType().toString()) ?? { fatalError("Unknown ToolType: \(rb.callType().toString())") }()
+        self.callType = try { let rawValue = rb.callType().toString(); guard let value = ToolType(rawValue: rawValue) else { throw LiterLlmError.validation(message: "Unknown ToolType variant", source: rawValue) }; return value }()
         self.function = try FunctionCall(rb.function())
     }
 
@@ -417,7 +417,7 @@ public struct SpecificToolChoice: Codable, Sendable, Hashable {
 // MARK: - Internal FFI conversions for SpecificToolChoice
 internal extension SpecificToolChoice {
     init(_ rb: RustBridge.SpecificToolChoiceRef) throws {
-        self.choiceType = ToolType(rawValue: rb.choiceType().toString()) ?? { fatalError("Unknown ToolType: \(rb.choiceType().toString())") }()
+        self.choiceType = try { let rawValue = rb.choiceType().toString(); guard let value = ToolType(rawValue: rawValue) else { throw LiterLlmError.validation(message: "Unknown ToolType variant", source: rawValue) }; return value }()
         self.function = try SpecificFunction(rb.function())
     }
 
@@ -2169,7 +2169,7 @@ public struct CreateFileRequest: Codable, Sendable, Hashable {
 internal extension CreateFileRequest {
     init(_ rb: RustBridge.CreateFileRequestRef) throws {
         self.file = rb.file().toString()
-        self.purpose = FilePurpose(rawValue: rb.purpose().toString()) ?? { fatalError("Unknown FilePurpose: \(rb.purpose().toString())") }()
+        self.purpose = try { let rawValue = rb.purpose().toString(); guard let value = FilePurpose(rawValue: rawValue) else { throw LiterLlmError.validation(message: "Unknown FilePurpose variant", source: rawValue) }; return value }()
         self.filename = rb.filename()?.toString()
     }
 
@@ -2555,7 +2555,7 @@ public struct AuthConfig: Codable, Sendable, Hashable {
 // MARK: - Internal FFI conversions for AuthConfig
 internal extension AuthConfig {
     init(_ rb: RustBridge.AuthConfigRef) throws {
-        self.authType = AuthType(rawValue: rb.authType().toString()) ?? { fatalError("Unknown AuthType: \(rb.authType().toString())") }()
+        self.authType = try { let rawValue = rb.authType().toString(); guard let value = AuthType(rawValue: rawValue) else { throw LiterLlmError.validation(message: "Unknown AuthType variant", source: rawValue) }; return value }()
         self.envVar = rb.envVar()?.toString()
     }
 
@@ -3301,6 +3301,9 @@ public enum LiterLlmError: Swift.Error {
     /// violates the policy (e.g. a private-range IP under `DenyPrivate`), or when
     /// the per-connection DNS resolver detects a forbidden address at connect time.
     case outboundForbidden(message: String, url: String, reason: String)
+    /// Synthetic case raised when a Rust serde unit-enum raw value cannot
+    /// be mapped to a known Swift case during DTO unmarshaling.
+    case validation(message: String, source: String)
 }
 
 extension LiterLlmError {
@@ -3323,6 +3326,7 @@ extension LiterLlmError {
         case .hookRejected(message: _): return 0
         case .internalError(message: _): return 0
         case .outboundForbidden(message: _, url: _, reason: _): return 0
+        case .validation(message: _, source: _): return 0
         }
     }
     public var isTransient: Bool {
@@ -3344,6 +3348,7 @@ extension LiterLlmError {
         case .hookRejected(message: _): return false
         case .internalError(message: _): return false
         case .outboundForbidden(message: _, url: _, reason: _): return false
+        case .validation(message: _, source: _): return false
         }
     }
     public var errorType: String {
@@ -3365,6 +3370,7 @@ extension LiterLlmError {
         case .hookRejected(message: _): return ""
         case .internalError(message: _): return ""
         case .outboundForbidden(message: _, url: _, reason: _): return ""
+        case .validation(message: _, source: _): return ""
         }
     }
 }
@@ -3995,11 +4001,11 @@ public func complexProviderNames() throws -> [String] {
 /// // 1000 * 0.0000025 + 500 * 0.00001 = 0.0025 + 0.005 = 0.0075
 /// assert!((usd - 0.0075).abs() < 1e-9);
 /// ```
-public func completionCost(model: String, promptTokens: UInt64, completionTokens: UInt64) -> Int? {
+public func completionCost(model: String, promptTokens: UInt64, completionTokens: UInt64) -> Double? {
         let _rb_model = RustString(model)
     let _rb_json = RustBridge.completionCost(_rb_model, promptTokens, completionTokens).toString()
     let _rb_data = _rb_json.data(using: .utf8) ?? Data()
-    return (try? JSONDecoder().decode(Int?.self, from: _rb_data)) ?? nil
+    return (try? JSONDecoder().decode(Double?.self, from: _rb_data)) ?? nil
 }
 /// Calculate the estimated cost of a completion, accounting for cached
 /// (cache-hit) prompt tokens billed at the provider's discounted rate.
@@ -4013,11 +4019,11 @@ public func completionCost(model: String, promptTokens: UInt64, completionTokens
 ///
 /// Returns `None` if the model is not present in the embedded pricing
 /// registry, mirroring [`completion_cost`].
-public func completionCostWithCache(model: String, promptTokens: UInt64, cachedTokens: UInt64, completionTokens: UInt64) -> Int? {
+public func completionCostWithCache(model: String, promptTokens: UInt64, cachedTokens: UInt64, completionTokens: UInt64) -> Double? {
         let _rb_model = RustString(model)
     let _rb_json = RustBridge.completionCostWithCache(_rb_model, promptTokens, cachedTokens, completionTokens).toString()
     let _rb_data = _rb_json.data(using: .utf8) ?? Data()
-    return (try? JSONDecoder().decode(Int?.self, from: _rb_data)) ?? nil
+    return (try? JSONDecoder().decode(Double?.self, from: _rb_data)) ?? nil
 }
 /// Count tokens in a text string using the tokenizer for the given model.
 ///

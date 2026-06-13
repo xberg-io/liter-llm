@@ -56,7 +56,7 @@ fn main() {
 }
 
 const FRB_GENERATED_DART: &str = "../lib/src/liter_llm_bridge_generated/frb_generated.dart";
-const FRB_HANDLER_EXECUTOR_CALLS_MARKER: &str = "handler.executeSync";
+const FRB_HANDLER_EXECUTOR_MARKER: &str = "handler.executeSync(";
 const LOADER_MARKER: &str = "_alefResolveExternalLibrary";
 const FRB_INIT_PROLOGUE: &str = "  /// Initialize flutter_rust_bridge\n  static Future<void> init({\n    RustLibApi? api,\n    BaseHandler? handler,\n    ExternalLibrary? externalLibrary,\n    bool forceSameCodegenVersion = true,\n  }) async {\n";
 const FRB_INIT_REPLACEMENT: &str = r#"  /// Resolve the prebuilt native library from this package's own installed
@@ -188,39 +188,236 @@ fn patch_published_loader() {
     }
 }
 
-/// Rewrite the FRB-generated `handler.executeSync(...)` and
-/// `handler.executeNormal(...)` calls on callback function parameters.
+/// Rewrite FRB-emitted `handler.executeSync(SyncTask(...))` calls into
+/// `SyncTask(...).executeSync()` form, but ONLY inside methods whose
+/// signature contains a callback parameter literally named `handler`.
 ///
-/// FRB 2.x emits `handler.executeSync(SyncTask(...))` inside service-API
-/// methods that take a user-supplied `handler` callback parameter; those
-/// methods don't exist on plain function types. This rewrite strips the
-/// erroneous method calls, calling the handler directly as a function.
+/// The check inspects the method/function signature (up to the opening brace)
+/// for both the parameter name `handler` and a callback type `Function(`.
+/// This avoids false positives: methods with other callback parameters
+/// (e.g., named `cb`) still use the inherited base-class field, which is
+/// properly callable as `.executeSync(task)` and must be left untouched.
 ///
-/// Idempotent: when the broken pattern is absent the function is a no-op.
+/// Idempotent: if no `handler.executeSync(` marker is present, exits early.
 #[allow(clippy::collapsible_if)]
 fn fix_handler_executor_calls() {
     let path = Path::new(FRB_GENERATED_DART);
     let Ok(source) = std::fs::read_to_string(path) else {
         return;
     };
-
-    if !source.contains(FRB_HANDLER_EXECUTOR_CALLS_MARKER) {
+    if !source.contains(FRB_HANDLER_EXECUTOR_MARKER) {
         return;
     }
 
-    let mut fixed = source
-        .replace("handler.executeSync(", "await handler(")
-        .replace("handler.executeNormal(", "await handler(");
-
-    // Collapse `return await` + `await handler(` → `return await handler(`.
-    fixed = fixed.replace("await await handler", "await handler");
-
-    if fixed != source {
-        if let Err(err) = std::fs::write(path, &fixed) {
-            println!(
-                "cargo:warning=failed to fix handler executor calls in {}: {err}",
-                FRB_GENERATED_DART
-            );
+    let lines: Vec<&str> = source.lines().collect();
+    let mut out = String::with_capacity(source.len());
+    let mut i = 0;
+    while i < lines.len() {
+        let line = lines[i];
+        let trimmed = line.trim_start();
+        let is_func_start = !trimmed.is_empty()
+            && !trimmed.starts_with("//")
+            && !trimmed.starts_with("class ")
+            && !trimmed.starts_with("abstract class ")
+            && !trimmed.starts_with("mixin ")
+            && !trimmed.starts_with('}')
+            && !trimmed.starts_with(')')
+            && !trimmed.starts_with(']')
+            && line.contains('(');
+        if !is_func_start {
+            out.push_str(line);
+            out.push('\n');
+            i += 1;
+            continue;
         }
+        let start = i;
+        let mut paren: i32 = 0;
+        let mut brace: i32 = 0;
+        let mut body_started = false;
+        while i < lines.len() {
+            let l = lines[i];
+            for c in l.chars() {
+                match c {
+                    '(' => paren += 1,
+                    ')' => paren -= 1,
+                    '{' => {
+                        brace += 1;
+                        body_started = true;
+                    }
+                    '}' => brace -= 1,
+                    _ => {}
+                }
+            }
+            i += 1;
+            if body_started && brace <= 0 && paren <= 0 {
+                break;
+            }
+        }
+        let block_text = lines[start..i].join("\n");
+        // Extract signature: text from method start up to and including the opening brace.
+        let signature_part = extract_signature(&block_text);
+        let rewritten = if signature_part.contains("handler") && signature_part.contains("Function(") {
+            rewrite_executor_to_task(&block_text)
+        } else {
+            block_text
+        };
+        out.push_str(&rewritten);
+        out.push('\n');
+    }
+    if !source.ends_with('\n') && out.ends_with('\n') {
+        out.pop();
+    }
+    if out != source {
+        if let Err(err) = std::fs::write(path, &out) {
+            println!("cargo:warning=failed to write handler-executor rewrite: {err}");
+        }
+    }
+}
+
+/// Extract the method/function signature (text before and including the opening brace).
+/// Tracks parentheses to handle multi-line signatures with complex parameter lists.
+fn extract_signature(src: &str) -> String {
+    let mut paren = 0;
+    let mut result = String::new();
+    for ch in src.chars() {
+        match ch {
+            '(' => {
+                paren += 1;
+                result.push(ch);
+            }
+            ')' => {
+                result.push(ch);
+                paren -= 1;
+            }
+            '{' if paren == 0 => {
+                // Only treat `{` as body-start when all parens are closed.
+                result.push(ch);
+                break;
+            }
+            _ => result.push(ch),
+        }
+    }
+    result
+}
+
+fn rewrite_executor_to_task(src: &str) -> String {
+    let mut out = String::with_capacity(src.len());
+    let mut cursor = 0;
+    while let Some((rel, method)) = next_executor_call(&src[cursor..]) {
+        let start = cursor + rel;
+        let open = start + "handler.".len() + method.len();
+        let Some(close) = matching_paren(src, open) else {
+            break;
+        };
+        out.push_str(&src[cursor..start]);
+        let inner = src[open + 1..close].trim();
+        let inner = inner.strip_suffix(',').map(str::trim_end).unwrap_or(inner);
+        out.push_str(inner);
+        out.push('.');
+        out.push_str(method);
+        out.push_str("()");
+        cursor = close + 1;
+    }
+    out.push_str(&src[cursor..]);
+    out
+}
+
+fn next_executor_call(src: &str) -> Option<(usize, &'static str)> {
+    let s = src.find("handler.executeSync(");
+    let n = src.find("handler.executeNormal(");
+    match (s, n) {
+        (Some(a), Some(b)) if a <= b => Some((a, "executeSync")),
+        (Some(_), Some(b)) => Some((b, "executeNormal")),
+        (Some(a), None) => Some((a, "executeSync")),
+        (None, Some(b)) => Some((b, "executeNormal")),
+        (None, None) => None,
+    }
+}
+
+fn matching_paren(src: &str, open: usize) -> Option<usize> {
+    let mut depth = 0usize;
+    for (offset, ch) in src[open..].char_indices() {
+        match ch {
+            '(' => depth += 1,
+            ')' => {
+                depth = depth.checked_sub(1)?;
+                if depth == 0 {
+                    return Some(open + offset);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn extract_signature_stops_at_opening_brace() {
+        let src = "void foo(int x) { return x; }";
+        let sig = extract_signature(src);
+        assert_eq!(sig, "void foo(int x) {");
+    }
+
+    #[test]
+    fn extract_signature_with_callback_param() {
+        let src = r#"int crateServiceApiAppConnect({
+    required App that,
+    required String path,
+    required FutureOr<String> Function(String) cb,
+  }) {
+    return handler.executeSync(SyncTask(...));
+  }"#;
+        let sig = extract_signature(src);
+        assert!(
+            sig.contains("Function("),
+            "signature should contain Function( for callback param"
+        );
+        assert!(sig.contains("{"), "signature should include opening brace");
+    }
+
+    #[test]
+    fn extract_signature_without_callback_param() {
+        let src = r#"void crateServiceApiAppConfig({
+    required App that,
+    required ServerConfig config,
+  }) {
+    return handler.executeSync(SyncTask(...));
+  }"#;
+        let sig = extract_signature(src);
+        assert!(
+            !sig.contains("Function("),
+            "signature should not contain Function( when no callback"
+        );
+        assert!(sig.contains("{"), "signature should include opening brace");
+    }
+
+    #[test]
+    fn extract_signature_multiline_complex_params() {
+        let src = "void method(int a, String b, List<Map<String, int>> c) { /* body */ }";
+        let sig = extract_signature(src);
+        assert!(sig.ends_with("{"), "should end with opening brace");
+        assert!(
+            sig.contains("method("),
+            "should contain method name and param list start"
+        );
+    }
+
+    #[test]
+    fn extract_signature_ignores_function_in_body() {
+        // The pattern "Function(" in a comment or nested type in the body should not affect signature extraction.
+        let src = r#"void process(String data) {
+    // This comment mentions Function(String) but it's in the body
+    return handleData();
+  }"#;
+        let sig = extract_signature(src);
+        assert!(
+            !sig.contains("Function("),
+            "signature extraction should stop before body"
+        );
+        assert_eq!(sig, "void process(String data) {");
     }
 }
