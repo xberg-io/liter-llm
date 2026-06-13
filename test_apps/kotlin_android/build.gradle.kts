@@ -48,7 +48,7 @@ kotlin {
 
 dependencies {
     // Published Android AAR from Maven Central (verifies artifact resolution)
-    implementation("dev.kreuzberg:liter-llm-android:1.5.0")
+    implementation("dev.kreuzberg:liter-llm-android:1.5.1")
     // Jackson for JSON assertion helpers
     testImplementation("com.fasterxml.jackson.core:jackson-annotations:2.18.2")
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")
@@ -81,7 +81,7 @@ dependencies {
 tasks.register("verifyAarPublished") {
     description = "Verify the published Android AAR contains jni and classes.jar"
     doLast {
-        val aarCoord = "dev.kreuzberg:liter-llm-android:1.5.0"
+        val aarCoord = "dev.kreuzberg:liter-llm-android:1.5.1"
         val (groupId, artifactId, version) = run {
             val parts = aarCoord.split(':')
             Triple(parts[0], parts[1], parts[2])
@@ -134,7 +134,75 @@ tasks.register("verifyAarPublished") {
     }
 }
 
+// Build host JNI library for JVM unit tests (macOS/Linux/Windows).
+// The generated Kotlin Bridge object calls System.loadLibrary("literllm_jni") for JVM
+// unit tests running on developer machines. This task builds the host-platform binary
+// and stages it into src/test/resources/host-jni/<platform>/ for the test loader.
+// Set alef.skipHostJni=true to disable this (e.g., in CI where only AAR validation is needed).
+tasks.register("buildHostJni", Exec::class) {
+    if (project.properties["alef.skipHostJni"] != "true") {
+        val jniCargoPath = "../../crates/liter-llm-jni/Cargo.toml"
+        description = "Build host-platform JNI library from ../../crates/liter-llm-jni"
+        commandLine("cargo", "build", "--release", "--manifest-path", jniCargoPath)
+        errorOutput = System.err
+    } else {
+        description = "Build host JNI (disabled via alef.skipHostJni=true)"
+        commandLine("true")
+    }
+}
+
+tasks.register("copyHostJni", Copy::class) {
+    if (project.properties["alef.skipHostJni"] != "true") {
+        description = "Copy host JNI library to test resources"
+        dependsOn("buildHostJni")
+
+        val hostPlatform = if (System.getProperty("os.name").lowercase().contains("mac")) {
+            "darwin"
+        } else if (System.getProperty("os.name").lowercase().contains("win")) {
+            "windows"
+        } else {
+            "linux"
+        }
+        val jniCargoPath = "../../crates/liter-llm-jni/Cargo.toml"
+        val crateDir = jniCargoPath.substringBeforeLast("/Cargo.toml")
+        val workspaceTarget = file("../../target/release")
+        val crateTarget = file(crateDir).resolve("target/release")
+        val buildDir = if (workspaceTarget.exists()) workspaceTarget else crateTarget
+
+        val libName = when (hostPlatform) {
+            "darwin" -> "libliterllm_jni.dylib"
+            "windows" -> "literllm_jni.dll"
+            else -> "libliterllm_jni.so"
+        }
+
+        from(buildDir) {
+            include(libName)
+        }
+        into(layout.projectDirectory.dir("src/test/resources/host-jni/$hostPlatform"))
+    }
+}
+
 tasks.withType<Test> {
     useJUnitPlatform()
     dependsOn("verifyAarPublished")
+    if (project.properties["alef.skipHostJni"] != "true") {
+        val hostPlatform = if (System.getProperty("os.name").lowercase().contains("mac")) {
+            "darwin"
+        } else if (System.getProperty("os.name").lowercase().contains("win")) {
+            "windows"
+        } else {
+            "linux"
+        }
+        systemProperty(
+            "java.library.path",
+            project.layout.projectDirectory.dir("src/test/resources/host-jni/$hostPlatform").asFile.absolutePath
+        )
+        dependsOn("copyHostJni")
+    }
+}
+
+tasks.matching { it.name.startsWith("processDebug") || it.name.startsWith("processRelease") }.configureEach {
+    if (project.properties["alef.skipHostJni"] != "true" && name.contains("UnitTestJavaRes")) {
+        dependsOn("copyHostJni")
+    }
 }

@@ -3,7 +3,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>LiterLlm</RootNamespace>
     <PackageId>LiterLlm</PackageId>
-    <Version>1.5.0</Version>
+    <Version>1.5.1</Version>
     <Description>Universal LLM API client with Rust-powered polyglot bindings.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryUrl>https://github.com/kreuzberg-dev/liter-llm</RepositoryUrl>
@@ -11,6 +11,11 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <!-- Enable native asset resolution for P/Invoke. Detect platform at build time. -->
+    <UseRuntimeIdentifier>true</UseRuntimeIdentifier>
+    <RuntimeIdentifier Condition="$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))">osx-arm64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))">linux-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))">win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>

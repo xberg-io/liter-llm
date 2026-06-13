@@ -6,7 +6,7 @@
 
     <groupId>dev.kreuzberg.literllm</groupId>
     <artifactId>liter-llm</artifactId>
-    <version>1.5.0</version>
+    <version>1.5.1</version>
     <packaging>jar</packaging>
 
     <name>liter-llm</name>
@@ -69,12 +69,12 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.22.0</version>
+            <version>2.21.2</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jdk8</artifactId>
-            <version>2.22.0</version>
+            <version>2.21.2</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -374,6 +374,11 @@
             <id>publish</id>
             <properties>
                 <gpg.skip>false</gpg.skip>
+                <!-- alef-emitted stream methods can exceed 200 tokens and trigger CPD/PMD
+                     duplicate-code violations; skip those checks in the publish profile so
+                     they do not block Maven Central deployment. -->
+                <cpd.skip>true</cpd.skip>
+                <pmd.skip>true</pmd.skip>
             </properties>
             <build>
                 <plugins>

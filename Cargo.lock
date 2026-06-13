@@ -130,7 +130,7 @@ version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40c48f72fd53cd289104fc64099abca73db4166ad86ea0b4341abe65af83dadc"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -141,7 +141,7 @@ checksum = "291e6a250ff86cd4a820112fb8898808a366d8f9f58ce16d1f538353ad55747d"
 dependencies = [
  "anstyle",
  "once_cell_polyfill",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -713,6 +713,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "clang-sys"
+version = "1.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b023947811758c97c59bf9d1c188fd619ad4718dcaa767947df1cadb14f39f4"
+dependencies = [
+ "glob",
+ "libc",
+ "libloading 0.8.9",
+]
+
+[[package]]
 name = "clap"
 version = "4.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1277,7 +1288,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1356,7 +1367,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1397,9 +1408,9 @@ dependencies = [
 
 [[package]]
 name = "ext-php-rs"
-version = "0.15.12"
+version = "0.15.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0525834a3e26fdf0a60a8e7c27ec9521a35808eba8e41a15e135c22f670bc937"
+checksum = "abe62f25cd053f5f95dc7bbf94e5b41818ea3cf39b36cc25de8ca6b4de68a0eb"
 dependencies = [
  "anyhow",
  "bitflags",
@@ -1419,13 +1430,13 @@ dependencies = [
 
 [[package]]
 name = "ext-php-rs-bindgen"
-version = "0.72.1-extphprs.1"
+version = "0.72.1-extphprs.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4795dd0976bd7d7d321c49e88e836f8e5b5b2b481e089067e303f2945617458a"
+checksum = "32ceb73da3b8b18a3424765dd6926dbc29464a0a7bc31ab491600bfa02adc4bc"
 dependencies = [
  "bitflags",
  "cexpr",
- "ext-php-rs-clang-sys",
+ "clang-sys",
  "itertools",
  "log",
  "prettyplease",
@@ -1447,21 +1458,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "ext-php-rs-clang-sys"
-version = "1.8.1-extphprs.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa1ad6e482017d457d57d73691f8bed148a8a6198babe90830310c3308480a61"
-dependencies = [
- "glob",
- "libc",
- "libloading 0.8.9",
-]
-
-[[package]]
 name = "ext-php-rs-derive"
-version = "0.11.12"
+version = "0.11.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6cb94d5f4c1e9758b6b936ad306dea36a034c125334d9a438fe966a5d596a85"
+checksum = "f57a075f878ad51bcc56745fb21efe601429a509204f8a385bbe526566597320"
 dependencies = [
  "convert_case",
  "darling 0.23.0",
@@ -2544,7 +2544,7 @@ checksum = "92daf443525c4cce67b150400bc2316076100ce0b3686209eb8cf3c31612e6f0"
 
 [[package]]
 name = "liter-llm"
-version = "1.5.0"
+version = "1.5.1"
 dependencies = [
  "aws-credential-types",
  "aws-sigv4",
@@ -2581,7 +2581,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-cli"
-version = "1.5.0"
+version = "1.5.1"
 dependencies = [
  "axum",
  "clap",
@@ -2597,7 +2597,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-dart"
-version = "1.5.0"
+version = "1.5.1"
 dependencies = [
  "flutter_rust_bridge",
  "futures-util",
@@ -2608,7 +2608,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-ffi"
-version = "1.5.0"
+version = "1.5.1"
 dependencies = [
  "ahash",
  "cbindgen",
@@ -2621,8 +2621,9 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-jni"
-version = "1.5.0"
+version = "1.5.1"
 dependencies = [
+ "base64 0.22.1",
  "futures-util",
  "jni",
  "liter-llm",
@@ -2632,7 +2633,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-node"
-version = "1.5.0"
+version = "1.5.1"
 dependencies = [
  "futures-util",
  "liter-llm",
@@ -2645,7 +2646,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-php"
-version = "1.5.0"
+version = "1.5.1"
 dependencies = [
  "ext-php-rs",
  "futures-util",
@@ -2657,7 +2658,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-proxy"
-version = "1.5.0"
+version = "1.5.1"
 dependencies = [
  "axum",
  "base64 0.22.1",
@@ -2688,7 +2689,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-py"
-version = "1.5.0"
+version = "1.5.1"
 dependencies = [
  "futures",
  "liter-llm",
@@ -2701,7 +2702,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-swift"
-version = "1.5.0"
+version = "1.5.1"
 dependencies = [
  "ahash",
  "async-trait",
@@ -2717,7 +2718,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-wasm"
-version = "1.5.0"
+version = "1.5.1"
 dependencies = [
  "futures",
  "futures-util",
@@ -2993,7 +2994,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4113,7 +4114,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4171,7 +4172,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4614,7 +4615,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52d1cfed4120b4d927bf7c0f86d2087a4a7d6027c906d9f9d525a80573b9be51"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4796,7 +4797,7 @@ dependencies = [
  "getrandom 0.4.2",
  "once_cell",
  "rustix",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5650,7 +5651,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
