@@ -5,13 +5,13 @@ package dev.kreuzberg.literllm;
  * The sink's backend failed to accept the event.
  */
 public class BackendException extends UsageSinkErrorException {
-    /** Creates a new BackendException with the given message. */
-    public BackendException(final String message) {
-        super(message);
-    }
+  /** Creates a new BackendException with the given message. */
+  public BackendException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new BackendException with the given message and cause. */
-    public BackendException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new BackendException with the given message and cause. */
+  public BackendException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

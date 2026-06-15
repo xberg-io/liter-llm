@@ -11,43 +11,42 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @SuppressWarnings("PMD")
 public enum OnMatch {
-    /**
-     * Block the request/response with the given error code and reason prefix.
-     */
-    Block("block"),
-    /**
-     * Replace the matched portion with the given replacement string.
-     */
-    Redact("redact");
+  /**
+   * Block the request/response with the given error code and reason prefix.
+   */
+  Block("block"),
+  /**
+   * Replace the matched portion with the given replacement string.
+   */
+  Redact("redact");
 
+  /** The string value. */
+  private final String value;
 
-    /** The string value. */
-    private final String value;
+  OnMatch(final String value) {
+    this.value = value;
+  }
 
-    OnMatch(final String value) {
-        this.value = value;
+  /** Returns the string value. */
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  /** Creates an instance from a string value. */
+  @JsonCreator
+  public static OnMatch fromValue(final String value) {
+    for (OnMatch e : values()) {
+      if (e.value.equalsIgnoreCase(value)) {
+        return e;
+      }
     }
+    throw new IllegalArgumentException("Unknown OnMatch value: " + value);
+  }
 
-    /** Returns the string value. */
-    @JsonValue
-    public String getValue() {
-        return value;
-    }
-
-    /** Creates an instance from a string value. */
-    @JsonCreator
-    public static OnMatch fromValue(final String value) {
-        for (OnMatch e : values()) {
-            if (e.value.equalsIgnoreCase(value)) {
-                return e;
-            }
-        }
-        throw new IllegalArgumentException("Unknown OnMatch value: " + value);
-    }
-
-    /** Returns the wire-format string value (matches JSON serialization). */
-    @Override
-    public String toString() {
-        return value;
-    }
+  /** Returns the wire-format string value (matches JSON serialization). */
+  @Override
+  public String toString() {
+    return value;
+  }
 }

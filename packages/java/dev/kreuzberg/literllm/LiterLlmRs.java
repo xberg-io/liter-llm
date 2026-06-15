@@ -9,611 +9,630 @@ import java.lang.foreign.MemorySegment;
 import java.util.List;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
+
 @SuppressWarnings("PMD")
 public final class LiterLlmRs {
-    private LiterLlmRs() { }
+  private LiterLlmRs() {}
 
-    /**
-     * Create a new LLM client with simple scalar configuration.
-     *
-     * This is the primary binding entry-point. All parameters except {@code api_key}
-     * are optional — omitting them uses the same defaults as
-     * ClientConfigBuilder.
-     * {@literal @}throws LiterLlmRsException Returns LiterLlmError if the underlying HTTP client cannot be
-     * constructed, or if the resolved provider configuration is invalid.
-     */
-    public static DefaultClient createClient(
-        final String apiKey,
-        final @Nullable String baseUrl,
-        final @Nullable Long timeoutSecs,
-        final @Nullable Integer maxRetries,
-        final @Nullable String modelHint
-    ) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var capiKey = arena.allocateFrom(apiKey);
-            var cbaseUrl = baseUrl != null ? arena.allocateFrom(baseUrl) : MemorySegment.NULL;
-            long ctimeoutSecs = (timeoutSecs == null) ? -1L : timeoutSecs;
-            int cmaxRetries = (maxRetries == null) ? -1 : maxRetries;
-            var cmodelHint = modelHint != null ? arena.allocateFrom(modelHint) : MemorySegment.NULL;
-            var resultPtr = (MemorySegment) NativeLib.LITERLLM_CREATE_CLIENT.invoke(
-                capiKey,
-                cbaseUrl,
-                ctimeoutSecs,
-                cmaxRetries,
-                cmodelHint
-            );
-            if (resultPtr.equals(MemorySegment.NULL)) {
-                checkLastError();                return null;            }
-            return new DefaultClient(resultPtr);
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Create a new LLM client with simple scalar configuration.
+   *
+   * This is the primary binding entry-point. All parameters except {@code api_key}
+   * are optional — omitting them uses the same defaults as
+   * ClientConfigBuilder.
+   * {@literal @}throws LiterLlmRsException Returns LiterLlmError if the underlying HTTP client cannot be
+   * constructed, or if the resolved provider configuration is invalid.
+   */
+  public static DefaultClient createClient(
+      final String apiKey,
+      final @Nullable String baseUrl,
+      final @Nullable Long timeoutSecs,
+      final @Nullable Integer maxRetries,
+      final @Nullable String modelHint)
+      throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var capiKey = arena.allocateFrom(apiKey);
+      var cbaseUrl = baseUrl != null ? arena.allocateFrom(baseUrl) : MemorySegment.NULL;
+      long ctimeoutSecs = (timeoutSecs == null) ? -1L : timeoutSecs;
+      int cmaxRetries = (maxRetries == null) ? -1 : maxRetries;
+      var cmodelHint = modelHint != null ? arena.allocateFrom(modelHint) : MemorySegment.NULL;
+      var resultPtr = (MemorySegment) NativeLib.LITERLLM_CREATE_CLIENT.invoke(
+          capiKey, cbaseUrl, ctimeoutSecs, cmaxRetries, cmodelHint);
+      if (resultPtr.equals(MemorySegment.NULL)) {
+        checkLastError();
+        return null;
+      }
+      return new DefaultClient(resultPtr);
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Create a new LLM client from a JSON string.
-     *
-     * The JSON object accepts the same fields as {@code liter-llm.toml} (snake_case).
-     * {@literal @}throws LiterLlmRsException Returns LiterLlmError.BadRequest if {@code json} is not valid JSON or
-     * contains unknown fields.
-     */
-    public static DefaultClient createClientFromJson(final String json) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var cjson = arena.allocateFrom(json);
-            var resultPtr = (MemorySegment) NativeLib.LITERLLM_CREATE_CLIENT_FROM_JSON.invoke(cjson);
-            if (resultPtr.equals(MemorySegment.NULL)) {
-                checkLastError();                return null;            }
-            return new DefaultClient(resultPtr);
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Create a new LLM client from a JSON string.
+   *
+   * The JSON object accepts the same fields as {@code liter-llm.toml} (snake_case).
+   * {@literal @}throws LiterLlmRsException Returns LiterLlmError.BadRequest if {@code json} is not valid JSON or
+   * contains unknown fields.
+   */
+  public static DefaultClient createClientFromJson(final String json) throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var cjson = arena.allocateFrom(json);
+      var resultPtr = (MemorySegment) NativeLib.LITERLLM_CREATE_CLIENT_FROM_JSON.invoke(cjson);
+      if (resultPtr.equals(MemorySegment.NULL)) {
+        checkLastError();
+        return null;
+      }
+      return new DefaultClient(resultPtr);
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Register a custom provider in the global runtime registry.
-     *
-     * The provider will be checked **before** all built-in providers during model
-     * detection. If a provider with the same {@code name} already exists it is replaced.
-     * {@literal @}throws LiterLlmRsException Returns an error if the config is invalid (empty name, empty base_url, or
-     * no model prefixes).
-     */
-    public static void registerCustomProvider(final CustomProviderConfig config) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var cconfigJson = config != null ? MAPPER.writeValueAsString(config) : null;
-            var cconfigJsonSeg = cconfigJson != null ? arena.allocateFrom(cconfigJson) : MemorySegment.NULL;
-            var cconfig = cconfigJson != null
-                ? (MemorySegment) NativeLib.LITERLLM_CUSTOM_PROVIDER_CONFIG_FROM_JSON.invoke(cconfigJsonSeg)
-                : MemorySegment.NULL;
-            if (cconfigJson != null && cconfig.equals(MemorySegment.NULL)) {
-                checkLastError();
-                throw new IllegalStateException("failed to create config from JSON");
-            }
-            NativeLib.LITERLLM_REGISTER_CUSTOM_PROVIDER.invoke(cconfig);
-            if (!cconfig.equals(MemorySegment.NULL)) {
-                NativeLib.LITERLLM_CUSTOM_PROVIDER_CONFIG_FREE.invoke(cconfig);
-            }
-            checkLastError();
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Register a custom provider in the global runtime registry.
+   *
+   * The provider will be checked **before** all built-in providers during model
+   * detection. If a provider with the same {@code name} already exists it is replaced.
+   * {@literal @}throws LiterLlmRsException Returns an error if the config is invalid (empty name, empty base_url, or
+   * no model prefixes).
+   */
+  public static void registerCustomProvider(final CustomProviderConfig config)
+      throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var cconfigJson = config != null ? MAPPER.writeValueAsString(config) : null;
+      var cconfigJsonSeg =
+          cconfigJson != null ? arena.allocateFrom(cconfigJson) : MemorySegment.NULL;
+      var cconfig = cconfigJson != null
+          ? (MemorySegment)
+              NativeLib.LITERLLM_CUSTOM_PROVIDER_CONFIG_FROM_JSON.invoke(cconfigJsonSeg)
+          : MemorySegment.NULL;
+      if (cconfigJson != null && cconfig.equals(MemorySegment.NULL)) {
+        checkLastError();
+        throw new IllegalStateException("failed to create config from JSON");
+      }
+      NativeLib.LITERLLM_REGISTER_CUSTOM_PROVIDER.invoke(cconfig);
+      if (!cconfig.equals(MemorySegment.NULL)) {
+        NativeLib.LITERLLM_CUSTOM_PROVIDER_CONFIG_FREE.invoke(cconfig);
+      }
+      checkLastError();
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Remove a previously registered custom provider by name.
-     *
-     * Returns {@code true} if a provider with the given name was found and removed,
-     * {@code false} if no such provider existed.
-     * {@literal @}throws LiterLlmRsException Returns an error only if the internal lock is poisoned.
-     */
-    public static boolean unregisterCustomProvider(final String name) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var cname = arena.allocateFrom(name);
-            var primitiveResult = (int) NativeLib.LITERLLM_UNREGISTER_CUSTOM_PROVIDER.invoke(cname);
-            checkLastError();
-            return primitiveResult != 0;
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Remove a previously registered custom provider by name.
+   *
+   * Returns {@code true} if a provider with the given name was found and removed,
+   * {@code false} if no such provider existed.
+   * {@literal @}throws LiterLlmRsException Returns an error only if the internal lock is poisoned.
+   */
+  public static boolean unregisterCustomProvider(final String name) throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var cname = arena.allocateFrom(name);
+      var primitiveResult = (int) NativeLib.LITERLLM_UNREGISTER_CUSTOM_PROVIDER.invoke(cname);
+      checkLastError();
+      return primitiveResult != 0;
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Return the capability flags for a named provider.
-     *
-     * Performs an O(n) linear scan over the embedded registry (142 entries).
-     * Returns a {@code 'static} reference valid for the lifetime of the process.
-     *
-     * For unknown {@code provider_name} values the function returns a reference to an
-     * all-{@code false} sentinel so callers never need to handle {@code Option}.
-     */
-    public static ProviderCapabilities capabilities(final String providerName) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var cproviderName = arena.allocateFrom(providerName);
-            var resultPtr = (MemorySegment) NativeLib.LITERLLM_CAPABILITIES.invoke(cproviderName);
-            if (resultPtr.equals(MemorySegment.NULL)) {
-                checkLastError();                return null;            }
-            // CPD-OFF
-            var jsonPtr = (MemorySegment) NativeLib.LITERLLM_PROVIDER_CAPABILITIES_TO_JSON.invoke(resultPtr);
-            NativeLib.LITERLLM_PROVIDER_CAPABILITIES_FREE.invoke(resultPtr);
-            if (jsonPtr.equals(MemorySegment.NULL)) {
-                checkLastError();
-                throw new LiterLlmRsException("capabilities: failed to serialize response", null);
-            }
-            String json = jsonPtr.reinterpret(Long.MAX_VALUE).getString(0);
-            NativeLib.LITERLLM_FREE_STRING.invoke(jsonPtr);
-            return MAPPER.readValue(json, ProviderCapabilities.class);
-            // CPD-ON
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Return the capability flags for a named provider.
+   *
+   * Performs an O(n) linear scan over the embedded registry (142 entries).
+   * Returns a {@code 'static} reference valid for the lifetime of the process.
+   *
+   * For unknown {@code provider_name} values the function returns a reference to an
+   * all-{@code false} sentinel so callers never need to handle {@code Option}.
+   */
+  public static ProviderCapabilities capabilities(final String providerName)
+      throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var cproviderName = arena.allocateFrom(providerName);
+      var resultPtr = (MemorySegment) NativeLib.LITERLLM_CAPABILITIES.invoke(cproviderName);
+      if (resultPtr.equals(MemorySegment.NULL)) {
+        checkLastError();
+        return null;
+      }
+      // CPD-OFF
+      var jsonPtr =
+          (MemorySegment) NativeLib.LITERLLM_PROVIDER_CAPABILITIES_TO_JSON.invoke(resultPtr);
+      NativeLib.LITERLLM_PROVIDER_CAPABILITIES_FREE.invoke(resultPtr);
+      if (jsonPtr.equals(MemorySegment.NULL)) {
+        checkLastError();
+        throw new LiterLlmRsException("capabilities: failed to serialize response", null);
+      }
+      String json = jsonPtr.reinterpret(Long.MAX_VALUE).getString(0);
+      NativeLib.LITERLLM_FREE_STRING.invoke(jsonPtr);
+      return MAPPER.readValue(json, ProviderCapabilities.class);
+      // CPD-ON
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Return all provider configs from the registry.
-     *
-     * Useful for tooling, documentation generation, or runtime enumeration.
-     * Returns the public ProviderConfig slice (without capability flags).
-     * To query capability flags for a specific provider use capabilities.
-     */
-    public static List<ProviderConfig> allProviders() throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var resultPtr = (MemorySegment) NativeLib.LITERLLM_ALL_PROVIDERS.invoke();
-            return readJsonList(resultPtr, new com.fasterxml.jackson.core.type.TypeReference<java.util.List<ProviderConfig>>() { });
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Return all provider configs from the registry.
+   *
+   * Useful for tooling, documentation generation, or runtime enumeration.
+   * Returns the public ProviderConfig slice (without capability flags).
+   * To query capability flags for a specific provider use capabilities.
+   */
+  public static List<ProviderConfig> allProviders() throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var resultPtr = (MemorySegment) NativeLib.LITERLLM_ALL_PROVIDERS.invoke();
+      return readJsonList(
+          resultPtr,
+          new com.fasterxml.jackson.core.type.TypeReference<java.util.List<ProviderConfig>>() {});
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Return the set of complex provider names.
-     *
-     * Complex providers require custom auth/routing logic beyond simple bearer
-     * tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
-     *
-     * The returned reference points into the static registry — no allocation.
-     */
-    public static List<String> complexProviderNames() throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var resultPtr = (MemorySegment) NativeLib.LITERLLM_COMPLEX_PROVIDER_NAMES.invoke();
-            return readJsonList(resultPtr, new com.fasterxml.jackson.core.type.TypeReference<java.util.List<String>>() { });
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Return the set of complex provider names.
+   *
+   * Complex providers require custom auth/routing logic beyond simple bearer
+   * tokens (e.g. AWS Bedrock SigV4, Vertex AI OAuth2).
+   *
+   * The returned reference points into the static registry — no allocation.
+   */
+  public static List<String> complexProviderNames() throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var resultPtr = (MemorySegment) NativeLib.LITERLLM_COMPLEX_PROVIDER_NAMES.invoke();
+      return readJsonList(
+          resultPtr,
+          new com.fasterxml.jackson.core.type.TypeReference<java.util.List<String>>() {});
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Calculate the estimated cost of a completion given a model name and token
-     * counts.
-     *
-     * Returns {@code None} if the model is not present in the embedded pricing registry.
-     * Returns {@code Some(cost_usd)} otherwise, where the value is in US dollars.
-     *
-     * When an exact model name match is not found, progressively shorter prefixes
-     * are tried by stripping from the last {@code -} or {@code .} separator.  For example,
-     * {@code gpt-4-0613} will match {@code gpt-4} if no {@code gpt-4-0613} entry exists.
-     */
-    public static Optional<Double> completionCost(
-        final String model,
-        final long promptTokens,
-        final long completionTokens
-    ) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var cmodel = arena.allocateFrom(model);
-            var primitiveResult = (double) NativeLib.LITERLLM_COMPLETION_COST.invoke(cmodel, promptTokens, completionTokens);
-            return Optional.of(primitiveResult);
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Calculate the estimated cost of a completion given a model name and token
+   * counts.
+   *
+   * Returns {@code None} if the model is not present in the embedded pricing registry.
+   * Returns {@code Some(cost_usd)} otherwise, where the value is in US dollars.
+   *
+   * When an exact model name match is not found, progressively shorter prefixes
+   * are tried by stripping from the last {@code -} or {@code .} separator.  For example,
+   * {@code gpt-4-0613} will match {@code gpt-4} if no {@code gpt-4-0613} entry exists.
+   */
+  public static Optional<Double> completionCost(
+      final String model, final long promptTokens, final long completionTokens)
+      throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var cmodel = arena.allocateFrom(model);
+      var primitiveResult = (double)
+          NativeLib.LITERLLM_COMPLETION_COST.invoke(cmodel, promptTokens, completionTokens);
+      return Optional.of(primitiveResult);
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Calculate the estimated cost of a completion, accounting for cached
-     * (cache-hit) prompt tokens billed at the provider's discounted rate.
-     *
-     * {@code cached_tokens} is the count of prompt tokens served from the provider's
-     * prompt cache. It must be {@code &lt;= prompt_tokens} (cached tokens are a subset of
-     * the prompt). The non-cached portion is billed at {@code input_cost_per_token}
-     * and the cached portion at {@code cache_read_input_token_cost} when the model
-     * has cache pricing; otherwise the entire prompt is billed at the regular
-     * input rate.
-     *
-     * Returns {@code None} if the model is not present in the embedded pricing
-     * registry, mirroring completion_cost.
-     */
-    public static Optional<Double> completionCostWithCache(
-        final String model,
-        final long promptTokens,
-        final long cachedTokens,
-        final long completionTokens
-    ) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var cmodel = arena.allocateFrom(model);
-            var primitiveResult = (double) NativeLib.LITERLLM_COMPLETION_COST_WITH_CACHE.invoke(
-                cmodel,
-                promptTokens,
-                cachedTokens,
-                completionTokens
-            );
-            return Optional.of(primitiveResult);
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Calculate the estimated cost of a completion, accounting for cached
+   * (cache-hit) prompt tokens billed at the provider's discounted rate.
+   *
+   * {@code cached_tokens} is the count of prompt tokens served from the provider's
+   * prompt cache. It must be {@code &lt;= prompt_tokens} (cached tokens are a subset of
+   * the prompt). The non-cached portion is billed at {@code input_cost_per_token}
+   * and the cached portion at {@code cache_read_input_token_cost} when the model
+   * has cache pricing; otherwise the entire prompt is billed at the regular
+   * input rate.
+   *
+   * Returns {@code None} if the model is not present in the embedded pricing
+   * registry, mirroring completion_cost.
+   */
+  public static Optional<Double> completionCostWithCache(
+      final String model,
+      final long promptTokens,
+      final long cachedTokens,
+      final long completionTokens)
+      throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var cmodel = arena.allocateFrom(model);
+      var primitiveResult = (double) NativeLib.LITERLLM_COMPLETION_COST_WITH_CACHE.invoke(
+          cmodel, promptTokens, cachedTokens, completionTokens);
+      return Optional.of(primitiveResult);
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Remove all guardrails from the global registry.
-     *
-     * Primarily useful in tests to reset state between test cases.
-     */
-    public static void clear() throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            NativeLib.LITERLLM_CLEAR.invoke();
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Remove all guardrails from the global registry.
+   *
+   * Primarily useful in tests to reset state between test cases.
+   */
+  public static void clear() throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      NativeLib.LITERLLM_CLEAR.invoke();
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Count tokens in a text string using the tokenizer for the given model.
-     *
-     * The tokenizer is resolved from the model name prefix (e.g. {@code "gpt-4o"} maps
-     * to the {@code Xenova/gpt-4o} HuggingFace tokenizer). Tokenizers are cached after
-     * first load.
-     * {@literal @}throws LiterLlmRsException Returns LiterLlmError.BadRequest if the tokenizer cannot be loaded
-     * (e.g. network failure on first use) or if tokenization itself fails.
-     */
-    public static long countTokens(final String model, final String text) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var cmodel = arena.allocateFrom(model);
-            var ctext = arena.allocateFrom(text);
-            var primitiveResult = (long) NativeLib.LITERLLM_COUNT_TOKENS.invoke(cmodel, ctext);
-            checkLastError();
-            return primitiveResult;
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Count tokens in a text string using the tokenizer for the given model.
+   *
+   * The tokenizer is resolved from the model name prefix (e.g. {@code "gpt-4o"} maps
+   * to the {@code Xenova/gpt-4o} HuggingFace tokenizer). Tokenizers are cached after
+   * first load.
+   * {@literal @}throws LiterLlmRsException Returns LiterLlmError.BadRequest if the tokenizer cannot be loaded
+   * (e.g. network failure on first use) or if tokenization itself fails.
+   */
+  public static long countTokens(final String model, final String text) throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var cmodel = arena.allocateFrom(model);
+      var ctext = arena.allocateFrom(text);
+      var primitiveResult = (long) NativeLib.LITERLLM_COUNT_TOKENS.invoke(cmodel, ctext);
+      checkLastError();
+      return primitiveResult;
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Count tokens for a full ChatCompletionRequest.
-     *
-     * Sums tokens across all message text contents plus a per-message overhead
-     * of ~4 tokens (for role, separators, and formatting metadata). Tool
-     * definitions and multimodal content parts (images, audio, documents) are
-     * not counted — only textual content contributes to the token total.
-     * {@literal @}throws LiterLlmRsException Returns LiterLlmError.BadRequest if the tokenizer cannot be loaded or
-     * if tokenization fails for any message.
-     */
-    public static long countRequestTokens(final String model, final ChatCompletionRequest req) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var cmodel = arena.allocateFrom(model);
-            var creqJson = req != null ? MAPPER.writeValueAsString(req) : null;
-            var creqJsonSeg = creqJson != null ? arena.allocateFrom(creqJson) : MemorySegment.NULL;
-            var creq = creqJson != null
-                ? (MemorySegment) NativeLib.LITERLLM_CHAT_COMPLETION_REQUEST_FROM_JSON.invoke(creqJsonSeg)
-                : MemorySegment.NULL;
-            if (creqJson != null && creq.equals(MemorySegment.NULL)) {
-                checkLastError();
-                throw new IllegalStateException("failed to create req from JSON");
-            }
-            var primitiveResult = (long) NativeLib.LITERLLM_COUNT_REQUEST_TOKENS.invoke(cmodel, creq);
-            if (!creq.equals(MemorySegment.NULL)) {
-                NativeLib.LITERLLM_CHAT_COMPLETION_REQUEST_FREE.invoke(creq);
-            }
-            checkLastError();
-            return primitiveResult;
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Count tokens for a full ChatCompletionRequest.
+   *
+   * Sums tokens across all message text contents plus a per-message overhead
+   * of ~4 tokens (for role, separators, and formatting metadata). Tool
+   * definitions and multimodal content parts (images, audio, documents) are
+   * not counted — only textual content contributes to the token total.
+   * {@literal @}throws LiterLlmRsException Returns LiterLlmError.BadRequest if the tokenizer cannot be loaded or
+   * if tokenization fails for any message.
+   */
+  public static long countRequestTokens(final String model, final ChatCompletionRequest req)
+      throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var cmodel = arena.allocateFrom(model);
+      var creqJson = req != null ? MAPPER.writeValueAsString(req) : null;
+      var creqJsonSeg = creqJson != null ? arena.allocateFrom(creqJson) : MemorySegment.NULL;
+      var creq = creqJson != null
+          ? (MemorySegment) NativeLib.LITERLLM_CHAT_COMPLETION_REQUEST_FROM_JSON.invoke(creqJsonSeg)
+          : MemorySegment.NULL;
+      if (creqJson != null && creq.equals(MemorySegment.NULL)) {
+        checkLastError();
+        throw new IllegalStateException("failed to create req from JSON");
+      }
+      var primitiveResult = (long) NativeLib.LITERLLM_COUNT_REQUEST_TOKENS.invoke(cmodel, creq);
+      if (!creq.equals(MemorySegment.NULL)) {
+        NativeLib.LITERLLM_CHAT_COMPLETION_REQUEST_FREE.invoke(creq);
+      }
+      checkLastError();
+      return primitiveResult;
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Record a cache hit metric.
-     *
-     * Call from cache layer implementations to emit {@code gen_ai.cache.hit}.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    public static void recordCacheHit(final String system, final String model, final String operation) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var csystem = arena.allocateFrom(system);
-            var cmodel = arena.allocateFrom(model);
-            var coperation = arena.allocateFrom(operation);
-            NativeLib.LITERLLM_RECORD_CACHE_HIT.invoke(csystem, cmodel, coperation);
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Record a cache hit metric.
+   *
+   * Call from cache layer implementations to emit {@code gen_ai.cache.hit}.
+   * If the meter has not been initialized, this call is a no-op.
+   */
+  public static void recordCacheHit(final String system, final String model, final String operation)
+      throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var csystem = arena.allocateFrom(system);
+      var cmodel = arena.allocateFrom(model);
+      var coperation = arena.allocateFrom(operation);
+      NativeLib.LITERLLM_RECORD_CACHE_HIT.invoke(csystem, cmodel, coperation);
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Record a cache miss metric.
-     *
-     * Call from cache layer implementations to emit {@code gen_ai.cache.miss}.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    public static void recordCacheMiss(final String system, final String model, final String operation) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var csystem = arena.allocateFrom(system);
-            var cmodel = arena.allocateFrom(model);
-            var coperation = arena.allocateFrom(operation);
-            NativeLib.LITERLLM_RECORD_CACHE_MISS.invoke(csystem, cmodel, coperation);
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Record a cache miss metric.
+   *
+   * Call from cache layer implementations to emit {@code gen_ai.cache.miss}.
+   * If the meter has not been initialized, this call is a no-op.
+   */
+  public static void recordCacheMiss(
+      final String system, final String model, final String operation) throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var csystem = arena.allocateFrom(system);
+      var cmodel = arena.allocateFrom(model);
+      var coperation = arena.allocateFrom(operation);
+      NativeLib.LITERLLM_RECORD_CACHE_MISS.invoke(csystem, cmodel, coperation);
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Record a stale cache metric.
-     *
-     * Call from cache layer implementations to emit {@code gen_ai.cache.stale}.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    public static void recordCacheStale(final String system, final String model, final String operation) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var csystem = arena.allocateFrom(system);
-            var cmodel = arena.allocateFrom(model);
-            var coperation = arena.allocateFrom(operation);
-            NativeLib.LITERLLM_RECORD_CACHE_STALE.invoke(csystem, cmodel, coperation);
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Record a stale cache metric.
+   *
+   * Call from cache layer implementations to emit {@code gen_ai.cache.stale}.
+   * If the meter has not been initialized, this call is a no-op.
+   */
+  public static void recordCacheStale(
+      final String system, final String model, final String operation) throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var csystem = arena.allocateFrom(system);
+      var cmodel = arena.allocateFrom(model);
+      var coperation = arena.allocateFrom(operation);
+      NativeLib.LITERLLM_RECORD_CACHE_STALE.invoke(csystem, cmodel, coperation);
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Record a circuit breaker trip.
-     *
-     * Call from {@code CircuitLayer} when the circuit opens.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    public static void recordCircuitTrip(final String system, final String model) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var csystem = arena.allocateFrom(system);
-            var cmodel = arena.allocateFrom(model);
-            NativeLib.LITERLLM_RECORD_CIRCUIT_TRIP.invoke(csystem, cmodel);
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Record a circuit breaker trip.
+   *
+   * Call from {@code CircuitLayer} when the circuit opens.
+   * If the meter has not been initialized, this call is a no-op.
+   */
+  public static void recordCircuitTrip(final String system, final String model)
+      throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var csystem = arena.allocateFrom(system);
+      var cmodel = arena.allocateFrom(model);
+      NativeLib.LITERLLM_RECORD_CIRCUIT_TRIP.invoke(csystem, cmodel);
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Record a retry attempt.
-     *
-     * Call from retry/hedge layers to emit {@code gen_ai.retry.attempt}.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    public static void recordRetryAttempt(final String system, final String model, final String operation) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var csystem = arena.allocateFrom(system);
-            var cmodel = arena.allocateFrom(model);
-            var coperation = arena.allocateFrom(operation);
-            NativeLib.LITERLLM_RECORD_RETRY_ATTEMPT.invoke(csystem, cmodel, coperation);
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Record a retry attempt.
+   *
+   * Call from retry/hedge layers to emit {@code gen_ai.retry.attempt}.
+   * If the meter has not been initialized, this call is a no-op.
+   */
+  public static void recordRetryAttempt(
+      final String system, final String model, final String operation) throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var csystem = arena.allocateFrom(system);
+      var cmodel = arena.allocateFrom(model);
+      var coperation = arena.allocateFrom(operation);
+      NativeLib.LITERLLM_RECORD_RETRY_ATTEMPT.invoke(csystem, cmodel, coperation);
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Record a per-tier cache hit.
-     *
-     * {@code tier} should be one of {@code "exact"}, {@code "semantic"}, or {@code "streaming_replay"}.
-     * Emits {@code gen_ai.cache.hit} with a {@code gen_ai.cache.tier} attribute.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    public static void recordCacheTierHit(final String system, final String model, final String tier) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var csystem = arena.allocateFrom(system);
-            var cmodel = arena.allocateFrom(model);
-            var ctier = arena.allocateFrom(tier);
-            NativeLib.LITERLLM_RECORD_CACHE_TIER_HIT.invoke(csystem, cmodel, ctier);
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Record a per-tier cache hit.
+   *
+   * {@code tier} should be one of {@code "exact"}, {@code "semantic"}, or {@code "streaming_replay"}.
+   * Emits {@code gen_ai.cache.hit} with a {@code gen_ai.cache.tier} attribute.
+   * If the meter has not been initialized, this call is a no-op.
+   */
+  public static void recordCacheTierHit(final String system, final String model, final String tier)
+      throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var csystem = arena.allocateFrom(system);
+      var cmodel = arena.allocateFrom(model);
+      var ctier = arena.allocateFrom(tier);
+      NativeLib.LITERLLM_RECORD_CACHE_TIER_HIT.invoke(csystem, cmodel, ctier);
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Record a per-tier cache miss.
-     *
-     * {@code tier} should be one of {@code "exact"}, {@code "semantic"}, or {@code "streaming_replay"}.
-     * Emits {@code gen_ai.cache.miss} with a {@code gen_ai.cache.tier} attribute.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    public static void recordCacheTierMiss(final String system, final String model, final String tier) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var csystem = arena.allocateFrom(system);
-            var cmodel = arena.allocateFrom(model);
-            var ctier = arena.allocateFrom(tier);
-            NativeLib.LITERLLM_RECORD_CACHE_TIER_MISS.invoke(csystem, cmodel, ctier);
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Record a per-tier cache miss.
+   *
+   * {@code tier} should be one of {@code "exact"}, {@code "semantic"}, or {@code "streaming_replay"}.
+   * Emits {@code gen_ai.cache.miss} with a {@code gen_ai.cache.tier} attribute.
+   * If the meter has not been initialized, this call is a no-op.
+   */
+  public static void recordCacheTierMiss(final String system, final String model, final String tier)
+      throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var csystem = arena.allocateFrom(system);
+      var cmodel = arena.allocateFrom(model);
+      var ctier = arena.allocateFrom(tier);
+      NativeLib.LITERLLM_RECORD_CACHE_TIER_MISS.invoke(csystem, cmodel, ctier);
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Record cumulative spend for a specific budget dimension.
-     *
-     * Emits {@code gen_ai.budget.spend_usd} with dimension attributes.
-     * Call from {@code record} after each
-     * successful completion.  If the meter has not been initialized, this
-     * call is a no-op.
-     */
-    public static void recordBudgetSpend(
-        final String model,
-        final String provider,
-        final @Nullable String tenantId,
-        final @Nullable String userId,
-        final @Nullable String apiKeyId,
-        final double costUsd
-    ) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var cmodel = arena.allocateFrom(model);
-            var cprovider = arena.allocateFrom(provider);
-            var ctenantId = tenantId != null ? arena.allocateFrom(tenantId) : MemorySegment.NULL;
-            var cuserId = userId != null ? arena.allocateFrom(userId) : MemorySegment.NULL;
-            var capiKeyId = apiKeyId != null ? arena.allocateFrom(apiKeyId) : MemorySegment.NULL;
-            NativeLib.LITERLLM_RECORD_BUDGET_SPEND.invoke(cmodel, cprovider, ctenantId, cuserId, capiKeyId, costUsd);
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Record cumulative spend for a specific budget dimension.
+   *
+   * Emits {@code gen_ai.budget.spend_usd} with dimension attributes.
+   * Call from {@code record} after each
+   * successful completion.  If the meter has not been initialized, this
+   * call is a no-op.
+   */
+  public static void recordBudgetSpend(
+      final String model,
+      final String provider,
+      final @Nullable String tenantId,
+      final @Nullable String userId,
+      final @Nullable String apiKeyId,
+      final double costUsd)
+      throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var cmodel = arena.allocateFrom(model);
+      var cprovider = arena.allocateFrom(provider);
+      var ctenantId = tenantId != null ? arena.allocateFrom(tenantId) : MemorySegment.NULL;
+      var cuserId = userId != null ? arena.allocateFrom(userId) : MemorySegment.NULL;
+      var capiKeyId = apiKeyId != null ? arena.allocateFrom(apiKeyId) : MemorySegment.NULL;
+      NativeLib.LITERLLM_RECORD_BUDGET_SPEND.invoke(
+          cmodel, cprovider, ctenantId, cuserId, capiKeyId, costUsd);
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Record a budget-rejection event.
-     *
-     * Emits {@code gen_ai.budget.rejection} with the triggering dimension.
-     * Call from {@code check} when
-     * returning {@code Reject}.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    public static void recordBudgetRejection(final String model, final String provider, final String dimension) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var cmodel = arena.allocateFrom(model);
-            var cprovider = arena.allocateFrom(provider);
-            var cdimension = arena.allocateFrom(dimension);
-            NativeLib.LITERLLM_RECORD_BUDGET_REJECTION.invoke(cmodel, cprovider, cdimension);
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Record a budget-rejection event.
+   *
+   * Emits {@code gen_ai.budget.rejection} with the triggering dimension.
+   * Call from {@code check} when
+   * returning {@code Reject}.
+   * If the meter has not been initialized, this call is a no-op.
+   */
+  public static void recordBudgetRejection(
+      final String model, final String provider, final String dimension)
+      throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var cmodel = arena.allocateFrom(model);
+      var cprovider = arena.allocateFrom(provider);
+      var cdimension = arena.allocateFrom(dimension);
+      NativeLib.LITERLLM_RECORD_BUDGET_REJECTION.invoke(cmodel, cprovider, cdimension);
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Record the lifetime of a completed Realtime WebSocket session.
-     *
-     * Emits {@code gen_ai.realtime.session.duration} (seconds).
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    public static void recordRealtimeSessionDuration(final String provider, final double durationSecs) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var cprovider = arena.allocateFrom(provider);
-            NativeLib.LITERLLM_RECORD_REALTIME_SESSION_DURATION.invoke(cprovider, durationSecs);
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Record the lifetime of a completed Realtime WebSocket session.
+   *
+   * Emits {@code gen_ai.realtime.session.duration} (seconds).
+   * If the meter has not been initialized, this call is a no-op.
+   */
+  public static void recordRealtimeSessionDuration(final String provider, final double durationSecs)
+      throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var cprovider = arena.allocateFrom(provider);
+      NativeLib.LITERLLM_RECORD_REALTIME_SESSION_DURATION.invoke(cprovider, durationSecs);
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Record a single Realtime event being forwarded.
-     *
-     * Emits {@code gen_ai.realtime.event.count} with {@code gen_ai.realtime.direction}
-     * ({@code "inbound"} | {@code "outbound"}), {@code gen_ai.realtime.event_type}, and
-     * {@code gen_ai.system}.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    public static void recordRealtimeEvent(
-        final String provider,
-        final String direction,
-        final String eventType
-    ) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var cprovider = arena.allocateFrom(provider);
-            var cdirection = arena.allocateFrom(direction);
-            var ceventType = arena.allocateFrom(eventType);
-            NativeLib.LITERLLM_RECORD_REALTIME_EVENT.invoke(cprovider, cdirection, ceventType);
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Record a single Realtime event being forwarded.
+   *
+   * Emits {@code gen_ai.realtime.event.count} with {@code gen_ai.realtime.direction}
+   * ({@code "inbound"} | {@code "outbound"}), {@code gen_ai.realtime.event_type}, and
+   * {@code gen_ai.system}.
+   * If the meter has not been initialized, this call is a no-op.
+   */
+  public static void recordRealtimeEvent(
+      final String provider, final String direction, final String eventType)
+      throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var cprovider = arena.allocateFrom(provider);
+      var cdirection = arena.allocateFrom(direction);
+      var ceventType = arena.allocateFrom(eventType);
+      NativeLib.LITERLLM_RECORD_REALTIME_EVENT.invoke(cprovider, cdirection, ceventType);
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Record audio bytes forwarded over a Realtime WebSocket session.
-     *
-     * Emits {@code gen_ai.realtime.bytes} with {@code gen_ai.system} and
-     * {@code gen_ai.realtime.direction} attributes.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    public static void recordRealtimeBytes(final String provider, final String direction, final long byteCount) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var cprovider = arena.allocateFrom(provider);
-            var cdirection = arena.allocateFrom(direction);
-            NativeLib.LITERLLM_RECORD_REALTIME_BYTES.invoke(cprovider, cdirection, byteCount);
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Record audio bytes forwarded over a Realtime WebSocket session.
+   *
+   * Emits {@code gen_ai.realtime.bytes} with {@code gen_ai.system} and
+   * {@code gen_ai.realtime.direction} attributes.
+   * If the meter has not been initialized, this call is a no-op.
+   */
+  public static void recordRealtimeBytes(
+      final String provider, final String direction, final long byteCount)
+      throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var cprovider = arena.allocateFrom(provider);
+      var cdirection = arena.allocateFrom(direction);
+      NativeLib.LITERLLM_RECORD_REALTIME_BYTES.invoke(cprovider, cdirection, byteCount);
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Assert that {@code current_len + incoming} does not exceed {@code limit}.
-     *
-     * Call this before appending {@code incoming} bytes to any buffer that must
-     * stay below {@code limit}.  Returns {@code Err(LiterLlmError.Streaming)} on overflow
-     * and emits a {@code tracing.warn!} with context.
-     */
-    public static void checkBound(
-        final String context,
-        final long currentLen,
-        final long incoming,
-        final long limit
-    ) throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            var ccontext = arena.allocateFrom(context);
-            NativeLib.LITERLLM_CHECK_BOUND.invoke(ccontext, currentLen, incoming, limit);
-            checkLastError();
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Assert that {@code current_len + incoming} does not exceed {@code limit}.
+   *
+   * Call this before appending {@code incoming} bytes to any buffer that must
+   * stay below {@code limit}.  Returns {@code Err(LiterLlmError.Streaming)} on overflow
+   * and emits a {@code tracing.warn!} with context.
+   */
+  public static void checkBound(
+      final String context, final long currentLen, final long incoming, final long limit)
+      throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      var ccontext = arena.allocateFrom(context);
+      NativeLib.LITERLLM_CHECK_BOUND.invoke(ccontext, currentLen, incoming, limit);
+      checkLastError();
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    /**
-     * Install the {@code ring} crypto provider as the rustls process default, idempotently.
-     *
-     * rustls 0.23+ removed the implicit default provider. This function installs
-     * {@code ring} once per process. Subsequent calls are no-ops. Calling it from a
-     * downstream Rust app that has already installed {@code aws-lc-rs} is safe — the
-     * {@code Err} from {@code install_default()} is silently ignored.
-     *
-     * Called automatically by every internal {@code reqwest.Client} constructor
-     * (auth providers, default HTTP client). Bindings and downstream consumers
-     * reach those constructors transitively, so no manual init is required.
-     *
-     * WASM builds are exempt — the WASM target uses the browser/Node.js fetch
-     * API instead of rustls, so no crypto provider is needed.
-     *
-     * Windows builds use native-tls (SChannel) via reqwest, so rustls is not
-     * present and no crypto provider installation is needed.
-     */
-    public static void ensureCryptoProvider() throws LiterLlmRsException {
-        try (var arena = Arena.ofShared()) {
-            NativeLib.LITERLLM_ENSURE_CRYPTO_PROVIDER.invoke();
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  /**
+   * Install the {@code ring} crypto provider as the rustls process default, idempotently.
+   *
+   * rustls 0.23+ removed the implicit default provider. This function installs
+   * {@code ring} once per process. Subsequent calls are no-ops. Calling it from a
+   * downstream Rust app that has already installed {@code aws-lc-rs} is safe — the
+   * {@code Err} from {@code install_default()} is silently ignored.
+   *
+   * Called automatically by every internal {@code reqwest.Client} constructor
+   * (auth providers, default HTTP client). Bindings and downstream consumers
+   * reach those constructors transitively, so no manual init is required.
+   *
+   * WASM builds are exempt — the WASM target uses the browser/Node.js fetch
+   * API instead of rustls, so no crypto provider is needed.
+   *
+   * Windows builds use native-tls (SChannel) via reqwest, so rustls is not
+   * present and no crypto provider installation is needed.
+   */
+  public static void ensureCryptoProvider() throws LiterLlmRsException {
+    try (var arena = Arena.ofShared()) {
+      NativeLib.LITERLLM_ENSURE_CRYPTO_PROVIDER.invoke();
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 
-    // Helper methods for FFI marshalling
+  // Helper methods for FFI marshalling
 
-    private static void checkLastError() throws Throwable {
-        int errCode = (int) NativeLib.LITERLLM_LAST_ERROR_CODE.invoke();
-        if (errCode != 0) {
-            var ctxPtr = (MemorySegment) NativeLib.LITERLLM_LAST_ERROR_CONTEXT.invoke();
-            String msg = ctxPtr.reinterpret(Long.MAX_VALUE).getString(0);
-            switch (errCode) {
-                case 1 -> throw new InvalidInputException(msg);
-                case 2 -> throw new ConversionErrorException(msg);
-                default -> throw new LiterLlmRsException(errCode, msg);
-            }
-        }
+  private static void checkLastError() throws Throwable {
+    int errCode = (int) NativeLib.LITERLLM_LAST_ERROR_CODE.invoke();
+    if (errCode != 0) {
+      var ctxPtr = (MemorySegment) NativeLib.LITERLLM_LAST_ERROR_CONTEXT.invoke();
+      String msg = ctxPtr.reinterpret(Long.MAX_VALUE).getString(0);
+      switch (errCode) {
+        case 1 -> throw new InvalidInputException(msg);
+        case 2 -> throw new ConversionErrorException(msg);
+        default -> throw new LiterLlmRsException(errCode, msg);
+      }
     }
-    private static com.fasterxml.jackson.databind.ObjectMapper createObjectMapper() {
-        return new com.fasterxml.jackson.databind.ObjectMapper()
-            .registerModule(new com.fasterxml.jackson.datatype.jdk8.Jdk8Module())
-            .findAndRegisterModules()
-            .setPropertyNamingStrategy(com.fasterxml.jackson.databind.PropertyNamingStrategies.SNAKE_CASE)
-            .setSerializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.ALWAYS)
-            .configure(com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS, true);
-    }
+  }
 
-    private static final com.fasterxml.jackson.databind.ObjectMapper MAPPER = createObjectMapper();
-    private static <T> java.util.List<T> readJsonList(
-        MemorySegment resultPtr,
-        com.fasterxml.jackson.core.type.TypeReference<java.util.List<T>> typeRef
-    ) throws LiterLlmRsException {
-        try {
-            if (resultPtr.equals(MemorySegment.NULL)) {
-                checkLastError();
-                return java.util.List.of();
-            }
-            String json = resultPtr.reinterpret(Long.MAX_VALUE).getString(0);
-            NativeLib.LITERLLM_FREE_STRING.invoke(resultPtr);
-            return MAPPER.readValue(json, typeRef);
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("FFI call failed", e);
-        }
+  private static com.fasterxml.jackson.databind.ObjectMapper createObjectMapper() {
+    return new com.fasterxml.jackson.databind.ObjectMapper()
+        .registerModule(new com.fasterxml.jackson.datatype.jdk8.Jdk8Module())
+        .findAndRegisterModules()
+        .setPropertyNamingStrategy(
+            com.fasterxml.jackson.databind.PropertyNamingStrategies.SNAKE_CASE)
+        .setSerializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.ALWAYS)
+        .configure(
+            com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS, true);
+  }
+
+  private static final com.fasterxml.jackson.databind.ObjectMapper MAPPER = createObjectMapper();
+
+  private static <T> java.util.List<T> readJsonList(
+      MemorySegment resultPtr,
+      com.fasterxml.jackson.core.type.TypeReference<java.util.List<T>> typeRef)
+      throws LiterLlmRsException {
+    try {
+      if (resultPtr.equals(MemorySegment.NULL)) {
+        checkLastError();
+        return java.util.List.of();
+      }
+      String json = resultPtr.reinterpret(Long.MAX_VALUE).getString(0);
+      NativeLib.LITERLLM_FREE_STRING.invoke(resultPtr);
+      return MAPPER.readValue(json, typeRef);
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("FFI call failed", e);
     }
+  }
 }

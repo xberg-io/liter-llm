@@ -29,8 +29,7 @@ data class ToolCall(
     /** Unique ID for this call, used to reference in tool result messages. */
     val id: String,
     /** Tool type (always "function"). */
-    @com.fasterxml.jackson.annotation.JsonProperty("type")
-    val callType: ToolType,
+    @com.fasterxml.jackson.annotation.JsonProperty("type") val callType: ToolType,
     /** Function name and arguments. */
     val function: FunctionCall,
 )

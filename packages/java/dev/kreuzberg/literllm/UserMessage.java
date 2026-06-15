@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -17,41 +17,37 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("PMD")
 public record UserMessage(
     @JsonProperty("content") UserContent content,
-    @Nullable @JsonProperty("name") String name
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("name") String name) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private UserContent content = null;
+    private String name = null;
+
+    /** Sets the content field. */
+    @JsonProperty("content")
+    public Builder withContent(final UserContent value) {
+      this.content = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private UserContent content = null;
-private String name = null;
-
-        /** Sets the content field. */
-        @JsonProperty("content")
-        public Builder withContent(final UserContent value) {
-            this.content = value;
-            return this;
-        }
-
-        /** Sets the name field. */
-        @JsonProperty("name")
-        public Builder withName(final @Nullable String value) {
-            this.name = value;
-            return this;
-        }
-
-        /** Builds the UserMessage instance. */
-        public UserMessage build() {
-            return new UserMessage(
-                content,
-                name
-            );
-        }
+    /** Sets the name field. */
+    @JsonProperty("name")
+    public Builder withName(final @Nullable String value) {
+      this.name = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Builds the UserMessage instance. */
+    public UserMessage build() {
+      return new UserMessage(content, name);
+    }
+  }
+  // CPD-ON
 }

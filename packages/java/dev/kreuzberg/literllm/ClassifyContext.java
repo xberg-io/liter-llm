@@ -3,10 +3,10 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -17,6 +17,6 @@ public record ClassifyContext(
     String prompt,
     @Nullable @JsonProperty("system_prompt") String systemPrompt,
     Map<String, String> metadata,
-    @JsonInclude(JsonInclude.Include.NON_NULL) @JsonProperty("available_models") List<String> availableModels
-) {
-}
+
+    @JsonInclude(JsonInclude.Include.NON_NULL) @JsonProperty("available_models")
+    List<String> availableModels) {}

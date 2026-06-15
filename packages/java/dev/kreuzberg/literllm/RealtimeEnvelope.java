@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -21,48 +21,46 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("PMD")
 public record RealtimeEnvelope(
     @Nullable @JsonProperty("event_id") String eventId,
-    @JsonProperty("event") RealtimeEvent event
-) {
-    public static Builder builder() {
-        return new Builder();
+    @JsonProperty("event") RealtimeEvent event) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    @JsonProperty("event_id")
+    private String eventId = null;
+
+    private RealtimeEvent event = null;
+
+    /** Sets the eventId field. */
+    @JsonProperty("event_id")
+    public Builder withEventId(final @Nullable String value) {
+      this.eventId = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-        @JsonProperty("event_id")
-private String eventId = null;
-private RealtimeEvent event = null;
-
-        /** Sets the eventId field. */
-        @JsonProperty("event_id")
-        public Builder withEventId(final @Nullable String value) {
-            this.eventId = value;
-            return this;
-        }
-
-        /** Sets the event field. */
-        @JsonProperty("event")
-        public Builder withEvent(final RealtimeEvent value) {
-            this.event = value;
-            return this;
-        }
-
-        /** Builds the RealtimeEnvelope instance. */
-        public RealtimeEnvelope build() {
-            return new RealtimeEnvelope(
-                eventId,
-                event
-            );
-        }
+    /** Sets the event field. */
+    @JsonProperty("event")
+    public Builder withEvent(final RealtimeEvent value) {
+      this.event = value;
+      return this;
     }
-    // CPD-ON
-    /**
-     * Construct an envelope with an explicit event ID.
-     */
-    public static RealtimeEnvelope withId(String eventId, RealtimeEvent event) {
-        throw new UnsupportedOperationException("withId is not yet bridged via JNI; use the Builder instead.");
+
+    /** Builds the RealtimeEnvelope instance. */
+    public RealtimeEnvelope build() {
+      return new RealtimeEnvelope(eventId, event);
     }
+  }
+  // CPD-ON
+  /**
+   * Construct an envelope with an explicit event ID.
+   */
+  public static RealtimeEnvelope withId(String eventId, RealtimeEvent event) {
+    throw new UnsupportedOperationException(
+        "withId is not yet bridged via JNI; use the Builder instead.");
+  }
 }

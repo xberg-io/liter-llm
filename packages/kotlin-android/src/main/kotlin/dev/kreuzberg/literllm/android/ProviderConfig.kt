@@ -27,10 +27,10 @@ package dev.kreuzberg.literllm.android
 /**
  * Static configuration for a single provider entry in providers.json.
  *
- * This struct deliberately does not include capability flags or streaming
- * format, which are accessed via the `capabilities` function.  Keeping
- * these fields separate preserves backward compatibility with all generated
- * binding code that constructs `ProviderConfig` using struct literal syntax.
+ * This struct deliberately does not include capability flags or streaming format, which are
+ * accessed via the `capabilities` function. Keeping these fields separate preserves backward
+ * compatibility with all generated binding code that constructs `ProviderConfig` using struct
+ * literal syntax.
  */
 data class ProviderConfig(
     /** Provider identifier (matches the entry key in providers.json). */
@@ -48,9 +48,9 @@ data class ProviderConfig(
     /**
      * Parameter key renaming for this provider.
      *
-     * Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`)
-     * to the name this provider expects (e.g. `"max_tokens"`).  Applied
-     * automatically by `ConfigDrivenProvider.transform_request`.
+     * Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this
+     * provider expects (e.g. `"max_tokens"`). Applied automatically by
+     * `ConfigDrivenProvider.transform_request`.
      */
     val paramMappings: Map<String, String>? = null,
 )

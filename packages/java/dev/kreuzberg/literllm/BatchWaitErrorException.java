@@ -9,13 +9,13 @@ package dev.kreuzberg.literllm;
  * [`LiterLlmError`] type directly.
  */
 public class BatchWaitErrorException extends Exception {
-    /** Creates a new BatchWaitErrorException with the given message. */
-    public BatchWaitErrorException(final String message) {
-        super(message);
-    }
+  /** Creates a new BatchWaitErrorException with the given message. */
+  public BatchWaitErrorException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new BatchWaitErrorException with the given message and cause. */
-    public BatchWaitErrorException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new BatchWaitErrorException with the given message and cause. */
+  public BatchWaitErrorException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

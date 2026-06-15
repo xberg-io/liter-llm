@@ -5,13 +5,13 @@ package dev.kreuzberg.literllm;
  * `status` preserves the exact HTTP status code received (401 or 403).
  */
 public class AuthenticationException extends LiterLlmErrorException {
-    /** Creates a new AuthenticationException with the given message. */
-    public AuthenticationException(final String message) {
-        super(message);
-    }
+  /** Creates a new AuthenticationException with the given message. */
+  public AuthenticationException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new AuthenticationException with the given message and cause. */
-    public AuthenticationException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new AuthenticationException with the given message and cause. */
+  public AuthenticationException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

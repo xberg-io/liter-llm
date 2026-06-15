@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
@@ -43,91 +43,88 @@ public record ProviderCapabilities(
     @JsonProperty("function_calling") boolean functionCalling,
     @JsonProperty("audio_in") boolean audioIn,
     @JsonProperty("audio_out") boolean audioOut,
-    @JsonProperty("video_in") boolean videoIn
-) {
-    public static Builder builder() {
-        return new Builder();
+    @JsonProperty("video_in") boolean videoIn) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private boolean vision = false;
+    private boolean reasoning = false;
+
+    @JsonProperty("structured_output")
+    private boolean structuredOutput = false;
+
+    @JsonProperty("function_calling")
+    private boolean functionCalling = false;
+
+    @JsonProperty("audio_in")
+    private boolean audioIn = false;
+
+    @JsonProperty("audio_out")
+    private boolean audioOut = false;
+
+    @JsonProperty("video_in")
+    private boolean videoIn = false;
+
+    /** Sets the vision field. */
+    @JsonProperty("vision")
+    public Builder withVision(final boolean value) {
+      this.vision = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private boolean vision = false;
-private boolean reasoning = false;
-        @JsonProperty("structured_output")
-private boolean structuredOutput = false;
-        @JsonProperty("function_calling")
-private boolean functionCalling = false;
-        @JsonProperty("audio_in")
-private boolean audioIn = false;
-        @JsonProperty("audio_out")
-private boolean audioOut = false;
-        @JsonProperty("video_in")
-private boolean videoIn = false;
-
-        /** Sets the vision field. */
-        @JsonProperty("vision")
-        public Builder withVision(final boolean value) {
-            this.vision = value;
-            return this;
-        }
-
-        /** Sets the reasoning field. */
-        @JsonProperty("reasoning")
-        public Builder withReasoning(final boolean value) {
-            this.reasoning = value;
-            return this;
-        }
-
-        /** Sets the structuredOutput field. */
-        @JsonProperty("structured_output")
-        public Builder withStructuredOutput(final boolean value) {
-            this.structuredOutput = value;
-            return this;
-        }
-
-        /** Sets the functionCalling field. */
-        @JsonProperty("function_calling")
-        public Builder withFunctionCalling(final boolean value) {
-            this.functionCalling = value;
-            return this;
-        }
-
-        /** Sets the audioIn field. */
-        @JsonProperty("audio_in")
-        public Builder withAudioIn(final boolean value) {
-            this.audioIn = value;
-            return this;
-        }
-
-        /** Sets the audioOut field. */
-        @JsonProperty("audio_out")
-        public Builder withAudioOut(final boolean value) {
-            this.audioOut = value;
-            return this;
-        }
-
-        /** Sets the videoIn field. */
-        @JsonProperty("video_in")
-        public Builder withVideoIn(final boolean value) {
-            this.videoIn = value;
-            return this;
-        }
-
-        /** Builds the ProviderCapabilities instance. */
-        public ProviderCapabilities build() {
-            return new ProviderCapabilities(
-                vision,
-                reasoning,
-                structuredOutput,
-                functionCalling,
-                audioIn,
-                audioOut,
-                videoIn
-            );
-        }
+    /** Sets the reasoning field. */
+    @JsonProperty("reasoning")
+    public Builder withReasoning(final boolean value) {
+      this.reasoning = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the structuredOutput field. */
+    @JsonProperty("structured_output")
+    public Builder withStructuredOutput(final boolean value) {
+      this.structuredOutput = value;
+      return this;
+    }
+
+    /** Sets the functionCalling field. */
+    @JsonProperty("function_calling")
+    public Builder withFunctionCalling(final boolean value) {
+      this.functionCalling = value;
+      return this;
+    }
+
+    /** Sets the audioIn field. */
+    @JsonProperty("audio_in")
+    public Builder withAudioIn(final boolean value) {
+      this.audioIn = value;
+      return this;
+    }
+
+    /** Sets the audioOut field. */
+    @JsonProperty("audio_out")
+    public Builder withAudioOut(final boolean value) {
+      this.audioOut = value;
+      return this;
+    }
+
+    /** Sets the videoIn field. */
+    @JsonProperty("video_in")
+    public Builder withVideoIn(final boolean value) {
+      this.videoIn = value;
+      return this;
+    }
+
+    /** Builds the ProviderCapabilities instance. */
+    public ProviderCapabilities build() {
+      return new ProviderCapabilities(
+          vision, reasoning, structuredOutput, functionCalling, audioIn, audioOut, videoIn);
+    }
+  }
+  // CPD-ON
 }

@@ -25,18 +25,19 @@
 package dev.kreuzberg.literllm.android
 
 import kotlin.time.Duration
+
 /**
  * Error type for batch polling operations.
  *
- * The `Client` variant carries a flattened `message` + numeric `code` so the
- * error can cross FFI boundaries without exposing the non-FFI-friendly
- * `LiterLlmError` type directly.
+ * The `Client` variant carries a flattened `message` + numeric `code` so the error can cross FFI
+ * boundaries without exposing the non-FFI-friendly `LiterLlmError` type directly.
  */
 sealed class BatchWaitError(message: String) : Exception(message) {
-    data class Failed(
-        val field0: BatchStatus,
-    ) : BatchWaitError("batch reached terminal failure state: {0:?}")
+    data class Failed(val field0: BatchStatus) :
+        BatchWaitError("batch reached terminal failure state: {0:?}")
+
     data class Timeout(val field0: Duration) : BatchWaitError("polling timed out after {0:?}")
+
     data class Client(
         override val message: String,
         val code: Int,

@@ -27,9 +27,8 @@ package dev.kreuzberg.literllm.android
 /**
  * The type discriminator for tool/tool-call objects.
  *
- * Per the OpenAI spec this is always `"function"`. Using an enum enforces
- * that constraint at the type level and rejects any other value on
- * deserialization.
+ * Per the OpenAI spec this is always `"function"`. Using an enum enforces that constraint at the
+ * type level and rejects any other value on deserialization.
  */
 enum class ToolType {
     @com.fasterxml.jackson.annotation.JsonProperty("function") FUNCTION;

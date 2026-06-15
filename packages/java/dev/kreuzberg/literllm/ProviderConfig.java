@@ -3,12 +3,12 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
+import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -29,90 +29,87 @@ public record ProviderConfig(
     @Nullable @JsonProperty("auth") AuthConfig auth,
     @Nullable @JsonProperty("endpoints") List<String> endpoints,
     @Nullable @JsonProperty("model_prefixes") List<String> modelPrefixes,
-    @Nullable @JsonProperty("param_mappings") Map<String, String> paramMappings
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("param_mappings") Map<String, String> paramMappings) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String name = "";
+
+    @JsonProperty("display_name")
+    private String displayName = null;
+
+    @JsonProperty("base_url")
+    private String baseUrl = null;
+
+    private AuthConfig auth = null;
+    private List<String> endpoints = null;
+
+    @JsonProperty("model_prefixes")
+    private List<String> modelPrefixes = null;
+
+    @JsonProperty("param_mappings")
+    private Map<String, String> paramMappings = null;
+
+    /** Sets the name field. */
+    @JsonProperty("name")
+    public Builder withName(final String value) {
+      this.name = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String name = "";
-        @JsonProperty("display_name")
-private String displayName = null;
-        @JsonProperty("base_url")
-private String baseUrl = null;
-private AuthConfig auth = null;
-private List<String> endpoints = null;
-        @JsonProperty("model_prefixes")
-private List<String> modelPrefixes = null;
-        @JsonProperty("param_mappings")
-private Map<String, String> paramMappings = null;
-
-        /** Sets the name field. */
-        @JsonProperty("name")
-        public Builder withName(final String value) {
-            this.name = value;
-            return this;
-        }
-
-        /** Sets the displayName field. */
-        @JsonProperty("display_name")
-        public Builder withDisplayName(final @Nullable String value) {
-            this.displayName = value;
-            return this;
-        }
-
-        /** Sets the baseUrl field. */
-        @JsonProperty("base_url")
-        public Builder withBaseUrl(final @Nullable String value) {
-            this.baseUrl = value;
-            return this;
-        }
-
-        /** Sets the auth field. */
-        @JsonProperty("auth")
-        public Builder withAuth(final @Nullable AuthConfig value) {
-            this.auth = value;
-            return this;
-        }
-
-        /** Sets the endpoints field. */
-        @JsonProperty("endpoints")
-        public Builder withEndpoints(final @Nullable List<String> value) {
-            this.endpoints = value;
-            return this;
-        }
-
-        /** Sets the modelPrefixes field. */
-        @JsonProperty("model_prefixes")
-        public Builder withModelPrefixes(final @Nullable List<String> value) {
-            this.modelPrefixes = value;
-            return this;
-        }
-
-        /** Sets the paramMappings field. */
-        @JsonProperty("param_mappings")
-        public Builder withParamMappings(final @Nullable Map<String, String> value) {
-            this.paramMappings = value;
-            return this;
-        }
-
-        /** Builds the ProviderConfig instance. */
-        public ProviderConfig build() {
-            return new ProviderConfig(
-                name,
-                displayName,
-                baseUrl,
-                auth,
-                endpoints,
-                modelPrefixes,
-                paramMappings
-            );
-        }
+    /** Sets the displayName field. */
+    @JsonProperty("display_name")
+    public Builder withDisplayName(final @Nullable String value) {
+      this.displayName = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the baseUrl field. */
+    @JsonProperty("base_url")
+    public Builder withBaseUrl(final @Nullable String value) {
+      this.baseUrl = value;
+      return this;
+    }
+
+    /** Sets the auth field. */
+    @JsonProperty("auth")
+    public Builder withAuth(final @Nullable AuthConfig value) {
+      this.auth = value;
+      return this;
+    }
+
+    /** Sets the endpoints field. */
+    @JsonProperty("endpoints")
+    public Builder withEndpoints(final @Nullable List<String> value) {
+      this.endpoints = value;
+      return this;
+    }
+
+    /** Sets the modelPrefixes field. */
+    @JsonProperty("model_prefixes")
+    public Builder withModelPrefixes(final @Nullable List<String> value) {
+      this.modelPrefixes = value;
+      return this;
+    }
+
+    /** Sets the paramMappings field. */
+    @JsonProperty("param_mappings")
+    public Builder withParamMappings(final @Nullable Map<String, String> value) {
+      this.paramMappings = value;
+      return this;
+    }
+
+    /** Builds the ProviderConfig instance. */
+    public ProviderConfig build() {
+      return new ProviderConfig(
+          name, displayName, baseUrl, auth, endpoints, modelPrefixes, paramMappings);
+    }
+  }
+  // CPD-ON
 }

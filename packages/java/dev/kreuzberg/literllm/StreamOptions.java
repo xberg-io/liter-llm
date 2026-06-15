@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -15,32 +15,31 @@ import org.jspecify.annotations.Nullable;
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
 @JsonDeserialize(builder = StreamOptions.Builder.class)
 @SuppressWarnings("PMD")
-public record StreamOptions(@Nullable @JsonProperty("include_usage") Boolean includeUsage) {
-    public static Builder builder() {
-        return new Builder();
+public record StreamOptions(
+    @Nullable @JsonProperty("include_usage") Boolean includeUsage) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    @JsonProperty("include_usage")
+    private Boolean includeUsage = null;
+
+    /** Sets the includeUsage field. */
+    @JsonProperty("include_usage")
+    public Builder withIncludeUsage(final @Nullable Boolean value) {
+      this.includeUsage = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-        @JsonProperty("include_usage")
-private Boolean includeUsage = null;
-
-        /** Sets the includeUsage field. */
-        @JsonProperty("include_usage")
-        public Builder withIncludeUsage(final @Nullable Boolean value) {
-            this.includeUsage = value;
-            return this;
-        }
-
-        /** Builds the StreamOptions instance. */
-        public StreamOptions build() {
-            return new StreamOptions(
-                includeUsage
-            );
-        }
+    /** Builds the StreamOptions instance. */
+    public StreamOptions build() {
+      return new StreamOptions(includeUsage);
     }
-    // CPD-ON
+  }
+  // CPD-ON
 }

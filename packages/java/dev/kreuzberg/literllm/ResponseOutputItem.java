@@ -3,11 +3,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.Map;
 
 /**
  * A single output item from the response.
@@ -17,49 +17,46 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 @SuppressWarnings("PMD")
 public record ResponseOutputItem(
     @JsonProperty("type") String itemType,
-    @com.fasterxml.jackson.annotation.JsonAnyGetter Map<String, Object> content
-) {
-    public static Builder builder() {
-        return new Builder();
+    @com.fasterxml.jackson.annotation.JsonAnyGetter Map<String, Object> content) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    @JsonProperty("type")
+    private String itemType = "";
+
+    private Map<String, Object> content = new java.util.HashMap<>();
+
+    /** Sets the itemType field. */
+    @JsonProperty("type")
+    public Builder withItemType(final String value) {
+      this.itemType = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-        @JsonProperty("type")
-private String itemType = "";
-private Map<String, Object> content = new java.util.HashMap<>();
-
-        /** Sets the itemType field. */
-        @JsonProperty("type")
-        public Builder withItemType(final String value) {
-            this.itemType = value;
-            return this;
-        }
-
-        /** Sets the content field. */
-        @com.fasterxml.jackson.annotation.JsonIgnore
-        public Builder withContent(final Map<String, Object> value) {
-            this.content = value;
-            return this;
-        }
-
-        /** Absorbs unknown sibling fields (serde flatten). */
-        @com.fasterxml.jackson.annotation.JsonAnySetter
-        public Builder contentEntry(final String key, final Object value) {
-            this.content.put(key, value);
-            return this;
-        }
-
-        /** Builds the ResponseOutputItem instance. */
-        public ResponseOutputItem build() {
-            return new ResponseOutputItem(
-                itemType,
-                content
-            );
-        }
+    /** Sets the content field. */
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public Builder withContent(final Map<String, Object> value) {
+      this.content = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Absorbs unknown sibling fields (serde flatten). */
+    @com.fasterxml.jackson.annotation.JsonAnySetter
+    public Builder contentEntry(final String key, final Object value) {
+      this.content.put(key, value);
+      return this;
+    }
+
+    /** Builds the ResponseOutputItem instance. */
+    public ResponseOutputItem build() {
+      return new ResponseOutputItem(itemType, content);
+    }
+  }
+  // CPD-ON
 }

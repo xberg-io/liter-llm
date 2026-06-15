@@ -11,48 +11,47 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @SuppressWarnings("PMD")
 public enum GuardrailStage {
-    /**
-     * The outgoing prompt / request, before forwarding to the upstream provider.
-     */
-    Input("input"),
-    /**
-     * The full response from the upstream provider (non-streaming).
-     */
-    Output("output"),
-    /**
-     * A single chunk in a streaming response. Guardrails here are called once
-     * per chunk and may block or mutate individual chunks.
-     */
-    OutputChunk("outputchunk");
+  /**
+   * The outgoing prompt / request, before forwarding to the upstream provider.
+   */
+  Input("input"),
+  /**
+   * The full response from the upstream provider (non-streaming).
+   */
+  Output("output"),
+  /**
+   * A single chunk in a streaming response. Guardrails here are called once
+   * per chunk and may block or mutate individual chunks.
+   */
+  OutputChunk("outputchunk");
 
+  /** The string value. */
+  private final String value;
 
-    /** The string value. */
-    private final String value;
+  GuardrailStage(final String value) {
+    this.value = value;
+  }
 
-    GuardrailStage(final String value) {
-        this.value = value;
+  /** Returns the string value. */
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  /** Creates an instance from a string value. */
+  @JsonCreator
+  public static GuardrailStage fromValue(final String value) {
+    for (GuardrailStage e : values()) {
+      if (e.value.equalsIgnoreCase(value)) {
+        return e;
+      }
     }
+    throw new IllegalArgumentException("Unknown GuardrailStage value: " + value);
+  }
 
-    /** Returns the string value. */
-    @JsonValue
-    public String getValue() {
-        return value;
-    }
-
-    /** Creates an instance from a string value. */
-    @JsonCreator
-    public static GuardrailStage fromValue(final String value) {
-        for (GuardrailStage e : values()) {
-            if (e.value.equalsIgnoreCase(value)) {
-                return e;
-            }
-        }
-        throw new IllegalArgumentException("Unknown GuardrailStage value: " + value);
-    }
-
-    /** Returns the wire-format string value (matches JSON serialization). */
-    @Override
-    public String toString() {
-        return value;
-    }
+  /** Returns the wire-format string value (matches JSON serialization). */
+  @Override
+  public String toString() {
+    return value;
+  }
 }

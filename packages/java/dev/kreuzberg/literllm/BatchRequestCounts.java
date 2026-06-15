@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
@@ -17,50 +17,45 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 public record BatchRequestCounts(
     @JsonProperty("total") long total,
     @JsonProperty("completed") long completed,
-    @JsonProperty("failed") long failed
-) {
-    public static Builder builder() {
-        return new Builder();
+    @JsonProperty("failed") long failed) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private long total = 0;
+    private long completed = 0;
+    private long failed = 0;
+
+    /** Sets the total field. */
+    @JsonProperty("total")
+    public Builder withTotal(final long value) {
+      this.total = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private long total = 0;
-private long completed = 0;
-private long failed = 0;
-
-        /** Sets the total field. */
-        @JsonProperty("total")
-        public Builder withTotal(final long value) {
-            this.total = value;
-            return this;
-        }
-
-        /** Sets the completed field. */
-        @JsonProperty("completed")
-        public Builder withCompleted(final long value) {
-            this.completed = value;
-            return this;
-        }
-
-        /** Sets the failed field. */
-        @JsonProperty("failed")
-        public Builder withFailed(final long value) {
-            this.failed = value;
-            return this;
-        }
-
-        /** Builds the BatchRequestCounts instance. */
-        public BatchRequestCounts build() {
-            return new BatchRequestCounts(
-                total,
-                completed,
-                failed
-            );
-        }
+    /** Sets the completed field. */
+    @JsonProperty("completed")
+    public Builder withCompleted(final long value) {
+      this.completed = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the failed field. */
+    @JsonProperty("failed")
+    public Builder withFailed(final long value) {
+      this.failed = value;
+      return this;
+    }
+
+    /** Builds the BatchRequestCounts instance. */
+    public BatchRequestCounts build() {
+      return new BatchRequestCounts(total, completed, failed);
+    }
+  }
+  // CPD-ON
 }

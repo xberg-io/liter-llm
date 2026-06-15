@@ -2,13 +2,13 @@
 package dev.kreuzberg.literllm;
 
 public class EndpointNotSupportedException extends LiterLlmErrorException {
-    /** Creates a new EndpointNotSupportedException with the given message. */
-    public EndpointNotSupportedException(final String message) {
-        super(message);
-    }
+  /** Creates a new EndpointNotSupportedException with the given message. */
+  public EndpointNotSupportedException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new EndpointNotSupportedException with the given message and cause. */
-    public EndpointNotSupportedException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new EndpointNotSupportedException with the given message and cause. */
+  public EndpointNotSupportedException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

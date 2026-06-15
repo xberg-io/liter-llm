@@ -3,11 +3,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import java.util.List;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -23,87 +23,81 @@ public record CreateResponseRequest(
     @Nullable @JsonProperty("tools") List<ResponseTool> tools,
     @Nullable @JsonProperty("temperature") Double temperature,
     @Nullable @JsonProperty("max_output_tokens") Long maxOutputTokens,
-    @Nullable @JsonProperty("metadata") Object metadata
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("metadata") Object metadata) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String model = "";
+    private Object input = null;
+    private String instructions = null;
+    private List<ResponseTool> tools = null;
+    private Double temperature = null;
+
+    @JsonProperty("max_output_tokens")
+    private Long maxOutputTokens = null;
+
+    private Object metadata = null;
+
+    /** Sets the model field. */
+    @JsonProperty("model")
+    public Builder withModel(final String value) {
+      this.model = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String model = "";
-private Object input = null;
-private String instructions = null;
-private List<ResponseTool> tools = null;
-private Double temperature = null;
-        @JsonProperty("max_output_tokens")
-private Long maxOutputTokens = null;
-private Object metadata = null;
-
-        /** Sets the model field. */
-        @JsonProperty("model")
-        public Builder withModel(final String value) {
-            this.model = value;
-            return this;
-        }
-
-        /** Sets the input field. */
-        @JsonProperty("input")
-        public Builder withInput(final Object value) {
-            this.input = value;
-            return this;
-        }
-
-        /** Sets the instructions field. */
-        @JsonProperty("instructions")
-        public Builder withInstructions(final @Nullable String value) {
-            this.instructions = value;
-            return this;
-        }
-
-        /** Sets the tools field. */
-        @JsonProperty("tools")
-        public Builder withTools(final @Nullable List<ResponseTool> value) {
-            this.tools = value;
-            return this;
-        }
-
-        /** Sets the temperature field. */
-        @JsonProperty("temperature")
-        public Builder withTemperature(final @Nullable Double value) {
-            this.temperature = value;
-            return this;
-        }
-
-        /** Sets the maxOutputTokens field. */
-        @JsonProperty("max_output_tokens")
-        public Builder withMaxOutputTokens(final @Nullable Long value) {
-            this.maxOutputTokens = value;
-            return this;
-        }
-
-        /** Sets the metadata field. */
-        @JsonProperty("metadata")
-        public Builder withMetadata(final @Nullable Object value) {
-            this.metadata = value;
-            return this;
-        }
-
-        /** Builds the CreateResponseRequest instance. */
-        public CreateResponseRequest build() {
-            return new CreateResponseRequest(
-                model,
-                input,
-                instructions,
-                tools,
-                temperature,
-                maxOutputTokens,
-                metadata
-            );
-        }
+    /** Sets the input field. */
+    @JsonProperty("input")
+    public Builder withInput(final Object value) {
+      this.input = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the instructions field. */
+    @JsonProperty("instructions")
+    public Builder withInstructions(final @Nullable String value) {
+      this.instructions = value;
+      return this;
+    }
+
+    /** Sets the tools field. */
+    @JsonProperty("tools")
+    public Builder withTools(final @Nullable List<ResponseTool> value) {
+      this.tools = value;
+      return this;
+    }
+
+    /** Sets the temperature field. */
+    @JsonProperty("temperature")
+    public Builder withTemperature(final @Nullable Double value) {
+      this.temperature = value;
+      return this;
+    }
+
+    /** Sets the maxOutputTokens field. */
+    @JsonProperty("max_output_tokens")
+    public Builder withMaxOutputTokens(final @Nullable Long value) {
+      this.maxOutputTokens = value;
+      return this;
+    }
+
+    /** Sets the metadata field. */
+    @JsonProperty("metadata")
+    public Builder withMetadata(final @Nullable Object value) {
+      this.metadata = value;
+      return this;
+    }
+
+    /** Builds the CreateResponseRequest instance. */
+    public CreateResponseRequest build() {
+      return new CreateResponseRequest(
+          model, input, instructions, tools, temperature, maxOutputTokens, metadata);
+    }
+  }
+  // CPD-ON
 }

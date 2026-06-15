@@ -5,13 +5,13 @@ package dev.kreuzberg.literllm;
  * Underlying client error, flattened to `message` + numeric `code`.
  */
 public class ClientException extends BatchWaitErrorException {
-    /** Creates a new ClientException with the given message. */
-    public ClientException(final String message) {
-        super(message);
-    }
+  /** Creates a new ClientException with the given message. */
+  public ClientException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new ClientException with the given message and cause. */
-    public ClientException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new ClientException with the given message and cause. */
+  public ClientException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

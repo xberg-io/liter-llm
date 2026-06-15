@@ -25,18 +25,25 @@
 package dev.kreuzberg.literllm.android
 
 /** How the API key is sent in the HTTP request. */
-@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = AuthHeaderFormatDeserializer::class)
+@com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+    using = AuthHeaderFormatDeserializer::class
+)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = AuthHeaderFormatSerializer::class)
 sealed class AuthHeaderFormat {
     /** Bearer token: `Authorization: Bearer <key>` */
     object Bearer : AuthHeaderFormat()
+
     /** Custom header: e.g., `X-Api-Key: <key>` */
     data class ApiKey(val value: String) : AuthHeaderFormat()
+
     /** No authentication required. */
     object None : AuthHeaderFormat()
 }
 
-private class AuthHeaderFormatDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<AuthHeaderFormat>(AuthHeaderFormat::class.java) {
+private class AuthHeaderFormatDeserializer :
+    com.fasterxml.jackson.databind.deser.std.StdDeserializer<AuthHeaderFormat>(
+        AuthHeaderFormat::class.java
+    ) {
     @Suppress("LongMethod", "CyclomaticComplexMethod", "ReturnCount")
     override fun deserialize(
         parser: com.fasterxml.jackson.core.JsonParser,
@@ -47,9 +54,13 @@ private class AuthHeaderFormatDeserializer : com.fasterxml.jackson.databind.dese
             return when (node.asText()) {
                 "Bearer" -> AuthHeaderFormat.Bearer
                 "None" -> AuthHeaderFormat.None
-                else -> throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
-                    parser, "Unknown AuthHeaderFormat unit variant", node.asText(), AuthHeaderFormat::class.java,
-                )
+                else ->
+                    throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
+                        parser,
+                        "Unknown AuthHeaderFormat unit variant",
+                        node.asText(),
+                        AuthHeaderFormat::class.java,
+                    )
             }
         }
         if (node.isObject) {
@@ -60,21 +71,34 @@ private class AuthHeaderFormatDeserializer : com.fasterxml.jackson.databind.dese
                 if (!it.hasNext()) {
                     val payload = entry.value
                     return when (entry.key) {
-                        "ApiKey" -> AuthHeaderFormat.ApiKey(ctx.readTreeAsValue<String>(payload, String::class.java))
-                        else -> throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
-                            parser, "Unknown AuthHeaderFormat data variant", entry.key, AuthHeaderFormat::class.java,
-                        )
+                        "ApiKey" ->
+                            AuthHeaderFormat.ApiKey(
+                                ctx.readTreeAsValue<String>(payload, String::class.java)
+                            )
+                        else ->
+                            throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
+                                parser,
+                                "Unknown AuthHeaderFormat data variant",
+                                entry.key,
+                                AuthHeaderFormat::class.java,
+                            )
                     }
                 }
             }
         }
         throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
-            parser, "Cannot deserialize AuthHeaderFormat: expected string or single-field object", null, AuthHeaderFormat::class.java,
+            parser,
+            "Cannot deserialize AuthHeaderFormat: expected string or single-field object",
+            null,
+            AuthHeaderFormat::class.java,
         )
     }
 }
 
-private class AuthHeaderFormatSerializer : com.fasterxml.jackson.databind.ser.std.StdSerializer<AuthHeaderFormat>(AuthHeaderFormat::class.java) {
+private class AuthHeaderFormatSerializer :
+    com.fasterxml.jackson.databind.ser.std.StdSerializer<AuthHeaderFormat>(
+        AuthHeaderFormat::class.java
+    ) {
     @Suppress("LongMethod")
     override fun serialize(
         value: AuthHeaderFormat,
@@ -82,7 +106,9 @@ private class AuthHeaderFormatSerializer : com.fasterxml.jackson.databind.ser.st
         provider: com.fasterxml.jackson.databind.SerializerProvider,
     ) {
         @Suppress("UNCHECKED_CAST")
-        val mapper = (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper) ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
+        val mapper =
+            (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper)
+                ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
         when (value) {
             is AuthHeaderFormat.Bearer -> gen.writeString("Bearer")
             is AuthHeaderFormat.ApiKey -> {

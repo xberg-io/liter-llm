@@ -26,7 +26,6 @@ package dev.kreuzberg.literllm.android
 
 /** Error type for `IdempotencyStore` operations. */
 sealed class IdempotencyStoreError(message: String) : Exception(message) {
-    data class Backend(
-        val field0: String,
-    ) : IdempotencyStoreError("idempotency store backend error: $field0")
+    data class Backend(val field0: String) :
+        IdempotencyStoreError("idempotency store backend error: $field0")
 }

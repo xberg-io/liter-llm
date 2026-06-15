@@ -3,16 +3,12 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
 
 /**
  * An intent prototype: {@code (intent_name, prototype_embedding, target_model_id)}.
  */
 @SuppressWarnings("PMD")
 public record IntentPrototype(
-    String name,
-    @JsonInclude(JsonInclude.Include.NON_NULL) List<Double> embedding,
-    String model
-) {
-}
+    String name, @JsonInclude(JsonInclude.Include.NON_NULL) List<Double> embedding, String model) {}

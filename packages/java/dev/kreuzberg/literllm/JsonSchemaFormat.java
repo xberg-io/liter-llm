@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -19,59 +19,53 @@ public record JsonSchemaFormat(
     @JsonProperty("name") String name,
     @Nullable @JsonProperty("description") String description,
     @JsonProperty("schema") Object schema,
-    @Nullable @JsonProperty("strict") Boolean strict
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("strict") Boolean strict) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String name = "";
+    private String description = null;
+    private Object schema = null;
+    private Boolean strict = null;
+
+    /** Sets the name field. */
+    @JsonProperty("name")
+    public Builder withName(final String value) {
+      this.name = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String name = "";
-private String description = null;
-private Object schema = null;
-private Boolean strict = null;
-
-        /** Sets the name field. */
-        @JsonProperty("name")
-        public Builder withName(final String value) {
-            this.name = value;
-            return this;
-        }
-
-        /** Sets the description field. */
-        @JsonProperty("description")
-        public Builder withDescription(final @Nullable String value) {
-            this.description = value;
-            return this;
-        }
-
-        /** Sets the schema field. */
-        @JsonProperty("schema")
-        public Builder withSchema(final Object value) {
-            this.schema = value;
-            return this;
-        }
-
-        /** Sets the strict field. */
-        @JsonProperty("strict")
-        public Builder withStrict(final @Nullable Boolean value) {
-            this.strict = value;
-            return this;
-        }
-
-        /** Builds the JsonSchemaFormat instance. */
-        public JsonSchemaFormat build() {
-            return new JsonSchemaFormat(
-                name,
-                description,
-                schema,
-                strict
-            );
-        }
+    /** Sets the description field. */
+    @JsonProperty("description")
+    public Builder withDescription(final @Nullable String value) {
+      this.description = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the schema field. */
+    @JsonProperty("schema")
+    public Builder withSchema(final Object value) {
+      this.schema = value;
+      return this;
+    }
+
+    /** Sets the strict field. */
+    @JsonProperty("strict")
+    public Builder withStrict(final @Nullable Boolean value) {
+      this.strict = value;
+      return this;
+    }
+
+    /** Builds the JsonSchemaFormat instance. */
+    public JsonSchemaFormat build() {
+      return new JsonSchemaFormat(name, description, schema, strict);
+    }
+  }
+  // CPD-ON
 }

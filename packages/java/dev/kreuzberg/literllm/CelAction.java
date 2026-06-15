@@ -11,43 +11,42 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @SuppressWarnings("PMD")
 public enum CelAction {
-    /**
-     * Block the request/response with the given code and reason.
-     */
-    Block("block"),
-    /**
-     * Replace the payload with a static JSON value (e.g., for redaction).
-     */
-    Mutate("mutate");
+  /**
+   * Block the request/response with the given code and reason.
+   */
+  Block("block"),
+  /**
+   * Replace the payload with a static JSON value (e.g., for redaction).
+   */
+  Mutate("mutate");
 
+  /** The string value. */
+  private final String value;
 
-    /** The string value. */
-    private final String value;
+  CelAction(final String value) {
+    this.value = value;
+  }
 
-    CelAction(final String value) {
-        this.value = value;
+  /** Returns the string value. */
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  /** Creates an instance from a string value. */
+  @JsonCreator
+  public static CelAction fromValue(final String value) {
+    for (CelAction e : values()) {
+      if (e.value.equalsIgnoreCase(value)) {
+        return e;
+      }
     }
+    throw new IllegalArgumentException("Unknown CelAction value: " + value);
+  }
 
-    /** Returns the string value. */
-    @JsonValue
-    public String getValue() {
-        return value;
-    }
-
-    /** Creates an instance from a string value. */
-    @JsonCreator
-    public static CelAction fromValue(final String value) {
-        for (CelAction e : values()) {
-            if (e.value.equalsIgnoreCase(value)) {
-                return e;
-            }
-        }
-        throw new IllegalArgumentException("Unknown CelAction value: " + value);
-    }
-
-    /** Returns the wire-format string value (matches JSON serialization). */
-    @Override
-    public String toString() {
-        return value;
-    }
+  /** Returns the wire-format string value (matches JSON serialization). */
+  @Override
+  public String toString() {
+    return value;
+  }
 }

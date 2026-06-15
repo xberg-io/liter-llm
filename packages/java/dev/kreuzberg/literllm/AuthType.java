@@ -11,51 +11,50 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @SuppressWarnings("PMD")
 public enum AuthType {
-    /**
-     * Standard {@code Authorization: Bearer &lt;key&gt;} header.
-     */
-    Bearer("bearer"),
-    /**
-     * {@code x-api-key: &lt;key&gt;} header (also handles {@code "header"} and {@code "x-api-key"} aliases).
-     */
-    ApiKey("api-key"),
-    /**
-     * No authentication header required.
-     */
-    None("none"),
-    /**
-     * Unrecognised auth scheme — falls back to bearer.
-     */
-    Unknown("unknown");
+  /**
+   * Standard {@code Authorization: Bearer &lt;key&gt;} header.
+   */
+  Bearer("bearer"),
+  /**
+   * {@code x-api-key: &lt;key&gt;} header (also handles {@code "header"} and {@code "x-api-key"} aliases).
+   */
+  ApiKey("api-key"),
+  /**
+   * No authentication header required.
+   */
+  None("none"),
+  /**
+   * Unrecognised auth scheme — falls back to bearer.
+   */
+  Unknown("unknown");
 
+  /** The string value. */
+  private final String value;
 
-    /** The string value. */
-    private final String value;
+  AuthType(final String value) {
+    this.value = value;
+  }
 
-    AuthType(final String value) {
-        this.value = value;
+  /** Returns the string value. */
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  /** Creates an instance from a string value. */
+  @JsonCreator
+  public static AuthType fromValue(final String value) {
+    for (AuthType e : values()) {
+      if (e.value.equalsIgnoreCase(value)) {
+        return e;
+      }
     }
+    throw new IllegalArgumentException("Unknown AuthType value: " + value);
+  }
 
-    /** Returns the string value. */
-    @JsonValue
-    public String getValue() {
-        return value;
-    }
-
-    /** Creates an instance from a string value. */
-    @JsonCreator
-    public static AuthType fromValue(final String value) {
-        for (AuthType e : values()) {
-            if (e.value.equalsIgnoreCase(value)) {
-                return e;
-            }
-        }
-        throw new IllegalArgumentException("Unknown AuthType value: " + value);
-    }
-
-    /** Returns the wire-format string value (matches JSON serialization). */
-    @Override
-    public String toString() {
-        return value;
-    }
+  /** Returns the wire-format string value (matches JSON serialization). */
+  @Override
+  public String toString() {
+    return value;
+  }
 }

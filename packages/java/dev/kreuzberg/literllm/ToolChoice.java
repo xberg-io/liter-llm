@@ -11,78 +11,86 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;/**
+import java.util.Optional;
+
+/**
  * Tool usage mode or a specific tool to call.
- */@SuppressWarnings("PMD")
+ */
+@SuppressWarnings("PMD")
 public final class ToolChoice {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-    private final JsonNode value;
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private final JsonNode value;
 
-    @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-    public ToolChoice(final JsonNode value) {
-        this.value = value;
-    }
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+  public ToolChoice(final JsonNode value) {
+    this.value = value;
+  }
 
-    @JsonValue
-    public JsonNode value() {
-        return value;
-    }
+  @JsonValue
+  public JsonNode value() {
+    return value;
+  }
 
-    public static ToolChoice of(final String s) {
-        return new ToolChoice(JsonNodeFactory.instance.textNode(s));
-    }
+  public static ToolChoice of(final String s) {
+    return new ToolChoice(JsonNodeFactory.instance.textNode(s));
+  }
 
-    public static ToolChoice of(final List<String> items) {
-        var arr = JsonNodeFactory.instance.arrayNode();
-        for (var s : items) { arr.add(s); }
-        return new ToolChoice(arr);
+  public static ToolChoice of(final List<String> items) {
+    var arr = JsonNodeFactory.instance.arrayNode();
+    for (var s : items) {
+      arr.add(s);
     }
+    return new ToolChoice(arr);
+  }
 
-    public static ToolChoice ofObject(final Object o) {
-        return new ToolChoice(MAPPER.valueToTree(o));
-    }
+  public static ToolChoice ofObject(final Object o) {
+    return new ToolChoice(MAPPER.valueToTree(o));
+  }
 
-    public static ToolChoice fromJson(final String json) throws LiterLlmRsException {
-        try {
-            return new ToolChoice(MAPPER.readTree(json));
-        } catch (Exception e) {
-            throw new LiterLlmRsException("Failed to parse ToolChoice from JSON: " + e.getMessage(), e);
-        }
+  public static ToolChoice fromJson(final String json) throws LiterLlmRsException {
+    try {
+      return new ToolChoice(MAPPER.readTree(json));
+    } catch (Exception e) {
+      throw new LiterLlmRsException("Failed to parse ToolChoice from JSON: " + e.getMessage(), e);
     }
+  }
 
-    // CPD-OFF — wrapper boilerplate is intentionally identical across all
-    // untagged-union classes; CPD's duplicate-block detector flags the asString /
-    // asList / asObject / equals / hashCode / toString block (~170 tokens) which
-    // is the price of avoiding a generic base class. See alef gen_java_untagged_wrapper.
-    public Optional<String> asString() {
-        return value != null && value.isTextual() ? Optional.of(value.asText()) : Optional.empty();
-    }
+  // CPD-OFF — wrapper boilerplate is intentionally identical across all
+  // untagged-union classes; CPD's duplicate-block detector flags the asString /
+  // asList / asObject / equals / hashCode / toString block (~170 tokens) which
+  // is the price of avoiding a generic base class. See alef gen_java_untagged_wrapper.
+  public Optional<String> asString() {
+    return value != null && value.isTextual() ? Optional.of(value.asText()) : Optional.empty();
+  }
 
-    public Optional<List<String>> asList() {
-        if (value == null || !value.isArray()) { return Optional.empty(); }
-        var result = new ArrayList<String>(value.size());
-        for (var node : value) { result.add(node.asText()); }
-        return Optional.of(result);
+  public Optional<List<String>> asList() {
+    if (value == null || !value.isArray()) {
+      return Optional.empty();
     }
+    var result = new ArrayList<String>(value.size());
+    for (var node : value) {
+      result.add(node.asText());
+    }
+    return Optional.of(result);
+  }
 
-    public Optional<JsonNode> asObject() {
-        return value != null && value.isObject() ? Optional.of(value) : Optional.empty();
-    }
+  public Optional<JsonNode> asObject() {
+    return value != null && value.isObject() ? Optional.of(value) : Optional.empty();
+  }
 
-    @Override
-    public boolean equals(final Object o) {
-        return this == o
-            || (o instanceof ToolChoice other && Objects.equals(value, other.value));
-    }
+  @Override
+  public boolean equals(final Object o) {
+    return this == o || (o instanceof ToolChoice other && Objects.equals(value, other.value));
+  }
 
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(value);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(value);
+  }
 
-    @Override
-    public String toString() {
-        return value == null ? "null" : value.toString();
-    }
-    // CPD-ON
+  @Override
+  public String toString() {
+    return value == null ? "null" : value.toString();
+  }
+  // CPD-ON
 }

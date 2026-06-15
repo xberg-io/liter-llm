@@ -11,55 +11,54 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @SuppressWarnings("PMD")
 public enum CacheState {
-    /**
-     * No cache entry found; request was sent to the provider.
-     */
-    Miss("miss"),
-    /**
-     * Exact-match cache hit; provider was not called.
-     */
-    ExactHit("exact_hit"),
-    /**
-     * Semantic-similarity cache hit; provider was not called.
-     */
-    SemanticHit("semantic_hit"),
-    /**
-     * Stale entry served (TTL expired but no fresh entry was available).
-     */
-    StaleHit("stale_hit"),
-    /**
-     * Cache lookup was skipped (bypass policy, streaming request, etc.).
-     */
-    Bypass("bypass");
+  /**
+   * No cache entry found; request was sent to the provider.
+   */
+  Miss("miss"),
+  /**
+   * Exact-match cache hit; provider was not called.
+   */
+  ExactHit("exact_hit"),
+  /**
+   * Semantic-similarity cache hit; provider was not called.
+   */
+  SemanticHit("semantic_hit"),
+  /**
+   * Stale entry served (TTL expired but no fresh entry was available).
+   */
+  StaleHit("stale_hit"),
+  /**
+   * Cache lookup was skipped (bypass policy, streaming request, etc.).
+   */
+  Bypass("bypass");
 
+  /** The string value. */
+  private final String value;
 
-    /** The string value. */
-    private final String value;
+  CacheState(final String value) {
+    this.value = value;
+  }
 
-    CacheState(final String value) {
-        this.value = value;
+  /** Returns the string value. */
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  /** Creates an instance from a string value. */
+  @JsonCreator
+  public static CacheState fromValue(final String value) {
+    for (CacheState e : values()) {
+      if (e.value.equalsIgnoreCase(value)) {
+        return e;
+      }
     }
+    throw new IllegalArgumentException("Unknown CacheState value: " + value);
+  }
 
-    /** Returns the string value. */
-    @JsonValue
-    public String getValue() {
-        return value;
-    }
-
-    /** Creates an instance from a string value. */
-    @JsonCreator
-    public static CacheState fromValue(final String value) {
-        for (CacheState e : values()) {
-            if (e.value.equalsIgnoreCase(value)) {
-                return e;
-            }
-        }
-        throw new IllegalArgumentException("Unknown CacheState value: " + value);
-    }
-
-    /** Returns the wire-format string value (matches JSON serialization). */
-    @Override
-    public String toString() {
-        return value;
-    }
+  /** Returns the wire-format string value (matches JSON serialization). */
+  @Override
+  public String toString() {
+    return value;
+  }
 }

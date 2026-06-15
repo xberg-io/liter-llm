@@ -25,37 +25,50 @@
 package dev.kreuzberg.literllm.android
 
 /** The outcome of a guardrail check. */
-@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = GuardrailDecisionDeserializer::class)
+@com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+    using = GuardrailDecisionDeserializer::class
+)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = GuardrailDecisionSerializer::class)
 sealed class GuardrailDecision {
     /** The check passed. Continue to the next guardrail or to the inner service. */
     object Allow : GuardrailDecision()
+
     /**
      * The check failed. Short-circuit the request/response with this reason.
      *
-     * `code` should be ≥ 1000 to avoid collision with HTTP status codes and
-     * to facilitate cross-language error mapping.
+     * `code` should be ≥ 1000 to avoid collision with HTTP status codes and to facilitate
+     * cross-language error mapping.
      */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
     data class Block(
         val reason: String,
         val code: Int,
     ) : GuardrailDecision()
+
     /**
-     * Rewrite the payload. The provided `new_payload` replaces the original
-     * `request` or `response` before it reaches the next stage.
+     * Rewrite the payload. The provided `new_payload` replaces the original `request` or `response`
+     * before it reaches the next stage.
      *
      * For `OutputChunk` stage: `new_payload` replaces the chunk content.
      */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
-    data class Mutate(
-        val newPayload: Any,
-    ) : GuardrailDecision()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
+    data class Mutate(val newPayload: Any) : GuardrailDecision()
 }
 
-private class GuardrailDecisionDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<GuardrailDecision>(GuardrailDecision::class.java) {
+private class GuardrailDecisionDeserializer :
+    com.fasterxml.jackson.databind.deser.std.StdDeserializer<GuardrailDecision>(
+        GuardrailDecision::class.java
+    ) {
     @Suppress("LongMethod", "CyclomaticComplexMethod", "ReturnCount")
     override fun deserialize(
         parser: com.fasterxml.jackson.core.JsonParser,
@@ -65,9 +78,13 @@ private class GuardrailDecisionDeserializer : com.fasterxml.jackson.databind.des
         if (node.isTextual) {
             return when (node.asText()) {
                 "Allow" -> GuardrailDecision.Allow
-                else -> throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
-                    parser, "Unknown GuardrailDecision unit variant", node.asText(), GuardrailDecision::class.java,
-                )
+                else ->
+                    throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
+                        parser,
+                        "Unknown GuardrailDecision unit variant",
+                        node.asText(),
+                        GuardrailDecision::class.java,
+                    )
             }
         }
         if (node.isObject) {
@@ -78,22 +95,40 @@ private class GuardrailDecisionDeserializer : com.fasterxml.jackson.databind.des
                 if (!it.hasNext()) {
                     val payload = entry.value
                     return when (entry.key) {
-                        "Block" -> ctx.readTreeAsValue<GuardrailDecision.Block>(payload, GuardrailDecision.Block::class.java)
-                        "Mutate" -> ctx.readTreeAsValue<GuardrailDecision.Mutate>(payload, GuardrailDecision.Mutate::class.java)
-                        else -> throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
-                            parser, "Unknown GuardrailDecision data variant", entry.key, GuardrailDecision::class.java,
-                        )
+                        "Block" ->
+                            ctx.readTreeAsValue<GuardrailDecision.Block>(
+                                payload,
+                                GuardrailDecision.Block::class.java,
+                            )
+                        "Mutate" ->
+                            ctx.readTreeAsValue<GuardrailDecision.Mutate>(
+                                payload,
+                                GuardrailDecision.Mutate::class.java,
+                            )
+                        else ->
+                            throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
+                                parser,
+                                "Unknown GuardrailDecision data variant",
+                                entry.key,
+                                GuardrailDecision::class.java,
+                            )
                     }
                 }
             }
         }
         throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
-            parser, "Cannot deserialize GuardrailDecision: expected string or single-field object", null, GuardrailDecision::class.java,
+            parser,
+            "Cannot deserialize GuardrailDecision: expected string or single-field object",
+            null,
+            GuardrailDecision::class.java,
         )
     }
 }
 
-private class GuardrailDecisionSerializer : com.fasterxml.jackson.databind.ser.std.StdSerializer<GuardrailDecision>(GuardrailDecision::class.java) {
+private class GuardrailDecisionSerializer :
+    com.fasterxml.jackson.databind.ser.std.StdSerializer<GuardrailDecision>(
+        GuardrailDecision::class.java
+    ) {
     @Suppress("LongMethod")
     override fun serialize(
         value: GuardrailDecision,
@@ -101,7 +136,9 @@ private class GuardrailDecisionSerializer : com.fasterxml.jackson.databind.ser.s
         provider: com.fasterxml.jackson.databind.SerializerProvider,
     ) {
         @Suppress("UNCHECKED_CAST")
-        val mapper = (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper) ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
+        val mapper =
+            (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper)
+                ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
         when (value) {
             is GuardrailDecision.Allow -> gen.writeString("Allow")
             is GuardrailDecision.Block -> {

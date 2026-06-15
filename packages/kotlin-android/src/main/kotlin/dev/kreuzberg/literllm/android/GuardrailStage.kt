@@ -31,8 +31,8 @@ enum class GuardrailStage {
     /** The full response from the upstream provider (non-streaming). */
     @com.fasterxml.jackson.annotation.JsonProperty("Output") OUTPUT,
     /**
-     * A single chunk in a streaming response. Guardrails here are called once
-     * per chunk and may block or mutate individual chunks.
+     * A single chunk in a streaming response. Guardrails here are called once per chunk and may
+     * block or mutate individual chunks.
      */
     @com.fasterxml.jackson.annotation.JsonProperty("OutputChunk") OUTPUT_CHUNK;
 

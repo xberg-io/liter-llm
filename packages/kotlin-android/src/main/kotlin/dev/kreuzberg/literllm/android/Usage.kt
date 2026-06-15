@@ -33,9 +33,8 @@ data class Usage(
     /** Total tokens used. Defaults to 0 when absent (some providers omit this). */
     val totalTokens: Long = 0L,
     /**
-     * Breakdown of tokens used in the prompt, including cached tokens served
-     * at the provider's discounted cache-read rate. Absent when the provider
-     * does not return prompt-token details.
+     * Breakdown of tokens used in the prompt, including cached tokens served at the provider's
+     * discounted cache-read rate. Absent when the provider does not return prompt-token details.
      */
     val promptTokensDetails: PromptTokensDetails? = null,
 )

@@ -5,13 +5,13 @@ package dev.kreuzberg.literllm;
  * Batch reached a terminal failure state.
  */
 public class FailedException extends BatchWaitErrorException {
-    /** Creates a new FailedException with the given message. */
-    public FailedException(final String message) {
-        super(message);
-    }
+  /** Creates a new FailedException with the given message. */
+  public FailedException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new FailedException with the given message and cause. */
-    public FailedException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new FailedException with the given message and cause. */
+  public FailedException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

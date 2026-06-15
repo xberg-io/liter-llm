@@ -5,13 +5,13 @@ package dev.kreuzberg.literllm;
  * Error type for [`IdempotencyStore`] operations.
  */
 public class IdempotencyStoreErrorException extends Exception {
-    /** Creates a new IdempotencyStoreErrorException with the given message. */
-    public IdempotencyStoreErrorException(final String message) {
-        super(message);
-    }
+  /** Creates a new IdempotencyStoreErrorException with the given message. */
+  public IdempotencyStoreErrorException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new IdempotencyStoreErrorException with the given message and cause. */
-    public IdempotencyStoreErrorException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new IdempotencyStoreErrorException with the given message and cause. */
+  public IdempotencyStoreErrorException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

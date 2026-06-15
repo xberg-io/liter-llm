@@ -12,31 +12,32 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", visible = false)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = TypesContentPart.Text.class, name = "text"),
-    @JsonSubTypes.Type(value = TypesContentPart.ImageUrl.class, name = "image_url"),
-    @JsonSubTypes.Type(value = TypesContentPart.Document.class, name = "document"),
-    @JsonSubTypes.Type(value = TypesContentPart.InputAudio.class, name = "input_audio")
+  @JsonSubTypes.Type(value = TypesContentPart.Text.class, name = "text"),
+  @JsonSubTypes.Type(value = TypesContentPart.ImageUrl.class, name = "image_url"),
+  @JsonSubTypes.Type(value = TypesContentPart.Document.class, name = "document"),
+  @JsonSubTypes.Type(value = TypesContentPart.InputAudio.class, name = "input_audio")
 })
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 public sealed interface TypesContentPart {
 
-    /**
-     * Plain text.
-     */
-    record Text(@JsonProperty("text") String text) implements TypesContentPart { }
+  /**
+   * Plain text.
+   */
+  record Text(@JsonProperty("text") String text) implements TypesContentPart {}
 
-    /**
-     * Image identified by URL (with optional detail level).
-     */
-    record ImageUrl(@JsonProperty("image_url") ImageUrl imageUrl) implements TypesContentPart { }
+  /**
+   * Image identified by URL (with optional detail level).
+   */
+  record ImageUrl(@JsonProperty("image_url") ImageUrl imageUrl) implements TypesContentPart {}
 
-    /**
-     * Document file (PDF, CSV, etc.) as base64 or URL.
-     */
-    record Document(@JsonProperty("document") DocumentContent document) implements TypesContentPart { }
+  /**
+   * Document file (PDF, CSV, etc.) as base64 or URL.
+   */
+  record Document(@JsonProperty("document") DocumentContent document) implements TypesContentPart {}
 
-    /**
-     * Audio input as base64.
-     */
-    record InputAudio(@JsonProperty("input_audio") AudioContent inputAudio) implements TypesContentPart { }
+  /**
+   * Audio input as base64.
+   */
+  record InputAudio(@JsonProperty("input_audio") AudioContent inputAudio)
+      implements TypesContentPart {}
 }

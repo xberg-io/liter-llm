@@ -5,13 +5,13 @@ package dev.kreuzberg.literllm;
  * Error returned by a [`UsageSink`] implementation.
  */
 public class UsageSinkErrorException extends Exception {
-    /** Creates a new UsageSinkErrorException with the given message. */
-    public UsageSinkErrorException(final String message) {
-        super(message);
-    }
+  /** Creates a new UsageSinkErrorException with the given message. */
+  public UsageSinkErrorException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new UsageSinkErrorException with the given message and cause. */
-    public UsageSinkErrorException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new UsageSinkErrorException with the given message and cause. */
+  public UsageSinkErrorException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

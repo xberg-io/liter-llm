@@ -28,6 +28,7 @@ package dev.kreuzberg.literllm.android
 sealed class CelAction {
     /** Block the request/response with the given code and reason. */
     data class Block(val code: Int, val reason: String) : CelAction()
+
     /** Replace the payload with a static JSON value (e.g., for redaction). */
     data class Mutate(val newPayload: Any) : CelAction()
 }

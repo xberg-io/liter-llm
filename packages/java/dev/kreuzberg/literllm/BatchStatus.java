@@ -11,67 +11,66 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @SuppressWarnings("PMD")
 public enum BatchStatus {
-    /**
-     * Validating the input file.
-     */
-    Validating("validating"),
-    /**
-     * Job failed.
-     */
-    Failed("failed"),
-    /**
-     * Job is running.
-     */
-    InProgress("in_progress"),
-    /**
-     * Finalizing results.
-     */
-    Finalizing("finalizing"),
-    /**
-     * Job completed successfully.
-     */
-    Completed("completed"),
-    /**
-     * Job expired before completion.
-     */
-    Expired("expired"),
-    /**
-     * Job is being cancelled.
-     */
-    Cancelling("cancelling"),
-    /**
-     * Job has been cancelled.
-     */
-    Cancelled("cancelled");
+  /**
+   * Validating the input file.
+   */
+  Validating("validating"),
+  /**
+   * Job failed.
+   */
+  Failed("failed"),
+  /**
+   * Job is running.
+   */
+  InProgress("in_progress"),
+  /**
+   * Finalizing results.
+   */
+  Finalizing("finalizing"),
+  /**
+   * Job completed successfully.
+   */
+  Completed("completed"),
+  /**
+   * Job expired before completion.
+   */
+  Expired("expired"),
+  /**
+   * Job is being cancelled.
+   */
+  Cancelling("cancelling"),
+  /**
+   * Job has been cancelled.
+   */
+  Cancelled("cancelled");
 
+  /** The string value. */
+  private final String value;
 
-    /** The string value. */
-    private final String value;
+  BatchStatus(final String value) {
+    this.value = value;
+  }
 
-    BatchStatus(final String value) {
-        this.value = value;
+  /** Returns the string value. */
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  /** Creates an instance from a string value. */
+  @JsonCreator
+  public static BatchStatus fromValue(final String value) {
+    for (BatchStatus e : values()) {
+      if (e.value.equalsIgnoreCase(value)) {
+        return e;
+      }
     }
+    throw new IllegalArgumentException("Unknown BatchStatus value: " + value);
+  }
 
-    /** Returns the string value. */
-    @JsonValue
-    public String getValue() {
-        return value;
-    }
-
-    /** Creates an instance from a string value. */
-    @JsonCreator
-    public static BatchStatus fromValue(final String value) {
-        for (BatchStatus e : values()) {
-            if (e.value.equalsIgnoreCase(value)) {
-                return e;
-            }
-        }
-        throw new IllegalArgumentException("Unknown BatchStatus value: " + value);
-    }
-
-    /** Returns the wire-format string value (matches JSON serialization). */
-    @Override
-    public String toString() {
-        return value;
-    }
+  /** Returns the wire-format string value (matches JSON serialization). */
+  @Override
+  public String toString() {
+    return value;
+  }
 }

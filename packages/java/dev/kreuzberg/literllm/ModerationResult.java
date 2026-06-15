@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
@@ -17,51 +17,47 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 public record ModerationResult(
     @JsonProperty("flagged") boolean flagged,
     @JsonProperty("categories") ModerationCategories categories,
-    @JsonProperty("category_scores") ModerationCategoryScores categoryScores
-) {
-    public static Builder builder() {
-        return new Builder();
+    @JsonProperty("category_scores") ModerationCategoryScores categoryScores) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private boolean flagged = false;
+    private ModerationCategories categories = null;
+
+    @JsonProperty("category_scores")
+    private ModerationCategoryScores categoryScores = null;
+
+    /** Sets the flagged field. */
+    @JsonProperty("flagged")
+    public Builder withFlagged(final boolean value) {
+      this.flagged = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private boolean flagged = false;
-private ModerationCategories categories = null;
-        @JsonProperty("category_scores")
-private ModerationCategoryScores categoryScores = null;
-
-        /** Sets the flagged field. */
-        @JsonProperty("flagged")
-        public Builder withFlagged(final boolean value) {
-            this.flagged = value;
-            return this;
-        }
-
-        /** Sets the categories field. */
-        @JsonProperty("categories")
-        public Builder withCategories(final ModerationCategories value) {
-            this.categories = value;
-            return this;
-        }
-
-        /** Sets the categoryScores field. */
-        @JsonProperty("category_scores")
-        public Builder withCategoryScores(final ModerationCategoryScores value) {
-            this.categoryScores = value;
-            return this;
-        }
-
-        /** Builds the ModerationResult instance. */
-        public ModerationResult build() {
-            return new ModerationResult(
-                flagged,
-                categories,
-                categoryScores
-            );
-        }
+    /** Sets the categories field. */
+    @JsonProperty("categories")
+    public Builder withCategories(final ModerationCategories value) {
+      this.categories = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the categoryScores field. */
+    @JsonProperty("category_scores")
+    public Builder withCategoryScores(final ModerationCategoryScores value) {
+      this.categoryScores = value;
+      return this;
+    }
+
+    /** Builds the ModerationResult instance. */
+    public ModerationResult build() {
+      return new ModerationResult(flagged, categories, categoryScores);
+    }
+  }
+  // CPD-ON
 }

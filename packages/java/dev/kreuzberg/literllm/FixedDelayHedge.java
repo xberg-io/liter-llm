@@ -11,77 +11,88 @@ import java.util.Optional;
  */
 @SuppressWarnings("PMD")
 public class FixedDelayHedge implements AutoCloseable {
-    private final MemorySegment handle;
+  private final MemorySegment handle;
 
-    FixedDelayHedge(MemorySegment handle) {
-        this.handle = handle;
-    }
+  FixedDelayHedge(MemorySegment handle) {
+    this.handle = handle;
+  }
 
-    MemorySegment handle() {
-        return this.handle;
-    }
-    public Optional<Long> delayForAttempt(final int attempt, final Long latencySoFar) throws LiterLlmRsException {
-        try {
-            var result = (long) NativeLib.LITERLLM_FIXED_DELAY_HEDGE_DELAY_FOR_ATTEMPT.invoke(this.handle, attempt, latencySoFar);
-            return java.util.OptionalLong.of(result);        } catch (LiterLlmRsException ex) {
-            throw ex;
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("delayForAttempt: failed", e);
-        }
-    }
-    public int maxAttempts() throws LiterLlmRsException {
-        try {
-            var result = (int) NativeLib.LITERLLM_FIXED_DELAY_HEDGE_MAX_ATTEMPTS.invoke(this.handle);
-            return result;
-        } catch (LiterLlmRsException ex) {
-            throw ex;
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("maxAttempts: failed", e);
-        }
-    }
-    /**
-     * Create a new policy.
-     *
-     * - {@code delay}: how long to wait before launching each additional attempt.
-     * - {@code max_attempts}: maximum concurrent copies of the request (≥ 1).
-     */
-    public static FixedDelayHedge create(final Long delay, final int maxAttempts) throws LiterLlmRsException {
-        try {
-            var handle = (MemorySegment) NativeLib.LITERLLM_FIXED_DELAY_HEDGE_NEW.invoke(delay, maxAttempts);
-            if (handle == null || handle.equals(MemorySegment.NULL)) {
-                throw new LiterLlmRsException("create returned null", (Throwable) null);
-            }
-            return new FixedDelayHedge(handle);
-        }
-        catch (Throwable e) {
-            if (e instanceof LiterLlmRsException) throw (LiterLlmRsException) e;
-            throw new RuntimeException("create failed: " + e.getMessage(), e);
-        }
-    }
-    @Override
-    @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    public void close() {
-        if (handle != null && !handle.equals(MemorySegment.NULL)) {
-            try {
-                NativeLib.LITERLLM_FIXED_DELAY_HEDGE_FREE.invoke(handle);
-            } catch (Throwable e) {
-                throw new RuntimeException("Failed to free FixedDelayHedge: " + e.getMessage(), e);
-            }
-        }
-    }
+  MemorySegment handle() {
+    return this.handle;
+  }
 
-    // CPD-OFF — generated FFI boilerplate, identical across all opaque types by design.
-    private static void checkLastFfiError() throws LiterLlmRsException {
-        try {
-            int code = (int) NativeLib.LITERLLM_LAST_ERROR_CODE.invoke();
-            if (code == 0) { return; }
-            MemorySegment ctxPtr = (MemorySegment) NativeLib.LITERLLM_LAST_ERROR_CONTEXT.invoke();
-            String msg = ctxPtr.equals(MemorySegment.NULL) ? "unknown" : ctxPtr.reinterpret(Long.MAX_VALUE).getString(0);
-            throw new LiterLlmRsException(code, msg);
-        } catch (LiterLlmRsException e) {
-            throw e;
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("failed to read last error", e);
-        }
-    }    // CPD-ON
+  public Optional<Long> delayForAttempt(final int attempt, final Long latencySoFar)
+      throws LiterLlmRsException {
+    try {
+      var result = (long) NativeLib.LITERLLM_FIXED_DELAY_HEDGE_DELAY_FOR_ATTEMPT.invoke(
+          this.handle, attempt, latencySoFar);
+      return java.util.OptionalLong.of(result);
+    } catch (LiterLlmRsException ex) {
+      throw ex;
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("delayForAttempt: failed", e);
+    }
+  }
+
+  public int maxAttempts() throws LiterLlmRsException {
+    try {
+      var result = (int) NativeLib.LITERLLM_FIXED_DELAY_HEDGE_MAX_ATTEMPTS.invoke(this.handle);
+      return result;
+    } catch (LiterLlmRsException ex) {
+      throw ex;
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("maxAttempts: failed", e);
+    }
+  }
+  /**
+   * Create a new policy.
+   *
+   * - {@code delay}: how long to wait before launching each additional attempt.
+   * - {@code max_attempts}: maximum concurrent copies of the request (≥ 1).
+   */
+  public static FixedDelayHedge create(final Long delay, final int maxAttempts)
+      throws LiterLlmRsException {
+    try {
+      var handle =
+          (MemorySegment) NativeLib.LITERLLM_FIXED_DELAY_HEDGE_NEW.invoke(delay, maxAttempts);
+      if (handle == null || handle.equals(MemorySegment.NULL)) {
+        throw new LiterLlmRsException("create returned null", (Throwable) null);
+      }
+      return new FixedDelayHedge(handle);
+    } catch (Throwable e) {
+      if (e instanceof LiterLlmRsException) throw (LiterLlmRsException) e;
+      throw new RuntimeException("create failed: " + e.getMessage(), e);
+    }
+  }
+
+  @Override
+  @SuppressWarnings("PMD.AvoidCatchingGenericException")
+  public void close() {
+    if (handle != null && !handle.equals(MemorySegment.NULL)) {
+      try {
+        NativeLib.LITERLLM_FIXED_DELAY_HEDGE_FREE.invoke(handle);
+      } catch (Throwable e) {
+        throw new RuntimeException("Failed to free FixedDelayHedge: " + e.getMessage(), e);
+      }
+    }
+  }
+
+  // CPD-OFF — generated FFI boilerplate, identical across all opaque types by design.
+  private static void checkLastFfiError() throws LiterLlmRsException {
+    try {
+      int code = (int) NativeLib.LITERLLM_LAST_ERROR_CODE.invoke();
+      if (code == 0) {
+        return;
+      }
+      MemorySegment ctxPtr = (MemorySegment) NativeLib.LITERLLM_LAST_ERROR_CONTEXT.invoke();
+      String msg = ctxPtr.equals(MemorySegment.NULL)
+          ? "unknown"
+          : ctxPtr.reinterpret(Long.MAX_VALUE).getString(0);
+      throw new LiterLlmRsException(code, msg);
+    } catch (LiterLlmRsException e) {
+      throw e;
+    } catch (Throwable e) {
+      throw new LiterLlmRsException("failed to read last error", e);
+    }
+  } // CPD-ON
 }

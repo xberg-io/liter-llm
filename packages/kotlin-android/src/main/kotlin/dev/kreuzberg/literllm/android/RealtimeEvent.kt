@@ -25,13 +25,12 @@
 package dev.kreuzberg.literllm.android
 
 /**
- * Unified Realtime event — the normalised in-memory representation of every
- * server-to-client or client-to-server message in the liter-llm Realtime API.
+ * Unified Realtime event — the normalised in-memory representation of every server-to-client or
+ * client-to-server message in the liter-llm Realtime API.
  *
- * All provider-specific wire formats are translated *into* this enum by a
- * `RealtimeTranslator`, and translated *back out of* it when forwarding to
- * the upstream provider.  Unknown event types are preserved as `Raw` so the
- * proxy never silently drops events it does not yet understand.
+ * All provider-specific wire formats are translated *into* this enum by a `RealtimeTranslator`, and
+ * translated *back out of* it when forwarding to the upstream provider. Unknown event types are
+ * preserved as `Raw` so the proxy never silently drops events it does not yet understand.
  *
  * `Raw`: RealtimeEvent.Raw
  */
@@ -39,159 +38,252 @@ package dev.kreuzberg.literllm.android
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = RealtimeEventSerializer::class)
 sealed class RealtimeEvent {
     /** The provider confirmed that a new session was created. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
     data class SessionCreated(
         val sessionId: String,
         val model: String,
     ) : RealtimeEvent()
+
     /** The session configuration was updated (e.g. instructions changed). */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
     data class SessionUpdated(
         val sessionId: String,
         val instructions: String?,
     ) : RealtimeEvent()
+
     /** A new conversation item was appended to the conversation. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
     data class ConversationItemCreated(
         val itemId: String,
         val role: String,
         val content: List<ContentPart>,
     ) : RealtimeEvent()
+
     /** A conversation item was deleted. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
-    data class ConversationItemDeleted(
-        val itemId: String,
-    ) : RealtimeEvent()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
+    data class ConversationItemDeleted(val itemId: String) : RealtimeEvent()
+
     /** The provider started generating a new response. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
-    data class ResponseCreated(
-        val responseId: String,
-    ) : RealtimeEvent()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
+    data class ResponseCreated(val responseId: String) : RealtimeEvent()
+
     /** The provider finished generating a response. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
     data class ResponseDone(
         val responseId: String,
         val status: ResponseStatus,
     ) : RealtimeEvent()
+
     /** An incremental text delta from the model's response. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
     data class ResponseTextDelta(
         val responseId: String,
         val delta: String,
     ) : RealtimeEvent()
+
     /** The model's text output for this response is complete. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
     data class ResponseTextDone(
         val responseId: String,
         val text: String,
     ) : RealtimeEvent()
+
     /** An incremental audio delta from the model's response. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
     data class ResponseAudioDelta(
         val responseId: String,
         val deltaBase64: String,
     ) : RealtimeEvent()
+
     /** The model's audio output for this response is complete. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
-    data class ResponseAudioDone(
-        val responseId: String,
-    ) : RealtimeEvent()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
+    data class ResponseAudioDone(val responseId: String) : RealtimeEvent()
+
     /** An incremental transcript delta for the model's audio output. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
     data class ResponseAudioTranscriptDelta(
         val responseId: String,
         val delta: String,
     ) : RealtimeEvent()
+
     /** The model's audio transcript for this response is complete. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
     data class ResponseAudioTranscriptDone(
         val responseId: String,
         val transcript: String,
     ) : RealtimeEvent()
+
     /** An incremental JSON delta for a function-call's arguments. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
     data class ResponseFunctionCallArgumentsDelta(
         val responseId: String,
         val callId: String,
         val delta: String,
     ) : RealtimeEvent()
+
     /** The function-call arguments for a tool call are complete. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
     data class ResponseFunctionCallArgumentsDone(
         val responseId: String,
         val callId: String,
         val name: String,
         val arguments: String,
     ) : RealtimeEvent()
+
     /** Client is appending a chunk of audio to the input buffer. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
-    data class InputAudioBufferAppend(
-        val audioBase64: String,
-    ) : RealtimeEvent()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
+    data class InputAudioBufferAppend(val audioBase64: String) : RealtimeEvent()
+
     /** Client is committing the current input audio buffer for processing. */
     object InputAudioBufferCommit : RealtimeEvent()
+
     /** Client is clearing the input audio buffer. */
     object InputAudioBufferClear : RealtimeEvent()
+
     /** The provider detected the start of speech in the audio buffer. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
-    data class InputAudioBufferSpeechStarted(
-        val itemId: String,
-    ) : RealtimeEvent()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
+    data class InputAudioBufferSpeechStarted(val itemId: String) : RealtimeEvent()
+
     /** The provider detected the end of speech in the audio buffer. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
     data class InputAudioBufferSpeechStopped(
         val itemId: String,
         val audioEndMs: Int,
     ) : RealtimeEvent()
+
     /** The provider sent updated rate-limit information. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
     data class RateLimitsUpdated(
         val remainingRequests: Int?,
         val remainingTokens: Int?,
         val resetAtUnixMs: Long,
     ) : RealtimeEvent()
+
     /** The provider or proxy encountered an error. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
     data class Error(
         val code: String,
         val message: String,
         val eventId: String?,
     ) : RealtimeEvent()
+
     /**
      * An event type that this library does not yet model explicitly.
      *
-     * The proxy forwards `Raw` events transparently to avoid data loss when
-     * a provider introduces new event types that the translator has not yet
-     * mapped.
+     * The proxy forwards `Raw` events transparently to avoid data loss when a provider introduces
+     * new event types that the translator has not yet mapped.
      */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
     data class Raw(
         val eventType: String,
         val payload: Any,
     ) : RealtimeEvent()
 }
 
-private class RealtimeEventDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<RealtimeEvent>(RealtimeEvent::class.java) {
+private class RealtimeEventDeserializer :
+    com.fasterxml.jackson.databind.deser.std.StdDeserializer<RealtimeEvent>(
+        RealtimeEvent::class.java
+    ) {
     @Suppress("LongMethod")
     override fun deserialize(
         parser: com.fasterxml.jackson.core.JsonParser,
@@ -200,38 +292,119 @@ private class RealtimeEventDeserializer : com.fasterxml.jackson.databind.deser.s
         val node = parser.codec.readTree<com.fasterxml.jackson.databind.node.ObjectNode>(parser)
         val tag = node.get("type")?.asText()
         @Suppress("UNCHECKED_CAST")
-        val payload = (node.deepCopy() as com.fasterxml.jackson.databind.node.ObjectNode).apply { remove("type") }
+        val payload =
+            (node.deepCopy() as com.fasterxml.jackson.databind.node.ObjectNode).apply {
+                remove("type")
+            }
         return when (tag) {
-            "session_created" -> ctx.readTreeAsValue<RealtimeEvent.SessionCreated>(payload, RealtimeEvent.SessionCreated::class.java)
-            "session_updated" -> ctx.readTreeAsValue<RealtimeEvent.SessionUpdated>(payload, RealtimeEvent.SessionUpdated::class.java)
-            "conversation_item_created" -> ctx.readTreeAsValue<RealtimeEvent.ConversationItemCreated>(payload, RealtimeEvent.ConversationItemCreated::class.java)
-            "conversation_item_deleted" -> ctx.readTreeAsValue<RealtimeEvent.ConversationItemDeleted>(payload, RealtimeEvent.ConversationItemDeleted::class.java)
-            "response_created" -> ctx.readTreeAsValue<RealtimeEvent.ResponseCreated>(payload, RealtimeEvent.ResponseCreated::class.java)
-            "response_done" -> ctx.readTreeAsValue<RealtimeEvent.ResponseDone>(payload, RealtimeEvent.ResponseDone::class.java)
-            "response_text_delta" -> ctx.readTreeAsValue<RealtimeEvent.ResponseTextDelta>(payload, RealtimeEvent.ResponseTextDelta::class.java)
-            "response_text_done" -> ctx.readTreeAsValue<RealtimeEvent.ResponseTextDone>(payload, RealtimeEvent.ResponseTextDone::class.java)
-            "response_audio_delta" -> ctx.readTreeAsValue<RealtimeEvent.ResponseAudioDelta>(payload, RealtimeEvent.ResponseAudioDelta::class.java)
-            "response_audio_done" -> ctx.readTreeAsValue<RealtimeEvent.ResponseAudioDone>(payload, RealtimeEvent.ResponseAudioDone::class.java)
-            "response_audio_transcript_delta" -> ctx.readTreeAsValue<RealtimeEvent.ResponseAudioTranscriptDelta>(payload, RealtimeEvent.ResponseAudioTranscriptDelta::class.java)
-            "response_audio_transcript_done" -> ctx.readTreeAsValue<RealtimeEvent.ResponseAudioTranscriptDone>(payload, RealtimeEvent.ResponseAudioTranscriptDone::class.java)
-            "response_function_call_arguments_delta" -> ctx.readTreeAsValue<RealtimeEvent.ResponseFunctionCallArgumentsDelta>(payload, RealtimeEvent.ResponseFunctionCallArgumentsDelta::class.java)
-            "response_function_call_arguments_done" -> ctx.readTreeAsValue<RealtimeEvent.ResponseFunctionCallArgumentsDone>(payload, RealtimeEvent.ResponseFunctionCallArgumentsDone::class.java)
-            "input_audio_buffer_append" -> ctx.readTreeAsValue<RealtimeEvent.InputAudioBufferAppend>(payload, RealtimeEvent.InputAudioBufferAppend::class.java)
+            "session_created" ->
+                ctx.readTreeAsValue<RealtimeEvent.SessionCreated>(
+                    payload,
+                    RealtimeEvent.SessionCreated::class.java,
+                )
+            "session_updated" ->
+                ctx.readTreeAsValue<RealtimeEvent.SessionUpdated>(
+                    payload,
+                    RealtimeEvent.SessionUpdated::class.java,
+                )
+            "conversation_item_created" ->
+                ctx.readTreeAsValue<RealtimeEvent.ConversationItemCreated>(
+                    payload,
+                    RealtimeEvent.ConversationItemCreated::class.java,
+                )
+            "conversation_item_deleted" ->
+                ctx.readTreeAsValue<RealtimeEvent.ConversationItemDeleted>(
+                    payload,
+                    RealtimeEvent.ConversationItemDeleted::class.java,
+                )
+            "response_created" ->
+                ctx.readTreeAsValue<RealtimeEvent.ResponseCreated>(
+                    payload,
+                    RealtimeEvent.ResponseCreated::class.java,
+                )
+            "response_done" ->
+                ctx.readTreeAsValue<RealtimeEvent.ResponseDone>(
+                    payload,
+                    RealtimeEvent.ResponseDone::class.java,
+                )
+            "response_text_delta" ->
+                ctx.readTreeAsValue<RealtimeEvent.ResponseTextDelta>(
+                    payload,
+                    RealtimeEvent.ResponseTextDelta::class.java,
+                )
+            "response_text_done" ->
+                ctx.readTreeAsValue<RealtimeEvent.ResponseTextDone>(
+                    payload,
+                    RealtimeEvent.ResponseTextDone::class.java,
+                )
+            "response_audio_delta" ->
+                ctx.readTreeAsValue<RealtimeEvent.ResponseAudioDelta>(
+                    payload,
+                    RealtimeEvent.ResponseAudioDelta::class.java,
+                )
+            "response_audio_done" ->
+                ctx.readTreeAsValue<RealtimeEvent.ResponseAudioDone>(
+                    payload,
+                    RealtimeEvent.ResponseAudioDone::class.java,
+                )
+            "response_audio_transcript_delta" ->
+                ctx.readTreeAsValue<RealtimeEvent.ResponseAudioTranscriptDelta>(
+                    payload,
+                    RealtimeEvent.ResponseAudioTranscriptDelta::class.java,
+                )
+            "response_audio_transcript_done" ->
+                ctx.readTreeAsValue<RealtimeEvent.ResponseAudioTranscriptDone>(
+                    payload,
+                    RealtimeEvent.ResponseAudioTranscriptDone::class.java,
+                )
+            "response_function_call_arguments_delta" ->
+                ctx.readTreeAsValue<RealtimeEvent.ResponseFunctionCallArgumentsDelta>(
+                    payload,
+                    RealtimeEvent.ResponseFunctionCallArgumentsDelta::class.java,
+                )
+            "response_function_call_arguments_done" ->
+                ctx.readTreeAsValue<RealtimeEvent.ResponseFunctionCallArgumentsDone>(
+                    payload,
+                    RealtimeEvent.ResponseFunctionCallArgumentsDone::class.java,
+                )
+            "input_audio_buffer_append" ->
+                ctx.readTreeAsValue<RealtimeEvent.InputAudioBufferAppend>(
+                    payload,
+                    RealtimeEvent.InputAudioBufferAppend::class.java,
+                )
             "input_audio_buffer_commit" -> RealtimeEvent.InputAudioBufferCommit
             "input_audio_buffer_clear" -> RealtimeEvent.InputAudioBufferClear
-            "input_audio_buffer_speech_started" -> ctx.readTreeAsValue<RealtimeEvent.InputAudioBufferSpeechStarted>(payload, RealtimeEvent.InputAudioBufferSpeechStarted::class.java)
-            "input_audio_buffer_speech_stopped" -> ctx.readTreeAsValue<RealtimeEvent.InputAudioBufferSpeechStopped>(payload, RealtimeEvent.InputAudioBufferSpeechStopped::class.java)
-            "rate_limits_updated" -> ctx.readTreeAsValue<RealtimeEvent.RateLimitsUpdated>(payload, RealtimeEvent.RateLimitsUpdated::class.java)
-            "error" -> ctx.readTreeAsValue<RealtimeEvent.Error>(payload, RealtimeEvent.Error::class.java)
+            "input_audio_buffer_speech_started" ->
+                ctx.readTreeAsValue<RealtimeEvent.InputAudioBufferSpeechStarted>(
+                    payload,
+                    RealtimeEvent.InputAudioBufferSpeechStarted::class.java,
+                )
+            "input_audio_buffer_speech_stopped" ->
+                ctx.readTreeAsValue<RealtimeEvent.InputAudioBufferSpeechStopped>(
+                    payload,
+                    RealtimeEvent.InputAudioBufferSpeechStopped::class.java,
+                )
+            "rate_limits_updated" ->
+                ctx.readTreeAsValue<RealtimeEvent.RateLimitsUpdated>(
+                    payload,
+                    RealtimeEvent.RateLimitsUpdated::class.java,
+                )
+            "error" ->
+                ctx.readTreeAsValue<RealtimeEvent.Error>(payload, RealtimeEvent.Error::class.java)
             "raw" -> ctx.readTreeAsValue<RealtimeEvent.Raw>(payload, RealtimeEvent.Raw::class.java)
-            else -> throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
-                parser, "Unknown RealtimeEvent tag", tag, RealtimeEvent::class.java,
-            )
+            else ->
+                throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
+                    parser,
+                    "Unknown RealtimeEvent tag",
+                    tag,
+                    RealtimeEvent::class.java,
+                )
         }
     }
 }
 
-private class RealtimeEventSerializer : com.fasterxml.jackson.databind.ser.std.StdSerializer<RealtimeEvent>(RealtimeEvent::class.java) {
+private class RealtimeEventSerializer :
+    com.fasterxml.jackson.databind.ser.std.StdSerializer<RealtimeEvent>(RealtimeEvent::class.java) {
     @Suppress("LongMethod")
     override fun serialize(
         value: RealtimeEvent,
@@ -239,139 +412,202 @@ private class RealtimeEventSerializer : com.fasterxml.jackson.databind.ser.std.S
         provider: com.fasterxml.jackson.databind.SerializerProvider,
     ) {
         @Suppress("UNCHECKED_CAST")
-        val mapper = (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper) ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
-        val node: com.fasterxml.jackson.databind.node.ObjectNode = when (value) {
-            is RealtimeEvent.SessionCreated -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.SessionCreated) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "session_created")
-                n
+        val mapper =
+            (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper)
+                ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
+        val node: com.fasterxml.jackson.databind.node.ObjectNode =
+            when (value) {
+                is RealtimeEvent.SessionCreated -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.SessionCreated
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "session_created")
+                    n
+                }
+                is RealtimeEvent.SessionUpdated -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.SessionUpdated
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "session_updated")
+                    n
+                }
+                is RealtimeEvent.ConversationItemCreated -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.ConversationItemCreated
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "conversation_item_created")
+                    n
+                }
+                is RealtimeEvent.ConversationItemDeleted -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.ConversationItemDeleted
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "conversation_item_deleted")
+                    n
+                }
+                is RealtimeEvent.ResponseCreated -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.ResponseCreated
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "response_created")
+                    n
+                }
+                is RealtimeEvent.ResponseDone -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.ResponseDone
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "response_done")
+                    n
+                }
+                is RealtimeEvent.ResponseTextDelta -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.ResponseTextDelta
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "response_text_delta")
+                    n
+                }
+                is RealtimeEvent.ResponseTextDone -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.ResponseTextDone
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "response_text_done")
+                    n
+                }
+                is RealtimeEvent.ResponseAudioDelta -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.ResponseAudioDelta
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "response_audio_delta")
+                    n
+                }
+                is RealtimeEvent.ResponseAudioDone -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.ResponseAudioDone
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "response_audio_done")
+                    n
+                }
+                is RealtimeEvent.ResponseAudioTranscriptDelta -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.ResponseAudioTranscriptDelta
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "response_audio_transcript_delta")
+                    n
+                }
+                is RealtimeEvent.ResponseAudioTranscriptDone -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.ResponseAudioTranscriptDone
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "response_audio_transcript_done")
+                    n
+                }
+                is RealtimeEvent.ResponseFunctionCallArgumentsDelta -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.ResponseFunctionCallArgumentsDelta
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "response_function_call_arguments_delta")
+                    n
+                }
+                is RealtimeEvent.ResponseFunctionCallArgumentsDone -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.ResponseFunctionCallArgumentsDone
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "response_function_call_arguments_done")
+                    n
+                }
+                is RealtimeEvent.InputAudioBufferAppend -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.InputAudioBufferAppend
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "input_audio_buffer_append")
+                    n
+                }
+                is RealtimeEvent.InputAudioBufferCommit -> {
+                    val n = mapper.createObjectNode()
+                    n.put("type", "input_audio_buffer_commit")
+                    n
+                }
+                is RealtimeEvent.InputAudioBufferClear -> {
+                    val n = mapper.createObjectNode()
+                    n.put("type", "input_audio_buffer_clear")
+                    n
+                }
+                is RealtimeEvent.InputAudioBufferSpeechStarted -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.InputAudioBufferSpeechStarted
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "input_audio_buffer_speech_started")
+                    n
+                }
+                is RealtimeEvent.InputAudioBufferSpeechStopped -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.InputAudioBufferSpeechStopped
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "input_audio_buffer_speech_stopped")
+                    n
+                }
+                is RealtimeEvent.RateLimitsUpdated -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.RateLimitsUpdated
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "rate_limits_updated")
+                    n
+                }
+                is RealtimeEvent.Error -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.Error
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "error")
+                    n
+                }
+                is RealtimeEvent.Raw -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as RealtimeEvent.Raw
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "raw")
+                    n
+                }
             }
-            is RealtimeEvent.SessionUpdated -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.SessionUpdated) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "session_updated")
-                n
-            }
-            is RealtimeEvent.ConversationItemCreated -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.ConversationItemCreated) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "conversation_item_created")
-                n
-            }
-            is RealtimeEvent.ConversationItemDeleted -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.ConversationItemDeleted) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "conversation_item_deleted")
-                n
-            }
-            is RealtimeEvent.ResponseCreated -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.ResponseCreated) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "response_created")
-                n
-            }
-            is RealtimeEvent.ResponseDone -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.ResponseDone) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "response_done")
-                n
-            }
-            is RealtimeEvent.ResponseTextDelta -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.ResponseTextDelta) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "response_text_delta")
-                n
-            }
-            is RealtimeEvent.ResponseTextDone -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.ResponseTextDone) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "response_text_done")
-                n
-            }
-            is RealtimeEvent.ResponseAudioDelta -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.ResponseAudioDelta) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "response_audio_delta")
-                n
-            }
-            is RealtimeEvent.ResponseAudioDone -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.ResponseAudioDone) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "response_audio_done")
-                n
-            }
-            is RealtimeEvent.ResponseAudioTranscriptDelta -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.ResponseAudioTranscriptDelta) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "response_audio_transcript_delta")
-                n
-            }
-            is RealtimeEvent.ResponseAudioTranscriptDone -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.ResponseAudioTranscriptDone) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "response_audio_transcript_done")
-                n
-            }
-            is RealtimeEvent.ResponseFunctionCallArgumentsDelta -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.ResponseFunctionCallArgumentsDelta) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "response_function_call_arguments_delta")
-                n
-            }
-            is RealtimeEvent.ResponseFunctionCallArgumentsDone -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.ResponseFunctionCallArgumentsDone) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "response_function_call_arguments_done")
-                n
-            }
-            is RealtimeEvent.InputAudioBufferAppend -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.InputAudioBufferAppend) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "input_audio_buffer_append")
-                n
-            }
-            is RealtimeEvent.InputAudioBufferCommit -> {
-                val n = mapper.createObjectNode()
-                n.put("type", "input_audio_buffer_commit")
-                n
-            }
-            is RealtimeEvent.InputAudioBufferClear -> {
-                val n = mapper.createObjectNode()
-                n.put("type", "input_audio_buffer_clear")
-                n
-            }
-            is RealtimeEvent.InputAudioBufferSpeechStarted -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.InputAudioBufferSpeechStarted) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "input_audio_buffer_speech_started")
-                n
-            }
-            is RealtimeEvent.InputAudioBufferSpeechStopped -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.InputAudioBufferSpeechStopped) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "input_audio_buffer_speech_stopped")
-                n
-            }
-            is RealtimeEvent.RateLimitsUpdated -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.RateLimitsUpdated) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "rate_limits_updated")
-                n
-            }
-            is RealtimeEvent.Error -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.Error) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "error")
-                n
-            }
-            is RealtimeEvent.Raw -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as RealtimeEvent.Raw) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "raw")
-                n
-            }
-        }
         mapper.writeTree(gen, node)
     }
 }

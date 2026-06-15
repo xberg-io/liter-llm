@@ -11,47 +11,46 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @SuppressWarnings("PMD")
 public enum ImageDetail {
-    /**
-     * Low detail: scales image to 512x512, uses fewer tokens.
-     */
-    Low("low"),
-    /**
-     * High detail: processes up to 2x2 grid of tiles, higher token cost.
-     */
-    High("high"),
-    /**
-     * Auto: model chooses low or high based on image dimensions.
-     */
-    Auto("auto");
+  /**
+   * Low detail: scales image to 512x512, uses fewer tokens.
+   */
+  Low("low"),
+  /**
+   * High detail: processes up to 2x2 grid of tiles, higher token cost.
+   */
+  High("high"),
+  /**
+   * Auto: model chooses low or high based on image dimensions.
+   */
+  Auto("auto");
 
+  /** The string value. */
+  private final String value;
 
-    /** The string value. */
-    private final String value;
+  ImageDetail(final String value) {
+    this.value = value;
+  }
 
-    ImageDetail(final String value) {
-        this.value = value;
+  /** Returns the string value. */
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  /** Creates an instance from a string value. */
+  @JsonCreator
+  public static ImageDetail fromValue(final String value) {
+    for (ImageDetail e : values()) {
+      if (e.value.equalsIgnoreCase(value)) {
+        return e;
+      }
     }
+    throw new IllegalArgumentException("Unknown ImageDetail value: " + value);
+  }
 
-    /** Returns the string value. */
-    @JsonValue
-    public String getValue() {
-        return value;
-    }
-
-    /** Creates an instance from a string value. */
-    @JsonCreator
-    public static ImageDetail fromValue(final String value) {
-        for (ImageDetail e : values()) {
-            if (e.value.equalsIgnoreCase(value)) {
-                return e;
-            }
-        }
-        throw new IllegalArgumentException("Unknown ImageDetail value: " + value);
-    }
-
-    /** Returns the wire-format string value (matches JSON serialization). */
-    @Override
-    public String toString() {
-        return value;
-    }
+  /** Returns the wire-format string value (matches JSON serialization). */
+  @Override
+  public String toString() {
+    return value;
+  }
 }

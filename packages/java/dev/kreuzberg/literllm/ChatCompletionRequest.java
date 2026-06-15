@@ -3,12 +3,12 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
+import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -37,214 +37,232 @@ public record ChatCompletionRequest(
     @Nullable @JsonProperty("stream_options") StreamOptions streamOptions,
     @Nullable @JsonProperty("seed") Long seed,
     @Nullable @JsonProperty("reasoning_effort") ReasoningEffort reasoningEffort,
-    @Nullable @JsonProperty("extra_body") Object extraBody
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("extra_body") Object extraBody) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String model = "";
+    private List<Message> messages = List.of();
+    private Double temperature = null;
+
+    @JsonProperty("top_p")
+    private Double topP = null;
+
+    private Integer n = null;
+    private Boolean stream = null;
+
+    @Nullable
+    private StopSequence stop = null;
+
+    @JsonProperty("max_tokens")
+    private Long maxTokens = null;
+
+    @JsonProperty("presence_penalty")
+    private Double presencePenalty = null;
+
+    @JsonProperty("frequency_penalty")
+    private Double frequencyPenalty = null;
+
+    @JsonProperty("logit_bias")
+    private Map<String, Double> logitBias = null;
+
+    private String user = null;
+    private List<ChatCompletionTool> tools = null;
+
+    @JsonProperty("tool_choice")
+    @Nullable
+    private ToolChoice toolChoice = null;
+
+    @JsonProperty("parallel_tool_calls")
+    private Boolean parallelToolCalls = null;
+
+    @JsonProperty("response_format")
+    @Nullable
+    private ResponseFormat responseFormat = null;
+
+    @JsonProperty("stream_options")
+    @Nullable
+    private StreamOptions streamOptions = null;
+
+    private Long seed = null;
+
+    @JsonProperty("reasoning_effort")
+    @Nullable
+    private ReasoningEffort reasoningEffort = null;
+
+    @JsonProperty("extra_body")
+    private Object extraBody = null;
+
+    /** Sets the model field. */
+    @JsonProperty("model")
+    public Builder withModel(final String value) {
+      this.model = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String model = "";
-private List<Message> messages = List.of();
-private Double temperature = null;
-        @JsonProperty("top_p")
-private Double topP = null;
-private Integer n = null;
-private Boolean stream = null;
-        @Nullable private StopSequence stop = null;
-        @JsonProperty("max_tokens")
-private Long maxTokens = null;
-        @JsonProperty("presence_penalty")
-private Double presencePenalty = null;
-        @JsonProperty("frequency_penalty")
-private Double frequencyPenalty = null;
-        @JsonProperty("logit_bias")
-private Map<String, Double> logitBias = null;
-private String user = null;
-private List<ChatCompletionTool> tools = null;
-        @JsonProperty("tool_choice")
-        @Nullable private ToolChoice toolChoice = null;
-        @JsonProperty("parallel_tool_calls")
-private Boolean parallelToolCalls = null;
-        @JsonProperty("response_format")
-        @Nullable private ResponseFormat responseFormat = null;
-        @JsonProperty("stream_options")
-        @Nullable private StreamOptions streamOptions = null;
-private Long seed = null;
-        @JsonProperty("reasoning_effort")
-        @Nullable private ReasoningEffort reasoningEffort = null;
-        @JsonProperty("extra_body")
-private Object extraBody = null;
-
-        /** Sets the model field. */
-        @JsonProperty("model")
-        public Builder withModel(final String value) {
-            this.model = value;
-            return this;
-        }
-
-        /** Sets the messages field. */
-        @JsonProperty("messages")
-        public Builder withMessages(final List<Message> value) {
-            this.messages = value;
-            return this;
-        }
-
-        /** Sets the temperature field. */
-        @JsonProperty("temperature")
-        public Builder withTemperature(final @Nullable Double value) {
-            this.temperature = value;
-            return this;
-        }
-
-        /** Sets the topP field. */
-        @JsonProperty("top_p")
-        public Builder withTopP(final @Nullable Double value) {
-            this.topP = value;
-            return this;
-        }
-
-        /** Sets the n field. */
-        @JsonProperty("n")
-        public Builder withN(final @Nullable Integer value) {
-            this.n = value;
-            return this;
-        }
-
-        /** Sets the stream field. */
-        @JsonProperty("stream")
-        public Builder withStream(final @Nullable Boolean value) {
-            this.stream = value;
-            return this;
-        }
-
-        /** Sets the stop field. */
-        @JsonProperty("stop")
-        public Builder withStop(final @Nullable StopSequence value) {
-            this.stop = value;
-            return this;
-        }
-
-        /** Sets the maxTokens field. */
-        @JsonProperty("max_tokens")
-        public Builder withMaxTokens(final @Nullable Long value) {
-            this.maxTokens = value;
-            return this;
-        }
-
-        /** Sets the presencePenalty field. */
-        @JsonProperty("presence_penalty")
-        public Builder withPresencePenalty(final @Nullable Double value) {
-            this.presencePenalty = value;
-            return this;
-        }
-
-        /** Sets the frequencyPenalty field. */
-        @JsonProperty("frequency_penalty")
-        public Builder withFrequencyPenalty(final @Nullable Double value) {
-            this.frequencyPenalty = value;
-            return this;
-        }
-
-        /** Sets the logitBias field. */
-        @JsonProperty("logit_bias")
-        public Builder withLogitBias(final @Nullable Map<String, Double> value) {
-            this.logitBias = value;
-            return this;
-        }
-
-        /** Sets the user field. */
-        @JsonProperty("user")
-        public Builder withUser(final @Nullable String value) {
-            this.user = value;
-            return this;
-        }
-
-        /** Sets the tools field. */
-        @JsonProperty("tools")
-        public Builder withTools(final @Nullable List<ChatCompletionTool> value) {
-            this.tools = value;
-            return this;
-        }
-
-        /** Sets the toolChoice field. */
-        @JsonProperty("tool_choice")
-        public Builder withToolChoice(final @Nullable ToolChoice value) {
-            this.toolChoice = value;
-            return this;
-        }
-
-        /** Sets the parallelToolCalls field. */
-        @JsonProperty("parallel_tool_calls")
-        public Builder withParallelToolCalls(final @Nullable Boolean value) {
-            this.parallelToolCalls = value;
-            return this;
-        }
-
-        /** Sets the responseFormat field. */
-        @JsonProperty("response_format")
-        public Builder withResponseFormat(final @Nullable ResponseFormat value) {
-            this.responseFormat = value;
-            return this;
-        }
-
-        /** Sets the streamOptions field. */
-        @JsonProperty("stream_options")
-        public Builder withStreamOptions(final @Nullable StreamOptions value) {
-            this.streamOptions = value;
-            return this;
-        }
-
-        /** Sets the seed field. */
-        @JsonProperty("seed")
-        public Builder withSeed(final @Nullable Long value) {
-            this.seed = value;
-            return this;
-        }
-
-        /** Sets the reasoningEffort field. */
-        @JsonProperty("reasoning_effort")
-        public Builder withReasoningEffort(final @Nullable ReasoningEffort value) {
-            this.reasoningEffort = value;
-            return this;
-        }
-
-        /** Sets the extraBody field. */
-        @JsonProperty("extra_body")
-        public Builder withExtraBody(final @Nullable Object value) {
-            this.extraBody = value;
-            return this;
-        }
-
-        /** Builds the ChatCompletionRequest instance. */
-        public ChatCompletionRequest build() {
-            return new ChatCompletionRequest(
-                model,
-                messages,
-                temperature,
-                topP,
-                n,
-                stream,
-                stop,
-                maxTokens,
-                presencePenalty,
-                frequencyPenalty,
-                logitBias,
-                user,
-                tools,
-                toolChoice,
-                parallelToolCalls,
-                responseFormat,
-                streamOptions,
-                seed,
-                reasoningEffort,
-                extraBody
-            );
-        }
+    /** Sets the messages field. */
+    @JsonProperty("messages")
+    public Builder withMessages(final List<Message> value) {
+      this.messages = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the temperature field. */
+    @JsonProperty("temperature")
+    public Builder withTemperature(final @Nullable Double value) {
+      this.temperature = value;
+      return this;
+    }
+
+    /** Sets the topP field. */
+    @JsonProperty("top_p")
+    public Builder withTopP(final @Nullable Double value) {
+      this.topP = value;
+      return this;
+    }
+
+    /** Sets the n field. */
+    @JsonProperty("n")
+    public Builder withN(final @Nullable Integer value) {
+      this.n = value;
+      return this;
+    }
+
+    /** Sets the stream field. */
+    @JsonProperty("stream")
+    public Builder withStream(final @Nullable Boolean value) {
+      this.stream = value;
+      return this;
+    }
+
+    /** Sets the stop field. */
+    @JsonProperty("stop")
+    public Builder withStop(final @Nullable StopSequence value) {
+      this.stop = value;
+      return this;
+    }
+
+    /** Sets the maxTokens field. */
+    @JsonProperty("max_tokens")
+    public Builder withMaxTokens(final @Nullable Long value) {
+      this.maxTokens = value;
+      return this;
+    }
+
+    /** Sets the presencePenalty field. */
+    @JsonProperty("presence_penalty")
+    public Builder withPresencePenalty(final @Nullable Double value) {
+      this.presencePenalty = value;
+      return this;
+    }
+
+    /** Sets the frequencyPenalty field. */
+    @JsonProperty("frequency_penalty")
+    public Builder withFrequencyPenalty(final @Nullable Double value) {
+      this.frequencyPenalty = value;
+      return this;
+    }
+
+    /** Sets the logitBias field. */
+    @JsonProperty("logit_bias")
+    public Builder withLogitBias(final @Nullable Map<String, Double> value) {
+      this.logitBias = value;
+      return this;
+    }
+
+    /** Sets the user field. */
+    @JsonProperty("user")
+    public Builder withUser(final @Nullable String value) {
+      this.user = value;
+      return this;
+    }
+
+    /** Sets the tools field. */
+    @JsonProperty("tools")
+    public Builder withTools(final @Nullable List<ChatCompletionTool> value) {
+      this.tools = value;
+      return this;
+    }
+
+    /** Sets the toolChoice field. */
+    @JsonProperty("tool_choice")
+    public Builder withToolChoice(final @Nullable ToolChoice value) {
+      this.toolChoice = value;
+      return this;
+    }
+
+    /** Sets the parallelToolCalls field. */
+    @JsonProperty("parallel_tool_calls")
+    public Builder withParallelToolCalls(final @Nullable Boolean value) {
+      this.parallelToolCalls = value;
+      return this;
+    }
+
+    /** Sets the responseFormat field. */
+    @JsonProperty("response_format")
+    public Builder withResponseFormat(final @Nullable ResponseFormat value) {
+      this.responseFormat = value;
+      return this;
+    }
+
+    /** Sets the streamOptions field. */
+    @JsonProperty("stream_options")
+    public Builder withStreamOptions(final @Nullable StreamOptions value) {
+      this.streamOptions = value;
+      return this;
+    }
+
+    /** Sets the seed field. */
+    @JsonProperty("seed")
+    public Builder withSeed(final @Nullable Long value) {
+      this.seed = value;
+      return this;
+    }
+
+    /** Sets the reasoningEffort field. */
+    @JsonProperty("reasoning_effort")
+    public Builder withReasoningEffort(final @Nullable ReasoningEffort value) {
+      this.reasoningEffort = value;
+      return this;
+    }
+
+    /** Sets the extraBody field. */
+    @JsonProperty("extra_body")
+    public Builder withExtraBody(final @Nullable Object value) {
+      this.extraBody = value;
+      return this;
+    }
+
+    /** Builds the ChatCompletionRequest instance. */
+    public ChatCompletionRequest build() {
+      return new ChatCompletionRequest(
+          model,
+          messages,
+          temperature,
+          topP,
+          n,
+          stream,
+          stop,
+          maxTokens,
+          presencePenalty,
+          frequencyPenalty,
+          logitBias,
+          user,
+          tools,
+          toolChoice,
+          parallelToolCalls,
+          responseFormat,
+          streamOptions,
+          seed,
+          reasoningEffort,
+          extraBody);
+    }
+  }
+  // CPD-ON
 }

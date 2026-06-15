@@ -11,43 +11,42 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @SuppressWarnings("PMD")
 public enum RetryClass {
-    /**
-     * Transient error — advance to the next service in the chain.
-     */
-    Transient("transient"),
-    /**
-     * Terminal error — return immediately without consulting further services.
-     */
-    Terminal("terminal");
+  /**
+   * Transient error — advance to the next service in the chain.
+   */
+  Transient("transient"),
+  /**
+   * Terminal error — return immediately without consulting further services.
+   */
+  Terminal("terminal");
 
+  /** The string value. */
+  private final String value;
 
-    /** The string value. */
-    private final String value;
+  RetryClass(final String value) {
+    this.value = value;
+  }
 
-    RetryClass(final String value) {
-        this.value = value;
+  /** Returns the string value. */
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  /** Creates an instance from a string value. */
+  @JsonCreator
+  public static RetryClass fromValue(final String value) {
+    for (RetryClass e : values()) {
+      if (e.value.equalsIgnoreCase(value)) {
+        return e;
+      }
     }
+    throw new IllegalArgumentException("Unknown RetryClass value: " + value);
+  }
 
-    /** Returns the string value. */
-    @JsonValue
-    public String getValue() {
-        return value;
-    }
-
-    /** Creates an instance from a string value. */
-    @JsonCreator
-    public static RetryClass fromValue(final String value) {
-        for (RetryClass e : values()) {
-            if (e.value.equalsIgnoreCase(value)) {
-                return e;
-            }
-        }
-        throw new IllegalArgumentException("Unknown RetryClass value: " + value);
-    }
-
-    /** Returns the wire-format string value (matches JSON serialization). */
-    @Override
-    public String toString() {
-        return value;
-    }
+  /** Returns the wire-format string value (matches JSON serialization). */
+  @Override
+  public String toString() {
+    return value;
+  }
 }

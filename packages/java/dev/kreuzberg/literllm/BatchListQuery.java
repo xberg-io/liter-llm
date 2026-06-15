@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -17,41 +17,37 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("PMD")
 public record BatchListQuery(
     @Nullable @JsonProperty("limit") Integer limit,
-    @Nullable @JsonProperty("after") String after
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("after") String after) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private Integer limit = null;
+    private String after = null;
+
+    /** Sets the limit field. */
+    @JsonProperty("limit")
+    public Builder withLimit(final @Nullable Integer value) {
+      this.limit = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private Integer limit = null;
-private String after = null;
-
-        /** Sets the limit field. */
-        @JsonProperty("limit")
-        public Builder withLimit(final @Nullable Integer value) {
-            this.limit = value;
-            return this;
-        }
-
-        /** Sets the after field. */
-        @JsonProperty("after")
-        public Builder withAfter(final @Nullable String value) {
-            this.after = value;
-            return this;
-        }
-
-        /** Builds the BatchListQuery instance. */
-        public BatchListQuery build() {
-            return new BatchListQuery(
-                limit,
-                after
-            );
-        }
+    /** Sets the after field. */
+    @JsonProperty("after")
+    public Builder withAfter(final @Nullable String value) {
+      this.after = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Builds the BatchListQuery instance. */
+    public BatchListQuery build() {
+      return new BatchListQuery(limit, after);
+    }
+  }
+  // CPD-ON
 }

@@ -25,18 +25,16 @@
 package dev.kreuzberg.literllm.android
 
 /**
- * Wire-level envelope that associates a per-frame `event_id` with a
- * `RealtimeEvent`.
+ * Wire-level envelope that associates a per-frame `event_id` with a `RealtimeEvent`.
  *
- * The `event_id` is optional: provider-to-client messages typically carry one,
- * but client-to-server messages (e.g. audio buffer appends) may omit it.
+ * The `event_id` is optional: provider-to-client messages typically carry one, but client-to-server
+ * messages (e.g. audio buffer appends) may omit it.
  */
 data class RealtimeEnvelope(
     /**
      * Provider-assigned or proxy-generated identifier for this event frame.
      *
-     * Used for correlation in logs and error responses (see
-     * `RealtimeEvent.Error.event_id`).
+     * Used for correlation in logs and error responses (see `RealtimeEvent.Error.event_id`).
      */
     val eventId: String? = null,
     /** The parsed event payload. */

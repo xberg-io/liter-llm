@@ -11,51 +11,50 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @SuppressWarnings("PMD")
 public enum ResponseStatus {
-    /**
-     * The response was produced in full.
-     */
-    Completed("completed"),
-    /**
-     * The response was cancelled before completion.
-     */
-    Cancelled("cancelled"),
-    /**
-     * The response failed due to an upstream error.
-     */
-    Failed("failed"),
-    /**
-     * The response hit a token/time limit before completing.
-     */
-    Incomplete("incomplete");
+  /**
+   * The response was produced in full.
+   */
+  Completed("completed"),
+  /**
+   * The response was cancelled before completion.
+   */
+  Cancelled("cancelled"),
+  /**
+   * The response failed due to an upstream error.
+   */
+  Failed("failed"),
+  /**
+   * The response hit a token/time limit before completing.
+   */
+  Incomplete("incomplete");
 
+  /** The string value. */
+  private final String value;
 
-    /** The string value. */
-    private final String value;
+  ResponseStatus(final String value) {
+    this.value = value;
+  }
 
-    ResponseStatus(final String value) {
-        this.value = value;
+  /** Returns the string value. */
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  /** Creates an instance from a string value. */
+  @JsonCreator
+  public static ResponseStatus fromValue(final String value) {
+    for (ResponseStatus e : values()) {
+      if (e.value.equalsIgnoreCase(value)) {
+        return e;
+      }
     }
+    throw new IllegalArgumentException("Unknown ResponseStatus value: " + value);
+  }
 
-    /** Returns the string value. */
-    @JsonValue
-    public String getValue() {
-        return value;
-    }
-
-    /** Creates an instance from a string value. */
-    @JsonCreator
-    public static ResponseStatus fromValue(final String value) {
-        for (ResponseStatus e : values()) {
-            if (e.value.equalsIgnoreCase(value)) {
-                return e;
-            }
-        }
-        throw new IllegalArgumentException("Unknown ResponseStatus value: " + value);
-    }
-
-    /** Returns the wire-format string value (matches JSON serialization). */
-    @Override
-    public String toString() {
-        return value;
-    }
+  /** Returns the wire-format string value (matches JSON serialization). */
+  @Override
+  public String toString() {
+    return value;
+  }
 }

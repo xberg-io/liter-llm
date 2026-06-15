@@ -25,36 +25,52 @@
 package dev.kreuzberg.literllm.android
 
 /** A single content part in a user message — text, image, document, or audio. */
-@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = TypesContentPartDeserializer::class)
+@com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+    using = TypesContentPartDeserializer::class
+)
 @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = TypesContentPartSerializer::class)
 sealed class TypesContentPart {
     /** Plain text. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
-    data class Text(
-        val text: String,
-    ) : TypesContentPart()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
+    data class Text(val text: String) : TypesContentPart()
+
     /** Image identified by URL (with optional detail level). */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
-    data class ImageUrl(
-        val imageUrl: dev.kreuzberg.literllm.android.ImageUrl,
-    ) : TypesContentPart()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
+    data class ImageUrl(val imageUrl: dev.kreuzberg.literllm.android.ImageUrl) : TypesContentPart()
+
     /** Document file (PDF, CSV, etc.) as base64 or URL. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
-    data class Document(
-        val document: DocumentContent,
-    ) : TypesContentPart()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
+    data class Document(val document: DocumentContent) : TypesContentPart()
+
     /** Audio input as base64. */
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
-    data class InputAudio(
-        val inputAudio: AudioContent,
-    ) : TypesContentPart()
+    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
+        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
+    )
+    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
+        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
+    )
+    data class InputAudio(val inputAudio: AudioContent) : TypesContentPart()
 }
 
-private class TypesContentPartDeserializer : com.fasterxml.jackson.databind.deser.std.StdDeserializer<TypesContentPart>(TypesContentPart::class.java) {
+private class TypesContentPartDeserializer :
+    com.fasterxml.jackson.databind.deser.std.StdDeserializer<TypesContentPart>(
+        TypesContentPart::class.java
+    ) {
     @Suppress("LongMethod")
     override fun deserialize(
         parser: com.fasterxml.jackson.core.JsonParser,
@@ -63,20 +79,46 @@ private class TypesContentPartDeserializer : com.fasterxml.jackson.databind.dese
         val node = parser.codec.readTree<com.fasterxml.jackson.databind.node.ObjectNode>(parser)
         val tag = node.get("type")?.asText()
         @Suppress("UNCHECKED_CAST")
-        val payload = (node.deepCopy() as com.fasterxml.jackson.databind.node.ObjectNode).apply { remove("type") }
+        val payload =
+            (node.deepCopy() as com.fasterxml.jackson.databind.node.ObjectNode).apply {
+                remove("type")
+            }
         return when (tag) {
-            "text" -> ctx.readTreeAsValue<TypesContentPart.Text>(payload, TypesContentPart.Text::class.java)
-            "image_url" -> ctx.readTreeAsValue<TypesContentPart.ImageUrl>(payload, TypesContentPart.ImageUrl::class.java)
-            "document" -> ctx.readTreeAsValue<TypesContentPart.Document>(payload, TypesContentPart.Document::class.java)
-            "input_audio" -> ctx.readTreeAsValue<TypesContentPart.InputAudio>(payload, TypesContentPart.InputAudio::class.java)
-            else -> throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
-                parser, "Unknown TypesContentPart tag", tag, TypesContentPart::class.java,
-            )
+            "text" ->
+                ctx.readTreeAsValue<TypesContentPart.Text>(
+                    payload,
+                    TypesContentPart.Text::class.java,
+                )
+            "image_url" ->
+                ctx.readTreeAsValue<TypesContentPart.ImageUrl>(
+                    payload,
+                    TypesContentPart.ImageUrl::class.java,
+                )
+            "document" ->
+                ctx.readTreeAsValue<TypesContentPart.Document>(
+                    payload,
+                    TypesContentPart.Document::class.java,
+                )
+            "input_audio" ->
+                ctx.readTreeAsValue<TypesContentPart.InputAudio>(
+                    payload,
+                    TypesContentPart.InputAudio::class.java,
+                )
+            else ->
+                throw com.fasterxml.jackson.databind.exc.InvalidFormatException(
+                    parser,
+                    "Unknown TypesContentPart tag",
+                    tag,
+                    TypesContentPart::class.java,
+                )
         }
     }
 }
 
-private class TypesContentPartSerializer : com.fasterxml.jackson.databind.ser.std.StdSerializer<TypesContentPart>(TypesContentPart::class.java) {
+private class TypesContentPartSerializer :
+    com.fasterxml.jackson.databind.ser.std.StdSerializer<TypesContentPart>(
+        TypesContentPart::class.java
+    ) {
     @Suppress("LongMethod")
     override fun serialize(
         value: TypesContentPart,
@@ -84,33 +126,48 @@ private class TypesContentPartSerializer : com.fasterxml.jackson.databind.ser.st
         provider: com.fasterxml.jackson.databind.SerializerProvider,
     ) {
         @Suppress("UNCHECKED_CAST")
-        val mapper = (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper) ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
-        val node: com.fasterxml.jackson.databind.node.ObjectNode = when (value) {
-            is TypesContentPart.Text -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as TypesContentPart.Text) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "text")
-                n
+        val mapper =
+            (gen.codec as? com.fasterxml.jackson.databind.ObjectMapper)
+                ?: com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
+        val node: com.fasterxml.jackson.databind.node.ObjectNode =
+            when (value) {
+                is TypesContentPart.Text -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as TypesContentPart.Text
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "text")
+                    n
+                }
+                is TypesContentPart.ImageUrl -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as TypesContentPart.ImageUrl
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "image_url")
+                    n
+                }
+                is TypesContentPart.Document -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as TypesContentPart.Document
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "document")
+                    n
+                }
+                is TypesContentPart.InputAudio -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val n =
+                        mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(
+                            value as TypesContentPart.InputAudio
+                        ) as com.fasterxml.jackson.databind.node.ObjectNode
+                    n.put("type", "input_audio")
+                    n
+                }
             }
-            is TypesContentPart.ImageUrl -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as TypesContentPart.ImageUrl) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "image_url")
-                n
-            }
-            is TypesContentPart.Document -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as TypesContentPart.Document) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "document")
-                n
-            }
-            is TypesContentPart.InputAudio -> {
-                @Suppress("UNCHECKED_CAST")
-                val n = mapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(value as TypesContentPart.InputAudio) as com.fasterxml.jackson.databind.node.ObjectNode
-                n.put("type", "input_audio")
-                n
-            }
-        }
         mapper.writeTree(gen, node)
     }
 }

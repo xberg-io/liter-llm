@@ -3,11 +3,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import java.util.List;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
 
 /**
  * Response containing generated images.
@@ -17,41 +17,37 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 @SuppressWarnings("PMD")
 public record ImagesResponse(
     @JsonProperty("created") long created,
-    @JsonProperty("data") List<Image> data
-) {
-    public static Builder builder() {
-        return new Builder();
+    @JsonProperty("data") List<Image> data) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private long created = 0;
+    private List<Image> data = List.of();
+
+    /** Sets the created field. */
+    @JsonProperty("created")
+    public Builder withCreated(final long value) {
+      this.created = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private long created = 0;
-private List<Image> data = List.of();
-
-        /** Sets the created field. */
-        @JsonProperty("created")
-        public Builder withCreated(final long value) {
-            this.created = value;
-            return this;
-        }
-
-        /** Sets the data field. */
-        @JsonProperty("data")
-        public Builder withData(final List<Image> value) {
-            this.data = value;
-            return this;
-        }
-
-        /** Builds the ImagesResponse instance. */
-        public ImagesResponse build() {
-            return new ImagesResponse(
-                created,
-                data
-            );
-        }
+    /** Sets the data field. */
+    @JsonProperty("data")
+    public Builder withData(final List<Image> value) {
+      this.data = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Builds the ImagesResponse instance. */
+    public ImagesResponse build() {
+      return new ImagesResponse(created, data);
+    }
+  }
+  // CPD-ON
 }

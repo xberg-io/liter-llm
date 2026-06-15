@@ -9,13 +9,13 @@ package dev.kreuzberg.literllm;
  * the per-connection DNS resolver detects a forbidden address at connect time.
  */
 public class OutboundForbiddenException extends LiterLlmErrorException {
-    /** Creates a new OutboundForbiddenException with the given message. */
-    public OutboundForbiddenException(final String message) {
-        super(message);
-    }
+  /** Creates a new OutboundForbiddenException with the given message. */
+  public OutboundForbiddenException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new OutboundForbiddenException with the given message and cause. */
-    public OutboundForbiddenException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new OutboundForbiddenException with the given message and cause. */
+  public OutboundForbiddenException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

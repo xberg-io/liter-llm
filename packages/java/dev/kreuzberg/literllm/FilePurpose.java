@@ -11,51 +11,50 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @SuppressWarnings("PMD")
 public enum FilePurpose {
-    /**
-     * File for use with Assistants API.
-     */
-    Assistants("assistants"),
-    /**
-     * File for batch processing.
-     */
-    Batch("batch"),
-    /**
-     * File for fine-tuning.
-     */
-    FineTune("fine-tune"),
-    /**
-     * File for vision/image tasks.
-     */
-    Vision("vision");
+  /**
+   * File for use with Assistants API.
+   */
+  Assistants("assistants"),
+  /**
+   * File for batch processing.
+   */
+  Batch("batch"),
+  /**
+   * File for fine-tuning.
+   */
+  FineTune("fine-tune"),
+  /**
+   * File for vision/image tasks.
+   */
+  Vision("vision");
 
+  /** The string value. */
+  private final String value;
 
-    /** The string value. */
-    private final String value;
+  FilePurpose(final String value) {
+    this.value = value;
+  }
 
-    FilePurpose(final String value) {
-        this.value = value;
+  /** Returns the string value. */
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  /** Creates an instance from a string value. */
+  @JsonCreator
+  public static FilePurpose fromValue(final String value) {
+    for (FilePurpose e : values()) {
+      if (e.value.equalsIgnoreCase(value)) {
+        return e;
+      }
     }
+    throw new IllegalArgumentException("Unknown FilePurpose value: " + value);
+  }
 
-    /** Returns the string value. */
-    @JsonValue
-    public String getValue() {
-        return value;
-    }
-
-    /** Creates an instance from a string value. */
-    @JsonCreator
-    public static FilePurpose fromValue(final String value) {
-        for (FilePurpose e : values()) {
-            if (e.value.equalsIgnoreCase(value)) {
-                return e;
-            }
-        }
-        throw new IllegalArgumentException("Unknown FilePurpose value: " + value);
-    }
-
-    /** Returns the wire-format string value (matches JSON serialization). */
-    @Override
-    public String toString() {
-        return value;
-    }
+  /** Returns the wire-format string value (matches JSON serialization). */
+  @Override
+  public String toString() {
+    return value;
+  }
 }

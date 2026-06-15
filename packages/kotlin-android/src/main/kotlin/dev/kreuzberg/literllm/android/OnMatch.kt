@@ -28,6 +28,7 @@ package dev.kreuzberg.literllm.android
 sealed class OnMatch {
     /** Block the request/response with the given error code and reason prefix. */
     data class Block(val code: Int, val reasonPrefix: String) : OnMatch()
+
     /** Replace the matched portion with the given replacement string. */
     data class Redact(val replacement: String) : OnMatch()
 }

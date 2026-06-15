@@ -6,13 +6,13 @@ package dev.kreuzberg.literllm;
  * by `ServiceUnavailable`).
  */
 public class ServerErrorException extends LiterLlmErrorException {
-    /** Creates a new ServerErrorException with the given message. */
-    public ServerErrorException(final String message) {
-        super(message);
-    }
+  /** Creates a new ServerErrorException with the given message. */
+  public ServerErrorException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new ServerErrorException with the given message and cause. */
-    public ServerErrorException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new ServerErrorException with the given message and cause. */
+  public ServerErrorException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }
