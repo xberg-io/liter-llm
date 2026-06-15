@@ -1,8 +1,10 @@
 ---
-title: "Kotlin API Reference"
+title: "Kotlin JVM Interop Reference"
 ---
 
-## Kotlin API Reference <span class="version-badge">v1.6.0-rc.0</span>
+## Kotlin JVM Interop Reference <span class="version-badge">Available by v1.6</span>
+
+The generated Kotlin target is [Kotlin Android](api-kotlin-android.md). JVM Kotlin applications should call the [Java binding](api-java.md) from Kotlin; there is no separate generated JVM Kotlin artifact in v1.6.
 
 ### Functions
 

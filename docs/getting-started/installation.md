@@ -1,5 +1,5 @@
 ---
-description: "Installing liter-llm for Rust, Python, TypeScript, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, WebAssembly, and C/FFI"
+description: "Installing liter-llm for Rust, Python, TypeScript, Go, Java, Kotlin Android, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, WebAssembly, and C/FFI"
 ---
 
 # Installation
@@ -107,22 +107,22 @@ liter-llm mcp --transport stdio
     <dependency>
         <groupId>dev.kreuzberg.literllm</groupId>
         <artifactId>liter-llm</artifactId>
-        <version>1.4.0-rc.27</version>
+        <version>1.6.0-rc.1</version>
     </dependency>
     ```
 
     **Gradle:**
 
     ```kotlin
-    implementation("dev.kreuzberg.literllm:liter-llm:1.4.0-rc.27")
+    implementation("dev.kreuzberg.literllm:liter-llm:1.6.0-rc.1")
     ```
 
-=== "Kotlin"
+=== "Kotlin Android"
 
-    Requires JVM 25+. Gradle (Kotlin DSL):
+    The generated Kotlin target is Android. JVM Kotlin applications should use the Java binding from Kotlin.
 
     ```kotlin
-    implementation("com.github.kreuzberg_dev:liter-llm-kotlin:1.4.0-rc.27")
+    implementation("dev.kreuzberg:liter-llm-android:1.6.0-rc.1")
     ```
 
 === "C# / .NET"
@@ -162,7 +162,7 @@ liter-llm mcp --transport stdio
     ```elixir
     defp deps do
       [
-        {:liter_llm, "~> 1.4.0-rc.27"}
+        {:liter_llm, "~> 1.6.0-rc.1"}
       ]
     end
     ```
@@ -182,7 +182,7 @@ liter-llm mcp --transport stdio
     Requires macOS 13+ and Swift 6.0+. Add to `Package.swift`:
 
     ```swift
-    .package(url: "https://github.com/kreuzberg-dev/liter-llm", from: "1.4.0-rc.27")
+    .package(url: "https://github.com/kreuzberg-dev/liter-llm", from: "1.6.0-rc.1")
     ```
 
 === "Zig"
@@ -190,7 +190,7 @@ liter-llm mcp --transport stdio
     Requires Zig 0.16+.
 
     ```bash
-    zig fetch --save https://github.com/kreuzberg-dev/liter-llm/archive/refs/tags/v1.4.0-rc.27.tar.gz
+    zig fetch --save https://github.com/kreuzberg-dev/liter-llm/archive/refs/tags/v1.6.0-rc.1.tar.gz
     ```
 
 === "WebAssembly"
@@ -307,5 +307,5 @@ task build
 
 - [Chat & Streaming](../usage/chat.md) — make your first API call
 - [MCP & IDE Integration](../usage/mcp-integration.md) — wire liter-llm into VS Code, Claude Desktop, Cursor, Zed
-- [Provider Registry](../providers.md) — browse all 143 supported providers
+- [Provider Registry](../providers.md) — browse all 142 runtime providers
 - [Configuration](../usage/configuration.md) — timeouts, retries, base-URL overrides, TOML config

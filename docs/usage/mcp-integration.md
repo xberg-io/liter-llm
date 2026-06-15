@@ -4,13 +4,13 @@ description: "MCP & IDE Integration — set up the liter-llm MCP server with VS 
 
 # MCP & IDE Integration
 
-The liter-llm MCP server exposes 22 tools for unified access to 143+ LLM providers, embeddings, files, batches, and more. Integrate it with VS Code, GitHub Copilot, Claude Desktop, Cursor, and other MCP-compatible IDEs and applications.
+The liter-llm MCP server exposes 22 tools for unified access to 142 runtime LLM providers, embeddings, files, batches, and more. Integrate it with VS Code, GitHub Copilot, Claude Desktop, Cursor, and other MCP-compatible IDEs and applications.
 
 ## What is MCP?
 
 The [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) is an open standard for connecting AI applications to context sources. The liter-llm MCP server provides tools that allow AI assistants to call LLM APIs, generate embeddings, search documents, and manage files — all through a unified, provider-agnostic interface.
 
-Instead of hard-coding integrations for each provider (OpenAI, Anthropic, Google, Groq, etc.), MCP lets your IDE or application call any of 143+ providers via a single interface.
+Instead of hard-coding integrations for each provider (OpenAI, Anthropic, Google, Groq, etc.), MCP lets your IDE or application call any of the 142 runtime providers via a single interface.
 
 ## Available MCP Tools
 
@@ -45,7 +45,7 @@ The liter-llm MCP server exposes 22 tools for core LLM operations:
 
 - **liter-llm CLI** installed (see [Installation](../getting-started/installation.md))
 - **API keys** set up for the providers you want to use (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
-- **Optional:** Custom `liter-llm.toml` config file
+- **Optional:** Custom `liter-llm-proxy.toml` config file
 
 ## Starting the MCP Server
 
@@ -54,10 +54,10 @@ The liter-llm MCP server exposes 22 tools for core LLM operations:
 For IDE integration (VS Code, GitHub Copilot, Claude Desktop, Cursor), use the `stdio` transport:
 
 ```bash
-liter-llm mcp --transport stdio
+liter-llm mcp --transport stdio --config /path/to/liter-llm-proxy.toml
 ```
 
-This is the standard way to integrate MCP servers into IDEs. The server communicates via stdin/stdout and is configured in the IDE's MCP settings.
+This is the standard way to integrate MCP servers into IDEs. The server communicates via stdin/stdout and is configured in the IDE's MCP settings. The proxy config must include `[mcp] stdio_key_id = "..."` or `[mcp] stdio_trust_local = true`.
 
 ### HTTP Transport (Remote/Custom)
 
@@ -67,17 +67,17 @@ For remote connections or custom integrations:
 liter-llm mcp --transport http --host 127.0.0.1 --port 3001
 ```
 
-The HTTP server will be available at `http://127.0.0.1:3001`.
+The HTTP server will be available at `http://127.0.0.1:3001/mcp`. Every request must include `Authorization: Bearer <master-or-virtual-key>`.
 
 ### Custom Configuration
 
-Use a custom config file to override provider settings, API keys, or model lists:
+Use a custom proxy config file to define models, virtual keys, MCP stdio auth context, and provider credentials:
 
 ```bash
-liter-llm mcp --transport stdio --config /path/to/liter-llm.toml
+liter-llm mcp --transport stdio --config /path/to/liter-llm-proxy.toml
 ```
 
-Configuration is identical to the proxy server — see [Configuration](./configuration.md) for full details.
+Configuration is identical to the proxy server — see [Proxy Configuration](../server/proxy-configuration.md) for full details.
 
 ## IDE Setup
 
@@ -95,7 +95,7 @@ Configuration is identical to the proxy server — see [Configuration](./configu
         {
           "name": "liter-llm",
           "command": "liter-llm",
-          "args": ["mcp", "--transport", "stdio"],
+          "args": ["mcp", "--transport", "stdio", "--config", "/absolute/path/to/liter-llm-proxy.toml"],
           "env": {
             "OPENAI_API_KEY": "sk-...",
             "ANTHROPIC_API_KEY": "sk-ant-...",
@@ -117,7 +117,7 @@ Configuration is identical to the proxy server — see [Configuration](./configu
       "mcpServers": {
         "liter-llm": {
           "command": "liter-llm",
-          "args": ["mcp", "--transport", "stdio"],
+          "args": ["mcp", "--transport", "stdio", "--config", "/absolute/path/to/liter-llm-proxy.toml"],
           "env": {
             "OPENAI_API_KEY": "sk-...",
             "ANTHROPIC_API_KEY": "sk-ant-...",
@@ -144,7 +144,7 @@ Configuration is identical to the proxy server — see [Configuration](./configu
         {
           "name": "liter-llm",
           "command": "liter-llm",
-          "args": ["mcp", "--transport", "stdio"],
+          "args": ["mcp", "--transport", "stdio", "--config", "/absolute/path/to/liter-llm-proxy.toml"],
           "env": {
             "OPENAI_API_KEY": "sk-...",
             "ANTHROPIC_API_KEY": "sk-ant-...",
@@ -172,7 +172,10 @@ Configuration is identical to the proxy server — see [Configuration](./configu
       "mcpServers": [
         {
           "name": "liter-llm",
-          "url": "http://127.0.0.1:3001"
+          "url": "http://127.0.0.1:3001/mcp",
+          "headers": {
+            "Authorization": "Bearer ${LITER_LLM_MASTER_KEY}"
+          }
         }
       ]
     }
@@ -200,42 +203,39 @@ You only need to set keys for providers you plan to use. If you only use OpenAI,
 
 ### Custom Config File
 
-To override defaults, base URLs, or provider configurations, use a custom TOML config file:
+To override defaults, base URLs, or provider configuration, use a custom proxy TOML file:
 
 ```bash
-liter-llm mcp --transport stdio --config /etc/liter-llm/liter-llm.toml
+liter-llm mcp --transport stdio --config /etc/liter-llm/liter-llm-proxy.toml
 ```
 
-Example `liter-llm.toml`:
+Example `liter-llm-proxy.toml`:
 
 ```toml
-# Global timeout (seconds)
-timeout_secs = 30
+[general]
+master_key = "${LITER_LLM_MASTER_KEY}"
 
-# Max retries for failed requests
-max_retries = 3
+[mcp]
+stdio_trust_local = true
 
-# API key (or read from env var)
+[[models]]
+name = "gpt-4o"
+provider_model = "openai/gpt-4o"
 api_key = "${OPENAI_API_KEY}"
 
-# Custom provider base URL
-[[providers]]
-name = "openai"
-base_url = "https://api.openai.com/v1"
-model_prefixes = ["openai/"]
-
-# Local Ollama provider
-[[providers]]
-name = "ollama"
+[[models]]
+name = "ollama-qwen"
+provider_model = "ollama/qwen2.5"
 base_url = "http://localhost:11434/v1"
-model_prefixes = ["ollama/"]
 ```
 
-See [Configuration](./configuration.md) for all available options.
+Use `stdio_key_id` instead of `stdio_trust_local` when you want stdio tools to run with a virtual key's model allowlist, RPM/TPM limits, and budget.
+
+See [Proxy Configuration](../server/proxy-configuration.md) for all available options.
 
 ### Master Key (Optional)
 
-For remote HTTP transport, set a master key to authenticate requests:
+For remote HTTP transport, set a master key or configure virtual keys to authenticate requests:
 
 ```bash
 export LITER_LLM_MASTER_KEY="your-secure-key"
@@ -245,8 +245,10 @@ liter-llm mcp --transport http --host 0.0.0.0 --port 3001
 Clients must include the key in the `Authorization` header:
 
 ```bash
-curl http://localhost:3001/chat \
-  -H "Authorization: Bearer your-secure-key"
+curl http://localhost:3001/mcp \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-secure-key" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 ```
 
 ## Tool Examples
@@ -264,11 +266,20 @@ curl http://localhost:3001/chat \
 === "cURL (HTTP)"
 
     ```bash
-    curl -X POST http://127.0.0.1:3001/tools/chat \
+    curl -X POST http://127.0.0.1:3001/mcp \
       -H "Content-Type: application/json" \
+      -H "Authorization: Bearer $LITER_LLM_MASTER_KEY" \
       -d '{
-        "model": "openai/gpt-4o",
-        "messages": [{"role": "user", "content": "What is 2+2?"}]
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": {
+          "name": "chat",
+          "arguments": {
+            "model": "gpt-4o",
+            "messages": [{"role": "user", "content": "What is 2+2?"}]
+          }
+        }
       }'
     ```
 
@@ -342,7 +353,7 @@ Ensure API keys are set as environment variables before starting the MCP server:
 
 ```bash
 export OPENAI_API_KEY="sk-..."
-liter-llm mcp --transport stdio
+liter-llm mcp --transport stdio --config liter-llm-proxy.toml
 ```
 
 Or hardcode them in the IDE config (less secure):
@@ -363,13 +374,14 @@ Use environment variables or a `.env` file (not committed to git). See [Secrets 
 Increase the timeout in a config file:
 
 ```toml
-timeout_secs = 120
+[general]
+default_timeout_secs = 120
 ```
 
 Then start with the config:
 
 ```bash
-liter-llm mcp --transport stdio --config liter-llm.toml
+liter-llm mcp --transport stdio --config liter-llm-proxy.toml
 ```
 
 ### Port Already in Use (HTTP)
@@ -400,7 +412,10 @@ Ensure the MCP server is running and listening on the correct host/port:
 liter-llm mcp --transport http --host 0.0.0.0 --port 3001 &
 
 # Test the connection
-curl http://127.0.0.1:3001/health
+curl http://127.0.0.1:3001/mcp \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LITER_LLM_MASTER_KEY" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 ```
 
 !!! Note
@@ -409,5 +424,5 @@ Use `0.0.0.0` to allow remote connections. For local development, `127.0.0.1` is
 ## Next Steps
 
 - [Chat & Streaming](./chat.md) — Learn the chat API and streaming patterns
-- [Provider Registry](../providers.md) — Browse all 143+ supported providers
+- [Provider Registry](../providers.md) — Browse all 142 runtime providers
 - [Configuration](./configuration.md) — Timeouts, retries, and custom endpoints

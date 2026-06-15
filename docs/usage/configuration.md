@@ -109,7 +109,7 @@ Array of custom provider definitions. Each entry contains:
 
 ## Construction
 
-The constructors below match the actual binding surface. Other bindings (Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, WebAssembly) expose the same scalar arguments through their generated wrappers — see each language's [API reference](../reference/api-rust.md) for the exact signature.
+The constructors below match the actual binding surface. Other bindings (Go, Java, Kotlin Android, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, WebAssembly) expose the same scalar arguments through their generated wrappers; JVM Kotlin applications use the Java binding from Kotlin. Use the matching API page under Reference for exact language signatures.
 
 === "Rust"
 

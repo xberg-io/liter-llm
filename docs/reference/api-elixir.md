@@ -2,7 +2,7 @@
 title: "Elixir API Reference"
 ---
 
-## Elixir API Reference <span class="version-badge">v1.6.0-rc.0</span>
+## Elixir API Reference <span class="version-badge">v1.6.0-rc.1</span>
 
 ### Functions
 
@@ -177,7 +177,7 @@ Returns `nil` if the model is not present in the embedded pricing registry.
 Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
 
 When an exact model name match is not found, progressively shorter prefixes
-are tried by stripping from the last `-` or `.` separator.  For example,
+are tried by stripping from the last `-` or `.` separator. For example,
 `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 
 **Signature:**

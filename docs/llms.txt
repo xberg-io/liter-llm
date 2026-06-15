@@ -1,8 +1,8 @@
 # liter-llm
 
-> Universal LLM API client. One Rust core, 14 native language bindings, 143 providers, an OpenAI-compatible proxy, and a built-in MCP server.
+> Universal LLM API client. One Rust core, 14 native language bindings, 142 runtime providers, an OpenAI-compatible proxy, and a built-in MCP server.
 
-liter-llm gives a single client surface — chat, streaming, tools, structured outputs, embeddings, rerank, images, speech, transcription, OCR, search, files, batches, moderation — across 143 LLM providers. It ships as a compiled Rust core with native bindings for Rust, Python, TypeScript, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, and WebAssembly, plus a C FFI surface and a CLI binary that exposes an OpenAI-compatible proxy server and a Model Context Protocol server.
+liter-llm gives a single client surface — chat, streaming, tools, structured outputs, embeddings, rerank, images, speech, transcription, OCR, search, files, batches, moderation — across 142 runtime LLM providers. It ships as a compiled Rust core with native bindings for Rust, Python, TypeScript, Go, Java, Kotlin Android, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, and WebAssembly, plus a C FFI surface and a CLI binary that exposes an OpenAI-compatible proxy server and a Model Context Protocol server.
 
 ## Get Started
 
@@ -46,7 +46,7 @@ liter-llm gives a single client surface — chat, streaming, tools, structured o
 - [TypeScript / Node API](https://docs.liter-llm.kreuzberg.dev/reference/api-typescript/)
 - [Go API](https://docs.liter-llm.kreuzberg.dev/reference/api-go/)
 - [Java API](https://docs.liter-llm.kreuzberg.dev/reference/api-java/)
-- [Kotlin API](https://docs.liter-llm.kreuzberg.dev/reference/api-kotlin/)
+- [Kotlin Android API](https://docs.liter-llm.kreuzberg.dev/reference/api-kotlin-android/)
 - [C# API](https://docs.liter-llm.kreuzberg.dev/reference/api-csharp/)
 - [Ruby API](https://docs.liter-llm.kreuzberg.dev/reference/api-ruby/)
 - [PHP API](https://docs.liter-llm.kreuzberg.dev/reference/api-php/)
@@ -56,7 +56,7 @@ liter-llm gives a single client surface — chat, streaming, tools, structured o
 - [Zig API](https://docs.liter-llm.kreuzberg.dev/reference/api-zig/)
 - [WebAssembly API](https://docs.liter-llm.kreuzberg.dev/reference/api-wasm/)
 - [C / FFI](https://docs.liter-llm.kreuzberg.dev/reference/api-c/)
-- [Providers](https://docs.liter-llm.kreuzberg.dev/providers/): All 143 supported providers with model prefixes
+- [Providers](https://docs.liter-llm.kreuzberg.dev/providers/): All 142 runtime providers with model prefixes
 - [Configuration](https://docs.liter-llm.kreuzberg.dev/reference/configuration/)
 - [Types](https://docs.liter-llm.kreuzberg.dev/reference/types/)
 - [Errors](https://docs.liter-llm.kreuzberg.dev/reference/errors/)
