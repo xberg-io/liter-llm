@@ -25,6 +25,12 @@ constructed, or if the resolved provider configuration is invalid.
 def create_client(api_key: str, base_url: str = None, timeout_secs: int = None, max_retries: int = None, model_hint: str = None) -> DefaultClient
 ```
 
+**Example:**
+
+```python
+result = create_client("value", base_url="value", timeout_secs=42, max_retries=42, model_hint="value")
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -36,6 +42,7 @@ def create_client(api_key: str, base_url: str = None, timeout_secs: int = None, 
 | `model_hint` | `str \| None` | No | The model hint |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Raises `Error`.
 
 ---
@@ -57,6 +64,12 @@ contains unknown fields.
 def create_client_from_json(json: str) -> DefaultClient
 ```
 
+**Example:**
+
+```python
+result = create_client_from_json("value")
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -64,6 +77,7 @@ def create_client_from_json(json: str) -> DefaultClient
 | `json` | `str` | Yes | The json |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Raises `Error`.
 
 ---
@@ -86,6 +100,12 @@ no model prefixes).
 def register_custom_provider(config: CustomProviderConfig) -> None
 ```
 
+**Example:**
+
+```python
+register_custom_provider(CustomProviderConfig())
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -93,6 +113,7 @@ def register_custom_provider(config: CustomProviderConfig) -> None
 | `config` | `CustomProviderConfig` | Yes | The configuration options |
 
 **Returns:** `None`
+
 **Errors:** Raises `Error`.
 
 ---
@@ -114,6 +135,12 @@ Returns an error only if the internal lock is poisoned.
 def unregister_custom_provider(name: str) -> bool
 ```
 
+**Example:**
+
+```python
+result = unregister_custom_provider("value")
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -121,6 +148,7 @@ def unregister_custom_provider(name: str) -> bool
 | `name` | `str` | Yes | The name |
 
 **Returns:** `bool`
+
 **Errors:** Raises `Error`.
 
 ---
@@ -130,15 +158,23 @@ def unregister_custom_provider(name: str) -> bool
 Return the capability flags for a named provider.
 
 Performs an O(n) linear scan over the embedded registry (142 entries).
-Returns a `'static` reference valid for the lifetime of the process.
+Returns an owned value so that bindings can box/copy it across the FFI
+boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+so this is a cheap memcpy of seven `bool` fields.
 
-For unknown `provider_name` values the function returns a reference to an
-all-`False` sentinel so callers never need to handle `Option`.
+For unknown `provider_name` values the function returns an all-`False`
+sentinel so callers never need to handle `Option`.
 
 **Signature:**
 
 ```python
 def capabilities(provider_name: str) -> ProviderCapabilities
+```
+
+**Example:**
+
+```python
+result = capabilities("value")
 ```
 
 **Parameters:**
@@ -165,7 +201,14 @@ To query capability flags for a specific provider use `capabilities`.
 def all_providers() -> list[ProviderConfig]
 ```
 
+**Example:**
+
+```python
+result = all_providers()
+```
+
 **Returns:** `list[ProviderConfig]`
+
 **Errors:** Raises `Error`.
 
 ---
@@ -185,7 +228,14 @@ The returned reference points into the static registry — no allocation.
 def complex_provider_names() -> list[str]
 ```
 
+**Example:**
+
+```python
+result = complex_provider_names()
+```
+
 **Returns:** `list[str]`
+
 **Errors:** Raises `Error`.
 
 ---
@@ -199,13 +249,19 @@ Returns `None` if the model is not present in the embedded pricing registry.
 Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
 
 When an exact model name match is not found, progressively shorter prefixes
-are tried by stripping from the last `-` or `.` separator. For example,
+are tried by stripping from the last `-` or `.` separator.  For example,
 `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 
 **Signature:**
 
 ```python
 def completion_cost(model: str, prompt_tokens: int, completion_tokens: int) -> float | None
+```
+
+**Example:**
+
+```python
+result = completion_cost("value", 42, 42)
 ```
 
 **Parameters:**
@@ -241,6 +297,12 @@ registry, mirroring `completion_cost`.
 def completion_cost_with_cache(model: str, prompt_tokens: int, cached_tokens: int, completion_tokens: int) -> float | None
 ```
 
+**Example:**
+
+```python
+result = completion_cost_with_cache("value", 42, 42, 42)
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -270,6 +332,12 @@ Panics if the global registry lock is poisoned.
 def clear() -> None
 ```
 
+**Example:**
+
+```python
+clear()
+```
+
 **Returns:** `None`
 
 ---
@@ -293,6 +361,12 @@ Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
 def count_tokens(model: str, text: str) -> int
 ```
 
+**Example:**
+
+```python
+result = count_tokens("value", "value")
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -301,6 +375,7 @@ def count_tokens(model: str, text: str) -> int
 | `text` | `str` | Yes | The text |
 
 **Returns:** `int`
+
 **Errors:** Raises `Error`.
 
 ---
@@ -325,6 +400,12 @@ if tokenization fails for any message.
 def count_request_tokens(model: str, req: ChatCompletionRequest) -> int
 ```
 
+**Example:**
+
+```python
+result = count_request_tokens("value", ChatCompletionRequest())
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -333,341 +414,8 @@ def count_request_tokens(model: str, req: ChatCompletionRequest) -> int
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
 **Returns:** `int`
+
 **Errors:** Raises `Error`.
-
----
-
-#### record_cache_state()
-
-Set the cache outcome for the current task.
-
-Uses `try_with` so that callers that run outside a `CACHE_STATE_CELL.scope`
-(e.g. in tests that do not involve `HooksLayer`) are silently ignored rather
-than panicking.
-
-**Signature:**
-
-```python
-def record_cache_state(state: CacheState) -> None
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `state` | `CacheState` | Yes | The cache state |
-
-**Returns:** `None`
-
----
-
-#### record_cache_hit()
-
-Record a cache hit metric.
-
-Call from cache layer implementations to emit `gen_ai.cache.hit`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```python
-def record_cache_hit(system: str, model: str, operation: str) -> None
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `str` | Yes | The system |
-| `model` | `str` | Yes | The model |
-| `operation` | `str` | Yes | The operation |
-
-**Returns:** `None`
-
----
-
-#### record_cache_miss()
-
-Record a cache miss metric.
-
-Call from cache layer implementations to emit `gen_ai.cache.miss`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```python
-def record_cache_miss(system: str, model: str, operation: str) -> None
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `str` | Yes | The system |
-| `model` | `str` | Yes | The model |
-| `operation` | `str` | Yes | The operation |
-
-**Returns:** `None`
-
----
-
-#### record_cache_stale()
-
-Record a stale cache metric.
-
-Call from cache layer implementations to emit `gen_ai.cache.stale`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```python
-def record_cache_stale(system: str, model: str, operation: str) -> None
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `str` | Yes | The system |
-| `model` | `str` | Yes | The model |
-| `operation` | `str` | Yes | The operation |
-
-**Returns:** `None`
-
----
-
-#### record_circuit_trip()
-
-Record a circuit breaker trip.
-
-Call from `CircuitLayer` when the circuit opens.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```python
-def record_circuit_trip(system: str, model: str) -> None
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `str` | Yes | The system |
-| `model` | `str` | Yes | The model |
-
-**Returns:** `None`
-
----
-
-#### record_retry_attempt()
-
-Record a retry attempt.
-
-Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```python
-def record_retry_attempt(system: str, model: str, operation: str) -> None
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `str` | Yes | The system |
-| `model` | `str` | Yes | The model |
-| `operation` | `str` | Yes | The operation |
-
-**Returns:** `None`
-
----
-
-#### record_cache_tier_hit()
-
-Record a per-tier cache hit.
-
-`tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```python
-def record_cache_tier_hit(system: str, model: str, tier: str) -> None
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `str` | Yes | The system |
-| `model` | `str` | Yes | The model |
-| `tier` | `str` | Yes | The tier |
-
-**Returns:** `None`
-
----
-
-#### record_cache_tier_miss()
-
-Record a per-tier cache miss.
-
-`tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```python
-def record_cache_tier_miss(system: str, model: str, tier: str) -> None
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `str` | Yes | The system |
-| `model` | `str` | Yes | The model |
-| `tier` | `str` | Yes | The tier |
-
-**Returns:** `None`
-
----
-
-#### record_budget_spend()
-
-Record cumulative spend for a specific budget dimension.
-
-Emits `gen_ai.budget.spend_usd` with dimension attributes.
-Call from `record` after each
-successful completion. If the meter has not been initialized, this
-call is a no-op.
-
-**Signature:**
-
-```python
-def record_budget_spend(model: str, provider: str, tenant_id: str = None, user_id: str = None, api_key_id: str = None, cost_usd: float) -> None
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `model` | `str` | Yes | The model |
-| `provider` | `str` | Yes | The provider |
-| `tenant_id` | `str \| None` | No | The tenant id |
-| `user_id` | `str \| None` | No | The user id |
-| `api_key_id` | `str \| None` | No | The api key id |
-| `cost_usd` | `float` | Yes | The cost usd |
-
-**Returns:** `None`
-
----
-
-#### record_budget_rejection()
-
-Record a budget-rejection event.
-
-Emits `gen_ai.budget.rejection` with the triggering dimension.
-Call from `check` when
-returning `Reject`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```python
-def record_budget_rejection(model: str, provider: str, dimension: str) -> None
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `model` | `str` | Yes | The model |
-| `provider` | `str` | Yes | The provider |
-| `dimension` | `str` | Yes | The dimension |
-
-**Returns:** `None`
-
----
-
-#### record_realtime_session_duration()
-
-Record the lifetime of a completed Realtime WebSocket session.
-
-Emits `gen_ai.realtime.session.duration` (seconds).
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```python
-def record_realtime_session_duration(provider: str, duration_secs: float) -> None
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `provider` | `str` | Yes | The provider |
-| `duration_secs` | `float` | Yes | The duration secs |
-
-**Returns:** `None`
-
----
-
-#### record_realtime_event()
-
-Record a single Realtime event being forwarded.
-
-Emits `gen_ai.realtime.event.count` with `gen_ai.realtime.direction`
-(`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
-`gen_ai.system`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```python
-def record_realtime_event(provider: str, direction: str, event_type: str) -> None
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `provider` | `str` | Yes | The provider |
-| `direction` | `str` | Yes | The direction |
-| `event_type` | `str` | Yes | The event type |
-
-**Returns:** `None`
-
----
-
-#### record_realtime_bytes()
-
-Record audio bytes forwarded over a Realtime WebSocket session.
-
-Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
-`gen_ai.realtime.direction` attributes.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```python
-def record_realtime_bytes(provider: str, direction: str, byte_count: int) -> None
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `provider` | `str` | Yes | The provider |
-| `direction` | `str` | Yes | The direction |
-| `byte_count` | `int` | Yes | The byte count |
-
-**Returns:** `None`
 
 ---
 
@@ -676,13 +424,19 @@ def record_realtime_bytes(provider: str, direction: str, byte_count: int) -> Non
 Assert that `current_len + incoming` does not exceed `limit`.
 
 Call this before appending `incoming` bytes to any buffer that must
-stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
+stay below `limit`.  Returns `Err(LiterLlmError.Streaming)` on overflow
 and emits a `tracing.warn!` with context.
 
 **Signature:**
 
 ```python
 def check_bound(context: str, current_len: int, incoming: int, limit: int) -> None
+```
+
+**Example:**
+
+```python
+check_bound("value", 42, 42, 42)
 ```
 
 **Parameters:**
@@ -695,6 +449,7 @@ def check_bound(context: str, current_len: int, incoming: int, limit: int) -> No
 | `limit` | `int` | Yes | The limit |
 
 **Returns:** `None`
+
 **Errors:** Raises `Error`.
 
 ---
@@ -722,6 +477,12 @@ present and no crypto provider installation is needed.
 
 ```python
 def ensure_crypto_provider() -> None
+```
+
+**Example:**
+
+```python
+ensure_crypto_provider()
 ```
 
 **Returns:** `None`
@@ -847,6 +608,14 @@ Configuration for budget enforcement.
 def default() -> BudgetConfig
 ```
 
+**Example:**
+
+```python
+result = BudgetConfig.default()
+```
+
+**Returns:** `BudgetConfig`
+
 ---
 
 #### CacheConfig
@@ -869,6 +638,14 @@ Configuration for the response cache.
 @staticmethod
 def default() -> CacheConfig
 ```
+
+**Example:**
+
+```python
+result = CacheConfig.default()
+```
+
+**Returns:** `CacheConfig`
 
 ---
 
@@ -985,88 +762,21 @@ Process a single chunk.
 def process(self, chunk: ChatCompletionChunk) -> ChatCompletionChunk | None
 ```
 
----
-
-#### CircuitPolicy
-
-Policy that drives a circuit breaker's state transitions.
-
-Implement this trait to provide custom failure-detection and
-recovery logic. The default implementation is `ExponentialBackoffCircuit`.
-
-### Methods
-
-#### record_success()
-
-Called when the inner service returns a successful response.
-
-**Signature:**
+**Example:**
 
 ```python
-def record_success(self) -> None
+result = instance.process(ChatCompletionChunk())
 ```
 
-#### record_failure()
+**Parameters:**
 
-Called when the inner service returns an error.
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `chunk` | `ChatCompletionChunk` | Yes | The chat completion chunk |
 
-The policy decides whether to count the error as a circuit-trip failure.
+**Returns:** `ChatCompletionChunk | None`
 
-**Signature:**
-
-```python
-def record_failure(self) -> None
-```
-
-#### should_allow()
-
-Returns `True` when a request should be allowed to proceed.
-
-`False` means the circuit is open and the request should be rejected.
-
-**Signature:**
-
-```python
-def should_allow(self) -> bool
-```
-
-#### state()
-
-Returns the current circuit state.
-
-**Signature:**
-
-```python
-def state(self) -> CircuitState
-```
-
-#### release_probe_slot()
-
-Called when a probe request is dropped without completing (e.g. due to
-panic or cancellation) to release the probe slot.
-
-The default implementation is a no-op. Policies that gate probe slots
-with a boolean flag (like `ExponentialBackoffCircuit`) should override
-this to clear the flag.
-
-**Signature:**
-
-```python
-def release_probe_slot(self) -> None
-```
-
----
-
-#### ClassifyContext
-
-Immutable context passed to every `RouteClassifier.classify` call.
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `prompt` | `str` | — | The user-facing prompt text. |
-| `system_prompt` | `str \| None` | `None` | Optional system prompt from the request. |
-| `metadata` | `dict[str, str]` | — | Arbitrary metadata attached to the request (e.g. tenant, session ID). |
-| `available_models` | `list[str]` | — | The set of model identifiers the router currently considers available. |
+**Errors:** Raises `Error`.
 
 ---
 
@@ -1198,6 +908,22 @@ headers are cached at construction to avoid redundant encoding on every request.
 def chat(self, req: ChatCompletionRequest) -> ChatCompletionResponse
 ```
 
+**Example:**
+
+```python
+result = instance.chat(ChatCompletionRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `ChatCompletionResponse`
+
+**Errors:** Raises `Error`.
+
 #### chat_stream()
 
 **Signature:**
@@ -1205,6 +931,22 @@ def chat(self, req: ChatCompletionRequest) -> ChatCompletionResponse
 ```python
 def chat_stream(self, req: ChatCompletionRequest) -> str
 ```
+
+**Example:**
+
+```python
+result = instance.chat_stream(ChatCompletionRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `str`
+
+**Errors:** Raises `Error`.
 
 #### embed()
 
@@ -1214,6 +956,22 @@ def chat_stream(self, req: ChatCompletionRequest) -> str
 def embed(self, req: EmbeddingRequest) -> EmbeddingResponse
 ```
 
+**Example:**
+
+```python
+result = instance.embed(EmbeddingRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `EmbeddingRequest` | Yes | The embedding request |
+
+**Returns:** `EmbeddingResponse`
+
+**Errors:** Raises `Error`.
+
 #### list_models()
 
 **Signature:**
@@ -1221,6 +979,16 @@ def embed(self, req: EmbeddingRequest) -> EmbeddingResponse
 ```python
 def list_models(self) -> ModelsListResponse
 ```
+
+**Example:**
+
+```python
+result = instance.list_models()
+```
+
+**Returns:** `ModelsListResponse`
+
+**Errors:** Raises `Error`.
 
 #### image_generate()
 
@@ -1230,6 +998,22 @@ def list_models(self) -> ModelsListResponse
 def image_generate(self, req: CreateImageRequest) -> ImagesResponse
 ```
 
+**Example:**
+
+```python
+result = instance.image_generate(CreateImageRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateImageRequest` | Yes | The create image request |
+
+**Returns:** `ImagesResponse`
+
+**Errors:** Raises `Error`.
+
 #### speech()
 
 **Signature:**
@@ -1237,6 +1021,22 @@ def image_generate(self, req: CreateImageRequest) -> ImagesResponse
 ```python
 def speech(self, req: CreateSpeechRequest) -> bytes
 ```
+
+**Example:**
+
+```python
+result = instance.speech(CreateSpeechRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateSpeechRequest` | Yes | The create speech request |
+
+**Returns:** `bytes`
+
+**Errors:** Raises `Error`.
 
 #### transcribe()
 
@@ -1246,6 +1046,22 @@ def speech(self, req: CreateSpeechRequest) -> bytes
 def transcribe(self, req: CreateTranscriptionRequest) -> TranscriptionResponse
 ```
 
+**Example:**
+
+```python
+result = instance.transcribe(CreateTranscriptionRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
+
+**Returns:** `TranscriptionResponse`
+
+**Errors:** Raises `Error`.
+
 #### moderate()
 
 **Signature:**
@@ -1253,6 +1069,22 @@ def transcribe(self, req: CreateTranscriptionRequest) -> TranscriptionResponse
 ```python
 def moderate(self, req: ModerationRequest) -> ModerationResponse
 ```
+
+**Example:**
+
+```python
+result = instance.moderate(ModerationRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ModerationRequest` | Yes | The moderation request |
+
+**Returns:** `ModerationResponse`
+
+**Errors:** Raises `Error`.
 
 #### rerank()
 
@@ -1262,6 +1094,22 @@ def moderate(self, req: ModerationRequest) -> ModerationResponse
 def rerank(self, req: RerankRequest) -> RerankResponse
 ```
 
+**Example:**
+
+```python
+result = instance.rerank(RerankRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `RerankRequest` | Yes | The rerank request |
+
+**Returns:** `RerankResponse`
+
+**Errors:** Raises `Error`.
+
 #### search()
 
 **Signature:**
@@ -1269,6 +1117,22 @@ def rerank(self, req: RerankRequest) -> RerankResponse
 ```python
 def search(self, req: SearchRequest) -> SearchResponse
 ```
+
+**Example:**
+
+```python
+result = instance.search(SearchRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `SearchRequest` | Yes | The search request |
+
+**Returns:** `SearchResponse`
+
+**Errors:** Raises `Error`.
 
 #### ocr()
 
@@ -1278,6 +1142,22 @@ def search(self, req: SearchRequest) -> SearchResponse
 def ocr(self, req: OcrRequest) -> OcrResponse
 ```
 
+**Example:**
+
+```python
+result = instance.ocr(OcrRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `OcrRequest` | Yes | The ocr request |
+
+**Returns:** `OcrResponse`
+
+**Errors:** Raises `Error`.
+
 #### create_file()
 
 **Signature:**
@@ -1285,6 +1165,22 @@ def ocr(self, req: OcrRequest) -> OcrResponse
 ```python
 def create_file(self, req: CreateFileRequest) -> FileObject
 ```
+
+**Example:**
+
+```python
+result = instance.create_file(CreateFileRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateFileRequest` | Yes | The create file request |
+
+**Returns:** `FileObject`
+
+**Errors:** Raises `Error`.
 
 #### retrieve_file()
 
@@ -1294,6 +1190,22 @@ def create_file(self, req: CreateFileRequest) -> FileObject
 def retrieve_file(self, file_id: str) -> FileObject
 ```
 
+**Example:**
+
+```python
+result = instance.retrieve_file("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `file_id` | `str` | Yes | The file id |
+
+**Returns:** `FileObject`
+
+**Errors:** Raises `Error`.
+
 #### delete_file()
 
 **Signature:**
@@ -1301,6 +1213,22 @@ def retrieve_file(self, file_id: str) -> FileObject
 ```python
 def delete_file(self, file_id: str) -> DeleteResponse
 ```
+
+**Example:**
+
+```python
+result = instance.delete_file("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `file_id` | `str` | Yes | The file id |
+
+**Returns:** `DeleteResponse`
+
+**Errors:** Raises `Error`.
 
 #### list_files()
 
@@ -1310,6 +1238,22 @@ def delete_file(self, file_id: str) -> DeleteResponse
 def list_files(self, query: FileListQuery) -> FileListResponse
 ```
 
+**Example:**
+
+```python
+result = instance.list_files(query=FileListQuery())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `FileListQuery \| None` | No | The file list query |
+
+**Returns:** `FileListResponse`
+
+**Errors:** Raises `Error`.
+
 #### file_content()
 
 **Signature:**
@@ -1317,6 +1261,22 @@ def list_files(self, query: FileListQuery) -> FileListResponse
 ```python
 def file_content(self, file_id: str) -> bytes
 ```
+
+**Example:**
+
+```python
+result = instance.file_content("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `file_id` | `str` | Yes | The file id |
+
+**Returns:** `bytes`
+
+**Errors:** Raises `Error`.
 
 #### create_batch()
 
@@ -1326,6 +1286,22 @@ def file_content(self, file_id: str) -> bytes
 def create_batch(self, req: CreateBatchRequest) -> BatchObject
 ```
 
+**Example:**
+
+```python
+result = instance.create_batch(CreateBatchRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateBatchRequest` | Yes | The create batch request |
+
+**Returns:** `BatchObject`
+
+**Errors:** Raises `Error`.
+
 #### retrieve_batch()
 
 **Signature:**
@@ -1333,6 +1309,22 @@ def create_batch(self, req: CreateBatchRequest) -> BatchObject
 ```python
 def retrieve_batch(self, batch_id: str) -> BatchObject
 ```
+
+**Example:**
+
+```python
+result = instance.retrieve_batch("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `str` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Raises `Error`.
 
 #### list_batches()
 
@@ -1342,6 +1334,22 @@ def retrieve_batch(self, batch_id: str) -> BatchObject
 def list_batches(self, query: BatchListQuery) -> BatchListResponse
 ```
 
+**Example:**
+
+```python
+result = instance.list_batches(query=BatchListQuery())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `BatchListQuery \| None` | No | The batch list query |
+
+**Returns:** `BatchListResponse`
+
+**Errors:** Raises `Error`.
+
 #### cancel_batch()
 
 **Signature:**
@@ -1350,13 +1358,21 @@ def list_batches(self, query: BatchListQuery) -> BatchListResponse
 def cancel_batch(self, batch_id: str) -> BatchObject
 ```
 
-#### retrieve()
-
-**Signature:**
+**Example:**
 
 ```python
-def retrieve(self, batch_id: str) -> BatchObject
+result = instance.cancel_batch("value")
 ```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `str` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Raises `Error`.
 
 #### wait_for_batch()
 
@@ -1377,6 +1393,23 @@ Returns `BatchWaitError.Client` for underlying client errors.
 def wait_for_batch(self, batch_id: str, config: WaitForBatchConfig) -> BatchObject
 ```
 
+**Example:**
+
+```python
+result = instance.wait_for_batch("value", WaitForBatchConfig())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `str` | Yes | The batch id |
+| `config` | `WaitForBatchConfig` | Yes | The configuration options |
+
+**Returns:** `BatchObject`
+
+**Errors:** Raises `BatchWaitError`.
+
 #### create_response()
 
 **Signature:**
@@ -1384,6 +1417,22 @@ def wait_for_batch(self, batch_id: str, config: WaitForBatchConfig) -> BatchObje
 ```python
 def create_response(self, req: CreateResponseRequest) -> ResponseObject
 ```
+
+**Example:**
+
+```python
+result = instance.create_response(CreateResponseRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateResponseRequest` | Yes | The create response request |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Raises `Error`.
 
 #### retrieve_response()
 
@@ -1393,6 +1442,22 @@ def create_response(self, req: CreateResponseRequest) -> ResponseObject
 def retrieve_response(self, response_id: str) -> ResponseObject
 ```
 
+**Example:**
+
+```python
+result = instance.retrieve_response("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `response_id` | `str` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Raises `Error`.
+
 #### cancel_response()
 
 **Signature:**
@@ -1400,6 +1465,22 @@ def retrieve_response(self, response_id: str) -> ResponseObject
 ```python
 def cancel_response(self, response_id: str) -> ResponseObject
 ```
+
+**Example:**
+
+```python
+result = instance.cancel_response("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `response_id` | `str` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Raises `Error`.
 
 ---
 
@@ -1476,79 +1557,6 @@ Embedding response.
 
 ---
 
-#### ExponentialBackoffCircuit
-
-Circuit breaker with exponential backoff.
-
-Opens after `failure_threshold` consecutive failures. After
-`base_backoff` (doubled on each successive open → half-open → open cycle,
-up to `max_backoff`), the circuit enters `CircuitState.HalfOpen` and
-allows one probe request through.
-
-### Methods
-
-#### new()
-
-Create a new policy.
-
-- `failure_threshold`: consecutive failures required to open the circuit.
-- `base_backoff`: initial half-open retry delay (doubles each open cycle,
-  capped at 2 minutes).
-
-**Signature:**
-
-```python
-@staticmethod
-def new(failure_threshold: int, base_backoff: float) -> ExponentialBackoffCircuit
-```
-
-#### record_success()
-
-**Signature:**
-
-```python
-def record_success(self) -> None
-```
-
-#### record_failure()
-
-**Signature:**
-
-```python
-def record_failure(self) -> None
-```
-
-#### should_allow()
-
-**Signature:**
-
-```python
-def should_allow(self) -> bool
-```
-
-#### state()
-
-**Signature:**
-
-```python
-def state(self) -> CircuitState
-```
-
-#### release_probe_slot()
-
-Release the probe slot without recording success or failure.
-
-Called by the `ProbeGuard` when the probe future is dropped before
-completing (e.g. cancelled or panicked).
-
-**Signature:**
-
-```python
-def release_probe_slot(self) -> None
-```
-
----
-
 #### FileListQuery
 
 Query parameters for listing files.
@@ -1586,44 +1594,6 @@ An uploaded file object.
 | `filename` | `str` | — | Filename. |
 | `purpose` | `str` | — | File purpose. |
 | `status` | `str \| None` | `None` | Processing status (e.g., `"uploaded"`, `"processed"`). |
-
----
-
-#### FixedDelayHedge
-
-A simple `HedgePolicy` that fires hedges at fixed intervals.
-
-### Methods
-
-#### new()
-
-Create a new policy.
-
-- `delay`: how long to wait before launching each additional attempt.
-- `max_attempts`: maximum concurrent copies of the request (≥ 1).
-
-**Signature:**
-
-```python
-@staticmethod
-def new(delay: float, max_attempts: int) -> FixedDelayHedge
-```
-
-#### delay_for_attempt()
-
-**Signature:**
-
-```python
-def delay_for_attempt(self, attempt: int, latency_so_far: float) -> float | None
-```
-
-#### max_attempts()
-
-**Signature:**
-
-```python
-def max_attempts(self) -> int
-```
 
 ---
 
@@ -1685,45 +1655,19 @@ move it into the returned future without a clone, making the
 def check(self, upstream: str) -> HealthStatus
 ```
 
----
-
-#### HedgePolicy
-
-Policy that controls when and how many hedged requests are launched.
-
-Implement this trait to provide custom hedging strategies such as
-latency-percentile-based delays or per-model adaptive delays.
-
-### Methods
-
-#### delay_for_attempt()
-
-Returns the delay before launching attempt `attempt` (1-indexed; attempt
-1 is the initial request, attempt 2 is the first hedge, etc.).
-
-- `attempt`: 1-indexed attempt number.
-- `latency_so_far`: elapsed time since the first request was dispatched.
-
-Return `None` to skip this attempt (and all subsequent ones).
-
-**Signature:**
+**Example:**
 
 ```python
-def delay_for_attempt(self, attempt: int, latency_so_far: float) -> float | None
+result = instance.check("value")
 ```
 
-#### max_attempts()
+**Parameters:**
 
-Maximum number of concurrent attempts (including the original request).
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `upstream` | `str` | Yes | The upstream |
 
-Must be ≥ 1. Values above 3 are rarely useful and increase provider
-costs significantly.
-
-**Signature:**
-
-```python
-def max_attempts(self) -> int
-```
+**Returns:** `HealthStatus`
 
 ---
 
@@ -1966,7 +1910,7 @@ discounted rate and the remainder at the regular input rate.
 Static capability flags for a provider.
 
 Each flag indicates whether the provider's models *generally* support that
-feature. For providers that aggregate many underlying models (e.g. Bedrock,
+feature.  For providers that aggregate many underlying models (e.g. Bedrock,
 OpenRouter, vLLM) the flags reflect the superset of available model
 capabilities — a flag being `True` means at least one model supports the
 feature, not every model.
@@ -1992,7 +1936,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function. Keeping
+format, which are accessed via the `capabilities` function.  Keeping
 these fields separate preserves backward compatibility with all generated
 binding code that constructs `ProviderConfig` using struct literal syntax.
 
@@ -2028,6 +1972,14 @@ Configuration for per-model rate limits.
 @staticmethod
 def default() -> RateLimitConfig
 ```
+
+**Example:**
+
+```python
+result = RateLimitConfig.default()
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -2173,7 +2125,7 @@ An individual search result.
 The value broadcast from a singleflight leader to all followers.
 
 `Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`. The `Arc` adds only a reference-count
+broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
 bump per follower, which is negligible under the burst loads this layer targets.
 
 ---
@@ -2320,35 +2272,6 @@ A segment of transcribed audio with timing information.
 
 ---
 
-#### UpstreamDiscover
-
-A typed extension of `tower.discover.Discover` for LLM upstream
-services.
-
-Implementors plug in their own discovery mechanism — file-based configs,
-etcd watches, HTTP polling — and the `DynamicRouter` handles the rest.
-The key type must be `String` so that provider names are human-readable in
-logs and metrics.
-
-### Object safety
-
-`UpstreamDiscover` is **not** object-safe and **must not** be stored as
-`dyn UpstreamDiscover`. It is a generic bound used exclusively as a type
-parameter for `DynamicRouter<D>`. All discovery implementations are
-monomorphised at compile time.
-
-If you need a runtime registry of heterogeneous discovery sources, wrap
-each source in an `Arc<Mutex<Box<dyn …>>>` and poll them via a custom
-`Stream` adapter — do not store them as `dyn UpstreamDiscover`.
-
-### Note for 1.A integration
-
-If the router encounters a discovery error, it wraps it in
-`RouterError.Discover`. The 1.A error-consolidation workstream should
-replace this local enum with the canonical error hierarchy.
-
----
-
 #### Usage
 
 Token-usage accounting returned by the provider on each completion / embedding call.
@@ -2377,12 +2300,15 @@ User message in the conversation.
 
 Configuration for polling a batch until terminal status.
 
+All time values are in seconds as `f64` so the struct bridges across FFI
+boundaries without requiring a `Duration` shim.
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `initial_interval` | `float` | `5000ms` | Initial interval between polls. |
-| `max_interval` | `float` | `60000ms` | Maximum interval between polls (backoff plateau). |
+| `initial_interval_secs` | `float` | `5` | Initial interval between polls, in seconds. |
+| `max_interval_secs` | `float` | `60` | Maximum interval between polls (backoff plateau), in seconds. |
 | `backoff_multiplier` | `float` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
-| `timeout` | `float \| None` | `None` | Optional timeout — polling fails if this duration is exceeded. |
+| `timeout_secs` | `float \| None` | `None` | Optional timeout in seconds — polling fails if this duration is exceeded. |
 
 ### Methods
 
@@ -2394,6 +2320,14 @@ Configuration for polling a batch until terminal status.
 @staticmethod
 def default() -> WaitForBatchConfig
 ```
+
+**Example:**
+
+```python
+result = WaitForBatchConfig.default()
+```
+
+**Returns:** `WaitForBatchConfig`
 
 ---
 
@@ -2425,7 +2359,7 @@ User message content as either plain text or a list of multimodal parts.
 
 ---
 
-#### TypesContentPart
+#### ContentPart
 
 A single content part in a user message — text, image, document, or audio.
 
@@ -2638,7 +2572,7 @@ How the API key is sent in the HTTP request.
 
 The streaming wire format a provider uses for its response stream.
 
-Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
+Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
 a proprietary binary EventStream framing.
 
 Deserialized from the `streaming_format` JSON field via `serde`.
@@ -2660,106 +2594,6 @@ Auth scheme used by a provider.
 | `API_KEY` | `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). |
 | `NONE` | No authentication header required. |
 | `UNKNOWN` | Unrecognised auth scheme — falls back to bearer. |
-
----
-
-#### OnMatch
-
-Action taken when a `RegexGuardrail` finds a match.
-
-| Value | Description |
-|-------|-------------|
-| `BLOCK` | Block the request/response with the given error code and reason prefix. — Fields: `code`: `int`, `reason_prefix`: `str` |
-| `REDACT` | Replace the matched portion with the given replacement string. — Fields: `replacement`: `str` |
-
----
-
-#### CelAction
-
-The action taken when a `CelGuardrail`'s expression evaluates to `True`.
-
-| Value | Description |
-|-------|-------------|
-| `BLOCK` | Block the request/response with the given code and reason. — Fields: `code`: `int`, `reason`: `str` |
-| `MUTATE` | Replace the payload with a static JSON value (e.g., for redaction). — Fields: `new_payload`: `dict[str, Any]` |
-
----
-
-#### GuardrailStage
-
-The lifecycle stage at which a guardrail runs.
-
-| Value | Description |
-|-------|-------------|
-| `INPUT` | The outgoing prompt / request, before forwarding to the upstream provider. |
-| `OUTPUT` | The full response from the upstream provider (non-streaming). |
-| `OUTPUT_CHUNK` | A single chunk in a streaming response. Guardrails here are called once per chunk and may block or mutate individual chunks. |
-
----
-
-#### GuardrailDecision
-
-The outcome of a guardrail check.
-
-| Value | Description |
-|-------|-------------|
-| `ALLOW` | The check passed. Continue to the next guardrail or to the inner service. |
-| `BLOCK` | The check failed. Short-circuit the request/response with this reason. `code` should be ≥ 1000 to avoid collision with HTTP status codes and to facilitate cross-language error mapping. — Fields: `reason`: `str`, `code`: `int` |
-| `MUTATE` | Rewrite the payload. The provided `new_payload` replaces the original `request` or `response` before it reaches the next stage. For `OutputChunk` stage: `new_payload` replaces the chunk content. — Fields: `new_payload`: `dict[str, Any]` |
-
----
-
-#### CacheState
-
-Cache outcome for a single request.
-
-| Value | Description |
-|-------|-------------|
-| `MISS` | No cache entry found; request was sent to the provider. |
-| `EXACT_HIT` | Exact-match cache hit; provider was not called. |
-| `SEMANTIC_HIT` | Semantic-similarity cache hit; provider was not called. |
-| `STALE_HIT` | Stale entry served (TTL expired but no fresh entry was available). |
-| `BYPASS` | Cache lookup was skipped (bypass policy, streaming request, etc.). |
-
----
-
-#### UsageEventOutcome
-
-High-level outcome of the request.
-
-| Value | Description |
-|-------|-------------|
-| `SUCCESS` | Inner service returned a successful response. |
-| `ERROR` | Inner service returned an error (non-timeout). |
-| `CANCELLED` | Request was cancelled before the inner service responded. |
-| `TIMED_OUT` | Inner service timed out. |
-
----
-
-#### ContentPart
-
-A single content part within a conversation item.
-
-Conversation items may carry text, audio, or an image (by reference).
-
-| Value | Description |
-|-------|-------------|
-| `TEXT` | A plain-text segment. — Fields: `text`: `str` |
-| `AUDIO` | A raw audio segment encoded as base64. — Fields: `base64`: `str` |
-| `IMAGE_REF` | An image referenced by a URL or ID rather than inline bytes. — Fields: `url`: `str` |
-
----
-
-#### ResponseStatus
-
-Terminal status for a completed `RealtimeEvent.ResponseDone`.
-
-| Value | Description |
-|-------|-------------|
-| `COMPLETED` | The response was produced in full. |
-| `CANCELLED` | The response was cancelled before completion. |
-| `FAILED` | The response failed due to an upstream error. |
-| `INCOMPLETE` | The response hit a token/time limit before completing. |
 
 ---
 
@@ -2794,17 +2628,6 @@ Observable state of a circuit breaker.
 | `CLOSED` | Requests flow through normally. |
 | `OPEN` | All requests are rejected; the circuit is waiting for the backoff to elapse. |
 | `HALF_OPEN` | One probe request is allowed through to test service health. |
-
----
-
-#### RetryClass
-
-Classification of a single attempt error.
-
-| Value | Description |
-|-------|-------------|
-| `TRANSIENT` | Transient error — advance to the next service in the chain. |
-| `TERMINAL` | Terminal error — return immediately without consulting further services. |
 
 ---
 
@@ -2848,29 +2671,5 @@ All errors that can occur when using `liter-llm`.
 | `OutboundForbidden(LiterLlmError)` | An outbound request was blocked by the active `OutboundPolicy`. Returned when `register_custom_provider` is called with a `base_url` that violates the policy (e.g. a private-range IP under `DenyPrivate`), or when the per-connection DNS resolver detects a forbidden address at connect time. |
 | `IdempotencyConflict(LiterLlmError)` | A different request body was submitted for an existing `Idempotency-Key`. Per the OpenAI `Idempotency-Key` convention, once a key is used with a particular request body, subsequent requests using the same key must carry an identical body.  A body mismatch is a hard error (not retryable). HTTP equivalent: 409 Conflict. |
 | `IdempotencyInFlight(LiterLlmError)` | The same `Idempotency-Key` is already in-flight (another request with the same key is currently being processed). The caller should wait briefly and retry.  The response is not yet available, and this request has been short-circuited to avoid running the operation twice. HTTP equivalent: 409 Conflict (retryable after a brief delay). |
-
----
-
-#### UsageSinkError
-
-Error returned by a `UsageSink` implementation.
-
-**Base class:** `UsageSinkError(Exception)`
-
-| Exception | Description |
-|-----------|-------------|
-| `Backend(UsageSinkError)` | The sink's backend failed to accept the event. |
-
----
-
-#### IdempotencyStoreError
-
-Error type for `IdempotencyStore` operations.
-
-**Base class:** `IdempotencyStoreError(Exception)`
-
-| Exception | Description |
-|-----------|-------------|
-| `Backend(IdempotencyStoreError)` | A backend-specific error occurred. |
 
 ---

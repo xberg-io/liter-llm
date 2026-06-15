@@ -92,7 +92,7 @@ Install via one of the supported package managers:
 **Gradle:**
 
 ```gradle
-implementation 'dev.kreuzberg:liter-llm:1.6.0-rc.0'
+implementation 'dev.kreuzberg:liter-llm:1.6.0-rc.1'
 ```
 
 **Maven:**
@@ -101,7 +101,7 @@ implementation 'dev.kreuzberg:liter-llm:1.6.0-rc.0'
 <dependency>
     <groupId>dev.kreuzberg</groupId>
     <artifactId>liter-llm</artifactId>
-    <version>1.6.0-rc.0</version>
+    <version>1.6.0-rc.1</version>
 </dependency>
 ```
 

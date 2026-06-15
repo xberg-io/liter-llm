@@ -33,23 +33,3 @@ All errors that can occur when using `liter-llm`.
 | `IdempotencyInFlight` | idempotency key '{key}' is currently in-flight; retry after the first request completes | The same `Idempotency-Key` is already in-flight (another request with the same key is currently being processed). The caller should wait briefly and retry.  The response is not yet available, and this request has been short-circuited to avoid running the operation twice. HTTP equivalent: 409 Conflict (retryable after a brief delay). |
 
 ---
-
-### UsageSinkError
-
-Error returned by a `UsageSink` implementation.
-
-| Variant | Message | Description |
-|---------|---------|-------------|
-| `Backend` | usage sink backend error: {0} | The sink's backend failed to accept the event. |
-
----
-
-### IdempotencyStoreError
-
-Error type for `IdempotencyStore` operations.
-
-| Variant | Message | Description |
-|---------|---------|-------------|
-| `Backend` | idempotency store backend error: {0} | A backend-specific error occurred. |
-
----

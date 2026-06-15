@@ -44,7 +44,7 @@ pub async fn run(args: McpArgs) -> Result<(), String> {
         ProxyConfig::discover()?.unwrap_or_default()
     };
 
-    let service_pool = Arc::new(ServicePool::from_config(&config)?);
+    let service_pool = Arc::new(ServicePool::from_config(&config, None)?);
     let key_store = Arc::new(KeyStore::from_config(config.general.master_key.clone(), &config.keys));
     let file_store = Arc::new(FileStore::from_config(
         config.files.as_ref().unwrap_or(&Default::default()),
@@ -113,6 +113,7 @@ pub async fn run(args: McpArgs) -> Result<(), String> {
                         .build(),
                 ),
                 shutdown: None,
+                usage_sink: None,
             };
 
             // For HTTP transport the actual KeyContext is resolved from the

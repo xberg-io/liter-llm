@@ -25,6 +25,12 @@ constructed, or if the resolved provider configuration is invalid.
 public static DefaultClient createClient(String apiKey, String baseUrl, long timeoutSecs, int maxRetries, String modelHint) throws Error
 ```
 
+**Example:**
+
+```java
+var result = createClient("value", "value", 42, 42, "value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -36,6 +42,7 @@ public static DefaultClient createClient(String apiKey, String baseUrl, long tim
 | `modelHint` | `Optional<String>` | No | The model hint |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Throws `ErrorException`.
 
 ---
@@ -57,6 +64,12 @@ contains unknown fields.
 public static DefaultClient createClientFromJson(String json) throws Error
 ```
 
+**Example:**
+
+```java
+var result = createClientFromJson("value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -64,6 +77,7 @@ public static DefaultClient createClientFromJson(String json) throws Error
 | `json` | `String` | Yes | The json |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Throws `ErrorException`.
 
 ---
@@ -86,6 +100,12 @@ no model prefixes).
 public static void registerCustomProvider(CustomProviderConfig config) throws Error
 ```
 
+**Example:**
+
+```java
+registerCustomProvider(new CustomProviderConfig());
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -93,6 +113,7 @@ public static void registerCustomProvider(CustomProviderConfig config) throws Er
 | `config` | `CustomProviderConfig` | Yes | The configuration options |
 
 **Returns:** `void`
+
 **Errors:** Throws `ErrorException`.
 
 ---
@@ -114,6 +135,12 @@ Returns an error only if the internal lock is poisoned.
 public static boolean unregisterCustomProvider(String name) throws Error
 ```
 
+**Example:**
+
+```java
+var result = unregisterCustomProvider("value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -121,6 +148,7 @@ public static boolean unregisterCustomProvider(String name) throws Error
 | `name` | `String` | Yes | The name |
 
 **Returns:** `boolean`
+
 **Errors:** Throws `ErrorException`.
 
 ---
@@ -130,15 +158,23 @@ public static boolean unregisterCustomProvider(String name) throws Error
 Return the capability flags for a named provider.
 
 Performs an O(n) linear scan over the embedded registry (142 entries).
-Returns a `'static` reference valid for the lifetime of the process.
+Returns an owned value so that bindings can box/copy it across the FFI
+boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+so this is a cheap memcpy of seven `bool` fields.
 
-For unknown `provider_name` values the function returns a reference to an
-all-`false` sentinel so callers never need to handle `Option`.
+For unknown `provider_name` values the function returns an all-`false`
+sentinel so callers never need to handle `Option`.
 
 **Signature:**
 
 ```java
 public static ProviderCapabilities capabilities(String providerName)
+```
+
+**Example:**
+
+```java
+var result = capabilities("value");
 ```
 
 **Parameters:**
@@ -165,7 +201,14 @@ To query capability flags for a specific provider use `capabilities`.
 public static List<ProviderConfig> allProviders() throws Error
 ```
 
+**Example:**
+
+```java
+var result = allProviders();
+```
+
 **Returns:** `List<ProviderConfig>`
+
 **Errors:** Throws `ErrorException`.
 
 ---
@@ -185,7 +228,14 @@ The returned reference points into the static registry — no allocation.
 public static List<String> complexProviderNames() throws Error
 ```
 
+**Example:**
+
+```java
+var result = complexProviderNames();
+```
+
 **Returns:** `List<String>`
+
 **Errors:** Throws `ErrorException`.
 
 ---
@@ -199,13 +249,19 @@ Returns `null` if the model is not present in the embedded pricing registry.
 Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
 
 When an exact model name match is not found, progressively shorter prefixes
-are tried by stripping from the last `-` or `.` separator. For example,
+are tried by stripping from the last `-` or `.` separator.  For example,
 `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 
 **Signature:**
 
 ```java
 public static Optional<Double> completionCost(String model, long promptTokens, long completionTokens)
+```
+
+**Example:**
+
+```java
+var result = completionCost("value", 42, 42);
 ```
 
 **Parameters:**
@@ -241,6 +297,12 @@ registry, mirroring `completion_cost`.
 public static Optional<Double> completionCostWithCache(String model, long promptTokens, long cachedTokens, long completionTokens)
 ```
 
+**Example:**
+
+```java
+var result = completionCostWithCache("value", 42, 42, 42);
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -270,6 +332,12 @@ Panics if the global registry lock is poisoned.
 public static void clear()
 ```
 
+**Example:**
+
+```java
+clear();
+```
+
 **Returns:** `void`
 
 ---
@@ -293,6 +361,12 @@ Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
 public static long countTokens(String model, String text) throws Error
 ```
 
+**Example:**
+
+```java
+var result = countTokens("value", "value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -301,6 +375,7 @@ public static long countTokens(String model, String text) throws Error
 | `text` | `String` | Yes | The text |
 
 **Returns:** `long`
+
 **Errors:** Throws `ErrorException`.
 
 ---
@@ -325,6 +400,12 @@ if tokenization fails for any message.
 public static long countRequestTokens(String model, ChatCompletionRequest req) throws Error
 ```
 
+**Example:**
+
+```java
+var result = countRequestTokens("value", new ChatCompletionRequest());
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -333,341 +414,8 @@ public static long countRequestTokens(String model, ChatCompletionRequest req) t
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
 **Returns:** `long`
+
 **Errors:** Throws `ErrorException`.
-
----
-
-#### recordCacheState()
-
-Set the cache outcome for the current task.
-
-Uses `try_with` so that callers that run outside a `CACHE_STATE_CELL.scope`
-(e.g. in tests that do not involve `HooksLayer`) are silently ignored rather
-than panicking.
-
-**Signature:**
-
-```java
-public static void recordCacheState(CacheState state)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `state` | `CacheState` | Yes | The cache state |
-
-**Returns:** `void`
-
----
-
-#### recordCacheHit()
-
-Record a cache hit metric.
-
-Call from cache layer implementations to emit `gen_ai.cache.hit`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```java
-public static void recordCacheHit(String system, String model, String operation)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `String` | Yes | The system |
-| `model` | `String` | Yes | The model |
-| `operation` | `String` | Yes | The operation |
-
-**Returns:** `void`
-
----
-
-#### recordCacheMiss()
-
-Record a cache miss metric.
-
-Call from cache layer implementations to emit `gen_ai.cache.miss`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```java
-public static void recordCacheMiss(String system, String model, String operation)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `String` | Yes | The system |
-| `model` | `String` | Yes | The model |
-| `operation` | `String` | Yes | The operation |
-
-**Returns:** `void`
-
----
-
-#### recordCacheStale()
-
-Record a stale cache metric.
-
-Call from cache layer implementations to emit `gen_ai.cache.stale`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```java
-public static void recordCacheStale(String system, String model, String operation)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `String` | Yes | The system |
-| `model` | `String` | Yes | The model |
-| `operation` | `String` | Yes | The operation |
-
-**Returns:** `void`
-
----
-
-#### recordCircuitTrip()
-
-Record a circuit breaker trip.
-
-Call from `CircuitLayer` when the circuit opens.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```java
-public static void recordCircuitTrip(String system, String model)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `String` | Yes | The system |
-| `model` | `String` | Yes | The model |
-
-**Returns:** `void`
-
----
-
-#### recordRetryAttempt()
-
-Record a retry attempt.
-
-Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```java
-public static void recordRetryAttempt(String system, String model, String operation)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `String` | Yes | The system |
-| `model` | `String` | Yes | The model |
-| `operation` | `String` | Yes | The operation |
-
-**Returns:** `void`
-
----
-
-#### recordCacheTierHit()
-
-Record a per-tier cache hit.
-
-`tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```java
-public static void recordCacheTierHit(String system, String model, String tier)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `String` | Yes | The system |
-| `model` | `String` | Yes | The model |
-| `tier` | `String` | Yes | The tier |
-
-**Returns:** `void`
-
----
-
-#### recordCacheTierMiss()
-
-Record a per-tier cache miss.
-
-`tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```java
-public static void recordCacheTierMiss(String system, String model, String tier)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `String` | Yes | The system |
-| `model` | `String` | Yes | The model |
-| `tier` | `String` | Yes | The tier |
-
-**Returns:** `void`
-
----
-
-#### recordBudgetSpend()
-
-Record cumulative spend for a specific budget dimension.
-
-Emits `gen_ai.budget.spend_usd` with dimension attributes.
-Call from `record` after each
-successful completion. If the meter has not been initialized, this
-call is a no-op.
-
-**Signature:**
-
-```java
-public static void recordBudgetSpend(String model, String provider, String tenantId, String userId, String apiKeyId, double costUsd)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `model` | `String` | Yes | The model |
-| `provider` | `String` | Yes | The provider |
-| `tenantId` | `Optional<String>` | No | The tenant id |
-| `userId` | `Optional<String>` | No | The user id |
-| `apiKeyId` | `Optional<String>` | No | The api key id |
-| `costUsd` | `double` | Yes | The cost usd |
-
-**Returns:** `void`
-
----
-
-#### recordBudgetRejection()
-
-Record a budget-rejection event.
-
-Emits `gen_ai.budget.rejection` with the triggering dimension.
-Call from `check` when
-returning `Reject`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```java
-public static void recordBudgetRejection(String model, String provider, String dimension)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `model` | `String` | Yes | The model |
-| `provider` | `String` | Yes | The provider |
-| `dimension` | `String` | Yes | The dimension |
-
-**Returns:** `void`
-
----
-
-#### recordRealtimeSessionDuration()
-
-Record the lifetime of a completed Realtime WebSocket session.
-
-Emits `gen_ai.realtime.session.duration` (seconds).
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```java
-public static void recordRealtimeSessionDuration(String provider, double durationSecs)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `provider` | `String` | Yes | The provider |
-| `durationSecs` | `double` | Yes | The duration secs |
-
-**Returns:** `void`
-
----
-
-#### recordRealtimeEvent()
-
-Record a single Realtime event being forwarded.
-
-Emits `gen_ai.realtime.event.count` with `gen_ai.realtime.direction`
-(`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
-`gen_ai.system`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```java
-public static void recordRealtimeEvent(String provider, String direction, String eventType)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `provider` | `String` | Yes | The provider |
-| `direction` | `String` | Yes | The direction |
-| `eventType` | `String` | Yes | The event type |
-
-**Returns:** `void`
-
----
-
-#### recordRealtimeBytes()
-
-Record audio bytes forwarded over a Realtime WebSocket session.
-
-Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
-`gen_ai.realtime.direction` attributes.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```java
-public static void recordRealtimeBytes(String provider, String direction, long byteCount)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `provider` | `String` | Yes | The provider |
-| `direction` | `String` | Yes | The direction |
-| `byteCount` | `long` | Yes | The byte count |
-
-**Returns:** `void`
 
 ---
 
@@ -676,13 +424,19 @@ public static void recordRealtimeBytes(String provider, String direction, long b
 Assert that `current_len + incoming` does not exceed `limit`.
 
 Call this before appending `incoming` bytes to any buffer that must
-stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
+stay below `limit`.  Returns `Err(LiterLlmError.Streaming)` on overflow
 and emits a `tracing.warn!` with context.
 
 **Signature:**
 
 ```java
 public static void checkBound(String context, long currentLen, long incoming, long limit) throws Error
+```
+
+**Example:**
+
+```java
+checkBound("value", 42, 42, 42);
 ```
 
 **Parameters:**
@@ -695,6 +449,7 @@ public static void checkBound(String context, long currentLen, long incoming, lo
 | `limit` | `long` | Yes | The limit |
 
 **Returns:** `void`
+
 **Errors:** Throws `ErrorException`.
 
 ---
@@ -722,6 +477,12 @@ present and no crypto provider installation is needed.
 
 ```java
 public static void ensureCryptoProvider()
+```
+
+**Example:**
+
+```java
+ensureCryptoProvider();
 ```
 
 **Returns:** `void`
@@ -846,6 +607,14 @@ Configuration for budget enforcement.
 public static BudgetConfig defaultOptions()
 ```
 
+**Example:**
+
+```java
+var result = BudgetConfig.defaultOptions();
+```
+
+**Returns:** `BudgetConfig`
+
 ---
 
 #### CacheConfig
@@ -867,6 +636,14 @@ Configuration for the response cache.
 ```java
 public static CacheConfig defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = CacheConfig.defaultOptions();
+```
+
+**Returns:** `CacheConfig`
 
 ---
 
@@ -983,88 +760,21 @@ Process a single chunk.
 public Optional<ChatCompletionChunk> process(ChatCompletionChunk chunk) throws Error
 ```
 
----
-
-#### CircuitPolicy
-
-Policy that drives a circuit breaker's state transitions.
-
-Implement this trait to provide custom failure-detection and
-recovery logic. The default implementation is `ExponentialBackoffCircuit`.
-
-### Methods
-
-#### recordSuccess()
-
-Called when the inner service returns a successful response.
-
-**Signature:**
+**Example:**
 
 ```java
-public void recordSuccess()
+var result = instance.process(new ChatCompletionChunk());
 ```
 
-#### recordFailure()
+**Parameters:**
 
-Called when the inner service returns an error.
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `chunk` | `ChatCompletionChunk` | Yes | The chat completion chunk |
 
-The policy decides whether to count the error as a circuit-trip failure.
+**Returns:** `Optional<ChatCompletionChunk>`
 
-**Signature:**
-
-```java
-public void recordFailure()
-```
-
-#### shouldAllow()
-
-Returns `true` when a request should be allowed to proceed.
-
-`false` means the circuit is open and the request should be rejected.
-
-**Signature:**
-
-```java
-public boolean shouldAllow()
-```
-
-#### state()
-
-Returns the current circuit state.
-
-**Signature:**
-
-```java
-public CircuitState state()
-```
-
-#### releaseProbeSlot()
-
-Called when a probe request is dropped without completing (e.g. due to
-panic or cancellation) to release the probe slot.
-
-The default implementation is a no-op. Policies that gate probe slots
-with a boolean flag (like `ExponentialBackoffCircuit`) should override
-this to clear the flag.
-
-**Signature:**
-
-```java
-public void releaseProbeSlot()
-```
-
----
-
-#### ClassifyContext
-
-Immutable context passed to every `RouteClassifier.classify` call.
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `prompt` | `String` | — | The user-facing prompt text. |
-| `systemPrompt` | `Optional<String>` | `null` | Optional system prompt from the request. |
-| `metadata` | `Map<String, String>` | — | Arbitrary metadata attached to the request (e.g. tenant, session ID). |
-| `availableModels` | `List<String>` | — | The set of model identifiers the router currently considers available. |
+**Errors:** Throws `ErrorException`.
 
 ---
 
@@ -1196,6 +906,22 @@ headers are cached at construction to avoid redundant encoding on every request.
 public ChatCompletionResponse chat(ChatCompletionRequest req) throws Error
 ```
 
+**Example:**
+
+```java
+var result = instance.chat(new ChatCompletionRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `ChatCompletionResponse`
+
+**Errors:** Throws `ErrorException`.
+
 #### chatStream()
 
 **Signature:**
@@ -1203,6 +929,22 @@ public ChatCompletionResponse chat(ChatCompletionRequest req) throws Error
 ```java
 public String chatStream(ChatCompletionRequest req) throws Error
 ```
+
+**Example:**
+
+```java
+var result = instance.chatStream(new ChatCompletionRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `String`
+
+**Errors:** Throws `ErrorException`.
 
 #### embed()
 
@@ -1212,6 +954,22 @@ public String chatStream(ChatCompletionRequest req) throws Error
 public EmbeddingResponse embed(EmbeddingRequest req) throws Error
 ```
 
+**Example:**
+
+```java
+var result = instance.embed(new EmbeddingRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `EmbeddingRequest` | Yes | The embedding request |
+
+**Returns:** `EmbeddingResponse`
+
+**Errors:** Throws `ErrorException`.
+
 #### listModels()
 
 **Signature:**
@@ -1219,6 +977,16 @@ public EmbeddingResponse embed(EmbeddingRequest req) throws Error
 ```java
 public ModelsListResponse listModels() throws Error
 ```
+
+**Example:**
+
+```java
+var result = instance.listModels();
+```
+
+**Returns:** `ModelsListResponse`
+
+**Errors:** Throws `ErrorException`.
 
 #### imageGenerate()
 
@@ -1228,6 +996,22 @@ public ModelsListResponse listModels() throws Error
 public ImagesResponse imageGenerate(CreateImageRequest req) throws Error
 ```
 
+**Example:**
+
+```java
+var result = instance.imageGenerate(new CreateImageRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateImageRequest` | Yes | The create image request |
+
+**Returns:** `ImagesResponse`
+
+**Errors:** Throws `ErrorException`.
+
 #### speech()
 
 **Signature:**
@@ -1235,6 +1019,22 @@ public ImagesResponse imageGenerate(CreateImageRequest req) throws Error
 ```java
 public byte[] speech(CreateSpeechRequest req) throws Error
 ```
+
+**Example:**
+
+```java
+var result = instance.speech(new CreateSpeechRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateSpeechRequest` | Yes | The create speech request |
+
+**Returns:** `byte[]`
+
+**Errors:** Throws `ErrorException`.
 
 #### transcribe()
 
@@ -1244,6 +1044,22 @@ public byte[] speech(CreateSpeechRequest req) throws Error
 public TranscriptionResponse transcribe(CreateTranscriptionRequest req) throws Error
 ```
 
+**Example:**
+
+```java
+var result = instance.transcribe(new CreateTranscriptionRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
+
+**Returns:** `TranscriptionResponse`
+
+**Errors:** Throws `ErrorException`.
+
 #### moderate()
 
 **Signature:**
@@ -1251,6 +1067,22 @@ public TranscriptionResponse transcribe(CreateTranscriptionRequest req) throws E
 ```java
 public ModerationResponse moderate(ModerationRequest req) throws Error
 ```
+
+**Example:**
+
+```java
+var result = instance.moderate(new ModerationRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ModerationRequest` | Yes | The moderation request |
+
+**Returns:** `ModerationResponse`
+
+**Errors:** Throws `ErrorException`.
 
 #### rerank()
 
@@ -1260,6 +1092,22 @@ public ModerationResponse moderate(ModerationRequest req) throws Error
 public RerankResponse rerank(RerankRequest req) throws Error
 ```
 
+**Example:**
+
+```java
+var result = instance.rerank(new RerankRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `RerankRequest` | Yes | The rerank request |
+
+**Returns:** `RerankResponse`
+
+**Errors:** Throws `ErrorException`.
+
 #### search()
 
 **Signature:**
@@ -1267,6 +1115,22 @@ public RerankResponse rerank(RerankRequest req) throws Error
 ```java
 public SearchResponse search(SearchRequest req) throws Error
 ```
+
+**Example:**
+
+```java
+var result = instance.search(new SearchRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `SearchRequest` | Yes | The search request |
+
+**Returns:** `SearchResponse`
+
+**Errors:** Throws `ErrorException`.
 
 #### ocr()
 
@@ -1276,6 +1140,22 @@ public SearchResponse search(SearchRequest req) throws Error
 public OcrResponse ocr(OcrRequest req) throws Error
 ```
 
+**Example:**
+
+```java
+var result = instance.ocr(new OcrRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `OcrRequest` | Yes | The ocr request |
+
+**Returns:** `OcrResponse`
+
+**Errors:** Throws `ErrorException`.
+
 #### createFile()
 
 **Signature:**
@@ -1283,6 +1163,22 @@ public OcrResponse ocr(OcrRequest req) throws Error
 ```java
 public FileObject createFile(CreateFileRequest req) throws Error
 ```
+
+**Example:**
+
+```java
+var result = instance.createFile(new CreateFileRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateFileRequest` | Yes | The create file request |
+
+**Returns:** `FileObject`
+
+**Errors:** Throws `ErrorException`.
 
 #### retrieveFile()
 
@@ -1292,6 +1188,22 @@ public FileObject createFile(CreateFileRequest req) throws Error
 public FileObject retrieveFile(String fileId) throws Error
 ```
 
+**Example:**
+
+```java
+var result = instance.retrieveFile("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `fileId` | `String` | Yes | The file id |
+
+**Returns:** `FileObject`
+
+**Errors:** Throws `ErrorException`.
+
 #### deleteFile()
 
 **Signature:**
@@ -1299,6 +1211,22 @@ public FileObject retrieveFile(String fileId) throws Error
 ```java
 public DeleteResponse deleteFile(String fileId) throws Error
 ```
+
+**Example:**
+
+```java
+var result = instance.deleteFile("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `fileId` | `String` | Yes | The file id |
+
+**Returns:** `DeleteResponse`
+
+**Errors:** Throws `ErrorException`.
 
 #### listFiles()
 
@@ -1308,6 +1236,22 @@ public DeleteResponse deleteFile(String fileId) throws Error
 public FileListResponse listFiles(FileListQuery query) throws Error
 ```
 
+**Example:**
+
+```java
+var result = instance.listFiles(new FileListQuery());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `Optional<FileListQuery>` | No | The file list query |
+
+**Returns:** `FileListResponse`
+
+**Errors:** Throws `ErrorException`.
+
 #### fileContent()
 
 **Signature:**
@@ -1315,6 +1259,22 @@ public FileListResponse listFiles(FileListQuery query) throws Error
 ```java
 public byte[] fileContent(String fileId) throws Error
 ```
+
+**Example:**
+
+```java
+var result = instance.fileContent("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `fileId` | `String` | Yes | The file id |
+
+**Returns:** `byte[]`
+
+**Errors:** Throws `ErrorException`.
 
 #### createBatch()
 
@@ -1324,6 +1284,22 @@ public byte[] fileContent(String fileId) throws Error
 public BatchObject createBatch(CreateBatchRequest req) throws Error
 ```
 
+**Example:**
+
+```java
+var result = instance.createBatch(new CreateBatchRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateBatchRequest` | Yes | The create batch request |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `ErrorException`.
+
 #### retrieveBatch()
 
 **Signature:**
@@ -1331,6 +1307,22 @@ public BatchObject createBatch(CreateBatchRequest req) throws Error
 ```java
 public BatchObject retrieveBatch(String batchId) throws Error
 ```
+
+**Example:**
+
+```java
+var result = instance.retrieveBatch("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `String` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `ErrorException`.
 
 #### listBatches()
 
@@ -1340,6 +1332,22 @@ public BatchObject retrieveBatch(String batchId) throws Error
 public BatchListResponse listBatches(BatchListQuery query) throws Error
 ```
 
+**Example:**
+
+```java
+var result = instance.listBatches(new BatchListQuery());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `Optional<BatchListQuery>` | No | The batch list query |
+
+**Returns:** `BatchListResponse`
+
+**Errors:** Throws `ErrorException`.
+
 #### cancelBatch()
 
 **Signature:**
@@ -1348,13 +1356,21 @@ public BatchListResponse listBatches(BatchListQuery query) throws Error
 public BatchObject cancelBatch(String batchId) throws Error
 ```
 
-#### retrieve()
-
-**Signature:**
+**Example:**
 
 ```java
-public BatchObject retrieve(String batchId) throws Error
+var result = instance.cancelBatch("value");
 ```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `String` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `ErrorException`.
 
 #### waitForBatch()
 
@@ -1375,6 +1391,23 @@ Returns `BatchWaitError.Client` for underlying client errors.
 public BatchObject waitForBatch(String batchId, WaitForBatchConfig config) throws BatchWaitError
 ```
 
+**Example:**
+
+```java
+var result = instance.waitForBatch("value", new WaitForBatchConfig());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `String` | Yes | The batch id |
+| `config` | `WaitForBatchConfig` | Yes | The configuration options |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `BatchWaitErrorException`.
+
 #### createResponse()
 
 **Signature:**
@@ -1382,6 +1415,22 @@ public BatchObject waitForBatch(String batchId, WaitForBatchConfig config) throw
 ```java
 public ResponseObject createResponse(CreateResponseRequest req) throws Error
 ```
+
+**Example:**
+
+```java
+var result = instance.createResponse(new CreateResponseRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateResponseRequest` | Yes | The create response request |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Throws `ErrorException`.
 
 #### retrieveResponse()
 
@@ -1391,6 +1440,22 @@ public ResponseObject createResponse(CreateResponseRequest req) throws Error
 public ResponseObject retrieveResponse(String responseId) throws Error
 ```
 
+**Example:**
+
+```java
+var result = instance.retrieveResponse("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `responseId` | `String` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Throws `ErrorException`.
+
 #### cancelResponse()
 
 **Signature:**
@@ -1398,6 +1463,22 @@ public ResponseObject retrieveResponse(String responseId) throws Error
 ```java
 public ResponseObject cancelResponse(String responseId) throws Error
 ```
+
+**Example:**
+
+```java
+var result = instance.cancelResponse("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `responseId` | `String` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Throws `ErrorException`.
 
 ---
 
@@ -1474,78 +1555,6 @@ Embedding response.
 
 ---
 
-#### ExponentialBackoffCircuit
-
-Circuit breaker with exponential backoff.
-
-Opens after `failure_threshold` consecutive failures. After
-`base_backoff` (doubled on each successive open → half-open → open cycle,
-up to `max_backoff`), the circuit enters `CircuitState.HalfOpen` and
-allows one probe request through.
-
-### Methods
-
-#### new()
-
-Create a new policy.
-
-- `failure_threshold`: consecutive failures required to open the circuit.
-- `base_backoff`: initial half-open retry delay (doubles each open cycle,
-  capped at 2 minutes).
-
-**Signature:**
-
-```java
-public static ExponentialBackoffCircuit new(int failureThreshold, Duration baseBackoff)
-```
-
-#### recordSuccess()
-
-**Signature:**
-
-```java
-public void recordSuccess()
-```
-
-#### recordFailure()
-
-**Signature:**
-
-```java
-public void recordFailure()
-```
-
-#### shouldAllow()
-
-**Signature:**
-
-```java
-public boolean shouldAllow()
-```
-
-#### state()
-
-**Signature:**
-
-```java
-public CircuitState state()
-```
-
-#### releaseProbeSlot()
-
-Release the probe slot without recording success or failure.
-
-Called by the `ProbeGuard` when the probe future is dropped before
-completing (e.g. cancelled or panicked).
-
-**Signature:**
-
-```java
-public void releaseProbeSlot()
-```
-
----
-
 #### FileListQuery
 
 Query parameters for listing files.
@@ -1583,43 +1592,6 @@ An uploaded file object.
 | `filename` | `String` | — | Filename. |
 | `purpose` | `String` | — | File purpose. |
 | `status` | `Optional<String>` | `null` | Processing status (e.g., `"uploaded"`, `"processed"`). |
-
----
-
-#### FixedDelayHedge
-
-A simple `HedgePolicy` that fires hedges at fixed intervals.
-
-### Methods
-
-#### new()
-
-Create a new policy.
-
-- `delay`: how long to wait before launching each additional attempt.
-- `max_attempts`: maximum concurrent copies of the request (≥ 1).
-
-**Signature:**
-
-```java
-public static FixedDelayHedge new(Duration delay, int maxAttempts)
-```
-
-#### delayForAttempt()
-
-**Signature:**
-
-```java
-public Optional<Duration> delayForAttempt(int attempt, Duration latencySoFar)
-```
-
-#### maxAttempts()
-
-**Signature:**
-
-```java
-public int maxAttempts()
-```
 
 ---
 
@@ -1681,45 +1653,19 @@ move it into the returned future without a clone, making the
 public HealthStatus check(String upstream)
 ```
 
----
-
-#### HedgePolicy
-
-Policy that controls when and how many hedged requests are launched.
-
-Implement this trait to provide custom hedging strategies such as
-latency-percentile-based delays or per-model adaptive delays.
-
-### Methods
-
-#### delayForAttempt()
-
-Returns the delay before launching attempt `attempt` (1-indexed; attempt
-1 is the initial request, attempt 2 is the first hedge, etc.).
-
-- `attempt`: 1-indexed attempt number.
-- `latency_so_far`: elapsed time since the first request was dispatched.
-
-Return `null` to skip this attempt (and all subsequent ones).
-
-**Signature:**
+**Example:**
 
 ```java
-public Optional<Duration> delayForAttempt(int attempt, Duration latencySoFar)
+var result = instance.check("value");
 ```
 
-#### maxAttempts()
+**Parameters:**
 
-Maximum number of concurrent attempts (including the original request).
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `upstream` | `String` | Yes | The upstream |
 
-Must be ≥ 1. Values above 3 are rarely useful and increase provider
-costs significantly.
-
-**Signature:**
-
-```java
-public int maxAttempts()
-```
+**Returns:** `HealthStatus`
 
 ---
 
@@ -1962,7 +1908,7 @@ discounted rate and the remainder at the regular input rate.
 Static capability flags for a provider.
 
 Each flag indicates whether the provider's models *generally* support that
-feature. For providers that aggregate many underlying models (e.g. Bedrock,
+feature.  For providers that aggregate many underlying models (e.g. Bedrock,
 OpenRouter, vLLM) the flags reflect the superset of available model
 capabilities — a flag being `true` means at least one model supports the
 feature, not every model.
@@ -1988,7 +1934,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function. Keeping
+format, which are accessed via the `capabilities` function.  Keeping
 these fields separate preserves backward compatibility with all generated
 binding code that constructs `ProviderConfig` using struct literal syntax.
 
@@ -2023,6 +1969,14 @@ Configuration for per-model rate limits.
 ```java
 public static RateLimitConfig defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = RateLimitConfig.defaultOptions();
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -2168,7 +2122,7 @@ An individual search result.
 The value broadcast from a singleflight leader to all followers.
 
 `Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`. The `Arc` adds only a reference-count
+broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
 bump per follower, which is negligible under the burst loads this layer targets.
 
 ---
@@ -2315,35 +2269,6 @@ A segment of transcribed audio with timing information.
 
 ---
 
-#### UpstreamDiscover
-
-A typed extension of `tower.discover.Discover` for LLM upstream
-services.
-
-Implementors plug in their own discovery mechanism — file-based configs,
-etcd watches, HTTP polling — and the `DynamicRouter` handles the rest.
-The key type must be `String` so that provider names are human-readable in
-logs and metrics.
-
-### Object safety
-
-`UpstreamDiscover` is **not** object-safe and **must not** be stored as
-`dyn UpstreamDiscover`. It is a generic bound used exclusively as a type
-parameter for `DynamicRouter<D>`. All discovery implementations are
-monomorphised at compile time.
-
-If you need a runtime registry of heterogeneous discovery sources, wrap
-each source in an `Arc<Mutex<Box<dyn …>>>` and poll them via a custom
-`Stream` adapter — do not store them as `dyn UpstreamDiscover`.
-
-### Note for 1.A integration
-
-If the router encounters a discovery error, it wraps it in
-`RouterError.Discover`. The 1.A error-consolidation workstream should
-replace this local enum with the canonical error hierarchy.
-
----
-
 #### Usage
 
 Token-usage accounting returned by the provider on each completion / embedding call.
@@ -2372,12 +2297,15 @@ User message in the conversation.
 
 Configuration for polling a batch until terminal status.
 
+All time values are in seconds as `f64` so the struct bridges across FFI
+boundaries without requiring a `Duration` shim.
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `initialInterval` | `Duration` | `5000ms` | Initial interval between polls. |
-| `maxInterval` | `Duration` | `60000ms` | Maximum interval between polls (backoff plateau). |
+| `initialIntervalSecs` | `double` | `5` | Initial interval between polls, in seconds. |
+| `maxIntervalSecs` | `double` | `60` | Maximum interval between polls (backoff plateau), in seconds. |
 | `backoffMultiplier` | `float` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
-| `timeout` | `Optional<Duration>` | `null` | Optional timeout — polling fails if this duration is exceeded. |
+| `timeoutSecs` | `Optional<Double>` | `null` | Optional timeout in seconds — polling fails if this duration is exceeded. |
 
 ### Methods
 
@@ -2388,6 +2316,14 @@ Configuration for polling a batch until terminal status.
 ```java
 public static WaitForBatchConfig defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = WaitForBatchConfig.defaultOptions();
+```
+
+**Returns:** `WaitForBatchConfig`
 
 ---
 
@@ -2419,7 +2355,7 @@ User message content as either plain text or a list of multimodal parts.
 
 ---
 
-#### TypesContentPart
+#### ContentPart
 
 A single content part in a user message — text, image, document, or audio.
 
@@ -2632,7 +2568,7 @@ How the API key is sent in the HTTP request.
 
 The streaming wire format a provider uses for its response stream.
 
-Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
+Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
 a proprietary binary EventStream framing.
 
 Deserialized from the `streaming_format` JSON field via `serde`.
@@ -2654,106 +2590,6 @@ Auth scheme used by a provider.
 | `API_KEY` | `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). |
 | `NONE` | No authentication header required. |
 | `UNKNOWN` | Unrecognised auth scheme — falls back to bearer. |
-
----
-
-#### OnMatch
-
-Action taken when a `RegexGuardrail` finds a match.
-
-| Value | Description |
-|-------|-------------|
-| `BLOCK` | Block the request/response with the given error code and reason prefix. — Fields: `code`: `int`, `reasonPrefix`: `String` |
-| `REDACT` | Replace the matched portion with the given replacement string. — Fields: `replacement`: `String` |
-
----
-
-#### CelAction
-
-The action taken when a `CelGuardrail`'s expression evaluates to `true`.
-
-| Value | Description |
-|-------|-------------|
-| `BLOCK` | Block the request/response with the given code and reason. — Fields: `code`: `int`, `reason`: `String` |
-| `MUTATE` | Replace the payload with a static JSON value (e.g., for redaction). — Fields: `newPayload`: `Object` |
-
----
-
-#### GuardrailStage
-
-The lifecycle stage at which a guardrail runs.
-
-| Value | Description |
-|-------|-------------|
-| `INPUT` | The outgoing prompt / request, before forwarding to the upstream provider. |
-| `OUTPUT` | The full response from the upstream provider (non-streaming). |
-| `OUTPUT_CHUNK` | A single chunk in a streaming response. Guardrails here are called once per chunk and may block or mutate individual chunks. |
-
----
-
-#### GuardrailDecision
-
-The outcome of a guardrail check.
-
-| Value | Description |
-|-------|-------------|
-| `ALLOW` | The check passed. Continue to the next guardrail or to the inner service. |
-| `BLOCK` | The check failed. Short-circuit the request/response with this reason. `code` should be ≥ 1000 to avoid collision with HTTP status codes and to facilitate cross-language error mapping. — Fields: `reason`: `String`, `code`: `int` |
-| `MUTATE` | Rewrite the payload. The provided `new_payload` replaces the original `request` or `response` before it reaches the next stage. For `OutputChunk` stage: `new_payload` replaces the chunk content. — Fields: `newPayload`: `Object` |
-
----
-
-#### CacheState
-
-Cache outcome for a single request.
-
-| Value | Description |
-|-------|-------------|
-| `MISS` | No cache entry found; request was sent to the provider. |
-| `EXACT_HIT` | Exact-match cache hit; provider was not called. |
-| `SEMANTIC_HIT` | Semantic-similarity cache hit; provider was not called. |
-| `STALE_HIT` | Stale entry served (TTL expired but no fresh entry was available). |
-| `BYPASS` | Cache lookup was skipped (bypass policy, streaming request, etc.). |
-
----
-
-#### UsageEventOutcome
-
-High-level outcome of the request.
-
-| Value | Description |
-|-------|-------------|
-| `SUCCESS` | Inner service returned a successful response. |
-| `ERROR` | Inner service returned an error (non-timeout). |
-| `CANCELLED` | Request was cancelled before the inner service responded. |
-| `TIMED_OUT` | Inner service timed out. |
-
----
-
-#### ContentPart
-
-A single content part within a conversation item.
-
-Conversation items may carry text, audio, or an image (by reference).
-
-| Value | Description |
-|-------|-------------|
-| `TEXT` | A plain-text segment. — Fields: `text`: `String` |
-| `AUDIO` | A raw audio segment encoded as base64. — Fields: `base64`: `String` |
-| `IMAGE_REF` | An image referenced by a URL or ID rather than inline bytes. — Fields: `url`: `String` |
-
----
-
-#### ResponseStatus
-
-Terminal status for a completed `RealtimeEvent.ResponseDone`.
-
-| Value | Description |
-|-------|-------------|
-| `COMPLETED` | The response was produced in full. |
-| `CANCELLED` | The response was cancelled before completion. |
-| `FAILED` | The response failed due to an upstream error. |
-| `INCOMPLETE` | The response hit a token/time limit before completing. |
 
 ---
 
@@ -2788,17 +2624,6 @@ Observable state of a circuit breaker.
 | `CLOSED` | Requests flow through normally. |
 | `OPEN` | All requests are rejected; the circuit is waiting for the backoff to elapse. |
 | `HALF_OPEN` | One probe request is allowed through to test service health. |
-
----
-
-#### RetryClass
-
-Classification of a single attempt error.
-
-| Value | Description |
-|-------|-------------|
-| `TRANSIENT` | Transient error — advance to the next service in the chain. |
-| `TERMINAL` | Terminal error — return immediately without consulting further services. |
 
 ---
 
@@ -2840,25 +2665,5 @@ All errors that can occur when using `liter-llm`.
 | `OUTBOUND_FORBIDDEN` | An outbound request was blocked by the active `OutboundPolicy`. Returned when `register_custom_provider` is called with a `base_url` that violates the policy (e.g. a private-range IP under `DenyPrivate`), or when the per-connection DNS resolver detects a forbidden address at connect time. |
 | `IDEMPOTENCY_CONFLICT` | A different request body was submitted for an existing `Idempotency-Key`. Per the OpenAI `Idempotency-Key` convention, once a key is used with a particular request body, subsequent requests using the same key must carry an identical body.  A body mismatch is a hard error (not retryable). HTTP equivalent: 409 Conflict. |
 | `IDEMPOTENCY_IN_FLIGHT` | The same `Idempotency-Key` is already in-flight (another request with the same key is currently being processed). The caller should wait briefly and retry.  The response is not yet available, and this request has been short-circuited to avoid running the operation twice. HTTP equivalent: 409 Conflict (retryable after a brief delay). |
-
----
-
-#### UsageSinkError
-
-Error returned by a `UsageSink` implementation.
-
-| Variant | Description |
-|---------|-------------|
-| `BACKEND` | The sink's backend failed to accept the event. |
-
----
-
-#### IdempotencyStoreError
-
-Error type for `IdempotencyStore` operations.
-
-| Variant | Description |
-|---------|-------------|
-| `BACKEND` | A backend-specific error occurred. |
 
 ---

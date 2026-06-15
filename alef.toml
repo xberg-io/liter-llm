@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.25.14"
+alef_version = "0.25.15"
 languages = [
   "python",
   "node",
@@ -177,7 +177,14 @@ package_name = "LiterLlm"
 # Until alef-backend-swift wires Vec<Named> through needs_json_bridge, exclude
 # the function from the Swift binding (consumers can still call
 # RustBridge.allProviders() directly if needed).
-exclude_functions = ["all_providers"]
+# `chat_stream` is excluded for Swift because alef-backend-swift fails to emit
+# `type DefaultClient;` inside the stream-handle extern "Rust" block (only the
+# stream-handle type is declared, but the `&DefaultClient` parameter requires
+# DefaultClient itself to be declared in the same bridge block). This is an
+# upstream alef-backend-swift codegen bug; once fixed, restore streaming for
+# Swift by removing `chat_stream` from this list. Swift consumers can still
+# stream by calling the OpenAI-compatible SSE endpoint directly until then.
+exclude_functions = ["all_providers", "chat_stream"]
 
 [crates.swift.client_constructor_body]
 DefaultClient = """    let mut config = liter_llm::ClientConfig::new(api_key);
@@ -1948,7 +1955,7 @@ name = "liter_llm_ffi"
 name = "LiterLlm"
 
 [crates.e2e.registry.packages.zig]
-hash = "liter_llm-1.6.0-rc.0-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
+hash = "liter_llm-1.6.0-rc.1-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
 
 [crates.e2e.registry.packages.homebrew]
 tap = "kreuzberg-dev/homebrew-tap"

@@ -26,6 +26,12 @@ constructed, or if the resolved provider configuration is invalid.
 def create_client(api_key, base_url, timeout_secs, max_retries, model_hint)
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = create_client("value", "value", 42, 42, "value")
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -37,6 +43,7 @@ def create_client(api_key, base_url, timeout_secs, max_retries, model_hint)
 | `model_hint` | `String.t() \| nil` | No | The model hint |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Returns `{:error, reason}`
 
 ---
@@ -59,6 +66,12 @@ contains unknown fields.
 def create_client_from_json(json)
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = create_client_from_json("value")
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -66,6 +79,7 @@ def create_client_from_json(json)
 | `json` | `String.t()` | Yes | The json |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Returns `{:error, reason}`
 
 ---
@@ -89,6 +103,12 @@ no model prefixes).
 def register_custom_provider(config)
 ```
 
+**Example:**
+
+```elixir
+:ok = register_custom_provider(%{{}})
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -96,6 +116,7 @@ def register_custom_provider(config)
 | `config` | `CustomProviderConfig` | Yes | The configuration options |
 
 **Returns:** `:ok`
+
 **Errors:** Returns `{:error, reason}`
 
 ---
@@ -118,6 +139,12 @@ Returns an error only if the internal lock is poisoned.
 def unregister_custom_provider(name)
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = unregister_custom_provider("value")
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -125,6 +152,7 @@ def unregister_custom_provider(name)
 | `name` | `String.t()` | Yes | The name |
 
 **Returns:** `boolean()`
+
 **Errors:** Returns `{:error, reason}`
 
 ---
@@ -134,16 +162,24 @@ def unregister_custom_provider(name)
 Return the capability flags for a named provider.
 
 Performs an O(n) linear scan over the embedded registry (142 entries).
-Returns a `'static` reference valid for the lifetime of the process.
+Returns an owned value so that bindings can box/copy it across the FFI
+boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+so this is a cheap memcpy of seven `bool` fields.
 
-For unknown `provider_name` values the function returns a reference to an
-all-`false` sentinel so callers never need to handle `Option`.
+For unknown `provider_name` values the function returns an all-`false`
+sentinel so callers never need to handle `Option`.
 
 **Signature:**
 
 ```elixir
 @spec capabilities(provider_name) :: {:ok, term()} | {:error, term()}
 def capabilities(provider_name)
+```
+
+**Example:**
+
+```elixir
+{:ok, result} = capabilities("value")
 ```
 
 **Parameters:**
@@ -171,7 +207,14 @@ To query capability flags for a specific provider use `capabilities`.
 def all_providers()
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = all_providers()
+```
+
 **Returns:** `list(ProviderConfig)`
+
 **Errors:** Returns `{:error, reason}`
 
 ---
@@ -192,7 +235,14 @@ The returned reference points into the static registry — no allocation.
 def complex_provider_names()
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = complex_provider_names()
+```
+
 **Returns:** `list(String.t())`
+
 **Errors:** Returns `{:error, reason}`
 
 ---
@@ -206,7 +256,7 @@ Returns `nil` if the model is not present in the embedded pricing registry.
 Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
 
 When an exact model name match is not found, progressively shorter prefixes
-are tried by stripping from the last `-` or `.` separator. For example,
+are tried by stripping from the last `-` or `.` separator.  For example,
 `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 
 **Signature:**
@@ -214,6 +264,12 @@ are tried by stripping from the last `-` or `.` separator. For example,
 ```elixir
 @spec completion_cost(model, prompt_tokens, completion_tokens) :: {:ok, term()} | {:error, term()}
 def completion_cost(model, prompt_tokens, completion_tokens)
+```
+
+**Example:**
+
+```elixir
+{:ok, result} = completion_cost("value", 42, 42)
 ```
 
 **Parameters:**
@@ -250,6 +306,12 @@ registry, mirroring `completion_cost`.
 def completion_cost_with_cache(model, prompt_tokens, cached_tokens, completion_tokens)
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = completion_cost_with_cache("value", 42, 42, 42)
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -280,6 +342,12 @@ Panics if the global registry lock is poisoned.
 def clear()
 ```
 
+**Example:**
+
+```elixir
+:ok = clear()
+```
+
 **Returns:** `:ok`
 
 ---
@@ -304,6 +372,12 @@ Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
 def count_tokens(model, text)
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = count_tokens("value", "value")
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -312,6 +386,7 @@ def count_tokens(model, text)
 | `text` | `String.t()` | Yes | The text |
 
 **Returns:** `integer()`
+
 **Errors:** Returns `{:error, reason}`
 
 ---
@@ -337,6 +412,12 @@ if tokenization fails for any message.
 def count_request_tokens(model, req)
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = count_request_tokens("value", %{{}})
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -345,354 +426,8 @@ def count_request_tokens(model, req)
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
 **Returns:** `integer()`
+
 **Errors:** Returns `{:error, reason}`
-
----
-
-#### record_cache_state()
-
-Set the cache outcome for the current task.
-
-Uses `try_with` so that callers that run outside a `CACHE_STATE_CELL.scope`
-(e.g. in tests that do not involve `HooksLayer`) are silently ignored rather
-than panicking.
-
-**Signature:**
-
-```elixir
-@spec record_cache_state(state) :: {:ok, term()} | {:error, term()}
-def record_cache_state(state)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `state` | `CacheState` | Yes | The cache state |
-
-**Returns:** `:ok`
-
----
-
-#### record_cache_hit()
-
-Record a cache hit metric.
-
-Call from cache layer implementations to emit `gen_ai.cache.hit`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```elixir
-@spec record_cache_hit(system, model, operation) :: {:ok, term()} | {:error, term()}
-def record_cache_hit(system, model, operation)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `String.t()` | Yes | The system |
-| `model` | `String.t()` | Yes | The model |
-| `operation` | `String.t()` | Yes | The operation |
-
-**Returns:** `:ok`
-
----
-
-#### record_cache_miss()
-
-Record a cache miss metric.
-
-Call from cache layer implementations to emit `gen_ai.cache.miss`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```elixir
-@spec record_cache_miss(system, model, operation) :: {:ok, term()} | {:error, term()}
-def record_cache_miss(system, model, operation)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `String.t()` | Yes | The system |
-| `model` | `String.t()` | Yes | The model |
-| `operation` | `String.t()` | Yes | The operation |
-
-**Returns:** `:ok`
-
----
-
-#### record_cache_stale()
-
-Record a stale cache metric.
-
-Call from cache layer implementations to emit `gen_ai.cache.stale`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```elixir
-@spec record_cache_stale(system, model, operation) :: {:ok, term()} | {:error, term()}
-def record_cache_stale(system, model, operation)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `String.t()` | Yes | The system |
-| `model` | `String.t()` | Yes | The model |
-| `operation` | `String.t()` | Yes | The operation |
-
-**Returns:** `:ok`
-
----
-
-#### record_circuit_trip()
-
-Record a circuit breaker trip.
-
-Call from `CircuitLayer` when the circuit opens.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```elixir
-@spec record_circuit_trip(system, model) :: {:ok, term()} | {:error, term()}
-def record_circuit_trip(system, model)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `String.t()` | Yes | The system |
-| `model` | `String.t()` | Yes | The model |
-
-**Returns:** `:ok`
-
----
-
-#### record_retry_attempt()
-
-Record a retry attempt.
-
-Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```elixir
-@spec record_retry_attempt(system, model, operation) :: {:ok, term()} | {:error, term()}
-def record_retry_attempt(system, model, operation)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `String.t()` | Yes | The system |
-| `model` | `String.t()` | Yes | The model |
-| `operation` | `String.t()` | Yes | The operation |
-
-**Returns:** `:ok`
-
----
-
-#### record_cache_tier_hit()
-
-Record a per-tier cache hit.
-
-`tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```elixir
-@spec record_cache_tier_hit(system, model, tier) :: {:ok, term()} | {:error, term()}
-def record_cache_tier_hit(system, model, tier)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `String.t()` | Yes | The system |
-| `model` | `String.t()` | Yes | The model |
-| `tier` | `String.t()` | Yes | The tier |
-
-**Returns:** `:ok`
-
----
-
-#### record_cache_tier_miss()
-
-Record a per-tier cache miss.
-
-`tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```elixir
-@spec record_cache_tier_miss(system, model, tier) :: {:ok, term()} | {:error, term()}
-def record_cache_tier_miss(system, model, tier)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `String.t()` | Yes | The system |
-| `model` | `String.t()` | Yes | The model |
-| `tier` | `String.t()` | Yes | The tier |
-
-**Returns:** `:ok`
-
----
-
-#### record_budget_spend()
-
-Record cumulative spend for a specific budget dimension.
-
-Emits `gen_ai.budget.spend_usd` with dimension attributes.
-Call from `record` after each
-successful completion. If the meter has not been initialized, this
-call is a no-op.
-
-**Signature:**
-
-```elixir
-@spec record_budget_spend(model, provider, tenant_id, user_id, api_key_id, cost_usd) :: {:ok, term()} | {:error, term()}
-def record_budget_spend(model, provider, tenant_id, user_id, api_key_id, cost_usd)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `model` | `String.t()` | Yes | The model |
-| `provider` | `String.t()` | Yes | The provider |
-| `tenant_id` | `String.t() \| nil` | No | The tenant id |
-| `user_id` | `String.t() \| nil` | No | The user id |
-| `api_key_id` | `String.t() \| nil` | No | The api key id |
-| `cost_usd` | `float()` | Yes | The cost usd |
-
-**Returns:** `:ok`
-
----
-
-#### record_budget_rejection()
-
-Record a budget-rejection event.
-
-Emits `gen_ai.budget.rejection` with the triggering dimension.
-Call from `check` when
-returning `Reject`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```elixir
-@spec record_budget_rejection(model, provider, dimension) :: {:ok, term()} | {:error, term()}
-def record_budget_rejection(model, provider, dimension)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `model` | `String.t()` | Yes | The model |
-| `provider` | `String.t()` | Yes | The provider |
-| `dimension` | `String.t()` | Yes | The dimension |
-
-**Returns:** `:ok`
-
----
-
-#### record_realtime_session_duration()
-
-Record the lifetime of a completed Realtime WebSocket session.
-
-Emits `gen_ai.realtime.session.duration` (seconds).
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```elixir
-@spec record_realtime_session_duration(provider, duration_secs) :: {:ok, term()} | {:error, term()}
-def record_realtime_session_duration(provider, duration_secs)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `provider` | `String.t()` | Yes | The provider |
-| `duration_secs` | `float()` | Yes | The duration secs |
-
-**Returns:** `:ok`
-
----
-
-#### record_realtime_event()
-
-Record a single Realtime event being forwarded.
-
-Emits `gen_ai.realtime.event.count` with `gen_ai.realtime.direction`
-(`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
-`gen_ai.system`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```elixir
-@spec record_realtime_event(provider, direction, event_type) :: {:ok, term()} | {:error, term()}
-def record_realtime_event(provider, direction, event_type)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `provider` | `String.t()` | Yes | The provider |
-| `direction` | `String.t()` | Yes | The direction |
-| `event_type` | `String.t()` | Yes | The event type |
-
-**Returns:** `:ok`
-
----
-
-#### record_realtime_bytes()
-
-Record audio bytes forwarded over a Realtime WebSocket session.
-
-Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
-`gen_ai.realtime.direction` attributes.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```elixir
-@spec record_realtime_bytes(provider, direction, byte_count) :: {:ok, term()} | {:error, term()}
-def record_realtime_bytes(provider, direction, byte_count)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `provider` | `String.t()` | Yes | The provider |
-| `direction` | `String.t()` | Yes | The direction |
-| `byte_count` | `integer()` | Yes | The byte count |
-
-**Returns:** `:ok`
 
 ---
 
@@ -701,7 +436,7 @@ def record_realtime_bytes(provider, direction, byte_count)
 Assert that `current_len + incoming` does not exceed `limit`.
 
 Call this before appending `incoming` bytes to any buffer that must
-stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
+stay below `limit`.  Returns `Err(LiterLlmError.Streaming)` on overflow
 and emits a `tracing.warn!` with context.
 
 **Signature:**
@@ -709,6 +444,12 @@ and emits a `tracing.warn!` with context.
 ```elixir
 @spec check_bound(context, current_len, incoming, limit) :: {:ok, term()} | {:error, term()}
 def check_bound(context, current_len, incoming, limit)
+```
+
+**Example:**
+
+```elixir
+:ok = check_bound("value", 42, 42, 42)
 ```
 
 **Parameters:**
@@ -721,6 +462,7 @@ def check_bound(context, current_len, incoming, limit)
 | `limit` | `integer()` | Yes | The limit |
 
 **Returns:** `:ok`
+
 **Errors:** Returns `{:error, reason}`
 
 ---
@@ -749,6 +491,12 @@ present and no crypto provider installation is needed.
 ```elixir
 @spec ensure_crypto_provider() :: {:ok, term()} | {:error, term()}
 def ensure_crypto_provider()
+```
+
+**Example:**
+
+```elixir
+:ok = ensure_crypto_provider()
 ```
 
 **Returns:** `:ok`
@@ -873,6 +621,14 @@ Configuration for budget enforcement.
 def default()
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = BudgetConfig.default()
+```
+
+**Returns:** `BudgetConfig`
+
 ---
 
 #### CacheConfig
@@ -894,6 +650,14 @@ Configuration for the response cache.
 ```elixir
 def default()
 ```
+
+**Example:**
+
+```elixir
+{:ok, result} = CacheConfig.default()
+```
+
+**Returns:** `CacheConfig`
 
 ---
 
@@ -1010,88 +774,21 @@ Process a single chunk.
 def process(chunk)
 ```
 
----
-
-#### CircuitPolicy
-
-Policy that drives a circuit breaker's state transitions.
-
-Implement this trait to provide custom failure-detection and
-recovery logic. The default implementation is `ExponentialBackoffCircuit`.
-
-### Functions
-
-#### record_success()
-
-Called when the inner service returns a successful response.
-
-**Signature:**
+**Example:**
 
 ```elixir
-def record_success()
+{:ok, result} = instance.process(%{{}})
 ```
 
-#### record_failure()
+**Parameters:**
 
-Called when the inner service returns an error.
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `chunk` | `ChatCompletionChunk` | Yes | The chat completion chunk |
 
-The policy decides whether to count the error as a circuit-trip failure.
+**Returns:** `ChatCompletionChunk | nil`
 
-**Signature:**
-
-```elixir
-def record_failure()
-```
-
-#### should_allow()
-
-Returns `true` when a request should be allowed to proceed.
-
-`false` means the circuit is open and the request should be rejected.
-
-**Signature:**
-
-```elixir
-def should_allow()
-```
-
-#### state()
-
-Returns the current circuit state.
-
-**Signature:**
-
-```elixir
-def state()
-```
-
-#### release_probe_slot()
-
-Called when a probe request is dropped without completing (e.g. due to
-panic or cancellation) to release the probe slot.
-
-The default implementation is a no-op. Policies that gate probe slots
-with a boolean flag (like `ExponentialBackoffCircuit`) should override
-this to clear the flag.
-
-**Signature:**
-
-```elixir
-def release_probe_slot()
-```
-
----
-
-#### ClassifyContext
-
-Immutable context passed to every `RouteClassifier.classify` call.
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `prompt` | `String.t()` | — | The user-facing prompt text. |
-| `system_prompt` | `String.t() \| nil` | `nil` | Optional system prompt from the request. |
-| `metadata` | `map()` | — | Arbitrary metadata attached to the request (e.g. tenant, session ID). |
-| `available_models` | `list(String.t())` | — | The set of model identifiers the router currently considers available. |
+**Errors:** Returns `{:error, reason}`
 
 ---
 
@@ -1223,6 +920,22 @@ headers are cached at construction to avoid redundant encoding on every request.
 def chat(req)
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = instance.chat(%{{}})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `ChatCompletionResponse`
+
+**Errors:** Returns `{:error, reason}`
+
 #### chat_stream()
 
 **Signature:**
@@ -1230,6 +943,22 @@ def chat(req)
 ```elixir
 def chat_stream(req)
 ```
+
+**Example:**
+
+```elixir
+{:ok, result} = instance.chat_stream(%{{}})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `String.t()`
+
+**Errors:** Returns `{:error, reason}`
 
 #### embed()
 
@@ -1239,6 +968,22 @@ def chat_stream(req)
 def embed(req)
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = instance.embed(%{{}})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `EmbeddingRequest` | Yes | The embedding request |
+
+**Returns:** `EmbeddingResponse`
+
+**Errors:** Returns `{:error, reason}`
+
 #### list_models()
 
 **Signature:**
@@ -1246,6 +991,16 @@ def embed(req)
 ```elixir
 def list_models()
 ```
+
+**Example:**
+
+```elixir
+{:ok, result} = instance.list_models()
+```
+
+**Returns:** `ModelsListResponse`
+
+**Errors:** Returns `{:error, reason}`
 
 #### image_generate()
 
@@ -1255,6 +1010,22 @@ def list_models()
 def image_generate(req)
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = instance.image_generate(%{{}})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateImageRequest` | Yes | The create image request |
+
+**Returns:** `ImagesResponse`
+
+**Errors:** Returns `{:error, reason}`
+
 #### speech()
 
 **Signature:**
@@ -1262,6 +1033,22 @@ def image_generate(req)
 ```elixir
 def speech(req)
 ```
+
+**Example:**
+
+```elixir
+{:ok, result} = instance.speech(%{{}})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateSpeechRequest` | Yes | The create speech request |
+
+**Returns:** `binary()`
+
+**Errors:** Returns `{:error, reason}`
 
 #### transcribe()
 
@@ -1271,6 +1058,22 @@ def speech(req)
 def transcribe(req)
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = instance.transcribe(%{{}})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
+
+**Returns:** `TranscriptionResponse`
+
+**Errors:** Returns `{:error, reason}`
+
 #### moderate()
 
 **Signature:**
@@ -1278,6 +1081,22 @@ def transcribe(req)
 ```elixir
 def moderate(req)
 ```
+
+**Example:**
+
+```elixir
+{:ok, result} = instance.moderate(%{{}})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ModerationRequest` | Yes | The moderation request |
+
+**Returns:** `ModerationResponse`
+
+**Errors:** Returns `{:error, reason}`
 
 #### rerank()
 
@@ -1287,6 +1106,22 @@ def moderate(req)
 def rerank(req)
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = instance.rerank(%{{}})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `RerankRequest` | Yes | The rerank request |
+
+**Returns:** `RerankResponse`
+
+**Errors:** Returns `{:error, reason}`
+
 #### search()
 
 **Signature:**
@@ -1294,6 +1129,22 @@ def rerank(req)
 ```elixir
 def search(req)
 ```
+
+**Example:**
+
+```elixir
+{:ok, result} = instance.search(%{{}})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `SearchRequest` | Yes | The search request |
+
+**Returns:** `SearchResponse`
+
+**Errors:** Returns `{:error, reason}`
 
 #### ocr()
 
@@ -1303,6 +1154,22 @@ def search(req)
 def ocr(req)
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = instance.ocr(%{{}})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `OcrRequest` | Yes | The ocr request |
+
+**Returns:** `OcrResponse`
+
+**Errors:** Returns `{:error, reason}`
+
 #### create_file()
 
 **Signature:**
@@ -1310,6 +1177,22 @@ def ocr(req)
 ```elixir
 def create_file(req)
 ```
+
+**Example:**
+
+```elixir
+{:ok, result} = instance.create_file(%{{}})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateFileRequest` | Yes | The create file request |
+
+**Returns:** `FileObject`
+
+**Errors:** Returns `{:error, reason}`
 
 #### retrieve_file()
 
@@ -1319,6 +1202,22 @@ def create_file(req)
 def retrieve_file(file_id)
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = instance.retrieve_file("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `file_id` | `String.t()` | Yes | The file id |
+
+**Returns:** `FileObject`
+
+**Errors:** Returns `{:error, reason}`
+
 #### delete_file()
 
 **Signature:**
@@ -1326,6 +1225,22 @@ def retrieve_file(file_id)
 ```elixir
 def delete_file(file_id)
 ```
+
+**Example:**
+
+```elixir
+{:ok, result} = instance.delete_file("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `file_id` | `String.t()` | Yes | The file id |
+
+**Returns:** `DeleteResponse`
+
+**Errors:** Returns `{:error, reason}`
 
 #### list_files()
 
@@ -1335,6 +1250,22 @@ def delete_file(file_id)
 def list_files(query)
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = instance.list_files(%{{}})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `FileListQuery \| nil` | No | The file list query |
+
+**Returns:** `FileListResponse`
+
+**Errors:** Returns `{:error, reason}`
+
 #### file_content()
 
 **Signature:**
@@ -1342,6 +1273,22 @@ def list_files(query)
 ```elixir
 def file_content(file_id)
 ```
+
+**Example:**
+
+```elixir
+{:ok, result} = instance.file_content("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `file_id` | `String.t()` | Yes | The file id |
+
+**Returns:** `binary()`
+
+**Errors:** Returns `{:error, reason}`
 
 #### create_batch()
 
@@ -1351,6 +1298,22 @@ def file_content(file_id)
 def create_batch(req)
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = instance.create_batch(%{{}})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateBatchRequest` | Yes | The create batch request |
+
+**Returns:** `BatchObject`
+
+**Errors:** Returns `{:error, reason}`
+
 #### retrieve_batch()
 
 **Signature:**
@@ -1358,6 +1321,22 @@ def create_batch(req)
 ```elixir
 def retrieve_batch(batch_id)
 ```
+
+**Example:**
+
+```elixir
+{:ok, result} = instance.retrieve_batch("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `String.t()` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Returns `{:error, reason}`
 
 #### list_batches()
 
@@ -1367,6 +1346,22 @@ def retrieve_batch(batch_id)
 def list_batches(query)
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = instance.list_batches(%{{}})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `BatchListQuery \| nil` | No | The batch list query |
+
+**Returns:** `BatchListResponse`
+
+**Errors:** Returns `{:error, reason}`
+
 #### cancel_batch()
 
 **Signature:**
@@ -1375,13 +1370,21 @@ def list_batches(query)
 def cancel_batch(batch_id)
 ```
 
-#### retrieve()
-
-**Signature:**
+**Example:**
 
 ```elixir
-def retrieve(batch_id)
+{:ok, result} = instance.cancel_batch("value")
 ```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `String.t()` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Returns `{:error, reason}`
 
 #### wait_for_batch()
 
@@ -1402,6 +1405,23 @@ Returns `BatchWaitError.Client` for underlying client errors.
 def wait_for_batch(batch_id, config)
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = instance.wait_for_batch("value", %{{}})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `String.t()` | Yes | The batch id |
+| `config` | `WaitForBatchConfig` | Yes | The configuration options |
+
+**Returns:** `BatchObject`
+
+**Errors:** Returns `{:error, reason}`
+
 #### create_response()
 
 **Signature:**
@@ -1409,6 +1429,22 @@ def wait_for_batch(batch_id, config)
 ```elixir
 def create_response(req)
 ```
+
+**Example:**
+
+```elixir
+{:ok, result} = instance.create_response(%{{}})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateResponseRequest` | Yes | The create response request |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Returns `{:error, reason}`
 
 #### retrieve_response()
 
@@ -1418,6 +1454,22 @@ def create_response(req)
 def retrieve_response(response_id)
 ```
 
+**Example:**
+
+```elixir
+{:ok, result} = instance.retrieve_response("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `response_id` | `String.t()` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Returns `{:error, reason}`
+
 #### cancel_response()
 
 **Signature:**
@@ -1425,6 +1477,22 @@ def retrieve_response(response_id)
 ```elixir
 def cancel_response(response_id)
 ```
+
+**Example:**
+
+```elixir
+{:ok, result} = instance.cancel_response("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `response_id` | `String.t()` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Returns `{:error, reason}`
 
 ---
 
@@ -1501,78 +1569,6 @@ Embedding response.
 
 ---
 
-#### ExponentialBackoffCircuit
-
-Circuit breaker with exponential backoff.
-
-Opens after `failure_threshold` consecutive failures. After
-`base_backoff` (doubled on each successive open → half-open → open cycle,
-up to `max_backoff`), the circuit enters `CircuitState.HalfOpen` and
-allows one probe request through.
-
-### Functions
-
-#### new()
-
-Create a new policy.
-
-- `failure_threshold`: consecutive failures required to open the circuit.
-- `base_backoff`: initial half-open retry delay (doubles each open cycle,
-  capped at 2 minutes).
-
-**Signature:**
-
-```elixir
-def new(failure_threshold, base_backoff)
-```
-
-#### record_success()
-
-**Signature:**
-
-```elixir
-def record_success()
-```
-
-#### record_failure()
-
-**Signature:**
-
-```elixir
-def record_failure()
-```
-
-#### should_allow()
-
-**Signature:**
-
-```elixir
-def should_allow()
-```
-
-#### state()
-
-**Signature:**
-
-```elixir
-def state()
-```
-
-#### release_probe_slot()
-
-Release the probe slot without recording success or failure.
-
-Called by the `ProbeGuard` when the probe future is dropped before
-completing (e.g. cancelled or panicked).
-
-**Signature:**
-
-```elixir
-def release_probe_slot()
-```
-
----
-
 #### FileListQuery
 
 Query parameters for listing files.
@@ -1610,43 +1606,6 @@ An uploaded file object.
 | `filename` | `String.t()` | — | Filename. |
 | `purpose` | `String.t()` | — | File purpose. |
 | `status` | `String.t() \| nil` | `nil` | Processing status (e.g., `"uploaded"`, `"processed"`). |
-
----
-
-#### FixedDelayHedge
-
-A simple `HedgePolicy` that fires hedges at fixed intervals.
-
-### Functions
-
-#### new()
-
-Create a new policy.
-
-- `delay`: how long to wait before launching each additional attempt.
-- `max_attempts`: maximum concurrent copies of the request (≥ 1).
-
-**Signature:**
-
-```elixir
-def new(delay, max_attempts)
-```
-
-#### delay_for_attempt()
-
-**Signature:**
-
-```elixir
-def delay_for_attempt(attempt, latency_so_far)
-```
-
-#### max_attempts()
-
-**Signature:**
-
-```elixir
-def max_attempts()
-```
 
 ---
 
@@ -1708,45 +1667,19 @@ move it into the returned future without a clone, making the
 def check(upstream)
 ```
 
----
-
-#### HedgePolicy
-
-Policy that controls when and how many hedged requests are launched.
-
-Implement this trait to provide custom hedging strategies such as
-latency-percentile-based delays or per-model adaptive delays.
-
-### Functions
-
-#### delay_for_attempt()
-
-Returns the delay before launching attempt `attempt` (1-indexed; attempt
-1 is the initial request, attempt 2 is the first hedge, etc.).
-
-- `attempt`: 1-indexed attempt number.
-- `latency_so_far`: elapsed time since the first request was dispatched.
-
-Return `nil` to skip this attempt (and all subsequent ones).
-
-**Signature:**
+**Example:**
 
 ```elixir
-def delay_for_attempt(attempt, latency_so_far)
+{:ok, result} = instance.check("value")
 ```
 
-#### max_attempts()
+**Parameters:**
 
-Maximum number of concurrent attempts (including the original request).
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `upstream` | `String.t()` | Yes | The upstream |
 
-Must be ≥ 1. Values above 3 are rarely useful and increase provider
-costs significantly.
-
-**Signature:**
-
-```elixir
-def max_attempts()
-```
+**Returns:** `HealthStatus`
 
 ---
 
@@ -1989,7 +1922,7 @@ discounted rate and the remainder at the regular input rate.
 Static capability flags for a provider.
 
 Each flag indicates whether the provider's models *generally* support that
-feature. For providers that aggregate many underlying models (e.g. Bedrock,
+feature.  For providers that aggregate many underlying models (e.g. Bedrock,
 OpenRouter, vLLM) the flags reflect the superset of available model
 capabilities — a flag being `true` means at least one model supports the
 feature, not every model.
@@ -2015,7 +1948,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function. Keeping
+format, which are accessed via the `capabilities` function.  Keeping
 these fields separate preserves backward compatibility with all generated
 binding code that constructs `ProviderConfig` using struct literal syntax.
 
@@ -2050,6 +1983,14 @@ Configuration for per-model rate limits.
 ```elixir
 def default()
 ```
+
+**Example:**
+
+```elixir
+{:ok, result} = RateLimitConfig.default()
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -2195,7 +2136,7 @@ An individual search result.
 The value broadcast from a singleflight leader to all followers.
 
 `Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`. The `Arc` adds only a reference-count
+broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
 bump per follower, which is negligible under the burst loads this layer targets.
 
 ---
@@ -2342,35 +2283,6 @@ A segment of transcribed audio with timing information.
 
 ---
 
-#### UpstreamDiscover
-
-A typed extension of `tower.discover.Discover` for LLM upstream
-services.
-
-Implementors plug in their own discovery mechanism — file-based configs,
-etcd watches, HTTP polling — and the `DynamicRouter` handles the rest.
-The key type must be `String` so that provider names are human-readable in
-logs and metrics.
-
-### Object safety
-
-`UpstreamDiscover` is **not** object-safe and **must not** be stored as
-`dyn UpstreamDiscover`. It is a generic bound used exclusively as a type
-parameter for `DynamicRouter<D>`. All discovery implementations are
-monomorphised at compile time.
-
-If you need a runtime registry of heterogeneous discovery sources, wrap
-each source in an `Arc<Mutex<Box<dyn …>>>` and poll them via a custom
-`Stream` adapter — do not store them as `dyn UpstreamDiscover`.
-
-### Note for 1.A integration
-
-If the router encounters a discovery error, it wraps it in
-`RouterError.Discover`. The 1.A error-consolidation workstream should
-replace this local enum with the canonical error hierarchy.
-
----
-
 #### Usage
 
 Token-usage accounting returned by the provider on each completion / embedding call.
@@ -2399,12 +2311,15 @@ User message in the conversation.
 
 Configuration for polling a batch until terminal status.
 
+All time values are in seconds as `f64` so the struct bridges across FFI
+boundaries without requiring a `Duration` shim.
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `initial_interval` | `integer()` | `5000ms` | Initial interval between polls. |
-| `max_interval` | `integer()` | `60000ms` | Maximum interval between polls (backoff plateau). |
+| `initial_interval_secs` | `float()` | `5` | Initial interval between polls, in seconds. |
+| `max_interval_secs` | `float()` | `60` | Maximum interval between polls (backoff plateau), in seconds. |
 | `backoff_multiplier` | `float()` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
-| `timeout` | `integer() \| nil` | `nil` | Optional timeout — polling fails if this duration is exceeded. |
+| `timeout_secs` | `float() \| nil` | `nil` | Optional timeout in seconds — polling fails if this duration is exceeded. |
 
 ### Functions
 
@@ -2415,6 +2330,14 @@ Configuration for polling a batch until terminal status.
 ```elixir
 def default()
 ```
+
+**Example:**
+
+```elixir
+{:ok, result} = WaitForBatchConfig.default()
+```
+
+**Returns:** `WaitForBatchConfig`
 
 ---
 
@@ -2446,7 +2369,7 @@ User message content as either plain text or a list of multimodal parts.
 
 ---
 
-#### TypesContentPart
+#### ContentPart
 
 A single content part in a user message — text, image, document, or audio.
 
@@ -2659,7 +2582,7 @@ How the API key is sent in the HTTP request.
 
 The streaming wire format a provider uses for its response stream.
 
-Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
+Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
 a proprietary binary EventStream framing.
 
 Deserialized from the `streaming_format` JSON field via `serde`.
@@ -2681,106 +2604,6 @@ Auth scheme used by a provider.
 | `api_key` | `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). |
 | `none` | No authentication header required. |
 | `unknown` | Unrecognised auth scheme — falls back to bearer. |
-
----
-
-#### OnMatch
-
-Action taken when a `RegexGuardrail` finds a match.
-
-| Value | Description |
-|-------|-------------|
-| `block` | Block the request/response with the given error code and reason prefix. — Fields: `code`: `integer()`, `reason_prefix`: `String.t()` |
-| `redact` | Replace the matched portion with the given replacement string. — Fields: `replacement`: `String.t()` |
-
----
-
-#### CelAction
-
-The action taken when a `CelGuardrail`'s expression evaluates to `true`.
-
-| Value | Description |
-|-------|-------------|
-| `block` | Block the request/response with the given code and reason. — Fields: `code`: `integer()`, `reason`: `String.t()` |
-| `mutate` | Replace the payload with a static JSON value (e.g., for redaction). — Fields: `new_payload`: `term()` |
-
----
-
-#### GuardrailStage
-
-The lifecycle stage at which a guardrail runs.
-
-| Value | Description |
-|-------|-------------|
-| `input` | The outgoing prompt / request, before forwarding to the upstream provider. |
-| `output` | The full response from the upstream provider (non-streaming). |
-| `output_chunk` | A single chunk in a streaming response. Guardrails here are called once per chunk and may block or mutate individual chunks. |
-
----
-
-#### GuardrailDecision
-
-The outcome of a guardrail check.
-
-| Value | Description |
-|-------|-------------|
-| `allow` | The check passed. Continue to the next guardrail or to the inner service. |
-| `block` | The check failed. Short-circuit the request/response with this reason. `code` should be ≥ 1000 to avoid collision with HTTP status codes and to facilitate cross-language error mapping. — Fields: `reason`: `String.t()`, `code`: `integer()` |
-| `mutate` | Rewrite the payload. The provided `new_payload` replaces the original `request` or `response` before it reaches the next stage. For `OutputChunk` stage: `new_payload` replaces the chunk content. — Fields: `new_payload`: `term()` |
-
----
-
-#### CacheState
-
-Cache outcome for a single request.
-
-| Value | Description |
-|-------|-------------|
-| `miss` | No cache entry found; request was sent to the provider. |
-| `exact_hit` | Exact-match cache hit; provider was not called. |
-| `semantic_hit` | Semantic-similarity cache hit; provider was not called. |
-| `stale_hit` | Stale entry served (TTL expired but no fresh entry was available). |
-| `bypass` | Cache lookup was skipped (bypass policy, streaming request, etc.). |
-
----
-
-#### UsageEventOutcome
-
-High-level outcome of the request.
-
-| Value | Description |
-|-------|-------------|
-| `success` | Inner service returned a successful response. |
-| `error` | Inner service returned an error (non-timeout). |
-| `cancelled` | Request was cancelled before the inner service responded. |
-| `timed_out` | Inner service timed out. |
-
----
-
-#### ContentPart
-
-A single content part within a conversation item.
-
-Conversation items may carry text, audio, or an image (by reference).
-
-| Value | Description |
-|-------|-------------|
-| `text` | A plain-text segment. — Fields: `text`: `String.t()` |
-| `audio` | A raw audio segment encoded as base64. — Fields: `base64`: `String.t()` |
-| `image_ref` | An image referenced by a URL or ID rather than inline bytes. — Fields: `url`: `String.t()` |
-
----
-
-#### ResponseStatus
-
-Terminal status for a completed `RealtimeEvent.ResponseDone`.
-
-| Value | Description |
-|-------|-------------|
-| `completed` | The response was produced in full. |
-| `cancelled` | The response was cancelled before completion. |
-| `failed` | The response failed due to an upstream error. |
-| `incomplete` | The response hit a token/time limit before completing. |
 
 ---
 
@@ -2815,17 +2638,6 @@ Observable state of a circuit breaker.
 | `closed` | Requests flow through normally. |
 | `open` | All requests are rejected; the circuit is waiting for the backoff to elapse. |
 | `half_open` | One probe request is allowed through to test service health. |
-
----
-
-#### RetryClass
-
-Classification of a single attempt error.
-
-| Value | Description |
-|-------|-------------|
-| `transient` | Transient error — advance to the next service in the chain. |
-| `terminal` | Terminal error — return immediately without consulting further services. |
 
 ---
 
@@ -2867,25 +2679,5 @@ All errors that can occur when using `liter-llm`.
 | `outbound_forbidden` | An outbound request was blocked by the active `OutboundPolicy`. Returned when `register_custom_provider` is called with a `base_url` that violates the policy (e.g. a private-range IP under `DenyPrivate`), or when the per-connection DNS resolver detects a forbidden address at connect time. |
 | `idempotency_conflict` | A different request body was submitted for an existing `Idempotency-Key`. Per the OpenAI `Idempotency-Key` convention, once a key is used with a particular request body, subsequent requests using the same key must carry an identical body.  A body mismatch is a hard error (not retryable). HTTP equivalent: 409 Conflict. |
 | `idempotency_in_flight` | The same `Idempotency-Key` is already in-flight (another request with the same key is currently being processed). The caller should wait briefly and retry.  The response is not yet available, and this request has been short-circuited to avoid running the operation twice. HTTP equivalent: 409 Conflict (retryable after a brief delay). |
-
----
-
-#### UsageSinkError
-
-Error returned by a `UsageSink` implementation.
-
-| Variant | Description |
-|---------|-------------|
-| `backend` | The sink's backend failed to accept the event. |
-
----
-
-#### IdempotencyStoreError
-
-Error type for `IdempotencyStore` operations.
-
-| Variant | Description |
-|---------|-------------|
-| `backend` | A backend-specific error occurred. |
 
 ---

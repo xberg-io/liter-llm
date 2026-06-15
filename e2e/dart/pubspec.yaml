@@ -8,6 +8,7 @@ environment:
 dependencies:
   liter_llm:
     path: ../../packages/dart
+  ffi: ^2.2.0
 
 dev_dependencies:
   test: ^1.25.0

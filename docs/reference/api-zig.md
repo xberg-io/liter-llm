@@ -25,6 +25,12 @@ constructed, or if the resolved provider configuration is invalid.
 pub fn create_client(api_key: [:0]const u8, base_url: ?[:0]const u8, timeout_secs: ?u64, max_retries: ?u32, model_hint: ?[:0]const u8) Error!DefaultClient
 ```
 
+**Example:**
+
+```zig
+const result = try createClient("value", "value", 42, 42, "value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -36,6 +42,7 @@ pub fn create_client(api_key: [:0]const u8, base_url: ?[:0]const u8, timeout_sec
 | `modelHint` | `[:0]const u8?` | No | The model hint |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Throws `Error`.
 
 ---
@@ -57,6 +64,12 @@ contains unknown fields.
 pub fn create_client_from_json(json: [:0]const u8) Error!DefaultClient
 ```
 
+**Example:**
+
+```zig
+const result = try createClientFromJson("value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -64,6 +77,7 @@ pub fn create_client_from_json(json: [:0]const u8) Error!DefaultClient
 | `json` | `[:0]const u8` | Yes | The json |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Throws `Error`.
 
 ---
@@ -86,6 +100,12 @@ no model prefixes).
 pub fn register_custom_provider(config: CustomProviderConfig) Error!void
 ```
 
+**Example:**
+
+```zig
+try registerCustomProvider(.{});
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -93,6 +113,7 @@ pub fn register_custom_provider(config: CustomProviderConfig) Error!void
 | `config` | `CustomProviderConfig` | Yes | The configuration options |
 
 **Returns:** `void`
+
 **Errors:** Throws `Error`.
 
 ---
@@ -114,6 +135,12 @@ Returns an error only if the internal lock is poisoned.
 pub fn unregister_custom_provider(name: [:0]const u8) Error!bool
 ```
 
+**Example:**
+
+```zig
+const result = try unregisterCustomProvider("value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -121,6 +148,7 @@ pub fn unregister_custom_provider(name: [:0]const u8) Error!bool
 | `name` | `[:0]const u8` | Yes | The name |
 
 **Returns:** `bool`
+
 **Errors:** Throws `Error`.
 
 ---
@@ -130,15 +158,23 @@ pub fn unregister_custom_provider(name: [:0]const u8) Error!bool
 Return the capability flags for a named provider.
 
 Performs an O(n) linear scan over the embedded registry (142 entries).
-Returns a `'static` reference valid for the lifetime of the process.
+Returns an owned value so that bindings can box/copy it across the FFI
+boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+so this is a cheap memcpy of seven `bool` fields.
 
-For unknown `provider_name` values the function returns a reference to an
-all-`false` sentinel so callers never need to handle `Option`.
+For unknown `provider_name` values the function returns an all-`false`
+sentinel so callers never need to handle `Option`.
 
 **Signature:**
 
 ```zig
 pub fn capabilities(provider_name: [:0]const u8) ProviderCapabilities
+```
+
+**Example:**
+
+```zig
+const result = capabilities("value");
 ```
 
 **Parameters:**
@@ -165,7 +201,14 @@ To query capability flags for a specific provider use `capabilities`.
 pub fn all_providers() Error![]const ProviderConfig
 ```
 
+**Example:**
+
+```zig
+const result = try allProviders();
+```
+
 **Returns:** `[]const ProviderConfig`
+
 **Errors:** Throws `Error`.
 
 ---
@@ -185,7 +228,14 @@ The returned reference points into the static registry — no allocation.
 pub fn complex_provider_names() Error![]const [:0]const u8
 ```
 
+**Example:**
+
+```zig
+const result = try complexProviderNames();
+```
+
 **Returns:** `[]const [:0]const u8`
+
 **Errors:** Throws `Error`.
 
 ---
@@ -199,13 +249,19 @@ Returns `null` if the model is not present in the embedded pricing registry.
 Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
 
 When an exact model name match is not found, progressively shorter prefixes
-are tried by stripping from the last `-` or `.` separator. For example,
+are tried by stripping from the last `-` or `.` separator.  For example,
 `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 
 **Signature:**
 
 ```zig
 pub fn completion_cost(model: [:0]const u8, prompt_tokens: u64, completion_tokens: u64) ?f64
+```
+
+**Example:**
+
+```zig
+const result = completionCost("value", 42, 42);
 ```
 
 **Parameters:**
@@ -241,6 +297,12 @@ registry, mirroring `completion_cost`.
 pub fn completion_cost_with_cache(model: [:0]const u8, prompt_tokens: u64, cached_tokens: u64, completion_tokens: u64) ?f64
 ```
 
+**Example:**
+
+```zig
+const result = completionCostWithCache("value", 42, 42, 42);
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -270,6 +332,12 @@ Panics if the global registry lock is poisoned.
 pub fn clear() void
 ```
 
+**Example:**
+
+```zig
+clear();
+```
+
 **Returns:** `void`
 
 ---
@@ -293,6 +361,12 @@ Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
 pub fn count_tokens(model: [:0]const u8, text: [:0]const u8) Error!u64
 ```
 
+**Example:**
+
+```zig
+const result = try countTokens("value", "value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -301,6 +375,7 @@ pub fn count_tokens(model: [:0]const u8, text: [:0]const u8) Error!u64
 | `text` | `[:0]const u8` | Yes | The text |
 
 **Returns:** `u64`
+
 **Errors:** Throws `Error`.
 
 ---
@@ -325,6 +400,12 @@ if tokenization fails for any message.
 pub fn count_request_tokens(model: [:0]const u8, req: ChatCompletionRequest) Error!u64
 ```
 
+**Example:**
+
+```zig
+const result = try countRequestTokens("value", .{});
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -333,341 +414,8 @@ pub fn count_request_tokens(model: [:0]const u8, req: ChatCompletionRequest) Err
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
 **Returns:** `u64`
+
 **Errors:** Throws `Error`.
-
----
-
-#### recordCacheState()
-
-Set the cache outcome for the current task.
-
-Uses `try_with` so that callers that run outside a `CACHE_STATE_CELL.scope`
-(e.g. in tests that do not involve `HooksLayer`) are silently ignored rather
-than panicking.
-
-**Signature:**
-
-```zig
-pub fn record_cache_state(state: CacheState) void
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `state` | `CacheState` | Yes | The cache state |
-
-**Returns:** `void`
-
----
-
-#### recordCacheHit()
-
-Record a cache hit metric.
-
-Call from cache layer implementations to emit `gen_ai.cache.hit`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```zig
-pub fn record_cache_hit(system: [:0]const u8, model: [:0]const u8, operation: [:0]const u8) void
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `[:0]const u8` | Yes | The system |
-| `model` | `[:0]const u8` | Yes | The model |
-| `operation` | `[:0]const u8` | Yes | The operation |
-
-**Returns:** `void`
-
----
-
-#### recordCacheMiss()
-
-Record a cache miss metric.
-
-Call from cache layer implementations to emit `gen_ai.cache.miss`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```zig
-pub fn record_cache_miss(system: [:0]const u8, model: [:0]const u8, operation: [:0]const u8) void
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `[:0]const u8` | Yes | The system |
-| `model` | `[:0]const u8` | Yes | The model |
-| `operation` | `[:0]const u8` | Yes | The operation |
-
-**Returns:** `void`
-
----
-
-#### recordCacheStale()
-
-Record a stale cache metric.
-
-Call from cache layer implementations to emit `gen_ai.cache.stale`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```zig
-pub fn record_cache_stale(system: [:0]const u8, model: [:0]const u8, operation: [:0]const u8) void
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `[:0]const u8` | Yes | The system |
-| `model` | `[:0]const u8` | Yes | The model |
-| `operation` | `[:0]const u8` | Yes | The operation |
-
-**Returns:** `void`
-
----
-
-#### recordCircuitTrip()
-
-Record a circuit breaker trip.
-
-Call from `CircuitLayer` when the circuit opens.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```zig
-pub fn record_circuit_trip(system: [:0]const u8, model: [:0]const u8) void
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `[:0]const u8` | Yes | The system |
-| `model` | `[:0]const u8` | Yes | The model |
-
-**Returns:** `void`
-
----
-
-#### recordRetryAttempt()
-
-Record a retry attempt.
-
-Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```zig
-pub fn record_retry_attempt(system: [:0]const u8, model: [:0]const u8, operation: [:0]const u8) void
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `[:0]const u8` | Yes | The system |
-| `model` | `[:0]const u8` | Yes | The model |
-| `operation` | `[:0]const u8` | Yes | The operation |
-
-**Returns:** `void`
-
----
-
-#### recordCacheTierHit()
-
-Record a per-tier cache hit.
-
-`tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```zig
-pub fn record_cache_tier_hit(system: [:0]const u8, model: [:0]const u8, tier: [:0]const u8) void
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `[:0]const u8` | Yes | The system |
-| `model` | `[:0]const u8` | Yes | The model |
-| `tier` | `[:0]const u8` | Yes | The tier |
-
-**Returns:** `void`
-
----
-
-#### recordCacheTierMiss()
-
-Record a per-tier cache miss.
-
-`tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```zig
-pub fn record_cache_tier_miss(system: [:0]const u8, model: [:0]const u8, tier: [:0]const u8) void
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `[:0]const u8` | Yes | The system |
-| `model` | `[:0]const u8` | Yes | The model |
-| `tier` | `[:0]const u8` | Yes | The tier |
-
-**Returns:** `void`
-
----
-
-#### recordBudgetSpend()
-
-Record cumulative spend for a specific budget dimension.
-
-Emits `gen_ai.budget.spend_usd` with dimension attributes.
-Call from `record` after each
-successful completion. If the meter has not been initialized, this
-call is a no-op.
-
-**Signature:**
-
-```zig
-pub fn record_budget_spend(model: [:0]const u8, provider: [:0]const u8, tenant_id: ?[:0]const u8, user_id: ?[:0]const u8, api_key_id: ?[:0]const u8, cost_usd: f64) void
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `model` | `[:0]const u8` | Yes | The model |
-| `provider` | `[:0]const u8` | Yes | The provider |
-| `tenantId` | `[:0]const u8?` | No | The tenant id |
-| `userId` | `[:0]const u8?` | No | The user id |
-| `apiKeyId` | `[:0]const u8?` | No | The api key id |
-| `costUsd` | `f64` | Yes | The cost usd |
-
-**Returns:** `void`
-
----
-
-#### recordBudgetRejection()
-
-Record a budget-rejection event.
-
-Emits `gen_ai.budget.rejection` with the triggering dimension.
-Call from `check` when
-returning `Reject`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```zig
-pub fn record_budget_rejection(model: [:0]const u8, provider: [:0]const u8, dimension: [:0]const u8) void
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `model` | `[:0]const u8` | Yes | The model |
-| `provider` | `[:0]const u8` | Yes | The provider |
-| `dimension` | `[:0]const u8` | Yes | The dimension |
-
-**Returns:** `void`
-
----
-
-#### recordRealtimeSessionDuration()
-
-Record the lifetime of a completed Realtime WebSocket session.
-
-Emits `gen_ai.realtime.session.duration` (seconds).
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```zig
-pub fn record_realtime_session_duration(provider: [:0]const u8, duration_secs: f64) void
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `provider` | `[:0]const u8` | Yes | The provider |
-| `durationSecs` | `f64` | Yes | The duration secs |
-
-**Returns:** `void`
-
----
-
-#### recordRealtimeEvent()
-
-Record a single Realtime event being forwarded.
-
-Emits `gen_ai.realtime.event.count` with `gen_ai.realtime.direction`
-(`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
-`gen_ai.system`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```zig
-pub fn record_realtime_event(provider: [:0]const u8, direction: [:0]const u8, event_type: [:0]const u8) void
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `provider` | `[:0]const u8` | Yes | The provider |
-| `direction` | `[:0]const u8` | Yes | The direction |
-| `eventType` | `[:0]const u8` | Yes | The event type |
-
-**Returns:** `void`
-
----
-
-#### recordRealtimeBytes()
-
-Record audio bytes forwarded over a Realtime WebSocket session.
-
-Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
-`gen_ai.realtime.direction` attributes.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```zig
-pub fn record_realtime_bytes(provider: [:0]const u8, direction: [:0]const u8, byte_count: u64) void
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `provider` | `[:0]const u8` | Yes | The provider |
-| `direction` | `[:0]const u8` | Yes | The direction |
-| `byteCount` | `u64` | Yes | The byte count |
-
-**Returns:** `void`
 
 ---
 
@@ -676,13 +424,19 @@ pub fn record_realtime_bytes(provider: [:0]const u8, direction: [:0]const u8, by
 Assert that `current_len + incoming` does not exceed `limit`.
 
 Call this before appending `incoming` bytes to any buffer that must
-stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
+stay below `limit`.  Returns `Err(LiterLlmError.Streaming)` on overflow
 and emits a `tracing.warn!` with context.
 
 **Signature:**
 
 ```zig
 pub fn check_bound(context: [:0]const u8, current_len: u64, incoming: u64, limit: u64) Error!void
+```
+
+**Example:**
+
+```zig
+try checkBound("value", 42, 42, 42);
 ```
 
 **Parameters:**
@@ -695,6 +449,7 @@ pub fn check_bound(context: [:0]const u8, current_len: u64, incoming: u64, limit
 | `limit` | `u64` | Yes | The limit |
 
 **Returns:** `void`
+
 **Errors:** Throws `Error`.
 
 ---
@@ -722,6 +477,12 @@ present and no crypto provider installation is needed.
 
 ```zig
 pub fn ensure_crypto_provider() void
+```
+
+**Example:**
+
+```zig
+ensureCryptoProvider();
 ```
 
 **Returns:** `void`
@@ -846,6 +607,14 @@ Configuration for budget enforcement.
 pub fn default() BudgetConfig
 ```
 
+**Example:**
+
+```zig
+const result = BudgetConfig.default();
+```
+
+**Returns:** `BudgetConfig`
+
 ---
 
 #### CacheConfig
@@ -867,6 +636,14 @@ Configuration for the response cache.
 ```zig
 pub fn default() CacheConfig
 ```
+
+**Example:**
+
+```zig
+const result = CacheConfig.default();
+```
+
+**Returns:** `CacheConfig`
 
 ---
 
@@ -983,88 +760,21 @@ Process a single chunk.
 pub fn process(self: *const ChunkMiddleware, chunk: ChatCompletionChunk) Error!?ChatCompletionChunk
 ```
 
----
-
-#### CircuitPolicy
-
-Policy that drives a circuit breaker's state transitions.
-
-Implement this trait to provide custom failure-detection and
-recovery logic. The default implementation is `ExponentialBackoffCircuit`.
-
-### Methods
-
-#### recordSuccess()
-
-Called when the inner service returns a successful response.
-
-**Signature:**
+**Example:**
 
 ```zig
-pub fn recordSuccess(self: *const CircuitPolicy) void
+const result = try instance.process(.{});
 ```
 
-#### recordFailure()
+**Parameters:**
 
-Called when the inner service returns an error.
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `chunk` | `ChatCompletionChunk` | Yes | The chat completion chunk |
 
-The policy decides whether to count the error as a circuit-trip failure.
+**Returns:** `?ChatCompletionChunk`
 
-**Signature:**
-
-```zig
-pub fn recordFailure(self: *const CircuitPolicy) void
-```
-
-#### shouldAllow()
-
-Returns `true` when a request should be allowed to proceed.
-
-`false` means the circuit is open and the request should be rejected.
-
-**Signature:**
-
-```zig
-pub fn shouldAllow(self: *const CircuitPolicy) bool
-```
-
-#### state()
-
-Returns the current circuit state.
-
-**Signature:**
-
-```zig
-pub fn state(self: *const CircuitPolicy) CircuitState
-```
-
-#### releaseProbeSlot()
-
-Called when a probe request is dropped without completing (e.g. due to
-panic or cancellation) to release the probe slot.
-
-The default implementation is a no-op. Policies that gate probe slots
-with a boolean flag (like `ExponentialBackoffCircuit`) should override
-this to clear the flag.
-
-**Signature:**
-
-```zig
-pub fn releaseProbeSlot(self: *const CircuitPolicy) void
-```
-
----
-
-#### ClassifyContext
-
-Immutable context passed to every `RouteClassifier.classify` call.
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `prompt` | `[:0]const u8` | — | The user-facing prompt text. |
-| `systemPrompt` | `[:0]const u8?` | `null` | Optional system prompt from the request. |
-| `metadata` | `std.StringHashMap([:0]const u8)` | — | Arbitrary metadata attached to the request (e.g. tenant, session ID). |
-| `availableModels` | `[]const [:0]const u8` | — | The set of model identifiers the router currently considers available. |
+**Errors:** Throws `Error`.
 
 ---
 
@@ -1196,6 +906,22 @@ headers are cached at construction to avoid redundant encoding on every request.
 pub fn chat(self: *const DefaultClient, req: ChatCompletionRequest) Error!ChatCompletionResponse
 ```
 
+**Example:**
+
+```zig
+const result = try instance.chat(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `ChatCompletionResponse`
+
+**Errors:** Throws `Error`.
+
 #### chatStream()
 
 **Signature:**
@@ -1203,6 +929,22 @@ pub fn chat(self: *const DefaultClient, req: ChatCompletionRequest) Error!ChatCo
 ```zig
 pub fn chatStream(self: *const DefaultClient, req: ChatCompletionRequest) Error![:0]const u8
 ```
+
+**Example:**
+
+```zig
+const result = try instance.chatStream(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `[:0]const u8`
+
+**Errors:** Throws `Error`.
 
 #### embed()
 
@@ -1212,6 +954,22 @@ pub fn chatStream(self: *const DefaultClient, req: ChatCompletionRequest) Error!
 pub fn embed(self: *const DefaultClient, req: EmbeddingRequest) Error!EmbeddingResponse
 ```
 
+**Example:**
+
+```zig
+const result = try instance.embed(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `EmbeddingRequest` | Yes | The embedding request |
+
+**Returns:** `EmbeddingResponse`
+
+**Errors:** Throws `Error`.
+
 #### listModels()
 
 **Signature:**
@@ -1219,6 +977,16 @@ pub fn embed(self: *const DefaultClient, req: EmbeddingRequest) Error!EmbeddingR
 ```zig
 pub fn listModels(self: *const DefaultClient) Error!ModelsListResponse
 ```
+
+**Example:**
+
+```zig
+const result = try instance.listModels();
+```
+
+**Returns:** `ModelsListResponse`
+
+**Errors:** Throws `Error`.
 
 #### imageGenerate()
 
@@ -1228,6 +996,22 @@ pub fn listModels(self: *const DefaultClient) Error!ModelsListResponse
 pub fn imageGenerate(self: *const DefaultClient, req: CreateImageRequest) Error!ImagesResponse
 ```
 
+**Example:**
+
+```zig
+const result = try instance.imageGenerate(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateImageRequest` | Yes | The create image request |
+
+**Returns:** `ImagesResponse`
+
+**Errors:** Throws `Error`.
+
 #### speech()
 
 **Signature:**
@@ -1235,6 +1019,22 @@ pub fn imageGenerate(self: *const DefaultClient, req: CreateImageRequest) Error!
 ```zig
 pub fn speech(self: *const DefaultClient, req: CreateSpeechRequest) Error![]const u8
 ```
+
+**Example:**
+
+```zig
+const result = try instance.speech(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateSpeechRequest` | Yes | The create speech request |
+
+**Returns:** `[]const u8`
+
+**Errors:** Throws `Error`.
 
 #### transcribe()
 
@@ -1244,6 +1044,22 @@ pub fn speech(self: *const DefaultClient, req: CreateSpeechRequest) Error![]cons
 pub fn transcribe(self: *const DefaultClient, req: CreateTranscriptionRequest) Error!TranscriptionResponse
 ```
 
+**Example:**
+
+```zig
+const result = try instance.transcribe(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
+
+**Returns:** `TranscriptionResponse`
+
+**Errors:** Throws `Error`.
+
 #### moderate()
 
 **Signature:**
@@ -1251,6 +1067,22 @@ pub fn transcribe(self: *const DefaultClient, req: CreateTranscriptionRequest) E
 ```zig
 pub fn moderate(self: *const DefaultClient, req: ModerationRequest) Error!ModerationResponse
 ```
+
+**Example:**
+
+```zig
+const result = try instance.moderate(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ModerationRequest` | Yes | The moderation request |
+
+**Returns:** `ModerationResponse`
+
+**Errors:** Throws `Error`.
 
 #### rerank()
 
@@ -1260,6 +1092,22 @@ pub fn moderate(self: *const DefaultClient, req: ModerationRequest) Error!Modera
 pub fn rerank(self: *const DefaultClient, req: RerankRequest) Error!RerankResponse
 ```
 
+**Example:**
+
+```zig
+const result = try instance.rerank(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `RerankRequest` | Yes | The rerank request |
+
+**Returns:** `RerankResponse`
+
+**Errors:** Throws `Error`.
+
 #### search()
 
 **Signature:**
@@ -1267,6 +1115,22 @@ pub fn rerank(self: *const DefaultClient, req: RerankRequest) Error!RerankRespon
 ```zig
 pub fn search(self: *const DefaultClient, req: SearchRequest) Error!SearchResponse
 ```
+
+**Example:**
+
+```zig
+const result = try instance.search(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `SearchRequest` | Yes | The search request |
+
+**Returns:** `SearchResponse`
+
+**Errors:** Throws `Error`.
 
 #### ocr()
 
@@ -1276,6 +1140,22 @@ pub fn search(self: *const DefaultClient, req: SearchRequest) Error!SearchRespon
 pub fn ocr(self: *const DefaultClient, req: OcrRequest) Error!OcrResponse
 ```
 
+**Example:**
+
+```zig
+const result = try instance.ocr(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `OcrRequest` | Yes | The ocr request |
+
+**Returns:** `OcrResponse`
+
+**Errors:** Throws `Error`.
+
 #### createFile()
 
 **Signature:**
@@ -1283,6 +1163,22 @@ pub fn ocr(self: *const DefaultClient, req: OcrRequest) Error!OcrResponse
 ```zig
 pub fn createFile(self: *const DefaultClient, req: CreateFileRequest) Error!FileObject
 ```
+
+**Example:**
+
+```zig
+const result = try instance.createFile(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateFileRequest` | Yes | The create file request |
+
+**Returns:** `FileObject`
+
+**Errors:** Throws `Error`.
 
 #### retrieveFile()
 
@@ -1292,6 +1188,22 @@ pub fn createFile(self: *const DefaultClient, req: CreateFileRequest) Error!File
 pub fn retrieveFile(self: *const DefaultClient, file_id: [:0]const u8) Error!FileObject
 ```
 
+**Example:**
+
+```zig
+const result = try instance.retrieveFile("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `fileId` | `[:0]const u8` | Yes | The file id |
+
+**Returns:** `FileObject`
+
+**Errors:** Throws `Error`.
+
 #### deleteFile()
 
 **Signature:**
@@ -1299,6 +1211,22 @@ pub fn retrieveFile(self: *const DefaultClient, file_id: [:0]const u8) Error!Fil
 ```zig
 pub fn deleteFile(self: *const DefaultClient, file_id: [:0]const u8) Error!DeleteResponse
 ```
+
+**Example:**
+
+```zig
+const result = try instance.deleteFile("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `fileId` | `[:0]const u8` | Yes | The file id |
+
+**Returns:** `DeleteResponse`
+
+**Errors:** Throws `Error`.
 
 #### listFiles()
 
@@ -1308,6 +1236,22 @@ pub fn deleteFile(self: *const DefaultClient, file_id: [:0]const u8) Error!Delet
 pub fn listFiles(self: *const DefaultClient, query: ?FileListQuery) Error!FileListResponse
 ```
 
+**Example:**
+
+```zig
+const result = try instance.listFiles(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `FileListQuery?` | No | The file list query |
+
+**Returns:** `FileListResponse`
+
+**Errors:** Throws `Error`.
+
 #### fileContent()
 
 **Signature:**
@@ -1315,6 +1259,22 @@ pub fn listFiles(self: *const DefaultClient, query: ?FileListQuery) Error!FileLi
 ```zig
 pub fn fileContent(self: *const DefaultClient, file_id: [:0]const u8) Error![]const u8
 ```
+
+**Example:**
+
+```zig
+const result = try instance.fileContent("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `fileId` | `[:0]const u8` | Yes | The file id |
+
+**Returns:** `[]const u8`
+
+**Errors:** Throws `Error`.
 
 #### createBatch()
 
@@ -1324,6 +1284,22 @@ pub fn fileContent(self: *const DefaultClient, file_id: [:0]const u8) Error![]co
 pub fn createBatch(self: *const DefaultClient, req: CreateBatchRequest) Error!BatchObject
 ```
 
+**Example:**
+
+```zig
+const result = try instance.createBatch(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateBatchRequest` | Yes | The create batch request |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error`.
+
 #### retrieveBatch()
 
 **Signature:**
@@ -1331,6 +1307,22 @@ pub fn createBatch(self: *const DefaultClient, req: CreateBatchRequest) Error!Ba
 ```zig
 pub fn retrieveBatch(self: *const DefaultClient, batch_id: [:0]const u8) Error!BatchObject
 ```
+
+**Example:**
+
+```zig
+const result = try instance.retrieveBatch("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `[:0]const u8` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error`.
 
 #### listBatches()
 
@@ -1340,6 +1332,22 @@ pub fn retrieveBatch(self: *const DefaultClient, batch_id: [:0]const u8) Error!B
 pub fn listBatches(self: *const DefaultClient, query: ?BatchListQuery) Error!BatchListResponse
 ```
 
+**Example:**
+
+```zig
+const result = try instance.listBatches(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `BatchListQuery?` | No | The batch list query |
+
+**Returns:** `BatchListResponse`
+
+**Errors:** Throws `Error`.
+
 #### cancelBatch()
 
 **Signature:**
@@ -1348,13 +1356,21 @@ pub fn listBatches(self: *const DefaultClient, query: ?BatchListQuery) Error!Bat
 pub fn cancelBatch(self: *const DefaultClient, batch_id: [:0]const u8) Error!BatchObject
 ```
 
-#### retrieve()
-
-**Signature:**
+**Example:**
 
 ```zig
-pub fn retrieve(self: *const DefaultClient, batch_id: [:0]const u8) Error!BatchObject
+const result = try instance.cancelBatch("value");
 ```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `[:0]const u8` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error`.
 
 #### waitForBatch()
 
@@ -1375,6 +1391,23 @@ Returns `BatchWaitError.Client` for underlying client errors.
 pub fn waitForBatch(self: *const DefaultClient, batch_id: [:0]const u8, config: WaitForBatchConfig) BatchWaitError!BatchObject
 ```
 
+**Example:**
+
+```zig
+const result = try instance.waitForBatch("value", .{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `[:0]const u8` | Yes | The batch id |
+| `config` | `WaitForBatchConfig` | Yes | The configuration options |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `BatchWaitError`.
+
 #### createResponse()
 
 **Signature:**
@@ -1382,6 +1415,22 @@ pub fn waitForBatch(self: *const DefaultClient, batch_id: [:0]const u8, config: 
 ```zig
 pub fn createResponse(self: *const DefaultClient, req: CreateResponseRequest) Error!ResponseObject
 ```
+
+**Example:**
+
+```zig
+const result = try instance.createResponse(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateResponseRequest` | Yes | The create response request |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Throws `Error`.
 
 #### retrieveResponse()
 
@@ -1391,6 +1440,22 @@ pub fn createResponse(self: *const DefaultClient, req: CreateResponseRequest) Er
 pub fn retrieveResponse(self: *const DefaultClient, response_id: [:0]const u8) Error!ResponseObject
 ```
 
+**Example:**
+
+```zig
+const result = try instance.retrieveResponse("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `responseId` | `[:0]const u8` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Throws `Error`.
+
 #### cancelResponse()
 
 **Signature:**
@@ -1398,6 +1463,22 @@ pub fn retrieveResponse(self: *const DefaultClient, response_id: [:0]const u8) E
 ```zig
 pub fn cancelResponse(self: *const DefaultClient, response_id: [:0]const u8) Error!ResponseObject
 ```
+
+**Example:**
+
+```zig
+const result = try instance.cancelResponse("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `responseId` | `[:0]const u8` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Throws `Error`.
 
 ---
 
@@ -1474,78 +1555,6 @@ Embedding response.
 
 ---
 
-#### ExponentialBackoffCircuit
-
-Circuit breaker with exponential backoff.
-
-Opens after `failure_threshold` consecutive failures. After
-`base_backoff` (doubled on each successive open → half-open → open cycle,
-up to `max_backoff`), the circuit enters `CircuitState.HalfOpen` and
-allows one probe request through.
-
-### Methods
-
-#### new()
-
-Create a new policy.
-
-- `failure_threshold`: consecutive failures required to open the circuit.
-- `base_backoff`: initial half-open retry delay (doubles each open cycle,
-  capped at 2 minutes).
-
-**Signature:**
-
-```zig
-pub fn new(failure_threshold: u32, base_backoff: i64) ExponentialBackoffCircuit
-```
-
-#### recordSuccess()
-
-**Signature:**
-
-```zig
-pub fn recordSuccess(self: *const ExponentialBackoffCircuit) void
-```
-
-#### recordFailure()
-
-**Signature:**
-
-```zig
-pub fn recordFailure(self: *const ExponentialBackoffCircuit) void
-```
-
-#### shouldAllow()
-
-**Signature:**
-
-```zig
-pub fn shouldAllow(self: *const ExponentialBackoffCircuit) bool
-```
-
-#### state()
-
-**Signature:**
-
-```zig
-pub fn state(self: *const ExponentialBackoffCircuit) CircuitState
-```
-
-#### releaseProbeSlot()
-
-Release the probe slot without recording success or failure.
-
-Called by the `ProbeGuard` when the probe future is dropped before
-completing (e.g. cancelled or panicked).
-
-**Signature:**
-
-```zig
-pub fn releaseProbeSlot(self: *const ExponentialBackoffCircuit) void
-```
-
----
-
 #### FileListQuery
 
 Query parameters for listing files.
@@ -1583,43 +1592,6 @@ An uploaded file object.
 | `filename` | `[:0]const u8` | — | Filename. |
 | `purpose` | `[:0]const u8` | — | File purpose. |
 | `status` | `[:0]const u8?` | `null` | Processing status (e.g., `"uploaded"`, `"processed"`). |
-
----
-
-#### FixedDelayHedge
-
-A simple `HedgePolicy` that fires hedges at fixed intervals.
-
-### Methods
-
-#### new()
-
-Create a new policy.
-
-- `delay`: how long to wait before launching each additional attempt.
-- `max_attempts`: maximum concurrent copies of the request (≥ 1).
-
-**Signature:**
-
-```zig
-pub fn new(delay: i64, max_attempts: u32) FixedDelayHedge
-```
-
-#### delayForAttempt()
-
-**Signature:**
-
-```zig
-pub fn delayForAttempt(self: *const FixedDelayHedge, attempt: u32, latency_so_far: i64) ?i64
-```
-
-#### maxAttempts()
-
-**Signature:**
-
-```zig
-pub fn maxAttempts(self: *const FixedDelayHedge) u32
-```
 
 ---
 
@@ -1681,45 +1653,19 @@ move it into the returned future without a clone, making the
 pub fn check(self: *const HealthChecker, upstream: [:0]const u8) HealthStatus
 ```
 
----
-
-#### HedgePolicy
-
-Policy that controls when and how many hedged requests are launched.
-
-Implement this trait to provide custom hedging strategies such as
-latency-percentile-based delays or per-model adaptive delays.
-
-### Methods
-
-#### delayForAttempt()
-
-Returns the delay before launching attempt `attempt` (1-indexed; attempt
-1 is the initial request, attempt 2 is the first hedge, etc.).
-
-- `attempt`: 1-indexed attempt number.
-- `latency_so_far`: elapsed time since the first request was dispatched.
-
-Return `null` to skip this attempt (and all subsequent ones).
-
-**Signature:**
+**Example:**
 
 ```zig
-pub fn delayForAttempt(self: *const HedgePolicy, attempt: u32, latency_so_far: i64) ?i64
+const result = instance.check("value");
 ```
 
-#### maxAttempts()
+**Parameters:**
 
-Maximum number of concurrent attempts (including the original request).
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `upstream` | `[:0]const u8` | Yes | The upstream |
 
-Must be ≥ 1. Values above 3 are rarely useful and increase provider
-costs significantly.
-
-**Signature:**
-
-```zig
-pub fn maxAttempts(self: *const HedgePolicy) u32
-```
+**Returns:** `HealthStatus`
 
 ---
 
@@ -1962,7 +1908,7 @@ discounted rate and the remainder at the regular input rate.
 Static capability flags for a provider.
 
 Each flag indicates whether the provider's models *generally* support that
-feature. For providers that aggregate many underlying models (e.g. Bedrock,
+feature.  For providers that aggregate many underlying models (e.g. Bedrock,
 OpenRouter, vLLM) the flags reflect the superset of available model
 capabilities — a flag being `true` means at least one model supports the
 feature, not every model.
@@ -1988,7 +1934,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function. Keeping
+format, which are accessed via the `capabilities` function.  Keeping
 these fields separate preserves backward compatibility with all generated
 binding code that constructs `ProviderConfig` using struct literal syntax.
 
@@ -2023,6 +1969,14 @@ Configuration for per-model rate limits.
 ```zig
 pub fn default() RateLimitConfig
 ```
+
+**Example:**
+
+```zig
+const result = RateLimitConfig.default();
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -2168,7 +2122,7 @@ An individual search result.
 The value broadcast from a singleflight leader to all followers.
 
 `Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`. The `Arc` adds only a reference-count
+broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
 bump per follower, which is negligible under the burst loads this layer targets.
 
 ---
@@ -2315,35 +2269,6 @@ A segment of transcribed audio with timing information.
 
 ---
 
-#### UpstreamDiscover
-
-A typed extension of `tower.discover.Discover` for LLM upstream
-services.
-
-Implementors plug in their own discovery mechanism — file-based configs,
-etcd watches, HTTP polling — and the `DynamicRouter` handles the rest.
-The key type must be `String` so that provider names are human-readable in
-logs and metrics.
-
-### Object safety
-
-`UpstreamDiscover` is **not** object-safe and **must not** be stored as
-`dyn UpstreamDiscover`. It is a generic bound used exclusively as a type
-parameter for `DynamicRouter<D>`. All discovery implementations are
-monomorphised at compile time.
-
-If you need a runtime registry of heterogeneous discovery sources, wrap
-each source in an `Arc<Mutex<Box<dyn …>>>` and poll them via a custom
-`Stream` adapter — do not store them as `dyn UpstreamDiscover`.
-
-### Note for 1.A integration
-
-If the router encounters a discovery error, it wraps it in
-`RouterError.Discover`. The 1.A error-consolidation workstream should
-replace this local enum with the canonical error hierarchy.
-
----
-
 #### Usage
 
 Token-usage accounting returned by the provider on each completion / embedding call.
@@ -2372,12 +2297,15 @@ User message in the conversation.
 
 Configuration for polling a batch until terminal status.
 
+All time values are in seconds as `f64` so the struct bridges across FFI
+boundaries without requiring a `Duration` shim.
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `initialInterval` | `i64` | `5000ms` | Initial interval between polls. |
-| `maxInterval` | `i64` | `60000ms` | Maximum interval between polls (backoff plateau). |
+| `initialIntervalSecs` | `f64` | `5` | Initial interval between polls, in seconds. |
+| `maxIntervalSecs` | `f64` | `60` | Maximum interval between polls (backoff plateau), in seconds. |
 | `backoffMultiplier` | `f32` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
-| `timeout` | `i64?` | `null` | Optional timeout — polling fails if this duration is exceeded. |
+| `timeoutSecs` | `f64?` | `null` | Optional timeout in seconds — polling fails if this duration is exceeded. |
 
 ### Methods
 
@@ -2388,6 +2316,14 @@ Configuration for polling a batch until terminal status.
 ```zig
 pub fn default() WaitForBatchConfig
 ```
+
+**Example:**
+
+```zig
+const result = WaitForBatchConfig.default();
+```
+
+**Returns:** `WaitForBatchConfig`
 
 ---
 
@@ -2419,7 +2355,7 @@ User message content as either plain text or a list of multimodal parts.
 
 ---
 
-#### TypesContentPart
+#### ContentPart
 
 A single content part in a user message — text, image, document, or audio.
 
@@ -2632,7 +2568,7 @@ How the API key is sent in the HTTP request.
 
 The streaming wire format a provider uses for its response stream.
 
-Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
+Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
 a proprietary binary EventStream framing.
 
 Deserialized from the `streaming_format` JSON field via `serde`.
@@ -2654,106 +2590,6 @@ Auth scheme used by a provider.
 | `ApiKey` | `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). |
 | `None` | No authentication header required. |
 | `Unknown` | Unrecognised auth scheme — falls back to bearer. |
-
----
-
-#### OnMatch
-
-Action taken when a `RegexGuardrail` finds a match.
-
-| Value | Description |
-|-------|-------------|
-| `Block` | Block the request/response with the given error code and reason prefix. — Fields: `code`: `u32`, `reasonPrefix`: `[:0]const u8` |
-| `Redact` | Replace the matched portion with the given replacement string. — Fields: `replacement`: `[:0]const u8` |
-
----
-
-#### CelAction
-
-The action taken when a `CelGuardrail`'s expression evaluates to `true`.
-
-| Value | Description |
-|-------|-------------|
-| `Block` | Block the request/response with the given code and reason. — Fields: `code`: `u32`, `reason`: `[:0]const u8` |
-| `Mutate` | Replace the payload with a static JSON value (e.g., for redaction). — Fields: `newPayload`: `[:0]const u8` |
-
----
-
-#### GuardrailStage
-
-The lifecycle stage at which a guardrail runs.
-
-| Value | Description |
-|-------|-------------|
-| `Input` | The outgoing prompt / request, before forwarding to the upstream provider. |
-| `Output` | The full response from the upstream provider (non-streaming). |
-| `OutputChunk` | A single chunk in a streaming response. Guardrails here are called once per chunk and may block or mutate individual chunks. |
-
----
-
-#### GuardrailDecision
-
-The outcome of a guardrail check.
-
-| Value | Description |
-|-------|-------------|
-| `Allow` | The check passed. Continue to the next guardrail or to the inner service. |
-| `Block` | The check failed. Short-circuit the request/response with this reason. `code` should be ≥ 1000 to avoid collision with HTTP status codes and to facilitate cross-language error mapping. — Fields: `reason`: `[:0]const u8`, `code`: `u32` |
-| `Mutate` | Rewrite the payload. The provided `new_payload` replaces the original `request` or `response` before it reaches the next stage. For `OutputChunk` stage: `new_payload` replaces the chunk content. — Fields: `newPayload`: `[:0]const u8` |
-
----
-
-#### CacheState
-
-Cache outcome for a single request.
-
-| Value | Description |
-|-------|-------------|
-| `Miss` | No cache entry found; request was sent to the provider. |
-| `ExactHit` | Exact-match cache hit; provider was not called. |
-| `SemanticHit` | Semantic-similarity cache hit; provider was not called. |
-| `StaleHit` | Stale entry served (TTL expired but no fresh entry was available). |
-| `Bypass` | Cache lookup was skipped (bypass policy, streaming request, etc.). |
-
----
-
-#### UsageEventOutcome
-
-High-level outcome of the request.
-
-| Value | Description |
-|-------|-------------|
-| `Success` | Inner service returned a successful response. |
-| `Error` | Inner service returned an error (non-timeout). |
-| `Cancelled` | Request was cancelled before the inner service responded. |
-| `TimedOut` | Inner service timed out. |
-
----
-
-#### ContentPart
-
-A single content part within a conversation item.
-
-Conversation items may carry text, audio, or an image (by reference).
-
-| Value | Description |
-|-------|-------------|
-| `Text` | A plain-text segment. — Fields: `text`: `[:0]const u8` |
-| `Audio` | A raw audio segment encoded as base64. — Fields: `base64`: `[:0]const u8` |
-| `ImageRef` | An image referenced by a URL or ID rather than inline bytes. — Fields: `url`: `[:0]const u8` |
-
----
-
-#### ResponseStatus
-
-Terminal status for a completed `RealtimeEvent.ResponseDone`.
-
-| Value | Description |
-|-------|-------------|
-| `Completed` | The response was produced in full. |
-| `Cancelled` | The response was cancelled before completion. |
-| `Failed` | The response failed due to an upstream error. |
-| `Incomplete` | The response hit a token/time limit before completing. |
 
 ---
 
@@ -2788,17 +2624,6 @@ Observable state of a circuit breaker.
 | `Closed` | Requests flow through normally. |
 | `Open` | All requests are rejected; the circuit is waiting for the backoff to elapse. |
 | `HalfOpen` | One probe request is allowed through to test service health. |
-
----
-
-#### RetryClass
-
-Classification of a single attempt error.
-
-| Value | Description |
-|-------|-------------|
-| `Transient` | Transient error — advance to the next service in the chain. |
-| `Terminal` | Terminal error — return immediately without consulting further services. |
 
 ---
 
@@ -2840,25 +2665,5 @@ All errors that can occur when using `liter-llm`.
 | `OutboundForbidden` | An outbound request was blocked by the active `OutboundPolicy`. Returned when `register_custom_provider` is called with a `base_url` that violates the policy (e.g. a private-range IP under `DenyPrivate`), or when the per-connection DNS resolver detects a forbidden address at connect time. |
 | `IdempotencyConflict` | A different request body was submitted for an existing `Idempotency-Key`. Per the OpenAI `Idempotency-Key` convention, once a key is used with a particular request body, subsequent requests using the same key must carry an identical body.  A body mismatch is a hard error (not retryable). HTTP equivalent: 409 Conflict. |
 | `IdempotencyInFlight` | The same `Idempotency-Key` is already in-flight (another request with the same key is currently being processed). The caller should wait briefly and retry.  The response is not yet available, and this request has been short-circuited to avoid running the operation twice. HTTP equivalent: 409 Conflict (retryable after a brief delay). |
-
----
-
-#### UsageSinkError
-
-Error returned by a `UsageSink` implementation.
-
-| Variant | Description |
-|---------|-------------|
-| `Backend` | The sink's backend failed to accept the event. |
-
----
-
-#### IdempotencyStoreError
-
-Error type for `IdempotencyStore` operations.
-
-| Variant | Description |
-|---------|-------------|
-| `Backend` | A backend-specific error occurred. |
 
 ---

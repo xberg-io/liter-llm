@@ -25,6 +25,12 @@ constructed, or if the resolved provider configuration is invalid.
 LiterllmDefaultClient* literllm_create_client(const char* api_key, const char* base_url, uint64_t timeout_secs, uint32_t max_retries, const char* model_hint);
 ```
 
+**Example:**
+
+```c
+void *result = literllm_create_client("value", "value", 42, 42, "value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -36,6 +42,7 @@ LiterllmDefaultClient* literllm_create_client(const char* api_key, const char* b
 | `model_hint` | `const char**` | No | The model hint |
 
 **Returns:** `LiterllmDefaultClient`
+
 **Errors:** Returns `NULL` on error.
 
 ---
@@ -57,6 +64,12 @@ contains unknown fields.
 LiterllmDefaultClient* literllm_create_client_from_json(const char* json);
 ```
 
+**Example:**
+
+```c
+void *result = literllm_create_client_from_json("value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -64,6 +77,7 @@ LiterllmDefaultClient* literllm_create_client_from_json(const char* json);
 | `json` | `const char*` | Yes | The json |
 
 **Returns:** `LiterllmDefaultClient`
+
 **Errors:** Returns `NULL` on error.
 
 ---
@@ -86,6 +100,12 @@ no model prefixes).
 void literllm_register_custom_provider(LiterllmCustomProviderConfig config);
 ```
 
+**Example:**
+
+```c
+literllm_register_custom_provider(NULL);
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -93,6 +113,7 @@ void literllm_register_custom_provider(LiterllmCustomProviderConfig config);
 | `config` | `LiterllmCustomProviderConfig` | Yes | The configuration options |
 
 **Returns:** `void`
+
 **Errors:** Returns `NULL` on error.
 
 ---
@@ -114,6 +135,12 @@ Returns an error only if the internal lock is poisoned.
 bool literllm_unregister_custom_provider(const char* name);
 ```
 
+**Example:**
+
+```c
+void *result = literllm_unregister_custom_provider("value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -121,6 +148,7 @@ bool literllm_unregister_custom_provider(const char* name);
 | `name` | `const char*` | Yes | The name |
 
 **Returns:** `bool`
+
 **Errors:** Returns `NULL` on error.
 
 ---
@@ -130,15 +158,23 @@ bool literllm_unregister_custom_provider(const char* name);
 Return the capability flags for a named provider.
 
 Performs an O(n) linear scan over the embedded registry (142 entries).
-Returns a `'static` reference valid for the lifetime of the process.
+Returns an owned value so that bindings can box/copy it across the FFI
+boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+so this is a cheap memcpy of seven `bool` fields.
 
-For unknown `provider_name` values the function returns a reference to an
-all-`false` sentinel so callers never need to handle `Option`.
+For unknown `provider_name` values the function returns an all-`false`
+sentinel so callers never need to handle `Option`.
 
 **Signature:**
 
 ```c
 LiterllmProviderCapabilities* literllm_capabilities(const char* provider_name);
+```
+
+**Example:**
+
+```c
+void *result = literllm_capabilities("value");
 ```
 
 **Parameters:**
@@ -165,7 +201,14 @@ To query capability flags for a specific provider use `capabilities`.
 LiterllmProviderConfig* literllm_all_providers();
 ```
 
+**Example:**
+
+```c
+void *result = literllm_all_providers();
+```
+
 **Returns:** `LiterllmProviderConfig*`
+
 **Errors:** Returns `NULL` on error.
 
 ---
@@ -185,7 +228,14 @@ The returned reference points into the static registry — no allocation.
 const char** literllm_complex_provider_names();
 ```
 
+**Example:**
+
+```c
+void *result = literllm_complex_provider_names();
+```
+
 **Returns:** `const char**`
+
 **Errors:** Returns `NULL` on error.
 
 ---
@@ -199,13 +249,19 @@ Returns `NULL` if the model is not present in the embedded pricing registry.
 Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
 
 When an exact model name match is not found, progressively shorter prefixes
-are tried by stripping from the last `-` or `.` separator. For example,
+are tried by stripping from the last `-` or `.` separator.  For example,
 `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 
 **Signature:**
 
 ```c
 double* literllm_completion_cost(const char* model, uint64_t prompt_tokens, uint64_t completion_tokens);
+```
+
+**Example:**
+
+```c
+void *result = literllm_completion_cost("value", 42, 42);
 ```
 
 **Parameters:**
@@ -241,6 +297,12 @@ registry, mirroring `completion_cost`.
 double* literllm_completion_cost_with_cache(const char* model, uint64_t prompt_tokens, uint64_t cached_tokens, uint64_t completion_tokens);
 ```
 
+**Example:**
+
+```c
+void *result = literllm_completion_cost_with_cache("value", 42, 42, 42);
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -270,6 +332,12 @@ Panics if the global registry lock is poisoned.
 void literllm_clear();
 ```
 
+**Example:**
+
+```c
+literllm_clear();
+```
+
 **Returns:** `void`
 
 ---
@@ -293,6 +361,12 @@ Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
 uintptr_t literllm_count_tokens(const char* model, const char* text);
 ```
 
+**Example:**
+
+```c
+void *result = literllm_count_tokens("value", "value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -301,6 +375,7 @@ uintptr_t literllm_count_tokens(const char* model, const char* text);
 | `text` | `const char*` | Yes | The text |
 
 **Returns:** `uintptr_t`
+
 **Errors:** Returns `NULL` on error.
 
 ---
@@ -325,6 +400,12 @@ if tokenization fails for any message.
 uintptr_t literllm_count_request_tokens(const char* model, LiterllmChatCompletionRequest req);
 ```
 
+**Example:**
+
+```c
+void *result = literllm_count_request_tokens("value", NULL);
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -333,341 +414,8 @@ uintptr_t literllm_count_request_tokens(const char* model, LiterllmChatCompletio
 | `req` | `LiterllmChatCompletionRequest` | Yes | The chat completion request |
 
 **Returns:** `uintptr_t`
+
 **Errors:** Returns `NULL` on error.
-
----
-
-#### literllm_record_cache_state()
-
-Set the cache outcome for the current task.
-
-Uses `try_with` so that callers that run outside a `CACHE_STATE_CELL.scope`
-(e.g. in tests that do not involve `HooksLayer`) are silently ignored rather
-than panicking.
-
-**Signature:**
-
-```c
-void literllm_record_cache_state(LiterllmCacheState state);
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `state` | `LiterllmCacheState` | Yes | The cache state |
-
-**Returns:** `void`
-
----
-
-#### literllm_record_cache_hit()
-
-Record a cache hit metric.
-
-Call from cache layer implementations to emit `gen_ai.cache.hit`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```c
-void literllm_record_cache_hit(const char* system, const char* model, const char* operation);
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `const char*` | Yes | The system |
-| `model` | `const char*` | Yes | The model |
-| `operation` | `const char*` | Yes | The operation |
-
-**Returns:** `void`
-
----
-
-#### literllm_record_cache_miss()
-
-Record a cache miss metric.
-
-Call from cache layer implementations to emit `gen_ai.cache.miss`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```c
-void literllm_record_cache_miss(const char* system, const char* model, const char* operation);
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `const char*` | Yes | The system |
-| `model` | `const char*` | Yes | The model |
-| `operation` | `const char*` | Yes | The operation |
-
-**Returns:** `void`
-
----
-
-#### literllm_record_cache_stale()
-
-Record a stale cache metric.
-
-Call from cache layer implementations to emit `gen_ai.cache.stale`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```c
-void literllm_record_cache_stale(const char* system, const char* model, const char* operation);
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `const char*` | Yes | The system |
-| `model` | `const char*` | Yes | The model |
-| `operation` | `const char*` | Yes | The operation |
-
-**Returns:** `void`
-
----
-
-#### literllm_record_circuit_trip()
-
-Record a circuit breaker trip.
-
-Call from `CircuitLayer` when the circuit opens.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```c
-void literllm_record_circuit_trip(const char* system, const char* model);
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `const char*` | Yes | The system |
-| `model` | `const char*` | Yes | The model |
-
-**Returns:** `void`
-
----
-
-#### literllm_record_retry_attempt()
-
-Record a retry attempt.
-
-Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```c
-void literllm_record_retry_attempt(const char* system, const char* model, const char* operation);
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `const char*` | Yes | The system |
-| `model` | `const char*` | Yes | The model |
-| `operation` | `const char*` | Yes | The operation |
-
-**Returns:** `void`
-
----
-
-#### literllm_record_cache_tier_hit()
-
-Record a per-tier cache hit.
-
-`tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```c
-void literllm_record_cache_tier_hit(const char* system, const char* model, const char* tier);
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `const char*` | Yes | The system |
-| `model` | `const char*` | Yes | The model |
-| `tier` | `const char*` | Yes | The tier |
-
-**Returns:** `void`
-
----
-
-#### literllm_record_cache_tier_miss()
-
-Record a per-tier cache miss.
-
-`tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```c
-void literllm_record_cache_tier_miss(const char* system, const char* model, const char* tier);
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `system` | `const char*` | Yes | The system |
-| `model` | `const char*` | Yes | The model |
-| `tier` | `const char*` | Yes | The tier |
-
-**Returns:** `void`
-
----
-
-#### literllm_record_budget_spend()
-
-Record cumulative spend for a specific budget dimension.
-
-Emits `gen_ai.budget.spend_usd` with dimension attributes.
-Call from `record` after each
-successful completion. If the meter has not been initialized, this
-call is a no-op.
-
-**Signature:**
-
-```c
-void literllm_record_budget_spend(const char* model, const char* provider, const char* tenant_id, const char* user_id, const char* api_key_id, double cost_usd);
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `model` | `const char*` | Yes | The model |
-| `provider` | `const char*` | Yes | The provider |
-| `tenant_id` | `const char**` | No | The tenant id |
-| `user_id` | `const char**` | No | The user id |
-| `api_key_id` | `const char**` | No | The api key id |
-| `cost_usd` | `double` | Yes | The cost usd |
-
-**Returns:** `void`
-
----
-
-#### literllm_record_budget_rejection()
-
-Record a budget-rejection event.
-
-Emits `gen_ai.budget.rejection` with the triggering dimension.
-Call from `check` when
-returning `Reject`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```c
-void literllm_record_budget_rejection(const char* model, const char* provider, const char* dimension);
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `model` | `const char*` | Yes | The model |
-| `provider` | `const char*` | Yes | The provider |
-| `dimension` | `const char*` | Yes | The dimension |
-
-**Returns:** `void`
-
----
-
-#### literllm_record_realtime_session_duration()
-
-Record the lifetime of a completed Realtime WebSocket session.
-
-Emits `gen_ai.realtime.session.duration` (seconds).
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```c
-void literllm_record_realtime_session_duration(const char* provider, double duration_secs);
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `provider` | `const char*` | Yes | The provider |
-| `duration_secs` | `double` | Yes | The duration secs |
-
-**Returns:** `void`
-
----
-
-#### literllm_record_realtime_event()
-
-Record a single Realtime event being forwarded.
-
-Emits `gen_ai.realtime.event.count` with `gen_ai.realtime.direction`
-(`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
-`gen_ai.system`.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```c
-void literllm_record_realtime_event(const char* provider, const char* direction, const char* event_type);
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `provider` | `const char*` | Yes | The provider |
-| `direction` | `const char*` | Yes | The direction |
-| `event_type` | `const char*` | Yes | The event type |
-
-**Returns:** `void`
-
----
-
-#### literllm_record_realtime_bytes()
-
-Record audio bytes forwarded over a Realtime WebSocket session.
-
-Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
-`gen_ai.realtime.direction` attributes.
-If the meter has not been initialized, this call is a no-op.
-
-**Signature:**
-
-```c
-void literllm_record_realtime_bytes(const char* provider, const char* direction, uint64_t byte_count);
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `provider` | `const char*` | Yes | The provider |
-| `direction` | `const char*` | Yes | The direction |
-| `byte_count` | `uint64_t` | Yes | The byte count |
-
-**Returns:** `void`
 
 ---
 
@@ -676,13 +424,19 @@ void literllm_record_realtime_bytes(const char* provider, const char* direction,
 Assert that `current_len + incoming` does not exceed `limit`.
 
 Call this before appending `incoming` bytes to any buffer that must
-stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
+stay below `limit`.  Returns `Err(LiterLlmError.Streaming)` on overflow
 and emits a `tracing.warn!` with context.
 
 **Signature:**
 
 ```c
 void literllm_check_bound(const char* context, uintptr_t current_len, uintptr_t incoming, uintptr_t limit);
+```
+
+**Example:**
+
+```c
+literllm_check_bound("value", 42, 42, 42);
 ```
 
 **Parameters:**
@@ -695,6 +449,7 @@ void literllm_check_bound(const char* context, uintptr_t current_len, uintptr_t 
 | `limit` | `uintptr_t` | Yes | The limit |
 
 **Returns:** `void`
+
 **Errors:** Returns `NULL` on error.
 
 ---
@@ -722,6 +477,12 @@ present and no crypto provider installation is needed.
 
 ```c
 void literllm_ensure_crypto_provider();
+```
+
+**Example:**
+
+```c
+literllm_ensure_crypto_provider();
 ```
 
 **Returns:** `void`
@@ -846,6 +607,14 @@ Configuration for budget enforcement.
 LiterllmBudgetConfig literllm_default();
 ```
 
+**Example:**
+
+```c
+void *result = literllm_default();
+```
+
+**Returns:** `LiterllmBudgetConfig`
+
 ---
 
 #### LiterllmCacheConfig
@@ -867,6 +636,14 @@ Configuration for the response cache.
 ```c
 LiterllmCacheConfig literllm_default();
 ```
+
+**Example:**
+
+```c
+void *result = literllm_default();
+```
+
+**Returns:** `LiterllmCacheConfig`
 
 ---
 
@@ -983,88 +760,21 @@ Process a single chunk.
 LiterllmChatCompletionChunk* literllm_process(LiterllmChatCompletionChunk chunk);
 ```
 
----
-
-#### LiterllmCircuitPolicy
-
-Policy that drives a circuit breaker's state transitions.
-
-Implement this trait to provide custom failure-detection and
-recovery logic. The default implementation is `ExponentialBackoffCircuit`.
-
-### Methods
-
-#### literllm_record_success()
-
-Called when the inner service returns a successful response.
-
-**Signature:**
+**Example:**
 
 ```c
-void literllm_record_success();
+void *result = literllm_process(instance, NULL);
 ```
 
-#### literllm_record_failure()
+**Parameters:**
 
-Called when the inner service returns an error.
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `chunk` | `LiterllmChatCompletionChunk` | Yes | The chat completion chunk |
 
-The policy decides whether to count the error as a circuit-trip failure.
+**Returns:** `LiterllmChatCompletionChunk*`
 
-**Signature:**
-
-```c
-void literllm_record_failure();
-```
-
-#### literllm_should_allow()
-
-Returns `true` when a request should be allowed to proceed.
-
-`false` means the circuit is open and the request should be rejected.
-
-**Signature:**
-
-```c
-bool literllm_should_allow();
-```
-
-#### literllm_state()
-
-Returns the current circuit state.
-
-**Signature:**
-
-```c
-LiterllmCircuitState literllm_state();
-```
-
-#### literllm_release_probe_slot()
-
-Called when a probe request is dropped without completing (e.g. due to
-panic or cancellation) to release the probe slot.
-
-The default implementation is a no-op. Policies that gate probe slots
-with a boolean flag (like `ExponentialBackoffCircuit`) should override
-this to clear the flag.
-
-**Signature:**
-
-```c
-void literllm_release_probe_slot();
-```
-
----
-
-#### LiterllmClassifyContext
-
-Immutable context passed to every `RouteClassifier.classify` call.
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `prompt` | `const char*` | — | The user-facing prompt text. |
-| `system_prompt` | `const char**` | `NULL` | Optional system prompt from the request. |
-| `metadata` | `void*` | — | Arbitrary metadata attached to the request (e.g. tenant, session ID). |
-| `available_models` | `const char**` | — | The set of model identifiers the router currently considers available. |
+**Errors:** Returns `NULL` on error.
 
 ---
 
@@ -1196,6 +906,22 @@ headers are cached at construction to avoid redundant encoding on every request.
 LiterllmChatCompletionResponse literllm_chat(LiterllmChatCompletionRequest req);
 ```
 
+**Example:**
+
+```c
+void *result = literllm_chat(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `LiterllmChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `LiterllmChatCompletionResponse`
+
+**Errors:** Returns `NULL` on error.
+
 #### literllm_chat_stream()
 
 **Signature:**
@@ -1203,6 +929,22 @@ LiterllmChatCompletionResponse literllm_chat(LiterllmChatCompletionRequest req);
 ```c
 const char* literllm_chat_stream(LiterllmChatCompletionRequest req);
 ```
+
+**Example:**
+
+```c
+void *result = literllm_chat_stream(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `LiterllmChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `const char*`
+
+**Errors:** Returns `NULL` on error.
 
 #### literllm_embed()
 
@@ -1212,6 +954,22 @@ const char* literllm_chat_stream(LiterllmChatCompletionRequest req);
 LiterllmEmbeddingResponse literllm_embed(LiterllmEmbeddingRequest req);
 ```
 
+**Example:**
+
+```c
+void *result = literllm_embed(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `LiterllmEmbeddingRequest` | Yes | The embedding request |
+
+**Returns:** `LiterllmEmbeddingResponse`
+
+**Errors:** Returns `NULL` on error.
+
 #### literllm_list_models()
 
 **Signature:**
@@ -1219,6 +977,16 @@ LiterllmEmbeddingResponse literllm_embed(LiterllmEmbeddingRequest req);
 ```c
 LiterllmModelsListResponse literllm_list_models();
 ```
+
+**Example:**
+
+```c
+void *result = literllm_list_models(instance);
+```
+
+**Returns:** `LiterllmModelsListResponse`
+
+**Errors:** Returns `NULL` on error.
 
 #### literllm_image_generate()
 
@@ -1228,6 +996,22 @@ LiterllmModelsListResponse literllm_list_models();
 LiterllmImagesResponse literllm_image_generate(LiterllmCreateImageRequest req);
 ```
 
+**Example:**
+
+```c
+void *result = literllm_image_generate(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `LiterllmCreateImageRequest` | Yes | The create image request |
+
+**Returns:** `LiterllmImagesResponse`
+
+**Errors:** Returns `NULL` on error.
+
 #### literllm_speech()
 
 **Signature:**
@@ -1235,6 +1019,22 @@ LiterllmImagesResponse literllm_image_generate(LiterllmCreateImageRequest req);
 ```c
 const uint8_t* literllm_speech(LiterllmCreateSpeechRequest req);
 ```
+
+**Example:**
+
+```c
+void *result = literllm_speech(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `LiterllmCreateSpeechRequest` | Yes | The create speech request |
+
+**Returns:** `const uint8_t*`
+
+**Errors:** Returns `NULL` on error.
 
 #### literllm_transcribe()
 
@@ -1244,6 +1044,22 @@ const uint8_t* literllm_speech(LiterllmCreateSpeechRequest req);
 LiterllmTranscriptionResponse literllm_transcribe(LiterllmCreateTranscriptionRequest req);
 ```
 
+**Example:**
+
+```c
+void *result = literllm_transcribe(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `LiterllmCreateTranscriptionRequest` | Yes | The create transcription request |
+
+**Returns:** `LiterllmTranscriptionResponse`
+
+**Errors:** Returns `NULL` on error.
+
 #### literllm_moderate()
 
 **Signature:**
@@ -1251,6 +1067,22 @@ LiterllmTranscriptionResponse literllm_transcribe(LiterllmCreateTranscriptionReq
 ```c
 LiterllmModerationResponse literllm_moderate(LiterllmModerationRequest req);
 ```
+
+**Example:**
+
+```c
+void *result = literllm_moderate(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `LiterllmModerationRequest` | Yes | The moderation request |
+
+**Returns:** `LiterllmModerationResponse`
+
+**Errors:** Returns `NULL` on error.
 
 #### literllm_rerank()
 
@@ -1260,6 +1092,22 @@ LiterllmModerationResponse literllm_moderate(LiterllmModerationRequest req);
 LiterllmRerankResponse literllm_rerank(LiterllmRerankRequest req);
 ```
 
+**Example:**
+
+```c
+void *result = literllm_rerank(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `LiterllmRerankRequest` | Yes | The rerank request |
+
+**Returns:** `LiterllmRerankResponse`
+
+**Errors:** Returns `NULL` on error.
+
 #### literllm_search()
 
 **Signature:**
@@ -1267,6 +1115,22 @@ LiterllmRerankResponse literllm_rerank(LiterllmRerankRequest req);
 ```c
 LiterllmSearchResponse literllm_search(LiterllmSearchRequest req);
 ```
+
+**Example:**
+
+```c
+void *result = literllm_search(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `LiterllmSearchRequest` | Yes | The search request |
+
+**Returns:** `LiterllmSearchResponse`
+
+**Errors:** Returns `NULL` on error.
 
 #### literllm_ocr()
 
@@ -1276,6 +1140,22 @@ LiterllmSearchResponse literllm_search(LiterllmSearchRequest req);
 LiterllmOcrResponse literllm_ocr(LiterllmOcrRequest req);
 ```
 
+**Example:**
+
+```c
+void *result = literllm_ocr(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `LiterllmOcrRequest` | Yes | The ocr request |
+
+**Returns:** `LiterllmOcrResponse`
+
+**Errors:** Returns `NULL` on error.
+
 #### literllm_create_file()
 
 **Signature:**
@@ -1283,6 +1163,22 @@ LiterllmOcrResponse literllm_ocr(LiterllmOcrRequest req);
 ```c
 LiterllmFileObject literllm_create_file(LiterllmCreateFileRequest req);
 ```
+
+**Example:**
+
+```c
+void *result = literllm_create_file(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `LiterllmCreateFileRequest` | Yes | The create file request |
+
+**Returns:** `LiterllmFileObject`
+
+**Errors:** Returns `NULL` on error.
 
 #### literllm_retrieve_file()
 
@@ -1292,6 +1188,22 @@ LiterllmFileObject literllm_create_file(LiterllmCreateFileRequest req);
 LiterllmFileObject literllm_retrieve_file(const char* file_id);
 ```
 
+**Example:**
+
+```c
+void *result = literllm_retrieve_file(instance, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `file_id` | `const char*` | Yes | The file id |
+
+**Returns:** `LiterllmFileObject`
+
+**Errors:** Returns `NULL` on error.
+
 #### literllm_delete_file()
 
 **Signature:**
@@ -1299,6 +1211,22 @@ LiterllmFileObject literllm_retrieve_file(const char* file_id);
 ```c
 LiterllmDeleteResponse literllm_delete_file(const char* file_id);
 ```
+
+**Example:**
+
+```c
+void *result = literllm_delete_file(instance, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `file_id` | `const char*` | Yes | The file id |
+
+**Returns:** `LiterllmDeleteResponse`
+
+**Errors:** Returns `NULL` on error.
 
 #### literllm_list_files()
 
@@ -1308,6 +1236,22 @@ LiterllmDeleteResponse literllm_delete_file(const char* file_id);
 LiterllmFileListResponse literllm_list_files(LiterllmFileListQuery query);
 ```
 
+**Example:**
+
+```c
+void *result = literllm_list_files(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `LiterllmFileListQuery*` | No | The file list query |
+
+**Returns:** `LiterllmFileListResponse`
+
+**Errors:** Returns `NULL` on error.
+
 #### literllm_file_content()
 
 **Signature:**
@@ -1315,6 +1259,22 @@ LiterllmFileListResponse literllm_list_files(LiterllmFileListQuery query);
 ```c
 const uint8_t* literllm_file_content(const char* file_id);
 ```
+
+**Example:**
+
+```c
+void *result = literllm_file_content(instance, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `file_id` | `const char*` | Yes | The file id |
+
+**Returns:** `const uint8_t*`
+
+**Errors:** Returns `NULL` on error.
 
 #### literllm_create_batch()
 
@@ -1324,6 +1284,22 @@ const uint8_t* literllm_file_content(const char* file_id);
 LiterllmBatchObject literllm_create_batch(LiterllmCreateBatchRequest req);
 ```
 
+**Example:**
+
+```c
+void *result = literllm_create_batch(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `LiterllmCreateBatchRequest` | Yes | The create batch request |
+
+**Returns:** `LiterllmBatchObject`
+
+**Errors:** Returns `NULL` on error.
+
 #### literllm_retrieve_batch()
 
 **Signature:**
@@ -1331,6 +1307,22 @@ LiterllmBatchObject literllm_create_batch(LiterllmCreateBatchRequest req);
 ```c
 LiterllmBatchObject literllm_retrieve_batch(const char* batch_id);
 ```
+
+**Example:**
+
+```c
+void *result = literllm_retrieve_batch(instance, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `const char*` | Yes | The batch id |
+
+**Returns:** `LiterllmBatchObject`
+
+**Errors:** Returns `NULL` on error.
 
 #### literllm_list_batches()
 
@@ -1340,6 +1332,22 @@ LiterllmBatchObject literllm_retrieve_batch(const char* batch_id);
 LiterllmBatchListResponse literllm_list_batches(LiterllmBatchListQuery query);
 ```
 
+**Example:**
+
+```c
+void *result = literllm_list_batches(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `LiterllmBatchListQuery*` | No | The batch list query |
+
+**Returns:** `LiterllmBatchListResponse`
+
+**Errors:** Returns `NULL` on error.
+
 #### literllm_cancel_batch()
 
 **Signature:**
@@ -1348,13 +1356,21 @@ LiterllmBatchListResponse literllm_list_batches(LiterllmBatchListQuery query);
 LiterllmBatchObject literllm_cancel_batch(const char* batch_id);
 ```
 
-#### literllm_retrieve()
-
-**Signature:**
+**Example:**
 
 ```c
-LiterllmBatchObject literllm_retrieve(const char* batch_id);
+void *result = literllm_cancel_batch(instance, "value");
 ```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `const char*` | Yes | The batch id |
+
+**Returns:** `LiterllmBatchObject`
+
+**Errors:** Returns `NULL` on error.
 
 #### literllm_wait_for_batch()
 
@@ -1375,6 +1391,23 @@ Returns `BatchWaitError.Client` for underlying client errors.
 LiterllmBatchObject literllm_wait_for_batch(const char* batch_id, LiterllmWaitForBatchConfig config);
 ```
 
+**Example:**
+
+```c
+void *result = literllm_wait_for_batch(instance, "value", NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `const char*` | Yes | The batch id |
+| `config` | `LiterllmWaitForBatchConfig` | Yes | The configuration options |
+
+**Returns:** `LiterllmBatchObject`
+
+**Errors:** Returns `NULL` on error.
+
 #### literllm_create_response()
 
 **Signature:**
@@ -1382,6 +1415,22 @@ LiterllmBatchObject literllm_wait_for_batch(const char* batch_id, LiterllmWaitFo
 ```c
 LiterllmResponseObject literllm_create_response(LiterllmCreateResponseRequest req);
 ```
+
+**Example:**
+
+```c
+void *result = literllm_create_response(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `LiterllmCreateResponseRequest` | Yes | The create response request |
+
+**Returns:** `LiterllmResponseObject`
+
+**Errors:** Returns `NULL` on error.
 
 #### literllm_retrieve_response()
 
@@ -1391,6 +1440,22 @@ LiterllmResponseObject literllm_create_response(LiterllmCreateResponseRequest re
 LiterllmResponseObject literllm_retrieve_response(const char* response_id);
 ```
 
+**Example:**
+
+```c
+void *result = literllm_retrieve_response(instance, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `response_id` | `const char*` | Yes | The response id |
+
+**Returns:** `LiterllmResponseObject`
+
+**Errors:** Returns `NULL` on error.
+
 #### literllm_cancel_response()
 
 **Signature:**
@@ -1398,6 +1463,22 @@ LiterllmResponseObject literllm_retrieve_response(const char* response_id);
 ```c
 LiterllmResponseObject literllm_cancel_response(const char* response_id);
 ```
+
+**Example:**
+
+```c
+void *result = literllm_cancel_response(instance, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `response_id` | `const char*` | Yes | The response id |
+
+**Returns:** `LiterllmResponseObject`
+
+**Errors:** Returns `NULL` on error.
 
 ---
 
@@ -1474,78 +1555,6 @@ Embedding response.
 
 ---
 
-#### LiterllmExponentialBackoffCircuit
-
-Circuit breaker with exponential backoff.
-
-Opens after `failure_threshold` consecutive failures. After
-`base_backoff` (doubled on each successive open → half-open → open cycle,
-up to `max_backoff`), the circuit enters `CircuitState.HalfOpen` and
-allows one probe request through.
-
-### Methods
-
-#### literllm_new()
-
-Create a new policy.
-
-- `failure_threshold`: consecutive failures required to open the circuit.
-- `base_backoff`: initial half-open retry delay (doubles each open cycle,
-  capped at 2 minutes).
-
-**Signature:**
-
-```c
-LiterllmExponentialBackoffCircuit literllm_new(uint32_t failure_threshold, uint64_t base_backoff);
-```
-
-#### literllm_record_success()
-
-**Signature:**
-
-```c
-void literllm_record_success();
-```
-
-#### literllm_record_failure()
-
-**Signature:**
-
-```c
-void literllm_record_failure();
-```
-
-#### literllm_should_allow()
-
-**Signature:**
-
-```c
-bool literllm_should_allow();
-```
-
-#### literllm_state()
-
-**Signature:**
-
-```c
-LiterllmCircuitState literllm_state();
-```
-
-#### literllm_release_probe_slot()
-
-Release the probe slot without recording success or failure.
-
-Called by the `ProbeGuard` when the probe future is dropped before
-completing (e.g. cancelled or panicked).
-
-**Signature:**
-
-```c
-void literllm_release_probe_slot();
-```
-
----
-
 #### LiterllmFileListQuery
 
 Query parameters for listing files.
@@ -1583,43 +1592,6 @@ An uploaded file object.
 | `filename` | `const char*` | — | Filename. |
 | `purpose` | `const char*` | — | File purpose. |
 | `status` | `const char**` | `NULL` | Processing status (e.g., `"uploaded"`, `"processed"`). |
-
----
-
-#### LiterllmFixedDelayHedge
-
-A simple `HedgePolicy` that fires hedges at fixed intervals.
-
-### Methods
-
-#### literllm_new()
-
-Create a new policy.
-
-- `delay`: how long to wait before launching each additional attempt.
-- `max_attempts`: maximum concurrent copies of the request (≥ 1).
-
-**Signature:**
-
-```c
-LiterllmFixedDelayHedge literllm_new(uint64_t delay, uint32_t max_attempts);
-```
-
-#### literllm_delay_for_attempt()
-
-**Signature:**
-
-```c
-uint64_t* literllm_delay_for_attempt(uint32_t attempt, uint64_t latency_so_far);
-```
-
-#### literllm_max_attempts()
-
-**Signature:**
-
-```c
-uint32_t literllm_max_attempts();
-```
 
 ---
 
@@ -1681,45 +1653,19 @@ move it into the returned future without a clone, making the
 LiterllmHealthStatus literllm_check(const char* upstream);
 ```
 
----
-
-#### LiterllmHedgePolicy
-
-Policy that controls when and how many hedged requests are launched.
-
-Implement this trait to provide custom hedging strategies such as
-latency-percentile-based delays or per-model adaptive delays.
-
-### Methods
-
-#### literllm_delay_for_attempt()
-
-Returns the delay before launching attempt `attempt` (1-indexed; attempt
-1 is the initial request, attempt 2 is the first hedge, etc.).
-
-- `attempt`: 1-indexed attempt number.
-- `latency_so_far`: elapsed time since the first request was dispatched.
-
-Return `NULL` to skip this attempt (and all subsequent ones).
-
-**Signature:**
+**Example:**
 
 ```c
-uint64_t* literllm_delay_for_attempt(uint32_t attempt, uint64_t latency_so_far);
+void *result = literllm_check(instance, "value");
 ```
 
-#### literllm_max_attempts()
+**Parameters:**
 
-Maximum number of concurrent attempts (including the original request).
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `upstream` | `const char*` | Yes | The upstream |
 
-Must be ≥ 1. Values above 3 are rarely useful and increase provider
-costs significantly.
-
-**Signature:**
-
-```c
-uint32_t literllm_max_attempts();
-```
+**Returns:** `LiterllmHealthStatus`
 
 ---
 
@@ -1962,7 +1908,7 @@ discounted rate and the remainder at the regular input rate.
 Static capability flags for a provider.
 
 Each flag indicates whether the provider's models *generally* support that
-feature. For providers that aggregate many underlying models (e.g. Bedrock,
+feature.  For providers that aggregate many underlying models (e.g. Bedrock,
 OpenRouter, vLLM) the flags reflect the superset of available model
 capabilities — a flag being `true` means at least one model supports the
 feature, not every model.
@@ -1988,7 +1934,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function. Keeping
+format, which are accessed via the `capabilities` function.  Keeping
 these fields separate preserves backward compatibility with all generated
 binding code that constructs `ProviderConfig` using struct literal syntax.
 
@@ -2023,6 +1969,14 @@ Configuration for per-model rate limits.
 ```c
 LiterllmRateLimitConfig literllm_default();
 ```
+
+**Example:**
+
+```c
+void *result = literllm_default();
+```
+
+**Returns:** `LiterllmRateLimitConfig`
 
 ---
 
@@ -2168,7 +2122,7 @@ An individual search result.
 The value broadcast from a singleflight leader to all followers.
 
 `Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`. The `Arc` adds only a reference-count
+broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
 bump per follower, which is negligible under the burst loads this layer targets.
 
 ---
@@ -2315,35 +2269,6 @@ A segment of transcribed audio with timing information.
 
 ---
 
-#### LiterllmUpstreamDiscover
-
-A typed extension of `tower.discover.Discover` for LLM upstream
-services.
-
-Implementors plug in their own discovery mechanism — file-based configs,
-etcd watches, HTTP polling — and the `DynamicRouter` handles the rest.
-The key type must be `String` so that provider names are human-readable in
-logs and metrics.
-
-### Object safety
-
-`UpstreamDiscover` is **not** object-safe and **must not** be stored as
-`dyn UpstreamDiscover`. It is a generic bound used exclusively as a type
-parameter for `DynamicRouter<D>`. All discovery implementations are
-monomorphised at compile time.
-
-If you need a runtime registry of heterogeneous discovery sources, wrap
-each source in an `Arc<Mutex<Box<dyn …>>>` and poll them via a custom
-`Stream` adapter — do not store them as `dyn UpstreamDiscover`.
-
-### Note for 1.A integration
-
-If the router encounters a discovery error, it wraps it in
-`RouterError.Discover`. The 1.A error-consolidation workstream should
-replace this local enum with the canonical error hierarchy.
-
----
-
 #### LiterllmUsage
 
 Token-usage accounting returned by the provider on each completion / embedding call.
@@ -2372,12 +2297,15 @@ User message in the conversation.
 
 Configuration for polling a batch until terminal status.
 
+All time values are in seconds as `f64` so the struct bridges across FFI
+boundaries without requiring a `Duration` shim.
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `initial_interval` | `uint64_t` | `5000ms` | Initial interval between polls. |
-| `max_interval` | `uint64_t` | `60000ms` | Maximum interval between polls (backoff plateau). |
+| `initial_interval_secs` | `double` | `5` | Initial interval between polls, in seconds. |
+| `max_interval_secs` | `double` | `60` | Maximum interval between polls (backoff plateau), in seconds. |
 | `backoff_multiplier` | `float` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
-| `timeout` | `uint64_t*` | `NULL` | Optional timeout — polling fails if this duration is exceeded. |
+| `timeout_secs` | `double*` | `NULL` | Optional timeout in seconds — polling fails if this duration is exceeded. |
 
 ### Methods
 
@@ -2388,6 +2316,14 @@ Configuration for polling a batch until terminal status.
 ```c
 LiterllmWaitForBatchConfig literllm_default();
 ```
+
+**Example:**
+
+```c
+void *result = literllm_default();
+```
+
+**Returns:** `LiterllmWaitForBatchConfig`
 
 ---
 
@@ -2419,7 +2355,7 @@ User message content as either plain text or a list of multimodal parts.
 
 ---
 
-#### LiterllmTypesContentPart
+#### LiterllmContentPart
 
 A single content part in a user message — text, image, document, or audio.
 
@@ -2632,7 +2568,7 @@ How the API key is sent in the HTTP request.
 
 The streaming wire format a provider uses for its response stream.
 
-Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
+Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
 a proprietary binary EventStream framing.
 
 Deserialized from the `streaming_format` JSON field via `serde`.
@@ -2654,106 +2590,6 @@ Auth scheme used by a provider.
 | `LITERLLM_API_KEY` | `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). |
 | `LITERLLM_NONE` | No authentication header required. |
 | `LITERLLM_UNKNOWN` | Unrecognised auth scheme — falls back to bearer. |
-
----
-
-#### LiterllmOnMatch
-
-Action taken when a `RegexGuardrail` finds a match.
-
-| Value | Description |
-|-------|-------------|
-| `LITERLLM_BLOCK` | Block the request/response with the given error code and reason prefix. — Fields: `code`: `uint32_t`, `reason_prefix`: `const char*` |
-| `LITERLLM_REDACT` | Replace the matched portion with the given replacement string. — Fields: `replacement`: `const char*` |
-
----
-
-#### LiterllmCelAction
-
-The action taken when a `CelGuardrail`'s expression evaluates to `true`.
-
-| Value | Description |
-|-------|-------------|
-| `LITERLLM_BLOCK` | Block the request/response with the given code and reason. — Fields: `code`: `uint32_t`, `reason`: `const char*` |
-| `LITERLLM_MUTATE` | Replace the payload with a static JSON value (e.g., for redaction). — Fields: `new_payload`: `void*` |
-
----
-
-#### LiterllmGuardrailStage
-
-The lifecycle stage at which a guardrail runs.
-
-| Value | Description |
-|-------|-------------|
-| `LITERLLM_INPUT` | The outgoing prompt / request, before forwarding to the upstream provider. |
-| `LITERLLM_OUTPUT` | The full response from the upstream provider (non-streaming). |
-| `LITERLLM_OUTPUT_CHUNK` | A single chunk in a streaming response. Guardrails here are called once per chunk and may block or mutate individual chunks. |
-
----
-
-#### LiterllmGuardrailDecision
-
-The outcome of a guardrail check.
-
-| Value | Description |
-|-------|-------------|
-| `LITERLLM_ALLOW` | The check passed. Continue to the next guardrail or to the inner service. |
-| `LITERLLM_BLOCK` | The check failed. Short-circuit the request/response with this reason. `code` should be ≥ 1000 to avoid collision with HTTP status codes and to facilitate cross-language error mapping. — Fields: `reason`: `const char*`, `code`: `uint32_t` |
-| `LITERLLM_MUTATE` | Rewrite the payload. The provided `new_payload` replaces the original `request` or `response` before it reaches the next stage. For `OutputChunk` stage: `new_payload` replaces the chunk content. — Fields: `new_payload`: `void*` |
-
----
-
-#### LiterllmCacheState
-
-Cache outcome for a single request.
-
-| Value | Description |
-|-------|-------------|
-| `LITERLLM_MISS` | No cache entry found; request was sent to the provider. |
-| `LITERLLM_EXACT_HIT` | Exact-match cache hit; provider was not called. |
-| `LITERLLM_SEMANTIC_HIT` | Semantic-similarity cache hit; provider was not called. |
-| `LITERLLM_STALE_HIT` | Stale entry served (TTL expired but no fresh entry was available). |
-| `LITERLLM_BYPASS` | Cache lookup was skipped (bypass policy, streaming request, etc.). |
-
----
-
-#### LiterllmUsageEventOutcome
-
-High-level outcome of the request.
-
-| Value | Description |
-|-------|-------------|
-| `LITERLLM_SUCCESS` | Inner service returned a successful response. |
-| `LITERLLM_ERROR` | Inner service returned an error (non-timeout). |
-| `LITERLLM_CANCELLED` | Request was cancelled before the inner service responded. |
-| `LITERLLM_TIMED_OUT` | Inner service timed out. |
-
----
-
-#### LiterllmContentPart
-
-A single content part within a conversation item.
-
-Conversation items may carry text, audio, or an image (by reference).
-
-| Value | Description |
-|-------|-------------|
-| `LITERLLM_TEXT` | A plain-text segment. — Fields: `text`: `const char*` |
-| `LITERLLM_AUDIO` | A raw audio segment encoded as base64. — Fields: `base64`: `const char*` |
-| `LITERLLM_IMAGE_REF` | An image referenced by a URL or ID rather than inline bytes. — Fields: `url`: `const char*` |
-
----
-
-#### LiterllmResponseStatus
-
-Terminal status for a completed `RealtimeEvent.ResponseDone`.
-
-| Value | Description |
-|-------|-------------|
-| `LITERLLM_COMPLETED` | The response was produced in full. |
-| `LITERLLM_CANCELLED` | The response was cancelled before completion. |
-| `LITERLLM_FAILED` | The response failed due to an upstream error. |
-| `LITERLLM_INCOMPLETE` | The response hit a token/time limit before completing. |
 
 ---
 
@@ -2788,17 +2624,6 @@ Observable state of a circuit breaker.
 | `LITERLLM_CLOSED` | Requests flow through normally. |
 | `LITERLLM_OPEN` | All requests are rejected; the circuit is waiting for the backoff to elapse. |
 | `LITERLLM_HALF_OPEN` | One probe request is allowed through to test service health. |
-
----
-
-#### LiterllmRetryClass
-
-Classification of a single attempt error.
-
-| Value | Description |
-|-------|-------------|
-| `LITERLLM_TRANSIENT` | Transient error — advance to the next service in the chain. |
-| `LITERLLM_TERMINAL` | Terminal error — return immediately without consulting further services. |
 
 ---
 
@@ -2840,25 +2665,5 @@ All errors that can occur when using `liter-llm`.
 | `LITERLLM_OUTBOUND_FORBIDDEN` | An outbound request was blocked by the active `OutboundPolicy`. Returned when `register_custom_provider` is called with a `base_url` that violates the policy (e.g. a private-range IP under `DenyPrivate`), or when the per-connection DNS resolver detects a forbidden address at connect time. |
 | `LITERLLM_IDEMPOTENCY_CONFLICT` | A different request body was submitted for an existing `Idempotency-Key`. Per the OpenAI `Idempotency-Key` convention, once a key is used with a particular request body, subsequent requests using the same key must carry an identical body.  A body mismatch is a hard error (not retryable). HTTP equivalent: 409 Conflict. |
 | `LITERLLM_IDEMPOTENCY_IN_FLIGHT` | The same `Idempotency-Key` is already in-flight (another request with the same key is currently being processed). The caller should wait briefly and retry.  The response is not yet available, and this request has been short-circuited to avoid running the operation twice. HTTP equivalent: 409 Conflict (retryable after a brief delay). |
-
----
-
-#### LiterllmUsageSinkError
-
-Error returned by a `UsageSink` implementation.
-
-| Variant | Description |
-|---------|-------------|
-| `LITERLLM_BACKEND` | The sink's backend failed to accept the event. |
-
----
-
-#### LiterllmIdempotencyStoreError
-
-Error type for `IdempotencyStore` operations.
-
-| Variant | Description |
-|---------|-------------|
-| `LITERLLM_BACKEND` | A backend-specific error occurred. |
 
 ---
