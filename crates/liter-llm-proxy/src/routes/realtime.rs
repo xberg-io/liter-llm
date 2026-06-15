@@ -33,11 +33,11 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
 
+use axum::Extension;
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 use axum::extract::{Query, State};
 use axum::response::IntoResponse;
 use futures_util::{SinkExt, StreamExt};
-use secrecy::ExposeSecret;
 use serde::Deserialize;
 use tokio::net::TcpStream;
 use tokio::sync::Mutex;
@@ -49,6 +49,9 @@ use liter_llm::guardrail::{Guardrail, GuardrailContext, GuardrailDecision, Guard
 use liter_llm::realtime::{RealtimeEvent, RealtimeTranslator};
 use liter_llm::tower::metrics::{record_realtime_bytes, record_realtime_event, record_realtime_session_duration};
 
+use crate::auth::KeyContext;
+use crate::config::VirtualKeyConfig;
+use crate::error::ProxyError;
 use crate::state::AppState;
 
 // ── Query parameters ──────────────────────────────────────────────────────────
@@ -66,20 +69,113 @@ pub struct RealtimeQueryParams {
 ///
 /// The handler is intentionally thin: it resolves the upstream URL from the
 /// configured model and delegates the actual proxying to [`run_proxy`].
+///
+/// # Security
+///
+/// - `KeyContext` is extracted from request extensions (populated by the
+///   `validate_api_key` middleware) and checked against the requested model
+///   **before** the WebSocket upgrade.  A 403 is returned immediately if the
+///   virtual key is not allowed to access the model — the upgrade never
+///   completes.
+/// - The upstream credential is resolved from the virtual key's
+///   `provider_credentials` list, **not** from the global `master_key`.  If
+///   no matching credential is found for the `"openai"` provider (or for a
+///   master-key caller without an explicit credential), the handler returns
+///   503 rather than falling back to the master key.
 pub async fn realtime_websocket(
     ws: WebSocketUpgrade,
     Query(params): Query<RealtimeQueryParams>,
     State(state): State<AppState>,
+    Extension(key_ctx): Extension<KeyContext>,
 ) -> impl IntoResponse {
     let model = params.model.unwrap_or_default();
-    ws.on_upgrade(move |socket| handle_session(socket, model, state))
+
+    // ── Security gate 1: model allowlist check ────────────────────────────
+    // This MUST happen before the WebSocket upgrade so the caller receives a
+    // proper HTTP 403 response rather than a WS-level error message.
+    if !key_ctx.can_access_model(&model) {
+        let err = ProxyError::forbidden(format!(
+            "key '{}' is not allowed to access model '{model}'",
+            key_ctx.key_id
+        ));
+        return err.into_response();
+    }
+
+    // ── Security gate 2: resolve upstream credential ──────────────────────
+    // Load the config snapshot once. Each request gets a stable view of the
+    // config even if a hot-reload fires mid-request.
+    let config = state.config.load();
+
+    // Resolve the upstream OpenAI API key from the virtual key's credential
+    // pool.  Never fall back to master_key — that would allow any VK holder
+    // to escalate to the master billing key.
+    let upstream_api_key = match resolve_upstream_credential(&key_ctx, &config.keys, &model) {
+        Some(key) => key,
+        None => {
+            let err = ProxyError::service_unavailable(format!(
+                "no provider credential configured for model '{model}' — \
+                 add [[keys.provider_credentials]] with provider = \"openai\" \
+                 to the virtual key configuration"
+            ));
+            return err.into_response();
+        }
+    };
+
+    // Credentials and model-access check passed — now upgrade to WebSocket.
+    ws.on_upgrade(move |socket| handle_session(socket, model, upstream_api_key, state))
+        .into_response()
+}
+
+/// Resolve an upstream API key from the virtual key's provider credential pool.
+///
+/// Selection order:
+/// 1. Any `provider_credentials` entry with `provider == "openai"` whose
+///    `model_allowlist` includes `model` (or whose `model_allowlist` is `None`).
+/// 2. First such entry when multiple match (callers should configure one per
+///    model group or leave `model_allowlist` unset for a universal credential).
+///
+/// Returns `None` when:
+/// - The caller authenticated as the master key (no VK config) and no explicit
+///   credential is provided — returning `None` forces a 503 rather than leaking
+///   `master_key` to the upstream.
+/// - The VK has no `provider_credentials` entries for `"openai"`.
+fn resolve_upstream_credential(key_ctx: &KeyContext, vk_configs: &[VirtualKeyConfig], model: &str) -> Option<String> {
+    // Master-key callers do not have a VirtualKeyConfig.  We intentionally do
+    // NOT fall back to `config.general.master_key` here — leaking the master
+    // key to upstream WebSocket connections is the vulnerability we are fixing.
+    // Operators should configure an explicit provider credential even for
+    // master-key sessions, or use a virtual key with provider_credentials.
+    if key_ctx.is_master {
+        // No VK config available; cannot resolve a per-model credential.
+        return None;
+    }
+
+    // Find the VirtualKeyConfig for this key_id.
+    let vk_config = vk_configs.iter().find(|vk| vk.key == key_ctx.key_id)?;
+
+    // Find the first OpenAI credential that allows the requested model.
+    vk_config
+        .provider_credentials
+        .iter()
+        .find(|cred| {
+            cred.provider == "openai"
+                && match &cred.model_allowlist {
+                    None => true,
+                    Some(allowed) => allowed.iter().any(|m| m == model),
+                }
+        })
+        .map(|cred| cred.api_key.clone())
 }
 
 // ── Session handler ───────────────────────────────────────────────────────────
 
-/// Spawned per WebSocket connection.  Resolves config, opens the upstream
-/// connection, and runs the bidirectional proxy until either side closes.
-async fn handle_session(client_socket: WebSocket, model: String, state: AppState) {
+/// Spawned per WebSocket connection.  Opens the upstream connection using the
+/// pre-resolved `upstream_api_key` and runs the bidirectional proxy until
+/// either side closes.
+///
+/// The `upstream_api_key` is the resolved per-VK credential — the master key
+/// is NEVER passed here (that check lives in [`realtime_websocket`]).
+async fn handle_session(client_socket: WebSocket, model: String, upstream_api_key: String, state: AppState) {
     let session_start = Instant::now();
 
     // Percent-encode the model name so query string is valid even if the model
@@ -102,8 +198,8 @@ async fn handle_session(client_socket: WebSocket, model: String, state: AppState
         "realtime session starting"
     );
 
-    // Open the upstream WebSocket.
-    let upstream = match connect_upstream(&upstream_url, &state).await {
+    // Open the upstream WebSocket using the per-VK credential.
+    let upstream = match connect_upstream(&upstream_url, &upstream_api_key).await {
         Ok(ws) => ws,
         Err(err) => {
             tracing::warn!(error = %err, "failed to connect to upstream realtime endpoint");
@@ -137,21 +233,22 @@ async fn handle_session(client_socket: WebSocket, model: String, state: AppState
 
 type UpstreamStream = tokio_tungstenite::WebSocketStream<MaybeTlsStream<TcpStream>>;
 
-async fn connect_upstream(url: &str, state: &AppState) -> Result<UpstreamStream, String> {
+/// Connect to the upstream WebSocket endpoint using the pre-resolved API key.
+///
+/// # Security
+///
+/// `api_key` must be the per-VK credential resolved in [`realtime_websocket`].
+/// This function must NEVER be called with the global `master_key` — that
+/// check is enforced at the call-site in [`handle_session`] which receives
+/// the key from [`realtime_websocket`] (never from `AppState.config`).
+async fn connect_upstream(url: &str, api_key: &str) -> Result<UpstreamStream, String> {
     use tokio_tungstenite::connect_async;
     use tokio_tungstenite::tungstenite::http::Request;
 
-    let mut request_builder = Request::builder()
+    let request = Request::builder()
         .uri(url)
-        .header("User-Agent", "liter-llm-proxy/realtime");
-
-    // Forward master key as Bearer token when available.
-    let config = state.config.load();
-    if let Some(key) = config.general.master_key.as_ref() {
-        request_builder = request_builder.header("Authorization", format!("Bearer {}", key.expose_secret()));
-    }
-
-    let request = request_builder
+        .header("User-Agent", "liter-llm-proxy/realtime")
+        .header("Authorization", format!("Bearer {api_key}"))
         .body(())
         .map_err(|e| format!("failed to build upstream request: {e}"))?;
 
@@ -721,5 +818,142 @@ mod tests {
             audio_base64: "AAAA".into(),
         };
         assert!(audio_bytes_for_event(&event) > 0);
+    }
+
+    // ── Security: per-model credential resolution ─────────────────────────────
+
+    use crate::auth::KeyContext;
+    use crate::config::VirtualKeyConfig;
+    use crate::config::key::ProviderCredential;
+
+    fn make_vk_config(
+        key: &str,
+        models: Vec<String>,
+        provider_credentials: Vec<ProviderCredential>,
+    ) -> VirtualKeyConfig {
+        VirtualKeyConfig {
+            key: key.to_string(),
+            description: None,
+            models,
+            rpm: None,
+            tpm: None,
+            budget_limit: None,
+            provider_credentials,
+        }
+    }
+
+    fn make_provider_cred(
+        provider: &str,
+        id: &str,
+        api_key: &str,
+        model_allowlist: Option<Vec<String>>,
+    ) -> ProviderCredential {
+        ProviderCredential {
+            provider: provider.to_string(),
+            id: id.to_string(),
+            api_key: api_key.to_string(),
+            model_allowlist,
+        }
+    }
+
+    /// `resolve_upstream_credential` must return the per-VK credential for
+    /// the matched model, never `master_key`.  Having two VKs with different
+    /// OpenAI credentials verifies that the correct one is selected.
+    #[test]
+    fn realtime_master_key_not_leaked_to_upstream() {
+        let cred_a = make_provider_cred("openai", "cred-a", "sk-vk-a-secret", None);
+        let cred_b = make_provider_cred("openai", "cred-b", "sk-vk-b-secret", None);
+
+        let vk_a = make_vk_config("vk-team-a", vec!["gpt-4o-realtime".into()], vec![cred_a]);
+        let vk_b = make_vk_config("vk-team-b", vec!["gpt-4o-realtime".into()], vec![cred_b]);
+        let vk_configs = vec![vk_a, vk_b];
+
+        // Authenticating as vk-team-a should resolve sk-vk-a-secret.
+        let ctx_a = KeyContext {
+            key_id: "vk-team-a".into(),
+            allowed_models: Some(vec!["gpt-4o-realtime".into()]),
+            is_master: false,
+        };
+        let resolved_a = resolve_upstream_credential(&ctx_a, &vk_configs, "gpt-4o-realtime");
+        assert_eq!(
+            resolved_a.as_deref(),
+            Some("sk-vk-a-secret"),
+            "team-a should get its own credential, not master key or team-b's key"
+        );
+
+        // Authenticating as vk-team-b should resolve sk-vk-b-secret.
+        let ctx_b = KeyContext {
+            key_id: "vk-team-b".into(),
+            allowed_models: Some(vec!["gpt-4o-realtime".into()]),
+            is_master: false,
+        };
+        let resolved_b = resolve_upstream_credential(&ctx_b, &vk_configs, "gpt-4o-realtime");
+        assert_eq!(
+            resolved_b.as_deref(),
+            Some("sk-vk-b-secret"),
+            "team-b should get its own credential"
+        );
+
+        // A master-key caller must NOT receive any credential (returns None → 503).
+        let ctx_master = KeyContext::master();
+        let resolved_master = resolve_upstream_credential(&ctx_master, &vk_configs, "gpt-4o-realtime");
+        assert!(
+            resolved_master.is_none(),
+            "master-key caller must never leak master_key to upstream; got Some({resolved_master:?})"
+        );
+    }
+
+    /// A VK with `model_allowlist = ["gpt-4o-realtime"]` must not receive
+    /// a credential when requesting a different model (the request would
+    /// already have been rejected at `can_access_model`, but we verify
+    /// credential resolution also refuses).
+    #[test]
+    fn realtime_credential_model_allowlist_respected() {
+        let cred = make_provider_cred(
+            "openai",
+            "cred-1",
+            "sk-vk-secret",
+            Some(vec!["gpt-4o-realtime-preview".into()]),
+        );
+        let vk = make_vk_config("vk-1", vec![], vec![cred]);
+        let vk_configs = vec![vk];
+
+        let ctx = KeyContext {
+            key_id: "vk-1".into(),
+            allowed_models: None,
+            is_master: false,
+        };
+
+        // Matching model — should resolve.
+        let matched = resolve_upstream_credential(&ctx, &vk_configs, "gpt-4o-realtime-preview");
+        assert_eq!(matched.as_deref(), Some("sk-vk-secret"));
+
+        // Non-matching model — must return None.
+        let unmatched = resolve_upstream_credential(&ctx, &vk_configs, "gpt-4o-mini");
+        assert!(
+            unmatched.is_none(),
+            "credential with model_allowlist must not be used for an unlisted model"
+        );
+    }
+
+    /// Verify that `can_access_model` gates model access in realtime.
+    /// This tests the `KeyContext` method used by the handler's security gate.
+    #[test]
+    fn realtime_websocket_denies_unallowed_model_with_403() {
+        // A VK restricted to gpt-4o must be denied for gpt-4o-mini.
+        let ctx = KeyContext {
+            key_id: "vk-restricted".into(),
+            allowed_models: Some(vec!["gpt-4o".into()]),
+            is_master: false,
+        };
+
+        assert!(
+            !ctx.can_access_model("gpt-4o-mini"),
+            "VK restricted to gpt-4o must be denied access to gpt-4o-mini"
+        );
+        assert!(
+            ctx.can_access_model("gpt-4o"),
+            "VK restricted to gpt-4o must be allowed access to gpt-4o"
+        );
     }
 }
