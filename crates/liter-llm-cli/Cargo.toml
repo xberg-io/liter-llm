@@ -27,6 +27,7 @@ jemalloc = ["dep:tikv-jemallocator"]
 default = []
 
 [dependencies]
+arc-swap = { workspace = true }
 axum = { workspace = true }
 clap = { workspace = true }
 liter-llm = { path = "../liter-llm", version = "1.6.0-rc.0" }

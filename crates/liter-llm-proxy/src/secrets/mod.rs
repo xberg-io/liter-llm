@@ -135,10 +135,7 @@ pub struct SecretMetadata {
 /// trait is object-safe without requiring `async_trait`.
 pub trait SecretManager: Send + Sync + 'static {
     /// Fetch a secret by name. Returns the value and full metadata.
-    fn get<'a>(
-        &'a self,
-        name: &'a str,
-    ) -> Pin<Box<dyn Future<Output = Result<SecretValue, SecretError>> + Send + 'a>>;
+    fn get<'a>(&'a self, name: &'a str) -> Pin<Box<dyn Future<Output = Result<SecretValue, SecretError>> + Send + 'a>>;
 
     /// Write or update a secret.
     ///
@@ -155,10 +152,7 @@ pub trait SecretManager: Send + Sync + 'static {
     ///
     /// Implementations that do not support deletes **must** return
     /// [`SecretError::PermissionDenied`].
-    fn delete<'a>(
-        &'a self,
-        name: &'a str,
-    ) -> Pin<Box<dyn Future<Output = Result<(), SecretError>> + Send + 'a>>;
+    fn delete<'a>(&'a self, name: &'a str) -> Pin<Box<dyn Future<Output = Result<(), SecretError>> + Send + 'a>>;
 
     /// Stable identifier used in log messages and metrics.
     fn backend(&self) -> &'static str;

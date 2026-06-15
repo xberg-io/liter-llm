@@ -3,7 +3,6 @@
 
 package dev.kreuzberg.literllm.android
 
-class LiterLlmBridgeException(message: String?, cause: Throwable?) :
-    RuntimeException(message, cause) {
+class LiterLlmBridgeException(message: String?, cause: Throwable?) : RuntimeException(message, cause) {
     constructor(message: String?) : this(message, null)
 }

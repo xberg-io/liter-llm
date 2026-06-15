@@ -3173,6 +3173,7 @@ dependencies = [
 name = "liter-llm-cli"
 version = "1.6.0-rc.0"
 dependencies = [
+ "arc-swap",
  "axum 0.8.9",
  "clap",
  "liter-llm",

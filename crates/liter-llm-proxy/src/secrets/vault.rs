@@ -30,7 +30,7 @@ use std::time::{Duration, Instant, SystemTime};
 use secrecy::{ExposeSecret, SecretString};
 use vaultrs::client::{VaultClient, VaultClientSettingsBuilder};
 
-use super::{SecretError, SecretMetadata, SecretManager, SecretValue};
+use super::{SecretError, SecretManager, SecretMetadata, SecretValue};
 
 // ---------------------------------------------------------------------------
 // Cache (reuses the same pattern as the AWS backend)
@@ -67,7 +67,14 @@ impl SecretCache {
 
     fn insert(&self, key: &str, raw: String, metadata: SecretMetadata) {
         let mut store = self.store.lock().expect("cache mutex poisoned");
-        store.insert(key.to_owned(), CacheEntry { raw, metadata, cached_at: Instant::now() });
+        store.insert(
+            key.to_owned(),
+            CacheEntry {
+                raw,
+                metadata,
+                cached_at: Instant::now(),
+            },
+        );
     }
 
     fn evict(&self, key: &str) {
@@ -103,24 +110,20 @@ impl HashiCorpVaultProvider {
             (name, "value")
         };
 
-        let data: HashMap<String, String> = vaultrs::kv2::read(
-            self.client.as_ref(),
-            &self.mount,
-            path,
-        )
-        .await
-        .map_err(|e| {
-            let msg = e.to_string();
-            if msg.contains("404") || msg.contains("not found") {
-                SecretError::NotFound(name.to_owned())
-            } else if msg.contains("403") || msg.contains("permission denied") {
-                SecretError::PermissionDenied(name.to_owned())
-            } else if msg.contains("429") || msg.contains("rate limit") {
-                SecretError::RateLimited
-            } else {
-                SecretError::backend(e)
-            }
-        })?;
+        let data: HashMap<String, String> = vaultrs::kv2::read(self.client.as_ref(), &self.mount, path)
+            .await
+            .map_err(|e| {
+                let msg = e.to_string();
+                if msg.contains("404") || msg.contains("not found") {
+                    SecretError::NotFound(name.to_owned())
+                } else if msg.contains("403") || msg.contains("permission denied") {
+                    SecretError::PermissionDenied(name.to_owned())
+                } else if msg.contains("429") || msg.contains("rate limit") {
+                    SecretError::RateLimited
+                } else {
+                    SecretError::backend(e)
+                }
+            })?;
 
         let raw = data
             .get(field)
@@ -130,28 +133,21 @@ impl HashiCorpVaultProvider {
         // Vault KV-v2 metadata (version, created_time) is returned in a
         // separate API call.  To keep the hot path cheap we read it
         // opportunistically and fall back to defaults on error.
-        let (version, created_at, tags) = match vaultrs::kv2::read_metadata(
-            self.client.as_ref(),
-            &self.mount,
-            path,
-        )
-        .await
-        {
-            Ok(meta) => {
-                let version = meta.current_version.to_string();
-                let created_at = meta
-                    .created_time
-                    .parse::<chrono::DateTime<chrono::Utc>>()
-                    .ok()
-                    .map(SystemTime::from)
-                    .unwrap_or(SystemTime::UNIX_EPOCH);
-                let tags: HashMap<String, String> = meta
-                    .custom_metadata
-                    .unwrap_or_default();
-                (version, created_at, tags)
-            }
-            Err(_) => ("unknown".to_owned(), SystemTime::UNIX_EPOCH, HashMap::new()),
-        };
+        let (version, created_at, tags) =
+            match vaultrs::kv2::read_metadata(self.client.as_ref(), &self.mount, path).await {
+                Ok(meta) => {
+                    let version = meta.current_version.to_string();
+                    let created_at = meta
+                        .created_time
+                        .parse::<chrono::DateTime<chrono::Utc>>()
+                        .ok()
+                        .map(SystemTime::from)
+                        .unwrap_or(SystemTime::UNIX_EPOCH);
+                    let tags: HashMap<String, String> = meta.custom_metadata.unwrap_or_default();
+                    (version, created_at, tags)
+                }
+                Err(_) => ("unknown".to_owned(), SystemTime::UNIX_EPOCH, HashMap::new()),
+            };
 
         let now = SystemTime::now();
         let metadata = SecretMetadata {
@@ -177,10 +173,7 @@ impl SecretManager for HashiCorpVaultProvider {
         "hashicorp-vault"
     }
 
-    fn get<'a>(
-        &'a self,
-        name: &'a str,
-    ) -> Pin<Box<dyn Future<Output = Result<SecretValue, SecretError>> + Send + 'a>> {
+    fn get<'a>(&'a self, name: &'a str) -> Pin<Box<dyn Future<Output = Result<SecretValue, SecretError>> + Send + 'a>> {
         Box::pin(async move {
             if let Some((raw, metadata)) = self.cache.get(name) {
                 return Ok(SecretValue {
@@ -209,20 +202,15 @@ impl SecretManager for HashiCorpVaultProvider {
             let mut data = HashMap::new();
             data.insert(field.to_owned(), raw.clone());
 
-            vaultrs::kv2::set(
-                self.client.as_ref(),
-                &self.mount,
-                path,
-                &data,
-            )
-            .await
-            .map_err(|e| {
-                if e.to_string().contains("403") {
-                    SecretError::PermissionDenied(name.to_owned())
-                } else {
-                    SecretError::backend(e)
-                }
-            })?;
+            vaultrs::kv2::set(self.client.as_ref(), &self.mount, path, &data)
+                .await
+                .map_err(|e| {
+                    if e.to_string().contains("403") {
+                        SecretError::PermissionDenied(name.to_owned())
+                    } else {
+                        SecretError::backend(e)
+                    }
+                })?;
 
             let now = SystemTime::now();
             let metadata = SecretMetadata {
@@ -238,12 +226,13 @@ impl SecretManager for HashiCorpVaultProvider {
         })
     }
 
-    fn delete<'a>(
-        &'a self,
-        name: &'a str,
-    ) -> Pin<Box<dyn Future<Output = Result<(), SecretError>> + Send + 'a>> {
+    fn delete<'a>(&'a self, name: &'a str) -> Pin<Box<dyn Future<Output = Result<(), SecretError>> + Send + 'a>> {
         Box::pin(async move {
-            let path = if let Some(idx) = name.find('#') { &name[..idx] } else { name };
+            let path = if let Some(idx) = name.find('#') {
+                &name[..idx]
+            } else {
+                name
+            };
             vaultrs::kv2::delete_latest(self.client.as_ref(), &self.mount, path)
                 .await
                 .map_err(|e| {
@@ -304,9 +293,7 @@ impl HashiCorpVaultProviderBuilder {
     /// Returns a [`SecretError::Backend`] if the Vault client cannot be
     /// constructed (e.g. invalid URL).
     pub fn build(self) -> Result<HashiCorpVaultProvider, SecretError> {
-        let address = self
-            .address
-            .unwrap_or_else(|| "http://127.0.0.1:8200".to_owned());
+        let address = self.address.unwrap_or_else(|| "http://127.0.0.1:8200".to_owned());
         let token = self
             .token
             .unwrap_or_else(|| std::env::var("VAULT_TOKEN").unwrap_or_default());

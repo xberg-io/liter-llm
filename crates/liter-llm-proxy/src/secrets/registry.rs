@@ -25,7 +25,7 @@ use std::sync::Arc;
 
 use secrecy::SecretString;
 
-use super::{SecretError, SecretMetadata, SecretManager, SecretValue, check_rotation_warning};
+use super::{SecretError, SecretManager, SecretMetadata, SecretValue, check_rotation_warning};
 
 /// A typed router that dispatches secret operations to the correct backend
 /// based on the URI scheme prefix of the secret name.
@@ -101,10 +101,7 @@ impl SecretManagerRegistry {
     }
 
     /// Delete a secret through the registry.
-    pub fn delete<'a>(
-        &'a self,
-        name: &'a str,
-    ) -> Pin<Box<dyn Future<Output = Result<(), SecretError>> + Send + 'a>> {
+    pub fn delete<'a>(&'a self, name: &'a str) -> Pin<Box<dyn Future<Output = Result<(), SecretError>> + Send + 'a>> {
         Box::pin(async move {
             let (backend, path) = self.resolve(name);
             backend.delete(path).await

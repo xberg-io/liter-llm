@@ -70,6 +70,7 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
 }
 
+<<<<<<< Updated upstream
 // Build host JNI library for JVM unit tests (macOS/Linux/Windows).
 // The generated Kotlin Bridge object calls System.loadLibrary("literllm_jni") for JVM
 // unit tests running on developer machines. This task builds the host-platform binary
@@ -137,6 +138,8 @@ tasks
         }
     }
 
+=======
+>>>>>>> Stashed changes
 mavenPublishing {
     configure(AndroidSingleVariantLibrary(
         variant = "release",

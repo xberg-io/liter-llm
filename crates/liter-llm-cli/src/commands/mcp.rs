@@ -22,9 +22,11 @@ pub struct McpArgs {
 pub async fn run(args: McpArgs) -> Result<(), String> {
     use std::sync::Arc;
 
+    use arc_swap::ArcSwap;
     use liter_llm_proxy::auth::{KeyContext, KeyStore};
     use liter_llm_proxy::file_store::FileStore;
     use liter_llm_proxy::mcp::{LiterLlmMcp, McpTransportKind};
+    use liter_llm_proxy::secrets::{EnvVarSecretManager, SecretManagerRegistry};
     use liter_llm_proxy::service_pool::ServicePool;
     use liter_llm_proxy::state::AppState;
     use rmcp::ServiceExt;
@@ -102,7 +104,13 @@ pub async fn run(args: McpArgs) -> Result<(), String> {
                 key_store: key_store.clone(),
                 service_pool: service_pool.clone(),
                 file_store: file_store.clone(),
-                config: Arc::new(config.clone()),
+                config: Arc::new(ArcSwap::new(Arc::new(config.clone()))),
+                secret_registry: Arc::new(
+                    SecretManagerRegistry::builder()
+                        .register("env", Arc::new(EnvVarSecretManager::new()))
+                        .default_backend(Arc::new(EnvVarSecretManager::new()))
+                        .build(),
+                ),
                 shutdown: None,
             };
 

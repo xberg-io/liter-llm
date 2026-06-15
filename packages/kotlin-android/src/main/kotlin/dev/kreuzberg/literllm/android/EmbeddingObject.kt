@@ -28,8 +28,8 @@ package dev.kreuzberg.literllm.android
 /** A single embedding vector. */
 data class EmbeddingObject(
     /**
-     * Always `"embedding"` from OpenAI-compatible APIs. Stored as a plain `String` so non-standard
-     * provider values do not break deserialization.
+     * Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain
+     * `String` so non-standard provider values do not break deserialization.
      */
     val `object`: String,
     /** The embedding vector. */

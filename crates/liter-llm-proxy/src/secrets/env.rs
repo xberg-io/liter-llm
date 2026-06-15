@@ -13,7 +13,7 @@ use std::time::SystemTime;
 
 use secrecy::SecretString;
 
-use super::{SecretError, SecretMetadata, SecretManager, SecretValue};
+use super::{SecretError, SecretManager, SecretMetadata, SecretValue};
 
 /// A read-only secret manager backed by process environment variables.
 ///
@@ -38,10 +38,7 @@ impl SecretManager for EnvVarSecretManager {
         "env"
     }
 
-    fn get<'a>(
-        &'a self,
-        name: &'a str,
-    ) -> Pin<Box<dyn Future<Output = Result<SecretValue, SecretError>> + Send + 'a>> {
+    fn get<'a>(&'a self, name: &'a str) -> Pin<Box<dyn Future<Output = Result<SecretValue, SecretError>> + Send + 'a>> {
         let name = name.to_owned();
         Box::pin(async move {
             match std::env::var(&name) {
@@ -60,9 +57,9 @@ impl SecretManager for EnvVarSecretManager {
                     })
                 }
                 Err(std::env::VarError::NotPresent) => Err(SecretError::NotFound(name)),
-                Err(std::env::VarError::NotUnicode(_)) => {
-                    Err(SecretError::backend_msg(format!("env var '{name}' contains invalid UTF-8")))
-                }
+                Err(std::env::VarError::NotUnicode(_)) => Err(SecretError::backend_msg(format!(
+                    "env var '{name}' contains invalid UTF-8"
+                ))),
             }
         })
     }
@@ -77,10 +74,7 @@ impl SecretManager for EnvVarSecretManager {
         Box::pin(async move { Err(SecretError::PermissionDenied(name)) })
     }
 
-    fn delete<'a>(
-        &'a self,
-        name: &'a str,
-    ) -> Pin<Box<dyn Future<Output = Result<(), SecretError>> + Send + 'a>> {
+    fn delete<'a>(&'a self, name: &'a str) -> Pin<Box<dyn Future<Output = Result<(), SecretError>> + Send + 'a>> {
         let name = name.to_owned();
         Box::pin(async move { Err(SecretError::PermissionDenied(name)) })
     }
@@ -123,9 +117,7 @@ mod tests {
     async fn secret_manager_env_not_found_returns_not_found_error() {
         let mgr = EnvVarSecretManager::new();
         let result = mgr.get("LITER_SURELY_NONEXISTENT_VAR_99999").await;
-        assert!(
-            matches!(result, Err(SecretError::NotFound(ref n)) if n == "LITER_SURELY_NONEXISTENT_VAR_99999")
-        );
+        assert!(matches!(result, Err(SecretError::NotFound(ref n)) if n == "LITER_SURELY_NONEXISTENT_VAR_99999"));
     }
 
     #[tokio::test]

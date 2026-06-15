@@ -69,8 +69,8 @@ pub async fn run(args: ApiArgs) -> Result<(), String> {
     // Apply CLI overrides (highest precedence).
     config.server.host.clone_from(&args.host);
     config.server.port = args.port;
-    if let Some(key) = args.master_key {
-        config.general.master_key = Some(SecretString::from(key));
+    if let Some(ref key) = args.master_key {
+        config.general.master_key = Some(SecretString::from(key.clone()));
     }
 
     // Warn when wildcard CORS is combined with a public-facing bind address.

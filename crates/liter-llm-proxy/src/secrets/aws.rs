@@ -16,7 +16,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use aws_sdk_secretsmanager::Client;
 use secrecy::{ExposeSecret, SecretString};
 
-use super::{SecretError, SecretMetadata, SecretManager, SecretValue};
+use super::{SecretError, SecretManager, SecretMetadata, SecretValue};
 
 // ---------------------------------------------------------------------------
 // Cache
@@ -130,9 +130,7 @@ impl AwsSecretsManagerProvider {
 
                 match sdk_err {
                     SdkError::ServiceError(ref svc) => match svc.err() {
-                        GetSecretValueError::ResourceNotFoundException(_) => {
-                            SecretError::NotFound(name.to_owned())
-                        }
+                        GetSecretValueError::ResourceNotFoundException(_) => SecretError::NotFound(name.to_owned()),
                         other => {
                             let msg = other.to_string();
                             if msg.contains("AccessDenied") {
@@ -158,9 +156,7 @@ impl AwsSecretsManagerProvider {
         // Extract timestamps from the API response.
         let created_at = resp
             .created_date()
-            .and_then(|dt| {
-                UNIX_EPOCH.checked_add(Duration::from_secs_f64(dt.as_secs_f64()))
-            })
+            .and_then(|dt| UNIX_EPOCH.checked_add(Duration::from_secs_f64(dt.as_secs_f64())))
             .unwrap_or(SystemTime::UNIX_EPOCH);
 
         // AWS Secrets Manager doesn't surface `updated_at` in GetSecretValue;
@@ -175,10 +171,7 @@ impl AwsSecretsManagerProvider {
             .map(|(i, s)| (format!("stage_{i}"), s.to_owned()))
             .collect();
 
-        let version = resp
-            .version_id()
-            .unwrap_or("unknown")
-            .to_owned();
+        let version = resp.version_id().unwrap_or("unknown").to_owned();
 
         let metadata = SecretMetadata {
             name: name.to_owned(),
@@ -203,10 +196,7 @@ impl SecretManager for AwsSecretsManagerProvider {
         "aws-secrets-manager"
     }
 
-    fn get<'a>(
-        &'a self,
-        name: &'a str,
-    ) -> Pin<Box<dyn Future<Output = Result<SecretValue, SecretError>> + Send + 'a>> {
+    fn get<'a>(&'a self, name: &'a str) -> Pin<Box<dyn Future<Output = Result<SecretValue, SecretError>> + Send + 'a>> {
         Box::pin(async move {
             // Cache hit — skip the AWS API call.
             if let Some((raw, metadata)) = self.cache.get(name) {
@@ -229,12 +219,7 @@ impl SecretManager for AwsSecretsManagerProvider {
             // Convert tags to AWS Tag structs.
             let aws_tags: Vec<aws_sdk_secretsmanager::types::Tag> = tags
                 .iter()
-                .map(|(k, v)| {
-                    aws_sdk_secretsmanager::types::Tag::builder()
-                        .key(k)
-                        .value(v)
-                        .build()
-                })
+                .map(|(k, v)| aws_sdk_secretsmanager::types::Tag::builder().key(k).value(v).build())
                 .collect();
 
             // Try PutSecretValue first; fall back to CreateSecret on
@@ -261,19 +246,10 @@ impl SecretManager for AwsSecretsManagerProvider {
                     );
                     if is_not_found {
                         // Secret does not exist yet — create it.
-                        let mut req = self
-                            .client
-                            .create_secret()
-                            .name(name)
-                            .secret_string(&raw);
+                        let mut req = self.client.create_secret().name(name).secret_string(&raw);
                         for tag in &aws_tags {
                             if let (Some(k), Some(v)) = (tag.key(), tag.value()) {
-                                req = req.tags(
-                                    aws_sdk_secretsmanager::types::Tag::builder()
-                                        .key(k)
-                                        .value(v)
-                                        .build(),
-                                );
+                                req = req.tags(aws_sdk_secretsmanager::types::Tag::builder().key(k).value(v).build());
                             }
                         }
                         req.send()
@@ -300,10 +276,7 @@ impl SecretManager for AwsSecretsManagerProvider {
         })
     }
 
-    fn delete<'a>(
-        &'a self,
-        name: &'a str,
-    ) -> Pin<Box<dyn Future<Output = Result<(), SecretError>> + Send + 'a>> {
+    fn delete<'a>(&'a self, name: &'a str) -> Pin<Box<dyn Future<Output = Result<(), SecretError>> + Send + 'a>> {
         Box::pin(async move {
             self.client
                 .delete_secret()
