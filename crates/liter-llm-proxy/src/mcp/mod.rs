@@ -872,6 +872,7 @@ mod tests {
             rpm: None,
             tpm: None,
             budget_limit: None,
+            provider_credentials: vec![],
         };
         KeyContext::from_config(&cfg)
     }

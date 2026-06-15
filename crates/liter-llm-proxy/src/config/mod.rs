@@ -2,13 +2,18 @@ pub mod files;
 pub mod key;
 pub mod mcp;
 pub mod model;
+pub mod provider;
 pub mod security;
 pub mod server;
+pub mod watcher;
 
 pub use files::FileStorageConfig;
 pub use key::VirtualKeyConfig;
 pub use mcp::McpConfig;
 pub use model::{AliasEntry, ModelEntry};
+pub use provider::{
+    ConfigError, ConfigEvent, ConfigProvider, EtcdConfigProvider, FileWatchConfigProvider, StaticFileConfigProvider,
+};
 pub use security::{OutboundPolicyKind, SecurityConfig};
 pub use server::ServerConfig;
 

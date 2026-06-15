@@ -4,6 +4,7 @@ use std::time::Duration;
 use clap::Args;
 use liter_llm::provider::{OutboundPolicy, set_outbound_policy};
 use liter_llm_proxy::ProxyServer;
+use liter_llm_proxy::WatchMode;
 use liter_llm_proxy::config::{OutboundPolicyKind, ProxyConfig};
 use liter_llm_proxy::shutdown::{ShutdownCoordinator, ShutdownPhase};
 use secrecy::SecretString;
@@ -28,6 +29,26 @@ pub struct ApiArgs {
     /// Enable debug logging.
     #[arg(long)]
     pub debug: bool,
+    /// Enable hot-reload of the configuration file.
+    ///
+    /// When `--config` is set, watches that file for changes and reloads
+    /// automatically on every save.  When `--etcd-endpoint` is also set,
+    /// uses etcd instead of file watching.
+    #[arg(long)]
+    pub watch: bool,
+    /// etcd endpoint URL(s) for distributed config (comma-separated).
+    ///
+    /// Example: `http://127.0.0.1:2379`
+    ///
+    /// When provided together with `--watch`, the proxy subscribes to the
+    /// etcd key at `--etcd-key` for live configuration updates.
+    #[arg(long, value_delimiter = ',', env = "LITER_LLM_ETCD_ENDPOINTS")]
+    pub etcd_endpoint: Vec<String>,
+    /// etcd key to watch for proxy configuration (default: `/liter-llm/config`).
+    ///
+    /// Only used when `--etcd-endpoint` is set.
+    #[arg(long, default_value = "/liter-llm/config", env = "LITER_LLM_ETCD_KEY")]
+    pub etcd_key: String,
 }
 
 pub async fn run(args: ApiArgs) -> Result<(), String> {
@@ -69,6 +90,9 @@ pub async fn run(args: ApiArgs) -> Result<(), String> {
     let policy = build_outbound_policy(&config)?;
     set_outbound_policy(policy);
 
+    // Resolve the watch mode from CLI flags.
+    let watch_mode = resolve_watch_mode(&args)?;
+
     // ── Shutdown coordinator ──────────────────────────────────────────────
     let coordinator = ShutdownCoordinator::new();
     let handle = coordinator.handle();
@@ -78,8 +102,12 @@ pub async fn run(args: ApiArgs) -> Result<(), String> {
 
     // Axum server — drains via the cancellation token.
     let server_handle = handle.clone();
-    let server_task =
-        tokio::spawn(async move { ProxyServer::new(config).serve_with_shutdown(Some(server_handle)).await });
+    let server_task = tokio::spawn(async move {
+        ProxyServer::new(config)
+            .with_watch_mode(watch_mode)
+            .serve_with_shutdown(Some(server_handle))
+            .await
+    });
 
     // Wait until we enter Draining (or beyond) before logging drain progress.
     {
@@ -123,6 +151,27 @@ pub async fn run(args: ApiArgs) -> Result<(), String> {
     }
 
     Ok(())
+}
+
+/// Translate CLI flags into a [`WatchMode`].
+fn resolve_watch_mode(args: &ApiArgs) -> Result<WatchMode, String> {
+    if !args.watch {
+        return Ok(WatchMode::Off);
+    }
+
+    if !args.etcd_endpoint.is_empty() {
+        return Ok(WatchMode::Etcd {
+            endpoints: args.etcd_endpoint.clone(),
+            key: args.etcd_key.clone(),
+        });
+    }
+
+    let path = args
+        .config
+        .clone()
+        .ok_or_else(|| "--watch requires --config <path> or --etcd-endpoint <url>".to_owned())?;
+
+    Ok(WatchMode::File { path })
 }
 
 /// Drive `coordinator` to completion while emitting a log line every `interval`.

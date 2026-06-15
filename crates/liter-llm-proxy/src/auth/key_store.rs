@@ -96,6 +96,7 @@ mod tests {
             rpm: Some(60),
             tpm: Some(100_000),
             budget_limit: Some(50.0),
+            provider_credentials: vec![],
         }
     }
 

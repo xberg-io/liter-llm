@@ -8,6 +8,7 @@ pub mod images;
 pub mod models;
 pub mod moderations;
 pub mod ocr;
+pub mod realtime;
 pub mod rerank;
 pub mod responses;
 pub mod search;
@@ -101,6 +102,8 @@ pub fn build_router(state: AppState) -> Router {
             "/v1/responses/{response_id}/cancel",
             post(responses::cancel_response),
         )
+        // Realtime WebSocket proxy
+        .route("/v1/realtime", get(realtime::realtime_websocket))
         // Auth middleware on all /v1 routes
         .layer(middleware::from_fn_with_state(
             state.clone(),
@@ -117,13 +120,19 @@ pub fn build_router(state: AppState) -> Router {
         .route("/readyz", get(health::readyz))
         .route("/openapi.json", get(crate::openapi::openapi_schema));
 
+    // Snapshot the current config for router-build decisions (CORS origins,
+    // body limit). These are applied once at startup; a hot-reload of CORS
+    // origins or body_limit_bytes requires a server restart. Request handlers
+    // that need per-request config should call `state.config.load()`.
+    let cfg_snapshot = state.config.load();
+
     // Build an optional CORS layer.  Empty cors_origins means CORS is disabled
     // entirely — no CorsLayer is added to the router.  A wildcard origin ("*")
     // is allowed but must NOT expose the Authorization header, which would
     // permit credentialed cross-origin requests from any origin.
-    let cors_layer: Option<CorsLayer> = if state.config.server.cors_origins.is_empty() {
+    let cors_layer: Option<CorsLayer> = if cfg_snapshot.server.cors_origins.is_empty() {
         None
-    } else if state.config.server.cors_origins.iter().any(|o| o == "*") {
+    } else if cfg_snapshot.server.cors_origins.iter().any(|o| o == "*") {
         Some(
             CorsLayer::new()
                 .allow_origin(Any)
@@ -136,8 +145,7 @@ pub fn build_router(state: AppState) -> Router {
                 ]),
         )
     } else {
-        let origins: Vec<HeaderValue> = state
-            .config
+        let origins: Vec<HeaderValue> = cfg_snapshot
             .server
             .cors_origins
             .iter()
@@ -155,7 +163,7 @@ pub fn build_router(state: AppState) -> Router {
         .merge(v1_routes)
         .merge(health_routes)
         .layer(SetSensitiveHeadersLayer::new([AUTHORIZATION]))
-        .layer(DefaultBodyLimit::max(state.config.server.body_limit_bytes))
+        .layer(DefaultBodyLimit::max(cfg_snapshot.server.body_limit_bytes))
         .layer(CompressionLayer::new())
         .layer(CatchPanicLayer::new())
         .layer(TraceLayer::new_for_http())

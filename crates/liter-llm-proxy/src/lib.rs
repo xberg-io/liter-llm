@@ -33,10 +33,7 @@ pub enum WatchMode {
     /// Watch a local TOML file for changes via `notify`.
     File { path: std::path::PathBuf },
     /// Watch an etcd key prefix for changes.
-    Etcd {
-        endpoints: Vec<String>,
-        key: String,
-    },
+    Etcd { endpoints: Vec<String>, key: String },
 }
 
 /// Builder for the liter-llm proxy server.
@@ -114,7 +111,10 @@ impl ProxyServer {
         // features are enabled and configured.
         let secret_registry = Arc::new(
             secrets::SecretManagerRegistry::builder()
-                .register("env", Arc::new(secrets::EnvVarSecretManager::new()) as Arc<dyn secrets::SecretManager>)
+                .register(
+                    "env",
+                    Arc::new(secrets::EnvVarSecretManager::new()) as Arc<dyn secrets::SecretManager>,
+                )
                 .default_backend(Arc::new(secrets::EnvVarSecretManager::new()) as Arc<dyn secrets::SecretManager>)
                 .build(),
         );

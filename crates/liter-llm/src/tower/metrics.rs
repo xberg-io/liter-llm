@@ -100,6 +100,13 @@ mod inner {
         budget_spend: Histogram<f64>,
         /// `gen_ai.budget.rejection` — counter incremented on budget reject.
         budget_rejection: Counter<u64>,
+        // ── Realtime instruments ───────────────────────────────────────────────
+        /// `gen_ai.realtime.session.duration` — WebSocket session lifetime in seconds.
+        realtime_session_duration: Histogram<f64>,
+        /// `gen_ai.realtime.event.count` — events forwarded (inbound + outbound).
+        realtime_event_count: Counter<u64>,
+        /// `gen_ai.realtime.bytes` — audio bytes forwarded.
+        realtime_bytes: Counter<u64>,
     }
 
     impl Instruments {
@@ -148,6 +155,22 @@ mod inner {
                 budget_rejection: meter
                     .u64_counter("gen_ai.budget.rejection")
                     .with_description("Number of requests rejected due to budget limits")
+                    .build(),
+                realtime_session_duration: meter
+                    .f64_histogram("gen_ai.realtime.session.duration")
+                    .with_description("Realtime WebSocket session lifetime in seconds")
+                    .with_unit("s")
+                    .build(),
+                realtime_event_count: meter
+                    .u64_counter("gen_ai.realtime.event.count")
+                    .with_description(
+                        "Number of Realtime events forwarded, by direction and type",
+                    )
+                    .build(),
+                realtime_bytes: meter
+                    .u64_counter("gen_ai.realtime.bytes")
+                    .with_description("Audio bytes forwarded over Realtime WebSocket sessions")
+                    .with_unit("By")
                     .build(),
             }
         }
@@ -460,6 +483,57 @@ mod inner {
         }
     }
 
+    // ─── Realtime metric helpers ──────────────────────────────────────────────
+
+    /// Record the lifetime of a completed Realtime WebSocket session.
+    ///
+    /// Emits `gen_ai.realtime.session.duration` (seconds).
+    /// If the meter has not been initialized, this call is a no-op.
+    pub fn record_realtime_session_duration(provider: &str, duration_secs: f64) {
+        if let Some(instr) = instruments() {
+            instr.realtime_session_duration.record(
+                duration_secs,
+                &[KeyValue::new("gen_ai.system", provider.to_owned())],
+            );
+        }
+    }
+
+    /// Record a single Realtime event being forwarded.
+    ///
+    /// Emits `gen_ai.realtime.event.count` with `gen_ai.realtime.direction`
+    /// (`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
+    /// `gen_ai.system`.
+    /// If the meter has not been initialized, this call is a no-op.
+    pub fn record_realtime_event(provider: &str, direction: &str, event_type: &str) {
+        if let Some(instr) = instruments() {
+            instr.realtime_event_count.add(
+                1,
+                &[
+                    KeyValue::new("gen_ai.system", provider.to_owned()),
+                    KeyValue::new("gen_ai.realtime.direction", direction.to_owned()),
+                    KeyValue::new("gen_ai.realtime.event_type", event_type.to_owned()),
+                ],
+            );
+        }
+    }
+
+    /// Record audio bytes forwarded over a Realtime WebSocket session.
+    ///
+    /// Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
+    /// `gen_ai.realtime.direction` attributes.
+    /// If the meter has not been initialized, this call is a no-op.
+    pub fn record_realtime_bytes(provider: &str, direction: &str, byte_count: u64) {
+        if let Some(instr) = instruments() {
+            instr.realtime_bytes.add(
+                byte_count,
+                &[
+                    KeyValue::new("gen_ai.system", provider.to_owned()),
+                    KeyValue::new("gen_ai.realtime.direction", direction.to_owned()),
+                ],
+            );
+        }
+    }
+
     // ─── Tests ────────────────────────────────────────────────────────────────
 
     #[cfg(test)]
@@ -652,6 +726,18 @@ mod inner {
     /// No-op per-tier cache-miss helper.
     #[inline]
     pub fn record_cache_tier_miss(_system: &str, _model: &str, _tier: &str) {}
+
+    /// No-op realtime session duration helper.
+    #[inline]
+    pub fn record_realtime_session_duration(_provider: &str, _duration_secs: f64) {}
+
+    /// No-op realtime event count helper.
+    #[inline]
+    pub fn record_realtime_event(_provider: &str, _direction: &str, _event_type: &str) {}
+
+    /// No-op realtime bytes helper.
+    #[inline]
+    pub fn record_realtime_bytes(_provider: &str, _direction: &str, _byte_count: u64) {}
 }
 
 // Re-export the active implementation.
