@@ -8,25 +8,46 @@ use subtle::ConstantTimeEq;
 
 use crate::config::VirtualKeyConfig;
 
+/// Tenant identifier used for requests authenticated via the master key.
+///
+/// This is a well-known constant so downstream consumers (BudgetLedger,
+/// TenantScopedStrategy, UsageEvent) can distinguish master-key traffic
+/// from virtual-key traffic without a special-case enum.
+pub const MASTER_TENANT_ID: &str = "master";
+
 /// Context injected into request extensions after successful auth.
 #[derive(Debug, Clone)]
 pub struct KeyContext {
     pub key_id: String,
     pub allowed_models: Option<Vec<String>>,
     pub is_master: bool,
+    /// Tenant resolved from the API key.
+    ///
+    /// For master-key auth this is always [`TenantId`]`("master")` (see
+    /// [`MASTER_TENANT_ID`]).  For virtual-key auth this is the `tenant_id`
+    /// returned by [`KeyResolver::resolve`].
+    pub tenant_id: TenantId,
 }
 
 impl KeyContext {
     /// Create a context representing the master key (unrestricted access).
+    ///
+    /// The tenant is set to [`MASTER_TENANT_ID`] so that BudgetLedger and
+    /// UsageEvent always have a non-null tenant dimension.
     pub fn master() -> Self {
         Self {
             key_id: "master".into(),
             allowed_models: None,
             is_master: true,
+            tenant_id: TenantId::from(MASTER_TENANT_ID),
         }
     }
 
     /// Create a context from a virtual key configuration.
+    ///
+    /// The `tenant_id` defaults to the key token itself when the config does
+    /// not carry an explicit tenant.  Callers that have resolved a
+    /// [`ResolvedKey`] should prefer [`KeyContext::from_resolved`] instead.
     pub fn from_config(config: &VirtualKeyConfig) -> Self {
         let allowed_models = if config.models.is_empty() {
             None
@@ -37,6 +58,26 @@ impl KeyContext {
             key_id: config.key.clone(),
             allowed_models,
             is_master: false,
+            tenant_id: TenantId::from(config.key.as_str()),
+        }
+    }
+
+    /// Create a context from a [`ResolvedKey`] returned by [`KeyResolver::resolve`].
+    ///
+    /// Uses the `tenant_id` and `allowed_models` from the resolved record so
+    /// the auth layer propagates the canonical tenant identity rather than
+    /// using the raw key token as a stand-in.
+    pub fn from_resolved(key_id: impl Into<String>, resolved: &ResolvedKey) -> Self {
+        let allowed_models = if resolved.allowed_models.is_empty() {
+            None
+        } else {
+            Some(resolved.allowed_models.clone())
+        };
+        Self {
+            key_id: key_id.into(),
+            allowed_models,
+            is_master: false,
+            tenant_id: resolved.tenant_id.clone(),
         }
     }
 

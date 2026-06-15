@@ -69,6 +69,7 @@ pub async fn chat_completions(
     } else {
         LlmRequest::Chat(req)
     };
+    let llm_req = llm_req.with_tenant_id(key_ctx.tenant_id.clone());
 
     let mut svc = state.service_pool.get_service(&model)?;
     let resp = svc.call(llm_req).await?;

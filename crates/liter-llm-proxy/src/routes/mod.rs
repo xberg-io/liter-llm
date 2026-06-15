@@ -34,8 +34,13 @@ use crate::auth::KeyContext;
 use crate::error::ProxyError;
 use crate::state::AppState;
 
-/// Check model access for the authenticated key, then dispatch the request
-/// through the Tower service stack.
+/// Check model access for the authenticated key, attach the tenant identifier,
+/// and dispatch the request through the Tower service stack.
+///
+/// `tenant_id` is propagated via [`LlmRequest::with_tenant_id`] so that every
+/// Tower layer downstream — [`BudgetLedger::Tenant`], [`TenantScopedStrategy`],
+/// and [`UsageEvent`] — receives the correct tenant dimension without each
+/// handler needing to wire it independently.
 pub(crate) async fn dispatch(
     state: &AppState,
     key_ctx: &KeyContext,
@@ -48,6 +53,7 @@ pub(crate) async fn dispatch(
             key_ctx.key_id
         )));
     }
+    let request = request.with_tenant_id(key_ctx.tenant_id.clone());
     let mut svc = state.service_pool.get_service(model)?;
     Ok(svc.call(request).await?)
 }

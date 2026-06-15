@@ -899,6 +899,7 @@ mod tests {
             key_id: "vk-team-a".into(),
             allowed_models: Some(vec!["gpt-4o-realtime".into()]),
             is_master: false,
+            tenant_id: liter_llm::tenant::TenantId::from("vk-team-a"),
         };
         let resolved_a = resolve_upstream_credential(&ctx_a, &vk_configs, "gpt-4o-realtime");
         assert_eq!(
@@ -912,6 +913,7 @@ mod tests {
             key_id: "vk-team-b".into(),
             allowed_models: Some(vec!["gpt-4o-realtime".into()]),
             is_master: false,
+            tenant_id: liter_llm::tenant::TenantId::from("vk-team-b"),
         };
         let resolved_b = resolve_upstream_credential(&ctx_b, &vk_configs, "gpt-4o-realtime");
         assert_eq!(
@@ -948,14 +950,12 @@ mod tests {
             key_id: "vk-1".into(),
             allowed_models: None,
             is_master: false,
+            tenant_id: liter_llm::tenant::TenantId::from("vk-1"),
         };
 
         // Matching model — should resolve.
         let matched = resolve_upstream_credential(&ctx, &vk_configs, "gpt-4o-realtime-preview");
-        assert_eq!(
-            matched.as_ref().map(|s| s.expose_secret()),
-            Some("sk-vk-secret")
-        );
+        assert_eq!(matched.as_ref().map(|s| s.expose_secret()), Some("sk-vk-secret"));
 
         // Non-matching model — must return None.
         let unmatched = resolve_upstream_credential(&ctx, &vk_configs, "gpt-4o-mini");
@@ -974,6 +974,7 @@ mod tests {
             key_id: "vk-restricted".into(),
             allowed_models: Some(vec!["gpt-4o".into()]),
             is_master: false,
+            tenant_id: liter_llm::tenant::TenantId::from("vk-restricted"),
         };
 
         assert!(
