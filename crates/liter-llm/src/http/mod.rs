@@ -10,3 +10,6 @@ pub(crate) mod eventstream;
 pub(crate) mod request;
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 pub(crate) mod streaming;
+
+// Transport configuration for HTTP client pooling and protocol selection.
+pub mod transport;

@@ -59,6 +59,9 @@ vertex-auth = ["native-http", "dep:jsonwebtoken"]
 vertex-adc = ["native-http"]
 # AWS STS Web Identity credential provider (EKS / IRSA token exchange).
 bedrock-auth = ["native-http"]
+# HTTP/3 (h3-quinn) support in reqwest. Requires the `native-http` feature.
+# When enabled, the HTTP client negotiates HTTP/3 during connection establishment.
+http3 = ["native-http"]
 # Full feature set: native HTTP + tower + tracing + otel + bedrock.
 # Token counting via HuggingFace tokenizers.  Provides lazy-cached tokenizer
 # loading and token counting for text and chat completion requests.
