@@ -1,8 +1,11 @@
+#[cfg(test)]
 use std::cell::RefCell;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use bytes::{Bytes, BytesMut};
+use bytes::Bytes;
+#[cfg(test)]
+use bytes::BytesMut;
 use futures_core::Stream;
 use memchr::memchr;
 use pin_project_lite::pin_project;
@@ -17,12 +20,15 @@ const MAX_BUFFER_BYTES: usize = 1024 * 1024; // 1 MiB
 /// Maximum capacity a reclaimed `BytesMut` buffer may have before it is
 /// discarded rather than returned to the pool.  Prevents unbounded memory
 /// accumulation on idle clients that previously processed very large chunks.
+#[cfg(test)]
 const MAX_POOL_BUFFER_CAPACITY: usize = 64 * 1024; // 64 KiB
 
 // ---------------------------------------------------------------------------
-// Threadlocal BytesMut pool
+// Threadlocal BytesMut pool (test-only; no production callers after removing
+// the SseParser scratch allocation)
 // ---------------------------------------------------------------------------
 
+#[cfg(test)]
 thread_local! {
     /// Per-thread pool of reusable `BytesMut` scratch buffers.
     ///
@@ -36,6 +42,7 @@ thread_local! {
 ///
 /// Returns a recycled buffer when one is available; otherwise allocates a new
 /// one pre-sized to 4 KiB (a reasonable first-chunk size for most SSE streams).
+#[cfg(test)]
 fn pool_acquire() -> BytesMut {
     BYTES_POOL.with(|cell| {
         cell.borrow_mut()
@@ -52,6 +59,7 @@ fn pool_acquire() -> BytesMut {
 ///
 /// Buffers exceeding [`MAX_POOL_BUFFER_CAPACITY`] are dropped instead of
 /// being pooled to prevent memory growth after large-response processing.
+#[cfg(test)]
 fn pool_release(buf: BytesMut) {
     if buf.capacity() <= MAX_POOL_BUFFER_CAPACITY {
         BYTES_POOL.with(|cell| {
@@ -238,12 +246,17 @@ pin_project! {
     /// event parsers without duplicating the byte-buffering and line-splitting
     /// logic.
     ///
-    /// # BytesMut pool
+    /// # Buffer strategy
     ///
-    /// Incoming byte chunks are decoded from UTF-8 into the main `String`
-    /// buffer directly.  A per-thread `BytesMut` scratch allocation is
-    /// reserved for the lifetime of the stream and returned to the pool on
-    /// `Drop` to amortise allocation cost across successive streams.
+    /// Incoming byte chunks are decoded from UTF-8 into a `String` buffer
+    /// directly.  A read cursor tracks the processed position; the buffer is
+    /// compacted (drained) only when the cursor has advanced past half its
+    /// length, amortising memmove cost to O(total_bytes) across the stream.
+    ///
+    /// `SseParser` does not hold a `BytesMut` scratch allocation.
+    /// Acquiring a buffer on construction and returning it on drop would pin
+    /// ~4 KiB per idle stream with no benefit since no parsing occurs until
+    /// the first byte arrives.
     struct SseParser<S, P> {
         #[pin]
         inner: S,
@@ -256,9 +269,6 @@ pin_project! {
         done: bool,
         // Provider-supplied event parser; translates raw SSE data payloads.
         parse_event: P,
-        // Scratch buffer from the per-thread pool, held for the stream
-        // lifetime and returned to the pool on Drop.
-        scratch: Option<BytesMut>,
         // Optional cancellation signal.
         //
         // On native-http: `Option<CancellationToken>`.
@@ -268,11 +278,9 @@ pin_project! {
 
     impl<S, P> PinnedDrop for SseParser<S, P> {
         fn drop(this: Pin<&mut Self>) {
-            // Return the scratch buffer to the thread-local pool.
-            let this = this.project();
-            if let Some(buf) = this.scratch.take() {
-                pool_release(buf);
-            }
+            // Nothing to return to the pool: SseParser no longer holds a
+            // BytesMut scratch buffer.
+            let _ = this;
         }
     }
 }
@@ -290,7 +298,6 @@ where
             cursor: 0,
             done: false,
             parse_event,
-            scratch: Some(pool_acquire()),
             cancel,
         }
     }
@@ -515,6 +522,62 @@ mod tests {
             acquired.capacity()
         );
         pool_release(acquired);
+    }
+
+    // ─── SseParser pool isolation ─────────────────────────────────────────────
+
+    #[test]
+    fn sse_parser_does_not_hold_idle_buffer_when_stream_idle() {
+        use std::pin::Pin;
+        use std::task::{Context, Poll};
+
+        use bytes::Bytes;
+        use futures_core::Stream;
+
+        struct NeverStream;
+
+        impl Stream for NeverStream {
+            type Item = std::result::Result<Bytes, reqwest::Error>;
+
+            fn poll_next(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+                Poll::Pending
+            }
+        }
+
+        // Seed the pool with a known buffer so we can detect whether
+        // SseParser construction drains it.
+        let sentinel = pool_acquire();
+        let sentinel_ptr = sentinel.as_ptr();
+        pool_release(sentinel);
+
+        // Constructing SseParser must NOT call pool_acquire; the sentinel
+        // buffer must remain in the pool slot.
+        let parser = SseParser::new(
+            NeverStream,
+            |_data: &str| -> Result<Option<crate::types::ChatCompletionChunk>> { Ok(None) },
+            None,
+        );
+
+        // Re-acquire from the pool: we must get the same sentinel back,
+        // confirming the constructor did not drain it.
+        let reclaimed = pool_acquire();
+        assert_eq!(
+            reclaimed.as_ptr(),
+            sentinel_ptr,
+            "SseParser constructor must not acquire a BytesMut from the pool"
+        );
+        pool_release(reclaimed);
+
+        // Drop the parser and confirm Drop does not corrupt the pool slot.
+        drop(parser);
+
+        let after_drop = pool_acquire();
+        assert_eq!(
+            after_drop.as_ptr(),
+            sentinel_ptr,
+            "SseParser Drop must not corrupt the pool slot"
+        );
+        pool_release(after_drop);
     }
 
     // ─── Cancellation tests ───────────────────────────────────────────────────
