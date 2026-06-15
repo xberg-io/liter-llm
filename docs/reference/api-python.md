@@ -125,11 +125,39 @@ def unregister_custom_provider(name: str) -> bool
 
 ---
 
+#### capabilities()
+
+Return the capability flags for a named provider.
+
+Performs an O(n) linear scan over the embedded registry (142 entries).
+Returns a `'static` reference valid for the lifetime of the process.
+
+For unknown `provider_name` values the function returns a reference to an
+all-`False` sentinel so callers never need to handle `Option`.
+
+**Signature:**
+
+```python
+def capabilities(provider_name: str) -> ProviderCapabilities
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `provider_name` | `str` | Yes | The provider name |
+
+**Returns:** `ProviderCapabilities`
+
+---
+
 #### all_providers()
 
 Return all provider configs from the registry.
 
 Useful for tooling, documentation generation, or runtime enumeration.
+Returns the public `ProviderConfig` slice (without capability flags).
+To query capability flags for a specific provider use `capabilities`.
 
 **Signature:**
 
@@ -171,7 +199,7 @@ Returns `None` if the model is not present in the embedded pricing registry.
 Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
 
 When an exact model name match is not found, progressively shorter prefixes
-are tried by stripping from the last `-` or `.` separator. For example,
+are tried by stripping from the last `-` or `.` separator.  For example,
 `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 
 **Signature:**
@@ -223,6 +251,26 @@ def completion_cost_with_cache(model: str, prompt_tokens: int, cached_tokens: in
 | `completion_tokens` | `int` | Yes | The completion tokens |
 
 **Returns:** `float | None`
+
+---
+
+#### clear()
+
+Remove all guardrails from the global registry.
+
+Primarily useful in tests to reset state between test cases.
+
+**Panics:**
+
+Panics if the global registry lock is poisoned.
+
+**Signature:**
+
+```python
+def clear() -> None
+```
+
+**Returns:** `None`
 
 ---
 
@@ -285,6 +333,368 @@ def count_request_tokens(model: str, req: ChatCompletionRequest) -> int
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
 **Returns:** `int`
+**Errors:** Raises `Error`.
+
+---
+
+#### record_cache_state()
+
+Set the cache outcome for the current task.
+
+Uses `try_with` so that callers that run outside a `CACHE_STATE_CELL.scope`
+(e.g. in tests that do not involve `HooksLayer`) are silently ignored rather
+than panicking.
+
+**Signature:**
+
+```python
+def record_cache_state(state: CacheState) -> None
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `state` | `CacheState` | Yes | The cache state |
+
+**Returns:** `None`
+
+---
+
+#### record_cache_hit()
+
+Record a cache hit metric.
+
+Call from cache layer implementations to emit `gen_ai.cache.hit`.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```python
+def record_cache_hit(system: str, model: str, operation: str) -> None
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `str` | Yes | The system |
+| `model` | `str` | Yes | The model |
+| `operation` | `str` | Yes | The operation |
+
+**Returns:** `None`
+
+---
+
+#### record_cache_miss()
+
+Record a cache miss metric.
+
+Call from cache layer implementations to emit `gen_ai.cache.miss`.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```python
+def record_cache_miss(system: str, model: str, operation: str) -> None
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `str` | Yes | The system |
+| `model` | `str` | Yes | The model |
+| `operation` | `str` | Yes | The operation |
+
+**Returns:** `None`
+
+---
+
+#### record_cache_stale()
+
+Record a stale cache metric.
+
+Call from cache layer implementations to emit `gen_ai.cache.stale`.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```python
+def record_cache_stale(system: str, model: str, operation: str) -> None
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `str` | Yes | The system |
+| `model` | `str` | Yes | The model |
+| `operation` | `str` | Yes | The operation |
+
+**Returns:** `None`
+
+---
+
+#### record_circuit_trip()
+
+Record a circuit breaker trip.
+
+Call from `CircuitLayer` when the circuit opens.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```python
+def record_circuit_trip(system: str, model: str) -> None
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `str` | Yes | The system |
+| `model` | `str` | Yes | The model |
+
+**Returns:** `None`
+
+---
+
+#### record_retry_attempt()
+
+Record a retry attempt.
+
+Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```python
+def record_retry_attempt(system: str, model: str, operation: str) -> None
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `str` | Yes | The system |
+| `model` | `str` | Yes | The model |
+| `operation` | `str` | Yes | The operation |
+
+**Returns:** `None`
+
+---
+
+#### record_cache_tier_hit()
+
+Record a per-tier cache hit.
+
+`tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
+Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```python
+def record_cache_tier_hit(system: str, model: str, tier: str) -> None
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `str` | Yes | The system |
+| `model` | `str` | Yes | The model |
+| `tier` | `str` | Yes | The tier |
+
+**Returns:** `None`
+
+---
+
+#### record_cache_tier_miss()
+
+Record a per-tier cache miss.
+
+`tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
+Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```python
+def record_cache_tier_miss(system: str, model: str, tier: str) -> None
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `str` | Yes | The system |
+| `model` | `str` | Yes | The model |
+| `tier` | `str` | Yes | The tier |
+
+**Returns:** `None`
+
+---
+
+#### record_budget_spend()
+
+Record cumulative spend for a specific budget dimension.
+
+Emits `gen_ai.budget.spend_usd` with dimension attributes.
+Call from `record` after each
+successful completion.  If the meter has not been initialized, this
+call is a no-op.
+
+**Signature:**
+
+```python
+def record_budget_spend(model: str, provider: str, tenant_id: str = None, user_id: str = None, api_key_id: str = None, cost_usd: float) -> None
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `model` | `str` | Yes | The model |
+| `provider` | `str` | Yes | The provider |
+| `tenant_id` | `str \| None` | No | The tenant id |
+| `user_id` | `str \| None` | No | The user id |
+| `api_key_id` | `str \| None` | No | The api key id |
+| `cost_usd` | `float` | Yes | The cost usd |
+
+**Returns:** `None`
+
+---
+
+#### record_budget_rejection()
+
+Record a budget-rejection event.
+
+Emits `gen_ai.budget.rejection` with the triggering dimension.
+Call from `check` when
+returning `Reject`.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```python
+def record_budget_rejection(model: str, provider: str, dimension: str) -> None
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `model` | `str` | Yes | The model |
+| `provider` | `str` | Yes | The provider |
+| `dimension` | `str` | Yes | The dimension |
+
+**Returns:** `None`
+
+---
+
+#### record_realtime_session_duration()
+
+Record the lifetime of a completed Realtime WebSocket session.
+
+Emits `gen_ai.realtime.session.duration` (seconds).
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```python
+def record_realtime_session_duration(provider: str, duration_secs: float) -> None
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `provider` | `str` | Yes | The provider |
+| `duration_secs` | `float` | Yes | The duration secs |
+
+**Returns:** `None`
+
+---
+
+#### record_realtime_event()
+
+Record a single Realtime event being forwarded.
+
+Emits `gen_ai.realtime.event.count` with `gen_ai.realtime.direction`
+(`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
+`gen_ai.system`.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```python
+def record_realtime_event(provider: str, direction: str, event_type: str) -> None
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `provider` | `str` | Yes | The provider |
+| `direction` | `str` | Yes | The direction |
+| `event_type` | `str` | Yes | The event type |
+
+**Returns:** `None`
+
+---
+
+#### record_realtime_bytes()
+
+Record audio bytes forwarded over a Realtime WebSocket session.
+
+Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
+`gen_ai.realtime.direction` attributes.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```python
+def record_realtime_bytes(provider: str, direction: str, byte_count: int) -> None
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `provider` | `str` | Yes | The provider |
+| `direction` | `str` | Yes | The direction |
+| `byte_count` | `int` | Yes | The byte count |
+
+**Returns:** `None`
+
+---
+
+#### check_bound()
+
+Assert that `current_len + incoming` does not exceed `limit`.
+
+Call this before appending `incoming` bytes to any buffer that must
+stay below `limit`.  Returns `Err(LiterLlmError.Streaming)` on overflow
+and emits a `tracing.warn!` with context.
+
+**Signature:**
+
+```python
+def check_bound(context: str, current_len: int, incoming: int, limit: int) -> None
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `context` | `str` | Yes | The context |
+| `current_len` | `int` | Yes | The current len |
+| `incoming` | `int` | Yes | The incoming |
+| `limit` | `int` | Yes | The limit |
+
+**Returns:** `None`
 **Errors:** Raises `Error`.
 
 ---
@@ -545,6 +955,118 @@ A single completion choice.
 | `index` | `int` | — | Index of this choice in the choices array. |
 | `message` | `AssistantMessage` | — | The assistant's message response. |
 | `finish_reason` | `FinishReason \| None` | `None` | Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). |
+
+---
+
+#### ChunkMiddleware
+
+A per-chunk transformation in the `StreamPipeline`.
+
+Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
+to pass it through (optionally modified), `Ok(None)` to drop the chunk,
+or `Err(e)` to propagate a stream error.
+
+The trait is object-safe so implementations can be stored in a
+`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+
+### Methods
+
+#### process()
+
+Process a single chunk.
+
+- `Ok(Some(chunk))` — emit (possibly transformed) chunk.
+- `Ok(None)` — drop this chunk silently.
+- `Err(e)` — propagate as a stream error.
+
+**Signature:**
+
+```python
+def process(self, chunk: ChatCompletionChunk) -> ChatCompletionChunk | None
+```
+
+---
+
+#### CircuitPolicy
+
+Policy that drives a circuit breaker's state transitions.
+
+Implement this trait to provide custom failure-detection and
+recovery logic.  The default implementation is `ExponentialBackoffCircuit`.
+
+### Methods
+
+#### record_success()
+
+Called when the inner service returns a successful response.
+
+**Signature:**
+
+```python
+def record_success(self) -> None
+```
+
+#### record_failure()
+
+Called when the inner service returns an error.
+
+The policy decides whether to count the error as a circuit-trip failure.
+
+**Signature:**
+
+```python
+def record_failure(self) -> None
+```
+
+#### should_allow()
+
+Returns `True` when a request should be allowed to proceed.
+
+`False` means the circuit is open and the request should be rejected.
+
+**Signature:**
+
+```python
+def should_allow(self) -> bool
+```
+
+#### state()
+
+Returns the current circuit state.
+
+**Signature:**
+
+```python
+def state(self) -> CircuitState
+```
+
+#### release_probe_slot()
+
+Called when a probe request is dropped without completing (e.g. due to
+panic or cancellation) to release the probe slot.
+
+The default implementation is a no-op.  Policies that gate probe slots
+with a boolean flag (like `ExponentialBackoffCircuit`) should override
+this to clear the flag.
+
+**Signature:**
+
+```python
+def release_probe_slot(self) -> None
+```
+
+---
+
+#### ClassifyContext
+
+Immutable context passed to every `RouteClassifier.classify` call.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `prompt` | `str` | — | The user-facing prompt text. |
+| `system_prompt` | `str \| None` | `None` | Optional system prompt from the request. |
+| `metadata` | `dict[str, str]` | — | Arbitrary metadata attached to the request (e.g. tenant, session ID). |
+| `available_models` | `list[str]` | — | The set of model identifiers the router currently considers available. |
 
 ---
 
@@ -828,6 +1350,33 @@ def list_batches(self, query: BatchListQuery) -> BatchListResponse
 def cancel_batch(self, batch_id: str) -> BatchObject
 ```
 
+#### retrieve()
+
+**Signature:**
+
+```python
+def retrieve(self, batch_id: str) -> BatchObject
+```
+
+#### wait_for_batch()
+
+Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
+
+Uses exponential backoff with configurable initial interval, maximum interval, and backoff multiplier.
+Optionally supports a timeout that aborts polling if exceeded.
+
+**Errors:**
+
+Returns `BatchWaitError.Failed` if the batch reaches a failure terminal status.
+Returns `BatchWaitError.Timeout` if the configured timeout is exceeded.
+Returns `BatchWaitError.Client` for underlying client errors.
+
+**Signature:**
+
+```python
+def wait_for_batch(self, batch_id: str, config: WaitForBatchConfig) -> BatchObject
+```
+
 #### create_response()
 
 **Signature:**
@@ -927,6 +1476,79 @@ Embedding response.
 
 ---
 
+#### ExponentialBackoffCircuit
+
+Circuit breaker with exponential backoff.
+
+Opens after `failure_threshold` consecutive failures.  After
+`base_backoff` (doubled on each successive open → half-open → open cycle,
+up to `max_backoff`), the circuit enters `CircuitState.HalfOpen` and
+allows one probe request through.
+
+### Methods
+
+#### new()
+
+Create a new policy.
+
+- `failure_threshold`: consecutive failures required to open the circuit.
+- `base_backoff`: initial half-open retry delay (doubles each open cycle,
+  capped at 2 minutes).
+
+**Signature:**
+
+```python
+@staticmethod
+def new(failure_threshold: int, base_backoff: float) -> ExponentialBackoffCircuit
+```
+
+#### record_success()
+
+**Signature:**
+
+```python
+def record_success(self) -> None
+```
+
+#### record_failure()
+
+**Signature:**
+
+```python
+def record_failure(self) -> None
+```
+
+#### should_allow()
+
+**Signature:**
+
+```python
+def should_allow(self) -> bool
+```
+
+#### state()
+
+**Signature:**
+
+```python
+def state(self) -> CircuitState
+```
+
+#### release_probe_slot()
+
+Release the probe slot without recording success or failure.
+
+Called by the `ProbeGuard` when the probe future is dropped before
+completing (e.g. cancelled or panicked).
+
+**Signature:**
+
+```python
+def release_probe_slot(self) -> None
+```
+
+---
+
 #### FileListQuery
 
 Query parameters for listing files.
@@ -967,6 +1589,44 @@ An uploaded file object.
 
 ---
 
+#### FixedDelayHedge
+
+A simple `HedgePolicy` that fires hedges at fixed intervals.
+
+### Methods
+
+#### new()
+
+Create a new policy.
+
+- `delay`: how long to wait before launching each additional attempt.
+- `max_attempts`: maximum concurrent copies of the request (≥ 1).
+
+**Signature:**
+
+```python
+@staticmethod
+def new(delay: float, max_attempts: int) -> FixedDelayHedge
+```
+
+#### delay_for_attempt()
+
+**Signature:**
+
+```python
+def delay_for_attempt(self, attempt: int, latency_so_far: float) -> float | None
+```
+
+#### max_attempts()
+
+**Signature:**
+
+```python
+def max_attempts(self) -> int
+```
+
+---
+
 #### FunctionCall
 
 Function call details.
@@ -1002,6 +1662,71 @@ Deprecated legacy function-role message body.
 
 ---
 
+#### HealthChecker
+
+Abstraction over a health probe strategy.
+
+Implementors issue a lightweight probe against `upstream` (typically a
+provider base URL or named identifier) and report `HealthStatus`.
+
+### Methods
+
+#### check()
+
+Probe `upstream` and return its current `HealthStatus`.
+
+The parameter is taken by value (`String`) so that implementations can
+move it into the returned future without a clone, making the
+`'static + Send` bound on the future trivially satisfiable.
+
+**Signature:**
+
+```python
+def check(self, upstream: str) -> HealthStatus
+```
+
+---
+
+#### HedgePolicy
+
+Policy that controls when and how many hedged requests are launched.
+
+Implement this trait to provide custom hedging strategies such as
+latency-percentile-based delays or per-model adaptive delays.
+
+### Methods
+
+#### delay_for_attempt()
+
+Returns the delay before launching attempt `attempt` (1-indexed; attempt
+1 is the initial request, attempt 2 is the first hedge, etc.).
+
+- `attempt`: 1-indexed attempt number.
+- `latency_so_far`: elapsed time since the first request was dispatched.
+
+Return `None` to skip this attempt (and all subsequent ones).
+
+**Signature:**
+
+```python
+def delay_for_attempt(self, attempt: int, latency_so_far: float) -> float | None
+```
+
+#### max_attempts()
+
+Maximum number of concurrent attempts (including the original request).
+
+Must be ≥ 1.  Values above 3 are rarely useful and increase provider
+costs significantly.
+
+**Signature:**
+
+```python
+def max_attempts(self) -> int
+```
+
+---
+
 #### Image
 
 A single generated image, returned as either a URL or base64 data.
@@ -1033,6 +1758,18 @@ Response containing generated images.
 |-------|------|---------|-------------|
 | `created` | `int` | — | Unix timestamp of image creation. |
 | `data` | `list[Image]` | `[]` | List of generated images. |
+
+---
+
+#### IntentPrototype
+
+An intent prototype: `(intent_name, prototype_embedding, target_model_id)`.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `str` | — | Human-readable name for the intent (used in logs/metrics). |
+| `embedding` | `list[float]` | — | Pre-computed embedding vector for this intent. |
+| `model` | `str` | — | Model to route to when this intent is detected. |
 
 ---
 
@@ -1224,9 +1961,40 @@ discounted rate and the remainder at the regular input rate.
 
 ---
 
+#### ProviderCapabilities
+
+Static capability flags for a provider.
+
+Each flag indicates whether the provider's models *generally* support that
+feature.  For providers that aggregate many underlying models (e.g. Bedrock,
+OpenRouter, vLLM) the flags reflect the superset of available model
+capabilities — a flag being `True` means at least one model supports the
+feature, not every model.
+
+All flags default to `False` so that newly added providers are safe.
+
+Access via the crate-level `capabilities` function:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `vision` | `bool` | — | The provider accepts image input in chat messages. |
+| `reasoning` | `bool` | — | The provider supports extended-thinking / reasoning tokens. |
+| `structured_output` | `bool` | — | The provider supports JSON-mode or `response_format` structured output. |
+| `function_calling` | `bool` | — | The provider supports tool / function calling. |
+| `audio_in` | `bool` | — | The provider accepts audio as input. |
+| `audio_out` | `bool` | — | The provider can generate audio / TTS output. |
+| `video_in` | `bool` | — | The provider accepts video as input. |
+
+---
+
 #### ProviderConfig
 
 Static configuration for a single provider entry in providers.json.
+
+This struct deliberately does not include capability flags or streaming
+format, which are accessed via the `capabilities` function.  Keeping
+these fields separate preserves backward compatibility with all generated
+binding code that constructs `ProviderConfig` using struct literal syntax.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -1400,6 +2168,16 @@ An individual search result.
 
 ---
 
+#### SingleflightResult
+
+The value broadcast from a singleflight leader to all followers.
+
+`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
+broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
+bump per follower, which is negligible under the burst loads this layer targets.
+
+---
+
 #### SpecificFunction
 
 Name of the specific function to invoke.
@@ -1542,6 +2320,35 @@ A segment of transcribed audio with timing information.
 
 ---
 
+#### UpstreamDiscover
+
+A typed extension of `tower.discover.Discover` for LLM upstream
+services.
+
+Implementors plug in their own discovery mechanism — file-based configs,
+etcd watches, HTTP polling — and the `DynamicRouter` handles the rest.
+The key type must be `String` so that provider names are human-readable in
+logs and metrics.
+
+### Object safety
+
+`UpstreamDiscover` is **not** object-safe and **must not** be stored as
+`dyn UpstreamDiscover`.  It is a generic bound used exclusively as a type
+parameter for `DynamicRouter<D>`.  All discovery implementations are
+monomorphised at compile time.
+
+If you need a runtime registry of heterogeneous discovery sources, wrap
+each source in an `Arc<Mutex<Box<dyn …>>>` and poll them via a custom
+`Stream` adapter — do not store them as `dyn UpstreamDiscover`.
+
+### Note for 1.A integration
+
+If the router encounters a discovery error, it wraps it in
+`RouterError.Discover`.  The 1.A error-consolidation workstream should
+replace this local enum with the canonical error hierarchy.
+
+---
+
 #### Usage
 
 Token-usage accounting returned by the provider on each completion / embedding call.
@@ -1563,6 +2370,30 @@ User message in the conversation.
 |-------|------|---------|-------------|
 | `content` | `UserContent` | `UserContent.TEXT` | Message content as plain text or array of content parts (text, images, documents, audio). |
 | `name` | `str \| None` | `None` | Optional name for the user. |
+
+---
+
+#### WaitForBatchConfig
+
+Configuration for polling a batch until terminal status.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `initial_interval` | `float` | `5000ms` | Initial interval between polls. |
+| `max_interval` | `float` | `60000ms` | Maximum interval between polls (backoff plateau). |
+| `backoff_multiplier` | `float` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
+| `timeout` | `float \| None` | `None` | Optional timeout — polling fails if this duration is exceeded. |
+
+### Methods
+
+#### default()
+
+**Signature:**
+
+```python
+@staticmethod
+def default() -> WaitForBatchConfig
+```
 
 ---
 
@@ -1594,7 +2425,7 @@ User message content as either plain text or a list of multimodal parts.
 
 ---
 
-#### ContentPart
+#### TypesContentPart
 
 A single content part in a user message — text, image, document, or audio.
 
@@ -1803,6 +2634,22 @@ How the API key is sent in the HTTP request.
 
 ---
 
+#### StreamFormat
+
+The streaming wire format a provider uses for its response stream.
+
+Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
+a proprietary binary EventStream framing.
+
+Deserialized from the `streaming_format` JSON field via `serde`.
+
+| Value | Description |
+|-------|-------------|
+| `SSE` | Standard Server-Sent Events (text/event-stream). |
+| `AWS_EVENT_STREAM` | AWS EventStream binary framing (application/vnd.amazon.eventstream). |
+
+---
+
 #### AuthType
 
 Auth scheme used by a provider.
@@ -1813,6 +2660,106 @@ Auth scheme used by a provider.
 | `API_KEY` | `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). |
 | `NONE` | No authentication header required. |
 | `UNKNOWN` | Unrecognised auth scheme — falls back to bearer. |
+
+---
+
+#### OnMatch
+
+Action taken when a `RegexGuardrail` finds a match.
+
+| Value | Description |
+|-------|-------------|
+| `BLOCK` | Block the request/response with the given error code and reason prefix. — Fields: `code`: `int`, `reason_prefix`: `str` |
+| `REDACT` | Replace the matched portion with the given replacement string. — Fields: `replacement`: `str` |
+
+---
+
+#### CelAction
+
+The action taken when a `CelGuardrail`'s expression evaluates to `True`.
+
+| Value | Description |
+|-------|-------------|
+| `BLOCK` | Block the request/response with the given code and reason. — Fields: `code`: `int`, `reason`: `str` |
+| `MUTATE` | Replace the payload with a static JSON value (e.g., for redaction). — Fields: `new_payload`: `dict[str, Any]` |
+
+---
+
+#### GuardrailStage
+
+The lifecycle stage at which a guardrail runs.
+
+| Value | Description |
+|-------|-------------|
+| `INPUT` | The outgoing prompt / request, before forwarding to the upstream provider. |
+| `OUTPUT` | The full response from the upstream provider (non-streaming). |
+| `OUTPUT_CHUNK` | A single chunk in a streaming response. Guardrails here are called once per chunk and may block or mutate individual chunks. |
+
+---
+
+#### GuardrailDecision
+
+The outcome of a guardrail check.
+
+| Value | Description |
+|-------|-------------|
+| `ALLOW` | The check passed. Continue to the next guardrail or to the inner service. |
+| `BLOCK` | The check failed. Short-circuit the request/response with this reason. `code` should be ≥ 1000 to avoid collision with HTTP status codes and to facilitate cross-language error mapping. — Fields: `reason`: `str`, `code`: `int` |
+| `MUTATE` | Rewrite the payload. The provided `new_payload` replaces the original `request` or `response` before it reaches the next stage. For `OutputChunk` stage: `new_payload` replaces the chunk content. — Fields: `new_payload`: `dict[str, Any]` |
+
+---
+
+#### CacheState
+
+Cache outcome for a single request.
+
+| Value | Description |
+|-------|-------------|
+| `MISS` | No cache entry found; request was sent to the provider. |
+| `EXACT_HIT` | Exact-match cache hit; provider was not called. |
+| `SEMANTIC_HIT` | Semantic-similarity cache hit; provider was not called. |
+| `STALE_HIT` | Stale entry served (TTL expired but no fresh entry was available). |
+| `BYPASS` | Cache lookup was skipped (bypass policy, streaming request, etc.). |
+
+---
+
+#### UsageEventOutcome
+
+High-level outcome of the request.
+
+| Value | Description |
+|-------|-------------|
+| `SUCCESS` | Inner service returned a successful response. |
+| `ERROR` | Inner service returned an error (non-timeout). |
+| `CANCELLED` | Request was cancelled before the inner service responded. |
+| `TIMED_OUT` | Inner service timed out. |
+
+---
+
+#### ContentPart
+
+A single content part within a conversation item.
+
+Conversation items may carry text, audio, or an image (by reference).
+
+| Value | Description |
+|-------|-------------|
+| `TEXT` | A plain-text segment. — Fields: `text`: `str` |
+| `AUDIO` | A raw audio segment encoded as base64. — Fields: `base64`: `str` |
+| `IMAGE_REF` | An image referenced by a URL or ID rather than inline bytes. — Fields: `url`: `str` |
+
+---
+
+#### ResponseStatus
+
+Terminal status for a completed `RealtimeEvent.ResponseDone`.
+
+| Value | Description |
+|-------|-------------|
+| `COMPLETED` | The response was produced in full. |
+| `CANCELLED` | The response was cancelled before completion. |
+| `FAILED` | The response failed due to an upstream error. |
+| `INCOMPLETE` | The response hit a token/time limit before completing. |
 
 ---
 
@@ -1835,6 +2782,40 @@ Storage backend for the response cache.
 |-------|-------------|
 | `MEMORY` | In-memory LRU cache (default). No external dependencies. |
 | `OPEN_DAL` | OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.). — Fields: `scheme`: `str`, `config`: `dict[str, str]` |
+
+---
+
+#### CircuitState
+
+Observable state of a circuit breaker.
+
+| Value | Description |
+|-------|-------------|
+| `CLOSED` | Requests flow through normally. |
+| `OPEN` | All requests are rejected; the circuit is waiting for the backoff to elapse. |
+| `HALF_OPEN` | One probe request is allowed through to test service health. |
+
+---
+
+#### RetryClass
+
+Classification of a single attempt error.
+
+| Value | Description |
+|-------|-------------|
+| `TRANSIENT` | Transient error — advance to the next service in the chain. |
+| `TERMINAL` | Terminal error — return immediately without consulting further services. |
+
+---
+
+#### HealthStatus
+
+The result of a single health probe.
+
+| Value | Description |
+|-------|-------------|
+| `HEALTHY` | The probe succeeded; the upstream is reachable. |
+| `UNHEALTHY` | The probe failed; the upstream may be down. |
 
 ---
 
@@ -1865,5 +2846,31 @@ All errors that can occur when using `liter-llm`.
 | `HookRejected(LiterLlmError)` | hook rejected: {message} |
 | `InternalError(LiterLlmError)` | An internal logic error (e.g. unexpected Tower response variant). This should never surface in normal operation — if it does, it indicates a bug in the library. |
 | `OutboundForbidden(LiterLlmError)` | An outbound request was blocked by the active `OutboundPolicy`. Returned when `register_custom_provider` is called with a `base_url` that violates the policy (e.g. a private-range IP under `DenyPrivate`), or when the per-connection DNS resolver detects a forbidden address at connect time. |
+| `IdempotencyConflict(LiterLlmError)` | A different request body was submitted for an existing `Idempotency-Key`. Per the OpenAI `Idempotency-Key` convention, once a key is used with a particular request body, subsequent requests using the same key must carry an identical body.  A body mismatch is a hard error (not retryable). HTTP equivalent: 409 Conflict. |
+| `IdempotencyInFlight(LiterLlmError)` | The same `Idempotency-Key` is already in-flight (another request with the same key is currently being processed). The caller should wait briefly and retry.  The response is not yet available, and this request has been short-circuited to avoid running the operation twice. HTTP equivalent: 409 Conflict (retryable after a brief delay). |
+
+---
+
+#### UsageSinkError
+
+Error returned by a `UsageSink` implementation.
+
+**Base class:** `UsageSinkError(Exception)`
+
+| Exception | Description |
+|-----------|-------------|
+| `Backend(UsageSinkError)` | The sink's backend failed to accept the event. |
+
+---
+
+#### IdempotencyStoreError
+
+Error type for `IdempotencyStore` operations.
+
+**Base class:** `IdempotencyStoreError(Exception)`
+
+| Exception | Description |
+|-----------|-------------|
+| `Backend(IdempotencyStoreError)` | A backend-specific error occurred. |
 
 ---

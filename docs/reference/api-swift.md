@@ -125,6 +125,32 @@ public static func unregisterCustomProvider(name: String) throws -> Bool
 
 ---
 
+#### capabilities()
+
+Return the capability flags for a named provider.
+
+Performs an O(n) linear scan over the embedded registry (142 entries).
+Returns a `'static` reference valid for the lifetime of the process.
+
+For unknown `provider_name` values the function returns a reference to an
+all-`false` sentinel so callers never need to handle `Option`.
+
+**Signature:**
+
+```swift
+public static func capabilities(providerName: String) -> ProviderCapabilities
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `providerName` | `String` | Yes | The provider name |
+
+**Returns:** `ProviderCapabilities`
+
+---
+
 #### complexProviderNames()
 
 Return the set of complex provider names.
@@ -154,7 +180,7 @@ Returns `null` if the model is not present in the embedded pricing registry.
 Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
 
 When an exact model name match is not found, progressively shorter prefixes
-are tried by stripping from the last `-` or `.` separator. For example,
+are tried by stripping from the last `-` or `.` separator.  For example,
 `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 
 **Signature:**
@@ -206,6 +232,26 @@ public static func completionCostWithCache(model: String, promptTokens: UInt64, 
 | `completionTokens` | `UInt64` | Yes | The completion tokens |
 
 **Returns:** `Double?`
+
+---
+
+#### clear()
+
+Remove all guardrails from the global registry.
+
+Primarily useful in tests to reset state between test cases.
+
+**Panics:**
+
+Panics if the global registry lock is poisoned.
+
+**Signature:**
+
+```swift
+public static func clear()
+```
+
+**Returns:** `Void`
 
 ---
 
@@ -268,6 +314,368 @@ public static func countRequestTokens(model: String, req: ChatCompletionRequest)
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
 **Returns:** `UInt64`
+**Errors:** Throws `Error`.
+
+---
+
+#### recordCacheState()
+
+Set the cache outcome for the current task.
+
+Uses `try_with` so that callers that run outside a `CACHE_STATE_CELL.scope`
+(e.g. in tests that do not involve `HooksLayer`) are silently ignored rather
+than panicking.
+
+**Signature:**
+
+```swift
+public static func recordCacheState(state: CacheState)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `state` | `CacheState` | Yes | The cache state |
+
+**Returns:** `Void`
+
+---
+
+#### recordCacheHit()
+
+Record a cache hit metric.
+
+Call from cache layer implementations to emit `gen_ai.cache.hit`.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```swift
+public static func recordCacheHit(system: String, model: String, operation: String)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `String` | Yes | The system |
+| `model` | `String` | Yes | The model |
+| `operation` | `String` | Yes | The operation |
+
+**Returns:** `Void`
+
+---
+
+#### recordCacheMiss()
+
+Record a cache miss metric.
+
+Call from cache layer implementations to emit `gen_ai.cache.miss`.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```swift
+public static func recordCacheMiss(system: String, model: String, operation: String)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `String` | Yes | The system |
+| `model` | `String` | Yes | The model |
+| `operation` | `String` | Yes | The operation |
+
+**Returns:** `Void`
+
+---
+
+#### recordCacheStale()
+
+Record a stale cache metric.
+
+Call from cache layer implementations to emit `gen_ai.cache.stale`.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```swift
+public static func recordCacheStale(system: String, model: String, operation: String)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `String` | Yes | The system |
+| `model` | `String` | Yes | The model |
+| `operation` | `String` | Yes | The operation |
+
+**Returns:** `Void`
+
+---
+
+#### recordCircuitTrip()
+
+Record a circuit breaker trip.
+
+Call from `CircuitLayer` when the circuit opens.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```swift
+public static func recordCircuitTrip(system: String, model: String)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `String` | Yes | The system |
+| `model` | `String` | Yes | The model |
+
+**Returns:** `Void`
+
+---
+
+#### recordRetryAttempt()
+
+Record a retry attempt.
+
+Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```swift
+public static func recordRetryAttempt(system: String, model: String, operation: String)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `String` | Yes | The system |
+| `model` | `String` | Yes | The model |
+| `operation` | `String` | Yes | The operation |
+
+**Returns:** `Void`
+
+---
+
+#### recordCacheTierHit()
+
+Record a per-tier cache hit.
+
+`tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
+Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```swift
+public static func recordCacheTierHit(system: String, model: String, tier: String)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `String` | Yes | The system |
+| `model` | `String` | Yes | The model |
+| `tier` | `String` | Yes | The tier |
+
+**Returns:** `Void`
+
+---
+
+#### recordCacheTierMiss()
+
+Record a per-tier cache miss.
+
+`tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
+Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```swift
+public static func recordCacheTierMiss(system: String, model: String, tier: String)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `String` | Yes | The system |
+| `model` | `String` | Yes | The model |
+| `tier` | `String` | Yes | The tier |
+
+**Returns:** `Void`
+
+---
+
+#### recordBudgetSpend()
+
+Record cumulative spend for a specific budget dimension.
+
+Emits `gen_ai.budget.spend_usd` with dimension attributes.
+Call from `record` after each
+successful completion.  If the meter has not been initialized, this
+call is a no-op.
+
+**Signature:**
+
+```swift
+public static func recordBudgetSpend(model: String, provider: String, tenantId: String? = nil, userId: String? = nil, apiKeyId: String? = nil, costUsd: Double)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `model` | `String` | Yes | The model |
+| `provider` | `String` | Yes | The provider |
+| `tenantId` | `String?` | No | The tenant id |
+| `userId` | `String?` | No | The user id |
+| `apiKeyId` | `String?` | No | The api key id |
+| `costUsd` | `Double` | Yes | The cost usd |
+
+**Returns:** `Void`
+
+---
+
+#### recordBudgetRejection()
+
+Record a budget-rejection event.
+
+Emits `gen_ai.budget.rejection` with the triggering dimension.
+Call from `check` when
+returning `Reject`.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```swift
+public static func recordBudgetRejection(model: String, provider: String, dimension: String)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `model` | `String` | Yes | The model |
+| `provider` | `String` | Yes | The provider |
+| `dimension` | `String` | Yes | The dimension |
+
+**Returns:** `Void`
+
+---
+
+#### recordRealtimeSessionDuration()
+
+Record the lifetime of a completed Realtime WebSocket session.
+
+Emits `gen_ai.realtime.session.duration` (seconds).
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```swift
+public static func recordRealtimeSessionDuration(provider: String, durationSecs: Double)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `provider` | `String` | Yes | The provider |
+| `durationSecs` | `Double` | Yes | The duration secs |
+
+**Returns:** `Void`
+
+---
+
+#### recordRealtimeEvent()
+
+Record a single Realtime event being forwarded.
+
+Emits `gen_ai.realtime.event.count` with `gen_ai.realtime.direction`
+(`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
+`gen_ai.system`.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```swift
+public static func recordRealtimeEvent(provider: String, direction: String, eventType: String)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `provider` | `String` | Yes | The provider |
+| `direction` | `String` | Yes | The direction |
+| `eventType` | `String` | Yes | The event type |
+
+**Returns:** `Void`
+
+---
+
+#### recordRealtimeBytes()
+
+Record audio bytes forwarded over a Realtime WebSocket session.
+
+Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
+`gen_ai.realtime.direction` attributes.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```swift
+public static func recordRealtimeBytes(provider: String, direction: String, byteCount: UInt64)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `provider` | `String` | Yes | The provider |
+| `direction` | `String` | Yes | The direction |
+| `byteCount` | `UInt64` | Yes | The byte count |
+
+**Returns:** `Void`
+
+---
+
+#### checkBound()
+
+Assert that `current_len + incoming` does not exceed `limit`.
+
+Call this before appending `incoming` bytes to any buffer that must
+stay below `limit`.  Returns `Err(LiterLlmError.Streaming)` on overflow
+and emits a `tracing.warn!` with context.
+
+**Signature:**
+
+```swift
+public static func checkBound(context: String, currentLen: UInt64, incoming: UInt64, limit: UInt64) throws
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `context` | `String` | Yes | The context |
+| `currentLen` | `UInt64` | Yes | The current len |
+| `incoming` | `UInt64` | Yes | The incoming |
+| `limit` | `UInt64` | Yes | The limit |
+
+**Returns:** `Void`
 **Errors:** Throws `Error`.
 
 ---
@@ -526,6 +934,118 @@ A single completion choice.
 | `index` | `UInt32` | — | Index of this choice in the choices array. |
 | `message` | `AssistantMessage` | — | The assistant's message response. |
 | `finishReason` | `FinishReason?` | `null` | Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). |
+
+---
+
+#### ChunkMiddleware
+
+A per-chunk transformation in the `StreamPipeline`.
+
+Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
+to pass it through (optionally modified), `Ok(None)` to drop the chunk,
+or `Err(e)` to propagate a stream error.
+
+The trait is object-safe so implementations can be stored in a
+`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+
+### Methods
+
+#### process()
+
+Process a single chunk.
+
+- `Ok(Some(chunk))` — emit (possibly transformed) chunk.
+- `Ok(None)` — drop this chunk silently.
+- `Err(e)` — propagate as a stream error.
+
+**Signature:**
+
+```swift
+public func process(chunk: ChatCompletionChunk) throws -> ChatCompletionChunk?
+```
+
+---
+
+#### CircuitPolicy
+
+Policy that drives a circuit breaker's state transitions.
+
+Implement this trait to provide custom failure-detection and
+recovery logic.  The default implementation is `ExponentialBackoffCircuit`.
+
+### Methods
+
+#### recordSuccess()
+
+Called when the inner service returns a successful response.
+
+**Signature:**
+
+```swift
+public func recordSuccess()
+```
+
+#### recordFailure()
+
+Called when the inner service returns an error.
+
+The policy decides whether to count the error as a circuit-trip failure.
+
+**Signature:**
+
+```swift
+public func recordFailure()
+```
+
+#### shouldAllow()
+
+Returns `true` when a request should be allowed to proceed.
+
+`false` means the circuit is open and the request should be rejected.
+
+**Signature:**
+
+```swift
+public func shouldAllow() -> Bool
+```
+
+#### state()
+
+Returns the current circuit state.
+
+**Signature:**
+
+```swift
+public func state() -> CircuitState
+```
+
+#### releaseProbeSlot()
+
+Called when a probe request is dropped without completing (e.g. due to
+panic or cancellation) to release the probe slot.
+
+The default implementation is a no-op.  Policies that gate probe slots
+with a boolean flag (like `ExponentialBackoffCircuit`) should override
+this to clear the flag.
+
+**Signature:**
+
+```swift
+public func releaseProbeSlot()
+```
+
+---
+
+#### ClassifyContext
+
+Immutable context passed to every `RouteClassifier.classify` call.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `prompt` | `String` | — | The user-facing prompt text. |
+| `systemPrompt` | `String?` | `null` | Optional system prompt from the request. |
+| `metadata` | `[String: String]` | — | Arbitrary metadata attached to the request (e.g. tenant, session ID). |
+| `availableModels` | `[String]` | — | The set of model identifiers the router currently considers available. |
 
 ---
 
@@ -809,6 +1329,33 @@ public func listBatches(query: BatchListQuery? = nil) throws -> BatchListRespons
 public func cancelBatch(batchId: String) throws -> BatchObject
 ```
 
+#### retrieve()
+
+**Signature:**
+
+```swift
+public func retrieve(batchId: String) throws -> BatchObject
+```
+
+#### waitForBatch()
+
+Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
+
+Uses exponential backoff with configurable initial interval, maximum interval, and backoff multiplier.
+Optionally supports a timeout that aborts polling if exceeded.
+
+**Errors:**
+
+Returns `BatchWaitError.Failed` if the batch reaches a failure terminal status.
+Returns `BatchWaitError.Timeout` if the configured timeout is exceeded.
+Returns `BatchWaitError.Client` for underlying client errors.
+
+**Signature:**
+
+```swift
+public func waitForBatch(batchId: String, config: WaitForBatchConfig) throws -> BatchObject
+```
+
 #### createResponse()
 
 **Signature:**
@@ -908,6 +1455,78 @@ Embedding response.
 
 ---
 
+#### ExponentialBackoffCircuit
+
+Circuit breaker with exponential backoff.
+
+Opens after `failure_threshold` consecutive failures.  After
+`base_backoff` (doubled on each successive open → half-open → open cycle,
+up to `max_backoff`), the circuit enters `CircuitState.HalfOpen` and
+allows one probe request through.
+
+### Methods
+
+#### new()
+
+Create a new policy.
+
+- `failure_threshold`: consecutive failures required to open the circuit.
+- `base_backoff`: initial half-open retry delay (doubles each open cycle,
+  capped at 2 minutes).
+
+**Signature:**
+
+```swift
+public static func new(failureThreshold: UInt32, baseBackoff: Duration) -> ExponentialBackoffCircuit
+```
+
+#### recordSuccess()
+
+**Signature:**
+
+```swift
+public func recordSuccess()
+```
+
+#### recordFailure()
+
+**Signature:**
+
+```swift
+public func recordFailure()
+```
+
+#### shouldAllow()
+
+**Signature:**
+
+```swift
+public func shouldAllow() -> Bool
+```
+
+#### state()
+
+**Signature:**
+
+```swift
+public func state() -> CircuitState
+```
+
+#### releaseProbeSlot()
+
+Release the probe slot without recording success or failure.
+
+Called by the `ProbeGuard` when the probe future is dropped before
+completing (e.g. cancelled or panicked).
+
+**Signature:**
+
+```swift
+public func releaseProbeSlot()
+```
+
+---
+
 #### FileListQuery
 
 Query parameters for listing files.
@@ -948,6 +1567,43 @@ An uploaded file object.
 
 ---
 
+#### FixedDelayHedge
+
+A simple `HedgePolicy` that fires hedges at fixed intervals.
+
+### Methods
+
+#### new()
+
+Create a new policy.
+
+- `delay`: how long to wait before launching each additional attempt.
+- `max_attempts`: maximum concurrent copies of the request (≥ 1).
+
+**Signature:**
+
+```swift
+public static func new(delay: Duration, maxAttempts: UInt32) -> FixedDelayHedge
+```
+
+#### delayForAttempt()
+
+**Signature:**
+
+```swift
+public func delayForAttempt(attempt: UInt32, latencySoFar: Duration) -> Duration?
+```
+
+#### maxAttempts()
+
+**Signature:**
+
+```swift
+public func maxAttempts() -> UInt32
+```
+
+---
+
 #### FunctionCall
 
 Function call details.
@@ -983,6 +1639,71 @@ Deprecated legacy function-role message body.
 
 ---
 
+#### HealthChecker
+
+Abstraction over a health probe strategy.
+
+Implementors issue a lightweight probe against `upstream` (typically a
+provider base URL or named identifier) and report `HealthStatus`.
+
+### Methods
+
+#### check()
+
+Probe `upstream` and return its current `HealthStatus`.
+
+The parameter is taken by value (`String`) so that implementations can
+move it into the returned future without a clone, making the
+`'static + Send` bound on the future trivially satisfiable.
+
+**Signature:**
+
+```swift
+public func check(upstream: String) -> HealthStatus
+```
+
+---
+
+#### HedgePolicy
+
+Policy that controls when and how many hedged requests are launched.
+
+Implement this trait to provide custom hedging strategies such as
+latency-percentile-based delays or per-model adaptive delays.
+
+### Methods
+
+#### delayForAttempt()
+
+Returns the delay before launching attempt `attempt` (1-indexed; attempt
+1 is the initial request, attempt 2 is the first hedge, etc.).
+
+- `attempt`: 1-indexed attempt number.
+- `latency_so_far`: elapsed time since the first request was dispatched.
+
+Return `null` to skip this attempt (and all subsequent ones).
+
+**Signature:**
+
+```swift
+public func delayForAttempt(attempt: UInt32, latencySoFar: Duration) -> Duration?
+```
+
+#### maxAttempts()
+
+Maximum number of concurrent attempts (including the original request).
+
+Must be ≥ 1.  Values above 3 are rarely useful and increase provider
+costs significantly.
+
+**Signature:**
+
+```swift
+public func maxAttempts() -> UInt32
+```
+
+---
+
 #### Image
 
 A single generated image, returned as either a URL or base64 data.
@@ -1014,6 +1735,18 @@ Response containing generated images.
 |-------|------|---------|-------------|
 | `created` | `UInt64` | — | Unix timestamp of image creation. |
 | `data` | `[Image]` | `[]` | List of generated images. |
+
+---
+
+#### IntentPrototype
+
+An intent prototype: `(intent_name, prototype_embedding, target_model_id)`.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `String` | — | Human-readable name for the intent (used in logs/metrics). |
+| `embedding` | `[Double]` | — | Pre-computed embedding vector for this intent. |
+| `model` | `String` | — | Model to route to when this intent is detected. |
 
 ---
 
@@ -1205,9 +1938,40 @@ discounted rate and the remainder at the regular input rate.
 
 ---
 
+#### ProviderCapabilities
+
+Static capability flags for a provider.
+
+Each flag indicates whether the provider's models *generally* support that
+feature.  For providers that aggregate many underlying models (e.g. Bedrock,
+OpenRouter, vLLM) the flags reflect the superset of available model
+capabilities — a flag being `true` means at least one model supports the
+feature, not every model.
+
+All flags default to `false` so that newly added providers are safe.
+
+Access via the crate-level `capabilities` function:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `vision` | `Bool` | — | The provider accepts image input in chat messages. |
+| `reasoning` | `Bool` | — | The provider supports extended-thinking / reasoning tokens. |
+| `structuredOutput` | `Bool` | — | The provider supports JSON-mode or `response_format` structured output. |
+| `functionCalling` | `Bool` | — | The provider supports tool / function calling. |
+| `audioIn` | `Bool` | — | The provider accepts audio as input. |
+| `audioOut` | `Bool` | — | The provider can generate audio / TTS output. |
+| `videoIn` | `Bool` | — | The provider accepts video as input. |
+
+---
+
 #### ProviderConfig
 
 Static configuration for a single provider entry in providers.json.
+
+This struct deliberately does not include capability flags or streaming
+format, which are accessed via the `capabilities` function.  Keeping
+these fields separate preserves backward compatibility with all generated
+binding code that constructs `ProviderConfig` using struct literal syntax.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -1380,6 +2144,16 @@ An individual search result.
 
 ---
 
+#### SingleflightResult
+
+The value broadcast from a singleflight leader to all followers.
+
+`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
+broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
+bump per follower, which is negligible under the burst loads this layer targets.
+
+---
+
 #### SpecificFunction
 
 Name of the specific function to invoke.
@@ -1522,6 +2296,35 @@ A segment of transcribed audio with timing information.
 
 ---
 
+#### UpstreamDiscover
+
+A typed extension of `tower.discover.Discover` for LLM upstream
+services.
+
+Implementors plug in their own discovery mechanism — file-based configs,
+etcd watches, HTTP polling — and the `DynamicRouter` handles the rest.
+The key type must be `String` so that provider names are human-readable in
+logs and metrics.
+
+### Object safety
+
+`UpstreamDiscover` is **not** object-safe and **must not** be stored as
+`dyn UpstreamDiscover`.  It is a generic bound used exclusively as a type
+parameter for `DynamicRouter<D>`.  All discovery implementations are
+monomorphised at compile time.
+
+If you need a runtime registry of heterogeneous discovery sources, wrap
+each source in an `Arc<Mutex<Box<dyn …>>>` and poll them via a custom
+`Stream` adapter — do not store them as `dyn UpstreamDiscover`.
+
+### Note for 1.A integration
+
+If the router encounters a discovery error, it wraps it in
+`RouterError.Discover`.  The 1.A error-consolidation workstream should
+replace this local enum with the canonical error hierarchy.
+
+---
+
 #### Usage
 
 Token-usage accounting returned by the provider on each completion / embedding call.
@@ -1543,6 +2346,29 @@ User message in the conversation.
 |-------|------|---------|-------------|
 | `content` | `UserContent` | `UserContent.Text` | Message content as plain text or array of content parts (text, images, documents, audio). |
 | `name` | `String?` | `null` | Optional name for the user. |
+
+---
+
+#### WaitForBatchConfig
+
+Configuration for polling a batch until terminal status.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `initialInterval` | `Duration` | `5000ms` | Initial interval between polls. |
+| `maxInterval` | `Duration` | `60000ms` | Maximum interval between polls (backoff plateau). |
+| `backoffMultiplier` | `Float` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
+| `timeout` | `Duration?` | `null` | Optional timeout — polling fails if this duration is exceeded. |
+
+### Methods
+
+#### default()
+
+**Signature:**
+
+```swift
+public static func default() -> WaitForBatchConfig
+```
 
 ---
 
@@ -1574,7 +2400,7 @@ User message content as either plain text or a list of multimodal parts.
 
 ---
 
-#### ContentPart
+#### TypesContentPart
 
 A single content part in a user message — text, image, document, or audio.
 
@@ -1783,6 +2609,22 @@ How the API key is sent in the HTTP request.
 
 ---
 
+#### StreamFormat
+
+The streaming wire format a provider uses for its response stream.
+
+Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
+a proprietary binary EventStream framing.
+
+Deserialized from the `streaming_format` JSON field via `serde`.
+
+| Value | Description |
+|-------|-------------|
+| `Sse` | Standard Server-Sent Events (text/event-stream). |
+| `AwsEventStream` | AWS EventStream binary framing (application/vnd.amazon.eventstream). |
+
+---
+
 #### AuthType
 
 Auth scheme used by a provider.
@@ -1793,6 +2635,106 @@ Auth scheme used by a provider.
 | `ApiKey` | `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). |
 | `None` | No authentication header required. |
 | `Unknown` | Unrecognised auth scheme — falls back to bearer. |
+
+---
+
+#### OnMatch
+
+Action taken when a `RegexGuardrail` finds a match.
+
+| Value | Description |
+|-------|-------------|
+| `Block` | Block the request/response with the given error code and reason prefix. — Fields: `code`: `UInt32`, `reasonPrefix`: `String` |
+| `Redact` | Replace the matched portion with the given replacement string. — Fields: `replacement`: `String` |
+
+---
+
+#### CelAction
+
+The action taken when a `CelGuardrail`'s expression evaluates to `true`.
+
+| Value | Description |
+|-------|-------------|
+| `Block` | Block the request/response with the given code and reason. — Fields: `code`: `UInt32`, `reason`: `String` |
+| `Mutate` | Replace the payload with a static JSON value (e.g., for redaction). — Fields: `newPayload`: `String` |
+
+---
+
+#### GuardrailStage
+
+The lifecycle stage at which a guardrail runs.
+
+| Value | Description |
+|-------|-------------|
+| `Input` | The outgoing prompt / request, before forwarding to the upstream provider. |
+| `Output` | The full response from the upstream provider (non-streaming). |
+| `OutputChunk` | A single chunk in a streaming response. Guardrails here are called once per chunk and may block or mutate individual chunks. |
+
+---
+
+#### GuardrailDecision
+
+The outcome of a guardrail check.
+
+| Value | Description |
+|-------|-------------|
+| `Allow` | The check passed. Continue to the next guardrail or to the inner service. |
+| `Block` | The check failed. Short-circuit the request/response with this reason. `code` should be ≥ 1000 to avoid collision with HTTP status codes and to facilitate cross-language error mapping. — Fields: `reason`: `String`, `code`: `UInt32` |
+| `Mutate` | Rewrite the payload. The provided `new_payload` replaces the original `request` or `response` before it reaches the next stage. For `OutputChunk` stage: `new_payload` replaces the chunk content. — Fields: `newPayload`: `String` |
+
+---
+
+#### CacheState
+
+Cache outcome for a single request.
+
+| Value | Description |
+|-------|-------------|
+| `Miss` | No cache entry found; request was sent to the provider. |
+| `ExactHit` | Exact-match cache hit; provider was not called. |
+| `SemanticHit` | Semantic-similarity cache hit; provider was not called. |
+| `StaleHit` | Stale entry served (TTL expired but no fresh entry was available). |
+| `Bypass` | Cache lookup was skipped (bypass policy, streaming request, etc.). |
+
+---
+
+#### UsageEventOutcome
+
+High-level outcome of the request.
+
+| Value | Description |
+|-------|-------------|
+| `Success` | Inner service returned a successful response. |
+| `Error` | Inner service returned an error (non-timeout). |
+| `Cancelled` | Request was cancelled before the inner service responded. |
+| `TimedOut` | Inner service timed out. |
+
+---
+
+#### ContentPart
+
+A single content part within a conversation item.
+
+Conversation items may carry text, audio, or an image (by reference).
+
+| Value | Description |
+|-------|-------------|
+| `Text` | A plain-text segment. — Fields: `text`: `String` |
+| `Audio` | A raw audio segment encoded as base64. — Fields: `base64`: `String` |
+| `ImageRef` | An image referenced by a URL or ID rather than inline bytes. — Fields: `url`: `String` |
+
+---
+
+#### ResponseStatus
+
+Terminal status for a completed `RealtimeEvent.ResponseDone`.
+
+| Value | Description |
+|-------|-------------|
+| `Completed` | The response was produced in full. |
+| `Cancelled` | The response was cancelled before completion. |
+| `Failed` | The response failed due to an upstream error. |
+| `Incomplete` | The response hit a token/time limit before completing. |
 
 ---
 
@@ -1815,6 +2757,40 @@ Storage backend for the response cache.
 |-------|-------------|
 | `Memory` | In-memory LRU cache (default). No external dependencies. |
 | `OpenDal` | OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.). — Fields: `scheme`: `String`, `config`: `[String: String]` |
+
+---
+
+#### CircuitState
+
+Observable state of a circuit breaker.
+
+| Value | Description |
+|-------|-------------|
+| `Closed` | Requests flow through normally. |
+| `Open` | All requests are rejected; the circuit is waiting for the backoff to elapse. |
+| `HalfOpen` | One probe request is allowed through to test service health. |
+
+---
+
+#### RetryClass
+
+Classification of a single attempt error.
+
+| Value | Description |
+|-------|-------------|
+| `Transient` | Transient error — advance to the next service in the chain. |
+| `Terminal` | Terminal error — return immediately without consulting further services. |
+
+---
+
+#### HealthStatus
+
+The result of a single health probe.
+
+| Value | Description |
+|-------|-------------|
+| `Healthy` | The probe succeeded; the upstream is reachable. |
+| `Unhealthy` | The probe failed; the upstream may be down. |
 
 ---
 
@@ -1843,5 +2819,27 @@ All errors that can occur when using `liter-llm`.
 | `HookRejected` | hook rejected: {message} |
 | `InternalError` | An internal logic error (e.g. unexpected Tower response variant). This should never surface in normal operation — if it does, it indicates a bug in the library. |
 | `OutboundForbidden` | An outbound request was blocked by the active `OutboundPolicy`. Returned when `register_custom_provider` is called with a `base_url` that violates the policy (e.g. a private-range IP under `DenyPrivate`), or when the per-connection DNS resolver detects a forbidden address at connect time. |
+| `IdempotencyConflict` | A different request body was submitted for an existing `Idempotency-Key`. Per the OpenAI `Idempotency-Key` convention, once a key is used with a particular request body, subsequent requests using the same key must carry an identical body.  A body mismatch is a hard error (not retryable). HTTP equivalent: 409 Conflict. |
+| `IdempotencyInFlight` | The same `Idempotency-Key` is already in-flight (another request with the same key is currently being processed). The caller should wait briefly and retry.  The response is not yet available, and this request has been short-circuited to avoid running the operation twice. HTTP equivalent: 409 Conflict (retryable after a brief delay). |
+
+---
+
+#### UsageSinkError
+
+Error returned by a `UsageSink` implementation.
+
+| Variant | Description |
+|---------|-------------|
+| `Backend` | The sink's backend failed to accept the event. |
+
+---
+
+#### IdempotencyStoreError
+
+Error type for `IdempotencyStore` operations.
+
+| Variant | Description |
+|---------|-------------|
+| `Backend` | A backend-specific error occurred. |
 
 ---

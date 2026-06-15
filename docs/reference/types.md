@@ -55,6 +55,18 @@ An individual search result.
 
 ---
 
+#### SingleflightResult
+
+The value broadcast from a singleflight leader to all followers.
+
+`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
+broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
+bump per follower, which is negligible under the burst loads this layer targets.
+
+*Opaque type — fields are not directly accessible.*
+
+---
+
 ### Configuration Types
 
 See [Configuration Reference](configuration.md) for detailed defaults and language-specific representations.
@@ -789,6 +801,19 @@ Token usage for a response.
 
 ---
 
+#### WaitForBatchConfig
+
+Configuration for polling a batch until terminal status.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `initial_interval` | `Duration` | `5000ms` | Initial interval between polls. |
+| `max_interval` | `Duration` | `60000ms` | Maximum interval between polls (backoff plateau). |
+| `backoff_multiplier` | `f32` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
+| `timeout` | `Option<Duration>` | `None` | Optional timeout — polling fails if this duration is exceeded. |
+
+---
+
 #### CustomProviderConfig
 
 Configuration for registering a custom LLM provider at runtime.
@@ -802,9 +827,40 @@ Configuration for registering a custom LLM provider at runtime.
 
 ---
 
+#### ProviderCapabilities
+
+Static capability flags for a provider.
+
+Each flag indicates whether the provider's models *generally* support that
+feature.  For providers that aggregate many underlying models (e.g. Bedrock,
+OpenRouter, vLLM) the flags reflect the superset of available model
+capabilities — a flag being `True` means at least one model supports the
+feature, not every model.
+
+All flags default to `False` so that newly added providers are safe.
+
+Access via the crate-level `capabilities` function:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `vision` | `bool` | — | The provider accepts image input in chat messages. |
+| `reasoning` | `bool` | — | The provider supports extended-thinking / reasoning tokens. |
+| `structured_output` | `bool` | — | The provider supports JSON-mode or `response_format` structured output. |
+| `function_calling` | `bool` | — | The provider supports tool / function calling. |
+| `audio_in` | `bool` | — | The provider accepts audio as input. |
+| `audio_out` | `bool` | — | The provider can generate audio / TTS output. |
+| `video_in` | `bool` | — | The provider accepts video as input. |
+
+---
+
 #### ProviderConfig
 
 Static configuration for a single provider entry in providers.json.
+
+This struct deliberately does not include capability flags or streaming
+format, which are accessed via the `capabilities` function.  Keeping
+these fields separate preserves backward compatibility with all generated
+binding code that constructs `ProviderConfig` using struct literal syntax.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -1043,6 +1099,131 @@ headers are cached at construction to avoid redundant encoding on every request.
 
 ---
 
+#### ChunkMiddleware
+
+A per-chunk transformation in the `StreamPipeline`.
+
+Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
+to pass it through (optionally modified), `Ok(None)` to drop the chunk,
+or `Err(e)` to propagate a stream error.
+
+The trait is object-safe so implementations can be stored in a
+`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+
+*Opaque type — fields are not directly accessible.*
+
+---
+
+#### CircuitPolicy
+
+Policy that drives a circuit breaker's state transitions.
+
+Implement this trait to provide custom failure-detection and
+recovery logic.  The default implementation is `ExponentialBackoffCircuit`.
+
+*Opaque type — fields are not directly accessible.*
+
+---
+
+#### ExponentialBackoffCircuit
+
+Circuit breaker with exponential backoff.
+
+Opens after `failure_threshold` consecutive failures.  After
+`base_backoff` (doubled on each successive open → half-open → open cycle,
+up to `max_backoff`), the circuit enters `CircuitState.HalfOpen` and
+allows one probe request through.
+
+*Opaque type — fields are not directly accessible.*
+
+---
+
+#### HealthChecker
+
+Abstraction over a health probe strategy.
+
+Implementors issue a lightweight probe against `upstream` (typically a
+provider base URL or named identifier) and report `HealthStatus`.
+
+*Opaque type — fields are not directly accessible.*
+
+---
+
+#### HedgePolicy
+
+Policy that controls when and how many hedged requests are launched.
+
+Implement this trait to provide custom hedging strategies such as
+latency-percentile-based delays or per-model adaptive delays.
+
+*Opaque type — fields are not directly accessible.*
+
+---
+
+#### FixedDelayHedge
+
+A simple `HedgePolicy` that fires hedges at fixed intervals.
+
+*Opaque type — fields are not directly accessible.*
+
+---
+
+#### ClassifyContext
+
+Immutable context passed to every `RouteClassifier.classify` call.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `prompt` | `String` | — | The user-facing prompt text. |
+| `system_prompt` | `Option<String>` | `None` | Optional system prompt from the request. |
+| `metadata` | `HashMap<String, String>` | — | Arbitrary metadata attached to the request (e.g. tenant, session ID). |
+| `available_models` | `Vec<String>` | — | The set of model identifiers the router currently considers available. |
+
+---
+
+#### IntentPrototype
+
+An intent prototype: `(intent_name, prototype_embedding, target_model_id)`.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `String` | — | Human-readable name for the intent (used in logs/metrics). |
+| `embedding` | `Vec<f64>` | — | Pre-computed embedding vector for this intent. |
+| `model` | `String` | — | Model to route to when this intent is detected. |
+
+---
+
+#### UpstreamDiscover
+
+A typed extension of `tower.discover.Discover` for LLM upstream
+services.
+
+Implementors plug in their own discovery mechanism — file-based configs,
+etcd watches, HTTP polling — and the `DynamicRouter` handles the rest.
+The key type must be `String` so that provider names are human-readable in
+logs and metrics.
+
+### Object safety
+
+`UpstreamDiscover` is **not** object-safe and **must not** be stored as
+`dyn UpstreamDiscover`.  It is a generic bound used exclusively as a type
+parameter for `DynamicRouter<D>`.  All discovery implementations are
+monomorphised at compile time.
+
+If you need a runtime registry of heterogeneous discovery sources, wrap
+each source in an `Arc<Mutex<Box<dyn …>>>` and poll them via a custom
+`Stream` adapter — do not store them as `dyn UpstreamDiscover`.
+
+### Note for 1.A integration
+
+If the router encounters a discovery error, it wraps it in
+`RouterError.Discover`.  The 1.A error-consolidation workstream should
+replace this local enum with the canonical error hierarchy.
+
+*Opaque type — fields are not directly accessible.*
+
+---
+
 ### Enums
 
 #### AuthHeaderFormat
@@ -1098,16 +1279,54 @@ Storage backend for the response cache.
 
 ---
 
-#### ContentPart
+#### CacheState
 
-A single content part in a user message — text, image, document, or audio.
+Cache outcome for a single request.
 
 | Variant | Wire value | Description |
 |---------|------------|-------------|
-| `Text` | `text` | Plain text. — Fields: `text`: `String` |
-| `ImageUrl` | `image_url` | Image identified by URL (with optional detail level). — Fields: `image_url`: `ImageUrl` |
-| `Document` | `document` | Document file (PDF, CSV, etc.) as base64 or URL. — Fields: `document`: `DocumentContent` |
-| `InputAudio` | `input_audio` | Audio input as base64. — Fields: `input_audio`: `AudioContent` |
+| `Miss` | `miss` | No cache entry found; request was sent to the provider. |
+| `ExactHit` | `exact_hit` | Exact-match cache hit; provider was not called. |
+| `SemanticHit` | `semantic_hit` | Semantic-similarity cache hit; provider was not called. |
+| `StaleHit` | `stale_hit` | Stale entry served (TTL expired but no fresh entry was available). |
+| `Bypass` | `bypass` | Cache lookup was skipped (bypass policy, streaming request, etc.). |
+
+---
+
+#### CelAction
+
+The action taken when a `CelGuardrail`'s expression evaluates to `true`.
+
+| Variant | Description |
+|---------|-------------|
+| `Block` | Block the request/response with the given code and reason. — Fields: `code`: `u32`, `reason`: `String` |
+| `Mutate` | Replace the payload with a static JSON value (e.g., for redaction). — Fields: `new_payload`: `serde_json::Value` |
+
+---
+
+#### CircuitState
+
+Observable state of a circuit breaker.
+
+| Variant | Description |
+|---------|-------------|
+| `Closed` | Requests flow through normally. |
+| `Open` | All requests are rejected; the circuit is waiting for the backoff to elapse. |
+| `HalfOpen` | One probe request is allowed through to test service health. |
+
+---
+
+#### ContentPart
+
+A single content part within a conversation item.
+
+Conversation items may carry text, audio, or an image (by reference).
+
+| Variant | Wire value | Description |
+|---------|------------|-------------|
+| `Text` | `text` | A plain-text segment. — Fields: `text`: `String` |
+| `Audio` | `audio` | A raw audio segment encoded as base64. — Fields: `base64`: `String` |
+| `ImageRef` | `image_ref` | An image referenced by a URL or ID rather than inline bytes. — Fields: `url`: `String` |
 
 ---
 
@@ -1172,6 +1391,41 @@ Why a choice stopped generating tokens.
 
 ---
 
+#### GuardrailDecision
+
+The outcome of a guardrail check.
+
+| Variant | Description |
+|---------|-------------|
+| `Allow` | The check passed. Continue to the next guardrail or to the inner service. |
+| `Block` | The check failed. Short-circuit the request/response with this reason. `code` should be ≥ 1000 to avoid collision with HTTP status codes and to facilitate cross-language error mapping. — Fields: `reason`: `String`, `code`: `u32` |
+| `Mutate` | Rewrite the payload. The provided `new_payload` replaces the original `request` or `response` before it reaches the next stage. For `OutputChunk` stage: `new_payload` replaces the chunk content. — Fields: `new_payload`: `serde_json::Value` |
+
+---
+
+#### GuardrailStage
+
+The lifecycle stage at which a guardrail runs.
+
+| Variant | Description |
+|---------|-------------|
+| `Input` | The outgoing prompt / request, before forwarding to the upstream provider. |
+| `Output` | The full response from the upstream provider (non-streaming). |
+| `OutputChunk` | A single chunk in a streaming response. Guardrails here are called once per chunk and may block or mutate individual chunks. |
+
+---
+
+#### HealthStatus
+
+The result of a single health probe.
+
+| Variant | Description |
+|---------|-------------|
+| `Healthy` | The probe succeeded; the upstream is reachable. |
+| `Unhealthy` | The probe failed; the upstream may be down. |
+
+---
+
 #### ImageDetail
 
 Image detail level controlling token cost and processing.
@@ -1221,6 +1475,17 @@ Document input for OCR — either a URL or inline base64 data.
 
 ---
 
+#### OnMatch
+
+Action taken when a `RegexGuardrail` finds a match.
+
+| Variant | Description |
+|---------|-------------|
+| `Block` | Block the request/response with the given error code and reason prefix. — Fields: `code`: `u32`, `reason_prefix`: `String` |
+| `Redact` | Replace the matched portion with the given replacement string. — Fields: `replacement`: `String` |
+
+---
+
 #### ReasoningEffort
 
 Controls how much reasoning effort the model should use.
@@ -1256,6 +1521,30 @@ Response format constraint.
 
 ---
 
+#### ResponseStatus
+
+Terminal status for a completed `RealtimeEvent.ResponseDone`.
+
+| Variant | Wire value | Description |
+|---------|------------|-------------|
+| `Completed` | `completed` | The response was produced in full. |
+| `Cancelled` | `cancelled` | The response was cancelled before completion. |
+| `Failed` | `failed` | The response failed due to an upstream error. |
+| `Incomplete` | `incomplete` | The response hit a token/time limit before completing. |
+
+---
+
+#### RetryClass
+
+Classification of a single attempt error.
+
+| Variant | Description |
+|---------|-------------|
+| `Transient` | Transient error — advance to the next service in the chain. |
+| `Terminal` | Terminal error — return immediately without consulting further services. |
+
+---
+
 #### StopSequence
 
 Stop sequence(s) that cause the model to stop generating.
@@ -1264,6 +1553,22 @@ Stop sequence(s) that cause the model to stop generating.
 |---------|-------------|
 | `Single` | Single stop sequence. — Fields: `_0`: `String` |
 | `Multiple` | Multiple stop sequences. — Fields: `_0`: `Vec<String>` |
+
+---
+
+#### StreamFormat
+
+The streaming wire format a provider uses for its response stream.
+
+Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
+a proprietary binary EventStream framing.
+
+Deserialized from the `streaming_format` JSON field via `serde`.
+
+| Variant | Wire value | Description |
+|---------|------------|-------------|
+| `Sse` | `sse` | Standard Server-Sent Events (text/event-stream). |
+| `AwsEventStream` | `aws_event_stream` | AWS EventStream binary framing (application/vnd.amazon.eventstream). |
 
 ---
 
@@ -1301,6 +1606,32 @@ deserialization.
 | Variant | Wire value | Description |
 |---------|------------|-------------|
 | `Function` | `function` | Function |
+
+---
+
+#### TypesContentPart
+
+A single content part in a user message — text, image, document, or audio.
+
+| Variant | Wire value | Description |
+|---------|------------|-------------|
+| `Text` | `text` | Plain text. — Fields: `text`: `String` |
+| `ImageUrl` | `image_url` | Image identified by URL (with optional detail level). — Fields: `image_url`: `ImageUrl` |
+| `Document` | `document` | Document file (PDF, CSV, etc.) as base64 or URL. — Fields: `document`: `DocumentContent` |
+| `InputAudio` | `input_audio` | Audio input as base64. — Fields: `input_audio`: `AudioContent` |
+
+---
+
+#### UsageEventOutcome
+
+High-level outcome of the request.
+
+| Variant | Wire value | Description |
+|---------|------------|-------------|
+| `Success` | `success` | Inner service returned a successful response. |
+| `Error` | `error` | Inner service returned an error (non-timeout). |
+| `Cancelled` | `cancelled` | Request was cancelled before the inner service responded. |
+| `TimedOut` | `timed_out` | Inner service timed out. |
 
 ---
 

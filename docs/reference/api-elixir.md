@@ -129,11 +129,40 @@ def unregister_custom_provider(name)
 
 ---
 
+#### capabilities()
+
+Return the capability flags for a named provider.
+
+Performs an O(n) linear scan over the embedded registry (142 entries).
+Returns a `'static` reference valid for the lifetime of the process.
+
+For unknown `provider_name` values the function returns a reference to an
+all-`false` sentinel so callers never need to handle `Option`.
+
+**Signature:**
+
+```elixir
+@spec capabilities(provider_name) :: {:ok, term()} | {:error, term()}
+def capabilities(provider_name)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `provider_name` | `String.t()` | Yes | The provider name |
+
+**Returns:** `ProviderCapabilities`
+
+---
+
 #### all_providers()
 
 Return all provider configs from the registry.
 
 Useful for tooling, documentation generation, or runtime enumeration.
+Returns the public `ProviderConfig` slice (without capability flags).
+To query capability flags for a specific provider use `capabilities`.
 
 **Signature:**
 
@@ -177,7 +206,7 @@ Returns `nil` if the model is not present in the embedded pricing registry.
 Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
 
 When an exact model name match is not found, progressively shorter prefixes
-are tried by stripping from the last `-` or `.` separator. For example,
+are tried by stripping from the last `-` or `.` separator.  For example,
 `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 
 **Signature:**
@@ -231,6 +260,27 @@ def completion_cost_with_cache(model, prompt_tokens, cached_tokens, completion_t
 | `completion_tokens` | `integer()` | Yes | The completion tokens |
 
 **Returns:** `float() | nil`
+
+---
+
+#### clear()
+
+Remove all guardrails from the global registry.
+
+Primarily useful in tests to reset state between test cases.
+
+**Panics:**
+
+Panics if the global registry lock is poisoned.
+
+**Signature:**
+
+```elixir
+@spec clear() :: {:ok, term()} | {:error, term()}
+def clear()
+```
+
+**Returns:** `:ok`
 
 ---
 
@@ -295,6 +345,382 @@ def count_request_tokens(model, req)
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
 **Returns:** `integer()`
+**Errors:** Returns `{:error, reason}`
+
+---
+
+#### record_cache_state()
+
+Set the cache outcome for the current task.
+
+Uses `try_with` so that callers that run outside a `CACHE_STATE_CELL.scope`
+(e.g. in tests that do not involve `HooksLayer`) are silently ignored rather
+than panicking.
+
+**Signature:**
+
+```elixir
+@spec record_cache_state(state) :: {:ok, term()} | {:error, term()}
+def record_cache_state(state)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `state` | `CacheState` | Yes | The cache state |
+
+**Returns:** `:ok`
+
+---
+
+#### record_cache_hit()
+
+Record a cache hit metric.
+
+Call from cache layer implementations to emit `gen_ai.cache.hit`.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```elixir
+@spec record_cache_hit(system, model, operation) :: {:ok, term()} | {:error, term()}
+def record_cache_hit(system, model, operation)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `String.t()` | Yes | The system |
+| `model` | `String.t()` | Yes | The model |
+| `operation` | `String.t()` | Yes | The operation |
+
+**Returns:** `:ok`
+
+---
+
+#### record_cache_miss()
+
+Record a cache miss metric.
+
+Call from cache layer implementations to emit `gen_ai.cache.miss`.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```elixir
+@spec record_cache_miss(system, model, operation) :: {:ok, term()} | {:error, term()}
+def record_cache_miss(system, model, operation)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `String.t()` | Yes | The system |
+| `model` | `String.t()` | Yes | The model |
+| `operation` | `String.t()` | Yes | The operation |
+
+**Returns:** `:ok`
+
+---
+
+#### record_cache_stale()
+
+Record a stale cache metric.
+
+Call from cache layer implementations to emit `gen_ai.cache.stale`.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```elixir
+@spec record_cache_stale(system, model, operation) :: {:ok, term()} | {:error, term()}
+def record_cache_stale(system, model, operation)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `String.t()` | Yes | The system |
+| `model` | `String.t()` | Yes | The model |
+| `operation` | `String.t()` | Yes | The operation |
+
+**Returns:** `:ok`
+
+---
+
+#### record_circuit_trip()
+
+Record a circuit breaker trip.
+
+Call from `CircuitLayer` when the circuit opens.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```elixir
+@spec record_circuit_trip(system, model) :: {:ok, term()} | {:error, term()}
+def record_circuit_trip(system, model)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `String.t()` | Yes | The system |
+| `model` | `String.t()` | Yes | The model |
+
+**Returns:** `:ok`
+
+---
+
+#### record_retry_attempt()
+
+Record a retry attempt.
+
+Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```elixir
+@spec record_retry_attempt(system, model, operation) :: {:ok, term()} | {:error, term()}
+def record_retry_attempt(system, model, operation)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `String.t()` | Yes | The system |
+| `model` | `String.t()` | Yes | The model |
+| `operation` | `String.t()` | Yes | The operation |
+
+**Returns:** `:ok`
+
+---
+
+#### record_cache_tier_hit()
+
+Record a per-tier cache hit.
+
+`tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
+Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```elixir
+@spec record_cache_tier_hit(system, model, tier) :: {:ok, term()} | {:error, term()}
+def record_cache_tier_hit(system, model, tier)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `String.t()` | Yes | The system |
+| `model` | `String.t()` | Yes | The model |
+| `tier` | `String.t()` | Yes | The tier |
+
+**Returns:** `:ok`
+
+---
+
+#### record_cache_tier_miss()
+
+Record a per-tier cache miss.
+
+`tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
+Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```elixir
+@spec record_cache_tier_miss(system, model, tier) :: {:ok, term()} | {:error, term()}
+def record_cache_tier_miss(system, model, tier)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `system` | `String.t()` | Yes | The system |
+| `model` | `String.t()` | Yes | The model |
+| `tier` | `String.t()` | Yes | The tier |
+
+**Returns:** `:ok`
+
+---
+
+#### record_budget_spend()
+
+Record cumulative spend for a specific budget dimension.
+
+Emits `gen_ai.budget.spend_usd` with dimension attributes.
+Call from `record` after each
+successful completion.  If the meter has not been initialized, this
+call is a no-op.
+
+**Signature:**
+
+```elixir
+@spec record_budget_spend(model, provider, tenant_id, user_id, api_key_id, cost_usd) :: {:ok, term()} | {:error, term()}
+def record_budget_spend(model, provider, tenant_id, user_id, api_key_id, cost_usd)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `model` | `String.t()` | Yes | The model |
+| `provider` | `String.t()` | Yes | The provider |
+| `tenant_id` | `String.t() \| nil` | No | The tenant id |
+| `user_id` | `String.t() \| nil` | No | The user id |
+| `api_key_id` | `String.t() \| nil` | No | The api key id |
+| `cost_usd` | `float()` | Yes | The cost usd |
+
+**Returns:** `:ok`
+
+---
+
+#### record_budget_rejection()
+
+Record a budget-rejection event.
+
+Emits `gen_ai.budget.rejection` with the triggering dimension.
+Call from `check` when
+returning `Reject`.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```elixir
+@spec record_budget_rejection(model, provider, dimension) :: {:ok, term()} | {:error, term()}
+def record_budget_rejection(model, provider, dimension)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `model` | `String.t()` | Yes | The model |
+| `provider` | `String.t()` | Yes | The provider |
+| `dimension` | `String.t()` | Yes | The dimension |
+
+**Returns:** `:ok`
+
+---
+
+#### record_realtime_session_duration()
+
+Record the lifetime of a completed Realtime WebSocket session.
+
+Emits `gen_ai.realtime.session.duration` (seconds).
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```elixir
+@spec record_realtime_session_duration(provider, duration_secs) :: {:ok, term()} | {:error, term()}
+def record_realtime_session_duration(provider, duration_secs)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `provider` | `String.t()` | Yes | The provider |
+| `duration_secs` | `float()` | Yes | The duration secs |
+
+**Returns:** `:ok`
+
+---
+
+#### record_realtime_event()
+
+Record a single Realtime event being forwarded.
+
+Emits `gen_ai.realtime.event.count` with `gen_ai.realtime.direction`
+(`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
+`gen_ai.system`.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```elixir
+@spec record_realtime_event(provider, direction, event_type) :: {:ok, term()} | {:error, term()}
+def record_realtime_event(provider, direction, event_type)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `provider` | `String.t()` | Yes | The provider |
+| `direction` | `String.t()` | Yes | The direction |
+| `event_type` | `String.t()` | Yes | The event type |
+
+**Returns:** `:ok`
+
+---
+
+#### record_realtime_bytes()
+
+Record audio bytes forwarded over a Realtime WebSocket session.
+
+Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
+`gen_ai.realtime.direction` attributes.
+If the meter has not been initialized, this call is a no-op.
+
+**Signature:**
+
+```elixir
+@spec record_realtime_bytes(provider, direction, byte_count) :: {:ok, term()} | {:error, term()}
+def record_realtime_bytes(provider, direction, byte_count)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `provider` | `String.t()` | Yes | The provider |
+| `direction` | `String.t()` | Yes | The direction |
+| `byte_count` | `integer()` | Yes | The byte count |
+
+**Returns:** `:ok`
+
+---
+
+#### check_bound()
+
+Assert that `current_len + incoming` does not exceed `limit`.
+
+Call this before appending `incoming` bytes to any buffer that must
+stay below `limit`.  Returns `Err(LiterLlmError.Streaming)` on overflow
+and emits a `tracing.warn!` with context.
+
+**Signature:**
+
+```elixir
+@spec check_bound(context, current_len, incoming, limit) :: {:ok, term()} | {:error, term()}
+def check_bound(context, current_len, incoming, limit)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `context` | `String.t()` | Yes | The context |
+| `current_len` | `integer()` | Yes | The current len |
+| `incoming` | `integer()` | Yes | The incoming |
+| `limit` | `integer()` | Yes | The limit |
+
+**Returns:** `:ok`
 **Errors:** Returns `{:error, reason}`
 
 ---
@@ -554,6 +980,118 @@ A single completion choice.
 | `index` | `integer()` | — | Index of this choice in the choices array. |
 | `message` | `AssistantMessage` | — | The assistant's message response. |
 | `finish_reason` | `FinishReason \| nil` | `nil` | Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). |
+
+---
+
+#### ChunkMiddleware
+
+A per-chunk transformation in the `StreamPipeline`.
+
+Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
+to pass it through (optionally modified), `Ok(None)` to drop the chunk,
+or `Err(e)` to propagate a stream error.
+
+The trait is object-safe so implementations can be stored in a
+`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+
+### Functions
+
+#### process()
+
+Process a single chunk.
+
+- `Ok(Some(chunk))` — emit (possibly transformed) chunk.
+- `Ok(None)` — drop this chunk silently.
+- `Err(e)` — propagate as a stream error.
+
+**Signature:**
+
+```elixir
+def process(chunk)
+```
+
+---
+
+#### CircuitPolicy
+
+Policy that drives a circuit breaker's state transitions.
+
+Implement this trait to provide custom failure-detection and
+recovery logic.  The default implementation is `ExponentialBackoffCircuit`.
+
+### Functions
+
+#### record_success()
+
+Called when the inner service returns a successful response.
+
+**Signature:**
+
+```elixir
+def record_success()
+```
+
+#### record_failure()
+
+Called when the inner service returns an error.
+
+The policy decides whether to count the error as a circuit-trip failure.
+
+**Signature:**
+
+```elixir
+def record_failure()
+```
+
+#### should_allow()
+
+Returns `true` when a request should be allowed to proceed.
+
+`false` means the circuit is open and the request should be rejected.
+
+**Signature:**
+
+```elixir
+def should_allow()
+```
+
+#### state()
+
+Returns the current circuit state.
+
+**Signature:**
+
+```elixir
+def state()
+```
+
+#### release_probe_slot()
+
+Called when a probe request is dropped without completing (e.g. due to
+panic or cancellation) to release the probe slot.
+
+The default implementation is a no-op.  Policies that gate probe slots
+with a boolean flag (like `ExponentialBackoffCircuit`) should override
+this to clear the flag.
+
+**Signature:**
+
+```elixir
+def release_probe_slot()
+```
+
+---
+
+#### ClassifyContext
+
+Immutable context passed to every `RouteClassifier.classify` call.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `prompt` | `String.t()` | — | The user-facing prompt text. |
+| `system_prompt` | `String.t() \| nil` | `nil` | Optional system prompt from the request. |
+| `metadata` | `map()` | — | Arbitrary metadata attached to the request (e.g. tenant, session ID). |
+| `available_models` | `list(String.t())` | — | The set of model identifiers the router currently considers available. |
 
 ---
 
@@ -837,6 +1375,33 @@ def list_batches(query)
 def cancel_batch(batch_id)
 ```
 
+#### retrieve()
+
+**Signature:**
+
+```elixir
+def retrieve(batch_id)
+```
+
+#### wait_for_batch()
+
+Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
+
+Uses exponential backoff with configurable initial interval, maximum interval, and backoff multiplier.
+Optionally supports a timeout that aborts polling if exceeded.
+
+**Errors:**
+
+Returns `BatchWaitError.Failed` if the batch reaches a failure terminal status.
+Returns `BatchWaitError.Timeout` if the configured timeout is exceeded.
+Returns `BatchWaitError.Client` for underlying client errors.
+
+**Signature:**
+
+```elixir
+def wait_for_batch(batch_id, config)
+```
+
 #### create_response()
 
 **Signature:**
@@ -936,6 +1501,78 @@ Embedding response.
 
 ---
 
+#### ExponentialBackoffCircuit
+
+Circuit breaker with exponential backoff.
+
+Opens after `failure_threshold` consecutive failures.  After
+`base_backoff` (doubled on each successive open → half-open → open cycle,
+up to `max_backoff`), the circuit enters `CircuitState.HalfOpen` and
+allows one probe request through.
+
+### Functions
+
+#### new()
+
+Create a new policy.
+
+- `failure_threshold`: consecutive failures required to open the circuit.
+- `base_backoff`: initial half-open retry delay (doubles each open cycle,
+  capped at 2 minutes).
+
+**Signature:**
+
+```elixir
+def new(failure_threshold, base_backoff)
+```
+
+#### record_success()
+
+**Signature:**
+
+```elixir
+def record_success()
+```
+
+#### record_failure()
+
+**Signature:**
+
+```elixir
+def record_failure()
+```
+
+#### should_allow()
+
+**Signature:**
+
+```elixir
+def should_allow()
+```
+
+#### state()
+
+**Signature:**
+
+```elixir
+def state()
+```
+
+#### release_probe_slot()
+
+Release the probe slot without recording success or failure.
+
+Called by the `ProbeGuard` when the probe future is dropped before
+completing (e.g. cancelled or panicked).
+
+**Signature:**
+
+```elixir
+def release_probe_slot()
+```
+
+---
+
 #### FileListQuery
 
 Query parameters for listing files.
@@ -976,6 +1613,43 @@ An uploaded file object.
 
 ---
 
+#### FixedDelayHedge
+
+A simple `HedgePolicy` that fires hedges at fixed intervals.
+
+### Functions
+
+#### new()
+
+Create a new policy.
+
+- `delay`: how long to wait before launching each additional attempt.
+- `max_attempts`: maximum concurrent copies of the request (≥ 1).
+
+**Signature:**
+
+```elixir
+def new(delay, max_attempts)
+```
+
+#### delay_for_attempt()
+
+**Signature:**
+
+```elixir
+def delay_for_attempt(attempt, latency_so_far)
+```
+
+#### max_attempts()
+
+**Signature:**
+
+```elixir
+def max_attempts()
+```
+
+---
+
 #### FunctionCall
 
 Function call details.
@@ -1011,6 +1685,71 @@ Deprecated legacy function-role message body.
 
 ---
 
+#### HealthChecker
+
+Abstraction over a health probe strategy.
+
+Implementors issue a lightweight probe against `upstream` (typically a
+provider base URL or named identifier) and report `HealthStatus`.
+
+### Functions
+
+#### check()
+
+Probe `upstream` and return its current `HealthStatus`.
+
+The parameter is taken by value (`String`) so that implementations can
+move it into the returned future without a clone, making the
+`'static + Send` bound on the future trivially satisfiable.
+
+**Signature:**
+
+```elixir
+def check(upstream)
+```
+
+---
+
+#### HedgePolicy
+
+Policy that controls when and how many hedged requests are launched.
+
+Implement this trait to provide custom hedging strategies such as
+latency-percentile-based delays or per-model adaptive delays.
+
+### Functions
+
+#### delay_for_attempt()
+
+Returns the delay before launching attempt `attempt` (1-indexed; attempt
+1 is the initial request, attempt 2 is the first hedge, etc.).
+
+- `attempt`: 1-indexed attempt number.
+- `latency_so_far`: elapsed time since the first request was dispatched.
+
+Return `nil` to skip this attempt (and all subsequent ones).
+
+**Signature:**
+
+```elixir
+def delay_for_attempt(attempt, latency_so_far)
+```
+
+#### max_attempts()
+
+Maximum number of concurrent attempts (including the original request).
+
+Must be ≥ 1.  Values above 3 are rarely useful and increase provider
+costs significantly.
+
+**Signature:**
+
+```elixir
+def max_attempts()
+```
+
+---
+
 #### Image
 
 A single generated image, returned as either a URL or base64 data.
@@ -1042,6 +1781,18 @@ Response containing generated images.
 |-------|------|---------|-------------|
 | `created` | `integer()` | — | Unix timestamp of image creation. |
 | `data` | `list(Image)` | `[]` | List of generated images. |
+
+---
+
+#### IntentPrototype
+
+An intent prototype: `(intent_name, prototype_embedding, target_model_id)`.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `String.t()` | — | Human-readable name for the intent (used in logs/metrics). |
+| `embedding` | `list(float())` | — | Pre-computed embedding vector for this intent. |
+| `model` | `String.t()` | — | Model to route to when this intent is detected. |
 
 ---
 
@@ -1233,9 +1984,40 @@ discounted rate and the remainder at the regular input rate.
 
 ---
 
+#### ProviderCapabilities
+
+Static capability flags for a provider.
+
+Each flag indicates whether the provider's models *generally* support that
+feature.  For providers that aggregate many underlying models (e.g. Bedrock,
+OpenRouter, vLLM) the flags reflect the superset of available model
+capabilities — a flag being `true` means at least one model supports the
+feature, not every model.
+
+All flags default to `false` so that newly added providers are safe.
+
+Access via the crate-level `capabilities` function:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `vision` | `boolean()` | — | The provider accepts image input in chat messages. |
+| `reasoning` | `boolean()` | — | The provider supports extended-thinking / reasoning tokens. |
+| `structured_output` | `boolean()` | — | The provider supports JSON-mode or `response_format` structured output. |
+| `function_calling` | `boolean()` | — | The provider supports tool / function calling. |
+| `audio_in` | `boolean()` | — | The provider accepts audio as input. |
+| `audio_out` | `boolean()` | — | The provider can generate audio / TTS output. |
+| `video_in` | `boolean()` | — | The provider accepts video as input. |
+
+---
+
 #### ProviderConfig
 
 Static configuration for a single provider entry in providers.json.
+
+This struct deliberately does not include capability flags or streaming
+format, which are accessed via the `capabilities` function.  Keeping
+these fields separate preserves backward compatibility with all generated
+binding code that constructs `ProviderConfig` using struct literal syntax.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -1408,6 +2190,16 @@ An individual search result.
 
 ---
 
+#### SingleflightResult
+
+The value broadcast from a singleflight leader to all followers.
+
+`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
+broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
+bump per follower, which is negligible under the burst loads this layer targets.
+
+---
+
 #### SpecificFunction
 
 Name of the specific function to invoke.
@@ -1550,6 +2342,35 @@ A segment of transcribed audio with timing information.
 
 ---
 
+#### UpstreamDiscover
+
+A typed extension of `tower.discover.Discover` for LLM upstream
+services.
+
+Implementors plug in their own discovery mechanism — file-based configs,
+etcd watches, HTTP polling — and the `DynamicRouter` handles the rest.
+The key type must be `String` so that provider names are human-readable in
+logs and metrics.
+
+### Object safety
+
+`UpstreamDiscover` is **not** object-safe and **must not** be stored as
+`dyn UpstreamDiscover`.  It is a generic bound used exclusively as a type
+parameter for `DynamicRouter<D>`.  All discovery implementations are
+monomorphised at compile time.
+
+If you need a runtime registry of heterogeneous discovery sources, wrap
+each source in an `Arc<Mutex<Box<dyn …>>>` and poll them via a custom
+`Stream` adapter — do not store them as `dyn UpstreamDiscover`.
+
+### Note for 1.A integration
+
+If the router encounters a discovery error, it wraps it in
+`RouterError.Discover`.  The 1.A error-consolidation workstream should
+replace this local enum with the canonical error hierarchy.
+
+---
+
 #### Usage
 
 Token-usage accounting returned by the provider on each completion / embedding call.
@@ -1571,6 +2392,29 @@ User message in the conversation.
 |-------|------|---------|-------------|
 | `content` | `UserContent` | `:text` | Message content as plain text or array of content parts (text, images, documents, audio). |
 | `name` | `String.t() \| nil` | `nil` | Optional name for the user. |
+
+---
+
+#### WaitForBatchConfig
+
+Configuration for polling a batch until terminal status.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `initial_interval` | `integer()` | `5000ms` | Initial interval between polls. |
+| `max_interval` | `integer()` | `60000ms` | Maximum interval between polls (backoff plateau). |
+| `backoff_multiplier` | `float()` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
+| `timeout` | `integer() \| nil` | `nil` | Optional timeout — polling fails if this duration is exceeded. |
+
+### Functions
+
+#### default()
+
+**Signature:**
+
+```elixir
+def default()
+```
 
 ---
 
@@ -1602,7 +2446,7 @@ User message content as either plain text or a list of multimodal parts.
 
 ---
 
-#### ContentPart
+#### TypesContentPart
 
 A single content part in a user message — text, image, document, or audio.
 
@@ -1811,6 +2655,22 @@ How the API key is sent in the HTTP request.
 
 ---
 
+#### StreamFormat
+
+The streaming wire format a provider uses for its response stream.
+
+Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
+a proprietary binary EventStream framing.
+
+Deserialized from the `streaming_format` JSON field via `serde`.
+
+| Value | Description |
+|-------|-------------|
+| `sse` | Standard Server-Sent Events (text/event-stream). |
+| `aws_event_stream` | AWS EventStream binary framing (application/vnd.amazon.eventstream). |
+
+---
+
 #### AuthType
 
 Auth scheme used by a provider.
@@ -1821,6 +2681,106 @@ Auth scheme used by a provider.
 | `api_key` | `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). |
 | `none` | No authentication header required. |
 | `unknown` | Unrecognised auth scheme — falls back to bearer. |
+
+---
+
+#### OnMatch
+
+Action taken when a `RegexGuardrail` finds a match.
+
+| Value | Description |
+|-------|-------------|
+| `block` | Block the request/response with the given error code and reason prefix. — Fields: `code`: `integer()`, `reason_prefix`: `String.t()` |
+| `redact` | Replace the matched portion with the given replacement string. — Fields: `replacement`: `String.t()` |
+
+---
+
+#### CelAction
+
+The action taken when a `CelGuardrail`'s expression evaluates to `true`.
+
+| Value | Description |
+|-------|-------------|
+| `block` | Block the request/response with the given code and reason. — Fields: `code`: `integer()`, `reason`: `String.t()` |
+| `mutate` | Replace the payload with a static JSON value (e.g., for redaction). — Fields: `new_payload`: `term()` |
+
+---
+
+#### GuardrailStage
+
+The lifecycle stage at which a guardrail runs.
+
+| Value | Description |
+|-------|-------------|
+| `input` | The outgoing prompt / request, before forwarding to the upstream provider. |
+| `output` | The full response from the upstream provider (non-streaming). |
+| `output_chunk` | A single chunk in a streaming response. Guardrails here are called once per chunk and may block or mutate individual chunks. |
+
+---
+
+#### GuardrailDecision
+
+The outcome of a guardrail check.
+
+| Value | Description |
+|-------|-------------|
+| `allow` | The check passed. Continue to the next guardrail or to the inner service. |
+| `block` | The check failed. Short-circuit the request/response with this reason. `code` should be ≥ 1000 to avoid collision with HTTP status codes and to facilitate cross-language error mapping. — Fields: `reason`: `String.t()`, `code`: `integer()` |
+| `mutate` | Rewrite the payload. The provided `new_payload` replaces the original `request` or `response` before it reaches the next stage. For `OutputChunk` stage: `new_payload` replaces the chunk content. — Fields: `new_payload`: `term()` |
+
+---
+
+#### CacheState
+
+Cache outcome for a single request.
+
+| Value | Description |
+|-------|-------------|
+| `miss` | No cache entry found; request was sent to the provider. |
+| `exact_hit` | Exact-match cache hit; provider was not called. |
+| `semantic_hit` | Semantic-similarity cache hit; provider was not called. |
+| `stale_hit` | Stale entry served (TTL expired but no fresh entry was available). |
+| `bypass` | Cache lookup was skipped (bypass policy, streaming request, etc.). |
+
+---
+
+#### UsageEventOutcome
+
+High-level outcome of the request.
+
+| Value | Description |
+|-------|-------------|
+| `success` | Inner service returned a successful response. |
+| `error` | Inner service returned an error (non-timeout). |
+| `cancelled` | Request was cancelled before the inner service responded. |
+| `timed_out` | Inner service timed out. |
+
+---
+
+#### ContentPart
+
+A single content part within a conversation item.
+
+Conversation items may carry text, audio, or an image (by reference).
+
+| Value | Description |
+|-------|-------------|
+| `text` | A plain-text segment. — Fields: `text`: `String.t()` |
+| `audio` | A raw audio segment encoded as base64. — Fields: `base64`: `String.t()` |
+| `image_ref` | An image referenced by a URL or ID rather than inline bytes. — Fields: `url`: `String.t()` |
+
+---
+
+#### ResponseStatus
+
+Terminal status for a completed `RealtimeEvent.ResponseDone`.
+
+| Value | Description |
+|-------|-------------|
+| `completed` | The response was produced in full. |
+| `cancelled` | The response was cancelled before completion. |
+| `failed` | The response failed due to an upstream error. |
+| `incomplete` | The response hit a token/time limit before completing. |
 
 ---
 
@@ -1843,6 +2803,40 @@ Storage backend for the response cache.
 |-------|-------------|
 | `memory` | In-memory LRU cache (default). No external dependencies. |
 | `open_dal` | OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.). — Fields: `scheme`: `String.t()`, `config`: `map()` |
+
+---
+
+#### CircuitState
+
+Observable state of a circuit breaker.
+
+| Value | Description |
+|-------|-------------|
+| `closed` | Requests flow through normally. |
+| `open` | All requests are rejected; the circuit is waiting for the backoff to elapse. |
+| `half_open` | One probe request is allowed through to test service health. |
+
+---
+
+#### RetryClass
+
+Classification of a single attempt error.
+
+| Value | Description |
+|-------|-------------|
+| `transient` | Transient error — advance to the next service in the chain. |
+| `terminal` | Terminal error — return immediately without consulting further services. |
+
+---
+
+#### HealthStatus
+
+The result of a single health probe.
+
+| Value | Description |
+|-------|-------------|
+| `healthy` | The probe succeeded; the upstream is reachable. |
+| `unhealthy` | The probe failed; the upstream may be down. |
 
 ---
 
@@ -1871,5 +2865,27 @@ All errors that can occur when using `liter-llm`.
 | `hook_rejected` | hook rejected: {message} |
 | `internal_error` | An internal logic error (e.g. unexpected Tower response variant). This should never surface in normal operation — if it does, it indicates a bug in the library. |
 | `outbound_forbidden` | An outbound request was blocked by the active `OutboundPolicy`. Returned when `register_custom_provider` is called with a `base_url` that violates the policy (e.g. a private-range IP under `DenyPrivate`), or when the per-connection DNS resolver detects a forbidden address at connect time. |
+| `idempotency_conflict` | A different request body was submitted for an existing `Idempotency-Key`. Per the OpenAI `Idempotency-Key` convention, once a key is used with a particular request body, subsequent requests using the same key must carry an identical body.  A body mismatch is a hard error (not retryable). HTTP equivalent: 409 Conflict. |
+| `idempotency_in_flight` | The same `Idempotency-Key` is already in-flight (another request with the same key is currently being processed). The caller should wait briefly and retry.  The response is not yet available, and this request has been short-circuited to avoid running the operation twice. HTTP equivalent: 409 Conflict (retryable after a brief delay). |
+
+---
+
+#### UsageSinkError
+
+Error returned by a `UsageSink` implementation.
+
+| Variant | Description |
+|---------|-------------|
+| `backend` | The sink's backend failed to accept the event. |
+
+---
+
+#### IdempotencyStoreError
+
+Error type for `IdempotencyStore` operations.
+
+| Variant | Description |
+|---------|-------------|
+| `backend` | A backend-specific error occurred. |
 
 ---
