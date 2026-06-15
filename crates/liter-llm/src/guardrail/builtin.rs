@@ -81,6 +81,7 @@ fn extract_text<'a>(stage: GuardrailStage, ctx: &'a GuardrailContext<'a>) -> std
 // ── What to do when a guardrail fires ─────────────────────────────────────────
 
 /// Action taken when a [`RegexGuardrail`] finds a match.
+#[cfg_attr(alef, alef(skip))]
 #[derive(Debug, Clone)]
 pub enum OnMatch {
     /// Block the request/response with the given error code and reason prefix.
@@ -103,6 +104,7 @@ pub enum OnMatch {
 ///
 /// Checks the serialized request JSON (Input), response JSON (Output), or raw
 /// chunk text (OutputChunk) against the pattern.
+#[cfg_attr(alef, alef(skip))]
 pub struct RegexGuardrail {
     guardrail_name: &'static str,
     pattern: Regex,
@@ -197,6 +199,7 @@ impl Guardrail for RegexGuardrail {
 ///
 /// Only the `metadata[field]` value is checked — request content is not inspected.
 /// If the field is absent from `metadata`, the request is blocked (fail-closed).
+#[cfg_attr(alef, alef(skip))]
 pub struct AllowListGuardrail {
     guardrail_name: &'static str,
     /// The metadata key to check (e.g., `"tenant_id"`).
@@ -262,6 +265,7 @@ impl Guardrail for AllowListGuardrail {
 ///
 /// If the field is absent from `metadata`, the request is allowed through
 /// (fail-open, since there is nothing to deny).
+#[cfg_attr(alef, alef(skip))]
 pub struct DenyListGuardrail {
     guardrail_name: &'static str,
     /// The metadata key to check (e.g., `"tenant_id"`).
@@ -319,6 +323,7 @@ impl Guardrail for DenyListGuardrail {
 /// The character count is computed over the serialized JSON of the request or
 /// response, not just the message text. This is intentionally conservative —
 /// it catches bloated payloads even when the user text alone is within bounds.
+#[cfg_attr(alef, alef(skip))]
 pub struct LengthCapGuardrail {
     guardrail_name: &'static str,
     max_chars: usize,
@@ -386,6 +391,7 @@ impl Guardrail for LengthCapGuardrail {
 /// For production-grade prompt-injection detection, plug in a dedicated
 /// service (e.g., Lakera Guard, Rebuff, or a custom fine-tuned classifier)
 /// via the [`Guardrail`] trait.
+#[cfg_attr(alef, alef(skip))]
 pub struct PromptInjectionHeuristic {
     guardrail_name: &'static str,
 }

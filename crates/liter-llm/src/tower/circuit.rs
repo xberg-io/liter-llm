@@ -105,6 +105,7 @@ impl<P: CircuitPolicy> Drop for ProbeGuard<P> {
 ///
 /// Implement this trait to provide custom failure-detection and
 /// recovery logic.  The default implementation is [`ExponentialBackoffCircuit`].
+#[cfg_attr(alef, alef(skip))]
 pub trait CircuitPolicy: Send + Sync + 'static {
     /// Called when the inner service returns a successful response.
     fn record_success(&self);
@@ -168,6 +169,7 @@ struct CircuitInner {
 /// let policy = Arc::new(ExponentialBackoffCircuit::new(5, std::time::Duration::from_secs(10)));
 /// let layer = CircuitLayer::new(policy, "openai".to_string());
 /// ```
+#[cfg_attr(alef, alef(skip))]
 pub struct ExponentialBackoffCircuit {
     /// Open after this many consecutive failures.
     failure_threshold: u32,

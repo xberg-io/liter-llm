@@ -54,6 +54,7 @@ pub use registry::GuardrailRegistry;
 ///
 /// Vendor-specific guardrails (Presidio, Lakera, Bedrock Guardrails) are
 /// intentionally excluded from this crate. Users plug them in via this trait.
+#[cfg_attr(alef, alef(skip))]
 pub trait Guardrail: Send + Sync + 'static {
     /// Human-readable identifier used in logs and metrics.
     ///
@@ -85,6 +86,7 @@ pub trait Guardrail: Send + Sync + 'static {
 // ── Stage Enum ────────────────────────────────────────────────────────────────
 
 /// The lifecycle stage at which a guardrail runs.
+#[cfg_attr(alef, alef(skip))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GuardrailStage {
     /// The outgoing prompt / request, before forwarding to the upstream provider.
@@ -104,6 +106,7 @@ pub enum GuardrailStage {
 /// At `Output` stage: both `request` and `response` are populated, `chunk` is `None`.
 /// At `OutputChunk` stage: `request` is populated, `chunk` holds the raw chunk
 /// text, and `response` is `None` (the full response is not yet available).
+#[cfg_attr(alef, alef(skip))]
 pub struct GuardrailContext<'a> {
     /// The full JSON request body sent to the provider.
     pub request: &'a serde_json::Value,
@@ -119,6 +122,7 @@ pub struct GuardrailContext<'a> {
 // ── Decision Enum ─────────────────────────────────────────────────────────────
 
 /// The outcome of a guardrail check.
+#[cfg_attr(alef, alef(skip))]
 #[derive(Debug)]
 pub enum GuardrailDecision {
     /// The check passed. Continue to the next guardrail or to the inner service.

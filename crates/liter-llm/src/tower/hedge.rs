@@ -43,6 +43,7 @@ use crate::error::{LiterLlmError, Result};
 ///
 /// Implement this trait to provide custom hedging strategies such as
 /// latency-percentile-based delays or per-model adaptive delays.
+#[cfg_attr(alef, alef(skip))]
 pub trait HedgePolicy: Send + Sync + 'static {
     /// Returns the delay before launching attempt `attempt` (1-indexed; attempt
     /// 1 is the initial request, attempt 2 is the first hedge, etc.).
@@ -75,6 +76,7 @@ pub trait HedgePolicy: Send + Sync + 'static {
 /// let policy = Arc::new(FixedDelayHedge::new(Duration::from_millis(200), 2));
 /// let layer = HedgeLayer::new(policy);
 /// ```
+#[cfg_attr(alef, alef(skip))]
 pub struct FixedDelayHedge {
     /// Fixed delay between attempts.
     delay: Duration,

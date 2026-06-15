@@ -110,6 +110,7 @@ pub struct UsageEvent {
 // ─── CacheState ──────────────────────────────────────────────────────────────
 
 /// Cache outcome for a single request.
+#[cfg_attr(alef, alef(skip))]
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CacheState {
@@ -129,6 +130,7 @@ pub enum CacheState {
 // ─── UsageEventOutcome ───────────────────────────────────────────────────────
 
 /// High-level outcome of the request.
+#[cfg_attr(alef, alef(skip))]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum UsageEventOutcome {
@@ -187,6 +189,7 @@ impl<T: UsageSink> UsageSinkErased for T {
 // ─── UsageSinkError ──────────────────────────────────────────────────────────
 
 /// Error returned by a [`UsageSink`] implementation.
+#[cfg_attr(alef, alef(skip))]
 #[derive(Debug, thiserror::Error)]
 pub enum UsageSinkError {
     /// The sink's backend failed to accept the event.

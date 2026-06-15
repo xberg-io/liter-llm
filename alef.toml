@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.25.9"
+alef_version = "0.25.12"
 languages = [
   "python",
   "node",
@@ -251,6 +251,8 @@ types = [
   "RawExchange",
   "RawStreamExchange",
   "TransportConfig",
+  # BatchWaitError: thiserror types don't auto-bridge; source uses FFI-friendly
+  # fields (f64 seconds, flattened message+code) so C FFI can bridge manually.
   "BatchWaitError",
   # Tower-internal Service request/response enums (externally tagged, contain
   # BoxStream/Bytes). Listed under both bare and Tower-prefixed names — alef
@@ -334,10 +336,39 @@ types = [
   "Weight",
   "OpenAiRealtimeTranslator",
   "RealtimeTranslator",
+  # RealtimeEvent is Tier C (binding-public) but alef v0.25.x cannot bridge
+  # serde_json::Value (Raw.payload) and doesn't generate Default for complex enums.
+  # realtime::ContentPart and realtime::ResponseStatus are marked alef(skip) at
+  # source level to avoid naming conflicts with types::ContentPart.
+  # Promote to fully Tier C in v1.7 after alef gains Value bridging support.
   "RealtimeEvent",
   "RealtimeEnvelope",
   "LlmService",
   "TracingLayer",
+  # v1.6.0 trait-stack extension points (Rust-only public, Tier B)
+  # Primary exclusion mechanism is alef(skip) at the source level;
+  # these entries are belt-and-braces for any transitively-referenced names.
+  "CircuitPolicy",
+  "ExponentialBackoffCircuit",
+  "HedgePolicy",
+  "FixedDelayHedge",
+  "UsageEvent",
+  "UsageSink",
+  "LoggingUsageSink",
+  "CacheState",
+  "UsageEventOutcome",
+  "UsageSinkError",
+  "CacheKeyStrategy",
+  "GuardrailStage",
+  "GuardrailDecision",
+  "CelAction",
+  "OnMatch",
+  "BatchRetriever",
+  "RetryClass",
+  "IdempotencyStoreError",
+  "HealthCheckConfig",
+  "UpstreamDiscover",
+  "ClassifyContext",
   # Rust-only extension traits and implementations (async traits, Arc<dyn>, generic callbacks).
   "EmbeddingProvider",
   "SelfHostedEmbeddingProvider",
@@ -363,6 +394,7 @@ types = [
   "EgressStream",
   # Tenant key resolution is Rust/server infrastructure; binding clients use
   # provider auth config instead of implementing async resolver traits.
+  # (TenantId is Tier C but currently excluded pending binding-surface audit in v1.7.)
   "TenantId",
   "TenantContext",
   "ResolvedKey",
@@ -429,6 +461,8 @@ methods = [
   "OpenDalVectorStore.new",
   "EtcdKeyResolver.resolve",
   "OpenAiRealtimeTranslator.translate_inbound",
+  # v1.6.0 additions — Tier B helper methods
+  "GuardrailRegistry.register",
 ]
 functions = [
   "str_pair",
@@ -436,6 +470,8 @@ functions = [
   "register",
   "run_stage",
   "should_hedge",
+  "wait_for_batch_impl",
+  "record_cache_state",
 ]
 
 [crates.lint.python]

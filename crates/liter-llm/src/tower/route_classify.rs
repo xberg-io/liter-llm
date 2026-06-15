@@ -84,6 +84,7 @@ fn record_classify_hit(tier: &'static str) {
 // ─── ClassifyContext ──────────────────────────────────────────────────────────
 
 /// Immutable context passed to every [`RouteClassifier::classify`] call.
+#[cfg_attr(alef, alef(skip))]
 pub struct ClassifyContext<'a> {
     /// The user-facing prompt text.
     pub prompt: &'a str,

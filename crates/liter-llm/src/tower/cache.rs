@@ -90,6 +90,7 @@ tokio::task_local! {
 /// Uses `try_with` so that callers that run outside a `CACHE_STATE_CELL.scope`
 /// (e.g. in tests that do not involve `HooksLayer`) are silently ignored rather
 /// than panicking.
+#[cfg_attr(alef, alef(skip))]
 pub fn record_cache_state(state: CacheState) {
     let _ = CACHE_STATE_CELL.try_with(|c| c.set(state));
 }

@@ -73,6 +73,7 @@ const CEL_EVAL_ERROR_CODE: u32 = 4001;
 // ── Action when CEL expression evaluates to true ──────────────────────────────
 
 /// The action taken when a [`CelGuardrail`]'s expression evaluates to `true`.
+#[cfg_attr(alef, alef(skip))]
 #[derive(Debug, Clone)]
 pub enum CelAction {
     /// Block the request/response with the given code and reason.
@@ -107,6 +108,7 @@ pub enum CelAction {
 /// **SECURITY WARNING**: Call [`CelGuardrail::with_fail_open`] only in
 /// non-production environments. Fail-open means a crafted request that triggers
 /// an eval error bypasses ALL CEL guardrails on that instance.
+#[cfg_attr(alef, alef(skip))]
 pub struct CelGuardrail {
     guardrail_name: &'static str,
     program: Program,
