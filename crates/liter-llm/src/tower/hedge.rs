@@ -176,12 +176,23 @@ where
     fn call(&mut self, req: LlmRequest) -> Self::Future {
         let policy = Arc::clone(&self.policy);
         let max_attempts = policy.max_attempts();
-        let inner = self.inner.clone();
+
+        // Apply the canonical Tower clone pattern:
+        //
+        // `poll_ready` was called on `self.inner`, so *that* instance holds any
+        // acquired permit (e.g. ConcurrencyLimit semaphore slot). We take it out
+        // via `mem::replace` so that attempt #1 can call it.  The replacement is
+        // a fresh clone that will be used for the *next* `poll_ready` cycle, and
+        // also serves as the source of additional clones for hedged attempts #2‥N.
+        // Those hedged clones each go through `ServiceExt::ready()` inside their
+        // spawned task, honouring the inner service's readiness contract.
+        let inner_for_hedges = self.inner.clone();
+        let primary = std::mem::replace(&mut self.inner, inner_for_hedges.clone());
 
         Box::pin(async move {
             // Log before the await — EnteredSpan is not Send.
             tracing::debug!(hedge.max_attempts = max_attempts, "starting hedged request");
-            hedge_race(req, inner, policy, max_attempts).await
+            hedge_race(req, primary, inner_for_hedges, policy, max_attempts).await
         })
     }
 }
@@ -189,9 +200,23 @@ where
 /// Core hedging logic: spawn attempts with increasing delays and race them.
 ///
 /// Uses `JoinSet` with `abort_all()` to cancel losing tasks.
+///
+/// # Tower readiness contract
+///
+/// `primary` is the service instance on which `poll_ready` was already called
+/// by [`HedgeService::poll_ready`].  It is used directly for attempt #1 so
+/// that any permit acquired during readiness (e.g. a `ConcurrencyLimit`
+/// semaphore slot) is properly consumed.
+///
+/// Hedged attempts (#2‥N) each receive a *fresh clone* of `inner_for_hedges`
+/// and call `ServiceExt::ready()` inside their spawned task before calling
+/// the service.  This means hedged attempts may wait for permits to become
+/// available, which is the correct behaviour — hedging is not a mechanism to
+/// bypass concurrency controls.
 async fn hedge_race<S>(
     req: LlmRequest,
-    inner: S,
+    mut primary: S,
+    inner_for_hedges: S,
     policy: Arc<impl HedgePolicy>,
     max_attempts: u32,
 ) -> Result<LlmResponse>
@@ -201,22 +226,33 @@ where
 {
     use std::time::Instant;
 
+    use tower::ServiceExt as _;
+
     let dispatch_time = Instant::now();
+
+    // Option B fast path: a single attempt never needs a JoinSet — just call
+    // the ready primary directly and return.
+    if max_attempts == 1 {
+        tracing::debug!("hedge fast path: max_attempts=1, calling primary directly");
+        return primary.call(req).await;
+    }
 
     // We use a JoinSet to manage concurrent tasks and abort losers.
     let mut join_set: tokio::task::JoinSet<(u32, Result<LlmResponse>)> = tokio::task::JoinSet::new();
 
-    // Launch attempt 1 immediately.
+    // Attempt #1: use the already-polled-ready `primary` — no extra readiness
+    // call needed.
     {
         let req_clone = req.clone();
-        let mut svc_clone = inner.clone();
         join_set.spawn(async move {
-            let result = svc_clone.call(req_clone).await;
+            let result = primary.call(req_clone).await;
             (1u32, result)
         });
     }
 
-    // Schedule hedged attempts.
+    // Attempts #2‥N: each clone goes through `ready()` before calling, so
+    // that concurrency-limiting layers (ConcurrencyLimit, Buffer, …) are
+    // respected.
     for attempt in 2..=max_attempts {
         let latency_so_far = dispatch_time.elapsed();
         let Some(hedge_delay) = policy.delay_for_attempt(attempt, latency_so_far) else {
@@ -224,7 +260,9 @@ where
         };
 
         let req_clone = req.clone();
-        let mut svc_clone = inner.clone();
+        // Each hedged attempt gets its own clone; `ready()` will poll it to
+        // readiness inside the spawned task before calling it.
+        let mut svc_clone = inner_for_hedges.clone();
         join_set.spawn(async move {
             if hedge_delay > Duration::ZERO {
                 tokio::time::sleep(hedge_delay).await;
@@ -236,7 +274,16 @@ where
             let system = model.split_once('/').map(|(p, _)| p.to_owned()).unwrap_or_default();
             super::metrics::record_retry_attempt(&system, &model, req_clone.operation_name());
 
-            let result = svc_clone.call(req_clone).await;
+            // Drive the clone to readiness before calling it.  This honours
+            // any per-instance permit that the inner service acquires in
+            // `poll_ready` (e.g. ConcurrencyLimit semaphore, Buffer slot).
+            // The spawn block returns (u32, Result<…>) so we cannot use `?`;
+            // map the readiness error explicitly.
+            let ready_result = svc_clone.ready().await;
+            let result = match ready_result {
+                Ok(ready_svc) => ready_svc.call(req_clone).await,
+                Err(e) => Err(e),
+            };
             (attempt, result)
         });
     }
@@ -285,7 +332,7 @@ mod tests {
     use std::sync::atomic::Ordering;
     use std::time::Duration;
 
-    use tower::{Layer as _, Service as _};
+    use tower::{Layer as _, Service as _, ServiceExt as _};
 
     use super::*;
     use crate::tower::service::LlmService;
@@ -380,5 +427,81 @@ mod tests {
         // depending on scheduling.  The count should be 1 or 2.
         let count = call_count.load(Ordering::SeqCst);
         assert!((1..=2).contains(&count), "expected 1 or 2 calls, got {count}");
+    }
+
+    /// With `max_attempts=1`, the JoinSet fast path is skipped entirely and
+    /// the inner service is called exactly once (Option B fast path).
+    #[tokio::test]
+    async fn hedge_max_attempts_one_does_not_spawn_extra() {
+        let policy = Arc::new(FixedDelayHedge::new(Duration::from_millis(0), 1));
+        let mock = MockClient::ok();
+        let call_count = Arc::clone(&mock.call_count);
+        let inner = LlmService::new(mock);
+        let mut svc = HedgeLayer::new(policy).layer(inner);
+
+        // Call twice to confirm the fast path is taken both times.
+        for _ in 0..2 {
+            svc.ready()
+                .await
+                .expect("service should become ready")
+                .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
+                .await
+                .expect("should succeed");
+        }
+
+        // Each of the two iterations should have triggered exactly 1 inner
+        // call — no extra tasks spawned.
+        assert_eq!(
+            call_count.load(Ordering::SeqCst),
+            2,
+            "max_attempts=1 must not spawn additional tasks; expected exactly 2 calls total"
+        );
+    }
+
+    /// A `ConcurrencyLimit(1)` inner service permits only one in-flight call
+    /// at a time.  With `max_attempts=2` and a hedge delay of 0, the second
+    /// attempt must wait for the first to release its permit before it can
+    /// proceed.  This verifies that hedged clones use `ready()` and do not
+    /// bypass the concurrency limit.
+    #[tokio::test]
+    async fn hedge_respects_inner_readiness_via_ready_and_call() {
+        use tower::limit::ConcurrencyLimitLayer;
+
+        // Wrap a fast-succeeding mock in a ConcurrencyLimit of 1.
+        let mock = MockClient::ok();
+        let call_count = Arc::clone(&mock.call_count);
+        let inner = LlmService::new(mock);
+        // ConcurrencyLimit(1): only 1 request can be in-flight at a time.
+        let limited = ConcurrencyLimitLayer::new(1).layer(inner);
+
+        // Hedge with max_attempts=2 and zero delay so the hedge fires immediately.
+        // Under the old (broken) code, both attempts would bypass poll_ready and
+        // run concurrently despite ConcurrencyLimit(1).  Under the fix, the
+        // hedged clone calls ready() and serialises behind the primary.
+        let policy = Arc::new(FixedDelayHedge::new(Duration::ZERO, 2));
+        let mut svc = HedgeLayer::new(policy).layer(limited);
+
+        // Drive to readiness then call.
+        let resp = svc
+            .ready()
+            .await
+            .expect("service should become ready")
+            .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
+            .await
+            .expect("hedged request should succeed");
+
+        assert!(matches!(resp, LlmResponse::Chat(_)));
+
+        // With ConcurrencyLimit(1) the calls are serialised, so the total
+        // count is either 1 (primary won before hedge acquired permit) or 2
+        // (hedge also got through after primary released).  Both are valid —
+        // what matters is that no panic / deadlock occurred and we got a
+        // successful response, proving the `ready()` path completed without
+        // bypassing the limit.
+        let count = call_count.load(Ordering::SeqCst);
+        assert!(
+            (1..=2).contains(&count),
+            "expected 1 or 2 inner calls with ConcurrencyLimit(1), got {count}"
+        );
     }
 }
