@@ -20,7 +20,6 @@
 
 use futures::StreamExt as _;
 use liter_llm::client::BatchClient;
-use liter_llm::client::BatchRetriever;
 use liter_llm::client::FileClient;
 use liter_llm::client::LlmClient;
 use liter_llm::client::ResponseClient;
@@ -6699,23 +6698,6 @@ impl DefaultClient {
         Ok(result.into())
     }
 
-    fn retrieve_async(&self, batch_id: String) -> Result<BatchObject, Error> {
-        let inner = self.inner.clone();
-        let rt = tokio::runtime::Runtime::new().map_err(|e| {
-            magnus::Error::new(
-                unsafe { Ruby::get_unchecked() }.exception_runtime_error(),
-                e.to_string(),
-            )
-        })?;
-        let result = rt.block_on(async { inner.retrieve(&batch_id).await }).map_err(|e| {
-            magnus::Error::new(
-                unsafe { Ruby::get_unchecked() }.exception_runtime_error(),
-                e.to_string(),
-            )
-        })?;
-        Ok(result.into())
-    }
-
     fn wait_for_batch_async(&self, batch_id: String, config: WaitForBatchConfig) -> Result<BatchObject, Error> {
         let inner = self.inner.clone();
         let rt = tokio::runtime::Runtime::new().map_err(|e| {
@@ -8785,7 +8767,7 @@ fn unregister_custom_provider(name: String) -> Result<bool, Error> {
 }
 
 fn capabilities(provider_name: String) -> ProviderCapabilities {
-    liter_llm::provider::capabilities(&provider_name).clone().into()
+    liter_llm::provider::capabilities(&provider_name).into()
 }
 
 fn all_providers() -> Result<Vec<ProviderConfig>, Error> {
@@ -8860,102 +8842,6 @@ fn count_request_tokens(args: &[magnus::Value]) -> Result<usize, Error> {
         )
     })?;
     Ok(result)
-}
-
-fn record_cache_hit(system: String, model: String, operation: String) -> () {
-    liter_llm::tower::metrics::record_cache_hit(&system, &model, &operation)
-}
-
-fn record_cache_miss(system: String, model: String, operation: String) -> () {
-    liter_llm::tower::metrics::record_cache_miss(&system, &model, &operation)
-}
-
-fn record_cache_stale(system: String, model: String, operation: String) -> () {
-    liter_llm::tower::metrics::record_cache_stale(&system, &model, &operation)
-}
-
-fn record_circuit_trip(system: String, model: String) -> () {
-    liter_llm::tower::metrics::record_circuit_trip(&system, &model)
-}
-
-fn record_retry_attempt(system: String, model: String, operation: String) -> () {
-    liter_llm::tower::metrics::record_retry_attempt(&system, &model, &operation)
-}
-
-fn record_cache_tier_hit(system: String, model: String, tier: String) -> () {
-    liter_llm::tower::metrics::record_cache_tier_hit(&system, &model, &tier)
-}
-
-fn record_cache_tier_miss(system: String, model: String, tier: String) -> () {
-    liter_llm::tower::metrics::record_cache_tier_miss(&system, &model, &tier)
-}
-
-fn record_budget_spend(args: &[magnus::Value]) -> Result<(), Error> {
-    let args = magnus::scan_args::scan_args::<
-        (String, String),
-        (
-            Option<magnus::Value>,
-            Option<magnus::Value>,
-            Option<magnus::Value>,
-            Option<f64>,
-        ),
-        (),
-        (),
-        (),
-        (),
-    >(args)?;
-    let (model, provider) = args.required;
-
-    let (tenant_id, user_id, api_key_id, cost_usd) = args.optional;
-
-    let tenant_id: Option<String> = tenant_id.and_then(|v| {
-        if v.is_nil() {
-            None
-        } else {
-            Some(String::try_convert(v).unwrap_or_default())
-        }
-    });
-
-    let user_id: Option<String> = user_id.and_then(|v| {
-        if v.is_nil() {
-            None
-        } else {
-            Some(String::try_convert(v).unwrap_or_default())
-        }
-    });
-
-    let api_key_id: Option<String> = api_key_id.and_then(|v| {
-        if v.is_nil() {
-            None
-        } else {
-            Some(String::try_convert(v).unwrap_or_default())
-        }
-    });
-
-    Ok(liter_llm::tower::metrics::record_budget_spend(
-        &model,
-        &provider,
-        tenant_id.as_deref(),
-        user_id.as_deref(),
-        api_key_id.as_deref(),
-        cost_usd,
-    ))
-}
-
-fn record_budget_rejection(model: String, provider: String, dimension: String) -> () {
-    liter_llm::tower::metrics::record_budget_rejection(&model, &provider, &dimension)
-}
-
-fn record_realtime_session_duration(provider: String, duration_secs: f64) -> () {
-    liter_llm::tower::metrics::record_realtime_session_duration(&provider, duration_secs)
-}
-
-fn record_realtime_event(provider: String, direction: String, event_type: String) -> () {
-    liter_llm::tower::metrics::record_realtime_event(&provider, &direction, &event_type)
-}
-
-fn record_realtime_bytes(provider: String, direction: String, byte_count: u64) -> () {
-    liter_llm::tower::metrics::record_realtime_bytes(&provider, &direction, byte_count)
 }
 
 fn check_bound(context: String, current_len: usize, incoming: usize, limit: usize) -> Result<(), Error> {
@@ -12376,8 +12262,6 @@ fn ruby_init(ruby: &Ruby) -> Result<(), Error> {
 
     class.define_method("cancel_batch_async", method!(DefaultClient::cancel_batch_async, 1))?;
 
-    class.define_method("retrieve_async", method!(DefaultClient::retrieve_async, 1))?;
-
     class.define_method("wait_for_batch_async", method!(DefaultClient::wait_for_batch_async, 2))?;
 
     class.define_method(
@@ -12513,33 +12397,6 @@ fn ruby_init(ruby: &Ruby) -> Result<(), Error> {
     module.define_module_function("count_tokens", function!(count_tokens, 2))?;
 
     module.define_module_function("count_request_tokens", function!(count_request_tokens, -1))?;
-
-    module.define_module_function("record_cache_hit", function!(record_cache_hit, 3))?;
-
-    module.define_module_function("record_cache_miss", function!(record_cache_miss, 3))?;
-
-    module.define_module_function("record_cache_stale", function!(record_cache_stale, 3))?;
-
-    module.define_module_function("record_circuit_trip", function!(record_circuit_trip, 2))?;
-
-    module.define_module_function("record_retry_attempt", function!(record_retry_attempt, 3))?;
-
-    module.define_module_function("record_cache_tier_hit", function!(record_cache_tier_hit, 3))?;
-
-    module.define_module_function("record_cache_tier_miss", function!(record_cache_tier_miss, 3))?;
-
-    module.define_module_function("record_budget_spend", function!(record_budget_spend, -1))?;
-
-    module.define_module_function("record_budget_rejection", function!(record_budget_rejection, 3))?;
-
-    module.define_module_function(
-        "record_realtime_session_duration",
-        function!(record_realtime_session_duration, 2),
-    )?;
-
-    module.define_module_function("record_realtime_event", function!(record_realtime_event, 3))?;
-
-    module.define_module_function("record_realtime_bytes", function!(record_realtime_bytes, 3))?;
 
     module.define_module_function("check_bound", function!(check_bound, 4))?;
 

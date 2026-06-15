@@ -742,36 +742,6 @@ public class DefaultClient implements AutoCloseable {
             throw new LiterLlmRsException("cancelBatch: failed", e);
         }
     }
-    public BatchObject retrieve(final String batchId) throws LiterLlmRsException {
-        java.util.Objects.requireNonNull(batchId, "batchId must not be null");
-        try {
-            Arena arena = Arena.ofShared();
-            var cBatchId = arena.allocateFrom(batchId);
-            // CPD-OFF — FFI JSON-roundtrip body, structurally identical for every named-result method.
-            MemorySegment resultPtr = (MemorySegment) NativeLib.LITERLLM_DEFAULT_CLIENT_RETRIEVE.invoke(this.handle, cBatchId);
-            if (resultPtr.equals(MemorySegment.NULL)) {
-                checkLastFfiError();
-                return null;
-            }
-            try {
-                MemorySegment jsonPtr = (MemorySegment) NativeLib.LITERLLM_BATCH_OBJECT_TO_JSON.invoke(resultPtr);
-                if (jsonPtr.equals(MemorySegment.NULL)) {
-                    checkLastFfiError();
-                    throw new LiterLlmRsException("retrieve: failed to serialize response", (Throwable) null);
-                }
-                String json = jsonPtr.reinterpret(Long.MAX_VALUE).getString(0);
-                NativeLib.LITERLLM_FREE_STRING.invoke(jsonPtr);
-                return STREAM_MAPPER.readValue(json, BatchObject.class);
-            } finally {
-                NativeLib.LITERLLM_BATCH_OBJECT_FREE.invoke(resultPtr);
-            }
-            // CPD-ON
-        } catch (LiterLlmRsException ex) {
-            throw ex;
-        } catch (Throwable e) {
-            throw new LiterLlmRsException("retrieve: failed", e);
-        }
-    }
     /**
      * Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
      *

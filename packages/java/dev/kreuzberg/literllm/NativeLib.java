@@ -429,169 +429,6 @@ final class NativeLib {
     );
 
 
-    static final MethodHandle LITERLLM_RECORD_CACHE_HIT = LINKER.downcallHandle(
-        LIB.find("literllm_record_cache_hit")
-            .or(() -> LIB.find("_literllm_record_cache_hit"))
-            // Try underscore-prefixed variant for macOS
-            .or(() -> LINKER.defaultLookup().find("literllm_record_cache_hit"))
-            // Fallback to default lookup
-            .or(() -> LINKER.defaultLookup().find("_literllm_record_cache_hit"))
-            // Fallback underscore variant
-            .orElseThrow(),
-        FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
-    );
-
-
-    static final MethodHandle LITERLLM_RECORD_CACHE_MISS = LINKER.downcallHandle(
-        LIB.find("literllm_record_cache_miss")
-            .or(() -> LIB.find("_literllm_record_cache_miss"))
-            // Try underscore-prefixed variant for macOS
-            .or(() -> LINKER.defaultLookup().find("literllm_record_cache_miss"))
-            // Fallback to default lookup
-            .or(() -> LINKER.defaultLookup().find("_literllm_record_cache_miss"))
-            // Fallback underscore variant
-            .orElseThrow(),
-        FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
-    );
-
-
-    static final MethodHandle LITERLLM_RECORD_CACHE_STALE = LINKER.downcallHandle(
-        LIB.find("literllm_record_cache_stale")
-            .or(() -> LIB.find("_literllm_record_cache_stale"))
-            // Try underscore-prefixed variant for macOS
-            .or(() -> LINKER.defaultLookup().find("literllm_record_cache_stale"))
-            // Fallback to default lookup
-            .or(() -> LINKER.defaultLookup().find("_literllm_record_cache_stale"))
-            // Fallback underscore variant
-            .orElseThrow(),
-        FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
-    );
-
-
-    static final MethodHandle LITERLLM_RECORD_CIRCUIT_TRIP = LINKER.downcallHandle(
-        LIB.find("literllm_record_circuit_trip")
-            .or(() -> LIB.find("_literllm_record_circuit_trip"))
-            // Try underscore-prefixed variant for macOS
-            .or(() -> LINKER.defaultLookup().find("literllm_record_circuit_trip"))
-            // Fallback to default lookup
-            .or(() -> LINKER.defaultLookup().find("_literllm_record_circuit_trip"))
-            // Fallback underscore variant
-            .orElseThrow(),
-        FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
-    );
-
-
-    static final MethodHandle LITERLLM_RECORD_RETRY_ATTEMPT = LINKER.downcallHandle(
-        LIB.find("literllm_record_retry_attempt")
-            .or(() -> LIB.find("_literllm_record_retry_attempt"))
-            // Try underscore-prefixed variant for macOS
-            .or(() -> LINKER.defaultLookup().find("literllm_record_retry_attempt"))
-            // Fallback to default lookup
-            .or(() -> LINKER.defaultLookup().find("_literllm_record_retry_attempt"))
-            // Fallback underscore variant
-            .orElseThrow(),
-        FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
-    );
-
-
-    static final MethodHandle LITERLLM_RECORD_CACHE_TIER_HIT = LINKER.downcallHandle(
-        LIB.find("literllm_record_cache_tier_hit")
-            .or(() -> LIB.find("_literllm_record_cache_tier_hit"))
-            // Try underscore-prefixed variant for macOS
-            .or(() -> LINKER.defaultLookup().find("literllm_record_cache_tier_hit"))
-            // Fallback to default lookup
-            .or(() -> LINKER.defaultLookup().find("_literllm_record_cache_tier_hit"))
-            // Fallback underscore variant
-            .orElseThrow(),
-        FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
-    );
-
-
-    static final MethodHandle LITERLLM_RECORD_CACHE_TIER_MISS = LINKER.downcallHandle(
-        LIB.find("literllm_record_cache_tier_miss")
-            .or(() -> LIB.find("_literllm_record_cache_tier_miss"))
-            // Try underscore-prefixed variant for macOS
-            .or(() -> LINKER.defaultLookup().find("literllm_record_cache_tier_miss"))
-            // Fallback to default lookup
-            .or(() -> LINKER.defaultLookup().find("_literllm_record_cache_tier_miss"))
-            // Fallback underscore variant
-            .orElseThrow(),
-        FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
-    );
-
-
-    static final MethodHandle LITERLLM_RECORD_BUDGET_SPEND = LINKER.downcallHandle(
-        LIB.find("literllm_record_budget_spend")
-            .or(() -> LIB.find("_literllm_record_budget_spend"))
-            // Try underscore-prefixed variant for macOS
-            .or(() -> LINKER.defaultLookup().find("literllm_record_budget_spend"))
-            // Fallback to default lookup
-            .or(() -> LINKER.defaultLookup().find("_literllm_record_budget_spend"))
-            // Fallback underscore variant
-            .orElseThrow(),
-        FunctionDescriptor.ofVoid(
-            ValueLayout.ADDRESS,
-            ValueLayout.ADDRESS,
-            ValueLayout.ADDRESS,
-            ValueLayout.ADDRESS,
-            ValueLayout.ADDRESS,
-            ValueLayout.JAVA_DOUBLE
-        )
-    );
-
-
-    static final MethodHandle LITERLLM_RECORD_BUDGET_REJECTION = LINKER.downcallHandle(
-        LIB.find("literllm_record_budget_rejection")
-            .or(() -> LIB.find("_literllm_record_budget_rejection"))
-            // Try underscore-prefixed variant for macOS
-            .or(() -> LINKER.defaultLookup().find("literllm_record_budget_rejection"))
-            // Fallback to default lookup
-            .or(() -> LINKER.defaultLookup().find("_literllm_record_budget_rejection"))
-            // Fallback underscore variant
-            .orElseThrow(),
-        FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
-    );
-
-
-    static final MethodHandle LITERLLM_RECORD_REALTIME_SESSION_DURATION = LINKER.downcallHandle(
-        LIB.find("literllm_record_realtime_session_duration")
-            .or(() -> LIB.find("_literllm_record_realtime_session_duration"))
-            // Try underscore-prefixed variant for macOS
-            .or(() -> LINKER.defaultLookup().find("literllm_record_realtime_session_duration"))
-            // Fallback to default lookup
-            .or(() -> LINKER.defaultLookup().find("_literllm_record_realtime_session_duration"))
-            // Fallback underscore variant
-            .orElseThrow(),
-        FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE)
-    );
-
-
-    static final MethodHandle LITERLLM_RECORD_REALTIME_EVENT = LINKER.downcallHandle(
-        LIB.find("literllm_record_realtime_event")
-            .or(() -> LIB.find("_literllm_record_realtime_event"))
-            // Try underscore-prefixed variant for macOS
-            .or(() -> LINKER.defaultLookup().find("literllm_record_realtime_event"))
-            // Fallback to default lookup
-            .or(() -> LINKER.defaultLookup().find("_literllm_record_realtime_event"))
-            // Fallback underscore variant
-            .orElseThrow(),
-        FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
-    );
-
-
-    static final MethodHandle LITERLLM_RECORD_REALTIME_BYTES = LINKER.downcallHandle(
-        LIB.find("literllm_record_realtime_bytes")
-            .or(() -> LIB.find("_literllm_record_realtime_bytes"))
-            // Try underscore-prefixed variant for macOS
-            .or(() -> LINKER.defaultLookup().find("literllm_record_realtime_bytes"))
-            // Fallback to default lookup
-            .or(() -> LINKER.defaultLookup().find("_literllm_record_realtime_bytes"))
-            // Fallback underscore variant
-            .orElseThrow(),
-        FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG)
-    );
-
-
     static final MethodHandle LITERLLM_CHECK_BOUND = LINKER.downcallHandle(
         LIB.find("literllm_check_bound")
             .or(() -> LIB.find("_literllm_check_bound"))
@@ -896,19 +733,6 @@ final class NativeLib {
             .or(() -> LINKER.defaultLookup().find("literllm_default_client_cancel_batch"))
             // Fallback to default lookup
             .or(() -> LINKER.defaultLookup().find("_literllm_default_client_cancel_batch"))
-            // Fallback underscore variant
-            .orElseThrow(),
-        FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
-    );
-
-
-    static final MethodHandle LITERLLM_DEFAULT_CLIENT_RETRIEVE = LINKER.downcallHandle(
-        LIB.find("literllm_default_client_retrieve")
-            .or(() -> LIB.find("_literllm_default_client_retrieve"))
-            // Try underscore-prefixed variant for macOS
-            .or(() -> LINKER.defaultLookup().find("literllm_default_client_retrieve"))
-            // Fallback to default lookup
-            .or(() -> LINKER.defaultLookup().find("_literllm_default_client_retrieve"))
             // Fallback underscore variant
             .orElseThrow(),
         FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)
@@ -1676,6 +1500,32 @@ final class NativeLib {
             .or(() -> LINKER.defaultLookup().find("literllm_batch_list_query_free"))
             // Fallback to default lookup
             .or(() -> LINKER.defaultLookup().find("_literllm_batch_list_query_free"))
+            // Fallback underscore variant
+            .orElseThrow(),
+        FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+    );
+
+
+    static final MethodHandle LITERLLM_WAIT_FOR_BATCH_CONFIG_FROM_JSON = LINKER.downcallHandle(
+        LIB.find("literllm_wait_for_batch_config_from_json")
+            .or(() -> LIB.find("_literllm_wait_for_batch_config_from_json"))
+            // Try underscore-prefixed variant for macOS
+            .or(() -> LINKER.defaultLookup().find("literllm_wait_for_batch_config_from_json"))
+            // Fallback to default lookup
+            .or(() -> LINKER.defaultLookup().find("_literllm_wait_for_batch_config_from_json"))
+            // Fallback underscore variant
+            .orElseThrow(),
+        FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
+    );
+
+
+    static final MethodHandle LITERLLM_WAIT_FOR_BATCH_CONFIG_FREE = LINKER.downcallHandle(
+        LIB.find("literllm_wait_for_batch_config_free")
+            .or(() -> LIB.find("_literllm_wait_for_batch_config_free"))
+            // Try underscore-prefixed variant for macOS
+            .or(() -> LINKER.defaultLookup().find("literllm_wait_for_batch_config_free"))
+            // Fallback to default lookup
+            .or(() -> LINKER.defaultLookup().find("_literllm_wait_for_batch_config_free"))
             // Fallback underscore variant
             .orElseThrow(),
         FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)

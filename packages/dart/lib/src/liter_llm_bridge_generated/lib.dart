@@ -72,10 +72,12 @@ Future<bool> unregisterCustomProvider({required String name}) =>
 /// Return the capability flags for a named provider.
 ///
 /// Performs an O(n) linear scan over the embedded registry (142 entries).
-/// Returns a `'static` reference valid for the lifetime of the process.
+/// Returns an owned value so that bindings can box/copy it across the FFI
+/// boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+/// so this is a cheap memcpy of seven `bool` fields.
 ///
-/// For unknown `provider_name` values the function returns a reference to an
-/// all-`false` sentinel so callers never need to handle `Option`.
+/// For unknown `provider_name` values the function returns an all-`false`
+/// sentinel so callers never need to handle `Option`.
 Future<ProviderCapabilities> capabilities({required String providerName}) =>
     RustLib.instance.api.crateCapabilities(providerName: providerName);
 
@@ -178,182 +180,6 @@ Future<PlatformInt64> countRequestTokens({
   required String model,
   required ChatCompletionRequest req,
 }) => RustLib.instance.api.crateCountRequestTokens(model: model, req: req);
-
-/// Record a cache hit metric.
-///
-/// Call from cache layer implementations to emit `gen_ai.cache.hit`.
-/// If the meter has not been initialized, this call is a no-op.
-Future<void> recordCacheHit({
-  required String system,
-  required String model,
-  required String operation,
-}) => RustLib.instance.api.crateRecordCacheHit(
-  system: system,
-  model: model,
-  operation: operation,
-);
-
-/// Record a cache miss metric.
-///
-/// Call from cache layer implementations to emit `gen_ai.cache.miss`.
-/// If the meter has not been initialized, this call is a no-op.
-Future<void> recordCacheMiss({
-  required String system,
-  required String model,
-  required String operation,
-}) => RustLib.instance.api.crateRecordCacheMiss(
-  system: system,
-  model: model,
-  operation: operation,
-);
-
-/// Record a stale cache metric.
-///
-/// Call from cache layer implementations to emit `gen_ai.cache.stale`.
-/// If the meter has not been initialized, this call is a no-op.
-Future<void> recordCacheStale({
-  required String system,
-  required String model,
-  required String operation,
-}) => RustLib.instance.api.crateRecordCacheStale(
-  system: system,
-  model: model,
-  operation: operation,
-);
-
-/// Record a circuit breaker trip.
-///
-/// Call from `CircuitLayer` when the circuit opens.
-/// If the meter has not been initialized, this call is a no-op.
-Future<void> recordCircuitTrip({
-  required String system,
-  required String model,
-}) => RustLib.instance.api.crateRecordCircuitTrip(system: system, model: model);
-
-/// Record a retry attempt.
-///
-/// Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
-/// If the meter has not been initialized, this call is a no-op.
-Future<void> recordRetryAttempt({
-  required String system,
-  required String model,
-  required String operation,
-}) => RustLib.instance.api.crateRecordRetryAttempt(
-  system: system,
-  model: model,
-  operation: operation,
-);
-
-/// Record a per-tier cache hit.
-///
-/// `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-/// Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
-/// If the meter has not been initialized, this call is a no-op.
-Future<void> recordCacheTierHit({
-  required String system,
-  required String model,
-  required String tier,
-}) => RustLib.instance.api.crateRecordCacheTierHit(
-  system: system,
-  model: model,
-  tier: tier,
-);
-
-/// Record a per-tier cache miss.
-///
-/// `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-/// Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
-/// If the meter has not been initialized, this call is a no-op.
-Future<void> recordCacheTierMiss({
-  required String system,
-  required String model,
-  required String tier,
-}) => RustLib.instance.api.crateRecordCacheTierMiss(
-  system: system,
-  model: model,
-  tier: tier,
-);
-
-/// Record cumulative spend for a specific budget dimension.
-///
-/// Emits `gen_ai.budget.spend_usd` with dimension attributes.
-/// Call from `record` after each
-/// successful completion.  If the meter has not been initialized, this
-/// call is a no-op.
-Future<void> recordBudgetSpend({
-  required String model,
-  required String provider,
-  String? tenantId,
-  String? userId,
-  String? apiKeyId,
-  required double costUsd,
-}) => RustLib.instance.api.crateRecordBudgetSpend(
-  model: model,
-  provider: provider,
-  tenantId: tenantId,
-  userId: userId,
-  apiKeyId: apiKeyId,
-  costUsd: costUsd,
-);
-
-/// Record a budget-rejection event.
-///
-/// Emits `gen_ai.budget.rejection` with the triggering dimension.
-/// Call from `check` when
-/// returning `Reject`.
-/// If the meter has not been initialized, this call is a no-op.
-Future<void> recordBudgetRejection({
-  required String model,
-  required String provider,
-  required String dimension,
-}) => RustLib.instance.api.crateRecordBudgetRejection(
-  model: model,
-  provider: provider,
-  dimension: dimension,
-);
-
-/// Record the lifetime of a completed Realtime WebSocket session.
-///
-/// Emits `gen_ai.realtime.session.duration` (seconds).
-/// If the meter has not been initialized, this call is a no-op.
-Future<void> recordRealtimeSessionDuration({
-  required String provider,
-  required double durationSecs,
-}) => RustLib.instance.api.crateRecordRealtimeSessionDuration(
-  provider: provider,
-  durationSecs: durationSecs,
-);
-
-/// Record a single Realtime event being forwarded.
-///
-/// Emits `gen_ai.realtime.event.count` with `gen_ai.realtime.direction`
-/// (`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
-/// `gen_ai.system`.
-/// If the meter has not been initialized, this call is a no-op.
-Future<void> recordRealtimeEvent({
-  required String provider,
-  required String direction,
-  required String eventType,
-}) => RustLib.instance.api.crateRecordRealtimeEvent(
-  provider: provider,
-  direction: direction,
-  eventType: eventType,
-);
-
-/// Record audio bytes forwarded over a Realtime WebSocket session.
-///
-/// Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
-/// `gen_ai.realtime.direction` attributes.
-/// If the meter has not been initialized, this call is a no-op.
-Future<void> recordRealtimeBytes({
-  required String provider,
-  required String direction,
-  required PlatformInt64 byteCount,
-}) => RustLib.instance.api.crateRecordRealtimeBytes(
-  provider: provider,
-  direction: direction,
-  byteCount: byteCount,
-);
 
 /// Assert that `current_len + incoming` does not exceed `limit`.
 ///
@@ -642,6 +468,10 @@ Future<ResponseOutputItem> createResponseOutputItemFromJson({
 Future<ResponseUsage> createResponseUsageFromJson({required String json}) =>
     RustLib.instance.api.crateCreateResponseUsageFromJson(json: json);
 
+Future<WaitForBatchConfig> createWaitForBatchConfigFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateWaitForBatchConfigFromJson(json: json);
+
 Future<CustomProviderConfig> createCustomProviderConfigFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateCustomProviderConfigFromJson(json: json);
@@ -700,8 +530,6 @@ abstract class DefaultClient implements RustOpaqueInterface {
   Future<OcrResponse> ocr({required OcrRequest req});
 
   Future<RerankResponse> rerank({required RerankRequest req});
-
-  Future<BatchObject> retrieve({required String batchId});
 
   Future<BatchObject> retrieveBatch({required String batchId});
 

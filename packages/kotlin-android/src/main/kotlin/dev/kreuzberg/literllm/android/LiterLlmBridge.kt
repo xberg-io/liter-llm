@@ -46,42 +46,6 @@ object LiterLlmBridge {
     external fun nativeClear()
 
     @Throws(LiterLlmBridgeException::class)
-    external fun nativeRecordCacheHit(system: String, model: String, operation: String)
-
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeRecordCacheMiss(system: String, model: String, operation: String)
-
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeRecordCacheStale(system: String, model: String, operation: String)
-
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeRecordCircuitTrip(system: String, model: String)
-
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeRecordRetryAttempt(system: String, model: String, operation: String)
-
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeRecordCacheTierHit(system: String, model: String, tier: String)
-
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeRecordCacheTierMiss(system: String, model: String, tier: String)
-
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeRecordBudgetSpend(model: String, provider: String, tenantId: String, userId: String, apiKeyId: String, costUsd: Double)
-
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeRecordBudgetRejection(model: String, provider: String, dimension: String)
-
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeRecordRealtimeSessionDuration(provider: String, durationSecs: Double)
-
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeRecordRealtimeEvent(provider: String, direction: String, eventType: String)
-
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeRecordRealtimeBytes(provider: String, direction: String, byteCount: Long)
-
-    @Throws(LiterLlmBridgeException::class)
     external fun nativeCheckBound(context: String, currentLen: Long, incoming: Long, limit: Long)
 
     @Throws(LiterLlmBridgeException::class)
@@ -128,8 +92,6 @@ object LiterLlmBridge {
     external fun nativeDefaultClientListBatches(handle: Long, requestJson: String): String
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientCancelBatch(handle: Long, requestJson: String): String
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeDefaultClientRetrieve(handle: Long, requestJson: String): String
     @Throws(LiterLlmBridgeException::class)
     external fun nativeDefaultClientWaitForBatch(handle: Long, requestJson: String): String
     @Throws(LiterLlmBridgeException::class)

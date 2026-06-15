@@ -312,91 +312,6 @@ internal static partial class NativeMethods
         IntPtr req
     );
 
-    [DllImport(LibName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "literllm_record_cache_hit")]
-    internal static extern void RecordCacheHit(
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string system,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string model,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string operation
-    );
-
-    [DllImport(LibName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "literllm_record_cache_miss")]
-    internal static extern void RecordCacheMiss(
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string system,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string model,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string operation
-    );
-
-    [DllImport(LibName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "literllm_record_cache_stale")]
-    internal static extern void RecordCacheStale(
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string system,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string model,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string operation
-    );
-
-    [DllImport(LibName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "literllm_record_circuit_trip")]
-    internal static extern void RecordCircuitTrip(
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string system,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string model
-    );
-
-    [DllImport(LibName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "literllm_record_retry_attempt")]
-    internal static extern void RecordRetryAttempt(
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string system,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string model,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string operation
-    );
-
-    [DllImport(LibName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "literllm_record_cache_tier_hit")]
-    internal static extern void RecordCacheTierHit(
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string system,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string model,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string tier
-    );
-
-    [DllImport(LibName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "literllm_record_cache_tier_miss")]
-    internal static extern void RecordCacheTierMiss(
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string system,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string model,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string tier
-    );
-
-    [DllImport(LibName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "literllm_record_budget_spend")]
-    internal static extern void RecordBudgetSpend(
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string model,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string provider,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string tenantId,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string userId,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string apiKeyId,
-        double costUsd
-    );
-
-    [DllImport(LibName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "literllm_record_budget_rejection")]
-    internal static extern void RecordBudgetRejection(
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string model,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string provider,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string dimension
-    );
-
-    [DllImport(LibName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "literllm_record_realtime_session_duration")]
-    internal static extern void RecordRealtimeSessionDuration(
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string provider,
-        double durationSecs
-    );
-
-    [DllImport(LibName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "literllm_record_realtime_event")]
-    internal static extern void RecordRealtimeEvent(
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string provider,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string direction,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string eventType
-    );
-
-    [DllImport(LibName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "literllm_record_realtime_bytes")]
-    internal static extern void RecordRealtimeBytes(
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string provider,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string direction,
-        ulong byteCount
-    );
-
     [DllImport(LibName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "literllm_check_bound")]
     internal static extern void CheckBound(
         [MarshalAs(UnmanagedType.LPUTF8Str)] string context,
@@ -526,12 +441,6 @@ internal static partial class NativeMethods
 
     [DllImport(LibName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "literllm_default_client_cancel_batch")]
     internal static extern IntPtr DefaultClientCancelBatch(
-        IntPtr handle,
-        [MarshalAs(UnmanagedType.LPUTF8Str)] string batchId
-    );
-
-    [DllImport(LibName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "literllm_default_client_retrieve")]
-    internal static extern IntPtr DefaultClientRetrieve(
         IntPtr handle,
         [MarshalAs(UnmanagedType.LPUTF8Str)] string batchId
     );

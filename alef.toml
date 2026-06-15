@@ -463,6 +463,10 @@ methods = [
   "OpenAiRealtimeTranslator.translate_inbound",
   # v1.6.0 additions — Tier B helper methods
   "GuardrailRegistry.register",
+  # BatchRetriever trait impl on DefaultClient — internal polling primitive,
+  # not part of the user-facing API.  Users call DefaultClient::wait_for_batch
+  # (Tier C, high-level) which dispatches through wait_for_batch_impl.
+  "DefaultClient.fetch_batch_for_polling",
 ]
 functions = [
   "str_pair",
@@ -472,6 +476,23 @@ functions = [
   "should_hedge",
   "wait_for_batch_impl",
   "record_cache_state",
+  # Tower metrics emit helpers — internal infrastructure; called from Tower
+  # middleware modules but not part of the user-facing API.  The Python
+  # generator mishandles their Option<f64>/f64 mix and the FFI generator
+  # mishandles &'static returns; both are non-issues once excluded.
+  "record_cache_hit",
+  "record_cache_miss",
+  "record_cache_stale",
+  "record_circuit_trip",
+  "record_retry_attempt",
+  "record_cache_tier_hit",
+  "record_cache_tier_miss",
+  "record_budget_spend",
+  "record_budget_rejection",
+  "record_realtime_session_duration",
+  "record_realtime_event",
+  "record_realtime_bytes",
+  "init_meter",
 ]
 
 [crates.lint.python]

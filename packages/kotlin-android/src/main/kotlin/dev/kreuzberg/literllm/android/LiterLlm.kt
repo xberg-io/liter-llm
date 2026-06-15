@@ -137,10 +137,12 @@ object LiterLlm {
      * Return the capability flags for a named provider.
      *
      * Performs an O(n) linear scan over the embedded registry (142 entries).
-     * Returns a `'static` reference valid for the lifetime of the process.
+     * Returns an owned value so that bindings can box/copy it across the FFI
+     * boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+     * so this is a cheap memcpy of seven `bool` fields.
      *
-     * For unknown `provider_name` values the function returns a reference to an
-     * all-`false` sentinel so callers never need to handle `Option`.
+     * For unknown `provider_name` values the function returns an all-`false`
+     * sentinel so callers never need to handle `Option`.
      */
     fun capabilities(providerName: String): ProviderCapabilities {
         val resultJson = LiterLlmBridge.nativeCapabilities(providerName)
@@ -150,10 +152,12 @@ object LiterLlm {
      * Return the capability flags for a named provider.
      *
      * Performs an O(n) linear scan over the embedded registry (142 entries).
-     * Returns a `'static` reference valid for the lifetime of the process.
+     * Returns an owned value so that bindings can box/copy it across the FFI
+     * boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+     * so this is a cheap memcpy of seven `bool` fields.
      *
-     * For unknown `provider_name` values the function returns a reference to an
-     * all-`false` sentinel so callers never need to handle `Option`.
+     * For unknown `provider_name` values the function returns an all-`false`
+     * sentinel so callers never need to handle `Option`.
      */
     suspend fun capabilitiesAsync(providerName: String): ProviderCapabilities =
         withContext(Dispatchers.IO) { capabilities(providerName) }
@@ -236,99 +240,6 @@ object LiterLlm {
      * Panics if the global registry lock is poisoned.
      */
     fun clear(): Unit = LiterLlmBridge.nativeClear()
-    /**
-     * Record a cache hit metric.
-     *
-     * Call from cache layer implementations to emit `gen_ai.cache.hit`.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    fun recordCacheHit(system: String, model: String, operation: String): Unit = LiterLlmBridge.nativeRecordCacheHit(system, model, operation)
-    /**
-     * Record a cache miss metric.
-     *
-     * Call from cache layer implementations to emit `gen_ai.cache.miss`.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    fun recordCacheMiss(system: String, model: String, operation: String): Unit = LiterLlmBridge.nativeRecordCacheMiss(system, model, operation)
-    /**
-     * Record a stale cache metric.
-     *
-     * Call from cache layer implementations to emit `gen_ai.cache.stale`.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    fun recordCacheStale(system: String, model: String, operation: String): Unit = LiterLlmBridge.nativeRecordCacheStale(system, model, operation)
-    /**
-     * Record a circuit breaker trip.
-     *
-     * Call from `CircuitLayer` when the circuit opens.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    fun recordCircuitTrip(system: String, model: String): Unit = LiterLlmBridge.nativeRecordCircuitTrip(system, model)
-    /**
-     * Record a retry attempt.
-     *
-     * Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    fun recordRetryAttempt(system: String, model: String, operation: String): Unit = LiterLlmBridge.nativeRecordRetryAttempt(system, model, operation)
-    /**
-     * Record a per-tier cache hit.
-     *
-     * `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-     * Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    fun recordCacheTierHit(system: String, model: String, tier: String): Unit = LiterLlmBridge.nativeRecordCacheTierHit(system, model, tier)
-    /**
-     * Record a per-tier cache miss.
-     *
-     * `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-     * Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    fun recordCacheTierMiss(system: String, model: String, tier: String): Unit = LiterLlmBridge.nativeRecordCacheTierMiss(system, model, tier)
-    /**
-     * Record cumulative spend for a specific budget dimension.
-     *
-     * Emits `gen_ai.budget.spend_usd` with dimension attributes.
-     * Call from `record` after each
-     * successful completion.  If the meter has not been initialized, this
-     * call is a no-op.
-     */
-    fun recordBudgetSpend(model: String, provider: String, tenantId: String? = null, userId: String? = null, apiKeyId: String? = null, costUsd: Double): Unit = LiterLlmBridge.nativeRecordBudgetSpend(model, provider, tenantId ?: "", userId ?: "", apiKeyId ?: "", costUsd)
-    /**
-     * Record a budget-rejection event.
-     *
-     * Emits `gen_ai.budget.rejection` with the triggering dimension.
-     * Call from `check` when
-     * returning `Reject`.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    fun recordBudgetRejection(model: String, provider: String, dimension: String): Unit = LiterLlmBridge.nativeRecordBudgetRejection(model, provider, dimension)
-    /**
-     * Record the lifetime of a completed Realtime WebSocket session.
-     *
-     * Emits `gen_ai.realtime.session.duration` (seconds).
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    fun recordRealtimeSessionDuration(provider: String, durationSecs: Double): Unit = LiterLlmBridge.nativeRecordRealtimeSessionDuration(provider, durationSecs)
-    /**
-     * Record a single Realtime event being forwarded.
-     *
-     * Emits `gen_ai.realtime.event.count` with `gen_ai.realtime.direction`
-     * (`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
-     * `gen_ai.system`.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    fun recordRealtimeEvent(provider: String, direction: String, eventType: String): Unit = LiterLlmBridge.nativeRecordRealtimeEvent(provider, direction, eventType)
-    /**
-     * Record audio bytes forwarded over a Realtime WebSocket session.
-     *
-     * Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
-     * `gen_ai.realtime.direction` attributes.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    fun recordRealtimeBytes(provider: String, direction: String, byteCount: Long): Unit = LiterLlmBridge.nativeRecordRealtimeBytes(provider, direction, byteCount)
     /**
      * Assert that `current_len + incoming` does not exceed `limit`.
      *

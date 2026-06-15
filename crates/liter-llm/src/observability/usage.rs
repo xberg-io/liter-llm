@@ -209,7 +209,9 @@ pub enum UsageSinkError {
 pub struct LoggingUsageSink;
 
 impl UsageSink for LoggingUsageSink {
+    #[cfg_attr(not(feature = "tracing"), allow(unused_variables))]
     async fn emit(&self, event: UsageEvent) -> Result<(), UsageSinkError> {
+        #[cfg(feature = "tracing")]
         tracing::info!(
             target: "gen_ai.usage",
             tenant_id = event.tenant_id.as_ref().map(|t| t.as_ref()),
@@ -309,25 +311,22 @@ impl MultiUsageSink {
 
 impl UsageSink for MultiUsageSink {
     async fn emit(&self, event: UsageEvent) -> Result<(), UsageSinkError> {
-        let futs: Vec<_> = self
-            .sinks
-            .iter()
-            .map(|s| {
-                let s = Arc::clone(s);
-                let e = event.clone();
-                async move {
-                    if let Err(err) = s.emit_erased(e).await {
-                        tracing::warn!(
-                            target: "gen_ai.usage",
-                            error = %err,
-                            "usage sink emit failed"
-                        );
-                    }
-                }
-            })
-            .collect();
-
-        futures_util::future::join_all(futs).await;
+        // Sequential emit — fan-out sinks are best-effort observability; if
+        // one sink is slow, it adds latency but does not block correctness.
+        // Sequentialising avoids pulling `futures_util` into minimal builds
+        // (JNI/wasm umbrella crates).  Use `join_all` from `futures_util`
+        // explicitly in your own `UsageSink` impl if concurrent fan-out is
+        // important — it's a workspace dep gated behind the `tower` feature.
+        for sink in &self.sinks {
+            if let Err(_err) = sink.emit_erased(event.clone()).await {
+                #[cfg(feature = "tracing")]
+                tracing::warn!(
+                    target: "gen_ai.usage",
+                    error = %_err,
+                    "usage sink emit failed"
+                );
+            }
+        }
         Ok(())
     }
 }

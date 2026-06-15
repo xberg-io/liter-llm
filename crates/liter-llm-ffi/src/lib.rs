@@ -25,7 +25,6 @@
 )]
 
 use liter_llm::client::BatchClient;
-use liter_llm::client::BatchRetriever;
 use liter_llm::client::FileClient;
 use liter_llm::client::LlmClient;
 use liter_llm::client::ResponseClient;
@@ -10655,6 +10654,66 @@ pub unsafe extern "C" fn literllm_response_usage_total_tokens(ptr: *const liter_
     obj.total_tokens
 }
 
+/// Create a `WaitForBatchConfig` from a JSON string. Returns null on failure.
+/// # Safety
+/// JSON string must be valid UTF-8 and null-terminated.
+/// Returned handle must be freed with `literllm_wait_for_batch_config_free`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn literllm_wait_for_batch_config_from_json(
+    json: *const c_char,
+) -> *mut liter_llm::client::WaitForBatchConfig {
+    clear_last_error();
+    if json.is_null() {
+        set_last_error(1, "Null pointer passed for JSON string");
+        return std::ptr::null_mut();
+    }
+    // SAFETY: null check above guarantees json is a valid pointer; string is valid UTF-8 from caller.
+    let c_str = match unsafe { CStr::from_ptr(json) }.to_str() {
+        Ok(s) => s,
+        Err(_) => {
+            set_last_error(1, "Invalid UTF-8 in JSON string");
+            return std::ptr::null_mut();
+        }
+    };
+    match serde_json::from_str::<liter_llm::client::WaitForBatchConfig>(c_str) {
+        Ok(val) => Box::into_raw(Box::new(val)),
+        Err(e) => {
+            set_last_error(2, &e.to_string());
+            std::ptr::null_mut()
+        }
+    }
+}
+
+/// Serialize a `WaitForBatchConfig` to a JSON string. Returns null on failure.
+/// # Safety
+/// `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+/// The returned string must be freed with `literllm_free_string`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn literllm_wait_for_batch_config_to_json(
+    ptr: *const liter_llm::client::WaitForBatchConfig,
+) -> *mut c_char {
+    clear_last_error();
+    if ptr.is_null() {
+        set_last_error(1, "Null pointer passed to to_json");
+        return std::ptr::null_mut();
+    }
+    // SAFETY: null check above guarantees ptr is a valid pointer.
+    let val = unsafe { &*ptr };
+    match serde_json::to_string(val) {
+        Ok(s) => match CString::new(s) {
+            Ok(cs) => cs.into_raw(),
+            Err(e) => {
+                set_last_error(2, &e.to_string());
+                std::ptr::null_mut()
+            }
+        },
+        Err(e) => {
+            set_last_error(2, &e.to_string());
+            std::ptr::null_mut()
+        }
+    }
+}
+
 /// Free a `WaitForBatchConfig` handle.
 /// # Safety
 /// Pointer must have been returned by this library, or be null.
@@ -11489,43 +11548,6 @@ pub unsafe extern "C" fn literllm_default_client_cancel_batch(
         }
     };
     let result = get_ffi_runtime().block_on(async { obj.cancel_batch(&batch_id_rs).await });
-    match result {
-        Ok(val) => Box::into_raw(Box::new(val)),
-        Err(e) => {
-            set_last_error(2, &e.to_string());
-            std::ptr::null_mut()
-        }
-    }
-}
-
-/// \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
-/// freed with the appropriate free function.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn literllm_default_client_retrieve(
-    this: *const liter_llm::client::DefaultClient,
-    batch_id: *const std::ffi::c_char,
-) -> *mut liter_llm::types::BatchObject {
-    clear_last_error();
-    if this.is_null() {
-        set_last_error(1, "Null pointer passed for self");
-        return std::ptr::null_mut();
-    }
-    // SAFETY: null check above guarantees this is a valid pointer.
-    let obj = unsafe { &*this };
-
-    if batch_id.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'batch_id'");
-        return std::ptr::null_mut();
-    }
-    // SAFETY: null check above guarantees batch_id is a valid pointer; string is valid UTF-8 from caller.
-    let batch_id_rs = match unsafe { CStr::from_ptr(batch_id) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'batch_id'");
-            return std::ptr::null_mut();
-        }
-    };
-    let result = get_ffi_runtime().block_on(async { obj.retrieve(&batch_id_rs).await });
     match result {
         Ok(val) => Box::into_raw(Box::new(val)),
         Err(e) => {
@@ -15292,10 +15314,12 @@ pub unsafe extern "C" fn literllm_unregister_custom_provider(name: *const std::f
 /// Return the capability flags for a named provider.
 ///
 /// Performs an O(n) linear scan over the embedded registry (142 entries).
-/// Returns a `'static` reference valid for the lifetime of the process.
+/// Returns an owned value so that bindings can box/copy it across the FFI
+/// boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+/// so this is a cheap memcpy of seven `bool` fields.
 ///
-/// For unknown `provider_name` values the function returns a reference to an
-/// all-`false` sentinel so callers never need to handle `Option`.
+/// For unknown `provider_name` values the function returns an all-`false`
+/// sentinel so callers never need to handle `Option`.
 /// \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
 /// freed with the appropriate free function.
 #[unsafe(no_mangle)]
@@ -15594,623 +15618,6 @@ pub unsafe extern "C" fn literllm_count_request_tokens(
             0
         }
     }
-}
-
-/// Record a cache hit metric.
-///
-/// Call from cache layer implementations to emit `gen_ai.cache.hit`.
-/// If the meter has not been initialized, this call is a no-op.
-/// \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
-/// freed with the appropriate free function.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn literllm_record_cache_hit(
-    system: *const std::ffi::c_char,
-    model: *const std::ffi::c_char,
-    operation: *const std::ffi::c_char,
-) {
-    clear_last_error();
-    if system.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'system'");
-        return;
-    }
-    // SAFETY: null check above guarantees system is a valid pointer; string is valid UTF-8 from caller.
-    let system_rs = match unsafe { CStr::from_ptr(system) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'system'");
-            return;
-        }
-    };
-    if model.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'model'");
-        return;
-    }
-    // SAFETY: null check above guarantees model is a valid pointer; string is valid UTF-8 from caller.
-    let model_rs = match unsafe { CStr::from_ptr(model) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'model'");
-            return;
-        }
-    };
-    if operation.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'operation'");
-        return;
-    }
-    // SAFETY: null check above guarantees operation is a valid pointer; string is valid UTF-8 from caller.
-    let operation_rs = match unsafe { CStr::from_ptr(operation) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'operation'");
-            return;
-        }
-    };
-    let result = liter_llm::tower::metrics::record_cache_hit(&system_rs, &model_rs, &operation_rs);
-}
-
-/// Record a cache miss metric.
-///
-/// Call from cache layer implementations to emit `gen_ai.cache.miss`.
-/// If the meter has not been initialized, this call is a no-op.
-/// \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
-/// freed with the appropriate free function.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn literllm_record_cache_miss(
-    system: *const std::ffi::c_char,
-    model: *const std::ffi::c_char,
-    operation: *const std::ffi::c_char,
-) {
-    clear_last_error();
-    if system.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'system'");
-        return;
-    }
-    // SAFETY: null check above guarantees system is a valid pointer; string is valid UTF-8 from caller.
-    let system_rs = match unsafe { CStr::from_ptr(system) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'system'");
-            return;
-        }
-    };
-    if model.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'model'");
-        return;
-    }
-    // SAFETY: null check above guarantees model is a valid pointer; string is valid UTF-8 from caller.
-    let model_rs = match unsafe { CStr::from_ptr(model) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'model'");
-            return;
-        }
-    };
-    if operation.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'operation'");
-        return;
-    }
-    // SAFETY: null check above guarantees operation is a valid pointer; string is valid UTF-8 from caller.
-    let operation_rs = match unsafe { CStr::from_ptr(operation) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'operation'");
-            return;
-        }
-    };
-    let result = liter_llm::tower::metrics::record_cache_miss(&system_rs, &model_rs, &operation_rs);
-}
-
-/// Record a stale cache metric.
-///
-/// Call from cache layer implementations to emit `gen_ai.cache.stale`.
-/// If the meter has not been initialized, this call is a no-op.
-/// \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
-/// freed with the appropriate free function.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn literllm_record_cache_stale(
-    system: *const std::ffi::c_char,
-    model: *const std::ffi::c_char,
-    operation: *const std::ffi::c_char,
-) {
-    clear_last_error();
-    if system.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'system'");
-        return;
-    }
-    // SAFETY: null check above guarantees system is a valid pointer; string is valid UTF-8 from caller.
-    let system_rs = match unsafe { CStr::from_ptr(system) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'system'");
-            return;
-        }
-    };
-    if model.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'model'");
-        return;
-    }
-    // SAFETY: null check above guarantees model is a valid pointer; string is valid UTF-8 from caller.
-    let model_rs = match unsafe { CStr::from_ptr(model) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'model'");
-            return;
-        }
-    };
-    if operation.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'operation'");
-        return;
-    }
-    // SAFETY: null check above guarantees operation is a valid pointer; string is valid UTF-8 from caller.
-    let operation_rs = match unsafe { CStr::from_ptr(operation) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'operation'");
-            return;
-        }
-    };
-    let result = liter_llm::tower::metrics::record_cache_stale(&system_rs, &model_rs, &operation_rs);
-}
-
-/// Record a circuit breaker trip.
-///
-/// Call from `CircuitLayer` when the circuit opens.
-/// If the meter has not been initialized, this call is a no-op.
-/// \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
-/// freed with the appropriate free function.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn literllm_record_circuit_trip(system: *const std::ffi::c_char, model: *const std::ffi::c_char) {
-    clear_last_error();
-    if system.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'system'");
-        return;
-    }
-    // SAFETY: null check above guarantees system is a valid pointer; string is valid UTF-8 from caller.
-    let system_rs = match unsafe { CStr::from_ptr(system) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'system'");
-            return;
-        }
-    };
-    if model.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'model'");
-        return;
-    }
-    // SAFETY: null check above guarantees model is a valid pointer; string is valid UTF-8 from caller.
-    let model_rs = match unsafe { CStr::from_ptr(model) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'model'");
-            return;
-        }
-    };
-    let result = liter_llm::tower::metrics::record_circuit_trip(&system_rs, &model_rs);
-}
-
-/// Record a retry attempt.
-///
-/// Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
-/// If the meter has not been initialized, this call is a no-op.
-/// \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
-/// freed with the appropriate free function.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn literllm_record_retry_attempt(
-    system: *const std::ffi::c_char,
-    model: *const std::ffi::c_char,
-    operation: *const std::ffi::c_char,
-) {
-    clear_last_error();
-    if system.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'system'");
-        return;
-    }
-    // SAFETY: null check above guarantees system is a valid pointer; string is valid UTF-8 from caller.
-    let system_rs = match unsafe { CStr::from_ptr(system) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'system'");
-            return;
-        }
-    };
-    if model.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'model'");
-        return;
-    }
-    // SAFETY: null check above guarantees model is a valid pointer; string is valid UTF-8 from caller.
-    let model_rs = match unsafe { CStr::from_ptr(model) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'model'");
-            return;
-        }
-    };
-    if operation.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'operation'");
-        return;
-    }
-    // SAFETY: null check above guarantees operation is a valid pointer; string is valid UTF-8 from caller.
-    let operation_rs = match unsafe { CStr::from_ptr(operation) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'operation'");
-            return;
-        }
-    };
-    let result = liter_llm::tower::metrics::record_retry_attempt(&system_rs, &model_rs, &operation_rs);
-}
-
-/// Record a per-tier cache hit.
-///
-/// `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-/// Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
-/// If the meter has not been initialized, this call is a no-op.
-/// \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
-/// freed with the appropriate free function.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn literllm_record_cache_tier_hit(
-    system: *const std::ffi::c_char,
-    model: *const std::ffi::c_char,
-    tier: *const std::ffi::c_char,
-) {
-    clear_last_error();
-    if system.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'system'");
-        return;
-    }
-    // SAFETY: null check above guarantees system is a valid pointer; string is valid UTF-8 from caller.
-    let system_rs = match unsafe { CStr::from_ptr(system) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'system'");
-            return;
-        }
-    };
-    if model.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'model'");
-        return;
-    }
-    // SAFETY: null check above guarantees model is a valid pointer; string is valid UTF-8 from caller.
-    let model_rs = match unsafe { CStr::from_ptr(model) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'model'");
-            return;
-        }
-    };
-    if tier.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'tier'");
-        return;
-    }
-    // SAFETY: null check above guarantees tier is a valid pointer; string is valid UTF-8 from caller.
-    let tier_rs = match unsafe { CStr::from_ptr(tier) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'tier'");
-            return;
-        }
-    };
-    let result = liter_llm::tower::metrics::record_cache_tier_hit(&system_rs, &model_rs, &tier_rs);
-}
-
-/// Record a per-tier cache miss.
-///
-/// `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-/// Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
-/// If the meter has not been initialized, this call is a no-op.
-/// \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
-/// freed with the appropriate free function.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn literllm_record_cache_tier_miss(
-    system: *const std::ffi::c_char,
-    model: *const std::ffi::c_char,
-    tier: *const std::ffi::c_char,
-) {
-    clear_last_error();
-    if system.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'system'");
-        return;
-    }
-    // SAFETY: null check above guarantees system is a valid pointer; string is valid UTF-8 from caller.
-    let system_rs = match unsafe { CStr::from_ptr(system) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'system'");
-            return;
-        }
-    };
-    if model.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'model'");
-        return;
-    }
-    // SAFETY: null check above guarantees model is a valid pointer; string is valid UTF-8 from caller.
-    let model_rs = match unsafe { CStr::from_ptr(model) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'model'");
-            return;
-        }
-    };
-    if tier.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'tier'");
-        return;
-    }
-    // SAFETY: null check above guarantees tier is a valid pointer; string is valid UTF-8 from caller.
-    let tier_rs = match unsafe { CStr::from_ptr(tier) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'tier'");
-            return;
-        }
-    };
-    let result = liter_llm::tower::metrics::record_cache_tier_miss(&system_rs, &model_rs, &tier_rs);
-}
-
-/// Record cumulative spend for a specific budget dimension.
-///
-/// Emits `gen_ai.budget.spend_usd` with dimension attributes.
-/// Call from `record` after each
-/// successful completion.  If the meter has not been initialized, this
-/// call is a no-op.
-/// \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
-/// freed with the appropriate free function.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn literllm_record_budget_spend(
-    model: *const std::ffi::c_char,
-    provider: *const std::ffi::c_char,
-    tenant_id: *const std::ffi::c_char,
-    user_id: *const std::ffi::c_char,
-    api_key_id: *const std::ffi::c_char,
-    cost_usd: f64,
-) {
-    clear_last_error();
-    if model.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'model'");
-        return;
-    }
-    // SAFETY: null check above guarantees model is a valid pointer; string is valid UTF-8 from caller.
-    let model_rs = match unsafe { CStr::from_ptr(model) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'model'");
-            return;
-        }
-    };
-    if provider.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'provider'");
-        return;
-    }
-    // SAFETY: null check above guarantees provider is a valid pointer; string is valid UTF-8 from caller.
-    let provider_rs = match unsafe { CStr::from_ptr(provider) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'provider'");
-            return;
-        }
-    };
-    let tenant_id_rs = if tenant_id.is_null() {
-        None
-    } else {
-        // SAFETY: null check above guarantees tenant_id is a valid pointer; string is valid UTF-8 from caller.
-        match unsafe { CStr::from_ptr(tenant_id) }.to_str() {
-            Ok(s) => Some(s.to_string()),
-            Err(_) => {
-                set_last_error(1, "Invalid UTF-8 in parameter 'tenant_id'");
-                return;
-            }
-        }
-    };
-    let user_id_rs = if user_id.is_null() {
-        None
-    } else {
-        // SAFETY: null check above guarantees user_id is a valid pointer; string is valid UTF-8 from caller.
-        match unsafe { CStr::from_ptr(user_id) }.to_str() {
-            Ok(s) => Some(s.to_string()),
-            Err(_) => {
-                set_last_error(1, "Invalid UTF-8 in parameter 'user_id'");
-                return;
-            }
-        }
-    };
-    let api_key_id_rs = if api_key_id.is_null() {
-        None
-    } else {
-        // SAFETY: null check above guarantees api_key_id is a valid pointer; string is valid UTF-8 from caller.
-        match unsafe { CStr::from_ptr(api_key_id) }.to_str() {
-            Ok(s) => Some(s.to_string()),
-            Err(_) => {
-                set_last_error(1, "Invalid UTF-8 in parameter 'api_key_id'");
-                return;
-            }
-        }
-    };
-    let cost_usd_rs = cost_usd;
-    let result = liter_llm::tower::metrics::record_budget_spend(
-        &model_rs,
-        &provider_rs,
-        tenant_id_rs.as_deref(),
-        user_id_rs.as_deref(),
-        api_key_id_rs.as_deref(),
-        cost_usd_rs,
-    );
-}
-
-/// Record a budget-rejection event.
-///
-/// Emits `gen_ai.budget.rejection` with the triggering dimension.
-/// Call from `check` when
-/// returning `Reject`.
-/// If the meter has not been initialized, this call is a no-op.
-/// \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
-/// freed with the appropriate free function.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn literllm_record_budget_rejection(
-    model: *const std::ffi::c_char,
-    provider: *const std::ffi::c_char,
-    dimension: *const std::ffi::c_char,
-) {
-    clear_last_error();
-    if model.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'model'");
-        return;
-    }
-    // SAFETY: null check above guarantees model is a valid pointer; string is valid UTF-8 from caller.
-    let model_rs = match unsafe { CStr::from_ptr(model) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'model'");
-            return;
-        }
-    };
-    if provider.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'provider'");
-        return;
-    }
-    // SAFETY: null check above guarantees provider is a valid pointer; string is valid UTF-8 from caller.
-    let provider_rs = match unsafe { CStr::from_ptr(provider) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'provider'");
-            return;
-        }
-    };
-    if dimension.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'dimension'");
-        return;
-    }
-    // SAFETY: null check above guarantees dimension is a valid pointer; string is valid UTF-8 from caller.
-    let dimension_rs = match unsafe { CStr::from_ptr(dimension) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'dimension'");
-            return;
-        }
-    };
-    let result = liter_llm::tower::metrics::record_budget_rejection(&model_rs, &provider_rs, &dimension_rs);
-}
-
-/// Record the lifetime of a completed Realtime WebSocket session.
-///
-/// Emits `gen_ai.realtime.session.duration` (seconds).
-/// If the meter has not been initialized, this call is a no-op.
-/// \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
-/// freed with the appropriate free function.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn literllm_record_realtime_session_duration(
-    provider: *const std::ffi::c_char,
-    duration_secs: f64,
-) {
-    clear_last_error();
-    if provider.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'provider'");
-        return;
-    }
-    // SAFETY: null check above guarantees provider is a valid pointer; string is valid UTF-8 from caller.
-    let provider_rs = match unsafe { CStr::from_ptr(provider) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'provider'");
-            return;
-        }
-    };
-    let duration_secs_rs = duration_secs;
-    let result = liter_llm::tower::metrics::record_realtime_session_duration(&provider_rs, duration_secs_rs);
-}
-
-/// Record a single Realtime event being forwarded.
-///
-/// Emits `gen_ai.realtime.event.count` with `gen_ai.realtime.direction`
-/// (`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
-/// `gen_ai.system`.
-/// If the meter has not been initialized, this call is a no-op.
-/// \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
-/// freed with the appropriate free function.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn literllm_record_realtime_event(
-    provider: *const std::ffi::c_char,
-    direction: *const std::ffi::c_char,
-    event_type: *const std::ffi::c_char,
-) {
-    clear_last_error();
-    if provider.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'provider'");
-        return;
-    }
-    // SAFETY: null check above guarantees provider is a valid pointer; string is valid UTF-8 from caller.
-    let provider_rs = match unsafe { CStr::from_ptr(provider) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'provider'");
-            return;
-        }
-    };
-    if direction.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'direction'");
-        return;
-    }
-    // SAFETY: null check above guarantees direction is a valid pointer; string is valid UTF-8 from caller.
-    let direction_rs = match unsafe { CStr::from_ptr(direction) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'direction'");
-            return;
-        }
-    };
-    if event_type.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'event_type'");
-        return;
-    }
-    // SAFETY: null check above guarantees event_type is a valid pointer; string is valid UTF-8 from caller.
-    let event_type_rs = match unsafe { CStr::from_ptr(event_type) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'event_type'");
-            return;
-        }
-    };
-    let result = liter_llm::tower::metrics::record_realtime_event(&provider_rs, &direction_rs, &event_type_rs);
-}
-
-/// Record audio bytes forwarded over a Realtime WebSocket session.
-///
-/// Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
-/// `gen_ai.realtime.direction` attributes.
-/// If the meter has not been initialized, this call is a no-op.
-/// \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
-/// freed with the appropriate free function.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn literllm_record_realtime_bytes(
-    provider: *const std::ffi::c_char,
-    direction: *const std::ffi::c_char,
-    byte_count: u64,
-) {
-    clear_last_error();
-    if provider.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'provider'");
-        return;
-    }
-    // SAFETY: null check above guarantees provider is a valid pointer; string is valid UTF-8 from caller.
-    let provider_rs = match unsafe { CStr::from_ptr(provider) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'provider'");
-            return;
-        }
-    };
-    if direction.is_null() {
-        set_last_error(1, "Null pointer passed for parameter 'direction'");
-        return;
-    }
-    // SAFETY: null check above guarantees direction is a valid pointer; string is valid UTF-8 from caller.
-    let direction_rs = match unsafe { CStr::from_ptr(direction) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => {
-            set_last_error(1, "Invalid UTF-8 in parameter 'direction'");
-            return;
-        }
-    };
-    let byte_count_rs = byte_count;
-    let result = liter_llm::tower::metrics::record_realtime_bytes(&provider_rs, &direction_rs, byte_count_rs);
 }
 
 /// Assert that `current_len + incoming` does not exceed `limit`.

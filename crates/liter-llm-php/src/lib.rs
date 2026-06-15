@@ -25,7 +25,6 @@
 
 use ext_php_rs::prelude::*;
 use liter_llm::client::BatchClient;
-use liter_llm::client::BatchRetriever;
 use liter_llm::client::FileClient;
 use liter_llm::client::LlmClient;
 use liter_llm::client::ResponseClient;
@@ -4312,17 +4311,6 @@ impl DefaultClient {
             .map_err(|e| ext_php_rs::exception::PhpException::default(e.to_string()))
     }
 
-    pub fn retrieve(&self, batchId: String) -> PhpResult<BatchObject> {
-        let inner = self.inner.clone();
-        WORKER_RUNTIME.block_on(async {
-            let result = inner
-                .retrieve(&batchId)
-                .await
-                .map_err(|e| ext_php_rs::exception::PhpException::default(e.to_string()))?;
-            Ok(result.into())
-        })
-    }
-
     /**
      * Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
      *
@@ -5397,14 +5385,16 @@ impl LiterLlmApi {
      * Return the capability flags for a named provider.
      *
      * Performs an O(n) linear scan over the embedded registry (142 entries).
-     * Returns a `'static` reference valid for the lifetime of the process.
+     * Returns an owned value so that bindings can box/copy it across the FFI
+     * boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+     * so this is a cheap memcpy of seven `bool` fields.
      *
-     * For unknown `provider_name` values the function returns a reference to an
-     * all-`false` sentinel so callers never need to handle `Option`.
+     * For unknown `provider_name` values the function returns an all-`false`
+     * sentinel so callers never need to handle `Option`.
      */
     #[php(name = "capabilities")]
     pub fn capabilities(providerName: String) -> ProviderCapabilities {
-        liter_llm::provider::capabilities(&providerName).clone().into()
+        liter_llm::provider::capabilities(&providerName).into()
     }
 
     /**
@@ -5529,161 +5519,6 @@ impl LiterLlmApi {
         let result = liter_llm::count_request_tokens(&model, &req_core.unwrap_or_default())
             .map_err(|e| ext_php_rs::exception::PhpException::default(e.to_string()))?;
         Ok(result as i64)
-    }
-
-    /**
-     * Record a cache hit metric.
-     *
-     * Call from cache layer implementations to emit `gen_ai.cache.hit`.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    #[php(name = "recordCacheHit")]
-    pub fn record_cache_hit(system: String, model: String, operation: String) {
-        liter_llm::tower::metrics::record_cache_hit(&system, &model, &operation)
-    }
-
-    /**
-     * Record a cache miss metric.
-     *
-     * Call from cache layer implementations to emit `gen_ai.cache.miss`.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    #[php(name = "recordCacheMiss")]
-    pub fn record_cache_miss(system: String, model: String, operation: String) {
-        liter_llm::tower::metrics::record_cache_miss(&system, &model, &operation)
-    }
-
-    /**
-     * Record a stale cache metric.
-     *
-     * Call from cache layer implementations to emit `gen_ai.cache.stale`.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    #[php(name = "recordCacheStale")]
-    pub fn record_cache_stale(system: String, model: String, operation: String) {
-        liter_llm::tower::metrics::record_cache_stale(&system, &model, &operation)
-    }
-
-    /**
-     * Record a circuit breaker trip.
-     *
-     * Call from `CircuitLayer` when the circuit opens.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    #[php(name = "recordCircuitTrip")]
-    pub fn record_circuit_trip(system: String, model: String) {
-        liter_llm::tower::metrics::record_circuit_trip(&system, &model)
-    }
-
-    /**
-     * Record a retry attempt.
-     *
-     * Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    #[php(name = "recordRetryAttempt")]
-    pub fn record_retry_attempt(system: String, model: String, operation: String) {
-        liter_llm::tower::metrics::record_retry_attempt(&system, &model, &operation)
-    }
-
-    /**
-     * Record a per-tier cache hit.
-     *
-     * `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-     * Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    #[php(name = "recordCacheTierHit")]
-    pub fn record_cache_tier_hit(system: String, model: String, tier: String) {
-        liter_llm::tower::metrics::record_cache_tier_hit(&system, &model, &tier)
-    }
-
-    /**
-     * Record a per-tier cache miss.
-     *
-     * `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-     * Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    #[php(name = "recordCacheTierMiss")]
-    pub fn record_cache_tier_miss(system: String, model: String, tier: String) {
-        liter_llm::tower::metrics::record_cache_tier_miss(&system, &model, &tier)
-    }
-
-    /**
-     * Record cumulative spend for a specific budget dimension.
-     *
-     * Emits `gen_ai.budget.spend_usd` with dimension attributes.
-     * Call from `record` after each
-     * successful completion.  If the meter has not been initialized, this
-     * call is a no-op.
-     */
-    #[php(name = "recordBudgetSpend")]
-    pub fn record_budget_spend(
-        model: String,
-        provider: String,
-        tenantId: Option<String>,
-        userId: Option<String>,
-        apiKeyId: Option<String>,
-        costUsd: f64,
-    ) {
-        liter_llm::tower::metrics::record_budget_spend(
-            &model,
-            &provider,
-            tenantId.as_deref(),
-            userId.as_deref(),
-            apiKeyId.as_deref(),
-            costUsd,
-        )
-    }
-
-    /**
-     * Record a budget-rejection event.
-     *
-     * Emits `gen_ai.budget.rejection` with the triggering dimension.
-     * Call from `check` when
-     * returning `Reject`.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    #[php(name = "recordBudgetRejection")]
-    pub fn record_budget_rejection(model: String, provider: String, dimension: String) {
-        liter_llm::tower::metrics::record_budget_rejection(&model, &provider, &dimension)
-    }
-
-    /**
-     * Record the lifetime of a completed Realtime WebSocket session.
-     *
-     * Emits `gen_ai.realtime.session.duration` (seconds).
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    #[php(name = "recordRealtimeSessionDuration")]
-    pub fn record_realtime_session_duration(provider: String, durationSecs: f64) {
-        liter_llm::tower::metrics::record_realtime_session_duration(&provider, durationSecs)
-    }
-
-    /**
-     * Record a single Realtime event being forwarded.
-     *
-     * Emits `gen_ai.realtime.event.count` with `gen_ai.realtime.direction`
-     * (`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
-     * `gen_ai.system`.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    #[php(name = "recordRealtimeEvent")]
-    pub fn record_realtime_event(provider: String, direction: String, eventType: String) {
-        liter_llm::tower::metrics::record_realtime_event(&provider, &direction, &eventType)
-    }
-
-    /**
-     * Record audio bytes forwarded over a Realtime WebSocket session.
-     *
-     * Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
-     * `gen_ai.realtime.direction` attributes.
-     * If the meter has not been initialized, this call is a no-op.
-     */
-    #[php(name = "recordRealtimeBytes")]
-    pub fn record_realtime_bytes(provider: String, direction: String, byteCount: i64) {
-        liter_llm::tower::metrics::record_realtime_bytes(&provider, &direction, byteCount as u64)
     }
 
     /**

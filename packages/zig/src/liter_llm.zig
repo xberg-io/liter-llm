@@ -968,6 +968,21 @@ pub const ResponseUsage = struct {
     total_tokens: u64,
 };
 
+/// Configuration for polling a batch until terminal status.
+///
+/// All time values are in seconds as `f64` so the struct bridges across FFI
+/// boundaries without requiring a `Duration` shim.
+pub const WaitForBatchConfig = struct {
+    /// Initial interval between polls, in seconds.
+    initial_interval_secs: f64,
+    /// Maximum interval between polls (backoff plateau), in seconds.
+    max_interval_secs: f64,
+    /// Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll).
+    backoff_multiplier: f32,
+    /// Optional timeout in seconds — polling fails if this duration is exceeded.
+    timeout_secs: ?f64,
+};
+
 /// Configuration for registering a custom LLM provider at runtime.
 pub const CustomProviderConfig = struct {
     /// Unique name for this provider (e.g., "my-provider").
@@ -1426,10 +1441,12 @@ pub fn unregister_custom_provider(name: []const u8) LiterLlmError!bool {
 /// Return the capability flags for a named provider.
 ///
 /// Performs an O(n) linear scan over the embedded registry (142 entries).
-/// Returns a `'static` reference valid for the lifetime of the process.
+/// Returns an owned value so that bindings can box/copy it across the FFI
+/// boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+/// so this is a cheap memcpy of seven `bool` fields.
 ///
-/// For unknown `provider_name` values the function returns a reference to an
-/// all-`false` sentinel so callers never need to handle `Option`.
+/// For unknown `provider_name` values the function returns an all-`false`
+/// sentinel so callers never need to handle `Option`.
 pub fn capabilities(provider_name: []const u8) error{OutOfMemory}![]u8 {
     const provider_name_z = try std.fmt.allocPrintSentinel(
         std.heap.c_allocator, "{s}", .{provider_name}, 0);
@@ -1595,213 +1612,6 @@ pub fn count_request_tokens(model: []const u8, req: []const u8) LiterLlmError!u6
     return _result;
 }
 
-/// Record a cache hit metric.
-///
-/// Call from cache layer implementations to emit `gen_ai.cache.hit`.
-/// If the meter has not been initialized, this call is a no-op.
-pub fn record_cache_hit(system: []const u8, model: []const u8, operation: []const u8) error{OutOfMemory}!void {
-    const system_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{system}, 0);
-    defer std.heap.c_allocator.free(system_z);
-    const model_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{model}, 0);
-    defer std.heap.c_allocator.free(model_z);
-    const operation_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{operation}, 0);
-    defer std.heap.c_allocator.free(operation_z);
-    _ = c.literllm_record_cache_hit(system_z, model_z, operation_z);
-}
-
-/// Record a cache miss metric.
-///
-/// Call from cache layer implementations to emit `gen_ai.cache.miss`.
-/// If the meter has not been initialized, this call is a no-op.
-pub fn record_cache_miss(system: []const u8, model: []const u8, operation: []const u8) error{OutOfMemory}!void {
-    const system_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{system}, 0);
-    defer std.heap.c_allocator.free(system_z);
-    const model_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{model}, 0);
-    defer std.heap.c_allocator.free(model_z);
-    const operation_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{operation}, 0);
-    defer std.heap.c_allocator.free(operation_z);
-    _ = c.literllm_record_cache_miss(system_z, model_z, operation_z);
-}
-
-/// Record a stale cache metric.
-///
-/// Call from cache layer implementations to emit `gen_ai.cache.stale`.
-/// If the meter has not been initialized, this call is a no-op.
-pub fn record_cache_stale(system: []const u8, model: []const u8, operation: []const u8) error{OutOfMemory}!void {
-    const system_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{system}, 0);
-    defer std.heap.c_allocator.free(system_z);
-    const model_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{model}, 0);
-    defer std.heap.c_allocator.free(model_z);
-    const operation_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{operation}, 0);
-    defer std.heap.c_allocator.free(operation_z);
-    _ = c.literllm_record_cache_stale(system_z, model_z, operation_z);
-}
-
-/// Record a circuit breaker trip.
-///
-/// Call from `CircuitLayer` when the circuit opens.
-/// If the meter has not been initialized, this call is a no-op.
-pub fn record_circuit_trip(system: []const u8, model: []const u8) error{OutOfMemory}!void {
-    const system_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{system}, 0);
-    defer std.heap.c_allocator.free(system_z);
-    const model_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{model}, 0);
-    defer std.heap.c_allocator.free(model_z);
-    _ = c.literllm_record_circuit_trip(system_z, model_z);
-}
-
-/// Record a retry attempt.
-///
-/// Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
-/// If the meter has not been initialized, this call is a no-op.
-pub fn record_retry_attempt(system: []const u8, model: []const u8, operation: []const u8) error{OutOfMemory}!void {
-    const system_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{system}, 0);
-    defer std.heap.c_allocator.free(system_z);
-    const model_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{model}, 0);
-    defer std.heap.c_allocator.free(model_z);
-    const operation_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{operation}, 0);
-    defer std.heap.c_allocator.free(operation_z);
-    _ = c.literllm_record_retry_attempt(system_z, model_z, operation_z);
-}
-
-/// Record a per-tier cache hit.
-///
-/// `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-/// Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
-/// If the meter has not been initialized, this call is a no-op.
-pub fn record_cache_tier_hit(system: []const u8, model: []const u8, tier: []const u8) error{OutOfMemory}!void {
-    const system_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{system}, 0);
-    defer std.heap.c_allocator.free(system_z);
-    const model_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{model}, 0);
-    defer std.heap.c_allocator.free(model_z);
-    const tier_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{tier}, 0);
-    defer std.heap.c_allocator.free(tier_z);
-    _ = c.literllm_record_cache_tier_hit(system_z, model_z, tier_z);
-}
-
-/// Record a per-tier cache miss.
-///
-/// `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-/// Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
-/// If the meter has not been initialized, this call is a no-op.
-pub fn record_cache_tier_miss(system: []const u8, model: []const u8, tier: []const u8) error{OutOfMemory}!void {
-    const system_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{system}, 0);
-    defer std.heap.c_allocator.free(system_z);
-    const model_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{model}, 0);
-    defer std.heap.c_allocator.free(model_z);
-    const tier_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{tier}, 0);
-    defer std.heap.c_allocator.free(tier_z);
-    _ = c.literllm_record_cache_tier_miss(system_z, model_z, tier_z);
-}
-
-/// Record cumulative spend for a specific budget dimension.
-///
-/// Emits `gen_ai.budget.spend_usd` with dimension attributes.
-/// Call from `record` after each
-/// successful completion.  If the meter has not been initialized, this
-/// call is a no-op.
-pub fn record_budget_spend(model: []const u8, provider: []const u8, tenant_id: ?[]const u8, user_id: ?[]const u8, api_key_id: ?[]const u8, cost_usd: f64) error{OutOfMemory}!void {
-    const model_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{model}, 0);
-    defer std.heap.c_allocator.free(model_z);
-    const provider_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{provider}, 0);
-    defer std.heap.c_allocator.free(provider_z);
-    const tenant_id_z: ?[:0]u8 = if (tenant_id) |v| try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{v}, 0) else null;
-    defer if (tenant_id_z) |z| std.heap.c_allocator.free(z);
-    const user_id_z: ?[:0]u8 = if (user_id) |v| try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{v}, 0) else null;
-    defer if (user_id_z) |z| std.heap.c_allocator.free(z);
-    const api_key_id_z: ?[:0]u8 = if (api_key_id) |v| try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{v}, 0) else null;
-    defer if (api_key_id_z) |z| std.heap.c_allocator.free(z);
-    _ = c.literllm_record_budget_spend(model_z, provider_z, if (tenant_id_z) |z| z.ptr else null, if (user_id_z) |z| z.ptr else null, if (api_key_id_z) |z| z.ptr else null, cost_usd);
-}
-
-/// Record a budget-rejection event.
-///
-/// Emits `gen_ai.budget.rejection` with the triggering dimension.
-/// Call from `check` when
-/// returning `Reject`.
-/// If the meter has not been initialized, this call is a no-op.
-pub fn record_budget_rejection(model: []const u8, provider: []const u8, dimension: []const u8) error{OutOfMemory}!void {
-    const model_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{model}, 0);
-    defer std.heap.c_allocator.free(model_z);
-    const provider_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{provider}, 0);
-    defer std.heap.c_allocator.free(provider_z);
-    const dimension_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{dimension}, 0);
-    defer std.heap.c_allocator.free(dimension_z);
-    _ = c.literllm_record_budget_rejection(model_z, provider_z, dimension_z);
-}
-
-/// Record the lifetime of a completed Realtime WebSocket session.
-///
-/// Emits `gen_ai.realtime.session.duration` (seconds).
-/// If the meter has not been initialized, this call is a no-op.
-pub fn record_realtime_session_duration(provider: []const u8, duration_secs: f64) error{OutOfMemory}!void {
-    const provider_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{provider}, 0);
-    defer std.heap.c_allocator.free(provider_z);
-    _ = c.literllm_record_realtime_session_duration(provider_z, duration_secs);
-}
-
-/// Record a single Realtime event being forwarded.
-///
-/// Emits `gen_ai.realtime.event.count` with `gen_ai.realtime.direction`
-/// (`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
-/// `gen_ai.system`.
-/// If the meter has not been initialized, this call is a no-op.
-pub fn record_realtime_event(provider: []const u8, direction: []const u8, event_type: []const u8) error{OutOfMemory}!void {
-    const provider_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{provider}, 0);
-    defer std.heap.c_allocator.free(provider_z);
-    const direction_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{direction}, 0);
-    defer std.heap.c_allocator.free(direction_z);
-    const event_type_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{event_type}, 0);
-    defer std.heap.c_allocator.free(event_type_z);
-    _ = c.literllm_record_realtime_event(provider_z, direction_z, event_type_z);
-}
-
-/// Record audio bytes forwarded over a Realtime WebSocket session.
-///
-/// Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
-/// `gen_ai.realtime.direction` attributes.
-/// If the meter has not been initialized, this call is a no-op.
-pub fn record_realtime_bytes(provider: []const u8, direction: []const u8, byte_count: u64) error{OutOfMemory}!void {
-    const provider_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{provider}, 0);
-    defer std.heap.c_allocator.free(provider_z);
-    const direction_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{direction}, 0);
-    defer std.heap.c_allocator.free(direction_z);
-    _ = c.literllm_record_realtime_bytes(provider_z, direction_z, byte_count);
-}
-
 /// Assert that `current_len + incoming` does not exceed `limit`.
 ///
 /// Call this before appending `incoming` bytes to any buffer that must
@@ -1837,25 +1647,6 @@ pub fn check_bound(context: []const u8, current_len: u64, incoming: u64, limit: 
 pub fn ensure_crypto_provider() void {
     _ = c.literllm_ensure_crypto_provider();
 }
-
-pub fn default_wait_for_batch_config() WaitForBatchConfig {
-    const _handle = c.literllm_wait_for_batch_config_default();
-    if (_handle == null) return _first_error(anyerror);
-    return .{ ._handle = @as(*c.LITERLLMWaitForBatchConfig, @ptrCast(_handle.?)) };
-}
-
-/// Configuration for polling a batch until terminal status.
-///
-/// All time values are in seconds as `f64` so the struct bridges across FFI
-/// boundaries without requiring a `Duration` shim.
-pub const WaitForBatchConfig = struct {
-    _handle: *anyopaque,
-
-    /// Release the underlying FFI handle. Safe to call once per instance.
-    pub fn free(self: *WaitForBatchConfig) void {
-        c.literllm_wait_for_batch_config_free(@as(*c.LITERLLMWaitForBatchConfig, @ptrCast(self._handle)));
-    }
-};
 
 /// Iterator over `ChatCompletionChunk` items in a streaming response.
 pub const ChatCompletionChunkStream = struct {
@@ -2268,23 +2059,6 @@ pub const DefaultClient = struct {
         };
     }
 
-    pub fn retrieve(self: *DefaultClient, batch_id: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
-        const batch_id_z = try std.heap.c_allocator.dupeZ(u8, batch_id);
-        defer std.heap.c_allocator.free(batch_id_z);
-        const _result = c.literllm_default_client_retrieve(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), batch_id_z);
-        if (_result == null) {
-            return _first_error(LiterLlmError);
-        }
-        return blk: {
-            const _json_ptr = c.literllm_batch_object_to_json(_result);
-            const _json_slice = std.mem.span(_json_ptr);
-            const owned = try std.heap.c_allocator.dupe(u8, _json_slice);
-            c.literllm_free_string(_json_ptr);
-            c.literllm_batch_object_free(_result);
-            break :blk owned;
-        };
-    }
-
     /// Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
     ///
     /// Uses exponential backoff with configurable initial interval, maximum interval, and backoff multiplier.
@@ -2295,10 +2069,15 @@ pub const DefaultClient = struct {
     /// Returns `BatchWaitError.Failed` if the batch reaches a failure terminal status.
     /// Returns `BatchWaitError.Timeout` if the configured timeout is exceeded.
     /// Returns `BatchWaitError.Client` for underlying client errors.
-    pub fn wait_for_batch(self: *DefaultClient, batch_id: []const u8, config: WaitForBatchConfig) (LiterLlmError||error{OutOfMemory})![]u8 {
+    pub fn wait_for_batch(self: *DefaultClient, batch_id: []const u8, config: []const u8) (LiterLlmError||error{OutOfMemory})![]u8 {
         const batch_id_z = try std.heap.c_allocator.dupeZ(u8, batch_id);
         defer std.heap.c_allocator.free(batch_id_z);
-        const _result = c.literllm_default_client_wait_for_batch(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), batch_id_z, config);
+        const config_z = try std.heap.c_allocator.dupeZ(u8, config);
+        defer std.heap.c_allocator.free(config_z);
+        const config_handle = c.literllm_wait_for_batch_config_from_json(config_z.ptr);
+        if (config_handle == null) return _first_error(LiterLlmError);
+        defer c.literllm_wait_for_batch_config_free(config_handle);
+        const _result = c.literllm_default_client_wait_for_batch(@as(*c.LITERLLMDefaultClient, @ptrCast(self._handle)), batch_id_z, config_handle);
         if (_result == null) {
             return _first_error(LiterLlmError);
         }

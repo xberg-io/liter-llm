@@ -154,13 +154,6 @@ class DefaultClient internal constructor(internal val handle: Long) : AutoClosea
         }
     }
 
-    suspend fun retrieve(batchId: String): BatchObject {
-        return withContext(Dispatchers.IO) {
-            val responseJson = LiterLlmBridge.nativeDefaultClientRetrieve(handle, MAPPER.writeValueAsString(batchId))
-            MAPPER.readValue(responseJson, BatchObject::class.java)
-        }
-    }
-
     // Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
     //
     // Uses exponential backoff with configurable initial interval, maximum interval, and backoff multiplier.

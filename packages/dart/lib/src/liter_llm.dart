@@ -67,10 +67,12 @@ class LiterLlmBridge {
   /// Return the capability flags for a named provider.
   ///
   /// Performs an O(n) linear scan over the embedded registry (142 entries).
-  /// Returns a `'static` reference valid for the lifetime of the process.
+  /// Returns an owned value so that bindings can box/copy it across the FFI
+  /// boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+  /// so this is a cheap memcpy of seven `bool` fields.
   ///
-  /// For unknown `provider_name` values the function returns a reference to an
-  /// all-`false` sentinel so callers never need to handle `Option`.
+  /// For unknown `provider_name` values the function returns an all-`false`
+  /// sentinel so callers never need to handle `Option`.
   static Future<ProviderCapabilities> capabilities(String providerName) async {
     return await rust_bridge.capabilities(providerName: providerName);
   }
@@ -175,111 +177,6 @@ class LiterLlmBridge {
   /// throws anyhow::Error on failure
   static Future<int> countRequestTokens(String model, ChatCompletionRequest req) async {
     return await rust_bridge.countRequestTokens(model: model, req: req);
-  }
-
-  /// Record a cache hit metric.
-  ///
-  /// Call from cache layer implementations to emit `gen_ai.cache.hit`.
-  /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordCacheHit(String system, String model, String operation) async {
-    return await rust_bridge.recordCacheHit(system: system, model: model, operation: operation);
-  }
-
-  /// Record a cache miss metric.
-  ///
-  /// Call from cache layer implementations to emit `gen_ai.cache.miss`.
-  /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordCacheMiss(String system, String model, String operation) async {
-    return await rust_bridge.recordCacheMiss(system: system, model: model, operation: operation);
-  }
-
-  /// Record a stale cache metric.
-  ///
-  /// Call from cache layer implementations to emit `gen_ai.cache.stale`.
-  /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordCacheStale(String system, String model, String operation) async {
-    return await rust_bridge.recordCacheStale(system: system, model: model, operation: operation);
-  }
-
-  /// Record a circuit breaker trip.
-  ///
-  /// Call from `CircuitLayer` when the circuit opens.
-  /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordCircuitTrip(String system, String model) async {
-    return await rust_bridge.recordCircuitTrip(system: system, model: model);
-  }
-
-  /// Record a retry attempt.
-  ///
-  /// Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
-  /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordRetryAttempt(String system, String model, String operation) async {
-    return await rust_bridge.recordRetryAttempt(system: system, model: model, operation: operation);
-  }
-
-  /// Record a per-tier cache hit.
-  ///
-  /// `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-  /// Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
-  /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordCacheTierHit(String system, String model, String tier) async {
-    return await rust_bridge.recordCacheTierHit(system: system, model: model, tier: tier);
-  }
-
-  /// Record a per-tier cache miss.
-  ///
-  /// `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-  /// Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
-  /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordCacheTierMiss(String system, String model, String tier) async {
-    return await rust_bridge.recordCacheTierMiss(system: system, model: model, tier: tier);
-  }
-
-  /// Record cumulative spend for a specific budget dimension.
-  ///
-  /// Emits `gen_ai.budget.spend_usd` with dimension attributes.
-  /// Call from `record` after each
-  /// successful completion.  If the meter has not been initialized, this
-  /// call is a no-op.
-  static Future<void> recordBudgetSpend(String model, String provider, double costUsd, {String? tenantId, String? userId, String? apiKeyId}) async {
-    return await rust_bridge.recordBudgetSpend(model: model, provider: provider, tenantId: tenantId, userId: userId, apiKeyId: apiKeyId, costUsd: costUsd);
-  }
-
-  /// Record a budget-rejection event.
-  ///
-  /// Emits `gen_ai.budget.rejection` with the triggering dimension.
-  /// Call from `check` when
-  /// returning `Reject`.
-  /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordBudgetRejection(String model, String provider, String dimension) async {
-    return await rust_bridge.recordBudgetRejection(model: model, provider: provider, dimension: dimension);
-  }
-
-  /// Record the lifetime of a completed Realtime WebSocket session.
-  ///
-  /// Emits `gen_ai.realtime.session.duration` (seconds).
-  /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordRealtimeSessionDuration(String provider, double durationSecs) async {
-    return await rust_bridge.recordRealtimeSessionDuration(provider: provider, durationSecs: durationSecs);
-  }
-
-  /// Record a single Realtime event being forwarded.
-  ///
-  /// Emits `gen_ai.realtime.event.count` with `gen_ai.realtime.direction`
-  /// (`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
-  /// `gen_ai.system`.
-  /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordRealtimeEvent(String provider, String direction, String eventType) async {
-    return await rust_bridge.recordRealtimeEvent(provider: provider, direction: direction, eventType: eventType);
-  }
-
-  /// Record audio bytes forwarded over a Realtime WebSocket session.
-  ///
-  /// Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
-  /// `gen_ai.realtime.direction` attributes.
-  /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordRealtimeBytes(String provider, String direction, int byteCount) async {
-    return await rust_bridge.recordRealtimeBytes(provider: provider, direction: direction, byteCount: byteCount);
   }
 
   /// Assert that `current_len + incoming` does not exceed `limit`.

@@ -4267,6 +4267,22 @@ uint64_t literllm_response_usage_output_tokens(const LITERLLMResponseUsage *ptr)
 uint64_t literllm_response_usage_total_tokens(const LITERLLMResponseUsage *ptr);
 
 /**
+ * Create a `WaitForBatchConfig` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `literllm_wait_for_batch_config_free`.
+ */
+LITERLLMWaitForBatchConfig *literllm_wait_for_batch_config_from_json(const char *json);
+
+/**
+ * Serialize a `WaitForBatchConfig` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_wait_for_batch_config_to_json(const LITERLLMWaitForBatchConfig *ptr);
+
+/**
  * Free a `WaitForBatchConfig` handle.
  * # Safety
  * Pointer must have been returned by this library, or be null.
@@ -4460,13 +4476,6 @@ LITERLLMBatchListResponse *literllm_default_client_list_batches(const LITERLLMDe
  */
 LITERLLMBatchObject *literllm_default_client_cancel_batch(const LITERLLMDefaultClient *this_,
                                                           const char *batch_id);
-
-/**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-LITERLLMBatchObject *literllm_default_client_retrieve(const LITERLLMDefaultClient *this_,
-                                                      const char *batch_id);
 
 /**
  * Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
@@ -5811,10 +5820,12 @@ int32_t literllm_unregister_custom_provider(const char *name);
  * Return the capability flags for a named provider.
  *
  * Performs an O(n) linear scan over the embedded registry (142 entries).
- * Returns a `'static` reference valid for the lifetime of the process.
+ * Returns an owned value so that bindings can box/copy it across the FFI
+ * boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+ * so this is a cheap memcpy of seven `bool` fields.
  *
- * For unknown `provider_name` values the function returns a reference to an
- * all-`false` sentinel so callers never need to handle `Option`.
+ * For unknown `provider_name` values the function returns an all-`false`
+ * sentinel so callers never need to handle `Option`.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
@@ -5943,160 +5954,6 @@ uintptr_t literllm_count_tokens(const char *model,
  */
 uintptr_t literllm_count_request_tokens(const char *model,
                                         const LITERLLMChatCompletionRequest *req);
-
-/**
- * Record a cache hit metric.
- *
- * Call from cache layer implementations to emit `gen_ai.cache.hit`.
- * If the meter has not been initialized, this call is a no-op.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-void literllm_record_cache_hit(const char *system,
-                               const char *model,
-                               const char *operation);
-
-/**
- * Record a cache miss metric.
- *
- * Call from cache layer implementations to emit `gen_ai.cache.miss`.
- * If the meter has not been initialized, this call is a no-op.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-void literllm_record_cache_miss(const char *system,
-                                const char *model,
-                                const char *operation);
-
-/**
- * Record a stale cache metric.
- *
- * Call from cache layer implementations to emit `gen_ai.cache.stale`.
- * If the meter has not been initialized, this call is a no-op.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-void literllm_record_cache_stale(const char *system,
-                                 const char *model,
-                                 const char *operation);
-
-/**
- * Record a circuit breaker trip.
- *
- * Call from `CircuitLayer` when the circuit opens.
- * If the meter has not been initialized, this call is a no-op.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-void literllm_record_circuit_trip(const char *system,
-                                  const char *model);
-
-/**
- * Record a retry attempt.
- *
- * Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
- * If the meter has not been initialized, this call is a no-op.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-void literllm_record_retry_attempt(const char *system,
-                                   const char *model,
-                                   const char *operation);
-
-/**
- * Record a per-tier cache hit.
- *
- * `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
- * Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
- * If the meter has not been initialized, this call is a no-op.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-void literllm_record_cache_tier_hit(const char *system,
-                                    const char *model,
-                                    const char *tier);
-
-/**
- * Record a per-tier cache miss.
- *
- * `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
- * Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
- * If the meter has not been initialized, this call is a no-op.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-void literllm_record_cache_tier_miss(const char *system,
-                                     const char *model,
-                                     const char *tier);
-
-/**
- * Record cumulative spend for a specific budget dimension.
- *
- * Emits `gen_ai.budget.spend_usd` with dimension attributes.
- * Call from `record` after each
- * successful completion.  If the meter has not been initialized, this
- * call is a no-op.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-void literllm_record_budget_spend(const char *model,
-                                  const char *provider,
-                                  const char *tenant_id,
-                                  const char *user_id,
-                                  const char *api_key_id,
-                                  double cost_usd);
-
-/**
- * Record a budget-rejection event.
- *
- * Emits `gen_ai.budget.rejection` with the triggering dimension.
- * Call from `check` when
- * returning `Reject`.
- * If the meter has not been initialized, this call is a no-op.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-void literllm_record_budget_rejection(const char *model,
-                                      const char *provider,
-                                      const char *dimension);
-
-/**
- * Record the lifetime of a completed Realtime WebSocket session.
- *
- * Emits `gen_ai.realtime.session.duration` (seconds).
- * If the meter has not been initialized, this call is a no-op.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-void literllm_record_realtime_session_duration(const char *provider,
-                                               double duration_secs);
-
-/**
- * Record a single Realtime event being forwarded.
- *
- * Emits `gen_ai.realtime.event.count` with `gen_ai.realtime.direction`
- * (`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
- * `gen_ai.system`.
- * If the meter has not been initialized, this call is a no-op.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-void literllm_record_realtime_event(const char *provider,
-                                    const char *direction,
-                                    const char *event_type);
-
-/**
- * Record audio bytes forwarded over a Realtime WebSocket session.
- *
- * Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
- * `gen_ai.realtime.direction` attributes.
- * If the meter has not been initialized, this call is a no-op.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-void literllm_record_realtime_bytes(const char *provider,
-                                    const char *direction,
-                                    uint64_t byte_count);
 
 /**
  * Assert that `current_len + incoming` does not exceed `limit`.

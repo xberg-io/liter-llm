@@ -46,7 +46,6 @@
 #![allow(unsafe_code)]
 
 use liter_llm::client::BatchClient;
-use liter_llm::client::BatchRetriever;
 use liter_llm::client::FileClient;
 use liter_llm::client::LlmClient;
 use liter_llm::client::ResponseClient;
@@ -3324,15 +3323,6 @@ impl DefaultClient {
     }
 
     #[allow(clippy::missing_errors_doc)]
-    #[pyo3(signature = (batch_id))]
-    pub fn retrieve<'py>(&self, py: Python<'py>, batch_id: String) -> PyResult<Bound<'py, PyAny>> {
-        let _ = batch_id;
-        Err(pyo3::exceptions::PyNotImplementedError::new_err(
-            "Not implemented: DefaultClient.retrieve",
-        ))
-    }
-
-    #[allow(clippy::missing_errors_doc)]
     #[pyo3(signature = (batch_id, config))]
     pub fn wait_for_batch<'py>(
         &self,
@@ -6143,7 +6133,7 @@ pub fn unregister_custom_provider(name: String) -> PyResult<bool> {
 #[pyfunction]
 #[pyo3(signature = (provider_name))]
 pub fn capabilities(provider_name: String) -> ProviderCapabilities {
-    liter_llm::provider::capabilities(&provider_name).clone().into()
+    liter_llm::provider::capabilities(&provider_name).into()
 }
 
 #[allow(clippy::missing_errors_doc)]
@@ -6202,92 +6192,6 @@ pub fn count_request_tokens(model: String, req: ChatCompletionRequest) -> PyResu
 
     liter_llm::count_request_tokens(&model, &req_core)
         .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
-}
-
-#[pyfunction]
-#[pyo3(signature = (system, model, operation))]
-pub fn record_cache_hit(system: String, model: String, operation: String) -> () {
-    liter_llm::tower::metrics::record_cache_hit(&system, &model, &operation)
-}
-
-#[pyfunction]
-#[pyo3(signature = (system, model, operation))]
-pub fn record_cache_miss(system: String, model: String, operation: String) -> () {
-    liter_llm::tower::metrics::record_cache_miss(&system, &model, &operation)
-}
-
-#[pyfunction]
-#[pyo3(signature = (system, model, operation))]
-pub fn record_cache_stale(system: String, model: String, operation: String) -> () {
-    liter_llm::tower::metrics::record_cache_stale(&system, &model, &operation)
-}
-
-#[pyfunction]
-#[pyo3(signature = (system, model))]
-pub fn record_circuit_trip(system: String, model: String) -> () {
-    liter_llm::tower::metrics::record_circuit_trip(&system, &model)
-}
-
-#[pyfunction]
-#[pyo3(signature = (system, model, operation))]
-pub fn record_retry_attempt(system: String, model: String, operation: String) -> () {
-    liter_llm::tower::metrics::record_retry_attempt(&system, &model, &operation)
-}
-
-#[pyfunction]
-#[pyo3(signature = (system, model, tier))]
-pub fn record_cache_tier_hit(system: String, model: String, tier: String) -> () {
-    liter_llm::tower::metrics::record_cache_tier_hit(&system, &model, &tier)
-}
-
-#[pyfunction]
-#[pyo3(signature = (system, model, tier))]
-pub fn record_cache_tier_miss(system: String, model: String, tier: String) -> () {
-    liter_llm::tower::metrics::record_cache_tier_miss(&system, &model, &tier)
-}
-
-#[pyfunction]
-#[pyo3(signature = (model, provider, tenant_id=None, user_id=None, api_key_id=None, cost_usd=0))]
-pub fn record_budget_spend(
-    model: String,
-    provider: String,
-    tenant_id: Option<String>,
-    user_id: Option<String>,
-    api_key_id: Option<String>,
-    cost_usd: Option<f64>,
-) -> () {
-    liter_llm::tower::metrics::record_budget_spend(
-        &model,
-        &provider,
-        tenant_id.as_deref(),
-        user_id.as_deref(),
-        api_key_id.as_deref(),
-        cost_usd,
-    )
-}
-
-#[pyfunction]
-#[pyo3(signature = (model, provider, dimension))]
-pub fn record_budget_rejection(model: String, provider: String, dimension: String) -> () {
-    liter_llm::tower::metrics::record_budget_rejection(&model, &provider, &dimension)
-}
-
-#[pyfunction]
-#[pyo3(signature = (provider, duration_secs))]
-pub fn record_realtime_session_duration(provider: String, duration_secs: f64) -> () {
-    liter_llm::tower::metrics::record_realtime_session_duration(&provider, duration_secs)
-}
-
-#[pyfunction]
-#[pyo3(signature = (provider, direction, event_type))]
-pub fn record_realtime_event(provider: String, direction: String, event_type: String) -> () {
-    liter_llm::tower::metrics::record_realtime_event(&provider, &direction, &event_type)
-}
-
-#[pyfunction]
-#[pyo3(signature = (provider, direction, byte_count))]
-pub fn record_realtime_bytes(provider: String, direction: String, byte_count: u64) -> () {
-    liter_llm::tower::metrics::record_realtime_bytes(&provider, &direction, byte_count)
 }
 
 #[allow(clippy::missing_errors_doc)]
@@ -8665,18 +8569,6 @@ pub fn _internal_bindings(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(clear, m)?)?;
     m.add_function(wrap_pyfunction!(count_tokens, m)?)?;
     m.add_function(wrap_pyfunction!(count_request_tokens, m)?)?;
-    m.add_function(wrap_pyfunction!(record_cache_hit, m)?)?;
-    m.add_function(wrap_pyfunction!(record_cache_miss, m)?)?;
-    m.add_function(wrap_pyfunction!(record_cache_stale, m)?)?;
-    m.add_function(wrap_pyfunction!(record_circuit_trip, m)?)?;
-    m.add_function(wrap_pyfunction!(record_retry_attempt, m)?)?;
-    m.add_function(wrap_pyfunction!(record_cache_tier_hit, m)?)?;
-    m.add_function(wrap_pyfunction!(record_cache_tier_miss, m)?)?;
-    m.add_function(wrap_pyfunction!(record_budget_spend, m)?)?;
-    m.add_function(wrap_pyfunction!(record_budget_rejection, m)?)?;
-    m.add_function(wrap_pyfunction!(record_realtime_session_duration, m)?)?;
-    m.add_function(wrap_pyfunction!(record_realtime_event, m)?)?;
-    m.add_function(wrap_pyfunction!(record_realtime_bytes, m)?)?;
     m.add_function(wrap_pyfunction!(check_bound, m)?)?;
     m.add_function(wrap_pyfunction!(ensure_crypto_provider, m)?)?;
     m.add("AuthenticationError", m.py().get_type::<AuthenticationError>())?;

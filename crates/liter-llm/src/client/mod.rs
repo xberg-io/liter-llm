@@ -53,7 +53,7 @@ use std::time::Duration;
 ///
 /// All time values are in seconds as `f64` so the struct bridges across FFI
 /// boundaries without requiring a `Duration` shim.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct WaitForBatchConfig {
     /// Initial interval between polls, in seconds.
     pub initial_interval_secs: f64,
@@ -1810,19 +1810,22 @@ impl BatchClient for DefaultClient {
 }
 
 /// Internal trait for batch retrieval, used to abstract polling logic for testability.
+///
+/// Method name avoids collision with the inherent `DefaultClient::retrieve_batch`
+/// so alef-generated bindings don't need to import this trait into scope.
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 #[async_trait::async_trait]
 #[doc(hidden)]
 #[cfg_attr(alef, alef(skip))]
 pub trait BatchRetriever {
-    /// Retrieve a batch by ID.
-    async fn retrieve(&self, batch_id: &str) -> Result<BatchObject>;
+    /// Retrieve a batch by ID for polling purposes.
+    async fn fetch_batch_for_polling(&self, batch_id: &str) -> Result<BatchObject>;
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 #[async_trait::async_trait]
 impl BatchRetriever for DefaultClient {
-    async fn retrieve(&self, batch_id: &str) -> Result<BatchObject> {
+    async fn fetch_batch_for_polling(&self, batch_id: &str) -> Result<BatchObject> {
         self.retrieve_batch(batch_id).await
     }
 }
@@ -1842,7 +1845,7 @@ pub async fn wait_for_batch_impl<R: BatchRetriever>(
     let mut interval_secs = config.initial_interval_secs;
 
     loop {
-        let batch = retriever.retrieve(batch_id).await?;
+        let batch = retriever.fetch_batch_for_polling(batch_id).await?;
 
         match batch.status {
             BatchStatus::Completed => return Ok(batch),

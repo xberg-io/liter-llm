@@ -714,30 +714,6 @@ public sealed class DefaultClient : IDisposable
         });
     }
 
-    public async Task<BatchObject> RetrieveAsync(string batchId)
-    {
-        return await Task.Run(() =>
-        {
-            var nativeResult = NativeMethods.DefaultClientRetrieve(
-                Handle,
-                batchId
-            );
-            if (nativeResult == IntPtr.Zero)
-            {
-                var ec = NativeMethods.LastErrorCode();
-                var ctxPtr = NativeMethods.LastErrorContext();
-                var msg = global::System.Runtime.InteropServices.Marshal.PtrToStringUTF8(ctxPtr) ?? "DefaultClientRetrieve failed";
-                throw new LiterLlmException(ec, msg);
-            }
-            var jsonPtr = NativeMethods.BatchObjectToJson(nativeResult);
-            var json = global::System.Runtime.InteropServices.Marshal.PtrToStringUTF8(jsonPtr);
-            NativeMethods.FreeString(jsonPtr);
-            NativeMethods.BatchObjectFree(nativeResult);
-            var returnValue = JsonSerializer.Deserialize<BatchObject>(json ?? "null", JsonOptions)!;
-            return returnValue;
-        });
-    }
-
     /// <summary>
     /// Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
     ///

@@ -92,26 +92,22 @@ static DEFAULT_CAPABILITIES: ProviderCapabilities = ProviderCapabilities {
 /// Return the capability flags for a named provider.
 ///
 /// Performs an O(n) linear scan over the embedded registry (142 entries).
-/// Returns a `'static` reference valid for the lifetime of the process.
+/// Returns an owned value so that bindings can box/copy it across the FFI
+/// boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+/// so this is a cheap memcpy of seven `bool` fields.
 ///
-/// For unknown `provider_name` values the function returns a reference to an
-/// all-`false` sentinel so callers never need to handle `Option`.
-pub fn capabilities(provider_name: &str) -> &'static ProviderCapabilities {
-    let reg = match REGISTRY.as_ref() {
-        Ok(r) => r,
-        Err(_) => return &DEFAULT_CAPABILITIES,
+/// For unknown `provider_name` values the function returns an all-`false`
+/// sentinel so callers never need to handle `Option`.
+pub fn capabilities(provider_name: &str) -> ProviderCapabilities {
+    let Ok(reg) = REGISTRY.as_ref() else {
+        return DEFAULT_CAPABILITIES;
     };
     for entry in &reg.providers {
         if entry.config.name == provider_name {
-            // SAFETY: `reg` is `&'static ProviderRegistry` (lives in `LazyLock`).
-            // `entry` is therefore an element of a `'static` `Vec`; its fields
-            // including `capabilities` are also `'static`.  The registry is
-            // never mutated after initialization, so there is no aliasing hazard.
-            let caps: &ProviderCapabilities = &entry.capabilities;
-            return unsafe { std::mem::transmute::<&ProviderCapabilities, &'static ProviderCapabilities>(caps) };
+            return entry.capabilities;
         }
     }
-    &DEFAULT_CAPABILITIES
+    DEFAULT_CAPABILITIES
 }
 
 // Embed the generated providers registry at compile time.

@@ -16,7 +16,6 @@
 )]
 
 use liter_llm::client::BatchClient;
-use liter_llm::client::BatchRetriever;
 use liter_llm::client::FileClient;
 use liter_llm::client::LlmClient;
 use liter_llm::client::ResponseClient;
@@ -1929,13 +1928,15 @@ pub fn unregister_custom_provider(name: String) -> Result<bool, String> {
 /// Return the capability flags for a named provider.
 ///
 /// Performs an O(n) linear scan over the embedded registry (142 entries).
-/// Returns a `'static` reference valid for the lifetime of the process.
+/// Returns an owned value so that bindings can box/copy it across the FFI
+/// boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+/// so this is a cheap memcpy of seven `bool` fields.
 ///
-/// For unknown `provider_name` values the function returns a reference to an
-/// all-`false` sentinel so callers never need to handle `Option`.
+/// For unknown `provider_name` values the function returns an all-`false`
+/// sentinel so callers never need to handle `Option`.
 #[rustler::nif]
 pub fn capabilities(provider_name: String) -> ProviderCapabilities {
-    liter_llm::provider::capabilities(&provider_name).clone().into()
+    liter_llm::provider::capabilities(&provider_name).into()
 }
 
 /// Return all provider configs from the registry.
@@ -2055,137 +2056,6 @@ pub fn count_request_tokens(model: String, req: Option<String>) -> Result<usize,
     let result = liter_llm::count_request_tokens(&model, req_core.as_ref().unwrap_or(&Default::default()))
         .map_err(|e| e.to_string())?;
     Ok(result)
-}
-
-/// Record a cache hit metric.
-///
-/// Call from cache layer implementations to emit `gen_ai.cache.hit`.
-/// If the meter has not been initialized, this call is a no-op.
-#[rustler::nif]
-pub fn record_cache_hit(system: String, model: String, operation: String) -> () {
-    liter_llm::tower::metrics::record_cache_hit(&system, &model, &operation)
-}
-
-/// Record a cache miss metric.
-///
-/// Call from cache layer implementations to emit `gen_ai.cache.miss`.
-/// If the meter has not been initialized, this call is a no-op.
-#[rustler::nif]
-pub fn record_cache_miss(system: String, model: String, operation: String) -> () {
-    liter_llm::tower::metrics::record_cache_miss(&system, &model, &operation)
-}
-
-/// Record a stale cache metric.
-///
-/// Call from cache layer implementations to emit `gen_ai.cache.stale`.
-/// If the meter has not been initialized, this call is a no-op.
-#[rustler::nif]
-pub fn record_cache_stale(system: String, model: String, operation: String) -> () {
-    liter_llm::tower::metrics::record_cache_stale(&system, &model, &operation)
-}
-
-/// Record a circuit breaker trip.
-///
-/// Call from `CircuitLayer` when the circuit opens.
-/// If the meter has not been initialized, this call is a no-op.
-#[rustler::nif]
-pub fn record_circuit_trip(system: String, model: String) -> () {
-    liter_llm::tower::metrics::record_circuit_trip(&system, &model)
-}
-
-/// Record a retry attempt.
-///
-/// Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
-/// If the meter has not been initialized, this call is a no-op.
-#[rustler::nif]
-pub fn record_retry_attempt(system: String, model: String, operation: String) -> () {
-    liter_llm::tower::metrics::record_retry_attempt(&system, &model, &operation)
-}
-
-/// Record a per-tier cache hit.
-///
-/// `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-/// Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
-/// If the meter has not been initialized, this call is a no-op.
-#[rustler::nif]
-pub fn record_cache_tier_hit(system: String, model: String, tier: String) -> () {
-    liter_llm::tower::metrics::record_cache_tier_hit(&system, &model, &tier)
-}
-
-/// Record a per-tier cache miss.
-///
-/// `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
-/// Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
-/// If the meter has not been initialized, this call is a no-op.
-#[rustler::nif]
-pub fn record_cache_tier_miss(system: String, model: String, tier: String) -> () {
-    liter_llm::tower::metrics::record_cache_tier_miss(&system, &model, &tier)
-}
-
-/// Record cumulative spend for a specific budget dimension.
-///
-/// Emits `gen_ai.budget.spend_usd` with dimension attributes.
-/// Call from `record` after each
-/// successful completion.  If the meter has not been initialized, this
-/// call is a no-op.
-#[rustler::nif]
-pub fn record_budget_spend(
-    model: String,
-    provider: String,
-    tenant_id: Option<String>,
-    user_id: Option<String>,
-    api_key_id: Option<String>,
-    cost_usd: f64,
-) -> () {
-    liter_llm::tower::metrics::record_budget_spend(
-        &model,
-        &provider,
-        tenant_id.as_deref(),
-        user_id.as_deref(),
-        api_key_id.as_deref(),
-        cost_usd,
-    )
-}
-
-/// Record a budget-rejection event.
-///
-/// Emits `gen_ai.budget.rejection` with the triggering dimension.
-/// Call from `check` when
-/// returning `Reject`.
-/// If the meter has not been initialized, this call is a no-op.
-#[rustler::nif]
-pub fn record_budget_rejection(model: String, provider: String, dimension: String) -> () {
-    liter_llm::tower::metrics::record_budget_rejection(&model, &provider, &dimension)
-}
-
-/// Record the lifetime of a completed Realtime WebSocket session.
-///
-/// Emits `gen_ai.realtime.session.duration` (seconds).
-/// If the meter has not been initialized, this call is a no-op.
-#[rustler::nif]
-pub fn record_realtime_session_duration(provider: String, duration_secs: f64) -> () {
-    liter_llm::tower::metrics::record_realtime_session_duration(&provider, duration_secs)
-}
-
-/// Record a single Realtime event being forwarded.
-///
-/// Emits `gen_ai.realtime.event.count` with `gen_ai.realtime.direction`
-/// (`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
-/// `gen_ai.system`.
-/// If the meter has not been initialized, this call is a no-op.
-#[rustler::nif]
-pub fn record_realtime_event(provider: String, direction: String, event_type: String) -> () {
-    liter_llm::tower::metrics::record_realtime_event(&provider, &direction, &event_type)
-}
-
-/// Record audio bytes forwarded over a Realtime WebSocket session.
-///
-/// Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
-/// `gen_ai.realtime.direction` attributes.
-/// If the meter has not been initialized, this call is a no-op.
-#[rustler::nif]
-pub fn record_realtime_bytes(provider: String, direction: String, byte_count: u64) -> () {
-    liter_llm::tower::metrics::record_realtime_bytes(&provider, &direction, byte_count)
 }
 
 /// Assert that `current_len + incoming` does not exceed `limit`.
@@ -2752,31 +2622,6 @@ pub fn defaultclient_cancel_batch_async(
                 let rt = tokio::runtime::Runtime::new().map_err(|e| e.to_string())?;
                 let result = rt
                     .block_on(async { resource.inner.as_ref().cancel_batch(&batch_id).await })
-                    .map_err(|e| e.to_string())?;
-                Ok(result.into())
-            })
-            .map_err(|e| e.to_string())?
-            .join()
-            .map_err(|_| "thread panicked".to_string())
-    }));
-    match result {
-        Ok(inner_result) => inner_result?,
-        Err(_) => Err("thread panic during async operation".to_string()),
-    }
-}
-
-#[rustler::nif(schedule = "DirtyCpu")]
-pub fn defaultclient_retrieve_async(
-    resource: rustler::ResourceArc<DefaultClient>,
-    batch_id: String,
-) -> Result<BatchObject, String> {
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        std::thread::Builder::new()
-            .stack_size(32 * 1024 * 1024)
-            .spawn(move || {
-                let rt = tokio::runtime::Runtime::new().map_err(|e| e.to_string())?;
-                let result = rt
-                    .block_on(async { resource.inner.as_ref().retrieve(&batch_id).await })
                     .map_err(|e| e.to_string())?;
                 Ok(result.into())
             })
@@ -5800,6 +5645,13 @@ pub fn response_output_item_from_json(json: String) -> Result<ResponseOutputItem
 pub fn response_usage_from_json(json: String) -> Result<ResponseUsage, String> {
     serde_json::from_str::<liter_llm::types::ResponseUsage>(&json)
         .map(ResponseUsage::from)
+        .map_err(|e| e.to_string())
+}
+
+#[rustler::nif]
+pub fn wait_for_batch_config_from_json(json: String) -> Result<WaitForBatchConfig, String> {
+    serde_json::from_str::<liter_llm::client::WaitForBatchConfig>(&json)
+        .map(WaitForBatchConfig::from)
         .map_err(|e| e.to_string())
 }
 
