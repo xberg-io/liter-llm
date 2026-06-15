@@ -14,7 +14,7 @@
 //! assert!(cost::completion_cost("unknown-model", 100, 50).is_none());
 //!
 //! // Returns Some(cost_in_usd) for known models.
-//! let cost = cost::completion_cost("gpt-4o", 1000, 500).unwrap();
+//! let cost = cost::completion_cost("gpt-4o", 1000, 500).expect("gpt-4o is a known model");
 //! assert!(cost > 0.0);
 //! ```
 
@@ -86,7 +86,7 @@ pub struct ModelPricing {
 /// ```rust
 /// use liter_llm::cost;
 ///
-/// let usd = cost::completion_cost("gpt-4o", 1_000, 500).unwrap();
+/// let usd = cost::completion_cost("gpt-4o", 1_000, 500).expect("gpt-4o is a known model");
 /// // 1000 * 0.0000025 + 500 * 0.00001 = 0.0025 + 0.005 = 0.0075
 /// assert!((usd - 0.0075).abs() < 1e-9);
 /// ```
@@ -197,7 +197,7 @@ mod tests {
             completion_cost("text-embedding-3-small", 100, 0).expect("text-embedding-3-small must be in registry");
         assert!(cost > 0.0, "input tokens must have a positive cost");
 
-        let pricing = model_pricing("text-embedding-3-small").unwrap();
+        let pricing = model_pricing("text-embedding-3-small").expect("text-embedding-3-small must be in pricing registry");
         assert_eq!(pricing.output_cost_per_token, 0.0, "embedding output cost must be zero");
     }
 
@@ -255,7 +255,7 @@ mod tests {
         let expected = 800.0 * 1e-5 + 200.0 * 1e-6 + 50.0 * 2e-5;
         let uncached = 1000 - 200;
         let actual = (uncached as f64) * pricing.input_cost_per_token
-            + 200.0 * pricing.cache_read_input_token_cost.unwrap()
+            + 200.0 * pricing.cache_read_input_token_cost.expect("cache_read_input_token_cost should be set")
             + 50.0 * pricing.output_cost_per_token;
         assert!((actual - expected).abs() < 1e-12);
     }

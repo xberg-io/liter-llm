@@ -251,7 +251,7 @@ mod tests {
     #[test]
     fn parse_minimal_config() {
         let toml = r#"api_key = "sk-test""#;
-        let config = FileConfig::from_toml_str(toml).unwrap();
+        let config = FileConfig::from_toml_str(toml).expect("TOML should parse");
         assert_eq!(config.api_key.as_deref(), Some("sk-test"));
         assert!(config.base_url.is_none());
         assert!(config.cache.is_none());
@@ -295,7 +295,7 @@ base_url = "https://my-llm.example.com/v1"
 auth_header = "Authorization"
 model_prefixes = ["my-provider/"]
 "#;
-        let config = FileConfig::from_toml_str(toml).unwrap();
+        let config = FileConfig::from_toml_str(toml).expect("TOML should parse");
         assert_eq!(config.timeout_secs, Some(120));
         assert_eq!(config.max_retries, Some(5));
         assert!(config.cache.is_some());
@@ -320,7 +320,7 @@ api_key = "sk-test"
 timeout_secs = 30
 max_retries = 2
 "#;
-        let file_config = FileConfig::from_toml_str(toml).unwrap();
+        let file_config = FileConfig::from_toml_str(toml).expect("TOML should parse");
         let config = file_config.into_builder().build();
         assert_eq!(config.timeout, Duration::from_secs(30));
         assert_eq!(config.max_retries, 2);
@@ -328,7 +328,7 @@ max_retries = 2
 
     #[test]
     fn empty_config_is_valid() {
-        let config = FileConfig::from_toml_str("").unwrap();
+        let config = FileConfig::from_toml_str("").expect("TOML should parse");
         assert!(config.api_key.is_none());
     }
 }

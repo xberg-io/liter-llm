@@ -253,7 +253,7 @@ mod tests {
     // 1. Parse minimal config (empty string)
     #[test]
     fn parse_minimal_config() {
-        let config = ProxyConfig::from_toml_str("").unwrap();
+        let config = ProxyConfig::from_toml_str("").expect("TOML config should parse");
         assert_eq!(config.server.host, "0.0.0.0");
         assert_eq!(config.server.port, 4000);
         assert_eq!(config.general.default_timeout_secs, 120);
@@ -340,7 +340,7 @@ probe_model = "openai/gpt-4o-mini"
 [cooldown]
 duration_secs = 60
 "#;
-        let config = ProxyConfig::from_toml_str(toml).unwrap();
+        let config = ProxyConfig::from_toml_str(toml).expect("TOML config should parse");
 
         // Server
         assert_eq!(config.server.host, "127.0.0.1");
@@ -379,35 +379,35 @@ duration_secs = 60
         assert_eq!(config.keys[0].rpm, Some(60));
 
         // Rate limit
-        let rl = config.rate_limit.unwrap();
+        let rl = config.rate_limit.expect("rate_limit should be present");
         assert_eq!(rl.rpm, Some(120));
         assert_eq!(rl.tpm, Some(500_000));
 
         // Budget
-        let budget = config.budget.unwrap();
+        let budget = config.budget.expect("budget should be present");
         assert_eq!(budget.global_limit, Some(100.0));
         assert_eq!(budget.enforcement, EnforcementMode::Soft);
         assert_eq!(budget.model_limits.get("openai/gpt-4o"), Some(&50.0));
 
         // Cache
-        let cache = config.cache.unwrap();
+        let cache = config.cache.expect("cache should be present");
         assert_eq!(cache.max_entries, Some(1024));
         assert_eq!(cache.ttl_seconds, Some(600));
         assert_eq!(cache.backend, "memory");
 
         // Files
-        let files = config.files.unwrap();
+        let files = config.files.expect("files should be present");
         assert_eq!(files.backend, "s3");
         assert_eq!(files.prefix, "proxy-files/");
-        assert_eq!(files.backend_config.get("bucket").unwrap(), "my-bucket");
+        assert_eq!(files.backend_config.get("bucket").expect("bucket should be present"), "my-bucket");
 
         // Health
-        let health = config.health.unwrap();
+        let health = config.health.expect("health should be present");
         assert_eq!(health.interval_secs, Some(30));
         assert_eq!(health.probe_model.as_deref(), Some("openai/gpt-4o-mini"));
 
         // Cooldown
-        assert_eq!(config.cooldown.unwrap().duration_secs, 60);
+        assert_eq!(config.cooldown.expect("cooldown should be present").duration_secs, 60);
     }
 
     // 3. Env var interpolation
@@ -427,7 +427,7 @@ host = "${LITER_TEST_HOST}"
 [general]
 master_key = "${LITER_TEST_KEY}"
 "#;
-        let config = ProxyConfig::from_toml_str(toml).unwrap();
+        let config = ProxyConfig::from_toml_str(toml).expect("TOML config should parse");
         assert_eq!(config.server.host, "10.0.0.1");
         assert_eq!(
             config.general.master_key.as_ref().map(|s| s.expose_secret()),
@@ -447,7 +447,7 @@ master_key = "${LITER_TEST_KEY}"
 [server]
 host = "literal-value"
 "#;
-        let config = ProxyConfig::from_toml_str(toml).unwrap();
+        let config = ProxyConfig::from_toml_str(toml).expect("TOML config should parse");
         assert_eq!(config.server.host, "literal-value");
     }
 
@@ -506,8 +506,8 @@ unknown_option = true
 [budget]
 global_limit = 100.0
 "#;
-        let config = ProxyConfig::from_toml_str(toml).unwrap();
-        assert_eq!(config.budget.unwrap().enforcement, EnforcementMode::Hard);
+        let config = ProxyConfig::from_toml_str(toml).expect("TOML config should parse");
+        assert_eq!(config.budget.expect("budget should be present").enforcement, EnforcementMode::Hard);
     }
 
     #[test]
@@ -516,8 +516,8 @@ global_limit = 100.0
 [cache]
 max_entries = 256
 "#;
-        let config = ProxyConfig::from_toml_str(toml).unwrap();
-        assert_eq!(config.cache.unwrap().backend, "memory");
+        let config = ProxyConfig::from_toml_str(toml).expect("TOML config should parse");
+        assert_eq!(config.cache.expect("cache should be present").backend, "memory");
     }
 
     #[test]
@@ -525,8 +525,8 @@ max_entries = 256
         let toml = r#"
 [files]
 "#;
-        let config = ProxyConfig::from_toml_str(toml).unwrap();
-        let files = config.files.unwrap();
+        let config = ProxyConfig::from_toml_str(toml).expect("TOML config should parse");
+        let files = config.files.expect("files should be present");
         assert_eq!(files.backend, "memory");
         assert_eq!(files.prefix, "liter-llm-files/");
         assert!(files.backend_config.is_empty());
@@ -546,7 +546,7 @@ name = "gpt-4o"
 provider_model = "azure/gpt-4o"
 api_key = "sk-key-2"
 "#;
-        let config = ProxyConfig::from_toml_str(toml).unwrap();
+        let config = ProxyConfig::from_toml_str(toml).expect("TOML config should parse");
         assert_eq!(config.models.len(), 2);
         assert_eq!(config.models[0].name, "gpt-4o");
         assert_eq!(config.models[1].name, "gpt-4o");
@@ -570,7 +570,7 @@ provider_model = "anthropic/claude-sonnet-4-20250514"
 name = "fallback-2"
 provider_model = "groq/llama3-70b"
 "#;
-        let config = ProxyConfig::from_toml_str(toml).unwrap();
+        let config = ProxyConfig::from_toml_str(toml).expect("TOML config should parse");
         assert_eq!(config.models[0].fallbacks, vec!["fallback-1", "fallback-2"]);
         assert!(config.models[1].fallbacks.is_empty());
         assert!(config.models[2].fallbacks.is_empty());

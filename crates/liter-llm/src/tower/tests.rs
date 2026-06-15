@@ -302,7 +302,7 @@ fn chat_req(model: &str) -> ChatCompletionRequest {
 #[tokio::test]
 async fn service_chat_returns_correct_response() {
     let mut svc = LlmService::new(MockClient::ok());
-    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
+    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.expect("service call should not fail");
     match resp {
         LlmResponse::Chat(r) => assert_eq!(r.model, "gpt-4"),
         other => panic!("expected Chat response, got {:?}", std::mem::discriminant(&other)),
@@ -319,7 +319,7 @@ async fn service_embed_returns_embedding_response() {
         dimensions: None,
         user: None,
     };
-    let resp = svc.call(LlmRequest::Embed(req)).await.unwrap();
+    let resp = svc.call(LlmRequest::Embed(req)).await.expect("service call should not fail");
     match resp {
         LlmResponse::Embed(r) => assert_eq!(r.model, "text-embedding-3-small"),
         other => panic!("expected Embed response, got {:?}", std::mem::discriminant(&other)),
@@ -329,7 +329,7 @@ async fn service_embed_returns_embedding_response() {
 #[tokio::test]
 async fn service_list_models_returns_model_list() {
     let mut svc = LlmService::new(MockClient::ok());
-    let resp = svc.call(LlmRequest::ListModels).await.unwrap();
+    let resp = svc.call(LlmRequest::ListModels).await.expect("service call should not fail");
     assert!(matches!(resp, LlmResponse::ListModels(_)));
 }
 
@@ -349,7 +349,7 @@ async fn service_propagates_client_error() {
 async fn tracing_layer_passes_through_success() {
     let inner = LlmService::new(MockClient::ok());
     let mut svc = TracingLayer.layer(inner);
-    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4o"))).await.unwrap();
+    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4o"))).await.expect("service call should not fail");
     assert!(matches!(resp, LlmResponse::Chat(_)));
 }
 
@@ -369,7 +369,7 @@ async fn fallback_not_triggered_on_success() {
     let fallback = LlmService::new(MockClient::ok());
 
     let mut svc = FallbackLayer::new(fallback).layer(primary);
-    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
+    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.expect("service call should not fail");
     // The response is Chat — confirming primary was called and succeeded.
     assert!(matches!(resp, LlmResponse::Chat(_)));
 }
@@ -380,7 +380,7 @@ async fn fallback_triggered_on_rate_limit() {
     let fallback = LlmService::new(MockClient::ok());
 
     let mut svc = FallbackLayer::new(fallback).layer(primary);
-    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
+    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.expect("service call should not fail");
     assert!(matches!(resp, LlmResponse::Chat(_)));
 }
 
@@ -390,7 +390,7 @@ async fn fallback_triggered_on_service_unavailable() {
     let fallback = LlmService::new(MockClient::ok());
 
     let mut svc = FallbackLayer::new(fallback).layer(primary);
-    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
+    let resp = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.expect("service call should not fail");
     assert!(matches!(resp, LlmResponse::Chat(_)));
 }
 
@@ -477,7 +477,7 @@ async fn router_round_robin_distributes_across_deployments() {
 
     // Fire 6 requests — each deployment should receive exactly 2.
     for _ in 0..6 {
-        router.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
+        router.call(LlmRequest::Chat(chat_req("gpt-4"))).await.expect("service call should not fail");
     }
 
     assert_eq!(
@@ -508,7 +508,7 @@ async fn router_fallback_tries_next_on_transient_error_then_succeeds() {
     let third_counter = Arc::clone(&deployments[2].inner().inner);
 
     let mut router = Router::new(deployments, RoutingStrategy::Fallback).expect("non-empty deployments");
-    let resp = router.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
+    let resp = router.call(LlmRequest::Chat(chat_req("gpt-4"))).await.expect("service call should not fail");
 
     assert!(
         matches!(resp, LlmResponse::Chat(_)),

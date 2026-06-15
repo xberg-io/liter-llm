@@ -218,8 +218,8 @@ mod tests {
     async fn extract(err: ProxyError) -> (StatusCode, ErrorResponse) {
         let response = err.into_response();
         let status = response.status();
-        let bytes = Body::new(response.into_body()).collect().await.unwrap().to_bytes();
-        let body: ErrorResponse = serde_json::from_slice(&bytes).unwrap();
+        let bytes = Body::new(response.into_body()).collect().await.expect("body collection should not fail").to_bytes();
+        let body: ErrorResponse = serde_json::from_slice(&bytes).expect("response body should be valid JSON");
         (status, body)
     }
 
@@ -454,7 +454,7 @@ mod tests {
             .headers()
             .get("retry-after")
             .expect("retry-after header must be present");
-        assert_eq!(retry.to_str().unwrap(), "30");
+        assert_eq!(retry.to_str().expect("retry-after header should be valid ASCII"), "30");
     }
 
     #[tokio::test]

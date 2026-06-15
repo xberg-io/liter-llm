@@ -647,7 +647,7 @@ mod tests {
 
         // Poison the mutex by panicking while holding the lock.
         let _ = thread::spawn(move || {
-            let _guard = m2.lock().unwrap();
+            let _guard = m2.lock().expect("acquiring test mutex should succeed");
             panic!("intentional panic to poison the mutex");
         })
         .join();

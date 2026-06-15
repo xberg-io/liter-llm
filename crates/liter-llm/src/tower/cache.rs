@@ -428,11 +428,11 @@ mod tests {
         let mut svc = layer.layer(inner);
 
         // First call — cache miss.
-        svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
+        svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.expect("service call should not fail");
         assert_eq!(call_count.load(Ordering::SeqCst), 1);
 
         // Second call — cache hit.
-        svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
+        svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.expect("service call should not fail");
         assert_eq!(call_count.load(Ordering::SeqCst), 1, "second call should hit cache");
     }
 
@@ -449,8 +449,8 @@ mod tests {
         let inner = LlmService::new(client);
         let mut svc = layer.layer(inner);
 
-        svc.call(LlmRequest::ChatStream(chat_req("gpt-4"))).await.unwrap();
-        svc.call(LlmRequest::ChatStream(chat_req("gpt-4"))).await.unwrap();
+        svc.call(LlmRequest::ChatStream(chat_req("gpt-4"))).await.expect("service call should not fail");
+        svc.call(LlmRequest::ChatStream(chat_req("gpt-4"))).await.expect("service call should not fail");
         assert_eq!(call_count.load(Ordering::SeqCst), 2, "streaming should not be cached");
     }
 
@@ -468,15 +468,15 @@ mod tests {
         let mut svc = layer.layer(inner);
 
         // Fill cache with model-a.
-        svc.call(LlmRequest::Chat(chat_req("model-a"))).await.unwrap();
+        svc.call(LlmRequest::Chat(chat_req("model-a"))).await.expect("service call should not fail");
         assert_eq!(call_count.load(Ordering::SeqCst), 1);
 
         // Insert model-b, evicting model-a.
-        svc.call(LlmRequest::Chat(chat_req("model-b"))).await.unwrap();
+        svc.call(LlmRequest::Chat(chat_req("model-b"))).await.expect("service call should not fail");
         assert_eq!(call_count.load(Ordering::SeqCst), 2);
 
         // model-a should be evicted — cache miss.
-        svc.call(LlmRequest::Chat(chat_req("model-a"))).await.unwrap();
+        svc.call(LlmRequest::Chat(chat_req("model-a"))).await.expect("service call should not fail");
         assert_eq!(
             call_count.load(Ordering::SeqCst),
             3,
@@ -497,8 +497,8 @@ mod tests {
         let inner = LlmService::new(client);
         let mut svc = layer.layer(inner);
 
-        svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
-        svc.call(LlmRequest::Chat(chat_req("gpt-3.5-turbo"))).await.unwrap();
+        svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.expect("service call should not fail");
+        svc.call(LlmRequest::Chat(chat_req("gpt-3.5-turbo"))).await.expect("service call should not fail");
         assert_eq!(
             call_count.load(Ordering::SeqCst),
             2,

@@ -64,13 +64,13 @@ mod tests {
 
     #[test]
     fn empty_section_defaults_to_deny_private() {
-        let cfg = parse("").unwrap();
+        let cfg = parse("").expect("security config should parse");
         assert_eq!(cfg.outbound_policy, OutboundPolicyKind::DenyPrivate);
     }
 
     #[test]
     fn off_policy_parses() {
-        let cfg = parse(r#"outbound_policy = "off""#).unwrap();
+        let cfg = parse(r#"outbound_policy = "off""#).expect("security config should parse");
         assert_eq!(cfg.outbound_policy, OutboundPolicyKind::Off);
     }
 
@@ -80,7 +80,7 @@ mod tests {
 outbound_policy = "allowlist"
 outbound_allowlist = ["https://api.openai.com", "https://api.anthropic.com"]
 "#;
-        let cfg = parse(toml).unwrap();
+        let cfg = parse(toml).expect("security config should parse");
         assert_eq!(cfg.outbound_policy, OutboundPolicyKind::Allowlist);
         assert_eq!(cfg.outbound_allowlist.len(), 2);
         assert_eq!(cfg.outbound_allowlist[0], "https://api.openai.com");
@@ -89,7 +89,7 @@ outbound_allowlist = ["https://api.openai.com", "https://api.anthropic.com"]
 
     #[test]
     fn deny_private_explicit_parses() {
-        let cfg = parse(r#"outbound_policy = "deny_private""#).unwrap();
+        let cfg = parse(r#"outbound_policy = "deny_private""#).expect("security config should parse");
         assert_eq!(cfg.outbound_policy, OutboundPolicyKind::DenyPrivate);
     }
 
