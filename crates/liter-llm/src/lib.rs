@@ -44,6 +44,8 @@ pub mod tokenizer;
 pub mod tower;
 /// Request/response DTOs shared across providers and bindings.
 pub mod types;
+/// Shared utility helpers (memory-bound guards, etc.).
+pub mod util;
 
 // Re-export key types at crate root.
 pub use client::{
