@@ -48,6 +48,7 @@ use tokio_util::sync::CancellationToken;
 use liter_llm::guardrail::{Guardrail, GuardrailContext, GuardrailDecision, GuardrailStage};
 use liter_llm::realtime::{RealtimeEvent, RealtimeTranslator};
 use liter_llm::tower::metrics::{record_realtime_bytes, record_realtime_event, record_realtime_session_duration};
+use secrecy::{ExposeSecret, SecretString};
 
 use crate::auth::KeyContext;
 use crate::config::VirtualKeyConfig;
@@ -109,7 +110,7 @@ pub async fn realtime_websocket(
     // Resolve the upstream OpenAI API key from the virtual key's credential
     // pool.  Never fall back to master_key — that would allow any VK holder
     // to escalate to the master billing key.
-    let upstream_api_key = match resolve_upstream_credential(&key_ctx, &config.keys, &model) {
+    let upstream_api_key: SecretString = match resolve_upstream_credential(&key_ctx, &config.keys, &model) {
         Some(key) => key,
         None => {
             let err = ProxyError::service_unavailable(format!(
@@ -139,7 +140,11 @@ pub async fn realtime_websocket(
 ///   credential is provided — returning `None` forces a 503 rather than leaking
 ///   `master_key` to the upstream.
 /// - The VK has no `provider_credentials` entries for `"openai"`.
-fn resolve_upstream_credential(key_ctx: &KeyContext, vk_configs: &[VirtualKeyConfig], model: &str) -> Option<String> {
+fn resolve_upstream_credential(
+    key_ctx: &KeyContext,
+    vk_configs: &[VirtualKeyConfig],
+    model: &str,
+) -> Option<SecretString> {
     // Master-key callers do not have a VirtualKeyConfig.  We intentionally do
     // NOT fall back to `config.general.master_key` here — leaking the master
     // key to upstream WebSocket connections is the vulnerability we are fixing.
@@ -175,7 +180,7 @@ fn resolve_upstream_credential(key_ctx: &KeyContext, vk_configs: &[VirtualKeyCon
 ///
 /// The `upstream_api_key` is the resolved per-VK credential — the master key
 /// is NEVER passed here (that check lives in [`realtime_websocket`]).
-async fn handle_session(client_socket: WebSocket, model: String, upstream_api_key: String, state: AppState) {
+async fn handle_session(client_socket: WebSocket, model: String, upstream_api_key: SecretString, state: AppState) {
     let session_start = Instant::now();
 
     // Percent-encode the model name so query string is valid even if the model
@@ -199,7 +204,7 @@ async fn handle_session(client_socket: WebSocket, model: String, upstream_api_ke
     );
 
     // Open the upstream WebSocket using the per-VK credential.
-    let upstream = match connect_upstream(&upstream_url, &upstream_api_key).await {
+    let upstream = match connect_upstream(&upstream_url, upstream_api_key.expose_secret()).await {
         Ok(ws) => ws,
         Err(err) => {
             tracing::warn!(error = %err, "failed to connect to upstream realtime endpoint");
@@ -822,6 +827,8 @@ mod tests {
 
     // ── Security: per-model credential resolution ─────────────────────────────
 
+    use secrecy::{ExposeSecret, SecretString};
+
     use crate::auth::KeyContext;
     use crate::config::VirtualKeyConfig;
     use crate::config::key::ProviderCredential;
@@ -851,9 +858,28 @@ mod tests {
         ProviderCredential {
             provider: provider.to_string(),
             id: id.to_string(),
-            api_key: api_key.to_string(),
+            api_key: SecretString::from(api_key.to_string()),
             model_allowlist,
         }
+    }
+
+    /// `resolve_upstream_credential` returns a `SecretString`.
+    /// Verify the key is correctly resolved and the type is `SecretString`.
+    #[test]
+    fn provider_credential_api_key_is_secret_string() {
+        let cred = make_provider_cred("openai", "cred-1", "sk-test-secret", None);
+        // Compile-time type assertion: the field must be SecretString.
+        let _: &SecretString = &cred.api_key;
+        // Debug output must NOT expose the secret value.
+        let debug = format!("{cred:?}");
+        assert!(
+            !debug.contains("sk-test-secret"),
+            "Debug output must redact the api_key; got: {debug}"
+        );
+        assert!(
+            debug.contains("[REDACTED]"),
+            "Debug output must contain '[REDACTED]'; got: {debug}"
+        );
     }
 
     /// `resolve_upstream_credential` must return the per-VK credential for
@@ -876,7 +902,7 @@ mod tests {
         };
         let resolved_a = resolve_upstream_credential(&ctx_a, &vk_configs, "gpt-4o-realtime");
         assert_eq!(
-            resolved_a.as_deref(),
+            resolved_a.as_ref().map(|s| s.expose_secret()),
             Some("sk-vk-a-secret"),
             "team-a should get its own credential, not master key or team-b's key"
         );
@@ -889,7 +915,7 @@ mod tests {
         };
         let resolved_b = resolve_upstream_credential(&ctx_b, &vk_configs, "gpt-4o-realtime");
         assert_eq!(
-            resolved_b.as_deref(),
+            resolved_b.as_ref().map(|s| s.expose_secret()),
             Some("sk-vk-b-secret"),
             "team-b should get its own credential"
         );
@@ -926,7 +952,10 @@ mod tests {
 
         // Matching model — should resolve.
         let matched = resolve_upstream_credential(&ctx, &vk_configs, "gpt-4o-realtime-preview");
-        assert_eq!(matched.as_deref(), Some("sk-vk-secret"));
+        assert_eq!(
+            matched.as_ref().map(|s| s.expose_secret()),
+            Some("sk-vk-secret")
+        );
 
         // Non-matching model — must return None.
         let unmatched = resolve_upstream_credential(&ctx, &vk_configs, "gpt-4o-mini");

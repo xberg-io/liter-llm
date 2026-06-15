@@ -81,10 +81,14 @@ impl serde::Serialize for LlmRequest {
 // Constructors mirror the old enum variant syntax (`LlmRequest::Chat(r)`) so
 // that all existing call sites continue to compile without modification.
 // The non_snake_case names are intentional and match the previous enum variants.
+// They are `#[doc(hidden)]` so they do not appear in rustdoc; callers should
+// build `LlmRequestKind` directly and wrap it, or use the `kind()` accessor
+// for pattern matching.
 #[allow(non_snake_case)]
 #[cfg_attr(alef, alef(skip))]
 impl LlmRequest {
     /// Non-streaming chat completion.
+    #[doc(hidden)]
     #[must_use]
     pub fn Chat(req: ChatCompletionRequest) -> Self {
         Self {
@@ -95,6 +99,7 @@ impl LlmRequest {
     }
 
     /// Streaming chat completion.
+    #[doc(hidden)]
     #[must_use]
     pub fn ChatStream(req: ChatCompletionRequest) -> Self {
         Self {
@@ -105,6 +110,7 @@ impl LlmRequest {
     }
 
     /// Text embedding.
+    #[doc(hidden)]
     #[must_use]
     pub fn Embed(req: EmbeddingRequest) -> Self {
         Self {
@@ -115,6 +121,7 @@ impl LlmRequest {
     }
 
     /// List available models.
+    #[doc(hidden)]
     #[must_use]
     pub fn ListModels() -> Self {
         Self {
@@ -125,6 +132,7 @@ impl LlmRequest {
     }
 
     /// Image generation.
+    #[doc(hidden)]
     #[must_use]
     pub fn ImageGenerate(req: CreateImageRequest) -> Self {
         Self {
@@ -135,6 +143,7 @@ impl LlmRequest {
     }
 
     /// Text-to-speech audio generation.
+    #[doc(hidden)]
     #[must_use]
     pub fn Speech(req: CreateSpeechRequest) -> Self {
         Self {
@@ -145,6 +154,7 @@ impl LlmRequest {
     }
 
     /// Audio transcription.
+    #[doc(hidden)]
     #[must_use]
     pub fn Transcribe(req: CreateTranscriptionRequest) -> Self {
         Self {
@@ -155,6 +165,7 @@ impl LlmRequest {
     }
 
     /// Content moderation.
+    #[doc(hidden)]
     #[must_use]
     pub fn Moderate(req: ModerationRequest) -> Self {
         Self {
@@ -165,6 +176,7 @@ impl LlmRequest {
     }
 
     /// Document reranking.
+    #[doc(hidden)]
     #[must_use]
     pub fn Rerank(req: RerankRequest) -> Self {
         Self {
@@ -175,6 +187,7 @@ impl LlmRequest {
     }
 
     /// Web/document search.
+    #[doc(hidden)]
     #[must_use]
     pub fn Search(req: SearchRequest) -> Self {
         Self {
@@ -185,6 +198,7 @@ impl LlmRequest {
     }
 
     /// Document OCR.
+    #[doc(hidden)]
     #[must_use]
     pub fn Ocr(req: OcrRequest) -> Self {
         Self {
@@ -199,6 +213,37 @@ impl LlmRequest {
 
 #[cfg_attr(alef, alef(skip))]
 impl LlmRequest {
+    /// Return a reference to the request discriminant for pattern matching.
+    ///
+    /// Prefer this over matching on the PascalCase constructor aliases, which
+    /// are deprecated shims for backward compat.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # #[cfg(feature = "tower")]
+    /// # {
+    /// use liter_llm::tower::types::{LlmRequest, LlmRequestKind};
+    /// use liter_llm::types::{ChatCompletionRequest, Message};
+    ///
+    /// let req = LlmRequest::Chat(ChatCompletionRequest {
+    ///     model: "gpt-4o".into(),
+    ///     messages: vec![],
+    ///     ..Default::default()
+    /// });
+    ///
+    /// match req.kind() {
+    ///     LlmRequestKind::Chat(_) => println!("chat request"),
+    ///     LlmRequestKind::ChatStream(_) => println!("streaming chat request"),
+    ///     _ => {}
+    /// }
+    /// # }
+    /// ```
+    #[must_use]
+    pub fn kind(&self) -> &LlmRequestKind {
+        &self.kind
+    }
+
     /// OpenTelemetry GenAI `gen_ai.operation.name` value for this request.
     #[must_use]
     pub fn operation_name(&self) -> &'static str {

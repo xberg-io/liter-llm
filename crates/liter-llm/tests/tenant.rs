@@ -103,7 +103,7 @@ async fn in_memory_resolver_basic() {
     let resolver = InMemoryKeyResolver::new();
     resolver.insert("sk-acme-key", sample_key("acme", true));
 
-    let resolved = resolver.resolve("sk-acme-key").await.expect("should resolve");
+    let resolved = resolver.resolve("sk-acme-key".to_owned()).await.expect("should resolve");
     assert_eq!(resolved.tenant_id.as_ref(), "acme");
     assert_eq!(resolved.allowed_models, vec!["gpt-4"]);
     assert!(resolved.active);
@@ -113,7 +113,7 @@ async fn in_memory_resolver_basic() {
 async fn in_memory_resolver_not_found() {
     let resolver = InMemoryKeyResolver::new();
 
-    let err = resolver.resolve("sk-nonexistent").await.expect_err("should fail");
+    let err = resolver.resolve("sk-nonexistent".to_owned()).await.expect_err("should fail");
     assert!(matches!(err, KeyResolverError::NotFound));
 }
 
@@ -123,7 +123,7 @@ async fn in_memory_resolver_inactive() {
     resolver.insert("sk-disabled", sample_key("acme", false));
 
     let err = resolver
-        .resolve("sk-disabled")
+        .resolve("sk-disabled".to_owned())
         .await
         .expect_err("should fail for inactive key");
     assert!(matches!(err, KeyResolverError::Inactive));
@@ -134,10 +134,10 @@ async fn in_memory_resolver_remove() {
     let resolver = InMemoryKeyResolver::new();
     resolver.insert("sk-temp", sample_key("acme", true));
 
-    assert!(resolver.resolve("sk-temp").await.is_ok());
+    assert!(resolver.resolve("sk-temp".to_owned()).await.is_ok());
     let removed = resolver.remove("sk-temp");
     assert!(removed.is_some());
-    assert!(resolver.resolve("sk-temp").await.is_err());
+    assert!(resolver.resolve("sk-temp".to_owned()).await.is_err());
 }
 
 #[tokio::test]
@@ -148,10 +148,10 @@ async fn in_memory_resolver_with_entries() {
     ];
     let resolver = InMemoryKeyResolver::with_entries(entries);
 
-    let a = resolver.resolve("sk-a").await.expect("should resolve a");
+    let a = resolver.resolve("sk-a".to_owned()).await.expect("should resolve a");
     assert_eq!(a.tenant_id.as_ref(), "tenant-a");
 
-    let b = resolver.resolve("sk-b").await.expect("should resolve b");
+    let b = resolver.resolve("sk-b".to_owned()).await.expect("should resolve b");
     assert_eq!(b.tenant_id.as_ref(), "tenant-b");
 }
 
@@ -244,11 +244,82 @@ async fn budget_ledger_skips_tenant_check_when_none() {
     );
 }
 
+// ── Pass-2: tenant serde + concurrent resolver ───────────────────────────────
+
+/// `TenantId` must serialise to JSON as a transparent string and deserialise
+/// back losslessly.
+#[test]
+fn tenant_id_serde_round_trip() {
+    let id = TenantId::from("acme");
+    let json = serde_json::to_string(&id).expect("serialize");
+    // Transparent string newtype — JSON output is the quoted string.
+    assert_eq!(json, "\"acme\"", "TenantId must serialize as a bare string");
+
+    let back: TenantId = serde_json::from_str(&json).expect("deserialize");
+    assert_eq!(back, id, "deserialized TenantId must equal the original");
+    assert_eq!(back.as_ref(), "acme");
+}
+
+/// Spawn 50 readers and 5 removers against an `InMemoryKeyResolver` populated
+/// with a fixed key set.  No panics, no deadlocks; the final state is
+/// consistent (every key is either present-and-active or fully removed).
+#[tokio::test]
+async fn in_memory_resolver_concurrent_get_and_remove() {
+    use tokio::task::JoinSet;
+
+    let resolver = Arc::new(InMemoryKeyResolver::new());
+    let keys: Vec<String> = (0..20).map(|i| format!("sk-{i}")).collect();
+    for k in &keys {
+        resolver.insert(k, sample_key("acme", true));
+    }
+
+    let mut set = JoinSet::new();
+
+    // 50 readers — repeatedly resolve a key from the set.
+    for r in 0..50 {
+        let resolver = Arc::clone(&resolver);
+        let keys = keys.clone();
+        set.spawn(async move {
+            for i in 0..20 {
+                let k = keys[(r + i) % keys.len()].clone();
+                // Either resolves successfully or returns NotFound (after removal).
+                let _ = resolver.resolve(k).await;
+            }
+        });
+    }
+
+    // 5 removers — each removes a disjoint subset (i % 5 == r).
+    for r in 0..5 {
+        let resolver = Arc::clone(&resolver);
+        let keys = keys.clone();
+        set.spawn(async move {
+            for i in 0..keys.len() {
+                if i % 5 == r {
+                    let _ = resolver.remove(&keys[i]);
+                }
+            }
+        });
+    }
+
+    while let Some(res) = set.join_next().await {
+        res.expect("no task should panic");
+    }
+
+    // Final state: every key has been removed by exactly one remover.
+    for k in &keys {
+        let r = resolver.resolve(k.clone()).await;
+        assert!(
+            matches!(r, Err(KeyResolverError::NotFound)),
+            "key {k} should have been removed, got {r:?}"
+        );
+    }
+}
+
 // ── KeyResolver object-safety ─────────────────────────────────────────────────
 
 #[tokio::test]
 async fn key_resolver_is_object_safe() {
     let resolver: Arc<dyn KeyResolver> = Arc::new(InMemoryKeyResolver::new());
-    let err = resolver.resolve("anything").await.unwrap_err();
+    let err = resolver.resolve("anything".to_owned()).await.unwrap_err();
     assert!(matches!(err, KeyResolverError::NotFound));
 }

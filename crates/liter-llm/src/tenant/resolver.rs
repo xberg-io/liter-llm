@@ -40,16 +40,37 @@ pub enum KeyResolverError {
 /// Implement this trait to plug in a database-backed, remote, or in-process
 /// key store.  The built-in implementation is [`super::InMemoryKeyResolver`].
 ///
-/// All methods return `Pin<Box<dyn Future…>>` so the trait is object-safe and
-/// can be stored behind `Arc<dyn KeyResolver>`.
+/// All methods return `Pin<Box<dyn Future… + 'static>>` so the returned future
+/// can be stored or spawned onto a Tokio executor without borrowing `self`.
+/// The trait itself requires `'static` ownership; implement via `Arc<Self>` if
+/// you need shared ownership across call sites.
 pub trait KeyResolver: Send + Sync + 'static {
     /// Resolve `api_key` to its associated [`ResolvedKey`].
+    ///
+    /// Takes `api_key` by value so the returned future is `'static` and can be
+    /// spawned onto a Tokio task or stored without borrowing the resolver.
     ///
     /// Returns [`KeyResolverError::NotFound`] when no record matches,
     /// [`KeyResolverError::Inactive`] when the record exists but
     /// `active == false`.
-    fn resolve<'a>(
-        &'a self,
-        api_key: &'a str,
-    ) -> Pin<Box<dyn Future<Output = Result<ResolvedKey, KeyResolverError>> + Send + 'a>>;
+    fn resolve(
+        &self,
+        api_key: String,
+    ) -> Pin<Box<dyn Future<Output = Result<ResolvedKey, KeyResolverError>> + Send + 'static>>;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tenant::InMemoryKeyResolver;
+
+    /// Compile-time assertion: the future returned by `InMemoryKeyResolver::resolve`
+    /// is `Send + 'static` and can be stored or spawned without borrowing the resolver.
+    #[allow(dead_code)]
+    fn _assert_future_is_static_send<T: Future + Send + 'static>(_: T) {}
+
+    #[allow(dead_code)]
+    fn _check_resolve_future_bounds(resolver: &InMemoryKeyResolver) {
+        _assert_future_is_static_send(resolver.resolve("sk-test".to_owned()));
+    }
 }

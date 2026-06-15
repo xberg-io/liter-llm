@@ -71,6 +71,34 @@ impl ProxyServer {
     pub async fn serve_with_shutdown(self, shutdown_handle: Option<shutdown::ShutdownHandle>) -> Result<(), String> {
         liter_llm::ensure_crypto_provider();
 
+        // Activate the SSRF outbound policy before any config or backend is
+        // instantiated.  This ensures that provider URL validation calls
+        // (`validate_outbound_url_sync`) are not no-ops at runtime.
+        //
+        // The proxy default is `DenyPrivate`; operators may explicitly opt
+        // out to `off` in `[security]` when running in a fully-trusted
+        // environment.
+        {
+            use config::OutboundPolicyKind;
+            use liter_llm::provider::{self as lp, OutboundPolicy};
+
+            let policy = match self.config.security.outbound_policy {
+                OutboundPolicyKind::Off => OutboundPolicy::Off,
+                OutboundPolicyKind::DenyPrivate => OutboundPolicy::DenyPrivate,
+                OutboundPolicyKind::Allowlist => {
+                    let urls: Vec<url::Url> = self
+                        .config
+                        .security
+                        .outbound_allowlist
+                        .iter()
+                        .filter_map(|s| url::Url::parse(s).ok())
+                        .collect();
+                    OutboundPolicy::Allowlist(urls)
+                }
+            };
+            lp::set_outbound_policy(policy);
+        }
+
         let service_pool = service_pool::ServicePool::from_config(&self.config)?;
         let key_store = auth::KeyStore::from_config(self.config.general.master_key.clone(), &self.config.keys);
         let file_store = file_store::FileStore::from_config(self.config.files.as_ref().unwrap_or(&Default::default()))?;

@@ -1,5 +1,6 @@
 use std::future::Future;
 use std::pin::Pin;
+use std::sync::Arc;
 
 use dashmap::DashMap;
 
@@ -10,15 +11,19 @@ use super::resolver::{KeyResolver, KeyResolverError, ResolvedKey};
 /// Suitable for tests and single-process deployments where the full key set
 /// fits in memory.  For database- or cache-backed production deployments,
 /// implement [`KeyResolver`] directly.
+///
+/// The map is stored behind an [`Arc`] so that the futures returned by
+/// [`KeyResolver::resolve`] are `'static` (they capture the `Arc` by clone,
+/// not a borrow of `self`).
 pub struct InMemoryKeyResolver {
-    keys: DashMap<String, ResolvedKey>,
+    keys: Arc<DashMap<String, ResolvedKey>>,
 }
 
 impl InMemoryKeyResolver {
     /// Create an empty resolver.
     #[must_use]
     pub fn new() -> Self {
-        Self { keys: DashMap::new() }
+        Self { keys: Arc::new(DashMap::new()) }
     }
 
     /// Create a resolver pre-populated with the given entries.
@@ -28,7 +33,7 @@ impl InMemoryKeyResolver {
         for (k, v) in entries {
             keys.insert(k, v);
         }
-        Self { keys }
+        Self { keys: Arc::new(keys) }
     }
 
     /// Insert or replace a key record.
@@ -49,12 +54,14 @@ impl Default for InMemoryKeyResolver {
 }
 
 impl KeyResolver for InMemoryKeyResolver {
-    fn resolve<'a>(
-        &'a self,
-        api_key: &'a str,
-    ) -> Pin<Box<dyn Future<Output = Result<ResolvedKey, KeyResolverError>> + Send + 'a>> {
+    fn resolve(
+        &self,
+        api_key: String,
+    ) -> Pin<Box<dyn Future<Output = Result<ResolvedKey, KeyResolverError>> + Send + 'static>> {
+        // Clone the Arc-backed DashMap so the future owns it and is 'static.
+        let keys = self.keys.clone();
         Box::pin(async move {
-            match self.keys.get(api_key) {
+            match keys.get(&api_key) {
                 None => Err(KeyResolverError::NotFound),
                 Some(entry) => {
                     if !entry.active {

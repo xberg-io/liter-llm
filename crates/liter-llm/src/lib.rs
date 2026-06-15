@@ -22,6 +22,8 @@
 
 /// Per-provider authentication strategies (API keys, AWS SigV4, OAuth tokens).
 pub mod auth;
+/// Canonical per-request usage events and pluggable sinks.
+pub mod observability;
 /// FFI-friendly client constructors used by the polyglot bindings.
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 pub mod bindings;
@@ -116,6 +118,18 @@ pub use types::*;
 pub use realtime::{
     ContentPart, OpenAiRealtimeTranslator, RealtimeEnvelope, RealtimeEvent, RealtimeTranslator, ResponseStatus,
 };
+/// Tenant primitives re-exported at the crate root.
+///
+/// Importers can write `liter_llm::TenantId` without spelling out the
+/// `tenant::` path.
+///
+/// # Example
+///
+/// ```
+/// let id = liter_llm::TenantId::from("acme-corp");
+/// assert_eq!(id.as_ref(), "acme-corp");
+/// ```
+pub use tenant::{InMemoryKeyResolver, KeyResolver, KeyResolverError, ResolvedKey, TenantContext, TenantId};
 
 /// Install the `ring` crypto provider as the rustls process default, idempotently.
 ///

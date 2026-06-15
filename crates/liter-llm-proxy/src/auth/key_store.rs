@@ -149,25 +149,26 @@ impl KeyStore {
 }
 
 impl KeyResolver for KeyStore {
-    fn resolve<'a>(
-        &'a self,
-        api_key: &'a str,
-    ) -> Pin<Box<dyn Future<Output = Result<ResolvedKey, KeyResolverError>> + Send + 'a>> {
-        Box::pin(async move {
-            match self.get(api_key) {
-                None => Err(KeyResolverError::NotFound),
-                Some(cfg) => Ok(ResolvedKey {
-                    tenant_id: TenantId::from(cfg.key.clone()),
-                    allowed_models: cfg.models.clone(),
-                    monthly_budget: cfg
-                        .budget_limit
-                        .map(|b| rust_decimal::Decimal::from_f64_retain(b).unwrap_or(rust_decimal::Decimal::ZERO)),
-                    currency: None,
-                    metadata: std::collections::HashMap::new(),
-                    active: true,
-                }),
-            }
-        })
+    fn resolve(
+        &self,
+        api_key: String,
+    ) -> Pin<Box<dyn Future<Output = Result<ResolvedKey, KeyResolverError>> + Send + 'static>> {
+        // Perform the synchronous constant-time lookup on the calling thread so the
+        // returned future is 'static (it captures an owned result, not a borrow of self).
+        let result = match self.get(&api_key) {
+            None => Err(KeyResolverError::NotFound),
+            Some(cfg) => Ok(ResolvedKey {
+                tenant_id: TenantId::from(cfg.key.clone()),
+                allowed_models: cfg.models.clone(),
+                monthly_budget: cfg
+                    .budget_limit
+                    .map(|b| rust_decimal::Decimal::from_f64_retain(b).unwrap_or(rust_decimal::Decimal::ZERO)),
+                currency: None,
+                metadata: std::collections::HashMap::new(),
+                active: true,
+            }),
+        };
+        Box::pin(std::future::ready(result))
     }
 }
 

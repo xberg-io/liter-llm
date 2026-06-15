@@ -579,4 +579,123 @@ mod tests {
             "ConcurrencyLimit(1) must cap concurrent calls at 1 even with hedging"
         );
     }
+
+    /// HIGH-priority correctness: when the winner returns, the loser must be
+    /// dropped (cancelled) so its long-running future does not continue to
+    /// consume permits or upstream resources.
+    ///
+    /// We wrap the inner response future in a `DropGuard` that decrements a
+    /// shared `AtomicUsize` on drop.  The winner finishes quickly; the loser
+    /// is parked indefinitely until aborted.  After the hedge returns, both
+    /// drop-counts must be observed, proving the loser's future was dropped.
+    #[tokio::test]
+    async fn hedge_loser_is_dropped_before_winner_returns() {
+        use std::sync::atomic::AtomicUsize;
+        use std::task::Poll;
+
+        use tokio::sync::Notify;
+
+        /// RAII helper: drops decrement `live_count`.
+        struct DropGuard {
+            live_count: Arc<AtomicUsize>,
+        }
+        impl Drop for DropGuard {
+            fn drop(&mut self) {
+                self.live_count.fetch_sub(1, Ordering::SeqCst);
+            }
+        }
+
+        // Counts in-flight futures (incremented when call() builds the future,
+        // decremented when the future is dropped).
+        let live = Arc::new(AtomicUsize::new(0));
+        let total_calls = Arc::new(AtomicUsize::new(0));
+        let winner_signal = Arc::new(Notify::new());
+
+        #[derive(Clone)]
+        struct SlowOrFast {
+            live: Arc<AtomicUsize>,
+            total_calls: Arc<AtomicUsize>,
+            // Attempt counter: 1st call returns immediately; 2nd+ blocks until aborted.
+            attempt: Arc<AtomicUsize>,
+            winner_signal: Arc<Notify>,
+        }
+
+        impl tower::Service<LlmRequest> for SlowOrFast {
+            type Response = LlmResponse;
+            type Error = LiterLlmError;
+            type Future = crate::client::BoxFuture<'static, crate::error::Result<LlmResponse>>;
+
+            fn poll_ready(&mut self, _cx: &mut std::task::Context<'_>) -> Poll<crate::error::Result<()>> {
+                Poll::Ready(Ok(()))
+            }
+
+            fn call(&mut self, _req: LlmRequest) -> Self::Future {
+                let attempt = self.attempt.fetch_add(1, Ordering::SeqCst) + 1;
+                self.total_calls.fetch_add(1, Ordering::SeqCst);
+                self.live.fetch_add(1, Ordering::SeqCst);
+                let guard = DropGuard {
+                    live_count: Arc::clone(&self.live),
+                };
+                let winner_signal = Arc::clone(&self.winner_signal);
+                Box::pin(async move {
+                    // Keep the drop-guard alive for the entire future body.
+                    let _g = guard;
+                    if attempt == 1 {
+                        // Winner: small delay so the hedge actually fires.
+                        tokio::time::sleep(Duration::from_millis(20)).await;
+                        winner_signal.notify_one();
+                        Ok(LlmResponse::Chat(crate::tower::tests_common::make_chat_response(
+                            "gpt-4",
+                        )))
+                    } else {
+                        // Loser: park forever — only abort can release us.
+                        std::future::pending::<()>().await;
+                        unreachable!("loser must be cancelled before completing");
+                    }
+                })
+            }
+        }
+
+        let inner = SlowOrFast {
+            live: Arc::clone(&live),
+            total_calls: Arc::clone(&total_calls),
+            attempt: Arc::new(AtomicUsize::new(0)),
+            winner_signal: Arc::clone(&winner_signal),
+        };
+
+        // Fire hedge immediately so both attempts run in parallel.
+        let policy = Arc::new(FixedDelayHedge::new(Duration::ZERO, 2));
+        let mut svc = HedgeLayer::new(policy).layer(inner);
+
+        let resp = svc
+            .ready()
+            .await
+            .expect("ready")
+            .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
+            .await
+            .expect("winner must succeed");
+        assert!(matches!(resp, LlmResponse::Chat(_)));
+
+        // Both attempts must have been spawned.
+        assert_eq!(
+            total_calls.load(Ordering::SeqCst),
+            2,
+            "expected primary + 1 hedged attempt"
+        );
+
+        // Give the abort signal a couple of yields to propagate and drop the loser.
+        for _ in 0..50 {
+            if live.load(Ordering::SeqCst) == 0 {
+                break;
+            }
+            tokio::task::yield_now().await;
+            tokio::time::sleep(Duration::from_millis(2)).await;
+        }
+        assert_eq!(
+            live.load(Ordering::SeqCst),
+            0,
+            "loser future must be dropped after winner returns; {} still alive",
+            live.load(Ordering::SeqCst)
+        );
+    }
 }

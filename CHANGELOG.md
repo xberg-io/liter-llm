@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `liter_llm::observability::{UsageEvent, UsageSink, CacheState, UsageEventOutcome, UsageSinkError, LoggingUsageSink, MultiUsageSink}` — canonical per-request usage events with pluggable sinks. `UsageEvent` is billing/observability-vendor-agnostic; downstream consumers translate it into metrics, ledgers, or OTel events.
+- `HooksLayer::with_usage_sink` — wires a `UsageSink` into the Tower stack; emits one event per request completion (success or error). Sink errors are best-effort: logged and not propagated to callers.
+- `liter_llm::tower::IdempotencyLayer` — `Idempotency-Key` dedup with pluggable `IdempotencyStore` (default `InMemoryIdempotencyStore` via `DashMap`, 24h TTL). Mismatched body for same key returns `LiterLlmError::IdempotencyConflict`; in-flight key returns `LiterLlmError::IdempotencyInFlight` (error-out, not sleep-poll).
+- `LlmRequest::idempotency_key: Option<String>` field and `LlmRequest::with_idempotency_key` builder for opt-in idempotency.
+- `LiterLlmError::IdempotencyConflict { key: String }` and `LiterLlmError::IdempotencyInFlight { key: String }` error variants (HTTP 409 equivalent).
 - `liter_llm::tower::FallbackChainLayer` — walk an ordered `Vec<S>` of services, advancing on transient errors via pluggable `RetryPolicy`. `DefaultRetryPolicy` treats 5xx/timeouts/429 as transient; auth and validation errors as terminal. Exports `RetryClass`, `RetryPolicy`, `DefaultRetryPolicy`, `FallbackChainLayer`, and `FallbackChainService`.
 - `liter_llm::tenant::{TenantId, TenantContext, KeyResolver, ResolvedKey, KeyResolverError, InMemoryKeyResolver}` — generic multi-tenant primitives.
 - `LlmRequest::with_tenant_id` / `LlmRequest::tenant_id` for tenant propagation through the Tower stack.
@@ -72,6 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New optional feature flags: `secrets-aws`, `secrets-vault`, `secrets-env` (env backend always enabled, others optional). `mimalloc`, `jemalloc` for allocator selection. `http3` for HTTP/3 support. `tokenizer` for `count_tokens` availability.
 - `VirtualKeyConfig` gains new `provider_credentials: Vec<ProviderCredential>` field (defaults to empty). Inline credentials in TOML via repeated `[[keys.provider_credentials]]` blocks; proxy auto-rotates among them on 429/5xx.
 - Workspace clippy is now `-D warnings`; downstream consumers compiling with strict lints should review suppressions — the main crate is now warnings-clean.
+- **`LlmRequest` pattern-matching change** — `LlmRequest` was previously an enum; it is now a struct with a `kind: LlmRequestKind` field. `match req { LlmRequest::Chat(r) => ... }` no longer compiles. Migrate to `match req.kind() { LlmRequestKind::Chat(r) => ... }` (preferred, using the new `kind()` accessor) or `match req.kind { LlmRequestKind::Chat(r) => ... }` (direct field access). The PascalCase constructor aliases (`LlmRequest::Chat(r)` etc.) remain callable for constructing requests and continue to compile unchanged; they are marked `#[doc(hidden)]` and will be removed in a future minor release.
+- **`KeyResolver::resolve` signature change** — the method now takes `api_key: String` (owned) instead of `api_key: &str`, and returns `Pin<Box<dyn Future<Output = ...> + Send + 'static>>` instead of `... + 'a`. Custom `KeyResolver` implementations must update their signature. Call sites that previously passed a `&str` literal must add `.to_owned()`: `resolver.resolve("sk-...".to_owned())`.
 
 ### Changed
 

@@ -635,4 +635,158 @@ mod tests {
         let result = tr.translate_inbound(raw);
         assert!(result.is_err());
     }
+
+    // ─── Pass-2 round-trips for previously-uncovered variants ────────────────
+
+    #[test]
+    fn realtime_session_updated_round_trips() {
+        let tr = translator();
+        let raw = json!({
+            "type": "session.updated",
+            "session": {
+                "id": "sess_upd_001",
+                "instructions": "Be terse and accurate."
+            }
+        });
+        let event = tr.translate_inbound(raw).unwrap();
+        match &event {
+            RealtimeEvent::SessionUpdated { session_id, instructions } => {
+                assert_eq!(session_id, "sess_upd_001");
+                assert_eq!(instructions.as_deref(), Some("Be terse and accurate."));
+            }
+            other => panic!("expected SessionUpdated, got {other:?}"),
+        }
+        let out = tr.translate_outbound(&event).unwrap();
+        assert_eq!(out["type"], "session.updated");
+        assert_eq!(out["session"]["id"], "sess_upd_001");
+        assert_eq!(out["session"]["instructions"], "Be terse and accurate.");
+    }
+
+    #[test]
+    fn realtime_conversation_item_deleted_round_trips() {
+        let tr = translator();
+        let raw = json!({
+            "type": "conversation.item.deleted",
+            "item_id": "item_xyz_42"
+        });
+        let event = tr.translate_inbound(raw).unwrap();
+        match &event {
+            RealtimeEvent::ConversationItemDeleted { item_id } => {
+                assert_eq!(item_id, "item_xyz_42");
+            }
+            other => panic!("expected ConversationItemDeleted, got {other:?}"),
+        }
+        let out = tr.translate_outbound(&event).unwrap();
+        assert_eq!(out["type"], "conversation.item.deleted");
+        assert_eq!(out["item_id"], "item_xyz_42");
+    }
+
+    #[test]
+    fn realtime_response_audio_transcript_delta_round_trips() {
+        let tr = translator();
+        let raw = json!({
+            "type": "response.audio_transcript.delta",
+            "response_id": "resp_at_001",
+            "delta": "Hello, world"
+        });
+        let event = tr.translate_inbound(raw).unwrap();
+        match &event {
+            RealtimeEvent::ResponseAudioTranscriptDelta { response_id, delta } => {
+                assert_eq!(response_id, "resp_at_001");
+                assert_eq!(delta, "Hello, world");
+            }
+            other => panic!("expected ResponseAudioTranscriptDelta, got {other:?}"),
+        }
+        let out = tr.translate_outbound(&event).unwrap();
+        assert_eq!(out["type"], "response.audio_transcript.delta");
+        assert_eq!(out["response_id"], "resp_at_001");
+        assert_eq!(out["delta"], "Hello, world");
+    }
+
+    #[test]
+    fn realtime_response_function_call_arguments_delta_round_trips() {
+        let tr = translator();
+        let raw = json!({
+            "type": "response.function_call_arguments.delta",
+            "response_id": "resp_fn_001",
+            "call_id": "call_abc",
+            "delta": "{\"x\":"
+        });
+        let event = tr.translate_inbound(raw).unwrap();
+        match &event {
+            RealtimeEvent::ResponseFunctionCallArgumentsDelta {
+                response_id,
+                call_id,
+                delta,
+            } => {
+                assert_eq!(response_id, "resp_fn_001");
+                assert_eq!(call_id, "call_abc");
+                assert_eq!(delta, "{\"x\":");
+            }
+            other => panic!("expected ResponseFunctionCallArgumentsDelta, got {other:?}"),
+        }
+        let out = tr.translate_outbound(&event).unwrap();
+        assert_eq!(out["type"], "response.function_call_arguments.delta");
+        assert_eq!(out["call_id"], "call_abc");
+        assert_eq!(out["delta"], "{\"x\":");
+    }
+
+    #[test]
+    fn realtime_input_audio_buffer_speech_started_round_trips() {
+        let tr = translator();
+        let raw = json!({
+            "type": "input_audio_buffer.speech_started",
+            "item_id": "item_speech_001"
+        });
+        let event = tr.translate_inbound(raw).unwrap();
+        match &event {
+            RealtimeEvent::InputAudioBufferSpeechStarted { item_id } => {
+                assert_eq!(item_id, "item_speech_001");
+            }
+            other => panic!("expected InputAudioBufferSpeechStarted, got {other:?}"),
+        }
+        let out = tr.translate_outbound(&event).unwrap();
+        assert_eq!(out["type"], "input_audio_buffer.speech_started");
+        assert_eq!(out["item_id"], "item_speech_001");
+    }
+
+    #[test]
+    fn realtime_rate_limits_updated_round_trips() {
+        let tr = translator();
+        // OpenAI reports per-axis limits in an array.  Use a reset_at one hour
+        // into the future so the field is non-trivial.
+        let reset_ts: f64 = 1_700_000_000.0;
+        let raw = json!({
+            "type": "rate_limits.updated",
+            "rate_limits": [
+                { "name": "requests", "remaining": 42u32, "reset_at": reset_ts },
+                { "name": "tokens",   "remaining": 9_000u32, "reset_at": reset_ts },
+            ]
+        });
+        let event = tr.translate_inbound(raw).unwrap();
+        match &event {
+            RealtimeEvent::RateLimitsUpdated {
+                remaining_requests,
+                remaining_tokens,
+                ..
+            } => {
+                assert_eq!(*remaining_requests, Some(42));
+                assert_eq!(*remaining_tokens, Some(9_000));
+            }
+            other => panic!("expected RateLimitsUpdated, got {other:?}"),
+        }
+
+        let out = tr.translate_outbound(&event).unwrap();
+        assert_eq!(out["type"], "rate_limits.updated");
+        let arr = out["rate_limits"].as_array().expect("rate_limits array");
+        assert_eq!(arr.len(), 2, "both axes must be serialised back");
+        // requests entry first, tokens second.
+        let req_entry = arr
+            .iter()
+            .find(|e| e["name"] == "requests")
+            .expect("requests entry present");
+        let tok_entry = arr.iter().find(|e| e["name"] == "tokens").expect("tokens entry present");
+        assert_eq!(req_entry["remaining"], 42);
+        assert_eq!(tok_entry["remaining"], 9_000);
+    }
 }
