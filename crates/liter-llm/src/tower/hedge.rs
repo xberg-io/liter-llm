@@ -379,6 +379,6 @@ mod tests {
         // The first attempt succeeds quickly; the hedge may or may not fire
         // depending on scheduling.  The count should be 1 or 2.
         let count = call_count.load(Ordering::SeqCst);
-        assert!(count >= 1 && count <= 2, "expected 1 or 2 calls, got {count}");
+        assert!((1..=2).contains(&count), "expected 1 or 2 calls, got {count}");
     }
 }

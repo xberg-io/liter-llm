@@ -70,7 +70,7 @@ pub async fn run(args: ApiArgs) -> Result<(), String> {
     set_outbound_policy(policy);
 
     // ── Shutdown coordinator ──────────────────────────────────────────────
-    let mut coordinator = ShutdownCoordinator::new();
+    let coordinator = ShutdownCoordinator::new();
     let handle = coordinator.handle();
 
     // Signal handler: SIGTERM / SIGINT → Draining; second signal → Aborted.

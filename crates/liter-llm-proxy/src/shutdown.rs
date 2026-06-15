@@ -151,7 +151,10 @@ impl ShutdownCoordinator {
 
     /// Transition to `Draining` and cancel the token.
     ///
-    /// Idempotent: calling this more than once has no effect.
+    /// Idempotent: calling this more than once has no effect. Test-only helper —
+    /// the signal handler inlines the same transition logic to avoid lock
+    /// contention on the phase channel.
+    #[cfg(test)]
     fn begin_draining(&self) {
         self.phase_tx.send_if_modified(|p| {
             if *p == ShutdownPhase::Running {
@@ -398,13 +401,15 @@ async fn wait_for_signal() {
 /// call site.  This [`Drainable`] implementation simply waits for the server
 /// join handle to complete, reporting a timeout if the deadline passes first.
 pub struct AxumServerDrainable {
-    handle: tokio::task::JoinHandle<Result<(), std::io::Error>>,
+    handle: tokio::sync::Mutex<Option<tokio::task::JoinHandle<Result<(), std::io::Error>>>>,
 }
 
 impl AxumServerDrainable {
     /// Wrap an axum server join handle.
     pub fn new(handle: tokio::task::JoinHandle<Result<(), std::io::Error>>) -> Self {
-        Self { handle }
+        Self {
+            handle: tokio::sync::Mutex::new(Some(handle)),
+        }
     }
 }
 
@@ -414,18 +419,16 @@ impl Drainable for AxumServerDrainable {
     }
 
     fn drain(&self, deadline: Instant) -> Pin<Box<dyn Future<Output = DrainResult> + Send + '_>> {
-        // We can't move `handle` out of `&self`, but we can poll the handle
-        // from a shared reference by aborting and waiting for cancellation.
-        // The axum server is already told to stop via the CancellationToken;
-        // we just need to wait for the task to finish.
         let remaining = deadline.saturating_duration_since(Instant::now());
         Box::pin(async move {
-            match tokio::time::timeout(remaining, tokio::time::sleep(Duration::from_millis(100))).await {
-                Ok(_) => {
-                    // Give the OS scheduler a moment; the real wait is in
-                    // wait_for_drained via JoinHandle.
-                    DrainResult::Clean
-                }
+            // Take the JoinHandle out; the server is already told to stop via
+            // its CancellationToken at the call site, so we just await its
+            // completion bounded by the deadline.
+            let Some(handle) = self.handle.lock().await.take() else {
+                return DrainResult::Clean; // already drained
+            };
+            match tokio::time::timeout(remaining, handle).await {
+                Ok(_) => DrainResult::Clean,
                 Err(_) => DrainResult::TimedOut,
             }
         })
@@ -548,7 +551,7 @@ mod tests {
     #[tokio::test]
     async fn shutdown_first_sigterm_transitions_to_draining() {
         let coordinator = ShutdownCoordinator::new();
-        let mut handle = coordinator.handle();
+        let handle = coordinator.handle();
 
         assert_eq!(handle.phase(), ShutdownPhase::Running);
         assert!(!handle.is_draining());

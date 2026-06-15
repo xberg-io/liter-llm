@@ -949,7 +949,7 @@ mod tests {
         })
         .await;
 
-        assert!(router.len() >= 1, "at least one upstream should be ready");
+        assert!(!router.is_empty(), "at least one upstream should be ready");
     }
 
     #[tokio::test]
