@@ -25,10 +25,16 @@ pub mod auth;
 /// FFI-friendly client constructors used by the polyglot bindings.
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 pub mod bindings;
+/// Pluggable cache key derivation strategies ([`CacheKeyStrategy`], built-in impls).
+#[cfg(feature = "tower")]
+pub mod cache_key;
 /// High-level LLM client traits and the reqwest-backed [`client::DefaultClient`].
 pub mod client;
 /// Token-cost tracking helpers.
 pub mod cost;
+/// Embedding provider abstraction ([`EmbeddingProvider`], [`SelfHostedEmbeddingProvider`]).
+#[cfg(feature = "tower")]
+pub mod embedding;
 /// Public error types and the crate-wide [`Result`] alias.
 pub mod error;
 /// Vendor-neutral guardrail plugin system (trait, stage enum, registry, built-in primitives).
@@ -48,6 +54,9 @@ pub mod tower;
 pub mod types;
 /// Shared utility helpers (memory-bound guards, etc.).
 pub mod util;
+/// Vector store abstraction for the semantic cache tier ([`VectorStore`], [`InMemoryVectorStore`]).
+#[cfg(feature = "tower")]
+pub mod vectorstore;
 
 // Re-export key types at crate root.
 pub use client::{
