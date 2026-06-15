@@ -25,6 +25,12 @@
 //!   spending budget enforcement (hard reject or soft warn).
 //! - [`hooks::HooksLayer`] / [`hooks::HooksService`] — user-defined pre/post
 //!   request hooks for guardrails, logging, and auditing.
+//! - [`metrics::MetricsLayer`] / [`metrics::MetricsService`] — OTel-native
+//!   GenAI semantic-convention metrics (histograms + counters).
+//! - [`circuit::CircuitLayer`] / [`circuit::CircuitService`] — circuit breaker
+//!   with pluggable [`circuit::CircuitPolicy`].
+//! - [`hedge::HedgeLayer`] / [`hedge::HedgeService`] — hedged retry that races
+//!   concurrent requests and cancels losers.
 //!
 //! # Example
 //!
@@ -46,16 +52,24 @@ pub mod cache;
 #[cfg(feature = "opendal-cache")]
 /// OpenDAL-backed cache backend for the response cache layer.
 pub mod cache_opendal;
+/// Circuit-breaker layer with pluggable [`circuit::CircuitPolicy`].
+pub mod circuit;
 /// Cooldown layer that backs off after upstream failures.
 pub mod cooldown;
 /// Cost-tracking layer that attaches token / dollar accounting to each call.
 pub mod cost;
+/// Staging area for new error variants (circuit-open, hedge-exhausted).
+pub(crate) mod error;
 /// Fallback layer that retries a failed call against a sibling provider.
 pub mod fallback;
 /// Health-probe layer used by the router to score upstream providers.
 pub mod health;
+/// Hedged-retry layer that races concurrent requests and cancels losers.
+pub mod hedge;
 /// User-supplied request/response hooks (mutators, observers).
 pub mod hooks;
+/// OTel-native GenAI semantic-convention metrics layer.
+pub mod metrics;
 /// Per-provider rate limiter.
 pub mod rate_limit;
 /// Provider routing strategies (round-robin, weighted, latency-aware).
@@ -78,11 +92,14 @@ pub use budget::{BudgetConfig, BudgetLayer, BudgetService, BudgetState, Enforcem
 pub use cache::{CacheBackend, CacheConfig, CacheLayer, CacheService, CacheStore, CachedResponse, InMemoryStore};
 #[cfg(feature = "opendal-cache")]
 pub use cache_opendal::OpenDalCacheStore;
+pub use circuit::{CircuitLayer, CircuitPolicy, CircuitService, CircuitState, ExponentialBackoffCircuit};
 pub use cooldown::{CooldownLayer, CooldownService};
 pub use cost::{CostTrackingLayer, CostTrackingService};
 pub use fallback::{FallbackLayer, FallbackService};
 pub use health::{HealthCheckLayer, HealthCheckService};
+pub use hedge::{FixedDelayHedge, HedgeLayer, HedgePolicy, HedgeService};
 pub use hooks::{HooksLayer, HooksService, LlmHook};
+pub use metrics::{MetricsLayer, MetricsService};
 pub use rate_limit::{ModelRateLimitLayer, ModelRateLimitService, RateLimitConfig};
 pub use router::{Router, RoutingStrategy};
 pub use service::LlmService;

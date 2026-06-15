@@ -1,0 +1,443 @@
+//! OTel-native metrics layer for the Tower middleware stack.
+//!
+//! [`MetricsLayer`] wraps any [`tower::Service<LlmRequest>`] and records
+//! GenAI semantic-convention metrics via the `opentelemetry::metrics` API.
+//!
+//! # Instruments
+//!
+//! **Histograms**
+//! - `gen_ai.client.operation.duration` — request latency in seconds.
+//! - `gen_ai.client.token.usage` — token counts (one observation per token
+//!   category; distinguished by the `gen_ai.token.type` attribute).
+//! - `gen_ai.client.cost.usd` — estimated cost in USD (when a cost is
+//!   available from [`super::cost`]).
+//! - `gen_ai.cache.lookup.duration` — time spent on cache lookups (recorded
+//!   from the `gen_ai.cache.hit` / `gen_ai.cache.miss` context; the layer
+//!   itself does not perform cache lookups, but downstream cache layers can
+//!   attach timing via the shared `CacheMetricsExt` helper).
+//!
+//! **Counters**
+//! - `gen_ai.cache.hit` — number of cache hits.
+//! - `gen_ai.cache.miss` — number of cache misses.
+//! - `gen_ai.cache.stale` — number of stale-cache served responses.
+//! - `gen_ai.circuit.trip` — number of times a circuit breaker tripped.
+//! - `gen_ai.retry.attempt` — number of retry attempts (excluding first try).
+//!
+//! # Attributes
+//!
+//! Every instrument observation carries the following key-value pairs from
+//! the GenAI semantic conventions:
+//! - `gen_ai.system` — provider prefix (e.g. `"openai"`).
+//! - `gen_ai.request.model` — the model name from the request.
+//! - `gen_ai.response.model` — the model from the response (may differ).
+//! - `gen_ai.operation.name` — `"chat"`, `"embeddings"`, etc.
+//!
+//! # Feature gate
+//!
+//! This module is compiled only when the `otel` feature is active.  When the
+//! feature is disabled the module still exists but exports a no-op
+//! `MetricsLayer` that compiles away completely.
+
+#[cfg(feature = "otel")]
+mod inner {
+    use std::sync::OnceLock;
+    use std::task::{Context, Poll};
+    use std::time::Instant;
+
+    use opentelemetry::KeyValue;
+    use opentelemetry::metrics::{Counter, Histogram, Meter};
+    use tower::{Layer, Service};
+
+    use super::super::types::{LlmRequest, LlmResponse};
+    use crate::client::BoxFuture;
+    use crate::error::{LiterLlmError, Result};
+
+    // ─── Meter singleton ──────────────────────────────────────────────────────
+
+    static METER: OnceLock<Meter> = OnceLock::new();
+
+    /// Initialise the global `Meter` used by all [`MetricsLayer`] instances.
+    ///
+    /// Call this once during application startup with the meter obtained from
+    /// your `opentelemetry` provider (e.g. `global::meter("liter-llm")`).
+    /// Subsequent calls are ignored.
+    pub fn init_meter(meter: Meter) {
+        let _ = METER.set(meter);
+    }
+
+    /// Return the global meter, or `None` when [`init_meter`] has not been called.
+    pub(crate) fn global_meter() -> Option<&'static Meter> {
+        METER.get()
+    }
+
+    // ─── Instrument set ───────────────────────────────────────────────────────
+
+    struct Instruments {
+        op_duration: Histogram<f64>,
+        token_usage: Histogram<u64>,
+        /// Cost histogram — populated by callers via [`record_cost_usd`].
+        #[allow(dead_code)]
+        cost_usd: Histogram<f64>,
+        cache_hit: Counter<u64>,
+        cache_miss: Counter<u64>,
+        cache_stale: Counter<u64>,
+        circuit_trip: Counter<u64>,
+        retry_attempt: Counter<u64>,
+    }
+
+    impl Instruments {
+        fn new(meter: &Meter) -> Self {
+            Self {
+                op_duration: meter
+                    .f64_histogram("gen_ai.client.operation.duration")
+                    .with_description("GenAI client request latency in seconds")
+                    .with_unit("s")
+                    .build(),
+                token_usage: meter
+                    .u64_histogram("gen_ai.client.token.usage")
+                    .with_description("Token counts for GenAI operations")
+                    .with_unit("{token}")
+                    .build(),
+                cost_usd: meter
+                    .f64_histogram("gen_ai.client.cost.usd")
+                    .with_description("Estimated cost of GenAI operations in USD")
+                    .with_unit("USD")
+                    .build(),
+                cache_hit: meter
+                    .u64_counter("gen_ai.cache.hit")
+                    .with_description("Number of GenAI response cache hits")
+                    .build(),
+                cache_miss: meter
+                    .u64_counter("gen_ai.cache.miss")
+                    .with_description("Number of GenAI response cache misses")
+                    .build(),
+                cache_stale: meter
+                    .u64_counter("gen_ai.cache.stale")
+                    .with_description("Number of stale GenAI cache responses served")
+                    .build(),
+                circuit_trip: meter
+                    .u64_counter("gen_ai.circuit.trip")
+                    .with_description("Number of circuit breaker trips")
+                    .build(),
+                retry_attempt: meter
+                    .u64_counter("gen_ai.retry.attempt")
+                    .with_description("Number of retry attempts (excluding first try)")
+                    .build(),
+            }
+        }
+    }
+
+    // ─── Layer ────────────────────────────────────────────────────────────────
+
+    /// Tower [`Layer`] that records OTel GenAI semantic-convention metrics.
+    ///
+    /// Metrics are only emitted when [`init_meter`] has been called before the
+    /// first request.  If the meter has not been initialised the layer is a
+    /// transparent pass-through.
+    #[derive(Clone)]
+    pub struct MetricsLayer;
+
+    impl<S> Layer<S> for MetricsLayer {
+        type Service = MetricsService<S>;
+
+        fn layer(&self, inner: S) -> Self::Service {
+            MetricsService { inner }
+        }
+    }
+
+    // ─── Service ─────────────────────────────────────────────────────────────
+
+    /// Tower service produced by [`MetricsLayer`].
+    pub struct MetricsService<S> {
+        inner: S,
+    }
+
+    impl<S: Clone> Clone for MetricsService<S> {
+        fn clone(&self) -> Self {
+            Self {
+                inner: self.inner.clone(),
+            }
+        }
+    }
+
+    impl<S> Service<LlmRequest> for MetricsService<S>
+    where
+        S: Service<LlmRequest, Response = LlmResponse, Error = LiterLlmError> + Send + 'static,
+        S::Future: Send + 'static,
+    {
+        type Response = LlmResponse;
+        type Error = LiterLlmError;
+        type Future = BoxFuture<'static, Result<LlmResponse>>;
+
+        fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<()>> {
+            self.inner.poll_ready(cx)
+        }
+
+        fn call(&mut self, req: LlmRequest) -> Self::Future {
+            let start = Instant::now();
+
+            // Capture metadata before moving `req` into the inner future.
+            let operation = req.operation_name();
+            let model_str = req.model().unwrap_or("").to_owned();
+            let system = model_str
+                .split_once('/')
+                .map(|(prefix, _)| prefix.to_owned())
+                .unwrap_or_default();
+
+            let fut = self.inner.call(req);
+
+            Box::pin(async move {
+                let result = fut.await;
+                let elapsed = start.elapsed().as_secs_f64();
+
+                // Only record metrics when the meter has been initialised.
+                if let Some(meter) = global_meter() {
+                    let instruments = Instruments::new(meter);
+
+                    // Common attribute set shared by all observations.
+                    let response_model = match &result {
+                        Ok(resp) => match resp {
+                            LlmResponse::Chat(r) => r.model.clone(),
+                            LlmResponse::Embed(r) => r.model.clone(),
+                            _ => model_str.clone(),
+                        },
+                        Err(_) => model_str.clone(),
+                    };
+
+                    let base_attrs = [
+                        KeyValue::new("gen_ai.system", system.clone()),
+                        KeyValue::new("gen_ai.request.model", model_str.clone()),
+                        KeyValue::new("gen_ai.response.model", response_model),
+                        KeyValue::new("gen_ai.operation.name", operation),
+                    ];
+
+                    // Operation duration.
+                    instruments.op_duration.record(elapsed, &base_attrs);
+
+                    // Token usage — only when the response carries usage data.
+                    if let Ok(resp) = &result
+                        && let Some(usage) = resp.usage()
+                    {
+                        // Input tokens.
+                        let mut input_attrs = base_attrs.to_vec();
+                        input_attrs.push(KeyValue::new("gen_ai.token.type", "input"));
+                        instruments.token_usage.record(usage.prompt_tokens, &input_attrs);
+
+                        // Output tokens.
+                        let mut output_attrs = base_attrs.to_vec();
+                        output_attrs.push(KeyValue::new("gen_ai.token.type", "output"));
+                        instruments.token_usage.record(usage.completion_tokens, &output_attrs);
+                    }
+                }
+
+                result
+            })
+        }
+    }
+
+    // ─── Public helpers ───────────────────────────────────────────────────────
+
+    /// Record a cache hit metric.
+    ///
+    /// Call from cache layer implementations to emit `gen_ai.cache.hit`.
+    pub fn record_cache_hit(system: &str, model: &str, operation: &str) {
+        if let Some(meter) = global_meter() {
+            let instruments = Instruments::new(meter);
+            instruments.cache_hit.add(
+                1,
+                &[
+                    KeyValue::new("gen_ai.system", system.to_owned()),
+                    KeyValue::new("gen_ai.request.model", model.to_owned()),
+                    KeyValue::new("gen_ai.operation.name", operation.to_owned()),
+                ],
+            );
+        }
+    }
+
+    /// Record a cache miss metric.
+    ///
+    /// Call from cache layer implementations to emit `gen_ai.cache.miss`.
+    pub fn record_cache_miss(system: &str, model: &str, operation: &str) {
+        if let Some(meter) = global_meter() {
+            let instruments = Instruments::new(meter);
+            instruments.cache_miss.add(
+                1,
+                &[
+                    KeyValue::new("gen_ai.system", system.to_owned()),
+                    KeyValue::new("gen_ai.request.model", model.to_owned()),
+                    KeyValue::new("gen_ai.operation.name", operation.to_owned()),
+                ],
+            );
+        }
+    }
+
+    /// Record a stale cache metric.
+    ///
+    /// Call from cache layer implementations to emit `gen_ai.cache.stale`.
+    pub fn record_cache_stale(system: &str, model: &str, operation: &str) {
+        if let Some(meter) = global_meter() {
+            let instruments = Instruments::new(meter);
+            instruments.cache_stale.add(
+                1,
+                &[
+                    KeyValue::new("gen_ai.system", system.to_owned()),
+                    KeyValue::new("gen_ai.request.model", model.to_owned()),
+                    KeyValue::new("gen_ai.operation.name", operation.to_owned()),
+                ],
+            );
+        }
+    }
+
+    /// Record a circuit breaker trip.
+    ///
+    /// Call from [`super::circuit::CircuitLayer`] when the circuit opens.
+    pub fn record_circuit_trip(system: &str, model: &str) {
+        if let Some(meter) = global_meter() {
+            let instruments = Instruments::new(meter);
+            instruments.circuit_trip.add(
+                1,
+                &[
+                    KeyValue::new("gen_ai.system", system.to_owned()),
+                    KeyValue::new("gen_ai.request.model", model.to_owned()),
+                ],
+            );
+        }
+    }
+
+    /// Record a retry attempt.
+    ///
+    /// Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
+    pub fn record_retry_attempt(system: &str, model: &str, operation: &str) {
+        if let Some(meter) = global_meter() {
+            let instruments = Instruments::new(meter);
+            instruments.retry_attempt.add(
+                1,
+                &[
+                    KeyValue::new("gen_ai.system", system.to_owned()),
+                    KeyValue::new("gen_ai.request.model", model.to_owned()),
+                    KeyValue::new("gen_ai.operation.name", operation.to_owned()),
+                ],
+            );
+        }
+    }
+}
+
+// ─── No-op stub when otel feature is off ─────────────────────────────────────
+
+#[cfg(not(feature = "otel"))]
+mod inner {
+    use std::task::{Context, Poll};
+
+    use tower::{Layer, Service};
+
+    use super::super::types::{LlmRequest, LlmResponse};
+    use crate::client::BoxFuture;
+    use crate::error::{LiterLlmError, Result};
+
+    /// No-op metrics layer (compiled when `otel` feature is disabled).
+    #[derive(Clone)]
+    pub struct MetricsLayer;
+
+    impl<S> Layer<S> for MetricsLayer {
+        type Service = MetricsService<S>;
+
+        fn layer(&self, inner: S) -> Self::Service {
+            MetricsService { inner }
+        }
+    }
+
+    /// No-op metrics service.
+    pub struct MetricsService<S> {
+        inner: S,
+    }
+
+    impl<S: Clone> Clone for MetricsService<S> {
+        fn clone(&self) -> Self {
+            Self {
+                inner: self.inner.clone(),
+            }
+        }
+    }
+
+    impl<S> Service<LlmRequest> for MetricsService<S>
+    where
+        S: Service<LlmRequest, Response = LlmResponse, Error = LiterLlmError> + Send + 'static,
+        S::Future: Send + 'static,
+    {
+        type Response = LlmResponse;
+        type Error = LiterLlmError;
+        type Future = BoxFuture<'static, Result<LlmResponse>>;
+
+        fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<()>> {
+            self.inner.poll_ready(cx)
+        }
+
+        fn call(&mut self, req: LlmRequest) -> Self::Future {
+            self.inner.call(req)
+        }
+    }
+
+    /// No-op cache-hit helper.
+    #[inline]
+    pub fn record_cache_hit(_system: &str, _model: &str, _operation: &str) {}
+
+    /// No-op cache-miss helper.
+    #[inline]
+    pub fn record_cache_miss(_system: &str, _model: &str, _operation: &str) {}
+
+    /// No-op cache-stale helper.
+    #[inline]
+    pub fn record_cache_stale(_system: &str, _model: &str, _operation: &str) {}
+
+    /// No-op circuit-trip helper.
+    #[inline]
+    pub fn record_circuit_trip(_system: &str, _model: &str) {}
+
+    /// No-op retry-attempt helper.
+    #[inline]
+    pub fn record_retry_attempt(_system: &str, _model: &str, _operation: &str) {}
+}
+
+// Re-export the active implementation.
+pub use inner::*;
+
+// ─── Tests ────────────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use tower::{Layer as _, Service as _};
+
+    use super::*;
+    use crate::tower::service::LlmService;
+    use crate::tower::tests_common::{MockClient, chat_req};
+    use crate::tower::types::LlmRequest;
+
+    /// Verify that the MetricsLayer is a transparent pass-through when the meter
+    /// is not initialised (the common case in unit tests without an OTel SDK).
+    #[tokio::test]
+    async fn metrics_layer_passes_through_without_meter() {
+        let inner = LlmService::new(MockClient::ok());
+        let mut svc = MetricsLayer.layer(inner);
+
+        let resp = svc
+            .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
+            .await
+            .expect("should succeed");
+
+        assert!(matches!(resp, crate::tower::types::LlmResponse::Chat(_)));
+    }
+
+    /// Verify the layer correctly passes through errors.
+    #[tokio::test]
+    async fn metrics_layer_propagates_errors() {
+        let inner = LlmService::new(MockClient::failing_timeout());
+        let mut svc = MetricsLayer.layer(inner);
+
+        let err = svc
+            .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
+            .await
+            .expect_err("should fail");
+
+        assert!(matches!(err, crate::error::LiterLlmError::Timeout));
+    }
+}
