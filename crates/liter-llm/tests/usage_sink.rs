@@ -76,7 +76,9 @@ mod helpers {
 
     impl OkClient {
         pub fn new() -> Self {
-            Self { call_count: Arc::new(AtomicUsize::new(0)) }
+            Self {
+                call_count: Arc::new(AtomicUsize::new(0)),
+            }
         }
     }
 
@@ -114,41 +116,87 @@ mod helpers {
             let resp = ok_response(&req.model);
             Box::pin(async move { Ok(resp) })
         }
-        fn chat_stream(&self, _req: ChatCompletionRequest) -> BoxFuture<'_, Result<BoxStream<'static, Result<ChatCompletionChunk>>>> {
+        fn chat_stream(
+            &self,
+            _req: ChatCompletionRequest,
+        ) -> BoxFuture<'_, Result<BoxStream<'static, Result<ChatCompletionChunk>>>> {
             Box::pin(async move { Ok(Box::pin(EmptyStream) as BoxStream<'_, _>) })
         }
         fn embed(&self, req: EmbeddingRequest) -> BoxFuture<'_, Result<EmbeddingResponse>> {
             let resp = EmbeddingResponse {
                 object: "list".into(),
-                data: vec![EmbeddingObject { object: "embedding".into(), embedding: vec![0.1], index: 0 }],
+                data: vec![EmbeddingObject {
+                    object: "embedding".into(),
+                    embedding: vec![0.1],
+                    index: 0,
+                }],
                 model: req.model.clone(),
                 usage: None,
             };
             Box::pin(async move { Ok(resp) })
         }
         fn list_models(&self) -> BoxFuture<'_, Result<ModelsListResponse>> {
-            Box::pin(async move { Ok(ModelsListResponse { object: "list".into(), data: vec![] }) })
+            Box::pin(async move {
+                Ok(ModelsListResponse {
+                    object: "list".into(),
+                    data: vec![],
+                })
+            })
         }
         fn image_generate(&self, _req: CreateImageRequest) -> BoxFuture<'_, Result<ImagesResponse>> {
-            Box::pin(async move { Ok(ImagesResponse { created: 0, data: vec![] }) })
+            Box::pin(async move {
+                Ok(ImagesResponse {
+                    created: 0,
+                    data: vec![],
+                })
+            })
         }
         fn speech(&self, _req: CreateSpeechRequest) -> BoxFuture<'_, Result<bytes::Bytes>> {
             Box::pin(async move { Ok(bytes::Bytes::new()) })
         }
         fn transcribe(&self, _req: CreateTranscriptionRequest) -> BoxFuture<'_, Result<TranscriptionResponse>> {
-            Box::pin(async move { Ok(TranscriptionResponse { text: String::new(), language: None, duration: None, segments: None }) })
+            Box::pin(async move {
+                Ok(TranscriptionResponse {
+                    text: String::new(),
+                    language: None,
+                    duration: None,
+                    segments: None,
+                })
+            })
         }
         fn moderate(&self, _req: ModerationRequest) -> BoxFuture<'_, Result<ModerationResponse>> {
-            Box::pin(async move { Ok(ModerationResponse { id: String::new(), model: String::new(), results: vec![] }) })
+            Box::pin(async move {
+                Ok(ModerationResponse {
+                    id: String::new(),
+                    model: String::new(),
+                    results: vec![],
+                })
+            })
         }
         fn rerank(&self, _req: RerankRequest) -> BoxFuture<'_, Result<RerankResponse>> {
-            Box::pin(async move { Ok(RerankResponse { id: None, results: vec![], meta: None }) })
+            Box::pin(async move {
+                Ok(RerankResponse {
+                    id: None,
+                    results: vec![],
+                    meta: None,
+                })
+            })
         }
         fn search(&self, _req: SearchRequest) -> BoxFuture<'_, Result<SearchResponse>> {
-            Box::pin(async { Err(LiterLlmError::EndpointNotSupported { endpoint: "search".into(), provider: "mock".into() }) })
+            Box::pin(async {
+                Err(LiterLlmError::EndpointNotSupported {
+                    endpoint: "search".into(),
+                    provider: "mock".into(),
+                })
+            })
         }
         fn ocr(&self, _req: OcrRequest) -> BoxFuture<'_, Result<OcrResponse>> {
-            Box::pin(async { Err(LiterLlmError::EndpointNotSupported { endpoint: "ocr".into(), provider: "mock".into() }) })
+            Box::pin(async {
+                Err(LiterLlmError::EndpointNotSupported {
+                    endpoint: "ocr".into(),
+                    provider: "mock".into(),
+                })
+            })
         }
     }
 
@@ -160,7 +208,10 @@ mod helpers {
         fn chat(&self, _req: ChatCompletionRequest) -> BoxFuture<'_, Result<ChatCompletionResponse>> {
             Box::pin(async { Err(LiterLlmError::Timeout) })
         }
-        fn chat_stream(&self, _req: ChatCompletionRequest) -> BoxFuture<'_, Result<BoxStream<'static, Result<ChatCompletionChunk>>>> {
+        fn chat_stream(
+            &self,
+            _req: ChatCompletionRequest,
+        ) -> BoxFuture<'_, Result<BoxStream<'static, Result<ChatCompletionChunk>>>> {
             Box::pin(async move { Ok(Box::pin(EmptyStream) as BoxStream<'_, _>) })
         }
         fn embed(&self, _req: EmbeddingRequest) -> BoxFuture<'_, Result<EmbeddingResponse>> {
@@ -185,17 +236,30 @@ mod helpers {
             Box::pin(async { Err(LiterLlmError::Timeout) })
         }
         fn search(&self, _req: SearchRequest) -> BoxFuture<'_, Result<SearchResponse>> {
-            Box::pin(async { Err(LiterLlmError::EndpointNotSupported { endpoint: "search".into(), provider: "mock".into() }) })
+            Box::pin(async {
+                Err(LiterLlmError::EndpointNotSupported {
+                    endpoint: "search".into(),
+                    provider: "mock".into(),
+                })
+            })
         }
         fn ocr(&self, _req: OcrRequest) -> BoxFuture<'_, Result<OcrResponse>> {
-            Box::pin(async { Err(LiterLlmError::EndpointNotSupported { endpoint: "ocr".into(), provider: "mock".into() }) })
+            Box::pin(async {
+                Err(LiterLlmError::EndpointNotSupported {
+                    endpoint: "ocr".into(),
+                    provider: "mock".into(),
+                })
+            })
         }
     }
 
     pub fn chat_req(model: &str) -> ChatCompletionRequest {
         ChatCompletionRequest {
             model: model.into(),
-            messages: vec![Message::System(SystemMessage { content: "hi".into(), name: None })],
+            messages: vec![Message::System(SystemMessage {
+                content: "hi".into(),
+                name: None,
+            })],
             ..Default::default()
         }
     }
@@ -223,6 +287,7 @@ async fn vec_sink_collects_events() {
         total_tokens: 15,
         cost_usd: rust_decimal::Decimal::ZERO,
         cache_state: CacheState::Miss,
+        effective_model: None,
         finish_reason: Some("stop".into()),
         outcome: UsageEventOutcome::Success,
         latency_ms: 42,
@@ -324,6 +389,7 @@ async fn multi_usage_sink_fans_out() {
         total_tokens: 0,
         cost_usd: rust_decimal::Decimal::ZERO,
         cache_state: CacheState::Bypass,
+        effective_model: None,
         finish_reason: None,
         outcome: UsageEventOutcome::Success,
         latency_ms: 0,
@@ -352,6 +418,7 @@ async fn logging_sink_does_not_error() {
         total_tokens: 3,
         cost_usd: rust_decimal::Decimal::ZERO,
         cache_state: CacheState::Miss,
+        effective_model: None,
         finish_reason: None,
         outcome: UsageEventOutcome::Success,
         latency_ms: 10,

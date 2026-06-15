@@ -38,10 +38,11 @@ use dashmap::DashMap;
 use tokio::sync::broadcast;
 use tower::{Layer, Service};
 
-use super::cache::CachedResponse;
+use super::cache::{CachedResponse, record_cache_state};
 use super::types::{LlmRequest, LlmRequestKind, LlmResponse};
 use crate::client::BoxFuture;
 use crate::error::{LiterLlmError, Result};
+use crate::observability::usage::CacheState;
 
 // Type alias for the shared in-flight map.
 type InFlightMap = Arc<DashMap<u64, broadcast::Sender<SingleflightResult>>>;
@@ -367,28 +368,31 @@ where
                     // is always allowed.
                     drop(inner);
                     match recv.recv().await {
-                        Ok(Ok(cached)) => cached.into_llm_response(),
+                        Ok(Ok(cached)) => {
+                            // From the follower's perspective, it received the
+                            // leader's result without performing an upstream call —
+                            // semantically equivalent to an exact cache hit.
+                            record_cache_state(CacheState::ExactHit);
+                            cached.into_llm_response()
+                        }
                         Ok(Err(arc_err)) => {
                             // Use `to_singleflight_error` rather than the `try_unwrap`
                             // fallback so that the original error variant is preserved
                             // even when the `Arc` has multiple strong references
                             // (broadcast clones the Arc for each subscriber).
-                            Err(
-                                Arc::try_unwrap(arc_err)
-                                    .unwrap_or_else(|arc| arc.to_singleflight_error()),
-                            )
+                            Err(Arc::try_unwrap(arc_err).unwrap_or_else(|arc| arc.to_singleflight_error()))
                         }
                         Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
                             // Ring-buffer overflow: resubscribe to drain the latest value.
                             tracing::debug!(skipped = n, "singleflight follower lagged; resubscribing");
                             let mut rx2 = recv.resubscribe();
                             match rx2.recv().await {
-                                Ok(Ok(cached)) => cached.into_llm_response(),
+                                Ok(Ok(cached)) => {
+                                    record_cache_state(CacheState::ExactHit);
+                                    cached.into_llm_response()
+                                }
                                 Ok(Err(arc_err)) => {
-                                    Err(
-                                        Arc::try_unwrap(arc_err)
-                                            .unwrap_or_else(|arc| arc.to_singleflight_error()),
-                                    )
+                                    Err(Arc::try_unwrap(arc_err).unwrap_or_else(|arc| arc.to_singleflight_error()))
                                 }
                                 Err(_) => Err(LiterLlmError::InternalError {
                                     message: "singleflight: follower lagged and retry also failed".into(),
@@ -796,7 +800,10 @@ mod tests {
             })
             .collect();
         let first = &models[0];
-        assert!(models.iter().all(|m| m == first), "all 100 callers must receive identical responses");
+        assert!(
+            models.iter().all(|m| m == first),
+            "all 100 callers must receive identical responses"
+        );
     }
 
     /// When the leader's future is cancelled (aborted via JoinHandle) before it

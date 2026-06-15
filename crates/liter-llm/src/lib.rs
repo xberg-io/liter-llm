@@ -22,8 +22,6 @@
 
 /// Per-provider authentication strategies (API keys, AWS SigV4, OAuth tokens).
 pub mod auth;
-/// Canonical per-request usage events and pluggable sinks.
-pub mod observability;
 /// FFI-friendly client constructors used by the polyglot bindings.
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 pub mod bindings;
@@ -42,6 +40,8 @@ pub mod error;
 /// Vendor-neutral guardrail plugin system (trait, stage enum, registry, built-in primitives).
 pub mod guardrail;
 pub(crate) mod http;
+/// Canonical per-request usage events and pluggable sinks.
+pub mod observability;
 /// Provider catalog (built-in providers plus runtime registration of custom providers).
 pub mod provider;
 /// Unified Realtime API event schema and per-provider translator trait.

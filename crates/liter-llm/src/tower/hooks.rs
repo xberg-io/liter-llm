@@ -30,6 +30,7 @@
 //!     .service(LlmService::new(client));
 //! ```
 
+use std::cell::Cell;
 use std::future::Future;
 use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
@@ -42,6 +43,7 @@ use futures_util::FutureExt as _;
 use tower::Layer;
 use tower::Service;
 
+use super::cache::CACHE_STATE_CELL;
 use super::types::{LlmRequest, LlmResponse};
 use crate::client::BoxFuture;
 use crate::error::{LiterLlmError, Result};
@@ -201,7 +203,24 @@ where
                 .as_ref()
                 .map(|s| CancellationGuard::new(Arc::clone(s), req_clone.clone(), start));
 
-            match fut.await {
+            // Scope the task-local so downstream layers (CacheLayer,
+            // SingleflightLayer) can call `record_cache_state` and update it.
+            // The initial value is Bypass: requests that never reach the cache
+            // layer (streaming, policy bypass, no CacheLayer in the stack) keep
+            // Bypass without any extra code in those paths.
+            //
+            // The cell is read inside the scope (before the future returns) and
+            // its value is paired with the inner result so it survives past the
+            // scope boundary.
+            let (inner_result, cache_state) = CACHE_STATE_CELL
+                .scope(Cell::new(CacheState::Bypass), async {
+                    let result = fut.await;
+                    let state = CACHE_STATE_CELL.with(|c| c.get());
+                    (result, state)
+                })
+                .await;
+
+            match inner_result {
                 Ok(resp) => {
                     let latency_ms = start.elapsed().as_millis() as u64;
 
@@ -224,7 +243,8 @@ where
                     }
 
                     if let Some(sink) = usage_sink {
-                        let event = build_usage_event(&req_clone, &resp, latency_ms, UsageEventOutcome::Success);
+                        let event =
+                            build_usage_event(&req_clone, &resp, latency_ms, UsageEventOutcome::Success, cache_state);
                         // Detach the sink call so slow backends don't add to
                         // caller-observed latency.  Errors are logged by the task.
                         tokio::spawn(async move {
@@ -262,7 +282,7 @@ where
 
                     if let Some(sink) = usage_sink {
                         let outcome = classify_error_outcome(&err);
-                        let event = build_error_usage_event(&req_clone, latency_ms, outcome);
+                        let event = build_error_usage_event(&req_clone, latency_ms, outcome, cache_state);
                         // Detach: slow sink must not add to error-path latency.
                         tokio::spawn(async move {
                             if let Err(sink_err) = sink.emit_erased(event).await {
@@ -320,7 +340,9 @@ impl Drop for CancellationGuard {
         let Some(inner) = self.inner.take() else { return };
 
         let latency_ms = inner.start.elapsed().as_millis() as u64;
-        let event = build_error_usage_event(&inner.req, latency_ms, UsageEventOutcome::Cancelled);
+        // On cancellation there is no response and the cache state is unknown;
+        // Bypass is the safest fallback.
+        let event = build_error_usage_event(&inner.req, latency_ms, UsageEventOutcome::Cancelled, CacheState::Bypass);
         let sink = inner.sink;
 
         // Fire-and-forget: if a Tokio runtime is active, spawn the emit.
@@ -364,8 +386,37 @@ fn classify_error_outcome(err: &LiterLlmError) -> UsageEventOutcome {
     }
 }
 
+/// Extract the provider-echoed model name from a response variant, when available.
+///
+/// Returns `None` for variants that do not carry a model field in their response
+/// body (streaming chunks, speech bytes, transcription, rerank, list-models,
+/// image generation).
+fn effective_model_from_response(resp: &LlmResponse) -> Option<String> {
+    match resp {
+        LlmResponse::Chat(r) => Some(r.model.clone()),
+        LlmResponse::Embed(r) => Some(r.model.clone()),
+        LlmResponse::Moderate(r) => Some(r.model.clone()),
+        LlmResponse::Ocr(r) => Some(r.model.clone()),
+        LlmResponse::Search(r) => Some(r.model.clone()),
+        // Streaming carries no aggregate model field; speech is raw bytes;
+        // transcription, rerank, and list-models have no provider-echoed model.
+        LlmResponse::ChatStream(_)
+        | LlmResponse::Speech(_)
+        | LlmResponse::Transcribe(_)
+        | LlmResponse::Rerank(_)
+        | LlmResponse::ListModels(_)
+        | LlmResponse::ImageGenerate(_) => None,
+    }
+}
+
 /// Build a `UsageEvent` from a successful response.
-fn build_usage_event(req: &LlmRequest, resp: &LlmResponse, latency_ms: u64, outcome: UsageEventOutcome) -> UsageEvent {
+fn build_usage_event(
+    req: &LlmRequest,
+    resp: &LlmResponse,
+    latency_ms: u64,
+    outcome: UsageEventOutcome,
+    cache_state: CacheState,
+) -> UsageEvent {
     let model = req.model().unwrap_or("").to_owned();
     let provider = provider_from_model(&model);
 
@@ -391,6 +442,8 @@ fn build_usage_event(req: &LlmRequest, resp: &LlmResponse, latency_ms: u64, outc
         _ => None,
     };
 
+    let effective_model = effective_model_from_response(resp);
+
     UsageEvent {
         tenant_id: req.tenant_id.clone(),
         request_id: request_id(req),
@@ -401,9 +454,8 @@ fn build_usage_event(req: &LlmRequest, resp: &LlmResponse, latency_ms: u64, outc
         cached_tokens,
         total_tokens,
         cost_usd,
-        // TODO: wire real cache state once the cache layer exposes hit-type
-        // metadata through a task-local or response extension.
-        cache_state: CacheState::Bypass,
+        cache_state,
+        effective_model,
         finish_reason,
         outcome,
         latency_ms,
@@ -413,7 +465,12 @@ fn build_usage_event(req: &LlmRequest, resp: &LlmResponse, latency_ms: u64, outc
 }
 
 /// Build a `UsageEvent` for the error path (no response available).
-fn build_error_usage_event(req: &LlmRequest, latency_ms: u64, outcome: UsageEventOutcome) -> UsageEvent {
+fn build_error_usage_event(
+    req: &LlmRequest,
+    latency_ms: u64,
+    outcome: UsageEventOutcome,
+    cache_state: CacheState,
+) -> UsageEvent {
     let model = req.model().unwrap_or("").to_owned();
     let provider = provider_from_model(&model);
 
@@ -427,7 +484,8 @@ fn build_error_usage_event(req: &LlmRequest, latency_ms: u64, outcome: UsageEven
         cached_tokens: 0,
         total_tokens: 0,
         cost_usd: rust_decimal::Decimal::ZERO,
-        cache_state: CacheState::Bypass,
+        cache_state,
+        effective_model: None,
         finish_reason: None,
         outcome,
         latency_ms,
@@ -447,8 +505,8 @@ mod tests {
     use tower::Service as _;
 
     use super::*;
-    use crate::observability::usage::{UsageEvent, UsageSinkError};
     use crate::observability::UsageSink;
+    use crate::observability::usage::{UsageEvent, UsageSinkError};
     use crate::tower::service::LlmService;
     use crate::tower::tests_common::{MockClient, chat_req};
     use crate::tower::types::{LlmRequest, LlmResponse};
@@ -707,9 +765,7 @@ mod tests {
         let mut svc = HooksLayer::new(vec![]).with_usage_sink(sink).layer(PendingService);
 
         // Spawn the future so we can abort it to simulate cancellation.
-        let handle = tokio::spawn(async move {
-            svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await
-        });
+        let handle = tokio::spawn(async move { svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await });
 
         // Give the future a tick to start (so the CancellationGuard is armed).
         tokio::task::yield_now().await;

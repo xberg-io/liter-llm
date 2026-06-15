@@ -46,6 +46,7 @@
 //!     .service(upstream);
 //! ```
 
+use std::cell::Cell;
 use std::collections::{HashMap, VecDeque};
 use std::future::Future;
 use std::hash::{DefaultHasher, Hash, Hasher};
@@ -53,6 +54,8 @@ use std::pin::Pin;
 use std::sync::{Arc, OnceLock, RwLock};
 use std::task::{Context, Poll};
 use std::time::{Duration, Instant};
+
+use crate::observability::usage::CacheState;
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use tower::{Layer, Service};
@@ -65,6 +68,31 @@ use crate::error::{LiterLlmError, Result};
 use crate::tower::cache_policy::{CacheDecision, CachePolicy, CachePolicyContext, StandardCachePolicy};
 use crate::types::{ChatCompletionResponse, EmbeddingResponse};
 use crate::vectorstore::VectorStore;
+
+// ─── Task-local cache state ───────────────────────────────────────────────────
+
+// `Cell<CacheState>` (not a plain `CacheState`) is used here because
+// `tokio::task_local!` values must be `'static`. `Cell` provides interior
+// mutability without `Sync`, which is fine because task-locals are per-task
+// and never accessed concurrently.
+tokio::task_local! {
+    /// Records the cache outcome for the current request task.
+    ///
+    /// Initialized by [`crate::tower::hooks::HooksService`] via
+    /// `CACHE_STATE_CELL.scope(Cell::new(CacheState::Bypass), fut)` before
+    /// the inner service stack runs. `CacheService` and
+    /// `SingleflightService` update the cell via [`record_cache_state`].
+    pub static CACHE_STATE_CELL: Cell<CacheState>;
+}
+
+/// Set the cache outcome for the current task.
+///
+/// Uses `try_with` so that callers that run outside a `CACHE_STATE_CELL.scope`
+/// (e.g. in tests that do not involve `HooksLayer`) are silently ignored rather
+/// than panicking.
+pub fn record_cache_state(state: CacheState) {
+    let _ = CACHE_STATE_CELL.try_with(|c| c.set(state));
+}
 
 // ---- Config ----------------------------------------------------------------
 
@@ -847,6 +875,7 @@ where
             {
                 #[cfg(feature = "otel")]
                 crate::tower::metrics::record_cache_tier_hit("", &model, "exact");
+                record_cache_state(CacheState::ExactHit);
                 return cached.into_llm_response();
             }
             #[cfg(feature = "otel")]
@@ -884,6 +913,7 @@ where
                 if let Some(cached) = maybe_cached {
                     #[cfg(feature = "otel")]
                     crate::tower::metrics::record_cache_tier_hit("", &model, "semantic");
+                    record_cache_state(CacheState::SemanticHit);
                     return cached.into_llm_response();
                 }
                 #[cfg(feature = "otel")]
@@ -895,6 +925,7 @@ where
             // the result via the broadcast channel before they reach this layer.
 
             // ── Cache miss → upstream call ─────────────────────────────────
+            record_cache_state(CacheState::Miss);
             let resp = fut.await?;
 
             // ── Populate tiers on success ──────────────────────────────────

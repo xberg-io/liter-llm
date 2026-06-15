@@ -41,6 +41,7 @@ use crate::tenant::TenantId;
 ///
 /// This type is intentionally decoupled from any specific billing vendor or
 /// observability stack. Sinks receive it and translate as needed.
+#[cfg_attr(alef, alef(skip))]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct UsageEvent {
     /// Tenant that issued the request, when tenant context was attached via
@@ -77,10 +78,18 @@ pub struct UsageEvent {
 
     /// Cache layer outcome for this request.
     ///
-    /// Currently always [`CacheState::Bypass`] — a follow-up will thread the
-    /// cache layer's hit-type metadata through to this field once the cache
-    /// layer exposes it via a task-local or response extension.
+    /// Set by [`crate::tower::cache::CacheService`] via a task-local cell read
+    /// by [`crate::tower::hooks::HooksService`] after the inner service resolves.
     pub cache_state: CacheState,
+
+    /// Provider-echoed model name from the response, when available.
+    ///
+    /// Differs from [`Self::model`] when routing or fallback substitutes a
+    /// different model than was requested (e.g. request asks for `"gpt-4o"` but
+    /// the provider echoes `"gpt-4o-2024-08-06"`). `None` for response variants
+    /// that do not carry a model field (streaming, speech, image, transcription,
+    /// rerank, list-models) and on error paths where no response is available.
+    pub effective_model: Option<String>,
 
     /// The `finish_reason` string from a chat response choice, when present.
     pub finish_reason: Option<String>,
@@ -140,6 +149,7 @@ pub enum UsageEventOutcome {
 /// Implementations should be cheap on the hot path — defer heavy I/O to
 /// their own background task or channel. The `emit` future is awaited
 /// directly in the Tower request path, so blocking I/O increases tail latency.
+#[cfg_attr(alef, alef(skip))]
 pub trait UsageSink: Send + Sync + 'static {
     /// Emit a single usage event.
     ///
@@ -157,6 +167,7 @@ pub trait UsageSink: Send + Sync + 'static {
 // collections to [`MultiUsageSink::from_erased`] without reaching into the
 // crate internals.  The trait is intentionally not re-exported from the crate
 // root to discourage direct implementation — use [`UsageSink`] instead.
+#[cfg_attr(alef, alef(skip))]
 pub trait UsageSinkErased: Send + Sync + 'static {
     fn emit_erased<'a>(
         &'a self,
@@ -190,6 +201,7 @@ pub enum UsageSinkError {
 ///
 /// Useful in development and as a smoke-test default. No I/O is performed;
 /// the sink is always cheap.
+#[cfg_attr(alef, alef(skip))]
 #[derive(Clone, Debug, Default)]
 pub struct LoggingUsageSink;
 
@@ -200,6 +212,7 @@ impl UsageSink for LoggingUsageSink {
             tenant_id = event.tenant_id.as_ref().map(|t| t.as_ref()),
             request_id = %event.request_id,
             model = %event.model,
+            effective_model = event.effective_model.as_deref(),
             provider = %event.provider,
             prompt_tokens = event.prompt_tokens,
             completion_tokens = event.completion_tokens,
@@ -220,6 +233,7 @@ impl UsageSink for LoggingUsageSink {
 /// Individual sink errors are logged but do not cause `emit` to return `Err`.
 /// Use this to layer, say, a logging sink and a database sink without
 /// coupling the error semantics of one to the other.
+#[cfg_attr(alef, alef(skip))]
 pub struct MultiUsageSink {
     sinks: Vec<Arc<dyn UsageSinkErased>>,
 }
