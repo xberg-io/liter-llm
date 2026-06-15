@@ -59,6 +59,7 @@ struct Entry {
 ///     vec![1.0, 0.0, 0.0],
 ///     VectorMetadata {
 ///         cache_key: 42,
+///         original_request_body: "body".into(),
 ///         tenant_id: None,
 ///         inserted_at: SystemTime::now(),
 ///         extra: HashMap::new(),
@@ -158,6 +159,7 @@ mod tests {
     fn meta(cache_key: u64) -> VectorMetadata {
         VectorMetadata {
             cache_key,
+            original_request_body: String::new(),
             tenant_id: None,
             inserted_at: SystemTime::now(),
             extra: HashMap::new(),

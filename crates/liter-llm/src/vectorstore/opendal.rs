@@ -42,6 +42,13 @@ fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
 struct StoredVector {
     vec: Vec<f32>,
     cache_key: u64,
+    /// Serialized request body stored at insertion time.
+    ///
+    /// Used by the semantic cache tier's collision-guard check: when a vector
+    /// match is found, the tier passes this body to `CacheStore::get` so that
+    /// the body comparison succeeds even though the current request differs.
+    #[serde(default)]
+    original_request_body: String,
     tenant_id: Option<String>,
     /// Unix timestamp (seconds) of insertion.
     inserted_at_secs: u64,
@@ -52,6 +59,7 @@ impl StoredVector {
     fn into_metadata(self) -> VectorMetadata {
         VectorMetadata {
             cache_key: self.cache_key,
+            original_request_body: self.original_request_body,
             tenant_id: self.tenant_id,
             inserted_at: UNIX_EPOCH + Duration::from_secs(self.inserted_at_secs),
             extra: self.extra,
@@ -165,6 +173,7 @@ impl VectorStore for OpenDalVectorStore {
             let stored = StoredVector {
                 vec,
                 cache_key: metadata.cache_key,
+                original_request_body: metadata.original_request_body,
                 tenant_id: metadata.tenant_id,
                 inserted_at_secs: Self::now_secs(),
                 extra: metadata.extra,
@@ -218,6 +227,7 @@ mod tests {
     fn meta(cache_key: u64) -> VectorMetadata {
         VectorMetadata {
             cache_key,
+            original_request_body: String::new(),
             tenant_id: None,
             inserted_at: SystemTime::now(),
             extra: HashMap::new(),

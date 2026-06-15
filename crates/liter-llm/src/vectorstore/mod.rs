@@ -37,6 +37,15 @@ pub struct VectorMetadata {
     /// When a semantic match is found, the cache layer uses this key to look up
     /// the cached response in the exact-cache [`CacheStore`][crate::tower::cache::CacheStore].
     pub cache_key: u64,
+    /// The serialized request body that was used when the entry was originally
+    /// inserted into the exact-cache store.
+    ///
+    /// The semantic tier passes this to `CacheStore::get` instead of the
+    /// current request's body so that the collision-guard check succeeds.
+    /// Without this field the collision guard always fails for semantic hits
+    /// because the current request body differs from the stored one by
+    /// definition (they are only semantically similar, not byte-identical).
+    pub original_request_body: String,
     /// Optional tenant identifier (for multi-tenant deployments).
     pub tenant_id: Option<String>,
     /// Wall-clock time when this vector was inserted.

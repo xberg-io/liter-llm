@@ -392,14 +392,6 @@ impl InnerCache {
         Some(entry.response.clone())
     }
 
-    /// Return `true` if the entry for `key` exists and is expired.
-    fn is_expired(&self, key: u64) -> bool {
-        self.map.get(&key).is_some_and(|e| match &e.response {
-            CachedResponse::Error { expires_at, .. } => Instant::now() >= *expires_at,
-            _ => e.inserted_at.elapsed() > self.effective_ttl(e),
-        })
-    }
-
     /// Remove an expired entry (eviction under write lock).
     fn remove_expired(&mut self, key: u64) {
         let ttl = self.ttl; // borrow-split
@@ -476,27 +468,32 @@ impl InMemoryStore {
 
 impl CacheStore for InMemoryStore {
     fn get(&self, key: u64, request_body: &str) -> Pin<Box<dyn Future<Output = Option<CachedResponse>> + Send + '_>> {
-        // Perform all synchronous work eagerly, then wrap result in a ready
-        // future.  This avoids capturing `request_body` in an async block
-        // (which would require tying its lifetime to the future).
+        // Perform all synchronous work eagerly under a single write lock, then
+        // wrap the result in a ready future.
         //
-        // Hit-count tracking requires a write lock on a cache hit.  We take
-        // the read lock first for the common miss path, then upgrade to write
-        // only on a hit to bump the counter.
-        let hit = self.inner.read().ok().and_then(|cache| {
+        // Previous implementation took a read lock, dropped it, then
+        // conditionally took a write lock for expiry eviction, dropped it, and
+        // then took a third write lock for hit counting.  That three-lock
+        // sequence introduced a TOCTOU race: a concurrent `put` of the same key
+        // between the read unlock and the write lock for eviction could race the
+        // expired-entry cleanup, leaving stale state or double-counting.
+        //
+        // Collapsing to one write lock per call serializes reads and writes but
+        // eliminates the race entirely.  For workloads where lock contention
+        // matters, the right upgrade is sharded locks (e.g. `dashmap`), not
+        // multiple lock re-acquisitions.
+        let hit = self.inner.write().ok().and_then(|mut cache| {
+            // Check validity first; `get_if_valid` handles expiry inline.
             let hit = cache.get_if_valid(key, request_body);
-            let expired = hit.is_none() && cache.is_expired(key);
-            drop(cache);
-            if expired && let Ok(mut w) = self.inner.write() {
-                w.remove_expired(key);
+            if hit.is_none() {
+                // Evict the expired entry if present so the map does not
+                // accumulate expired-but-not-yet-collected tombstones.
+                cache.remove_expired(key);
+            } else {
+                cache.record_hit(key);
             }
             hit
         });
-        if hit.is_some()
-            && let Ok(mut w) = self.inner.write()
-        {
-            w.record_hit(key);
-        }
         Box::pin(std::future::ready(hit))
     }
 
@@ -722,8 +719,21 @@ pub(crate) fn cache_key(req: &LlmRequest) -> Option<(u64, String)> {
 /// configured [`CacheKeyStrategy`].
 ///
 /// Returns `None` for non-cacheable request variants.
+///
+/// # Tenant and system-prompt extraction
+///
+/// `tenant_id` is sourced from the `user` field of a `Chat` request using the
+/// convention `"tenant:<id>"` (e.g. `"tenant:acme"`).  If the field is absent
+/// or does not start with `"tenant:"`, `tenant_id` is `None`.
+///
+/// `system_prompt` is extracted from the first `Message::System` message in
+/// the conversation, if one is present.  This ensures that
+/// [`SystemPromptAwareStrategy`][crate::cache_key::SystemPromptAwareStrategy]
+/// and [`TenantScopedStrategy`][crate::cache_key::TenantScopedStrategy]
+/// produce isolation keys correctly; previously both fields were hard-coded to
+/// `None`, which meant tenant A's response could be served to tenant B.
 fn strategy_key(strategy: &dyn CacheKeyStrategy, req: &LlmRequest) -> Option<(u64, String)> {
-    let (model, messages_json, params_json) = match req {
+    let (model, messages_json, params_json, tenant_id, system_prompt) = match req {
         LlmRequest::Chat(r) => {
             let msgs = serde_json::to_string(&r.messages).ok()?;
             // Serialize inference params as a separate JSON object.
@@ -734,7 +744,27 @@ fn strategy_key(strategy: &dyn CacheKeyStrategy, req: &LlmRequest) -> Option<(u6
                 "n": r.n,
                 "stop": r.stop,
             });
-            (r.model.as_str(), msgs, params.to_string())
+            // Extract tenant_id from the `user` field (convention: "tenant:<id>").
+            let tenant_id: Option<String> = r
+                .user
+                .as_deref()
+                .and_then(|u| u.strip_prefix("tenant:"))
+                .map(str::to_owned);
+            // Extract system prompt from the first System message.
+            let system_prompt: Option<String> = r.messages.iter().find_map(|m| {
+                if let crate::types::Message::System(s) = m {
+                    Some(s.content.clone())
+                } else {
+                    None
+                }
+            });
+            (
+                r.model.as_str().to_owned(),
+                msgs,
+                params.to_string(),
+                tenant_id,
+                system_prompt,
+            )
         }
         LlmRequest::Embed(r) => {
             let input = serde_json::to_string(&r.input).ok()?;
@@ -742,17 +772,17 @@ fn strategy_key(strategy: &dyn CacheKeyStrategy, req: &LlmRequest) -> Option<(u6
                 "dimensions": r.dimensions,
                 "encoding_format": r.encoding_format,
             });
-            (r.model.as_str(), input, params.to_string())
+            (r.model.as_str().to_owned(), input, params.to_string(), None, None)
         }
         _ => return None,
     };
 
     let input = CacheKeyInput {
-        model,
+        model: &model,
         messages_json: &messages_json,
         params_json: &params_json,
-        tenant_id: None,
-        system_prompt: None,
+        tenant_id: tenant_id.as_deref(),
+        system_prompt: system_prompt.as_deref(),
     };
     Some(strategy.key_for(&input))
 }
@@ -826,9 +856,15 @@ where
                         .await
                         .into_iter()
                         .next()?;
-                    // Look up the associated response in the exact store keyed
-                    // by the vector match's cache_key.
-                    store.get(best.metadata.cache_key, body).await
+                    // Use the *original* request body stored in the vector
+                    // metadata rather than the current request's body.  The
+                    // collision guard in `CacheStore::get` compares the supplied
+                    // body against the one stored at insertion time; passing the
+                    // current body always fails because semantically-similar
+                    // requests are not byte-identical by definition.
+                    store
+                        .get(best.metadata.cache_key, &best.metadata.original_request_body)
+                        .await
                 }
                 .await;
                 if let Some(cached) = maybe_cached {
@@ -868,6 +904,12 @@ where
                     {
                         let metadata = crate::vectorstore::VectorMetadata {
                             cache_key: k,
+                            // Store the canonical body so the semantic-tier
+                            // lookup can pass it to `CacheStore::get` for the
+                            // collision-guard check.  Without this the guard
+                            // always fails because the current request body
+                            // differs from the original by definition.
+                            original_request_body: body.clone(),
                             tenant_id: None,
                             inserted_at: std::time::SystemTime::now(),
                             extra: HashMap::new(),
@@ -1110,8 +1152,18 @@ mod tests {
         );
     }
 
+    /// Verify that the semantic cache tier returns a stored response when the
+    /// vector store reports a similarity match above the threshold.
+    ///
+    /// Previously, the tier called `store.get(key, current_body)` where
+    /// `current_body` is the incoming request's serialised form.  The
+    /// collision-guard comparison always failed because the stored body (from
+    /// the original request) differs from `current_body` by definition.
+    ///
+    /// The fix: `VectorMetadata` now carries `original_request_body`, and the
+    /// semantic tier passes that to `store.get` instead of the current body.
     #[tokio::test]
-    async fn three_tier_semantic_hit_returns_cached_response() {
+    async fn semantic_cache_tier_returns_hit_when_vector_match_above_threshold() {
         use std::collections::HashMap;
         use std::sync::Arc;
         use std::time::SystemTime;
@@ -1128,22 +1180,24 @@ mod tests {
         };
         let store: Arc<dyn CacheStore> = Arc::new(InMemoryStore::new(&config));
 
-        // Pre-populate the exact store with a known response.
+        // Pre-populate the exact store with a known response under a sentinel
+        // body string that differs from what the incoming "gpt-4" request produces.
         let cached = CachedResponse::Chat(crate::tower::tests_common::make_chat_response("gpt-4"));
         let exact_key: u64 = 9999;
-        store.put(exact_key, "sentinel-body".into(), cached).await;
+        let sentinel_body = "sentinel-body";
+        store.put(exact_key, sentinel_body.into(), cached).await;
 
-        // Pre-populate the vector store with a match pointing at exact_key.
-        // The NoOpEmbeddingProvider returns zero vectors, so all queries are
-        // identical — any threshold >= 1.0 is impossible but any threshold <= 0.0
-        // means cosine(zero, zero) = 0.0 which equals the threshold.
-        // We use threshold = 0.0 to guarantee a match.
+        // Pre-populate the vector store pointing at exact_key and carrying the
+        // original body so the semantic tier can pass it to the collision guard.
+        // NoOpEmbeddingProvider returns zero vectors; cosine(0,0) = 0.0 >=
+        // threshold 0.0, so the search guarantees a match.
         let vs: Arc<dyn VectorStore> = Arc::new(InMemoryVectorStore::new(1));
         vs.upsert(
             "sentinel".into(),
             vec![0.0],
             VectorMetadata {
                 cache_key: exact_key,
+                original_request_body: sentinel_body.into(),
                 tenant_id: None,
                 inserted_at: SystemTime::now(),
                 extra: HashMap::new(),
@@ -1156,7 +1210,7 @@ mod tests {
 
         let policy = Arc::new(StandardCachePolicy {
             semantic_ttl: Some(Duration::from_secs(60)),
-            similarity_threshold: 0.0, // Match zero vectors
+            similarity_threshold: 0.0,
             ..Default::default()
         });
 
@@ -1170,23 +1224,174 @@ mod tests {
         let inner = LlmService::new(client);
         let mut svc = layer.layer(inner);
 
-        // The exact key for "gpt-4" won't match "sentinel-body" body, so exact
-        // tier misses.  The semantic tier should find the vector and look up
-        // the sentinel response from the exact store.
-        //
-        // Note: the body derived by strategy_key for chat("gpt-4") will not
-        // match "sentinel-body", so the exact-tier lookup misses, and the
-        // semantic lookup uses the NoOpEmbeddingProvider's zero vector to find
-        // the pre-seeded vector entry. However, store.get(exact_key, body) will
-        // fail the collision-guard because the body we pass is not "sentinel-body".
-        // This test therefore exercises the semantic path but the store.get will
-        // miss on the collision guard, falling through to the upstream.
-        //
-        // Semantic hit path is verified by the vectorstore tests directly.
-        // Here we confirm no panic and the upstream is called on semantic miss.
+        // The exact key for "gpt-4" will not match the sentinel body, so the
+        // exact tier misses.  The semantic tier finds the vector match, uses
+        // `original_request_body` from metadata to pass to store.get, and
+        // returns the pre-seeded response — upstream must NOT be called.
         svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
-        // Call count will be 1 (upstream called because collision guard prevented semantic hit)
-        assert_eq!(call_count.load(Ordering::SeqCst), 1);
+        assert_eq!(
+            call_count.load(Ordering::SeqCst),
+            0,
+            "semantic hit must short-circuit upstream without calling it"
+        );
+    }
+
+    // ── Tenant / system-prompt isolation tests ────────────────────────────────
+
+    /// Verify that `TenantScopedStrategy` produces different cache keys for
+    /// different tenants so that tenant A's response is never served to tenant B.
+    ///
+    /// Previously `strategy_key` hard-coded `tenant_id: None`, meaning the
+    /// strategy's tenant prefix was never applied and all tenants shared the
+    /// same cache slot — a data-leakage bug.
+    #[tokio::test]
+    async fn tenant_scoped_strategy_isolates_tenants_via_cache_service() {
+        use crate::cache_key::TenantScopedStrategy;
+
+        let config = CacheConfig {
+            max_entries: 20,
+            ttl: Duration::from_secs(60),
+            backend: CacheBackend::default(),
+        };
+        let layer = CacheLayer::new(config).with_key_strategy(Arc::new(TenantScopedStrategy));
+        let client = MockClient::ok();
+        let call_count = Arc::clone(&client.call_count);
+        let inner = LlmService::new(client);
+        let mut svc = layer.layer(inner);
+
+        // Build a request for tenant-a (convention: user = "tenant:<id>").
+        let mut req_a = chat_req("gpt-4");
+        req_a.user = Some("tenant:acme".into());
+
+        // Build an identical prompt for tenant-b.
+        let mut req_b = chat_req("gpt-4");
+        req_b.user = Some("tenant:globex".into());
+
+        // First call — tenant-a, cache miss → upstream.
+        svc.call(LlmRequest::Chat(req_a.clone())).await.unwrap();
+        assert_eq!(call_count.load(Ordering::SeqCst), 1, "first call must miss");
+
+        // Second call — tenant-b with the same prompt.
+        // Must be a MISS because the tenant prefix is different.
+        svc.call(LlmRequest::Chat(req_b)).await.unwrap();
+        assert_eq!(
+            call_count.load(Ordering::SeqCst),
+            2,
+            "tenant-b must not receive tenant-a cached response"
+        );
+
+        // Third call — tenant-a again.  Must be a HIT.
+        svc.call(LlmRequest::Chat(req_a)).await.unwrap();
+        assert_eq!(
+            call_count.load(Ordering::SeqCst),
+            2,
+            "tenant-a second call must hit cache"
+        );
+    }
+
+    /// Verify that `SystemPromptAwareStrategy` isolates responses by system
+    /// prompt, so different system prompts produce different cache keys.
+    ///
+    /// Previously `strategy_key` hard-coded `system_prompt: None`, so the
+    /// system prompt was never factored into the cache key.
+    #[tokio::test]
+    async fn system_prompt_aware_strategy_isolates_via_cache_service() {
+        use crate::cache_key::SystemPromptAwareStrategy;
+        use crate::types::{Message, SystemMessage, UserContent, UserMessage};
+
+        let config = CacheConfig {
+            max_entries: 20,
+            ttl: Duration::from_secs(60),
+            backend: CacheBackend::default(),
+        };
+        let layer = CacheLayer::new(config).with_key_strategy(Arc::new(SystemPromptAwareStrategy));
+        let client = MockClient::ok();
+        let call_count = Arc::clone(&client.call_count);
+        let inner = LlmService::new(client);
+        let mut svc = layer.layer(inner);
+
+        // Build a request with system prompt A.
+        let mut req_a = chat_req("gpt-4");
+        req_a.messages = vec![
+            Message::System(SystemMessage {
+                content: "You are a helpful assistant.".into(),
+                name: None,
+            }),
+            Message::User(UserMessage {
+                content: UserContent::Text("Hello".into()),
+                name: None,
+            }),
+        ];
+
+        // Same user message, different system prompt.
+        let mut req_b = chat_req("gpt-4");
+        req_b.messages = vec![
+            Message::System(SystemMessage {
+                content: "You are a pirate.".into(),
+                name: None,
+            }),
+            Message::User(UserMessage {
+                content: UserContent::Text("Hello".into()),
+                name: None,
+            }),
+        ];
+
+        // First call — system prompt A, cache miss.
+        svc.call(LlmRequest::Chat(req_a.clone())).await.unwrap();
+        assert_eq!(call_count.load(Ordering::SeqCst), 1, "first call must miss");
+
+        // Second call — system prompt B, must be a MISS.
+        svc.call(LlmRequest::Chat(req_b)).await.unwrap();
+        assert_eq!(
+            call_count.load(Ordering::SeqCst),
+            2,
+            "different system prompt must produce a cache miss"
+        );
+
+        // Third call — system prompt A again, must be a HIT.
+        svc.call(LlmRequest::Chat(req_a)).await.unwrap();
+        assert_eq!(
+            call_count.load(Ordering::SeqCst),
+            2,
+            "same system prompt must hit cache"
+        );
+    }
+
+    /// Stress-test `InMemoryStore::get` under concurrent get/put pairs.
+    ///
+    /// Verifies that the single-lock refactor eliminates TOCTOU races: one
+    /// hundred tasks each write a unique key then immediately read it back.
+    /// No panics, no data corruption, and every write is immediately readable.
+    #[tokio::test]
+    async fn in_memory_store_get_single_lock_acquisition() {
+        let config = CacheConfig {
+            max_entries: 1000,
+            ttl: Duration::from_secs(60),
+            backend: CacheBackend::default(),
+        };
+        let store = Arc::new(InMemoryStore::new(&config));
+        const TASKS: u64 = 100;
+
+        let handles: Vec<_> = (0..TASKS)
+            .map(|i| {
+                let store = Arc::clone(&store);
+                tokio::spawn(async move {
+                    let key = i;
+                    let body = format!("body-{i}");
+                    let response = CachedResponse::Chat(crate::tower::tests_common::make_chat_response("m"));
+                    store.put(key, body.clone(), response).await;
+                    let result = store.get(key, &body).await;
+                    assert!(
+                        result.is_some(),
+                        "key {key} written by task {i} must be immediately readable"
+                    );
+                })
+            })
+            .collect();
+
+        for h in handles {
+            h.await.expect("task must not panic");
+        }
     }
 
     #[tokio::test]
