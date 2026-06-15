@@ -16,9 +16,13 @@
 //! [`LlmRequest::tenant_id`] automatically.
 
 pub mod context;
+#[cfg(feature = "etcd-key-resolver")]
+pub mod etcd;
 pub mod in_memory;
 pub mod resolver;
 
 pub use context::{TenantContext, TenantId};
+#[cfg(feature = "etcd-key-resolver")]
+pub use etcd::{EtcdKeyResolver, EtcdKeyResolverConfig};
 pub use in_memory::InMemoryKeyResolver;
 pub use resolver::{KeyResolver, KeyResolverError, ResolvedKey};

@@ -23,7 +23,9 @@ impl InMemoryKeyResolver {
     /// Create an empty resolver.
     #[must_use]
     pub fn new() -> Self {
-        Self { keys: Arc::new(DashMap::new()) }
+        Self {
+            keys: Arc::new(DashMap::new()),
+        }
     }
 
     /// Create a resolver pre-populated with the given entries.

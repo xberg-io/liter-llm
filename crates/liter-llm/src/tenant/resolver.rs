@@ -5,7 +5,7 @@ use std::pin::Pin;
 use super::context::TenantId;
 
 /// A resolved virtual-key record returned by [`KeyResolver::resolve`].
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct ResolvedKey {
     /// Tenant this key belongs to.
     pub tenant_id: TenantId,
