@@ -108,9 +108,13 @@ pub fn build_router(state: AppState) -> Router {
         ));
 
     let health_routes = Router::new()
+        // Legacy health endpoints (retained for backward compatibility).
         .route("/health", get(health::health))
         .route("/health/liveness", get(health::liveness))
         .route("/health/readiness", get(health::readiness))
+        // v1.6 enriched endpoints.
+        .route("/healthz", get(health::healthz))
+        .route("/readyz", get(health::readyz))
         .route("/openapi.json", get(crate::openapi::openapi_schema));
 
     // Build an optional CORS layer.  Empty cors_origins means CORS is disabled
