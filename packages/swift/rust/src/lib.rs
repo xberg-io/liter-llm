@@ -1233,16 +1233,6 @@ mod ffi {
     }
 
     extern "Rust" {
-        #[swift_bridge(swift_name = "createClient")]
-        fn create_client(
-            api_key: String,
-            base_url: Option<String>,
-            timeout_secs: Option<u64>,
-            max_retries: Option<u32>,
-            model_hint: Option<String>,
-        ) -> Result<DefaultClient, String>;
-        #[swift_bridge(swift_name = "createClientFromJson")]
-        fn create_client_from_json(json: String) -> Result<DefaultClient, String>;
         #[swift_bridge(swift_name = "registerCustomProvider")]
         fn register_custom_provider(config: CustomProviderConfig) -> Result<(), String>;
         #[swift_bridge(swift_name = "unregisterCustomProvider")]
@@ -6535,6 +6525,7 @@ impl HealthStatus {
     }
 }
 
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
 pub fn create_client(
     api_key: String,
     base_url: Option<String>,
@@ -6547,6 +6538,7 @@ pub fn create_client(
         .map(DefaultClient)
 }
 
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
 pub fn create_client_from_json(json: String) -> Result<DefaultClient, String> {
     liter_llm::create_client_from_json(&json)
         .map_err(|e| e.to_string())

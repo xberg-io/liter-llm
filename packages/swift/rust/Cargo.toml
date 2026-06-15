@@ -29,6 +29,7 @@ doctest = false
 bench = false
 
 [features]
+default = ["native-http", "opendal-cache", "wasm-http"]
 native-http = ["liter_llm/native-http"]
 opendal-cache = ["liter_llm/opendal-cache"]
 wasm-http = ["liter_llm/wasm-http"]
