@@ -40,6 +40,10 @@ android {
 }
 
 kotlin {
+<<<<<<< Updated upstream
+=======
+    jvmToolchain(21)
+>>>>>>> Stashed changes
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
     }
@@ -137,13 +141,11 @@ tasks
     }
 
 mavenPublishing {
-    configure(
-        AndroidSingleVariantLibrary(
-            variant = "release",
-            sourcesJar = com.vanniktech.maven.publish.SourcesJar.Sources(),
-            javadocJar = com.vanniktech.maven.publish.JavadocJar.Empty(),
-        )
-    )
+    configure(AndroidSingleVariantLibrary(
+        variant = "release",
+        sourcesJar = com.vanniktech.maven.publish.SourcesJar.Sources(),
+        javadocJar = com.vanniktech.maven.publish.JavadocJar.Empty(),
+    ))
 
     publishToMavenCentral()
     signAllPublications()
