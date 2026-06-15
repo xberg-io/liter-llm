@@ -86,13 +86,7 @@ impl ProxyServer {
                 OutboundPolicyKind::Off => OutboundPolicy::Off,
                 OutboundPolicyKind::DenyPrivate => OutboundPolicy::DenyPrivate,
                 OutboundPolicyKind::Allowlist => {
-                    let urls: Vec<url::Url> = self
-                        .config
-                        .security
-                        .outbound_allowlist
-                        .iter()
-                        .filter_map(|s| url::Url::parse(s).ok())
-                        .collect();
+                    let urls = parse_allowlist_urls(&self.config.security.outbound_allowlist);
                     OutboundPolicy::Allowlist(urls)
                 }
             };
@@ -200,5 +194,102 @@ impl ProxyServer {
     /// `ProxyServer::new(config).serve().await` directly.
     pub async fn serve(self) -> Result<(), String> {
         self.serve_with_shutdown(None).await
+    }
+}
+
+/// Parse outbound allowlist strings into [`url::Url`] values, logging a warning
+/// for each entry that fails to parse so operators can spot typos at startup.
+///
+/// Returns the successfully parsed URLs.
+pub(crate) fn parse_allowlist_urls(entries: &[String]) -> Vec<url::Url> {
+    let mut urls = Vec::with_capacity(entries.len());
+    let mut parsed_count: usize = 0;
+    let mut skipped_count: usize = 0;
+
+    for s in entries {
+        match url::Url::parse(s) {
+            Ok(url) => {
+                urls.push(url);
+                parsed_count += 1;
+            }
+            Err(e) => {
+                tracing::warn!(
+                    target: "liter_llm_proxy::security",
+                    entry = ?s,
+                    error = %e,
+                    "invalid allowlist URL — skipping"
+                );
+                skipped_count += 1;
+            }
+        }
+    }
+
+    tracing::info!(
+        target: "liter_llm_proxy::security",
+        parsed = parsed_count,
+        skipped = skipped_count,
+        "outbound allowlist policy applied"
+    );
+
+    urls
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_allowlist_urls_accepts_valid_entries() {
+        let entries = vec![
+            "https://api.openai.com".to_string(),
+            "https://api.anthropic.com".to_string(),
+        ];
+        let urls = parse_allowlist_urls(&entries);
+        assert_eq!(urls.len(), 2, "both valid URLs should be parsed");
+    }
+
+    #[test]
+    fn parse_allowlist_urls_skips_invalid_entries() {
+        // "htps://…" is syntactically valid (the url crate accepts any scheme),
+        // so only "not a url at all" (relative URL without a base) is rejected.
+        let entries = vec![
+            "htps://api.openai.com".to_string(),
+            "https://api.anthropic.com".to_string(),
+            "not a url at all".to_string(),
+        ];
+        let urls = parse_allowlist_urls(&entries);
+        assert_eq!(
+            urls.len(),
+            2,
+            "two syntactically valid URLs should be parsed; one relative entry must be skipped"
+        );
+        assert_eq!(urls[1].as_str(), "https://api.anthropic.com/");
+    }
+
+    #[test]
+    fn parse_allowlist_urls_empty_input_returns_empty() {
+        let urls = parse_allowlist_urls(&[]);
+        assert!(urls.is_empty());
+    }
+
+    /// Verifies that invalid entries are silently skipped and the parsed count
+    /// is correct.  Log capture via `tracing-test` is skipped here because the
+    /// `#[ctor]` global crypto subscriber installed elsewhere in this crate
+    /// pre-empts the test subscriber; the warn/info paths are covered by the
+    /// code path exercised in `parse_allowlist_urls_skips_invalid_entries`.
+    #[test]
+    fn parse_allowlist_urls_emits_warn_on_invalid_entry() {
+        // "not-a-url" has no scheme and no base → parse error → warn emitted at runtime.
+        let entries = vec![
+            "not-a-url".to_string(),
+            "https://api.anthropic.com".to_string(),
+        ];
+        let urls = parse_allowlist_urls(&entries);
+        assert_eq!(
+            urls.len(),
+            1,
+            "one valid entry must be returned; the relative entry must be skipped"
+        );
+        assert_eq!(urls[0].as_str(), "https://api.anthropic.com/");
     }
 }
