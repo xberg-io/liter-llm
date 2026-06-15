@@ -116,7 +116,7 @@ mod tests {
     #[test]
     fn auth_header_uses_x_goog_api_key() {
         let p = provider();
-        let (name, value) = p.auth_header("test-key").unwrap();
+        let (name, value) = p.auth_header("test-key").expect("auth_header should be present");
         assert_eq!(name.as_ref(), "x-goog-api-key");
         assert_eq!(value.as_ref(), "test-key");
     }
@@ -183,7 +183,7 @@ mod tests {
             "max_tokens": 100
         });
 
-        p.transform_request(&mut body).unwrap();
+        p.transform_request(&mut body).expect("transform_request should not fail");
 
         assert_eq!(body["systemInstruction"]["parts"][0]["text"], "You are helpful.");
         assert_eq!(body["contents"][0]["role"], "user");
@@ -203,9 +203,9 @@ mod tests {
             }
         });
 
-        p.transform_request(&mut body).unwrap();
+        p.transform_request(&mut body).expect("transform_request should not fail");
 
-        let settings = body["safetySettings"].as_array().unwrap();
+        let settings = body["safetySettings"].as_array().expect("safetySettings should be an array");
         assert_eq!(settings.len(), 1);
         assert_eq!(settings[0]["category"], "HARM_CATEGORY_HATE_SPEECH");
     }
@@ -220,7 +220,7 @@ mod tests {
             }
         });
 
-        p.transform_request(&mut body).unwrap();
+        p.transform_request(&mut body).expect("transform_request should not fail");
 
         assert_eq!(body["cachedContent"], "cachedContents/abc123");
     }
@@ -244,7 +244,7 @@ mod tests {
             }
         });
 
-        p.transform_response(&mut body).unwrap();
+        p.transform_response(&mut body).expect("transform_response should not fail");
 
         assert_eq!(body["object"], "chat.completion");
         assert_eq!(body["choices"][0]["message"]["content"], "Hello from Google AI!");
@@ -258,7 +258,7 @@ mod tests {
     #[test]
     fn parse_stream_event_empty_returns_none() {
         let p = provider();
-        let result = p.parse_stream_event("").unwrap();
+        let result = p.parse_stream_event("").expect("parse should not fail");
         assert!(result.is_none());
     }
 
@@ -273,7 +273,7 @@ mod tests {
             "usageMetadata": {"promptTokenCount": 3, "candidatesTokenCount": 1}
         }"#;
 
-        let chunk = p.parse_stream_event(event_data).unwrap().unwrap();
+        let chunk = p.parse_stream_event(event_data).expect("parse should not fail").expect("should yield a chunk");
 
         assert_eq!(chunk.object, "chat.completion.chunk");
         assert_eq!(chunk.choices[0].delta.content.as_deref(), Some("Hi"));

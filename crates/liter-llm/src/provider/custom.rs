@@ -228,7 +228,7 @@ mod tests {
 
         let provider = detect_custom_provider("my-model-7b");
         assert!(provider.is_some(), "should detect custom provider by prefix 'my-'");
-        let provider = provider.unwrap();
+        let provider = provider.expect("custom provider should be found");
         assert_eq!(provider.name(), "my-provider");
         assert_eq!(provider.base_url(), "https://api.my-provider.com/v1");
 

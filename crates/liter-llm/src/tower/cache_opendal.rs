@@ -184,7 +184,7 @@ mod tests {
         store.put(42, "request-body-a".into(), dummy_response()).await;
         let cached = store.get(42, "request-body-a").await;
         assert!(cached.is_some(), "expected a cached response after put");
-        match cached.unwrap() {
+        match cached.expect("cached value should be present") {
             CachedResponse::Chat(resp) => {
                 assert_eq!(resp.id, "test-resp-001");
                 assert_eq!(resp.model, "gpt-4");

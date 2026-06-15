@@ -133,7 +133,7 @@ mod tests {
 
         let result = store.get("vk-team-a");
         assert!(result.is_some());
-        let found = result.unwrap();
+        let found = result.expect("key lookup should succeed");
         assert_eq!(found.key, "vk-team-a");
         assert_eq!(found.models, vec!["gpt-4o"]);
     }

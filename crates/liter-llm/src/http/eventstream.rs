@@ -496,7 +496,7 @@ mod tests {
             buf
         };
 
-        let headers = parse_headers(&headers_data).unwrap();
+        let headers = parse_headers(&headers_data).expect("headers should parse");
         assert_eq!(headers.len(), 1);
         assert_eq!(headers[0].name, ":event-type");
         assert_eq!(headers[0].value, "contentBlockDelta");
@@ -610,11 +610,11 @@ mod tests {
         let headers_end = headers_start + headers_length;
         let total_length = frame.len();
 
-        let headers = parse_headers(&frame[headers_start..headers_end]).unwrap();
-        let message_type = headers.iter().find(|h| h.name == ":message-type").unwrap();
+        let headers = parse_headers(&frame[headers_start..headers_end]).expect("headers should parse");
+        let message_type = headers.iter().find(|h| h.name == ":message-type").expect(":message-type header should be present");
         assert_eq!(message_type.value, "exception");
 
-        let payload = std::str::from_utf8(&frame[headers_end..total_length - 4]).unwrap();
+        let payload = std::str::from_utf8(&frame[headers_end..total_length - 4]).expect("payload should be valid UTF-8");
         assert!(payload.contains("Invalid request"));
     }
 
@@ -676,13 +676,13 @@ mod tests {
         let byte_stream = VecStream::new(vec![Ok(chunk1), Ok(chunk2)]);
         let parse = |event_type: &str, payload: &str| -> Result<Option<ChatCompletionChunk>> {
             if event_type == "contentBlockDelta" {
-                let v: serde_json::Value = serde_json::from_str(payload).unwrap();
+                let v: serde_json::Value = serde_json::from_str(payload).expect("payload should be valid JSON");
                 let text = v.pointer("/delta/text").and_then(|t| t.as_str()).unwrap_or("");
                 let chunk: ChatCompletionChunk = serde_json::from_value(serde_json::json!({
                     "id": "t", "object": "chat.completion.chunk", "created": 0, "model": "t",
                     "choices": [{"index": 0, "delta": {"content": text}, "finish_reason": null}]
                 }))
-                .unwrap();
+                .expect("test chunk JSON should deserialize");
                 Ok(Some(chunk))
             } else {
                 Ok(None)
