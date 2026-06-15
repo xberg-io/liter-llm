@@ -9,6 +9,42 @@
 //! The default backend is an in-memory LRU ([`InMemoryStore`]) with a
 //! configurable maximum entry count and TTL.  Implement the [`CacheStore`]
 //! trait to plug in Redis, DynamoDB, or any other storage backend.
+//!
+//! # Recommended layer order
+//!
+//! When composing the resilience layers, stack them in the following order
+//! (outermost to innermost):
+//!
+//! ```text
+//! Singleflight → NegativeCache → Cache → Upstream
+//! ```
+//!
+//! - **`SingleflightLayer`** (outermost): collapses concurrent identical
+//!   requests into one upstream call before any cache interaction.
+//! - **`NegativeCacheLayer`**: intercepts upstream errors and writes them into
+//!   the cache store as [`CachedResponse::Error`] entries so subsequent callers
+//!   receive the cached error without hitting upstream again.
+//! - **`CacheLayer`**: handles success-path caching.  It sees the result after
+//!   `NegativeCacheLayer` has already decided whether to store the error.
+//! - **Upstream service**: the actual LLM provider.
+//!
+//! Using `ServiceBuilder`:
+//!
+//! ```rust,ignore
+//! use tower::ServiceBuilder;
+//! use liter_llm::tower::{
+//!     CacheConfig, CacheLayer,
+//!     NegativeCacheLayer, FixedWindowNegativeCache,
+//!     SingleflightLayer, InMemorySingleflight,
+//! };
+//! use std::sync::Arc;
+//!
+//! let svc = ServiceBuilder::new()
+//!     .layer(SingleflightLayer::new(Arc::new(InMemorySingleflight::default())))
+//!     .layer(NegativeCacheLayer::default())
+//!     .layer(CacheLayer::new(CacheConfig::default()))
+//!     .service(upstream);
+//! ```
 
 use std::collections::{HashMap, VecDeque};
 use std::future::Future;
@@ -18,7 +54,7 @@ use std::sync::{Arc, RwLock};
 use std::task::{Context, Poll};
 use std::time::{Duration, Instant};
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use tower::{Layer, Service};
 
 use super::types::{LlmRequest, LlmResponse};
@@ -72,6 +108,34 @@ impl Default for CacheConfig {
 ///
 /// Streaming responses are not cacheable because they are consumed once.
 ///
+/// # `Error` variant
+///
+/// The [`CachedResponse::Error`] variant stores a transient upstream error
+/// together with an expiry instant.  This allows
+/// [`crate::tower::cache_negative::NegativeCacheLayer`] to short-circuit
+/// repeated calls for the same request key without hitting upstream again while
+/// the negative-cache window is open.  The variant is written by
+/// `NegativeCacheLayer` and read by `CacheService`; `CacheService` itself never
+/// writes it — separation of concerns is maintained by keeping the write path in
+/// the negative-cache layer.
+///
+/// ### Why `Arc<LiterLlmError>` rather than a serialisable form?
+///
+/// `LiterLlmError` contains a `reqwest::Error` variant gated on `native-http`.
+/// That variant is not `Serialize`, so the enum cannot derive `Serialize`
+/// unconditionally.  Wrapping in `Arc` lets the in-memory store pass the value
+/// around cheaply without serialisation.  External stores (Redis, DynamoDB)
+/// that require serialisation should handle the `Error` variant explicitly in
+/// their `CacheStore` implementation, converting to/from a serialisable
+/// representation of the error.
+///
+/// ### Serialisation contract
+///
+/// Custom `Serialize`/`Deserialize` impls are provided.  Only the `Chat` and
+/// `Embed` variants are serialisable.  Attempting to serialise an `Error`
+/// variant returns an error; this guards against accidentally writing negative-
+/// cache entries to external stores without an explicit conversion shim.
+///
 /// # Performance note
 ///
 /// `CachedResponse` is `Clone`d on every cache hit (to return a value while
@@ -84,22 +148,88 @@ impl Default for CacheConfig {
 /// contract (`Serialize`/`Deserialize` on `Arc` requires special handling)
 /// and would not benefit external store implementations (Redis, DynamoDB)
 /// that must serialise on every read anyway.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone)]
 #[cfg_attr(alef, alef(skip))]
 pub enum CachedResponse {
     /// A cached chat completion response.
     Chat(ChatCompletionResponse),
     /// A cached embedding response.
     Embed(EmbeddingResponse),
+    /// A cached upstream error, stored by
+    /// [`crate::tower::cache_negative::NegativeCacheLayer`].
+    ///
+    /// The `expires_at` field records the instant at which this negative-cache
+    /// entry should be evicted.  Readers that encounter an expired `Error`
+    /// entry must treat it as a cache miss.
+    Error {
+        /// The upstream error, shared cheaply via `Arc`.
+        error: Arc<LiterLlmError>,
+        /// The wall-clock instant after which this entry must not be served.
+        expires_at: Instant,
+    },
+}
+
+// Manual Serialize/Deserialize for CachedResponse.
+//
+// The `Error` variant holds `Arc<LiterLlmError>` which is not `Serialize`
+// (the `reqwest::Error` inside `LiterLlmError` does not implement `Serialize`).
+// We serialise only `Chat` and `Embed` via a repr enum; `Error` entries are
+// in-memory only.
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+enum CachedResponseRepr {
+    Chat(ChatCompletionResponse),
+    Embed(EmbeddingResponse),
+}
+
+impl Serialize for CachedResponse {
+    fn serialize<S: Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> {
+        match self {
+            Self::Chat(r) => CachedResponseRepr::Chat(r.clone()).serialize(serializer),
+            Self::Embed(r) => CachedResponseRepr::Embed(r.clone()).serialize(serializer),
+            Self::Error { .. } => Err(serde::ser::Error::custom(
+                "CachedResponse::Error is not serialisable; convert to a serialisable form before writing to an external store",
+            )),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for CachedResponse {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> std::result::Result<Self, D::Error> {
+        match CachedResponseRepr::deserialize(deserializer)? {
+            CachedResponseRepr::Chat(r) => Ok(Self::Chat(r)),
+            CachedResponseRepr::Embed(r) => Ok(Self::Embed(r)),
+        }
+    }
 }
 
 impl CachedResponse {
     /// Convert this cached response back into the full [`LlmResponse`] enum.
-    pub fn into_llm_response(self) -> LlmResponse {
+    ///
+    /// Returns `Err` when this entry is a [`CachedResponse::Error`] variant.
+    /// Callers that only expect success responses should call this method and
+    /// propagate the `Err`.
+    ///
+    /// The in-memory `NegativeCacheLayer` stores errors via `Arc<LiterLlmError>`;
+    /// when converting back, `Arc::try_unwrap` is attempted first to avoid an
+    /// extra allocation.  If other holders exist (unlikely in normal operation),
+    /// the error's `Display` string is re-wrapped in `InternalError`.
+    pub fn into_llm_response(self) -> Result<LlmResponse> {
         match self {
-            Self::Chat(r) => LlmResponse::Chat(r),
-            Self::Embed(r) => LlmResponse::Embed(r),
+            Self::Chat(r) => Ok(LlmResponse::Chat(r)),
+            Self::Embed(r) => Ok(LlmResponse::Embed(r)),
+            Self::Error { error, .. } => Err(Arc::try_unwrap(error).unwrap_or_else(|arc| {
+                LiterLlmError::InternalError {
+                    message: arc.to_string(),
+                }
+            })),
         }
+    }
+
+    /// Returns `true` if this entry is an `Error` variant that has passed its expiry.
+    #[must_use]
+    pub fn is_expired_error(&self) -> bool {
+        matches!(self, Self::Error { expires_at, .. } if Instant::now() >= *expires_at)
     }
 }
 
@@ -167,13 +297,23 @@ impl InnerCache {
     ///
     /// Returns `Some(response)` when the entry exists, matches the serialized
     /// request body, and has not expired.  Returns `None` on miss.
+    ///
+    /// For [`CachedResponse::Error`] entries, expiry is checked against the
+    /// per-entry `expires_at` instant (set by `NegativeCacheLayer`) rather than
+    /// the global `ttl`, because the negative-cache window is controlled by the
+    /// policy, not the success-cache TTL.
     fn get_if_valid(&self, key: u64, request_body: &str) -> Option<CachedResponse> {
         let entry = self.map.get(&key)?;
         if entry.request_body != request_body {
             // Hash collision — different request mapped to the same key.
             return None;
         }
-        if entry.inserted_at.elapsed() > self.ttl {
+        // Error entries carry their own expiry; success entries use the global TTL.
+        let is_expired = match &entry.response {
+            CachedResponse::Error { expires_at, .. } => Instant::now() >= *expires_at,
+            _ => entry.inserted_at.elapsed() > self.ttl,
+        };
+        if is_expired {
             return None;
         }
         // Clone is required: the cache retains ownership while the caller
@@ -184,12 +324,23 @@ impl InnerCache {
 
     /// Return `true` if the entry for `key` exists and is expired.
     fn is_expired(&self, key: u64) -> bool {
-        self.map.get(&key).is_some_and(|e| e.inserted_at.elapsed() > self.ttl)
+        self.map.get(&key).is_some_and(|e| {
+            match &e.response {
+                CachedResponse::Error { expires_at, .. } => Instant::now() >= *expires_at,
+                _ => e.inserted_at.elapsed() > self.ttl,
+            }
+        })
     }
 
     /// Remove an expired entry (eviction under write lock).
     fn remove_expired(&mut self, key: u64) {
-        if self.map.get(&key).is_some_and(|e| e.inserted_at.elapsed() > self.ttl) {
+        let expired = self.map.get(&key).is_some_and(|e| {
+            match &e.response {
+                CachedResponse::Error { expires_at, .. } => Instant::now() >= *expires_at,
+                _ => e.inserted_at.elapsed() > self.ttl,
+            }
+        });
+        if expired {
             self.map.remove(&key);
             // Lazily cleaned from `order` during eviction.
         }
@@ -342,7 +493,7 @@ impl<S: Clone> Clone for CacheService<S> {
 /// The returned tuple contains the 64-bit hash key and the serialized request
 /// body.  The body is stored alongside the cached response so lookups can
 /// verify against hash collisions.
-fn cache_key(req: &LlmRequest) -> Option<(u64, String)> {
+pub(crate) fn cache_key(req: &LlmRequest) -> Option<(u64, String)> {
     let json = match req {
         LlmRequest::Chat(r) => serde_json::to_string(r).ok()?,
         LlmRequest::Embed(r) => serde_json::to_string(r).ok()?,
@@ -375,11 +526,12 @@ where
         let fut = self.inner.call(req);
 
         Box::pin(async move {
-            // Check cache for a hit.
+            // Check cache for a hit.  `into_llm_response` returns `Err` for
+            // `CachedResponse::Error` entries written by `NegativeCacheLayer`.
             if let Some((k, ref body)) = key_and_body
                 && let Some(cached) = store.get(k, body).await
             {
-                return Ok(cached.into_llm_response());
+                return cached.into_llm_response();
             }
 
             let resp = fut.await?;

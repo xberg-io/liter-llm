@@ -153,6 +153,7 @@ mod tower_integration {
     use crate::tower::types::LlmRequest;
     use crate::error::LiterLlmError;
 
+    #[allow(dead_code)]
     static INPUT_STAGES: &[GuardrailStage] = &[GuardrailStage::Input];
 
     #[tokio::test]

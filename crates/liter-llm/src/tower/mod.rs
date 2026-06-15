@@ -17,6 +17,10 @@
 //!   — per-model RPM / TPM rate limiting.
 //! - [`cache::CacheLayer`] / [`cache::CacheService`] — in-memory response
 //!   caching for non-streaming requests.
+//! - [`cache_negative::NegativeCacheLayer`] / [`cache_negative::NegativeCacheService`]
+//!   — negative-cache layer that caches upstream errors to prevent thundering-herd retries.
+//! - [`cache_singleflight::SingleflightLayer`] / [`cache_singleflight::SingleflightService`]
+//!   — singleflight deduplication layer that collapses concurrent identical requests.
 //! - [`cooldown::CooldownLayer`] / [`cooldown::CooldownService`] — deployment
 //!   cooldowns after transient errors.
 //! - [`health::HealthCheckLayer`] / [`health::HealthCheckService`] — periodic
@@ -49,11 +53,13 @@
 pub mod budget;
 /// Response-cache layer with pluggable in-memory backend.
 pub mod cache;
-/// Guardrail enforcement layer (content filtering, safety checks, policy evaluation).
-pub mod guardrail;
+/// Negative-cache layer that caches upstream errors to prevent thundering-herd retries.
+pub mod cache_negative;
 #[cfg(feature = "opendal-cache")]
 /// OpenDAL-backed cache backend for the response cache layer.
 pub mod cache_opendal;
+/// Singleflight deduplication layer that collapses concurrent identical requests.
+pub mod cache_singleflight;
 /// Circuit-breaker layer with pluggable [`circuit::CircuitPolicy`].
 pub mod circuit;
 /// Cooldown layer that backs off after upstream failures.
@@ -64,6 +70,8 @@ pub mod cost;
 pub(crate) mod error;
 /// Fallback layer that retries a failed call against a sibling provider.
 pub mod fallback;
+/// Guardrail enforcement layer (content filtering, safety checks, policy evaluation).
+pub mod guardrail;
 /// Health-probe layer used by the router to score upstream providers.
 pub mod health;
 /// Hedged-retry layer that races concurrent requests and cancels losers.
@@ -92,13 +100,18 @@ pub use tower::ServiceExt;
 
 pub use budget::{BudgetConfig, BudgetLayer, BudgetService, BudgetState, Enforcement};
 pub use cache::{CacheBackend, CacheConfig, CacheLayer, CacheService, CacheStore, CachedResponse, InMemoryStore};
-pub use guardrail::{GuardrailLayer, GuardrailService};
+pub use cache_negative::{FixedWindowNegativeCache, NegativeCacheLayer, NegativeCachePolicy, NegativeCacheService};
 #[cfg(feature = "opendal-cache")]
 pub use cache_opendal::OpenDalCacheStore;
+pub use cache_singleflight::{
+    InMemorySingleflight, SingleflightCoordinator, SingleflightHandle, SingleflightLayer, SingleflightResult,
+    SingleflightService,
+};
 pub use circuit::{CircuitLayer, CircuitPolicy, CircuitService, CircuitState, ExponentialBackoffCircuit};
 pub use cooldown::{CooldownLayer, CooldownService};
 pub use cost::{CostTrackingLayer, CostTrackingService};
 pub use fallback::{FallbackLayer, FallbackService};
+pub use guardrail::{GuardrailLayer, GuardrailService};
 pub use health::{
     HealthCheckConfig, HealthCheckLayer, HealthCheckService, HealthChecker, HealthStatus, HttpProbeHealthChecker,
     PerProviderHealthCheck,
