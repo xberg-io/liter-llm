@@ -24,14 +24,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ClientConfig::new("sk-..."),
         None
     )?;
-    
+
     // Upload input file (JSONL format)
     let file_req = liter_llm::types::files::CreateFileRequest {
         file: my_file_bytes,
         purpose: "batch".to_string(),
     };
     let uploaded = client.create_file(file_req).await?;
-    
+
     // Create batch
     let batch_req = CreateBatchRequest {
         input_file_id: uploaded.id,
@@ -40,16 +40,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         metadata: None,
     };
     let batch = client.create_batch(batch_req).await?;
-    
+
     // Wait for completion
     let completed = client.wait_for_batch(
         &batch.id,
         WaitForBatchConfig::default()
     ).await?;
-    
+
     println!("Batch status: {:?}", completed.status);
     println!("Output file: {:?}", completed.output_file_id);
-    
+
     Ok(())
 }
 ```
@@ -116,10 +116,10 @@ Non-terminal states (polling continues):
 pub enum BatchWaitError {
     /// Batch reached a terminal failure state.
     Failed(BatchStatus),
-    
+
     /// Polling timed out before reaching terminal status.
     Timeout(Duration),
-    
+
     /// Underlying client error.
     Client(LiterLlmError),
 }

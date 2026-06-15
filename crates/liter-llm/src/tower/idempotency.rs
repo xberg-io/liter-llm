@@ -408,11 +408,7 @@ where
             // Without a tenant prefix, a guessable key such as `"req-001"` used
             // by tenant A would collide with the same key used by tenant B,
             // leaking tenant A's cached response to tenant B.
-            let tenant_prefix = request
-                .tenant_id
-                .as_ref()
-                .map(|t| t.as_ref())
-                .unwrap_or("_");
+            let tenant_prefix = request.tenant_id.as_ref().map(|t| t.as_ref()).unwrap_or("_");
             let key = format!("{tenant_prefix}:{raw_key}");
 
             // ── Compute body hash ─────────────────────────────────────────
@@ -808,8 +804,10 @@ mod tests {
 
         // Build a shared store and two layers that share it.
         let shared_store = Arc::new(InMemoryIdempotencyStore::new());
-        let make_layer_shared =
-            || IdempotencyLayer { store: Arc::clone(&shared_store), ttl: Duration::from_secs(60) };
+        let make_layer_shared = || IdempotencyLayer {
+            store: Arc::clone(&shared_store),
+            ttl: Duration::from_secs(60),
+        };
 
         let client_a = MockClient::ok();
         let call_count_a = Arc::clone(&client_a.call_count);
@@ -835,13 +833,25 @@ mod tests {
         // Tenant B's first request — must ALSO hit inner (different store key).
         let resp_b = svc_b.call(req_b.clone()).await.expect("tenant B first call");
         assert!(matches!(resp_b, LlmResponse::Chat(_)));
-        assert_eq!(call_count_b.load(Ordering::SeqCst), 1, "inner called for tenant B (no cross-tenant hit)");
+        assert_eq!(
+            call_count_b.load(Ordering::SeqCst),
+            1,
+            "inner called for tenant B (no cross-tenant hit)"
+        );
 
         // Repeat for both — should now return cached without calling inner again.
         svc_a.call(req_a).await.expect("tenant A repeat");
-        assert_eq!(call_count_a.load(Ordering::SeqCst), 1, "inner NOT called on tenant A repeat");
+        assert_eq!(
+            call_count_a.load(Ordering::SeqCst),
+            1,
+            "inner NOT called on tenant A repeat"
+        );
 
         svc_b.call(req_b).await.expect("tenant B repeat");
-        assert_eq!(call_count_b.load(Ordering::SeqCst), 1, "inner NOT called on tenant B repeat");
+        assert_eq!(
+            call_count_b.load(Ordering::SeqCst),
+            1,
+            "inner NOT called on tenant B repeat"
+        );
     }
 }

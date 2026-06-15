@@ -155,11 +155,11 @@ impl KeyResolver for CustomKeyResolver {
                 .await
                 .map_err(|e| KeyResolverError::Backend(format!("lookup failed: {}", e)))?
                 .ok_or(KeyResolverError::NotFound)?;
-            
+
             if !key.active {
                 return Err(KeyResolverError::Inactive);
             }
-            
+
             Ok(key)
         })
     }

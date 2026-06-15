@@ -169,7 +169,7 @@ cost for billing, dashboards, or analytics.
 | `metadata` | HashMap | Always | Free-form attributes; sinks can inspect without adding struct fields |
 | `received_at` | SystemTime | Always | Wall-clock time event was created |
 
-### effective_model
+### Effective_model
 
 Differs from `model` when routing or fallback rewrites the request. For example:
 
@@ -204,7 +204,7 @@ Implement `UsageSink` to consume events:
 
 ```rust
 pub trait UsageSink: Send + Sync + 'static {
-    fn emit(&self, event: UsageEvent) 
+    fn emit(&self, event: UsageEvent)
         -> impl Future<Output = Result<(), UsageSinkError>> + Send;
 }
 ```

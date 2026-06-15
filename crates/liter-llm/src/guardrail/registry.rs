@@ -21,6 +21,7 @@ use super::{Guardrail, GuardrailContext, GuardrailDecision, GuardrailStage};
 /// `Mutate` rewrites the context payload and continues.
 ///
 /// For the global singleton, use [`global`].
+#[cfg_attr(alef, alef(skip))]
 pub struct GuardrailRegistry {
     guardrails: Vec<Arc<dyn Guardrail>>,
 }

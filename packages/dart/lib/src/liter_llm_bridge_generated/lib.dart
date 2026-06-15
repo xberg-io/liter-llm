@@ -8,7 +8,8 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `IntentPrototype`, `SingleflightResult`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Create a new LLM client with simple scalar configuration.
 ///
@@ -68,9 +69,21 @@ Future<void> registerCustomProvider({required CustomProviderConfig config}) =>
 Future<bool> unregisterCustomProvider({required String name}) =>
     RustLib.instance.api.crateUnregisterCustomProvider(name: name);
 
+/// Return the capability flags for a named provider.
+///
+/// Performs an O(n) linear scan over the embedded registry (142 entries).
+/// Returns a `'static` reference valid for the lifetime of the process.
+///
+/// For unknown `provider_name` values the function returns a reference to an
+/// all-`false` sentinel so callers never need to handle `Option`.
+Future<ProviderCapabilities> capabilities({required String providerName}) =>
+    RustLib.instance.api.crateCapabilities(providerName: providerName);
+
 /// Return all provider configs from the registry.
 ///
 /// Useful for tooling, documentation generation, or runtime enumeration.
+/// Returns the public `ProviderConfig` slice (without capability flags).
+/// To query capability flags for a specific provider use `capabilities`.
 Future<List<ProviderConfig>> allProviders() =>
     RustLib.instance.api.crateAllProviders();
 
@@ -126,6 +139,15 @@ Future<double?> completionCostWithCache({
   completionTokens: completionTokens,
 );
 
+/// Remove all guardrails from the global registry.
+///
+/// Primarily useful in tests to reset state between test cases.
+///
+/// **Panics:**
+///
+/// Panics if the global registry lock is poisoned.
+Future<void> clear() => RustLib.instance.api.crateClear();
+
 /// Count tokens in a text string using the tokenizer for the given model.
 ///
 /// The tokenizer is resolved from the model name prefix (e.g. `"gpt-4o"` maps
@@ -156,6 +178,199 @@ Future<PlatformInt64> countRequestTokens({
   required String model,
   required ChatCompletionRequest req,
 }) => RustLib.instance.api.crateCountRequestTokens(model: model, req: req);
+
+/// Record a cache hit metric.
+///
+/// Call from cache layer implementations to emit `gen_ai.cache.hit`.
+/// If the meter has not been initialized, this call is a no-op.
+Future<void> recordCacheHit({
+  required String system,
+  required String model,
+  required String operation,
+}) => RustLib.instance.api.crateRecordCacheHit(
+  system: system,
+  model: model,
+  operation: operation,
+);
+
+/// Record a cache miss metric.
+///
+/// Call from cache layer implementations to emit `gen_ai.cache.miss`.
+/// If the meter has not been initialized, this call is a no-op.
+Future<void> recordCacheMiss({
+  required String system,
+  required String model,
+  required String operation,
+}) => RustLib.instance.api.crateRecordCacheMiss(
+  system: system,
+  model: model,
+  operation: operation,
+);
+
+/// Record a stale cache metric.
+///
+/// Call from cache layer implementations to emit `gen_ai.cache.stale`.
+/// If the meter has not been initialized, this call is a no-op.
+Future<void> recordCacheStale({
+  required String system,
+  required String model,
+  required String operation,
+}) => RustLib.instance.api.crateRecordCacheStale(
+  system: system,
+  model: model,
+  operation: operation,
+);
+
+/// Record a circuit breaker trip.
+///
+/// Call from `CircuitLayer` when the circuit opens.
+/// If the meter has not been initialized, this call is a no-op.
+Future<void> recordCircuitTrip({
+  required String system,
+  required String model,
+}) => RustLib.instance.api.crateRecordCircuitTrip(system: system, model: model);
+
+/// Record a retry attempt.
+///
+/// Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
+/// If the meter has not been initialized, this call is a no-op.
+Future<void> recordRetryAttempt({
+  required String system,
+  required String model,
+  required String operation,
+}) => RustLib.instance.api.crateRecordRetryAttempt(
+  system: system,
+  model: model,
+  operation: operation,
+);
+
+/// Record a per-tier cache hit.
+///
+/// `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
+/// Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
+/// If the meter has not been initialized, this call is a no-op.
+Future<void> recordCacheTierHit({
+  required String system,
+  required String model,
+  required String tier,
+}) => RustLib.instance.api.crateRecordCacheTierHit(
+  system: system,
+  model: model,
+  tier: tier,
+);
+
+/// Record a per-tier cache miss.
+///
+/// `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
+/// Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
+/// If the meter has not been initialized, this call is a no-op.
+Future<void> recordCacheTierMiss({
+  required String system,
+  required String model,
+  required String tier,
+}) => RustLib.instance.api.crateRecordCacheTierMiss(
+  system: system,
+  model: model,
+  tier: tier,
+);
+
+/// Record cumulative spend for a specific budget dimension.
+///
+/// Emits `gen_ai.budget.spend_usd` with dimension attributes.
+/// Call from `record` after each
+/// successful completion.  If the meter has not been initialized, this
+/// call is a no-op.
+Future<void> recordBudgetSpend({
+  required String model,
+  required String provider,
+  String? tenantId,
+  String? userId,
+  String? apiKeyId,
+  required double costUsd,
+}) => RustLib.instance.api.crateRecordBudgetSpend(
+  model: model,
+  provider: provider,
+  tenantId: tenantId,
+  userId: userId,
+  apiKeyId: apiKeyId,
+  costUsd: costUsd,
+);
+
+/// Record a budget-rejection event.
+///
+/// Emits `gen_ai.budget.rejection` with the triggering dimension.
+/// Call from `check` when
+/// returning `Reject`.
+/// If the meter has not been initialized, this call is a no-op.
+Future<void> recordBudgetRejection({
+  required String model,
+  required String provider,
+  required String dimension,
+}) => RustLib.instance.api.crateRecordBudgetRejection(
+  model: model,
+  provider: provider,
+  dimension: dimension,
+);
+
+/// Record the lifetime of a completed Realtime WebSocket session.
+///
+/// Emits `gen_ai.realtime.session.duration` (seconds).
+/// If the meter has not been initialized, this call is a no-op.
+Future<void> recordRealtimeSessionDuration({
+  required String provider,
+  required double durationSecs,
+}) => RustLib.instance.api.crateRecordRealtimeSessionDuration(
+  provider: provider,
+  durationSecs: durationSecs,
+);
+
+/// Record a single Realtime event being forwarded.
+///
+/// Emits `gen_ai.realtime.event.count` with `gen_ai.realtime.direction`
+/// (`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
+/// `gen_ai.system`.
+/// If the meter has not been initialized, this call is a no-op.
+Future<void> recordRealtimeEvent({
+  required String provider,
+  required String direction,
+  required String eventType,
+}) => RustLib.instance.api.crateRecordRealtimeEvent(
+  provider: provider,
+  direction: direction,
+  eventType: eventType,
+);
+
+/// Record audio bytes forwarded over a Realtime WebSocket session.
+///
+/// Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
+/// `gen_ai.realtime.direction` attributes.
+/// If the meter has not been initialized, this call is a no-op.
+Future<void> recordRealtimeBytes({
+  required String provider,
+  required String direction,
+  required PlatformInt64 byteCount,
+}) => RustLib.instance.api.crateRecordRealtimeBytes(
+  provider: provider,
+  direction: direction,
+  byteCount: byteCount,
+);
+
+/// Assert that `current_len + incoming` does not exceed `limit`.
+///
+/// Call this before appending `incoming` bytes to any buffer that must
+/// stay below `limit`.  Returns `Err(LiterLlmError.Streaming)` on overflow
+/// and emits a `tracing.warn!` with context.
+Future<void> checkBound({
+  required String context,
+  required PlatformInt64 currentLen,
+  required PlatformInt64 incoming,
+  required PlatformInt64 limit,
+}) => RustLib.instance.api.crateCheckBound(
+  context: context,
+  currentLen: currentLen,
+  incoming: incoming,
+  limit: limit,
+);
 
 /// Install the `ring` crypto provider as the rustls process default, idempotently.
 ///
@@ -431,6 +646,10 @@ Future<CustomProviderConfig> createCustomProviderConfigFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateCustomProviderConfigFromJson(json: json);
 
+Future<ProviderCapabilities> createProviderCapabilitiesFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateProviderCapabilitiesFromJson(json: json);
+
 Future<ProviderConfig> createProviderConfigFromJson({required String json}) =>
     RustLib.instance.api.crateCreateProviderConfigFromJson(json: json);
 
@@ -482,6 +701,8 @@ abstract class DefaultClient implements RustOpaqueInterface {
 
   Future<RerankResponse> rerank({required RerankRequest req});
 
+  Future<BatchObject> retrieve({required String batchId});
+
   Future<BatchObject> retrieveBatch({required String batchId});
 
   Future<FileObject> retrieveFile({required String fileId});
@@ -494,6 +715,11 @@ abstract class DefaultClient implements RustOpaqueInterface {
 
   Future<TranscriptionResponse> transcribe({
     required CreateTranscriptionRequest req,
+  });
+
+  Future<BatchObject> waitForBatch({
+    required String batchId,
+    required WaitForBatchConfig config,
   });
 }
 
@@ -1232,6 +1458,18 @@ class Choice {
           index == other.index &&
           message == other.message &&
           finishReason == other.finishReason;
+}
+
+/// Observable state of a circuit breaker.
+enum CircuitState {
+  /// Requests flow through normally.
+  closed,
+
+  /// All requests are rejected; the circuit is waiting for the backoff to elapse.
+  open,
+
+  /// One probe request is allowed through to test service health.
+  halfOpen,
 }
 
 @freezed
@@ -2026,6 +2264,15 @@ class FunctionMessage {
           name == other.name;
 }
 
+/// The result of a single health probe.
+enum HealthStatus {
+  /// The probe succeeded; the upstream is reachable.
+  healthy,
+
+  /// The probe failed; the upstream may be down.
+  unhealthy,
+}
+
 /// A single generated image, returned as either a URL or base64 data.
 class Image {
   /// Image URL (if response_format was "url").
@@ -2225,6 +2472,27 @@ sealed class LiterLlmError with _$LiterLlmError {
     required String url,
     required String reason,
   }) = LiterLlmError_OutboundForbidden;
+
+  /// A different request body was submitted for an existing `Idempotency-Key`.
+  ///
+  /// Per the OpenAI `Idempotency-Key` convention, once a key is used with a
+  /// particular request body, subsequent requests using the same key must carry
+  /// an identical body.  A body mismatch is a hard error (not retryable).
+  ///
+  /// HTTP equivalent: 409 Conflict.
+  const factory LiterLlmError.idempotencyConflict({required String key}) =
+      LiterLlmError_IdempotencyConflict;
+
+  /// The same `Idempotency-Key` is already in-flight (another request with the
+  /// same key is currently being processed).
+  ///
+  /// The caller should wait briefly and retry.  The response is not yet
+  /// available, and this request has been short-circuited to avoid running
+  /// the operation twice.
+  ///
+  /// HTTP equivalent: 409 Conflict (retryable after a brief delay).
+  const factory LiterLlmError.idempotencyInFlight({required String key}) =
+      LiterLlmError_IdempotencyInFlight;
 
   /// Return the OpenTelemetry `error.type` string for this error variant.
   ///
@@ -2785,7 +3053,91 @@ class PromptTokensDetails {
           audioTokens == other.audioTokens;
 }
 
+/// Static capability flags for a provider.
+///
+/// Each flag indicates whether the provider's models *generally* support that
+/// feature.  For providers that aggregate many underlying models (e.g. Bedrock,
+/// OpenRouter, vLLM) the flags reflect the superset of available model
+/// capabilities — a flag being `true` means at least one model supports the
+/// feature, not every model.
+///
+/// All flags default to `false` so that newly added providers are safe.
+///
+/// Access via the crate-level [`capabilities`] function:
+///
+/// ```rust
+/// use liter_llm::capabilities;
+///
+/// let caps = capabilities("openai");
+/// assert!(caps.function_calling);
+/// assert!(caps.vision);
+///
+/// // Unknown providers return a default-all-false reference.
+/// let unknown = capabilities("my-private-model");
+/// assert!(!unknown.function_calling);
+/// ```
+class ProviderCapabilities {
+  /// The provider accepts image input in chat messages.
+  final bool vision;
+
+  /// The provider supports extended-thinking / reasoning tokens.
+  final bool reasoning;
+
+  /// The provider supports JSON-mode or `response_format` structured output.
+  final bool structuredOutput;
+
+  /// The provider supports tool / function calling.
+  final bool functionCalling;
+
+  /// The provider accepts audio as input.
+  final bool audioIn;
+
+  /// The provider can generate audio / TTS output.
+  final bool audioOut;
+
+  /// The provider accepts video as input.
+  final bool videoIn;
+
+  const ProviderCapabilities({
+    required this.vision,
+    required this.reasoning,
+    required this.structuredOutput,
+    required this.functionCalling,
+    required this.audioIn,
+    required this.audioOut,
+    required this.videoIn,
+  });
+
+  @override
+  int get hashCode =>
+      vision.hashCode ^
+      reasoning.hashCode ^
+      structuredOutput.hashCode ^
+      functionCalling.hashCode ^
+      audioIn.hashCode ^
+      audioOut.hashCode ^
+      videoIn.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProviderCapabilities &&
+          runtimeType == other.runtimeType &&
+          vision == other.vision &&
+          reasoning == other.reasoning &&
+          structuredOutput == other.structuredOutput &&
+          functionCalling == other.functionCalling &&
+          audioIn == other.audioIn &&
+          audioOut == other.audioOut &&
+          videoIn == other.videoIn;
+}
+
 /// Static configuration for a single provider entry in providers.json.
+///
+/// This struct deliberately does not include capability flags or streaming
+/// format, which are accessed via the [`capabilities`] function.  Keeping
+/// these fields separate preserves backward compatibility with all generated
+/// binding code that constructs `ProviderConfig` using struct literal syntax.
 class ProviderConfig {
   /// Provider identifier (matches the entry key in providers.json).
   final String name;
@@ -3393,6 +3745,20 @@ class StreamDelta {
           refusal == other.refusal;
 }
 
+/// The streaming wire format a provider uses for its response stream.
+///
+/// Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
+/// a proprietary binary EventStream framing.
+///
+/// Deserialized from the `streaming_format` JSON field via [`serde`].
+enum StreamFormat {
+  /// Standard Server-Sent Events (text/event-stream).
+  sse,
+
+  /// AWS EventStream binary framing (application/vnd.amazon.eventstream).
+  awsEventStream,
+}
+
 /// Partial function call details in a stream.
 class StreamFunctionCall {
   /// Function name (typically in the first chunk).
@@ -3728,4 +4094,46 @@ class UserMessage {
           runtimeType == other.runtimeType &&
           content == other.content &&
           name == other.name;
+}
+
+/// Configuration for polling a batch until terminal status.
+///
+/// All time values are in seconds as `f64` so the struct bridges across FFI
+/// boundaries without requiring a `Duration` shim.
+class WaitForBatchConfig {
+  /// Initial interval between polls, in seconds.
+  final double initialIntervalSecs;
+
+  /// Maximum interval between polls (backoff plateau), in seconds.
+  final double maxIntervalSecs;
+
+  /// Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll).
+  final double backoffMultiplier;
+
+  /// Optional timeout in seconds — polling fails if this duration is exceeded.
+  final double? timeoutSecs;
+
+  const WaitForBatchConfig({
+    required this.initialIntervalSecs,
+    required this.maxIntervalSecs,
+    required this.backoffMultiplier,
+    this.timeoutSecs,
+  });
+
+  @override
+  int get hashCode =>
+      initialIntervalSecs.hashCode ^
+      maxIntervalSecs.hashCode ^
+      backoffMultiplier.hashCode ^
+      timeoutSecs.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is WaitForBatchConfig &&
+          runtimeType == other.runtimeType &&
+          initialIntervalSecs == other.initialIntervalSecs &&
+          maxIntervalSecs == other.maxIntervalSecs &&
+          backoffMultiplier == other.backoffMultiplier &&
+          timeoutSecs == other.timeoutSecs;
 }

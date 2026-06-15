@@ -232,9 +232,15 @@ impl LiterLlmError {
                 message: message.clone(),
                 status: *status,
             },
-            Self::ContextWindowExceeded { message } => Self::ContextWindowExceeded { message: message.clone() },
-            Self::ContentPolicy { message } => Self::ContentPolicy { message: message.clone() },
-            Self::NotFound { message } => Self::NotFound { message: message.clone() },
+            Self::ContextWindowExceeded { message } => Self::ContextWindowExceeded {
+                message: message.clone(),
+            },
+            Self::ContentPolicy { message } => Self::ContentPolicy {
+                message: message.clone(),
+            },
+            Self::NotFound { message } => Self::NotFound {
+                message: message.clone(),
+            },
             Self::ServerError { message, status } => Self::ServerError {
                 message: message.clone(),
                 status: *status,
@@ -246,7 +252,9 @@ impl LiterLlmError {
             Self::Timeout => Self::Timeout,
             #[cfg(any(feature = "native-http", feature = "wasm-http"))]
             Self::Network(e) => Self::InternalError { message: e.to_string() },
-            Self::Streaming { message } => Self::Streaming { message: message.clone() },
+            Self::Streaming { message } => Self::Streaming {
+                message: message.clone(),
+            },
             Self::EndpointNotSupported { endpoint, provider } => Self::EndpointNotSupported {
                 endpoint: endpoint.clone(),
                 provider: provider.clone(),
@@ -260,8 +268,12 @@ impl LiterLlmError {
                 message: message.clone(),
                 model: model.clone(),
             },
-            Self::HookRejected { message } => Self::HookRejected { message: message.clone() },
-            Self::InternalError { message } => Self::InternalError { message: message.clone() },
+            Self::HookRejected { message } => Self::HookRejected {
+                message: message.clone(),
+            },
+            Self::InternalError { message } => Self::InternalError {
+                message: message.clone(),
+            },
             Self::OutboundForbidden { url, reason } => Self::OutboundForbidden {
                 url: url.clone(),
                 reason: reason.clone(),

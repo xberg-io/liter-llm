@@ -20,7 +20,7 @@ use secrecy::ExposeSecret;
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
-/// `HashiCorpVaultProvider::get` must extract the `.data.data.<field>` field
+/// `HashCorpVaultProvider::get` must extract the `.data.data.<field>` field
 /// from a Vault KV-v2 read response.
 #[tokio::test]
 async fn fetch_kv_v2_path_extracts_data_data_field() {

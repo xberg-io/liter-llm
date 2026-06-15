@@ -20,7 +20,7 @@ use liter_llm::tenant::InMemoryKeyResolver;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = ProxyConfig::from_file("liter-llm-proxy.toml")?;
-    
+
     // Create a custom key resolver (in-memory for this example)
     let resolver = Arc::new(InMemoryKeyResolver::with_entries(vec![
         (
@@ -35,13 +35,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             },
         ),
     ]));
-    
+
     // Build and serve with the custom resolver
     ProxyServer::new(config)
         .with_key_resolver(resolver)
         .serve_with_shutdown(None)
         .await?;
-    
+
     Ok(())
 }
 ```

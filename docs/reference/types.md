@@ -60,7 +60,7 @@ An individual search result.
 The value broadcast from a singleflight leader to all followers.
 
 `Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
+broadcast channels require `T: Clone`. The `Arc` adds only a reference-count
 bump per follower, which is negligible under the burst loads this layer targets.
 
 *Opaque type — fields are not directly accessible.*
@@ -832,7 +832,7 @@ Configuration for registering a custom LLM provider at runtime.
 Static capability flags for a provider.
 
 Each flag indicates whether the provider's models *generally* support that
-feature.  For providers that aggregate many underlying models (e.g. Bedrock,
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
 OpenRouter, vLLM) the flags reflect the superset of available model
 capabilities — a flag being `True` means at least one model supports the
 feature, not every model.
@@ -858,7 +858,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function.  Keeping
+format, which are accessed via the `capabilities` function. Keeping
 these fields separate preserves backward compatibility with all generated
 binding code that constructs `ProviderConfig` using struct literal syntax.
 
@@ -1119,7 +1119,7 @@ The trait is object-safe so implementations can be stored in a
 Policy that drives a circuit breaker's state transitions.
 
 Implement this trait to provide custom failure-detection and
-recovery logic.  The default implementation is `ExponentialBackoffCircuit`.
+recovery logic. The default implementation is `ExponentialBackoffCircuit`.
 
 *Opaque type — fields are not directly accessible.*
 
@@ -1129,7 +1129,7 @@ recovery logic.  The default implementation is `ExponentialBackoffCircuit`.
 
 Circuit breaker with exponential backoff.
 
-Opens after `failure_threshold` consecutive failures.  After
+Opens after `failure_threshold` consecutive failures. After
 `base_backoff` (doubled on each successive open → half-open → open cycle,
 up to `max_backoff`), the circuit enters `CircuitState.HalfOpen` and
 allows one probe request through.
@@ -1206,8 +1206,8 @@ logs and metrics.
 ### Object safety
 
 `UpstreamDiscover` is **not** object-safe and **must not** be stored as
-`dyn UpstreamDiscover`.  It is a generic bound used exclusively as a type
-parameter for `DynamicRouter<D>`.  All discovery implementations are
+`dyn UpstreamDiscover`. It is a generic bound used exclusively as a type
+parameter for `DynamicRouter<D>`. All discovery implementations are
 monomorphised at compile time.
 
 If you need a runtime registry of heterogeneous discovery sources, wrap
@@ -1217,7 +1217,7 @@ each source in an `Arc<Mutex<Box<dyn …>>>` and poll them via a custom
 ### Note for 1.A integration
 
 If the router encounters a discovery error, it wraps it in
-`RouterError.Discover`.  The 1.A error-consolidation workstream should
+`RouterError.Discover`. The 1.A error-consolidation workstream should
 replace this local enum with the canonical error hierarchy.
 
 *Opaque type — fields are not directly accessible.*
@@ -1560,7 +1560,7 @@ Stop sequence(s) that cause the model to stop generating.
 
 The streaming wire format a provider uses for its response stream.
 
-Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
+Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
 a proprietary binary EventStream framing.
 
 Deserialized from the `streaming_format` JSON field via `serde`.

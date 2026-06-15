@@ -103,7 +103,10 @@ async fn in_memory_resolver_basic() {
     let resolver = InMemoryKeyResolver::new();
     resolver.insert("sk-acme-key", sample_key("acme", true));
 
-    let resolved = resolver.resolve("sk-acme-key".to_owned()).await.expect("should resolve");
+    let resolved = resolver
+        .resolve("sk-acme-key".to_owned())
+        .await
+        .expect("should resolve");
     assert_eq!(resolved.tenant_id.as_ref(), "acme");
     assert_eq!(resolved.allowed_models, vec!["gpt-4"]);
     assert!(resolved.active);
@@ -113,7 +116,10 @@ async fn in_memory_resolver_basic() {
 async fn in_memory_resolver_not_found() {
     let resolver = InMemoryKeyResolver::new();
 
-    let err = resolver.resolve("sk-nonexistent".to_owned()).await.expect_err("should fail");
+    let err = resolver
+        .resolve("sk-nonexistent".to_owned())
+        .await
+        .expect_err("should fail");
     assert!(matches!(err, KeyResolverError::NotFound));
 }
 

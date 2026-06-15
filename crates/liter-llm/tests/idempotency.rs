@@ -478,9 +478,21 @@ async fn idempotency_body_hash_deterministic() {
         let mut svc = layer.layer(ok_inner(Arc::clone(&count), "gpt-4"));
 
         // First call populates; the response carries a deterministic model.
-        let first = svc.ready().await.unwrap().call(req_with_key("gpt-4", &key)).await.unwrap();
+        let first = svc
+            .ready()
+            .await
+            .unwrap()
+            .call(req_with_key("gpt-4", &key))
+            .await
+            .unwrap();
         // Second call must hit the cache — same key+body.
-        let second = svc.ready().await.unwrap().call(req_with_key("gpt-4", &key)).await.unwrap();
+        let second = svc
+            .ready()
+            .await
+            .unwrap()
+            .call(req_with_key("gpt-4", &key))
+            .await
+            .unwrap();
 
         let (m1, m2) = match (first, second) {
             (LlmResponse::Chat(a), LlmResponse::Chat(b)) => (a.model, b.model),
@@ -507,8 +519,18 @@ async fn idempotency_tenant_scoped_keys_dont_collide() {
         .with_idempotency_key("shared-key")
         .with_tenant_id("tenant-b");
 
-    svc.ready().await.unwrap().call(req_a.clone()).await.expect("tenant-a first");
-    svc.ready().await.unwrap().call(req_b.clone()).await.expect("tenant-b first");
+    svc.ready()
+        .await
+        .unwrap()
+        .call(req_a.clone())
+        .await
+        .expect("tenant-a first");
+    svc.ready()
+        .await
+        .unwrap()
+        .call(req_b.clone())
+        .await
+        .expect("tenant-b first");
 
     assert_eq!(
         count.load(Ordering::SeqCst),

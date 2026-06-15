@@ -767,7 +767,7 @@ Configuration for registering a custom LLM provider at runtime.
 Static capability flags for a provider.
 
 Each flag indicates whether the provider's models *generally* support that
-feature.  For providers that aggregate many underlying models (e.g. Bedrock,
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
 OpenRouter, vLLM) the flags reflect the superset of available model
 capabilities — a flag being `True` means at least one model supports the
 feature, not every model.
@@ -793,7 +793,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function.  Keeping
+format, which are accessed via the `capabilities` function. Keeping
 these fields separate preserves backward compatibility with all generated
 binding code that constructs `ProviderConfig` using struct literal syntax.
 

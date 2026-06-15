@@ -90,6 +90,7 @@ pub struct CacheKeyInput<'a> {
 ///
 /// The trait is object-safe; implementations can be stored behind
 /// `Arc<dyn CacheKeyStrategy>`.
+#[cfg_attr(alef, alef(skip))]
 pub trait CacheKeyStrategy: Send + Sync + 'static {
     /// Derive a `u64` hash key and a canonical serialized request body for
     /// collision-guard comparison.
@@ -108,6 +109,7 @@ pub trait CacheKeyStrategy: Send + Sync + 'static {
 /// This is the default behavior: two requests are cache-equivalent only when
 /// their full serialization is byte-identical.  Tenant and system-prompt fields
 /// are included verbatim.
+#[cfg_attr(alef, alef(skip))]
 #[derive(Debug, Clone, Default)]
 pub struct ExactHashStrategy;
 
@@ -138,6 +140,7 @@ impl CacheKeyStrategy for ExactHashStrategy {
 /// the caller wants tenant isolation to be handled at a higher layer, or when
 /// per-call metadata such as a request trace ID would otherwise fragment the
 /// cache unnecessarily.
+#[cfg_attr(alef, alef(skip))]
 #[derive(Debug, Clone, Default)]
 pub struct SystemPromptAwareStrategy;
 
@@ -164,6 +167,7 @@ impl CacheKeyStrategy for SystemPromptAwareStrategy {
 ///
 /// When no `tenant_id` is present in the input, this strategy behaves
 /// identically to [`ExactHashStrategy`].
+#[cfg_attr(alef, alef(skip))]
 #[derive(Debug, Clone, Default)]
 pub struct TenantScopedStrategy;
 

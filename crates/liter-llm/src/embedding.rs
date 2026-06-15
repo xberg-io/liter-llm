@@ -29,6 +29,7 @@ use crate::types::EmbeddingRequest;
 ///
 /// The trait is object-safe; implementations can be stored behind
 /// `Arc<dyn EmbeddingProvider>`.
+#[cfg_attr(alef, alef(skip))]
 pub trait EmbeddingProvider: Send + Sync + 'static {
     /// Embed `text` and return a dense float vector.
     ///
@@ -64,6 +65,7 @@ pub trait EmbeddingProvider: Send + Sync + 'static {
 ///     ),
 /// );
 /// ```
+#[cfg_attr(alef, alef(skip))]
 pub struct SelfHostedEmbeddingProvider {
     client: Arc<dyn LlmClient>,
     model: String,
@@ -124,6 +126,7 @@ impl EmbeddingProvider for SelfHostedEmbeddingProvider {
 ///
 /// Useful in tests and in the `lite` configuration where the semantic cache
 /// tier is disabled and no embedding provider is wired up.
+#[cfg_attr(alef, alef(skip))]
 #[derive(Debug, Clone)]
 pub struct NoOpEmbeddingProvider {
     /// Dimensionality of the zero vector returned by [`embed`][Self::embed].

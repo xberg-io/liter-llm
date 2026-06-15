@@ -243,28 +243,26 @@ where
                 // that reserve a resource slot inside `poll_ready`.
                 let svc = match svc.ready().await {
                     Ok(s) => s,
-                    Err(e) => {
-                        match policy.classify(&e) {
-                            RetryClass::Terminal => {
-                                tracing::debug!(
-                                    attempt,
-                                    error = %e,
-                                    "fallback chain: terminal error in poll_ready, aborting"
-                                );
-                                return Err(e);
-                            }
-                            RetryClass::Transient => {
-                                tracing::warn!(
-                                    attempt,
-                                    chain_len,
-                                    error = %e,
-                                    "fallback chain: transient error in poll_ready, trying next service"
-                                );
-                                last_err = Some(e);
-                                continue;
-                            }
+                    Err(e) => match policy.classify(&e) {
+                        RetryClass::Terminal => {
+                            tracing::debug!(
+                                attempt,
+                                error = %e,
+                                "fallback chain: terminal error in poll_ready, aborting"
+                            );
+                            return Err(e);
                         }
-                    }
+                        RetryClass::Transient => {
+                            tracing::warn!(
+                                attempt,
+                                chain_len,
+                                error = %e,
+                                "fallback chain: transient error in poll_ready, trying next service"
+                            );
+                            last_err = Some(e);
+                            continue;
+                        }
+                    },
                 };
 
                 match svc.call(request.clone()).await {
@@ -357,11 +355,7 @@ mod tests {
             .await
             .expect("fallback must succeed on second service");
         assert!(matches!(resp, LlmResponse::Chat(_)));
-        assert_eq!(
-            ok_calls.load(Ordering::SeqCst),
-            1,
-            "second service must be called"
-        );
+        assert_eq!(ok_calls.load(Ordering::SeqCst), 1, "second service must be called");
     }
 
     #[tokio::test]
@@ -467,7 +461,9 @@ mod tests {
                     // Yield once so parallel tasks can interleave.
                     tokio::task::yield_now().await;
                     concurrent.fetch_sub(1, Ordering::SeqCst);
-                    Ok(LlmResponse::Chat(crate::tower::tests_common::make_chat_response("gpt-4")))
+                    Ok(LlmResponse::Chat(crate::tower::tests_common::make_chat_response(
+                        "gpt-4",
+                    )))
                 })
             }
         }
@@ -521,9 +517,7 @@ mod tests {
         let handles: Vec<_> = (0..5)
             .map(|_| {
                 let mut s = svc2.clone();
-                tokio::spawn(async move {
-                    s.call(LlmRequest::Chat(chat_req("openai/gpt-4"))).await
-                })
+                tokio::spawn(async move { s.call(LlmRequest::Chat(chat_req("openai/gpt-4"))).await })
             })
             .collect();
         for h in handles {

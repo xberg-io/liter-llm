@@ -30,6 +30,7 @@ use crate::error::Result;
 // ── VectorMetadata ────────────────────────────────────────────────────────────
 
 /// Metadata stored alongside each vector entry.
+#[cfg_attr(alef, alef(skip))]
 #[derive(Debug, Clone)]
 pub struct VectorMetadata {
     /// The exact-cache key this vector corresponds to.

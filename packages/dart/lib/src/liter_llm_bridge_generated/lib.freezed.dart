@@ -1354,7 +1354,7 @@ extension LiterLlmErrorPatterns on LiterLlmError {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( LiterLlmError_Authentication value)?  authentication,TResult Function( LiterLlmError_RateLimited value)?  rateLimited,TResult Function( LiterLlmError_BadRequest value)?  badRequest,TResult Function( LiterLlmError_ContextWindowExceeded value)?  contextWindowExceeded,TResult Function( LiterLlmError_ContentPolicy value)?  contentPolicy,TResult Function( LiterLlmError_NotFound value)?  notFound,TResult Function( LiterLlmError_ServerError value)?  serverError,TResult Function( LiterLlmError_ServiceUnavailable value)?  serviceUnavailable,TResult Function( LiterLlmError_Timeout value)?  timeout,TResult Function( LiterLlmError_Streaming value)?  streaming,TResult Function( LiterLlmError_EndpointNotSupported value)?  endpointNotSupported,TResult Function( LiterLlmError_InvalidHeader value)?  invalidHeader,TResult Function( LiterLlmError_Serialization value)?  serialization,TResult Function( LiterLlmError_BudgetExceeded value)?  budgetExceeded,TResult Function( LiterLlmError_HookRejected value)?  hookRejected,TResult Function( LiterLlmError_InternalError value)?  internalError,TResult Function( LiterLlmError_OutboundForbidden value)?  outboundForbidden,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( LiterLlmError_Authentication value)?  authentication,TResult Function( LiterLlmError_RateLimited value)?  rateLimited,TResult Function( LiterLlmError_BadRequest value)?  badRequest,TResult Function( LiterLlmError_ContextWindowExceeded value)?  contextWindowExceeded,TResult Function( LiterLlmError_ContentPolicy value)?  contentPolicy,TResult Function( LiterLlmError_NotFound value)?  notFound,TResult Function( LiterLlmError_ServerError value)?  serverError,TResult Function( LiterLlmError_ServiceUnavailable value)?  serviceUnavailable,TResult Function( LiterLlmError_Timeout value)?  timeout,TResult Function( LiterLlmError_Streaming value)?  streaming,TResult Function( LiterLlmError_EndpointNotSupported value)?  endpointNotSupported,TResult Function( LiterLlmError_InvalidHeader value)?  invalidHeader,TResult Function( LiterLlmError_Serialization value)?  serialization,TResult Function( LiterLlmError_BudgetExceeded value)?  budgetExceeded,TResult Function( LiterLlmError_HookRejected value)?  hookRejected,TResult Function( LiterLlmError_InternalError value)?  internalError,TResult Function( LiterLlmError_OutboundForbidden value)?  outboundForbidden,TResult Function( LiterLlmError_IdempotencyConflict value)?  idempotencyConflict,TResult Function( LiterLlmError_IdempotencyInFlight value)?  idempotencyInFlight,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case LiterLlmError_Authentication() when authentication != null:
@@ -1374,7 +1374,9 @@ return serialization(_that);case LiterLlmError_BudgetExceeded() when budgetExcee
 return budgetExceeded(_that);case LiterLlmError_HookRejected() when hookRejected != null:
 return hookRejected(_that);case LiterLlmError_InternalError() when internalError != null:
 return internalError(_that);case LiterLlmError_OutboundForbidden() when outboundForbidden != null:
-return outboundForbidden(_that);case _:
+return outboundForbidden(_that);case LiterLlmError_IdempotencyConflict() when idempotencyConflict != null:
+return idempotencyConflict(_that);case LiterLlmError_IdempotencyInFlight() when idempotencyInFlight != null:
+return idempotencyInFlight(_that);case _:
   return orElse();
 
 }
@@ -1392,7 +1394,7 @@ return outboundForbidden(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( LiterLlmError_Authentication value)  authentication,required TResult Function( LiterLlmError_RateLimited value)  rateLimited,required TResult Function( LiterLlmError_BadRequest value)  badRequest,required TResult Function( LiterLlmError_ContextWindowExceeded value)  contextWindowExceeded,required TResult Function( LiterLlmError_ContentPolicy value)  contentPolicy,required TResult Function( LiterLlmError_NotFound value)  notFound,required TResult Function( LiterLlmError_ServerError value)  serverError,required TResult Function( LiterLlmError_ServiceUnavailable value)  serviceUnavailable,required TResult Function( LiterLlmError_Timeout value)  timeout,required TResult Function( LiterLlmError_Streaming value)  streaming,required TResult Function( LiterLlmError_EndpointNotSupported value)  endpointNotSupported,required TResult Function( LiterLlmError_InvalidHeader value)  invalidHeader,required TResult Function( LiterLlmError_Serialization value)  serialization,required TResult Function( LiterLlmError_BudgetExceeded value)  budgetExceeded,required TResult Function( LiterLlmError_HookRejected value)  hookRejected,required TResult Function( LiterLlmError_InternalError value)  internalError,required TResult Function( LiterLlmError_OutboundForbidden value)  outboundForbidden,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( LiterLlmError_Authentication value)  authentication,required TResult Function( LiterLlmError_RateLimited value)  rateLimited,required TResult Function( LiterLlmError_BadRequest value)  badRequest,required TResult Function( LiterLlmError_ContextWindowExceeded value)  contextWindowExceeded,required TResult Function( LiterLlmError_ContentPolicy value)  contentPolicy,required TResult Function( LiterLlmError_NotFound value)  notFound,required TResult Function( LiterLlmError_ServerError value)  serverError,required TResult Function( LiterLlmError_ServiceUnavailable value)  serviceUnavailable,required TResult Function( LiterLlmError_Timeout value)  timeout,required TResult Function( LiterLlmError_Streaming value)  streaming,required TResult Function( LiterLlmError_EndpointNotSupported value)  endpointNotSupported,required TResult Function( LiterLlmError_InvalidHeader value)  invalidHeader,required TResult Function( LiterLlmError_Serialization value)  serialization,required TResult Function( LiterLlmError_BudgetExceeded value)  budgetExceeded,required TResult Function( LiterLlmError_HookRejected value)  hookRejected,required TResult Function( LiterLlmError_InternalError value)  internalError,required TResult Function( LiterLlmError_OutboundForbidden value)  outboundForbidden,required TResult Function( LiterLlmError_IdempotencyConflict value)  idempotencyConflict,required TResult Function( LiterLlmError_IdempotencyInFlight value)  idempotencyInFlight,}){
 final _that = this;
 switch (_that) {
 case LiterLlmError_Authentication():
@@ -1412,7 +1414,9 @@ return serialization(_that);case LiterLlmError_BudgetExceeded():
 return budgetExceeded(_that);case LiterLlmError_HookRejected():
 return hookRejected(_that);case LiterLlmError_InternalError():
 return internalError(_that);case LiterLlmError_OutboundForbidden():
-return outboundForbidden(_that);}
+return outboundForbidden(_that);case LiterLlmError_IdempotencyConflict():
+return idempotencyConflict(_that);case LiterLlmError_IdempotencyInFlight():
+return idempotencyInFlight(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -1426,7 +1430,7 @@ return outboundForbidden(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( LiterLlmError_Authentication value)?  authentication,TResult? Function( LiterLlmError_RateLimited value)?  rateLimited,TResult? Function( LiterLlmError_BadRequest value)?  badRequest,TResult? Function( LiterLlmError_ContextWindowExceeded value)?  contextWindowExceeded,TResult? Function( LiterLlmError_ContentPolicy value)?  contentPolicy,TResult? Function( LiterLlmError_NotFound value)?  notFound,TResult? Function( LiterLlmError_ServerError value)?  serverError,TResult? Function( LiterLlmError_ServiceUnavailable value)?  serviceUnavailable,TResult? Function( LiterLlmError_Timeout value)?  timeout,TResult? Function( LiterLlmError_Streaming value)?  streaming,TResult? Function( LiterLlmError_EndpointNotSupported value)?  endpointNotSupported,TResult? Function( LiterLlmError_InvalidHeader value)?  invalidHeader,TResult? Function( LiterLlmError_Serialization value)?  serialization,TResult? Function( LiterLlmError_BudgetExceeded value)?  budgetExceeded,TResult? Function( LiterLlmError_HookRejected value)?  hookRejected,TResult? Function( LiterLlmError_InternalError value)?  internalError,TResult? Function( LiterLlmError_OutboundForbidden value)?  outboundForbidden,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( LiterLlmError_Authentication value)?  authentication,TResult? Function( LiterLlmError_RateLimited value)?  rateLimited,TResult? Function( LiterLlmError_BadRequest value)?  badRequest,TResult? Function( LiterLlmError_ContextWindowExceeded value)?  contextWindowExceeded,TResult? Function( LiterLlmError_ContentPolicy value)?  contentPolicy,TResult? Function( LiterLlmError_NotFound value)?  notFound,TResult? Function( LiterLlmError_ServerError value)?  serverError,TResult? Function( LiterLlmError_ServiceUnavailable value)?  serviceUnavailable,TResult? Function( LiterLlmError_Timeout value)?  timeout,TResult? Function( LiterLlmError_Streaming value)?  streaming,TResult? Function( LiterLlmError_EndpointNotSupported value)?  endpointNotSupported,TResult? Function( LiterLlmError_InvalidHeader value)?  invalidHeader,TResult? Function( LiterLlmError_Serialization value)?  serialization,TResult? Function( LiterLlmError_BudgetExceeded value)?  budgetExceeded,TResult? Function( LiterLlmError_HookRejected value)?  hookRejected,TResult? Function( LiterLlmError_InternalError value)?  internalError,TResult? Function( LiterLlmError_OutboundForbidden value)?  outboundForbidden,TResult? Function( LiterLlmError_IdempotencyConflict value)?  idempotencyConflict,TResult? Function( LiterLlmError_IdempotencyInFlight value)?  idempotencyInFlight,}){
 final _that = this;
 switch (_that) {
 case LiterLlmError_Authentication() when authentication != null:
@@ -1446,7 +1450,9 @@ return serialization(_that);case LiterLlmError_BudgetExceeded() when budgetExcee
 return budgetExceeded(_that);case LiterLlmError_HookRejected() when hookRejected != null:
 return hookRejected(_that);case LiterLlmError_InternalError() when internalError != null:
 return internalError(_that);case LiterLlmError_OutboundForbidden() when outboundForbidden != null:
-return outboundForbidden(_that);case _:
+return outboundForbidden(_that);case LiterLlmError_IdempotencyConflict() when idempotencyConflict != null:
+return idempotencyConflict(_that);case LiterLlmError_IdempotencyInFlight() when idempotencyInFlight != null:
+return idempotencyInFlight(_that);case _:
   return null;
 
 }
@@ -1463,7 +1469,7 @@ return outboundForbidden(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String message,  PlatformInt64 status)?  authentication,TResult Function( String message,  PlatformInt64 retryAfter)?  rateLimited,TResult Function( String message,  PlatformInt64 status)?  badRequest,TResult Function( String message)?  contextWindowExceeded,TResult Function( String message)?  contentPolicy,TResult Function( String message)?  notFound,TResult Function( String message,  PlatformInt64 status)?  serverError,TResult Function( String message,  PlatformInt64 status)?  serviceUnavailable,TResult Function()?  timeout,TResult Function( String message)?  streaming,TResult Function( String endpoint,  String provider)?  endpointNotSupported,TResult Function( String name,  String reason)?  invalidHeader,TResult Function( String field0)?  serialization,TResult Function( String message,  String model)?  budgetExceeded,TResult Function( String message)?  hookRejected,TResult Function( String message)?  internalError,TResult Function( String url,  String reason)?  outboundForbidden,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String message,  PlatformInt64 status)?  authentication,TResult Function( String message,  PlatformInt64 retryAfter)?  rateLimited,TResult Function( String message,  PlatformInt64 status)?  badRequest,TResult Function( String message)?  contextWindowExceeded,TResult Function( String message)?  contentPolicy,TResult Function( String message)?  notFound,TResult Function( String message,  PlatformInt64 status)?  serverError,TResult Function( String message,  PlatformInt64 status)?  serviceUnavailable,TResult Function()?  timeout,TResult Function( String message)?  streaming,TResult Function( String endpoint,  String provider)?  endpointNotSupported,TResult Function( String name,  String reason)?  invalidHeader,TResult Function( String field0)?  serialization,TResult Function( String message,  String model)?  budgetExceeded,TResult Function( String message)?  hookRejected,TResult Function( String message)?  internalError,TResult Function( String url,  String reason)?  outboundForbidden,TResult Function( String key)?  idempotencyConflict,TResult Function( String key)?  idempotencyInFlight,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case LiterLlmError_Authentication() when authentication != null:
 return authentication(_that.message,_that.status);case LiterLlmError_RateLimited() when rateLimited != null:
@@ -1482,7 +1488,9 @@ return serialization(_that.field0);case LiterLlmError_BudgetExceeded() when budg
 return budgetExceeded(_that.message,_that.model);case LiterLlmError_HookRejected() when hookRejected != null:
 return hookRejected(_that.message);case LiterLlmError_InternalError() when internalError != null:
 return internalError(_that.message);case LiterLlmError_OutboundForbidden() when outboundForbidden != null:
-return outboundForbidden(_that.url,_that.reason);case _:
+return outboundForbidden(_that.url,_that.reason);case LiterLlmError_IdempotencyConflict() when idempotencyConflict != null:
+return idempotencyConflict(_that.key);case LiterLlmError_IdempotencyInFlight() when idempotencyInFlight != null:
+return idempotencyInFlight(_that.key);case _:
   return orElse();
 
 }
@@ -1500,7 +1508,7 @@ return outboundForbidden(_that.url,_that.reason);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String message,  PlatformInt64 status)  authentication,required TResult Function( String message,  PlatformInt64 retryAfter)  rateLimited,required TResult Function( String message,  PlatformInt64 status)  badRequest,required TResult Function( String message)  contextWindowExceeded,required TResult Function( String message)  contentPolicy,required TResult Function( String message)  notFound,required TResult Function( String message,  PlatformInt64 status)  serverError,required TResult Function( String message,  PlatformInt64 status)  serviceUnavailable,required TResult Function()  timeout,required TResult Function( String message)  streaming,required TResult Function( String endpoint,  String provider)  endpointNotSupported,required TResult Function( String name,  String reason)  invalidHeader,required TResult Function( String field0)  serialization,required TResult Function( String message,  String model)  budgetExceeded,required TResult Function( String message)  hookRejected,required TResult Function( String message)  internalError,required TResult Function( String url,  String reason)  outboundForbidden,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String message,  PlatformInt64 status)  authentication,required TResult Function( String message,  PlatformInt64 retryAfter)  rateLimited,required TResult Function( String message,  PlatformInt64 status)  badRequest,required TResult Function( String message)  contextWindowExceeded,required TResult Function( String message)  contentPolicy,required TResult Function( String message)  notFound,required TResult Function( String message,  PlatformInt64 status)  serverError,required TResult Function( String message,  PlatformInt64 status)  serviceUnavailable,required TResult Function()  timeout,required TResult Function( String message)  streaming,required TResult Function( String endpoint,  String provider)  endpointNotSupported,required TResult Function( String name,  String reason)  invalidHeader,required TResult Function( String field0)  serialization,required TResult Function( String message,  String model)  budgetExceeded,required TResult Function( String message)  hookRejected,required TResult Function( String message)  internalError,required TResult Function( String url,  String reason)  outboundForbidden,required TResult Function( String key)  idempotencyConflict,required TResult Function( String key)  idempotencyInFlight,}) {final _that = this;
 switch (_that) {
 case LiterLlmError_Authentication():
 return authentication(_that.message,_that.status);case LiterLlmError_RateLimited():
@@ -1519,7 +1527,9 @@ return serialization(_that.field0);case LiterLlmError_BudgetExceeded():
 return budgetExceeded(_that.message,_that.model);case LiterLlmError_HookRejected():
 return hookRejected(_that.message);case LiterLlmError_InternalError():
 return internalError(_that.message);case LiterLlmError_OutboundForbidden():
-return outboundForbidden(_that.url,_that.reason);}
+return outboundForbidden(_that.url,_that.reason);case LiterLlmError_IdempotencyConflict():
+return idempotencyConflict(_that.key);case LiterLlmError_IdempotencyInFlight():
+return idempotencyInFlight(_that.key);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1533,7 +1543,7 @@ return outboundForbidden(_that.url,_that.reason);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String message,  PlatformInt64 status)?  authentication,TResult? Function( String message,  PlatformInt64 retryAfter)?  rateLimited,TResult? Function( String message,  PlatformInt64 status)?  badRequest,TResult? Function( String message)?  contextWindowExceeded,TResult? Function( String message)?  contentPolicy,TResult? Function( String message)?  notFound,TResult? Function( String message,  PlatformInt64 status)?  serverError,TResult? Function( String message,  PlatformInt64 status)?  serviceUnavailable,TResult? Function()?  timeout,TResult? Function( String message)?  streaming,TResult? Function( String endpoint,  String provider)?  endpointNotSupported,TResult? Function( String name,  String reason)?  invalidHeader,TResult? Function( String field0)?  serialization,TResult? Function( String message,  String model)?  budgetExceeded,TResult? Function( String message)?  hookRejected,TResult? Function( String message)?  internalError,TResult? Function( String url,  String reason)?  outboundForbidden,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String message,  PlatformInt64 status)?  authentication,TResult? Function( String message,  PlatformInt64 retryAfter)?  rateLimited,TResult? Function( String message,  PlatformInt64 status)?  badRequest,TResult? Function( String message)?  contextWindowExceeded,TResult? Function( String message)?  contentPolicy,TResult? Function( String message)?  notFound,TResult? Function( String message,  PlatformInt64 status)?  serverError,TResult? Function( String message,  PlatformInt64 status)?  serviceUnavailable,TResult? Function()?  timeout,TResult? Function( String message)?  streaming,TResult? Function( String endpoint,  String provider)?  endpointNotSupported,TResult? Function( String name,  String reason)?  invalidHeader,TResult? Function( String field0)?  serialization,TResult? Function( String message,  String model)?  budgetExceeded,TResult? Function( String message)?  hookRejected,TResult? Function( String message)?  internalError,TResult? Function( String url,  String reason)?  outboundForbidden,TResult? Function( String key)?  idempotencyConflict,TResult? Function( String key)?  idempotencyInFlight,}) {final _that = this;
 switch (_that) {
 case LiterLlmError_Authentication() when authentication != null:
 return authentication(_that.message,_that.status);case LiterLlmError_RateLimited() when rateLimited != null:
@@ -1552,7 +1562,9 @@ return serialization(_that.field0);case LiterLlmError_BudgetExceeded() when budg
 return budgetExceeded(_that.message,_that.model);case LiterLlmError_HookRejected() when hookRejected != null:
 return hookRejected(_that.message);case LiterLlmError_InternalError() when internalError != null:
 return internalError(_that.message);case LiterLlmError_OutboundForbidden() when outboundForbidden != null:
-return outboundForbidden(_that.url,_that.reason);case _:
+return outboundForbidden(_that.url,_that.reason);case LiterLlmError_IdempotencyConflict() when idempotencyConflict != null:
+return idempotencyConflict(_that.key);case LiterLlmError_IdempotencyInFlight() when idempotencyInFlight != null:
+return idempotencyInFlight(_that.key);case _:
   return null;
 
 }
@@ -2659,6 +2671,138 @@ class _$LiterLlmError_OutboundForbiddenCopyWithImpl<$Res>
   return _then(LiterLlmError_OutboundForbidden(
 url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
 as String,reason: null == reason ? _self.reason : reason // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class LiterLlmError_IdempotencyConflict extends LiterLlmError {
+  const LiterLlmError_IdempotencyConflict({required this.key}): super._();
+  
+
+ final  String key;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LiterLlmError_IdempotencyConflictCopyWith<LiterLlmError_IdempotencyConflict> get copyWith => _$LiterLlmError_IdempotencyConflictCopyWithImpl<LiterLlmError_IdempotencyConflict>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError_IdempotencyConflict&&(identical(other.key, key) || other.key == key));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,key);
+
+@override
+String toString() {
+  return 'LiterLlmError.idempotencyConflict(key: $key)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LiterLlmError_IdempotencyConflictCopyWith<$Res> implements $LiterLlmErrorCopyWith<$Res> {
+  factory $LiterLlmError_IdempotencyConflictCopyWith(LiterLlmError_IdempotencyConflict value, $Res Function(LiterLlmError_IdempotencyConflict) _then) = _$LiterLlmError_IdempotencyConflictCopyWithImpl;
+@useResult
+$Res call({
+ String key
+});
+
+
+
+
+}
+/// @nodoc
+class _$LiterLlmError_IdempotencyConflictCopyWithImpl<$Res>
+    implements $LiterLlmError_IdempotencyConflictCopyWith<$Res> {
+  _$LiterLlmError_IdempotencyConflictCopyWithImpl(this._self, this._then);
+
+  final LiterLlmError_IdempotencyConflict _self;
+  final $Res Function(LiterLlmError_IdempotencyConflict) _then;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? key = null,}) {
+  return _then(LiterLlmError_IdempotencyConflict(
+key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class LiterLlmError_IdempotencyInFlight extends LiterLlmError {
+  const LiterLlmError_IdempotencyInFlight({required this.key}): super._();
+  
+
+ final  String key;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LiterLlmError_IdempotencyInFlightCopyWith<LiterLlmError_IdempotencyInFlight> get copyWith => _$LiterLlmError_IdempotencyInFlightCopyWithImpl<LiterLlmError_IdempotencyInFlight>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LiterLlmError_IdempotencyInFlight&&(identical(other.key, key) || other.key == key));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,key);
+
+@override
+String toString() {
+  return 'LiterLlmError.idempotencyInFlight(key: $key)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LiterLlmError_IdempotencyInFlightCopyWith<$Res> implements $LiterLlmErrorCopyWith<$Res> {
+  factory $LiterLlmError_IdempotencyInFlightCopyWith(LiterLlmError_IdempotencyInFlight value, $Res Function(LiterLlmError_IdempotencyInFlight) _then) = _$LiterLlmError_IdempotencyInFlightCopyWithImpl;
+@useResult
+$Res call({
+ String key
+});
+
+
+
+
+}
+/// @nodoc
+class _$LiterLlmError_IdempotencyInFlightCopyWithImpl<$Res>
+    implements $LiterLlmError_IdempotencyInFlightCopyWith<$Res> {
+  _$LiterLlmError_IdempotencyInFlightCopyWithImpl(this._self, this._then);
+
+  final LiterLlmError_IdempotencyInFlight _self;
+  final $Res Function(LiterLlmError_IdempotencyInFlight) _then;
+
+/// Create a copy of LiterLlmError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? key = null,}) {
+  return _then(LiterLlmError_IdempotencyInFlight(
+key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }

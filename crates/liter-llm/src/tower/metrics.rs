@@ -71,6 +71,7 @@ mod inner {
     /// metric helpers (e.g. `record_cache_hit`) are called before
     /// `init_meter`, they silently no-op. Once the meter is initialised,
     /// all subsequent metric operations use the cached instrument set.
+    #[cfg_attr(alef, alef(skip))]
     pub fn init_meter(meter: Meter) {
         let _ = METER.set(meter);
     }

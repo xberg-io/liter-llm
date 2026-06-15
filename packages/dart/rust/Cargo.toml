@@ -1,6 +1,6 @@
 [package]
 name = "liter-llm-dart"
-version = "1.6.0-rc.0"
+version = "1.6.0-rc.1"
 edition = "2024"
 license = "MIT"
 
@@ -11,7 +11,10 @@ ignored = ["liter_llm"]
 
 [lib]
 crate-type = ["cdylib", "staticlib"]
-
+[features]
+native-http = ["liter_llm/native-http"]
+opendal-cache = ["liter_llm/opendal-cache"]
+wasm-http = ["liter_llm/wasm-http"]
 [dependencies]
 flutter_rust_bridge = "=2.12.0"
 futures-util = "0.3"
@@ -21,5 +24,4 @@ tokio = { version = "1", features = ["rt-multi-thread", "sync"] }
 
 [lints.rust]
 # flutter_rust_bridge uses #[cfg(frb_expand)] internally during macro expansion.
-# Declare it as a known cfg so rustc does not emit unexpected_cfgs warnings.
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
