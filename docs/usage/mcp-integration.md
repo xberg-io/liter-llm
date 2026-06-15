@@ -309,8 +309,8 @@ which liter-llm
 If not found, reinstall:
 
 ```bash
-brew tap kreuzberg-dev/tap
-brew install liter-llm
+brew trust kreuzberg-dev/tap
+brew install kreuzberg-dev/tap/liter-llm
 # or
 cargo install liter-llm-cli
 ```

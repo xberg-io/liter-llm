@@ -131,7 +131,7 @@ A universal LLM API client with a Rust core and native bindings for 14 languages
 
 ---
 
-### Part of kreuzberg.dev
+### Part of Kreuzberg.dev
 
 <div class="grid cards" markdown>
 

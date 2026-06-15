@@ -1864,6 +1864,11 @@ snippets_dir = "docs/snippets"
 output_pattern = "packages/{language}/README.md"
 discord_url = "https://discord.gg/xt9WY3GnKR"
 
+[crates.readme.targets.root]
+template = "root.md"
+output_path = "README.md"
+name = "liter-llm"
+
 [crates.readme.languages.rust]
 template = "language_package.md"
 output_path = "crates/liter-llm/README.md"

@@ -616,8 +616,8 @@ client.addHook({
 ### Homebrew
 
 ```bash
-brew tap kreuzberg-dev/tap
-brew install liter-llm
+brew trust kreuzberg-dev/tap
+brew install kreuzberg-dev/tap/liter-llm
 ```
 
 ### Cargo

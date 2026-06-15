@@ -61,13 +61,13 @@ liter-llm gives a single client surface — chat, streaming, tools, structured o
 - [Types](https://docs.liter-llm.kreuzberg.dev/reference/types/)
 - [Errors](https://docs.liter-llm.kreuzberg.dev/reference/errors/)
 
-## Ecosystem
+## Kreuzberg Ecosystem
 
-- [Kreuzberg](https://docs.kreuzberg.dev): Document intelligence — text, tables, metadata, OCR over 90+ formats
-- [Kreuzberg Cloud](https://docs.kreuzberg.cloud): Managed document-extraction API
-- [Kreuzcrawl](https://docs.kreuzcrawl.kreuzberg.dev): Web crawling with HTML→Markdown and headless-Chrome fallback
-- [html-to-markdown](https://docs.html-to-markdown.kreuzberg.dev): Standalone HTML→Markdown engine
-- [tree-sitter-language-pack](https://docs.tree-sitter-language-pack.kreuzberg.dev): 300+ tree-sitter grammars and code-intelligence primitives
+- [Kreuzberg](https://docs.kreuzberg.dev): Document intelligence: text, tables, metadata from 91+ formats with optional OCR
+- [Kreuzberg Cloud](https://docs.kreuzberg.cloud): Managed extraction API with SDKs, dashboards, and observability
+- [kreuzcrawl](https://docs.kreuzcrawl.kreuzberg.dev): Web crawling and scraping with HTML to Markdown and headless-Chrome fallback
+- [html-to-markdown](https://docs.html-to-markdown.kreuzberg.dev): Fast, lossless HTML to Markdown engine
+- [tree-sitter-language-pack](https://docs.tree-sitter-language-pack.kreuzberg.dev): Tree-sitter grammars and code-intelligence primitives
 
 ## More
 

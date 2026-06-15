@@ -15,8 +15,8 @@ The CLI runs the proxy server and the MCP tool server. You don't need it if you 
 === "Homebrew"
 
     ```bash
-    brew tap kreuzberg-dev/tap
-    brew install liter-llm
+    brew trust kreuzberg-dev/tap
+    brew install kreuzberg-dev/tap/liter-llm
     ```
 
 === "Cargo"

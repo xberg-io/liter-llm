@@ -54,6 +54,7 @@ nav = [
       { "Go" = "reference/api-go.md" },
       { "Java" = "reference/api-java.md" },
       { "Kotlin" = "reference/api-kotlin.md" },
+      { "Kotlin (Android)" = "reference/api-kotlin-android.md" },
       { "C#" = "reference/api-csharp.md" },
       { "Ruby" = "reference/api-ruby.md" },
       { "PHP" = "reference/api-php.md" },
@@ -73,9 +74,8 @@ nav = [
   { "More" = [
     { "Contributing" = "contributing.md" },
     { "Changelog" = "CHANGELOG.md" },
+    { "Ecosystem" = "ecosystem.md" },
   ] },
-
-  { "Ecosystem" = "ecosystem.md" },
 ]
 
 [project.theme]
