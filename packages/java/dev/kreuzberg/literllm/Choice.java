@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -18,47 +18,51 @@ import org.jspecify.annotations.Nullable;
 public record Choice(
     @JsonProperty("index") int index,
     @JsonProperty("message") AssistantMessage message,
-    @Nullable @JsonProperty("finish_reason") FinishReason finishReason) {
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  // CPD-OFF
-  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-  public static final class Builder {
-
-    private int index = 0;
-    private AssistantMessage message = null;
-
-    @JsonProperty("finish_reason")
-    private FinishReason finishReason = null;
-
-    /** Sets the index field. */
-    @JsonProperty("index")
-    public Builder withIndex(final int value) {
-      this.index = value;
-      return this;
+    @Nullable @JsonProperty("finish_reason") FinishReason finishReason
+) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    /** Sets the message field. */
-    @JsonProperty("message")
-    public Builder withMessage(final AssistantMessage value) {
-      this.message = value;
-      return this;
-    }
+    // CPD-OFF
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+    public static final class Builder {
 
-    /** Sets the finishReason field. */
-    @JsonProperty("finish_reason")
-    public Builder withFinishReason(final @Nullable FinishReason value) {
-      this.finishReason = value;
-      return this;
-    }
+private int index = 0;
+private AssistantMessage message = null;
+        @JsonProperty("finish_reason")
+private FinishReason finishReason = null;
 
-    /** Builds the Choice instance. */
-    public Choice build() {
-      return new Choice(index, message, finishReason);
+        /** Sets the index field. */
+        @JsonProperty("index")
+        public Builder withIndex(final int value) {
+            this.index = value;
+            return this;
+        }
+
+        /** Sets the message field. */
+        @JsonProperty("message")
+        public Builder withMessage(final AssistantMessage value) {
+            this.message = value;
+            return this;
+        }
+
+        /** Sets the finishReason field. */
+        @JsonProperty("finish_reason")
+        public Builder withFinishReason(final @Nullable FinishReason value) {
+            this.finishReason = value;
+            return this;
+        }
+
+        /** Builds the Choice instance. */
+        public Choice build() {
+            return new Choice(
+                index,
+                message,
+                finishReason
+            );
+        }
     }
-  }
-  // CPD-ON
+    // CPD-ON
 }

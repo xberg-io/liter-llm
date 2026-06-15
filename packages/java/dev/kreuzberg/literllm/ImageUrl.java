@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -17,39 +17,41 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("PMD")
 public record ImageUrl(
     @JsonProperty("url") String url,
-    @Nullable @JsonProperty("detail") ImageDetail detail) {
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  // CPD-OFF
-  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-  public static final class Builder {
-
-    private String url = "";
-
-    @Nullable
-    private ImageDetail detail = null;
-
-    /** Sets the url field. */
-    @JsonProperty("url")
-    public Builder withUrl(final String value) {
-      this.url = value;
-      return this;
+    @Nullable @JsonProperty("detail") ImageDetail detail
+) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    /** Sets the detail field. */
-    @JsonProperty("detail")
-    public Builder withDetail(final @Nullable ImageDetail value) {
-      this.detail = value;
-      return this;
-    }
+    // CPD-OFF
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+    public static final class Builder {
 
-    /** Builds the ImageUrl instance. */
-    public ImageUrl build() {
-      return new ImageUrl(url, detail);
+private String url = "";
+        @Nullable private ImageDetail detail = null;
+
+        /** Sets the url field. */
+        @JsonProperty("url")
+        public Builder withUrl(final String value) {
+            this.url = value;
+            return this;
+        }
+
+        /** Sets the detail field. */
+        @JsonProperty("detail")
+        public Builder withDetail(final @Nullable ImageDetail value) {
+            this.detail = value;
+            return this;
+        }
+
+        /** Builds the ImageUrl instance. */
+        public ImageUrl build() {
+            return new ImageUrl(
+                url,
+                detail
+            );
+        }
     }
-  }
-  // CPD-ON
+    // CPD-ON
 }

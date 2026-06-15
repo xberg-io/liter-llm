@@ -2,13 +2,13 @@
 package dev.kreuzberg.literllm;
 
 public class ContentPolicyException extends LiterLlmErrorException {
-  /** Creates a new ContentPolicyException with the given message. */
-  public ContentPolicyException(final String message) {
-    super(message);
-  }
+    /** Creates a new ContentPolicyException with the given message. */
+    public ContentPolicyException(final String message) {
+        super(message);
+    }
 
-  /** Creates a new ContentPolicyException with the given message and cause. */
-  public ContentPolicyException(final String message, final Throwable cause) {
-    super(message, cause);
-  }
+    /** Creates a new ContentPolicyException with the given message and cause. */
+    public ContentPolicyException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
 }

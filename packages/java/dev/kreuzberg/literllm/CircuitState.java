@@ -11,46 +11,47 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @SuppressWarnings("PMD")
 public enum CircuitState {
-  /**
-   * Requests flow through normally.
-   */
-  Closed("closed"),
-  /**
-   * All requests are rejected; the circuit is waiting for the backoff to elapse.
-   */
-  Open("open"),
-  /**
-   * One probe request is allowed through to test service health.
-   */
-  HalfOpen("halfopen");
+    /**
+     * Requests flow through normally.
+     */
+    Closed("closed"),
+    /**
+     * All requests are rejected; the circuit is waiting for the backoff to elapse.
+     */
+    Open("open"),
+    /**
+     * One probe request is allowed through to test service health.
+     */
+    HalfOpen("halfopen");
 
-  /** The string value. */
-  private final String value;
 
-  CircuitState(final String value) {
-    this.value = value;
-  }
+    /** The string value. */
+    private final String value;
 
-  /** Returns the string value. */
-  @JsonValue
-  public String getValue() {
-    return value;
-  }
-
-  /** Creates an instance from a string value. */
-  @JsonCreator
-  public static CircuitState fromValue(final String value) {
-    for (CircuitState e : values()) {
-      if (e.value.equalsIgnoreCase(value)) {
-        return e;
-      }
+    CircuitState(final String value) {
+        this.value = value;
     }
-    throw new IllegalArgumentException("Unknown CircuitState value: " + value);
-  }
 
-  /** Returns the wire-format string value (matches JSON serialization). */
-  @Override
-  public String toString() {
-    return value;
-  }
+    /** Returns the string value. */
+    @JsonValue
+    public String getValue() {
+        return value;
+    }
+
+    /** Creates an instance from a string value. */
+    @JsonCreator
+    public static CircuitState fromValue(final String value) {
+        for (CircuitState e : values()) {
+            if (e.value.equalsIgnoreCase(value)) {
+                return e;
+            }
+        }
+        throw new IllegalArgumentException("Unknown CircuitState value: " + value);
+    }
+
+    /** Returns the wire-format string value (matches JSON serialization). */
+    @Override
+    public String toString() {
+        return value;
+    }
 }

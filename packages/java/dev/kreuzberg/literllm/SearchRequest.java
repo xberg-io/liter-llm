@@ -3,11 +3,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -21,66 +21,70 @@ public record SearchRequest(
     @JsonProperty("query") String query,
     @Nullable @JsonProperty("max_results") Integer maxResults,
     @Nullable @JsonProperty("search_domain_filter") List<String> searchDomainFilter,
-    @Nullable @JsonProperty("country") String country) {
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  // CPD-OFF
-  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-  public static final class Builder {
-
-    private String model = "";
-    private String query = "";
-
-    @JsonProperty("max_results")
-    private Integer maxResults = null;
-
-    @JsonProperty("search_domain_filter")
-    private List<String> searchDomainFilter = null;
-
-    private String country = null;
-
-    /** Sets the model field. */
-    @JsonProperty("model")
-    public Builder withModel(final String value) {
-      this.model = value;
-      return this;
+    @Nullable @JsonProperty("country") String country
+) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    /** Sets the query field. */
-    @JsonProperty("query")
-    public Builder withQuery(final String value) {
-      this.query = value;
-      return this;
-    }
+    // CPD-OFF
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+    public static final class Builder {
 
-    /** Sets the maxResults field. */
-    @JsonProperty("max_results")
-    public Builder withMaxResults(final @Nullable Integer value) {
-      this.maxResults = value;
-      return this;
-    }
+private String model = "";
+private String query = "";
+        @JsonProperty("max_results")
+private Integer maxResults = null;
+        @JsonProperty("search_domain_filter")
+private List<String> searchDomainFilter = null;
+private String country = null;
 
-    /** Sets the searchDomainFilter field. */
-    @JsonProperty("search_domain_filter")
-    public Builder withSearchDomainFilter(final @Nullable List<String> value) {
-      this.searchDomainFilter = value;
-      return this;
-    }
+        /** Sets the model field. */
+        @JsonProperty("model")
+        public Builder withModel(final String value) {
+            this.model = value;
+            return this;
+        }
 
-    /** Sets the country field. */
-    @JsonProperty("country")
-    public Builder withCountry(final @Nullable String value) {
-      this.country = value;
-      return this;
-    }
+        /** Sets the query field. */
+        @JsonProperty("query")
+        public Builder withQuery(final String value) {
+            this.query = value;
+            return this;
+        }
 
-    /** Builds the SearchRequest instance. */
-    public SearchRequest build() {
-      return new SearchRequest(model, query, maxResults, searchDomainFilter, country);
+        /** Sets the maxResults field. */
+        @JsonProperty("max_results")
+        public Builder withMaxResults(final @Nullable Integer value) {
+            this.maxResults = value;
+            return this;
+        }
+
+        /** Sets the searchDomainFilter field. */
+        @JsonProperty("search_domain_filter")
+        public Builder withSearchDomainFilter(final @Nullable List<String> value) {
+            this.searchDomainFilter = value;
+            return this;
+        }
+
+        /** Sets the country field. */
+        @JsonProperty("country")
+        public Builder withCountry(final @Nullable String value) {
+            this.country = value;
+            return this;
+        }
+
+        /** Builds the SearchRequest instance. */
+        public SearchRequest build() {
+            return new SearchRequest(
+                model,
+                query,
+                maxResults,
+                searchDomainFilter,
+                country
+            );
+        }
     }
-  }
-  // CPD-ON
+    // CPD-ON
 }

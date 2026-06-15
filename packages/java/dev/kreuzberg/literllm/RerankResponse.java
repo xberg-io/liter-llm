@@ -3,11 +3,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -19,45 +19,50 @@ import org.jspecify.annotations.Nullable;
 public record RerankResponse(
     @Nullable @JsonProperty("id") String id,
     @JsonProperty("results") List<RerankResult> results,
-    @Nullable @JsonProperty("meta") Object meta) {
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  // CPD-OFF
-  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-  public static final class Builder {
-
-    private String id = null;
-    private List<RerankResult> results = List.of();
-    private Object meta = null;
-
-    /** Sets the id field. */
-    @JsonProperty("id")
-    public Builder withId(final @Nullable String value) {
-      this.id = value;
-      return this;
+    @Nullable @JsonProperty("meta") Object meta
+) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    /** Sets the results field. */
-    @JsonProperty("results")
-    public Builder withResults(final List<RerankResult> value) {
-      this.results = value;
-      return this;
-    }
+    // CPD-OFF
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+    public static final class Builder {
 
-    /** Sets the meta field. */
-    @JsonProperty("meta")
-    public Builder withMeta(final @Nullable Object value) {
-      this.meta = value;
-      return this;
-    }
+private String id = null;
+private List<RerankResult> results = List.of();
+private Object meta = null;
 
-    /** Builds the RerankResponse instance. */
-    public RerankResponse build() {
-      return new RerankResponse(id, results, meta);
+        /** Sets the id field. */
+        @JsonProperty("id")
+        public Builder withId(final @Nullable String value) {
+            this.id = value;
+            return this;
+        }
+
+        /** Sets the results field. */
+        @JsonProperty("results")
+        public Builder withResults(final List<RerankResult> value) {
+            this.results = value;
+            return this;
+        }
+
+        /** Sets the meta field. */
+        @JsonProperty("meta")
+        public Builder withMeta(final @Nullable Object value) {
+            this.meta = value;
+            return this;
+        }
+
+        /** Builds the RerankResponse instance. */
+        public RerankResponse build() {
+            return new RerankResponse(
+                id,
+                results,
+                meta
+            );
+        }
     }
-  }
-  // CPD-ON
+    // CPD-ON
 }

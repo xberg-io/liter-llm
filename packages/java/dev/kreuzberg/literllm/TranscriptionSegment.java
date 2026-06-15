@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
@@ -18,53 +18,59 @@ public record TranscriptionSegment(
     @JsonProperty("id") int id,
     @JsonProperty("start") double start,
     @JsonProperty("end") double end,
-    @JsonProperty("text") String text) {
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  // CPD-OFF
-  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-  public static final class Builder {
-
-    private int id = 0;
-    private double start = 0.0;
-    private double end = 0.0;
-    private String text = "";
-
-    /** Sets the id field. */
-    @JsonProperty("id")
-    public Builder withId(final int value) {
-      this.id = value;
-      return this;
+    @JsonProperty("text") String text
+) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    /** Sets the start field. */
-    @JsonProperty("start")
-    public Builder withStart(final double value) {
-      this.start = value;
-      return this;
-    }
+    // CPD-OFF
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+    public static final class Builder {
 
-    /** Sets the end field. */
-    @JsonProperty("end")
-    public Builder withEnd(final double value) {
-      this.end = value;
-      return this;
-    }
+private int id = 0;
+private double start = 0.0;
+private double end = 0.0;
+private String text = "";
 
-    /** Sets the text field. */
-    @JsonProperty("text")
-    public Builder withText(final String value) {
-      this.text = value;
-      return this;
-    }
+        /** Sets the id field. */
+        @JsonProperty("id")
+        public Builder withId(final int value) {
+            this.id = value;
+            return this;
+        }
 
-    /** Builds the TranscriptionSegment instance. */
-    public TranscriptionSegment build() {
-      return new TranscriptionSegment(id, start, end, text);
+        /** Sets the start field. */
+        @JsonProperty("start")
+        public Builder withStart(final double value) {
+            this.start = value;
+            return this;
+        }
+
+        /** Sets the end field. */
+        @JsonProperty("end")
+        public Builder withEnd(final double value) {
+            this.end = value;
+            return this;
+        }
+
+        /** Sets the text field. */
+        @JsonProperty("text")
+        public Builder withText(final String value) {
+            this.text = value;
+            return this;
+        }
+
+        /** Builds the TranscriptionSegment instance. */
+        public TranscriptionSegment build() {
+            return new TranscriptionSegment(
+                id,
+                start,
+                end,
+                text
+            );
+        }
     }
-  }
-  // CPD-ON
+    // CPD-ON
 }

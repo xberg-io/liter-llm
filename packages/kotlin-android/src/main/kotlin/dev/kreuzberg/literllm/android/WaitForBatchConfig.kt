@@ -27,8 +27,8 @@ package dev.kreuzberg.literllm.android
 /**
  * Configuration for polling a batch until terminal status.
  *
- * All time values are in seconds as `f64` so the struct bridges across FFI boundaries without
- * requiring a `Duration` shim.
+ * All time values are in seconds as `f64` so the struct bridges across FFI
+ * boundaries without requiring a `Duration` shim.
  */
 data class WaitForBatchConfig(
     /** Initial interval between polls, in seconds. */

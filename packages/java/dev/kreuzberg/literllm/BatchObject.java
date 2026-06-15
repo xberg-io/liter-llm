@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -29,168 +29,158 @@ public record BatchObject(
     @Nullable @JsonProperty("failed_at") Long failedAt,
     @Nullable @JsonProperty("expired_at") Long expiredAt,
     @Nullable @JsonProperty("request_counts") BatchRequestCounts requestCounts,
-    @Nullable @JsonProperty("metadata") Object metadata) {
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  // CPD-OFF
-  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-  public static final class Builder {
-
-    private String id = "";
-    private String object = "";
-    private String endpoint = "";
-
-    @JsonProperty("input_file_id")
-    private String inputFileId = "";
-
-    @JsonProperty("completion_window")
-    private String completionWindow = null;
-
-    private BatchStatus status = null;
-
-    @JsonProperty("output_file_id")
-    private String outputFileId = null;
-
-    @JsonProperty("error_file_id")
-    private String errorFileId = null;
-
-    @JsonProperty("created_at")
-    private long createdAt = 0;
-
-    @JsonProperty("completed_at")
-    private Long completedAt = null;
-
-    @JsonProperty("failed_at")
-    private Long failedAt = null;
-
-    @JsonProperty("expired_at")
-    private Long expiredAt = null;
-
-    @JsonProperty("request_counts")
-    @Nullable
-    private BatchRequestCounts requestCounts = null;
-
-    private Object metadata = null;
-
-    /** Sets the id field. */
-    @JsonProperty("id")
-    public Builder withId(final String value) {
-      this.id = value;
-      return this;
+    @Nullable @JsonProperty("metadata") Object metadata
+) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    /** Sets the object field. */
-    @JsonProperty("object")
-    public Builder withObject(final String value) {
-      this.object = value;
-      return this;
-    }
+    // CPD-OFF
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+    public static final class Builder {
 
-    /** Sets the endpoint field. */
-    @JsonProperty("endpoint")
-    public Builder withEndpoint(final String value) {
-      this.endpoint = value;
-      return this;
-    }
+private String id = "";
+private String object = "";
+private String endpoint = "";
+        @JsonProperty("input_file_id")
+private String inputFileId = "";
+        @JsonProperty("completion_window")
+private String completionWindow = null;
+private BatchStatus status = null;
+        @JsonProperty("output_file_id")
+private String outputFileId = null;
+        @JsonProperty("error_file_id")
+private String errorFileId = null;
+        @JsonProperty("created_at")
+private long createdAt = 0;
+        @JsonProperty("completed_at")
+private Long completedAt = null;
+        @JsonProperty("failed_at")
+private Long failedAt = null;
+        @JsonProperty("expired_at")
+private Long expiredAt = null;
+        @JsonProperty("request_counts")
+        @Nullable private BatchRequestCounts requestCounts = null;
+private Object metadata = null;
 
-    /** Sets the inputFileId field. */
-    @JsonProperty("input_file_id")
-    public Builder withInputFileId(final String value) {
-      this.inputFileId = value;
-      return this;
-    }
+        /** Sets the id field. */
+        @JsonProperty("id")
+        public Builder withId(final String value) {
+            this.id = value;
+            return this;
+        }
 
-    /** Sets the completionWindow field. */
-    @JsonProperty("completion_window")
-    public Builder withCompletionWindow(final @Nullable String value) {
-      this.completionWindow = value;
-      return this;
-    }
+        /** Sets the object field. */
+        @JsonProperty("object")
+        public Builder withObject(final String value) {
+            this.object = value;
+            return this;
+        }
 
-    /** Sets the status field. */
-    @JsonProperty("status")
-    public Builder withStatus(final BatchStatus value) {
-      this.status = value;
-      return this;
-    }
+        /** Sets the endpoint field. */
+        @JsonProperty("endpoint")
+        public Builder withEndpoint(final String value) {
+            this.endpoint = value;
+            return this;
+        }
 
-    /** Sets the outputFileId field. */
-    @JsonProperty("output_file_id")
-    public Builder withOutputFileId(final @Nullable String value) {
-      this.outputFileId = value;
-      return this;
-    }
+        /** Sets the inputFileId field. */
+        @JsonProperty("input_file_id")
+        public Builder withInputFileId(final String value) {
+            this.inputFileId = value;
+            return this;
+        }
 
-    /** Sets the errorFileId field. */
-    @JsonProperty("error_file_id")
-    public Builder withErrorFileId(final @Nullable String value) {
-      this.errorFileId = value;
-      return this;
-    }
+        /** Sets the completionWindow field. */
+        @JsonProperty("completion_window")
+        public Builder withCompletionWindow(final @Nullable String value) {
+            this.completionWindow = value;
+            return this;
+        }
 
-    /** Sets the createdAt field. */
-    @JsonProperty("created_at")
-    public Builder withCreatedAt(final long value) {
-      this.createdAt = value;
-      return this;
-    }
+        /** Sets the status field. */
+        @JsonProperty("status")
+        public Builder withStatus(final BatchStatus value) {
+            this.status = value;
+            return this;
+        }
 
-    /** Sets the completedAt field. */
-    @JsonProperty("completed_at")
-    public Builder withCompletedAt(final @Nullable Long value) {
-      this.completedAt = value;
-      return this;
-    }
+        /** Sets the outputFileId field. */
+        @JsonProperty("output_file_id")
+        public Builder withOutputFileId(final @Nullable String value) {
+            this.outputFileId = value;
+            return this;
+        }
 
-    /** Sets the failedAt field. */
-    @JsonProperty("failed_at")
-    public Builder withFailedAt(final @Nullable Long value) {
-      this.failedAt = value;
-      return this;
-    }
+        /** Sets the errorFileId field. */
+        @JsonProperty("error_file_id")
+        public Builder withErrorFileId(final @Nullable String value) {
+            this.errorFileId = value;
+            return this;
+        }
 
-    /** Sets the expiredAt field. */
-    @JsonProperty("expired_at")
-    public Builder withExpiredAt(final @Nullable Long value) {
-      this.expiredAt = value;
-      return this;
-    }
+        /** Sets the createdAt field. */
+        @JsonProperty("created_at")
+        public Builder withCreatedAt(final long value) {
+            this.createdAt = value;
+            return this;
+        }
 
-    /** Sets the requestCounts field. */
-    @JsonProperty("request_counts")
-    public Builder withRequestCounts(final @Nullable BatchRequestCounts value) {
-      this.requestCounts = value;
-      return this;
-    }
+        /** Sets the completedAt field. */
+        @JsonProperty("completed_at")
+        public Builder withCompletedAt(final @Nullable Long value) {
+            this.completedAt = value;
+            return this;
+        }
 
-    /** Sets the metadata field. */
-    @JsonProperty("metadata")
-    public Builder withMetadata(final @Nullable Object value) {
-      this.metadata = value;
-      return this;
-    }
+        /** Sets the failedAt field. */
+        @JsonProperty("failed_at")
+        public Builder withFailedAt(final @Nullable Long value) {
+            this.failedAt = value;
+            return this;
+        }
 
-    /** Builds the BatchObject instance. */
-    public BatchObject build() {
-      return new BatchObject(
-          id,
-          object,
-          endpoint,
-          inputFileId,
-          completionWindow,
-          status,
-          outputFileId,
-          errorFileId,
-          createdAt,
-          completedAt,
-          failedAt,
-          expiredAt,
-          requestCounts,
-          metadata);
+        /** Sets the expiredAt field. */
+        @JsonProperty("expired_at")
+        public Builder withExpiredAt(final @Nullable Long value) {
+            this.expiredAt = value;
+            return this;
+        }
+
+        /** Sets the requestCounts field. */
+        @JsonProperty("request_counts")
+        public Builder withRequestCounts(final @Nullable BatchRequestCounts value) {
+            this.requestCounts = value;
+            return this;
+        }
+
+        /** Sets the metadata field. */
+        @JsonProperty("metadata")
+        public Builder withMetadata(final @Nullable Object value) {
+            this.metadata = value;
+            return this;
+        }
+
+        /** Builds the BatchObject instance. */
+        public BatchObject build() {
+            return new BatchObject(
+                id,
+                object,
+                endpoint,
+                inputFileId,
+                completionWindow,
+                status,
+                outputFileId,
+                errorFileId,
+                createdAt,
+                completedAt,
+                failedAt,
+                expiredAt,
+                requestCounts,
+                metadata
+            );
+        }
     }
-  }
-  // CPD-ON
+    // CPD-ON
 }

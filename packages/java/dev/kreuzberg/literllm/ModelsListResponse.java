@@ -3,11 +3,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import java.util.List;
 
 /**
  * Response listing available models.
@@ -17,37 +17,41 @@ import java.util.List;
 @SuppressWarnings("PMD")
 public record ModelsListResponse(
     @JsonProperty("object") String object,
-    @JsonProperty("data") List<ModelObject> data) {
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  // CPD-OFF
-  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-  public static final class Builder {
-
-    private String object = "";
-    private List<ModelObject> data = List.of();
-
-    /** Sets the object field. */
-    @JsonProperty("object")
-    public Builder withObject(final String value) {
-      this.object = value;
-      return this;
+    @JsonProperty("data") List<ModelObject> data
+) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    /** Sets the data field. */
-    @JsonProperty("data")
-    public Builder withData(final List<ModelObject> value) {
-      this.data = value;
-      return this;
-    }
+    // CPD-OFF
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+    public static final class Builder {
 
-    /** Builds the ModelsListResponse instance. */
-    public ModelsListResponse build() {
-      return new ModelsListResponse(object, data);
+private String object = "";
+private List<ModelObject> data = List.of();
+
+        /** Sets the object field. */
+        @JsonProperty("object")
+        public Builder withObject(final String value) {
+            this.object = value;
+            return this;
+        }
+
+        /** Sets the data field. */
+        @JsonProperty("data")
+        public Builder withData(final List<ModelObject> value) {
+            this.data = value;
+            return this;
+        }
+
+        /** Builds the ModelsListResponse instance. */
+        public ModelsListResponse build() {
+            return new ModelsListResponse(
+                object,
+                data
+            );
+        }
     }
-  }
-  // CPD-ON
+    // CPD-ON
 }

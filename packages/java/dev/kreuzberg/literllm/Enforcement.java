@@ -11,44 +11,45 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @SuppressWarnings("PMD")
 public enum Enforcement {
-  /**
-   * Reject requests that would exceed the budget with
-   * LiterLlmError.BudgetExceeded.
-   */
-  Hard("hard"),
-  /**
-   * Allow requests through but emit a {@code tracing.warn!} when the budget is
-   * exceeded.
-   */
-  Soft("soft");
+    /**
+     * Reject requests that would exceed the budget with
+     * LiterLlmError.BudgetExceeded.
+     */
+    Hard("hard"),
+    /**
+     * Allow requests through but emit a {@code tracing.warn!} when the budget is
+     * exceeded.
+     */
+    Soft("soft");
 
-  /** The string value. */
-  private final String value;
 
-  Enforcement(final String value) {
-    this.value = value;
-  }
+    /** The string value. */
+    private final String value;
 
-  /** Returns the string value. */
-  @JsonValue
-  public String getValue() {
-    return value;
-  }
-
-  /** Creates an instance from a string value. */
-  @JsonCreator
-  public static Enforcement fromValue(final String value) {
-    for (Enforcement e : values()) {
-      if (e.value.equalsIgnoreCase(value)) {
-        return e;
-      }
+    Enforcement(final String value) {
+        this.value = value;
     }
-    throw new IllegalArgumentException("Unknown Enforcement value: " + value);
-  }
 
-  /** Returns the wire-format string value (matches JSON serialization). */
-  @Override
-  public String toString() {
-    return value;
-  }
+    /** Returns the string value. */
+    @JsonValue
+    public String getValue() {
+        return value;
+    }
+
+    /** Creates an instance from a string value. */
+    @JsonCreator
+    public static Enforcement fromValue(final String value) {
+        for (Enforcement e : values()) {
+            if (e.value.equalsIgnoreCase(value)) {
+                return e;
+            }
+        }
+        throw new IllegalArgumentException("Unknown Enforcement value: " + value);
+    }
+
+    /** Returns the wire-format string value (matches JSON serialization). */
+    @Override
+    public String toString() {
+        return value;
+    }
 }

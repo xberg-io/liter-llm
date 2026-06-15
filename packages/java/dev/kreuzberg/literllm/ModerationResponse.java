@@ -3,11 +3,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import java.util.List;
 
 /**
  * Response from the moderation endpoint.
@@ -18,45 +18,50 @@ import java.util.List;
 public record ModerationResponse(
     @JsonProperty("id") String id,
     @JsonProperty("model") String model,
-    @JsonProperty("results") List<ModerationResult> results) {
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  // CPD-OFF
-  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-  public static final class Builder {
-
-    private String id = "";
-    private String model = "";
-    private List<ModerationResult> results = List.of();
-
-    /** Sets the id field. */
-    @JsonProperty("id")
-    public Builder withId(final String value) {
-      this.id = value;
-      return this;
+    @JsonProperty("results") List<ModerationResult> results
+) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    /** Sets the model field. */
-    @JsonProperty("model")
-    public Builder withModel(final String value) {
-      this.model = value;
-      return this;
-    }
+    // CPD-OFF
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+    public static final class Builder {
 
-    /** Sets the results field. */
-    @JsonProperty("results")
-    public Builder withResults(final List<ModerationResult> value) {
-      this.results = value;
-      return this;
-    }
+private String id = "";
+private String model = "";
+private List<ModerationResult> results = List.of();
 
-    /** Builds the ModerationResponse instance. */
-    public ModerationResponse build() {
-      return new ModerationResponse(id, model, results);
+        /** Sets the id field. */
+        @JsonProperty("id")
+        public Builder withId(final String value) {
+            this.id = value;
+            return this;
+        }
+
+        /** Sets the model field. */
+        @JsonProperty("model")
+        public Builder withModel(final String value) {
+            this.model = value;
+            return this;
+        }
+
+        /** Sets the results field. */
+        @JsonProperty("results")
+        public Builder withResults(final List<ModerationResult> value) {
+            this.results = value;
+            return this;
+        }
+
+        /** Builds the ModerationResponse instance. */
+        public ModerationResponse build() {
+            return new ModerationResponse(
+                id,
+                model,
+                results
+            );
+        }
     }
-  }
-  // CPD-ON
+    // CPD-ON
 }

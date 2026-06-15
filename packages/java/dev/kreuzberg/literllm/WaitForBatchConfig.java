@@ -17,9 +17,9 @@ public record WaitForBatchConfig(
     @JsonProperty("initial_interval_secs") double initialIntervalSecs,
     @JsonProperty("max_interval_secs") double maxIntervalSecs,
     @JsonProperty("backoff_multiplier") float backoffMultiplier,
-    @Nullable @JsonProperty("timeout_secs") Double timeoutSecs) {
-  public static WaitForBatchConfig defaultInstance() {
-    throw new UnsupportedOperationException(
-        "defaultInstance is not yet bridged via JNI; use the Builder instead.");
-  }
+    @Nullable @JsonProperty("timeout_secs") Double timeoutSecs
+) {
+    public static WaitForBatchConfig defaultInstance() {
+        throw new UnsupportedOperationException("defaultInstance is not yet bridged via JNI; use the Builder instead.");
+    }
 }

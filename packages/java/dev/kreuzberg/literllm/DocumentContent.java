@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
@@ -16,39 +16,42 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 @SuppressWarnings("PMD")
 public record DocumentContent(
     @JsonProperty("data") String data,
-    @JsonProperty("media_type") String mediaType) {
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  // CPD-OFF
-  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-  public static final class Builder {
-
-    private String data = "";
-
-    @JsonProperty("media_type")
-    private String mediaType = "";
-
-    /** Sets the data field. */
-    @JsonProperty("data")
-    public Builder withData(final String value) {
-      this.data = value;
-      return this;
+    @JsonProperty("media_type") String mediaType
+) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    /** Sets the mediaType field. */
-    @JsonProperty("media_type")
-    public Builder withMediaType(final String value) {
-      this.mediaType = value;
-      return this;
-    }
+    // CPD-OFF
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+    public static final class Builder {
 
-    /** Builds the DocumentContent instance. */
-    public DocumentContent build() {
-      return new DocumentContent(data, mediaType);
+private String data = "";
+        @JsonProperty("media_type")
+private String mediaType = "";
+
+        /** Sets the data field. */
+        @JsonProperty("data")
+        public Builder withData(final String value) {
+            this.data = value;
+            return this;
+        }
+
+        /** Sets the mediaType field. */
+        @JsonProperty("media_type")
+        public Builder withMediaType(final String value) {
+            this.mediaType = value;
+            return this;
+        }
+
+        /** Builds the DocumentContent instance. */
+        public DocumentContent build() {
+            return new DocumentContent(
+                data,
+                mediaType
+            );
+        }
     }
-  }
-  // CPD-ON
+    // CPD-ON
 }

@@ -11,52 +11,53 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @SuppressWarnings("PMD")
 public enum FinishReason {
-  Stop("stop"),
-  Length("length"),
-  ToolCalls("tool_calls"),
-  ContentFilter("content_filter"),
-  /**
-   * Deprecated legacy finish reason; retained for API compatibility.
-   */
-  FunctionCall("function_call"),
-  /**
-   * Catch-all for unknown finish reasons returned by non-OpenAI providers.
-   *
-   * Note: this intentionally does **not** carry the original string (e.g.
-   * {@code Other(String)}).  Using {@code #[serde(other)]} requires a unit variant, and
-   * switching to {@code #[serde(untagged)]} would change deserialization semantics
-   * for all variants.  The original value can be recovered by inspecting the
-   * raw JSON if needed.
-   */
-  Other("other");
+    Stop("stop"),
+    Length("length"),
+    ToolCalls("tool_calls"),
+    ContentFilter("content_filter"),
+    /**
+     * Deprecated legacy finish reason; retained for API compatibility.
+     */
+    FunctionCall("function_call"),
+    /**
+     * Catch-all for unknown finish reasons returned by non-OpenAI providers.
+     *
+     * Note: this intentionally does **not** carry the original string (e.g.
+     * {@code Other(String)}).  Using {@code #[serde(other)]} requires a unit variant, and
+     * switching to {@code #[serde(untagged)]} would change deserialization semantics
+     * for all variants.  The original value can be recovered by inspecting the
+     * raw JSON if needed.
+     */
+    Other("other");
 
-  /** The string value. */
-  private final String value;
 
-  FinishReason(final String value) {
-    this.value = value;
-  }
+    /** The string value. */
+    private final String value;
 
-  /** Returns the string value. */
-  @JsonValue
-  public String getValue() {
-    return value;
-  }
-
-  /** Creates an instance from a string value. */
-  @JsonCreator
-  public static FinishReason fromValue(final String value) {
-    for (FinishReason e : values()) {
-      if (e.value.equalsIgnoreCase(value)) {
-        return e;
-      }
+    FinishReason(final String value) {
+        this.value = value;
     }
-    throw new IllegalArgumentException("Unknown FinishReason value: " + value);
-  }
 
-  /** Returns the wire-format string value (matches JSON serialization). */
-  @Override
-  public String toString() {
-    return value;
-  }
+    /** Returns the string value. */
+    @JsonValue
+    public String getValue() {
+        return value;
+    }
+
+    /** Creates an instance from a string value. */
+    @JsonCreator
+    public static FinishReason fromValue(final String value) {
+        for (FinishReason e : values()) {
+            if (e.value.equalsIgnoreCase(value)) {
+                return e;
+            }
+        }
+        throw new IllegalArgumentException("Unknown FinishReason value: " + value);
+    }
+
+    /** Returns the wire-format string value (matches JSON serialization). */
+    @Override
+    public String toString() {
+        return value;
+    }
 }

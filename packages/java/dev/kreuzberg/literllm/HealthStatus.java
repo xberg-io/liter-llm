@@ -11,42 +11,43 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @SuppressWarnings("PMD")
 public enum HealthStatus {
-  /**
-   * The probe succeeded; the upstream is reachable.
-   */
-  Healthy("healthy"),
-  /**
-   * The probe failed; the upstream may be down.
-   */
-  Unhealthy("unhealthy");
+    /**
+     * The probe succeeded; the upstream is reachable.
+     */
+    Healthy("healthy"),
+    /**
+     * The probe failed; the upstream may be down.
+     */
+    Unhealthy("unhealthy");
 
-  /** The string value. */
-  private final String value;
 
-  HealthStatus(final String value) {
-    this.value = value;
-  }
+    /** The string value. */
+    private final String value;
 
-  /** Returns the string value. */
-  @JsonValue
-  public String getValue() {
-    return value;
-  }
-
-  /** Creates an instance from a string value. */
-  @JsonCreator
-  public static HealthStatus fromValue(final String value) {
-    for (HealthStatus e : values()) {
-      if (e.value.equalsIgnoreCase(value)) {
-        return e;
-      }
+    HealthStatus(final String value) {
+        this.value = value;
     }
-    throw new IllegalArgumentException("Unknown HealthStatus value: " + value);
-  }
 
-  /** Returns the wire-format string value (matches JSON serialization). */
-  @Override
-  public String toString() {
-    return value;
-  }
+    /** Returns the string value. */
+    @JsonValue
+    public String getValue() {
+        return value;
+    }
+
+    /** Creates an instance from a string value. */
+    @JsonCreator
+    public static HealthStatus fromValue(final String value) {
+        for (HealthStatus e : values()) {
+            if (e.value.equalsIgnoreCase(value)) {
+                return e;
+            }
+        }
+        throw new IllegalArgumentException("Unknown HealthStatus value: " + value);
+    }
+
+    /** Returns the wire-format string value (matches JSON serialization). */
+    @Override
+    public String toString() {
+        return value;
+    }
 }

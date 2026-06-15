@@ -3,11 +3,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import java.util.List;
 
 /**
  * A search response.
@@ -17,37 +17,41 @@ import java.util.List;
 @SuppressWarnings("PMD")
 public record SearchResponse(
     @JsonProperty("results") List<SearchResult> results,
-    @JsonProperty("model") String model) {
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  // CPD-OFF
-  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-  public static final class Builder {
-
-    private List<SearchResult> results = List.of();
-    private String model = "";
-
-    /** Sets the results field. */
-    @JsonProperty("results")
-    public Builder withResults(final List<SearchResult> value) {
-      this.results = value;
-      return this;
+    @JsonProperty("model") String model
+) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    /** Sets the model field. */
-    @JsonProperty("model")
-    public Builder withModel(final String value) {
-      this.model = value;
-      return this;
-    }
+    // CPD-OFF
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+    public static final class Builder {
 
-    /** Builds the SearchResponse instance. */
-    public SearchResponse build() {
-      return new SearchResponse(results, model);
+private List<SearchResult> results = List.of();
+private String model = "";
+
+        /** Sets the results field. */
+        @JsonProperty("results")
+        public Builder withResults(final List<SearchResult> value) {
+            this.results = value;
+            return this;
+        }
+
+        /** Sets the model field. */
+        @JsonProperty("model")
+        public Builder withModel(final String value) {
+            this.model = value;
+            return this;
+        }
+
+        /** Builds the SearchResponse instance. */
+        public SearchResponse build() {
+            return new SearchResponse(
+                results,
+                model
+            );
+        }
     }
-  }
-  // CPD-ON
+    // CPD-ON
 }
