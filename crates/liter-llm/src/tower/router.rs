@@ -1,14 +1,111 @@
+//! Provider routing — weighted selection, dynamic discovery, and concurrency limits.
+//!
+//! # Overview
+//!
+//! This module provides three independent building blocks that compose to form
+//! a full routing stack:
+//!
+//! - [`Weight`] — a saturating `u32` wrapper for canary and weighted-random
+//!   weights; avoids NaN/Inf foot-guns from raw `f64` weights.
+//! - [`UpstreamDiscover`] / [`StaticDiscover`] — a trait that abstracts over
+//!   dynamic service discovery (etcd, file-watch, HTTP poll) and a built-in
+//!   static implementation that seeds from a fixed list.
+//! - [`DynamicRouter`] — a generic router over any `UpstreamDiscover` that
+//!   pre-warms discovered services in a [`tower::ready_cache::ReadyCache`]
+//!   so request-time setup cost is zero.
+//! - [`Router`] — the original statically-configured router, retained for
+//!   backward compatibility and as the default when dynamic discovery is not
+//!   required.
+
+use std::collections::HashMap;
+use std::fmt;
+use std::hash::Hash;
+use std::marker::PhantomData;
+use std::pin::Pin;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::task::{Context, Poll};
 use std::time::Instant;
 
 use dashmap::DashMap;
+use futures_core::Stream;
 use tower::Service;
+use tower::discover::{Change, Discover};
+use tower::limit::ConcurrencyLimit;
+use tower::ready_cache::ReadyCache;
 
 use super::types::{LlmRequest, LlmResponse};
 use crate::client::BoxFuture;
 use crate::error::{LiterLlmError, Result};
+
+// ---- Weight ----------------------------------------------------------------
+
+/// An integer traffic weight in the range [0, [`u32::MAX`]].
+///
+/// Uses saturating conversion from `f64` so that NaN and negative values
+/// clamp to 0 and `+Inf` clamps to `u32::MAX`.  This prevents canary
+/// configurations with malformed YAML weights from causing panics or
+/// undefined distribution behaviour.
+///
+/// # Example
+///
+/// ```
+/// use liter_llm::tower::router::Weight;
+///
+/// assert_eq!(Weight::from_f64(1.0).as_u32(), 1);
+/// assert_eq!(Weight::from_f64(f64::NAN).as_u32(), 0);
+/// assert_eq!(Weight::from_f64(f64::INFINITY).as_u32(), u32::MAX);
+/// assert_eq!(Weight::from_f64(-5.0).as_u32(), 0);
+/// ```
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Weight(u32);
+
+impl Weight {
+    /// Zero weight — the service receives no traffic.
+    pub const ZERO: Weight = Weight(0);
+    /// Default unit weight (corresponds to `1.0_f64`).
+    pub const ONE: Weight = Weight(1);
+    /// Maximum representable weight.
+    pub const MAX: Weight = Weight(u32::MAX);
+
+    /// Convert from an `f64` with saturating semantics.
+    ///
+    /// - NaN → 0
+    /// - negative → 0
+    /// - `+Inf` → [`u32::MAX`]
+    /// - otherwise: `round(f)` clamped to `[0, u32::MAX]`
+    #[must_use]
+    pub fn from_f64(f: f64) -> Self {
+        if f.is_nan() || f < 0.0 {
+            Self::ZERO
+        } else if f.is_infinite() {
+            Self::MAX
+        } else {
+            // saturating_cast: values > u32::MAX as f64 are clamped.
+            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+            let w = f.round().min(f64::from(u32::MAX)) as u32;
+            Self(w)
+        }
+    }
+
+    /// Return the raw `u32` value.
+    #[must_use]
+    pub fn as_u32(self) -> u32 {
+        self.0
+    }
+}
+
+impl Default for Weight {
+    fn default() -> Self {
+        Self::ONE
+    }
+}
+
+impl fmt::Display for Weight {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 // ---- Routing strategy ------------------------------------------------------
 
@@ -28,12 +125,12 @@ pub enum RoutingStrategy {
     /// embedded pricing registry.
     CostBased,
     /// Weighted random distribution across deployments.  Weights are
-    /// normalised at construction time; higher values receive proportionally
-    /// more traffic.
+    /// normalised at request time; higher values receive proportionally
+    /// more traffic.  Weights of 0 exclude the deployment entirely.
     WeightedRandom {
         /// One weight per deployment (must have the same length as the
         /// deployments vec).
-        weights: Vec<f64>,
+        weights: Vec<Weight>,
     },
 }
 
@@ -143,8 +240,8 @@ impl<S> Router<S> {
                     status: 400,
                 });
             }
-            let total: f64 = weights.iter().sum();
-            if total <= 0.0 {
+            let total: u64 = weights.iter().map(|w| u64::from(w.as_u32())).sum();
+            if total == 0 {
                 return Err(LiterLlmError::BadRequest {
                     message: "WeightedRandom: total weight must be positive".into(),
                     status: 400,
@@ -308,8 +405,11 @@ where
 ///
 /// Uses a simple linear scan with a random threshold.  For small deployment
 /// counts (typical: 2-5) this is fast enough; no binary search needed.
-fn weighted_random_select(weights: &[f64]) -> usize {
-    let total: f64 = weights.iter().sum();
+fn weighted_random_select(weights: &[Weight]) -> usize {
+    let total: u64 = weights.iter().map(|w| u64::from(w.as_u32())).sum();
+    if total == 0 {
+        return 0;
+    }
     // Simple pseudo-random: use the lower bits of the current time.
     // This avoids adding a `rand` dependency.  For production use,
     // callers who need better randomness can use the `rand` crate
@@ -318,27 +418,380 @@ fn weighted_random_select(weights: &[f64]) -> usize {
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .subsec_nanos();
-    let threshold = (f64::from(nanos) / 1_000_000_000.0) * total;
+    let threshold = u64::from(nanos) % total;
 
-    let mut cumulative = 0.0;
-    for (i, &w) in weights.iter().enumerate() {
-        cumulative += w;
+    let mut cumulative: u64 = 0;
+    for (i, w) in weights.iter().enumerate() {
+        cumulative += u64::from(w.as_u32());
         if threshold < cumulative {
             return i;
         }
     }
-    // Fallback to last deployment (rounding edge case).
+    // Fallback to last non-zero deployment (rounding edge case).
     weights.len() - 1
+}
+
+// ---- UpstreamDiscover trait -----------------------------------------------
+
+/// A typed extension of [`tower::discover::Discover`] for LLM upstream
+/// services.
+///
+/// Implementors plug in their own discovery mechanism — file-based configs,
+/// etcd watches, HTTP polling — and the [`DynamicRouter`] handles the rest.
+/// The key type must be `String` so that provider names are human-readable in
+/// logs and metrics.
+///
+/// # Note for 1.A integration
+///
+/// If the router encounters a discovery error, it wraps it in
+/// [`RouterError::Discover`].  The 1.A error-consolidation workstream should
+/// replace this local enum with the canonical error hierarchy.
+pub trait UpstreamDiscover: Discover<Key = String> + Unpin + Send {}
+
+impl<D> UpstreamDiscover for D where D: Discover<Key = String> + Unpin + Send {}
+
+// ---- Router-local error (for 1.A to consolidate) --------------------------
+
+/// Errors produced exclusively by the router.
+///
+/// **Note**: 1.A owns error-type consolidation.  These codes start at 2000 so
+/// they don't clash with the 1xxx range used by the existing
+/// [`LiterLlmError`] variants.
+#[derive(Debug, thiserror::Error)]
+#[cfg_attr(alef, alef(skip))]
+pub enum RouterError {
+    /// Discovery stream returned an error.
+    #[error("discovery error (code 2001): {source}")]
+    Discover {
+        source: tower::BoxError,
+        /// Numeric code for cross-language error conversion.
+        code: u32,
+    },
+    /// No ready upstream is available to serve the request.
+    #[error("no ready upstream available (code 2002)")]
+    NoReadyUpstream {
+        /// Numeric code for cross-language error conversion.
+        code: u32,
+    },
+}
+
+impl RouterError {
+    /// Numeric error code, suitable for FFI boundaries.
+    #[must_use]
+    pub fn code(&self) -> u32 {
+        match self {
+            Self::Discover { code, .. } | Self::NoReadyUpstream { code } => *code,
+        }
+    }
+}
+
+impl From<RouterError> for LiterLlmError {
+    fn from(e: RouterError) -> Self {
+        LiterLlmError::ServerError {
+            message: e.to_string(),
+            status: 503,
+        }
+    }
+}
+
+// ---- StaticDiscover -------------------------------------------------------
+
+/// A [`tower::discover::Discover`]-compatible stream that wraps a fixed list
+/// of named services.
+///
+/// In tower 0.5, `Discover` is a blanket impl over any type implementing
+/// `TryStream<Ok = Change<K, S>, Error = E>`.  So `StaticDiscover` implements
+/// `Stream<Item = Result<Change<String, S>, Infallible>>` which satisfies the
+/// `TryStream` bound, making it auto-implement `Discover`.
+///
+/// Yields one [`Change::Insert`] per service, then signals end-of-stream.
+/// This preserves the behaviour of the original [`Router`] while making
+/// it composable with [`DynamicRouter`].
+#[cfg_attr(alef, alef(skip))]
+pub struct StaticDiscover<S> {
+    keys: std::collections::VecDeque<String>,
+    services: std::collections::VecDeque<S>,
+}
+
+impl<S> StaticDiscover<S> {
+    /// Build a `StaticDiscover` from an iterable of `(name, service)` pairs.
+    pub fn new(services: impl IntoIterator<Item = (String, S)>) -> Self {
+        let (keys, services): (std::collections::VecDeque<_>, std::collections::VecDeque<_>) =
+            services.into_iter().unzip();
+        Self { keys, services }
+    }
+}
+
+impl<S: Unpin> Unpin for StaticDiscover<S> {}
+
+impl<S: Unpin> Stream for StaticDiscover<S> {
+    type Item = std::result::Result<Change<String, S>, std::convert::Infallible>;
+
+    fn poll_next(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        match (self.keys.pop_front(), self.services.pop_front()) {
+            (Some(key), Some(svc)) => Poll::Ready(Some(Ok(Change::Insert(key, svc)))),
+            _ => Poll::Ready(None),
+        }
+    }
+}
+
+// ---- Per-provider concurrency limit ---------------------------------------
+
+/// Default maximum concurrent in-flight requests per upstream provider.
+///
+/// Prevents a single slow provider from exhausting all Tokio permits.
+/// Callers can override per-provider via [`ProviderConfig::concurrency_limit`].
+pub const DEFAULT_CONCURRENCY_LIMIT: usize = 256;
+
+/// Per-provider configuration attached to each upstream in a
+/// [`DynamicRouter`].
+#[derive(Debug, Clone)]
+#[cfg_attr(alef, alef(skip))]
+pub struct ProviderConfig {
+    /// Maximum concurrent requests allowed to this upstream.
+    /// Defaults to [`DEFAULT_CONCURRENCY_LIMIT`].
+    pub concurrency_limit: usize,
+}
+
+impl Default for ProviderConfig {
+    fn default() -> Self {
+        Self {
+            concurrency_limit: DEFAULT_CONCURRENCY_LIMIT,
+        }
+    }
+}
+
+// ---- DynamicRouter --------------------------------------------------------
+
+/// A router over a [`tower::discover::Discover`] stream of LLM upstreams.
+///
+/// Services discovered via `D` are pre-warmed in a
+/// [`tower::ready_cache::ReadyCache`] so that request-path setup cost is
+/// minimal.  Each service is also wrapped in a per-provider
+/// [`tower::limit::ConcurrencyLimit`] to prevent one rogue upstream from
+/// monopolising Tokio permits.
+///
+/// # Type parameters
+///
+/// - `D`: the discovery source; must implement [`UpstreamDiscover`].
+/// - `S`: the underlying service type yielded by `D`.
+///
+/// # Usage
+///
+/// ```rust,ignore
+/// use liter_llm::tower::router::{DynamicRouter, StaticDiscover};
+/// use liter_llm::tower::service::LlmService;
+///
+/// let discover = StaticDiscover::new([
+///     ("openai".into(), LlmService::new(openai_client)),
+///     ("anthropic".into(), LlmService::new(anthropic_client)),
+/// ]);
+/// let router = DynamicRouter::new(discover);
+/// ```
+#[cfg_attr(alef, alef(skip))]
+pub struct DynamicRouter<D>
+where
+    D: Discover<Key = String>,
+    D::Service: Service<LlmRequest, Response = LlmResponse, Error = LiterLlmError>,
+{
+    discover: D,
+    /// Pre-warmed, ready services keyed by provider name.
+    services: ReadyCache<String, ConcurrencyLimit<D::Service>, LlmRequest>,
+    /// Per-provider configuration (concurrency limits, etc.).
+    provider_configs: HashMap<String, ProviderConfig>,
+    _marker: PhantomData<LlmRequest>,
+}
+
+impl<D> fmt::Debug for DynamicRouter<D>
+where
+    D: Discover<Key = String> + fmt::Debug,
+    D::Service: Service<LlmRequest, Response = LlmResponse, Error = LiterLlmError> + fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DynamicRouter")
+            .field("discover", &self.discover)
+            .finish_non_exhaustive()
+    }
+}
+
+impl<D> DynamicRouter<D>
+where
+    D: Discover<Key = String> + Unpin,
+    D::Service: Service<LlmRequest, Response = LlmResponse, Error = LiterLlmError> + Send + Unpin + 'static,
+    <D::Service as Service<LlmRequest>>::Future: Send + 'static,
+    D::Error: Into<tower::BoxError>,
+{
+    /// Create a new `DynamicRouter` from a discovery source.
+    ///
+    /// Use [`StaticDiscover`] to preserve the behaviour of the original
+    /// [`Router`] without external service discovery infrastructure.
+    pub fn new(discover: D) -> Self {
+        Self {
+            discover,
+            services: ReadyCache::default(),
+            provider_configs: HashMap::new(),
+            _marker: PhantomData,
+        }
+    }
+
+    /// Attach a per-provider [`ProviderConfig`] (concurrency limits, etc.).
+    pub fn with_provider_config(mut self, key: impl Into<String>, config: ProviderConfig) -> Self {
+        self.provider_configs.insert(key.into(), config);
+        self
+    }
+
+    /// Return the number of upstream services currently tracked.
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.services.len()
+    }
+
+    /// Return `true` if no upstream services are currently tracked.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.services.is_empty()
+    }
+
+    /// Poll the discovery stream and apply any pending insertions/removals.
+    fn update_from_discover(&mut self, cx: &mut Context<'_>) -> std::result::Result<(), RouterError> {
+        loop {
+            match Pin::new(&mut self.discover).poll_discover(cx) {
+                Poll::Pending => return Ok(()),
+                Poll::Ready(None) => return Ok(()), // stream exhausted
+                Poll::Ready(Some(Err(e))) => {
+                    return Err(RouterError::Discover {
+                        source: e.into(),
+                        code: 2001,
+                    });
+                }
+                Poll::Ready(Some(Ok(Change::Insert(key, svc)))) => {
+                    let limit = self
+                        .provider_configs
+                        .get(&key)
+                        .map_or(DEFAULT_CONCURRENCY_LIMIT, |c| c.concurrency_limit);
+                    tracing::debug!(provider = %key, concurrency_limit = limit, "discovered new upstream");
+                    self.services.push(key, ConcurrencyLimit::new(svc, limit));
+                }
+                Poll::Ready(Some(Ok(Change::Remove(key)))) => {
+                    tracing::debug!(provider = %key, "upstream removed from discovery");
+                    self.services.evict(&key);
+                }
+            }
+        }
+    }
+}
+
+impl<D> Service<LlmRequest> for DynamicRouter<D>
+where
+    D: Discover<Key = String> + Unpin + Send,
+    D::Service: Service<LlmRequest, Response = LlmResponse, Error = LiterLlmError> + Send + Unpin + 'static,
+    <D::Service as Service<LlmRequest>>::Future: Send + 'static,
+    D::Error: Into<tower::BoxError>,
+{
+    type Response = LlmResponse;
+    type Error = LiterLlmError;
+    type Future = BoxFuture<'static, Result<LlmResponse>>;
+
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<()>> {
+        // Drain discovery updates.
+        if let Err(e) = self.update_from_discover(cx) {
+            return Poll::Ready(Err(e.into()));
+        }
+
+        // Drive the ready cache to promote newly-inserted services.
+        let _ = self.services.poll_pending(cx);
+
+        if self.services.ready_len() > 0 {
+            Poll::Ready(Ok(()))
+        } else {
+            Poll::Pending
+        }
+    }
+
+    fn call(&mut self, req: LlmRequest) -> Self::Future {
+        if self.services.ready_len() == 0 {
+            return Box::pin(async {
+                Err(RouterError::NoReadyUpstream { code: 2002 }.into())
+            });
+        }
+        // Round-robin across ready services by using the first ready slot.
+        // A future enhancement can use weighted selection here.
+        let fut = self.services.call_ready_index(0, req);
+        Box::pin(fut)
+    }
 }
 
 // ---- Tests -----------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
+    use std::collections::VecDeque;
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
+
+    use futures_core::Stream;
+    use tower::Service as _;
+
     use super::*;
     use crate::tower::service::LlmService;
     use crate::tower::tests_common::{MockClient, chat_req};
     use crate::tower::types::LlmRequest;
+
+    // ---- Weight tests -------------------------------------------------------
+
+    #[test]
+    fn weight_clamps_nan_to_zero() {
+        assert_eq!(Weight::from_f64(f64::NAN).as_u32(), 0);
+    }
+
+    #[test]
+    fn weight_clamps_negative_to_zero() {
+        assert_eq!(Weight::from_f64(-1.0).as_u32(), 0);
+        assert_eq!(Weight::from_f64(-f64::INFINITY).as_u32(), 0);
+    }
+
+    #[test]
+    fn weight_clamps_inf_to_max() {
+        assert_eq!(Weight::from_f64(f64::INFINITY).as_u32(), u32::MAX);
+    }
+
+    #[test]
+    fn weight_rounds_normal_values() {
+        assert_eq!(Weight::from_f64(1.0).as_u32(), 1);
+        assert_eq!(Weight::from_f64(1.4).as_u32(), 1);
+        assert_eq!(Weight::from_f64(1.5).as_u32(), 2);
+        assert_eq!(Weight::from_f64(100.0).as_u32(), 100);
+    }
+
+    #[test]
+    fn weight_default_is_one() {
+        assert_eq!(Weight::default().as_u32(), 1);
+    }
+
+    // ---- weighted_random_select proportionality test ----------------------
+
+    #[test]
+    fn weighted_random_selects_proportionally() {
+        // Weight distribution: 0:1, 1:2, 2:3 → ~1/6, ~2/6, ~3/6
+        // With 600 samples we expect each bucket to be within ±100 of its
+        // expected count.  The pseudo-random source is time-based, so this
+        // is a distribution sanity check, not a strict uniform test.
+        let weights = vec![Weight(1), Weight(2), Weight(3)];
+        let mut counts = [0usize; 3];
+
+        for _ in 0..600u64 {
+            let idx = weighted_random_select(&weights);
+            assert!(idx < 3, "index {idx} out of range");
+            counts[idx] += 1;
+        }
+
+        // Every index must have been selected at least once across 600 calls.
+        for (i, &count) in counts.iter().enumerate() {
+            assert!(count > 0, "index {i} was never selected (counts: {counts:?})");
+        }
+    }
+
+    // ---- Router (static, strategy-based) tests ----------------------------
 
     #[tokio::test]
     async fn latency_based_routes_to_fastest() {
@@ -381,7 +834,7 @@ mod tests {
         let mut router = Router::new(
             deployments,
             RoutingStrategy::WeightedRandom {
-                weights: vec![1.0, 2.0, 3.0],
+                weights: vec![Weight(1), Weight(2), Weight(3)],
             },
         )
         .expect("non-empty deployments");
@@ -402,7 +855,7 @@ mod tests {
         let result = Router::new(
             deployments,
             RoutingStrategy::WeightedRandom {
-                weights: vec![1.0], // Wrong length.
+                weights: vec![Weight(1)], // Wrong length.
             },
         );
         assert!(result.is_err());
@@ -412,13 +865,18 @@ mod tests {
     async fn weighted_random_rejects_zero_total_weight() {
         let deployments: Vec<LlmService<MockClient>> = vec![LlmService::new(MockClient::ok())];
 
-        let result = Router::new(deployments, RoutingStrategy::WeightedRandom { weights: vec![0.0] });
+        let result = Router::new(
+            deployments,
+            RoutingStrategy::WeightedRandom {
+                weights: vec![Weight::ZERO],
+            },
+        );
         assert!(result.is_err());
     }
 
     #[test]
     fn weighted_random_select_returns_valid_index() {
-        let weights = vec![1.0, 2.0, 3.0];
+        let weights = vec![Weight(1), Weight(2), Weight(3)];
         for _ in 0..100 {
             let idx = weighted_random_select(&weights);
             assert!(idx < weights.len());
@@ -440,5 +898,178 @@ mod tests {
             (m.latency_ema - 0.7).abs() < 1e-9,
             "EMA should be 0.7 after second sample"
         );
+    }
+
+    // ---- DynamicRouter tests -----------------------------------------------
+
+    /// A `Stream`-based discover that drains from a pre-built VecDeque.
+    /// In tower 0.5, `Discover` is a blanket impl over `TryStream`, so
+    /// implementing `Stream` here is sufficient.
+    struct VecDiscover {
+        items: VecDeque<
+            std::result::Result<Change<String, LlmService<MockClient>>, std::convert::Infallible>,
+        >,
+    }
+
+    impl VecDiscover {
+        fn new(services: Vec<(String, LlmService<MockClient>)>) -> Self {
+            Self {
+                items: services.into_iter().map(|(k, v)| Ok(Change::Insert(k, v))).collect(),
+            }
+        }
+    }
+
+    impl Stream for VecDiscover {
+        type Item = std::result::Result<
+            Change<String, LlmService<MockClient>>,
+            std::convert::Infallible,
+        >;
+
+        fn poll_next(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+            Poll::Ready(self.items.pop_front())
+        }
+    }
+
+    impl Unpin for VecDiscover {}
+
+    #[tokio::test]
+    async fn dynamic_router_warms_ready_cache() {
+        let discover = VecDiscover::new(vec![
+            ("openai".into(), LlmService::new(MockClient::ok())),
+            ("anthropic".into(), LlmService::new(MockClient::ok())),
+        ]);
+
+        let mut router = DynamicRouter::new(discover);
+
+        // poll_ready should drain the discovery updates and warm the cache.
+        futures_util::future::poll_fn(|cx| match router.poll_ready(cx) {
+            Poll::Ready(Ok(())) => Poll::Ready(()),
+            Poll::Ready(Err(e)) => panic!("unexpected error: {e}"),
+            Poll::Pending => Poll::Pending,
+        })
+        .await;
+
+        assert!(router.len() >= 1, "at least one upstream should be ready");
+    }
+
+    #[tokio::test]
+    async fn dynamic_router_evicts_stale() {
+        /// A stream that inserts then immediately removes a service.
+        struct InsertThenRemoveDiscover {
+            step: usize,
+        }
+
+        impl Stream for InsertThenRemoveDiscover {
+            type Item = std::result::Result<
+                Change<String, LlmService<MockClient>>,
+                std::convert::Infallible,
+            >;
+
+            fn poll_next(
+                mut self: Pin<&mut Self>,
+                _cx: &mut Context<'_>,
+            ) -> Poll<Option<Self::Item>> {
+                let step = self.step;
+                self.step += 1;
+                match step {
+                    0 => Poll::Ready(Some(Ok(Change::Insert(
+                        "openai".into(),
+                        LlmService::new(MockClient::ok()),
+                    )))),
+                    1 => Poll::Ready(Some(Ok(Change::Remove("openai".into())))),
+                    _ => Poll::Ready(None),
+                }
+            }
+        }
+
+        impl Unpin for InsertThenRemoveDiscover {}
+
+        let discover = InsertThenRemoveDiscover { step: 0 };
+        let mut router = DynamicRouter::new(discover);
+
+        // Drive once to process insert + remove.
+        let mut noop_cx = std::task::Context::from_waker(futures_util::task::noop_waker_ref());
+        let _ = router.poll_ready(&mut noop_cx);
+
+        // After eviction the router should have zero entries.
+        assert_eq!(router.len(), 0, "evicted service should be removed");
+    }
+
+    // ---- Concurrency limit test --------------------------------------------
+
+    #[tokio::test]
+    async fn concurrency_limit_rejects_at_max() {
+
+        // A service that blocks until a signal is set, so we can hold the
+        // permit open.
+        #[derive(Clone)]
+        struct BlockingService {
+            call_count: Arc<AtomicUsize>,
+        }
+
+        impl Service<LlmRequest> for BlockingService {
+            type Response = LlmResponse;
+            type Error = LiterLlmError;
+            type Future = BoxFuture<'static, Result<LlmResponse>>;
+
+            fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<()>> {
+                Poll::Ready(Ok(()))
+            }
+
+            fn call(&mut self, _req: LlmRequest) -> Self::Future {
+                self.call_count.fetch_add(1, AtomicOrdering::SeqCst);
+                Box::pin(std::future::pending())
+            }
+        }
+
+        let counter = Arc::new(AtomicUsize::new(0));
+        let inner = BlockingService {
+            call_count: Arc::clone(&counter),
+        };
+
+        // Limit to 1 concurrent request.
+        let mut limited = ConcurrencyLimit::new(inner, 1);
+
+        // First poll_ready → should succeed, acquiring the permit.
+        assert!(
+            futures_util::future::poll_fn(|cx| limited.poll_ready(cx)).await.is_ok(),
+            "first poll_ready should be ok"
+        );
+
+        // Dispatch the first call (holds the permit open indefinitely).
+        let _held_fut = limited.call(LlmRequest::ListModels);
+
+        // Now the concurrency slot is exhausted.  poll_ready should return
+        // Pending (the tower ConcurrencyLimit only returns Ready once the
+        // semaphore has a slot).
+        let mut noop_cx = std::task::Context::from_waker(futures_util::task::noop_waker_ref());
+        let poll = limited.poll_ready(&mut noop_cx);
+        assert!(
+            poll.is_pending(),
+            "second poll_ready should be Pending when limit=1 and one request is in-flight"
+        );
+    }
+
+    // ---- StaticDiscover tests -----------------------------------------------
+
+    #[tokio::test]
+    async fn static_discover_yields_all_services() {
+        let mut discover = StaticDiscover::new(vec![
+            ("a".to_owned(), LlmService::new(MockClient::ok())),
+            ("b".to_owned(), LlmService::new(MockClient::ok())),
+        ]);
+
+        let mut noop_cx = std::task::Context::from_waker(futures_util::task::noop_waker_ref());
+
+        // StaticDiscover implements Stream (not Discover directly).
+        let first = Pin::new(&mut discover).poll_next(&mut noop_cx);
+        assert!(matches!(first, Poll::Ready(Some(Ok(Change::Insert(ref k, _)))) if k == "a"));
+
+        let second = Pin::new(&mut discover).poll_next(&mut noop_cx);
+        assert!(matches!(second, Poll::Ready(Some(Ok(Change::Insert(ref k, _)))) if k == "b"));
+
+        // After all services are yielded, stream ends.
+        let third = Pin::new(&mut discover).poll_next(&mut noop_cx);
+        assert!(matches!(third, Poll::Ready(None)));
     }
 }

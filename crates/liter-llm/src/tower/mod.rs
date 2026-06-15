@@ -81,10 +81,16 @@ pub use cache_opendal::OpenDalCacheStore;
 pub use cooldown::{CooldownLayer, CooldownService};
 pub use cost::{CostTrackingLayer, CostTrackingService};
 pub use fallback::{FallbackLayer, FallbackService};
-pub use health::{HealthCheckLayer, HealthCheckService};
+pub use health::{
+    HealthCheckConfig, HealthCheckLayer, HealthCheckService, HealthChecker, HealthStatus,
+    HttpProbeHealthChecker, PerProviderHealthCheck,
+};
 pub use hooks::{HooksLayer, HooksService, LlmHook};
 pub use rate_limit::{ModelRateLimitLayer, ModelRateLimitService, RateLimitConfig};
-pub use router::{Router, RoutingStrategy};
+pub use router::{
+    DEFAULT_CONCURRENCY_LIMIT, DynamicRouter, ProviderConfig, Router, RouterError, RoutingStrategy,
+    StaticDiscover, UpstreamDiscover, Weight,
+};
 pub use service::LlmService;
 pub use tracing::{TracingLayer, TracingService};
 pub use types::{LlmRequest, LlmResponse};
