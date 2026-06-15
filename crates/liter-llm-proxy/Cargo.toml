@@ -10,7 +10,7 @@ description = "OpenAI-compatible LLM proxy server — model routing, virtual key
 keywords = ["llm", "proxy", "openai", "gateway", "kreuzberg"]
 
 [package.metadata.cargo-machete]
-ignored = ["opentelemetry", "tracing-opentelemetry"]
+ignored = ["opentelemetry", "tracing-opentelemetry", "notify", "tracing-test"]
 
 [features]
 # OTel export bridge — forwarded to the core `liter-llm/otel` feature.
@@ -25,18 +25,28 @@ opendal-cache = ["liter-llm/opendal-cache"]
 # surface so upstream crates can depend on the proxy with explicit intent.
 proxy = []
 
-# `full` — all proxy features: otel + opendal-cache.
-full = ["otel", "opendal-cache", "proxy"]
+# Secret backends.
+# `secrets-aws`   — AWS Secrets Manager via `aws-sdk-secretsmanager`.
+# `secrets-vault` — HashiCorp Vault KV-v2 via `vaultrs`.
+# The `env://` backend is always available with no feature gate.
+secrets-aws = ["dep:aws-config", "dep:aws-sdk-secretsmanager"]
+secrets-vault = ["dep:vaultrs", "dep:chrono"]
+
+# `full` — all proxy features: otel + opendal-cache + both secret backends.
+full = ["otel", "opendal-cache", "proxy", "secrets-aws", "secrets-vault"]
 
 default = ["proxy"]
 
 [dependencies]
+arc-swap = { workspace = true }
 axum = { workspace = true }
 base64 = { workspace = true }
 bytes = { workspace = true }
 dashmap = { workspace = true }
+etcd-client = { workspace = true }
 futures-util = { workspace = true }
 http = { workspace = true }
+notify = { workspace = true }
 liter-llm = { path = "../liter-llm", version = "1.6.0-rc.0", features = [
     "native-http",
     "tower",
@@ -44,15 +54,25 @@ liter-llm = { path = "../liter-llm", version = "1.6.0-rc.0", features = [
 ] }
 opendal = { workspace = true }
 
-# Feature-gated
+# Feature-gated: OTel
 opentelemetry = { workspace = true, optional = true }
+
+# Feature-gated: secrets-aws
+aws-config = { workspace = true, optional = true }
+aws-sdk-secretsmanager = { workspace = true, optional = true }
+
+# Feature-gated: secrets-vault
+vaultrs = { workspace = true, optional = true }
+chrono = { workspace = true, optional = true }
 rmcp = { workspace = true }
 schemars = { workspace = true }
 secrecy = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 subtle = { workspace = true }
+thiserror = { workspace = true }
 tokio = { workspace = true }
+tokio-tungstenite = { workspace = true }
 tokio-util = { workspace = true }
 toml = { workspace = true }
 tower = { workspace = true }
@@ -65,7 +85,9 @@ utoipa = { workspace = true }
 ctor = "1.0"
 http-body-util = "0.1"
 reqwest = { workspace = true }
+tempfile = { workspace = true }
 tokio = { workspace = true, features = ["test-util"] }
+tracing-test = "0.2"
 
 [lints]
 workspace = true

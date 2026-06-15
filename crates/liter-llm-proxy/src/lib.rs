@@ -4,7 +4,9 @@ pub mod error;
 pub mod file_store;
 pub mod mcp;
 pub mod openapi;
+pub mod provider;
 pub mod routes;
+pub mod secrets;
 pub mod service_pool;
 pub mod shutdown;
 pub mod state;
@@ -19,8 +21,23 @@ fn init_crypto_for_unit_tests() {
 use std::net::SocketAddr;
 use std::sync::Arc;
 
+use arc_swap::ArcSwap;
 use config::ProxyConfig;
 use state::AppState;
+
+/// Hot-reload mode selected by the `--watch` CLI flag.
+#[derive(Debug, Clone)]
+pub enum WatchMode {
+    /// No live reload — use a `StaticFileConfigProvider`.
+    Off,
+    /// Watch a local TOML file for changes via `notify`.
+    File { path: std::path::PathBuf },
+    /// Watch an etcd key prefix for changes.
+    Etcd {
+        endpoints: Vec<String>,
+        key: String,
+    },
+}
 
 /// Builder for the liter-llm proxy server.
 ///
@@ -28,12 +45,23 @@ use state::AppState;
 /// router, and serves on the configured address.
 pub struct ProxyServer {
     config: ProxyConfig,
+    watch_mode: WatchMode,
 }
 
 impl ProxyServer {
-    /// Create a new proxy server with the given configuration.
+    /// Create a new proxy server with the given configuration and no live
+    /// reload (static config only).
     pub fn new(config: ProxyConfig) -> Self {
-        Self { config }
+        Self {
+            config,
+            watch_mode: WatchMode::Off,
+        }
+    }
+
+    /// Enable hot-reload with the given [`WatchMode`].
+    pub fn with_watch_mode(mut self, mode: WatchMode) -> Self {
+        self.watch_mode = mode;
+        self
     }
 
     /// Build the application state, assemble the router, and start serving.
@@ -45,21 +73,60 @@ impl ProxyServer {
     /// `None` the server falls back to listening for Ctrl-C only.
     pub async fn serve_with_shutdown(self, shutdown_handle: Option<shutdown::ShutdownHandle>) -> Result<(), String> {
         liter_llm::ensure_crypto_provider();
+
         let service_pool = service_pool::ServicePool::from_config(&self.config)?;
         let key_store = auth::KeyStore::from_config(self.config.general.master_key.clone(), &self.config.keys);
         let file_store = file_store::FileStore::from_config(self.config.files.as_ref().unwrap_or(&Default::default()))?;
+
+        let arc_config = Arc::new(ArcSwap::from(Arc::new(self.config)));
+
+        // Spawn the hot-reload background watcher when requested.
+        let cancel = shutdown_handle
+            .as_ref()
+            .map(|h| h.cancellation_token())
+            .unwrap_or_default();
+
+        match self.watch_mode {
+            WatchMode::Off => {
+                // No watcher — arc_config is static.
+            }
+            WatchMode::File { path } => {
+                let provider = Arc::new(config::FileWatchConfigProvider::new(path));
+                config::watcher::spawn_watcher(provider, Arc::clone(&arc_config), cancel.clone()).await;
+            }
+            WatchMode::Etcd { endpoints, key } => {
+                let provider = config::EtcdConfigProvider::connect(endpoints, key)
+                    .await
+                    .map_err(|e| format!("etcd connect failed: {e}"))?;
+                config::watcher::spawn_watcher(Arc::new(provider), Arc::clone(&arc_config), cancel.clone()).await;
+            }
+        }
+
+        let addr: SocketAddr = {
+            let cfg = arc_config.load();
+            format!("{}:{}", cfg.server.host, cfg.server.port)
+                .parse()
+                .map_err(|e| format!("invalid listen address: {e}"))?
+        };
+
+        // Build the default secret registry with the env backend as the
+        // fallback. AWS and Vault backends are added when the corresponding
+        // features are enabled and configured.
+        let secret_registry = Arc::new(
+            secrets::SecretManagerRegistry::builder()
+                .register("env", Arc::new(secrets::EnvVarSecretManager::new()) as Arc<dyn secrets::SecretManager>)
+                .default_backend(Arc::new(secrets::EnvVarSecretManager::new()) as Arc<dyn secrets::SecretManager>)
+                .build(),
+        );
 
         let state = AppState {
             key_store: Arc::new(key_store),
             service_pool: Arc::new(service_pool),
             file_store: Arc::new(file_store),
-            config: Arc::new(self.config),
+            config: arc_config,
+            secret_registry,
             shutdown: shutdown_handle.clone(),
         };
-
-        let addr: SocketAddr = format!("{}:{}", state.config.server.host, state.config.server.port)
-            .parse()
-            .map_err(|e| format!("invalid listen address: {e}"))?;
 
         let router = routes::build_router(state);
 

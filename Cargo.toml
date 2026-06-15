@@ -65,7 +65,15 @@ keywords = ["llm", "openai", "api-client", "ai", "kreuzberg"]
 
 [workspace.dependencies]
 anyhow = "1"
-axum = { version = "0.8", features = ["macros"] }
+arc-swap = "1"
+
+# Secret backends
+aws-config = { version = "1", default-features = false, features = ["rustls"] }
+aws-sdk-secretsmanager = { version = "1", default-features = false, features = ["rustls"] }
+chrono = { version = "0.4", default-features = false, features = ["std"] }
+vaultrs = { version = "0.8", default-features = false, features = ["rustls"] }
+
+axum = { version = "0.8", features = ["macros", "ws"] }
 # Optional global allocators — selected via `mimalloc`/`jemalloc` features on
 # `liter-llm-cli`.  Off by default; absence means the system allocator is used.
 mimalloc = { version = "0.1", default-features = false }
@@ -137,8 +145,11 @@ tempfile = "3"
 
 # Error handling
 thiserror = "2"
+notify = { version = "8", features = ["macos_kqueue"] }
+etcd-client = { version = "0.15", default-features = false }
 tokenizers = { version = "0.23", default-features = false, features = ["http", "fancy-regex"] }
 tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = { version = "0.26", features = ["native-tls"] }
 tokio-util = { version = "0.7", features = ["rt"] }
 toml = "1.1"
 tower = { version = "0.5", features = [
