@@ -103,6 +103,7 @@ pub async fn run(args: McpArgs) -> Result<(), String> {
                 service_pool: service_pool.clone(),
                 file_store: file_store.clone(),
                 config: Arc::new(config.clone()),
+                shutdown: None,
             };
 
             // For HTTP transport the actual KeyContext is resolved from the

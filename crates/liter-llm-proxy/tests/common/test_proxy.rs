@@ -36,6 +36,7 @@ impl TestProxy {
             service_pool: Arc::new(service_pool),
             file_store: Arc::new(file_store),
             config: Arc::new(config),
+            shutdown: None,
         };
 
         Self { state }

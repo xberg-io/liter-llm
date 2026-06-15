@@ -106,6 +106,7 @@ tempfile = "3"
 thiserror = "2"
 tokenizers = { version = "0.23", default-features = false, features = ["http", "fancy-regex"] }
 tokio = { version = "1", features = ["full"] }
+tokio-util = { version = "0.7", features = ["rt"] }
 toml = "1.1"
 tower = { version = "0.5", features = [
     "retry",
@@ -115,6 +116,8 @@ tower = { version = "0.5", features = [
     "load-shed",
     "steer",
     "util",
+    "discover",
+    "ready-cache",
 ] }
 tower-http = { version = "0.6", features = [
     "follow-redirect",

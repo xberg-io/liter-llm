@@ -6,6 +6,7 @@ pub mod mcp;
 pub mod openapi;
 pub mod routes;
 pub mod service_pool;
+pub mod shutdown;
 pub mod state;
 pub mod streaming;
 
@@ -36,7 +37,13 @@ impl ProxyServer {
     }
 
     /// Build the application state, assemble the router, and start serving.
-    pub async fn serve(self) -> Result<(), String> {
+    ///
+    /// Accepts an optional [`shutdown::ShutdownHandle`] to integrate with the
+    /// [`shutdown::ShutdownCoordinator`].  When provided, the server stops
+    /// accepting new connections as soon as the handle's cancellation token is
+    /// cancelled (i.e. when the coordinator enters `Draining`).  When
+    /// `None` the server falls back to listening for Ctrl-C only.
+    pub async fn serve_with_shutdown(self, shutdown_handle: Option<shutdown::ShutdownHandle>) -> Result<(), String> {
         liter_llm::ensure_crypto_provider();
         let service_pool = service_pool::ServicePool::from_config(&self.config)?;
         let key_store = auth::KeyStore::from_config(self.config.general.master_key.clone(), &self.config.keys);
@@ -47,6 +54,7 @@ impl ProxyServer {
             service_pool: Arc::new(service_pool),
             file_store: Arc::new(file_store),
             config: Arc::new(self.config),
+            shutdown: shutdown_handle.clone(),
         };
 
         let addr: SocketAddr = format!("{}:{}", state.config.server.host, state.config.server.port)
@@ -61,16 +69,37 @@ impl ProxyServer {
             .await
             .map_err(|e| format!("failed to bind {addr}: {e}"))?;
 
-        let shutdown = async {
-            let _ = tokio::signal::ctrl_c().await;
-            tracing::info!("shutdown signal received");
-        };
-
-        axum::serve(listener, router)
-            .with_graceful_shutdown(shutdown)
-            .await
-            .map_err(|e| format!("server error: {e}"))?;
+        match shutdown_handle {
+            Some(handle) => {
+                // Use the coordinator's cancellation token so axum drains on
+                // the first signal, not just on process exit.
+                let token = handle.cancellation_token();
+                axum::serve(listener, router)
+                    .with_graceful_shutdown(async move { token.cancelled().await })
+                    .await
+                    .map_err(|e| format!("server error: {e}"))?;
+            }
+            None => {
+                // Fallback: ctrl-c only (legacy / test usage).
+                let shutdown = async {
+                    let _ = tokio::signal::ctrl_c().await;
+                    tracing::info!("shutdown signal received");
+                };
+                axum::serve(listener, router)
+                    .with_graceful_shutdown(shutdown)
+                    .await
+                    .map_err(|e| format!("server error: {e}"))?;
+            }
+        }
 
         Ok(())
+    }
+
+    /// Convenience wrapper that uses the coordinator-less fallback (Ctrl-C).
+    ///
+    /// Kept for backward compatibility with any code that was calling
+    /// `ProxyServer::new(config).serve().await` directly.
+    pub async fn serve(self) -> Result<(), String> {
+        self.serve_with_shutdown(None).await
     }
 }
