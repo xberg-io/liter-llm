@@ -13,6 +13,23 @@
 //! liter-llm = { features = ["guardrail-cel"] }
 //! ```
 //!
+//! # Fail-closed vs fail-open
+//!
+//! By default [`CelGuardrail`] is **fail-closed**: if the CEL expression cannot
+//! be evaluated at runtime (eval error, non-bool result), the guardrail returns
+//! [`GuardrailDecision::Block`] with code `4001`. This is the only secure
+//! default — an attacker who can craft a request that triggers an eval error
+//! must not be able to bypass ALL guardrails as a result.
+//!
+//! To opt in to fail-open behaviour (e.g., in development environments where
+//! guardrails are advisory), chain [`CelGuardrail::with_fail_open`]:
+//!
+//! ```rust,ignore
+//! let guardrail = CelGuardrail::new(...)
+//!     .expect("valid CEL")
+//!     .with_fail_open(true); // SECURITY WARNING: only use in non-production
+//! ```
+//!
 //! # CEL variables available in expressions
 //!
 //! | Variable | Type | Description |
@@ -47,6 +64,12 @@ use cel_interpreter::{Context, ParseError, Program};
 
 use super::{Guardrail, GuardrailContext, GuardrailDecision, GuardrailStage};
 
+// ── Error code for guardrail evaluation failures ──────────────────────────────
+
+/// Numeric error code returned when a CEL expression cannot be evaluated and
+/// the guardrail is configured to fail-closed (the default).
+const CEL_EVAL_ERROR_CODE: u32 = 4001;
+
 // ── Action when CEL expression evaluates to true ──────────────────────────────
 
 /// The action taken when a [`CelGuardrail`]'s expression evaluates to `true`.
@@ -74,17 +97,34 @@ pub enum CelAction {
 /// The CEL expression is compiled at construction time so runtime evaluation
 /// is fast. Construction returns an error if the expression is syntactically
 /// invalid.
+///
+/// # Fail-closed behaviour (default, secure)
+///
+/// When the expression cannot be evaluated at runtime (eval error or non-bool
+/// result), [`CelGuardrail`] returns [`GuardrailDecision::Block`] with code
+/// `4001` and logs an `error`-level tracing event.
+///
+/// **SECURITY WARNING**: Call [`CelGuardrail::with_fail_open`] only in
+/// non-production environments. Fail-open means a crafted request that triggers
+/// an eval error bypasses ALL CEL guardrails on that instance.
 pub struct CelGuardrail {
     guardrail_name: &'static str,
     program: Program,
     on_true: CelAction,
     stages: &'static [GuardrailStage],
+    /// When `true`, runtime evaluation errors return `Allow` instead of `Block`.
+    /// Defaults to `false` (fail-closed). Use [`with_fail_open`] to opt in.
+    fail_open: bool,
 }
 
 impl CelGuardrail {
     /// Create a new [`CelGuardrail`].
     ///
     /// `expression` is parsed and compiled at construction time.
+    ///
+    /// The guardrail defaults to **fail-closed**: eval errors and non-bool
+    /// results return [`GuardrailDecision::Block`] with code 4001. Use
+    /// [`with_fail_open`] to override.
     ///
     /// # Errors
     ///
@@ -101,7 +141,22 @@ impl CelGuardrail {
             program,
             on_true,
             stages,
+            fail_open: false,
         })
+    }
+
+    /// Set the fail-open mode for this guardrail.
+    ///
+    /// When `fail_open` is `true`, runtime evaluation errors and non-bool
+    /// results return [`GuardrailDecision::Allow`] instead of blocking.
+    ///
+    /// **SECURITY WARNING**: Only use `fail_open(true)` in non-production
+    /// environments where guardrails are advisory. In production, the default
+    /// fail-closed behaviour prevents eval errors from becoming a bypass vector.
+    #[must_use]
+    pub fn with_fail_open(mut self, fail_open: bool) -> Self {
+        self.fail_open = fail_open;
+        self
     }
 }
 
@@ -120,8 +175,6 @@ impl Guardrail for CelGuardrail {
         ctx: &'a GuardrailContext<'a>,
     ) -> Pin<Box<dyn Future<Output = GuardrailDecision> + Send + 'a>> {
         Box::pin(async move {
-            // Suppress unused-variable lint when the tracing feature is off.
-            let _ = stage;
             let mut cel_ctx = Context::default();
 
             // Bind `request` — always present.
@@ -142,8 +195,6 @@ impl Guardrail for CelGuardrail {
             // Bind `metadata` as a CEL map.
             cel_ctx.add_variable_from_value("metadata", metadata_to_cel(ctx.metadata));
 
-            // Evaluate the expression. Treat eval errors as Allow (fail-open)
-            // to avoid blocking legitimate requests on CEL engine errors.
             match self.program.execute(&cel_ctx) {
                 Ok(Value::Bool(true)) => match &self.on_true {
                     CelAction::Block { code, reason } => GuardrailDecision::Block {
@@ -154,17 +205,66 @@ impl Guardrail for CelGuardrail {
                         new_payload: new_payload.clone(),
                     },
                 },
-                Ok(_) => GuardrailDecision::Allow,
-                Err(e) => {
+
+                // Expression evaluated to false — allow the request.
+                Ok(Value::Bool(false)) => GuardrailDecision::Allow,
+
+                // Expression returned a non-bool value. This is a guardrail
+                // authoring error. Fail-closed by default to prevent bypass.
+                Ok(non_bool) => {
                     #[cfg(feature = "tracing")]
-                    tracing::warn!(
+                    tracing::error!(
                         guardrail = self.guardrail_name,
                         stage = ?stage,
-                        "CEL expression evaluation error (fail-open): {e}"
+                        result = ?non_bool,
+                        "CEL expression returned non-bool value; \
+                         defaulting to fail-closed (Block/4001) — \
+                         set fail_open=true to suppress"
                     );
                     #[cfg(not(feature = "tracing"))]
-                    let _ = e;
-                    GuardrailDecision::Allow
+                    {
+                        let _ = stage;
+                        let _ = non_bool;
+                    }
+
+                    if self.fail_open {
+                        GuardrailDecision::Allow
+                    } else {
+                        GuardrailDecision::Block {
+                            reason: format!(
+                                "guardrail evaluation error: expression returned non-bool result ({})",
+                                self.guardrail_name
+                            ),
+                            code: CEL_EVAL_ERROR_CODE,
+                        }
+                    }
+                }
+
+                // CEL runtime error. Fail-closed by default: an attacker who
+                // can trigger eval errors must not be able to bypass guardrails.
+                Err(e) => {
+                    #[cfg(feature = "tracing")]
+                    tracing::error!(
+                        guardrail = self.guardrail_name,
+                        stage = ?stage,
+                        error = %e,
+                        "CEL expression evaluation error; \
+                         defaulting to fail-closed (Block/4001) — \
+                         set fail_open=true to suppress"
+                    );
+                    #[cfg(not(feature = "tracing"))]
+                    {
+                        let _ = stage;
+                    }
+
+                    if self.fail_open {
+                        GuardrailDecision::Allow
+                    } else {
+                        GuardrailDecision::Block {
+                            reason: format!("guardrail evaluation error: {e}"),
+                            code: CEL_EVAL_ERROR_CODE,
+                        }
+                    }
                 }
             }
         })
@@ -227,6 +327,8 @@ mod tests {
     fn meta_with(pairs: &[(&str, &str)]) -> HashMap<String, String> {
         pairs.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()
     }
+
+    // ── Existing tests (unchanged behaviour) ──────────────────────────────────
 
     #[tokio::test]
     async fn cel_guardrail_blocks_when_expression_is_true() {
@@ -382,5 +484,153 @@ mod tests {
         };
         let decision = guardrail.check(GuardrailStage::Input, &ctx).await;
         assert!(decision.is_allow());
+    }
+
+    // ── New security tests ────────────────────────────────────────────────────
+
+    /// A CEL expression that references an undeclared variable triggers an
+    /// `ExecutionError::UndeclaredReference` at eval time. Default (fail-closed)
+    /// must return Block/4001.
+    #[tokio::test]
+    async fn cel_guardrail_eval_error_defaults_to_block() {
+        let meta = HashMap::new();
+        let req = serde_json::json!({ "model": "gpt-4o" });
+
+        let guardrail = CelGuardrail::new(
+            "undeclared-var-guardrail",
+            // `undeclared_var` is never bound in the activation — this is a
+            // reliable `ExecutionError::UndeclaredReference` at eval time.
+            "undeclared_var == true",
+            CelAction::Block {
+                code: 1500,
+                reason: "blocked by policy".into(),
+            },
+            INPUT_STAGES,
+        )
+        .expect("valid CEL expression");
+
+        let ctx = GuardrailContext {
+            request: &req,
+            response: None,
+            chunk: None,
+            metadata: &meta,
+        };
+
+        let decision = guardrail.check(GuardrailStage::Input, &ctx).await;
+        match decision {
+            GuardrailDecision::Block { code, reason } => {
+                assert_eq!(code, CEL_EVAL_ERROR_CODE, "eval error must use code 4001");
+                assert!(
+                    reason.contains("guardrail evaluation error"),
+                    "reason must describe evaluation failure, got: {reason}"
+                );
+            }
+            other => panic!("expected Block(4001) on eval error (fail-closed default), got {other:?}"),
+        }
+    }
+
+    /// Same eval-error scenario, but with `with_fail_open(true)`: must return Allow.
+    #[tokio::test]
+    async fn cel_guardrail_eval_error_with_fail_open_returns_allow() {
+        let meta = HashMap::new();
+        let req = serde_json::json!({ "model": "gpt-4o" });
+
+        let guardrail = CelGuardrail::new(
+            "undeclared-var-fail-open",
+            "undeclared_var == true",
+            CelAction::Block {
+                code: 1500,
+                reason: "blocked by policy".into(),
+            },
+            INPUT_STAGES,
+        )
+        .expect("valid CEL expression")
+        .with_fail_open(true);
+
+        let ctx = GuardrailContext {
+            request: &req,
+            response: None,
+            chunk: None,
+            metadata: &meta,
+        };
+
+        let decision = guardrail.check(GuardrailStage::Input, &ctx).await;
+        assert!(
+            decision.is_allow(),
+            "with_fail_open(true) must return Allow on eval error, got {decision:?}"
+        );
+    }
+
+    /// An expression that returns a string (non-bool) must Block by default.
+    /// With fail_open=true it must Allow.
+    #[tokio::test]
+    async fn cel_guardrail_non_bool_result_blocks_by_default() {
+        let meta = HashMap::new();
+        let req = serde_json::json!({ "model": "gpt-4o" });
+
+        // `request.model` is a string, not a bool — non-bool result path.
+        let guardrail_default = CelGuardrail::new(
+            "non-bool-default",
+            "request.model",
+            CelAction::Block {
+                code: 1500,
+                reason: "blocked by policy".into(),
+            },
+            INPUT_STAGES,
+        )
+        .expect("valid CEL expression");
+
+        let guardrail_fail_open = CelGuardrail::new(
+            "non-bool-fail-open",
+            "request.model",
+            CelAction::Block {
+                code: 1500,
+                reason: "blocked by policy".into(),
+            },
+            INPUT_STAGES,
+        )
+        .expect("valid CEL expression")
+        .with_fail_open(true);
+
+        let ctx = GuardrailContext {
+            request: &req,
+            response: None,
+            chunk: None,
+            metadata: &meta,
+        };
+
+        // Default: fail-closed → Block/4001
+        let decision_default = guardrail_default.check(GuardrailStage::Input, &ctx).await;
+        match &decision_default {
+            GuardrailDecision::Block { code, .. } => {
+                assert_eq!(*code, CEL_EVAL_ERROR_CODE, "non-bool must use code 4001");
+            }
+            other => panic!("expected Block(4001) for non-bool result (fail-closed default), got {other:?}"),
+        }
+
+        // With fail_open=true → Allow
+        let decision_open = guardrail_fail_open.check(GuardrailStage::Input, &ctx).await;
+        assert!(
+            decision_open.is_allow(),
+            "fail_open=true must return Allow for non-bool result, got {decision_open:?}"
+        );
+    }
+
+    /// Malformed CEL expression must fail at construction time (existing behaviour preserved).
+    #[tokio::test]
+    async fn cel_guardrail_compile_error_still_blocks_construction() {
+        let result = CelGuardrail::new(
+            "bad-syntax",
+            "request.model ==",
+            CelAction::Block {
+                code: 1399,
+                reason: "test".into(),
+            },
+            INPUT_STAGES,
+        );
+        assert!(
+            result.is_err(),
+            "malformed CEL expression must fail at construction, not at eval time"
+        );
     }
 }
