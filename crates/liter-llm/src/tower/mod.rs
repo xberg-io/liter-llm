@@ -149,6 +149,13 @@ pub use health::{
 };
 pub use hedge::{FixedDelayHedge, HedgeLayer, HedgePolicy, HedgeService};
 pub use hooks::{HooksLayer, HooksService, LlmHook};
+/// `IdempotencyStoreError` is accessible via the `tower` module.
+///
+/// ```rust
+/// use liter_llm::tower::IdempotencyStoreError;
+///
+/// fn _accepts_store_err(_e: IdempotencyStoreError) {}
+/// ```
 pub use idempotency::{
     IdempotencyEntry, IdempotencyLayer, IdempotencyService, IdempotencyStore, IdempotencyStoreError,
     InMemoryIdempotencyStore,

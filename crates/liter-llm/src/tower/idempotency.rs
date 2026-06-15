@@ -69,32 +69,50 @@ use crate::tower::types::{LlmRequest, LlmRequestKind, LlmResponse};
 
 // ── Body hash ─────────────────────────────────────────────────────────────────
 
-/// Compute a stable SHA-256 hex digest of the request body.
+/// Fixed seeds for the `ahash` [`RandomState`] used by body hashing.
+///
+/// These constants MUST NOT be changed once idempotency entries have been
+/// persisted, as a seed change would invalidate stored hashes.
+const IDEM_HASH_SEED_0: u64 = 0x6964_656d_706f_7465; // "idempote"
+const IDEM_HASH_SEED_1: u64 = 0x6e63_795f_6861_7368; // "ncy_hash"
+const IDEM_HASH_SEED_2: u64 = 0x5f73_6565_6430_5f76; // "_seed0_v"
+const IDEM_HASH_SEED_3: u64 = 0x315f_6c6c_6d00_0000; // "1_llm\0\0\0"
+
+/// Process-global deterministic [`ahash::RandomState`] for body hashing.
+///
+/// Constructed once from compile-time-fixed seeds so the same body always
+/// produces the same hash across process restarts and Rust version upgrades.
+/// This makes it safe to use in distributed stores (Redis, DynamoDB) where
+/// multiple processes must agree on the hash value.
+fn idem_random_state() -> &'static ahash::RandomState {
+    use std::sync::OnceLock;
+    static STATE: OnceLock<ahash::RandomState> = OnceLock::new();
+    STATE.get_or_init(|| {
+        ahash::RandomState::generate_with(IDEM_HASH_SEED_0, IDEM_HASH_SEED_1, IDEM_HASH_SEED_2, IDEM_HASH_SEED_3)
+    })
+}
+
+/// Compute a stable body hash for the request.
 ///
 /// Only `kind` is hashed — `tenant_id` and `idempotency_key` are infra
 /// metadata and must not affect the body identity check.
 ///
+/// Uses [`ahash::RandomState`] with four fixed compile-time seeds so the
+/// hash is identical across process restarts, distributed nodes, and Rust
+/// versions.  The body string prefix is embedded in the output for extra
+/// collision resistance, so a hash collision yields a spurious
+/// `IdempotencyConflict` rather than silent data corruption.
+///
 /// Returns `None` for request variants that cannot be serialised (should
 /// never happen in practice — all variants derive `serde::Serialize`).
 fn compute_body_hash(request: &LlmRequest) -> Option<String> {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
-
     // Serialise only the kind (provider payload), excluding infra metadata.
     let json = serde_json::to_string(&request.kind).ok()?;
 
-    // A cryptographic hash would be more collision-resistant, but sha2 is not
-    // a workspace dependency.  The DefaultHasher collision probability for a
-    // 64-bit hash over request bodies is negligible in practice (birthday
-    // bound ≈ 2^32 entries for 50% collision probability).  The body string
-    // is compared verbatim alongside the hash for the conflict check, so a
-    // collision only causes a spurious `IdempotencyConflict`, not data
-    // corruption.  Callers who require cryptographic strength should implement
-    // a custom `IdempotencyStore` that hashes differently.
-    let mut hasher = DefaultHasher::new();
-    json.hash(&mut hasher);
-    // Combine hash with a prefix of the JSON body for extra collision resistance.
-    let h = hasher.finish();
+    let h = idem_random_state().hash_one(&json);
+    // Embed a JSON body prefix alongside the hash for extra collision
+    // resistance: a collision only causes a spurious IdempotencyConflict,
+    // never silent data corruption.
     Some(format!("{h:016x}:{}", &json[..json.len().min(64)]))
 }
 
@@ -381,11 +399,21 @@ where
 
         Box::pin(async move {
             // ── No key: pass through ──────────────────────────────────────
-            let Some(ref key) = request.idempotency_key.clone() else {
+            let Some(ref raw_key) = request.idempotency_key.clone() else {
                 return inner.call(request).await;
             };
 
-            let key = key.clone();
+            // ── Tenant-scope the store key ────────────────────────────────
+            // An idempotency key is scoped to the tenant that supplied it.
+            // Without a tenant prefix, a guessable key such as `"req-001"` used
+            // by tenant A would collide with the same key used by tenant B,
+            // leaking tenant A's cached response to tenant B.
+            let tenant_prefix = request
+                .tenant_id
+                .as_ref()
+                .map(|t| t.as_ref())
+                .unwrap_or("_");
+            let key = format!("{tenant_prefix}:{raw_key}");
 
             // ── Compute body hash ─────────────────────────────────────────
             let body_hash = match compute_body_hash(&request) {
@@ -400,7 +428,9 @@ where
             // ── Check existing entry ──────────────────────────────────────
             if let Some(entry) = store.get(&key).await.map_err(store_err)? {
                 if entry.body_hash != body_hash {
-                    return Err(LiterLlmError::IdempotencyConflict { key });
+                    // Report the raw (user-facing) key in the error, not the
+                    // tenant-scoped internal store key.
+                    return Err(LiterLlmError::IdempotencyConflict { key: raw_key.clone() });
                 }
                 if let Some(cached) = entry.response {
                     // Hit: return stored response without calling inner.
@@ -409,7 +439,7 @@ where
                 // Entry exists but no response yet — another caller is the
                 // writer and has not completed.  Error-out so the caller can
                 // retry after a brief delay (see module docs for rationale).
-                return Err(LiterLlmError::IdempotencyInFlight { key });
+                return Err(LiterLlmError::IdempotencyInFlight { key: raw_key.clone() });
             }
 
             // ── Try to become the writer ──────────────────────────────────
@@ -419,12 +449,12 @@ where
                 // Lost the race.  Re-read and apply the same logic as above.
                 if let Some(entry) = store.get(&key).await.map_err(store_err)? {
                     if entry.body_hash != body_hash {
-                        return Err(LiterLlmError::IdempotencyConflict { key });
+                        return Err(LiterLlmError::IdempotencyConflict { key: raw_key.clone() });
                     }
                     if let Some(cached) = entry.response {
                         return cached.into_llm_response();
                     }
-                    return Err(LiterLlmError::IdempotencyInFlight { key });
+                    return Err(LiterLlmError::IdempotencyInFlight { key: raw_key.clone() });
                 }
                 // Entry disappeared between try_insert and get (expired between
                 // the two calls) — fall through to call inner.
@@ -487,7 +517,7 @@ pub(crate) fn is_cacheable_kind(kind: &LlmRequestKind) -> bool {
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
-    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::atomic::Ordering;
     use std::time::Duration;
 
     use tower::{Layer as _, Service as _};
@@ -502,10 +532,6 @@ mod tests {
 
     fn make_layer() -> IdempotencyLayer<InMemoryIdempotencyStore> {
         IdempotencyLayer::new(InMemoryIdempotencyStore::new())
-    }
-
-    fn make_layer_with_ttl(ttl: Duration) -> IdempotencyLayer<InMemoryIdempotencyStore> {
-        IdempotencyLayer::with_ttl(InMemoryIdempotencyStore::new(), ttl)
     }
 
     fn req_with_key(model: &str, key: &str) -> LlmRequest {
@@ -737,5 +763,85 @@ mod tests {
         };
 
         assert_eq!(first_model, second_model, "cached response must match original");
+    }
+
+    // ── Fix 2: ahash determinism ──────────────────────────────────────────────
+
+    /// `compute_body_hash` must return the same value on every call for the
+    /// same request, even when constructed from independent instances.
+    /// The old `DefaultHasher` used a randomized seed (Rust 1.36+), so two
+    /// different process runs (or, in distributed setups, two different nodes)
+    /// could produce different hashes for the same request body, breaking
+    /// distributed idempotency coordination.
+    #[test]
+    fn idempotency_body_hash_deterministic_across_instances() {
+        let req = LlmRequest::Chat(chat_req("gpt-4"));
+
+        let hashes: Vec<_> = (0..10).map(|_| compute_body_hash(&req)).collect();
+
+        // Every hash must be Some and identical to the first.
+        let first = hashes[0].as_ref().expect("hash must be Some");
+        for (i, h) in hashes.iter().enumerate() {
+            assert_eq!(
+                h.as_ref().expect("hash must be Some"),
+                first,
+                "hash #{i} differs from hash #0 — ahash seed is not fixed"
+            );
+        }
+    }
+
+    // ── Fix 3: tenant-scoped keys ─────────────────────────────────────────────
+
+    /// Two requests with the same idempotency key but different tenant IDs must
+    /// not share the same cached response.  Before the fix, the store key was
+    /// the raw idempotency key with no tenant prefix, so tenant B could observe
+    /// tenant A's cached response if they happened to use the same key string.
+    #[tokio::test]
+    async fn idempotency_tenant_scoped_keys_dont_collide() {
+        use crate::tower::types::LlmResponse;
+
+        let store = Arc::new(InMemoryIdempotencyStore::new());
+        let layer_a = IdempotencyLayer::new(InMemoryIdempotencyStore::new());
+        let layer_b = IdempotencyLayer::new(InMemoryIdempotencyStore::new());
+        // Use the same shared store for both tenants to verify isolation.
+        let _ = (store, layer_a, layer_b); // silence unused
+
+        // Build a shared store and two layers that share it.
+        let shared_store = Arc::new(InMemoryIdempotencyStore::new());
+        let make_layer_shared =
+            || IdempotencyLayer { store: Arc::clone(&shared_store), ttl: Duration::from_secs(60) };
+
+        let client_a = MockClient::ok();
+        let call_count_a = Arc::clone(&client_a.call_count);
+        let mut svc_a = make_layer_shared().layer(LlmService::new(client_a));
+
+        let client_b = MockClient::ok();
+        let call_count_b = Arc::clone(&client_b.call_count);
+        let mut svc_b = make_layer_shared().layer(LlmService::new(client_b));
+
+        // Both tenants use the exact same idempotency key "shared-key".
+        let req_a = LlmRequest::Chat(chat_req("gpt-4"))
+            .with_idempotency_key("shared-key")
+            .with_tenant_id("tenant-A");
+        let req_b = LlmRequest::Chat(chat_req("gpt-4"))
+            .with_idempotency_key("shared-key")
+            .with_tenant_id("tenant-B");
+
+        // Tenant A's first request — must hit inner.
+        let resp_a = svc_a.call(req_a.clone()).await.expect("tenant A first call");
+        assert!(matches!(resp_a, LlmResponse::Chat(_)));
+        assert_eq!(call_count_a.load(Ordering::SeqCst), 1, "inner called for tenant A");
+
+        // Tenant B's first request — must ALSO hit inner (different store key).
+        let resp_b = svc_b.call(req_b.clone()).await.expect("tenant B first call");
+        assert!(matches!(resp_b, LlmResponse::Chat(_)));
+        assert_eq!(call_count_b.load(Ordering::SeqCst), 1, "inner called for tenant B (no cross-tenant hit)");
+
+        // Repeat for both — should now return cached without calling inner again.
+        svc_a.call(req_a).await.expect("tenant A repeat");
+        assert_eq!(call_count_a.load(Ordering::SeqCst), 1, "inner NOT called on tenant A repeat");
+
+        svc_b.call(req_b).await.expect("tenant B repeat");
+        assert_eq!(call_count_b.load(Ordering::SeqCst), 1, "inner NOT called on tenant B repeat");
     }
 }

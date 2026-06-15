@@ -61,6 +61,44 @@ impl CircuitState {
     }
 }
 
+// ─── ProbeGuard ───────────────────────────────────────────────────────────────
+
+/// RAII guard that releases the probe slot via [`CircuitPolicy::release_probe_slot`]
+/// when dropped.
+///
+/// Held by `CircuitService::call`'s async future **only** on the HalfOpen probe
+/// path.  The guard is disarmed after the policy records success or failure via
+/// [`ProbeGuard::disarm`]; if the future is dropped earlier — due to a panic,
+/// cancellation, or any other reason — `Drop` invokes `release_probe_slot` so
+/// subsequent requests are not permanently locked out of the probe slot.
+enum ProbeGuard<P: CircuitPolicy> {
+    /// Not on the probe path; no slot to release on drop.
+    None,
+    /// Holding the probe slot; releases it via the policy on drop unless disarmed.
+    Half(Arc<P>),
+}
+
+impl<P: CircuitPolicy> ProbeGuard<P> {
+    /// Disarm the guard without releasing the probe slot.
+    ///
+    /// Call this after invoking `policy.record_success()` or
+    /// `policy.record_failure()`, which already handle the slot as part of the
+    /// state transition.
+    fn disarm(&mut self) {
+        *self = Self::None;
+    }
+}
+
+impl<P: CircuitPolicy> Drop for ProbeGuard<P> {
+    fn drop(&mut self) {
+        if let Self::Half(policy) = self {
+            // The probe future was dropped without completing (cancel or panic).
+            // Release the slot so subsequent requests can attempt a probe.
+            policy.release_probe_slot();
+        }
+    }
+}
+
 // ─── CircuitPolicy trait ──────────────────────────────────────────────────────
 
 /// Policy that drives a circuit breaker's state transitions.
@@ -83,6 +121,14 @@ pub trait CircuitPolicy: Send + Sync + 'static {
 
     /// Returns the current circuit state.
     fn state(&self) -> CircuitState;
+
+    /// Called when a probe request is dropped without completing (e.g. due to
+    /// panic or cancellation) to release the probe slot.
+    ///
+    /// The default implementation is a no-op.  Policies that gate probe slots
+    /// with a boolean flag (like [`ExponentialBackoffCircuit`]) should override
+    /// this to clear the flag.
+    fn release_probe_slot(&self) {}
 }
 
 // ─── ExponentialBackoffCircuit ─────────────────────────────────────────────────
@@ -282,6 +328,14 @@ impl CircuitPolicy for ExponentialBackoffCircuit {
     fn state(&self) -> CircuitState {
         CircuitState::from_u8(self.inner.state.load(Ordering::Acquire))
     }
+
+    /// Release the probe slot without recording success or failure.
+    ///
+    /// Called by the [`ProbeGuard`] when the probe future is dropped before
+    /// completing (e.g. cancelled or panicked).
+    fn release_probe_slot(&self) {
+        self.inner.probe_in_flight.store(false, Ordering::Release);
+    }
 }
 
 // ─── Layer ────────────────────────────────────────────────────────────────────
@@ -379,14 +433,15 @@ where
 
         Box::pin(async move {
             // Use a block to ensure `EnteredSpan` is dropped before any await.
-            let allowed = {
+            let (allowed, is_probe) = {
                 let _span = tracing::debug_span!(
                     "circuit_breaker",
                     gen_ai.circuit.state = ?state,
                     provider = %provider,
                 )
                 .entered();
-                policy.should_allow()
+                let probe = state != CircuitState::Closed;
+                (policy.should_allow(), probe)
             };
 
             if !allowed {
@@ -401,16 +456,40 @@ where
                 });
             }
 
+            // Arm a probe guard when we are on the HalfOpen probe path.
+            // If the future is dropped before `record_success`/`record_failure`
+            // are called (panic or cancellation), the guard releases the probe
+            // slot so the next request can attempt a probe.
+            let mut probe_guard: ProbeGuard<P> = if is_probe {
+                ProbeGuard::Half(Arc::clone(&policy))
+            } else {
+                ProbeGuard::None
+            };
+
             tracing::debug!(provider = %provider, state = ?policy.state(), "circuit allowing request through");
 
             match inner.call(req).await {
                 Ok(resp) => {
+                    // Disarm the guard before calling record_success, which
+                    // handles probe_in_flight internally.
+                    probe_guard.disarm();
                     policy.record_success();
                     Ok(resp)
                 }
                 Err(e) => {
                     if e.is_transient() {
+                        // Disarm before record_failure, which clears probe slot.
+                        probe_guard.disarm();
                         policy.record_failure();
+                    } else {
+                        // Non-transient error: if we are on the probe path, the
+                        // circuit stays HalfOpen (we did not count this as a
+                        // failure), so we need to release the probe slot
+                        // explicitly so the next request can retry.
+                        probe_guard.disarm();
+                        if is_probe {
+                            policy.release_probe_slot();
+                        }
                     }
                     Err(e)
                 }
@@ -759,6 +838,59 @@ mod tests {
             rejected_count.load(std::sync::atomic::Ordering::SeqCst),
             49,
             "49 rejected"
+        );
+    }
+
+    /// Fix 1: probe_in_flight is cleared when the probe future is dropped before
+    /// completing (cancellation).  Without the ProbeGuard the flag would stay
+    /// `true` forever, permanently preventing new probes.
+    #[tokio::test]
+    async fn circuit_probe_flag_cleared_on_cancel() {
+        use std::sync::atomic::Ordering as AO;
+
+        let p = Arc::new(ExponentialBackoffCircuit::new(1, Duration::from_millis(10)));
+
+        // Open the circuit then manually advance to HalfOpen.
+        p.record_failure();
+        assert_eq!(p.state(), CircuitState::Open);
+        p.inner.state.store(CircuitState::HalfOpen as u8, AO::Release);
+        p.inner.probe_in_flight.store(false, AO::Release);
+
+        // Inner service that blocks forever (simulates a request that is cancelled).
+        #[derive(Clone)]
+        struct BlockForever;
+        impl tower::Service<LlmRequest> for BlockForever {
+            type Response = LlmResponse;
+            type Error = LiterLlmError;
+            type Future = crate::client::BoxFuture<'static, Result<LlmResponse>>;
+            fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<()>> {
+                Poll::Ready(Ok(()))
+            }
+            fn call(&mut self, _req: LlmRequest) -> Self::Future {
+                Box::pin(std::future::pending())
+            }
+        }
+
+        let layer = CircuitLayer::new(Arc::clone(&p), "test");
+        let mut svc = layer.layer(BlockForever);
+
+        // Start a probe call and then immediately drop the future (cancel).
+        {
+            let fut = svc.call(LlmRequest::Chat(chat_req("openai/gpt-4")));
+            // Dropping `fut` here cancels it — ProbeGuard::drop must fire.
+            drop(fut);
+        }
+
+        // probe_in_flight must be cleared so the next request can probe.
+        assert!(
+            !p.inner.probe_in_flight.load(AO::Acquire),
+            "probe_in_flight must be false after probe future is dropped"
+        );
+
+        // A subsequent request is now allowed to probe (not stuck in HalfOpen-rejected limbo).
+        assert!(
+            p.should_allow(),
+            "should allow another probe after cancelled probe slot was released"
         );
     }
 

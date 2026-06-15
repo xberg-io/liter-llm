@@ -12,7 +12,7 @@
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
-use tower::{Layer, Service};
+use tower::{Layer, Service, ServiceExt as _};
 
 use super::types::{LlmRequest, LlmResponse};
 use crate::client::BoxFuture;
@@ -122,21 +122,57 @@ impl<S: Clone, R: RetryPolicy> Clone for FallbackChainLayer<S, R> {
     }
 }
 
-impl<S, R, Inner> Layer<Inner> for FallbackChainLayer<S, R>
-where
-    R: RetryPolicy,
-{
+/// `FallbackChainLayer` implements `Layer<()>` rather than the generic `Layer<S>`.
+///
+/// Unlike most Tower layers, `FallbackChainLayer` owns its entire service chain
+/// internally (supplied to `FallbackChainLayer::new`).  The standard
+/// `ServiceBuilder::new().layer(layer).service(svc)` composition pattern would
+/// pass `svc` as the `inner` argument — but this layer has no single inner
+/// service, it has a list.
+///
+/// # Usage
+///
+/// Pass `()` as the placeholder inner when using `layer()` directly:
+///
+/// ```rust,ignore
+/// let layer = FallbackChainLayer::new(vec![svc_a, svc_b, svc_c]);
+/// let svc = layer.layer(());
+/// ```
+///
+/// To add a service at the head of the chain, use `prepend`:
+/// ```rust,ignore
+/// let layer = FallbackChainLayer::new(vec![svc_b, svc_c]).prepend(svc_a);
+/// let svc = layer.layer(());
+/// ```
+impl<S: Clone, R: RetryPolicy> Layer<()> for FallbackChainLayer<S, R> {
     type Service = FallbackChainService<S, R>;
 
-    fn layer(&self, _inner: Inner) -> Self::Service {
-        // The chain _is_ the set of inner services; the `Inner` parameter is
-        // accepted to satisfy Tower's `Layer<S>` interface convention but is
-        // not used. Callers should pass the first service as the chain head
-        // and supply the remainder via `FallbackChainLayer::new(chain)`.
+    fn layer(&self, _inner: ()) -> Self::Service {
+        // The entire chain is stored internally; `_inner` is the unit
+        // placeholder required by `ServiceBuilder::new().layer(...)` composition.
         FallbackChainService {
             chain: Arc::clone(&self.chain),
             policy: Arc::clone(&self.policy),
         }
+    }
+}
+
+impl<S: Clone, R: RetryPolicy> FallbackChainLayer<S, R> {
+    /// Create a new [`FallbackChainLayer`] with `head` prepended to the chain.
+    ///
+    /// This is the ergonomic alternative to `ServiceBuilder` composition for
+    /// `FallbackChainLayer`.  Use it when the first fallback candidate is
+    /// logically the primary service:
+    ///
+    /// ```rust,ignore
+    /// let layer = FallbackChainLayer::new(vec![backup_a, backup_b]).prepend(primary);
+    /// let svc = layer.layer(());
+    /// ```
+    #[must_use]
+    pub fn prepend(mut self, head: S) -> Self {
+        let chain = Arc::make_mut(&mut self.chain);
+        chain.insert(0, head);
+        self
     }
 }
 
@@ -201,6 +237,36 @@ where
                 );
                 let _guard = span.enter();
 
+                // Honour the Tower readiness contract: drive the service to
+                // ready before calling it.  This is required for services with
+                // permit-based readiness (e.g. `ConcurrencyLimit`, `Buffer`)
+                // that reserve a resource slot inside `poll_ready`.
+                let svc = match svc.ready().await {
+                    Ok(s) => s,
+                    Err(e) => {
+                        match policy.classify(&e) {
+                            RetryClass::Terminal => {
+                                tracing::debug!(
+                                    attempt,
+                                    error = %e,
+                                    "fallback chain: terminal error in poll_ready, aborting"
+                                );
+                                return Err(e);
+                            }
+                            RetryClass::Transient => {
+                                tracing::warn!(
+                                    attempt,
+                                    chain_len,
+                                    error = %e,
+                                    "fallback chain: transient error in poll_ready, trying next service"
+                                );
+                                last_err = Some(e);
+                                continue;
+                            }
+                        }
+                    }
+                };
+
                 match svc.call(request.clone()).await {
                     Ok(resp) => {
                         tracing::debug!(attempt, "fallback chain: success");
@@ -236,5 +302,237 @@ where
                 status: 503,
             }))
         })
+    }
+}
+
+// ─── Tests ────────────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::task::{Context, Poll};
+
+    use tower::{Layer as _, Service as _};
+
+    use super::*;
+    use crate::error::LiterLlmError;
+    use crate::tower::service::LlmService;
+    use crate::tower::tests_common::{MockClient, chat_req};
+    use crate::tower::types::{LlmRequest, LlmResponse};
+
+    // ── Basic chain behaviour ─────────────────────────────────────────────────
+
+    #[tokio::test]
+    async fn fallback_chain_succeeds_on_first_service() {
+        let svc = FallbackChainService {
+            chain: Arc::new(vec![LlmService::new(MockClient::ok())]),
+            policy: Arc::new(DefaultRetryPolicy),
+        };
+        let mut svc = svc;
+        let resp = svc
+            .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
+            .await
+            .expect("first service must succeed");
+        assert!(matches!(resp, LlmResponse::Chat(_)));
+    }
+
+    #[tokio::test]
+    async fn fallback_chain_advances_on_transient_error() {
+        let failing = LlmService::new(MockClient::failing_timeout());
+        let succeeding = LlmService::new(MockClient::ok());
+        let call_count = Arc::clone(&MockClient::ok().call_count);
+        let _ = call_count; // counts via MockClient::ok() above — use a fresh one below
+
+        let ok_client = MockClient::ok();
+        let ok_calls = Arc::clone(&ok_client.call_count);
+        let mut svc = FallbackChainService {
+            chain: Arc::new(vec![failing, LlmService::new(ok_client)]),
+            policy: Arc::new(DefaultRetryPolicy),
+        };
+        let _ = succeeding; // not used
+
+        let resp = svc
+            .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
+            .await
+            .expect("fallback must succeed on second service");
+        assert!(matches!(resp, LlmResponse::Chat(_)));
+        assert_eq!(
+            ok_calls.load(Ordering::SeqCst),
+            1,
+            "second service must be called"
+        );
+    }
+
+    #[tokio::test]
+    async fn fallback_chain_aborts_on_terminal_error() {
+        let failing_auth = LlmService::new(MockClient::failing_auth());
+        let ok_client = MockClient::ok();
+        let ok_calls = Arc::clone(&ok_client.call_count);
+        let mut svc = FallbackChainService {
+            chain: Arc::new(vec![failing_auth, LlmService::new(ok_client)]),
+            policy: Arc::new(DefaultRetryPolicy),
+        };
+
+        let err = svc
+            .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
+            .await
+            .expect_err("terminal error must abort chain");
+        assert!(
+            matches!(err, LiterLlmError::BadRequest { .. }),
+            "expected BadRequest (terminal), got {err:?}"
+        );
+        assert_eq!(
+            ok_calls.load(Ordering::SeqCst),
+            0,
+            "second service must NOT be called after terminal error"
+        );
+    }
+
+    #[tokio::test]
+    async fn fallback_chain_empty_returns_server_error() {
+        let mut svc = FallbackChainService::<LlmService<MockClient>, DefaultRetryPolicy> {
+            chain: Arc::new(vec![]),
+            policy: Arc::new(DefaultRetryPolicy),
+        };
+        let err = svc
+            .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
+            .await
+            .expect_err("empty chain must return error");
+        assert!(
+            matches!(err, LiterLlmError::ServerError { .. }),
+            "expected ServerError for empty chain, got {err:?}"
+        );
+    }
+
+    // ── Fix 5: prepend() adds a service at chain head ─────────────────────────
+
+    /// `FallbackChainLayer::prepend(head)` inserts `head` at position 0 so that
+    /// it is tried first.  Without this method there was no ergonomic way to
+    /// compose a primary service with a fallback chain; callers had to manually
+    /// construct the full Vec including the primary.
+    #[tokio::test]
+    async fn fallback_chain_prepend_inserts_at_head() {
+        let ok_client = MockClient::ok();
+        let ok_calls = Arc::clone(&ok_client.call_count);
+        let head_svc = LlmService::new(ok_client);
+
+        // Chain has one failing service; after prepend, head_svc is tried first.
+        let chain_svc = LlmService::new(MockClient::failing_timeout());
+        let layer = FallbackChainLayer::new(vec![chain_svc]).prepend(head_svc);
+        let mut svc = layer.layer(());
+
+        let resp = svc
+            .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
+            .await
+            .expect("prepended service (head) must be tried first and succeed");
+        assert!(matches!(resp, LlmResponse::Chat(_)));
+        assert_eq!(
+            ok_calls.load(Ordering::SeqCst),
+            1,
+            "prepended head service must be called"
+        );
+    }
+
+    // ── Fix 4: Tower readiness contract ───────────────────────────────────────
+
+    /// `FallbackChainService::call` must invoke `poll_ready` on each cloned
+    /// service before calling it.  Without `svc.ready().await`, services that
+    /// reserve a resource in `poll_ready` (e.g. `ConcurrencyLimit`) would have
+    /// their readiness bypassed, potentially exceeding the concurrency limit.
+    #[tokio::test]
+    async fn fallback_chain_respects_inner_readiness() {
+        // Counting service: tracks concurrent calls in flight.
+        #[derive(Clone)]
+        struct CountingService {
+            concurrent: Arc<AtomicUsize>,
+            peak: Arc<AtomicUsize>,
+        }
+
+        impl Service<LlmRequest> for CountingService {
+            type Response = LlmResponse;
+            type Error = LiterLlmError;
+            type Future = crate::client::BoxFuture<'static, Result<LlmResponse>>;
+
+            fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<()>> {
+                Poll::Ready(Ok(()))
+            }
+
+            fn call(&mut self, _req: LlmRequest) -> Self::Future {
+                let concurrent = Arc::clone(&self.concurrent);
+                let peak = Arc::clone(&self.peak);
+                Box::pin(async move {
+                    let current = concurrent.fetch_add(1, Ordering::SeqCst) + 1;
+                    peak.fetch_max(current, Ordering::SeqCst);
+                    // Yield once so parallel tasks can interleave.
+                    tokio::task::yield_now().await;
+                    concurrent.fetch_sub(1, Ordering::SeqCst);
+                    Ok(LlmResponse::Chat(crate::tower::tests_common::make_chat_response("gpt-4")))
+                })
+            }
+        }
+
+        // Wrap with ConcurrencyLimit(1) so only one call at a time is allowed.
+        let concurrent = Arc::new(AtomicUsize::new(0));
+        let peak = Arc::new(AtomicUsize::new(0));
+        let inner = CountingService {
+            concurrent: Arc::clone(&concurrent),
+            peak: Arc::clone(&peak),
+        };
+        let limited = tower::limit::ConcurrencyLimit::new(inner, 1);
+        let mut svc = FallbackChainService {
+            chain: Arc::new(vec![limited]),
+            policy: Arc::new(DefaultRetryPolicy),
+        };
+
+        // Run 5 sequential calls (FallbackChainService clones per call).
+        // Each clone must call ready() before call(), respecting the limit.
+        for _ in 0..5 {
+            svc.call(LlmRequest::Chat(chat_req("openai/gpt-4")))
+                .await
+                .expect("each call must succeed");
+        }
+
+        // Since calls are sequential here and each waits for completion,
+        // peak concurrent should be exactly 1.
+        assert_eq!(
+            peak.load(Ordering::SeqCst),
+            1,
+            "peak concurrent calls must be 1 (ConcurrencyLimit respected)"
+        );
+
+        // Also verify that a FallbackChainService with a ConcurrencyLimit(1)
+        // and two concurrent tasks does not exceed the limit.
+        let concurrent2 = Arc::new(AtomicUsize::new(0));
+        let peak2 = Arc::new(AtomicUsize::new(0));
+        let inner2 = CountingService {
+            concurrent: Arc::clone(&concurrent2),
+            peak: Arc::clone(&peak2),
+        };
+        let limited2 = tower::limit::ConcurrencyLimit::new(inner2, 1);
+        let svc2 = FallbackChainService {
+            chain: Arc::new(vec![limited2]),
+            policy: Arc::new(DefaultRetryPolicy),
+        };
+
+        // Spawn tasks; they share the same chain Arc but clone per call.
+        // Without ready(), peak would exceed 1.  With ready(), the limit
+        // is serialized by the ConcurrencyLimit permit.
+        let handles: Vec<_> = (0..5)
+            .map(|_| {
+                let mut s = svc2.clone();
+                tokio::spawn(async move {
+                    s.call(LlmRequest::Chat(chat_req("openai/gpt-4"))).await
+                })
+            })
+            .collect();
+        for h in handles {
+            h.await.expect("task panicked").expect("call must succeed");
+        }
+        assert!(
+            peak2.load(Ordering::SeqCst) <= 1,
+            "peak concurrent calls must not exceed ConcurrencyLimit of 1, got {}",
+            peak2.load(Ordering::SeqCst)
+        );
     }
 }
