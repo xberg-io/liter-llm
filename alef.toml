@@ -628,6 +628,7 @@ status_code = "status_code"
 "ocr_page.index" = "uint32_t"
 "choice.index" = "uint32_t"
 "chat_completion_response.created" = "uint64_t"
+"chat_completion_response.usage" = "Usage"
 "images_response.created" = "uint64_t"
 # Opaque enum returns: the FFI returns a pointer to an opaque struct (e.g.
 # LITERLLMBatchStatus*) and the C codegen must convert via
@@ -677,6 +678,7 @@ client_factory = "create_client"
 trait_imports = ["LlmClient", "FileClient", "BatchClient", "ResponseClient"]
 
 [crates.e2e.call.overrides.csharp]
+class = "LiterLlmConverter"
 client_factory = "CreateClient"
 options_via = "from_json"
 
@@ -1775,7 +1777,7 @@ name = "liter_llm_ffi"
 name = "LiterLlm"
 
 [crates.e2e.registry.packages.zig]
-hash = "liter_llm-1.5.1-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
+hash = "liter_llm-1.6.0-rc.0-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
 
 [crates.e2e.registry.packages.homebrew]
 tap = "kreuzberg-dev/homebrew-tap"

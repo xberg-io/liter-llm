@@ -26,8 +26,12 @@ final class LiterLlm
      * @throws \Liter\Llm\LiterLlmException
      */
     public static function createClient(
-string $api_key, ?string $base_url = null, ?int $timeout_secs = null, ?int $max_retries = null, ?string $model_hint = null): DefaultClient
-    {
+        string $api_key,
+        ?string $base_url = null,
+        ?int $timeout_secs = null,
+        ?int $max_retries = null,
+        ?string $model_hint = null,
+    ): DefaultClient {
         return \Liter\Llm\LiterLlmApi::createClient($api_key, $base_url, $timeout_secs, $max_retries, $model_hint); // delegate to native extension class
     }
     /**
@@ -40,8 +44,8 @@ string $api_key, ?string $base_url = null, ?int $timeout_secs = null, ?int $max_
      * @throws \Liter\Llm\LiterLlmException
      */
     public static function createClientFromJson(
-string $json): DefaultClient
-    {
+        string $json,
+    ): DefaultClient {
         return \Liter\Llm\LiterLlmApi::createClientFromJson($json); // delegate to native extension class
     }
     /**
@@ -55,8 +59,8 @@ string $json): DefaultClient
      * @throws \Liter\Llm\LiterLlmException
      */
     public static function registerCustomProvider(
-CustomProviderConfig $config): void
-    {
+        CustomProviderConfig $config,
+    ): void {
         \Liter\Llm\LiterLlmApi::registerCustomProvider($config); // delegate to native extension class
     }
     /**
@@ -70,8 +74,8 @@ CustomProviderConfig $config): void
      * @throws \Liter\Llm\LiterLlmException
      */
     public static function unregisterCustomProvider(
-string $name): bool
-    {
+        string $name,
+    ): bool {
         return \Liter\Llm\LiterLlmApi::unregisterCustomProvider($name); // delegate to native extension class
     }
     /**
@@ -82,7 +86,8 @@ string $name): bool
      * @return array<ProviderConfig>
      * @throws \Liter\Llm\LiterLlmException
      */
-    public static function allProviders(): array {
+    public static function allProviders(): array
+    {
         return \Liter\Llm\LiterLlmApi::allProviders(); // delegate to native extension class
     }
     /**
@@ -96,7 +101,8 @@ string $name): bool
      * @return array<string>
      * @throws \Liter\Llm\LiterLlmException
      */
-    public static function complexProviderNames(): array {
+    public static function complexProviderNames(): array
+    {
         return \Liter\Llm\LiterLlmApi::complexProviderNames(); // delegate to native extension class
     }
     /**
@@ -116,8 +122,10 @@ string $name): bool
      * @return ?float
      */
     public static function completionCost(
-string $model, int $prompt_tokens, int $completion_tokens): ?float
-    {
+        string $model,
+        int $prompt_tokens,
+        int $completion_tokens,
+    ): ?float {
         return \Liter\Llm\LiterLlmApi::completionCost($model, $prompt_tokens, $completion_tokens); // delegate to native extension class
     }
     /**
@@ -141,8 +149,11 @@ string $model, int $prompt_tokens, int $completion_tokens): ?float
      * @return ?float
      */
     public static function completionCostWithCache(
-string $model, int $prompt_tokens, int $cached_tokens, int $completion_tokens): ?float
-    {
+        string $model,
+        int $prompt_tokens,
+        int $cached_tokens,
+        int $completion_tokens,
+    ): ?float {
         return \Liter\Llm\LiterLlmApi::completionCostWithCache($model, $prompt_tokens, $cached_tokens, $completion_tokens); // delegate to native extension class
     }
     /**
@@ -158,8 +169,9 @@ string $model, int $prompt_tokens, int $cached_tokens, int $completion_tokens): 
      * @throws \Liter\Llm\LiterLlmException
      */
     public static function countTokens(
-string $model, string $text): int
-    {
+        string $model,
+        string $text,
+    ): int {
         return \Liter\Llm\LiterLlmApi::countTokens($model, $text); // delegate to native extension class
     }
     /**
@@ -176,8 +188,9 @@ string $model, string $text): int
      * @throws \Liter\Llm\LiterLlmException
      */
     public static function countRequestTokens(
-string $model, ChatCompletionRequest $req): int
-    {
+        string $model,
+        ChatCompletionRequest $req,
+    ): int {
         return \Liter\Llm\LiterLlmApi::countRequestTokens($model, $req); // delegate to native extension class
     }
     /**
@@ -200,7 +213,8 @@ string $model, ChatCompletionRequest $req): int
      *
      * @return void
      */
-    public static function ensureCryptoProvider(): void {
+    public static function ensureCryptoProvider(): void
+    {
         \Liter\Llm\LiterLlmApi::ensureCryptoProvider(); // delegate to native extension class
     }
 }

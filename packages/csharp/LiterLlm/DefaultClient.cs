@@ -31,7 +31,8 @@ internal sealed class DefaultClientSafeHandle : SafeHandle
 }
 /// <summary>/// Default client implementation backed by `reqwest`./// /// Sends requests to 140+ LLM providers with automatic provider detection/// and per-request routing. The provider is resolved at construction time/// from `model_hint` (or defaults to OpenAI), but individual requests can/// override the provider via model name prefix (e.g. `"anthropic/claude-3-5-sonnet"`/// routes to Anthropic regardless of construction-time setting)./// /// When the model prefix does not match any known provider, the construction-time/// provider is used as the fallback. This enables seamless migration between/// providers by changing only the model name./// /// The provider is stored behind an `Arc` so it can be shared cheaply into/// async closures and streaming tasks. Pre-computed auth headers and extra/// headers are cached at construction to avoid redundant encoding on every request./// </summary>
 public sealed class DefaultClient : IDisposable
-{    private static readonly JsonSerializerOptions JsonOptions = new()
+{
+    private static readonly JsonSerializerOptions JsonOptions = new()
     {
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower) },
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault

@@ -5,17 +5,26 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     // Default library/include search paths follow the conventional Cargo workspace
-    // layout (`<workspace>/target/{profile}` and the FFI crate's `include/` dir).
-    // Override with `-Dffi_path=...` and `-Dffi_include_path=...` if your layout differs.
-    // `alef publish` rewrites this file for the distributed tarball so consumers
-    // link the bundled `lib/` + `include/` shipped alongside the package instead.
-    const ffi_path = b.option([]const u8, "ffi_path", "Path to directory containing libliter_llm_ffi.{dylib,so,dll,a}") orelse "../../target/release";
-    const ffi_include = b.option([]const u8, "ffi_include_path", "Path to directory containing the FFI C header") orelse "../../crates/liter-llm-ffi/include";
+    // layout. `alef publish package --lang zig` rewrites this file for the
+    // distributed tarball so consumers link the bundled lib/ and include/ dirs.
+    // Override with -Dffi_path=... and -Dffi_include_path=... if your layout differs.
+    const ffi_path = b.option(
+        []const u8,
+        "ffi_path",
+        "Path to directory containing libliter_llm_ffi.{dylib,so,dll,a}"
+    ) orelse "../../target/release";
+
+    const ffi_include = b.option(
+        []const u8,
+        "ffi_include_path",
+        "Path to directory containing the FFI C header"
+    ) orelse "../../crates/liter-llm-ffi/include";
 
     const module = b.addModule("liter_llm", .{
         .root_source_file = b.path("src/liter_llm.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     module.addLibraryPath(.{ .cwd_relative = ffi_path });
     module.addIncludePath(.{ .cwd_relative = ffi_include });
@@ -25,6 +34,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/liter_llm.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
     test_module.addLibraryPath(.{ .cwd_relative = ffi_path });
     test_module.addIncludePath(.{ .cwd_relative = ffi_include });

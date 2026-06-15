@@ -74,7 +74,7 @@
 
 Universal LLM API client for Go. Access 143+ LLM providers through a single interface backed by the Rust core.
 
-> **Version 1.5.1**
+> **Version 1.6.0-rc.0**
 > Report issues at [github.com/kreuzberg-dev/liter-llm](https://github.com/kreuzberg-dev/liter-llm/issues).
 
 ## What This Package Provides
@@ -117,7 +117,7 @@ Download from [GitHub Releases](https://github.com/kreuzberg-dev/liter-llm/relea
 
 ```bash
 # Example: Linux x86_64
-curl -LO https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.5.1/go-ffi-linux-x86_64.tar.gz
+curl -LO https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.6.0-rc.0/go-ffi-linux-x86_64.tar.gz
 tar -xzf go-ffi-linux-x86_64.tar.gz
 
 mkdir -p ~/liter-llm/lib
@@ -157,7 +157,6 @@ CGO_LDFLAGS="-L$HOME/liter-llm/lib -lliter_llm_ffi" go build
 
 ## Quickstart
 
-
 ```go
 package main
 
@@ -186,7 +185,6 @@ func main() {
 }
 ```
 
-
 Build and run:
 
 ```bash
@@ -197,7 +195,6 @@ CGO_LDFLAGS="-L$HOME/liter-llm/lib -lliter_llm_ffi" go build
 ## Examples
 
 ### Streaming Responses
-
 
 ```go
 stream, err := client.ChatStream(ctx, literllm.ChatRequest{
@@ -214,9 +211,7 @@ for chunk := range stream.Chunks() {
 }
 ```
 
-
 ### Multiple Providers
-
 
 ```go
 // OpenAI
@@ -229,9 +224,7 @@ resp, _ = client.Chat(ctx, literllm.ChatRequest{Model: "anthropic/claude-3-5-son
 resp, _ = client.Chat(ctx, literllm.ChatRequest{Model: "groq/llama-3.1-70b-versatile", Messages: msgs})
 ```
 
-
 ### Context-Aware Requests
-
 
 ```go
 ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -246,7 +239,6 @@ if err != nil {
 }
 fmt.Println(resp.Content)
 ```
-
 
 ## Proxy Server
 

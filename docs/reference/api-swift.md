@@ -2,7 +2,7 @@
 title: "Swift API Reference"
 ---
 
-## Swift API Reference <span class="version-badge">v1.5.1</span>
+## Swift API Reference <span class="version-badge">v1.6.0-rc.0</span>
 
 ### Functions
 

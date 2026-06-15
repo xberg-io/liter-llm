@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0-rc.0] - 2026-06-15
+
+### Changed
+
+- **Bindings regenerated against the latest alef**; refreshes all 16 language surfaces, e2e suites, and README templates. New `[crates.e2e.fields_c_types]` entry `chat_completion_response.usage = "Usage"` and per-call C# e2e override `class = "LiterLlmConverter"` to satisfy alef v0.25.9's stricter intermediate-accessor checks.
+- **Version baseline** opens v1.6.0 development cycle. Subsequent rc cuts will accumulate the v1.6.0 roadmap deliverables (caching tiers, guardrail trait, semantic routing, realtime, hot-reload config, secret-manager trait, ingress/egress streaming split).
+
 ## [1.5.1] - 2026-06-13
 
 ### Changed

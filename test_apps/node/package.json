@@ -10,7 +10,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@kreuzberg/liter-llm-node": "1.5.1",
+    "@kreuzberg/liter-llm-node": "^1.6.0-rc.0",
     "@types/node": "^22.10.2",
     "vitest": "^4.1.5"
   }

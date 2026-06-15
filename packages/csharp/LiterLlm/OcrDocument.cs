@@ -15,7 +15,7 @@ namespace LiterLlm;
 /// <summary>
 /// Document input for OCR — either a URL or inline base64 data.
 /// </summary>
-    [JsonConverter(typeof(OcrDocumentJsonConverter))]
+[JsonConverter(typeof(OcrDocumentJsonConverter))]
 public abstract record OcrDocument
 {
     /// <summary>
@@ -108,7 +108,9 @@ public sealed class OcrDocumentJsonConverter : JsonConverter<OcrDocument>
         var wrappedJson = msWrapped.ToArray();
 
         return tagValue switch
-        {            "document_url" => JsonSerializer.Deserialize<OcrDocument.Url>(flatJson, options) ?? throw new JsonException("Failed to deserialize variant"),            "base64" => JsonSerializer.Deserialize<OcrDocument.Base64>(flatJson, options) ?? throw new JsonException("Failed to deserialize variant"),            // Unknown discriminator: forward compatibility for unknown variants
+        {
+            "document_url" => JsonSerializer.Deserialize<OcrDocument.Url>(flatJson, options) ?? throw new JsonException("Failed to deserialize variant"),
+            "base64" => JsonSerializer.Deserialize<OcrDocument.Base64>(flatJson, options) ?? throw new JsonException("Failed to deserialize variant"),            // Unknown discriminator: forward compatibility for unknown variants
             _ => throw new JsonException($"Unknown OcrDocument discriminator: {tagValue}")
         };
     }
@@ -123,9 +125,12 @@ public sealed class OcrDocumentJsonConverter : JsonConverter<OcrDocument>
         string tag;
         object? inner;
         switch (value)
-        {            case OcrDocument.Url v_url:
-                tag = "document_url";                inner = v_url;                break;            case OcrDocument.Base64 v_base64:
-                tag = "base64";                inner = v_base64;                break;            default:
+        {
+            case OcrDocument.Url v_url:
+                tag = "document_url"; inner = v_url; break;
+            case OcrDocument.Base64 v_base64:
+                tag = "base64"; inner = v_base64; break;
+            default:
                 throw new JsonException($"Unknown OcrDocument variant: {value.GetType().Name}");
         }
 
