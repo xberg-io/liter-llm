@@ -6,10 +6,11 @@ use tower::Layer;
 
 use liter_llm::client::{ClientConfigBuilder, DefaultClient};
 use liter_llm::error::LiterLlmError;
+use liter_llm::observability::{MultiUsageSink, UsageSinkErased};
 use liter_llm::tower::types::{LlmRequest, LlmResponse};
 use liter_llm::tower::{
     BudgetConfig, BudgetLayer, BudgetState, CacheConfig, CacheLayer, CooldownLayer, CostTrackingLayer, Enforcement,
-    HealthCheckLayer, LlmService, ModelRateLimitLayer, RateLimitConfig, TracingLayer,
+    HealthCheckLayer, HooksLayer, LlmService, ModelRateLimitLayer, RateLimitConfig, TracingLayer,
 };
 
 use crate::config::{ModelEntry, ProxyConfig};
@@ -67,11 +68,14 @@ impl ServicePool {
     /// each unique model name.  When multiple deployments share a name, the
     /// first entry is used (round-robin load balancing is planned for v2).
     ///
+    /// `usage_sink`, when `Some`, is wired into `HooksLayer` outermost in
+    /// every model's Tower stack so all completions emit a `UsageEvent`.
+    ///
     /// # Errors
     ///
     /// Returns an error string if a `DefaultClient` cannot be constructed for
     /// any model entry.
-    pub fn from_config(config: &ProxyConfig) -> Result<Self, String> {
+    pub fn from_config(config: &ProxyConfig, usage_sink: Option<Arc<dyn UsageSinkErased>>) -> Result<Self, String> {
         // Group model entries by name, preserving insertion order for the
         // first-entry-wins rule.
         let mut grouped: HashMap<String, Vec<&ModelEntry>> = HashMap::new();
@@ -95,7 +99,7 @@ impl ServicePool {
                 default_client = Some(Arc::clone(&client_arc));
             }
 
-            let svc = build_service_stack(config, Arc::clone(&client_arc));
+            let svc = build_service_stack(config, Arc::clone(&client_arc), usage_sink.clone());
 
             services.insert(name.clone(), SyncBoxService { inner: Mutex::new(svc) });
             clients.insert(name.clone(), client_arc);
@@ -185,8 +189,16 @@ fn build_client(entry: &ModelEntry, config: &ProxyConfig) -> Result<DefaultClien
 /// 4. RateLimit
 /// 5. CostTracking
 /// 6. Budget
-/// 7. Tracing (outermost)
-fn build_service_stack(config: &ProxyConfig, client: Arc<DefaultClient>) -> Bcs {
+/// 7. Tracing
+/// 8. HooksLayer with usage sink (outermost, conditional on `usage_sink.is_some()`)
+///
+/// HooksLayer sits outermost so it observes every request regardless of which
+/// inner layer produces the response (cache hit or live upstream).
+fn build_service_stack(
+    config: &ProxyConfig,
+    client: Arc<DefaultClient>,
+    usage_sink: Option<Arc<dyn UsageSinkErased>>,
+) -> Bcs {
     let base = LlmService::new_from_arc(client);
     let mut svc: Bcs = tower::util::BoxCloneService::new(base);
 
@@ -249,9 +261,19 @@ fn build_service_stack(config: &ProxyConfig, client: Arc<DefaultClient>) -> Bcs 
         svc = tower::util::BoxCloneService::new(layer.layer(svc));
     }
 
-    // 7. Tracing (outermost).
+    // 7. Tracing.
     if config.general.enable_tracing {
         svc = tower::util::BoxCloneService::new(TracingLayer.layer(svc));
+    }
+
+    // 8. HooksLayer with usage sink (outermost, only when a sink is configured).
+    //    Sits outside Tracing so every request — cache hits included — emits an event.
+    //    Bridge: `UsageSink` uses RPITIT (not dyn-compatible) so we wrap the
+    //    erased sink in `MultiUsageSink` which implements `UsageSink` directly.
+    if let Some(sink) = usage_sink {
+        let multi = Arc::new(MultiUsageSink::from_erased(vec![sink]));
+        let layer = HooksLayer::new(vec![]).with_usage_sink(multi);
+        svc = tower::util::BoxCloneService::new(layer.layer(svc));
     }
 
     svc
@@ -294,7 +316,7 @@ api_key = "sk-b"
     #[test]
     fn build_from_empty_config() {
         let config = ProxyConfig::default();
-        let pool = ServicePool::from_config(&config).expect("empty config should build");
+        let pool = ServicePool::from_config(&config, None).expect("empty config should build");
         assert!(pool.services.is_empty());
         assert!(pool.clients.is_empty());
         assert!(!pool.has_any_service());
@@ -303,7 +325,7 @@ api_key = "sk-b"
     #[test]
     fn build_from_config_with_one_model() {
         let config = config_with_one_model();
-        let pool = ServicePool::from_config(&config).expect("should build");
+        let pool = ServicePool::from_config(&config, None).expect("should build");
         assert_eq!(pool.services.len(), 1);
         assert_eq!(pool.clients.len(), 1);
         assert!(pool.has_any_service());
@@ -312,7 +334,7 @@ api_key = "sk-b"
     #[test]
     fn get_service_for_unknown_model_returns_not_found() {
         let config = config_with_one_model();
-        let pool = ServicePool::from_config(&config).expect("should build");
+        let pool = ServicePool::from_config(&config, None).expect("should build");
         let result = pool.get_service("nonexistent");
         assert!(result.is_err());
         let err = result.unwrap_err();
@@ -322,7 +344,7 @@ api_key = "sk-b"
     #[test]
     fn get_service_for_known_model_succeeds() {
         let config = config_with_one_model();
-        let pool = ServicePool::from_config(&config).expect("should build");
+        let pool = ServicePool::from_config(&config, None).expect("should build");
         let result = pool.get_service("test-model");
         assert!(result.is_ok());
     }
@@ -330,7 +352,7 @@ api_key = "sk-b"
     #[test]
     fn get_client_for_known_model_succeeds() {
         let config = config_with_one_model();
-        let pool = ServicePool::from_config(&config).expect("should build");
+        let pool = ServicePool::from_config(&config, None).expect("should build");
         let result = pool.get_client("test-model");
         assert!(result.is_ok());
     }
@@ -338,7 +360,7 @@ api_key = "sk-b"
     #[test]
     fn get_client_for_unknown_model_returns_not_found() {
         let config = config_with_one_model();
-        let pool = ServicePool::from_config(&config).expect("should build");
+        let pool = ServicePool::from_config(&config, None).expect("should build");
         let result = pool.get_client("nonexistent");
         assert!(result.is_err());
     }
@@ -346,7 +368,7 @@ api_key = "sk-b"
     #[test]
     fn model_names_returns_correct_list() {
         let config = config_with_two_models();
-        let pool = ServicePool::from_config(&config).expect("should build");
+        let pool = ServicePool::from_config(&config, None).expect("should build");
         let mut names = pool.model_names();
         names.sort();
         assert_eq!(names, vec!["model-a", "model-b"]);
@@ -355,14 +377,14 @@ api_key = "sk-b"
     #[test]
     fn has_any_service_returns_false_for_empty_pool() {
         let config = ProxyConfig::default();
-        let pool = ServicePool::from_config(&config).expect("should build");
+        let pool = ServicePool::from_config(&config, None).expect("should build");
         assert!(!pool.has_any_service());
     }
 
     #[test]
     fn has_any_service_returns_true_for_nonempty_pool() {
         let config = config_with_one_model();
-        let pool = ServicePool::from_config(&config).expect("should build");
+        let pool = ServicePool::from_config(&config, None).expect("should build");
         assert!(pool.has_any_service());
     }
 
@@ -399,7 +421,7 @@ interval_secs = 10
         )
         .expect("valid TOML");
 
-        let pool = ServicePool::from_config(&config).expect("should build with middleware");
+        let pool = ServicePool::from_config(&config, None).expect("should build with middleware");
         assert!(pool.has_any_service());
         assert!(pool.get_service("gpt").is_ok());
     }
@@ -421,7 +443,7 @@ api_key = "sk-2"
         )
         .expect("valid TOML");
 
-        let pool = ServicePool::from_config(&config).expect("should build");
+        let pool = ServicePool::from_config(&config, None).expect("should build");
         // Only one entry in the pool despite two config entries with same name.
         assert_eq!(pool.services.len(), 1);
         assert!(pool.get_service("gpt").is_ok());

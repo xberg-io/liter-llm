@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use arc_swap::ArcSwap;
+use liter_llm::observability::UsageSinkErased;
 use liter_llm::tenant::KeyResolver;
 
 use crate::auth::KeyStore;
@@ -39,4 +40,7 @@ pub struct AppState {
     /// to differentiate between `/health/liveness` (200 during drain) and
     /// `/health/readiness` (503 during drain).
     pub shutdown: Option<ShutdownHandle>,
+    /// Embedder-supplied usage sink; when `Some`, [`HooksLayer`] is pushed
+    /// outermost in the Tower stack so every completed request emits an event.
+    pub usage_sink: Option<Arc<dyn UsageSinkErased>>,
 }

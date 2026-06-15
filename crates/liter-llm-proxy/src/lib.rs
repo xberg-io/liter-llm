@@ -43,6 +43,10 @@ pub enum WatchMode {
 pub struct ProxyServer {
     config: ProxyConfig,
     watch_mode: WatchMode,
+    key_resolver_override: Option<Arc<dyn liter_llm::tenant::KeyResolver>>,
+    // `UsageSink` uses RPITIT and is not dyn-compatible; we erase it at the
+    // builder boundary via the `UsageSinkErased` blanket impl.
+    usage_sink: Option<Arc<dyn liter_llm::observability::UsageSinkErased>>,
 }
 
 impl ProxyServer {
@@ -52,12 +56,37 @@ impl ProxyServer {
         Self {
             config,
             watch_mode: WatchMode::Off,
+            key_resolver_override: None,
+            usage_sink: None,
         }
     }
 
     /// Enable hot-reload with the given [`WatchMode`].
     pub fn with_watch_mode(mut self, mode: WatchMode) -> Self {
         self.watch_mode = mode;
+        self
+    }
+
+    /// Override the default `KeyStore`-backed key resolver with a custom
+    /// implementation.
+    ///
+    /// When set, the supplied resolver is used instead of the `KeyStore`
+    /// constructed from `ProxyConfig.keys`.  Cloud embedders use this to plug
+    /// in database-backed or remote resolvers without forking `AppState`.
+    #[must_use]
+    pub fn with_key_resolver(mut self, resolver: Arc<dyn liter_llm::tenant::KeyResolver>) -> Self {
+        self.key_resolver_override = Some(resolver);
+        self
+    }
+
+    /// Attach an embedder-supplied usage sink.
+    ///
+    /// When set, `HooksLayer` is pushed outermost in the Tower stack so every
+    /// completed request (success or error) emits a [`liter_llm::observability::UsageEvent`].
+    /// Default behaviour (no sink) is unchanged.
+    #[must_use]
+    pub fn with_usage_sink<S: liter_llm::observability::UsageSink>(mut self, sink: Arc<S>) -> Self {
+        self.usage_sink = Some(sink as Arc<dyn liter_llm::observability::UsageSinkErased>);
         self
     }
 
@@ -93,7 +122,7 @@ impl ProxyServer {
             lp::set_outbound_policy(policy);
         }
 
-        let service_pool = service_pool::ServicePool::from_config(&self.config)?;
+        let service_pool = service_pool::ServicePool::from_config(&self.config, self.usage_sink.clone())?;
         let key_store = auth::KeyStore::from_config(self.config.general.master_key.clone(), &self.config.keys);
         let file_store = file_store::FileStore::from_config(self.config.files.as_ref().unwrap_or(&Default::default()))?;
 
@@ -142,8 +171,11 @@ impl ProxyServer {
         );
 
         let key_store = Arc::new(key_store);
-        let key_resolver: Arc<dyn liter_llm::tenant::KeyResolver> =
-            key_store.clone() as Arc<dyn liter_llm::tenant::KeyResolver>;
+        // Fall back to the config-backed KeyStore when no override is supplied.
+        let key_resolver: Arc<dyn liter_llm::tenant::KeyResolver> = self
+            .key_resolver_override
+            .clone()
+            .unwrap_or_else(|| key_store.clone() as Arc<dyn liter_llm::tenant::KeyResolver>);
         let state = AppState {
             key_store,
             key_resolver,
@@ -152,6 +184,7 @@ impl ProxyServer {
             config: arc_config,
             secret_registry,
             shutdown: shutdown_handle.clone(),
+            usage_sink: self.usage_sink.clone(),
         };
 
         let router = routes::build_router(state);
@@ -280,10 +313,7 @@ mod tests {
     #[test]
     fn parse_allowlist_urls_emits_warn_on_invalid_entry() {
         // "not-a-url" has no scheme and no base → parse error → warn emitted at runtime.
-        let entries = vec![
-            "not-a-url".to_string(),
-            "https://api.anthropic.com".to_string(),
-        ];
+        let entries = vec!["not-a-url".to_string(), "https://api.anthropic.com".to_string()];
         let urls = parse_allowlist_urls(&entries);
         assert_eq!(
             urls.len(),
