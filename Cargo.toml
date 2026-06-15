@@ -63,7 +63,7 @@ opendal = { version = "0.57", default-features = false, features = [
     "services-fs",
     "services-s3",
 ] }
-opentelemetry = "0.32"
+opentelemetry = { version = "0.32", features = ["metrics"] }
 pin-project-lite = "0.2"
 pyo3 = { version = "0.29", features = ["abi3-py310", "multiple-pymethods"] }
 pyo3-async-runtimes = { version = "0.29", features = ["tokio-runtime"] }

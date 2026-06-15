@@ -25,6 +25,7 @@ native-http = [
     # the current target, so this entry is a no-op on Windows without causing an error.
     "dep:rustls",
     "dep:tokio",
+    "dep:tokio-util",
     "dep:memchr",
     "dep:base64",
     "dep:gcp_auth",
@@ -105,6 +106,7 @@ serde_json = { workspace = true }
 thiserror = { workspace = true }
 tokenizers = { workspace = true, optional = true }
 tokio = { workspace = true, features = ["time", "rt", "macros"], optional = true }
+tokio-util = { workspace = true, optional = true }
 toml = { workspace = true }
 tower = { workspace = true, optional = true }
 tower-http = { workspace = true, optional = true }
