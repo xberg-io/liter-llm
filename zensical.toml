@@ -26,14 +26,18 @@ nav = [
     ] },
     { "Advanced" = [
       { "Authentication" = "usage/authentication.md" },
+      { "Batches" = "usage/batches.md" },
       { "Fallback & Routing" = "usage/fallback-routing.md" },
       { "Local LLMs" = "usage/local-llms.md" },
       { "Error Handling" = "usage/error-handling.md" },
+      { "Multi-Tenancy" = "usage/multi-tenancy.md" },
       { "Observability" = "usage/observability.md" },
     ] },
     { "Deployment" = [
       { "Proxy Server" = "server/proxy-server.md" },
       { "Proxy Configuration" = "server/proxy-configuration.md" },
+      { "Embedding the Proxy" = "server/embedding.md" },
+      { "Key Resolvers" = "server/key-resolvers.md" },
       { "MCP Server" = "server/mcp-server.md" },
       { "MCP & IDE Integration" = "usage/mcp-integration.md" },
     ] },
