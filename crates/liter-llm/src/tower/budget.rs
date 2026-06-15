@@ -1439,6 +1439,37 @@ mod tests {
         );
     }
 
+    /// Bug 6 fix: 200 parallel `add($0.10)` calls at a rollover boundary must
+    /// total exactly $20.00 — no contribution lost due to TOCTOU.
+    #[test]
+    fn budget_window_rollover_no_torn_read() {
+        use std::sync::Barrier;
+        use std::thread;
+
+        let entry = Arc::new(WindowEntry::new(Duration::from_secs(1)));
+        let future_now = SystemTime::now() + Duration::from_secs(2);
+
+        const WRITERS: usize = 200;
+        let barrier = Arc::new(Barrier::new(WRITERS));
+        let mut handles = Vec::with_capacity(WRITERS);
+        for _ in 0..WRITERS {
+            let e = Arc::clone(&entry);
+            let b = Arc::clone(&barrier);
+            handles.push(thread::spawn(move || {
+                b.wait();
+                e.add(0.10, future_now);
+            }));
+        }
+        for h in handles {
+            h.join().expect("writer must not panic");
+        }
+        let total = microcents_to_usd(entry.spend_mc.load(Ordering::Acquire));
+        assert!(
+            (total - 20.0_f64).abs() < 1e-4,
+            "expected $20.00 total after 200 concurrent adds at rollover; got ${total:.6}"
+        );
+    }
+
     // ── should_hedge: respects configured user budget ────────────────────────
 
     /// $10 user budget, $9.50 spend, estimated_cost=$0.50, safety_margin=0.10

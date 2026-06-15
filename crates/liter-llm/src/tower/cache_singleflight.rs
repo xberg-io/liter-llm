@@ -39,7 +39,7 @@ use tokio::sync::broadcast;
 use tower::{Layer, Service};
 
 use super::cache::CachedResponse;
-use super::types::{LlmRequest, LlmResponse};
+use super::types::{LlmRequest, LlmRequestKind, LlmResponse};
 use crate::client::BoxFuture;
 use crate::error::{LiterLlmError, Result};
 
@@ -155,12 +155,17 @@ impl SingleflightCoordinator for InMemorySingleflight {
                     let map = Arc::clone(&self.in_flight);
 
                     let complete = Box::new(move |result: SingleflightResult| {
-                        // Remove the entry first so new arrivals see a Vacant slot
-                        // and become leaders for the next singleflight round.
-                        map.remove(&key);
-                        // Ignore send errors: zero subscribers is valid (all
-                        // followers may have timed out or been cancelled).
+                        // Send BEFORE removing the map entry (bug 5 fix).
+                        //
+                        // With the old remove-then-send order, a new caller arriving
+                        // between the remove and the send sees a Vacant slot, becomes
+                        // a leader, and starts a duplicate upstream call.  Sending
+                        // first ensures any subscriber that joined before complete()
+                        // receives the result before the entry is removed.
                         let _ = tx.send(result);
+                        // Remove after broadcasting so the next distinct request
+                        // starts a fresh singleflight round.
+                        map.remove(&key);
                     });
 
                     SingleflightHandle::Leader { complete }
@@ -229,9 +234,9 @@ impl<C: SingleflightCoordinator, S: Clone> Clone for SingleflightService<C, S> {
 fn singleflight_key(req: &LlmRequest) -> Option<u64> {
     use std::hash::{DefaultHasher, Hash, Hasher};
 
-    let json = match req {
-        LlmRequest::Chat(r) => serde_json::to_string(r).ok()?,
-        LlmRequest::Embed(r) => serde_json::to_string(r).ok()?,
+    let json = match &req.kind {
+        LlmRequestKind::Chat(r) => serde_json::to_string(r).ok()?,
+        LlmRequestKind::Embed(r) => serde_json::to_string(r).ok()?,
         _ => return None,
     };
     let mut hasher = DefaultHasher::new();
@@ -318,7 +323,25 @@ where
                                 }),
                             )
                         }
-                        Err(_recv_err) => Err(LiterLlmError::InternalError {
+                        Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
+                            // Ring-buffer overflow: resubscribe to drain the latest value.
+                            tracing::debug!(skipped = n, "singleflight follower lagged; resubscribing");
+                            let mut rx2 = recv.resubscribe();
+                            match rx2.recv().await {
+                                Ok(Ok(cached)) => cached.into_llm_response(),
+                                Ok(Err(arc_err)) => {
+                                    Err(
+                                        Arc::try_unwrap(arc_err).unwrap_or_else(|arc| LiterLlmError::InternalError {
+                                            message: arc.to_string(),
+                                        }),
+                                    )
+                                }
+                                Err(_) => Err(LiterLlmError::InternalError {
+                                    message: "singleflight: follower lagged and retry also failed".into(),
+                                }),
+                            }
+                        }
+                        Err(tokio::sync::broadcast::error::RecvError::Closed) => Err(LiterLlmError::InternalError {
                             message: "singleflight: leader closed channel without sending a result".into(),
                         }),
                     }
@@ -500,9 +523,14 @@ mod tests {
     }
 
     /// 10 concurrent requests via independent service clones all receive the same result.
+    ///
+    /// Uses `SlowClient` (50 ms delay) so all 10 tasks reach the coordinator as
+    /// followers before the leader's upstream call completes.  Without the delay
+    /// the leader may complete before followers subscribe, causing spurious second
+    /// leader rounds.
     #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
     async fn singleflight_followers_get_same_result() {
-        let client = MockClient::ok();
+        let client = SlowClient::ok_with_delay(std::time::Duration::from_millis(50));
         let coordinator = Arc::new(InMemorySingleflight::new());
         let layer = SingleflightLayer::new(Arc::clone(&coordinator));
 
@@ -665,5 +693,36 @@ mod tests {
             calls, 10,
             "each distinct key must produce its own upstream call; got {calls}"
         );
+    }
+
+    /// Bug 5 fix: send-before-remove ordering in `complete` closure.
+    ///
+    /// A follower that subscribes BEFORE the leader calls `complete` must
+    /// receive the result — not a `RecvError::Closed`.
+    #[tokio::test]
+    async fn singleflight_no_duplicate_upstream_on_late_arrival() {
+        let coordinator = Arc::new(InMemorySingleflight::new());
+        let key: u64 = 0xC0FF_EE00;
+
+        // Leader joins first.
+        let complete = match coordinator.join(key).await {
+            SingleflightHandle::Leader { complete } => complete,
+            SingleflightHandle::Follower { .. } => panic!("first join must be Leader"),
+        };
+
+        // Follower joins while the entry is still in the map.
+        let mut recv = match coordinator.join(key).await {
+            SingleflightHandle::Follower { recv } => recv,
+            SingleflightHandle::Leader { .. } => panic!("second join must be Follower"),
+        };
+
+        // Leader completes: send first, remove second.
+        complete(Ok(CachedResponse::Chat(
+            crate::tower::tests_common::make_chat_response("gpt-4"),
+        )));
+
+        // Follower must receive the result (not RecvError::Closed).
+        let received = recv.recv().await.expect("follower must receive leader result");
+        assert!(received.is_ok(), "follower must receive success result");
     }
 }

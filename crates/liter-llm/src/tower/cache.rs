@@ -57,7 +57,7 @@ use std::time::{Duration, Instant};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use tower::{Layer, Service};
 
-use super::types::{LlmRequest, LlmResponse};
+use super::types::{LlmRequest, LlmRequestKind, LlmResponse};
 use crate::cache_key::{CacheKeyInput, CacheKeyStrategy, ExactHashStrategy};
 use crate::client::BoxFuture;
 use crate::embedding::EmbeddingProvider;
@@ -703,9 +703,9 @@ impl<S> CacheService<S> {
 /// body.  The body is stored alongside the cached response so lookups can
 /// verify against hash collisions.
 pub(crate) fn cache_key(req: &LlmRequest) -> Option<(u64, String)> {
-    let json = match req {
-        LlmRequest::Chat(r) => serde_json::to_string(r).ok()?,
-        LlmRequest::Embed(r) => serde_json::to_string(r).ok()?,
+    let json = match &req.kind {
+        LlmRequestKind::Chat(r) => serde_json::to_string(r).ok()?,
+        LlmRequestKind::Embed(r) => serde_json::to_string(r).ok()?,
         // Not cacheable.
         _ => return None,
     };
@@ -733,8 +733,10 @@ pub(crate) fn cache_key(req: &LlmRequest) -> Option<(u64, String)> {
 /// produce isolation keys correctly; previously both fields were hard-coded to
 /// `None`, which meant tenant A's response could be served to tenant B.
 fn strategy_key(strategy: &dyn CacheKeyStrategy, req: &LlmRequest) -> Option<(u64, String)> {
-    let (model, messages_json, params_json, tenant_id, system_prompt) = match req {
-        LlmRequest::Chat(r) => {
+    // reads tenant_id from request when set
+    let req_tenant = req.tenant_id().map(|t| t.as_ref().to_owned());
+    let (model, messages_json, params_json, tenant_id, system_prompt) = match &req.kind {
+        LlmRequestKind::Chat(r) => {
             let msgs = serde_json::to_string(&r.messages).ok()?;
             // Serialize inference params as a separate JSON object.
             let params = serde_json::json!({
@@ -744,12 +746,13 @@ fn strategy_key(strategy: &dyn CacheKeyStrategy, req: &LlmRequest) -> Option<(u6
                 "n": r.n,
                 "stop": r.stop,
             });
-            // Extract tenant_id from the `user` field (convention: "tenant:<id>").
-            let tenant_id: Option<String> = r
-                .user
-                .as_deref()
-                .and_then(|u| u.strip_prefix("tenant:"))
-                .map(str::to_owned);
+            // Prefer explicit tenant_id from request; fall back to `user` field convention.
+            let tenant_id: Option<String> = req_tenant.or_else(|| {
+                r.user
+                    .as_deref()
+                    .and_then(|u| u.strip_prefix("tenant:"))
+                    .map(str::to_owned)
+            });
             // Extract system prompt from the first System message.
             let system_prompt: Option<String> = r.messages.iter().find_map(|m| {
                 if let crate::types::Message::System(s) = m {
@@ -766,13 +769,13 @@ fn strategy_key(strategy: &dyn CacheKeyStrategy, req: &LlmRequest) -> Option<(u6
                 system_prompt,
             )
         }
-        LlmRequest::Embed(r) => {
+        LlmRequestKind::Embed(r) => {
             let input = serde_json::to_string(&r.input).ok()?;
             let params = serde_json::json!({
                 "dimensions": r.dimensions,
                 "encoding_format": r.encoding_format,
             });
-            (r.model.as_str().to_owned(), input, params.to_string(), None, None)
+            (r.model.as_str().to_owned(), input, params.to_string(), req_tenant, None)
         }
         _ => return None,
     };
@@ -808,11 +811,12 @@ where
         static EMPTY_METADATA: OnceLock<HashMap<String, String>> = OnceLock::new();
         let empty_meta = EMPTY_METADATA.get_or_init(HashMap::new);
 
-        let stream = matches!(req, LlmRequest::ChatStream(_));
+        let stream = matches!(req.kind, LlmRequestKind::ChatStream(_));
         let model = req.model().unwrap_or("").to_owned();
+        let tenant_id_str: Option<String> = req.tenant_id().map(|t| t.as_ref().to_owned());
         let ctx = CachePolicyContext {
             model: &model,
-            tenant_id: None,
+            tenant_id: tenant_id_str.as_deref(),
             stream,
             metadata: empty_meta,
         };
@@ -1536,7 +1540,9 @@ mod tests {
             fn call(&mut self, _req: LlmRequest) -> Self::Future {
                 self.call_count.fetch_add(1, Ordering::SeqCst);
                 Box::pin(async {
-                    Ok(LlmResponse::Chat(crate::tower::tests_common::make_chat_response("gpt-4")))
+                    Ok(LlmResponse::Chat(crate::tower::tests_common::make_chat_response(
+                        "gpt-4",
+                    )))
                 })
             }
         }
@@ -1558,7 +1564,12 @@ mod tests {
 
         // First call: poll_ready → call.
         use tower::ServiceExt as _;
-        svc.ready().await.expect("ready").call(LlmRequest::Chat(chat_req("gpt-4-v1"))).await.unwrap();
+        svc.ready()
+            .await
+            .expect("ready")
+            .call(LlmRequest::Chat(chat_req("gpt-4-v1")))
+            .await
+            .unwrap();
         assert_eq!(call_count.load(Ordering::SeqCst), 1, "inner called once");
 
         // Second call: poll_ready → call again (TTL expired, cache miss).
@@ -1566,8 +1577,17 @@ mod tests {
         // be called on it; without mem::replace the second call would attempt to
         // call on an already-called instance.
         tokio::time::sleep(Duration::from_millis(1)).await;
-        svc.ready().await.expect("ready second time").call(LlmRequest::Chat(chat_req("gpt-4-v2"))).await.unwrap();
-        assert_eq!(call_count.load(Ordering::SeqCst), 2, "inner called twice across two call cycles");
+        svc.ready()
+            .await
+            .expect("ready second time")
+            .call(LlmRequest::Chat(chat_req("gpt-4-v2")))
+            .await
+            .unwrap();
+        assert_eq!(
+            call_count.load(Ordering::SeqCst),
+            2,
+            "inner called twice across two call cycles"
+        );
     }
 
     /// Verify that CacheService::call does not allocate policy_meta HashMap
@@ -1591,9 +1611,7 @@ mod tests {
         // Make 1000 calls — without the optimization, this would allocate 1000 HashMaps.
         // With the static EMPTY_METADATA optimization, no allocations occur (reuse single static).
         for _ in 0..1000 {
-            let _ = svc
-                .call(LlmRequest::Chat(chat_req("gpt-4")))
-                .await;
+            let _ = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
         }
 
         // If we reach here without OOM, the optimization is working.

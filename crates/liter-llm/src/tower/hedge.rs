@@ -180,14 +180,18 @@ where
         // Apply the canonical Tower clone pattern:
         //
         // `poll_ready` was called on `self.inner`, so *that* instance holds any
-        // acquired permit (e.g. ConcurrencyLimit semaphore slot). We take it out
-        // via `mem::replace` so that attempt #1 can call it.  The replacement is
-        // a fresh clone that will be used for the *next* `poll_ready` cycle, and
-        // also serves as the source of additional clones for hedged attempts #2‥N.
-        // Those hedged clones each go through `ServiceExt::ready()` inside their
-        // spawned task, honouring the inner service's readiness contract.
+        // acquired permit (e.g. ConcurrencyLimit semaphore slot). Take the
+        // polled-ready instance out via `mem::replace` and leave a fresh clone as
+        // standby for the next `poll_ready`/`call` cycle.
+        //
+        // Hedge attempts #2‥N each receive a clone of the standby and call
+        // `ServiceExt::ready()` before calling — they must NOT receive a clone
+        // of `primary` (which already holds a permit), or they would double-
+        // consume permits on inner services like `ConcurrencyLimit`.
+        let standby = self.inner.clone(); // fresh, un-polled
+        let primary = std::mem::replace(&mut self.inner, standby);
+        // Source for hedge clones: self.inner is now the fresh standby.
         let inner_for_hedges = self.inner.clone();
-        let primary = std::mem::replace(&mut self.inner, inner_for_hedges.clone());
 
         Box::pin(async move {
             // Log before the await — EnteredSpan is not Send.
@@ -502,6 +506,77 @@ mod tests {
         assert!(
             (1..=2).contains(&count),
             "expected 1 or 2 inner calls with ConcurrencyLimit(1), got {count}"
+        );
+    }
+
+    /// Bug 3 fix: wrapping inner in `ConcurrencyLimit(1)` with 2 hedge attempts
+    /// must not panic or exceed 1 concurrent in-flight call at any moment.
+    #[tokio::test]
+    async fn hedge_no_double_permit_consumption() {
+        use std::sync::atomic::AtomicUsize;
+
+        use tower::limit::ConcurrencyLimit;
+
+        let peak = Arc::new(AtomicUsize::new(0));
+        let current = Arc::new(AtomicUsize::new(0));
+
+        #[derive(Clone)]
+        struct PeakTracker {
+            peak: Arc<AtomicUsize>,
+            current: Arc<AtomicUsize>,
+        }
+
+        impl tower::Service<LlmRequest> for PeakTracker {
+            type Response = LlmResponse;
+            type Error = LiterLlmError;
+            type Future = crate::client::BoxFuture<'static, crate::error::Result<LlmResponse>>;
+
+            fn poll_ready(&mut self, _cx: &mut std::task::Context<'_>) -> std::task::Poll<crate::error::Result<()>> {
+                std::task::Poll::Ready(Ok(()))
+            }
+
+            fn call(&mut self, _req: LlmRequest) -> Self::Future {
+                let peak = Arc::clone(&self.peak);
+                let current = Arc::clone(&self.current);
+                Box::pin(async move {
+                    let now = current.fetch_add(1, Ordering::SeqCst) + 1;
+                    let mut prev = peak.load(Ordering::SeqCst);
+                    while now > prev {
+                        match peak.compare_exchange(prev, now, Ordering::SeqCst, Ordering::SeqCst) {
+                            Ok(_) => break,
+                            Err(p) => prev = p,
+                        }
+                    }
+                    tokio::task::yield_now().await;
+                    current.fetch_sub(1, Ordering::SeqCst);
+                    Ok(LlmResponse::Chat(crate::tower::tests_common::make_chat_response(
+                        "gpt-4",
+                    )))
+                })
+            }
+        }
+
+        let tracker = PeakTracker {
+            peak: Arc::clone(&peak),
+            current: Arc::clone(&current),
+        };
+        let limited: ConcurrencyLimit<PeakTracker> = ConcurrencyLimit::new(tracker, 1);
+        let policy = Arc::new(FixedDelayHedge::new(Duration::ZERO, 2));
+        let mut svc = HedgeLayer::new(policy).layer(limited);
+
+        let resp = svc
+            .ready()
+            .await
+            .expect("service should become ready")
+            .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
+            .await
+            .expect("hedged request must succeed");
+
+        assert!(matches!(resp, LlmResponse::Chat(_)));
+        assert_eq!(
+            peak.load(Ordering::SeqCst),
+            1,
+            "ConcurrencyLimit(1) must cap concurrent calls at 1 even with hedging"
         );
     }
 }

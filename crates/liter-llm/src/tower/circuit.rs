@@ -26,7 +26,7 @@
 //! The [`CircuitPolicy`] trait lets callers plug in custom policy logic
 //! (e.g. sliding-window error-rate policies) without modifying library code.
 
-use std::sync::atomic::{AtomicU8, AtomicU32, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU8, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll};
 use std::time::{Duration, Instant};
@@ -97,6 +97,13 @@ struct CircuitInner {
     /// Uses `std::sync::Mutex` (not `tokio::sync::Mutex`) so that it can be
     /// acquired from synchronous contexts such as `record_failure`.
     open_since: Mutex<Option<Instant>>,
+    /// Single-permit gate for HalfOpen probe requests.
+    ///
+    /// `true` while a probe is in-flight.  The first caller that CAS-es this
+    /// from `false` to `true` owns the probe slot; all others are rejected as
+    /// if the circuit were Open.  Cleared by `record_success` / `record_failure`
+    /// as part of the state transition out of HalfOpen.
+    probe_in_flight: AtomicBool,
 }
 
 /// Circuit breaker with exponential backoff.
@@ -143,6 +150,7 @@ impl ExponentialBackoffCircuit {
                 state: AtomicU8::new(CircuitState::Closed as u8),
                 consecutive_failures: AtomicU32::new(0),
                 open_since: Mutex::new(None),
+                probe_in_flight: AtomicBool::new(false),
             }),
             open_count: AtomicU32::new(0),
         }
@@ -163,9 +171,8 @@ impl ExponentialBackoffCircuit {
     /// Check whether the open-circuit backoff has elapsed and, if so,
     /// transition to [`CircuitState::HalfOpen`].
     ///
-    /// Called from the test suite to simulate the half-open transition without
-    /// waiting for the full real-time backoff.
-    #[cfg_attr(not(test), allow(dead_code))]
+    /// Called from [`should_allow`] on every request when the circuit is Open,
+    /// driving the timer-based Open → HalfOpen transition on the request path.
     fn maybe_half_open(&self) -> bool {
         let backoff = self.current_backoff();
         let guard = self.inner.open_since.lock().expect("open_since mutex poisoned");
@@ -185,6 +192,8 @@ impl CircuitPolicy for ExponentialBackoffCircuit {
     fn record_success(&self) {
         self.inner.consecutive_failures.store(0, Ordering::Relaxed);
         let prev = self.inner.state.swap(CircuitState::Closed as u8, Ordering::Release);
+        // Release the probe slot so a future HalfOpen round can happen.
+        self.inner.probe_in_flight.store(false, Ordering::Release);
         if CircuitState::from_u8(prev) != CircuitState::Closed {
             tracing::info!("circuit breaker closed after successful probe");
         }
@@ -233,6 +242,8 @@ impl CircuitPolicy for ExponentialBackoffCircuit {
                 let mut guard = self.inner.open_since.lock().expect("open_since mutex poisoned");
                 *guard = Some(Instant::now());
             }
+            // Release the probe slot; a fresh cooldown is now in effect.
+            self.inner.probe_in_flight.store(false, Ordering::Release);
             tracing::warn!(
                 consecutive_failures = failures,
                 backoff = ?backoff,
@@ -245,8 +256,26 @@ impl CircuitPolicy for ExponentialBackoffCircuit {
 
     fn should_allow(&self) -> bool {
         match CircuitState::from_u8(self.inner.state.load(Ordering::Acquire)) {
-            CircuitState::Closed | CircuitState::HalfOpen => true,
-            CircuitState::Open => false,
+            CircuitState::Closed => true,
+            CircuitState::Open => {
+                // Attempt the timer-driven Open → HalfOpen transition.
+                if self.maybe_half_open() {
+                    // Claim the single probe slot.
+                    self.inner
+                        .probe_in_flight
+                        .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+                        .is_ok()
+                } else {
+                    false
+                }
+            }
+            CircuitState::HalfOpen => {
+                // Exactly ONE concurrent probe: first CAS winner gets the slot.
+                self.inner
+                    .probe_in_flight
+                    .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+                    .is_ok()
+            }
         }
     }
 
@@ -641,7 +670,7 @@ mod tests {
         futures_util::future::poll_fn(|cx| svc.poll_ready(cx))
             .await
             .expect("first poll_ready should succeed");
-        let mut held_fut = svc.call(LlmRequest::ListModels);
+        let mut held_fut = svc.call(LlmRequest::ListModels());
 
         // Drive the future once so that the async block runs to the point where
         // `inner.call(req)` is invoked (BlockingInner::call increments the counter
@@ -666,6 +695,93 @@ mod tests {
         assert!(
             poll.is_pending(),
             "second poll_ready must be Pending when the concurrency permit is exhausted"
+        );
+    }
+
+    /// Bug 1 fix: Open circuit transitions to HalfOpen after cooldown elapses,
+    /// driven by `should_allow` on the request path.
+    #[tokio::test]
+    async fn circuit_half_open_after_cooldown() {
+        let p = Arc::new(ExponentialBackoffCircuit::new(1, Duration::from_millis(20)));
+        let layer = CircuitLayer::new(Arc::clone(&p), "test");
+        let mut svc_fail = layer.layer(LlmService::new(MockClient::failing_timeout()));
+        let _ = svc_fail.call(LlmRequest::Chat(chat_req("openai/gpt-4"))).await;
+        assert_eq!(p.state(), CircuitState::Open);
+        // Wait for real-clock cooldown to elapse.
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        let layer2 = CircuitLayer::new(Arc::clone(&p), "test");
+        let mut svc_ok = layer2.layer(LlmService::new(MockClient::ok()));
+        // Next call: should_allow transitions Open→HalfOpen, claims probe slot.
+        let resp = svc_ok
+            .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
+            .await
+            .expect("probe after cooldown must succeed");
+        assert!(matches!(resp, LlmResponse::Chat(_)));
+        assert_eq!(p.state(), CircuitState::Closed);
+    }
+
+    /// Bug 2 fix: exactly ONE concurrent probe request allowed in HalfOpen.
+    #[tokio::test]
+    async fn circuit_half_open_single_probe() {
+        use std::sync::atomic::AtomicUsize;
+
+        let p = Arc::new(ExponentialBackoffCircuit::new(1, Duration::from_millis(20)));
+        p.record_failure();
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        assert!(p.maybe_half_open(), "should transition to HalfOpen");
+        assert_eq!(p.state(), CircuitState::HalfOpen);
+
+        let probe_count = Arc::new(AtomicUsize::new(0));
+        let rejected_count = Arc::new(AtomicUsize::new(0));
+        let handles: Vec<_> = (0..50)
+            .map(|_| {
+                let p2 = Arc::clone(&p);
+                let pc = Arc::clone(&probe_count);
+                let rc = Arc::clone(&rejected_count);
+                tokio::spawn(async move {
+                    if p2.should_allow() {
+                        pc.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                    } else {
+                        rc.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                    }
+                })
+            })
+            .collect();
+        for h in handles {
+            h.await.unwrap();
+        }
+        assert_eq!(
+            probe_count.load(std::sync::atomic::Ordering::SeqCst),
+            1,
+            "exactly 1 probe"
+        );
+        assert_eq!(
+            rejected_count.load(std::sync::atomic::Ordering::SeqCst),
+            49,
+            "49 rejected"
+        );
+    }
+
+    /// Bug 1+2 fix: failing HalfOpen probe re-opens the circuit with fresh cooldown.
+    #[tokio::test]
+    async fn circuit_half_open_failure_reopens() {
+        let p = Arc::new(ExponentialBackoffCircuit::new(1, Duration::from_millis(20)));
+        let layer = CircuitLayer::new(Arc::clone(&p), "test");
+        let mut svc_fail = layer.layer(LlmService::new(MockClient::failing_timeout()));
+        let _ = svc_fail.call(LlmRequest::Chat(chat_req("openai/gpt-4"))).await;
+        assert_eq!(p.state(), CircuitState::Open);
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        let layer2 = CircuitLayer::new(Arc::clone(&p), "test");
+        let mut svc_fail2 = layer2.layer(LlmService::new(MockClient::failing_timeout()));
+        let err = svc_fail2
+            .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
+            .await
+            .expect_err("failing probe must error");
+        assert!(matches!(err, LiterLlmError::Timeout));
+        assert_eq!(p.state(), CircuitState::Open, "must re-open after failing probe");
+        assert!(
+            !p.inner.probe_in_flight.load(Ordering::Acquire),
+            "probe_in_flight must be cleared after failure"
         );
     }
 }
