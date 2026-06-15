@@ -154,7 +154,25 @@ impl SingleflightCoordinator for InMemorySingleflight {
                     // to the map independently of the coordinator's lifetime.
                     let map = Arc::clone(&self.in_flight);
 
+                    // Wrap sender in an `Arc` shared between the `complete` closure
+                    // and a `LeaderDropGuard`.  The guard ensures that if `complete`
+                    // is dropped without being called (e.g. task abort / cancellation),
+                    // the map entry is removed.  Removing the map entry drops the
+                    // `tx_for_map` clone held there; combined with dropping `tx` from
+                    // the closure, all `Sender` clones are freed, closing the broadcast
+                    // channel.  Followers blocked on `recv.recv()` then receive
+                    // `RecvError::Closed` rather than hanging indefinitely.
+                    let guard = LeaderDropGuard {
+                        map: Arc::clone(&map),
+                        key,
+                        disarmed: false,
+                    };
+
                     let complete = Box::new(move |result: SingleflightResult| {
+                        // Disarm the drop guard — normal completion handles cleanup.
+                        let mut g = guard;
+                        g.disarmed = true;
+
                         // Send BEFORE removing the map entry (bug 5 fix).
                         //
                         // With the old remove-then-send order, a new caller arriving
@@ -177,6 +195,35 @@ impl SingleflightCoordinator for InMemorySingleflight {
                 }
             }
         })
+    }
+}
+
+/// RAII guard that removes a singleflight key from the in-flight map when
+/// the leader's `complete` closure is dropped without being called.
+///
+/// This handles the case where a leader task is cancelled (e.g. via
+/// `JoinHandle::abort()`) before it can call `complete`.  Without this guard,
+/// the `broadcast::Sender` stored in the DashMap would outlive the leader's
+/// owned sender copy, preventing the channel from closing and causing followers
+/// to hang indefinitely.
+///
+/// When the guard's `Drop` runs (armed), it removes the map entry holding
+/// the `broadcast::Sender`.  Combined with the leader's `tx` going out of
+/// scope, all sender clones are freed, and the channel closes.  Followers
+/// then receive `RecvError::Closed`.
+struct LeaderDropGuard {
+    map: InFlightMap,
+    key: u64,
+    disarmed: bool,
+}
+
+impl Drop for LeaderDropGuard {
+    fn drop(&mut self) {
+        if !self.disarmed {
+            // Leader was cancelled without completing — remove the map entry
+            // to close the broadcast channel and unblock any followers.
+            self.map.remove(&self.key);
+        }
     }
 }
 
@@ -304,7 +351,12 @@ where
                                 message: "singleflight: non-cacheable response variant in leader".into(),
                             })),
                         },
-                        Err(e) => Err(Arc::new(LiterLlmError::InternalError { message: e.to_string() })),
+                        // Preserve the original error variant so followers receive
+                        // the semantically correct error class (e.g. `RateLimited`,
+                        // not a downgraded `InternalError`).  `LiterLlmError` is
+                        // not `Clone`, so `to_singleflight_error` produces an owned
+                        // semantically-equivalent value for the broadcast Arc.
+                        Err(e) => Err(Arc::new(e.to_singleflight_error())),
                     };
                     complete(sf_result);
                     result
@@ -317,10 +369,13 @@ where
                     match recv.recv().await {
                         Ok(Ok(cached)) => cached.into_llm_response(),
                         Ok(Err(arc_err)) => {
+                            // Use `to_singleflight_error` rather than the `try_unwrap`
+                            // fallback so that the original error variant is preserved
+                            // even when the `Arc` has multiple strong references
+                            // (broadcast clones the Arc for each subscriber).
                             Err(
-                                Arc::try_unwrap(arc_err).unwrap_or_else(|arc| LiterLlmError::InternalError {
-                                    message: arc.to_string(),
-                                }),
+                                Arc::try_unwrap(arc_err)
+                                    .unwrap_or_else(|arc| arc.to_singleflight_error()),
                             )
                         }
                         Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
@@ -331,9 +386,8 @@ where
                                 Ok(Ok(cached)) => cached.into_llm_response(),
                                 Ok(Err(arc_err)) => {
                                     Err(
-                                        Arc::try_unwrap(arc_err).unwrap_or_else(|arc| LiterLlmError::InternalError {
-                                            message: arc.to_string(),
-                                        }),
+                                        Arc::try_unwrap(arc_err)
+                                            .unwrap_or_else(|arc| arc.to_singleflight_error()),
                                     )
                                 }
                                 Err(_) => Err(LiterLlmError::InternalError {
@@ -693,6 +747,177 @@ mod tests {
             calls, 10,
             "each distinct key must produce its own upstream call; got {calls}"
         );
+    }
+
+    // ── Pass-3 review tests ──────────────────────────────────────────────────
+
+    /// 100 concurrent callers for the same key must collapse to exactly one
+    /// inner call; all 100 must receive the identical leader response.
+    ///
+    /// Semantically identical to `singleflight_leader_runs_upstream_once_under_burst`
+    /// but explicitly named per pass-3 requirements and asserts response identity.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn singleflight_n100_burst_one_inner_call_only() {
+        let client = SlowClient::ok_with_delay(std::time::Duration::from_millis(50));
+        let call_count = Arc::clone(&client.inner.call_count);
+        let coordinator = Arc::new(InMemorySingleflight::new());
+        let layer = SingleflightLayer::new(Arc::clone(&coordinator));
+
+        let barrier = Arc::new(tokio::sync::Barrier::new(100));
+        let handles: Vec<_> = (0..100)
+            .map(|_| {
+                let svc = layer.layer(LlmService::new(client.clone()));
+                let barrier = Arc::clone(&barrier);
+                tokio::spawn(async move {
+                    barrier.wait().await;
+                    let mut svc = svc;
+                    futures_util::future::poll_fn(|cx| svc.poll_ready(cx)).await.unwrap();
+                    svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await
+                })
+            })
+            .collect();
+
+        let results: Vec<_> = futures_util::future::join_all(handles).await;
+
+        // All 100 callers must succeed.
+        let success_count = results.iter().filter(|r| r.as_ref().unwrap().is_ok()).count();
+        assert_eq!(success_count, 100, "all 100 callers should get a successful response");
+
+        // Inner must have been called exactly once.
+        let calls = call_count.load(Ordering::SeqCst);
+        assert_eq!(calls, 1, "inner service called {calls} times; expected exactly 1");
+
+        // All 100 responses must carry the same model string.
+        let models: Vec<String> = results
+            .into_iter()
+            .map(|r| match r.unwrap().unwrap() {
+                LlmResponse::Chat(resp) => resp.model,
+                _ => panic!("expected Chat response"),
+            })
+            .collect();
+        let first = &models[0];
+        assert!(models.iter().all(|m| m == first), "all 100 callers must receive identical responses");
+    }
+
+    /// When the leader's future is cancelled (aborted via JoinHandle) before it
+    /// calls `complete`, followers must receive an error rather than hanging.
+    ///
+    /// Protocol:
+    /// 1. Leader joins coordinator (gets `Leader` handle), then signals via `ready_tx`
+    ///    that it has registered, then parks on a `Semaphore` that is never released.
+    /// 2. Main task waits for `ready_tx`, then spawns 10 followers that each subscribe
+    ///    and wait, then waits for all followers to be parked on `recv.recv()` via a
+    ///    `Barrier`, then aborts the leader.
+    /// 3. `LeaderDropGuard` removes the map entry → channel closes →
+    ///    followers receive `RecvError::Closed`.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn singleflight_leader_cancelled_followers_receive_cancellation() {
+        let coordinator = Arc::new(InMemorySingleflight::new());
+        let key: u64 = 0xDEAD_BEEF;
+
+        // One-shot: leader signals when it has called join() and obtained the Leader handle.
+        let (ready_tx, ready_rx) = tokio::sync::oneshot::channel::<()>();
+        // Barrier: main + 10 followers → main waits until all followers have called join().
+        let all_subscribed = Arc::new(tokio::sync::Barrier::new(11)); // 10 followers + main
+
+        let leader_handle = tokio::spawn({
+            let coordinator = Arc::clone(&coordinator);
+            async move {
+                let handle = coordinator.join(key).await;
+                match handle {
+                    SingleflightHandle::Leader { complete: _complete } => {
+                        // Signal main: the channel is now open; followers can subscribe.
+                        let _ = ready_tx.send(());
+                        // Park until aborted — `_complete` is dropped on task cancellation,
+                        // which triggers `LeaderDropGuard::drop` and closes the channel.
+                        std::future::pending::<()>().await;
+                    }
+                    SingleflightHandle::Follower { .. } => panic!("first join must be Leader"),
+                }
+            }
+        });
+
+        // Wait until the leader has registered the key.
+        ready_rx.await.expect("leader must signal readiness");
+
+        // Spawn 10 followers; each waits at the barrier after subscribing so we know
+        // all followers are subscribed before we abort the leader.
+        let follower_handles: Vec<_> = (0..10)
+            .map(|_| {
+                let coordinator = Arc::clone(&coordinator);
+                let barrier = Arc::clone(&all_subscribed);
+                tokio::spawn(async move {
+                    let recv = match coordinator.join(key).await {
+                        SingleflightHandle::Follower { recv } => recv,
+                        SingleflightHandle::Leader { .. } => panic!("subsequent joins must be Follower"),
+                    };
+                    // Signal that this follower has subscribed.
+                    barrier.wait().await;
+                    // Now wait for the result.
+                    let mut recv = recv;
+                    recv.recv().await
+                })
+            })
+            .collect();
+
+        // Wait until all 10 followers have subscribed.
+        all_subscribed.wait().await;
+
+        // Abort the leader — `LeaderDropGuard` removes the map entry,
+        // dropping `tx_for_map`; combined with `_complete` going out of scope,
+        // all senders are freed and the channel closes.
+        leader_handle.abort();
+        let _ = leader_handle.await;
+
+        // All 10 followers must receive RecvError::Closed.
+        for handle in follower_handles {
+            let result = handle.await.expect("follower task must not panic");
+            assert!(
+                matches!(result, Err(tokio::sync::broadcast::error::RecvError::Closed)),
+                "follower must receive RecvError::Closed when leader is cancelled; got {result:?}"
+            );
+        }
+    }
+
+    /// When the leader's inner service returns `RateLimited`, all followers
+    /// must receive an error whose variant is `RateLimited` — not a downgraded
+    /// `InternalError`.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn singleflight_leader_error_broadcast_to_followers() {
+        let inner_client = MockClient::failing_rate_limited();
+        let slow_client = SlowClient {
+            inner: inner_client,
+            delay: std::time::Duration::from_millis(50),
+        };
+        let coordinator = Arc::new(InMemorySingleflight::new());
+        let layer = SingleflightLayer::new(Arc::clone(&coordinator));
+
+        let barrier = Arc::new(tokio::sync::Barrier::new(10));
+        let handles: Vec<_> = (0..10)
+            .map(|_| {
+                let svc = layer.layer(LlmService::new(slow_client.clone()));
+                let barrier = Arc::clone(&barrier);
+                tokio::spawn(async move {
+                    barrier.wait().await;
+                    let mut svc = svc;
+                    futures_util::future::poll_fn(|cx| svc.poll_ready(cx)).await.unwrap();
+                    svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await
+                })
+            })
+            .collect();
+
+        let results: Vec<_> = futures_util::future::join_all(handles).await;
+
+        for (i, result) in results.into_iter().enumerate() {
+            let err = result
+                .unwrap_or_else(|e| panic!("task {i} panicked: {e}"))
+                .expect_err("all callers must receive an error");
+
+            assert!(
+                matches!(err, LiterLlmError::RateLimited { .. }),
+                "caller {i} got {err:?}; expected RateLimited (variant must be preserved across broadcast)"
+            );
+        }
     }
 
     /// Bug 5 fix: send-before-remove ordering in `complete` closure.

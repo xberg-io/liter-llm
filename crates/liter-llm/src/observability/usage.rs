@@ -152,7 +152,12 @@ pub trait UsageSink: Send + Sync + 'static {
 
 // `UsageSink` uses RPITIT which is not object-safe. This sealed helper trait
 // lets `HooksLayer` and `MultiUsageSink` store sinks behind `dyn` pointers.
-pub(crate) trait UsageSinkErased: Send + Sync + 'static {
+//
+// It is `pub` (not `pub(crate)`) so that users can pass heterogeneous sink
+// collections to [`MultiUsageSink::from_erased`] without reaching into the
+// crate internals.  The trait is intentionally not re-exported from the crate
+// root to discourage direct implementation — use [`UsageSink`] instead.
+pub trait UsageSinkErased: Send + Sync + 'static {
     fn emit_erased<'a>(
         &'a self,
         event: UsageEvent,
@@ -220,15 +225,52 @@ pub struct MultiUsageSink {
 }
 
 impl MultiUsageSink {
-    /// Build a fan-out sink from a list of type-erased inner sinks.
+    /// Build a fan-out sink from a homogeneous list of inner sinks.
     ///
-    /// Each element must be `Arc<impl UsageSink>`. Construct via
-    /// `MultiUsageSink::from_sinks(vec![Arc::new(LoggingUsageSink)])`.
+    /// Each element must be `Arc<S>` where `S: UsageSink`. For heterogeneous
+    /// compositions (mixing sink types), use [`Self::from_erased`] instead.
+    ///
+    /// ```rust
+    /// use std::sync::Arc;
+    /// use liter_llm::observability::{LoggingUsageSink, MultiUsageSink};
+    ///
+    /// let _multi = MultiUsageSink::from_sinks(vec![Arc::new(LoggingUsageSink)]);
+    /// ```
     #[must_use]
     pub fn from_sinks<S: UsageSink>(sinks: Vec<Arc<S>>) -> Self {
         Self {
             sinks: sinks.into_iter().map(|s| s as Arc<dyn UsageSinkErased>).collect(),
         }
+    }
+
+    /// Build a fan-out sink from a heterogeneous list of already-erased sinks.
+    ///
+    /// Use this when you need to combine sinks of different concrete types in a
+    /// single `MultiUsageSink`:
+    ///
+    /// ```rust
+    /// use std::sync::Arc;
+    /// use liter_llm::observability::{
+    ///     LoggingUsageSink, MultiUsageSink, UsageEvent, UsageSink, UsageSinkError,
+    ///     UsageSinkErased,
+    /// };
+    ///
+    /// #[derive(Default)]
+    /// struct MetricsSink;
+    /// impl UsageSink for MetricsSink {
+    ///     async fn emit(&self, _event: UsageEvent) -> Result<(), UsageSinkError> {
+    ///         Ok(())
+    ///     }
+    /// }
+    ///
+    /// let multi = MultiUsageSink::from_erased(vec![
+    ///     Arc::new(LoggingUsageSink) as Arc<dyn UsageSinkErased>,
+    ///     Arc::new(MetricsSink::default()) as Arc<dyn UsageSinkErased>,
+    /// ]);
+    /// ```
+    #[must_use]
+    pub fn from_erased(sinks: Vec<Arc<dyn UsageSinkErased>>) -> Self {
+        Self { sinks }
     }
 
     /// Build an empty fan-out sink.
@@ -240,6 +282,11 @@ impl MultiUsageSink {
     /// Append an inner sink.
     pub fn push<S: UsageSink>(&mut self, sink: Arc<S>) {
         self.sinks.push(sink as Arc<dyn UsageSinkErased>);
+    }
+
+    /// Append an already-erased sink.
+    pub fn push_erased(&mut self, sink: Arc<dyn UsageSinkErased>) {
+        self.sinks.push(sink);
     }
 }
 

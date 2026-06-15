@@ -2,5 +2,6 @@
 pub mod usage;
 
 pub use usage::{
-    CacheState, LoggingUsageSink, MultiUsageSink, UsageEvent, UsageEventOutcome, UsageSink, UsageSinkError,
+    CacheState, LoggingUsageSink, MultiUsageSink, UsageEvent, UsageEventOutcome, UsageSink, UsageSinkErased,
+    UsageSinkError,
 };

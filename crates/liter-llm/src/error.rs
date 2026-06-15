@@ -211,6 +211,66 @@ impl LiterLlmError {
         }
     }
 
+    /// Create a version of this error suitable for broadcasting via singleflight.
+    ///
+    /// `LiterLlmError` is not `Clone` because some variants hold non-Clone types
+    /// (e.g. `reqwest::Error`).  This method produces a semantically equivalent
+    /// error that *is* owned and can be placed behind an `Arc` for broadcast.
+    /// Variants that cannot be cloned exactly are converted to their nearest
+    /// owned equivalent while preserving the error class (variant discriminant).
+    pub(crate) fn to_singleflight_error(&self) -> Self {
+        match self {
+            Self::Authentication { message, status } => Self::Authentication {
+                message: message.clone(),
+                status: *status,
+            },
+            Self::RateLimited { message, retry_after } => Self::RateLimited {
+                message: message.clone(),
+                retry_after: *retry_after,
+            },
+            Self::BadRequest { message, status } => Self::BadRequest {
+                message: message.clone(),
+                status: *status,
+            },
+            Self::ContextWindowExceeded { message } => Self::ContextWindowExceeded { message: message.clone() },
+            Self::ContentPolicy { message } => Self::ContentPolicy { message: message.clone() },
+            Self::NotFound { message } => Self::NotFound { message: message.clone() },
+            Self::ServerError { message, status } => Self::ServerError {
+                message: message.clone(),
+                status: *status,
+            },
+            Self::ServiceUnavailable { message, status } => Self::ServiceUnavailable {
+                message: message.clone(),
+                status: *status,
+            },
+            Self::Timeout => Self::Timeout,
+            #[cfg(any(feature = "native-http", feature = "wasm-http"))]
+            Self::Network(e) => Self::InternalError { message: e.to_string() },
+            Self::Streaming { message } => Self::Streaming { message: message.clone() },
+            Self::EndpointNotSupported { endpoint, provider } => Self::EndpointNotSupported {
+                endpoint: endpoint.clone(),
+                provider: provider.clone(),
+            },
+            Self::InvalidHeader { name, reason } => Self::InvalidHeader {
+                name: name.clone(),
+                reason: reason.clone(),
+            },
+            Self::Serialization(e) => Self::InternalError { message: e.to_string() },
+            Self::BudgetExceeded { message, model } => Self::BudgetExceeded {
+                message: message.clone(),
+                model: model.clone(),
+            },
+            Self::HookRejected { message } => Self::HookRejected { message: message.clone() },
+            Self::InternalError { message } => Self::InternalError { message: message.clone() },
+            Self::OutboundForbidden { url, reason } => Self::OutboundForbidden {
+                url: url.clone(),
+                reason: reason.clone(),
+            },
+            Self::IdempotencyConflict { key } => Self::IdempotencyConflict { key: key.clone() },
+            Self::IdempotencyInFlight { key } => Self::IdempotencyInFlight { key: key.clone() },
+        }
+    }
+
     /// Create from an HTTP status code, an API error response body, and an
     /// optional `Retry-After` duration already parsed from the response header.
     ///

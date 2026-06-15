@@ -193,6 +193,14 @@ where
 
             let start = Instant::now();
 
+            // Arm the cancellation guard: if this future is dropped before
+            // reaching the normal completion path (e.g. the caller drops the
+            // future mid-flight), the guard's `Drop` impl fires a detached
+            // `Cancelled` event to the sink.
+            let mut cancel_guard = usage_sink
+                .as_ref()
+                .map(|s| CancellationGuard::new(Arc::clone(s), req_clone.clone(), start));
+
             match fut.await {
                 Ok(resp) => {
                     let latency_ms = start.elapsed().as_millis() as u64;
@@ -209,15 +217,25 @@ where
                         }
                     }
 
-                    if let Some(sink) = &usage_sink {
+                    // Disarm the cancellation guard before the sink emit so that
+                    // `Drop` does not also fire a `Cancelled` event.
+                    if let Some(guard) = cancel_guard.take() {
+                        guard.disarm();
+                    }
+
+                    if let Some(sink) = usage_sink {
                         let event = build_usage_event(&req_clone, &resp, latency_ms, UsageEventOutcome::Success);
-                        if let Err(err) = sink.emit_erased(event).await {
-                            tracing::warn!(
-                                target: "gen_ai.usage",
-                                error = %err,
-                                "usage sink emit failed"
-                            );
-                        }
+                        // Detach the sink call so slow backends don't add to
+                        // caller-observed latency.  Errors are logged by the task.
+                        tokio::spawn(async move {
+                            if let Err(err) = sink.emit_erased(event).await {
+                                tracing::warn!(
+                                    target: "gen_ai.usage",
+                                    error = %err,
+                                    "usage sink emit failed"
+                                );
+                            }
+                        });
                     }
 
                     Ok(resp)
@@ -237,22 +255,89 @@ where
                         }
                     }
 
-                    if let Some(sink) = &usage_sink {
+                    // Disarm before emitting the real error event.
+                    if let Some(guard) = cancel_guard.take() {
+                        guard.disarm();
+                    }
+
+                    if let Some(sink) = usage_sink {
                         let outcome = classify_error_outcome(&err);
                         let event = build_error_usage_event(&req_clone, latency_ms, outcome);
-                        if let Err(sink_err) = sink.emit_erased(event).await {
-                            tracing::warn!(
-                                target: "gen_ai.usage",
-                                error = %sink_err,
-                                "usage sink emit failed on error path"
-                            );
-                        }
+                        // Detach: slow sink must not add to error-path latency.
+                        tokio::spawn(async move {
+                            if let Err(sink_err) = sink.emit_erased(event).await {
+                                tracing::warn!(
+                                    target: "gen_ai.usage",
+                                    error = %sink_err,
+                                    "usage sink emit failed on error path"
+                                );
+                            }
+                        });
                     }
 
                     Err(err)
                 }
             }
         })
+    }
+}
+
+// ─── CancellationGuard ───────────────────────────────────────────────────────
+
+/// RAII guard that emits a [`UsageEventOutcome::Cancelled`] event when dropped
+/// while still armed.
+///
+/// The guard is created just before the inner service future is awaited and
+/// disarmed immediately before the normal sink emit on both success and error
+/// paths.  If the enclosing future is dropped mid-flight (caller cancellation),
+/// the guard fires a fire-and-forget `Cancelled` event via [`tokio::spawn`].
+struct CancellationGuard {
+    /// The sink to emit to, wrapped in an `Option` so `disarm` can take it.
+    inner: Option<CancellationGuardInner>,
+}
+
+struct CancellationGuardInner {
+    sink: Arc<dyn UsageSinkErased>,
+    req: LlmRequest,
+    start: Instant,
+}
+
+impl CancellationGuard {
+    fn new(sink: Arc<dyn UsageSinkErased>, req: LlmRequest, start: Instant) -> Self {
+        Self {
+            inner: Some(CancellationGuardInner { sink, req, start }),
+        }
+    }
+
+    /// Disarm: drop the guard without firing the cancellation event.
+    fn disarm(mut self) {
+        self.inner = None;
+    }
+}
+
+impl Drop for CancellationGuard {
+    fn drop(&mut self) {
+        let Some(inner) = self.inner.take() else { return };
+
+        let latency_ms = inner.start.elapsed().as_millis() as u64;
+        let event = build_error_usage_event(&inner.req, latency_ms, UsageEventOutcome::Cancelled);
+        let sink = inner.sink;
+
+        // Fire-and-forget: if a Tokio runtime is active, spawn the emit.
+        // If not (e.g. a synchronous test context drops the future), the
+        // event is silently discarded — correct behavior since there is no
+        // runtime to deliver it to anyway.
+        if let Ok(handle) = tokio::runtime::Handle::try_current() {
+            handle.spawn(async move {
+                if let Err(err) = sink.emit_erased(event).await {
+                    tracing::warn!(
+                        target: "gen_ai.usage",
+                        error = %err,
+                        "usage sink emit failed for cancelled request"
+                    );
+                }
+            });
+        }
     }
 }
 
@@ -362,9 +447,48 @@ mod tests {
     use tower::Service as _;
 
     use super::*;
+    use crate::observability::usage::{UsageEvent, UsageSinkError};
+    use crate::observability::UsageSink;
     use crate::tower::service::LlmService;
     use crate::tower::tests_common::{MockClient, chat_req};
     use crate::tower::types::{LlmRequest, LlmResponse};
+
+    // ── Shared sink helpers for new tests ────────────────────────────────────
+
+    /// In-test sink that records every received event.
+    #[derive(Default)]
+    struct VecSink {
+        events: Arc<std::sync::Mutex<Vec<UsageEvent>>>,
+    }
+
+    impl VecSink {
+        #[allow(dead_code)]
+        fn collected(&self) -> Vec<UsageEvent> {
+            self.events.lock().expect("lock poisoned").clone()
+        }
+    }
+
+    impl UsageSink for VecSink {
+        async fn emit(&self, event: UsageEvent) -> std::result::Result<(), UsageSinkError> {
+            self.events.lock().expect("lock poisoned").push(event);
+            Ok(())
+        }
+    }
+
+    /// Sink that waits 500 ms before completing — used to verify non-blocking
+    /// behaviour on the response path.
+    #[derive(Default)]
+    struct SlowSink {
+        events: Arc<std::sync::Mutex<Vec<UsageEvent>>>,
+    }
+
+    impl UsageSink for SlowSink {
+        async fn emit(&self, event: UsageEvent) -> std::result::Result<(), UsageSinkError> {
+            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            self.events.lock().expect("lock poisoned").push(event);
+            Ok(())
+        }
+    }
 
     // ── Test hook implementations ────────────────────────────────────────────
 
@@ -527,5 +651,83 @@ mod tests {
         let recorded = order.lock().expect("lock poisoned").clone();
         // Pre-hooks: 1, 2, 3 then post-hooks: 101, 102, 103
         assert_eq!(recorded, vec![1, 2, 3, 101, 102, 103]);
+    }
+
+    /// Verify that a slow sink does not block the caller's response path.
+    ///
+    /// The `SlowSink` sleeps 500 ms in `emit`; the request must return in
+    /// under 100 ms because the sink is spawned detached.
+    #[tokio::test]
+    async fn sink_does_not_block_response_path() {
+        let sink = Arc::new(SlowSink::default());
+        let inner = LlmService::new(MockClient::ok());
+        let mut svc = HooksLayer::new(vec![]).with_usage_sink(Arc::clone(&sink)).layer(inner);
+
+        let t0 = tokio::time::Instant::now();
+        svc.call(LlmRequest::Chat(chat_req("gpt-4")))
+            .await
+            .expect("should succeed");
+        let elapsed = t0.elapsed();
+
+        assert!(
+            elapsed < std::time::Duration::from_millis(100),
+            "response should return in <100 ms even with a slow sink; got {elapsed:?}"
+        );
+    }
+
+    /// When the response future is dropped before completion, the
+    /// `CancellationGuard` must fire exactly one `Cancelled` event.
+    #[tokio::test]
+    async fn cancelled_outcome_emitted_when_future_dropped() {
+        use std::task::{Context, Poll};
+
+        use tower::Service as _;
+
+        // An inner service that never resolves — its future just parks forever.
+        #[derive(Clone)]
+        struct PendingService;
+
+        impl tower::Service<LlmRequest> for PendingService {
+            type Response = LlmResponse;
+            type Error = LiterLlmError;
+            type Future = BoxFuture<'static, Result<LlmResponse>>;
+
+            fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<()>> {
+                Poll::Ready(Ok(()))
+            }
+
+            fn call(&mut self, _req: LlmRequest) -> Self::Future {
+                Box::pin(std::future::pending())
+            }
+        }
+
+        let sink = Arc::new(VecSink::default());
+        let events_ref = Arc::clone(&sink.events);
+
+        let mut svc = HooksLayer::new(vec![]).with_usage_sink(sink).layer(PendingService);
+
+        // Spawn the future so we can abort it to simulate cancellation.
+        let handle = tokio::spawn(async move {
+            svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await
+        });
+
+        // Give the future a tick to start (so the CancellationGuard is armed).
+        tokio::task::yield_now().await;
+
+        // Drop / abort the future before it completes.
+        handle.abort();
+        // Wait for the abort to complete and the guard's Drop to fire.
+        let _ = handle.await;
+
+        // Give the spawned emit task a moment to complete.
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+
+        let collected = events_ref.lock().expect("lock poisoned").clone();
+        assert_eq!(collected.len(), 1, "exactly one Cancelled event must be emitted");
+        assert_eq!(
+            collected[0].outcome,
+            crate::observability::UsageEventOutcome::Cancelled,
+            "outcome must be Cancelled"
+        );
     }
 }

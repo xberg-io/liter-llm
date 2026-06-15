@@ -249,6 +249,9 @@ async fn hooks_layer_emits_usage_event_on_success() {
     let req = LlmRequest::Chat(chat_req("openai/gpt-4o")).with_tenant_id("t-1");
     svc.call(req).await.expect("should succeed");
 
+    // The sink is emitted from a detached tokio::spawn; yield to let it land.
+    tokio::task::yield_now().await;
+
     let events = sink.collected();
     assert_eq!(events.len(), 1, "exactly one event per request");
 
@@ -274,6 +277,9 @@ async fn hooks_layer_emits_usage_event_on_timeout() {
     let err = svc.call(req).await.expect_err("should fail with timeout");
     assert!(matches!(err, liter_llm::LiterLlmError::Timeout));
 
+    // Yield so the detached sink task can complete.
+    tokio::task::yield_now().await;
+
     let events = sink.collected();
     assert_eq!(events.len(), 1, "one event even on error");
     assert_eq!(events[0].outcome, UsageEventOutcome::TimedOut);
@@ -290,6 +296,9 @@ async fn hooks_layer_uses_idempotency_key_as_request_id() {
 
     let req = LlmRequest::Chat(chat_req("gpt-4")).with_idempotency_key("my-idem-key");
     svc.call(req).await.expect("should succeed");
+
+    // Yield so the detached sink task can complete.
+    tokio::task::yield_now().await;
 
     let events = sink.collected();
     assert_eq!(events[0].request_id, "my-idem-key");
