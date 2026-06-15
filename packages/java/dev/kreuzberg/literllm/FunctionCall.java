@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
@@ -16,37 +16,41 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 @SuppressWarnings("PMD")
 public record FunctionCall(
     @JsonProperty("name") String name,
-    @JsonProperty("arguments") String arguments) {
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  // CPD-OFF
-  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-  public static final class Builder {
-
-    private String name = "";
-    private String arguments = "";
-
-    /** Sets the name field. */
-    @JsonProperty("name")
-    public Builder withName(final String value) {
-      this.name = value;
-      return this;
+    @JsonProperty("arguments") String arguments
+) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    /** Sets the arguments field. */
-    @JsonProperty("arguments")
-    public Builder withArguments(final String value) {
-      this.arguments = value;
-      return this;
-    }
+    // CPD-OFF
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+    public static final class Builder {
 
-    /** Builds the FunctionCall instance. */
-    public FunctionCall build() {
-      return new FunctionCall(name, arguments);
+private String name = "";
+private String arguments = "";
+
+        /** Sets the name field. */
+        @JsonProperty("name")
+        public Builder withName(final String value) {
+            this.name = value;
+            return this;
+        }
+
+        /** Sets the arguments field. */
+        @JsonProperty("arguments")
+        public Builder withArguments(final String value) {
+            this.arguments = value;
+            return this;
+        }
+
+        /** Builds the FunctionCall instance. */
+        public FunctionCall build() {
+            return new FunctionCall(
+                name,
+                arguments
+            );
+        }
     }
-  }
-  // CPD-ON
+    // CPD-ON
 }

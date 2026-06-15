@@ -2,13 +2,13 @@
 package dev.kreuzberg.literllm;
 
 public class SerializationException extends LiterLlmErrorException {
-  /** Creates a new SerializationException with the given message. */
-  public SerializationException(final String message) {
-    super(message);
-  }
+    /** Creates a new SerializationException with the given message. */
+    public SerializationException(final String message) {
+        super(message);
+    }
 
-  /** Creates a new SerializationException with the given message and cause. */
-  public SerializationException(final String message, final Throwable cause) {
-    super(message, cause);
-  }
+    /** Creates a new SerializationException with the given message and cause. */
+    public SerializationException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
 }

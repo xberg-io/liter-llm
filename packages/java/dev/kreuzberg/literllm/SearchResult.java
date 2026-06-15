@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -19,53 +19,59 @@ public record SearchResult(
     @JsonProperty("title") String title,
     @JsonProperty("url") String url,
     @JsonProperty("snippet") String snippet,
-    @Nullable @JsonProperty("date") String date) {
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  // CPD-OFF
-  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-  public static final class Builder {
-
-    private String title = "";
-    private String url = "";
-    private String snippet = "";
-    private String date = null;
-
-    /** Sets the title field. */
-    @JsonProperty("title")
-    public Builder withTitle(final String value) {
-      this.title = value;
-      return this;
+    @Nullable @JsonProperty("date") String date
+) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    /** Sets the url field. */
-    @JsonProperty("url")
-    public Builder withUrl(final String value) {
-      this.url = value;
-      return this;
-    }
+    // CPD-OFF
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+    public static final class Builder {
 
-    /** Sets the snippet field. */
-    @JsonProperty("snippet")
-    public Builder withSnippet(final String value) {
-      this.snippet = value;
-      return this;
-    }
+private String title = "";
+private String url = "";
+private String snippet = "";
+private String date = null;
 
-    /** Sets the date field. */
-    @JsonProperty("date")
-    public Builder withDate(final @Nullable String value) {
-      this.date = value;
-      return this;
-    }
+        /** Sets the title field. */
+        @JsonProperty("title")
+        public Builder withTitle(final String value) {
+            this.title = value;
+            return this;
+        }
 
-    /** Builds the SearchResult instance. */
-    public SearchResult build() {
-      return new SearchResult(title, url, snippet, date);
+        /** Sets the url field. */
+        @JsonProperty("url")
+        public Builder withUrl(final String value) {
+            this.url = value;
+            return this;
+        }
+
+        /** Sets the snippet field. */
+        @JsonProperty("snippet")
+        public Builder withSnippet(final String value) {
+            this.snippet = value;
+            return this;
+        }
+
+        /** Sets the date field. */
+        @JsonProperty("date")
+        public Builder withDate(final @Nullable String value) {
+            this.date = value;
+            return this;
+        }
+
+        /** Builds the SearchResult instance. */
+        public SearchResult build() {
+            return new SearchResult(
+                title,
+                url,
+                snippet,
+                date
+            );
+        }
     }
-  }
-  // CPD-ON
+    // CPD-ON
 }

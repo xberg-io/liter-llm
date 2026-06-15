@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -21,73 +21,78 @@ public record CreateTranscriptionRequest(
     @Nullable @JsonProperty("language") String language,
     @Nullable @JsonProperty("prompt") String prompt,
     @Nullable @JsonProperty("response_format") String responseFormat,
-    @Nullable @JsonProperty("temperature") Double temperature) {
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  // CPD-OFF
-  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-  public static final class Builder {
-
-    private String model = "";
-    private String file = "";
-    private String language = null;
-    private String prompt = null;
-
-    @JsonProperty("response_format")
-    private String responseFormat = null;
-
-    private Double temperature = null;
-
-    /** Sets the model field. */
-    @JsonProperty("model")
-    public Builder withModel(final String value) {
-      this.model = value;
-      return this;
+    @Nullable @JsonProperty("temperature") Double temperature
+) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    /** Sets the file field. */
-    @JsonProperty("file")
-    public Builder withFile(final String value) {
-      this.file = value;
-      return this;
-    }
+    // CPD-OFF
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+    public static final class Builder {
 
-    /** Sets the language field. */
-    @JsonProperty("language")
-    public Builder withLanguage(final @Nullable String value) {
-      this.language = value;
-      return this;
-    }
+private String model = "";
+private String file = "";
+private String language = null;
+private String prompt = null;
+        @JsonProperty("response_format")
+private String responseFormat = null;
+private Double temperature = null;
 
-    /** Sets the prompt field. */
-    @JsonProperty("prompt")
-    public Builder withPrompt(final @Nullable String value) {
-      this.prompt = value;
-      return this;
-    }
+        /** Sets the model field. */
+        @JsonProperty("model")
+        public Builder withModel(final String value) {
+            this.model = value;
+            return this;
+        }
 
-    /** Sets the responseFormat field. */
-    @JsonProperty("response_format")
-    public Builder withResponseFormat(final @Nullable String value) {
-      this.responseFormat = value;
-      return this;
-    }
+        /** Sets the file field. */
+        @JsonProperty("file")
+        public Builder withFile(final String value) {
+            this.file = value;
+            return this;
+        }
 
-    /** Sets the temperature field. */
-    @JsonProperty("temperature")
-    public Builder withTemperature(final @Nullable Double value) {
-      this.temperature = value;
-      return this;
-    }
+        /** Sets the language field. */
+        @JsonProperty("language")
+        public Builder withLanguage(final @Nullable String value) {
+            this.language = value;
+            return this;
+        }
 
-    /** Builds the CreateTranscriptionRequest instance. */
-    public CreateTranscriptionRequest build() {
-      return new CreateTranscriptionRequest(
-          model, file, language, prompt, responseFormat, temperature);
+        /** Sets the prompt field. */
+        @JsonProperty("prompt")
+        public Builder withPrompt(final @Nullable String value) {
+            this.prompt = value;
+            return this;
+        }
+
+        /** Sets the responseFormat field. */
+        @JsonProperty("response_format")
+        public Builder withResponseFormat(final @Nullable String value) {
+            this.responseFormat = value;
+            return this;
+        }
+
+        /** Sets the temperature field. */
+        @JsonProperty("temperature")
+        public Builder withTemperature(final @Nullable Double value) {
+            this.temperature = value;
+            return this;
+        }
+
+        /** Builds the CreateTranscriptionRequest instance. */
+        public CreateTranscriptionRequest build() {
+            return new CreateTranscriptionRequest(
+                model,
+                file,
+                language,
+                prompt,
+                responseFormat,
+                temperature
+            );
+        }
     }
-  }
-  // CPD-ON
+    // CPD-ON
 }

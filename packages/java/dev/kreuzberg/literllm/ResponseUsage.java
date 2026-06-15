@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
@@ -17,50 +17,53 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 public record ResponseUsage(
     @JsonProperty("input_tokens") long inputTokens,
     @JsonProperty("output_tokens") long outputTokens,
-    @JsonProperty("total_tokens") long totalTokens) {
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  // CPD-OFF
-  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-  public static final class Builder {
-
-    @JsonProperty("input_tokens")
-    private long inputTokens = 0;
-
-    @JsonProperty("output_tokens")
-    private long outputTokens = 0;
-
-    @JsonProperty("total_tokens")
-    private long totalTokens = 0;
-
-    /** Sets the inputTokens field. */
-    @JsonProperty("input_tokens")
-    public Builder withInputTokens(final long value) {
-      this.inputTokens = value;
-      return this;
+    @JsonProperty("total_tokens") long totalTokens
+) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    /** Sets the outputTokens field. */
-    @JsonProperty("output_tokens")
-    public Builder withOutputTokens(final long value) {
-      this.outputTokens = value;
-      return this;
-    }
+    // CPD-OFF
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+    public static final class Builder {
 
-    /** Sets the totalTokens field. */
-    @JsonProperty("total_tokens")
-    public Builder withTotalTokens(final long value) {
-      this.totalTokens = value;
-      return this;
-    }
+        @JsonProperty("input_tokens")
+private long inputTokens = 0;
+        @JsonProperty("output_tokens")
+private long outputTokens = 0;
+        @JsonProperty("total_tokens")
+private long totalTokens = 0;
 
-    /** Builds the ResponseUsage instance. */
-    public ResponseUsage build() {
-      return new ResponseUsage(inputTokens, outputTokens, totalTokens);
+        /** Sets the inputTokens field. */
+        @JsonProperty("input_tokens")
+        public Builder withInputTokens(final long value) {
+            this.inputTokens = value;
+            return this;
+        }
+
+        /** Sets the outputTokens field. */
+        @JsonProperty("output_tokens")
+        public Builder withOutputTokens(final long value) {
+            this.outputTokens = value;
+            return this;
+        }
+
+        /** Sets the totalTokens field. */
+        @JsonProperty("total_tokens")
+        public Builder withTotalTokens(final long value) {
+            this.totalTokens = value;
+            return this;
+        }
+
+        /** Builds the ResponseUsage instance. */
+        public ResponseUsage build() {
+            return new ResponseUsage(
+                inputTokens,
+                outputTokens,
+                totalTokens
+            );
+        }
     }
-  }
-  // CPD-ON
+    // CPD-ON
 }

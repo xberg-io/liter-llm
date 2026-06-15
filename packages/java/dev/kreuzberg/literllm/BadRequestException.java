@@ -5,13 +5,13 @@ package dev.kreuzberg.literllm;
  * `status` preserves the exact HTTP status code received (400, 405, 413, 422, …).
  */
 public class BadRequestException extends LiterLlmErrorException {
-  /** Creates a new BadRequestException with the given message. */
-  public BadRequestException(final String message) {
-    super(message);
-  }
+    /** Creates a new BadRequestException with the given message. */
+    public BadRequestException(final String message) {
+        super(message);
+    }
 
-  /** Creates a new BadRequestException with the given message and cause. */
-  public BadRequestException(final String message, final Throwable cause) {
-    super(message, cause);
-  }
+    /** Creates a new BadRequestException with the given message and cause. */
+    public BadRequestException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
 }

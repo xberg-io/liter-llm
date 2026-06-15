@@ -3,11 +3,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import java.util.List;
 
 /**
  * A single embedding vector.
@@ -18,45 +18,50 @@ import java.util.List;
 public record EmbeddingObject(
     @JsonProperty("object") String object,
     @JsonProperty("embedding") List<Double> embedding,
-    @JsonProperty("index") int index) {
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  // CPD-OFF
-  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-  public static final class Builder {
-
-    private String object = "";
-    private List<Double> embedding = List.of();
-    private int index = 0;
-
-    /** Sets the object field. */
-    @JsonProperty("object")
-    public Builder withObject(final String value) {
-      this.object = value;
-      return this;
+    @JsonProperty("index") int index
+) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    /** Sets the embedding field. */
-    @JsonProperty("embedding")
-    public Builder withEmbedding(final List<Double> value) {
-      this.embedding = value;
-      return this;
-    }
+    // CPD-OFF
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+    public static final class Builder {
 
-    /** Sets the index field. */
-    @JsonProperty("index")
-    public Builder withIndex(final int value) {
-      this.index = value;
-      return this;
-    }
+private String object = "";
+private List<Double> embedding = List.of();
+private int index = 0;
 
-    /** Builds the EmbeddingObject instance. */
-    public EmbeddingObject build() {
-      return new EmbeddingObject(object, embedding, index);
+        /** Sets the object field. */
+        @JsonProperty("object")
+        public Builder withObject(final String value) {
+            this.object = value;
+            return this;
+        }
+
+        /** Sets the embedding field. */
+        @JsonProperty("embedding")
+        public Builder withEmbedding(final List<Double> value) {
+            this.embedding = value;
+            return this;
+        }
+
+        /** Sets the index field. */
+        @JsonProperty("index")
+        public Builder withIndex(final int value) {
+            this.index = value;
+            return this;
+        }
+
+        /** Builds the EmbeddingObject instance. */
+        public EmbeddingObject build() {
+            return new EmbeddingObject(
+                object,
+                embedding,
+                index
+            );
+        }
     }
-  }
-  // CPD-ON
+    // CPD-ON
 }

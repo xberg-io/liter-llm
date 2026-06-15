@@ -3,11 +3,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -21,67 +21,71 @@ public record BatchListResponse(
     @JsonProperty("data") List<BatchObject> data,
     @Nullable @JsonProperty("has_more") Boolean hasMore,
     @Nullable @JsonProperty("first_id") String firstId,
-    @Nullable @JsonProperty("last_id") String lastId) {
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  // CPD-OFF
-  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-  public static final class Builder {
-
-    private String object = "";
-    private List<BatchObject> data = List.of();
-
-    @JsonProperty("has_more")
-    private Boolean hasMore = null;
-
-    @JsonProperty("first_id")
-    private String firstId = null;
-
-    @JsonProperty("last_id")
-    private String lastId = null;
-
-    /** Sets the object field. */
-    @JsonProperty("object")
-    public Builder withObject(final String value) {
-      this.object = value;
-      return this;
+    @Nullable @JsonProperty("last_id") String lastId
+) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    /** Sets the data field. */
-    @JsonProperty("data")
-    public Builder withData(final List<BatchObject> value) {
-      this.data = value;
-      return this;
-    }
+    // CPD-OFF
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+    public static final class Builder {
 
-    /** Sets the hasMore field. */
-    @JsonProperty("has_more")
-    public Builder withHasMore(final @Nullable Boolean value) {
-      this.hasMore = value;
-      return this;
-    }
+private String object = "";
+private List<BatchObject> data = List.of();
+        @JsonProperty("has_more")
+private Boolean hasMore = null;
+        @JsonProperty("first_id")
+private String firstId = null;
+        @JsonProperty("last_id")
+private String lastId = null;
 
-    /** Sets the firstId field. */
-    @JsonProperty("first_id")
-    public Builder withFirstId(final @Nullable String value) {
-      this.firstId = value;
-      return this;
-    }
+        /** Sets the object field. */
+        @JsonProperty("object")
+        public Builder withObject(final String value) {
+            this.object = value;
+            return this;
+        }
 
-    /** Sets the lastId field. */
-    @JsonProperty("last_id")
-    public Builder withLastId(final @Nullable String value) {
-      this.lastId = value;
-      return this;
-    }
+        /** Sets the data field. */
+        @JsonProperty("data")
+        public Builder withData(final List<BatchObject> value) {
+            this.data = value;
+            return this;
+        }
 
-    /** Builds the BatchListResponse instance. */
-    public BatchListResponse build() {
-      return new BatchListResponse(object, data, hasMore, firstId, lastId);
+        /** Sets the hasMore field. */
+        @JsonProperty("has_more")
+        public Builder withHasMore(final @Nullable Boolean value) {
+            this.hasMore = value;
+            return this;
+        }
+
+        /** Sets the firstId field. */
+        @JsonProperty("first_id")
+        public Builder withFirstId(final @Nullable String value) {
+            this.firstId = value;
+            return this;
+        }
+
+        /** Sets the lastId field. */
+        @JsonProperty("last_id")
+        public Builder withLastId(final @Nullable String value) {
+            this.lastId = value;
+            return this;
+        }
+
+        /** Builds the BatchListResponse instance. */
+        public BatchListResponse build() {
+            return new BatchListResponse(
+                object,
+                data,
+                hasMore,
+                firstId,
+                lastId
+            );
+        }
     }
-  }
-  // CPD-ON
+    // CPD-ON
 }

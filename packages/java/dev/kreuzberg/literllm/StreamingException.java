@@ -10,13 +10,13 @@ package dev.kreuzberg.literllm;
  * field contains a human-readable description of the specific failure.
  */
 public class StreamingException extends LiterLlmErrorException {
-  /** Creates a new StreamingException with the given message. */
-  public StreamingException(final String message) {
-    super(message);
-  }
+    /** Creates a new StreamingException with the given message. */
+    public StreamingException(final String message) {
+        super(message);
+    }
 
-  /** Creates a new StreamingException with the given message and cause. */
-  public StreamingException(final String message, final Throwable cause) {
-    super(message, cause);
-  }
+    /** Creates a new StreamingException with the given message and cause. */
+    public StreamingException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
 }

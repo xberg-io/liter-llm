@@ -20,20 +20,8 @@ class LiterLlmBridge {
   /// Returns [`LiterLlmError`] if the underlying HTTP client cannot be
   /// constructed, or if the resolved provider configuration is invalid.
   /// throws anyhow::Error on failure
-  static Future<DefaultClient> createClient(
-    String apiKey, {
-    String? baseUrl,
-    int? timeoutSecs,
-    int? maxRetries,
-    String? modelHint,
-  }) async {
-    return await rust_bridge.createClient(
-      apiKey: apiKey,
-      baseUrl: baseUrl,
-      timeoutSecs: timeoutSecs,
-      maxRetries: maxRetries,
-      modelHint: modelHint,
-    );
+  static Future<DefaultClient> createClient(String apiKey, {String? baseUrl, int? timeoutSecs, int? maxRetries, String? modelHint}) async {
+    return await rust_bridge.createClient(apiKey: apiKey, baseUrl: baseUrl, timeoutSecs: timeoutSecs, maxRetries: maxRetries, modelHint: modelHint);
   }
 
   /// Create a new LLM client from a JSON string.
@@ -59,9 +47,7 @@ class LiterLlmBridge {
   /// Returns an error if the config is invalid (empty name, empty base_url, or
   /// no model prefixes).
   /// throws anyhow::Error on failure
-  static Future<void> registerCustomProvider(
-    CustomProviderConfig config,
-  ) async {
+  static Future<void> registerCustomProvider(CustomProviderConfig config) async {
     return await rust_bridge.registerCustomProvider(config: config);
   }
 
@@ -129,16 +115,8 @@ class LiterLlmBridge {
   /// // 1000 * 0.0000025 + 500 * 0.00001 = 0.0025 + 0.005 = 0.0075
   /// assert!((usd - 0.0075).abs() < 1e-9);
   /// ```
-  static Future<double?> completionCost(
-    String model,
-    int promptTokens,
-    int completionTokens,
-  ) async {
-    return await rust_bridge.completionCost(
-      model: model,
-      promptTokens: promptTokens,
-      completionTokens: completionTokens,
-    );
+  static Future<double?> completionCost(String model, int promptTokens, int completionTokens) async {
+    return await rust_bridge.completionCost(model: model, promptTokens: promptTokens, completionTokens: completionTokens);
   }
 
   /// Calculate the estimated cost of a completion, accounting for cached
@@ -153,18 +131,8 @@ class LiterLlmBridge {
   ///
   /// Returns `None` if the model is not present in the embedded pricing
   /// registry, mirroring [`completion_cost`].
-  static Future<double?> completionCostWithCache(
-    String model,
-    int promptTokens,
-    int cachedTokens,
-    int completionTokens,
-  ) async {
-    return await rust_bridge.completionCostWithCache(
-      model: model,
-      promptTokens: promptTokens,
-      cachedTokens: cachedTokens,
-      completionTokens: completionTokens,
-    );
+  static Future<double?> completionCostWithCache(String model, int promptTokens, int cachedTokens, int completionTokens) async {
+    return await rust_bridge.completionCostWithCache(model: model, promptTokens: promptTokens, cachedTokens: cachedTokens, completionTokens: completionTokens);
   }
 
   /// Remove all guardrails from the global registry.
@@ -205,10 +173,7 @@ class LiterLlmBridge {
   /// Returns [`LiterLlmError::BadRequest`] if the tokenizer cannot be loaded or
   /// if tokenization fails for any message.
   /// throws anyhow::Error on failure
-  static Future<int> countRequestTokens(
-    String model,
-    ChatCompletionRequest req,
-  ) async {
+  static Future<int> countRequestTokens(String model, ChatCompletionRequest req) async {
     return await rust_bridge.countRequestTokens(model: model, req: req);
   }
 
@@ -216,48 +181,24 @@ class LiterLlmBridge {
   ///
   /// Call from cache layer implementations to emit `gen_ai.cache.hit`.
   /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordCacheHit(
-    String system,
-    String model,
-    String operation,
-  ) async {
-    return await rust_bridge.recordCacheHit(
-      system: system,
-      model: model,
-      operation: operation,
-    );
+  static Future<void> recordCacheHit(String system, String model, String operation) async {
+    return await rust_bridge.recordCacheHit(system: system, model: model, operation: operation);
   }
 
   /// Record a cache miss metric.
   ///
   /// Call from cache layer implementations to emit `gen_ai.cache.miss`.
   /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordCacheMiss(
-    String system,
-    String model,
-    String operation,
-  ) async {
-    return await rust_bridge.recordCacheMiss(
-      system: system,
-      model: model,
-      operation: operation,
-    );
+  static Future<void> recordCacheMiss(String system, String model, String operation) async {
+    return await rust_bridge.recordCacheMiss(system: system, model: model, operation: operation);
   }
 
   /// Record a stale cache metric.
   ///
   /// Call from cache layer implementations to emit `gen_ai.cache.stale`.
   /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordCacheStale(
-    String system,
-    String model,
-    String operation,
-  ) async {
-    return await rust_bridge.recordCacheStale(
-      system: system,
-      model: model,
-      operation: operation,
-    );
+  static Future<void> recordCacheStale(String system, String model, String operation) async {
+    return await rust_bridge.recordCacheStale(system: system, model: model, operation: operation);
   }
 
   /// Record a circuit breaker trip.
@@ -272,16 +213,8 @@ class LiterLlmBridge {
   ///
   /// Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
   /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordRetryAttempt(
-    String system,
-    String model,
-    String operation,
-  ) async {
-    return await rust_bridge.recordRetryAttempt(
-      system: system,
-      model: model,
-      operation: operation,
-    );
+  static Future<void> recordRetryAttempt(String system, String model, String operation) async {
+    return await rust_bridge.recordRetryAttempt(system: system, model: model, operation: operation);
   }
 
   /// Record a per-tier cache hit.
@@ -289,16 +222,8 @@ class LiterLlmBridge {
   /// `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
   /// Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
   /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordCacheTierHit(
-    String system,
-    String model,
-    String tier,
-  ) async {
-    return await rust_bridge.recordCacheTierHit(
-      system: system,
-      model: model,
-      tier: tier,
-    );
+  static Future<void> recordCacheTierHit(String system, String model, String tier) async {
+    return await rust_bridge.recordCacheTierHit(system: system, model: model, tier: tier);
   }
 
   /// Record a per-tier cache miss.
@@ -306,16 +231,8 @@ class LiterLlmBridge {
   /// `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
   /// Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
   /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordCacheTierMiss(
-    String system,
-    String model,
-    String tier,
-  ) async {
-    return await rust_bridge.recordCacheTierMiss(
-      system: system,
-      model: model,
-      tier: tier,
-    );
+  static Future<void> recordCacheTierMiss(String system, String model, String tier) async {
+    return await rust_bridge.recordCacheTierMiss(system: system, model: model, tier: tier);
   }
 
   /// Record cumulative spend for a specific budget dimension.
@@ -324,22 +241,8 @@ class LiterLlmBridge {
   /// Call from `record` after each
   /// successful completion.  If the meter has not been initialized, this
   /// call is a no-op.
-  static Future<void> recordBudgetSpend(
-    String model,
-    String provider,
-    double costUsd, {
-    String? tenantId,
-    String? userId,
-    String? apiKeyId,
-  }) async {
-    return await rust_bridge.recordBudgetSpend(
-      model: model,
-      provider: provider,
-      tenantId: tenantId,
-      userId: userId,
-      apiKeyId: apiKeyId,
-      costUsd: costUsd,
-    );
+  static Future<void> recordBudgetSpend(String model, String provider, double costUsd, {String? tenantId, String? userId, String? apiKeyId}) async {
+    return await rust_bridge.recordBudgetSpend(model: model, provider: provider, tenantId: tenantId, userId: userId, apiKeyId: apiKeyId, costUsd: costUsd);
   }
 
   /// Record a budget-rejection event.
@@ -348,30 +251,16 @@ class LiterLlmBridge {
   /// Call from `check` when
   /// returning `Reject`.
   /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordBudgetRejection(
-    String model,
-    String provider,
-    String dimension,
-  ) async {
-    return await rust_bridge.recordBudgetRejection(
-      model: model,
-      provider: provider,
-      dimension: dimension,
-    );
+  static Future<void> recordBudgetRejection(String model, String provider, String dimension) async {
+    return await rust_bridge.recordBudgetRejection(model: model, provider: provider, dimension: dimension);
   }
 
   /// Record the lifetime of a completed Realtime WebSocket session.
   ///
   /// Emits `gen_ai.realtime.session.duration` (seconds).
   /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordRealtimeSessionDuration(
-    String provider,
-    double durationSecs,
-  ) async {
-    return await rust_bridge.recordRealtimeSessionDuration(
-      provider: provider,
-      durationSecs: durationSecs,
-    );
+  static Future<void> recordRealtimeSessionDuration(String provider, double durationSecs) async {
+    return await rust_bridge.recordRealtimeSessionDuration(provider: provider, durationSecs: durationSecs);
   }
 
   /// Record a single Realtime event being forwarded.
@@ -380,16 +269,8 @@ class LiterLlmBridge {
   /// (`"inbound"` | `"outbound"`), `gen_ai.realtime.event_type`, and
   /// `gen_ai.system`.
   /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordRealtimeEvent(
-    String provider,
-    String direction,
-    String eventType,
-  ) async {
-    return await rust_bridge.recordRealtimeEvent(
-      provider: provider,
-      direction: direction,
-      eventType: eventType,
-    );
+  static Future<void> recordRealtimeEvent(String provider, String direction, String eventType) async {
+    return await rust_bridge.recordRealtimeEvent(provider: provider, direction: direction, eventType: eventType);
   }
 
   /// Record audio bytes forwarded over a Realtime WebSocket session.
@@ -397,16 +278,8 @@ class LiterLlmBridge {
   /// Emits `gen_ai.realtime.bytes` with `gen_ai.system` and
   /// `gen_ai.realtime.direction` attributes.
   /// If the meter has not been initialized, this call is a no-op.
-  static Future<void> recordRealtimeBytes(
-    String provider,
-    String direction,
-    int byteCount,
-  ) async {
-    return await rust_bridge.recordRealtimeBytes(
-      provider: provider,
-      direction: direction,
-      byteCount: byteCount,
-    );
+  static Future<void> recordRealtimeBytes(String provider, String direction, int byteCount) async {
+    return await rust_bridge.recordRealtimeBytes(provider: provider, direction: direction, byteCount: byteCount);
   }
 
   /// Assert that `current_len + incoming` does not exceed `limit`.
@@ -422,18 +295,8 @@ class LiterLlmBridge {
   /// buffer.push_str(chunk_str);
   /// ```
   /// throws anyhow::Error on failure
-  static Future<void> checkBound(
-    String context,
-    int currentLen,
-    int incoming,
-    int limit,
-  ) async {
-    return await rust_bridge.checkBound(
-      context: context,
-      currentLen: currentLen,
-      incoming: incoming,
-      limit: limit,
-    );
+  static Future<void> checkBound(String context, int currentLen, int incoming, int limit) async {
+    return await rust_bridge.checkBound(context: context, currentLen: currentLen, incoming: incoming, limit: limit);
   }
 
   /// Install the `ring` crypto provider as the rustls process default, idempotently.
@@ -456,10 +319,8 @@ class LiterLlmBridge {
     return await rust_bridge.ensureCryptoProvider();
   }
 
-  static Stream<ChatCompletionChunk> chatStream(
-    DefaultClient defaultClient,
-    ChatCompletionRequest req,
-  ) {
+  static Stream<ChatCompletionChunk> chatStream(DefaultClient defaultClient, ChatCompletionRequest req) {
     return defaultClient.chatStream(req: req);
   }
+
 }

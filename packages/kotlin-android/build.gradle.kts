@@ -90,22 +90,20 @@ tasks.register("copyHostJni", Copy::class) {
         description = "Copy host JNI library to test resources"
         dependsOn("buildHostJni")
 
-        val hostPlatform =
-            when {
-                System.getProperty("os.name").lowercase().contains("mac") -> "darwin"
-                System.getProperty("os.name").lowercase().contains("win") -> "windows"
-                else -> "linux"
-            }
+        val hostPlatform = when {
+            System.getProperty("os.name").lowercase().contains("mac") -> "darwin"
+            System.getProperty("os.name").lowercase().contains("win") -> "windows"
+            else -> "linux"
+        }
         val jniCratePath = file("../../crates/liter-llm-jni")
         val buildDir = jniCratePath.resolve("target/release")
 
         // Map host platform to library filename
-        val libName =
-            when (hostPlatform) {
-                "darwin" -> "libliterllm_jni.dylib"
-                "windows" -> "literllm_jni.dll"
-                else -> "libliterllm_jni.so" // linux
-            }
+        val libName = when (hostPlatform) {
+            "darwin" -> "libliterllm_jni.dylib"
+            "windows" -> "literllm_jni.dll"
+            else -> "libliterllm_jni.so"  // linux
+        }
 
         from(buildDir) {
             include(libName)
@@ -116,18 +114,14 @@ tasks.register("copyHostJni", Copy::class) {
 
 tasks.withType<Test> {
     if (project.properties["alef.skipHostJni"] != "true") {
-        val hostPlatform =
-            when {
-                System.getProperty("os.name").lowercase().contains("mac") -> "darwin"
-                System.getProperty("os.name").lowercase().contains("win") -> "windows"
-                else -> "linux"
-            }
+        val hostPlatform = when {
+            System.getProperty("os.name").lowercase().contains("mac") -> "darwin"
+            System.getProperty("os.name").lowercase().contains("win") -> "windows"
+            else -> "linux"
+        }
         systemProperty(
             "java.library.path",
-            project.layout.projectDirectory
-                .dir("src/test/resources/host-jni/$hostPlatform")
-                .asFile
-                .absolutePath,
+            project.layout.projectDirectory.dir("src/test/resources/host-jni/$hostPlatform").asFile.absolutePath
         )
         dependsOn("copyHostJni")
     }
@@ -137,22 +131,18 @@ tasks.withType<Test> {
 // `src/test/resources` tree into the unit-test runtime classpath. They consume
 // the dylib emitted by `copyHostJni`, so AGP 8.10+ requires an explicit
 // dependency declaration to satisfy Gradle's task-output validation.
-tasks
-    .matching { it.name.startsWith("processDebug") || it.name.startsWith("processRelease") }
-    .configureEach {
-        if (project.properties["alef.skipHostJni"] != "true" && name.contains("UnitTestJavaRes")) {
-            dependsOn("copyHostJni")
-        }
+tasks.matching { it.name.startsWith("processDebug") || it.name.startsWith("processRelease") }.configureEach {
+    if (project.properties["alef.skipHostJni"] != "true" && name.contains("UnitTestJavaRes")) {
+        dependsOn("copyHostJni")
     }
+}
 
 mavenPublishing {
-    configure(
-        AndroidSingleVariantLibrary(
-            variant = "release",
-            sourcesJar = com.vanniktech.maven.publish.SourcesJar.Sources(),
-            javadocJar = com.vanniktech.maven.publish.JavadocJar.Empty(),
-        )
-    )
+    configure(AndroidSingleVariantLibrary(
+        variant = "release",
+        sourcesJar = com.vanniktech.maven.publish.SourcesJar.Sources(),
+        javadocJar = com.vanniktech.maven.publish.JavadocJar.Empty(),
+    ))
 
     publishToMavenCentral()
     signAllPublications()

@@ -13,21 +13,24 @@ import java.util.Map;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", visible = false)
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = CacheBackend.Memory.class, name = "memory"),
-  @JsonSubTypes.Type(value = CacheBackend.OpenDal.class, name = "open_dal")
+    @JsonSubTypes.Type(value = CacheBackend.Memory.class, name = "memory"),
+    @JsonSubTypes.Type(value = CacheBackend.OpenDal.class, name = "open_dal")
 })
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 public sealed interface CacheBackend {
 
-  /**
-   * In-memory LRU cache (default). No external dependencies.
-   */
-  record Memory() implements CacheBackend {}
+    /**
+     * In-memory LRU cache (default). No external dependencies.
+     */
+    record Memory() implements CacheBackend {
+    }
 
-  /**
-   * OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.).
-   */
-  record OpenDal(
-      @JsonProperty("scheme") String scheme,
-      @JsonProperty("config") Map<String, String> config) implements CacheBackend {}
+    /**
+     * OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.).
+     */
+    record OpenDal(
+        @JsonProperty("scheme") String scheme,
+        @JsonProperty("config") Map<String, String> config
+    ) implements CacheBackend {
+    }
 }

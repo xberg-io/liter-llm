@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -18,48 +18,51 @@ import org.jspecify.annotations.Nullable;
 public record ToolMessage(
     @JsonProperty("content") String content,
     @JsonProperty("tool_call_id") String toolCallId,
-    @Nullable @JsonProperty("name") String name) {
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  // CPD-OFF
-  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-  public static final class Builder {
-
-    private String content = "";
-
-    @JsonProperty("tool_call_id")
-    private String toolCallId = "";
-
-    private String name = null;
-
-    /** Sets the content field. */
-    @JsonProperty("content")
-    public Builder withContent(final String value) {
-      this.content = value;
-      return this;
+    @Nullable @JsonProperty("name") String name
+) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    /** Sets the toolCallId field. */
-    @JsonProperty("tool_call_id")
-    public Builder withToolCallId(final String value) {
-      this.toolCallId = value;
-      return this;
-    }
+    // CPD-OFF
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+    public static final class Builder {
 
-    /** Sets the name field. */
-    @JsonProperty("name")
-    public Builder withName(final @Nullable String value) {
-      this.name = value;
-      return this;
-    }
+private String content = "";
+        @JsonProperty("tool_call_id")
+private String toolCallId = "";
+private String name = null;
 
-    /** Builds the ToolMessage instance. */
-    public ToolMessage build() {
-      return new ToolMessage(content, toolCallId, name);
+        /** Sets the content field. */
+        @JsonProperty("content")
+        public Builder withContent(final String value) {
+            this.content = value;
+            return this;
+        }
+
+        /** Sets the toolCallId field. */
+        @JsonProperty("tool_call_id")
+        public Builder withToolCallId(final String value) {
+            this.toolCallId = value;
+            return this;
+        }
+
+        /** Sets the name field. */
+        @JsonProperty("name")
+        public Builder withName(final @Nullable String value) {
+            this.name = value;
+            return this;
+        }
+
+        /** Builds the ToolMessage instance. */
+        public ToolMessage build() {
+            return new ToolMessage(
+                content,
+                toolCallId,
+                name
+            );
+        }
     }
-  }
-  // CPD-ON
+    // CPD-ON
 }

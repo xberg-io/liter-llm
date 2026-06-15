@@ -3,8 +3,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
@@ -16,37 +16,41 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 @SuppressWarnings("PMD")
 public record AudioContent(
     @JsonProperty("data") String data,
-    @JsonProperty("format") String format) {
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  // CPD-OFF
-  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-  public static final class Builder {
-
-    private String data = "";
-    private String format = "";
-
-    /** Sets the data field. */
-    @JsonProperty("data")
-    public Builder withData(final String value) {
-      this.data = value;
-      return this;
+    @JsonProperty("format") String format
+) {
+    public static Builder builder() {
+        return new Builder();
     }
 
-    /** Sets the format field. */
-    @JsonProperty("format")
-    public Builder withFormat(final String value) {
-      this.format = value;
-      return this;
-    }
+    // CPD-OFF
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+    public static final class Builder {
 
-    /** Builds the AudioContent instance. */
-    public AudioContent build() {
-      return new AudioContent(data, format);
+private String data = "";
+private String format = "";
+
+        /** Sets the data field. */
+        @JsonProperty("data")
+        public Builder withData(final String value) {
+            this.data = value;
+            return this;
+        }
+
+        /** Sets the format field. */
+        @JsonProperty("format")
+        public Builder withFormat(final String value) {
+            this.format = value;
+            return this;
+        }
+
+        /** Builds the AudioContent instance. */
+        public AudioContent build() {
+            return new AudioContent(
+                data,
+                format
+            );
+        }
     }
-  }
-  // CPD-ON
+    // CPD-ON
 }
