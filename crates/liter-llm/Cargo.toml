@@ -24,6 +24,10 @@ ignored = ["dashmap", "tower-http"]
 # instead and the tokio multi-thread runtime is unavailable.
 native-http = [
     "dep:reqwest",
+    # reqwest/http2 is required for `ClientBuilder::http2_prior_knowledge()` which
+    # is gated behind reqwest's `http2` feature.  Enable it alongside native-http
+    # so `TransportConfig::http2_prior_knowledge` can be wired through.
+    "reqwest/http2",
     # dep:rustls is only satisfied on non-Windows (see target-conditional deps below).
     # Cargo silently ignores feature activations for optional deps that are absent on
     # the current target, so this entry is a no-op on Windows without causing an error.

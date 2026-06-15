@@ -562,6 +562,11 @@ impl DefaultClient {
             // support per-client timeout configuration.
             #[cfg(not(target_arch = "wasm32"))]
             let builder = builder.timeout(config.timeout);
+            // Apply transport config (connection pool, TCP keepalive, HTTP
+            // version negotiation).  WASM uses the browser fetch API which
+            // controls these settings independently.
+            #[cfg(not(target_arch = "wasm32"))]
+            let builder = config.transport.apply_to_builder(builder);
             builder.build().map_err(LiterLlmError::from)?
         };
 
