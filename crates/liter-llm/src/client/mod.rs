@@ -50,43 +50,70 @@ use crate::types::batch::BatchStatus;
 use std::time::Duration;
 
 /// Configuration for polling a batch until terminal status.
+///
+/// All time values are in seconds as `f64` so the struct bridges across FFI
+/// boundaries without requiring a `Duration` shim.
 #[derive(Clone, Debug)]
 pub struct WaitForBatchConfig {
-    /// Initial interval between polls.
-    pub initial_interval: Duration,
-    /// Maximum interval between polls (backoff plateau).
-    pub max_interval: Duration,
+    /// Initial interval between polls, in seconds.
+    pub initial_interval_secs: f64,
+    /// Maximum interval between polls (backoff plateau), in seconds.
+    pub max_interval_secs: f64,
     /// Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll).
     pub backoff_multiplier: f32,
-    /// Optional timeout — polling fails if this duration is exceeded.
-    pub timeout: Option<Duration>,
+    /// Optional timeout in seconds — polling fails if this duration is exceeded.
+    pub timeout_secs: Option<f64>,
 }
 
 impl Default for WaitForBatchConfig {
     fn default() -> Self {
         Self {
-            initial_interval: Duration::from_secs(5),
-            max_interval: Duration::from_secs(60),
+            initial_interval_secs: 5.0,
+            max_interval_secs: 60.0,
             backoff_multiplier: 1.5,
-            timeout: None,
+            timeout_secs: None,
         }
     }
 }
 
 /// Error type for batch polling operations.
+///
+/// All fields use FFI-friendly types so the error can be represented across
+/// every language binding without a shim. `Duration` fields are expressed
+/// as `f64` seconds; `LiterLlmError` is flattened to `message` + `code`.
 #[derive(Debug, thiserror::Error)]
 pub enum BatchWaitError {
     /// Batch reached a terminal failure state.
-    #[error("batch reached terminal failure state: {0:?}")]
-    Failed(BatchStatus),
+    #[error("batch reached terminal failure state: {status:?}")]
+    Failed {
+        /// Terminal batch status (Failed, Expired, or Cancelled).
+        status: BatchStatus,
+    },
 
     /// Polling timed out before reaching terminal status.
-    #[error("polling timed out after {0:?}")]
-    Timeout(Duration),
+    #[error("polling timed out after {timeout_secs:.1}s")]
+    Timeout {
+        /// Configured timeout in seconds.
+        timeout_secs: f64,
+    },
 
-    /// Underlying client error.
-    #[error(transparent)]
-    Client(#[from] LiterLlmError),
+    /// Underlying client error, flattened to `message` + numeric `code`.
+    #[error("client error (code {code}): {message}")]
+    Client {
+        /// Human-readable error description.
+        message: String,
+        /// Numeric error code (HTTP status, or 0 for non-HTTP errors).
+        code: u32,
+    },
+}
+
+impl From<LiterLlmError> for BatchWaitError {
+    fn from(err: LiterLlmError) -> Self {
+        Self::Client {
+            code: u32::from(err.status_code()),
+            message: err.to_string(),
+        }
+    }
 }
 
 /// A boxed future returning `T`.
@@ -1786,6 +1813,7 @@ impl BatchClient for DefaultClient {
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 #[async_trait::async_trait]
 #[doc(hidden)]
+#[cfg_attr(alef, alef(skip))]
 pub trait BatchRetriever {
     /// Retrieve a batch by ID.
     async fn retrieve(&self, batch_id: &str) -> Result<BatchObject>;
@@ -1804,13 +1832,14 @@ impl BatchRetriever for DefaultClient {
 /// This is the internal implementation shared by tests and `DefaultClient::wait_for_batch`.
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 #[doc(hidden)]
+#[cfg_attr(alef, alef(skip))]
 pub async fn wait_for_batch_impl<R: BatchRetriever>(
     retriever: &R,
     batch_id: &str,
     config: WaitForBatchConfig,
 ) -> std::result::Result<BatchObject, BatchWaitError> {
     let started = tokio::time::Instant::now();
-    let mut interval = config.initial_interval;
+    let mut interval_secs = config.initial_interval_secs;
 
     loop {
         let batch = retriever.retrieve(batch_id).await?;
@@ -1818,17 +1847,19 @@ pub async fn wait_for_batch_impl<R: BatchRetriever>(
         match batch.status {
             BatchStatus::Completed => return Ok(batch),
             BatchStatus::Failed | BatchStatus::Expired | BatchStatus::Cancelled => {
-                return Err(BatchWaitError::Failed(batch.status));
+                return Err(BatchWaitError::Failed { status: batch.status });
             }
             BatchStatus::Validating | BatchStatus::InProgress | BatchStatus::Finalizing | BatchStatus::Cancelling => {
-                if let Some(timeout) = config.timeout {
+                if let Some(timeout_secs) = config.timeout_secs {
+                    let timeout = Duration::from_secs_f64(timeout_secs);
                     if started.elapsed() >= timeout {
-                        return Err(BatchWaitError::Timeout(timeout));
+                        return Err(BatchWaitError::Timeout { timeout_secs });
                     }
                 }
-                tokio::time::sleep(interval).await;
-                let next = (interval.as_secs_f32() * config.backoff_multiplier).min(config.max_interval.as_secs_f32());
-                interval = Duration::from_secs_f32(next);
+                tokio::time::sleep(Duration::from_secs_f64(interval_secs)).await;
+                let next =
+                    (interval_secs as f32 * config.backoff_multiplier).min(config.max_interval_secs as f32) as f64;
+                interval_secs = next;
             }
         }
     }

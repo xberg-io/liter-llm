@@ -76,6 +76,10 @@ pub use client::{
     BatchClient, BoxFuture, BoxStream, ClientBuilder, ClientConfig, ClientConfigBuilder, FileClient, FileConfig,
     LlmClient, LlmClientRaw, ResponseClient,
 };
+// Batch polling helpers: WaitForBatchConfig and BatchWaitError are Tier C
+// (binding-public) — users call wait_for_batch from every language binding.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+pub use client::{BatchWaitError, WaitForBatchConfig};
 pub use http::transport::TransportConfig;
 // DefaultClient requires the native HTTP stack (reqwest on native or WASM fetch API).
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]

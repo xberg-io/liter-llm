@@ -28,8 +28,6 @@
 //! let event = translator.translate_inbound(raw).unwrap();
 //! ```
 
-use std::time::SystemTime;
-
 use serde::{Deserialize, Serialize};
 
 pub mod openai;
@@ -42,6 +40,7 @@ use crate::error::Result;
 /// A single content part within a conversation item.
 ///
 /// Conversation items may carry text, audio, or an image (by reference).
+#[cfg_attr(alef, alef(skip))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum ContentPart {
@@ -80,6 +79,7 @@ impl ContentPart {
 }
 
 /// Terminal status for a completed [`RealtimeEvent::ResponseDone`].
+#[cfg_attr(alef, alef(skip))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ResponseStatus {
@@ -251,8 +251,8 @@ pub enum RealtimeEvent {
         remaining_requests: Option<u32>,
         /// Remaining token quota, when reported.
         remaining_tokens: Option<u32>,
-        /// Timestamp when the quota resets.
-        reset_at: SystemTime,
+        /// Unix timestamp (milliseconds) when the quota resets.
+        reset_at_unix_ms: i64,
     },
 
     // ── Error ─────────────────────────────────────────────────────────────────
@@ -360,6 +360,7 @@ impl RealtimeEnvelope {
 ///     }
 /// }
 /// ```
+#[cfg_attr(alef, alef(skip))]
 pub trait RealtimeTranslator: Send + Sync + 'static {
     /// Translate an incoming provider-native JSON event into the unified
     /// [`RealtimeEvent`].

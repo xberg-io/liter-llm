@@ -5,7 +5,7 @@
 //! The translator handles serialisation and deserialisation via `serde_json`
 //! and maps unknown event types to [`RealtimeEvent::Raw`].
 
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde_json::Value;
 
@@ -22,6 +22,7 @@ use crate::error::{LiterLlmError, Result};
 ///
 /// `OpenAiRealtimeTranslator` is `Send + Sync + 'static`; a single shared
 /// instance can service the entire proxy's WebSocket session pool.
+#[cfg_attr(alef, alef(skip))]
 #[derive(Debug, Clone, Default)]
 pub struct OpenAiRealtimeTranslator;
 
@@ -85,15 +86,18 @@ fn parse_content_parts(raw: &Value) -> Vec<ContentPart> {
 
 // ── Helper: parse a reset_at timestamp ───────────────────────────────────────
 
-fn parse_reset_at(obj: &Value) -> SystemTime {
+/// Parse `reset_at` from a provider JSON object into Unix milliseconds.
+fn parse_reset_at_ms(obj: &Value) -> i64 {
     // OpenAI may supply `reset_at` as a Unix timestamp (f64 or integer).
     if let Some(ts) = obj.get("reset_at").and_then(|v| v.as_f64()) {
-        let secs = ts as u64;
-        let nanos = ((ts - secs as f64) * 1_000_000_000.0) as u32;
-        return UNIX_EPOCH + Duration::new(secs, nanos);
+        return (ts * 1_000.0) as i64;
     }
     // Fallback: reset 60 seconds from now.
-    SystemTime::now() + Duration::from_secs(60)
+    let now_ms = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(0);
+    now_ms + 60_000
 }
 
 // ── RealtimeTranslator impl ───────────────────────────────────────────────────
@@ -221,7 +225,11 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
                 let limits = raw.get("rate_limits").and_then(|v| v.as_array());
                 let mut remaining_requests = None;
                 let mut remaining_tokens = None;
-                let mut reset_at = SystemTime::now() + Duration::from_secs(60);
+                let now_ms = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .map(|d| d.as_millis() as i64)
+                    .unwrap_or(0);
+                let mut reset_at_unix_ms = now_ms + 60_000;
 
                 if let Some(limits) = limits {
                     for limit in limits {
@@ -229,7 +237,7 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
                         match name {
                             "requests" => {
                                 remaining_requests = get_u32(limit, "remaining");
-                                reset_at = parse_reset_at(limit);
+                                reset_at_unix_ms = parse_reset_at_ms(limit);
                             }
                             "tokens" => {
                                 remaining_tokens = get_u32(limit, "remaining");
@@ -242,7 +250,7 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
                 RealtimeEvent::RateLimitsUpdated {
                     remaining_requests,
                     remaining_tokens,
-                    reset_at,
+                    reset_at_unix_ms,
                 }
             }
 
@@ -405,9 +413,9 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
             RealtimeEvent::RateLimitsUpdated {
                 remaining_requests,
                 remaining_tokens,
-                reset_at,
+                reset_at_unix_ms,
             } => {
-                let reset_ts = reset_at.duration_since(UNIX_EPOCH).unwrap_or_default().as_secs_f64();
+                let reset_ts = *reset_at_unix_ms as f64 / 1_000.0;
                 let mut limits = vec![];
                 if let Some(r) = remaining_requests {
                     limits.push(json!({"name": "requests", "remaining": r, "reset_at": reset_ts}));
@@ -650,7 +658,10 @@ mod tests {
         });
         let event = tr.translate_inbound(raw).unwrap();
         match &event {
-            RealtimeEvent::SessionUpdated { session_id, instructions } => {
+            RealtimeEvent::SessionUpdated {
+                session_id,
+                instructions,
+            } => {
                 assert_eq!(session_id, "sess_upd_001");
                 assert_eq!(instructions.as_deref(), Some("Be terse and accurate."));
             }
@@ -753,9 +764,10 @@ mod tests {
     #[test]
     fn realtime_rate_limits_updated_round_trips() {
         let tr = translator();
-        // OpenAI reports per-axis limits in an array.  Use a reset_at one hour
-        // into the future so the field is non-trivial.
+        // OpenAI reports per-axis limits in an array.  reset_at is 1_700_000_000.0
+        // Unix seconds = 1_700_000_000_000 Unix milliseconds.
         let reset_ts: f64 = 1_700_000_000.0;
+        let expected_ms: i64 = 1_700_000_000_000;
         let raw = json!({
             "type": "rate_limits.updated",
             "rate_limits": [
@@ -768,10 +780,11 @@ mod tests {
             RealtimeEvent::RateLimitsUpdated {
                 remaining_requests,
                 remaining_tokens,
-                ..
+                reset_at_unix_ms,
             } => {
                 assert_eq!(*remaining_requests, Some(42));
                 assert_eq!(*remaining_tokens, Some(9_000));
+                assert_eq!(*reset_at_unix_ms, expected_ms);
             }
             other => panic!("expected RateLimitsUpdated, got {other:?}"),
         }
@@ -785,7 +798,10 @@ mod tests {
             .iter()
             .find(|e| e["name"] == "requests")
             .expect("requests entry present");
-        let tok_entry = arr.iter().find(|e| e["name"] == "tokens").expect("tokens entry present");
+        let tok_entry = arr
+            .iter()
+            .find(|e| e["name"] == "tokens")
+            .expect("tokens entry present");
         assert_eq!(req_entry["remaining"], 42);
         assert_eq!(tok_entry["remaining"], 9_000);
     }
