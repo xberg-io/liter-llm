@@ -1007,7 +1007,8 @@ mod tests {
             "temperature": 0.5
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         // System instruction extracted with camelCase key required by Gemini API.
         assert_eq!(
@@ -1034,7 +1035,8 @@ mod tests {
             ]
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["contents"][1]["role"], "model");
         assert_eq!(body["contents"][1]["parts"][0]["text"], "Hello there!");
@@ -1064,7 +1066,8 @@ mod tests {
             ]
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         let contents = body["contents"].as_array().expect("contents should be an array");
         assert_eq!(contents.len(), 3);
@@ -1091,9 +1094,12 @@ mod tests {
             "stop": ["END", "STOP"]
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
-        let stop_seqs = body["generationConfig"]["stopSequences"].as_array().expect("stopSequences should be an array");
+        let stop_seqs = body["generationConfig"]["stopSequences"]
+            .as_array()
+            .expect("stopSequences should be an array");
         assert_eq!(stop_seqs.len(), 2);
         assert_eq!(stop_seqs[0], "END");
         assert_eq!(stop_seqs[1], "STOP");
@@ -1114,9 +1120,12 @@ mod tests {
             }
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
-        let settings = body["safetySettings"].as_array().expect("safetySettings should be an array");
+        let settings = body["safetySettings"]
+            .as_array()
+            .expect("safetySettings should be an array");
         assert_eq!(settings.len(), 2);
         assert_eq!(settings[0]["category"], "HARM_CATEGORY_HATE_SPEECH");
         assert_eq!(settings[0]["threshold"], "BLOCK_MEDIUM_AND_ABOVE");
@@ -1135,7 +1144,8 @@ mod tests {
             }
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         let tools = body["tools"].as_array().expect("tools should be an array");
         assert!(
@@ -1155,7 +1165,8 @@ mod tests {
             }
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         let tools = body["tools"].as_array().expect("tools should be an array");
         // Should have functionDeclarations + google_search_retrieval.
@@ -1177,7 +1188,8 @@ mod tests {
             }
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["cachedContent"], cached);
     }
@@ -1203,9 +1215,12 @@ mod tests {
             }]
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
-        let parts = body["contents"][0]["parts"].as_array().expect("parts should be an array");
+        let parts = body["contents"][0]["parts"]
+            .as_array()
+            .expect("parts should be an array");
         assert_eq!(parts.len(), 2);
         assert_eq!(parts[0]["text"], "Summarize this document.");
         assert_eq!(parts[1]["inlineData"]["mimeType"], "application/pdf");
@@ -1232,7 +1247,8 @@ mod tests {
             }
         });
 
-        p.transform_response(&mut body).expect("transform_response should not fail");
+        p.transform_response(&mut body)
+            .expect("transform_response should not fail");
 
         assert_eq!(body["object"], "chat.completion");
         assert_eq!(body["id"], "resp-gemini-123");
@@ -1270,9 +1286,12 @@ mod tests {
             "usageMetadata": {"promptTokenCount": 10, "candidatesTokenCount": 5}
         });
 
-        p.transform_response(&mut body).expect("transform_response should not fail");
+        p.transform_response(&mut body)
+            .expect("transform_response should not fail");
 
-        let tool_calls = body["choices"][0]["message"]["tool_calls"].as_array().expect("tool_calls should be an array");
+        let tool_calls = body["choices"][0]["message"]["tool_calls"]
+            .as_array()
+            .expect("tool_calls should be an array");
         assert_eq!(tool_calls.len(), 2);
 
         // Both calls should have the function name "get_weather" but different IDs.
@@ -1283,10 +1302,18 @@ mod tests {
         assert!(id1.starts_with("call_get_weather_"));
 
         // Verify arguments are correct.
-        let args0: serde_json::Value =
-            serde_json::from_str(tool_calls[0]["function"]["arguments"].as_str().expect("arguments should be a string")).expect("arguments should be valid JSON");
-        let args1: serde_json::Value =
-            serde_json::from_str(tool_calls[1]["function"]["arguments"].as_str().expect("arguments should be a string")).expect("arguments should be valid JSON");
+        let args0: serde_json::Value = serde_json::from_str(
+            tool_calls[0]["function"]["arguments"]
+                .as_str()
+                .expect("arguments should be a string"),
+        )
+        .expect("arguments should be valid JSON");
+        let args1: serde_json::Value = serde_json::from_str(
+            tool_calls[1]["function"]["arguments"]
+                .as_str()
+                .expect("arguments should be a string"),
+        )
+        .expect("arguments should be valid JSON");
         assert_eq!(args0["city"], "Berlin");
         assert_eq!(args1["city"], "Paris");
     }
@@ -1310,9 +1337,12 @@ mod tests {
             "usageMetadata": {"promptTokenCount": 10, "candidatesTokenCount": 5}
         });
 
-        p.transform_response(&mut body).expect("transform_response should not fail");
+        p.transform_response(&mut body)
+            .expect("transform_response should not fail");
 
-        let tool_calls = body["choices"][0]["message"]["tool_calls"].as_array().expect("tool_calls should be an array");
+        let tool_calls = body["choices"][0]["message"]["tool_calls"]
+            .as_array()
+            .expect("tool_calls should be an array");
         assert_eq!(tool_calls.len(), 1);
         assert_eq!(tool_calls[0]["function"]["name"], "get_weather");
         // ID should contain the function name and a unique counter.
@@ -1343,7 +1373,8 @@ mod tests {
                 }],
                 "usageMetadata": {"promptTokenCount": 0, "candidatesTokenCount": 0}
             });
-            p.transform_response(&mut body).expect("transform_response should not fail");
+            p.transform_response(&mut body)
+                .expect("transform_response should not fail");
             assert_eq!(
                 body["choices"][0]["finish_reason"], expected_oai_reason,
                 "Gemini finishReason '{gemini_reason}' should map to '{expected_oai_reason}'"
@@ -1369,14 +1400,21 @@ mod tests {
             "usageMetadata": {"promptTokenCount": 5, "candidatesTokenCount": 3}
         });
 
-        p.transform_response(&mut body).expect("transform_response should not fail");
+        p.transform_response(&mut body)
+            .expect("transform_response should not fail");
 
         assert_eq!(body["choices"][0]["message"]["content"], "grounded answer");
         assert!(
             body.get("_grounding_metadata").is_some(),
             "grounding metadata should be preserved"
         );
-        assert!(body["_grounding_metadata"]["groundingChunks"].as_array().expect("groundingChunks should be an array").len() == 1);
+        assert!(
+            body["_grounding_metadata"]["groundingChunks"]
+                .as_array()
+                .expect("groundingChunks should be an array")
+                .len()
+                == 1
+        );
     }
 
     // ── parse_stream_event ────────────────────────────────────────────────────
@@ -1411,7 +1449,10 @@ mod tests {
             "usageMetadata": {"promptTokenCount": 5, "candidatesTokenCount": 2}
         }"#;
 
-        let chunk = p.parse_stream_event(event_data).expect("parse_stream_event should not fail").expect("should yield a chunk");
+        let chunk = p
+            .parse_stream_event(event_data)
+            .expect("parse_stream_event should not fail")
+            .expect("should yield a chunk");
 
         assert_eq!(chunk.object, "chat.completion.chunk");
         assert_eq!(chunk.choices[0].delta.content.as_deref(), Some("Hello"));
@@ -1449,9 +1490,12 @@ mod tests {
             }]
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
-        let parts = body["contents"][0]["parts"].as_array().expect("parts should be an array");
+        let parts = body["contents"][0]["parts"]
+            .as_array()
+            .expect("parts should be an array");
         assert_eq!(parts.len(), 2);
         assert_eq!(parts[0]["text"], "What is in this image?");
         assert_eq!(parts[1]["inlineData"]["mimeType"], "image/jpeg");
@@ -1471,9 +1515,12 @@ mod tests {
             }]
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
-        let parts = body["contents"][0]["parts"].as_array().expect("parts should be an array");
+        let parts = body["contents"][0]["parts"]
+            .as_array()
+            .expect("parts should be an array");
         assert_eq!(parts.len(), 2);
         assert_eq!(parts[1]["fileData"]["fileUri"], "https://example.com/image.jpg");
     }
@@ -1488,7 +1535,8 @@ mod tests {
             "response_format": {"type": "json_object"}
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["generationConfig"]["responseMimeType"], "application/json");
     }
@@ -1507,7 +1555,8 @@ mod tests {
             }
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["generationConfig"]["responseMimeType"], "application/json");
         assert_eq!(body["generationConfig"]["responseSchema"]["type"], "object");
@@ -1524,7 +1573,8 @@ mod tests {
             "tool_choice": "auto"
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["toolConfig"]["functionCallingConfig"]["mode"], "AUTO");
     }
@@ -1538,7 +1588,8 @@ mod tests {
             "tool_choice": "none"
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["toolConfig"]["functionCallingConfig"]["mode"], "NONE");
     }
@@ -1552,7 +1603,8 @@ mod tests {
             "tool_choice": "required"
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["toolConfig"]["functionCallingConfig"]["mode"], "ANY");
     }
@@ -1566,7 +1618,8 @@ mod tests {
             "tool_choice": {"type": "function", "function": {"name": "get_weather"}}
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["toolConfig"]["functionCallingConfig"]["mode"], "ANY");
         assert_eq!(

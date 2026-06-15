@@ -476,7 +476,9 @@ mod tests {
 
         let mut svc = build_service(config, Arc::clone(&state));
         // MockClient returns usage: prompt=10, completion=5 for the model.
-        svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.expect("service call should not fail");
+        svc.call(LlmRequest::Chat(chat_req("gpt-4")))
+            .await
+            .expect("service call should not fail");
 
         // gpt-4 pricing: input=0.00003/token, output=0.00006/token
         // 10 * 0.00003 + 5 * 0.00006 = 0.0003 + 0.0003 = 0.0006

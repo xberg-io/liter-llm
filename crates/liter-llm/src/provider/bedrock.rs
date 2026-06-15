@@ -1117,7 +1117,8 @@ mod tests {
             "temperature": 0.7
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         // System messages extracted to top-level array.
         assert_eq!(body["system"][0]["text"], "You are helpful.");
@@ -1155,7 +1156,8 @@ mod tests {
             ]
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         let messages = body["messages"].as_array().expect("messages should be an array");
         assert_eq!(messages.len(), 3);
@@ -1192,9 +1194,12 @@ mod tests {
             }]
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
-        let tools = body["toolConfig"]["tools"].as_array().expect("tools should be an array");
+        let tools = body["toolConfig"]["tools"]
+            .as_array()
+            .expect("tools should be an array");
         assert_eq!(tools.len(), 1);
         let spec = &tools[0]["toolSpec"];
         assert_eq!(spec["name"], "search");
@@ -1223,7 +1228,8 @@ mod tests {
             }
         });
 
-        p.transform_response(&mut body).expect("transform_response should not fail");
+        p.transform_response(&mut body)
+            .expect("transform_response should not fail");
 
         assert_eq!(body["object"], "chat.completion");
         assert_eq!(body["id"], "req-123");
@@ -1255,15 +1261,22 @@ mod tests {
             "usage": {"inputTokens": 20, "outputTokens": 10}
         });
 
-        p.transform_response(&mut body).expect("transform_response should not fail");
+        p.transform_response(&mut body)
+            .expect("transform_response should not fail");
 
         assert_eq!(body["choices"][0]["finish_reason"], "tool_calls");
-        let tool_calls = body["choices"][0]["message"]["tool_calls"].as_array().expect("tool_calls should be an array");
+        let tool_calls = body["choices"][0]["message"]["tool_calls"]
+            .as_array()
+            .expect("tool_calls should be an array");
         assert_eq!(tool_calls.len(), 1);
         assert_eq!(tool_calls[0]["id"], "call_xyz");
         assert_eq!(tool_calls[0]["function"]["name"], "get_weather");
-        let args: serde_json::Value =
-            serde_json::from_str(tool_calls[0]["function"]["arguments"].as_str().expect("arguments should be a string")).expect("arguments should be valid JSON");
+        let args: serde_json::Value = serde_json::from_str(
+            tool_calls[0]["function"]["arguments"]
+                .as_str()
+                .expect("arguments should be a string"),
+        )
+        .expect("arguments should be valid JSON");
         assert_eq!(args["city"], "Berlin");
     }
 
@@ -1286,7 +1299,8 @@ mod tests {
                 "output": {"message": {"role": "assistant", "content": [{"text": ""}]}},
                 "usage": {"inputTokens": 0, "outputTokens": 0}
             });
-            p.transform_response(&mut body).expect("transform_response should not fail");
+            p.transform_response(&mut body)
+                .expect("transform_response should not fail");
             assert_eq!(
                 body["choices"][0]["finish_reason"], expected_oai_reason,
                 "bedrock stopReason '{bedrock_reason}' should map to '{expected_oai_reason}'"
@@ -1377,9 +1391,20 @@ mod tests {
         )
         .expect("parse should not fail")
         .expect("should yield a chunk");
-        let tc = &chunk.choices[0].delta.tool_calls.as_ref().expect("tool_calls should be present")[0];
+        let tc = &chunk.choices[0]
+            .delta
+            .tool_calls
+            .as_ref()
+            .expect("tool_calls should be present")[0];
         assert_eq!(tc.id.as_deref(), Some("call_123"));
-        assert_eq!(tc.function.as_ref().expect("function should be present").name.as_deref(), Some("get_weather"));
+        assert_eq!(
+            tc.function
+                .as_ref()
+                .expect("function should be present")
+                .name
+                .as_deref(),
+            Some("get_weather")
+        );
     }
 
     #[test]
@@ -1390,9 +1415,17 @@ mod tests {
         )
         .expect("parse should not fail")
         .expect("should yield a chunk");
-        let tc = &chunk.choices[0].delta.tool_calls.as_ref().expect("tool_calls should be present")[0];
+        let tc = &chunk.choices[0]
+            .delta
+            .tool_calls
+            .as_ref()
+            .expect("tool_calls should be present")[0];
         assert_eq!(
-            tc.function.as_ref().expect("function should be present").arguments.as_deref(),
+            tc.function
+                .as_ref()
+                .expect("function should be present")
+                .arguments
+                .as_deref(),
             Some("{\"city\":\"Berlin\"}")
         );
     }
@@ -1417,7 +1450,8 @@ mod tests {
 
     #[test]
     fn parse_stream_event_content_block_stop_returns_none() {
-        let result = parse_bedrock_stream_event("contentBlockStop", r#"{"contentBlockIndex":0}"#).expect("parse should not fail");
+        let result = parse_bedrock_stream_event("contentBlockStop", r#"{"contentBlockIndex":0}"#)
+            .expect("parse should not fail");
         assert!(result.is_none());
     }
 
@@ -1438,7 +1472,8 @@ mod tests {
             "reasoning_effort": "low",
             "max_tokens": 1000
         });
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         let amf = &body["additionalModelRequestFields"];
         assert_eq!(amf["thinking"]["type"], "enabled");
@@ -1453,7 +1488,8 @@ mod tests {
             "messages": [{"role": "user", "content": "Think."}],
             "reasoning_effort": "medium"
         });
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["additionalModelRequestFields"]["thinking"]["budget_tokens"], 4096);
     }
@@ -1466,7 +1502,8 @@ mod tests {
             "messages": [{"role": "user", "content": "Think hard."}],
             "reasoning_effort": "high"
         });
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["additionalModelRequestFields"]["thinking"]["budget_tokens"], 16384);
     }
@@ -1478,7 +1515,8 @@ mod tests {
         let mut body = json!({
             "messages": [{"role": "user", "content": "hi"}]
         });
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert!(body.get("additionalModelRequestFields").is_none());
     }
@@ -1504,9 +1542,12 @@ mod tests {
                 ]
             }]
         });
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
-        let content = body["messages"][0]["content"].as_array().expect("content should be an array");
+        let content = body["messages"][0]["content"]
+            .as_array()
+            .expect("content should be an array");
         assert_eq!(content.len(), 2);
 
         // First part: text
@@ -1537,7 +1578,8 @@ mod tests {
                 ]
             }]
         });
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         let doc = &body["messages"][0]["content"][0]["document"];
         assert_eq!(doc["format"], "csv");
@@ -1559,7 +1601,8 @@ mod tests {
                 }
             }
         });
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         let gc = &body["guardrailConfig"];
         assert_eq!(gc["guardrailIdentifier"], "my-guardrail-id");
@@ -1574,7 +1617,8 @@ mod tests {
         let mut body = json!({
             "messages": [{"role": "user", "content": "hello"}]
         });
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert!(body.get("guardrailConfig").is_none());
     }
@@ -1589,7 +1633,8 @@ mod tests {
             "messages": [{"role": "user", "content": "Give me JSON."}],
             "response_format": {"type": "json_object"}
         });
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         // Should have a system instruction for JSON output.
         let system = body["system"].as_array().expect("system should be an array");
@@ -1618,7 +1663,8 @@ mod tests {
                 }
             }
         });
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         let system = body["system"].as_array().expect("system should be an array");
         let json_instruction = system
@@ -1641,7 +1687,8 @@ mod tests {
             "messages": [{"role": "user", "content": "hello"}],
             "response_format": {"type": "text"}
         });
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         // No system instruction should be added for plain text format.
         assert!(body.get("system").is_none());

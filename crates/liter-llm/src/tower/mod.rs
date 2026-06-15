@@ -97,16 +97,16 @@ pub use cooldown::{CooldownLayer, CooldownService};
 pub use cost::{CostTrackingLayer, CostTrackingService};
 pub use fallback::{FallbackLayer, FallbackService};
 pub use health::{
-    HealthCheckConfig, HealthCheckLayer, HealthCheckService, HealthChecker, HealthStatus,
-    HttpProbeHealthChecker, PerProviderHealthCheck,
+    HealthCheckConfig, HealthCheckLayer, HealthCheckService, HealthChecker, HealthStatus, HttpProbeHealthChecker,
+    PerProviderHealthCheck,
 };
 pub use hedge::{FixedDelayHedge, HedgeLayer, HedgePolicy, HedgeService};
 pub use hooks::{HooksLayer, HooksService, LlmHook};
 pub use metrics::{MetricsLayer, MetricsService};
 pub use rate_limit::{ModelRateLimitLayer, ModelRateLimitService, RateLimitConfig};
 pub use router::{
-    DEFAULT_CONCURRENCY_LIMIT, DynamicRouter, ProviderConfig, Router, RouterError, RoutingStrategy,
-    StaticDiscover, UpstreamDiscover, Weight,
+    DEFAULT_CONCURRENCY_LIMIT, DynamicRouter, ProviderConfig, Router, RouterError, RoutingStrategy, StaticDiscover,
+    UpstreamDiscover, Weight,
 };
 pub use service::LlmService;
 pub use tracing::{TracingLayer, TracingService};

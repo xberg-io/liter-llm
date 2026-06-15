@@ -239,8 +239,12 @@ mod tests {
         let mut svc = layer.layer(inner);
 
         // First two succeed.
-        svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.expect("service call should not fail");
-        svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.expect("service call should not fail");
+        svc.call(LlmRequest::Chat(chat_req("gpt-4")))
+            .await
+            .expect("service call should not fail");
+        svc.call(LlmRequest::Chat(chat_req("gpt-4")))
+            .await
+            .expect("service call should not fail");
 
         // Third should be rate limited.
         let err = svc
@@ -261,9 +265,13 @@ mod tests {
         let inner = LlmService::new(MockClient::ok());
         let mut svc = layer.layer(inner);
 
-        svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.expect("service call should not fail");
+        svc.call(LlmRequest::Chat(chat_req("gpt-4")))
+            .await
+            .expect("service call should not fail");
         // Different model should still work.
-        svc.call(LlmRequest::Chat(chat_req("gpt-3.5-turbo"))).await.expect("service call should not fail");
+        svc.call(LlmRequest::Chat(chat_req("gpt-3.5-turbo")))
+            .await
+            .expect("service call should not fail");
     }
 
     #[tokio::test]
@@ -278,7 +286,9 @@ mod tests {
         let mut svc = layer.layer(inner);
 
         // First call succeeds and records 15 tokens (over the 10 limit).
-        svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.expect("service call should not fail");
+        svc.call(LlmRequest::Chat(chat_req("gpt-4")))
+            .await
+            .expect("service call should not fail");
 
         // Second call should be rejected because token count >= tpm.
         let err = svc

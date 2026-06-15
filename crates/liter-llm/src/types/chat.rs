@@ -350,8 +350,12 @@ mod tests {
             total_tokens: 1_050,
             prompt_tokens_details: None,
         };
-        let a = make_response("gpt-4", usage_with_cached).estimated_cost().expect("cost estimation should succeed for known model");
-        let b = make_response("gpt-4", usage_no_details).estimated_cost().expect("cost estimation should succeed for known model");
+        let a = make_response("gpt-4", usage_with_cached)
+            .estimated_cost()
+            .expect("cost estimation should succeed for known model");
+        let b = make_response("gpt-4", usage_no_details)
+            .estimated_cost()
+            .expect("cost estimation should succeed for known model");
         assert!((a - b).abs() < 1e-12);
     }
 

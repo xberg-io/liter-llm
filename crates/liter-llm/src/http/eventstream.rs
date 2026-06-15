@@ -611,10 +611,14 @@ mod tests {
         let total_length = frame.len();
 
         let headers = parse_headers(&frame[headers_start..headers_end]).expect("headers should parse");
-        let message_type = headers.iter().find(|h| h.name == ":message-type").expect(":message-type header should be present");
+        let message_type = headers
+            .iter()
+            .find(|h| h.name == ":message-type")
+            .expect(":message-type header should be present");
         assert_eq!(message_type.value, "exception");
 
-        let payload = std::str::from_utf8(&frame[headers_end..total_length - 4]).expect("payload should be valid UTF-8");
+        let payload =
+            std::str::from_utf8(&frame[headers_end..total_length - 4]).expect("payload should be valid UTF-8");
         assert!(payload.contains("Invalid request"));
     }
 

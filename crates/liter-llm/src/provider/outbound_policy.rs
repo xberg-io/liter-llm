@@ -387,7 +387,9 @@ mod tests {
 
     #[test]
     fn is_forbidden_ipv6_public() {
-        let ip: IpAddr = "2001:4860:4860::8888".parse().expect("Google DNS is a valid IPv6 address"); // Google DNS
+        let ip: IpAddr = "2001:4860:4860::8888"
+            .parse()
+            .expect("Google DNS is a valid IPv6 address"); // Google DNS
         assert!(!is_forbidden(ip));
     }
 

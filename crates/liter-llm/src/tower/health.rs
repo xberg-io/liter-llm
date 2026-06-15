@@ -128,10 +128,7 @@ impl HttpProbeHealthChecker {
     /// `probe_urls`: maps provider base URL / name → dedicated health-check
     /// URL.  If a provider is not in this map, the prober issues a GET
     /// request on the upstream URL itself.
-    pub fn new(
-        timeout: Duration,
-        probe_urls: impl IntoIterator<Item = (String, String)>,
-    ) -> Result<Self> {
+    pub fn new(timeout: Duration, probe_urls: impl IntoIterator<Item = (String, String)>) -> Result<Self> {
         let client = reqwest::Client::builder()
             .timeout(timeout)
             .build()
@@ -161,9 +158,7 @@ impl HealthChecker for HttpProbeHealthChecker {
         Box::pin(async move {
             let result = client.get(&url).send().await;
             match result {
-                Ok(resp) if resp.status().is_success() || resp.status().is_redirection() => {
-                    HealthStatus::Healthy
-                }
+                Ok(resp) if resp.status().is_success() || resp.status().is_redirection() => HealthStatus::Healthy,
                 Ok(resp) => {
                     tracing::debug!(
                         upstream = %url,
@@ -636,8 +631,7 @@ mod tests {
             fn check(
                 &self,
                 _upstream: &str,
-            ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HealthStatus> + Send + 'static>>
-            {
+            ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HealthStatus> + Send + 'static>> {
                 Box::pin(async { HealthStatus::Healthy })
             }
         }
@@ -659,8 +653,7 @@ mod tests {
             fn check(
                 &self,
                 _upstream: &str,
-            ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HealthStatus> + Send + 'static>>
-            {
+            ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HealthStatus> + Send + 'static>> {
                 Box::pin(async { HealthStatus::Unhealthy })
             }
         }

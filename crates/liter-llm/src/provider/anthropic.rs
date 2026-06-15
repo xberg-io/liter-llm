@@ -1186,7 +1186,9 @@ mod tests {
             ]
         });
 
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         // System messages lifted to top-level `system` field.
         assert_eq!(
@@ -1211,7 +1213,9 @@ mod tests {
             ]
         });
 
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         let system = body["system"].as_array().expect("system should be an array");
         assert_eq!(system.len(), 2);
@@ -1226,7 +1230,9 @@ mod tests {
             "messages": [{"role": "user", "content": "Hi"}]
         });
 
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["max_tokens"], json!(DEFAULT_MAX_TOKENS));
     }
@@ -1239,7 +1245,9 @@ mod tests {
             "max_tokens": 1024
         });
 
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["max_tokens"], json!(1024u64));
     }
@@ -1252,7 +1260,9 @@ mod tests {
             "stop": "\n"
         });
 
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["stop_sequences"], json!(["\n"]));
         assert!(body.get("stop").is_none(), "old `stop` key should be removed");
@@ -1266,7 +1276,9 @@ mod tests {
             "stop": ["STOP", "END"]
         });
 
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["stop_sequences"], json!(["STOP", "END"]));
         assert!(body.get("stop").is_none());
@@ -1281,7 +1293,9 @@ mod tests {
             "tools": [{"type": "function", "function": {"name": "f", "parameters": {}}}]
         });
 
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["tool_choice"], json!({"type": "any"}));
     }
@@ -1295,7 +1309,9 @@ mod tests {
             "tools": [{"type": "function", "function": {"name": "f", "parameters": {}}}]
         });
 
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert!(body.get("tool_choice").is_none(), "tool_choice should be removed");
         assert!(
@@ -1313,7 +1329,9 @@ mod tests {
             "tools": [{"type": "function", "function": {"name": "my_tool", "parameters": {}}}]
         });
 
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["tool_choice"], json!({"type": "tool", "name": "my_tool"}));
     }
@@ -1333,7 +1351,9 @@ mod tests {
             }]
         });
 
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         let tools = body["tools"].as_array().expect("tools should be an array");
         assert_eq!(tools.len(), 1);
@@ -1356,7 +1376,9 @@ mod tests {
             "stream": true
         });
 
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         for key in &["n", "presence_penalty", "frequency_penalty", "logit_bias"] {
             assert!(body.get(key).is_none(), "`{key}` should be removed");
@@ -1380,13 +1402,17 @@ mod tests {
             ]
         });
 
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         let messages = body["messages"].as_array().expect("messages should be an array");
         // tool message → user message with tool_result block
         let tool_result_msg = &messages[2];
         assert_eq!(tool_result_msg["role"], "user");
-        let content = tool_result_msg["content"].as_array().expect("content should be an array");
+        let content = tool_result_msg["content"]
+            .as_array()
+            .expect("content should be an array");
         assert_eq!(content[0]["type"], "tool_result");
         assert_eq!(content[0]["tool_use_id"], "call_abc");
     }
@@ -1404,7 +1430,9 @@ mod tests {
             }]
         });
 
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         let messages = body["messages"].as_array().expect("messages should be an array");
         let content = messages[0]["content"].as_array().expect("content should be an array");
@@ -1428,7 +1456,9 @@ mod tests {
             "usage": {"input_tokens": 10, "output_tokens": 5}
         });
 
-        provider().transform_response(&mut body).expect("transform_response should not fail");
+        provider()
+            .transform_response(&mut body)
+            .expect("transform_response should not fail");
 
         assert_eq!(body["object"], "chat.completion");
         assert_eq!(body["id"], "msg_01Xfn7");
@@ -1452,7 +1482,9 @@ mod tests {
             "usage": {"input_tokens": 5, "output_tokens": 50}
         });
 
-        provider().transform_response(&mut body).expect("transform_response should not fail");
+        provider()
+            .transform_response(&mut body)
+            .expect("transform_response should not fail");
 
         assert_eq!(body["choices"][0]["finish_reason"], "length");
     }
@@ -1474,19 +1506,25 @@ mod tests {
             "usage": {"input_tokens": 20, "output_tokens": 10}
         });
 
-        provider().transform_response(&mut body).expect("transform_response should not fail");
+        provider()
+            .transform_response(&mut body)
+            .expect("transform_response should not fail");
 
         let choice = &body["choices"][0];
         assert_eq!(choice["finish_reason"], "tool_calls");
         assert_eq!(choice["message"]["content"], Value::Null);
 
-        let tool_calls = choice["message"]["tool_calls"].as_array().expect("tool_calls should be an array");
+        let tool_calls = choice["message"]["tool_calls"]
+            .as_array()
+            .expect("tool_calls should be an array");
         assert_eq!(tool_calls.len(), 1);
         assert_eq!(tool_calls[0]["id"], "toolu_01abc");
         assert_eq!(tool_calls[0]["function"]["name"], "get_weather");
 
         // arguments must be a JSON string
-        let args_str = tool_calls[0]["function"]["arguments"].as_str().expect("arguments should be a string");
+        let args_str = tool_calls[0]["function"]["arguments"]
+            .as_str()
+            .expect("arguments should be a string");
         let args: Value = serde_json::from_str(args_str).expect("arguments should be valid JSON");
         assert_eq!(args["location"], "London");
     }
@@ -1501,7 +1539,9 @@ mod tests {
         });
         let mut body = original.clone();
 
-        provider().transform_response(&mut body).expect("transform_response should not fail");
+        provider()
+            .transform_response(&mut body)
+            .expect("transform_response should not fail");
 
         assert_eq!(body, original);
     }
@@ -1522,21 +1562,29 @@ mod tests {
     #[test]
     fn parse_stream_event_message_stop_returns_none() {
         let event = r#"{"type":"message_stop"}"#;
-        let result = provider().parse_stream_event(event).expect("parse_stream_event should not fail");
+        let result = provider()
+            .parse_stream_event(event)
+            .expect("parse_stream_event should not fail");
         assert!(result.is_none());
     }
 
     #[test]
     fn parse_stream_event_text_delta() {
         let event = r#"{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Hello"}}"#;
-        let chunk = provider().parse_stream_event(event).expect("parse_stream_event should not fail").expect("expected chunk");
+        let chunk = provider()
+            .parse_stream_event(event)
+            .expect("parse_stream_event should not fail")
+            .expect("expected chunk");
         assert_eq!(chunk.choices[0].delta.content.as_deref(), Some("Hello"));
     }
 
     #[test]
     fn parse_stream_event_message_delta_with_finish_reason() {
         let event = r#"{"type":"message_delta","delta":{"stop_reason":"end_turn","stop_sequence":null},"usage":{"output_tokens":12}}"#;
-        let chunk = provider().parse_stream_event(event).expect("parse_stream_event should not fail").expect("expected chunk");
+        let chunk = provider()
+            .parse_stream_event(event)
+            .expect("parse_stream_event should not fail")
+            .expect("expected chunk");
         assert_eq!(chunk.choices[0].finish_reason, Some(FinishReason::Stop));
         let usage = chunk.usage.expect("usage should be present");
         assert_eq!(usage.completion_tokens, 12);
@@ -1545,14 +1593,20 @@ mod tests {
     #[test]
     fn parse_stream_event_message_delta_tool_use_stop_reason() {
         let event = r#"{"type":"message_delta","delta":{"stop_reason":"tool_use"},"usage":{"output_tokens":5}}"#;
-        let chunk = provider().parse_stream_event(event).expect("parse_stream_event should not fail").expect("expected chunk");
+        let chunk = provider()
+            .parse_stream_event(event)
+            .expect("parse_stream_event should not fail")
+            .expect("expected chunk");
         assert_eq!(chunk.choices[0].finish_reason, Some(FinishReason::ToolCalls));
     }
 
     #[test]
     fn parse_stream_event_message_start() {
         let event = r#"{"type":"message_start","message":{"id":"msg_abc","type":"message","role":"assistant","content":[],"model":"claude-3-5-sonnet-20241022","stop_reason":null,"usage":{"input_tokens":25,"output_tokens":1}}}"#;
-        let chunk = provider().parse_stream_event(event).expect("parse_stream_event should not fail").expect("expected chunk");
+        let chunk = provider()
+            .parse_stream_event(event)
+            .expect("parse_stream_event should not fail")
+            .expect("expected chunk");
         assert_eq!(chunk.id, "msg_abc");
         assert_eq!(chunk.model, "claude-3-5-sonnet-20241022");
         assert_eq!(chunk.choices[0].delta.role.as_deref(), Some("assistant"));
@@ -1564,9 +1618,23 @@ mod tests {
     fn parse_stream_event_input_json_delta() {
         let event =
             r#"{"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\"loc"}}"#;
-        let chunk = provider().parse_stream_event(event).expect("parse_stream_event should not fail").expect("expected chunk");
-        let tc = &chunk.choices[0].delta.tool_calls.as_ref().expect("tool_calls should be present")[0];
-        assert_eq!(tc.function.as_ref().expect("function should be present").arguments.as_deref(), Some("{\"loc"));
+        let chunk = provider()
+            .parse_stream_event(event)
+            .expect("parse_stream_event should not fail")
+            .expect("expected chunk");
+        let tc = &chunk.choices[0]
+            .delta
+            .tool_calls
+            .as_ref()
+            .expect("tool_calls should be present")[0];
+        assert_eq!(
+            tc.function
+                .as_ref()
+                .expect("function should be present")
+                .arguments
+                .as_deref(),
+            Some("{\"loc")
+        );
     }
 
     #[test]
@@ -1581,14 +1649,18 @@ mod tests {
     #[test]
     fn parse_stream_event_ping_returns_none() {
         let event = r#"{"type":"ping"}"#;
-        let result = provider().parse_stream_event(event).expect("parse_stream_event should not fail");
+        let result = provider()
+            .parse_stream_event(event)
+            .expect("parse_stream_event should not fail");
         assert!(result.is_none(), "ping should return Ok(None), not a chunk");
     }
 
     #[test]
     fn parse_stream_event_content_block_stop_returns_none() {
         let event = r#"{"type":"content_block_stop","index":0}"#;
-        let result = provider().parse_stream_event(event).expect("parse_stream_event should not fail");
+        let result = provider()
+            .parse_stream_event(event)
+            .expect("parse_stream_event should not fail");
         assert!(result.is_none(), "content_block_stop should return Ok(None)");
     }
 
@@ -1625,7 +1697,9 @@ mod tests {
                 {"role": "tool", "tool_call_id": "call_abc.123", "content": "Sunny"}
             ]
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         let messages = body["messages"].as_array().expect("messages should be an array");
         // The tool_result message is the last one (index 2 after merging nothing)
         let tool_result_msg = messages
@@ -1645,7 +1719,9 @@ mod tests {
                 {"role": "user", "content": "Second"}
             ]
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         let messages = body["messages"].as_array().expect("messages should be an array");
         // Two consecutive user messages should be merged into one.
         assert_eq!(messages.len(), 1);
@@ -1666,7 +1742,9 @@ mod tests {
                 {"role": "user", "content": "Hello"}
             ]
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         let system = body["system"].as_array().expect("system should be an array");
         assert_eq!(system.len(), 2);
         assert_eq!(system[0]["text"], "Block one");
@@ -1681,7 +1759,9 @@ mod tests {
                 {"role": "user", "content": "Hi"}
             ]
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         let system = body["system"].as_array().expect("system should be an array");
         assert_eq!(system[0]["cache_control"]["type"], "ephemeral");
     }
@@ -1697,7 +1777,9 @@ mod tests {
                 ]
             }]
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         let messages = body["messages"].as_array().expect("messages should be an array");
         let content = messages[0]["content"].as_array().expect("content should be an array");
         assert_eq!(content[0]["cache_control"]["type"], "ephemeral");
@@ -1717,7 +1799,9 @@ mod tests {
                 }
             }]
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         let tools = body["tools"].as_array().expect("tools should be an array");
         assert_eq!(tools[0]["input_schema"]["type"], "object");
     }
@@ -1729,7 +1813,9 @@ mod tests {
             "messages": [{"role": "user", "content": "Hi"}],
             "max_completion_tokens": 512
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         assert_eq!(body["max_tokens"], json!(512u64));
         assert!(body.get("max_completion_tokens").is_none());
     }
@@ -1751,7 +1837,9 @@ mod tests {
                 ]}
             ]
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         let messages = body["messages"].as_array().expect("messages should be an array");
         let tool_result_msg = messages
             .iter()
@@ -1762,7 +1850,9 @@ mod tests {
                         .is_some_and(|c| c.first().is_some_and(|b| b["type"] == "tool_result"))
             })
             .expect("tool_result message with image should be present");
-        let result_content = tool_result_msg["content"][0]["content"].as_array().expect("content should be an array");
+        let result_content = tool_result_msg["content"][0]["content"]
+            .as_array()
+            .expect("content should be an array");
         assert_eq!(result_content.len(), 2);
         assert_eq!(result_content[0]["type"], "text");
         assert_eq!(result_content[1]["type"], "image");
@@ -1782,8 +1872,12 @@ mod tests {
             "stop_reason": "end_turn",
             "usage": {"input_tokens": 10, "output_tokens": 20}
         });
-        provider().transform_response(&mut body).expect("transform_response should not fail");
-        let content = body["choices"][0]["message"]["content"].as_str().expect("content should be a string");
+        provider()
+            .transform_response(&mut body)
+            .expect("transform_response should not fail");
+        let content = body["choices"][0]["message"]["content"]
+            .as_str()
+            .expect("content should be a string");
         // Thinking blocks are internal chain-of-thought and must NOT appear in user-facing content.
         assert!(
             !content.contains("Let me reason..."),
@@ -1808,8 +1902,12 @@ mod tests {
             "stop_reason": "tool_use",
             "usage": {"input_tokens": 5, "output_tokens": 5}
         });
-        provider().transform_response(&mut body).expect("transform_response should not fail");
-        let tool_calls = body["choices"][0]["message"]["tool_calls"].as_array().expect("tool_calls should be an array");
+        provider()
+            .transform_response(&mut body)
+            .expect("transform_response should not fail");
+        let tool_calls = body["choices"][0]["message"]["tool_calls"]
+            .as_array()
+            .expect("tool_calls should be an array");
         assert_eq!(tool_calls.len(), 1);
         assert_eq!(tool_calls[0]["id"], "srvtool_01");
         assert_eq!(tool_calls[0]["function"]["name"], "web_search");
@@ -1831,7 +1929,9 @@ mod tests {
                 "output_tokens": 10
             }
         });
-        provider().transform_response(&mut body).expect("transform_response should not fail");
+        provider()
+            .transform_response(&mut body)
+            .expect("transform_response should not fail");
         // prompt_tokens = 100 + 50 + 25 = 175
         assert_eq!(body["usage"]["prompt_tokens"], 175u64);
         assert_eq!(body["usage"]["completion_tokens"], 10u64);
@@ -1853,9 +1953,14 @@ mod tests {
                 {"role": "tool", "tool_call_id": "call_xyz", "content": "result"}
             ]
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         let messages = body["messages"].as_array().expect("messages should be an array");
-        let assistant_msg = messages.iter().find(|m| m["role"] == "assistant").expect("assistant message should be present");
+        let assistant_msg = messages
+            .iter()
+            .find(|m| m["role"] == "assistant")
+            .expect("assistant message should be present");
         let blocks = assistant_msg["content"].as_array().expect("content should be an array");
         // Only the tool_use block should be present; no empty text block.
         assert!(blocks.iter().all(|b| b["type"] != "text" || b["text"] != ""));
@@ -1866,14 +1971,19 @@ mod tests {
     fn parse_stream_event_thinking_delta_returns_none() {
         // Thinking blocks are filtered in both streaming and non-streaming for consistency.
         let event = r#"{"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"I am thinking..."}}"#;
-        let result = provider().parse_stream_event(event).expect("parse_stream_event should not fail");
+        let result = provider()
+            .parse_stream_event(event)
+            .expect("parse_stream_event should not fail");
         assert!(result.is_none(), "thinking_delta should be filtered (return None)");
     }
 
     #[test]
     fn parse_stream_event_message_start_cache_tokens_in_usage() {
         let event = r#"{"type":"message_start","message":{"id":"msg_x","model":"claude-opus","content":[],"usage":{"input_tokens":100,"cache_creation_input_tokens":50,"cache_read_input_tokens":25,"output_tokens":0}}}"#;
-        let chunk = provider().parse_stream_event(event).expect("parse_stream_event should not fail").expect("expected chunk");
+        let chunk = provider()
+            .parse_stream_event(event)
+            .expect("parse_stream_event should not fail")
+            .expect("expected chunk");
         let usage = chunk.usage.expect("usage should be present");
         // prompt_tokens = 100 + 50 + 25 = 175
         assert_eq!(usage.prompt_tokens, 175);
@@ -1905,7 +2015,9 @@ mod tests {
             "messages": [{"role": "user", "content": "Think about this"}],
             "reasoning_effort": "low"
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         assert_eq!(body["thinking"]["type"], "enabled");
         assert_eq!(body["thinking"]["budget_tokens"], 1024);
         assert!(
@@ -1921,7 +2033,9 @@ mod tests {
             "messages": [{"role": "user", "content": "Think about this"}],
             "reasoning_effort": "medium"
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         assert_eq!(body["thinking"]["type"], "enabled");
         assert_eq!(body["thinking"]["budget_tokens"], 4096);
     }
@@ -1933,7 +2047,9 @@ mod tests {
             "messages": [{"role": "user", "content": "Think deeply"}],
             "reasoning_effort": "high"
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         assert_eq!(body["thinking"]["type"], "enabled");
         assert_eq!(body["thinking"]["budget_tokens"], 16384);
     }
@@ -1945,7 +2061,9 @@ mod tests {
             "messages": [{"role": "user", "content": "Think"}],
             "extra_body": {"reasoning_effort": "high"}
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         assert_eq!(body["thinking"]["type"], "enabled");
         assert_eq!(body["thinking"]["budget_tokens"], 16384);
     }
@@ -2028,7 +2146,9 @@ mod tests {
                 }
             }]
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         let tools = body["tools"].as_array().expect("tools should be an array");
         assert_eq!(tools[0]["cache_control"]["type"], "ephemeral");
     }
@@ -2043,9 +2163,14 @@ mod tests {
                 {"role": "user", "content": "How are you?"}
             ]
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         let messages = body["messages"].as_array().expect("messages should be an array");
-        let assistant_msg = messages.iter().find(|m| m["role"] == "assistant").expect("assistant message should be present");
+        let assistant_msg = messages
+            .iter()
+            .find(|m| m["role"] == "assistant")
+            .expect("assistant message should be present");
         let content = assistant_msg["content"].as_array().expect("content should be an array");
         assert_eq!(content[0]["cache_control"]["type"], "ephemeral");
     }
@@ -2060,7 +2185,9 @@ mod tests {
                 "cache_control": {"type": "ephemeral"}
             }]
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         let messages = body["messages"].as_array().expect("messages should be an array");
         let content = messages[0]["content"].as_array().expect("content should be an array");
         assert_eq!(content[0]["cache_control"]["type"], "ephemeral");
@@ -2083,7 +2210,9 @@ mod tests {
                 ]
             }]
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         let messages = body["messages"].as_array().expect("messages should be an array");
         let content = messages[0]["content"].as_array().expect("content should be an array");
         assert_eq!(content[0]["type"], "text");
@@ -2107,7 +2236,9 @@ mod tests {
                 ]
             }]
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         let messages = body["messages"].as_array().expect("messages should be an array");
         let content = messages[0]["content"].as_array().expect("content should be an array");
         assert_eq!(content[0]["cache_control"]["type"], "ephemeral");
@@ -2122,10 +2253,17 @@ mod tests {
             "messages": [{"role": "user", "content": "Give me JSON"}],
             "response_format": {"type": "json_object"}
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         assert!(body.get("response_format").is_none());
         let system = body["system"].as_array().expect("system should be an array");
-        assert!(system[0]["text"].as_str().expect("text should be a string").contains("valid JSON"));
+        assert!(
+            system[0]["text"]
+                .as_str()
+                .expect("text should be a string")
+                .contains("valid JSON")
+        );
     }
 
     #[test]
@@ -2147,7 +2285,9 @@ mod tests {
                 }
             }
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         assert!(body.get("response_format").is_none());
         let system = body["system"].as_array().expect("system should be an array");
         let instruction = system[0]["text"].as_str().expect("text should be a string");
@@ -2165,10 +2305,17 @@ mod tests {
             ],
             "response_format": {"type": "json_object"}
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         let system = body["system"].as_array().expect("system should be an array");
         assert_eq!(system.len(), 2);
-        assert!(system[0]["text"].as_str().expect("text should be a string").contains("valid JSON"));
+        assert!(
+            system[0]["text"]
+                .as_str()
+                .expect("text should be a string")
+                .contains("valid JSON")
+        );
         assert_eq!(system[1]["text"], "You are helpful.");
     }
 
@@ -2187,7 +2334,9 @@ mod tests {
                 }}
             ]
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         let tools = body["tools"].as_array().expect("tools should be an array");
         assert_eq!(tools.len(), 2);
         assert_eq!(tools[0]["type"], "web_search_20250305");
@@ -2207,7 +2356,9 @@ mod tests {
                 "display_height_px": 768
             }]
         });
-        provider().transform_request(&mut body).expect("transform_request should not fail");
+        provider()
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
         let tools = body["tools"].as_array().expect("tools should be an array");
         assert_eq!(tools[0]["type"], "computer_20241022");
         assert_eq!(tools[0]["display_width_px"], 1024);
@@ -2230,8 +2381,12 @@ mod tests {
             "stop_reason": "end_turn",
             "usage": {"input_tokens": 50, "output_tokens": 20}
         });
-        provider().transform_response(&mut body).expect("transform_response should not fail");
-        let content = body["choices"][0]["message"]["content"].as_str().expect("content should be a string");
+        provider()
+            .transform_response(&mut body)
+            .expect("transform_response should not fail");
+        let content = body["choices"][0]["message"]["content"]
+            .as_str()
+            .expect("content should be a string");
         assert_eq!(content, "According to the document, Rust is a fast language.");
         assert!(!content.contains("citation"));
     }

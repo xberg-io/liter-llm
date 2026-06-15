@@ -399,7 +399,10 @@ duration_secs = 60
         let files = config.files.expect("files should be present");
         assert_eq!(files.backend, "s3");
         assert_eq!(files.prefix, "proxy-files/");
-        assert_eq!(files.backend_config.get("bucket").expect("bucket should be present"), "my-bucket");
+        assert_eq!(
+            files.backend_config.get("bucket").expect("bucket should be present"),
+            "my-bucket"
+        );
 
         // Health
         let health = config.health.expect("health should be present");
@@ -507,7 +510,10 @@ unknown_option = true
 global_limit = 100.0
 "#;
         let config = ProxyConfig::from_toml_str(toml).expect("TOML config should parse");
-        assert_eq!(config.budget.expect("budget should be present").enforcement, EnforcementMode::Hard);
+        assert_eq!(
+            config.budget.expect("budget should be present").enforcement,
+            EnforcementMode::Hard
+        );
     }
 
     #[test]

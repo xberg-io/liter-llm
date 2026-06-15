@@ -257,7 +257,10 @@ mod tests {
         let builder = reqwest::Client::builder();
         let builder = cfg.apply_to_builder(builder);
         let client = builder.build();
-        assert!(client.is_ok(), "reqwest::Client::build() failed with non-default TransportConfig");
+        assert!(
+            client.is_ok(),
+            "reqwest::Client::build() failed with non-default TransportConfig"
+        );
     }
 
     /// Verify that `apply_to_builder` with `http2_prior_knowledge = true` also
@@ -267,7 +270,10 @@ mod tests {
     fn test_apply_to_builder_with_http2_prior_knowledge() {
         let cfg = TransportConfig::new().with_http2_prior_knowledge(true);
         let client = cfg.apply_to_builder(reqwest::Client::builder()).build();
-        assert!(client.is_ok(), "reqwest::Client::build() failed with http2_prior_knowledge=true");
+        assert!(
+            client.is_ok(),
+            "reqwest::Client::build() failed with http2_prior_knowledge=true"
+        );
     }
 
     /// Verify that `apply_to_builder` with pooling disabled produces a valid client.

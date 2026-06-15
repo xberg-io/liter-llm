@@ -197,7 +197,8 @@ mod tests {
             completion_cost("text-embedding-3-small", 100, 0).expect("text-embedding-3-small must be in registry");
         assert!(cost > 0.0, "input tokens must have a positive cost");
 
-        let pricing = model_pricing("text-embedding-3-small").expect("text-embedding-3-small must be in pricing registry");
+        let pricing =
+            model_pricing("text-embedding-3-small").expect("text-embedding-3-small must be in pricing registry");
         assert_eq!(pricing.output_cost_per_token, 0.0, "embedding output cost must be zero");
     }
 
@@ -255,7 +256,10 @@ mod tests {
         let expected = 800.0 * 1e-5 + 200.0 * 1e-6 + 50.0 * 2e-5;
         let uncached = 1000 - 200;
         let actual = (uncached as f64) * pricing.input_cost_per_token
-            + 200.0 * pricing.cache_read_input_token_cost.expect("cache_read_input_token_cost should be set")
+            + 200.0
+                * pricing
+                    .cache_read_input_token_cost
+                    .expect("cache_read_input_token_cost should be set")
             + 50.0 * pricing.output_cost_per_token;
         assert!((actual - expected).abs() < 1e-12);
     }

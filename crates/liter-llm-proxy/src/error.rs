@@ -218,7 +218,11 @@ mod tests {
     async fn extract(err: ProxyError) -> (StatusCode, ErrorResponse) {
         let response = err.into_response();
         let status = response.status();
-        let bytes = Body::new(response.into_body()).collect().await.expect("body collection should not fail").to_bytes();
+        let bytes = Body::new(response.into_body())
+            .collect()
+            .await
+            .expect("body collection should not fail")
+            .to_bytes();
         let body: ErrorResponse = serde_json::from_slice(&bytes).expect("response body should be valid JSON");
         (status, body)
     }

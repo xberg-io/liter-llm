@@ -710,9 +710,7 @@ where
 
     fn call(&mut self, req: LlmRequest) -> Self::Future {
         if self.services.ready_len() == 0 {
-            return Box::pin(async {
-                Err(RouterError::NoReadyUpstream { code: 2002 }.into())
-            });
+            return Box::pin(async { Err(RouterError::NoReadyUpstream { code: 2002 }.into()) });
         }
         // Round-robin across ready services by using the first ready slot.
         // A future enhancement can use weighted selection here.
@@ -906,9 +904,7 @@ mod tests {
     /// In tower 0.5, `Discover` is a blanket impl over `TryStream`, so
     /// implementing `Stream` here is sufficient.
     struct VecDiscover {
-        items: VecDeque<
-            std::result::Result<Change<String, LlmService<MockClient>>, std::convert::Infallible>,
-        >,
+        items: VecDeque<std::result::Result<Change<String, LlmService<MockClient>>, std::convert::Infallible>>,
     }
 
     impl VecDiscover {
@@ -920,10 +916,7 @@ mod tests {
     }
 
     impl Stream for VecDiscover {
-        type Item = std::result::Result<
-            Change<String, LlmService<MockClient>>,
-            std::convert::Infallible,
-        >;
+        type Item = std::result::Result<Change<String, LlmService<MockClient>>, std::convert::Infallible>;
 
         fn poll_next(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
             Poll::Ready(self.items.pop_front())
@@ -960,15 +953,9 @@ mod tests {
         }
 
         impl Stream for InsertThenRemoveDiscover {
-            type Item = std::result::Result<
-                Change<String, LlmService<MockClient>>,
-                std::convert::Infallible,
-            >;
+            type Item = std::result::Result<Change<String, LlmService<MockClient>>, std::convert::Infallible>;
 
-            fn poll_next(
-                mut self: Pin<&mut Self>,
-                _cx: &mut Context<'_>,
-            ) -> Poll<Option<Self::Item>> {
+            fn poll_next(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
                 let step = self.step;
                 self.step += 1;
                 match step {
@@ -999,7 +986,6 @@ mod tests {
 
     #[tokio::test]
     async fn concurrency_limit_rejects_at_max() {
-
         // A service that blocks until a signal is set, so we can hold the
         // permit open.
         #[derive(Clone)]

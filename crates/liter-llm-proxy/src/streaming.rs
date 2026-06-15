@@ -106,7 +106,12 @@ mod tests {
         let response = sse_response(mock_stream);
 
         assert_eq!(
-            response.headers().get("content-type").expect("content-type header should be present").to_str().expect("content-type should be valid ASCII"),
+            response
+                .headers()
+                .get("content-type")
+                .expect("content-type header should be present")
+                .to_str()
+                .expect("content-type should be valid ASCII"),
             "text/event-stream"
         );
 

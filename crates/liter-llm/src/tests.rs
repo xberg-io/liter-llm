@@ -988,7 +988,8 @@ mod provider_tests {
 
     #[test]
     fn detect_bedrock_by_prefix() {
-        let p = detect_provider("bedrock/anthropic.claude-3-sonnet-20240229-v1:0").expect("provider should be detected");
+        let p =
+            detect_provider("bedrock/anthropic.claude-3-sonnet-20240229-v1:0").expect("provider should be detected");
         assert_eq!(p.name(), "bedrock");
     }
 
@@ -1005,7 +1006,8 @@ mod provider_tests {
 
     #[test]
     fn bedrock_strips_prefix() {
-        let p = detect_provider("bedrock/anthropic.claude-3-sonnet-20240229-v1:0").expect("provider should be detected");
+        let p =
+            detect_provider("bedrock/anthropic.claude-3-sonnet-20240229-v1:0").expect("provider should be detected");
         assert_eq!(
             p.strip_model_prefix("bedrock/anthropic.claude-3-sonnet-20240229-v1:0"),
             "anthropic.claude-3-sonnet-20240229-v1:0"
@@ -1026,7 +1028,8 @@ mod provider_tests {
     #[test]
     fn bedrock_auth_header_returns_none() {
         // SigV4 uses computed headers, not a static auth header.
-        let p = detect_provider("bedrock/anthropic.claude-3-sonnet-20240229-v1:0").expect("provider should be detected");
+        let p =
+            detect_provider("bedrock/anthropic.claude-3-sonnet-20240229-v1:0").expect("provider should be detected");
         let header = p.auth_header("ignored-for-sigv4");
         assert!(header.is_none(), "BedrockProvider must return None for auth_header");
     }
@@ -1096,7 +1099,9 @@ mod provider_tests {
             "max_completion_tokens": 512
         });
 
-        provider.transform_request(&mut body).expect("transform_request should not fail");
+        provider
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["max_tokens"], 512);
         assert!(body.get("max_completion_tokens").is_none());
@@ -1113,7 +1118,9 @@ mod provider_tests {
             "messages": []
         });
 
-        provider.transform_request(&mut body).expect("transform_request should not fail");
+        provider
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert!(body.get("max_tokens").is_none());
         assert!(body.get("max_completion_tokens").is_none());
@@ -1128,7 +1135,9 @@ mod provider_tests {
             "max_completion_tokens": 512
         });
 
-        provider.transform_request(&mut body).expect("transform_request should not fail");
+        provider
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         // Field untouched when no mappings configured
         assert_eq!(body["max_completion_tokens"], 512);
@@ -1148,7 +1157,9 @@ mod provider_tests {
             "frequency_penalty": 0.5
         });
 
-        provider.transform_request(&mut body).expect("transform_request should not fail");
+        provider
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["max_tokens"], 512);
         assert_eq!(body["repetition_penalty"], 0.5);
@@ -1165,7 +1176,8 @@ mod provider_tests {
             "max_completion_tokens": 256
         });
 
-        p.transform_request(&mut body).expect("transform_request should not fail");
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["max_tokens"], 256);
         assert!(body.get("max_completion_tokens").is_none());
@@ -1395,7 +1407,9 @@ mod sse_tests {
     #[test]
     fn parse_valid_chunk() {
         let line = r#"data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1700000000,"model":"gpt-4","choices":[{"index":0,"delta":{"content":"Hi"},"finish_reason":null}]}"#;
-        let result = parse_sse_line(line).expect("parse_sse_line should not fail").expect("should yield a chunk");
+        let result = parse_sse_line(line)
+            .expect("parse_sse_line should not fail")
+            .expect("should yield a chunk");
         assert_eq!(result.choices[0].delta.content.as_deref(), Some("Hi"));
     }
 
@@ -1420,7 +1434,9 @@ mod sse_tests {
     fn parse_data_without_space() {
         // Some implementations emit "data:{json}" without a trailing space.
         let line = r#"data:{"id":"chatcmpl-123","object":"chat.completion.chunk","created":1700000000,"model":"gpt-4","choices":[{"index":0,"delta":{"content":"Hi"},"finish_reason":null}]}"#;
-        let result = parse_sse_line(line).expect("parse_sse_line should not fail").expect("should yield a chunk");
+        let result = parse_sse_line(line)
+            .expect("parse_sse_line should not fail")
+            .expect("should yield a chunk");
         assert_eq!(result.choices[0].delta.content.as_deref(), Some("Hi"));
     }
 
@@ -1439,16 +1455,25 @@ mod config_tests {
         // Test trailing slash removal
         let builder = ClientConfigBuilder::new("key").base_url("https://api.example.com/");
         let config = builder.build();
-        assert_eq!(config.base_url.expect("base_url should be present"), "https://api.example.com");
+        assert_eq!(
+            config.base_url.expect("base_url should be present"),
+            "https://api.example.com"
+        );
 
         // Test multiple trailing slashes
         let builder = ClientConfigBuilder::new("key").base_url("https://api.example.com///");
         let config = builder.build();
-        assert_eq!(config.base_url.expect("base_url should be present"), "https://api.example.com");
+        assert_eq!(
+            config.base_url.expect("base_url should be present"),
+            "https://api.example.com"
+        );
 
         // Test no trailing slash (remains unchanged)
         let builder = ClientConfigBuilder::new("key").base_url("https://api.example.com");
         let config = builder.build();
-        assert_eq!(config.base_url.expect("base_url should be present"), "https://api.example.com");
+        assert_eq!(
+            config.base_url.expect("base_url should be present"),
+            "https://api.example.com"
+        );
     }
 }
