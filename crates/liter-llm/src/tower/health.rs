@@ -84,19 +84,15 @@ impl Default for HealthCheckConfig {
 ///
 /// Implementors issue a lightweight probe against `upstream` (typically a
 /// provider base URL or named identifier) and report [`HealthStatus`].
-///
-/// # Note for 1.A integration
-///
-/// The `upstream` parameter is intentionally a plain `&str` so that it works
-/// across the FFI boundary without allocation.  1.A's error consolidation
-/// should ensure that `Err` values carry numeric codes ≥ 2000.
 pub trait HealthChecker: Send + Sync + 'static {
     /// Probe `upstream` and return its current [`HealthStatus`].
     ///
-    /// The future must be `'static + Send`.
+    /// The parameter is taken by value (`String`) so that implementations can
+    /// move it into the returned future without a clone, making the
+    /// `'static + Send` bound on the future trivially satisfiable.
     fn check(
         &self,
-        upstream: &str,
+        upstream: String,
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HealthStatus> + Send + 'static>>;
 }
 
@@ -146,13 +142,13 @@ impl HttpProbeHealthChecker {
 impl HealthChecker for HttpProbeHealthChecker {
     fn check(
         &self,
-        upstream: &str,
+        upstream: String,
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HealthStatus> + Send + 'static>> {
         let url = self
             .probe_urls
-            .get(upstream)
+            .get(&upstream)
             .cloned()
-            .unwrap_or_else(|| upstream.to_owned());
+            .unwrap_or(upstream);
         let client = self.client.clone();
 
         Box::pin(async move {
@@ -258,7 +254,7 @@ async fn run_provider_health_probe<C: HealthChecker>(
             break;
         }
 
-        let status = checker.check(&upstream).await;
+        let status = checker.check(upstream.clone()).await;
         state.record(status, &config);
     }
 }
@@ -405,7 +401,7 @@ where
             break;
         }
 
-        let result = svc.call(LlmRequest::ListModels).await;
+        let result = svc.call(LlmRequest::ListModels()).await;
         let is_healthy = result.is_ok();
         healthy.store(is_healthy, Ordering::Release);
 
@@ -630,7 +626,7 @@ mod tests {
         impl HealthChecker for AlwaysHealthy {
             fn check(
                 &self,
-                _upstream: &str,
+                _upstream: String,
             ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HealthStatus> + Send + 'static>> {
                 Box::pin(async { HealthStatus::Healthy })
             }
@@ -652,7 +648,7 @@ mod tests {
         impl HealthChecker for AlwaysUnhealthy {
             fn check(
                 &self,
-                _upstream: &str,
+                _upstream: String,
             ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HealthStatus> + Send + 'static>> {
                 Box::pin(async { HealthStatus::Unhealthy })
             }

@@ -64,6 +64,7 @@ description = "Universal LLM API client — 143 providers, streaming, tool calli
 keywords = ["llm", "openai", "api-client", "ai", "kreuzberg"]
 
 [workspace.dependencies]
+ahash = "0.8"
 anyhow = "1"
 arc-swap = "1"
 
@@ -124,6 +125,7 @@ rmcp = { version = "1.7", features = [
     "transport-streamable-http-server",
     "server-side-http",
 ] }
+rust_decimal = "1"
 rustler = "0.38"
 rustls = { version = "0.23", default-features = false, features = [
     "ring",

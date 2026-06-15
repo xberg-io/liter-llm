@@ -68,7 +68,7 @@ pub enum DrainResult {
 /// [`ShutdownCoordinator::register`].  When the coordinator transitions to
 /// `Draining` it calls `drain` on every registered subsystem concurrently
 /// and waits for them all to return (or the hard deadline to fire).
-pub trait Drainable: Send + Sync {
+pub trait Drainable: Send + Sync + 'static {
     /// Drain any in-flight work.
     ///
     /// Implementations MUST respect `deadline`: they should return

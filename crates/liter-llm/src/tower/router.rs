@@ -34,7 +34,7 @@ use tower::discover::{Change, Discover};
 use tower::limit::ConcurrencyLimit;
 use tower::ready_cache::ReadyCache;
 
-use super::types::{LlmRequest, LlmResponse};
+use super::types::{LlmRequest, LlmRequestKind, LlmResponse};
 use crate::client::BoxFuture;
 use crate::error::{LiterLlmError, Result};
 
@@ -444,8 +444,8 @@ where
                 let available_models: Vec<String> = (0..n).map(|i| i.to_string()).collect();
 
                 // Extract prompt and system prompt from the request.
-                let (prompt, system_prompt) = match &req {
-                    LlmRequest::Chat(r) => {
+                let (prompt, system_prompt) = match &req.kind {
+                    LlmRequestKind::Chat(r) => {
                         let prompt = r
                             .messages
                             .iter()
@@ -539,11 +539,25 @@ fn weighted_random_select(weights: &[Weight]) -> usize {
 /// The key type must be `String` so that provider names are human-readable in
 /// logs and metrics.
 ///
+/// # Object safety
+///
+/// `UpstreamDiscover` is **not** object-safe and **must not** be stored as
+/// `dyn UpstreamDiscover`.  It is a generic bound used exclusively as a type
+/// parameter for [`DynamicRouter<D>`].  All discovery implementations are
+/// monomorphised at compile time.
+///
+/// If you need a runtime registry of heterogeneous discovery sources, wrap
+/// each source in an `Arc<Mutex<Box<dyn …>>>` and poll them via a custom
+/// `Stream` adapter — do not store them as `dyn UpstreamDiscover`.
+///
 /// # Note for 1.A integration
 ///
 /// If the router encounters a discovery error, it wraps it in
 /// [`RouterError::Discover`].  The 1.A error-consolidation workstream should
 /// replace this local enum with the canonical error hierarchy.
+// Object-safety: not required — used only as a generic parameter on
+// `DynamicRouter<D>`.  `tower::discover::Discover` is itself a blanket
+// alias over `TryStream` which is not object-safe.
 pub trait UpstreamDiscover: Discover<Key = String> + Unpin + Send {}
 
 impl<D> UpstreamDiscover for D where D: Discover<Key = String> + Unpin + Send {}
@@ -1121,7 +1135,7 @@ mod tests {
         );
 
         // Dispatch the first call (holds the permit open indefinitely).
-        let _held_fut = limited.call(LlmRequest::ListModels);
+        let _held_fut = limited.call(LlmRequest::ListModels());
 
         // Now the concurrency slot is exhausted.  poll_ready should return
         // Pending (the tower ConcurrencyLimit only returns Ready once the

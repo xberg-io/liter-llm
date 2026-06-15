@@ -102,6 +102,19 @@ pub mod types;
 // Re-export tower core types for convenient access
 pub use tower::ServiceExt;
 
+// Re-export cache key strategies so users can reference them via `liter_llm::tower::*`
+// without spelling out the full internal module path.
+pub use crate::cache_key::{CacheKeyInput, CacheKeyStrategy, ExactHashStrategy, SystemPromptAwareStrategy, TenantScopedStrategy};
+// Re-export vector store abstractions (tower-gated module).
+pub use crate::vectorstore::{InMemoryVectorStore, VectorMatch, VectorMetadata, VectorStore};
+// Re-export the OpenDAL-backed vector store when the opendal-cache feature is active.
+#[cfg(feature = "opendal-cache")]
+pub use crate::vectorstore::OpenDalVectorStore;
+// Re-export embedding provider abstraction.
+pub use crate::embedding::{EmbeddingProvider, NoOpEmbeddingProvider, SelfHostedEmbeddingProvider};
+// Re-export guardrail types (unconditionally compiled, exposed through tower for ergonomics).
+pub use crate::guardrail::{Guardrail, GuardrailContext, GuardrailDecision, GuardrailStage};
+
 pub use budget::{
     BudgetConfig, BudgetDimension, BudgetLayer, BudgetLedger, BudgetService, BudgetSnapshot, BudgetState,
     BudgetVerdict, CostCheckContext, CostRecordContext, DimensionLimits, Enforcement, InMemoryBudgetLedger,

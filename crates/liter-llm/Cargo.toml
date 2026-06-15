@@ -63,7 +63,7 @@ otel = ["tracing", "dep:tracing-opentelemetry", "dep:opentelemetry"]
 
 # Tower middleware integration (LlmService, TracingLayer, FallbackLayer,
 # rate_limit, budget, health, retry, circuit, hedge, cache).
-tower = ["dep:tower", "dep:tower-http", "dep:dashmap", "dep:futures-util", "tracing"]
+tower = ["dep:tower", "dep:tower-http", "dep:futures-util", "tracing"]
 # ---------------------------------------------------------------------------
 # Caching feature
 # ---------------------------------------------------------------------------
@@ -145,12 +145,13 @@ full = [
 default = ["native-http"]
 
 [dependencies]
+ahash = { workspace = true }
 aws-credential-types = { version = "1", optional = true }
 aws-sigv4 = { version = "1", features = ["sign-http", "http1"], optional = true }
 base64 = { workspace = true, optional = true }
 bytes = { workspace = true }
 cel-interpreter = { version = "0.8", optional = true }
-dashmap = { workspace = true, optional = true }
+dashmap = { workspace = true }
 futures-core = { workspace = true }
 futures-util = { workspace = true, optional = true }
 gcp_auth = { workspace = true, optional = true }
@@ -161,6 +162,7 @@ opendal = { workspace = true, optional = true }
 opentelemetry = { workspace = true, optional = true }
 pin-project-lite = { workspace = true }
 regex = "1"
+rust_decimal = { workspace = true }
 secrecy = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

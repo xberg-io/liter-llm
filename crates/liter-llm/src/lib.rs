@@ -60,6 +60,9 @@ pub mod tokenizer;
 pub mod tower;
 /// Request/response DTOs shared across providers and bindings.
 pub mod types;
+/// Generic multi-tenant primitives: [`tenant::TenantId`], [`tenant::TenantContext`],
+/// [`tenant::KeyResolver`], and [`tenant::InMemoryKeyResolver`].
+pub mod tenant;
 /// Shared utility helpers (memory-bound guards, etc.).
 pub mod util;
 /// Vector store abstraction for the semantic cache tier ([`VectorStore`], [`InMemoryVectorStore`]).
@@ -86,6 +89,16 @@ pub use error::{LiterLlmError, Result};
 // pattern that does not cross FFI cleanly).
 #[cfg(feature = "tower")]
 pub use tower::{BudgetConfig, CacheBackend, CacheConfig, Enforcement, RateLimitConfig};
+// Cache key strategies and vector store / embedding / guardrail abstractions
+// are surfaced at the crate root so bindings and application code can import
+// them without spelling out the full `tower::` path.
+#[cfg(feature = "tower")]
+pub use tower::{
+    CacheKeyStrategy, ExactHashStrategy, SystemPromptAwareStrategy, TenantScopedStrategy,
+    EmbeddingProvider, NoOpEmbeddingProvider,
+    VectorStore, VectorMatch,
+    Guardrail, GuardrailContext, GuardrailDecision, GuardrailStage,
+};
 // Re-export the public provider helper functions that are part of the crate's
 // public API even though the `provider` module itself is pub(crate).
 pub use cost::{completion_cost, completion_cost_with_cache};

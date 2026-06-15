@@ -95,7 +95,7 @@ impl ProbeResult {
 ///     }
 /// }
 /// ```
-pub trait ReadinessProbe: Send + Sync {
+pub trait ReadinessProbe: Send + Sync + 'static {
     /// A short, stable identifier for this probe (used in error JSON).
     fn name(&self) -> &'static str;
 

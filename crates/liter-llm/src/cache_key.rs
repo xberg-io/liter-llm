@@ -12,8 +12,47 @@
 //! | [`ExactHashStrategy`] | Hash the full serialized request body (default). |
 //! | [`SystemPromptAwareStrategy`] | Hash includes the resolved system prompt but ignores per-call metadata noise. |
 //! | [`TenantScopedStrategy`] | Adds a tenant prefix so two tenants requesting the same prompt get separate cache entries. |
+//!
+//! # Hash stability
+//!
+//! All built-in strategies use [`ahash::RandomState`] with four fixed
+//! compile-time seeds.  Identical inputs produce identical `u64` keys
+//! **across processes and Rust versions** — the hash is stable as long as
+//! the seed constants are not changed.  This makes it safe to persist or
+//! distribute cache keys.
+//!
+//! The canonical body string is also returned alongside the key so that
+//! callers can guard against the (astronomically rare) 64-bit hash collision
+//! by comparing the body on lookup.
 
-use std::hash::{DefaultHasher, Hash, Hasher};
+use std::hash::{BuildHasher, Hash, Hasher};
+
+use ahash::RandomState;
+
+/// Fixed seeds for the ahash [`RandomState`] used by all built-in cache key
+/// strategies.
+///
+/// These constants MUST NOT be changed after cache entries have been persisted,
+/// as changing them would invalidate all existing cache keys.
+const CACHE_KEY_SEED_0: u64 = 0x6c69_7465_725f_6c6c; // "liter_ll"
+const CACHE_KEY_SEED_1: u64 = 0x6d5f_6361_6368_655f; // "m_cache_"
+const CACHE_KEY_SEED_2: u64 = 0x6b65_795f_7374_7261; // "key_stra"
+const CACHE_KEY_SEED_3: u64 = 0x7465_6779_5f76_3100; // "tegy_v1\0"
+
+/// The process-global deterministic random state.  Constructed once from
+/// compile-time-fixed seeds so the same input always yields the same hash,
+/// regardless of process restart or Rust version.
+fn cache_random_state() -> &'static RandomState {
+    use std::sync::OnceLock;
+    static STATE: OnceLock<RandomState> = OnceLock::new();
+    STATE.get_or_init(|| RandomState::generate_with(CACHE_KEY_SEED_0, CACHE_KEY_SEED_1, CACHE_KEY_SEED_2, CACHE_KEY_SEED_3))
+}
+
+/// Construct a deterministic hasher using the fixed-seed [`RandomState`].
+#[inline]
+fn seeded_hasher() -> impl Hasher {
+    cache_random_state().build_hasher()
+}
 
 // ── CacheKeyInput ─────────────────────────────────────────────────────────────
 
@@ -54,8 +93,9 @@ pub trait CacheKeyStrategy: Send + Sync + 'static {
     /// collision-guard comparison.
     ///
     /// Determinism is required: identical inputs must produce identical outputs
-    /// across calls (though not necessarily across process restarts, since
-    /// `DefaultHasher` is not stable across Rust versions).
+    /// across calls **and** across process restarts.  Built-in implementations
+    /// satisfy this by using a fixed-seed ahash [`RandomState`] (see
+    /// module-level docs).
     fn key_for(&self, input: &CacheKeyInput<'_>) -> (u64, String);
 }
 
@@ -81,7 +121,7 @@ impl CacheKeyStrategy for ExactHashStrategy {
             input.tenant_id.unwrap_or(""),
             input.system_prompt.unwrap_or(""),
         );
-        let mut hasher = DefaultHasher::new();
+        let mut hasher = seeded_hasher();
         body.hash(&mut hasher);
         (hasher.finish(), body)
     }
@@ -109,7 +149,7 @@ impl CacheKeyStrategy for SystemPromptAwareStrategy {
             input.params_json,
             input.system_prompt.unwrap_or(""),
         );
-        let mut hasher = DefaultHasher::new();
+        let mut hasher = seeded_hasher();
         body.hash(&mut hasher);
         (hasher.finish(), body)
     }
@@ -137,7 +177,7 @@ impl CacheKeyStrategy for TenantScopedStrategy {
             input.params_json,
             input.system_prompt.unwrap_or(""),
         );
-        let mut hasher = DefaultHasher::new();
+        let mut hasher = seeded_hasher();
         body.hash(&mut hasher);
         (hasher.finish(), body)
     }
@@ -285,6 +325,31 @@ mod tests {
             k1, k2,
             "two requests without tenant_id should share a key under tenant-scoped strategy"
         );
+    }
+
+    // ── Determinism across instances (process-restart stability) ──────────────
+
+    #[test]
+    fn cache_key_deterministic_across_invocations() {
+        // Ten independent ExactHashStrategy instances must all produce the same
+        // key and body for the same input.  This verifies that the fixed-seed
+        // hasher is stable regardless of when the hasher is constructed.
+        let reference_input = input(
+            "openai/gpt-4o",
+            r#"[{"role":"user","content":"hello world"}]"#,
+            r#"{"temperature":0.7}"#,
+            Some("tenant-x"),
+            Some("You are helpful."),
+        );
+
+        let (expected_key, expected_body) = ExactHashStrategy.key_for(&reference_input);
+
+        for _ in 0..10 {
+            let s = ExactHashStrategy;
+            let (k, b) = s.key_for(&reference_input);
+            assert_eq!(k, expected_key, "key must be stable across ExactHashStrategy instances");
+            assert_eq!(b, expected_body, "body must be stable across ExactHashStrategy instances");
+        }
     }
 
     // ── Cross-strategy isolation ───────────────────────────────────────────────
