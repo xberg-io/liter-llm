@@ -526,19 +526,28 @@ mod tests {
         assert!(models.iter().all(|m| m == first), "all followers must receive the same result");
     }
 
-    /// When the leader returns an error, followers receive an error (may be different
-    /// type due to Arc unwrapping, but all callers should get an Err).
+    /// When the leader returns an error, all followers receive that error.
+    ///
+    /// A `SlowClient` with a 50 ms delay ensures all 10 tasks subscribe as followers
+    /// before the leader's future resolves — otherwise the fast `MockClient` would
+    /// complete before followers arrive, causing multiple "leader" rounds.
     #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
     async fn singleflight_leader_error_propagates_to_followers() {
-        let client = MockClient::failing_rate_limited();
-        let call_count = Arc::clone(&client.call_count);
+        // Use a slow failing client so all 10 tasks arrive while the leader is still
+        // awaiting its upstream call.
+        let inner_client = MockClient::failing_rate_limited();
+        let slow_client = SlowClient {
+            inner: inner_client,
+            delay: std::time::Duration::from_millis(50),
+        };
+        let call_count = Arc::clone(&slow_client.inner.call_count);
         let coordinator = Arc::new(InMemorySingleflight::new());
         let layer = SingleflightLayer::new(Arc::clone(&coordinator));
 
         let barrier = Arc::new(tokio::sync::Barrier::new(10));
         let handles: Vec<_> = (0..10)
             .map(|_| {
-                let svc = layer.layer(LlmService::new(client.clone()));
+                let svc = layer.layer(LlmService::new(slow_client.clone()));
                 let barrier = Arc::clone(&barrier);
                 tokio::spawn(async move {
                     barrier.wait().await;
@@ -555,14 +564,12 @@ mod tests {
             .filter(|r| r.as_ref().unwrap().is_err())
             .count();
 
-        // All callers should receive an error (the leader's error propagates to followers).
-        assert!(error_count >= 1, "at least one caller must receive the leader's error");
+        // All callers should receive an error.
+        assert_eq!(error_count, 10, "all callers must receive the leader's error");
 
-        // Inner service should be called significantly fewer times than the number of callers.
+        // With a 50 ms delay, all 10 tasks arrive while the leader is awaiting;
+        // inner should be called exactly once.
         let calls = call_count.load(Ordering::SeqCst);
-        assert!(
-            calls <= 5,
-            "inner should be called far fewer than 10 times under singleflight; got {calls}"
-        );
+        assert_eq!(calls, 1, "inner should be called exactly once under singleflight; got {calls}");
     }
 }
