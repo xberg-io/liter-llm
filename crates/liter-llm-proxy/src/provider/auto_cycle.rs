@@ -327,7 +327,6 @@ mod tests {
                     ..Default::default()
                 },
                 finish_reason: Some(FinishReason::Stop),
-                ..Default::default()
             }],
             usage: None,
             system_fingerprint: None,

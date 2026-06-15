@@ -1,11 +1,13 @@
 use std::sync::Arc;
 
+use arc_swap::ArcSwap;
 use axum::Router;
 
 use liter_llm_proxy::auth::KeyStore;
 use liter_llm_proxy::config::ProxyConfig;
 use liter_llm_proxy::file_store::FileStore;
 use liter_llm_proxy::routes::build_router;
+use liter_llm_proxy::secrets::{EnvVarSecretManager, SecretManagerRegistry};
 use liter_llm_proxy::service_pool::ServicePool;
 use liter_llm_proxy::state::AppState;
 
@@ -35,7 +37,13 @@ impl TestProxy {
             key_store: Arc::new(key_store),
             service_pool: Arc::new(service_pool),
             file_store: Arc::new(file_store),
-            config: Arc::new(config),
+            config: Arc::new(ArcSwap::new(Arc::new(config))),
+            secret_registry: Arc::new(
+                SecretManagerRegistry::builder()
+                    .register("env", Arc::new(EnvVarSecretManager::new()))
+                    .default_backend(Arc::new(EnvVarSecretManager::new()))
+                    .build(),
+            ),
             shutdown: None,
         };
 
