@@ -96,6 +96,10 @@ mod inner {
         cache_stale: Counter<u64>,
         circuit_trip: Counter<u64>,
         retry_attempt: Counter<u64>,
+        /// `gen_ai.budget.spend_usd` — gauge-style histogram per dimension.
+        budget_spend: Histogram<f64>,
+        /// `gen_ai.budget.rejection` — counter incremented on budget reject.
+        budget_rejection: Counter<u64>,
     }
 
     impl Instruments {
@@ -135,6 +139,15 @@ mod inner {
                 retry_attempt: meter
                     .u64_counter("gen_ai.retry.attempt")
                     .with_description("Number of retry attempts (excluding first try)")
+                    .build(),
+                budget_spend: meter
+                    .f64_histogram("gen_ai.budget.spend_usd")
+                    .with_description("Cumulative spend in USD per budget dimension")
+                    .with_unit("USD")
+                    .build(),
+                budget_rejection: meter
+                    .u64_counter("gen_ai.budget.rejection")
+                    .with_description("Number of requests rejected due to budget limits")
                     .build(),
             }
         }
@@ -359,6 +372,94 @@ mod inner {
         }
     }
 
+    /// Record a per-tier cache hit.
+    ///
+    /// `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
+    /// Emits `gen_ai.cache.hit` with a `gen_ai.cache.tier` attribute.
+    /// If the meter has not been initialized, this call is a no-op.
+    pub fn record_cache_tier_hit(system: &str, model: &str, tier: &str) {
+        if let Some(instr) = instruments() {
+            instr.cache_hit.add(
+                1,
+                &[
+                    KeyValue::new("gen_ai.system", system.to_owned()),
+                    KeyValue::new("gen_ai.request.model", model.to_owned()),
+                    KeyValue::new("gen_ai.cache.tier", tier.to_owned()),
+                ],
+            );
+        }
+    }
+
+    /// Record a per-tier cache miss.
+    ///
+    /// `tier` should be one of `"exact"`, `"semantic"`, or `"streaming_replay"`.
+    /// Emits `gen_ai.cache.miss` with a `gen_ai.cache.tier` attribute.
+    /// If the meter has not been initialized, this call is a no-op.
+    pub fn record_cache_tier_miss(system: &str, model: &str, tier: &str) {
+        if let Some(instr) = instruments() {
+            instr.cache_miss.add(
+                1,
+                &[
+                    KeyValue::new("gen_ai.system", system.to_owned()),
+                    KeyValue::new("gen_ai.request.model", model.to_owned()),
+                    KeyValue::new("gen_ai.cache.tier", tier.to_owned()),
+                ],
+            );
+        }
+    }
+
+    /// Record cumulative spend for a specific budget dimension.
+    ///
+    /// Emits `gen_ai.budget.spend_usd` with dimension attributes.
+    /// Call from [`super::budget::InMemoryBudgetLedger::record`] after each
+    /// successful completion.  If the meter has not been initialized, this
+    /// call is a no-op.
+    #[allow(clippy::too_many_arguments)]
+    pub fn record_budget_spend(
+        model: &str,
+        provider: &str,
+        tenant_id: Option<&str>,
+        user_id: Option<&str>,
+        api_key_id: Option<&str>,
+        cost_usd: f64,
+    ) {
+        if let Some(instr) = instruments() {
+            let mut attrs = vec![
+                KeyValue::new("gen_ai.request.model", model.to_owned()),
+                KeyValue::new("gen_ai.system", provider.to_owned()),
+            ];
+            if let Some(tenant) = tenant_id {
+                attrs.push(KeyValue::new("gen_ai.budget.tenant_id", tenant.to_owned()));
+            }
+            if let Some(user) = user_id {
+                attrs.push(KeyValue::new("gen_ai.budget.user_id", user.to_owned()));
+            }
+            if let Some(key) = api_key_id {
+                attrs.push(KeyValue::new("gen_ai.budget.api_key_id", key.to_owned()));
+            }
+            instr.budget_spend.record(cost_usd, &attrs);
+        }
+    }
+
+    /// Record a budget-rejection event.
+    ///
+    /// Emits `gen_ai.budget.rejection` with the triggering dimension.
+    /// Call from [`super::budget::InMemoryBudgetLedger::check`] when
+    /// returning [`super::budget::BudgetVerdict::Reject`].
+    /// If the meter has not been initialized, this call is a no-op.
+    pub fn record_budget_rejection(model: &str, provider: &str, dimension: &str) {
+        if let Some(instr) = instruments() {
+            instr.budget_rejection.add(
+                1,
+                &[
+                    KeyValue::new("gen_ai.request.model", model.to_owned()),
+                    KeyValue::new("gen_ai.system", provider.to_owned()),
+                    KeyValue::new("gen_ai.budget.dimension", dimension.to_owned()),
+                ],
+            );
+        }
+    }
+
     // ─── Tests ────────────────────────────────────────────────────────────────
 
     #[cfg(test)]
@@ -526,6 +627,31 @@ mod inner {
     /// No-op retry-attempt helper.
     #[inline]
     pub fn record_retry_attempt(_system: &str, _model: &str, _operation: &str) {}
+
+    /// No-op budget-spend helper.
+    #[allow(clippy::too_many_arguments)]
+    #[inline]
+    pub fn record_budget_spend(
+        _model: &str,
+        _provider: &str,
+        _tenant_id: Option<&str>,
+        _user_id: Option<&str>,
+        _api_key_id: Option<&str>,
+        _cost_usd: f64,
+    ) {
+    }
+
+    /// No-op budget-rejection helper.
+    #[inline]
+    pub fn record_budget_rejection(_model: &str, _provider: &str, _dimension: &str) {}
+
+    /// No-op per-tier cache-hit helper.
+    #[inline]
+    pub fn record_cache_tier_hit(_system: &str, _model: &str, _tier: &str) {}
+
+    /// No-op per-tier cache-miss helper.
+    #[inline]
+    pub fn record_cache_tier_miss(_system: &str, _model: &str, _tier: &str) {}
 }
 
 // Re-export the active implementation.

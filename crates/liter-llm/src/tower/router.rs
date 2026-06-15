@@ -110,7 +110,7 @@ impl fmt::Display for Weight {
 // ---- Routing strategy ------------------------------------------------------
 
 /// Routing strategy for selecting among multiple deployments.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 #[cfg_attr(alef, alef(skip))]
 pub enum RoutingStrategy {
     /// Round-robin across all deployments in order.
@@ -132,6 +132,31 @@ pub enum RoutingStrategy {
         /// deployments vec).
         weights: Vec<Weight>,
     },
+    /// Intent-based semantic routing.
+    ///
+    /// Calls the provided [`RouteClassifier`] cascade to determine which
+    /// model should handle the request.  The classifier inspects the prompt
+    /// text (and optionally system prompt / metadata) and returns a model ID.
+    ///
+    /// If the classifier returns `None` (all tiers defer) the router falls
+    /// back to [`RoutingStrategy::RoundRobin`] across the available
+    /// deployments so requests are never dropped.
+    ///
+    /// [`RouteClassifier`]: super::route_classify::RouteClassifier
+    Semantic(Arc<dyn super::route_classify::RouteClassifier>),
+}
+
+impl std::fmt::Debug for RoutingStrategy {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::RoundRobin => write!(f, "RoundRobin"),
+            Self::Fallback => write!(f, "Fallback"),
+            Self::LatencyBased => write!(f, "LatencyBased"),
+            Self::CostBased => write!(f, "CostBased"),
+            Self::WeightedRandom { weights } => f.debug_struct("WeightedRandom").field("weights", weights).finish(),
+            Self::Semantic(_) => write!(f, "Semantic(…)"),
+        }
+    }
 }
 
 // ---- Per-deployment metrics ------------------------------------------------
@@ -396,6 +421,81 @@ where
                 let idx = weighted_random_select(weights);
                 let mut svc = self.deployments[idx].clone();
                 Box::pin(async move { svc.call(req).await })
+            }
+            RoutingStrategy::Semantic(classifier) => {
+                use super::route_classify::ClassifyContext;
+                use std::collections::HashMap;
+
+                let classifier = Arc::clone(classifier);
+                let deployments = self.deployments.clone();
+                let counter = Arc::clone(&self.counter);
+
+                // Build a list of model strings from the request so the
+                // classifier knows what is available.  We derive model names
+                // from deployment indices as opaque "deployment-{i}" keys
+                // when the deployments do not carry metadata; the classifier
+                // can then map these back to a deployment index.
+                //
+                // For typical usage the caller registers one deployment per
+                // model and names them accordingly.  We expose the indices
+                // 0..n as model identifiers so the classifier can refer to
+                // them.
+                let n = deployments.len();
+                let available_models: Vec<String> = (0..n).map(|i| i.to_string()).collect();
+
+                // Extract prompt and system prompt from the request.
+                let (prompt, system_prompt) = match &req {
+                    LlmRequest::Chat(r) => {
+                        let prompt = r
+                            .messages
+                            .iter()
+                            .rev()
+                            .find_map(|m| {
+                                if let crate::types::Message::User(u) = m {
+                                    match &u.content {
+                                        crate::types::UserContent::Text(t) => Some(t.clone()),
+                                        crate::types::UserContent::Parts(_) => None,
+                                    }
+                                } else {
+                                    None
+                                }
+                            })
+                            .unwrap_or_default();
+                        let system = r.messages.iter().find_map(|m| {
+                            if let crate::types::Message::System(s) = m {
+                                Some(s.content.clone())
+                            } else {
+                                None
+                            }
+                        });
+                        (prompt, system)
+                    }
+                    _ => (String::new(), None),
+                };
+
+                Box::pin(async move {
+                    let meta: HashMap<String, String> = HashMap::new();
+                    let ctx = ClassifyContext {
+                        prompt: &prompt,
+                        system_prompt: system_prompt.as_deref(),
+                        metadata: &meta,
+                        available_models: &available_models,
+                    };
+
+                    // Call the classifier; if it returns a model index, parse it.
+                    let idx = classifier
+                        .classify(&ctx)
+                        .await
+                        .and_then(|model_str| model_str.parse::<usize>().ok())
+                        .filter(|&i| i < n);
+
+                    // Fallback to round-robin when the classifier defers.
+                    let idx = idx.unwrap_or_else(|| {
+                        counter.fetch_add(1, Ordering::Relaxed) % n
+                    });
+
+                    deployments[idx].clone().call(req).await
+                })
             }
         }
     }
@@ -1057,5 +1157,67 @@ mod tests {
         // After all services are yielded, stream ends.
         let third = Pin::new(&mut discover).poll_next(&mut noop_cx);
         assert!(matches!(third, Poll::Ready(None)));
+    }
+
+    // ---- Semantic routing tests -------------------------------------------
+
+    /// A classifier that always routes to deployment index `target`.
+    struct FixedIndexClassifier {
+        target: String,
+    }
+
+    impl crate::tower::route_classify::RouteClassifier for FixedIndexClassifier {
+        fn classify<'a>(
+            &'a self,
+            _ctx: &'a crate::tower::route_classify::ClassifyContext<'a>,
+        ) -> Pin<Box<dyn std::future::Future<Output = Option<String>> + Send + 'a>> {
+            let target = self.target.clone();
+            Box::pin(async move { Some(target) })
+        }
+    }
+
+    /// A classifier that always defers (returns None).
+    struct DeferringClassifier;
+
+    impl crate::tower::route_classify::RouteClassifier for DeferringClassifier {
+        fn classify<'a>(
+            &'a self,
+            _ctx: &'a crate::tower::route_classify::ClassifyContext<'a>,
+        ) -> Pin<Box<dyn std::future::Future<Output = Option<String>> + Send + 'a>> {
+            Box::pin(async move { None })
+        }
+    }
+
+    /// [`RoutingStrategy::Semantic`] routes to the deployment index returned
+    /// by the classifier.
+    ///
+    /// Deployment 0 wraps a `failing_rate_limited` client and deployment 1
+    /// wraps an `ok` client.  The classifier always routes to index "1",
+    /// so the request must succeed.
+    #[tokio::test]
+    async fn router_semantic_strategy_uses_classifier() {
+        let deployments: Vec<LlmService<MockClient>> = vec![
+            LlmService::new(MockClient::failing_rate_limited()),
+            LlmService::new(MockClient::ok()),
+        ];
+        let classifier = Arc::new(FixedIndexClassifier { target: "1".into() });
+        let mut router = Router::new(deployments, RoutingStrategy::Semantic(classifier)).expect("valid router");
+
+        let resp = router.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
+        assert!(resp.is_ok(), "classifier should have routed to the ok deployment");
+    }
+
+    /// When the classifier returns `None` (defers), the router falls back to
+    /// round-robin so the request is never dropped.
+    #[tokio::test]
+    async fn router_semantic_strategy_fallback_to_round_robin_when_classifier_defers() {
+        let deployments: Vec<LlmService<MockClient>> =
+            vec![LlmService::new(MockClient::ok()), LlmService::new(MockClient::ok())];
+        let classifier = Arc::new(DeferringClassifier);
+        let mut router = Router::new(deployments, RoutingStrategy::Semantic(classifier)).expect("valid router");
+
+        // Even with a deferring classifier the request must succeed via round-robin fallback.
+        let resp = router.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
+        assert!(resp.is_ok(), "fallback round-robin should handle the request");
     }
 }

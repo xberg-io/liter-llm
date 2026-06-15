@@ -58,6 +58,8 @@ pub mod cache_negative;
 #[cfg(feature = "opendal-cache")]
 /// OpenDAL-backed cache backend for the response cache layer.
 pub mod cache_opendal;
+/// Per-request cache tier selection and bypass policy ([`CachePolicy`], [`StandardCachePolicy`]).
+pub mod cache_policy;
 /// Singleflight deduplication layer that collapses concurrent identical requests.
 pub mod cache_singleflight;
 /// Circuit-breaker layer with pluggable [`circuit::CircuitPolicy`].
@@ -82,6 +84,8 @@ pub mod hooks;
 pub mod metrics;
 /// Per-provider rate limiter.
 pub mod rate_limit;
+/// Semantic routing cascade — [`route_classify::RouteClassifier`] trait and built-in classifiers.
+pub mod route_classify;
 /// Provider routing strategies (round-robin, weighted, latency-aware).
 pub mod router;
 /// Wired-up Tower service type alias plus the public [`service::ManagedService`] entry-point.
@@ -98,11 +102,18 @@ pub mod types;
 // Re-export tower core types for convenient access
 pub use tower::ServiceExt;
 
-pub use budget::{BudgetConfig, BudgetLayer, BudgetService, BudgetState, Enforcement};
-pub use cache::{CacheBackend, CacheConfig, CacheLayer, CacheService, CacheStore, CachedResponse, InMemoryStore};
+pub use budget::{
+    BudgetConfig, BudgetDimension, BudgetLayer, BudgetLedger, BudgetService, BudgetSnapshot, BudgetState,
+    BudgetVerdict, CostCheckContext, CostRecordContext, DimensionLimits, Enforcement, InMemoryBudgetLedger,
+    should_hedge,
+};
+pub use cache::{
+    CacheBackend, CacheConfig, CacheLayer, CacheMetadata, CacheService, CacheStore, CachedResponse, InMemoryStore,
+};
 pub use cache_negative::{FixedWindowNegativeCache, NegativeCacheLayer, NegativeCachePolicy, NegativeCacheService};
 #[cfg(feature = "opendal-cache")]
 pub use cache_opendal::OpenDalCacheStore;
+pub use cache_policy::{CacheDecision, CachePolicy, CachePolicyContext, StandardCachePolicy};
 pub use cache_singleflight::{
     InMemorySingleflight, SingleflightCoordinator, SingleflightHandle, SingleflightLayer, SingleflightResult,
     SingleflightService,
@@ -119,7 +130,11 @@ pub use health::{
 pub use hedge::{FixedDelayHedge, HedgeLayer, HedgePolicy, HedgeService};
 pub use hooks::{HooksLayer, HooksService, LlmHook};
 pub use metrics::{MetricsLayer, MetricsService};
-pub use rate_limit::{ModelRateLimitLayer, ModelRateLimitService, RateLimitConfig};
+pub use rate_limit::{CostRateLimitConfig, CostRateLimitLayer, CostRateLimitService, ModelRateLimitLayer, ModelRateLimitService, RateLimitConfig};
+pub use route_classify::{
+    CascadeClassifier, ClassifierVerdictCache, ClassifyContext, EmbeddingSimilarityClassifier, IntentPrototype,
+    KeywordClassifier, LlmClassifier, RouteClassifier,
+};
 pub use router::{
     DEFAULT_CONCURRENCY_LIMIT, DynamicRouter, ProviderConfig, Router, RouterError, RoutingStrategy, StaticDiscover,
     UpstreamDiscover, Weight,
