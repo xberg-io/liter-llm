@@ -179,10 +179,13 @@ impl ReadinessProbe for TokioQueueDepthProbe {
     fn check(&self) -> Pin<Box<dyn Future<Output = ProbeResult> + Send + '_>> {
         let limit = self.limit;
         Box::pin(async move {
-            let depth = tokio::runtime::Handle::current().metrics().injection_queue_depth();
-            if depth > limit {
+            // tokio's queue-depth metrics live behind the `tokio_unstable` cfg.
+            // With stable tokio, fall back to alive-task count, which scales with
+            // queue pressure under typical proxy load.
+            let alive = tokio::runtime::Handle::current().metrics().num_alive_tasks();
+            if alive > limit {
                 ProbeResult::NotReady {
-                    reason: format!("tokio injection queue depth {depth} exceeds limit {limit}"),
+                    reason: format!("tokio alive tasks {alive} exceeds limit {limit}"),
                 }
             } else {
                 ProbeResult::Ready
@@ -295,7 +298,7 @@ pub async fn readyz(State(state): State<AppState>) -> impl IntoResponse {
 ///
 /// Exposed as a public function so that custom probe lists can be driven from
 /// tests or alternative handler implementations.
-pub async fn run_probes(probes: &[Box<dyn ReadinessProbe>]) -> impl IntoResponse {
+pub async fn run_probes(probes: &[Box<dyn ReadinessProbe>]) -> impl IntoResponse + use<> {
     for probe in probes {
         match probe.check().await {
             ProbeResult::Ready => {}
