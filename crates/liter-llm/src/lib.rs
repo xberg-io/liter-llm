@@ -31,6 +31,8 @@ pub mod client;
 pub mod cost;
 /// Public error types and the crate-wide [`Result`] alias.
 pub mod error;
+/// Vendor-neutral guardrail plugin system (trait, stage enum, registry, built-in primitives).
+pub mod guardrail;
 pub(crate) mod http;
 /// Provider catalog (built-in providers plus runtime registration of custom providers).
 pub mod provider;

@@ -76,6 +76,10 @@ tower = ["dep:tower", "dep:tower-http", "dep:dashmap", "dep:futures-util", "trac
 # Requires the `tower` feature for the middleware stack.
 opendal-cache = ["dep:opendal", "tower"]
 
+# CEL (Common Expression Language) policy DSL for guardrails.
+# Enables `CelGuardrail` in the `guardrail::cel` module.
+guardrail-cel = ["dep:cel-interpreter"]
+
 # ---------------------------------------------------------------------------
 # Cloud-provider auth features
 # ---------------------------------------------------------------------------
@@ -152,7 +156,9 @@ aws-credential-types = { version = "1", optional = true }
 aws-sigv4 = { version = "1", features = ["sign-http", "http1"], optional = true }
 base64 = { workspace = true, optional = true }
 bytes = { workspace = true }
+cel-interpreter = { version = "0.8", optional = true }
 dashmap = { workspace = true, optional = true }
+regex = "1"
 futures-core = { workspace = true }
 futures-util = { workspace = true, optional = true }
 gcp_auth = { workspace = true, optional = true }

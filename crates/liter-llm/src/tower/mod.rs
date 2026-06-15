@@ -49,6 +49,8 @@
 pub mod budget;
 /// Response-cache layer with pluggable in-memory backend.
 pub mod cache;
+/// Guardrail enforcement layer (content filtering, safety checks, policy evaluation).
+pub mod guardrail;
 #[cfg(feature = "opendal-cache")]
 /// OpenDAL-backed cache backend for the response cache layer.
 pub mod cache_opendal;
@@ -90,6 +92,7 @@ pub use tower::ServiceExt;
 
 pub use budget::{BudgetConfig, BudgetLayer, BudgetService, BudgetState, Enforcement};
 pub use cache::{CacheBackend, CacheConfig, CacheLayer, CacheService, CacheStore, CachedResponse, InMemoryStore};
+pub use guardrail::{GuardrailLayer, GuardrailService};
 #[cfg(feature = "opendal-cache")]
 pub use cache_opendal::OpenDalCacheStore;
 pub use circuit::{CircuitLayer, CircuitPolicy, CircuitService, CircuitState, ExponentialBackoffCircuit};
