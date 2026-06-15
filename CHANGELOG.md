@@ -24,6 +24,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `LlmRequest` is now a struct (`kind: LlmRequestKind`, `tenant_id: Option<TenantId>`) rather than a plain enum. All existing constructor call sites (`LlmRequest::Chat(r)`, `LlmRequest::Embed(r)`, etc.) continue to compile unchanged via `#[allow(non_snake_case)]` associated functions. Pattern-match sites that directly match on `LlmRequest::Variant` must be updated to match on `req.kind`.
 - `liter-llm-proxy` `AppState` gains `key_resolver: Arc<dyn KeyResolver>` alongside the existing `key_store: Arc<KeyStore>`. `KeyStore` implements `KeyResolver`; behaviour is unchanged.
 - Cache (`CacheService`, `SingleflightService`) reads `tenant_id` from the request via `LlmRequest::tenant_id()` so cached responses are scoped to the correct tenant automatically.
+- `KeyResolver::resolve` now takes an owned `String` and returns a `'static` future so the future can be spawned across `tower::Service::call` boundaries.
+- `ProviderCredential.api_key` is now `secrecy::SecretString` (was `String`); zeroed on drop, `Debug` impl redacts to `[REDACTED]`.
+- `liter-llm-proxy` activates `liter_llm::provider::set_outbound_policy` at startup based on `SecurityConfig.outbound_policy`. Defaults to `DenyPrivate` (blocks RFC1918, loopback, link-local, multicast, unspecified); `Allowlist` parse errors are logged and skipped with a startup summary line.
+- `liter-llm-proxy` virtual-key lookup uses `subtle::ConstantTimeEq` over a full iteration of the key store, preventing timing-side-channel inference of key existence.
+- `tower::HooksLayer::with_usage_sink` now dispatches sink emit via `tokio::spawn`; slow sinks no longer add latency to caller-observed responses.
+
+### Fixed
+
+- **`tower::circuit`** — `maybe_half_open` is wired into the request path; circuits no longer get permanently stuck `Open` after tripping. `probe_in_flight` is now a `ProbeGuard<P>` RAII enum so the probe slot is reclaimed even if the future panics or is cancelled. `should_allow` gates HalfOpen to exactly one probe via atomic CAS.
+- **`tower::hedge`** — `HedgeService::call` uses `mem::replace` correctly so the polled-ready inner becomes the primary attempt and hedge attempts clone from a fresh standby; eliminates Tower-readiness contract violation and `ConcurrencyLimit` permit double-consumption.
+- **`tower::cache::CacheService::call`** — applies the `mem::replace(&mut self.inner, self.inner.clone())` Tower swap so permit-bearing inner services (e.g. `ConcurrencyLimit`, `Buffer`) are not double-consumed.
+- **`tower::cache_singleflight`** — `tx.send(result)` now precedes `map.remove(&key)` so late-arriving followers don't become duplicate leaders. Added `LeaderDropGuard` to clean up the in-flight map when the leader is cancelled; leader errors propagate to followers with variant preserved (no longer mapped to `InternalError`).
+- **`tower::cache_key::ExactHashStrategy`** — uses `ahash::RandomState::generate_with(fixed_seeds)` via `OnceLock` so cache keys are deterministic across process restarts and distributed nodes (was `std::hash::DefaultHasher`, which is randomized per process).
+- **`tower::idempotency::compute_body_hash`** — same deterministic-ahash fix as the cache key strategy; required for distributed `IdempotencyStore` backends to function.
+- **`tower::idempotency::IdempotencyService::call`** — store key is now `format!("{tenant_id}:{idempotency_key}")` so two tenants with the same idempotency key value do not cross-pollinate responses.
+- **`tower::fallback_chain::FallbackChainService::call`** — drives `svc.ready().await?` before each `svc.call(...)`, restoring the Tower readiness contract for chain elements (previously silently bypassed `ConcurrencyLimit` permits). `FallbackChainLayer` implements `Layer<()>` with a `prepend(head)` helper for `ServiceBuilder` composition.
+- **`tower::budget`** — window rollover is atomic via CAS; concurrent writers across the rollover boundary cannot torn-read a $0 window mid-zero-then-add.
+- **`liter-llm-proxy::routes::realtime`** — the WebSocket upgrade now resolves the upstream credential via the per-model `ProviderCredential` registry instead of `general.master_key`; restricted virtual keys can no longer trigger Realtime sessions that bill the master key. The handler also calls `key_ctx.can_access_model(&model)` before `ws.on_upgrade`, so the model allowlist is enforced before any upstream connection is opened.
+- **`liter-llm-proxy::secrets`** (`aws.rs`, `vault.rs`) — cache values are stored as `secrecy::SecretString` so secrets are zeroed on TTL eviction; previously plain `String` left key material on the heap.
+- **`liter-llm-proxy::secrets::vault`** — `HashiCorpVaultProviderBuilder::build` validates the address against the outbound policy (`validate_outbound_url_sync`) before constructing the `VaultClient`; misconfigured addresses pointing at internal endpoints (link-local, loopback, RFC1918) are rejected with `SecretError::Forbidden`.
+- **`guardrail::cel`** — CEL evaluation errors are no longer returned to the caller verbatim (could leak expression internals); callers see a fixed `"policy evaluation error"` reason while the full error is logged server-side via `tracing::error!`.
+- **`http::transport::TransportConfig`** — re-exported at the crate root so the rustdoc example compiles; previously the type was reachable only via the `pub(crate)` `http` module.
+- **Trait re-exports** — `CacheKeyStrategy`, `Guardrail`, `GuardrailContext`, `GuardrailDecision`, `GuardrailStage`, `VectorStore`, `VectorMatch`, `EmbeddingProvider`, `NoOpEmbeddingProvider`, `TenantId`, `TenantContext`, `KeyResolver`, `ResolvedKey`, `KeyResolverError`, `InMemoryKeyResolver`, `IdempotencyStoreError` are now reachable from `liter_llm::*` or `liter_llm::tower::*` without spelling out the full module path.
+
+### Security
+
+- All findings from three rounds of critical security audit are resolved: per-model credential isolation on the Realtime route, model-allowlist enforcement before WebSocket upgrade, constant-time virtual-key lookup, `SecretString` for cached secrets and provider credentials (zeroed on drop), SSRF outbound-policy guard activated at proxy startup, Vault address validation, CEL error redaction, fail-closed CEL guardrails, and JSON-tree redaction for regex guardrails.
 
 ## [1.6.0-rc.0] - 2026-06-15
 
