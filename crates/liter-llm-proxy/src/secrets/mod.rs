@@ -163,7 +163,7 @@ pub struct SecretMetadata {
 ///             let value = std::env::var(name)
 ///                 .map_err(|_| SecretError::NotFound(name.to_string()))?;
 ///             Ok(SecretValue {
-///                 value: SecretString::new(value),
+///                 value: SecretString::from(value),
 ///                 metadata: SecretMetadata {
 ///                     name: name.to_string(),
 ///                     version: "1".to_string(),

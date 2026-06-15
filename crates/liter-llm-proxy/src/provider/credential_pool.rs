@@ -99,8 +99,7 @@ pub struct PoolSnapshot {
 ///
 /// ```no_run
 /// use liter_llm_proxy::provider::credential_pool_memory::InMemoryCredentialPool;
-/// use liter_llm_proxy::provider::credential_pool::{CredentialPool, CredentialHandle};
-/// use secrecy::SecretString;
+/// use liter_llm_proxy::provider::credential_pool::CredentialPool;
 /// use std::time::Duration;
 ///
 /// #[tokio::main]
@@ -108,20 +107,13 @@ pub struct PoolSnapshot {
 ///     let pool = InMemoryCredentialPool::new();
 ///
 ///     // Seed with two credentials
-///     pool.add(
-///         "openai",
-///         CredentialHandle {
-///             id: "key-1".to_string(),
-///             api_key: SecretString::new("sk-first".to_string()),
-///             model_allowlist: None,
-///         },
-///     );
+///     pool.add_credential("openai", "key-1", "sk-first", None);
+///     pool.add_credential("openai", "key-2", "sk-second", None);
 ///
-///     // Get current credential (first one)
+///     // Get current credential
 ///     let cred = pool.current("openai").await.unwrap();
-///     assert_eq!(cred.id, "key-1");
 ///
-///     // Mark it exhausted; pool advances to next credential on next .current() call
+///     // Mark it exhausted; pool advances to next credential
 ///     pool.mark_exhausted("openai", &cred, Duration::from_secs(60)).await;
 /// }
 /// ```

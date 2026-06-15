@@ -8,7 +8,7 @@
 /// # Examples
 ///
 /// ```no_run
-/// use liter_llm::http::transport::TransportConfig;
+/// use liter_llm::TransportConfig;
 /// use std::time::Duration;
 ///
 /// let config = TransportConfig::default()

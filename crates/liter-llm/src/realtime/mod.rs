@@ -65,16 +65,12 @@ pub enum ContentPart {
 impl ContentPart {
     /// Construct a text content part.
     pub fn text(content: impl Into<String>) -> Self {
-        Self::Text {
-            text: content.into(),
-        }
+        Self::Text { text: content.into() }
     }
 
     /// Construct an audio content part from a base64 string.
     pub fn audio(base64: impl Into<String>) -> Self {
-        Self::Audio {
-            base64: base64.into(),
-        }
+        Self::Audio { base64: base64.into() }
     }
 
     /// Construct an image-ref content part from a URL.
@@ -305,10 +301,7 @@ pub struct RealtimeEnvelope {
 impl RealtimeEnvelope {
     /// Construct an envelope without an event ID.
     pub fn new(event: RealtimeEvent) -> Self {
-        Self {
-            event_id: None,
-            event,
-        }
+        Self { event_id: None, event }
     }
 
     /// Construct an envelope with an explicit event ID.

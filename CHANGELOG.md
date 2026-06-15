@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `liter_llm::tower::FallbackChainLayer` — walk an ordered `Vec<S>` of services, advancing on transient errors via pluggable `RetryPolicy`. `DefaultRetryPolicy` treats 5xx/timeouts/429 as transient; auth and validation errors as terminal. Exports `RetryClass`, `RetryPolicy`, `DefaultRetryPolicy`, `FallbackChainLayer`, and `FallbackChainService`.
+- `liter_llm::tenant::{TenantId, TenantContext, KeyResolver, ResolvedKey, KeyResolverError, InMemoryKeyResolver}` — generic multi-tenant primitives.
+- `LlmRequest::with_tenant_id` / `LlmRequest::tenant_id` for tenant propagation through the Tower stack.
+- `LlmRequestKind` — the discriminant enum extracted from `LlmRequest` to carry the variant payload; re-exported from `liter_llm::tower`.
+
+### Changed
+
+- `LlmRequest` is now a struct (`kind: LlmRequestKind`, `tenant_id: Option<TenantId>`) rather than a plain enum. All existing constructor call sites (`LlmRequest::Chat(r)`, `LlmRequest::Embed(r)`, etc.) continue to compile unchanged via `#[allow(non_snake_case)]` associated functions. Pattern-match sites that directly match on `LlmRequest::Variant` must be updated to match on `req.kind`.
+- `liter-llm-proxy` `AppState` gains `key_resolver: Arc<dyn KeyResolver>` alongside the existing `key_store: Arc<KeyStore>`. `KeyStore` implements `KeyResolver`; behaviour is unchanged.
+- Cache (`CacheService`, `SingleflightService`) reads `tenant_id` from the request via `LlmRequest::tenant_id()` so cached responses are scoped to the correct tenant automatically.
+
 ## [1.6.0-rc.0] - 2026-06-15
 
 ### Added

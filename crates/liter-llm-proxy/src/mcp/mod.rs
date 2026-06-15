@@ -273,7 +273,7 @@ impl LiterLlmMcp {
             .get_service(first_model)
             .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
 
-        let resp = svc.call(LlmRequest::ListModels).await.map_err(to_error_data)?;
+        let resp = svc.call(LlmRequest::ListModels()).await.map_err(to_error_data)?;
 
         match resp {
             LlmResponse::ListModels(r) => json_success(&r),

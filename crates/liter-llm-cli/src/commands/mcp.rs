@@ -102,6 +102,7 @@ pub async fn run(args: McpArgs) -> Result<(), String> {
 
             let app_state = AppState {
                 key_store: key_store.clone(),
+                key_resolver: key_store.clone(),
                 service_pool: service_pool.clone(),
                 file_store: file_store.clone(),
                 config: Arc::new(ArcSwap::new(Arc::new(config.clone()))),

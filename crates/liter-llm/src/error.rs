@@ -106,6 +106,27 @@ pub enum LiterLlmError {
     /// the per-connection DNS resolver detects a forbidden address at connect time.
     #[error("outbound request to {url} forbidden: {reason}")]
     OutboundForbidden { url: String, reason: String },
+
+    /// A different request body was submitted for an existing `Idempotency-Key`.
+    ///
+    /// Per the OpenAI `Idempotency-Key` convention, once a key is used with a
+    /// particular request body, subsequent requests using the same key must carry
+    /// an identical body.  A body mismatch is a hard error (not retryable).
+    ///
+    /// HTTP equivalent: 409 Conflict.
+    #[error("idempotency conflict: key '{key}' was already used with a different request body")]
+    IdempotencyConflict { key: String },
+
+    /// The same `Idempotency-Key` is already in-flight (another request with the
+    /// same key is currently being processed).
+    ///
+    /// The caller should wait briefly and retry.  The response is not yet
+    /// available, and this request has been short-circuited to avoid running
+    /// the operation twice.
+    ///
+    /// HTTP equivalent: 409 Conflict (retryable after a brief delay).
+    #[error("idempotency key '{key}' is currently in-flight; retry after the first request completes")]
+    IdempotencyInFlight { key: String },
 }
 
 impl LiterLlmError {
@@ -136,6 +157,8 @@ impl LiterLlmError {
             Self::HookRejected { .. } => 0,
             Self::InternalError { .. } => 0,
             Self::OutboundForbidden { .. } => 0,
+            Self::IdempotencyConflict { .. } => 409,
+            Self::IdempotencyInFlight { .. } => 409,
         }
     }
 
@@ -183,6 +206,8 @@ impl LiterLlmError {
             Self::HookRejected { .. } => "HookRejected",
             Self::InternalError { .. } => "InternalError",
             Self::OutboundForbidden { .. } => "OutboundForbidden",
+            Self::IdempotencyConflict { .. } => "IdempotencyConflict",
+            Self::IdempotencyInFlight { .. } => "IdempotencyInFlight",
         }
     }
 

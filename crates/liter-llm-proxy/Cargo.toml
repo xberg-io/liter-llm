@@ -65,6 +65,7 @@ aws-sdk-secretsmanager = { workspace = true, optional = true }
 vaultrs = { workspace = true, optional = true }
 chrono = { workspace = true, optional = true }
 rmcp = { workspace = true }
+rust_decimal = { workspace = true }
 schemars = { workspace = true }
 secrecy = { workspace = true }
 serde = { workspace = true }

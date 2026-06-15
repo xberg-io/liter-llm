@@ -45,7 +45,9 @@ const CACHE_KEY_SEED_3: u64 = 0x7465_6779_5f76_3100; // "tegy_v1\0"
 fn cache_random_state() -> &'static RandomState {
     use std::sync::OnceLock;
     static STATE: OnceLock<RandomState> = OnceLock::new();
-    STATE.get_or_init(|| RandomState::generate_with(CACHE_KEY_SEED_0, CACHE_KEY_SEED_1, CACHE_KEY_SEED_2, CACHE_KEY_SEED_3))
+    STATE.get_or_init(|| {
+        RandomState::generate_with(CACHE_KEY_SEED_0, CACHE_KEY_SEED_1, CACHE_KEY_SEED_2, CACHE_KEY_SEED_3)
+    })
 }
 
 /// Construct a deterministic hasher using the fixed-seed [`RandomState`].
@@ -348,7 +350,10 @@ mod tests {
             let s = ExactHashStrategy;
             let (k, b) = s.key_for(&reference_input);
             assert_eq!(k, expected_key, "key must be stable across ExactHashStrategy instances");
-            assert_eq!(b, expected_body, "body must be stable across ExactHashStrategy instances");
+            assert_eq!(
+                b, expected_body,
+                "body must be stable across ExactHashStrategy instances"
+            );
         }
     }
 

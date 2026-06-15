@@ -209,9 +209,7 @@ where
             // Process complete lines in the buffer.
             if let Some(offset) = memchr_newline(&this.buffer.as_bytes()[*this.cursor..]) {
                 let newline_pos = *this.cursor + offset;
-                let line = this.buffer[*this.cursor..newline_pos]
-                    .trim_end_matches('\r')
-                    .trim();
+                let line = this.buffer[*this.cursor..newline_pos].trim_end_matches('\r').trim();
 
                 if line.is_empty() || line.starts_with(':') {
                     *this.cursor = newline_pos + 1;
@@ -264,9 +262,7 @@ where
                     if this.buffer.len() + bytes.len() > MAX_BUFFER_BYTES {
                         *this.done = true;
                         return Poll::Ready(Some(Err(LiterLlmError::Streaming {
-                            message: format!(
-                                "SSE buffer exceeded {MAX_BUFFER_BYTES} bytes; stream aborted"
-                            ),
+                            message: format!("SSE buffer exceeded {MAX_BUFFER_BYTES} bytes; stream aborted"),
                         })));
                     }
                     match std::str::from_utf8(&bytes) {
@@ -681,9 +677,7 @@ mod tests {
     ///
     /// Uses `futures_util::stream::iter` (synchronous) so the stream is `Unpin`
     /// and can be used directly with `.next().await` without boxing.
-    fn sse_byte_stream(
-        lines: Vec<String>,
-    ) -> impl Stream<Item = std::result::Result<Bytes, reqwest::Error>> + Unpin {
+    fn sse_byte_stream(lines: Vec<String>) -> impl Stream<Item = std::result::Result<Bytes, reqwest::Error>> + Unpin {
         let joined = lines.join("");
         futures_util::stream::iter(vec![Ok::<_, reqwest::Error>(Bytes::from(joined))])
     }
@@ -699,7 +693,10 @@ mod tests {
         let buf2 = pool_acquire();
         let ptr_after = buf2.as_ptr();
 
-        assert_eq!(ptr_before, ptr_after, "egress pool should reuse the same BytesMut allocation");
+        assert_eq!(
+            ptr_before, ptr_after,
+            "egress pool should reuse the same BytesMut allocation"
+        );
         pool_release(buf2);
     }
 
@@ -734,7 +731,11 @@ mod tests {
         };
 
         let mut stream = IngressStream::new_sse(byte_stream, parse, None);
-        let result = stream.next().await.expect("should yield one chunk").expect("should be Ok");
+        let result = stream
+            .next()
+            .await
+            .expect("should yield one chunk")
+            .expect("should be Ok");
         assert_eq!(result.choices[0].delta.content.as_deref(), Some("hello"));
 
         // Next poll should be None (stream ended after [DONE]).
@@ -772,8 +773,7 @@ mod tests {
         let chunk = make_chunk("world");
         let inner = futures_util::stream::iter(vec![Ok::<_, LiterLlmError>(chunk.clone())]);
 
-        let mut egress =
-            EgressStream::new(inner, StreamFormat::Sse, StreamFormat::Sse, 0, None);
+        let mut egress = EgressStream::new(inner, StreamFormat::Sse, StreamFormat::Sse, 0, None);
 
         let bytes = egress.next().await.expect("should yield bytes").expect("should be Ok");
         let text = std::str::from_utf8(&bytes).expect("bytes should be valid UTF-8");
@@ -782,8 +782,7 @@ mod tests {
         assert!(text.ends_with("\n\n"), "should end with \\n\\n");
 
         let json_part = text.trim_start_matches("data: ").trim_end_matches("\n\n");
-        let decoded: ChatCompletionChunk =
-            serde_json::from_str(json_part).expect("encoded bytes should deserialise");
+        let decoded: ChatCompletionChunk = serde_json::from_str(json_part).expect("encoded bytes should deserialise");
         assert_eq!(decoded.choices[0].delta.content.as_deref(), Some("world"));
     }
 
@@ -867,8 +866,7 @@ mod tests {
         let bytes = egress.next().await.expect("should yield bytes").expect("should be Ok");
         let text = std::str::from_utf8(&bytes).expect("valid UTF-8");
         let json_part = text.trim_start_matches("data: ").trim_end_matches("\n\n");
-        let decoded: ChatCompletionChunk =
-            serde_json::from_str(json_part).expect("should deserialise");
+        let decoded: ChatCompletionChunk = serde_json::from_str(json_part).expect("should deserialise");
 
         // The middleware appended " [mw]" — confirming parse-encode round trip.
         assert_eq!(
@@ -893,14 +891,12 @@ mod tests {
 
         // Different formats → EgressStream must encode.
         let pipeline = StreamPipeline::new(inner, vec![], None);
-        let mut egress =
-            EgressStream::new(pipeline, StreamFormat::AwsEventStream, StreamFormat::Sse, 0, None);
+        let mut egress = EgressStream::new(pipeline, StreamFormat::AwsEventStream, StreamFormat::Sse, 0, None);
 
         let bytes = egress.next().await.expect("should yield bytes").expect("should be Ok");
         let text = std::str::from_utf8(&bytes).expect("valid UTF-8");
         let json_part = text.trim_start_matches("data: ").trim_end_matches("\n\n");
-        let decoded: ChatCompletionChunk =
-            serde_json::from_str(json_part).expect("should deserialise");
+        let decoded: ChatCompletionChunk = serde_json::from_str(json_part).expect("should deserialise");
 
         assert_eq!(
             decoded.choices[0].delta.content.as_deref(),
@@ -936,13 +932,7 @@ mod tests {
         );
 
         let pipeline = StreamPipeline::new(ingress, vec![], Some(cancel_clone.clone()));
-        let mut egress = EgressStream::new(
-            pipeline,
-            StreamFormat::Sse,
-            StreamFormat::Sse,
-            0,
-            Some(cancel_clone),
-        );
+        let mut egress = EgressStream::new(pipeline, StreamFormat::Sse, StreamFormat::Sse, 0, Some(cancel_clone));
 
         // Cancel the token, then assert all 3 layers drain promptly.
         token.cancel();
@@ -972,8 +962,7 @@ mod tests {
             let chunk = make_chunk("x");
             let inner = futures_util::stream::iter(vec![Ok::<_, LiterLlmError>(chunk)]);
             let pipeline = StreamPipeline::new(inner, vec![], None);
-            let mut egress =
-                EgressStream::new(pipeline, StreamFormat::Sse, StreamFormat::Sse, 0, None);
+            let mut egress = EgressStream::new(pipeline, StreamFormat::Sse, StreamFormat::Sse, 0, None);
 
             while let Some(item) = egress.next().await {
                 item.expect("should be Ok");

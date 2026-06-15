@@ -144,11 +144,7 @@ impl HealthChecker for HttpProbeHealthChecker {
         &self,
         upstream: String,
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HealthStatus> + Send + 'static>> {
-        let url = self
-            .probe_urls
-            .get(&upstream)
-            .cloned()
-            .unwrap_or(upstream);
+        let url = self.probe_urls.get(&upstream).cloned().unwrap_or(upstream);
         let client = self.client.clone();
 
         Box::pin(async move {

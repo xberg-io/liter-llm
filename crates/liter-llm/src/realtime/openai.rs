@@ -66,10 +66,7 @@ fn parse_content_parts(raw: &Value) -> Vec<ContentPart> {
                     Some(ContentPart::text(text))
                 }
                 "audio" | "input_audio" => {
-                    let base64 = item
-                        .get("audio")
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("");
+                    let base64 = item.get("audio").and_then(|v| v.as_str()).unwrap_or("");
                     Some(ContentPart::audio(base64))
                 }
                 "image_url" => {
@@ -129,10 +126,7 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
             // ── Conversation items ────────────────────────────────────────────
             "conversation.item.created" | "conversation.item.added" => {
                 let item = raw.get("item").unwrap_or(&Value::Null);
-                let content = item
-                    .get("content")
-                    .map(parse_content_parts)
-                    .unwrap_or_default();
+                let content = item.get("content").map(parse_content_parts).unwrap_or_default();
                 RealtimeEvent::ConversationItemCreated {
                     item_id: get_str_opt(item, "id").unwrap_or("").into(),
                     role: get_str_opt(item, "role").unwrap_or("").into(),
@@ -140,11 +134,7 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
                 }
             }
             "conversation.item.deleted" => RealtimeEvent::ConversationItemDeleted {
-                item_id: raw
-                    .get("item_id")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .into(),
+                item_id: raw.get("item_id").and_then(|v| v.as_str()).unwrap_or("").into(),
             },
 
             // ── Response lifecycle ────────────────────────────────────────────
@@ -171,145 +161,57 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
 
             // ── Text streaming ────────────────────────────────────────────────
             "response.text.delta" => RealtimeEvent::ResponseTextDelta {
-                response_id: raw
-                    .get("response_id")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .into(),
-                delta: raw
-                    .get("delta")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .into(),
+                response_id: raw.get("response_id").and_then(|v| v.as_str()).unwrap_or("").into(),
+                delta: raw.get("delta").and_then(|v| v.as_str()).unwrap_or("").into(),
             },
             "response.text.done" => RealtimeEvent::ResponseTextDone {
-                response_id: raw
-                    .get("response_id")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .into(),
-                text: raw
-                    .get("text")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .into(),
+                response_id: raw.get("response_id").and_then(|v| v.as_str()).unwrap_or("").into(),
+                text: raw.get("text").and_then(|v| v.as_str()).unwrap_or("").into(),
             },
 
             // ── Audio streaming ───────────────────────────────────────────────
             "response.audio.delta" => RealtimeEvent::ResponseAudioDelta {
-                response_id: raw
-                    .get("response_id")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .into(),
-                delta_base64: raw
-                    .get("delta")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .into(),
+                response_id: raw.get("response_id").and_then(|v| v.as_str()).unwrap_or("").into(),
+                delta_base64: raw.get("delta").and_then(|v| v.as_str()).unwrap_or("").into(),
             },
             "response.audio.done" => RealtimeEvent::ResponseAudioDone {
-                response_id: raw
-                    .get("response_id")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .into(),
+                response_id: raw.get("response_id").and_then(|v| v.as_str()).unwrap_or("").into(),
             },
 
             // ── Audio transcript streaming ─────────────────────────────────────
             "response.audio_transcript.delta" => RealtimeEvent::ResponseAudioTranscriptDelta {
-                response_id: raw
-                    .get("response_id")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .into(),
-                delta: raw
-                    .get("delta")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .into(),
+                response_id: raw.get("response_id").and_then(|v| v.as_str()).unwrap_or("").into(),
+                delta: raw.get("delta").and_then(|v| v.as_str()).unwrap_or("").into(),
             },
             "response.audio_transcript.done" => RealtimeEvent::ResponseAudioTranscriptDone {
-                response_id: raw
-                    .get("response_id")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .into(),
-                transcript: raw
-                    .get("transcript")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .into(),
+                response_id: raw.get("response_id").and_then(|v| v.as_str()).unwrap_or("").into(),
+                transcript: raw.get("transcript").and_then(|v| v.as_str()).unwrap_or("").into(),
             },
 
             // ── Function call streaming ───────────────────────────────────────
-            "response.function_call_arguments.delta" => {
-                RealtimeEvent::ResponseFunctionCallArgumentsDelta {
-                    response_id: raw
-                        .get("response_id")
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .into(),
-                    call_id: raw
-                        .get("call_id")
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .into(),
-                    delta: raw
-                        .get("delta")
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .into(),
-                }
-            }
-            "response.function_call_arguments.done" => {
-                RealtimeEvent::ResponseFunctionCallArgumentsDone {
-                    response_id: raw
-                        .get("response_id")
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .into(),
-                    call_id: raw
-                        .get("call_id")
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .into(),
-                    name: raw
-                        .get("name")
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .into(),
-                    arguments: raw
-                        .get("arguments")
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .into(),
-                }
-            }
+            "response.function_call_arguments.delta" => RealtimeEvent::ResponseFunctionCallArgumentsDelta {
+                response_id: raw.get("response_id").and_then(|v| v.as_str()).unwrap_or("").into(),
+                call_id: raw.get("call_id").and_then(|v| v.as_str()).unwrap_or("").into(),
+                delta: raw.get("delta").and_then(|v| v.as_str()).unwrap_or("").into(),
+            },
+            "response.function_call_arguments.done" => RealtimeEvent::ResponseFunctionCallArgumentsDone {
+                response_id: raw.get("response_id").and_then(|v| v.as_str()).unwrap_or("").into(),
+                call_id: raw.get("call_id").and_then(|v| v.as_str()).unwrap_or("").into(),
+                name: raw.get("name").and_then(|v| v.as_str()).unwrap_or("").into(),
+                arguments: raw.get("arguments").and_then(|v| v.as_str()).unwrap_or("").into(),
+            },
 
             // ── Input audio buffer ────────────────────────────────────────────
             "input_audio_buffer.append" => RealtimeEvent::InputAudioBufferAppend {
-                audio_base64: raw
-                    .get("audio")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .into(),
+                audio_base64: raw.get("audio").and_then(|v| v.as_str()).unwrap_or("").into(),
             },
             "input_audio_buffer.commit" => RealtimeEvent::InputAudioBufferCommit,
             "input_audio_buffer.clear" => RealtimeEvent::InputAudioBufferClear,
             "input_audio_buffer.speech_started" => RealtimeEvent::InputAudioBufferSpeechStarted {
-                item_id: raw
-                    .get("item_id")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .into(),
+                item_id: raw.get("item_id").and_then(|v| v.as_str()).unwrap_or("").into(),
             },
             "input_audio_buffer.speech_stopped" => RealtimeEvent::InputAudioBufferSpeechStopped {
-                item_id: raw
-                    .get("item_id")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .into(),
+                item_id: raw.get("item_id").and_then(|v| v.as_str()).unwrap_or("").into(),
                 audio_end_ms: get_u32(&raw, "audio_end_ms").unwrap_or(0),
             },
 
@@ -383,11 +285,7 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
                 }
                 json!({ "type": "session.updated", "session": session })
             }
-            RealtimeEvent::ConversationItemCreated {
-                item_id,
-                role,
-                content,
-            } => {
+            RealtimeEvent::ConversationItemCreated { item_id, role, content } => {
                 let content_json: Vec<_> = content
                     .iter()
                     .map(|part| match part {
@@ -411,10 +309,7 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
             RealtimeEvent::ResponseCreated { response_id } => {
                 json!({ "type": "response.created", "response": { "id": response_id } })
             }
-            RealtimeEvent::ResponseDone {
-                response_id,
-                status,
-            } => {
+            RealtimeEvent::ResponseDone { response_id, status } => {
                 let status_str = match status {
                     ResponseStatus::Completed => "completed",
                     ResponseStatus::Cancelled => "cancelled",
@@ -500,10 +395,7 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
             RealtimeEvent::InputAudioBufferSpeechStarted { item_id } => {
                 json!({ "type": "input_audio_buffer.speech_started", "item_id": item_id })
             }
-            RealtimeEvent::InputAudioBufferSpeechStopped {
-                item_id,
-                audio_end_ms,
-            } => {
+            RealtimeEvent::InputAudioBufferSpeechStopped { item_id, audio_end_ms } => {
                 json!({
                     "type": "input_audio_buffer.speech_stopped",
                     "item_id": item_id,
@@ -515,10 +407,7 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
                 remaining_tokens,
                 reset_at,
             } => {
-                let reset_ts = reset_at
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_secs_f64();
+                let reset_ts = reset_at.duration_since(UNIX_EPOCH).unwrap_or_default().as_secs_f64();
                 let mut limits = vec![];
                 if let Some(r) = remaining_requests {
                     limits.push(json!({"name": "requests", "remaining": r, "reset_at": reset_ts}));

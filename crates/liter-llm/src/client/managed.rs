@@ -370,7 +370,7 @@ impl LlmClient for ManagedClient {
         if self.service.is_none() {
             return self.inner.list_models();
         }
-        let fut = self.call_service(LlmRequest::ListModels);
+        let fut = self.call_service(LlmRequest::ListModels());
         Box::pin(async move {
             match fut.await? {
                 LlmResponse::ListModels(r) => Ok(r),

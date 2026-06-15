@@ -72,6 +72,8 @@ pub mod cost;
 pub(crate) mod error;
 /// Fallback layer that retries a failed call against a sibling provider.
 pub mod fallback;
+/// Multi-step fallback chain layer with pluggable retry-classification policy.
+pub mod fallback_chain;
 /// Guardrail enforcement layer (content filtering, safety checks, policy evaluation).
 pub mod guardrail;
 /// Health-probe layer used by the router to score upstream providers.
@@ -80,6 +82,8 @@ pub mod health;
 pub mod hedge;
 /// User-supplied request/response hooks (mutators, observers).
 pub mod hooks;
+/// Idempotency-Key dedup layer (OpenAI convention, pluggable store, 24h default TTL).
+pub mod idempotency;
 /// OTel-native GenAI semantic-convention metrics layer.
 pub mod metrics;
 /// Per-provider rate limiter.
@@ -104,7 +108,9 @@ pub use tower::ServiceExt;
 
 // Re-export cache key strategies so users can reference them via `liter_llm::tower::*`
 // without spelling out the full internal module path.
-pub use crate::cache_key::{CacheKeyInput, CacheKeyStrategy, ExactHashStrategy, SystemPromptAwareStrategy, TenantScopedStrategy};
+pub use crate::cache_key::{
+    CacheKeyInput, CacheKeyStrategy, ExactHashStrategy, SystemPromptAwareStrategy, TenantScopedStrategy,
+};
 // Re-export vector store abstractions (tower-gated module).
 pub use crate::vectorstore::{InMemoryVectorStore, VectorMatch, VectorMetadata, VectorStore};
 // Re-export the OpenDAL-backed vector store when the opendal-cache feature is active.
@@ -135,6 +141,7 @@ pub use circuit::{CircuitLayer, CircuitPolicy, CircuitService, CircuitState, Exp
 pub use cooldown::{CooldownLayer, CooldownService};
 pub use cost::{CostTrackingLayer, CostTrackingService};
 pub use fallback::{FallbackLayer, FallbackService};
+pub use fallback_chain::{DefaultRetryPolicy, FallbackChainLayer, FallbackChainService, RetryClass, RetryPolicy};
 pub use guardrail::{GuardrailLayer, GuardrailService};
 pub use health::{
     HealthCheckConfig, HealthCheckLayer, HealthCheckService, HealthChecker, HealthStatus, HttpProbeHealthChecker,
@@ -142,6 +149,10 @@ pub use health::{
 };
 pub use hedge::{FixedDelayHedge, HedgeLayer, HedgePolicy, HedgeService};
 pub use hooks::{HooksLayer, HooksService, LlmHook};
+pub use idempotency::{
+    IdempotencyEntry, IdempotencyLayer, IdempotencyService, IdempotencyStore, IdempotencyStoreError,
+    InMemoryIdempotencyStore,
+};
 pub use metrics::{MetricsLayer, MetricsService};
 pub use rate_limit::{
     CostRateLimitConfig, CostRateLimitLayer, CostRateLimitService, ModelRateLimitLayer, ModelRateLimitService,
@@ -157,4 +168,4 @@ pub use router::{
 };
 pub use service::LlmService;
 pub use tracing::{TracingLayer, TracingService};
-pub use types::{LlmRequest, LlmResponse};
+pub use types::{LlmRequest, LlmRequestKind, LlmResponse};

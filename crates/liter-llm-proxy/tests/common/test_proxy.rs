@@ -33,8 +33,10 @@ impl TestProxy {
         let file_store = FileStore::from_config(config.files.as_ref().unwrap_or(&Default::default()))
             .expect("FileStore::from_config");
 
+        let key_store = Arc::new(key_store);
         let state = AppState {
-            key_store: Arc::new(key_store),
+            key_store: key_store.clone(),
+            key_resolver: key_store,
             service_pool: Arc::new(service_pool),
             file_store: Arc::new(file_store),
             config: Arc::new(ArcSwap::new(Arc::new(config))),

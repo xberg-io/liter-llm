@@ -50,6 +50,9 @@ pub mod realtime;
 /// [`streaming::EgressStream`] for composing streaming request pipelines with
 /// optional per-chunk middleware and end-to-end cancellation.
 pub mod streaming;
+/// Generic multi-tenant primitives: [`tenant::TenantId`], [`tenant::TenantContext`],
+/// [`tenant::KeyResolver`], and [`tenant::InMemoryKeyResolver`].
+pub mod tenant;
 #[cfg(test)]
 mod tests;
 #[cfg(feature = "tokenizer")]
@@ -60,9 +63,6 @@ pub mod tokenizer;
 pub mod tower;
 /// Request/response DTOs shared across providers and bindings.
 pub mod types;
-/// Generic multi-tenant primitives: [`tenant::TenantId`], [`tenant::TenantContext`],
-/// [`tenant::KeyResolver`], and [`tenant::InMemoryKeyResolver`].
-pub mod tenant;
 /// Shared utility helpers (memory-bound guards, etc.).
 pub mod util;
 /// Vector store abstraction for the semantic cache tier ([`VectorStore`], [`InMemoryVectorStore`]).
@@ -74,6 +74,7 @@ pub use client::{
     BatchClient, BoxFuture, BoxStream, ClientBuilder, ClientConfig, ClientConfigBuilder, FileClient, FileConfig,
     LlmClient, LlmClientRaw, ResponseClient,
 };
+pub use http::transport::TransportConfig;
 // DefaultClient requires the native HTTP stack (reqwest on native or WASM fetch API).
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 pub use client::DefaultClient;
@@ -94,10 +95,8 @@ pub use tower::{BudgetConfig, CacheBackend, CacheConfig, Enforcement, RateLimitC
 // them without spelling out the full `tower::` path.
 #[cfg(feature = "tower")]
 pub use tower::{
-    CacheKeyStrategy, ExactHashStrategy, SystemPromptAwareStrategy, TenantScopedStrategy,
-    EmbeddingProvider, NoOpEmbeddingProvider,
-    VectorStore, VectorMatch,
-    Guardrail, GuardrailContext, GuardrailDecision, GuardrailStage,
+    CacheKeyStrategy, EmbeddingProvider, ExactHashStrategy, Guardrail, GuardrailContext, GuardrailDecision,
+    GuardrailStage, NoOpEmbeddingProvider, SystemPromptAwareStrategy, TenantScopedStrategy, VectorMatch, VectorStore,
 };
 // Re-export the public provider helper functions that are part of the crate's
 // public API even though the `provider` module itself is pub(crate).
@@ -115,8 +114,7 @@ pub use types::*;
 
 // Realtime API public surface.
 pub use realtime::{
-    ContentPart, OpenAiRealtimeTranslator, RealtimeEnvelope, RealtimeEvent, RealtimeTranslator,
-    ResponseStatus,
+    ContentPart, OpenAiRealtimeTranslator, RealtimeEnvelope, RealtimeEvent, RealtimeTranslator, ResponseStatus,
 };
 
 /// Install the `ring` crypto provider as the rustls process default, idempotently.

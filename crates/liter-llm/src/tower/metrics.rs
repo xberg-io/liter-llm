@@ -164,9 +164,7 @@ mod inner {
                     .build(),
                 realtime_event_count: meter
                     .u64_counter("gen_ai.realtime.event.count")
-                    .with_description(
-                        "Number of Realtime events forwarded, by direction and type",
-                    )
+                    .with_description("Number of Realtime events forwarded, by direction and type")
                     .build(),
                 realtime_bytes: meter
                     .u64_counter("gen_ai.realtime.bytes")
@@ -204,12 +202,7 @@ mod inner {
 
     /// Retrieve or build base attributes for the given (system, model) pair.
     /// Returns an Arc pointing to the cached attribute slice to avoid per-request clones.
-    fn get_or_build_base_attrs(
-        system: &str,
-        model: &str,
-        response_model: &str,
-        operation: &str,
-    ) -> Arc<[KeyValue]> {
+    fn get_or_build_base_attrs(system: &str, model: &str, response_model: &str, operation: &str) -> Arc<[KeyValue]> {
         let system_arc = Arc::<str>::from(system);
         let model_arc = Arc::<str>::from(model);
         let key = (Arc::clone(&system_arc), Arc::clone(&model_arc));
@@ -222,29 +215,25 @@ mod inner {
         }
 
         // Slow path: build and cache.
-        let attrs = Arc::from(vec![
-            KeyValue::new("gen_ai.system", system_arc.to_string()),
-            KeyValue::new("gen_ai.request.model", model_arc.to_string()),
-            KeyValue::new("gen_ai.response.model", response_model.to_owned()),
-            KeyValue::new("gen_ai.operation.name", operation.to_owned()),
-        ].into_boxed_slice());
+        let attrs = Arc::from(
+            vec![
+                KeyValue::new("gen_ai.system", system_arc.to_string()),
+                KeyValue::new("gen_ai.request.model", model_arc.to_string()),
+                KeyValue::new("gen_ai.response.model", response_model.to_owned()),
+                KeyValue::new("gen_ai.operation.name", operation.to_owned()),
+            ]
+            .into_boxed_slice(),
+        );
 
         // Insert and return (another thread might race; we use entry to minimize reinsert).
-        cache
-            .entry(key)
-            .or_insert_with(|| Arc::clone(&attrs));
+        cache.entry(key).or_insert_with(|| Arc::clone(&attrs));
 
         attrs
     }
 
     /// Retrieve or build cached token-type attributes for the given base attributes.
     /// Returns a pair of (input_attrs, output_attrs) to avoid to_vec() on every token recording.
-    fn get_or_build_token_attrs(
-        system: &str,
-        model: &str,
-        response_model: &str,
-        operation: &str,
-    ) -> CachedTokenAttrs {
+    fn get_or_build_token_attrs(system: &str, model: &str, response_model: &str, operation: &str) -> CachedTokenAttrs {
         let system_arc = Arc::<str>::from(system);
         let model_arc = Arc::<str>::from(model);
         let key = (Arc::clone(&system_arc), Arc::clone(&model_arc));
@@ -276,12 +265,10 @@ mod inner {
         };
 
         // Insert and return.
-        cache
-            .entry(key)
-            .or_insert_with(|| CachedTokenAttrs {
-                input: Arc::clone(&input_arc),
-                output: Arc::clone(&output_arc),
-            });
+        cache.entry(key).or_insert_with(|| CachedTokenAttrs {
+            input: Arc::clone(&input_arc),
+            output: Arc::clone(&output_arc),
+        });
 
         cached
     }
@@ -402,10 +389,14 @@ mod inner {
                         let token_attrs = get_or_build_token_attrs(&system, &model_str, &response_model, operation);
 
                         // Input tokens.
-                        instr.token_usage.record(usage.prompt_tokens, token_attrs.input.as_ref());
+                        instr
+                            .token_usage
+                            .record(usage.prompt_tokens, token_attrs.input.as_ref());
 
                         // Output tokens.
-                        instr.token_usage.record(usage.completion_tokens, token_attrs.output.as_ref());
+                        instr
+                            .token_usage
+                            .record(usage.completion_tokens, token_attrs.output.as_ref());
                     }
                 }
 
@@ -596,10 +587,9 @@ mod inner {
     /// If the meter has not been initialized, this call is a no-op.
     pub fn record_realtime_session_duration(provider: &str, duration_secs: f64) {
         if let Some(instr) = instruments() {
-            instr.realtime_session_duration.record(
-                duration_secs,
-                &[KeyValue::new("gen_ai.system", provider.to_owned())],
-            );
+            instr
+                .realtime_session_duration
+                .record(duration_secs, &[KeyValue::new("gen_ai.system", provider.to_owned())]);
         }
     }
 
@@ -743,9 +733,7 @@ mod inner {
             // Without caching, we would allocate a new Vec on each request.
             // With caching, the same Arc<[KeyValue]> is reused.
             for _ in 0..100 {
-                let _ = svc
-                    .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
-                    .await;
+                let _ = svc.call(LlmRequest::Chat(chat_req("openai/gpt-4"))).await;
             }
 
             // Verify that the cache contains at least one entry for the (openai, gpt-4) pair.

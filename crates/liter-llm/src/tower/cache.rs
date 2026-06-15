@@ -152,7 +152,7 @@ impl Default for CacheConfig {
 /// contract (`Serialize`/`Deserialize` on `Arc` requires special handling)
 /// and would not benefit external store implementations (Redis, DynamoDB)
 /// that must serialise on every read anyway.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[cfg_attr(alef, alef(skip))]
 pub enum CachedResponse {
     /// A cached chat completion response.

@@ -119,8 +119,12 @@ impl ProxyServer {
                 .build(),
         );
 
+        let key_store = Arc::new(key_store);
+        let key_resolver: Arc<dyn liter_llm::tenant::KeyResolver> =
+            key_store.clone() as Arc<dyn liter_llm::tenant::KeyResolver>;
         let state = AppState {
-            key_store: Arc::new(key_store),
+            key_store,
+            key_resolver,
             service_pool: Arc::new(service_pool),
             file_store: Arc::new(file_store),
             config: arc_config,

@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use arc_swap::ArcSwap;
+use liter_llm::tenant::KeyResolver;
 
 use crate::auth::KeyStore;
 use crate::config::ProxyConfig;
@@ -17,7 +18,11 @@ use crate::shutdown::ShutdownHandle;
 /// snapshot for the lifetime of that request.
 #[derive(Clone)]
 pub struct AppState {
+    /// Concrete key store used for master-key checks and model-access control.
     pub key_store: Arc<KeyStore>,
+    /// Polymorphic key resolver — the same `KeyStore` exposed via the
+    /// [`KeyResolver`] trait so embedding code can swap in custom backends.
+    pub key_resolver: Arc<dyn KeyResolver>,
     pub service_pool: Arc<ServicePool>,
     pub file_store: Arc<FileStore>,
     /// Atomically-swappable proxy configuration.

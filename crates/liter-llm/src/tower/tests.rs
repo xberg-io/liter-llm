@@ -336,7 +336,7 @@ async fn service_embed_returns_embedding_response() {
 async fn service_list_models_returns_model_list() {
     let mut svc = LlmService::new(MockClient::ok());
     let resp = svc
-        .call(LlmRequest::ListModels)
+        .call(LlmRequest::ListModels())
         .await
         .expect("service call should not fail");
     assert!(matches!(resp, LlmResponse::ListModels(_)));
@@ -445,7 +445,7 @@ fn request_type_labels() {
         .request_type(),
         "embeddings"
     );
-    assert_eq!(LlmRequest::ListModels.request_type(), "list_models");
+    assert_eq!(LlmRequest::ListModels().request_type(), "list_models");
 }
 
 #[test]
@@ -463,12 +463,12 @@ fn operation_name_labels() {
         .operation_name(),
         "embeddings"
     );
-    assert_eq!(LlmRequest::ListModels.operation_name(), "list_models");
+    assert_eq!(LlmRequest::ListModels().operation_name(), "list_models");
 }
 
 #[test]
 fn request_model_returns_none_for_list_models() {
-    assert!(LlmRequest::ListModels.model().is_none());
+    assert!(LlmRequest::ListModels().model().is_none());
 }
 
 // ─── Router tests ─────────────────────────────────────────────────────────────
