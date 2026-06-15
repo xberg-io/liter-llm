@@ -5,64 +5,116 @@
 //!
 //! # Mocking harness
 //!
-//! The original brief asks for a `wiremock`-backed mock Vault server.
-//! `wiremock` is not currently in `dev-dependencies` for this crate (see
-//! `crates/liter-llm-proxy/Cargo.toml`), so the tests below are gated behind
-//! `#[ignore]` with a comment explaining how to enable them once the harness
-//! lands.  The bodies are kept fully written so they will run as soon as
-//! `wiremock = "0.6"` is added to dev-deps.
+//! Uses [`wiremock`] (a dev-dependency) to stand up an HTTP mock that emulates
+//! a Vault KV-v2 backend.  Note that wiremock binds to `127.0.0.1`, which the
+//! outbound SSRF policy rejects under `DenyPrivate`.  These tests rely on the
+//! library default policy of `OutboundPolicy::Off`.  The unit test
+//! `vault_address_rejects_internal_endpoints` in `src/secrets/vault.rs` flips
+//! the policy to `DenyPrivate` and resets to `Off` before returning, but it
+//! lives in a different test binary, so test ordering is not a concern.
 
 #![cfg(feature = "secrets-vault")]
 
+use liter_llm_proxy::secrets::{HashCorpVaultProvider, SecretError, SecretManager};
+use secrecy::ExposeSecret;
+use wiremock::matchers::{method, path};
+use wiremock::{Mock, MockServer, ResponseTemplate};
+
 /// `HashiCorpVaultProvider::get` must extract the `.data.data.<field>` field
 /// from a Vault KV-v2 read response.
-///
-/// To enable:
-///   1. Add `wiremock = "0.6"` to `crates/liter-llm-proxy/Cargo.toml` dev-deps.
-///   2. Remove the `#[ignore]` attribute below.
 #[tokio::test]
-#[ignore = "wiremock is not currently in dev-dependencies; enable once available"]
 async fn fetch_kv_v2_path_extracts_data_data_field() {
-    // Pseudo-code body — fully realisable once wiremock is wired in:
-    //
-    // let server = wiremock::MockServer::start().await;
-    // wiremock::Mock::given(wiremock::matchers::method("GET"))
-    //     .and(wiremock::matchers::path("/v1/secret/data/foo"))
-    //     .respond_with(wiremock::ResponseTemplate::new(200).set_body_json(
-    //         serde_json::json!({"data": {"data": {"value": "abc"}, "metadata": {...}}})
-    //     ))
-    //     .mount(&server)
-    //     .await;
-    //
-    // let provider = HashCorpVaultProvider::builder()
-    //     .address(server.uri())
-    //     .token("test-token")
-    //     .build()
-    //     .expect("builder must succeed when policy is Off");
-    //
-    // let secret = provider.get("foo").await.expect("must fetch");
-    // assert_eq!(secret.value.expose_secret(), "abc");
+    let server = MockServer::start().await;
+
+    // KV-v2 read: GET /v1/secret/data/foo → { data: { data: { value: "abc" }, metadata: {...} } }
+    Mock::given(method("GET"))
+        .and(path("/v1/secret/data/foo"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "request_id": "test-req-id",
+            "lease_id": "",
+            "renewable": false,
+            "lease_duration": 0,
+            "data": {
+                "data": { "value": "abc" },
+                "metadata": {
+                    "created_time": "2024-01-01T00:00:00Z",
+                    "custom_metadata": null,
+                    "deletion_time": "",
+                    "destroyed": false,
+                    "version": 1
+                }
+            },
+            "wrap_info": null,
+            "warnings": null,
+            "auth": null
+        })))
+        .mount(&server)
+        .await;
+
+    // Metadata read used opportunistically by fetch_from_vault.  We mount a
+    // plausible response so the metadata branch succeeds; if it fails, the
+    // provider falls back to default metadata which is still acceptable.
+    Mock::given(method("GET"))
+        .and(path("/v1/secret/metadata/foo"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "request_id": "test-req-id",
+            "lease_id": "",
+            "renewable": false,
+            "lease_duration": 0,
+            "data": {
+                "created_time": "2024-01-01T00:00:00Z",
+                "current_version": 1,
+                "max_versions": 0,
+                "oldest_version": 0,
+                "updated_time": "2024-01-01T00:00:00Z",
+                "versions": {},
+                "custom_metadata": null
+            },
+            "wrap_info": null,
+            "warnings": null,
+            "auth": null
+        })))
+        .mount(&server)
+        .await;
+
+    let provider = HashCorpVaultProvider::builder()
+        .address(server.uri())
+        .token("test-token")
+        .build()
+        .expect("builder must succeed when policy is Off");
+
+    let secret = provider.get("foo").await.expect("must fetch secret");
+    assert_eq!(
+        secret.value.expose_secret(),
+        "abc",
+        "value field is extracted from data.data.value"
+    );
+    assert_eq!(secret.metadata.name, "foo");
 }
 
 /// A 403 response from Vault must be translated to [`SecretError::PermissionDenied`].
 #[tokio::test]
-#[ignore = "wiremock is not currently in dev-dependencies; enable once available"]
 async fn fetch_returns_error_on_403() {
-    // Pseudo-code body:
-    //
-    // let server = wiremock::MockServer::start().await;
-    // wiremock::Mock::given(wiremock::matchers::method("GET"))
-    //     .and(wiremock::matchers::path("/v1/secret/data/forbidden"))
-    //     .respond_with(wiremock::ResponseTemplate::new(403))
-    //     .mount(&server)
-    //     .await;
-    //
-    // let provider = HashCorpVaultProvider::builder()
-    //     .address(server.uri())
-    //     .token("test-token")
-    //     .build()
-    //     .unwrap();
-    //
-    // let err = provider.get("forbidden").await.expect_err("403 must error");
-    // assert!(matches!(err, SecretError::PermissionDenied(_)));
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path("/v1/secret/data/forbidden"))
+        .respond_with(ResponseTemplate::new(403).set_body_json(serde_json::json!({
+            "errors": ["permission denied"]
+        })))
+        .mount(&server)
+        .await;
+
+    let provider = HashCorpVaultProvider::builder()
+        .address(server.uri())
+        .token("test-token")
+        .build()
+        .expect("builder must succeed when policy is Off");
+
+    let result = provider.get("forbidden").await;
+    match result {
+        Ok(_) => panic!("403 response must surface as an error"),
+        Err(SecretError::PermissionDenied(_)) => {}
+        Err(other) => panic!("403 must map to PermissionDenied, got {other:?}"),
+    }
 }
