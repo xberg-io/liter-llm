@@ -21,8 +21,20 @@ class LiterLlmBridge {
   /// Returns [`LiterLlmError`] if the underlying HTTP client cannot be
   /// constructed, or if the resolved provider configuration is invalid.
   /// throws anyhow::Error on failure
-  static Future<DefaultClient> createClient(String apiKey, {String? baseUrl, int? timeoutSecs, int? maxRetries, String? modelHint}) async {
-    return await rust_bridge.createClient(apiKey: apiKey, baseUrl: baseUrl, timeoutSecs: timeoutSecs, maxRetries: maxRetries, modelHint: modelHint);
+  static Future<DefaultClient> createClient(
+    String apiKey, {
+    String? baseUrl,
+    int? timeoutSecs,
+    int? maxRetries,
+    String? modelHint,
+  }) async {
+    return await rust_bridge.createClient(
+      apiKey: apiKey,
+      baseUrl: baseUrl,
+      timeoutSecs: timeoutSecs,
+      maxRetries: maxRetries,
+      modelHint: modelHint,
+    );
   }
 
   /// Create a new LLM client from a JSON string.
@@ -48,7 +60,9 @@ class LiterLlmBridge {
   /// Returns an error if the config is invalid (empty name, empty base_url, or
   /// no model prefixes).
   /// throws anyhow::Error on failure
-  static Future<void> registerCustomProvider(CustomProviderConfig config) async {
+  static Future<void> registerCustomProvider(
+    CustomProviderConfig config,
+  ) async {
     return await rust_bridge.registerCustomProvider(config: config);
   }
 
@@ -103,8 +117,16 @@ class LiterLlmBridge {
   /// // 1000 * 0.0000025 + 500 * 0.00001 = 0.0025 + 0.005 = 0.0075
   /// assert!((usd - 0.0075).abs() < 1e-9);
   /// ```
-  static Future<double?> completionCost(String model, int promptTokens, int completionTokens) async {
-    return await rust_bridge.completionCost(model: model, promptTokens: promptTokens, completionTokens: completionTokens);
+  static Future<double?> completionCost(
+    String model,
+    int promptTokens,
+    int completionTokens,
+  ) async {
+    return await rust_bridge.completionCost(
+      model: model,
+      promptTokens: promptTokens,
+      completionTokens: completionTokens,
+    );
   }
 
   /// Calculate the estimated cost of a completion, accounting for cached
@@ -119,8 +141,18 @@ class LiterLlmBridge {
   ///
   /// Returns `None` if the model is not present in the embedded pricing
   /// registry, mirroring [`completion_cost`].
-  static Future<double?> completionCostWithCache(String model, int promptTokens, int cachedTokens, int completionTokens) async {
-    return await rust_bridge.completionCostWithCache(model: model, promptTokens: promptTokens, cachedTokens: cachedTokens, completionTokens: completionTokens);
+  static Future<double?> completionCostWithCache(
+    String model,
+    int promptTokens,
+    int cachedTokens,
+    int completionTokens,
+  ) async {
+    return await rust_bridge.completionCostWithCache(
+      model: model,
+      promptTokens: promptTokens,
+      cachedTokens: cachedTokens,
+      completionTokens: completionTokens,
+    );
   }
 
   /// Count tokens in a text string using the tokenizer for the given model.
@@ -150,7 +182,10 @@ class LiterLlmBridge {
   /// Returns [`LiterLlmError::BadRequest`] if the tokenizer cannot be loaded or
   /// if tokenization fails for any message.
   /// throws anyhow::Error on failure
-  static Future<int> countRequestTokens(String model, ChatCompletionRequest req) async {
+  static Future<int> countRequestTokens(
+    String model,
+    ChatCompletionRequest req,
+  ) async {
     return await rust_bridge.countRequestTokens(model: model, req: req);
   }
 
@@ -174,8 +209,10 @@ class LiterLlmBridge {
     return await rust_bridge.ensureCryptoProvider();
   }
 
-  static Stream<ChatCompletionChunk> chatStream(DefaultClient defaultClient, ChatCompletionRequest req) {
+  static Stream<ChatCompletionChunk> chatStream(
+    DefaultClient defaultClient,
+    ChatCompletionRequest req,
+  ) {
     return defaultClient.chatStream(req: req);
   }
-
 }

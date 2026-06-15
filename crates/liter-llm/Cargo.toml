@@ -42,9 +42,7 @@ native-http = [
 # WASM transport: browser / Node.js fetch API via gloo-timers.
 # Mutually exclusive with `native-http`.
 wasm-http = ["dep:reqwest", "dep:memchr", "dep:base64", "dep:gloo-timers"]
-
 # (HTTP/3 feature is declared further down — see the http3 entry under transports.)
-
 # ---------------------------------------------------------------------------
 # Observability features
 # ---------------------------------------------------------------------------
@@ -59,7 +57,6 @@ tracing = ["dep:tracing"]
 # subscriber stack without a hard dependency on the crate themselves.
 # OTel is the single observability surface — no prometheus feature exists by design.
 otel = ["tracing", "dep:tracing-opentelemetry", "dep:opentelemetry"]
-
 # ---------------------------------------------------------------------------
 # Middleware feature
 # ---------------------------------------------------------------------------
@@ -67,7 +64,6 @@ otel = ["tracing", "dep:tracing-opentelemetry", "dep:opentelemetry"]
 # Tower middleware integration (LlmService, TracingLayer, FallbackLayer,
 # rate_limit, budget, health, retry, circuit, hedge, cache).
 tower = ["dep:tower", "dep:tower-http", "dep:dashmap", "dep:futures-util", "tracing"]
-
 # ---------------------------------------------------------------------------
 # Caching feature
 # ---------------------------------------------------------------------------
@@ -79,7 +75,6 @@ opendal-cache = ["dep:opendal", "tower"]
 # CEL (Common Expression Language) policy DSL for guardrails.
 # Enables `CelGuardrail` in the `guardrail::cel` module.
 guardrail-cel = ["dep:cel-interpreter"]
-
 # ---------------------------------------------------------------------------
 # Cloud-provider auth features
 # ---------------------------------------------------------------------------
@@ -112,7 +107,6 @@ bedrock-auth = ["native-http"]
 # HTTP/3 (h3-quinn) support in reqwest. Requires the `native-http` feature.
 # When enabled, the HTTP client negotiates HTTP/3 during connection establishment.
 http3 = ["native-http"]
-
 # ---------------------------------------------------------------------------
 # Token counting
 # ---------------------------------------------------------------------------
@@ -120,7 +114,6 @@ http3 = ["native-http"]
 # Token counting via HuggingFace tokenizers.  Provides lazy-cached tokenizer
 # loading and token counting for text and chat completion requests.
 tokenizer = ["dep:tokenizers"]
-
 # ---------------------------------------------------------------------------
 # Composite presets
 # ---------------------------------------------------------------------------
@@ -158,7 +151,6 @@ base64 = { workspace = true, optional = true }
 bytes = { workspace = true }
 cel-interpreter = { version = "0.8", optional = true }
 dashmap = { workspace = true, optional = true }
-regex = "1"
 futures-core = { workspace = true }
 futures-util = { workspace = true, optional = true }
 gcp_auth = { workspace = true, optional = true }
@@ -168,6 +160,7 @@ memchr = { workspace = true, optional = true }
 opendal = { workspace = true, optional = true }
 opentelemetry = { workspace = true, optional = true }
 pin-project-lite = { workspace = true }
+regex = "1"
 secrecy = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

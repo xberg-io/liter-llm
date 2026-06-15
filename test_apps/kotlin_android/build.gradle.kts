@@ -33,18 +33,12 @@ android {
 }
 
 kotlin {
-<<<<<<< Updated upstream
-    // Set JVM target for compilation. gradle.properties enables auto-detection
-    // of host JDK installations so Gradle uses the available JDK version on the
-    // build machine, preventing provisioning failures when the target version is not installed.
-=======
     // Pin the JDK toolchain used for compilation AND test execution. Without this,
     // Gradle picks the host JDK; under JDK 25 (Temurin) the Android Gradle Plugin
     // fails to parse the host version string and aborts with
     // `What went wrong: 25.0.2`. `jvmToolchain(N)` makes Gradle provision the
     // requested LTS JDK (downloading via toolchains if not present locally) so
     // `./gradlew test` succeeds on hosts with newer JDKs installed.
->>>>>>> Stashed changes
     jvmToolchain(17)
     compilerOptions {
         jvmTarget = JvmTarget.JVM_17

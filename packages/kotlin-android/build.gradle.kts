@@ -40,10 +40,7 @@ android {
 }
 
 kotlin {
-<<<<<<< Updated upstream
-=======
     jvmToolchain(21)
->>>>>>> Stashed changes
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
     }

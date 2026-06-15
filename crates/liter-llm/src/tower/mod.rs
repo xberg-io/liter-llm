@@ -130,7 +130,10 @@ pub use health::{
 pub use hedge::{FixedDelayHedge, HedgeLayer, HedgePolicy, HedgeService};
 pub use hooks::{HooksLayer, HooksService, LlmHook};
 pub use metrics::{MetricsLayer, MetricsService};
-pub use rate_limit::{CostRateLimitConfig, CostRateLimitLayer, CostRateLimitService, ModelRateLimitLayer, ModelRateLimitService, RateLimitConfig};
+pub use rate_limit::{
+    CostRateLimitConfig, CostRateLimitLayer, CostRateLimitService, ModelRateLimitLayer, ModelRateLimitService,
+    RateLimitConfig,
+};
 pub use route_classify::{
     CascadeClassifier, ClassifierVerdictCache, ClassifyContext, EmbeddingSimilarityClassifier, IntentPrototype,
     KeywordClassifier, LlmClassifier, RouteClassifier,

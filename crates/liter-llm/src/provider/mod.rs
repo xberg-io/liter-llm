@@ -108,9 +108,7 @@ pub fn capabilities(provider_name: &str) -> &'static ProviderCapabilities {
             // including `capabilities` are also `'static`.  The registry is
             // never mutated after initialization, so there is no aliasing hazard.
             let caps: &ProviderCapabilities = &entry.capabilities;
-            return unsafe {
-                std::mem::transmute::<&ProviderCapabilities, &'static ProviderCapabilities>(caps)
-            };
+            return unsafe { std::mem::transmute::<&ProviderCapabilities, &'static ProviderCapabilities>(caps) };
         }
     }
     &DEFAULT_CAPABILITIES

@@ -145,13 +145,13 @@ mod tower_integration {
     use tower::{Layer, Service};
 
     use super::*;
+    use crate::error::LiterLlmError;
     use crate::guardrail::builtin::{OnMatch, RegexGuardrail};
     use crate::guardrail::registry::GuardrailRegistry;
     use crate::tower::guardrail::GuardrailLayer;
     use crate::tower::service::LlmService;
     use crate::tower::tests_common::{MockClient, chat_req};
     use crate::tower::types::LlmRequest;
-    use crate::error::LiterLlmError;
 
     #[allow(dead_code)]
     static INPUT_STAGES: &[GuardrailStage] = &[GuardrailStage::Input];
@@ -176,10 +176,17 @@ mod tower_integration {
             .await
             .expect_err("should be blocked by guardrail");
 
-        assert!(matches!(err, LiterLlmError::HookRejected { .. }), "guardrail block should map to HookRejected");
+        assert!(
+            matches!(err, LiterLlmError::HookRejected { .. }),
+            "guardrail block should map to HookRejected"
+        );
         // Inner service must NOT have been called.
         use std::sync::atomic::Ordering;
-        assert_eq!(call_count.load(Ordering::SeqCst), 0, "inner service should not be called");
+        assert_eq!(
+            call_count.load(Ordering::SeqCst),
+            0,
+            "inner service should not be called"
+        );
     }
 
     #[tokio::test]

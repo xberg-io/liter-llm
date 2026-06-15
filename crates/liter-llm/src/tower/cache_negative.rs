@@ -287,17 +287,17 @@ mod tests {
     fn build_stack(
         client: MockClient,
         policy: FixedWindowNegativeCache,
-    ) -> (Arc<InMemoryStore>, impl Service<LlmRequest, Response = LlmResponse, Error = LiterLlmError>) {
+    ) -> (
+        Arc<InMemoryStore>,
+        impl Service<LlmRequest, Response = LlmResponse, Error = LiterLlmError>,
+    ) {
         let store = Arc::new(InMemoryStore::new(&CacheConfig {
             max_entries: 64,
             ttl: Duration::from_secs(60),
             ..Default::default()
         }));
         let cache_layer = CacheLayer::with_store(Arc::clone(&store) as Arc<dyn CacheStore>);
-        let neg_layer = NegativeCacheLayer::new(
-            Arc::clone(&store) as Arc<dyn CacheStore>,
-            Arc::new(policy),
-        );
+        let neg_layer = NegativeCacheLayer::new(Arc::clone(&store) as Arc<dyn CacheStore>, Arc::new(policy));
         let inner = LlmService::new(client);
         let svc = neg_layer.layer(cache_layer.layer(inner));
         (store, svc)
@@ -339,7 +339,12 @@ mod tests {
         let req_body = chat_req("gpt-4");
 
         // First call — cache miss, upstream returns RateLimited.
-        let first = svc.ready().await.unwrap().call(LlmRequest::Chat(req_body.clone())).await;
+        let first = svc
+            .ready()
+            .await
+            .unwrap()
+            .call(LlmRequest::Chat(req_body.clone()))
+            .await;
         assert!(first.is_err(), "first call should propagate the upstream error");
 
         // Verify the error was written to the store.
@@ -374,7 +379,12 @@ mod tests {
         let req_body = chat_req("gpt-4");
 
         // First call — hits upstream, gets RateLimited, caches it.
-        let _ = svc.ready().await.unwrap().call(LlmRequest::Chat(req_body.clone())).await;
+        let _ = svc
+            .ready()
+            .await
+            .unwrap()
+            .call(LlmRequest::Chat(req_body.clone()))
+            .await;
         assert_eq!(call_count.load(std::sync::atomic::Ordering::SeqCst), 1);
 
         // Wait for the window to elapse.

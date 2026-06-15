@@ -29,11 +29,7 @@ use super::{Guardrail, GuardrailContext, GuardrailDecision, GuardrailStage};
 /// For `OutputChunk` stage: returns the raw chunk text.
 fn extract_text<'a>(stage: GuardrailStage, ctx: &'a GuardrailContext<'a>) -> std::borrow::Cow<'a, str> {
     match stage {
-        GuardrailStage::OutputChunk => {
-            ctx.chunk
-                .map(std::borrow::Cow::Borrowed)
-                .unwrap_or_default()
-        }
+        GuardrailStage::OutputChunk => ctx.chunk.map(std::borrow::Cow::Borrowed).unwrap_or_default(),
         GuardrailStage::Output => ctx
             .response
             .map(|v| std::borrow::Cow::Owned(v.to_string()))
@@ -90,7 +86,11 @@ impl RegexGuardrail {
 }
 
 #[allow(dead_code)]
-static REGEX_ALL_STAGES: &[GuardrailStage] = &[GuardrailStage::Input, GuardrailStage::Output, GuardrailStage::OutputChunk];
+static REGEX_ALL_STAGES: &[GuardrailStage] = &[
+    GuardrailStage::Input,
+    GuardrailStage::Output,
+    GuardrailStage::OutputChunk,
+];
 
 impl Guardrail for RegexGuardrail {
     fn name(&self) -> &'static str {
@@ -419,10 +419,7 @@ mod tests {
         serde_json::json!({ "messages": [{ "role": "user", "content": content }] })
     }
 
-    fn ctx_input<'a>(
-        request: &'a serde_json::Value,
-        meta: &'a HashMap<String, String>,
-    ) -> GuardrailContext<'a> {
+    fn ctx_input<'a>(request: &'a serde_json::Value, meta: &'a HashMap<String, String>) -> GuardrailContext<'a> {
         GuardrailContext {
             request,
             response: None,
@@ -597,7 +594,10 @@ mod tests {
         let meta = empty_meta();
         let ctx = ctx_input(&req, &meta);
         let decision = guardrail.check(GuardrailStage::Input, &ctx).await;
-        assert!(decision.is_allow(), "absent field should allow (fail-open for deny-list)");
+        assert!(
+            decision.is_allow(),
+            "absent field should allow (fail-open for deny-list)"
+        );
     }
 
     // ── LengthCapGuardrail ────────────────────────────────────────────────────

@@ -193,11 +193,9 @@ where
 
             let output_decision = registry.run_stage(GuardrailStage::Output, &output_ctx).await;
             match output_decision {
-                GuardrailDecision::Block { reason, code } => {
-                    Err(LiterLlmError::HookRejected {
-                        message: format!("guardrail blocked output [code={code}]: {reason}"),
-                    })
-                }
+                GuardrailDecision::Block { reason, code } => Err(LiterLlmError::HookRejected {
+                    message: format!("guardrail blocked output [code={code}]: {reason}"),
+                }),
                 GuardrailDecision::Mutate { .. } => {
                     // Response mutation requires rebuilding the typed response from JSON.
                     // For the initial implementation we log and return the original.

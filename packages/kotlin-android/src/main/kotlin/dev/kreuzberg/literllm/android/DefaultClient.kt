@@ -177,42 +177,6 @@ class DefaultClient internal constructor(internal val handle: Long) : AutoClosea
     }
 
     @Suppress("TooGenericExceptionCaught")
-<<<<<<< Updated upstream
-    fun chatStream(req: ChatCompletionRequest): kotlinx.coroutines.flow.Flow<ChatCompletionChunk> =
-        kotlinx.coroutines.flow.callbackFlow {
-            val mapper =
-                com.fasterxml.jackson.databind
-                    .ObjectMapper()
-                    .registerModule(com.fasterxml.jackson.datatype.jdk8.Jdk8Module())
-                    .findAndRegisterModules()
-                    .setPropertyNamingStrategy(
-                        com.fasterxml.jackson.databind.PropertyNamingStrategies.SNAKE_CASE
-                    )
-            val streamHandle: Long =
-                withContext(Dispatchers.IO) {
-                    LiterLlmBridge.nativeDefaultClientChatStreamStart(
-                        handle,
-                        mapper.writeValueAsString(req),
-                    )
-                }
-            try {
-                while (true) {
-                    val chunkJson: String? =
-                        withContext(Dispatchers.IO) {
-                            LiterLlmBridge.nativeDefaultClientChatStreamNext(streamHandle)
-                        }
-                    if (chunkJson == null) break
-                    val chunk = mapper.readValue(chunkJson, ChatCompletionChunk::class.java)
-                    send(chunk)
-                }
-                close()
-            } catch (e: Throwable) {
-                close(e)
-            }
-            awaitClose {
-                LiterLlmBridge.nativeDefaultClientChatStreamFree(streamHandle)
-            }
-=======
     fun chatStream(req: ChatCompletionRequest): kotlinx.coroutines.flow.Flow<ChatCompletionChunk> = kotlinx.coroutines.flow.callbackFlow {
         val mapper = com.fasterxml.jackson.databind.ObjectMapper()
             .registerModule(com.fasterxml.jackson.datatype.jdk8.Jdk8Module())
@@ -236,7 +200,6 @@ class DefaultClient internal constructor(internal val handle: Long) : AutoClosea
         }
         awaitClose {
             LiterLlmBridge.nativeDefaultClientChatStreamFree(streamHandle)
->>>>>>> Stashed changes
         }
     }
 

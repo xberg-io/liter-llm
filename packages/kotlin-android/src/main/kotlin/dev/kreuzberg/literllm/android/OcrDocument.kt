@@ -36,17 +36,8 @@ sealed class OcrDocument {
         val url: String,
     ) : OcrDocument()
     /** Inline base64-encoded document data. */
-<<<<<<< Updated upstream
-    @com.fasterxml.jackson.databind.annotation.JsonDeserialize(
-        using = com.fasterxml.jackson.databind.JsonDeserializer.None::class
-    )
-    @com.fasterxml.jackson.databind.annotation.JsonSerialize(
-        using = com.fasterxml.jackson.databind.JsonSerializer.None::class
-    )
-=======
     @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None::class)
     @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = com.fasterxml.jackson.databind.JsonSerializer.None::class)
->>>>>>> Stashed changes
     data class Base64(
         val data: String,
         val mediaType: String,

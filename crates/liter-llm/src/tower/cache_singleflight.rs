@@ -96,10 +96,7 @@ pub trait SingleflightCoordinator: Send + Sync + 'static {
     ///
     /// Returns a [`SingleflightHandle`] that indicates whether this caller is
     /// the leader (must do upstream work) or a follower (must await the leader).
-    fn join<'a>(
-        &'a self,
-        key: u64,
-    ) -> Pin<Box<dyn Future<Output = SingleflightHandle> + Send + 'a>>;
+    fn join<'a>(&'a self, key: u64) -> Pin<Box<dyn Future<Output = SingleflightHandle> + Send + 'a>>;
 }
 
 // ─── InMemorySingleflight ─────────────────────────────────────────────────────
@@ -142,10 +139,7 @@ impl InMemorySingleflight {
 }
 
 impl SingleflightCoordinator for InMemorySingleflight {
-    fn join<'a>(
-        &'a self,
-        key: u64,
-    ) -> Pin<Box<dyn Future<Output = SingleflightHandle> + Send + 'a>> {
+    fn join<'a>(&'a self, key: u64) -> Pin<Box<dyn Future<Output = SingleflightHandle> + Send + 'a>> {
         Box::pin(async move {
             use dashmap::mapref::entry::Entry;
 
@@ -294,9 +288,7 @@ where
                                 message: "singleflight: non-cacheable response variant in leader".into(),
                             })),
                         },
-                        Err(e) => Err(Arc::new(LiterLlmError::InternalError {
-                            message: e.to_string(),
-                        })),
+                        Err(e) => Err(Arc::new(LiterLlmError::InternalError { message: e.to_string() })),
                     };
                     complete(sf_result);
                     result
@@ -306,11 +298,13 @@ where
                     drop(fut);
                     match recv.recv().await {
                         Ok(Ok(cached)) => cached.into_llm_response(),
-                        Ok(Err(arc_err)) => Err(Arc::try_unwrap(arc_err).unwrap_or_else(|arc| {
-                            LiterLlmError::InternalError {
-                                message: arc.to_string(),
-                            }
-                        })),
+                        Ok(Err(arc_err)) => {
+                            Err(
+                                Arc::try_unwrap(arc_err).unwrap_or_else(|arc| LiterLlmError::InternalError {
+                                    message: arc.to_string(),
+                                }),
+                            )
+                        }
                         Err(_recv_err) => Err(LiterLlmError::InternalError {
                             message: "singleflight: leader closed channel without sending a result".into(),
                         }),
@@ -374,7 +368,9 @@ mod tests {
             req: crate::types::ChatCompletionRequest,
         ) -> crate::client::BoxFuture<
             '_,
-            crate::error::Result<crate::client::BoxStream<'static, crate::error::Result<crate::types::ChatCompletionChunk>>>,
+            crate::error::Result<
+                crate::client::BoxStream<'static, crate::error::Result<crate::types::ChatCompletionChunk>>,
+            >,
         > {
             self.inner.chat_stream(req)
         }
@@ -484,7 +480,10 @@ mod tests {
         let calls = call_count.load(Ordering::SeqCst);
         // With a 50ms delay in the upstream, all 100 tasks arrive while the
         // leader awaits — singleflight should collapse to exactly 1 call.
-        assert_eq!(calls, 1, "inner service must be called exactly once under burst; got {calls}");
+        assert_eq!(
+            calls, 1,
+            "inner service must be called exactly once under burst; got {calls}"
+        );
     }
 
     /// 10 concurrent requests via independent service clones all receive the same result.
@@ -513,7 +512,9 @@ mod tests {
         let models: Vec<String> = results
             .into_iter()
             .map(|join_result| {
-                let llm_resp = join_result.expect("task did not panic").expect("service call succeeded");
+                let llm_resp = join_result
+                    .expect("task did not panic")
+                    .expect("service call succeeded");
                 match llm_resp {
                     LlmResponse::Chat(r) => r.model,
                     _ => panic!("expected Chat response"),
@@ -523,7 +524,10 @@ mod tests {
 
         // All responses should carry the same model string set by MockClient.
         let first = &models[0];
-        assert!(models.iter().all(|m| m == first), "all followers must receive the same result");
+        assert!(
+            models.iter().all(|m| m == first),
+            "all followers must receive the same result"
+        );
     }
 
     /// When the leader returns an error, all followers receive that error.
@@ -559,10 +563,7 @@ mod tests {
             .collect();
 
         let results: Vec<_> = futures_util::future::join_all(handles).await;
-        let error_count = results
-            .iter()
-            .filter(|r| r.as_ref().unwrap().is_err())
-            .count();
+        let error_count = results.iter().filter(|r| r.as_ref().unwrap().is_err()).count();
 
         // All callers should receive an error.
         assert_eq!(error_count, 10, "all callers must receive the leader's error");
@@ -570,6 +571,9 @@ mod tests {
         // With a 50 ms delay, all 10 tasks arrive while the leader is awaiting;
         // inner should be called exactly once.
         let calls = call_count.load(Ordering::SeqCst);
-        assert_eq!(calls, 1, "inner should be called exactly once under singleflight; got {calls}");
+        assert_eq!(
+            calls, 1,
+            "inner should be called exactly once under singleflight; got {calls}"
+        );
     }
 }

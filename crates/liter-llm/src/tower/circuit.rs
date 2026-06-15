@@ -26,8 +26,8 @@
 //! The [`CircuitPolicy`] trait lets callers plug in custom policy logic
 //! (e.g. sliding-window error-rate policies) without modifying library code.
 
+use std::sync::atomic::{AtomicU8, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
-use std::sync::atomic::{AtomicU32, AtomicU8, Ordering};
 use std::task::{Context, Poll};
 use std::time::{Duration, Instant};
 
@@ -173,9 +173,7 @@ impl ExponentialBackoffCircuit {
             && open_at.elapsed() >= backoff
         {
             drop(guard);
-            self.inner
-                .state
-                .store(CircuitState::HalfOpen as u8, Ordering::Release);
+            self.inner.state.store(CircuitState::HalfOpen as u8, Ordering::Release);
             tracing::info!(backoff = ?backoff, "circuit breaker entering half-open");
             return true;
         }
@@ -429,7 +427,11 @@ mod tests {
         }
 
         // State is updated synchronously -- no sleep needed.
-        assert_eq!(p.state(), CircuitState::Open, "circuit should be open after threshold failures");
+        assert_eq!(
+            p.state(),
+            CircuitState::Open,
+            "circuit should be open after threshold failures"
+        );
     }
 
     #[tokio::test]

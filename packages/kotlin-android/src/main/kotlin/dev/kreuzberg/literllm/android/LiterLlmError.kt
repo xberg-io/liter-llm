@@ -33,33 +33,14 @@ sealed class LiterLlmError(message: String) : Exception(message) {
         override val message: String,
         val status: Short,
     ) : LiterLlmError("authentication failed: {message}")
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
     data class RateLimited(
         override val message: String,
         val retryAfter: Duration?,
     ) : LiterLlmError("rate limited: {message}")
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
     data class BadRequest(
         override val message: String,
         val status: Short,
     ) : LiterLlmError("bad request: {message}")
-<<<<<<< Updated upstream
-
-    data class ContextWindowExceeded(override val message: String) :
-        LiterLlmError("context window exceeded: {message}")
-
-    data class ContentPolicy(override val message: String) :
-        LiterLlmError("content policy violation: {message}")
-
-    data class NotFound(override val message: String) : LiterLlmError("not found: {message}")
-
-=======
     data class ContextWindowExceeded(
         override val message: String,
     ) : LiterLlmError("context window exceeded: {message}")
@@ -67,73 +48,35 @@ sealed class LiterLlmError(message: String) : Exception(message) {
         override val message: String,
     ) : LiterLlmError("content policy violation: {message}")
     data class NotFound(override val message: String) : LiterLlmError("not found: {message}")
->>>>>>> Stashed changes
     data class ServerError(
         override val message: String,
         val status: Short,
     ) : LiterLlmError("server error: {message}")
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
     data class ServiceUnavailable(
         override val message: String,
         val status: Short,
     ) : LiterLlmError("service unavailable: {message}")
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
     object Timeout : LiterLlmError("request timeout")
     data class Streaming(override val message: String) : LiterLlmError("streaming error: {message}")
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
     data class EndpointNotSupported(
         val endpoint: String,
         val provider: String,
     ) : LiterLlmError("provider {provider} does not support {endpoint}")
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
     data class InvalidHeader(
         val name: String,
         val reason: String,
     ) : LiterLlmError("invalid header {name:?}: {reason}")
-<<<<<<< Updated upstream
-
     data class Serialization(val field0: String) : LiterLlmError("serialization error: $field0")
-
-=======
-    data class Serialization(val field0: String) : LiterLlmError("serialization error: $field0")
->>>>>>> Stashed changes
     data class BudgetExceeded(
         override val message: String,
         val model: String?,
     ) : LiterLlmError("budget exceeded: {message}")
-<<<<<<< Updated upstream
-
-    data class HookRejected(override val message: String) :
-        LiterLlmError("hook rejected: {message}")
-
-    data class InternalError(override val message: String) :
-        LiterLlmError("internal error: {message}")
-
-    data class OutboundForbidden(
-        val url: String,
-        val reason: String,
-    ) : LiterLlmError("outbound request to {url} forbidden: {reason}")
-
-=======
     data class HookRejected(
         override val message: String,
     ) : LiterLlmError("hook rejected: {message}")
     data class InternalError(
         override val message: String,
     ) : LiterLlmError("internal error: {message}")
->>>>>>> Stashed changes
     open val statusCode: Short = 0
     open val isTransient: Boolean = false
     open val errorType: String = ""

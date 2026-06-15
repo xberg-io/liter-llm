@@ -39,9 +39,7 @@ use std::time::{Duration, Instant};
 use regex::Regex;
 
 use crate::client::LlmClient;
-use crate::types::{
-    ChatCompletionRequest, EmbeddingInput, EmbeddingRequest, Message, SystemMessage, UserMessage,
-};
+use crate::types::{ChatCompletionRequest, EmbeddingInput, EmbeddingRequest, Message, SystemMessage, UserMessage};
 
 // ─── OTel helpers (guarded) ──────────────────────────────────────────────────
 
@@ -58,10 +56,7 @@ fn record_classify_duration(tier: &'static str, duration_secs: f64) {
                 .with_description("Semantic routing classifier latency per tier")
                 .with_unit("s")
                 .build()
-                .record(
-                    duration_secs,
-                    &[KeyValue::new("route.classifier.tier", tier)],
-                );
+                .record(duration_secs, &[KeyValue::new("route.classifier.tier", tier)]);
         }
     }
     // Suppress unused parameter warnings when otel is off.
@@ -402,10 +397,7 @@ impl LlmClassifier {
 
         // Use serde_json for robust parsing.
         let value: serde_json::Value = serde_json::from_str(json_str).ok()?;
-        value
-            .get("model")
-            .and_then(|v| v.as_str())
-            .map(ToOwned::to_owned)
+        value.get("model").and_then(|v| v.as_str()).map(ToOwned::to_owned)
     }
 }
 
@@ -441,11 +433,7 @@ impl RouteClassifier for LlmClassifier {
                 }
             };
 
-            let text = resp
-                .choices
-                .into_iter()
-                .next()
-                .and_then(|c| c.message.content)?;
+            let text = resp.choices.into_iter().next().and_then(|c| c.message.content)?;
 
             let model_id = Self::parse_model_from_response(&text);
 
@@ -799,11 +787,21 @@ mod tests {
         }
 
         fn list_models(&self) -> BoxFuture<'_, Result<ModelsListResponse>> {
-            Box::pin(async move { Ok(ModelsListResponse { object: "list".into(), data: vec![] }) })
+            Box::pin(async move {
+                Ok(ModelsListResponse {
+                    object: "list".into(),
+                    data: vec![],
+                })
+            })
         }
 
         fn image_generate(&self, _req: CreateImageRequest) -> BoxFuture<'_, Result<ImagesResponse>> {
-            Box::pin(async move { Ok(ImagesResponse { created: 0, data: vec![] }) })
+            Box::pin(async move {
+                Ok(ImagesResponse {
+                    created: 0,
+                    data: vec![],
+                })
+            })
         }
 
         fn speech(&self, _req: CreateSpeechRequest) -> BoxFuture<'_, Result<bytes::Bytes>> {
@@ -822,11 +820,23 @@ mod tests {
         }
 
         fn moderate(&self, _req: ModerationRequest) -> BoxFuture<'_, Result<ModerationResponse>> {
-            Box::pin(async move { Ok(ModerationResponse { id: String::new(), model: String::new(), results: vec![] }) })
+            Box::pin(async move {
+                Ok(ModerationResponse {
+                    id: String::new(),
+                    model: String::new(),
+                    results: vec![],
+                })
+            })
         }
 
         fn rerank(&self, _req: RerankRequest) -> BoxFuture<'_, Result<RerankResponse>> {
-            Box::pin(async move { Ok(RerankResponse { id: None, results: vec![], meta: None }) })
+            Box::pin(async move {
+                Ok(RerankResponse {
+                    id: None,
+                    results: vec![],
+                    meta: None,
+                })
+            })
         }
 
         fn search(&self, _req: SearchRequest) -> BoxFuture<'_, Result<SearchResponse>> {
@@ -983,9 +993,7 @@ mod tests {
         let embed_call_count = Arc::clone(&embed_client.embed_call_count);
         let llm_call_count = Arc::clone(&llm_client.chat_call_count);
 
-        let kw = KeywordClassifier::new(vec![
-            (Regex::new(r"(?i)code").unwrap(), "gpt-4o".into()),
-        ]);
+        let kw = KeywordClassifier::new(vec![(Regex::new(r"(?i)code").unwrap(), "gpt-4o".into())]);
         let embedding_cls = EmbeddingSimilarityClassifier::new(
             embed_client,
             "text-embedding-3-small",
@@ -1010,7 +1018,11 @@ mod tests {
 
         let result = cascade.classify(&ctx).await;
         assert_eq!(result, Some("gpt-4o".into()));
-        assert_eq!(embed_call_count.load(Ordering::SeqCst), 0, "embedding should not be called");
+        assert_eq!(
+            embed_call_count.load(Ordering::SeqCst),
+            0,
+            "embedding should not be called"
+        );
         assert_eq!(llm_call_count.load(Ordering::SeqCst), 0, "llm should not be called");
     }
 
@@ -1022,9 +1034,7 @@ mod tests {
 
         let llm_call_count = Arc::clone(&llm_client.chat_call_count);
 
-        let kw = KeywordClassifier::new(vec![
-            (Regex::new(r"(?i)image").unwrap(), "dall-e-3".into()),
-        ]);
+        let kw = KeywordClassifier::new(vec![(Regex::new(r"(?i)image").unwrap(), "dall-e-3".into())]);
         let embedding_cls = EmbeddingSimilarityClassifier::new(
             embed_client,
             "text-embedding-3-small",
@@ -1159,7 +1169,12 @@ mod tests {
         let prompt = "Expire me";
 
         // First call → miss.
-        let ctx1 = ClassifyContext { prompt, system_prompt: None, metadata: &meta, available_models: &avail };
+        let ctx1 = ClassifyContext {
+            prompt,
+            system_prompt: None,
+            metadata: &meta,
+            available_models: &avail,
+        };
         let r1 = cached.classify(&ctx1).await;
         assert_eq!(r1, Some("gpt-4o".into()));
         assert_eq!(call_count.load(Ordering::SeqCst), 1);
@@ -1168,7 +1183,12 @@ mod tests {
         tokio::time::sleep(Duration::from_millis(20)).await;
 
         // Second call → cache expired → inner called again.
-        let ctx2 = ClassifyContext { prompt, system_prompt: None, metadata: &meta, available_models: &avail };
+        let ctx2 = ClassifyContext {
+            prompt,
+            system_prompt: None,
+            metadata: &meta,
+            available_models: &avail,
+        };
         let r2 = cached.classify(&ctx2).await;
         assert_eq!(r2, Some("gpt-4o".into()));
         assert_eq!(call_count.load(Ordering::SeqCst), 2, "inner should be called after TTL");

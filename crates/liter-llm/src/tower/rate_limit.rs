@@ -308,9 +308,7 @@ impl CostRateLimitState {
             let spend = self.per_minute.spend_usd(now);
             if spend >= limit {
                 return Some(LiterLlmError::RateLimited {
-                    message: format!(
-                        "cost rate limit exceeded: ${spend:.6} >= ${limit:.6} per minute"
-                    ),
+                    message: format!("cost rate limit exceeded: ${spend:.6} >= ${limit:.6} per minute"),
                     retry_after: Some(Duration::from_secs(60)),
                 });
             }
@@ -320,9 +318,7 @@ impl CostRateLimitState {
             let spend = self.per_hour.spend_usd(now);
             if spend >= limit {
                 return Some(LiterLlmError::RateLimited {
-                    message: format!(
-                        "cost rate limit exceeded: ${spend:.6} >= ${limit:.6} per hour"
-                    ),
+                    message: format!("cost rate limit exceeded: ${spend:.6} >= ${limit:.6} per hour"),
                     retry_after: Some(Duration::from_secs(3600)),
                 });
             }
@@ -332,9 +328,7 @@ impl CostRateLimitState {
             let spend = self.per_day.spend_usd(now);
             if spend >= limit {
                 return Some(LiterLlmError::RateLimited {
-                    message: format!(
-                        "cost rate limit exceeded: ${spend:.6} >= ${limit:.6} per day"
-                    ),
+                    message: format!("cost rate limit exceeded: ${spend:.6} >= ${limit:.6} per day"),
                     retry_after: Some(Duration::from_secs(86_400)),
                 });
             }

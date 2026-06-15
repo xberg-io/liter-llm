@@ -172,10 +172,7 @@ pub trait BudgetLedger: Send + Sync + 'static {
     /// This is called **before** the inner service is invoked.  Return
     /// [`BudgetVerdict::Reject`] to short-circuit the call without forwarding
     /// to the upstream provider.
-    fn check<'a>(
-        &'a self,
-        ctx: &'a CostCheckContext<'a>,
-    ) -> Pin<Box<dyn Future<Output = BudgetVerdict> + Send + 'a>>;
+    fn check<'a>(&'a self, ctx: &'a CostCheckContext<'a>) -> Pin<Box<dyn Future<Output = BudgetVerdict> + Send + 'a>>;
 
     /// Return a point-in-time snapshot of all tracked spend dimensions.
     ///
@@ -218,10 +215,7 @@ impl WindowEntry {
 
     /// Return current spend in USD, resetting if the window has elapsed.
     fn spend_usd(&self, now: SystemTime) -> f64 {
-        let now_secs = now
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
+        let now_secs = now.duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default().as_secs();
         let start = self.window_start_secs.load(Ordering::Relaxed);
         if now_secs.saturating_sub(start) >= self.window_secs {
             // Window has elapsed — reset.
@@ -352,9 +346,7 @@ impl InMemoryBudgetLedger {
     }
 
     fn entry_spend(map: &DashMap<String, WindowEntry>, key: &str, now: SystemTime) -> f64 {
-        map.get(key)
-            .map(|e| e.spend_usd(now))
-            .unwrap_or(0.0)
+        map.get(key).map(|e| e.spend_usd(now)).unwrap_or(0.0)
     }
 
     fn entry_add(map: &DashMap<String, WindowEntry>, key: &str, usd: f64, window: Duration, now: SystemTime) {
@@ -366,9 +358,7 @@ impl InMemoryBudgetLedger {
     fn check_limit(spend: f64, limit: f64, dimension: BudgetDimension, key: &str) -> Option<BudgetVerdict> {
         if spend >= limit {
             Some(BudgetVerdict::Reject {
-                reason: format!(
-                    "{key} budget exceeded: spent ${spend:.6}, limit ${limit:.6}"
-                ),
+                reason: format!("{key} budget exceeded: spent ${spend:.6}, limit ${limit:.6}"),
                 dimension,
             })
         } else {
@@ -409,10 +399,7 @@ impl BudgetLedger for InMemoryBudgetLedger {
         })
     }
 
-    fn check<'a>(
-        &'a self,
-        ctx: &'a CostCheckContext<'a>,
-    ) -> Pin<Box<dyn Future<Output = BudgetVerdict> + Send + 'a>> {
+    fn check<'a>(&'a self, ctx: &'a CostCheckContext<'a>) -> Pin<Box<dyn Future<Output = BudgetVerdict> + Send + 'a>> {
         Box::pin(async move {
             let now = ctx.timestamp;
 
@@ -1144,7 +1131,11 @@ mod tests {
         ledger.record(&ctx2).await;
 
         let snap = ledger.snapshot();
-        assert!((snap.global_spend_usd - 0.30).abs() < 1e-9, "global: {}", snap.global_spend_usd);
+        assert!(
+            (snap.global_spend_usd - 0.30).abs() < 1e-9,
+            "global: {}",
+            snap.global_spend_usd
+        );
         assert!((snap.per_model["gpt-4"] - 0.30).abs() < 1e-9);
         assert!((snap.per_tenant["acme"] - 0.30).abs() < 1e-9);
         assert!((snap.per_user["alice"] - 0.10).abs() < 1e-9);
@@ -1234,10 +1225,7 @@ mod tests {
 
         // spend_usd on the global entry will detect the elapsed window when queried.
         let spend_after_window = ledger.global.spend_usd(future);
-        assert_eq!(
-            spend_after_window, 0.0,
-            "spend should reset to 0 after window boundary"
-        );
+        assert_eq!(spend_after_window, 0.0, "spend should reset to 0 after window boundary");
     }
 
     // ── BudgetSnapshot CSV export ─────────────────────────────────────────────

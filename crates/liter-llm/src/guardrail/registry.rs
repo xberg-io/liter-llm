@@ -248,7 +248,10 @@ mod tests {
 
         // At Output stage, the injection heuristic should not fire.
         let decision = registry.run_stage(GuardrailStage::Output, &ctx).await;
-        assert!(decision.is_allow(), "injection heuristic should not run at Output stage");
+        assert!(
+            decision.is_allow(),
+            "injection heuristic should not run at Output stage"
+        );
     }
 
     #[tokio::test]

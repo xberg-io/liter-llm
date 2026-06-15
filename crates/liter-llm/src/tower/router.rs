@@ -490,9 +490,7 @@ where
                         .filter(|&i| i < n);
 
                     // Fallback to round-robin when the classifier defers.
-                    let idx = idx.unwrap_or_else(|| {
-                        counter.fetch_add(1, Ordering::Relaxed) % n
-                    });
+                    let idx = idx.unwrap_or_else(|| counter.fetch_add(1, Ordering::Relaxed) % n);
 
                     deployments[idx].clone().call(req).await
                 })

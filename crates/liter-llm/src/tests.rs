@@ -1503,10 +1503,7 @@ mod capability_tests {
             let _: bool = caps.audio_out;
             let _: bool = caps.video_in;
         }
-        assert!(
-            !providers.is_empty(),
-            "registry should have at least one provider"
-        );
+        assert!(!providers.is_empty(), "registry should have at least one provider");
     }
 
     /// The total number of providers in the embedded registry must equal 142.
@@ -1533,10 +1530,7 @@ mod capability_tests {
     /// OpenAI must have vision = true (gpt-4o supports image input).
     #[test]
     fn capabilities_openai_vision() {
-        assert!(
-            capabilities("openai").vision,
-            "openai must advertise vision support"
-        );
+        assert!(capabilities("openai").vision, "openai must advertise vision support");
     }
 
     /// Anthropic must have reasoning = true (extended thinking tokens).
@@ -1640,10 +1634,7 @@ mod builder_tests {
             .provider("openai")
             .load_env(false)
             .build();
-        assert!(
-            result.is_ok(),
-            "build() should succeed with key + provider"
-        );
+        assert!(result.is_ok(), "build() should succeed with key + provider");
     }
 
     /// api_key then provider and provider then api_key both produce WithApiKey+WithProvider.

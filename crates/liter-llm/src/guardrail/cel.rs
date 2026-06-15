@@ -128,10 +128,11 @@ impl Guardrail for CelGuardrail {
             cel_ctx.add_variable_from_value("request", json_value_to_cel(ctx.request));
 
             // Bind `response` — empty map when not at Output stage.
-            let response_val = ctx
-                .response
-                .map(json_value_to_cel)
-                .unwrap_or_else(|| Value::Map(Map { map: Arc::new(HashMap::new()) }));
+            let response_val = ctx.response.map(json_value_to_cel).unwrap_or_else(|| {
+                Value::Map(Map {
+                    map: Arc::new(HashMap::new()),
+                })
+            });
             cel_ctx.add_variable_from_value("response", response_val);
 
             // Bind `chunk` — empty string when not at OutputChunk stage.
@@ -144,17 +145,15 @@ impl Guardrail for CelGuardrail {
             // Evaluate the expression. Treat eval errors as Allow (fail-open)
             // to avoid blocking legitimate requests on CEL engine errors.
             match self.program.execute(&cel_ctx) {
-                Ok(Value::Bool(true)) => {
-                    match &self.on_true {
-                        CelAction::Block { code, reason } => GuardrailDecision::Block {
-                            reason: reason.clone(),
-                            code: *code,
-                        },
-                        CelAction::Mutate { new_payload } => GuardrailDecision::Mutate {
-                            new_payload: new_payload.clone(),
-                        },
-                    }
-                }
+                Ok(Value::Bool(true)) => match &self.on_true {
+                    CelAction::Block { code, reason } => GuardrailDecision::Block {
+                        reason: reason.clone(),
+                        code: *code,
+                    },
+                    CelAction::Mutate { new_payload } => GuardrailDecision::Mutate {
+                        new_payload: new_payload.clone(),
+                    },
+                },
                 Ok(_) => GuardrailDecision::Allow,
                 Err(e) => {
                     #[cfg(feature = "tracing")]
@@ -209,10 +208,7 @@ fn json_value_to_cel(value: &serde_json::Value) -> Value {
 fn metadata_to_cel(metadata: &HashMap<String, String>) -> Value {
     let mut map: HashMap<Key, Value> = HashMap::new();
     for (key, val) in metadata {
-        map.insert(
-            Key::String(Arc::new(key.clone())),
-            Value::String(Arc::new(val.clone())),
-        );
+        map.insert(Key::String(Arc::new(key.clone())), Value::String(Arc::new(val.clone())));
     }
     Value::Map(Map { map: Arc::new(map) })
 }
@@ -316,7 +312,10 @@ mod tests {
         };
 
         let decision = guardrail.check(GuardrailStage::Input, &ctx).await;
-        assert!(decision.is_allow(), "non-gpt-4o model should be allowed regardless of tier");
+        assert!(
+            decision.is_allow(),
+            "non-gpt-4o model should be allowed regardless of tier"
+        );
     }
 
     #[tokio::test]

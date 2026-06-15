@@ -187,16 +187,7 @@ object LiterLlm {
      * are tried by stripping from the last `-` or `.` separator.  For example,
      * `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
      */
-<<<<<<< Updated upstream
-    fun completionCost(
-        model: String,
-        promptTokens: Long,
-        completionTokens: Long,
-    ): String? = LiterLlmBridge.nativeCompletionCost(model, promptTokens, completionTokens)
-
-=======
     fun completionCost(model: String, promptTokens: Long, completionTokens: Long): String? = LiterLlmBridge.nativeCompletionCost(model, promptTokens, completionTokens)
->>>>>>> Stashed changes
     /**
      * Calculate the estimated cost of a completion, accounting for cached
      * (cache-hit) prompt tokens billed at the provider's discounted rate.
@@ -224,16 +215,8 @@ object LiterLlm {
      * (auth providers, default HTTP client). Bindings and downstream consumers
      * reach those constructors transitively, so no manual init is required.
      *
-<<<<<<< Updated upstream
-     * WASM builds are exempt — the WASM target uses the browser/Node.js fetch API instead of
-     * rustls, so no crypto provider is needed.
-     *
-     * Windows builds use native-tls (SChannel) via reqwest, so rustls is not present and no crypto
-     * provider installation is needed.
-=======
      * WASM builds are exempt — the WASM target uses the browser/Node.js fetch
      * API instead of rustls, so no crypto provider is needed.
->>>>>>> Stashed changes
      */
     fun ensureCryptoProvider(): Unit = LiterLlmBridge.nativeEnsureCryptoProvider()
 }
