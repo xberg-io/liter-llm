@@ -136,7 +136,9 @@ pub struct CostCheckContext<'a> {
 /// A point-in-time snapshot of cumulative spend across all tracked dimensions.
 ///
 /// Used for observability dashboards and as the primitive for chargeback-ready
-/// CSV export via [`InMemoryBudgetLedger::export_csv`].
+/// CSV export via [`InMemoryBudgetLedger::export_csv`].  The `limits_*` fields
+/// carry the configured caps so that helpers such as [`should_hedge`] can make
+/// limit-aware decisions without requiring access to ledger internals.
 #[derive(Debug, Clone, Default)]
 pub struct BudgetSnapshot {
     /// Total spend across all dimensions, in USD.
@@ -149,6 +151,14 @@ pub struct BudgetSnapshot {
     pub per_user: HashMap<String, f64>,
     /// Per-API-key spend, keyed by API-key identifier, in USD.
     pub per_api_key: HashMap<String, f64>,
+    /// Configured global spending cap in USD, if any.
+    pub limit_global: Option<f64>,
+    /// Configured per-user spending caps in USD.
+    pub limits_per_user: HashMap<String, f64>,
+    /// Configured per-API-key spending caps in USD.
+    pub limits_per_api_key: HashMap<String, f64>,
+    /// Configured per-tenant spending caps in USD.
+    pub limits_per_tenant: HashMap<String, f64>,
 }
 
 /// Pluggable cost-tracking and budget-enforcement backend.
@@ -214,22 +224,37 @@ impl WindowEntry {
     }
 
     /// Return current spend in USD, resetting if the window has elapsed.
+    ///
+    /// Uses a `compare_exchange` CAS so that under concurrent calls exactly one
+    /// thread wins the rollover: it zeroes `spend_mc` and advances
+    /// `window_start_secs`.  Threads that lose the CAS (the window was already
+    /// rolled by the winner) simply re-read the (now-zeroed) counter.
     fn spend_usd(&self, now: SystemTime) -> f64 {
         let now_secs = now.duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default().as_secs();
-        let start = self.window_start_secs.load(Ordering::Relaxed);
+        let start = self.window_start_secs.load(Ordering::Acquire);
         if now_secs.saturating_sub(start) >= self.window_secs {
-            // Window has elapsed — reset.
-            self.spend_mc.store(0, Ordering::Relaxed);
-            self.window_start_secs.store(now_secs, Ordering::Relaxed);
+            // CAS: only one thread advances the window start.  The loser sees
+            // `Err` and skips the reset — the winner already zeroed `spend_mc`.
+            if self
+                .window_start_secs
+                .compare_exchange(start, now_secs, Ordering::AcqRel, Ordering::Acquire)
+                .is_ok()
+            {
+                // We won the race — zero the accumulator.
+                self.spend_mc.store(0, Ordering::Release);
+            }
+            // Whether we won or lost, the window has been reset.  Re-read the
+            // (now potentially zeroed) counter so we return the correct value.
         }
-        microcents_to_usd(self.spend_mc.load(Ordering::Relaxed))
+        microcents_to_usd(self.spend_mc.load(Ordering::Acquire))
     }
 
     /// Add `usd` to this entry, respecting the sliding window.
     fn add(&self, usd: f64, now: SystemTime) {
-        // Trigger window reset via `spend_usd` first.
+        // Trigger window reset via `spend_usd` first.  The CAS inside ensures
+        // exactly one thread performs the reset even under concurrent calls.
         let _ = self.spend_usd(now);
-        self.spend_mc.fetch_add(usd_to_microcents(usd), Ordering::Relaxed);
+        self.spend_mc.fetch_add(usd_to_microcents(usd), Ordering::AcqRel);
     }
 }
 
@@ -508,6 +533,10 @@ impl BudgetLedger for InMemoryBudgetLedger {
             per_tenant,
             per_user,
             per_api_key,
+            limit_global: self.limits.global,
+            limits_per_user: self.limits.per_user.clone(),
+            limits_per_api_key: self.limits.per_api_key.clone(),
+            limits_per_tenant: self.limits.per_tenant.clone(),
         }
     }
 }
@@ -517,28 +546,87 @@ impl BudgetLedger for InMemoryBudgetLedger {
 /// Advise the hedge layer wiring whether to issue a speculative duplicate
 /// request for the given pre-flight context.
 ///
-/// Returns `false` (suppress hedging) when the projected cost would push the
-/// caller over any configured limit.  The hedge wiring callsite (in the
-/// `service` or `hedge` setup code) should consult this before enabling the
-/// hedge policy for cost-sensitive operations.
+/// Returns `false` (suppress hedging) when issuing a second speculative copy
+/// of the request would push any budget dimension over its limit.  The hedge
+/// wiring callsite should consult this before enabling the hedge policy.
 ///
-/// This is a best-effort heuristic: it cannot know the actual response cost
-/// before the call completes, so it errs on the side of **allowing** hedging
-/// when the budget snapshot is well under the limit (> 10 % headroom).
+/// # Parameters
+///
+/// * `ledger` — the live budget ledger to consult.
+/// * `ctx` — pre-flight context identifying the user / key / model.
+/// * `estimated_cost_usd` — expected cost of **one** copy of the request.  A
+///   hedged call doubles this cost, so the check uses `2 × estimated_cost`.
+/// * `safety_margin_pct` — fraction of each limit to reserve before blocking
+///   hedging (e.g. `0.10` stops hedging when spend would exceed 90 % of the
+///   limit).  Must be in `[0.0, 1.0)`.
+///
+/// # Logic
+///
+/// For each budget dimension that is both tracked in the ledger snapshot and
+/// has a configured limit on `ledger`, hedging is suppressed when:
+///
+/// ```text
+/// current_spend + 2 × estimated_cost  >=  limit × (1 − safety_margin_pct)
+/// ```
+///
+/// Returns `true` only if **all** applicable dimensions have sufficient
+/// headroom for two copies of the call.
 #[must_use]
-pub fn should_hedge(ctx: &CostCheckContext<'_>, ledger: &dyn BudgetLedger) -> bool {
+pub fn should_hedge<L: BudgetLedger>(
+    ledger: &L,
+    ctx: &CostCheckContext<'_>,
+    estimated_cost_usd: f64,
+    safety_margin_pct: f64,
+) -> bool {
     let snap = ledger.snapshot();
-    // If there is no global limit info we cannot advise; allow hedging.
-    // A more precise implementation would consult per-dimension limits but
-    // that requires ledger internals.  For now, if the global spend is
-    // above 90 % of the observed ceiling we suppress hedging.
-    //
-    // Callers that need dimension-aware suppression should use
-    // `BudgetLedger::check` directly.
-    let _ = ctx;
-    // If global spend is very high (above a nominal $1000 per window as a
-    // safety default) we emit a conservative false.
-    snap.global_spend_usd < 900.0
+    // A hedge issues two copies of the request.
+    let hedge_cost = 2.0 * estimated_cost_usd;
+    let margin = safety_margin_pct.clamp(0.0, 0.999);
+
+    // Returns `true` when `spend + hedge_cost` fits within the effective limit.
+    let has_headroom = |spend: f64, limit: f64| -> bool {
+        let effective_limit = limit * (1.0 - margin);
+        spend + hedge_cost < effective_limit
+    };
+
+    // Global dimension.
+    if let Some(global_limit) = snap.limit_global
+        && !has_headroom(snap.global_spend_usd, global_limit)
+    {
+        return false;
+    }
+
+    // Per-user dimension.
+    if let Some(user) = ctx.user_id
+        && let Some(&user_limit) = snap.limits_per_user.get(user)
+    {
+        let user_spend = snap.per_user.get(user).copied().unwrap_or(0.0);
+        if !has_headroom(user_spend, user_limit) {
+            return false;
+        }
+    }
+
+    // Per-API-key dimension.
+    if let Some(key) = ctx.api_key_id
+        && let Some(&key_limit) = snap.limits_per_api_key.get(key)
+    {
+        let key_spend = snap.per_api_key.get(key).copied().unwrap_or(0.0);
+        if !has_headroom(key_spend, key_limit) {
+            return false;
+        }
+    }
+
+    // Per-tenant dimension.
+    if let Some(tenant) = ctx.tenant_id
+        && let Some(&tenant_limit) = snap.limits_per_tenant.get(tenant)
+    {
+        let tenant_spend = snap.per_tenant.get(tenant).copied().unwrap_or(0.0);
+        if !has_headroom(tenant_spend, tenant_limit) {
+            return false;
+        }
+    }
+
+    true
 }
 
 // ── Types -----------------------------------------------------------------
@@ -1298,5 +1386,137 @@ mod tests {
         assert!(found_tenant, "tenant row missing from CSV");
         assert!(found_user, "user row missing from CSV");
         assert!(found_key, "api_key row missing from CSV");
+    }
+
+    // ── Window rollover concurrency ──────────────────────────────────────────
+
+    /// Spawn 100 threads each calling `add($0.10)` exactly at the window
+    /// boundary and assert the total is $10.00, not less.
+    ///
+    /// The CAS in `spend_usd` guarantees exactly one thread resets the window;
+    /// the other 99 threads see the already-zeroed counter but still add their
+    /// $0.10 contribution via `fetch_add`.  Without the CAS fix, both threads
+    /// that race on the boundary would zero `spend_mc` independently, causing
+    /// each other's prior `add` to be dropped.
+    #[test]
+    fn window_rollover_under_concurrent_threads_does_not_undercount() {
+        use std::sync::Barrier;
+        use std::thread;
+
+        // Very short window (1 second) so we can trigger a rollover without
+        // actually sleeping: we manually pass a "future" timestamp.
+        let entry = Arc::new(WindowEntry::new(Duration::from_secs(1)));
+
+        // All 100 threads will add $0.10 using a timestamp that is 2 seconds
+        // past the window start — i.e., all threads see the window as expired
+        // and race for the CAS.
+        let future_now = SystemTime::now() + Duration::from_secs(2);
+
+        let barrier = Arc::new(Barrier::new(100));
+        let mut handles = Vec::with_capacity(100);
+
+        for _ in 0..100 {
+            let entry_clone = Arc::clone(&entry);
+            let barrier_clone = Arc::clone(&barrier);
+            handles.push(thread::spawn(move || {
+                // Synchronise all threads so they hit the window boundary at
+                // the same instant, maximising the chance of a race.
+                barrier_clone.wait();
+                entry_clone.add(0.10, future_now);
+            }));
+        }
+
+        for h in handles {
+            h.join().expect("thread must not panic");
+        }
+
+        let total = microcents_to_usd(entry.spend_mc.load(Ordering::Acquire));
+        // Allow a tiny floating-point rounding tolerance (microcents are
+        // integers, so the real tolerance is 0 but we allow 1 µ$ of drift).
+        assert!(
+            (total - 10.0_f64).abs() < 1e-4,
+            "expected $10.00 total, got ${total:.6} — window rollover race caused under-counting"
+        );
+    }
+
+    // ── should_hedge: respects configured user budget ────────────────────────
+
+    /// $10 user budget, $9.50 spend, estimated_cost=$0.50, safety_margin=0.10
+    /// → effective limit = $10 × 0.90 = $9.00.
+    /// $9.50 + 2×$0.50 = $10.50 ≥ $9.00 → hedging must be suppressed.
+    #[tokio::test]
+    async fn should_hedge_respects_user_budget() {
+        let mut limits = DimensionLimits::default();
+        limits.per_user.insert("alice".to_owned(), 10.0);
+
+        let ledger = InMemoryBudgetLedger::new(limits, Duration::from_secs(3600));
+
+        ledger
+            .record(&CostRecordContext {
+                model: "gpt-4",
+                provider: "openai",
+                tenant_id: None,
+                user_id: Some("alice"),
+                api_key_id: None,
+                cost_usd: 9.50,
+                tokens_in: 100,
+                tokens_out: 50,
+                timestamp: SystemTime::now(),
+            })
+            .await;
+
+        let ctx = CostCheckContext {
+            model: "gpt-4",
+            provider: "openai",
+            tenant_id: None,
+            user_id: Some("alice"),
+            api_key_id: None,
+            timestamp: SystemTime::now(),
+        };
+
+        let result = should_hedge(&ledger, &ctx, 0.50, 0.10);
+        assert!(
+            !result,
+            "hedging should be suppressed when user spend + 2×cost would exceed 90% of budget"
+        );
+    }
+
+    /// Same $10 user budget but only $1.00 spend.
+    /// $1.00 + 2×$0.50 = $2.00 < $9.00 → hedging must be allowed.
+    #[tokio::test]
+    async fn should_hedge_allows_when_far_below_budget() {
+        let mut limits = DimensionLimits::default();
+        limits.per_user.insert("alice".to_owned(), 10.0);
+
+        let ledger = InMemoryBudgetLedger::new(limits, Duration::from_secs(3600));
+
+        ledger
+            .record(&CostRecordContext {
+                model: "gpt-4",
+                provider: "openai",
+                tenant_id: None,
+                user_id: Some("alice"),
+                api_key_id: None,
+                cost_usd: 1.00,
+                tokens_in: 100,
+                tokens_out: 50,
+                timestamp: SystemTime::now(),
+            })
+            .await;
+
+        let ctx = CostCheckContext {
+            model: "gpt-4",
+            provider: "openai",
+            tenant_id: None,
+            user_id: Some("alice"),
+            api_key_id: None,
+            timestamp: SystemTime::now(),
+        };
+
+        let result = should_hedge(&ledger, &ctx, 0.50, 0.10);
+        assert!(
+            result,
+            "hedging should be allowed when user spend + 2×cost is well below 90% of budget"
+        );
     }
 }

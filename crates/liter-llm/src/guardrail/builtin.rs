@@ -159,10 +159,7 @@ impl Guardrail for RegexGuardrail {
                         match stage {
                             GuardrailStage::OutputChunk => {
                                 // Chunk is a raw string — replace directly.
-                                let redacted = self
-                                    .pattern
-                                    .replace_all(&text, replacement.as_str())
-                                    .into_owned();
+                                let redacted = self.pattern.replace_all(&text, replacement.as_str()).into_owned();
                                 GuardrailDecision::Mutate {
                                     new_payload: serde_json::Value::String(redacted),
                                 }
@@ -172,13 +169,12 @@ impl Guardrail for RegexGuardrail {
                                 // string-typed leaves.  This preserves JSON structure
                                 // regardless of what the regex matches.
                                 let mut payload = ctx.request.clone();
-                                if stage == GuardrailStage::Output {
-                                    if let Some(resp) = ctx.response {
-                                        payload = resp.clone();
-                                    }
+                                if stage == GuardrailStage::Output
+                                    && let Some(resp) = ctx.response
+                                {
+                                    payload = resp.clone();
                                 }
-                                let changed =
-                                    redact_in_place(&mut payload, &self.pattern, replacement);
+                                let changed = redact_in_place(&mut payload, &self.pattern, replacement);
                                 if changed {
                                     GuardrailDecision::Mutate { new_payload: payload }
                                 } else {
