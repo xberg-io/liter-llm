@@ -361,9 +361,7 @@ impl HashCorpVaultProviderBuilder {
         // CGNAT) without requiring an async context; hostname-based addresses
         // get additional checks at connect time via `GuardedResolver`.
         validate_outbound_url_sync(&address).map_err(|e| {
-            SecretError::Forbidden(format!(
-                "Vault address '{address}' rejected by outbound policy: {e}"
-            ))
+            SecretError::Forbidden(format!("Vault address '{address}' rejected by outbound policy: {e}"))
         })?;
 
         let settings = VaultClientSettingsBuilder::default()
@@ -427,10 +425,7 @@ mod tests {
         // Evict the entry — the CacheEntry (and its SecretString) is dropped,
         // which triggers zeroization of the heap allocation.
         cache.evict("my/secret");
-        assert!(
-            cache.get("my/secret").is_none(),
-            "evicted entry must not be found"
-        );
+        assert!(cache.get("my/secret").is_none(), "evicted entry must not be found");
     }
 
     // ── SSRF guard tests ──────────────────────────────────────────────────────
@@ -455,15 +450,16 @@ mod tests {
         set_outbound_policy(OutboundPolicy::DenyPrivate);
 
         // Loopback addresses are forbidden under DenyPrivate.
-        let result_loopback = HashCorpVaultProvider::builder()
+        let err_loopback = HashCorpVaultProvider::builder()
             .address("http://127.0.0.1:8200")
             .token("test-token")
-            .build();
+            .build()
+            .err();
         assert!(
-            result_loopback.is_err(),
-            "loopback address must be rejected: {result_loopback:?}"
+            err_loopback.is_some(),
+            "loopback address must be rejected by outbound policy"
         );
-        match result_loopback.unwrap_err() {
+        match err_loopback.unwrap() {
             SecretError::Forbidden(msg) => {
                 assert!(
                     msg.contains("127.0.0.1"),
@@ -474,15 +470,16 @@ mod tests {
         }
 
         // Link-local / cloud-metadata addresses are also forbidden.
-        let result_metadata = HashCorpVaultProvider::builder()
+        let err_metadata = HashCorpVaultProvider::builder()
             .address("http://169.254.169.254/latest/meta-data/")
             .token("test-token")
-            .build();
+            .build()
+            .err();
         assert!(
-            result_metadata.is_err(),
-            "cloud-metadata address must be rejected: {result_metadata:?}"
+            err_metadata.is_some(),
+            "cloud-metadata address must be rejected by outbound policy"
         );
-        match result_metadata.unwrap_err() {
+        match err_metadata.unwrap() {
             SecretError::Forbidden(msg) => {
                 assert!(
                     msg.contains("169.254.169.254"),
@@ -507,7 +504,7 @@ mod tests {
             expires_at: None,
             tags: HashMap::new(),
         };
-        cache.insert("path/key", "secret-val".to_owned(), meta);
+        cache.insert("path/key", SecretString::from("secret-val".to_owned()), meta);
         // Immediately expired.
         assert!(cache.get("path/key").is_none());
     }
@@ -523,10 +520,11 @@ mod tests {
             expires_at: None,
             tags: HashMap::new(),
         };
-        cache.insert("path/key", "secret-val".to_owned(), meta);
+        cache.insert("path/key", SecretString::from("secret-val".to_owned()), meta);
         let hit = cache.get("path/key");
         assert!(hit.is_some());
-        assert_eq!(hit.unwrap().0, "secret-val");
+        // Compare via expose_secret since SecretString does not impl PartialEq<&str>.
+        assert_eq!(hit.unwrap().0.expose_secret(), "secret-val");
     }
 
     /// Verify that the builder falls back to sane defaults.

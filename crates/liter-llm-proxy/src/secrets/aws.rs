@@ -23,8 +23,18 @@ use super::{SecretError, SecretManager, SecretMetadata, SecretValue};
 // ---------------------------------------------------------------------------
 
 /// A single cached entry.
+///
+/// `value` is a [`SecretString`] so the heap memory is zeroed on eviction
+/// (when the entry is dropped from the `HashMap`).  Raw `String` caching
+/// would leave the plaintext on the heap until the allocator reuses the
+/// memory, creating a heap-dump exposure window.
 struct CacheEntry {
-    value: String,
+    /// Secret value, zeroed on drop.
+    ///
+    /// Use `.expose_secret()` only at the last possible moment — when building
+    /// the HTTP `Authorization` header or returning to the caller.  Never
+    /// derive `Debug` or `Display` on any type that holds this field.
+    value: SecretString,
     metadata: SecretMetadata,
     cached_at: Instant,
 }
@@ -33,6 +43,9 @@ struct CacheEntry {
 ///
 /// Uses a `Mutex<HashMap>` — cache hits are fast (no network I/O), so the
 /// lock contention overhead is negligible compared to an AWS API call.
+///
+/// Secret values are stored as [`SecretString`] to ensure heap memory is
+/// zeroed when entries are evicted.
 struct SecretCache {
     store: Mutex<HashMap<String, CacheEntry>>,
     ttl: Duration,
@@ -47,18 +60,28 @@ impl SecretCache {
     }
 
     /// Return a cached entry if it exists and has not expired.
-    fn get(&self, name: &str) -> Option<(String, SecretMetadata)> {
+    ///
+    /// The returned [`SecretString`] wraps a clone of the cached bytes.
+    /// Memory zeroing occurs when the returned value is dropped.
+    fn get(&self, name: &str) -> Option<(SecretString, SecretMetadata)> {
         let store = self.store.lock().expect("cache mutex poisoned");
         let entry = store.get(name)?;
         if entry.cached_at.elapsed() < self.ttl {
-            Some((entry.value.clone(), entry.metadata.clone()))
+            // Clone exposes the underlying bytes momentarily; the new
+            // SecretString takes ownership and will zero them on drop.
+            let cloned = SecretString::from(entry.value.expose_secret().to_owned());
+            Some((cloned, entry.metadata.clone()))
         } else {
             None
         }
     }
 
     /// Insert or overwrite a cache entry.
-    fn insert(&self, name: &str, value: String, metadata: SecretMetadata) {
+    ///
+    /// The `value` is stored as-is (already a [`SecretString`]).  Any
+    /// previous entry for `name` is evicted (and its memory zeroed) by the
+    /// `HashMap::insert` replacement.
+    fn insert(&self, name: &str, value: SecretString, metadata: SecretMetadata) {
         let mut store = self.store.lock().expect("cache mutex poisoned");
         store.insert(
             name.to_owned(),
@@ -71,6 +94,9 @@ impl SecretCache {
     }
 
     /// Evict a cache entry (used after a successful `delete`).
+    ///
+    /// `HashMap::remove` drops the `CacheEntry`, which drops the
+    /// `SecretString`, triggering zeroization of the heap allocation.
     #[allow(dead_code)]
     fn evict(&self, name: &str) {
         let mut store = self.store.lock().expect("cache mutex poisoned");
@@ -182,10 +208,19 @@ impl AwsSecretsManagerProvider {
             tags,
         };
 
-        self.cache.insert(name, raw_value.clone(), metadata.clone());
+        // Wrap in SecretString before caching so the cache never holds a
+        // plain `String`.  Expose the secret only at the very last moment
+        // when handing it to the caller.
+        let secret_value = SecretString::from(raw_value);
+        // Clone via expose_secret: the cache entry gets its own SecretString.
+        self.cache.insert(
+            name,
+            SecretString::from(secret_value.expose_secret().to_owned()),
+            metadata.clone(),
+        );
 
         Ok(SecretValue {
-            value: SecretString::from(raw_value),
+            value: secret_value,
             metadata,
         })
     }
@@ -199,9 +234,10 @@ impl SecretManager for AwsSecretsManagerProvider {
     fn get<'a>(&'a self, name: &'a str) -> Pin<Box<dyn Future<Output = Result<SecretValue, SecretError>> + Send + 'a>> {
         Box::pin(async move {
             // Cache hit — skip the AWS API call.
-            if let Some((raw, metadata)) = self.cache.get(name) {
+            // The cache returns a SecretString; no intermediate plain String.
+            if let Some((secret, metadata)) = self.cache.get(name) {
                 return Ok(SecretValue {
-                    value: SecretString::from(raw),
+                    value: secret,
                     metadata,
                 });
             }
@@ -271,7 +307,8 @@ impl SecretManager for AwsSecretsManagerProvider {
                 expires_at: None,
                 tags: tags.clone(),
             };
-            self.cache.insert(name, raw, metadata.clone());
+            // Cache the value as SecretString so the heap bytes are zeroed on eviction.
+            self.cache.insert(name, SecretString::from(raw), metadata.clone());
             Ok(metadata)
         })
     }
@@ -316,11 +353,12 @@ mod tests {
             expires_at: None,
             tags: HashMap::new(),
         };
-        cache.insert("prod/api-key", "super-secret".to_owned(), meta);
+        cache.insert("prod/api-key", SecretString::from("super-secret".to_owned()), meta);
         let hit = cache.get("prod/api-key");
         assert!(hit.is_some());
         let (val, _meta) = hit.unwrap();
-        assert_eq!(val, "super-secret");
+        // Compare via expose_secret since SecretString does not impl PartialEq<&str>.
+        assert_eq!(val.expose_secret(), "super-secret");
     }
 
     #[test]
@@ -335,7 +373,7 @@ mod tests {
             expires_at: None,
             tags: HashMap::new(),
         };
-        cache.insert("my/secret", "value-one".to_owned(), meta.clone());
+        cache.insert("my/secret", SecretString::from("value-one".to_owned()), meta.clone());
 
         // A second insert would overwrite — but the cache TTL hasn't expired,
         // so get() returns the original.
@@ -344,8 +382,9 @@ mod tests {
 
         assert!(hit1.is_some());
         assert!(hit2.is_some());
-        assert_eq!(hit1.unwrap().0, "value-one");
-        assert_eq!(hit2.unwrap().0, "value-one");
+        // Compare via expose_secret since SecretString does not impl PartialEq<&str>.
+        assert_eq!(hit1.unwrap().0.expose_secret(), "value-one");
+        assert_eq!(hit2.unwrap().0.expose_secret(), "value-one");
     }
 
     #[test]
@@ -360,7 +399,7 @@ mod tests {
             expires_at: None,
             tags: HashMap::new(),
         };
-        cache.insert("key", "val".to_owned(), meta);
+        cache.insert("key", SecretString::from("val".to_owned()), meta);
         // Immediately expired because ttl == 0.
         assert!(cache.get("key").is_none(), "zero-TTL cache should always miss");
     }
@@ -369,5 +408,39 @@ mod tests {
     fn cache_miss_on_unknown_key() {
         let cache = SecretCache::new(Duration::from_secs(60));
         assert!(cache.get("nonexistent").is_none());
+    }
+
+    /// Verify that the AWS cache uses [`SecretString`] values so heap memory
+    /// is zeroed on eviction.  This is a type-level assertion enforced at
+    /// compile time: `SecretCache::get` returns `(SecretString, SecretMetadata)`
+    /// — if it returned `(String, …)` the type annotation below would not compile.
+    #[test]
+    fn aws_cache_zeroizes_on_eviction_type_check() {
+        let cache = SecretCache::new(Duration::from_secs(60));
+        let meta = SecretMetadata {
+            name: "my/secret".to_owned(),
+            version: "v1".to_owned(),
+            created_at: SystemTime::UNIX_EPOCH,
+            updated_at: SystemTime::UNIX_EPOCH,
+            expires_at: None,
+            tags: HashMap::new(),
+        };
+        // Insert accepts only SecretString — plain String is rejected at compile time.
+        cache.insert("my/secret", SecretString::from("plaintext-value".to_owned()), meta);
+
+        // get() must return SecretString, not String.
+        let result: Option<(SecretString, SecretMetadata)> = cache.get("my/secret");
+        assert!(result.is_some(), "cache hit expected");
+        let (secret, _meta) = result.unwrap();
+        assert_eq!(
+            secret.expose_secret(),
+            "plaintext-value",
+            "value round-trips through SecretString cache"
+        );
+
+        // Evict the entry — the CacheEntry (and its SecretString) is dropped,
+        // which triggers zeroization of the heap allocation.
+        cache.evict("my/secret");
+        assert!(cache.get("my/secret").is_none(), "evicted entry must not be found");
     }
 }
