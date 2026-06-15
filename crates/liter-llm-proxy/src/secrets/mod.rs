@@ -133,6 +133,53 @@ pub struct SecretMetadata {
 ///
 /// All methods return `Pin<Box<dyn Future…>>` (i.e. boxed futures) so the
 /// trait is object-safe without requiring `async_trait`.
+///
+/// # Examples
+///
+/// Implement a basic secret manager that reads from environment variables:
+///
+/// ```no_run
+/// use liter_llm_proxy::secrets::{SecretManager, SecretValue, SecretMetadata, SecretError};
+/// use secrecy::SecretString;
+/// use std::collections::HashMap;
+/// use std::pin::Pin;
+/// use std::future::Future;
+/// use std::time::SystemTime;
+///
+/// struct SimpleEnvSecretManager;
+///
+/// impl SecretManager for SimpleEnvSecretManager {
+///     fn get<'a>(&'a self, name: &'a str) -> Pin<Box<dyn Future<Output = Result<SecretValue, SecretError>> + Send + 'a>> {
+///         Box::pin(async move {
+///             let value = std::env::var(name)
+///                 .map_err(|_| SecretError::NotFound(name.to_string()))?;
+///             Ok(SecretValue {
+///                 value: SecretString::new(value),
+///                 metadata: SecretMetadata {
+///                     name: name.to_string(),
+///                     version: "1".to_string(),
+///                     created_at: SystemTime::now(),
+///                     updated_at: SystemTime::now(),
+///                     expires_at: None,
+///                     tags: HashMap::new(),
+///                 },
+///             })
+///         })
+///     }
+///
+///     fn set<'a>(&'a self, _: &'a str, _: SecretString, _: HashMap<String, String>) -> Pin<Box<dyn Future<Output = Result<SecretMetadata, SecretError>> + Send + 'a>> {
+///         Box::pin(async { Err(SecretError::PermissionDenied("read-only".to_string())) })
+///     }
+///
+///     fn delete<'a>(&'a self, _: &'a str) -> Pin<Box<dyn Future<Output = Result<(), SecretError>> + Send + 'a>> {
+///         Box::pin(async { Err(SecretError::PermissionDenied("read-only".to_string())) })
+///     }
+///
+///     fn backend(&self) -> &'static str {
+///         "env"
+///     }
+/// }
+/// ```
 pub trait SecretManager: Send + Sync + 'static {
     /// Fetch a secret by name. Returns the value and full metadata.
     fn get<'a>(&'a self, name: &'a str) -> Pin<Box<dyn Future<Output = Result<SecretValue, SecretError>> + Send + 'a>>;

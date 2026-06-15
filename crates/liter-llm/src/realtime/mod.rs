@@ -340,6 +340,33 @@ impl RealtimeEnvelope {
 ///
 /// Implementations MUST be `Send + Sync + 'static` so that the same translator
 /// instance can be shared across the proxy's async tasks without cloning.
+///
+/// # Examples
+///
+/// Implement a minimal translator that passes OpenAI events through:
+///
+/// ```ignore
+/// use liter_llm::realtime::{RealtimeTranslator, RealtimeEvent};
+/// use liter_llm::error::Result;
+///
+/// struct PassthroughTranslator;
+///
+/// impl RealtimeTranslator for PassthroughTranslator {
+///     fn translate_inbound(&self, raw: serde_json::Value) -> Result<RealtimeEvent> {
+///         serde_json::from_value(raw).map_err(|e| {
+///             liter_llm::error::LiterLlmError::StreamParse(e.to_string())
+///         })
+///     }
+///
+///     fn translate_outbound(&self, event: &RealtimeEvent) -> Result<serde_json::Value> {
+///         Ok(serde_json::to_value(event)?)
+///     }
+///
+///     fn provider(&self) -> &'static str {
+///         "custom_provider"
+///     }
+/// }
+/// ```
 pub trait RealtimeTranslator: Send + Sync + 'static {
     /// Translate an incoming provider-native JSON event into the unified
     /// [`RealtimeEvent`].

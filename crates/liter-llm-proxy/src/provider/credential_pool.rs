@@ -92,6 +92,39 @@ pub struct PoolSnapshot {
 ///
 /// Methods return `Pin<Box<dyn Future + Send + 'a>>` — the futures borrow
 /// `&'a self` and are `Send`, satisfying Tokio's multi-thread executor.
+///
+/// # Examples
+///
+/// Use the default in-memory implementation to rotate through credentials:
+///
+/// ```no_run
+/// use liter_llm_proxy::provider::credential_pool_memory::InMemoryCredentialPool;
+/// use liter_llm_proxy::provider::credential_pool::{CredentialPool, CredentialHandle};
+/// use secrecy::SecretString;
+/// use std::time::Duration;
+///
+/// #[tokio::main]
+/// async fn main() {
+///     let pool = InMemoryCredentialPool::new();
+///
+///     // Seed with two credentials
+///     pool.add(
+///         "openai",
+///         CredentialHandle {
+///             id: "key-1".to_string(),
+///             api_key: SecretString::new("sk-first".to_string()),
+///             model_allowlist: None,
+///         },
+///     );
+///
+///     // Get current credential (first one)
+///     let cred = pool.current("openai").await.unwrap();
+///     assert_eq!(cred.id, "key-1");
+///
+///     // Mark it exhausted; pool advances to next credential on next .current() call
+///     pool.mark_exhausted("openai", &cred, Duration::from_secs(60)).await;
+/// }
+/// ```
 pub trait CredentialPool: Send + Sync + 'static {
     /// Return the current active credential for the pool.
     ///

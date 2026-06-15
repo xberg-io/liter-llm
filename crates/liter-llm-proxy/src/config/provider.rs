@@ -107,6 +107,37 @@ impl std::fmt::Debug for ConfigEvent {
 ///
 /// Implementors must be `Send + Sync + 'static` so they can be held inside
 /// `Arc` and shared across Tokio tasks.
+///
+/// # Examples
+///
+/// Implement a static configuration provider that loads a TOML file once:
+///
+/// ```no_run
+/// use liter_llm_proxy::config::{ConfigProvider, ConfigError, ProxyConfig, ConfigEvent};
+/// use std::pin::Pin;
+/// use std::future::Future;
+/// use std::path::PathBuf;
+/// use tokio::sync::mpsc;
+///
+/// struct MyStaticConfigProvider {
+///     path: PathBuf,
+/// }
+///
+/// impl ConfigProvider for MyStaticConfigProvider {
+///     fn load<'a>(&'a self) -> Pin<Box<dyn Future<Output = Result<ProxyConfig, ConfigError>> + Send + 'a>> {
+///         // Load from file...
+///         Box::pin(async { Err(ConfigError::NotFound) })
+///     }
+///
+///     fn watch<'a>(&'a self) -> Pin<Box<dyn Future<Output = Result<mpsc::Receiver<ConfigEvent>, ConfigError>> + Send + 'a>> {
+///         // Return a receiver that never yields (no hot-reload)
+///         Box::pin(async {
+///             let (_tx, rx) = mpsc::channel(1);
+///             Ok(rx)
+///         })
+///     }
+/// }
+/// ```
 pub trait ConfigProvider: Send + Sync + 'static {
     /// Fetch the full configuration once.
     ///
