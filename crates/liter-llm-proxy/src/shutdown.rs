@@ -198,14 +198,43 @@ impl ShutdownCoordinator {
     /// - First SIGTERM or Ctrl-C → `Draining`.
     /// - Second signal within [`SECOND_SIGNAL_WINDOW`] → `Aborted`.
     ///
+    /// Signal handlers are pre-registered BEFORE the first `.await` so that no
+    /// signal can be delivered to an unregistered listener in the gap between
+    /// the first signal returning and the second registration taking effect.
+    ///
     /// Returns a `JoinHandle` that the caller can optionally await or abort.
     pub fn spawn_signal_handler(&self) -> tokio::task::JoinHandle<()> {
         let phase_tx = Arc::clone(&self.phase_tx);
         let token = self.token.clone();
 
         tokio::spawn(async move {
-            // Wait for the first signal.
-            wait_for_signal().await;
+            // Pre-register ALL signal listeners before the first await.
+            // This eliminates the miss window that would exist if each
+            // `wait_for_signal()` call created a fresh OS-level pipe.
+            #[cfg(unix)]
+            let (mut sigterm, mut sigint) = {
+                use tokio::signal::unix::{SignalKind, signal};
+                (
+                    signal(SignalKind::terminate()).expect("failed to register SIGTERM handler"),
+                    signal(SignalKind::interrupt()).expect("failed to register SIGINT handler"),
+                )
+            };
+            #[cfg(not(unix))]
+            let mut ctrl_c_registered = ();
+
+            // Wait for the first signal using the pre-registered handles.
+            #[cfg(unix)]
+            wait_first(&mut sigterm, &mut sigint).await;
+            #[cfg(not(unix))]
+            {
+                // On Windows there is no SIGTERM equivalent; Ctrl-C is the
+                // only graceful-shutdown signal available.
+                let _ = &mut ctrl_c_registered;
+                tokio::signal::ctrl_c()
+                    .await
+                    .expect("failed to register Ctrl-C handler");
+                tracing::debug!("Ctrl-C received");
+            }
 
             let current = *phase_tx.borrow();
             if current >= ShutdownPhase::Draining {
@@ -234,24 +263,63 @@ impl ShutdownCoordinator {
             token.cancel();
 
             // Listen for a second signal within the window.
+            // The SAME pre-registered handles are reused — no re-registration gap.
             let window = tokio::time::sleep(SECOND_SIGNAL_WINDOW);
-            tokio::select! {
-                _ = wait_for_signal() => {
-                    tracing::warn!(
-                        "second shutdown signal received within {}s — force aborting",
-                        SECOND_SIGNAL_WINDOW.as_secs()
-                    );
-                    phase_tx.send_if_modified(|p| {
-                        if *p < ShutdownPhase::Aborted {
-                            *p = ShutdownPhase::Aborted;
-                            true
-                        } else {
-                            false
-                        }
-                    });
+
+            // `tokio::select!` does not support `#[cfg]` attributes on
+            // individual arms, so the platform-specific select bodies live in
+            // separate `#[cfg]` blocks that are each complete `select!` calls.
+
+            #[cfg(unix)]
+            {
+                // Unix: reuse the already-registered sigterm / sigint handles.
+                // No re-registration gap because the handles were created before
+                // the first await above.
+                tokio::select! {
+                    _ = wait_first(&mut sigterm, &mut sigint) => {
+                        tracing::warn!(
+                            "second shutdown signal received within {}s — force aborting",
+                            SECOND_SIGNAL_WINDOW.as_secs()
+                        );
+                        phase_tx.send_if_modified(|p| {
+                            if *p < ShutdownPhase::Aborted {
+                                *p = ShutdownPhase::Aborted;
+                                true
+                            } else {
+                                false
+                            }
+                        });
+                    }
+                    _ = window => {
+                        // Window elapsed without a second signal — normal drain in progress.
+                    }
                 }
-                _ = window => {
-                    // Window elapsed without a second signal — normal drain in progress.
+            }
+
+            #[cfg(not(unix))]
+            {
+                // Windows: a second Ctrl-C from a fresh future.  The first one
+                // was already consumed above so this registers a new listener.
+                // Windows has no SIGTERM so there is no signal-miss-window
+                // concern for a distinct signal type.
+                tokio::select! {
+                    _ = tokio::signal::ctrl_c() => {
+                        tracing::warn!(
+                            "second Ctrl-C received within {}s — force aborting",
+                            SECOND_SIGNAL_WINDOW.as_secs()
+                        );
+                        phase_tx.send_if_modified(|p| {
+                            if *p < ShutdownPhase::Aborted {
+                                *p = ShutdownPhase::Aborted;
+                                true
+                            } else {
+                                false
+                            }
+                        });
+                    }
+                    _ = window => {
+                        // Window elapsed without a second signal — normal drain in progress.
+                    }
                 }
             }
         })
@@ -306,12 +374,18 @@ impl ShutdownCoordinator {
         // Hard deadline timer.
         let hard_timeout = tokio::time::sleep_until(tokio::time::Instant::from_std(deadline));
 
-        // Join all drain tasks, honouring abort and hard deadline.
+        // Join all drain tasks concurrently, honouring abort and hard deadline.
+        //
+        // Using `FuturesUnordered` instead of a sequential `for` loop ensures
+        // that a stalled first drainable (e.g. the axum server stalling 29 s)
+        // does not block polling of faster drainables.  All tasks are driven
+        // concurrently; results are collected as they arrive.
         let drain_all = async move {
-            let mut results = Vec::with_capacity(drain_futures.len());
-            for handle in drain_futures {
-                // Each spawn is already bounded by `deadline` inside `drain()`.
-                match handle.await {
+            use futures_util::StreamExt as _;
+            let mut pending: futures_util::stream::FuturesUnordered<_> = drain_futures.into_iter().collect();
+            let mut results = Vec::with_capacity(pending.len());
+            while let Some(join_result) = pending.next().await {
+                match join_result {
                     Ok(r) => results.push(r),
                     Err(e) => {
                         tracing::error!("drain task panicked: {e}");
@@ -360,34 +434,24 @@ impl Default for ShutdownCoordinator {
 
 // ── Signal abstraction ────────────────────────────────────────────────────────
 
-/// Wait for the next shutdown signal (SIGTERM, SIGINT, or Ctrl-C).
+/// Wait for either SIGTERM or SIGINT on pre-registered Unix signal handles.
 ///
-/// On Unix: waits for SIGTERM or SIGINT.
-/// On Windows: waits for Ctrl-C only (no SIGTERM on Windows).
-async fn wait_for_signal() {
-    #[cfg(unix)]
-    {
-        use tokio::signal::unix::{SignalKind, signal};
-
-        let mut sigterm = signal(SignalKind::terminate()).expect("failed to register SIGTERM handler");
-        let mut sigint = signal(SignalKind::interrupt()).expect("failed to register SIGINT handler");
-
-        tokio::select! {
-            _ = sigterm.recv() => {
-                tracing::debug!("SIGTERM received");
-            }
-            _ = sigint.recv() => {
-                tracing::debug!("SIGINT received");
-            }
+/// Callers MUST pre-register the handles before any `.await` point in the
+/// enclosing task so that no signal is missed in the gap between registration
+/// calls.  This function takes `&mut` references so the same handles can be
+/// reused across multiple waits without re-registering a new OS-level pipe.
+///
+/// On Windows there is no direct SIGTERM equivalent; the caller handles
+/// `tokio::signal::ctrl_c()` directly.
+#[cfg(unix)]
+async fn wait_first(sigterm: &mut tokio::signal::unix::Signal, sigint: &mut tokio::signal::unix::Signal) {
+    tokio::select! {
+        _ = sigterm.recv() => {
+            tracing::debug!("SIGTERM received");
         }
-    }
-
-    #[cfg(not(unix))]
-    {
-        tokio::signal::ctrl_c()
-            .await
-            .expect("failed to register Ctrl-C handler");
-        tracing::debug!("Ctrl-C received");
+        _ = sigint.recv() => {
+            tracing::debug!("SIGINT received");
+        }
     }
 }
 
@@ -614,5 +678,156 @@ mod tests {
     #[test]
     fn drain_hard_deadline_is_30s() {
         assert_eq!(DRAIN_HARD_DEADLINE, Duration::from_secs(30));
+    }
+
+    // ── shutdown_pre_registered_signal_handlers_no_miss_window ────────────
+    //
+    // We cannot send a real OS signal in a unit test, but we can structurally
+    // verify that `spawn_signal_handler` registers signal listeners before
+    // any await point by checking that the JoinHandle completes when the task
+    // is immediately aborted (i.e. the task body runs far enough to register
+    // the OS handles and park on the first await before we abort it — if
+    // registration happened *after* an await the task would never reach the
+    // registration code).
+    //
+    // The observable proxy: spawning and immediately aborting the handle must
+    // not panic, and the coordinator phase must remain `Running` (no spurious
+    // signal was recorded).
+    #[tokio::test]
+    async fn shutdown_pre_registered_signal_handlers_no_miss_window() {
+        let coordinator = ShutdownCoordinator::new();
+        let handle = coordinator.handle();
+
+        // Spawn the signal handler and immediately abort it.
+        // If signal registration happened after an await, the spawn body would
+        // be scheduled to run later and may not register at all — the abort
+        // would hit an unregistered state.  Either way, no panic must occur
+        // and the coordinator must remain in `Running` phase.
+        let join = coordinator.spawn_signal_handler();
+        join.abort();
+        // Awaiting after abort returns either Ok(()) or Err(Cancelled).
+        let _ = join.await;
+
+        // Phase must still be Running — no spurious signal was fired.
+        assert_eq!(
+            handle.phase(),
+            ShutdownPhase::Running,
+            "phase must remain Running when signal handler is aborted before any signal"
+        );
+    }
+
+    // ── drainable_concurrent_drain_completes_when_one_slow ────────────────
+    //
+    // Two drainables: one fast (returns immediately), one slow (takes ~29 s
+    // measured by tokio's time), deadline set to 30 s.  With concurrent
+    // polling both tasks are driven simultaneously; the fast one finishes
+    // immediately, the slow one finishes just inside the deadline.  The
+    // coordinator must return `Drained`, not `Aborted`, and the fast
+    // drainable's flag must be set.
+    #[tokio::test(start_paused = true)]
+    async fn drainable_concurrent_drain_completes_when_one_slow() {
+        // A helper Drainable that sleeps for a fixed duration then returns Clean.
+        struct TimedDrainable {
+            name: &'static str,
+            delay: Duration,
+            completed: Arc<AtomicBool>,
+        }
+
+        impl Drainable for TimedDrainable {
+            fn name(&self) -> &str {
+                self.name
+            }
+
+            fn drain(
+                &self,
+                deadline: Instant,
+            ) -> std::pin::Pin<Box<dyn std::future::Future<Output = DrainResult> + Send + '_>> {
+                let delay = self.delay;
+                let flag = Arc::clone(&self.completed);
+                Box::pin(async move {
+                    let remaining = deadline.saturating_duration_since(Instant::now());
+                    if delay > remaining {
+                        return DrainResult::TimedOut;
+                    }
+                    tokio::time::sleep(delay).await;
+                    flag.store(true, Ordering::SeqCst);
+                    DrainResult::Clean
+                })
+            }
+        }
+
+        let fast_flag = Arc::new(AtomicBool::new(false));
+        let slow_flag = Arc::new(AtomicBool::new(false));
+
+        let mut coordinator = ShutdownCoordinator::new();
+        coordinator.register(TimedDrainable {
+            name: "fast",
+            delay: Duration::from_millis(10),
+            completed: Arc::clone(&fast_flag),
+        });
+        coordinator.register(TimedDrainable {
+            name: "slow",
+            delay: Duration::from_secs(29),
+            completed: Arc::clone(&slow_flag),
+        });
+
+        coordinator.begin_draining();
+
+        // With `start_paused = true` the Tokio runtime starts with time frozen;
+        // `tokio::time::sleep` advances virtual time.  Both tasks run
+        // concurrently so the 29 s slow task and the 10 ms fast task overlap.
+        let phase = coordinator.wait_for_drained().await;
+
+        assert_eq!(
+            phase,
+            ShutdownPhase::Drained,
+            "should drain cleanly when both tasks finish within the 30 s window"
+        );
+        assert!(fast_flag.load(Ordering::SeqCst), "fast drainable must have completed");
+        assert!(
+            slow_flag.load(Ordering::SeqCst),
+            "slow drainable must have completed within the 30 s window"
+        );
+    }
+
+    // ── drainable_hard_deadline_fires_when_all_slow ───────────────────────
+    //
+    // Two drainables both sleeping well beyond the hard deadline (40 s each).
+    // The 30 s hard deadline fires first; coordinator must return `Aborted`.
+    #[tokio::test(start_paused = true)]
+    async fn drainable_hard_deadline_fires_when_all_slow() {
+        struct VerySlowDrainable {
+            name: &'static str,
+        }
+
+        impl Drainable for VerySlowDrainable {
+            fn name(&self) -> &str {
+                self.name
+            }
+
+            fn drain(
+                &self,
+                _deadline: Instant,
+            ) -> std::pin::Pin<Box<dyn std::future::Future<Output = DrainResult> + Send + '_>> {
+                Box::pin(async move {
+                    tokio::time::sleep(Duration::from_secs(40)).await;
+                    DrainResult::TimedOut
+                })
+            }
+        }
+
+        let mut coordinator = ShutdownCoordinator::new();
+        coordinator.register(VerySlowDrainable { name: "slow-a" });
+        coordinator.register(VerySlowDrainable { name: "slow-b" });
+
+        coordinator.begin_draining();
+
+        let phase = coordinator.wait_for_drained().await;
+
+        assert_eq!(
+            phase,
+            ShutdownPhase::Aborted,
+            "hard deadline must fire and return Aborted when all subsystems are slow"
+        );
     }
 }

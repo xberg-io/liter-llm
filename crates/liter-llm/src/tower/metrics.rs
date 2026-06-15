@@ -52,6 +52,8 @@ mod inner {
     use crate::client::BoxFuture;
     use crate::error::{LiterLlmError, Result};
 
+    use std::sync::Arc;
+
     // ─── Meter singleton ──────────────────────────────────────────────────────
 
     static METER: OnceLock<Meter> = OnceLock::new();
@@ -61,6 +63,13 @@ mod inner {
     /// Call this once during application startup with the meter obtained from
     /// your `opentelemetry` provider (e.g. `global::meter("liter-llm")`).
     /// Subsequent calls are ignored.
+    ///
+    /// # Order of initialisation
+    ///
+    /// The instruments cache is populated when `init_meter` is called. If any
+    /// metric helpers (e.g. `record_cache_hit`) are called before
+    /// `init_meter`, they silently no-op. Once the meter is initialised,
+    /// all subsequent metric operations use the cached instrument set.
     pub fn init_meter(meter: Meter) {
         let _ = METER.set(meter);
     }
@@ -72,6 +81,10 @@ mod inner {
 
     // ─── Instrument set ───────────────────────────────────────────────────────
 
+    /// Cached OTel instruments for recording metrics.
+    ///
+    /// Initialized once via [`init_meter`] and shared across all requests and
+    /// helper functions via `Arc` to avoid repeated instrument construction.
     struct Instruments {
         op_duration: Histogram<f64>,
         token_usage: Histogram<u64>,
@@ -125,6 +138,33 @@ mod inner {
                     .build(),
             }
         }
+    }
+
+    // ─── Instruments cache ────────────────────────────────────────────────────
+
+    static INSTRUMENTS: OnceLock<Arc<Instruments>> = OnceLock::new();
+
+    /// Return the cached instruments, initializing them if the meter is available.
+    /// Returns `None` if the meter has not yet been initialized.
+    fn instruments() -> Option<Arc<Instruments>> {
+        // Fast path: instruments already cached.
+        if let Some(cached) = INSTRUMENTS.get() {
+            return Some(Arc::clone(cached));
+        }
+
+        // Slow path: lazy initialization from meter.
+        // This is called at most once per thread (first time after METER is set).
+        if let Some(meter) = global_meter() {
+            let new_instruments = Arc::new(Instruments::new(meter));
+            // Best-effort cache insertion; another thread may beat us to it.
+            let result = INSTRUMENTS
+                .set(Arc::clone(&new_instruments))
+                .ok()
+                .map(|_| Arc::clone(&new_instruments));
+            return result.or_else(|| INSTRUMENTS.get().map(Arc::clone));
+        }
+
+        None
     }
 
     // ─── Layer ────────────────────────────────────────────────────────────────
@@ -190,10 +230,8 @@ mod inner {
                 let result = fut.await;
                 let elapsed = start.elapsed().as_secs_f64();
 
-                // Only record metrics when the meter has been initialised.
-                if let Some(meter) = global_meter() {
-                    let instruments = Instruments::new(meter);
-
+                // Only record metrics when instruments are available.
+                if let Some(instr) = instruments() {
                     // Common attribute set shared by all observations.
                     let response_model = match &result {
                         Ok(resp) => match resp {
@@ -212,7 +250,7 @@ mod inner {
                     ];
 
                     // Operation duration.
-                    instruments.op_duration.record(elapsed, &base_attrs);
+                    instr.op_duration.record(elapsed, &base_attrs);
 
                     // Token usage — only when the response carries usage data.
                     if let Ok(resp) = &result
@@ -221,12 +259,12 @@ mod inner {
                         // Input tokens.
                         let mut input_attrs = base_attrs.to_vec();
                         input_attrs.push(KeyValue::new("gen_ai.token.type", "input"));
-                        instruments.token_usage.record(usage.prompt_tokens, &input_attrs);
+                        instr.token_usage.record(usage.prompt_tokens, &input_attrs);
 
                         // Output tokens.
                         let mut output_attrs = base_attrs.to_vec();
                         output_attrs.push(KeyValue::new("gen_ai.token.type", "output"));
-                        instruments.token_usage.record(usage.completion_tokens, &output_attrs);
+                        instr.token_usage.record(usage.completion_tokens, &output_attrs);
                     }
                 }
 
@@ -240,10 +278,10 @@ mod inner {
     /// Record a cache hit metric.
     ///
     /// Call from cache layer implementations to emit `gen_ai.cache.hit`.
+    /// If the meter has not been initialized, this call is a no-op.
     pub fn record_cache_hit(system: &str, model: &str, operation: &str) {
-        if let Some(meter) = global_meter() {
-            let instruments = Instruments::new(meter);
-            instruments.cache_hit.add(
+        if let Some(instr) = instruments() {
+            instr.cache_hit.add(
                 1,
                 &[
                     KeyValue::new("gen_ai.system", system.to_owned()),
@@ -257,10 +295,10 @@ mod inner {
     /// Record a cache miss metric.
     ///
     /// Call from cache layer implementations to emit `gen_ai.cache.miss`.
+    /// If the meter has not been initialized, this call is a no-op.
     pub fn record_cache_miss(system: &str, model: &str, operation: &str) {
-        if let Some(meter) = global_meter() {
-            let instruments = Instruments::new(meter);
-            instruments.cache_miss.add(
+        if let Some(instr) = instruments() {
+            instr.cache_miss.add(
                 1,
                 &[
                     KeyValue::new("gen_ai.system", system.to_owned()),
@@ -274,10 +312,10 @@ mod inner {
     /// Record a stale cache metric.
     ///
     /// Call from cache layer implementations to emit `gen_ai.cache.stale`.
+    /// If the meter has not been initialized, this call is a no-op.
     pub fn record_cache_stale(system: &str, model: &str, operation: &str) {
-        if let Some(meter) = global_meter() {
-            let instruments = Instruments::new(meter);
-            instruments.cache_stale.add(
+        if let Some(instr) = instruments() {
+            instr.cache_stale.add(
                 1,
                 &[
                     KeyValue::new("gen_ai.system", system.to_owned()),
@@ -291,10 +329,10 @@ mod inner {
     /// Record a circuit breaker trip.
     ///
     /// Call from [`super::circuit::CircuitLayer`] when the circuit opens.
+    /// If the meter has not been initialized, this call is a no-op.
     pub fn record_circuit_trip(system: &str, model: &str) {
-        if let Some(meter) = global_meter() {
-            let instruments = Instruments::new(meter);
-            instruments.circuit_trip.add(
+        if let Some(instr) = instruments() {
+            instr.circuit_trip.add(
                 1,
                 &[
                     KeyValue::new("gen_ai.system", system.to_owned()),
@@ -307,10 +345,10 @@ mod inner {
     /// Record a retry attempt.
     ///
     /// Call from retry/hedge layers to emit `gen_ai.retry.attempt`.
+    /// If the meter has not been initialized, this call is a no-op.
     pub fn record_retry_attempt(system: &str, model: &str, operation: &str) {
-        if let Some(meter) = global_meter() {
-            let instruments = Instruments::new(meter);
-            instruments.retry_attempt.add(
+        if let Some(instr) = instruments() {
+            instr.retry_attempt.add(
                 1,
                 &[
                     KeyValue::new("gen_ai.system", system.to_owned()),
@@ -318,6 +356,98 @@ mod inner {
                     KeyValue::new("gen_ai.operation.name", operation.to_owned()),
                 ],
             );
+        }
+    }
+
+    // ─── Tests ────────────────────────────────────────────────────────────────
+
+    #[cfg(test)]
+    mod tests {
+        use tower::{Layer as _, Service as _};
+
+        use super::*;
+        use crate::tower::service::LlmService;
+        use crate::tower::tests_common::{MockClient, chat_req};
+        use crate::tower::types::LlmRequest;
+
+        /// Verify that the MetricsLayer is a transparent pass-through when the meter
+        /// is not initialised (the common case in unit tests without an OTel SDK).
+        #[tokio::test]
+        async fn metrics_layer_passes_through_without_meter() {
+            let inner = LlmService::new(MockClient::ok());
+            let mut svc = MetricsLayer.layer(inner);
+
+            let resp = svc
+                .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
+                .await
+                .expect("should succeed");
+
+            assert!(matches!(resp, crate::tower::types::LlmResponse::Chat(_)));
+        }
+
+        /// Verify the layer correctly passes through errors.
+        #[tokio::test]
+        async fn metrics_layer_propagates_errors() {
+            let inner = LlmService::new(MockClient::failing_timeout());
+            let mut svc = MetricsLayer.layer(inner);
+
+            let err = svc
+                .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
+                .await
+                .expect_err("should fail");
+
+            assert!(matches!(err, crate::error::LiterLlmError::Timeout));
+        }
+
+        /// Verify that `Instruments` are cached and not reconstructed on each call.
+        /// Initializing the meter twice should reuse the same cached instruments.
+        #[test]
+        fn instruments_initialised_once() {
+            use opentelemetry::global;
+
+            // Initialize a test meter using the global provider.
+            // In testing, we use a no-op provider if nothing has been configured.
+            let meter = global::meter("liter-llm-test");
+
+            // Initialize once.
+            init_meter(meter.clone());
+
+            // Retrieve instruments the first time.
+            let instr1 = instruments().expect("instruments should be cached");
+
+            // Attempt to initialize again (should be ignored).
+            let meter2 = global::meter("liter-llm-test-2");
+            init_meter(meter2);
+
+            // Retrieve instruments the second time.
+            let instr2 = instruments().expect("instruments should still be cached");
+
+            // Verify pointer identity: both `Arc` pointers should reference the same
+            // allocation, proving that the second initialization was ignored.
+            assert!(Arc::ptr_eq(&instr1, &instr2), "instruments should be reused");
+        }
+
+        /// Verify that metric record helpers are no-ops before the meter is initialized.
+        /// These should not panic even when called without `init_meter`.
+        #[test]
+        fn metrics_record_helpers_no_op_without_meter() {
+            // Note: we cannot clear the global METER or INSTRUMENTS state in tests
+            // (OnceLock doesn't expose a reset API). This test assumes a fresh test
+            // process or carefully sequenced test ordering. In CI, each test should
+            // ideally run in isolation. For now, we at least document the expected
+            // behavior.
+
+            // If instruments are not yet cached and the meter is not initialized,
+            // these calls should return early and do nothing.
+            record_cache_hit("openai", "gpt-4", "chat");
+            record_cache_miss("openai", "gpt-4", "chat");
+            record_cache_stale("openai", "gpt-4", "chat");
+            record_circuit_trip("openai", "gpt-4");
+            record_retry_attempt("openai", "gpt-4", "chat");
+
+            // If we reach here without panicking, the test passes.
+            // (A proper test would require resettable global state, which OnceLock
+            // does not provide.)
         }
     }
 }
@@ -373,7 +503,7 @@ mod inner {
         }
 
         fn call(&mut self, req: LlmRequest) -> Self::Future {
-            self.inner.call(req)
+            Box::pin(self.inner.call(req))
         }
     }
 
@@ -401,9 +531,10 @@ mod inner {
 // Re-export the active implementation.
 pub use inner::*;
 
-// ─── Tests ────────────────────────────────────────────────────────────────────
+// ─── Top-level tests (run regardless of otel feature) ──────────────────────
 
 #[cfg(test)]
+#[cfg(feature = "otel")]
 mod tests {
     use tower::{Layer as _, Service as _};
 
@@ -415,7 +546,7 @@ mod tests {
     /// Verify that the MetricsLayer is a transparent pass-through when the meter
     /// is not initialised (the common case in unit tests without an OTel SDK).
     #[tokio::test]
-    async fn metrics_layer_passes_through_without_meter() {
+    async fn tower_metrics_layer_passes_through_without_meter() {
         let inner = LlmService::new(MockClient::ok());
         let mut svc = MetricsLayer.layer(inner);
 
@@ -429,7 +560,7 @@ mod tests {
 
     /// Verify the layer correctly passes through errors.
     #[tokio::test]
-    async fn metrics_layer_propagates_errors() {
+    async fn tower_metrics_layer_propagates_errors() {
         let inner = LlmService::new(MockClient::failing_timeout());
         let mut svc = MetricsLayer.layer(inner);
 
@@ -439,5 +570,19 @@ mod tests {
             .expect_err("should fail");
 
         assert!(matches!(err, crate::error::LiterLlmError::Timeout));
+    }
+
+    /// Verify that metric record helpers are no-ops before the meter is initialized.
+    /// These should not panic even when called without `init_meter`.
+    #[test]
+    fn tower_metrics_record_helpers_no_op_without_meter() {
+        // These calls should return early and do nothing when meter is not initialized.
+        record_cache_hit("openai", "gpt-4", "chat");
+        record_cache_miss("openai", "gpt-4", "chat");
+        record_cache_stale("openai", "gpt-4", "chat");
+        record_circuit_trip("openai", "gpt-4");
+        record_retry_attempt("openai", "gpt-4", "chat");
+
+        // If we reach here without panicking, the test passes.
     }
 }
