@@ -42,6 +42,14 @@ pub mod guardrail;
 pub(crate) mod http;
 /// Provider catalog (built-in providers plus runtime registration of custom providers).
 pub mod provider;
+/// Unified Realtime API event schema and per-provider translator trait.
+pub mod realtime;
+/// Ingress/egress streaming pipeline with zero-copy passthrough optimisation.
+///
+/// Exposes [`streaming::IngressStream`], [`streaming::StreamPipeline`], and
+/// [`streaming::EgressStream`] for composing streaming request pipelines with
+/// optional per-chunk middleware and end-to-end cancellation.
+pub mod streaming;
 #[cfg(test)]
 mod tests;
 #[cfg(feature = "tokenizer")]
@@ -85,11 +93,18 @@ pub use provider::custom::{
     AuthHeaderFormat, CustomProviderConfig, register_custom_provider, unregister_custom_provider,
 };
 pub use provider::{
-    AuthConfig, AuthType, ProviderCapabilities, ProviderConfig, all_providers, capabilities, complex_provider_names,
+    AuthConfig, AuthType, ProviderCapabilities, ProviderConfig, StreamFormat, all_providers, capabilities,
+    complex_provider_names,
 };
 #[cfg(feature = "tokenizer")]
 pub use tokenizer::{count_request_tokens, count_tokens};
 pub use types::*;
+
+// Realtime API public surface.
+pub use realtime::{
+    ContentPart, OpenAiRealtimeTranslator, RealtimeEnvelope, RealtimeEvent, RealtimeTranslator,
+    ResponseStatus,
+};
 
 /// Install the `ring` crypto provider as the rustls process default, idempotently.
 ///

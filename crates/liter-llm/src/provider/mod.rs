@@ -27,7 +27,7 @@ pub(crate) fn unix_timestamp_secs() -> u64 {
 /// Deserialized from the `streaming_format` JSON field via [`serde`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub(crate) enum StreamFormat {
+pub enum StreamFormat {
     /// Standard Server-Sent Events (text/event-stream).
     #[default]
     Sse,
