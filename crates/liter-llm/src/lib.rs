@@ -51,8 +51,8 @@ pub mod util;
 
 // Re-export key types at crate root.
 pub use client::{
-    BatchClient, BoxFuture, BoxStream, ClientConfig, ClientConfigBuilder, FileClient, FileConfig, LlmClient,
-    LlmClientRaw, ResponseClient,
+    BatchClient, BoxFuture, BoxStream, ClientBuilder, ClientConfig, ClientConfigBuilder, FileClient, FileConfig,
+    LlmClient, LlmClientRaw, ResponseClient,
 };
 // DefaultClient requires the native HTTP stack (reqwest on native or WASM fetch API).
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
@@ -75,7 +75,9 @@ pub use cost::{completion_cost, completion_cost_with_cache};
 pub use provider::custom::{
     AuthHeaderFormat, CustomProviderConfig, register_custom_provider, unregister_custom_provider,
 };
-pub use provider::{AuthConfig, AuthType, ProviderConfig, all_providers, complex_provider_names};
+pub use provider::{
+    AuthConfig, AuthType, ProviderCapabilities, ProviderConfig, all_providers, capabilities, complex_provider_names,
+};
 #[cfg(feature = "tokenizer")]
 pub use tokenizer::{count_request_tokens, count_tokens};
 pub use types::*;

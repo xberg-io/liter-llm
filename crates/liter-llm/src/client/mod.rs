@@ -1,3 +1,5 @@
+/// Type-state builder for [`DefaultClient`] ([`ClientBuilder`]).
+pub mod builder;
 /// Client builder configuration ([`ClientConfig`] and related helpers).
 pub mod config;
 /// On-disk client configuration schema (TOML / JSON / YAML).
@@ -42,6 +44,7 @@ use crate::provider::{self, OpenAiCompatibleProvider, OpenAiProvider, Provider};
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 use secrecy::ExposeSecret;
 
+pub use builder::{ClientBuilder, NoApiKey, NoProvider, WithApiKey, WithProvider};
 pub use config::{ClientConfig, ClientConfigBuilder};
 pub use config_file::FileConfig;
 

@@ -1477,3 +1477,179 @@ mod config_tests {
         );
     }
 }
+
+// ── 2.F tests: capabilities, streaming_format, type-state builder ─────────────
+
+#[cfg(test)]
+mod capability_tests {
+    use crate::provider::{all_providers, capabilities};
+
+    /// Every provider must return a capabilities struct with all seven boolean
+    /// flags accessible.  The fact that registry parsing succeeded (all_providers
+    /// returns Ok) confirms the streaming_format field also parsed correctly
+    /// (any unknown value would cause a serde error that fails the registry load).
+    #[test]
+    fn schema_all_providers_have_capabilities_and_streaming_format() {
+        let providers = all_providers().expect("registry should load");
+        for cfg in providers {
+            // capabilities() accesses the internal ProviderEntry which carries
+            // the deserialized capabilities and streaming_format fields.
+            let caps = capabilities(&cfg.name);
+            let _: bool = caps.vision;
+            let _: bool = caps.reasoning;
+            let _: bool = caps.structured_output;
+            let _: bool = caps.function_calling;
+            let _: bool = caps.audio_in;
+            let _: bool = caps.audio_out;
+            let _: bool = caps.video_in;
+        }
+        assert!(
+            !providers.is_empty(),
+            "registry should have at least one provider"
+        );
+    }
+
+    /// The total number of providers in the embedded registry must equal 142.
+    #[test]
+    fn schema_provider_count_is_142() {
+        let providers = all_providers().expect("registry should load");
+        assert_eq!(
+            providers.len(),
+            142,
+            "expected 142 providers in providers.json, found {}",
+            providers.len()
+        );
+    }
+
+    /// OpenAI must have function_calling = true.
+    #[test]
+    fn capabilities_openai_function_calling() {
+        assert!(
+            capabilities("openai").function_calling,
+            "openai must advertise function_calling support"
+        );
+    }
+
+    /// OpenAI must have vision = true (gpt-4o supports image input).
+    #[test]
+    fn capabilities_openai_vision() {
+        assert!(
+            capabilities("openai").vision,
+            "openai must advertise vision support"
+        );
+    }
+
+    /// Anthropic must have reasoning = true (extended thinking tokens).
+    #[test]
+    fn capabilities_anthropic_reasoning() {
+        assert!(
+            capabilities("anthropic").reasoning,
+            "anthropic must advertise reasoning support"
+        );
+    }
+
+    /// Bedrock must have vision = true.
+    #[test]
+    fn capabilities_bedrock_has_vision() {
+        assert!(
+            capabilities("bedrock").vision,
+            "bedrock must advertise vision support (supported by Claude/Nova models)"
+        );
+    }
+
+    /// Bedrock entry must exist in the registry.
+    #[test]
+    fn schema_bedrock_entry_parsed_cleanly() {
+        let providers = all_providers().expect("registry should load");
+        let bedrock = providers.iter().find(|p| p.name == "bedrock");
+        assert!(bedrock.is_some(), "bedrock must be present in registry");
+    }
+
+    /// An unknown provider name must return the default (all-false) capabilities.
+    #[test]
+    fn capabilities_unknown_provider_returns_default() {
+        let caps = capabilities("this-provider-does-not-exist");
+        assert!(!caps.vision);
+        assert!(!caps.reasoning);
+        assert!(!caps.structured_output);
+        assert!(!caps.function_calling);
+        assert!(!caps.audio_in);
+        assert!(!caps.audio_out);
+        assert!(!caps.video_in);
+    }
+
+    /// Providers with only false flags (e.g. vector DBs) return a valid struct.
+    #[test]
+    fn capabilities_all_false_provider_is_valid() {
+        let caps = capabilities("milvus");
+        let _ = caps.vision;
+        let _ = caps.function_calling;
+    }
+}
+
+#[cfg(test)]
+mod builder_tests {
+    // Positive test: ClientBuilder::new().api_key().provider().build() compiles and succeeds.
+    //
+    // The negative compile-time test (calling .build() without api_key + provider)
+    // is enforced by the type-state.  The `build` method is only defined on
+    // `ClientBuilder<WithApiKey, WithProvider>`.  Uncommenting any of the
+    // following in a test would cause a compile error:
+    //
+    //   liter_llm::ClientBuilder::new().build();                     // no method `build`
+    //   liter_llm::ClientBuilder::new().api_key("k").build();        // no method `build`
+    //   liter_llm::ClientBuilder::new().provider("openai").build();  // no method `build`
+
+    use crate::client::builder::{ClientBuilder, NoApiKey, NoProvider, WithApiKey, WithProvider};
+
+    /// Type-state transitions: the builder returns the correct types at each step.
+    #[test]
+    fn builder_type_state_transitions() {
+        let _b: ClientBuilder<NoApiKey, NoProvider> = ClientBuilder::new();
+        let _b: ClientBuilder<WithApiKey, NoProvider> = ClientBuilder::new().api_key("sk-test");
+        let _b: ClientBuilder<NoApiKey, WithProvider> = ClientBuilder::new().provider("openai");
+        let _b: ClientBuilder<WithApiKey, WithProvider> = ClientBuilder::new().api_key("sk-test").provider("openai");
+    }
+
+    /// Optional knobs are available at any state and preserve the type state.
+    #[test]
+    fn builder_optional_knobs_preserve_state() {
+        use std::time::Duration;
+        let builder = ClientBuilder::new()
+            .api_key("sk-test")
+            .provider("openai")
+            .timeout(Duration::from_secs(30))
+            .max_retries(5)
+            .load_env(false)
+            .base_url("https://api.openai.com/v1");
+        let _: ClientBuilder<WithApiKey, WithProvider> = builder;
+    }
+
+    /// The default constructor produces a correctly typed builder.
+    #[test]
+    fn builder_default_produces_no_key_no_provider() {
+        let _: ClientBuilder<NoApiKey, NoProvider> = ClientBuilder::default();
+    }
+
+    /// build() succeeds with a valid key and provider.
+    #[cfg(any(feature = "native-http", feature = "wasm-http"))]
+    #[test]
+    fn builder_build_succeeds_with_key_and_provider() {
+        let result = ClientBuilder::new()
+            .api_key("sk-test-key")
+            .provider("openai")
+            .load_env(false)
+            .build();
+        assert!(
+            result.is_ok(),
+            "build() should succeed with key + provider"
+        );
+    }
+
+    /// api_key then provider and provider then api_key both produce WithApiKey+WithProvider.
+    #[test]
+    fn builder_order_independence() {
+        let _: ClientBuilder<WithApiKey, WithProvider> = ClientBuilder::new().api_key("k").provider("openai");
+        let _: ClientBuilder<WithApiKey, WithProvider> = ClientBuilder::new().provider("openai").api_key("k");
+    }
+}
