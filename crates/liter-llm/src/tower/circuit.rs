@@ -26,12 +26,11 @@
 //! The [`CircuitPolicy`] trait lets callers plug in custom policy logic
 //! (e.g. sliding-window error-rate policies) without modifying library code.
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicU32, AtomicU8, Ordering};
 use std::task::{Context, Poll};
 use std::time::{Duration, Instant};
 
-use tokio::sync::Mutex;
 use tower::{Layer, Service};
 
 use super::types::{LlmRequest, LlmResponse};
@@ -95,6 +94,8 @@ struct CircuitInner {
     /// Number of consecutive failures since the circuit was last closed.
     consecutive_failures: AtomicU32,
     /// Protects the `open_since` `Instant`; only mutated on state transitions.
+    /// Uses `std::sync::Mutex` (not `tokio::sync::Mutex`) so that it can be
+    /// acquired from synchronous contexts such as `record_failure`.
     open_since: Mutex<Option<Instant>>,
 }
 
@@ -165,9 +166,9 @@ impl ExponentialBackoffCircuit {
     /// Called from the test suite to simulate the half-open transition without
     /// waiting for the full real-time backoff.
     #[cfg_attr(not(test), allow(dead_code))]
-    async fn maybe_half_open(&self) -> bool {
+    fn maybe_half_open(&self) -> bool {
         let backoff = self.current_backoff();
-        let guard = self.inner.open_since.lock().await;
+        let guard = self.inner.open_since.lock().expect("open_since mutex poisoned");
         if let Some(open_at) = *guard
             && open_at.elapsed() >= backoff
         {
@@ -193,29 +194,55 @@ impl CircuitPolicy for ExponentialBackoffCircuit {
 
     fn record_failure(&self) {
         let failures = self.inner.consecutive_failures.fetch_add(1, Ordering::AcqRel) + 1;
-        let current = CircuitState::from_u8(self.inner.state.load(Ordering::Acquire));
 
         // Open if threshold reached, or re-open after a failed half-open probe.
-        if failures >= self.failure_threshold || current == CircuitState::HalfOpen {
-            // We need an async context to lock `open_since`, but `record_failure`
-            // is a sync method.  Spawn a detached task to do the transition.
-            // This is intentionally fire-and-forget: the state transition is
-            // best-effort and idempotent.
-            let inner_arc = Arc::clone(&self.inner);
+        // Use a CAS so that exactly ONE concurrent caller performs the transition:
+        // the winner atomically changes the state from non-Open to Open; all other
+        // concurrent callers see the CAS fail and skip.  This prevents N concurrent
+        // failures from incrementing `open_count` N times, which would make the
+        // exponential-backoff exponent grow N times faster than intended.
+        let current_u8 = self.inner.state.load(Ordering::Acquire);
+        let current = CircuitState::from_u8(current_u8);
+
+        // Already open: nothing to do.
+        if current == CircuitState::Open {
+            return;
+        }
+
+        let should_open = failures >= self.failure_threshold || current == CircuitState::HalfOpen;
+        if !should_open {
+            return;
+        }
+
+        // Attempt to atomically transition Closed/HalfOpen to Open.  Only the
+        // single thread whose CAS succeeds proceeds to update metadata; losers
+        // see Err(_) and skip silently because another thread already won.
+        let result = self.inner.state.compare_exchange(
+            current_u8,
+            CircuitState::Open as u8,
+            Ordering::AcqRel,
+            Ordering::Acquire,
+        );
+
+        if result.is_ok() {
+            // We are the sole winner: capture the backoff BEFORE incrementing
+            // open_count so that `current_backoff()` uses the pre-transition
+            // exponent.  The increment records that a new open cycle has begun
+            // (for the NEXT half-open probe delay).
             let backoff = self.current_backoff();
             let open_count = self.open_count.fetch_add(1, Ordering::Relaxed) + 1;
-            tokio::spawn(async move {
-                inner_arc.state.store(CircuitState::Open as u8, Ordering::Release);
-                let mut guard = inner_arc.open_since.lock().await;
+            {
+                let mut guard = self.inner.open_since.lock().expect("open_since mutex poisoned");
                 *guard = Some(Instant::now());
-                tracing::warn!(
-                    consecutive_failures = failures,
-                    backoff = ?backoff,
-                    open_count,
-                    "circuit breaker opened"
-                );
-            });
+            }
+            tracing::warn!(
+                consecutive_failures = failures,
+                backoff = ?backoff,
+                open_count,
+                "circuit breaker opened"
+            );
         }
+        // Losers (result.is_err()) skip silently -- the circuit is already Open.
     }
 
     fn should_allow(&self) -> bool {
@@ -311,7 +338,17 @@ where
         let model = req.model().unwrap_or("").to_owned();
         let system = model.split_once('/').map(|(p, _)| p.to_owned()).unwrap_or_default();
         let state = self.policy.state();
-        let mut inner = self.inner.clone();
+
+        // Tower readiness contract: `poll_ready` was called on `self.inner`
+        // (the "polled-ready" instance).  We must call `inner.call(req)` on
+        // that exact instance -- not on a fresh clone -- to consume any permit
+        // reserved by `poll_ready` (e.g. ConcurrencyLimit slot, Buffer slot).
+        //
+        // Standard pattern (docs.rs/tower "Be careful when cloning inner
+        // services"): take the ready instance for this call, leave a fresh
+        // clone behind so the next `poll_ready`/`call` round starts clean.
+        let clone = self.inner.clone();
+        let mut inner = std::mem::replace(&mut self.inner, clone);
 
         Box::pin(async move {
             // Use a block to ensure `EnteredSpan` is dropped before any await.
@@ -326,7 +363,7 @@ where
             };
 
             if !allowed {
-                tracing::debug!(provider = %provider, "circuit open — rejecting request");
+                tracing::debug!(provider = %provider, "circuit open -- rejecting request");
 
                 // Emit circuit metric via the metrics module.
                 super::metrics::record_circuit_trip(&system, &model);
@@ -391,9 +428,7 @@ mod tests {
             let _ = svc.call(LlmRequest::Chat(chat_req("openai/gpt-4"))).await;
         }
 
-        // Give the background spawn a moment to update state.
-        tokio::time::sleep(Duration::from_millis(10)).await;
-
+        // State is updated synchronously -- no sleep needed.
         assert_eq!(p.state(), CircuitState::Open, "circuit should be open after threshold failures");
     }
 
@@ -405,9 +440,8 @@ mod tests {
         let layer = CircuitLayer::new(Arc::clone(&p), "test");
         let mut svc = layer.layer(LlmService::new(mock));
 
-        // Trigger open.
+        // Trigger open -- state is set synchronously, no sleep needed.
         let _ = svc.call(LlmRequest::Chat(chat_req("openai/gpt-4"))).await;
-        tokio::time::sleep(Duration::from_millis(10)).await;
 
         let before = call_count.load(std::sync::atomic::Ordering::SeqCst);
 
@@ -435,16 +469,15 @@ mod tests {
         let layer = CircuitLayer::new(Arc::clone(&p), "test");
         let mut svc = layer.layer(LlmService::new(MockClient::failing_timeout()));
 
-        // Open the circuit.
+        // Open the circuit -- state is set synchronously, no sleep needed.
         let _ = svc.call(LlmRequest::Chat(chat_req("openai/gpt-4"))).await;
-        tokio::time::sleep(Duration::from_millis(10)).await;
         assert_eq!(p.state(), CircuitState::Open);
 
         // Wait for backoff to elapse.
-        tokio::time::sleep(Duration::from_millis(30)).await;
+        tokio::time::sleep(Duration::from_millis(50)).await;
 
         // Manually transition to half-open (mirrors what the layer does on probe).
-        let allowed = p.maybe_half_open().await;
+        let allowed = p.maybe_half_open();
         assert!(allowed, "should transition to half-open after backoff");
         assert_eq!(p.state(), CircuitState::HalfOpen);
     }
@@ -457,9 +490,8 @@ mod tests {
         let layer = CircuitLayer::new(Arc::clone(&p), "test");
         let mut svc = layer.layer(failing);
 
-        // Open the circuit.
+        // Open the circuit -- state is set synchronously.
         let _ = svc.call(LlmRequest::Chat(chat_req("openai/gpt-4"))).await;
-        tokio::time::sleep(Duration::from_millis(10)).await;
         assert_eq!(p.state(), CircuitState::Open);
 
         // Manually transition to half-open.
@@ -488,13 +520,150 @@ mod tests {
         for _ in 0..5 {
             let _ = svc.call(LlmRequest::Chat(chat_req("openai/gpt-4"))).await;
         }
-        tokio::time::sleep(Duration::from_millis(10)).await;
 
-        // Circuit should still be closed — auth errors are not transient.
+        // Circuit should still be closed -- auth errors are not transient.
         assert_eq!(
             p.state(),
             CircuitState::Closed,
             "non-transient errors should not open the circuit"
+        );
+    }
+
+    /// Regression: N concurrent `record_failure` calls must increment `open_count`
+    /// by exactly 1, not N.  Previously the spawn-based approach caused every
+    /// concurrent caller to race to increment `open_count`, making the
+    /// exponential-backoff exponent grow N times faster than intended.
+    #[test]
+    fn circuit_concurrent_failures_open_count_increments_once() {
+        use std::thread;
+
+        // Threshold of 3: each thread calls record_failure once, so threads 3..N
+        // all see failures >= threshold.  Only one should win the CAS and
+        // increment open_count.
+        let circuit = Arc::new(ExponentialBackoffCircuit::new(3, Duration::from_millis(50)));
+
+        let handles: Vec<_> = (0..10)
+            .map(|_| {
+                let c = Arc::clone(&circuit);
+                thread::spawn(move || c.record_failure())
+            })
+            .collect();
+
+        for h in handles {
+            h.join().expect("thread panicked");
+        }
+
+        let open_count = circuit.open_count.load(Ordering::Relaxed);
+        assert_eq!(
+            open_count, 1,
+            "open_count should be 1 regardless of how many concurrent callers hit the threshold; got {open_count}"
+        );
+        assert_eq!(
+            circuit.state(),
+            CircuitState::Open,
+            "circuit should be open after concurrent failures"
+        );
+    }
+
+    /// Regression: `record_failure` must not panic when called outside a Tokio
+    /// runtime.  Previously the `tokio::spawn` call would panic with
+    /// "no current runtime" in non-async contexts (sync tests, Drop impls).
+    #[test]
+    fn circuit_record_failure_works_outside_tokio_runtime() {
+        // This is a plain (non-async) test function -- no Tokio runtime is active.
+        let circuit = ExponentialBackoffCircuit::new(1, Duration::from_millis(50));
+        // Should not panic.
+        circuit.record_failure();
+        assert_eq!(
+            circuit.state(),
+            CircuitState::Open,
+            "state should be Open after one failure with threshold=1"
+        );
+    }
+
+    /// Verify that `CircuitService` honours the Tower readiness contract when
+    /// the inner service is a `ConcurrencyLimit` (which reserves a permit in
+    /// `poll_ready` and releases it when the returned future is dropped).
+    ///
+    /// With the old clone-and-call pattern the second caller would obtain a
+    /// fresh clone that never had `poll_ready` called -- skipping the permit
+    /// acquisition entirely and potentially exceeding the concurrency limit.
+    /// With `std::mem::replace` the polled-ready instance is consumed for the
+    /// call and the permit bookkeeping is correct.
+    #[tokio::test]
+    async fn circuit_service_respects_inner_readiness() {
+        use std::pin::Pin;
+        use std::sync::atomic::AtomicUsize;
+        use std::sync::atomic::Ordering as AtomicOrdering;
+
+        use tower::limit::ConcurrencyLimit;
+
+        // Inner service that blocks until the future is dropped, allowing us to
+        // hold the ConcurrencyLimit permit open across concurrent callers.
+        #[derive(Clone)]
+        struct BlockingInner {
+            call_count: Arc<AtomicUsize>,
+        }
+
+        impl tower::Service<LlmRequest> for BlockingInner {
+            type Response = LlmResponse;
+            type Error = LiterLlmError;
+            type Future = crate::client::BoxFuture<'static, Result<LlmResponse>>;
+
+            fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<()>> {
+                Poll::Ready(Ok(()))
+            }
+
+            fn call(&mut self, _req: LlmRequest) -> Self::Future {
+                self.call_count.fetch_add(1, AtomicOrdering::SeqCst);
+                // Block forever -- keeps the concurrency permit held.
+                Box::pin(std::future::pending())
+            }
+        }
+
+        let call_count = Arc::new(AtomicUsize::new(0));
+        let inner = BlockingInner {
+            call_count: Arc::clone(&call_count),
+        };
+
+        // Limit to 1 concurrent request.  Wrap it in CircuitService.
+        let limited: ConcurrencyLimit<BlockingInner> = ConcurrencyLimit::new(inner, 1);
+        let p = Arc::new(ExponentialBackoffCircuit::new(5, Duration::from_millis(50)));
+        let mut svc = CircuitService {
+            inner: limited,
+            policy: Arc::clone(&p),
+            provider: "test".into(),
+        };
+
+        // First poll_ready + call: acquires the permit, dispatches the blocking future.
+        futures_util::future::poll_fn(|cx| svc.poll_ready(cx))
+            .await
+            .expect("first poll_ready should succeed");
+        let mut held_fut = svc.call(LlmRequest::ListModels);
+
+        // Drive the future once so that the async block runs to the point where
+        // `inner.call(req)` is invoked (BlockingInner::call increments the counter
+        // and returns `pending()`).  A single poll is sufficient.
+        {
+            let mut noop_cx = std::task::Context::from_waker(futures_util::task::noop_waker_ref());
+            let _ = Pin::new(&mut held_fut).poll(&mut noop_cx);
+        }
+
+        // The inner service should have been called exactly once.
+        assert_eq!(
+            call_count.load(AtomicOrdering::SeqCst),
+            1,
+            "inner service should have been called exactly once"
+        );
+
+        // The concurrency slot is now exhausted.  A second poll_ready on the
+        // circuit service should propagate the Pending from ConcurrencyLimit --
+        // not return Ready by bypassing poll_ready on a stale clone.
+        let mut noop_cx = std::task::Context::from_waker(futures_util::task::noop_waker_ref());
+        let poll = svc.poll_ready(&mut noop_cx);
+        assert!(
+            poll.is_pending(),
+            "second poll_ready must be Pending when the concurrency permit is exhausted"
         );
     }
 }
