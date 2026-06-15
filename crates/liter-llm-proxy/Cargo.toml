@@ -13,10 +13,22 @@ keywords = ["llm", "proxy", "openai", "gateway", "kreuzberg"]
 ignored = ["opentelemetry", "tracing-opentelemetry"]
 
 [features]
-default = []
+# OTel export bridge — forwarded to the core `liter-llm/otel` feature.
+# OTel is the single observability surface; no prometheus feature exists by design.
 otel = ["liter-llm/otel", "dep:opentelemetry", "dep:tracing-opentelemetry"]
+
+# Caching layer backed by opendal — forwarded to `liter-llm/opendal-cache`.
 opendal-cache = ["liter-llm/opendal-cache"]
-full = ["otel", "opendal-cache"]
+
+# `proxy` — MCP server, files, batches, and responses endpoints.
+# All are always compiled into the proxy binary; this feature is a named
+# surface so upstream crates can depend on the proxy with explicit intent.
+proxy = []
+
+# `full` — all proxy features: otel + opendal-cache.
+full = ["otel", "opendal-cache", "proxy"]
+
+default = ["proxy"]
 
 [dependencies]
 axum = { workspace = true }

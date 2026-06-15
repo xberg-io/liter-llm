@@ -20,6 +20,35 @@ exclude = [
 resolver = "2"
 
 [workspace.lints.clippy]
+# --- Deny: correctness -------------------------------------------------------
+# Catches logic bugs that are almost certainly wrong.
+correctness = { level = "deny", priority = -1 }
+# --- Deny: suspicious --------------------------------------------------------
+# Catches patterns that are likely unintentional or misleading.
+suspicious = { level = "deny", priority = -1 }
+# --- Deny: perf --------------------------------------------------------------
+# Catches avoidable performance regressions.
+perf = { level = "deny", priority = -1 }
+# --- Warn: style -------------------------------------------------------------
+# Enforces consistent, idiomatic Rust — warn rather than deny so style issues
+# don't block non-style PRs.
+style = { level = "warn", priority = -1 }
+# --- Explicit allows ---------------------------------------------------------
+# unused-unit: generated FFI bridge shims (alef/swift-bridge) emit `-> ()`.
+# Denying this would require patching generated output on every regen.
+unused-unit = "allow"
+# needless-pass-by-value: public API takes owned values for FFI-friendliness;
+# changing signatures would break cross-language ABI stability.
+needless-pass-by-value = "allow"
+# module-name-repetitions: `LlmError`, `LlmClient` etc. are idiomatic in a
+# library crate named `liter-llm` — the repetition aids discoverability.
+module-name-repetitions = "allow"
+# missing-errors-doc: not all public functions are public API in the
+# rustdoc sense; requiring `# Errors` on every fn that returns `Result`
+# is too noisy during active development.
+missing-errors-doc = "allow"
+# missing-panics-doc: same rationale as missing-errors-doc.
+missing-panics-doc = "allow"
 
 [workspace.lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(alef)'] }
@@ -37,6 +66,10 @@ keywords = ["llm", "openai", "api-client", "ai", "kreuzberg"]
 [workspace.dependencies]
 anyhow = "1"
 axum = { version = "0.8", features = ["macros"] }
+# Optional global allocators — selected via `mimalloc`/`jemalloc` features on
+# `liter-llm-cli`.  Off by default; absence means the system allocator is used.
+mimalloc = { version = "0.1", default-features = false }
+tikv-jemallocator = { version = "0.6" }
 axum-extra = { version = "0.12", features = ["typed-header"] }
 base64 = "0.22"
 bytes = "1"

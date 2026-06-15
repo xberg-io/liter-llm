@@ -15,6 +15,10 @@ categories = ["api-bindings", "web-programming::http-client"]
 ignored = ["dashmap", "tower-http"]
 
 [features]
+# ---------------------------------------------------------------------------
+# Transport features
+# ---------------------------------------------------------------------------
+
 # Enable the native HTTP stack (reqwest + tokio).  Disable this feature when
 # compiling for WebAssembly, where the browser / Node.js fetch API is used
 # instead and the tokio multi-thread runtime is unavailable.
@@ -30,45 +34,96 @@ native-http = [
     "dep:base64",
     "dep:gcp_auth",
 ]
+
+# WASM transport: browser / Node.js fetch API via gloo-timers.
+# Mutually exclusive with `native-http`.
 wasm-http = ["dep:reqwest", "dep:memchr", "dep:base64", "dep:gloo-timers"]
+
+# (HTTP/3 feature is declared further down — see the http3 entry under transports.)
+
+# ---------------------------------------------------------------------------
+# Observability features
+# ---------------------------------------------------------------------------
+
 # Structured tracing via the `tracing` crate.  Adds `#[instrument]` spans on
 # HTTP functions and SSE parser warnings.  Can be enabled independently of the
 # Tower middleware integration.
 tracing = ["dep:tracing"]
-# Tower middleware integration (LlmService, TracingLayer, FallbackLayer).
-tower = ["dep:tower", "dep:tower-http", "dep:dashmap", "dep:futures-util", "tracing"]
+
 # OpenTelemetry export bridge via `tracing-opentelemetry`.  Depends on `tracing`
 # and re-exports `tracing_opentelemetry` so callers can compose their own
 # subscriber stack without a hard dependency on the crate themselves.
+# OTel is the single observability surface — no prometheus feature exists by design.
 otel = ["tracing", "dep:tracing-opentelemetry", "dep:opentelemetry"]
+
+# ---------------------------------------------------------------------------
+# Middleware feature
+# ---------------------------------------------------------------------------
+
+# Tower middleware integration (LlmService, TracingLayer, FallbackLayer,
+# rate_limit, budget, health, retry, circuit, hedge, cache).
+tower = ["dep:tower", "dep:tower-http", "dep:dashmap", "dep:futures-util", "tracing"]
+
+# ---------------------------------------------------------------------------
+# Caching feature
+# ---------------------------------------------------------------------------
+
+# Caching layer backed by opendal (memory, Redis, S3, filesystem).
+# Requires the `tower` feature for the middleware stack.
+opendal-cache = ["dep:opendal", "tower"]
+
+# ---------------------------------------------------------------------------
+# Cloud-provider auth features
+# ---------------------------------------------------------------------------
+
 # AWS Bedrock SigV4 signing support.  Enables the `aws-sigv4` dependency and
 # activates real SigV4 signing in `BedrockProvider`.  When this feature is
 # disabled, `BedrockProvider` still routes `bedrock/` prefixed model names
 # and strips the prefix, but sends requests unsigned (suitable for tests
 # using a `base_url` override pointing to a mock server).
 bedrock = ["native-http", "dep:aws-credential-types", "dep:aws-sigv4"]
+
 # Azure AD OAuth2 credential provider (client-credentials flow).
 azure-auth = ["native-http"]
+
 # GitHub Copilot OAuth Device Flow credential provider.
 copilot-auth = ["native-http"]
+
 # Google Vertex AI OAuth2 credential provider (service-account JWT flow).
 vertex-auth = ["native-http", "dep:jsonwebtoken"]
+
 # Google Vertex AI ADC credential provider (metadata server + gcp_auth fallback).
 # Back-compat alias: native-http already pulls in gcp_auth so the ADC provider
 # is reachable whenever native-http is on. ADC is the recommended auth path
 # for GKE / Workload Identity deployments — no service-account key file needed.
 vertex-adc = ["native-http"]
+
 # AWS STS Web Identity credential provider (EKS / IRSA token exchange).
 bedrock-auth = ["native-http"]
+
 # HTTP/3 (h3-quinn) support in reqwest. Requires the `native-http` feature.
 # When enabled, the HTTP client negotiates HTTP/3 during connection establishment.
 http3 = ["native-http"]
-# Full feature set: native HTTP + tower + tracing + otel + bedrock.
+
+# ---------------------------------------------------------------------------
+# Token counting
+# ---------------------------------------------------------------------------
+
 # Token counting via HuggingFace tokenizers.  Provides lazy-cached tokenizer
 # loading and token counting for text and chat completion requests.
 tokenizer = ["dep:tokenizers"]
-# Full feature set: native HTTP + tower + tracing + otel + bedrock + tokenizer + auth providers.
-opendal-cache = ["dep:opendal", "tower"]
+
+# ---------------------------------------------------------------------------
+# Composite presets
+# ---------------------------------------------------------------------------
+
+# `lite` — bare client with native HTTP, no opendal, no Tower middleware,
+# no tokenizer.  Suitable for embedded usage or minimal binary size targets.
+lite = ["native-http"]
+
+# `full` — everything: native HTTP + tower + tracing + otel + bedrock +
+# tokenizer + all auth providers + opendal cache.
+# Default for the proxy and CLI; downstream crates use granular features.
 full = [
     "native-http",
     "tower",
@@ -83,6 +138,9 @@ full = [
     "bedrock-auth",
     "opendal-cache",
 ]
+
+# Default: native HTTP only — matches `lite` without the alias.
+# Keeps `cargo build` in downstream projects working without opt-in to heavy deps.
 default = ["native-http"]
 
 [dependencies]

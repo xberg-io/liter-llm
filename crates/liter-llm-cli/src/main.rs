@@ -1,3 +1,4 @@
+mod allocator;
 mod commands;
 
 use clap::Parser;
