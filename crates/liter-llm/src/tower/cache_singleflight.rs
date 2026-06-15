@@ -242,7 +242,7 @@ fn singleflight_key(req: &LlmRequest) -> Option<u64> {
 impl<C, S> Service<LlmRequest> for SingleflightService<C, S>
 where
     C: SingleflightCoordinator,
-    S: Service<LlmRequest, Response = LlmResponse, Error = LiterLlmError> + Send + 'static,
+    S: Service<LlmRequest, Response = LlmResponse, Error = LiterLlmError> + Clone + Send + 'static,
     S::Future: Send + 'static,
 {
     type Response = LlmResponse;
@@ -267,13 +267,24 @@ where
         };
 
         let coordinator = Arc::clone(&self.coordinator);
-        let fut = self.inner.call(req);
+
+        // Tower contract: `poll_ready` readied `self.inner` for exactly one call.
+        // We must consume that readied slot for the leader path and leave `self.inner`
+        // in a fresh (un-readied) state for the next `poll_ready`/`call` cycle.
+        //
+        // Pattern: clone the service to obtain a fresh standby, then `mem::replace`
+        // so that `inner` holds the poll_ready'd instance and `self.inner` holds the
+        // fresh clone.  Only the leader ever invokes `inner.call(req)`; followers drop
+        // `inner` without calling it, which is safe because `call` was never invoked.
+        let clone = self.inner.clone();
+        let mut inner = std::mem::replace(&mut self.inner, clone);
 
         Box::pin(async move {
             match coordinator.join(key).await {
                 SingleflightHandle::Leader { complete } => {
-                    // Perform the upstream call.
-                    let result = fut.await;
+                    // Leader is the sole caller of `inner.call`.  This satisfies Tower's
+                    // contract: exactly one `call` per `poll_ready`.
+                    let result = inner.call(req).await;
                     // Convert the upstream result into a `SingleflightResult` to
                     // broadcast.  Success path clones the inner response into a
                     // `CachedResponse` so followers receive the same value.
@@ -294,8 +305,10 @@ where
                     result
                 }
                 SingleflightHandle::Follower { mut recv } => {
-                    // Drop the upstream future — the leader will perform the call.
-                    drop(fut);
+                    // Follower never calls `inner.call(req)` — safe to drop because
+                    // Tower only prohibits calling after poll_ready; skipping the call
+                    // is always allowed.
+                    drop(inner);
                     match recv.recv().await {
                         Ok(Ok(cached)) => cached.into_llm_response(),
                         Ok(Err(arc_err)) => {
@@ -574,6 +587,83 @@ mod tests {
         assert_eq!(
             calls, 1,
             "inner should be called exactly once under singleflight; got {calls}"
+        );
+    }
+
+    /// Followers must never invoke `inner.call` — only the leader does.
+    ///
+    /// Wire a slow mock with a call counter, fire 10 concurrent requests for the
+    /// same key, and assert the inner counter is exactly 1 (the leader) even though
+    /// all 10 callers received a successful response.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn singleflight_follower_does_not_call_inner_service() {
+        let client = SlowClient::ok_with_delay(std::time::Duration::from_millis(50));
+        let call_count = Arc::clone(&client.inner.call_count);
+        let coordinator = Arc::new(InMemorySingleflight::new());
+        let layer = SingleflightLayer::new(Arc::clone(&coordinator));
+
+        let barrier = Arc::new(tokio::sync::Barrier::new(10));
+        let handles: Vec<_> = (0..10)
+            .map(|_| {
+                let svc = layer.layer(LlmService::new(client.clone()));
+                let barrier = Arc::clone(&barrier);
+                tokio::spawn(async move {
+                    barrier.wait().await;
+                    let mut svc = svc;
+                    use tower::Service as _;
+                    futures_util::future::poll_fn(|cx| svc.poll_ready(cx)).await.unwrap();
+                    svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await
+                })
+            })
+            .collect();
+
+        let results: Vec<_> = futures_util::future::join_all(handles).await;
+        let success_count = results.iter().filter(|r| r.as_ref().unwrap().is_ok()).count();
+        assert_eq!(success_count, 10, "all 10 callers should succeed");
+
+        let calls = call_count.load(Ordering::SeqCst);
+        assert_eq!(
+            calls, 1,
+            "inner service must be called exactly once (leader only); followers must not call it; got {calls}"
+        );
+    }
+
+    /// Requests with distinct keys must not be deduplicated — each key triggers its
+    /// own upstream call.
+    ///
+    /// Fire 10 concurrent requests with 10 different model names (which produces
+    /// 10 different cache keys) and assert the inner service call counter equals 10.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn singleflight_concurrent_keys_dont_dedupe() {
+        let client = SlowClient::ok_with_delay(std::time::Duration::from_millis(20));
+        let call_count = Arc::clone(&client.inner.call_count);
+        let coordinator = Arc::new(InMemorySingleflight::new());
+        let layer = SingleflightLayer::new(Arc::clone(&coordinator));
+
+        let barrier = Arc::new(tokio::sync::Barrier::new(10));
+        let handles: Vec<_> = (0..10u32)
+            .map(|i| {
+                let svc = layer.layer(LlmService::new(client.clone()));
+                let barrier = Arc::clone(&barrier);
+                tokio::spawn(async move {
+                    barrier.wait().await;
+                    let mut svc = svc;
+                    use tower::Service as _;
+                    futures_util::future::poll_fn(|cx| svc.poll_ready(cx)).await.unwrap();
+                    // Each task uses a distinct model name → distinct cache key.
+                    svc.call(LlmRequest::Chat(chat_req(&format!("gpt-4-model-{i}")))).await
+                })
+            })
+            .collect();
+
+        let results: Vec<_> = futures_util::future::join_all(handles).await;
+        let success_count = results.iter().filter(|r| r.as_ref().unwrap().is_ok()).count();
+        assert_eq!(success_count, 10, "all 10 distinct-key callers should succeed");
+
+        let calls = call_count.load(Ordering::SeqCst);
+        assert_eq!(
+            calls, 10,
+            "each distinct key must produce its own upstream call; got {calls}"
         );
     }
 }
