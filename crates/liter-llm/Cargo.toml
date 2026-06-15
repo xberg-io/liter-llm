@@ -140,22 +140,29 @@ full = [
     "opendal-cache",
 ]
 
+# etcd-backed KeyResolver implementation.
+# Adds EtcdKeyResolver and EtcdKeyResolverConfig to liter_llm::tenant.
+etcd-key-resolver = ["dep:etcd-client", "dep:hex", "dep:sha2"]
+
 # Default: native HTTP only — matches `lite` without the alias.
 # Keeps `cargo build` in downstream projects working without opt-in to heavy deps.
 default = ["native-http"]
 
 [dependencies]
 ahash = { workspace = true }
+async-trait = { workspace = true }
 aws-credential-types = { version = "1", optional = true }
 aws-sigv4 = { version = "1", features = ["sign-http", "http1"], optional = true }
 base64 = { workspace = true, optional = true }
 bytes = { workspace = true }
 cel-interpreter = { version = "0.8", optional = true }
 dashmap = { workspace = true }
+etcd-client = { workspace = true, optional = true }
 futures-core = { workspace = true }
 futures-util = { workspace = true, optional = true }
 gcp_auth = { workspace = true, optional = true }
 gloo-timers = { version = "0.4", features = ["futures"], optional = true }
+hex = { workspace = true, optional = true }
 jsonwebtoken = { workspace = true, optional = true }
 memchr = { workspace = true, optional = true }
 opendal = { workspace = true, optional = true }
@@ -166,6 +173,7 @@ rust_decimal = { workspace = true }
 secrecy = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+sha2 = { workspace = true, optional = true }
 thiserror = { workspace = true }
 tokenizers = { workspace = true, optional = true }
 tokio = { workspace = true, features = ["time", "rt", "macros"], optional = true }
@@ -190,8 +198,10 @@ reqwest = { workspace = true, optional = true, features = ["native-tls"] }
 
 [dev-dependencies]
 ctor = "1.0"
+etcd-client = { workspace = true }
 futures-util = { workspace = true }
 jsonschema = { workspace = true }
+serde_json = { workspace = true }
 serial_test = { workspace = true }
 tokio = { workspace = true, features = ["test-util", "macros"] }
 

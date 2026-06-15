@@ -54,7 +54,7 @@ missing-panics-doc = "allow"
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(alef)'] }
 
 [workspace.package]
-version = "1.6.0-rc.0"
+version = "1.6.0-rc.1"
 edition = "2024"
 license = "MIT"
 repository = "https://github.com/kreuzberg-dev/liter-llm"
@@ -67,6 +67,7 @@ keywords = ["llm", "openai", "api-client", "ai", "kreuzberg"]
 ahash = "0.8"
 anyhow = "1"
 arc-swap = "1"
+async-trait = "0.1"
 
 # Secret backends
 aws-config = { version = "1", default-features = false, features = ["rustls"] }
@@ -125,7 +126,7 @@ rmcp = { version = "1.7", features = [
     "transport-streamable-http-server",
     "server-side-http",
 ] }
-rust_decimal = "1"
+rust_decimal = { version = "1", features = ["serde"] }
 rustler = "0.38"
 rustls = { version = "0.23", default-features = false, features = [
     "ring",
@@ -149,6 +150,8 @@ tempfile = "3"
 thiserror = "2"
 notify = { version = "8", features = ["macos_kqueue"] }
 etcd-client = { version = "0.15", default-features = false }
+hex = "0.4"
+sha2 = "0.10"
 tokenizers = { version = "0.23", default-features = false, features = ["http", "fancy-regex"] }
 tokio = { version = "1", features = ["full"] }
 tokio-tungstenite = { version = "0.26", features = ["native-tls"] }

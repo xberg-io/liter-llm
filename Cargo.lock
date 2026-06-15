@@ -3243,9 +3243,10 @@ checksum = "92daf443525c4cce67b150400bc2316076100ce0b3686209eb8cf3c31612e6f0"
 
 [[package]]
 name = "liter-llm"
-version = "1.6.0-rc.0"
+version = "1.6.0-rc.1"
 dependencies = [
  "ahash 0.8.12",
+ "async-trait",
  "aws-credential-types",
  "aws-sigv4",
  "base64 0.22.1",
@@ -3253,10 +3254,12 @@ dependencies = [
  "cel-interpreter",
  "ctor 1.0.6",
  "dashmap 6.1.0",
+ "etcd-client",
  "futures-core",
  "futures-util",
  "gcp_auth",
  "gloo-timers",
+ "hex",
  "jsonschema",
  "jsonwebtoken",
  "memchr",
@@ -3271,6 +3274,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serial_test",
+ "sha2 0.10.9",
  "thiserror 2.0.18",
  "tokenizers",
  "tokio",
@@ -3285,7 +3289,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-cli"
-version = "1.6.0-rc.0"
+version = "1.6.0-rc.1"
 dependencies = [
  "arc-swap",
  "axum 0.8.9",
@@ -3304,7 +3308,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-dart"
-version = "1.6.0-rc.0"
+version = "1.6.0-rc.1"
 dependencies = [
  "flutter_rust_bridge",
  "futures-util",
@@ -3315,7 +3319,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-ffi"
-version = "1.6.0-rc.0"
+version = "1.6.0-rc.1"
 dependencies = [
  "ahash 0.8.12",
  "cbindgen",
@@ -3328,7 +3332,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-jni"
-version = "1.6.0-rc.0"
+version = "1.6.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "futures-util",
@@ -3340,7 +3344,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-node"
-version = "1.6.0-rc.0"
+version = "1.6.0-rc.1"
 dependencies = [
  "futures-util",
  "liter-llm",
@@ -3353,7 +3357,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-php"
-version = "1.6.0-rc.0"
+version = "1.6.0-rc.1"
 dependencies = [
  "ext-php-rs",
  "futures-util",
@@ -3365,7 +3369,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-proxy"
-version = "1.6.0-rc.0"
+version = "1.6.0-rc.1"
 dependencies = [
  "arc-swap",
  "aws-config",
@@ -3411,7 +3415,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-py"
-version = "1.6.0-rc.0"
+version = "1.6.0-rc.1"
 dependencies = [
  "futures",
  "liter-llm",
@@ -3424,7 +3428,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-swift"
-version = "1.6.0-rc.0"
+version = "1.6.0-rc.1"
 dependencies = [
  "ahash 0.8.12",
  "async-trait",
@@ -3440,7 +3444,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-wasm"
-version = "1.6.0-rc.0"
+version = "1.6.0-rc.1"
 dependencies = [
  "futures",
  "futures-util",

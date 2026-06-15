@@ -39,31 +39,28 @@ default = ["proxy"]
 
 [dependencies]
 arc-swap = { workspace = true }
-axum = { workspace = true }
-base64 = { workspace = true }
-bytes = { workspace = true }
-dashmap = { workspace = true }
-etcd-client = { workspace = true }
-futures-util = { workspace = true }
-http = { workspace = true }
-notify = { workspace = true }
-liter-llm = { path = "../liter-llm", version = "1.6.0-rc.0", features = [
-    "native-http",
-    "tower",
-    "tracing",
-] }
-opendal = { workspace = true }
-
-# Feature-gated: OTel
-opentelemetry = { workspace = true, optional = true }
 
 # Feature-gated: secrets-aws
 aws-config = { workspace = true, optional = true }
 aws-sdk-secretsmanager = { workspace = true, optional = true }
-
-# Feature-gated: secrets-vault
-vaultrs = { workspace = true, optional = true }
+axum = { workspace = true }
+base64 = { workspace = true }
+bytes = { workspace = true }
 chrono = { workspace = true, optional = true }
+dashmap = { workspace = true }
+etcd-client = { workspace = true }
+futures-util = { workspace = true }
+http = { workspace = true }
+liter-llm = { path = "../liter-llm", version = "1.6.0-rc.1", features = [
+    "native-http",
+    "tower",
+    "tracing",
+] }
+notify = { workspace = true }
+opendal = { workspace = true }
+
+# Feature-gated: OTel
+opentelemetry = { workspace = true, optional = true }
 rmcp = { workspace = true }
 rust_decimal = { workspace = true }
 schemars = { workspace = true }
@@ -79,9 +76,12 @@ toml = { workspace = true }
 tower = { workspace = true }
 tower-http = { workspace = true }
 tracing = { workspace = true }
-url = { workspace = true }
 tracing-opentelemetry = { workspace = true, optional = true }
+url = { workspace = true }
 utoipa = { workspace = true }
+
+# Feature-gated: secrets-vault
+vaultrs = { workspace = true, optional = true }
 
 [dev-dependencies]
 ctor = "1.0"
