@@ -212,6 +212,11 @@ impl Guardrail for CelGuardrail {
                 // Expression returned a non-bool value. This is a guardrail
                 // authoring error. Fail-closed by default to prevent bypass.
                 Ok(non_bool) => {
+                    // Log the full internal detail server-side only.
+                    // The opaque reason returned to the caller must NOT include
+                    // `non_bool` — CEL result internals can reflect
+                    // user-controlled expression fragments and must not be
+                    // surfaced to the API caller.
                     #[cfg(feature = "tracing")]
                     tracing::error!(
                         guardrail = self.guardrail_name,
@@ -231,10 +236,8 @@ impl Guardrail for CelGuardrail {
                         GuardrailDecision::Allow
                     } else {
                         GuardrailDecision::Block {
-                            reason: format!(
-                                "guardrail evaluation error: expression returned non-bool result ({})",
-                                self.guardrail_name
-                            ),
+                            // Opaque reason — no internal detail.
+                            reason: "policy evaluation error".to_owned(),
                             code: CEL_EVAL_ERROR_CODE,
                         }
                     }
@@ -243,6 +246,11 @@ impl Guardrail for CelGuardrail {
                 // CEL runtime error. Fail-closed by default: an attacker who
                 // can trigger eval errors must not be able to bypass guardrails.
                 Err(e) => {
+                    // Log the full error server-side only.
+                    // The opaque reason returned to the caller must NOT include
+                    // `e` — CEL runtime errors can reflect user-controlled
+                    // expression internals and must not be surfaced to the
+                    // API caller via the `reason` field.
                     #[cfg(feature = "tracing")]
                     tracing::error!(
                         guardrail = self.guardrail_name,
@@ -255,13 +263,16 @@ impl Guardrail for CelGuardrail {
                     #[cfg(not(feature = "tracing"))]
                     {
                         let _ = stage;
+                        let _ = e;
                     }
 
                     if self.fail_open {
                         GuardrailDecision::Allow
                     } else {
                         GuardrailDecision::Block {
-                            reason: format!("guardrail evaluation error: {e}"),
+                            // Opaque reason — no internal detail.
+                            // The full error is logged above (server-side only).
+                            reason: "policy evaluation error".to_owned(),
                             code: CEL_EVAL_ERROR_CODE,
                         }
                     }
@@ -520,9 +531,16 @@ mod tests {
         match decision {
             GuardrailDecision::Block { code, reason } => {
                 assert_eq!(code, CEL_EVAL_ERROR_CODE, "eval error must use code 4001");
+                // The reason returned to callers must be opaque — no internal
+                // detail (e.g. CEL error message, expression internals) may be
+                // included.  Full error detail is logged server-side only.
+                assert_eq!(
+                    reason, "policy evaluation error",
+                    "eval error reason must be opaque; got: {reason}"
+                );
                 assert!(
-                    reason.contains("guardrail evaluation error"),
-                    "reason must describe evaluation failure, got: {reason}"
+                    !reason.contains("guardrail evaluation error"),
+                    "old verbose reason must not appear in caller response; got: {reason}"
                 );
             }
             other => panic!("expected Block(4001) on eval error (fail-closed default), got {other:?}"),
@@ -633,4 +651,111 @@ mod tests {
             "malformed CEL expression must fail at construction, not at eval time"
         );
     }
+
+    // ── Security: opaque error reasons ───────────────────────────────────────
+
+    /// Induce a CEL eval error via an undeclared variable reference and assert
+    /// that the reason returned to the caller is the opaque sentinel string,
+    /// NOT the internal `format!("guardrail evaluation error: {e}")` form.
+    ///
+    /// This prevents CEL runtime errors (which can reflect user-controlled
+    /// expression internals) from reaching the API caller.
+    #[tokio::test]
+    async fn cel_error_reason_not_leaked_to_caller() {
+        let meta = HashMap::new();
+        let req = serde_json::json!({ "model": "gpt-4o" });
+
+        // An undeclared variable reference triggers `ExecutionError::UndeclaredReference`
+        // at eval time.  The error message produced by `cel_interpreter` contains
+        // the variable name — that must NOT reach the caller.
+        let guardrail = CelGuardrail::new(
+            "leaky-error-guardrail",
+            "undeclared_internal_var == true",
+            CelAction::Block {
+                code: 1500,
+                reason: "should not appear — error path taken".into(),
+            },
+            INPUT_STAGES,
+        )
+        .expect("syntactically valid CEL");
+
+        let ctx = GuardrailContext {
+            request: &req,
+            response: None,
+            chunk: None,
+            metadata: &meta,
+        };
+
+        let decision = guardrail.check(GuardrailStage::Input, &ctx).await;
+        match decision {
+            GuardrailDecision::Block { code, reason } => {
+                assert_eq!(code, CEL_EVAL_ERROR_CODE, "eval error must use code 4001");
+
+                // The caller-facing reason must be the opaque sentinel.
+                assert_eq!(
+                    reason, "policy evaluation error",
+                    "reason must be opaque sentinel, not internal error detail; got: {reason:?}"
+                );
+
+                // Regression guard: the old verbose form must NOT appear.
+                assert!(
+                    !reason.contains("guardrail evaluation error"),
+                    "old verbose reason must not leak to caller; got: {reason:?}"
+                );
+
+                // The internal variable name must NOT appear in the reason.
+                assert!(
+                    !reason.contains("undeclared_internal_var"),
+                    "internal CEL variable name must not leak to caller; got: {reason:?}"
+                );
+            }
+            other => panic!("expected Block(4001) from eval error, got {other:?}"),
+        }
+    }
+
+    /// Same test for the non-bool result path: a CEL expression that returns
+    /// a string must produce the opaque reason, not the actual CEL result value.
+    #[tokio::test]
+    async fn cel_non_bool_reason_not_leaked_to_caller() {
+        let meta = HashMap::new();
+        let req = serde_json::json!({ "model": "gpt-4o" });
+
+        // `request.model` returns the string "gpt-4o" — a non-bool result.
+        // The old code included the model name in the reason via `format!`.
+        let guardrail = CelGuardrail::new(
+            "non-bool-leak-check",
+            "request.model",
+            CelAction::Block {
+                code: 1500,
+                reason: "should not appear".into(),
+            },
+            INPUT_STAGES,
+        )
+        .expect("valid CEL expression");
+
+        let ctx = GuardrailContext {
+            request: &req,
+            response: None,
+            chunk: None,
+            metadata: &meta,
+        };
+
+        let decision = guardrail.check(GuardrailStage::Input, &ctx).await;
+        match decision {
+            GuardrailDecision::Block { code, reason } => {
+                assert_eq!(code, CEL_EVAL_ERROR_CODE);
+                assert_eq!(
+                    reason, "policy evaluation error",
+                    "non-bool reason must be opaque; got: {reason:?}"
+                );
+                // The actual model name must NOT appear in the reason.
+                assert!(
+                    !reason.contains("gpt-4o"),
+                    "CEL result value must not leak to caller; got: {reason:?}"
+                );
+            }
+            other => panic!("expected Block(4001), got {other:?}"),
+        }
+    }
 }
+

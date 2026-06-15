@@ -6,7 +6,7 @@
 //! |--------|---------|
 //! | `env://NAME` | [`EnvVarSecretManager`](super::EnvVarSecretManager) |
 //! | `aws://PATH` | [`AwsSecretsManagerProvider`](super::AwsSecretsManagerProvider) (feature `secrets-aws`) |
-//! | `vault://PATH` | [`HashiCorpVaultProvider`](super::HashiCorpVaultProvider) (feature `secrets-vault`) |
+//! | `vault://PATH` | [`HashCorpVaultProvider`](super::HashCorpVaultProvider) (feature `secrets-vault`) |
 //!
 //! When no matching scheme is found, the request is forwarded to the
 //! configured default backend using the full name as-is.

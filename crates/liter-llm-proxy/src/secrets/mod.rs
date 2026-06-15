@@ -6,7 +6,7 @@
 //!
 //! - `env://NAME` — environment variable `NAME` (always available)
 //! - `aws://PATH` — AWS Secrets Manager (requires `secrets-aws` feature)
-//! - `vault://PATH` — HashiCorp Vault KV-v2 (requires `secrets-vault` feature)
+//! - `vault://PATH` — HashCorp Vault KV-v2 (requires `secrets-vault` feature)
 //!
 //! When no scheme is present, the registry uses its configured default backend.
 //!
@@ -44,7 +44,7 @@ pub use registry::SecretManagerRegistry;
 pub use aws::AwsSecretsManagerProvider;
 
 #[cfg(feature = "secrets-vault")]
-pub use vault::HashiCorpVaultProvider;
+pub use vault::HashCorpVaultProvider;
 
 // ---------------------------------------------------------------------------
 // Error type
@@ -68,6 +68,15 @@ pub enum SecretError {
     /// The backend rate-limited the request.
     #[error("rate limited by secret backend")]
     RateLimited,
+
+    /// The backend address was rejected by the outbound SSRF policy.
+    ///
+    /// Returned by backends (e.g. Vault) when the caller-supplied `address`
+    /// targets a private / loopback / link-local / CGNAT address that the
+    /// active [`liter_llm::provider::OutboundPolicy`] does not permit.
+    /// Prevents SSRF via operator misconfiguration or config-file injection.
+    #[error("backend address forbidden by outbound policy: {0}")]
+    Forbidden(String),
 
     /// Any other backend-specific error.
     #[error("secret backend error: {0}")]
