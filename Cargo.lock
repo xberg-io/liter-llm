@@ -3375,6 +3375,7 @@ dependencies = [
  "tracing",
  "tracing-opentelemetry",
  "tracing-test",
+ "url",
  "utoipa",
  "vaultrs",
 ]

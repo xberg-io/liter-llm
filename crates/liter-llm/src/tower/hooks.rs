@@ -11,6 +11,12 @@
 //!
 //! Hooks are invoked sequentially in registration order.
 //!
+//! Attach a [`crate::observability::UsageSink`] via
+//! [`HooksLayer::with_usage_sink`] to receive one
+//! [`crate::observability::UsageEvent`] per completed request (success or
+//! error). The sink call is best-effort: errors are logged and do not affect
+//! the caller's response.
+//!
 //! # Example
 //!
 //! ```rust,ignore
@@ -28,7 +34,9 @@ use std::future::Future;
 use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering as AtomicOrdering};
 use std::task::{Context, Poll};
+use std::time::Instant;
 
 use futures_util::FutureExt as _;
 use tower::Layer;
@@ -37,6 +45,12 @@ use tower::Service;
 use super::types::{LlmRequest, LlmResponse};
 use crate::client::BoxFuture;
 use crate::error::{LiterLlmError, Result};
+use crate::observability::usage::{CacheState, UsageEvent, UsageEventOutcome, UsageSinkErased};
+
+// Process-scoped counter used as a fallback request-id when no idempotency
+// key is attached. Monotonically increasing; uniqueness across processes is
+// not guaranteed — this is a best-effort correlation aid.
+static REQUEST_COUNTER: AtomicU64 = AtomicU64::new(1);
 
 // ─── Hook Trait ──────────────────────────────────────────────────────────────
 
@@ -75,6 +89,7 @@ pub trait LlmHook: Send + Sync + 'static {
 #[cfg_attr(alef, alef(skip))]
 pub struct HooksLayer {
     hooks: Arc<Vec<Arc<dyn LlmHook>>>,
+    usage_sink: Option<Arc<dyn UsageSinkErased>>,
 }
 
 impl HooksLayer {
@@ -83,13 +98,27 @@ impl HooksLayer {
     /// Hooks are invoked sequentially in the order they appear in the vector.
     #[must_use]
     pub fn new(hooks: Vec<Arc<dyn LlmHook>>) -> Self {
-        Self { hooks: Arc::new(hooks) }
+        Self {
+            hooks: Arc::new(hooks),
+            usage_sink: None,
+        }
     }
 
     /// Convenience constructor for a single hook.
     #[must_use]
     pub fn single(hook: Arc<dyn LlmHook>) -> Self {
         Self::new(vec![hook])
+    }
+
+    /// Attach a [`crate::observability::UsageSink`] that receives one
+    /// [`crate::observability::UsageEvent`] per completed request.
+    ///
+    /// The sink is invoked after all post-hooks complete, on both the success
+    /// and error paths. Emit errors are logged and do not propagate.
+    #[must_use]
+    pub fn with_usage_sink<S: crate::observability::UsageSink>(mut self, sink: Arc<S>) -> Self {
+        self.usage_sink = Some(sink as Arc<dyn UsageSinkErased>);
+        self
     }
 }
 
@@ -100,6 +129,7 @@ impl<S> Layer<S> for HooksLayer {
         HooksService {
             inner,
             hooks: Arc::clone(&self.hooks),
+            usage_sink: self.usage_sink.clone(),
         }
     }
 }
@@ -111,6 +141,7 @@ impl<S> Layer<S> for HooksLayer {
 pub struct HooksService<S> {
     inner: S,
     hooks: Arc<Vec<Arc<dyn LlmHook>>>,
+    usage_sink: Option<Arc<dyn UsageSinkErased>>,
 }
 
 impl<S: Clone> Clone for HooksService<S> {
@@ -118,6 +149,7 @@ impl<S: Clone> Clone for HooksService<S> {
         Self {
             inner: self.inner.clone(),
             hooks: Arc::clone(&self.hooks),
+            usage_sink: self.usage_sink.clone(),
         }
     }
 }
@@ -137,6 +169,7 @@ where
 
     fn call(&mut self, req: LlmRequest) -> Self::Future {
         let hooks = Arc::clone(&self.hooks);
+        let usage_sink = self.usage_sink.clone();
         // Clone the request so we can pass it to post-hooks after the inner
         // service consumes the original.
         let req_clone = req.clone();
@@ -158,8 +191,12 @@ where
                 }
             }
 
+            let start = Instant::now();
+
             match fut.await {
                 Ok(resp) => {
+                    let latency_ms = start.elapsed().as_millis() as u64;
+
                     // Post-hooks (success path) — panics are logged but do not
                     // propagate so the caller still receives the response.
                     for hook in hooks.iter() {
@@ -171,9 +208,23 @@ where
                             tracing::error!("hook panicked during on_response");
                         }
                     }
+
+                    if let Some(sink) = &usage_sink {
+                        let event = build_usage_event(&req_clone, &resp, latency_ms, UsageEventOutcome::Success);
+                        if let Err(err) = sink.emit_erased(event).await {
+                            tracing::warn!(
+                                target: "gen_ai.usage",
+                                error = %err,
+                                "usage sink emit failed"
+                            );
+                        }
+                    }
+
                     Ok(resp)
                 }
                 Err(err) => {
+                    let latency_ms = start.elapsed().as_millis() as u64;
+
                     // Post-hooks (error path) — panics are logged but do not
                     // replace the original error.
                     for hook in hooks.iter() {
@@ -185,10 +236,118 @@ where
                             tracing::error!("hook panicked during on_error");
                         }
                     }
+
+                    if let Some(sink) = &usage_sink {
+                        let outcome = classify_error_outcome(&err);
+                        let event = build_error_usage_event(&req_clone, latency_ms, outcome);
+                        if let Err(sink_err) = sink.emit_erased(event).await {
+                            tracing::warn!(
+                                target: "gen_ai.usage",
+                                error = %sink_err,
+                                "usage sink emit failed on error path"
+                            );
+                        }
+                    }
+
                     Err(err)
                 }
             }
         })
+    }
+}
+
+// ─── UsageEvent construction helpers ─────────────────────────────────────────
+
+/// Derive a stable `request_id` from the request's idempotency key,
+/// falling back to a process-scoped counter.
+fn request_id(req: &LlmRequest) -> String {
+    req.idempotency_key
+        .clone()
+        .unwrap_or_else(|| REQUEST_COUNTER.fetch_add(1, AtomicOrdering::Relaxed).to_string())
+}
+
+/// Extract the provider prefix from a model string (the part before `/`).
+fn provider_from_model(model: &str) -> String {
+    model.split_once('/').map(|(prefix, _)| prefix).unwrap_or("").to_owned()
+}
+
+/// Map a `LiterLlmError` to a `UsageEventOutcome`.
+fn classify_error_outcome(err: &LiterLlmError) -> UsageEventOutcome {
+    match err {
+        LiterLlmError::Timeout => UsageEventOutcome::TimedOut,
+        _ => UsageEventOutcome::Error,
+    }
+}
+
+/// Build a `UsageEvent` from a successful response.
+fn build_usage_event(req: &LlmRequest, resp: &LlmResponse, latency_ms: u64, outcome: UsageEventOutcome) -> UsageEvent {
+    let model = req.model().unwrap_or("").to_owned();
+    let provider = provider_from_model(&model);
+
+    let (prompt_tokens, completion_tokens, cached_tokens, total_tokens) = resp
+        .usage()
+        .map(|u| {
+            let cached = u.prompt_tokens_details.as_ref().map_or(0, |d| d.cached_tokens);
+            (u.prompt_tokens, u.completion_tokens, cached, u.total_tokens)
+        })
+        .unwrap_or((0, 0, 0, 0));
+
+    // cost::completion_cost_with_cache returns Option<f64>; convert to Decimal.
+    let cost_usd = crate::cost::completion_cost_with_cache(&model, prompt_tokens, cached_tokens, completion_tokens)
+        .and_then(|f| rust_decimal::Decimal::try_from(f).ok())
+        .unwrap_or(rust_decimal::Decimal::ZERO);
+
+    let finish_reason = match resp {
+        LlmResponse::Chat(r) => r
+            .choices
+            .first()
+            .and_then(|c| c.finish_reason.as_ref())
+            .map(|fr| format!("{fr:?}").to_lowercase()),
+        _ => None,
+    };
+
+    UsageEvent {
+        tenant_id: req.tenant_id.clone(),
+        request_id: request_id(req),
+        model,
+        provider,
+        prompt_tokens,
+        completion_tokens,
+        cached_tokens,
+        total_tokens,
+        cost_usd,
+        // TODO: wire real cache state once the cache layer exposes hit-type
+        // metadata through a task-local or response extension.
+        cache_state: CacheState::Bypass,
+        finish_reason,
+        outcome,
+        latency_ms,
+        metadata: std::collections::HashMap::new(),
+        received_at: std::time::SystemTime::now(),
+    }
+}
+
+/// Build a `UsageEvent` for the error path (no response available).
+fn build_error_usage_event(req: &LlmRequest, latency_ms: u64, outcome: UsageEventOutcome) -> UsageEvent {
+    let model = req.model().unwrap_or("").to_owned();
+    let provider = provider_from_model(&model);
+
+    UsageEvent {
+        tenant_id: req.tenant_id.clone(),
+        request_id: request_id(req),
+        model,
+        provider,
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        cached_tokens: 0,
+        total_tokens: 0,
+        cost_usd: rust_decimal::Decimal::ZERO,
+        cache_state: CacheState::Bypass,
+        finish_reason: None,
+        outcome,
+        latency_ms,
+        metadata: std::collections::HashMap::new(),
+        received_at: std::time::SystemTime::now(),
     }
 }
 
