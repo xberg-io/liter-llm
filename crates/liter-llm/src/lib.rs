@@ -1,6 +1,6 @@
 //! Universal LLM API client with provider-agnostic chat, embeddings, files,
 //! batches, responses, image generation, transcription, moderation, OCR,
-//! rerank, and web-search across 140+ providers.
+//! rerank, and web-search across 143 providers.
 //!
 //! See [`LlmClient`] for the high-level streaming client, [`DefaultClient`]
 //! (native-http only) for the canonical reqwest-backed implementation, and

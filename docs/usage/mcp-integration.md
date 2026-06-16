@@ -16,6 +16,8 @@ Instead of hard-coding integrations for each provider (OpenAI, Anthropic, Google
 
 The liter-llm MCP server exposes 22 tools for core LLM operations:
 
+Virtual keys can use the model-routed tools. File, batch, and response-management tools require a master key because they manage provider-side resources outside a single model route.
+
 | Tool                | Description                                               |
 | ------------------- | --------------------------------------------------------- |
 | `chat`              | Send a chat completion request to any LLM provider        |

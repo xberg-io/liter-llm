@@ -12,9 +12,12 @@ request.model = "openai/gpt-4o";
 request.messages = [{ role: "user", content: "Tell me a story" }];
 request.stream = true;
 
-// chatStream resolves to an array of chunks materialised by the WASM binding.
-const chunks = await client.chatStream(request);
-for (const chunk of chunks) {
+const stream = await client.chatStream(request);
+while (true) {
+  const chunk = await stream.next();
+  if (chunk === null) {
+    break;
+  }
   process.stdout.write(chunk.choices?.[0]?.delta?.content ?? "");
 }
 console.log();

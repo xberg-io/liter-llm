@@ -2,7 +2,7 @@
 title: "Go API Reference"
 ---
 
-## Go API Reference <span class="version-badge">v1.6.0</span>
+## Go API Reference <span class="version-badge">v1.6.1</span>
 
 ### Functions
 
@@ -168,7 +168,7 @@ if err != nil {
 
 Return the capability flags for a named provider.
 
-Performs an O(n) linear scan over the embedded registry (142 entries).
+Performs an O(n) linear scan over the embedded registry (143 entries).
 Returns an owned value so that bindings can box/copy it across the FFI
 boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
 so this is a cheap memcpy of seven `bool` fields.
@@ -266,7 +266,7 @@ Returns `nil` if the model is not present in the embedded pricing registry.
 Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
 
 When an exact model name match is not found, progressively shorter prefixes
-are tried by stripping from the last `-` or `.` separator. For example,
+are tried by stripping from the last `-` or `.` separator.  For example,
 `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 
 **Signature:**
@@ -447,7 +447,7 @@ if err != nil {
 Assert that `current_len + incoming` does not exceed `limit`.
 
 Call this before appending `incoming` bytes to any buffer that must
-stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
+stay below `limit`.  Returns `Err(LiterLlmError.Streaming)` on overflow
 and emits a `tracing.warn!` with context.
 
 **Signature:**
@@ -910,7 +910,7 @@ Configuration for registering a custom LLM provider at runtime.
 
 Default client implementation backed by `reqwest`.
 
-Sends requests to 140+ LLM providers with automatic provider detection
+Sends requests to 143 LLM providers with automatic provider detection
 and per-request routing. The provider is resolved at construction time
 from `model_hint` (or defaults to OpenAI), but individual requests can
 override the provider via model name prefix (e.g. `"anthropic/claude-3-5-sonnet"`
@@ -958,15 +958,18 @@ if err != nil {
 **Signature:**
 
 ```go
-func (o *DefaultClient) ChatStream(req ChatCompletionRequest) (string, error)
+func (o *DefaultClient) ChatStream(req ChatCompletionRequest) (<-chan ChatCompletionChunk, error)
 ```
 
 **Example:**
 
 ```go
-result, err := instance.ChatStream(ChatCompletionRequest{})
+stream, err := instance.ChatStream(ChatCompletionRequest{})
 if err != nil {
     return err
+}
+for chunk := range stream {
+    fmt.Println(chunk)
 }
 ```
 
@@ -976,7 +979,7 @@ if err != nil {
 |------|------|----------|-------------|
 | `Req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
-**Returns:** `string`
+**Returns:** `(<-chan ChatCompletionChunk, error)`
 
 **Errors:** Returns `error`.
 
@@ -2035,7 +2038,7 @@ discounted rate and the remainder at the regular input rate.
 Static capability flags for a provider.
 
 Each flag indicates whether the provider's models *generally* support that
-feature. For providers that aggregate many underlying models (e.g. Bedrock,
+feature.  For providers that aggregate many underlying models (e.g. Bedrock,
 OpenRouter, vLLM) the flags reflect the superset of available model
 capabilities — a flag being `true` means at least one model supports the
 feature, not every model.
@@ -2061,7 +2064,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function. Keeping
+format, which are accessed via the `capabilities` function.  Keeping
 these fields separate preserves backward compatibility with all generated
 binding code that constructs `ProviderConfig` using struct literal syntax.
 
@@ -2249,7 +2252,7 @@ An individual search result.
 The value broadcast from a singleflight leader to all followers.
 
 `Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`. The `Arc` adds only a reference-count
+broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
 bump per follower, which is negligible under the burst loads this layer targets.
 
 ---
@@ -2695,7 +2698,7 @@ How the API key is sent in the HTTP request.
 
 The streaming wire format a provider uses for its response stream.
 
-Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
+Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
 a proprietary binary EventStream framing.
 
 Deserialized from the `streaming_format` JSON field via `serde`.

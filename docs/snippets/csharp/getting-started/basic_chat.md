@@ -7,7 +7,7 @@ using var client = LiterLlmLib.CreateClient(
     apiKey: Environment.GetEnvironmentVariable("OPENAI_API_KEY")!,
     baseUrl: null, timeoutSecs: null, maxRetries: null, modelHint: null);
 
-var response = await client.Chat(new ChatCompletionRequest
+var response = await client.ChatAsync(new ChatCompletionRequest
 {
     Model = "openai/gpt-4o",
     Messages = [new Message.User(new UserMessage { Content = UserContent.Of("Hello!") })]

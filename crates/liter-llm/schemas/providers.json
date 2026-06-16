@@ -1,6 +1,6 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$comment": "Generated from litellm data. Source: https://github.com/BerriAI/litellm (MIT License, Copyright 2023 Berri AI)",
+	"$comment": "Generated from the public provider registry plus runtime capability metadata used by liter-llm.",
 	"providers": [
 		{
 			"name": "a2a",
@@ -1887,6 +1887,33 @@
 			"streaming_format": "sse"
 		},
 		{
+			"name": "llamacpp",
+			"display_name": "llama.cpp",
+			"base_url": "http://localhost:8080/v1",
+			"auth": {
+				"type": "none"
+			},
+			"endpoints": [
+				"chat",
+				"completion",
+				"embedding",
+				"rerank"
+			],
+			"model_prefixes": [
+				"llamacpp/"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
+		},
+		{
 			"name": "llamagate",
 			"display_name": "LlamaGate",
 			"base_url": "https://api.llamagate.dev/v1",
@@ -1919,14 +1946,20 @@
 			"streaming_format": "sse"
 		},
 		{
-			"name": "lm_studio",
+			"name": "lmstudio",
 			"display_name": "LM Studio",
 			"base_url": "http://localhost:1234/v1",
 			"auth": {
 				"type": "none"
 			},
 			"endpoints": [
-				"chat"
+				"chat",
+				"completion",
+				"embedding"
+			],
+			"model_prefixes": [
+				"lmstudio/",
+				"lm_studio/"
 			],
 			"capabilities": {
 				"vision": true,
@@ -1935,6 +1968,35 @@
 				"function_calling": true,
 				"audio_in": false,
 				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
+		},
+		{
+			"name": "localai",
+			"display_name": "LocalAI",
+			"base_url": "http://localhost:8080/v1",
+			"auth": {
+				"type": "none"
+			},
+			"endpoints": [
+				"audio",
+				"chat",
+				"completion",
+				"embedding",
+				"image",
+				"rerank"
+			],
+			"model_prefixes": [
+				"localai/"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": true,
+				"audio_out": true,
 				"video_in": false
 			},
 			"streaming_format": "sse"
@@ -2352,30 +2414,10 @@
 				"ollama/deepseek-",
 				"ollama/gpt-",
 				"ollama/mistral-",
-				"ollama/mixtral-"
+				"ollama/mixtral-",
+				"ollama_chat/"
 			],
 			"model_count": 29,
-			"capabilities": {
-				"vision": true,
-				"reasoning": false,
-				"structured_output": true,
-				"function_calling": true,
-				"audio_in": false,
-				"audio_out": false,
-				"video_in": false
-			},
-			"streaming_format": "sse"
-		},
-		{
-			"name": "ollama_chat",
-			"display_name": "Ollama Chat",
-			"base_url": "http://localhost:11434/v1",
-			"auth": {
-				"type": "none"
-			},
-			"endpoints": [
-				"chat"
-			],
 			"capabilities": {
 				"vision": true,
 				"reasoning": false,
@@ -3687,10 +3729,13 @@
 		"custom",
 		"custom_openai",
 		"databricks",
+		"dataforseo",
 		"datarobot",
 		"gigachat",
 		"github_copilot",
+		"heroku",
 		"hosted_vllm",
+		"infinity",
 		"litellm_proxy",
 		"manus",
 		"milvus",

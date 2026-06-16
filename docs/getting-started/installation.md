@@ -107,14 +107,14 @@ liter-llm mcp --transport stdio
     <dependency>
         <groupId>dev.kreuzberg.literllm</groupId>
         <artifactId>liter-llm</artifactId>
-        <version>1.6.0-rc.1</version>
+        <version>1.6.0</version>
     </dependency>
     ```
 
     **Gradle:**
 
     ```kotlin
-    implementation("dev.kreuzberg.literllm:liter-llm:1.6.0-rc.1")
+    implementation("dev.kreuzberg.literllm:liter-llm:1.6.0")
     ```
 
 === "Kotlin Android"
@@ -122,7 +122,7 @@ liter-llm mcp --transport stdio
     The generated Kotlin target is Android. JVM Kotlin applications should use the Java binding from Kotlin.
 
     ```kotlin
-    implementation("dev.kreuzberg:liter-llm-android:1.6.0-rc.1")
+    implementation("dev.kreuzberg:liter-llm-android:1.6.0")
     ```
 
 === "C# / .NET"
@@ -152,7 +152,7 @@ liter-llm mcp --transport stdio
     Requires PHP 8.2+.
 
     ```bash
-    composer require kreuzberg/liter-llm
+    composer require kreuzberg-dev/liter-llm
     ```
 
 === "Elixir"
@@ -162,7 +162,7 @@ liter-llm mcp --transport stdio
     ```elixir
     defp deps do
       [
-        {:liter_llm, "~> 1.6.0-rc.1"}
+        {:liter_llm, "~> 1.6.0"}
       ]
     end
     ```
@@ -179,10 +179,14 @@ liter-llm mcp --transport stdio
 
 === "Swift"
 
-    Requires macOS 13+ and Swift 6.0+. Add to `Package.swift`:
+    Requires macOS 13+ and Swift 6.0+. Add the release artifact bundle to `Package.swift`:
 
     ```swift
-    .package(url: "https://github.com/kreuzberg-dev/liter-llm", from: "1.6.0-rc.1")
+    .binaryTarget(
+        name: "LiterLlm",
+        url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.6.0/LiterLlm-rs.artifactbundle.zip",
+        checksum: "<CHECKSUM-FROM-RELEASE-NOTES>"
+    )
     ```
 
 === "Zig"
@@ -190,7 +194,7 @@ liter-llm mcp --transport stdio
     Requires Zig 0.16+.
 
     ```bash
-    zig fetch --save https://github.com/kreuzberg-dev/liter-llm/archive/refs/tags/v1.6.0-rc.1.tar.gz
+    zig fetch --save https://github.com/kreuzberg-dev/liter-llm/archive/refs/tags/v1.6.0.tar.gz
     ```
 
 === "WebAssembly"

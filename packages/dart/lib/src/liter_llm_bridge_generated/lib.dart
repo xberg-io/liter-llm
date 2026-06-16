@@ -71,7 +71,7 @@ Future<bool> unregisterCustomProvider({required String name}) =>
 
 /// Return the capability flags for a named provider.
 ///
-/// Performs an O(n) linear scan over the embedded registry (142 entries).
+/// Performs an O(n) linear scan over the embedded registry (143 entries).
 /// Returns an owned value so that bindings can box/copy it across the FFI
 /// boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
 /// so this is a cheap memcpy of seven `bool` fields.

@@ -1,11 +1,23 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$comment": "Generated from litellm data. Source: https://github.com/BerriAI/litellm (MIT License, Copyright 2023 Berri AI)",
+	"$comment": "Generated from the public provider registry plus runtime capability metadata used by liter-llm.",
 	"providers": [
 		{
 			"name": "a2a",
 			"display_name": "A2A",
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "abliteration",
@@ -15,7 +27,19 @@
 				"type": "bearer",
 				"env_var": "ABLITERATION_API_KEY"
 			},
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "ai21",
@@ -25,9 +49,24 @@
 				"type": "bearer",
 				"env_var": "AI21_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["j2-", "jamba-"],
-			"model_count": 12
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"j2-",
+				"jamba-"
+			],
+			"model_count": 12,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "ai21_chat",
@@ -37,31 +76,77 @@
 				"type": "bearer",
 				"env_var": "AI21_API_KEY"
 			},
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "aiml",
 			"display_name": "AI/ML API",
-			"base_url": "https://api.aimlapi.com",
+			"base_url": "https://api.aimlapi.com/v1",
 			"auth": {
 				"type": "bearer",
 				"env_var": "AIML_API_KEY"
 			},
-			"endpoints": ["chat", "embedding", "image"],
-			"model_prefixes": ["aiml/", "aiml/dall-", "aiml/flux-", "aiml/flux/kontext-"],
-			"model_count": 12
+			"endpoints": [
+				"chat",
+				"embedding",
+				"image"
+			],
+			"model_prefixes": [
+				"aiml/",
+				"aiml/dall-",
+				"aiml/flux-",
+				"aiml/flux/kontext-"
+			],
+			"model_count": 12,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "amazon_nova",
 			"display_name": "Amazon Nova",
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"amazon-",
+				"amazon-nova/"
+			],
+			"model_count": 4,
 			"base_url": "https://api.nova.amazon.com/v1",
 			"auth": {
 				"type": "bearer",
 				"env_var": "AMAZON_NOVA_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["amazon-", "amazon-nova/"],
-			"model_count": 4
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": true
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "anthropic",
@@ -71,9 +156,24 @@
 				"type": "bearer",
 				"env_var": "ANTHROPIC_API_KEY"
 			},
-			"endpoints": ["batch", "chat"],
-			"model_prefixes": ["claude-"],
-			"model_count": 18
+			"endpoints": [
+				"batch",
+				"chat"
+			],
+			"model_prefixes": [
+				"claude-"
+			],
+			"model_count": 18,
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "anthropic_text",
@@ -83,7 +183,20 @@
 				"type": "bearer",
 				"env_var": "ANTHROPIC_API_KEY"
 			},
-			"endpoints": ["batch", "chat"]
+			"endpoints": [
+				"batch",
+				"chat"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "apertis",
@@ -96,36 +209,98 @@
 			"param_mappings": {
 				"max_completion_tokens": "max_tokens"
 			},
-			"endpoints": ["chat", "embedding"]
+			"endpoints": [
+				"chat",
+				"embedding"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "assemblyai",
 			"display_name": "AssemblyAI",
-			"base_url": "https://llm-gateway.assemblyai.com/v1",
+			"base_url": "https://api.assemblyai.com",
 			"auth": {
 				"type": "bearer",
 				"env_var": "ASSEMBLYAI_API_KEY"
 			},
-			"endpoints": ["audio", "chat"],
-			"model_prefixes": ["assemblyai/"],
-			"model_count": 2
+			"endpoints": [
+				"audio",
+				"chat"
+			],
+			"model_prefixes": [
+				"assemblyai/"
+			],
+			"model_count": 2,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": true,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "auto_router",
 			"display_name": "Auto Router",
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "aws_polly",
 			"display_name": "AWS - Polly",
-			"endpoints": ["audio"],
-			"model_prefixes": ["aws_polly/"],
-			"model_count": 4
+			"endpoints": [
+				"audio"
+			],
+			"model_prefixes": [
+				"aws_polly/"
+			],
+			"model_count": 4,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": true,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "azure",
 			"display_name": "Azure",
-			"endpoints": ["audio", "batch", "chat", "completion", "embedding", "image", "moderation"],
+			"endpoints": [
+				"audio",
+				"batch",
+				"chat",
+				"completion",
+				"embedding",
+				"image",
+				"moderation"
+			],
 			"model_prefixes": [
 				"azure/",
 				"azure/eu/gpt-",
@@ -153,12 +328,30 @@
 				"azure/us/o1-",
 				"azure/us/o3-"
 			],
-			"model_count": 189
+			"model_count": 189,
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": true,
+				"audio_out": true,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "azure_ai",
 			"display_name": "Azure AI",
-			"endpoints": ["audio", "batch", "chat", "embedding", "image", "moderation", "ocr"],
+			"endpoints": [
+				"audio",
+				"batch",
+				"chat",
+				"embedding",
+				"image",
+				"moderation",
+				"ocr"
+			],
 			"model_prefixes": [
 				"azure_ai/",
 				"azure_ai/Cohere-",
@@ -173,39 +366,107 @@
 				"azure_ai/grok-",
 				"azure_ai/mistral-"
 			],
-			"model_count": 75
+			"model_count": 75,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": true,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "azure_ai/agents",
 			"display_name": "Azure AI Foundry Agents",
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "azure_ai/doc-intelligence",
 			"display_name": "Azure AI Document Intelligence",
-			"endpoints": ["ocr"]
+			"endpoints": [
+				"ocr"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "azure_text",
 			"display_name": "Azure Text",
-			"endpoints": ["audio", "batch", "chat", "moderation"],
-			"model_prefixes": ["azure/", "azure/gpt-"],
-			"model_count": 3
+			"endpoints": [
+				"audio",
+				"batch",
+				"chat",
+				"moderation"
+			],
+			"model_prefixes": [
+				"azure/",
+				"azure/gpt-"
+			],
+			"model_count": 3,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "baseten",
 			"display_name": "Baseten",
+			"endpoints": [
+				"chat"
+			],
 			"base_url": "https://inference.baseten.co/v1",
 			"auth": {
 				"type": "bearer",
 				"env_var": "BASETEN_API_KEY"
 			},
-			"endpoints": ["chat"]
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "bedrock",
 			"display_name": "AWS - Bedrock",
-			"endpoints": ["chat", "embedding", "rerank"],
+			"endpoints": [
+				"chat",
+				"embedding",
+				"rerank"
+			],
 			"model_prefixes": [
 				"1024-",
 				"1024-x-1024/",
@@ -240,7 +501,17 @@
 				"us.anthropic.claude-",
 				"us.meta.llama3-"
 			],
-			"model_count": 245
+			"model_count": 245,
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": true
+			},
+			"streaming_format": "aws_event_stream"
 		},
 		{
 			"name": "brave",
@@ -250,7 +521,19 @@
 				"type": "bearer",
 				"env_var": "BRAVE_API_KEY"
 			},
-			"endpoints": ["search"]
+			"endpoints": [
+				"search"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "bytez",
@@ -260,7 +543,19 @@
 				"type": "bearer",
 				"env_var": "BYTEZ_KEY"
 			},
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "cerebras",
@@ -270,16 +565,47 @@
 				"type": "bearer",
 				"env_var": "CEREBRAS_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["cerebras/", "cerebras/llama3.1-", "cerebras/zai-"],
-			"model_count": 7
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"cerebras/",
+				"cerebras/llama3.1-",
+				"cerebras/zai-"
+			],
+			"model_count": 7,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "chatgpt",
 			"display_name": "ChatGPT Subscription",
-			"endpoints": ["chat"],
-			"model_prefixes": ["chatgpt/", "chatgpt/gpt-"],
-			"model_count": 10
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"chatgpt/",
+				"chatgpt/gpt-"
+			],
+			"model_count": 10,
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": true,
+				"audio_out": true,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "chutes",
@@ -292,24 +618,64 @@
 			"param_mappings": {
 				"max_completion_tokens": "max_tokens"
 			},
-			"endpoints": ["chat", "embedding"]
+			"endpoints": [
+				"chat",
+				"embedding"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "clarifai",
 			"display_name": "Clarifai",
-			"base_url": "https://api.clarifai.com/v2/ext/openai/v1",
+			"base_url": "https://api.clarifai.com",
 			"auth": {
 				"type": "bearer",
 				"env_var": "CLARIFAI_API_KEY"
 			},
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "cloudflare",
 			"display_name": "Cloudflare AI Workers",
-			"endpoints": ["chat"],
-			"model_prefixes": ["cloudflare/", "cloudflare/@cf/meta/llama-"],
-			"model_count": 4
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"cloudflare/",
+				"cloudflare/@cf/meta/llama-"
+			],
+			"model_count": 4,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "codestral",
@@ -319,9 +685,24 @@
 				"type": "bearer",
 				"env_var": "CODESTRAL_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["codestral/", "codestral/codestral-"],
-			"model_count": 2
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"codestral/",
+				"codestral/codestral-"
+			],
+			"model_count": 2,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "cohere",
@@ -331,9 +712,26 @@
 				"type": "bearer",
 				"env_var": "COHERE_API_KEY"
 			},
-			"endpoints": ["chat", "embedding", "rerank"],
-			"model_prefixes": ["embed-", "rerank-"],
-			"model_count": 15
+			"endpoints": [
+				"chat",
+				"embedding",
+				"rerank"
+			],
+			"model_prefixes": [
+				"embed-",
+				"rerank-"
+			],
+			"model_count": 15,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "cohere_chat",
@@ -343,9 +741,23 @@
 				"type": "bearer",
 				"env_var": "COHERE_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["command-"],
-			"model_count": 7
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"command-"
+			],
+			"model_count": 7,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "cometapi",
@@ -353,70 +765,193 @@
 			"base_url": "https://api.cometapi.com/v1",
 			"auth": {
 				"type": "bearer",
-				"env_var": "COMETAPI_KEY"
+				"env_var": "COMETAPI_API_KEY"
 			},
-			"endpoints": ["chat", "embedding", "image"]
+			"endpoints": [
+				"chat",
+				"embedding"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "compactifai",
 			"display_name": "CompactifAI",
+			"endpoints": [
+				"chat"
+			],
 			"base_url": "https://api.compactif.ai/v1",
 			"auth": {
 				"type": "bearer",
 				"env_var": "COMPACTIFAI_API_KEY"
 			},
-			"endpoints": ["chat"]
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "cursor",
 			"display_name": "Cursor BYOK",
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "custom",
 			"display_name": "Custom",
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "custom_openai",
 			"display_name": "Custom OpenAI",
-			"endpoints": ["audio", "batch", "chat", "moderation"]
+			"endpoints": [
+				"audio",
+				"batch",
+				"chat",
+				"moderation"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "dashscope",
 			"display_name": "Dashscope",
-			"base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+			"base_url": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
 			"auth": {
 				"type": "bearer",
 				"env_var": "DASHSCOPE_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["dashscope/", "dashscope/qwen-", "dashscope/qwen3-"],
-			"model_count": 32
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"dashscope/",
+				"dashscope/qwen-",
+				"dashscope/qwen3-"
+			],
+			"model_count": 32,
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "databricks",
 			"display_name": "Databricks",
-			"endpoints": ["chat"],
-			"model_prefixes": ["databricks/", "databricks/databricks-"],
-			"model_count": 28
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"databricks/",
+				"databricks/databricks-"
+			],
+			"model_count": 28,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "dataforseo",
 			"display_name": "DataForSEO",
-			"base_url": "https://api.dataforseo.com/v3/serp/google/organic/live/advanced",
-			"endpoints": ["search"],
-			"model_count": 1
+			"base_url": "https://api.dataforseo.com/v3",
+			"auth": {
+				"type": "bearer",
+				"env_var": "DATAFORSEO_API_KEY"
+			},
+			"endpoints": [
+				"search"
+			],
+			"model_count": 1,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "datarobot",
 			"display_name": "DataRobot",
+			"endpoints": [
+				"chat"
+			],
 			"base_url": "https://app.datarobot.com",
 			"auth": {
 				"type": "bearer",
 				"env_var": "DATAROBOT_API_TOKEN"
 			},
-			"endpoints": ["chat"]
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "deepgram",
@@ -426,7 +961,10 @@
 				"type": "bearer",
 				"env_var": "DEEPGRAM_API_KEY"
 			},
-			"endpoints": ["audio", "chat"],
+			"endpoints": [
+				"audio",
+				"chat"
+			],
 			"model_prefixes": [
 				"deepgram/",
 				"deepgram/base-",
@@ -434,7 +972,17 @@
 				"deepgram/nova-",
 				"deepgram/whisper-"
 			],
-			"model_count": 36
+			"model_count": 36,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": true,
+				"audio_out": true,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "deepinfra",
@@ -444,7 +992,9 @@
 				"type": "bearer",
 				"env_var": "DEEPINFRA_API_KEY"
 			},
-			"endpoints": ["chat", "rerank"],
+			"endpoints": [
+				"chat"
+			],
 			"model_prefixes": [
 				"deepinfra/",
 				"deepinfra/NousResearch/Hermes-",
@@ -460,50 +1010,115 @@
 				"deepinfra/nvidia/Llama-",
 				"deepinfra/openai/gpt-"
 			],
-			"model_count": 67
+			"model_count": 67,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "deepseek",
 			"display_name": "Deepseek",
-			"base_url": "https://api.deepseek.com/beta",
+			"base_url": "https://api.deepseek.com/v1",
 			"auth": {
 				"type": "bearer",
 				"env_var": "DEEPSEEK_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["deepseek-", "deepseek/", "deepseek/deepseek-"],
-			"model_count": 8
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"deepseek-",
+				"deepseek/",
+				"deepseek/deepseek-"
+			],
+			"model_count": 8,
+			"capabilities": {
+				"vision": false,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "docker_model_runner",
 			"display_name": "Docker Model Runner",
+			"endpoints": [
+				"chat"
+			],
 			"base_url": "http://localhost:22088/engines/llama.cpp",
 			"auth": {
 				"type": "none"
 			},
-			"endpoints": ["chat"]
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "duckduckgo",
 			"display_name": "DuckDuckGo",
+			"endpoints": [
+				"search"
+			],
+			"model_count": 1,
 			"base_url": "https://api.duckduckgo.com",
 			"auth": {
 				"type": "none"
 			},
-			"endpoints": ["search"],
-			"model_count": 1
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "elevenlabs",
 			"display_name": "ElevenLabs",
-			"base_url": "https://api.elevenlabs.io",
+			"base_url": "https://api.elevenlabs.io/v1",
 			"auth": {
 				"type": "bearer",
 				"env_var": "ELEVENLABS_API_KEY"
 			},
-			"endpoints": ["audio"],
-			"model_prefixes": ["elevenlabs/"],
-			"model_count": 4
+			"endpoints": [
+				"audio",
+				"chat"
+			],
+			"model_prefixes": [
+				"elevenlabs/"
+			],
+			"model_count": 4,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": true,
+				"audio_out": true,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "empower",
@@ -513,7 +1128,19 @@
 				"type": "bearer",
 				"env_var": "EMPOWER_API_KEY"
 			},
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "exa_ai",
@@ -523,8 +1150,20 @@
 				"type": "bearer",
 				"env_var": "EXA_API_KEY"
 			},
-			"endpoints": ["search"],
-			"model_count": 1
+			"endpoints": [
+				"search"
+			],
+			"model_count": 1,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "fal_ai",
@@ -532,11 +1171,27 @@
 			"base_url": "https://fal.run",
 			"auth": {
 				"type": "bearer",
-				"env_var": "FAL_AI_API_KEY"
+				"env_var": "FAL_KEY"
 			},
-			"endpoints": ["chat", "image"],
-			"model_prefixes": ["fal_ai/", "fal_ai/fal-"],
-			"model_count": 12
+			"endpoints": [
+				"chat",
+				"image"
+			],
+			"model_prefixes": [
+				"fal_ai/",
+				"fal_ai/fal-"
+			],
+			"model_count": 12,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "featherless_ai",
@@ -546,20 +1201,47 @@
 				"type": "bearer",
 				"env_var": "FEATHERLESS_AI_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["featherless_ai/", "featherless_ai/featherless-"],
-			"model_count": 2
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"featherless_ai/",
+				"featherless_ai/featherless-"
+			],
+			"model_count": 2,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "firecrawl",
 			"display_name": "Firecrawl",
-			"base_url": "https://api.firecrawl.dev/v2",
+			"base_url": "https://api.firecrawl.dev/v1",
 			"auth": {
 				"type": "bearer",
 				"env_var": "FIRECRAWL_API_KEY"
 			},
-			"endpoints": ["search"],
-			"model_count": 1
+			"endpoints": [
+				"search"
+			],
+			"model_count": 1,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "fireworks_ai",
@@ -569,7 +1251,10 @@
 				"type": "bearer",
 				"env_var": "FIREWORKS_AI_API_KEY"
 			},
-			"endpoints": ["chat", "rerank"],
+			"endpoints": [
+				"chat",
+				"rerank"
+			],
 			"model_prefixes": [
 				"fireworks-",
 				"fireworks_ai/",
@@ -610,19 +1295,44 @@
 				"fireworks_ai/accounts/fireworks/models/whisper-",
 				"fireworks_ai/accounts/fireworks/models/yi-"
 			],
-			"model_count": 269
+			"model_count": 269,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "friendliai",
 			"display_name": "FriendliAI",
-			"base_url": "https://api.friendli.ai/serverless/v1",
+			"base_url": "https://inference.friendli.ai/v1",
 			"auth": {
 				"type": "bearer",
 				"env_var": "FRIENDLI_TOKEN"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["friendliai/", "friendliai/meta-"],
-			"model_count": 2
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"friendliai/",
+				"friendliai/meta-"
+			],
+			"model_count": 2,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "galadriel",
@@ -632,7 +1342,19 @@
 				"type": "bearer",
 				"env_var": "GALADRIEL_API_KEY"
 			},
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "gemini",
@@ -642,9 +1364,27 @@
 				"type": "bearer",
 				"env_var": "GEMINI_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["gemini-", "gemini/", "gemini/gemini-", "gemini/imagen-", "gemini/veo-"],
-			"model_count": 60
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"gemini-",
+				"gemini/",
+				"gemini/gemini-",
+				"gemini/imagen-",
+				"gemini/veo-"
+			],
+			"model_count": 60,
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": true,
+				"audio_out": false,
+				"video_in": true
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "gigachat",
@@ -654,9 +1394,25 @@
 				"type": "bearer",
 				"env_var": "GIGACHAT_API_KEY"
 			},
-			"endpoints": ["chat", "embedding"],
-			"model_prefixes": ["gigachat/", "gigachat/GigaChat-"],
-			"model_count": 6
+			"endpoints": [
+				"chat",
+				"embedding"
+			],
+			"model_prefixes": [
+				"gigachat/",
+				"gigachat/GigaChat-"
+			],
+			"model_count": 6,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "github",
@@ -666,12 +1422,26 @@
 				"type": "bearer",
 				"env_var": "GITHUB_API_KEY"
 			},
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "github_copilot",
 			"display_name": "GitHub Copilot",
-			"endpoints": ["chat"],
+			"endpoints": [
+				"chat"
+			],
 			"model_prefixes": [
 				"github_copilot/",
 				"github_copilot/claude-",
@@ -679,17 +1449,29 @@
 				"github_copilot/gpt-",
 				"github_copilot/text-"
 			],
-			"model_count": 31
+			"model_count": 31,
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "gmi",
 			"display_name": "GMI Cloud",
-			"base_url": "https://api.gmi-serving.com/v1",
+			"base_url": "https://inference.gmicloud.ai/v1",
 			"auth": {
 				"type": "bearer",
 				"env_var": "GMI_API_KEY"
 			},
-			"endpoints": ["chat"],
+			"endpoints": [
+				"chat"
+			],
 			"model_prefixes": [
 				"gmi/",
 				"gmi/anthropic/claude-",
@@ -697,7 +1479,17 @@
 				"gmi/google/gemini-",
 				"gmi/openai/gpt-"
 			],
-			"model_count": 17
+			"model_count": 17,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "google_pse",
@@ -707,20 +1499,48 @@
 				"type": "bearer",
 				"env_var": "GOOGLE_PSE_API_KEY"
 			},
-			"endpoints": ["search"],
-			"model_count": 1
+			"endpoints": [
+				"search"
+			],
+			"model_count": 1,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "gradient_ai",
 			"display_name": "GradientAI",
-			"base_url": "https://inference.do-ai.run",
+			"base_url": "https://api.gradient.ai/api",
 			"auth": {
 				"type": "bearer",
-				"env_var": "GRADIENT_AI_API_KEY"
+				"env_var": "GRADIENT_ACCESS_TOKEN"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["gradient_ai/", "gradient_ai/anthropic-", "gradient_ai/openai-"],
-			"model_count": 13
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"gradient_ai/",
+				"gradient_ai/anthropic-",
+				"gradient_ai/openai-"
+			],
+			"model_count": 13,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "groq",
@@ -730,31 +1550,97 @@
 				"type": "bearer",
 				"env_var": "GROQ_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["groq/", "groq/llama-", "groq/meta-", "groq/openai/gpt-", "groq/whisper-"],
-			"model_count": 14
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"groq/",
+				"groq/llama-",
+				"groq/meta-",
+				"groq/openai/gpt-",
+				"groq/whisper-"
+			],
+			"model_count": 14,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": true,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "helicone",
 			"display_name": "Helicone",
-			"base_url": "https://ai-gateway.helicone.ai/",
+			"base_url": "https://gateway.helicone.ai/v1",
 			"auth": {
 				"type": "bearer",
 				"env_var": "HELICONE_API_KEY"
 			},
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "heroku",
 			"display_name": "Heroku",
-			"endpoints": ["chat"],
-			"model_prefixes": ["heroku/", "heroku/claude-"],
-			"model_count": 4
+			"base_url": "https://us.inference.heroku.com",
+			"auth": {
+				"type": "bearer",
+				"env_var": "HEROKU_API_KEY"
+			},
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"heroku/",
+				"heroku/claude-"
+			],
+			"model_count": 4,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "hosted_vllm",
 			"display_name": "Hosted VLLM",
-			"endpoints": ["batch", "chat", "embedding", "files", "rerank"]
+			"endpoints": [
+				"batch",
+				"chat",
+				"embedding",
+				"files",
+				"rerank"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "huggingface",
@@ -764,7 +1650,21 @@
 				"type": "bearer",
 				"env_var": "HUGGINGFACE_API_KEY"
 			},
-			"endpoints": ["chat", "embedding", "rerank"]
+			"endpoints": [
+				"chat",
+				"embedding",
+				"rerank"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "hyperbolic",
@@ -774,14 +1674,47 @@
 				"type": "bearer",
 				"env_var": "HYPERBOLIC_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["hyperbolic/", "hyperbolic/Qwen/Qwen2.5-", "hyperbolic/deepseek-", "hyperbolic/meta-"],
-			"model_count": 16
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"hyperbolic/",
+				"hyperbolic/Qwen/Qwen2.5-",
+				"hyperbolic/deepseek-",
+				"hyperbolic/meta-"
+			],
+			"model_count": 16,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "infinity",
 			"display_name": "Infinity",
-			"endpoints": ["embedding"]
+			"base_url": "http://localhost:7997",
+			"auth": {
+				"type": "none"
+			},
+			"endpoints": [
+				"embedding"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "jina_ai",
@@ -789,20 +1722,34 @@
 			"base_url": "https://api.jina.ai/v1",
 			"auth": {
 				"type": "bearer",
-				"env_var": "JINA_AI_API_KEY"
+				"env_var": "JINA_API_KEY"
 			},
-			"endpoints": ["embedding", "rerank"],
-			"model_count": 1
+			"endpoints": [
+				"embedding"
+			],
+			"model_count": 1,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "lambda_ai",
 			"display_name": "Lambda AI",
-			"base_url": "https://api.lambda.ai/v1",
+			"base_url": "https://api.lambdalabs.com/v1",
 			"auth": {
 				"type": "bearer",
 				"env_var": "LAMBDA_API_KEY"
 			},
-			"endpoints": ["chat"],
+			"endpoints": [
+				"chat"
+			],
 			"model_prefixes": [
 				"lambda_ai/",
 				"lambda_ai/deepseek-",
@@ -812,28 +1759,66 @@
 				"lambda_ai/llama3.1-",
 				"lambda_ai/llama3.2-"
 			],
-			"model_count": 20
+			"model_count": 20,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "langgraph",
 			"display_name": "LangGraph",
+			"endpoints": [
+				"chat"
+			],
 			"base_url": "http://localhost:2024",
 			"auth": {
 				"type": "bearer",
 				"env_var": "LANGGRAPH_API_KEY"
 			},
-			"endpoints": ["chat"]
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "lemonade",
 			"display_name": "Lemonade",
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"lemonade/",
+				"lemonade/Qwen3-",
+				"lemonade/gpt-"
+			],
+			"model_count": 5,
 			"base_url": "http://localhost:8000/api/v1",
 			"auth": {
 				"type": "none"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["lemonade/", "lemonade/Qwen3-", "lemonade/gpt-"],
-			"model_count": 5
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "linkup",
@@ -843,24 +1828,63 @@
 				"type": "bearer",
 				"env_var": "LINKUP_API_KEY"
 			},
-			"endpoints": ["search"],
-			"model_prefixes": ["linkup/"],
-			"model_count": 2
+			"endpoints": [
+				"search"
+			],
+			"model_prefixes": [
+				"linkup/"
+			],
+			"model_count": 2,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "litellm_proxy",
 			"display_name": "LiteLLM Proxy",
-			"endpoints": ["chat", "embedding", "image"]
+			"endpoints": [
+				"chat",
+				"embedding",
+				"image"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "llamafile",
-			"display_name": "llamafile",
+			"display_name": "Llamafile",
 			"base_url": "http://localhost:8080/v1",
 			"auth": {
 				"type": "none"
 			},
-			"endpoints": ["chat", "completion", "embedding", "rerank"],
-			"model_prefixes": ["llamafile/"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "llamacpp",
@@ -869,8 +1893,25 @@
 			"auth": {
 				"type": "none"
 			},
-			"endpoints": ["chat", "completion", "embedding", "rerank"],
-			"model_prefixes": ["llamacpp/"]
+			"endpoints": [
+				"chat",
+				"completion",
+				"embedding",
+				"rerank"
+			],
+			"model_prefixes": [
+				"llamacpp/"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "llamagate",
@@ -883,9 +1924,26 @@
 			"param_mappings": {
 				"max_completion_tokens": "max_tokens"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["llamagate/", "llamagate/deepseek-", "llamagate/llama-", "llamagate/qwen3-"],
-			"model_count": 16
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"llamagate/",
+				"llamagate/deepseek-",
+				"llamagate/llama-",
+				"llamagate/qwen3-"
+			],
+			"model_count": 16,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "lmstudio",
@@ -894,8 +1952,25 @@
 			"auth": {
 				"type": "none"
 			},
-			"endpoints": ["chat", "completion", "embedding"],
-			"model_prefixes": ["lmstudio/"]
+			"endpoints": [
+				"chat",
+				"completion",
+				"embedding"
+			],
+			"model_prefixes": [
+				"lmstudio/",
+				"lm_studio/"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "localai",
@@ -904,13 +1979,45 @@
 			"auth": {
 				"type": "none"
 			},
-			"endpoints": ["audio", "chat", "completion", "embedding", "image", "rerank"],
-			"model_prefixes": ["localai/"]
+			"endpoints": [
+				"audio",
+				"chat",
+				"completion",
+				"embedding",
+				"image",
+				"rerank"
+			],
+			"model_prefixes": [
+				"localai/"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": true,
+				"audio_out": true,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "manus",
 			"display_name": "Manus",
-			"endpoints": ["chat", "files"]
+			"endpoints": [
+				"chat",
+				"files"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "maritalk",
@@ -920,7 +2027,19 @@
 				"type": "bearer",
 				"env_var": "MARITALK_API_KEY"
 			},
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "meta_llama",
@@ -930,25 +2049,66 @@
 				"type": "bearer",
 				"env_var": "LLAMA_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["meta_llama/", "meta_llama/Llama-"],
-			"model_count": 4
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"meta_llama/",
+				"meta_llama/Llama-"
+			],
+			"model_count": 4,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "milvus",
-			"display_name": "Milvus"
+			"display_name": "Milvus",
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "minimax",
 			"display_name": "Minimax",
-			"base_url": "https://api.minimax.io/v1",
+			"base_url": "https://api.minimax.chat/v1",
 			"auth": {
 				"type": "bearer",
 				"env_var": "MINIMAX_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["minimax/", "minimax/MiniMax-", "minimax/speech-"],
-			"model_count": 9
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"minimax/",
+				"minimax/MiniMax-",
+				"minimax/speech-"
+			],
+			"model_count": 9,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": true,
+				"audio_out": true,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "mistral",
@@ -958,7 +2118,11 @@
 				"type": "bearer",
 				"env_var": "MISTRAL_API_KEY"
 			},
-			"endpoints": ["chat", "embedding", "ocr", "audio"],
+			"endpoints": [
+				"chat",
+				"embedding",
+				"ocr"
+			],
 			"model_prefixes": [
 				"mistral/",
 				"mistral/codestral-",
@@ -969,31 +2133,72 @@
 				"mistral/open-",
 				"mistral/pixtral-"
 			],
-			"model_count": 51
+			"model_count": 51,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "moonshot",
 			"display_name": "Moonshot",
-			"base_url": "https://api.moonshot.ai/v1",
+			"base_url": "https://api.moonshot.cn/v1",
 			"auth": {
 				"type": "bearer",
 				"env_var": "MOONSHOT_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["moonshot/", "moonshot/kimi-", "moonshot/moonshot-"],
-			"model_count": 21
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"moonshot/",
+				"moonshot/kimi-",
+				"moonshot/moonshot-"
+			],
+			"model_count": 21,
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "morph",
 			"display_name": "Morph",
-			"base_url": "https://api.morphllm.com/v1",
+			"base_url": "https://api.morph.so/v1",
 			"auth": {
 				"type": "bearer",
 				"env_var": "MORPH_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["morph/", "morph/morph-"],
-			"model_count": 2
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"morph/",
+				"morph/morph-"
+			],
+			"model_count": 2,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "nanogpt",
@@ -1003,10 +2208,20 @@
 				"type": "bearer",
 				"env_var": "NANOGPT_API_KEY"
 			},
-			"endpoints": ["chat", "embedding"],
-			"param_mappings": {
-				"max_completion_tokens": "max_tokens"
-			}
+			"endpoints": [
+				"chat",
+				"embedding"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "nebius",
@@ -1016,7 +2231,10 @@
 				"type": "bearer",
 				"env_var": "NEBIUS_API_KEY"
 			},
-			"endpoints": ["chat", "embedding"],
+			"endpoints": [
+				"chat",
+				"embedding"
+			],
 			"model_prefixes": [
 				"nebius/",
 				"nebius/BAAI/bge-",
@@ -1027,18 +2245,40 @@
 				"nebius/meta-",
 				"nebius/nvidia/Llama-"
 			],
-			"model_count": 30
+			"model_count": 30,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "nlp_cloud",
 			"display_name": "NLP Cloud",
-			"base_url": "https://api.nlpcloud.io/v1/gpu/",
+			"base_url": "https://api.nlpcloud.io/v1",
 			"auth": {
 				"type": "bearer",
 				"env_var": "NLP_CLOUD_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_count": 2
+			"endpoints": [
+				"chat"
+			],
+			"model_count": 2,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "novita",
@@ -1048,7 +2288,9 @@
 				"type": "bearer",
 				"env_var": "NOVITA_API_KEY"
 			},
-			"endpoints": ["chat"],
+			"endpoints": [
+				"chat"
+			],
 			"model_prefixes": [
 				"novita/",
 				"novita/baai/bge-",
@@ -1065,7 +2307,17 @@
 				"novita/sao10k/l3-",
 				"novita/zai-"
 			],
-			"model_count": 85
+			"model_count": 85,
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "nscale",
@@ -1075,9 +2327,26 @@
 				"type": "bearer",
 				"env_var": "NSCALE_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["nscale/", "nscale/Qwen/Qwen2.5-", "nscale/deepseek-", "nscale/meta-"],
-			"model_count": 16
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"nscale/",
+				"nscale/Qwen/Qwen2.5-",
+				"nscale/deepseek-",
+				"nscale/meta-"
+			],
+			"model_count": 16,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "nvidia_nim",
@@ -1087,26 +2356,78 @@
 				"type": "bearer",
 				"env_var": "NVIDIA_NIM_API_KEY"
 			},
-			"endpoints": ["chat", "embedding", "rerank"],
-			"model_prefixes": ["nvidia_nim/"],
-			"model_count": 3
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"nvidia_nim/"
+			],
+			"model_count": 3,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "oci",
 			"display_name": "OCI",
-			"endpoints": ["chat"],
-			"model_prefixes": ["oci/", "oci/cohere.command-", "oci/meta.llama-", "oci/xai.grok-"],
-			"model_count": 13
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"oci/",
+				"oci/cohere.command-",
+				"oci/meta.llama-",
+				"oci/xai.grok-"
+			],
+			"model_count": 13,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "ollama",
 			"display_name": "Ollama",
-			"base_url": "http://localhost:11434",
+			"base_url": "http://localhost:11434/v1",
 			"auth": {
 				"type": "none"
 			},
-			"endpoints": ["chat", "completion", "embedding"],
-			"model_prefixes": ["ollama/"]
+			"endpoints": [
+				"chat",
+				"embedding"
+			],
+			"model_prefixes": [
+				"ollama/",
+				"ollama/deepseek-",
+				"ollama/gpt-",
+				"ollama/mistral-",
+				"ollama/mixtral-",
+				"ollama_chat/"
+			],
+			"model_count": 29,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "oobabooga",
@@ -1115,7 +2436,22 @@
 			"auth": {
 				"type": "none"
 			},
-			"endpoints": ["audio", "batch", "chat", "moderation"]
+			"endpoints": [
+				"audio",
+				"batch",
+				"chat",
+				"moderation"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "openai",
@@ -1125,7 +2461,15 @@
 				"type": "bearer",
 				"env_var": "OPENAI_API_KEY"
 			},
-			"endpoints": ["audio", "batch", "chat", "completion", "embedding", "image", "moderation"],
+			"endpoints": [
+				"audio",
+				"batch",
+				"chat",
+				"completion",
+				"embedding",
+				"image",
+				"moderation"
+			],
 			"model_prefixes": [
 				"1024-",
 				"1024-x-1024/",
@@ -1160,12 +2504,34 @@
 				"text-",
 				"tts-"
 			],
-			"model_count": 203
+			"model_count": 203,
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": true,
+				"audio_out": true,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "openai_like",
 			"display_name": "OpenAI-like",
-			"endpoints": ["embedding"]
+			"endpoints": [
+				"embedding"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "openrouter",
@@ -1175,7 +2541,10 @@
 				"type": "bearer",
 				"env_var": "OPENROUTER_API_KEY"
 			},
-			"endpoints": ["chat", "embedding"],
+			"endpoints": [
+				"chat",
+				"embedding"
+			],
 			"model_prefixes": [
 				"openrouter/",
 				"openrouter/anthropic/claude-",
@@ -1191,7 +2560,17 @@
 				"openrouter/qwen/qwen3.5-",
 				"openrouter/z-"
 			],
-			"model_count": 89
+			"model_count": 89,
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "ovhcloud",
@@ -1201,7 +2580,10 @@
 				"type": "bearer",
 				"env_var": "OVH_API_KEY"
 			},
-			"endpoints": ["audio", "chat"],
+			"endpoints": [
+				"audio",
+				"chat"
+			],
 			"model_prefixes": [
 				"ovhcloud/",
 				"ovhcloud/Meta-",
@@ -1209,7 +2591,17 @@
 				"ovhcloud/Qwen2.5-",
 				"ovhcloud/gpt-"
 			],
-			"model_count": 15
+			"model_count": 15,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "parallel_ai",
@@ -1219,9 +2611,23 @@
 				"type": "bearer",
 				"env_var": "PARALLEL_AI_API_KEY"
 			},
-			"endpoints": ["search"],
-			"model_prefixes": ["parallel_ai/"],
-			"model_count": 2
+			"endpoints": [
+				"search"
+			],
+			"model_prefixes": [
+				"parallel_ai/"
+			],
+			"model_count": 2,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "perplexity",
@@ -1231,7 +2637,10 @@
 				"type": "bearer",
 				"env_var": "PERPLEXITYAI_API_KEY"
 			},
-			"endpoints": ["chat", "search"],
+			"endpoints": [
+				"chat",
+				"search"
+			],
 			"model_prefixes": [
 				"perplexity/",
 				"perplexity/anthropic/claude-",
@@ -1242,21 +2651,53 @@
 				"perplexity/pplx-",
 				"perplexity/sonar-"
 			],
-			"model_count": 40
+			"model_count": 40,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "petals",
 			"display_name": "Petals",
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "pg_vector",
-			"display_name": "PG Vector"
+			"display_name": "PG Vector",
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "poe",
 			"display_name": "Poe",
-			"base_url": "https://api.poe.com/v1",
+			"base_url": "https://api.poe.com/bot",
 			"auth": {
 				"type": "bearer",
 				"env_var": "POE_API_KEY"
@@ -1264,7 +2705,20 @@
 			"param_mappings": {
 				"max_completion_tokens": "max_tokens"
 			},
-			"endpoints": ["chat", "embedding"]
+			"endpoints": [
+				"chat",
+				"embedding"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "predibase",
@@ -1274,7 +2728,19 @@
 				"type": "bearer",
 				"env_var": "PREDIBASE_API_KEY"
 			},
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "publicai",
@@ -1287,18 +2753,57 @@
 			"param_mappings": {
 				"max_completion_tokens": "max_tokens"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["publicai/", "publicai/BSC-", "publicai/allenai/Olmo-", "publicai/swiss-"],
-			"model_count": 9
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"publicai/",
+				"publicai/BSC-",
+				"publicai/allenai/Olmo-",
+				"publicai/swiss-"
+			],
+			"model_count": 9,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "pydantic_ai_agents",
-			"display_name": "Pydantic AI Agents"
+			"display_name": "Pydantic AI Agents",
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "ragflow",
 			"display_name": "RAGFlow",
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "recraft",
@@ -1308,9 +2813,23 @@
 				"type": "bearer",
 				"env_var": "RECRAFT_API_KEY"
 			},
-			"endpoints": ["image"],
-			"model_prefixes": ["recraft/"],
-			"model_count": 2
+			"endpoints": [
+				"image"
+			],
+			"model_prefixes": [
+				"recraft/"
+			],
+			"model_count": 2,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "replicate",
@@ -1320,7 +2839,9 @@
 				"type": "bearer",
 				"env_var": "REPLICATE_API_KEY"
 			},
-			"endpoints": ["chat"],
+			"endpoints": [
+				"chat"
+			],
 			"model_prefixes": [
 				"replicate/",
 				"replicate/anthropic/claude-",
@@ -1330,7 +2851,17 @@
 				"replicate/mistralai/mistral-",
 				"replicate/openai/gpt-"
 			],
-			"model_count": 40
+			"model_count": 40,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "runwayml",
@@ -1340,25 +2871,78 @@
 				"type": "bearer",
 				"env_var": "RUNWAYML_API_KEY"
 			},
-			"endpoints": ["audio", "image"],
-			"model_prefixes": ["runwayml/"],
-			"model_count": 6
+			"endpoints": [
+				"audio",
+				"image"
+			],
+			"model_prefixes": [
+				"runwayml/"
+			],
+			"model_count": 6,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": true,
+				"audio_out": false,
+				"video_in": true
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "s3_vectors",
-			"display_name": "AWS S3 Vectors"
+			"display_name": "AWS S3 Vectors",
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "sagemaker",
 			"display_name": "AWS - Sagemaker",
-			"endpoints": ["chat", "embedding"],
-			"model_prefixes": ["sagemaker/", "sagemaker/meta-"],
-			"model_count": 6
+			"endpoints": [
+				"chat",
+				"embedding"
+			],
+			"model_prefixes": [
+				"sagemaker/",
+				"sagemaker/meta-"
+			],
+			"model_count": 6,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "sagemaker_chat",
 			"display_name": "Sagemaker Chat",
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "sambanova",
@@ -1368,14 +2952,43 @@
 				"type": "bearer",
 				"env_var": "SAMBANOVA_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["sambanova/", "sambanova/DeepSeek-", "sambanova/Llama-", "sambanova/Meta-"],
-			"model_count": 16
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"sambanova/",
+				"sambanova/DeepSeek-",
+				"sambanova/Llama-",
+				"sambanova/Meta-"
+			],
+			"model_count": 16,
+			"capabilities": {
+				"vision": false,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "sap",
 			"display_name": "SAP Generative AI Hub",
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "sarvam",
@@ -1388,8 +3001,20 @@
 			"param_mappings": {
 				"max_completion_tokens": "max_tokens"
 			},
-			"endpoints": ["chat"],
-			"model_count": 1
+			"endpoints": [
+				"chat"
+			],
+			"model_count": 1,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "scaleway",
@@ -1399,13 +3024,37 @@
 				"type": "bearer",
 				"env_var": "SCW_SECRET_KEY"
 			},
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "searxng",
 			"display_name": "SearXNG",
-			"endpoints": ["search"],
-			"model_count": 1
+			"endpoints": [
+				"search"
+			],
+			"model_count": 1,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "serper",
@@ -1415,13 +3064,27 @@
 				"type": "bearer",
 				"env_var": "SERPER_API_KEY"
 			},
-			"endpoints": ["search"],
-			"model_count": 1
+			"endpoints": [
+				"search"
+			],
+			"model_count": 1,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "snowflake",
 			"display_name": "Snowflake",
-			"endpoints": ["chat"],
+			"endpoints": [
+				"chat"
+			],
 			"model_prefixes": [
 				"snowflake/",
 				"snowflake/jamba-",
@@ -1432,17 +3095,29 @@
 				"snowflake/reka-",
 				"snowflake/snowflake-"
 			],
-			"model_count": 24
+			"model_count": 24,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "stability",
 			"display_name": "Stability AI",
-			"base_url": "https://api.stability.ai",
+			"base_url": "https://api.stability.ai/v2beta",
 			"auth": {
 				"type": "bearer",
 				"env_var": "STABILITY_API_KEY"
 			},
-			"endpoints": ["image"],
+			"endpoints": [
+				"image"
+			],
 			"model_prefixes": [
 				"stability/",
 				"stability/sd3-",
@@ -1450,7 +3125,17 @@
 				"stability/search-",
 				"stability/stable-"
 			],
-			"model_count": 23
+			"model_count": 23,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "synthetic",
@@ -1463,7 +3148,20 @@
 			"param_mappings": {
 				"max_completion_tokens": "max_tokens"
 			},
-			"endpoints": ["chat", "embedding"]
+			"endpoints": [
+				"chat",
+				"embedding"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "tavily",
@@ -1473,9 +3171,23 @@
 				"type": "bearer",
 				"env_var": "TAVILY_API_KEY"
 			},
-			"endpoints": ["search"],
-			"model_prefixes": ["tavily/"],
-			"model_count": 2
+			"endpoints": [
+				"search"
+			],
+			"model_prefixes": [
+				"tavily/"
+			],
+			"model_count": 2,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "text-completion-codestral",
@@ -1485,9 +3197,24 @@
 				"type": "bearer",
 				"env_var": "CODESTRAL_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["text-", "text-completion-codestral/"],
-			"model_count": 2
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"text-",
+				"text-completion-codestral/"
+			],
+			"model_count": 2,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "text-completion-openai",
@@ -1497,9 +3224,26 @@
 				"type": "bearer",
 				"env_var": "OPENAI_API_KEY"
 			},
-			"endpoints": ["audio", "batch", "chat", "moderation"],
-			"model_prefixes": ["gpt-"],
-			"model_count": 6
+			"endpoints": [
+				"audio",
+				"batch",
+				"chat",
+				"moderation"
+			],
+			"model_prefixes": [
+				"gpt-"
+			],
+			"model_count": 6,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "together_ai",
@@ -1509,7 +3253,9 @@
 				"type": "bearer",
 				"env_var": "TOGETHER_AI_API_KEY"
 			},
-			"endpoints": ["chat"],
+			"endpoints": [
+				"chat"
+			],
 			"model_prefixes": [
 				"together-",
 				"together_ai/",
@@ -1522,7 +3268,17 @@
 				"together_ai/openai/gpt-",
 				"together_ai/zai-"
 			],
-			"model_count": 43
+			"model_count": 43,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "topaz",
@@ -1531,24 +3287,61 @@
 			"auth": {
 				"type": "bearer",
 				"env_var": "TOPAZ_API_KEY"
-			}
+			},
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": true
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "triton",
 			"display_name": "Triton",
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "v0",
 			"display_name": "V0",
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"v0/",
+				"v0/v0-"
+			],
+			"model_count": 3,
 			"base_url": "https://api.v0.dev/v1",
 			"auth": {
 				"type": "bearer",
 				"env_var": "V0_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["v0/", "v0/v0-"],
-			"model_count": 3
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "venice",
@@ -1556,19 +3349,28 @@
 			"base_url": "https://api.venice.ai/api/v1",
 			"auth": {
 				"type": "bearer",
-				"env_var": "VENICE_AI_API_KEY"
+				"env_var": "VENICE_API_KEY"
 			},
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "vercel_ai_gateway",
 			"display_name": "Vercel AI Gateway",
-			"base_url": "https://ai-gateway.vercel.sh/v1",
-			"auth": {
-				"type": "bearer",
-				"env_var": "VERCEL_AI_GATEWAY_API_KEY"
-			},
-			"endpoints": ["chat"],
+			"endpoints": [
+				"chat"
+			],
 			"model_prefixes": [
 				"vercel_ai_gateway/",
 				"vercel_ai_gateway/alibaba/qwen-",
@@ -1591,29 +3393,90 @@
 				"vercel_ai_gateway/xai/grok-",
 				"vercel_ai_gateway/zai/glm-"
 			],
-			"model_count": 101
+			"model_count": 101,
+			"base_url": "https://ai-gateway.vercel.sh/v1",
+			"auth": {
+				"type": "bearer",
+				"env_var": "VERCEL_AI_GATEWAY_API_KEY"
+			},
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "vertex_ai",
 			"display_name": "Google - Vertex AI",
-			"endpoints": ["audio", "chat", "embedding", "image", "ocr"],
-			"model_prefixes": ["vertex_ai/", "vertex_ai/gemini-"],
-			"model_count": 9
+			"endpoints": [
+				"audio",
+				"chat",
+				"embedding",
+				"image",
+				"ocr"
+			],
+			"model_prefixes": [
+				"vertex_ai/",
+				"vertex_ai/gemini-"
+			],
+			"model_count": 9,
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": true,
+				"audio_out": false,
+				"video_in": true
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "vertex_ai/agent_engine",
 			"display_name": "Vertex AI Agent Engine",
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "vllm",
-			"display_name": "vLLM",
+			"display_name": "VLLM",
 			"base_url": "http://localhost:8000/v1",
 			"auth": {
 				"type": "none"
 			},
-			"endpoints": ["chat", "completion", "embedding", "rerank"],
-			"model_prefixes": ["vllm/"]
+			"endpoints": [
+				"batch",
+				"chat",
+				"embedding",
+				"files",
+				"rerank"
+			],
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "volcengine",
@@ -1623,9 +3486,25 @@
 				"type": "bearer",
 				"env_var": "VOLCENGINE_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["doubao-", "volcengine/", "volcengine/doubao-"],
-			"model_count": 12
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"doubao-",
+				"volcengine/",
+				"volcengine/doubao-"
+			],
+			"model_count": 12,
+			"capabilities": {
+				"vision": true,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "voyage",
@@ -1635,33 +3514,99 @@
 				"type": "bearer",
 				"env_var": "VOYAGE_API_KEY"
 			},
-			"endpoints": ["embedding", "rerank"],
-			"model_prefixes": ["voyage/", "voyage/rerank-", "voyage/voyage-"],
-			"model_count": 19
+			"endpoints": [
+				"embedding",
+				"rerank"
+			],
+			"model_prefixes": [
+				"voyage/",
+				"voyage/rerank-",
+				"voyage/voyage-"
+			],
+			"model_count": 19,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "wandb",
 			"display_name": "WandB Inference",
-			"base_url": "https://api.inference.wandb.ai/v1",
+			"base_url": "https://api.wandb.ai/proxy/openai/v1",
 			"auth": {
 				"type": "bearer",
 				"env_var": "WANDB_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["wandb/", "wandb/Qwen/Qwen3-", "wandb/deepseek-", "wandb/meta-", "wandb/openai/gpt-"],
-			"model_count": 14
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"wandb/",
+				"wandb/Qwen/Qwen3-",
+				"wandb/deepseek-",
+				"wandb/meta-",
+				"wandb/openai/gpt-"
+			],
+			"model_count": 14,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "watsonx",
 			"display_name": "IBM - Watsonx.ai",
-			"endpoints": ["audio", "chat", "embedding"],
-			"model_prefixes": ["watsonx/", "watsonx/ibm/granite-", "watsonx/meta-", "watsonx/mistralai/mistral-"],
-			"model_count": 29
+			"endpoints": [
+				"audio",
+				"chat",
+				"embedding"
+			],
+			"model_prefixes": [
+				"watsonx/",
+				"watsonx/ibm/granite-",
+				"watsonx/meta-",
+				"watsonx/mistralai/mistral-"
+			],
+			"model_count": 29,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "watsonx_text",
 			"display_name": "Watsonx Text",
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "xai",
@@ -1671,9 +3616,24 @@
 				"type": "bearer",
 				"env_var": "XAI_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["xai/", "xai/grok-"],
-			"model_count": 35
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"xai/",
+				"xai/grok-"
+			],
+			"model_count": 35,
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "xiaomi_mimo",
@@ -1686,7 +3646,19 @@
 			"param_mappings": {
 				"max_completion_tokens": "max_tokens"
 			},
-			"endpoints": ["chat"]
+			"endpoints": [
+				"chat"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": true,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "xinference",
@@ -1695,19 +3667,46 @@
 			"auth": {
 				"type": "none"
 			},
-			"endpoints": ["embedding"]
+			"endpoints": [
+				"embedding"
+			],
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": false,
+				"function_calling": false,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		},
 		{
 			"name": "zai",
 			"display_name": "Z.AI",
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"zai/",
+				"zai/glm-"
+			],
+			"model_count": 11,
 			"base_url": "https://api.z.ai/api/paas/v4",
 			"auth": {
 				"type": "bearer",
 				"env_var": "ZAI_API_KEY"
 			},
-			"endpoints": ["chat"],
-			"model_prefixes": ["zai/", "zai/glm-"],
-			"model_count": 11
+			"capabilities": {
+				"vision": true,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
 		}
 	],
 	"complex_providers": [

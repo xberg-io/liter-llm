@@ -9,7 +9,7 @@ using var client = LiterLlmLib.CreateClient(
 
 try
 {
-    var response = await client.Chat(new ChatCompletionRequest
+    var response = await client.ChatAsync(new ChatCompletionRequest
     {
         Model = "openai/gpt-4o",
         Messages = [new Message.User(new UserMessage { Content = UserContent.Of("Hello") })]

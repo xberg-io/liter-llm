@@ -1,108 +1,86 @@
 # TypeScript (Node.js)
 
-<div
-  align="center"
-  style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0"
->
-  <!-- Built with -->
-  <a href="https://github.com/kreuzberg-dev/alef">
-    <img
-      src="https://img.shields.io/badge/Bindings-alef%20%D7%90-007ec6"
-      alt="Bindings"
-    />
-  </a>
-  <!-- Language Bindings -->
-  <a href="https://crates.io/crates/liter-llm">
-    <img src="https://img.shields.io/crates/v/liter-llm?label=Rust&color=007ec6" alt="Rust" />
-  </a>
-  <a href="https://pypi.org/project/liter-llm/">
-    <img src="https://img.shields.io/pypi/v/liter-llm?label=Python&color=007ec6" alt="Python" />
-  </a>
-  <a href="https://www.npmjs.com/package/@kreuzberg/liter-llm">
-    <img
-      src="https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=Node.js&color=007ec6"
-      alt="Node.js"
-    />
-  </a>
-  <a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-wasm">
-    <img
-      src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6"
-      alt="WASM"
-    />
-  </a>
-  <a href="https://central.sonatype.com/artifact/dev.kreuzberg/liter-llm">
-    <img
-      src="https://img.shields.io/maven-central/v/dev.kreuzberg/liter-llm?label=Java&color=007ec6"
-      alt="Java"
-    />
-  </a>
-  <a href="https://github.com/kreuzberg-dev/liter-llm/tree/main/packages/go">
-    <img
-      src="https://img.shields.io/github/v/tag/kreuzberg-dev/liter-llm?label=Go&color=007ec6"
-      alt="Go"
-    />
-  </a>
-  <a href="https://www.nuget.org/packages/LiterLlm">
-    <img src="https://img.shields.io/nuget/v/LiterLlm?label=C%23&color=007ec6" alt="C#" />
-  </a>
-  <a href="https://packagist.org/packages/kreuzberg/liter-llm">
-    <img
-      src="https://img.shields.io/packagist/v/kreuzberg/liter-llm?label=PHP&color=007ec6"
-      alt="PHP"
-    />
-  </a>
-  <a href="https://rubygems.org/gems/liter_llm">
-    <img src="https://img.shields.io/gem/v/liter_llm?label=Ruby&color=007ec6" alt="Ruby" />
-  </a>
-  <a href="https://hex.pm/packages/liter_llm">
-    <img src="https://img.shields.io/hexpm/v/liter_llm?label=Elixir&color=007ec6" alt="Elixir" />
-  </a>
-  <a href="https://github.com/kreuzberg-dev/liter-llm/pkgs/container/liter-llm">
-    <img
-      src="https://img.shields.io/badge/Docker-007ec6?logo=docker&logoColor=white"
-      alt="Docker"
-    />
-  </a>
-  <a href="https://github.com/kreuzberg-dev/homebrew-tap/blob/main/Formula/liter-llm.rb">
-    <img
-      src="https://img.shields.io/badge/Homebrew-007ec6?logo=homebrew&logoColor=white"
-      alt="Homebrew"
-    />
-  </a>
-  <a href="https://github.com/kreuzberg-dev/liter-llm/tree/main/crates/liter-llm-ffi">
-    <img src="https://img.shields.io/badge/C-FFI-007ec6" alt="C FFI" />
-  </a>
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0">
+	<!-- Built with -->
+	<a href="https://github.com/kreuzberg-dev/alef">
+		<img src="https://img.shields.io/badge/Bindings-alef%20%D7%90-007ec6" alt="Bindings" />
+	</a>
+	<!-- Language Bindings -->
+	<a href="https://crates.io/crates/liter-llm">
+		<img src="https://img.shields.io/crates/v/liter-llm?label=Rust&color=007ec6" alt="Rust" />
+	</a>
+	<a href="https://pypi.org/project/liter-llm/">
+		<img src="https://img.shields.io/pypi/v/liter-llm?label=Python&color=007ec6" alt="Python" />
+	</a>
+	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-node">
+		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-node?label=Node.js&color=007ec6" alt="Node.js" />
+	</a>
+	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-wasm">
+		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6" alt="WASM" />
+	</a>
+	<a href="https://central.sonatype.com/artifact/dev.kreuzberg.literllm/liter-llm">
+		<img src="https://img.shields.io/maven-central/v/dev.kreuzberg.literllm/liter-llm?label=Java&color=007ec6" alt="Java" />
+	</a>
+	<a href="https://github.com/kreuzberg-dev/liter-llm/tree/main/packages/go">
+		<img src="https://img.shields.io/github/v/tag/kreuzberg-dev/liter-llm?label=Go&color=007ec6" alt="Go" />
+	</a>
+	<a href="https://www.nuget.org/packages/LiterLlm">
+		<img src="https://img.shields.io/nuget/v/LiterLlm?label=C%23&color=007ec6" alt="C#" />
+	</a>
+	<a href="https://packagist.org/packages/kreuzberg-dev/liter-llm">
+		<img src="https://img.shields.io/packagist/v/kreuzberg-dev/liter-llm?label=PHP&color=007ec6" alt="PHP" />
+	</a>
+	<a href="https://rubygems.org/gems/liter_llm">
+		<img src="https://img.shields.io/gem/v/liter_llm?label=Ruby&color=007ec6" alt="Ruby" />
+	</a>
+	<a href="https://hex.pm/packages/liter_llm">
+		<img src="https://img.shields.io/hexpm/v/liter_llm?label=Elixir&color=007ec6" alt="Elixir" />
+	</a>
+	<a href="https://github.com/kreuzberg-dev/liter-llm/pkgs/container/liter-llm">
+		<img src="https://img.shields.io/badge/Docker-007ec6?logo=docker&logoColor=white" alt="Docker" />
+	</a>
+	<a href="https://github.com/kreuzberg-dev/homebrew-tap/blob/main/Formula/liter-llm.rb">
+		<img src="https://img.shields.io/badge/Homebrew-007ec6?logo=homebrew&logoColor=white" alt="Homebrew" />
+	</a>
+	<a href="https://github.com/kreuzberg-dev/liter-llm/tree/main/crates/liter-llm-ffi">
+		<img src="https://img.shields.io/badge/C-FFI-007ec6" alt="C FFI" />
+	</a>
 
-  <!-- Project Info -->
-  <a href="https://github.com/kreuzberg-dev/liter-llm/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-007ec6" alt="License" />
-  </a>
-  <a href="https://docs.liter-llm.kreuzberg.dev">
-    <img src="https://img.shields.io/badge/Docs-liter--llm-007ec6" alt="Docs" />
-  </a>
+	<!-- Project Info -->
+	<a href="https://github.com/kreuzberg-dev/liter-llm/blob/main/LICENSE">
+		<img src="https://img.shields.io/badge/License-MIT-007ec6" alt="License" />
+	</a>
+	<a href="https://docs.liter-llm.kreuzberg.dev">
+		<img src="https://img.shields.io/badge/Docs-liter--llm-007ec6" alt="Docs" />
+	</a>
 </div>
 <div align="center" style="margin: 24px 0 0">
-  <a href="https://kreuzberg.dev">
-    <img
-      alt="kreuzberg.dev"
-      src="https://github.com/user-attachments/assets/1b6c6ad7-3b6d-4171-b1c9-f2026cc9deb8"
-    />
-  </a>
+	<a href="https://kreuzberg.dev">
+		<img
+			alt="kreuzberg.dev"
+			src="https://github.com/user-attachments/assets/1b6c6ad7-3b6d-4171-b1c9-f2026cc9deb8"
+		/>
+	</a>
 </div>
-<div
-  align="center"
-  style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 28px 0 24px"
->
-  <a href="https://discord.gg/xt9WY3GnKR">
-    <img
-      height="22"
-      src="https://img.shields.io/badge/Discord-Chat-007ec6?logo=discord&logoColor=white"
-      alt="Join Discord"
-    />
-  </a>
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 28px 0 24px">
+	<a href="https://discord.gg/xt9WY3GnKR">
+		<img
+			height="22"
+			src="https://img.shields.io/badge/Discord-Chat-007ec6?logo=discord&logoColor=white"
+			alt="Join Discord"
+		/>
+	</a>
 </div>
 
-Universal LLM API client for TypeScript and Node.js. Access 143+ LLM providers through a single interface with native NAPI-RS bindings, async/await, streaming, tool calling, and full TypeScript type definitions.
+Universal LLM API client for TypeScript and Node.js. Access 143 LLM providers through a single interface with native NAPI-RS bindings, async/await, streaming, tool calling, and full TypeScript type definitions.
+
+## What This Package Provides
+
+- **One provider surface** — chat, streaming, embeddings, images, audio, search, OCR, tools, and structured output across the provider registry.
+- **Provider/model routing** — call models with the `provider/model` convention and keep provider-specific request code out of application paths.
+- **Production controls** — retries, fallback, rate limits, cache layers, budgets, health checks, OpenTelemetry spans, and redacted secrets.
+- **Same core as every binding** — Rust, Python, Node.js, Go, Java, PHP, Ruby, .NET, Elixir, WASM, Kotlin Android, Swift, Dart, Zig, and C FFI use the same Rust implementation.
+- **Node-first TypeScript API** — NAPI-RS package with typed requests/responses and async iterables for streaming.
 
 ## Installation
 
@@ -113,19 +91,19 @@ Install via one of the supported package managers:
 **npm:**
 
 ```bash
-npm install @kreuzberg/liter-llm
+npm install @kreuzberg/liter-llm-node
 ```
 
 **pnpm:**
 
 ```bash
-pnpm add @kreuzberg/liter-llm
+pnpm add @kreuzberg/liter-llm-node
 ```
 
 **yarn:**
 
 ```bash
-yarn add @kreuzberg/liter-llm
+yarn add @kreuzberg/liter-llm-node
 ```
 
 ### System Requirements
@@ -152,8 +130,8 @@ import { createClient } from "@kreuzberg/liter-llm-node";
 
 const client = createClient(process.env.OPENAI_API_KEY!);
 const response = await client.chat({
-	model: "openai/gpt-4o",
-	messages: [{ role: "user", content: "Hello!" }],
+  model: "openai/gpt-4o",
+  messages: [{ role: "user", content: "Hello!" }],
 });
 console.log(response.choices[0].message.content);
 ```
@@ -169,12 +147,12 @@ import { createClient } from "@kreuzberg/liter-llm-node";
 
 const client = createClient(process.env.OPENAI_API_KEY!);
 const chunks = await client.chatStream({
-	model: "openai/gpt-4o",
-	messages: [{ role: "user", content: "Tell me a story" }],
+  model: "openai/gpt-4o",
+  messages: [{ role: "user", content: "Tell me a story" }],
 });
 
-for (const chunk of chunks) {
-	process.stdout.write(chunk.choices?.[0]?.delta?.content ?? "");
+for await (const chunk of chunks) {
+  process.stdout.write(chunk.choices?.[0]?.delta?.content ?? "");
 }
 console.log();
 ```
@@ -189,26 +167,26 @@ import { createClient, ToolType } from "@kreuzberg/liter-llm-node";
 const client = createClient(process.env.OPENAI_API_KEY!);
 
 const response = await client.chat({
-	model: "openai/gpt-4o",
-	messages: [{ role: "user", content: "What is the weather in Berlin?" }],
-	tools: [
-		{
-			toolType: ToolType.Function,
-			function: {
-				name: "get_weather",
-				description: "Get the current weather for a location",
-				parameters: {
-					type: "object",
-					properties: { location: { type: "string" } },
-					required: ["location"],
-				},
-			},
-		},
-	],
+  model: "openai/gpt-4o",
+  messages: [{ role: "user", content: "What is the weather in Berlin?" }],
+  tools: [
+    {
+      toolType: ToolType.Function,
+      function: {
+        name: "get_weather",
+        description: "Get the current weather for a location",
+        parameters: {
+          type: "object",
+          properties: { location: { type: "string" } },
+          required: ["location"],
+        },
+      },
+    },
+  ],
 });
 
 for (const call of response.choices[0]?.message?.toolCalls ?? []) {
-	console.log(`Tool: ${call.function.name}, Args: ${call.function.arguments}`);
+  console.log(`Tool: ${call.function.name}, Args: ${call.function.arguments}`);
 }
 ```
 
@@ -242,7 +220,7 @@ This binding uses NAPI-RS to provide native Node.js bindings with:
 
 ## Features
 
-### Supported Providers (143+)
+### Supported Providers (143)
 
 Route to any provider using the `provider/model` prefix convention:
 
@@ -262,14 +240,11 @@ Route to any provider using the `provider/model` prefix convention:
 
 ### Key Capabilities
 
-- **Provider Routing** -- Single client for 143+ LLM providers via `provider/model` prefix
+- **Provider Routing** -- Single client for 143 LLM providers via `provider/model` prefix
 - **Local LLMs** — Connect to locally-hosted models via Ollama, LM Studio, vLLM, llama.cpp, and other local inference servers
 - **Unified API** -- Consistent `chat`, `chat_stream`, `embeddings`, `list_models` interface
-
 - **Streaming** -- Real-time token streaming via `chat_stream`
-
 - **Tool Calling** -- Function calling and tool use across all supporting providers
-
 - **Type Safe** -- Schema-driven types compiled from JSON schemas
 - **Secure** -- API keys never logged or serialized, managed via environment variables
 - **Observability** -- Built-in [OpenTelemetry](https://opentelemetry.io/docs/specs/semconv/gen-ai/) with GenAI semantic conventions
@@ -286,7 +261,7 @@ Built on a compiled Rust core for speed and safety:
 
 ## Provider Routing
 
-Route to 143+ providers using the `provider/model` prefix convention:
+Route to 143 providers using the `provider/model` prefix convention:
 
 ```text
 openai/gpt-4o
@@ -315,12 +290,13 @@ See the [proxy server documentation](https://docs.liter-llm.kreuzberg.dev/server
 
 ## Part of Kreuzberg.dev
 
-- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 90+ formats with optional OCR.
+- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
 - [Kreuzberg Cloud](https://github.com/kreuzberg-dev/kreuzberg-cloud) — managed extraction API with SDKs, dashboards, and observability.
 - [kreuzcrawl](https://github.com/kreuzberg-dev/kreuzcrawl) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
 - [html-to-markdown](https://github.com/kreuzberg-dev/html-to-markdown) — fast, lossless HTML→Markdown engine.
+- [liter-llm](https://github.com/kreuzberg-dev/liter-llm) — universal LLM API client with native bindings for 14 languages and 143 providers.
 - [tree-sitter-language-pack](https://github.com/kreuzberg-dev/tree-sitter-language-pack) — tree-sitter grammars and code-intelligence primitives.
-- [alef](https://github.com/kreuzberg-dev/alef) — the polyglot binding generator that produces this README and all per-language bindings.
+- [alef](https://github.com/kreuzberg-dev/alef) — the polyglot binding generator that produces every per-language binding across the 5 polyglot repos.
 - [Discord](https://discord.gg/xt9WY3GnKR) — community, roadmap, announcements.
 
 ## Contributing

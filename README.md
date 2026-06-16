@@ -12,14 +12,14 @@
   <a href="https://pypi.org/project/liter-llm/">
     <img src="https://img.shields.io/pypi/v/liter-llm?label=Python&color=007ec6" alt="Python">
   </a>
-  <a href="https://www.npmjs.com/package/@kreuzberg/liter-llm">
-    <img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=Node.js&color=007ec6" alt="Node.js">
+  <a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-node">
+    <img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-node?label=Node.js&color=007ec6" alt="Node.js">
   </a>
   <a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-wasm">
     <img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6" alt="WASM">
   </a>
-  <a href="https://central.sonatype.com/artifact/dev.kreuzberg/liter-llm">
-    <img src="https://img.shields.io/maven-central/v/dev.kreuzberg/liter-llm?label=Java&color=007ec6" alt="Java">
+  <a href="https://central.sonatype.com/artifact/dev.kreuzberg.literllm/liter-llm">
+    <img src="https://img.shields.io/maven-central/v/dev.kreuzberg.literllm/liter-llm?label=Java&color=007ec6" alt="Java">
   </a>
   <a href="https://github.com/kreuzberg-dev/liter-llm/tree/main/packages/go">
     <img src="https://img.shields.io/github/v/tag/kreuzberg-dev/liter-llm?label=Go&color=007ec6" alt="Go">
@@ -27,8 +27,8 @@
   <a href="https://www.nuget.org/packages/LiterLlm">
     <img src="https://img.shields.io/nuget/v/LiterLlm?label=C%23&color=007ec6" alt="C#">
   </a>
-  <a href="https://packagist.org/packages/kreuzberg/liter-llm">
-    <img src="https://img.shields.io/packagist/v/kreuzberg/liter-llm?label=PHP&color=007ec6" alt="PHP">
+  <a href="https://packagist.org/packages/kreuzberg-dev/liter-llm">
+    <img src="https://img.shields.io/packagist/v/kreuzberg-dev/liter-llm?label=PHP&color=007ec6" alt="PHP">
   </a>
   <a href="https://rubygems.org/gems/liter_llm">
     <img src="https://img.shields.io/gem/v/liter_llm?label=Ruby&color=007ec6" alt="Ruby">
@@ -219,14 +219,14 @@ Install in your language of choice:
 | Language         | Install                                                                      |
 | ---------------- | ---------------------------------------------------------------------------- |
 | Python           | `pip install liter-llm`                                                      |
-| Node.js          | `pnpm add @kreuzberg/liter-llm`                                              |
+| Node.js          | `pnpm add @kreuzberg/liter-llm-node`                                         |
 | Rust             | `cargo add liter-llm`                                                        |
 | Go               | `go get github.com/kreuzberg-dev/liter-llm/packages/go`                      |
-| Java             | `dev.kreuzberg:liter-llm` (Maven/Gradle)                                     |
+| Java             | `dev.kreuzberg.literllm:liter-llm` (Maven/Gradle)                            |
 | Ruby             | `gem install liter_llm`                                                      |
-| PHP              | `composer require kreuzberg/liter-llm`                                       |
+| PHP              | `composer require kreuzberg-dev/liter-llm`                                   |
 | C#               | `dotnet add package LiterLlm`                                                |
-| Elixir           | `{:liter_llm, "~> 1.4.0-rc.27"}` in mix.exs                                  |
+| Elixir           | `{:liter_llm, "~> 1.6.0"}` in mix.exs                                        |
 | Dart / Flutter   | `dart pub add liter_llm`                                                     |
 | Swift            | See [Swift package](packages/swift/README.md) -- `.binaryTarget` from release notes |
 | Kotlin (Android) | `dev.kreuzberg:liter-llm-android` (Maven Central)                            |
@@ -237,25 +237,27 @@ Install in your language of choice:
 ### Usage
 
 ```python
-import asyncio, os
-from liter_llm import LlmClient
+import asyncio
+import os
+
+from liter_llm import create_client
+from liter_llm._internal_bindings import ChatCompletionRequest
 
 async def main():
-    client = LlmClient(api_key=os.environ["OPENAI_API_KEY"])
+    client = create_client(api_key=os.environ["OPENAI_API_KEY"])
 
     # Chat with any provider using the provider/model prefix
-    response = await client.chat(
-        model="openai/gpt-4o",
-        messages=[{"role": "user", "content": "Hello!"}],
+    request = ChatCompletionRequest.from_json(
+        '{"model":"openai/gpt-4o","messages":[{"role":"user","content":"Hello!"}]}'
     )
+    response = await client.chat(request)
     print(response.choices[0].message.content)
 
     # Switch providers by changing the prefix -- no other code changes
-    client2 = LlmClient(api_key=os.environ["ANTHROPIC_API_KEY"])
-    response = await client2.chat(
-        model="anthropic/claude-sonnet-4-20250514",
-        messages=[{"role": "user", "content": "Hello!"}],
+    request = ChatCompletionRequest.from_json(
+        '{"model":"anthropic/claude-sonnet-4-20250514","messages":[{"role":"user","content":"Hello!"}]}'
     )
+    response = await client.chat(request)
     print(response.choices[0].message.content)
 
 asyncio.run(main())
@@ -289,19 +291,19 @@ The same API is available in all 14 languages -- see the language READMEs below 
 
 All bindings expose a unified `chat()` function:
 
-| Language | Usage                                                        |
-| -------- | ------------------------------------------------------------ |
-| Rust     | `DefaultClient::new(config).chat(messages, options).await`   |
-| Python   | `LlmClient(api_key=...).chat(messages, config)`              |
-| Node.js  | `new LlmClient({ apiKey }).chat(messages, config)`           |
-| Go       | `client.Chat(ctx, messages, config)`                         |
-| Java     | `client.chat(messages, configJson)`                          |
-| Ruby     | `LiterLlm::LlmClient.new(api_key, config).chat(messages)`    |
-| Elixir   | `LiterLlm.chat(messages, config)`                            |
-| PHP      | `LiterLlm\LlmClient::new($apiKey)->chat($messages, $config)` |
-| C#       | `new LlmClient(apiKey).ChatAsync(messages, config)`          |
-| WASM     | `new LlmClient({ apiKey }).chat(messages, config)`           |
-| C FFI    | `liter_llm_chat(client, messages_json, config_json)`         |
+| Language | Usage                                                       |
+| -------- | ----------------------------------------------------------- |
+| Rust     | `client.chat(request).await`                                |
+| Python   | `await client.chat(request)`                                |
+| Node.js  | `await client.chat(request)`                                |
+| Go       | `client.Chat(request)`                                      |
+| Java     | `client.chat(request)`                                      |
+| Ruby     | `client.chat_async(request)`                                |
+| Elixir   | `LiterLlm.defaultclient_chat_async(client, request)`        |
+| PHP      | `LiterLlm::createClient($apiKey)->chat($request)`           |
+| C#       | `await client.ChatAsync(request)`                           |
+| WASM     | `await client.chat(request)`                                |
+| C FFI    | `literllm_default_client_chat(client, request)`             |
 
 ## Language READMEs
 

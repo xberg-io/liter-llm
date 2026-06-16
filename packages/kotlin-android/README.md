@@ -12,14 +12,14 @@
 	<a href="https://pypi.org/project/liter-llm/">
 		<img src="https://img.shields.io/pypi/v/liter-llm?label=Python&color=007ec6" alt="Python" />
 	</a>
-	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm">
-		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=Node.js&color=007ec6" alt="Node.js" />
+	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-node">
+		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-node?label=Node.js&color=007ec6" alt="Node.js" />
 	</a>
 	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-wasm">
 		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6" alt="WASM" />
 	</a>
-	<a href="https://central.sonatype.com/artifact/dev.kreuzberg/liter-llm">
-		<img src="https://img.shields.io/maven-central/v/dev.kreuzberg/liter-llm?label=Java&color=007ec6" alt="Java" />
+	<a href="https://central.sonatype.com/artifact/dev.kreuzberg.literllm/liter-llm">
+		<img src="https://img.shields.io/maven-central/v/dev.kreuzberg.literllm/liter-llm?label=Java&color=007ec6" alt="Java" />
 	</a>
 	<a href="https://github.com/kreuzberg-dev/liter-llm/tree/main/packages/go">
 		<img src="https://img.shields.io/github/v/tag/kreuzberg-dev/liter-llm?label=Go&color=007ec6" alt="Go" />
@@ -27,8 +27,8 @@
 	<a href="https://www.nuget.org/packages/LiterLlm">
 		<img src="https://img.shields.io/nuget/v/LiterLlm?label=C%23&color=007ec6" alt="C#" />
 	</a>
-	<a href="https://packagist.org/packages/kreuzberg/liter-llm">
-		<img src="https://img.shields.io/packagist/v/kreuzberg/liter-llm?label=PHP&color=007ec6" alt="PHP" />
+	<a href="https://packagist.org/packages/kreuzberg-dev/liter-llm">
+		<img src="https://img.shields.io/packagist/v/kreuzberg-dev/liter-llm?label=PHP&color=007ec6" alt="PHP" />
 	</a>
 	<a href="https://rubygems.org/gems/liter_llm">
 		<img src="https://img.shields.io/gem/v/liter_llm?label=Ruby&color=007ec6" alt="Ruby" />
@@ -92,7 +92,7 @@ Install via one of the supported package managers:
 **Gradle:**
 
 ```gradle
-implementation 'dev.kreuzberg:liter-llm-android:1.6.0'
+implementation 'dev.kreuzberg:liter-llm-android:1.6.1'
 ```
 
 **Maven:**
@@ -101,7 +101,7 @@ implementation 'dev.kreuzberg:liter-llm-android:1.6.0'
 <dependency>
     <groupId>dev.kreuzberg</groupId>
     <artifactId>liter-llm-android</artifactId>
-    <version>1.6.0</version>
+    <version>1.6.1</version>
 </dependency>
 ```
 

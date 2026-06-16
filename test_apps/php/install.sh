@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # alef-generated installer for registry-mode PHP test_app.
-# Installs the kreuzberg/liter-llm extension via PIE before `composer install` runs.
+# Installs the kreuzberg-dev/liter-llm extension via PIE before `composer install` runs.
 # Requires `php` on PATH; downloads and runs PIE if needed.
 # Version is alef-injected at generate time so the script is self-contained.
 set -euo pipefail
 
 # Version override: pass as $1 to test an arbitrary tag; defaults to the
 # alef-pinned version from `[crates.e2e.registry.packages.php].version`.
-VERSION="${1:-1.6.0}"
+VERSION="${1:-1.6.1}"
 
 # PIE >= 1.3.7 supports the array-form `php-ext.download-url-method`
 # our composer.json emits; 1.4.0+ is preferred. Download PIE if we don't
@@ -42,7 +42,7 @@ fi
 # binary cleanly. The php.ini-append guard below prevents duplicate `extension=`
 # lines so the verification step doesn't trip on "Module already loaded".
 EXT_DIR="$(php -r 'echo ini_get("extension_dir");')"
-"$PIE" install "kreuzberg/liter-llm:$VERSION" --skip-enable-extension
+"$PIE" install "kreuzberg-dev/liter-llm:$VERSION" --skip-enable-extension
 
 # Verify the .so/.dylib/.dll exists after install (or was already present).
 test -f "$EXT_DIR/liter_llm.so" || test -f "$EXT_DIR/liter_llm.dylib" || test -f "$EXT_DIR/liter_llm.dll"

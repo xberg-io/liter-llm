@@ -12,9 +12,13 @@ request.model = "openai/gpt-4o";
 request.messages = [{ role: "user", content: "Explain quantum computing briefly" }];
 request.stream = true;
 
-const chunks = await client.chatStream(request);
+const stream = await client.chatStream(request);
 let fullText = "";
-for (const chunk of chunks) {
+while (true) {
+  const chunk = await stream.next();
+  if (chunk === null) {
+    break;
+  }
   const delta = chunk.choices?.[0]?.delta?.content;
   if (delta) {
     fullText += delta;

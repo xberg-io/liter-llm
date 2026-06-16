@@ -11,13 +11,12 @@ $client = LiterLlm::createClient(getenv('OPENAI_API_KEY') ?: '');
 $request = ChatCompletionRequest::from_json(json_encode([
     'model' => 'openai/gpt-4o-mini',
     'messages' => [['role' => 'user', 'content' => 'Explain quantum computing briefly']],
-    'stream' => true,
 ]));
 
-$chunks = json_decode($client->chatStreamAsync($request), true);
 $fullText = '';
-foreach ($chunks as $chunk) {
-    $delta = $chunk['choices'][0]['delta']['content'] ?? null;
+foreach ($client->chatStream($request) as $chunkJson) {
+    $chunk = json_decode($chunkJson, false, flags: JSON_THROW_ON_ERROR);
+    $delta = $chunk->choices[0]->delta->content ?? null;
     if ($delta !== null) {
         $fullText .= $delta;
         echo $delta;

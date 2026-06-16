@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.1] - 2026-06-16
+
+### Fixed
+
+- **FFI crate `wasm-http` feature** — declared `wasm-http` as a no-op feature on `liter-llm-ffi/Cargo.toml` so the alef-emitted `#[cfg(any(feature = "native-http", feature = "wasm-http"))]` gates in `crates/liter-llm-ffi/src/lib.rs` resolve under `cargo build -D warnings`. v1.6.0's publish workflow failed on every Rust FFI, CLI, WASM, and Kotlin Android native build with `unexpected_cfgs` errors because the gate was emitted without the corresponding feature declaration.
+
 ## [1.6.0] - 2026-06-16
 
 ### Bindings

@@ -13,6 +13,6 @@ $request = ChatCompletionRequest::from_json(json_encode([
     'messages' => [['role' => 'user', 'content' => 'Hello!']],
 ]));
 
-$result = $client->chatAsync($request);
+$result = $client->chat($request);
 echo $result->choices[0]->message->content . PHP_EOL;
 ```

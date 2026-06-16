@@ -95,27 +95,37 @@ CGO_LDFLAGS="-L$HOME/liter-llm/lib -lliter_llm_ffi" go build
 package main
 
 import (
-	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 
 	literllm "github.com/kreuzberg-dev/liter-llm/packages/go"
 )
 
 func main() {
-	client := literllm.NewClient()
+	client, err := literllm.CreateClient(os.Getenv("OPENAI_API_KEY"), nil, nil, nil, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer client.Free()
 
-	resp, err := client.Chat(context.Background(), literllm.ChatRequest{
-		Model: "openai/gpt-4o",
-		Messages: []literllm.Message{
-			{Role: "user", Content: "Hello!"},
-		},
-	})
+	var req literllm.ChatCompletionRequest
+	if err := json.Unmarshal([]byte(`{
+		"model": "openai/gpt-4o-mini",
+		"messages": [{"role": "user", "content": "Hello!"}]
+	}`), &req); err != nil {
+		log.Fatal(err)
+	}
+
+	resp, err := client.Chat(req)
 	if err != nil {
 		log.Fatalf("chat failed: %v", err)
 	}
 
-	fmt.Println(resp.Content)
+	if len(resp.Choices) > 0 && resp.Choices[0].Message.Content != nil {
+		fmt.Println(*resp.Choices[0].Message.Content)
+	}
 }
 ```
 
@@ -135,17 +145,23 @@ CGO_LDFLAGS="-L$HOME/liter-llm/lib -lliter_llm_ffi" go build
 {% raw %}
 
 ```go
-stream, err := client.ChatStream(ctx, literllm.ChatRequest{
-	Model:    "openai/gpt-4o",
-	Messages: []literllm.Message{{Role: "user", Content: "Tell me a story"}},
-})
+var req literllm.ChatCompletionRequest
+if err := json.Unmarshal([]byte(`{
+	"model": "openai/gpt-4o-mini",
+	"messages": [{"role": "user", "content": "Tell me a story"}]
+}`), &req); err != nil {
+	log.Fatal(err)
+}
+
+stream, err := client.ChatStream(req)
 if err != nil {
 	log.Fatal(err)
 }
-defer stream.Close()
 
-for chunk := range stream.Chunks() {
-	fmt.Print(chunk.Delta)
+for chunk := range stream {
+	if len(chunk.Choices) > 0 && chunk.Choices[0].Delta.Content != nil {
+		fmt.Print(*chunk.Choices[0].Delta.Content)
+	}
 }
 ```
 
@@ -156,34 +172,28 @@ for chunk := range stream.Chunks() {
 {% raw %}
 
 ```go
-// OpenAI
-resp, _ := client.Chat(ctx, literllm.ChatRequest{Model: "openai/gpt-4o", Messages: msgs})
+for _, model := range []string{
+	"openai/gpt-4o-mini",
+	"anthropic/claude-3-5-sonnet-20241022",
+	"groq/llama-3.1-70b-versatile",
+} {
+	var req literllm.ChatCompletionRequest
+	if err := json.Unmarshal([]byte(fmt.Sprintf(`{
+		"model": %q,
+		"messages": [{"role": "user", "content": "Hello!"}]
+	}`, model)), &req); err != nil {
+		log.Fatal(err)
+	}
 
-// Anthropic
-resp, _ = client.Chat(ctx, literllm.ChatRequest{Model: "anthropic/claude-3-5-sonnet-20241022", Messages: msgs})
-
-// Groq
-resp, _ = client.Chat(ctx, literllm.ChatRequest{Model: "groq/llama-3.1-70b-versatile", Messages: msgs})
-```
-
-{% endraw %}
-
-### Context-Aware Requests
-
-{% raw %}
-
-```go
-ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-defer cancel()
-
-resp, err := client.Chat(ctx, literllm.ChatRequest{
-	Model:    "openai/gpt-4o",
-	Messages: []literllm.Message{{Role: "user", Content: "Hello!"}},
-})
-if err != nil {
-	log.Fatalf("chat failed: %v", err)
+	resp, err := client.Chat(req)
+	if err != nil {
+		log.Printf("%s failed: %v", model, err)
+		continue
+	}
+	if len(resp.Choices) > 0 && resp.Choices[0].Message.Content != nil {
+		fmt.Printf("%s: %s\n", model, *resp.Choices[0].Message.Content)
+	}
 }
-fmt.Println(resp.Content)
 ```
 
 {% endraw %}

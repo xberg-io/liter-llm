@@ -1,5 +1,5 @@
 ---
-description: "Full TOML reference for liter-llm-proxy.toml: server, models, aliases, virtual keys, rate limits, budgets, cache, files, health, cooldown."
+description: "Full TOML reference for liter-llm-proxy.toml: server, models, aliases, virtual keys, security, rate limits, budgets, cache, files, health, cooldown."
 ---
 
 # Proxy Configuration
@@ -50,6 +50,17 @@ Proxy-wide behaviour.
 | `enable_tracing`       | bool    | `false` | Emit OpenTelemetry spans with GenAI semantic conventions. Set to `true` when exporting to an OTEL collector.                    |
 
 --8<-- "snippets/toml/server/general.md"
+
+## `[security]`
+
+Outbound policy for custom provider and model endpoint URLs. The proxy default is `deny_private`, which blocks private, loopback, link-local, CGNAT, and cloud-metadata targets. The policy is applied before custom providers are registered or requests are accepted.
+
+| Field                | Type         | Default          | Description                                                                                         |
+| -------------------- | ------------ | ---------------- | --------------------------------------------------------------------------------------------------- |
+| `outbound_policy`    | string       | `"deny_private"` | One of `deny_private`, `allowlist`, or `off`. Use `off` only when every configured endpoint is trusted. |
+| `outbound_allowlist` | list<string> | `[]`             | Allowed origins when `outbound_policy = "allowlist"`. Scheme, host, and port define the origin; paths are ignored. |
+
+--8<-- "snippets/toml/server/security.md"
 
 ## `[[models]]`
 

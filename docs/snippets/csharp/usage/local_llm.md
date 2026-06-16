@@ -10,7 +10,7 @@ using var client = LiterLlmLib.CreateClient(
     maxRetries: null,
     modelHint: "ollama/qwen2:0.5b");
 
-var response = await client.Chat(new ChatCompletionRequest
+var response = await client.ChatAsync(new ChatCompletionRequest
 {
     Model = "ollama/qwen2:0.5b",
     Messages = new[]

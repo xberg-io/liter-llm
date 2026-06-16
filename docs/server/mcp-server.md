@@ -4,7 +4,7 @@ description: "Run liter-llm as a Model Context Protocol server that exposes 22 L
 
 # MCP Server
 
-The `liter-llm` binary can run as a Model Context Protocol (MCP) server. It exposes 22 tools backed by the same `ProxyConfig` used by the HTTP proxy, so every provider, virtual key, fallback, and cache layer that works for the REST API works for MCP clients too.
+The `liter-llm` binary can run as a Model Context Protocol (MCP) server. It exposes 22 tools backed by the same `ProxyConfig` used by the HTTP proxy. Model-routed tools honor provider routing, virtual keys, fallbacks, and cache settings; file, batch, and response-management tools require master-key access.
 
 Launch it with `liter-llm mcp`. The server supports two transports: `stdio` for local clients like Claude Desktop and Cursor, and `http` for network-attached clients using the [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports) transport.
 
@@ -38,6 +38,8 @@ The MCP server loads the same `liter-llm-proxy.toml` as the HTTP proxy. See [Pro
 ## Tools
 
 Every tool returns a JSON payload as a single `text` content part. Errors are propagated as MCP error objects with the liter-llm error type embedded in the message.
+
+Virtual keys can call model-routed tools such as chat, embeddings, media, moderation, rerank, search, and OCR. File, batch, and response-management tools require the master key because they operate on provider-side resources outside a single routed model request.
 
 ### LLM operations
 

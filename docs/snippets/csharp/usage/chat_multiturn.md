@@ -13,14 +13,14 @@ var messages = new List<Message>
     new Message.User(new UserMessage { Content = UserContent.Of("What is the capital of France?") }),
 };
 
-var response = await client.Chat(new ChatCompletionRequest { Model = "openai/gpt-4o", Messages = messages });
+var response = await client.ChatAsync(new ChatCompletionRequest { Model = "openai/gpt-4o", Messages = messages });
 var content = response.Choices[0].Message.Content;
 Console.WriteLine($"Assistant: {content}");
 
 messages.Add(new Message.Assistant(new AssistantMessage { Content = content }));
 messages.Add(new Message.User(new UserMessage { Content = UserContent.Of("What about Germany?") }));
 
-response = await client.Chat(new ChatCompletionRequest { Model = "openai/gpt-4o", Messages = messages });
+response = await client.ChatAsync(new ChatCompletionRequest { Model = "openai/gpt-4o", Messages = messages });
 Console.WriteLine($"Assistant: {response.Choices[0].Message.Content}");
 
 if (response.Usage is not null)

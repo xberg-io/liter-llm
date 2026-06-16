@@ -10,12 +10,12 @@ Liter-llm routes to any local inference engine that exposes an OpenAI-compatible
 
 | Provider                                               | Default URL                 | Prefix                    | Notes                                                                |
 | ------------------------------------------------------ | --------------------------- | ------------------------- | -------------------------------------------------------------------- |
-| [Ollama](https://ollama.ai)                            | `http://localhost:11434/v1` | `ollama/`                 | Most popular, easy setup. Use `ollama_chat/` for chat-tuned routing. |
-| [LM Studio](https://lmstudio.ai)                       | `http://localhost:1234/v1`  | `lm_studio/`              | GUI-based, beginner-friendly                                         |
-| [vLLM](https://docs.vllm.ai)                           | `http://localhost:8000/v1`  | `vllm/` or `hosted_vllm/` | High-throughput serving                                              |
+| [Ollama](https://ollama.ai)                            | `http://localhost:11434/v1` | `ollama/`                 | Most popular, easy setup                                             |
+| [LM Studio](https://lmstudio.ai)                       | `http://localhost:1234/v1`  | `lmstudio/`               | GUI-based, beginner-friendly                                         |
+| [vLLM](https://docs.vllm.ai)                           | `http://localhost:8000/v1`  | `vllm/`                   | High-throughput serving                                              |
 | [llamafile](https://github.com/Mozilla-Ocho/llamafile) | `http://localhost:8080/v1`  | `llamafile/`              | Single-file executable                                               |
 
-All of these providers are registered in the [provider registry](../providers.md). For any other OpenAI-compatible server (LocalAI, llama.cpp `--api-server`, etc.), use a [custom provider](../usage/configuration.md#custom-providers) — register the prefix and base URL once, then route to it like any other provider.
+All of these providers are registered in the [provider registry](../providers.md). LocalAI and llama.cpp are also built in with the `localai/` and `llamacpp/` prefixes. For any other OpenAI-compatible server, use a [custom provider](../usage/configuration.md#custom-providers) — register the prefix and base URL once, then route to it like any other provider.
 
 All listed engines also support streaming via SSE and model listing via `/v1/models`. Tool calling, vision, and multimodal inputs work through the chat endpoint where the underlying model supports them.
 
@@ -65,7 +65,7 @@ Liter-llm uses the standard `provider/model-name` prefix convention for local pr
 ```text
 ollama/llama3.2          -> Ollama running Llama 3.2
 ollama/qwen2:0.5b        -> Ollama running Qwen2 0.5B
-lm_studio/my-model       -> LM Studio
+lmstudio/my-model        -> LM Studio
 vllm/meta-llama/Llama-3  -> vLLM
 llamafile/my-model       -> llamafile
 ```
@@ -154,9 +154,9 @@ LM Studio runs on port 1234 by default. Load a model in the LM Studio GUI, then 
 api_key = ""
 
 [[providers]]
-name = "lm_studio"
+name = "lmstudio"
 base_url = "http://localhost:1234/v1"
-model_prefixes = ["lm_studio/", "lmstudio/"]
+model_prefixes = ["lmstudio/"]
 ```
 
 ### VLLM

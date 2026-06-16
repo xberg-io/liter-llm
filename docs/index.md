@@ -63,8 +63,8 @@ A universal LLM API client with a Rust core and native bindings for 14 languages
 | **Kotlin Android**    | Maven `dev.kreuzberg:liter-llm-android`                 | [API Reference](reference/api-kotlin-android.md) |
 | **C#**                | `dotnet add package LiterLlm`                           | [API Reference](reference/api-csharp.md)     |
 | **Ruby**              | `gem install liter_llm`                                 | [API Reference](reference/api-ruby.md)       |
-| **PHP**               | `composer require kreuzberg/liter-llm`                  | [API Reference](reference/api-php.md)        |
-| **Elixir**            | `{:liter_llm, "~> 1.6.0-rc.1"}`                         | [API Reference](reference/api-elixir.md)     |
+| **PHP**               | `composer require kreuzberg-dev/liter-llm`              | [API Reference](reference/api-php.md)        |
+| **Elixir**            | `{:liter_llm, "~> 1.6.0"}`                              | [API Reference](reference/api-elixir.md)     |
 | **Dart / Flutter**    | `dart pub add liter_llm`                                | [API Reference](reference/api-dart.md)       |
 | **Swift**             | Swift Package Manager                                   | [API Reference](reference/api-swift.md)      |
 | **Zig**               | `zig fetch --save` from GitHub                          | [API Reference](reference/api-zig.md)        |
@@ -137,7 +137,7 @@ A universal LLM API client with a Rust core and native bindings for 14 languages
 
 - :material-file-document-multiple:{ .lg .middle } **[Kreuzberg](https://docs.kreuzberg.dev)**
 
-  Document intelligence — text, tables, and metadata from 90+ file formats with optional OCR.
+  Document intelligence — text, tables, and metadata from 96 file formats with optional OCR.
 
 - :material-cloud:{ .lg .middle } **[Kreuzberg Cloud](https://docs.kreuzberg.cloud)**
 
@@ -153,7 +153,7 @@ A universal LLM API client with a Rust core and native bindings for 14 languages
 
 - :material-code-tags:{ .lg .middle } **[tree-sitter-language-pack](https://docs.tree-sitter-language-pack.kreuzberg.dev)**
 
-  300+ tree-sitter grammars and code-intelligence primitives.
+  306 tree-sitter grammars and code-intelligence primitives.
 
 - :fontawesome-brands-discord:{ .lg .middle } **[Discord](https://discord.gg/xt9WY3GnKR)**
 

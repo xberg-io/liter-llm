@@ -28,6 +28,6 @@ $request = new ChatCompletionRequest(
     ]
 );
 
-$response = $client->chatAsync($request);
+$response = $client->chat($request);
 echo $response->choices[0]->message->content . PHP_EOL;
 ```

@@ -28,7 +28,7 @@ $request = ChatCompletionRequest::from_json(json_encode([
     'tool_choice' => 'auto',
 ]));
 
-$result = $client->chatAsync($request);
+$result = $client->chat($request);
 foreach ($result->choices[0]->message->toolCalls ?? [] as $call) {
     echo "Tool: {$call->function->name}, Args: {$call->function->arguments}" . PHP_EOL;
 }

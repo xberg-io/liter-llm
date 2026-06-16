@@ -39,7 +39,7 @@ Liter-llm supports **143 providers** out of the box. Route requests to any provi
 | Codestral | `codestral/` | :white_check_mark: | -- | -- | -- | -- |
 | Cohere | `cohere/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | Cohere Chat | `cohere_chat/` | :white_check_mark: | -- | -- | -- | -- |
-| CometAPI | `cometapi/` | :white_check_mark: | :white_check_mark: | :white_check_mark: | -- | -- |
+| CometAPI | `cometapi/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | CompactifAI | `compactifai/` | :white_check_mark: | -- | -- | -- | -- |
 | Cursor BYOK | `cursor/` | :white_check_mark: | -- | -- | -- | -- |
 | Custom | `custom/` | :white_check_mark: | -- | -- | -- | -- |
@@ -53,7 +53,7 @@ Liter-llm supports **143 providers** out of the box. Route requests to any provi
 | Deepseek | `deepseek/` | :white_check_mark: | -- | -- | -- | -- |
 | Docker Model Runner | `docker_model_runner/` | :white_check_mark: | -- | -- | -- | -- |
 | DuckDuckGo | `duckduckgo/` | -- | -- | -- | -- | -- |
-| ElevenLabs | `elevenlabs/` | -- | -- | -- | :white_check_mark: | -- |
+| ElevenLabs | `elevenlabs/` | :white_check_mark: | -- | -- | :white_check_mark: | -- |
 | Empower | `empower/` | :white_check_mark: | -- | -- | -- | -- |
 | Exa AI | `exa_ai/` | -- | -- | -- | -- | -- |
 | Fal AI | `fal_ai/` | :white_check_mark: | -- | :white_check_mark: | -- | -- |
@@ -85,7 +85,7 @@ Liter-llm supports **143 providers** out of the box. Route requests to any provi
 | Linkup | `linkup/` | -- | -- | -- | -- | -- |
 | LiteLLM Proxy | `litellm_proxy/` | :white_check_mark: | :white_check_mark: | :white_check_mark: | -- | -- |
 | llama.cpp | `llamacpp/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
-| llamafile | `llamafile/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
+| Llamafile | `llamafile/` | :white_check_mark: | -- | -- | -- | -- |
 | LlamaGate | `llamagate/` | :white_check_mark: | -- | -- | -- | -- |
 | LM Studio | `lmstudio/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | LocalAI | `localai/` | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | -- |
@@ -94,7 +94,7 @@ Liter-llm supports **143 providers** out of the box. Route requests to any provi
 | Meta - Llama API | `meta_llama/` | :white_check_mark: | -- | -- | -- | -- |
 | Milvus | `milvus/` | -- | -- | -- | -- | -- |
 | Minimax | `minimax/` | :white_check_mark: | -- | -- | -- | -- |
-| Mistral AI API | `mistral/` | :white_check_mark: | :white_check_mark: | -- | :white_check_mark: | -- |
+| Mistral AI API | `mistral/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | Moonshot | `moonshot/` | :white_check_mark: | -- | -- | -- | -- |
 | Morph | `morph/` | :white_check_mark: | -- | -- | -- | -- |
 | NanoGPT | `nanogpt/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
@@ -102,7 +102,7 @@ Liter-llm supports **143 providers** out of the box. Route requests to any provi
 | NLP Cloud | `nlp_cloud/` | :white_check_mark: | -- | -- | -- | -- |
 | Novita AI | `novita/` | :white_check_mark: | -- | -- | -- | -- |
 | Nscale | `nscale/` | :white_check_mark: | -- | -- | -- | -- |
-| Nvidia NIM | `nvidia_nim/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
+| Nvidia NIM | `nvidia_nim/` | :white_check_mark: | -- | -- | -- | -- |
 | OCI | `oci/` | :white_check_mark: | -- | -- | -- | -- |
 | Ollama | `ollama/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | Oobabooga | `oobabooga/` | :white_check_mark: | -- | -- | :white_check_mark: | :white_check_mark: |
@@ -142,7 +142,7 @@ Liter-llm supports **143 providers** out of the box. Route requests to any provi
 | Venice.ai | `venice/` | :white_check_mark: | -- | -- | -- | -- |
 | Vercel AI Gateway | `vercel_ai_gateway/` | :white_check_mark: | -- | -- | -- | -- |
 | Vertex AI Agent Engine | `vertex_ai/agent_engine/` | :white_check_mark: | -- | -- | -- | -- |
-| vLLM | `vllm/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
+| VLLM | `vllm/` | :white_check_mark: | :white_check_mark: | -- | -- | -- |
 | Volcengine | `volcengine/` | :white_check_mark: | -- | -- | -- | -- |
 | Voyage AI | `voyage/` | -- | :white_check_mark: | -- | -- | -- |
 | WandB Inference | `wandb/` | :white_check_mark: | -- | -- | -- | -- |

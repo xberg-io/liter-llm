@@ -15,7 +15,7 @@ var request = new ChatCompletionRequest
 };
 
 var sb = new StringBuilder();
-await foreach (var chunk in client.ChatStream(request))
+await foreach (var chunk in client.ChatStreamAsync(request))
 {
     var delta = chunk.Choices.Count > 0 ? chunk.Choices[0].Delta.Content : null;
     if (delta is not null)

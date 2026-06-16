@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.25.18"
+alef_version = "0.25.19"
 languages = [
   "python",
   "node",
@@ -115,7 +115,7 @@ exclude_types = ["CacheBackend", "CacheConfig"]
 output = "packages/ruby/sig/"
 
 [crates.php]
-composer_package = "kreuzberg/liter-llm"
+composer_package = "kreuzberg-dev/liter-llm"
 
 [crates.elixir]
 app_name = "liter_llm"
@@ -1926,7 +1926,7 @@ name = "dev.kreuzberg.literllm:liter-llm"
 name = "LiterLlm"
 
 [crates.e2e.registry.packages.php]
-name = "kreuzberg/liter-llm"
+name = "kreuzberg-dev/liter-llm"
 
 [crates.e2e.registry.packages.kotlin_android]
 name = "dev.kreuzberg:liter-llm-android"
@@ -1944,7 +1944,7 @@ name = "liter_llm_ffi"
 name = "LiterLlm"
 
 [crates.e2e.registry.packages.zig]
-hash = "liter_llm-1.6.0-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
+hash = "liter_llm-1.6.1-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
 
 [crates.e2e.registry.packages.homebrew]
 tap = "kreuzberg-dev/homebrew-tap"
@@ -2036,6 +2036,33 @@ template = "root.md"
 output_path = "README.md"
 name = "liter-llm"
 
+[crates.readme.targets.node_package]
+template = "language_package.md"
+output_path = "packages/node/README.md"
+language = "typescript"
+name = "TypeScript (Node.js)"
+package_name = "@kreuzberg/liter-llm-node"
+badge_url = "https://img.shields.io/npm/v/@kreuzberg/liter-llm-node?label=TypeScript&color=007ec6"
+docs_url = "https://github.com/kreuzberg-dev/liter-llm"
+description = "Universal LLM API client for TypeScript and Node.js. Access 143 LLM providers through a single interface with native NAPI-RS bindings, async/await, streaming, tool calling, and full TypeScript type definitions."
+package_manager = ["npm", "pnpm", "yarn"]
+optional_sections = ["async_support", "streaming_support", "tool_calling"]
+
+[crates.readme.targets.node_package.features]
+streaming = true
+async = true
+tool_calling = true
+provider_routing = true
+cost_tracking = true
+search = true
+ocr = true
+caching = true
+
+[crates.readme.targets.node_package.snippets]
+basic_chat = "getting-started/basic_chat.md"
+streaming = "getting-started/streaming.md"
+tool_calling = "getting-started/tool_calling.md"
+
 [crates.readme.languages.rust]
 template = "language_package.md"
 output_path = "crates/liter-llm/README.md"
@@ -2090,8 +2117,8 @@ tool_calling = "getting-started/tool_calling.md"
 template = "language_package.md"
 output_path = "crates/liter-llm-node/README.md"
 name = "TypeScript (Node.js)"
-package_name = "@kreuzberg/liter-llm"
-badge_url = "https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=TypeScript&color=007ec6"
+package_name = "@kreuzberg/liter-llm-node"
+badge_url = "https://img.shields.io/npm/v/@kreuzberg/liter-llm-node?label=TypeScript&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
 description = "Universal LLM API client for TypeScript and Node.js. Access 143 LLM providers through a single interface with native NAPI-RS bindings, async/await, streaming, tool calling, and full TypeScript type definitions."
 package_manager = ["npm", "pnpm", "yarn"]
@@ -2140,8 +2167,8 @@ streaming = "getting-started/streaming.md"
 [crates.readme.languages.java]
 template = "language_package.md"
 name = "Java"
-package_name = "dev.kreuzberg:liter-llm"
-badge_url = "https://img.shields.io/maven-central/v/dev.kreuzberg/liter-llm?label=Java&color=007ec6"
+package_name = "dev.kreuzberg.literllm:liter-llm"
+badge_url = "https://img.shields.io/maven-central/v/dev.kreuzberg.literllm/liter-llm?label=Java&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
 description = "Universal LLM API client for Java. Access 143 LLM providers through a single type-safe interface with Foreign Function & Memory API integration, async support, and native performance."
 package_manager = ["maven", "gradle"]
@@ -2164,8 +2191,8 @@ streaming = "getting-started/streaming.md"
 [crates.readme.languages.php]
 template = "language_package.md"
 name = "PHP"
-package_name = "kreuzberg/liter-llm"
-badge_url = "https://img.shields.io/packagist/v/kreuzberg/liter-llm?label=PHP&color=007ec6"
+package_name = "kreuzberg-dev/liter-llm"
+badge_url = "https://img.shields.io/packagist/v/kreuzberg-dev/liter-llm?label=PHP&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
 description = "Universal LLM API client for PHP. Access 143 LLM providers through a single interface with modern PHP 8.2+ support and a type-safe API."
 package_manager = ["composer"]

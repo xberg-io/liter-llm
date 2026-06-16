@@ -13,7 +13,7 @@ $messages = [
     ['role' => 'user', 'content' => 'What is the capital of France?'],
 ];
 
-$result = $client->chatAsync(ChatCompletionRequest::from_json(json_encode([
+$result = $client->chat(ChatCompletionRequest::from_json(json_encode([
     'model' => 'openai/gpt-4o-mini',
     'messages' => $messages,
 ])));
@@ -23,7 +23,7 @@ echo "Assistant: {$answer}" . PHP_EOL;
 $messages[] = ['role' => 'assistant', 'content' => $answer];
 $messages[] = ['role' => 'user', 'content' => 'What about Germany?'];
 
-$result = $client->chatAsync(ChatCompletionRequest::from_json(json_encode([
+$result = $client->chat(ChatCompletionRequest::from_json(json_encode([
     'model' => 'openai/gpt-4o-mini',
     'messages' => $messages,
 ])));

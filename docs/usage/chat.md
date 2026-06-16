@@ -313,11 +313,16 @@ OpenAI o-series models and Anthropic extended-thinking models accept a `reasonin
 === "Go"
 
     ```go
-    resp, err := client.Chat(ctx, &llm.ChatRequest{
-        Model:           "openai/o3-mini",
-        Messages:        messages,
-        ReasoningEffort: "high",
-    })
+    var req llm.ChatCompletionRequest
+    if err := json.Unmarshal([]byte(`{
+        "model": "openai/o3-mini",
+        "messages": [{"role": "user", "content": "Think step by step."}],
+        "reasoning_effort": "high"
+    }`), &req); err != nil {
+        return err
+    }
+
+    resp, err := client.Chat(req)
     ```
 
 Accepted values for OpenAI o-series: `"low"`, `"medium"`, `"high"`. Anthropic extended thinking uses a `budget_tokens` integer instead, which maps to `reasoning_effort` when the binding converts the field.

@@ -15,7 +15,7 @@ $request = ChatCompletionRequest::from_json(json_encode([
 ]));
 
 try {
-    $result = $client->chatAsync($request);
+    $result = $client->chat($request);
     echo $result->choices[0]->message->content . PHP_EOL;
 } catch (LiterLlmException $e) {
     // All liter-llm errors surface as a single LiterLlmException type.
