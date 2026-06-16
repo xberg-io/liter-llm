@@ -138,8 +138,8 @@ pub use tenant::{InMemoryKeyResolver, KeyResolver, KeyResolverError, ResolvedKey
 /// Install the `ring` crypto provider as the rustls process default, idempotently.
 ///
 /// rustls 0.23+ removed the implicit default provider. This function installs
-/// `ring` once per process. Subsequent calls are no-ops. Calling it from a
-/// downstream Rust app that has already installed `aws-lc-rs` is safe — the
+/// `ring` once per process. Subsequent calls are no-ops. Calling it after
+/// another rustls crypto provider has already been installed is safe: the
 /// `Err` from `install_default()` is silently ignored.
 ///
 /// Called automatically by every internal `reqwest::Client` constructor

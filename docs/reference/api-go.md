@@ -2,7 +2,7 @@
 title: "Go API Reference"
 ---
 
-## Go API Reference <span class="version-badge">v1.6.2</span>
+## Go API Reference <span class="version-badge">v1.6.3</span>
 
 ### Functions
 
@@ -135,7 +135,7 @@ Returns `true` if a provider with the given name was found and removed,
 
 **Errors:**
 
-Returns an error only if the internal lock is poisoned.
+Returns an error if the custom-provider registry cannot be updated.
 
 **Signature:**
 
@@ -169,9 +169,8 @@ if err != nil {
 Return the capability flags for a named provider.
 
 Performs an O(n) linear scan over the embedded registry (143 entries).
-Returns an owned value so that bindings can box/copy it across the FFI
-boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
-so this is a cheap memcpy of seven `bool` fields.
+Returns an owned value so bindings can pass capability data without
+borrowing registry internals.
 
 For unknown `provider_name` values the function returns an all-`false`
 sentinel so callers never need to handle `Option`.
@@ -484,8 +483,8 @@ if err := CheckBound("value", 42, 42, 42); err != nil {
 Install the `ring` crypto provider as the rustls process default, idempotently.
 
 rustls 0.23+ removed the implicit default provider. This function installs
-`ring` once per process. Subsequent calls are no-ops. Calling it from a
-downstream Rust app that has already installed `aws-lc-rs` is safe — the
+`ring` once per process. Subsequent calls are no-ops. Calling it after
+another rustls crypto provider has already been installed is safe: the
 `Err` from `install_default()` is silently ignored.
 
 Called automatically by every internal `reqwest.Client` constructor
@@ -766,8 +765,8 @@ Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
 to pass it through (optionally modified), `Ok(None)` to drop the chunk,
 or `Err(e)` to propagate a stream error.
 
-The trait is object-safe so implementations can be stored in a
-`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+The trait is object-safe so multiple middleware implementations can be
+chained inside `StreamPipeline`.
 
 ##### Methods
 
@@ -926,540 +925,6 @@ headers are cached at construction to avoid redundant encoding on every request.
 
 ##### Methods
 
-###### Chat()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) Chat(req ChatCompletionRequest) (ChatCompletionResponse, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.Chat(ChatCompletionRequest{})
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `ChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `ChatCompletionResponse`
-
-**Errors:** Returns `error`.
-
-###### ChatStream()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) ChatStream(req ChatCompletionRequest) (string, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.ChatStream(ChatCompletionRequest{})
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `ChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `string`
-
-**Errors:** Returns `error`.
-
-###### Embed()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) Embed(req EmbeddingRequest) (EmbeddingResponse, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.Embed(EmbeddingRequest{})
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `EmbeddingRequest` | Yes | The embedding request |
-
-**Returns:** `EmbeddingResponse`
-
-**Errors:** Returns `error`.
-
-###### ListModels()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) ListModels() (ModelsListResponse, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.ListModels()
-if err != nil {
-    return err
-}
-```
-
-**Returns:** `ModelsListResponse`
-
-**Errors:** Returns `error`.
-
-###### ImageGenerate()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) ImageGenerate(req CreateImageRequest) (ImagesResponse, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.ImageGenerate(CreateImageRequest{})
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `CreateImageRequest` | Yes | The create image request |
-
-**Returns:** `ImagesResponse`
-
-**Errors:** Returns `error`.
-
-###### Speech()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) Speech(req CreateSpeechRequest) ([]byte, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.Speech(CreateSpeechRequest{})
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `CreateSpeechRequest` | Yes | The create speech request |
-
-**Returns:** `[]byte`
-
-**Errors:** Returns `error`.
-
-###### Transcribe()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) Transcribe(req CreateTranscriptionRequest) (TranscriptionResponse, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.Transcribe(CreateTranscriptionRequest{})
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
-
-**Returns:** `TranscriptionResponse`
-
-**Errors:** Returns `error`.
-
-###### Moderate()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) Moderate(req ModerationRequest) (ModerationResponse, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.Moderate(ModerationRequest{})
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `ModerationRequest` | Yes | The moderation request |
-
-**Returns:** `ModerationResponse`
-
-**Errors:** Returns `error`.
-
-###### Rerank()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) Rerank(req RerankRequest) (RerankResponse, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.Rerank(RerankRequest{})
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `RerankRequest` | Yes | The rerank request |
-
-**Returns:** `RerankResponse`
-
-**Errors:** Returns `error`.
-
-###### Search()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) Search(req SearchRequest) (SearchResponse, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.Search(SearchRequest{})
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `SearchRequest` | Yes | The search request |
-
-**Returns:** `SearchResponse`
-
-**Errors:** Returns `error`.
-
-###### Ocr()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) Ocr(req OcrRequest) (OcrResponse, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.Ocr(OcrRequest{})
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `OcrRequest` | Yes | The ocr request |
-
-**Returns:** `OcrResponse`
-
-**Errors:** Returns `error`.
-
-###### CreateFile()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) CreateFile(req CreateFileRequest) (FileObject, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.CreateFile(CreateFileRequest{})
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `CreateFileRequest` | Yes | The create file request |
-
-**Returns:** `FileObject`
-
-**Errors:** Returns `error`.
-
-###### RetrieveFile()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) RetrieveFile(fileId string) (FileObject, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.RetrieveFile("value")
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `FileId` | `string` | Yes | The file id |
-
-**Returns:** `FileObject`
-
-**Errors:** Returns `error`.
-
-###### DeleteFile()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) DeleteFile(fileId string) (DeleteResponse, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.DeleteFile("value")
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `FileId` | `string` | Yes | The file id |
-
-**Returns:** `DeleteResponse`
-
-**Errors:** Returns `error`.
-
-###### ListFiles()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) ListFiles(query FileListQuery) (FileListResponse, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.ListFiles(FileListQuery{})
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Query` | `*FileListQuery` | No | The file list query |
-
-**Returns:** `FileListResponse`
-
-**Errors:** Returns `error`.
-
-###### FileContent()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) FileContent(fileId string) ([]byte, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.FileContent("value")
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `FileId` | `string` | Yes | The file id |
-
-**Returns:** `[]byte`
-
-**Errors:** Returns `error`.
-
-###### CreateBatch()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) CreateBatch(req CreateBatchRequest) (BatchObject, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.CreateBatch(CreateBatchRequest{})
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `CreateBatchRequest` | Yes | The create batch request |
-
-**Returns:** `BatchObject`
-
-**Errors:** Returns `error`.
-
-###### RetrieveBatch()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) RetrieveBatch(batchId string) (BatchObject, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.RetrieveBatch("value")
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `BatchId` | `string` | Yes | The batch id |
-
-**Returns:** `BatchObject`
-
-**Errors:** Returns `error`.
-
-###### ListBatches()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) ListBatches(query BatchListQuery) (BatchListResponse, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.ListBatches(BatchListQuery{})
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Query` | `*BatchListQuery` | No | The batch list query |
-
-**Returns:** `BatchListResponse`
-
-**Errors:** Returns `error`.
-
-###### CancelBatch()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) CancelBatch(batchId string) (BatchObject, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.CancelBatch("value")
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `BatchId` | `string` | Yes | The batch id |
-
-**Returns:** `BatchObject`
-
-**Errors:** Returns `error`.
-
 ###### FetchBatchForPolling()
 
 **Signature:**
@@ -1523,87 +988,6 @@ if err != nil {
 | `Config` | `WaitForBatchConfig` | Yes | The configuration options |
 
 **Returns:** `BatchObject`
-
-**Errors:** Returns `error`.
-
-###### CreateResponse()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) CreateResponse(req CreateResponseRequest) (ResponseObject, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.CreateResponse(CreateResponseRequest{})
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `CreateResponseRequest` | Yes | The create response request |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Returns `error`.
-
-###### RetrieveResponse()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) RetrieveResponse(responseId string) (ResponseObject, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.RetrieveResponse("value")
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `ResponseId` | `string` | Yes | The response id |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Returns `error`.
-
-###### CancelResponse()
-
-**Signature:**
-
-```go
-func (o *DefaultClient) CancelResponse(responseId string) (ResponseObject, error)
-```
-
-**Example:**
-
-```go
-result, err := instance.CancelResponse("value")
-if err != nil {
-    return err
-}
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `ResponseId` | `string` | Yes | The response id |
-
-**Returns:** `ResponseObject`
 
 **Errors:** Returns `error`.
 
@@ -1678,7 +1062,7 @@ Embedding response.
 | `Object` | `string` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `Data` | `[]EmbeddingObject` | — | List of embeddings. |
 | `Model` | `string` | — | Model used to generate embeddings. |
-| `Usage` | `*Usage` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
+| `Usage` | `*Usage` | language default | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -1740,9 +1124,9 @@ Function definition exposed to the model.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `Name` | `string` | — | Name of the function. Required and must be alphanumeric + underscores. |
-| `Description` | `*string` | `/* serde(default) */` | Human-readable description explaining what the function does. |
-| `Parameters` | `*interface{}` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
-| `Strict` | `*bool` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
+| `Description` | `*string` | language default | Human-readable description explaining what the function does. |
+| `Parameters` | `*interface{}` | language default | JSON Schema defining the function's parameters. |
+| `Strict` | `*bool` | language default | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -1961,7 +1345,7 @@ An image extracted from an OCR page.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `Id` | `string` | — | Unique image identifier within the document. |
-| `ImageBase64` | `*string` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
+| `ImageBase64` | `*string` | language default | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1973,8 +1357,8 @@ A single page of OCR output.
 |-------|------|---------|-------------|
 | `Index` | `uint32` | — | Page index (0-based). |
 | `Markdown` | `string` | — | Extracted page content as Markdown. |
-| `Images` | `*[]OcrImage` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `Dimensions` | `*PageDimensions` | `/* serde(default) */` | Page dimensions in pixels, if available. |
+| `Images` | `*[]OcrImage` | language default | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `Dimensions` | `*PageDimensions` | language default | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1999,7 +1383,7 @@ An OCR response.
 |-------|------|---------|-------------|
 | `Pages` | `[]OcrPage` | — | Extracted pages in order. |
 | `Model` | `string` | — | Model/provider used for OCR. |
-| `Usage` | `*Usage` | `/* serde(default) */` | Token usage, if reported by the provider. |
+| `Usage` | `*Usage` | language default | Token usage, if reported by the provider. |
 
 ---
 
@@ -2061,9 +1445,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function.  Keeping
-these fields separate preserves backward compatibility with all generated
-binding code that constructs `ProviderConfig` using struct literal syntax.
+format, which are accessed via the `capabilities` function.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -2129,7 +1511,7 @@ Response from the rerank endpoint.
 |-------|------|---------|-------------|
 | `Id` | `*string` | `nil` | Unique identifier for this rerank request. |
 | `Results` | `[]RerankResult` | — | Reranked documents in order of relevance. |
-| `Meta` | `*interface{}` | `/* serde(default) */` | Optional metadata about the reranking operation. |
+| `Meta` | `*interface{}` | language default | Optional metadata about the reranking operation. |
 
 ---
 
@@ -2141,7 +1523,7 @@ A single reranked document with its relevance score.
 |-------|------|---------|-------------|
 | `Index` | `uint32` | — | Original document index in the input list. |
 | `RelevanceScore` | `float64` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `Document` | `*RerankResultDocument` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
+| `Document` | `*RerankResultDocument` | language default | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -2240,7 +1622,7 @@ An individual search result.
 | `Title` | `string` | — | Result title. |
 | `Url` | `string` | — | Result URL. |
 | `Snippet` | `string` | — | Text snippet or excerpt from the page. |
-| `Date` | `*string` | `/* serde(default) */` | Publication or last-updated date, if available. |
+| `Date` | `*string` | language default | Publication or last-updated date, if available. |
 
 ---
 
@@ -2248,9 +1630,8 @@ An individual search result.
 
 The value broadcast from a singleflight leader to all followers.
 
-`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
-bump per follower, which is negligible under the burst loads this layer targets.
+The error value is shared so every follower receives the same upstream
+failure without cloning the underlying error.
 
 ---
 

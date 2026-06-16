@@ -2,7 +2,7 @@
 title: "Ruby API Reference"
 ---
 
-## Ruby API Reference <span class="version-badge">v1.6.2</span>
+## Ruby API Reference <span class="version-badge">v1.6.3</span>
 
 ### Functions
 
@@ -127,7 +127,7 @@ Returns `true` if a provider with the given name was found and removed,
 
 **Errors:**
 
-Returns an error only if the internal lock is poisoned.
+Returns an error if the custom-provider registry cannot be updated.
 
 **Signature:**
 
@@ -158,9 +158,8 @@ result = unregister_custom_provider("value")
 Return the capability flags for a named provider.
 
 Performs an O(n) linear scan over the embedded registry (143 entries).
-Returns an owned value so that bindings can box/copy it across the FFI
-boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
-so this is a cheap memcpy of seven `bool` fields.
+Returns an owned value so bindings can pass capability data without
+borrowing registry internals.
 
 For unknown `provider_name` values the function returns an all-`false`
 sentinel so callers never need to handle `Option`.
@@ -459,8 +458,8 @@ check_bound("value", 42, 42, 42)
 Install the `ring` crypto provider as the rustls process default, idempotently.
 
 rustls 0.23+ removed the implicit default provider. This function installs
-`ring` once per process. Subsequent calls are no-ops. Calling it from a
-downstream Rust app that has already installed `aws-lc-rs` is safe — the
+`ring` once per process. Subsequent calls are no-ops. Calling it after
+another rustls crypto provider has already been installed is safe: the
 `Err` from `install_default()` is silently ignored.
 
 Called automatically by every internal `reqwest.Client` constructor
@@ -711,8 +710,8 @@ Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
 to pass it through (optionally modified), `Ok(None)` to drop the chunk,
 or `Err(e)` to propagate a stream error.
 
-The trait is object-safe so implementations can be stored in a
-`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+The trait is object-safe so multiple middleware implementations can be
+chained inside `StreamPipeline`.
 
 ##### Methods
 
@@ -868,480 +867,6 @@ headers are cached at construction to avoid redundant encoding on every request.
 
 ##### Methods
 
-###### chat()
-
-**Signature:**
-
-```ruby
-def chat(req)
-```
-
-**Example:**
-
-```ruby
-result = instance.chat(ChatCompletionRequest.new)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `ChatCompletionResponse`
-
-**Errors:** Raises `Error`.
-
-###### chat_stream()
-
-**Signature:**
-
-```ruby
-def chat_stream(req)
-```
-
-**Example:**
-
-```ruby
-result = instance.chat_stream(ChatCompletionRequest.new)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `String`
-
-**Errors:** Raises `Error`.
-
-###### embed()
-
-**Signature:**
-
-```ruby
-def embed(req)
-```
-
-**Example:**
-
-```ruby
-result = instance.embed(EmbeddingRequest.new)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `EmbeddingRequest` | Yes | The embedding request |
-
-**Returns:** `EmbeddingResponse`
-
-**Errors:** Raises `Error`.
-
-###### list_models()
-
-**Signature:**
-
-```ruby
-def list_models()
-```
-
-**Example:**
-
-```ruby
-result = instance.list_models()
-```
-
-**Returns:** `ModelsListResponse`
-
-**Errors:** Raises `Error`.
-
-###### image_generate()
-
-**Signature:**
-
-```ruby
-def image_generate(req)
-```
-
-**Example:**
-
-```ruby
-result = instance.image_generate(CreateImageRequest.new)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateImageRequest` | Yes | The create image request |
-
-**Returns:** `ImagesResponse`
-
-**Errors:** Raises `Error`.
-
-###### speech()
-
-**Signature:**
-
-```ruby
-def speech(req)
-```
-
-**Example:**
-
-```ruby
-result = instance.speech(CreateSpeechRequest.new)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateSpeechRequest` | Yes | The create speech request |
-
-**Returns:** `String`
-
-**Errors:** Raises `Error`.
-
-###### transcribe()
-
-**Signature:**
-
-```ruby
-def transcribe(req)
-```
-
-**Example:**
-
-```ruby
-result = instance.transcribe(CreateTranscriptionRequest.new)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
-
-**Returns:** `TranscriptionResponse`
-
-**Errors:** Raises `Error`.
-
-###### moderate()
-
-**Signature:**
-
-```ruby
-def moderate(req)
-```
-
-**Example:**
-
-```ruby
-result = instance.moderate(ModerationRequest.new)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ModerationRequest` | Yes | The moderation request |
-
-**Returns:** `ModerationResponse`
-
-**Errors:** Raises `Error`.
-
-###### rerank()
-
-**Signature:**
-
-```ruby
-def rerank(req)
-```
-
-**Example:**
-
-```ruby
-result = instance.rerank(RerankRequest.new)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `RerankRequest` | Yes | The rerank request |
-
-**Returns:** `RerankResponse`
-
-**Errors:** Raises `Error`.
-
-###### search()
-
-**Signature:**
-
-```ruby
-def search(req)
-```
-
-**Example:**
-
-```ruby
-result = instance.search(SearchRequest.new)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `SearchRequest` | Yes | The search request |
-
-**Returns:** `SearchResponse`
-
-**Errors:** Raises `Error`.
-
-###### ocr()
-
-**Signature:**
-
-```ruby
-def ocr(req)
-```
-
-**Example:**
-
-```ruby
-result = instance.ocr(OcrRequest.new)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `OcrRequest` | Yes | The ocr request |
-
-**Returns:** `OcrResponse`
-
-**Errors:** Raises `Error`.
-
-###### create_file()
-
-**Signature:**
-
-```ruby
-def create_file(req)
-```
-
-**Example:**
-
-```ruby
-result = instance.create_file(CreateFileRequest.new)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateFileRequest` | Yes | The create file request |
-
-**Returns:** `FileObject`
-
-**Errors:** Raises `Error`.
-
-###### retrieve_file()
-
-**Signature:**
-
-```ruby
-def retrieve_file(file_id)
-```
-
-**Example:**
-
-```ruby
-result = instance.retrieve_file("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `file_id` | `String` | Yes | The file id |
-
-**Returns:** `FileObject`
-
-**Errors:** Raises `Error`.
-
-###### delete_file()
-
-**Signature:**
-
-```ruby
-def delete_file(file_id)
-```
-
-**Example:**
-
-```ruby
-result = instance.delete_file("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `file_id` | `String` | Yes | The file id |
-
-**Returns:** `DeleteResponse`
-
-**Errors:** Raises `Error`.
-
-###### list_files()
-
-**Signature:**
-
-```ruby
-def list_files(query)
-```
-
-**Example:**
-
-```ruby
-result = instance.list_files(query: FileListQuery.new)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `query` | `FileListQuery?` | No | The file list query |
-
-**Returns:** `FileListResponse`
-
-**Errors:** Raises `Error`.
-
-###### file_content()
-
-**Signature:**
-
-```ruby
-def file_content(file_id)
-```
-
-**Example:**
-
-```ruby
-result = instance.file_content("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `file_id` | `String` | Yes | The file id |
-
-**Returns:** `String`
-
-**Errors:** Raises `Error`.
-
-###### create_batch()
-
-**Signature:**
-
-```ruby
-def create_batch(req)
-```
-
-**Example:**
-
-```ruby
-result = instance.create_batch(CreateBatchRequest.new)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateBatchRequest` | Yes | The create batch request |
-
-**Returns:** `BatchObject`
-
-**Errors:** Raises `Error`.
-
-###### retrieve_batch()
-
-**Signature:**
-
-```ruby
-def retrieve_batch(batch_id)
-```
-
-**Example:**
-
-```ruby
-result = instance.retrieve_batch("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `batch_id` | `String` | Yes | The batch id |
-
-**Returns:** `BatchObject`
-
-**Errors:** Raises `Error`.
-
-###### list_batches()
-
-**Signature:**
-
-```ruby
-def list_batches(query)
-```
-
-**Example:**
-
-```ruby
-result = instance.list_batches(query: BatchListQuery.new)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `query` | `BatchListQuery?` | No | The batch list query |
-
-**Returns:** `BatchListResponse`
-
-**Errors:** Raises `Error`.
-
-###### cancel_batch()
-
-**Signature:**
-
-```ruby
-def cancel_batch(batch_id)
-```
-
-**Example:**
-
-```ruby
-result = instance.cancel_batch("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `batch_id` | `String` | Yes | The batch id |
-
-**Returns:** `BatchObject`
-
-**Errors:** Raises `Error`.
-
 ###### fetch_batch_for_polling()
 
 **Signature:**
@@ -1401,78 +926,6 @@ result = instance.wait_for_batch("value", WaitForBatchConfig.new)
 **Returns:** `BatchObject`
 
 **Errors:** Raises `BatchWaitError`.
-
-###### create_response()
-
-**Signature:**
-
-```ruby
-def create_response(req)
-```
-
-**Example:**
-
-```ruby
-result = instance.create_response(CreateResponseRequest.new)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateResponseRequest` | Yes | The create response request |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Raises `Error`.
-
-###### retrieve_response()
-
-**Signature:**
-
-```ruby
-def retrieve_response(response_id)
-```
-
-**Example:**
-
-```ruby
-result = instance.retrieve_response("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `response_id` | `String` | Yes | The response id |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Raises `Error`.
-
-###### cancel_response()
-
-**Signature:**
-
-```ruby
-def cancel_response(response_id)
-```
-
-**Example:**
-
-```ruby
-result = instance.cancel_response("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `response_id` | `String` | Yes | The response id |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Raises `Error`.
 
 ---
 
@@ -1545,7 +998,7 @@ Embedding response.
 | `object` | `String` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `data` | `Array<EmbeddingObject>` | — | List of embeddings. |
 | `model` | `String` | — | Model used to generate embeddings. |
-| `usage` | `Usage?` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
+| `usage` | `Usage?` | language default | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -1607,9 +1060,9 @@ Function definition exposed to the model.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Name of the function. Required and must be alphanumeric + underscores. |
-| `description` | `String?` | `/* serde(default) */` | Human-readable description explaining what the function does. |
-| `parameters` | `Object?` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
-| `strict` | `Boolean?` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
+| `description` | `String?` | language default | Human-readable description explaining what the function does. |
+| `parameters` | `Object?` | language default | JSON Schema defining the function's parameters. |
+| `strict` | `Boolean?` | language default | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -1828,7 +1281,7 @@ An image extracted from an OCR page.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String` | — | Unique image identifier within the document. |
-| `image_base64` | `String?` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
+| `image_base64` | `String?` | language default | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1840,8 +1293,8 @@ A single page of OCR output.
 |-------|------|---------|-------------|
 | `index` | `Integer` | — | Page index (0-based). |
 | `markdown` | `String` | — | Extracted page content as Markdown. |
-| `images` | `Array<OcrImage>?` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `dimensions` | `PageDimensions?` | `/* serde(default) */` | Page dimensions in pixels, if available. |
+| `images` | `Array<OcrImage>?` | language default | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `PageDimensions?` | language default | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1866,7 +1319,7 @@ An OCR response.
 |-------|------|---------|-------------|
 | `pages` | `Array<OcrPage>` | — | Extracted pages in order. |
 | `model` | `String` | — | Model/provider used for OCR. |
-| `usage` | `Usage?` | `/* serde(default) */` | Token usage, if reported by the provider. |
+| `usage` | `Usage?` | language default | Token usage, if reported by the provider. |
 
 ---
 
@@ -1928,9 +1381,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function.  Keeping
-these fields separate preserves backward compatibility with all generated
-binding code that constructs `ProviderConfig` using struct literal syntax.
+format, which are accessed via the `capabilities` function.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -1996,7 +1447,7 @@ Response from the rerank endpoint.
 |-------|------|---------|-------------|
 | `id` | `String?` | `nil` | Unique identifier for this rerank request. |
 | `results` | `Array<RerankResult>` | — | Reranked documents in order of relevance. |
-| `meta` | `Object?` | `/* serde(default) */` | Optional metadata about the reranking operation. |
+| `meta` | `Object?` | language default | Optional metadata about the reranking operation. |
 
 ---
 
@@ -2008,7 +1459,7 @@ A single reranked document with its relevance score.
 |-------|------|---------|-------------|
 | `index` | `Integer` | — | Original document index in the input list. |
 | `relevance_score` | `Float` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `document` | `RerankResultDocument?` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
+| `document` | `RerankResultDocument?` | language default | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -2107,7 +1558,7 @@ An individual search result.
 | `title` | `String` | — | Result title. |
 | `url` | `String` | — | Result URL. |
 | `snippet` | `String` | — | Text snippet or excerpt from the page. |
-| `date` | `String?` | `/* serde(default) */` | Publication or last-updated date, if available. |
+| `date` | `String?` | language default | Publication or last-updated date, if available. |
 
 ---
 
@@ -2115,9 +1566,8 @@ An individual search result.
 
 The value broadcast from a singleflight leader to all followers.
 
-`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
-bump per follower, which is negligible under the burst loads this layer targets.
+The error value is shared so every follower receives the same upstream
+failure without cloning the underlying error.
 
 ---
 

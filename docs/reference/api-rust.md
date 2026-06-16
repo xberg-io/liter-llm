@@ -2,7 +2,7 @@
 title: "Rust API Reference"
 ---
 
-## Rust API Reference <span class="version-badge">v1.6.2</span>
+## Rust API Reference <span class="version-badge">v1.6.3</span>
 
 ### Functions
 
@@ -55,7 +55,7 @@ The JSON object accepts the same fields as `liter-llm.toml` (snake_case).
 
 **Errors:**
 
-Returns `LiterLlmError.BadRequest` if `json` is not valid JSON or
+Returns `LiterLlmError::BadRequest` if `json` is not valid JSON or
 contains unknown fields.
 
 **Signature:**
@@ -127,7 +127,7 @@ Returns `true` if a provider with the given name was found and removed,
 
 **Errors:**
 
-Returns an error only if the internal lock is poisoned.
+Returns an error if the custom-provider registry cannot be updated.
 
 **Signature:**
 
@@ -158,9 +158,8 @@ let result = unregister_custom_provider("value")?;
 Return the capability flags for a named provider.
 
 Performs an O(n) linear scan over the embedded registry (143 entries).
-Returns an owned value so that bindings can box/copy it across the FFI
-boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
-so this is a cheap memcpy of seven `bool` fields.
+Returns an owned value so bindings can pass capability data without
+borrowing registry internals.
 
 For unknown `provider_name` values the function returns an all-`false`
 sentinel so callers never need to handle `Option`.
@@ -356,7 +355,7 @@ first load.
 
 **Errors:**
 
-Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
+Returns `LiterLlmError::BadRequest` if the tokenizer cannot be loaded
 (e.g. network failure on first use) or if tokenization itself fails.
 
 **Signature:**
@@ -395,7 +394,7 @@ not counted — only textual content contributes to the token total.
 
 **Errors:**
 
-Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded or
+Returns `LiterLlmError::BadRequest` if the tokenizer cannot be loaded or
 if tokenization fails for any message.
 
 **Signature:**
@@ -428,8 +427,8 @@ let result = count_request_tokens("value", ChatCompletionRequest::default())?;
 Assert that `current_len + incoming` does not exceed `limit`.
 
 Call this before appending `incoming` bytes to any buffer that must
-stay below `limit`.  Returns `Err(LiterLlmError.Streaming)` on overflow
-and emits a `tracing.warn!` with context.
+stay below `limit`.  Returns `Err(LiterLlmError::Streaming)` on overflow
+and emits a `tracing::warn!` with context.
 
 **Signature:**
 
@@ -464,11 +463,11 @@ buffer.push_str(chunk_str);
 Install the `ring` crypto provider as the rustls process default, idempotently.
 
 rustls 0.23+ removed the implicit default provider. This function installs
-`ring` once per process. Subsequent calls are no-ops. Calling it from a
-downstream Rust app that has already installed `aws-lc-rs` is safe — the
+`ring` once per process. Subsequent calls are no-ops. Calling it after
+another rustls crypto provider has already been installed is safe: the
 `Err` from `install_default()` is silently ignored.
 
-Called automatically by every internal `reqwest.Client` constructor
+Called automatically by every internal `reqwest::Client` constructor
 (auth providers, default HTTP client). Bindings and downstream consumers
 reach those constructors transitively, so no manual init is required.
 
@@ -746,8 +745,8 @@ Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
 to pass it through (optionally modified), `Ok(None)` to drop the chunk,
 or `Err(e)` to propagate a stream error.
 
-The trait is object-safe so implementations can be stored in a
-`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+The trait is object-safe so multiple middleware implementations can be
+chained inside `StreamPipeline`.
 
 ##### Methods
 
@@ -932,13 +931,17 @@ let result = instance.chat(ChatCompletionRequest::default()).await?;
 **Signature:**
 
 ```rust
-pub async fn chat_stream(&self, req: ChatCompletionRequest) -> Result<String, Error>
+fn chat_stream(&self, req: ChatCompletionRequest) -> BoxFuture<'_, Result<BoxStream<'static, Result<ChatCompletionChunk>>>>
 ```
 
 **Example:**
 
 ```rust
-let result = instance.chat_stream(ChatCompletionRequest::default()).await?;
+let mut stream = instance.chat_stream(ChatCompletionRequest::default()).await?;
+while let Some(chunk) = stream.next().await {
+    let chunk = chunk?;
+    println!("{chunk:?}");
+}
 ```
 
 **Parameters:**
@@ -947,7 +950,7 @@ let result = instance.chat_stream(ChatCompletionRequest::default()).await?;
 |------|------|----------|-------------|
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
-**Returns:** `String`
+**Returns:** `BoxFuture<'_, Result<BoxStream<'static, Result<ChatCompletionChunk>>>>`
 
 **Errors:** Returns `Err(Error)`.
 
@@ -1410,9 +1413,9 @@ Optionally supports a timeout that aborts polling if exceeded.
 
 **Errors:**
 
-Returns `BatchWaitError.Failed` if the batch reaches a failure terminal status.
-Returns `BatchWaitError.Timeout` if the configured timeout is exceeded.
-Returns `BatchWaitError.Client` for underlying client errors.
+Returns `BatchWaitError::Failed` if the batch reaches a failure terminal status.
+Returns `BatchWaitError::Timeout` if the configured timeout is exceeded.
+Returns `BatchWaitError::Client` for underlying client errors.
 
 **Signature:**
 
@@ -1586,7 +1589,7 @@ Embedding response.
 | `object` | `String` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `data` | `Vec<EmbeddingObject>` | — | List of embeddings. |
 | `model` | `String` | — | Model used to generate embeddings. |
-| `usage` | `Option<Usage>` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
+| `usage` | `Option<Usage>` | language default | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -1637,7 +1640,7 @@ Function call details.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Function name. |
-| `arguments` | `String` | — | Arguments as a JSON string (parse with serde_json.from_str). |
+| `arguments` | `String` | — | Arguments as a JSON string (parse with serde_json::from_str). |
 
 ---
 
@@ -1648,9 +1651,9 @@ Function definition exposed to the model.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Name of the function. Required and must be alphanumeric + underscores. |
-| `description` | `Option<String>` | `/* serde(default) */` | Human-readable description explaining what the function does. |
-| `parameters` | `Option<serde_json::Value>` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
-| `strict` | `Option<bool>` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
+| `description` | `Option<String>` | language default | Human-readable description explaining what the function does. |
+| `parameters` | `Option<serde_json::Value>` | language default | JSON Schema defining the function's parameters. |
+| `strict` | `Option<bool>` | language default | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -1869,7 +1872,7 @@ An image extracted from an OCR page.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String` | — | Unique image identifier within the document. |
-| `image_base64` | `Option<String>` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
+| `image_base64` | `Option<String>` | language default | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1881,8 +1884,8 @@ A single page of OCR output.
 |-------|------|---------|-------------|
 | `index` | `u32` | — | Page index (0-based). |
 | `markdown` | `String` | — | Extracted page content as Markdown. |
-| `images` | `Option<Vec<OcrImage>>` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `dimensions` | `Option<PageDimensions>` | `/* serde(default) */` | Page dimensions in pixels, if available. |
+| `images` | `Option<Vec<OcrImage>>` | language default | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `Option<PageDimensions>` | language default | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1907,7 +1910,7 @@ An OCR response.
 |-------|------|---------|-------------|
 | `pages` | `Vec<OcrPage>` | — | Extracted pages in order. |
 | `model` | `String` | — | Model/provider used for OCR. |
-| `usage` | `Option<Usage>` | `/* serde(default) */` | Token usage, if reported by the provider. |
+| `usage` | `Option<Usage>` | language default | Token usage, if reported by the provider. |
 
 ---
 
@@ -1926,7 +1929,7 @@ Page dimensions in pixels.
 
 Breakdown of tokens used in the prompt portion of a request.
 
-`cached_tokens` is included in `Usage.prompt_tokens` — it is *not* an
+`cached_tokens` is included in `Usage::prompt_tokens` — it is *not* an
 additional charge on top of the prompt token count. When pricing supports
 a `cache_read_input_token_cost`, the cached portion is billed at the
 discounted rate and the remainder at the regular input rate.
@@ -1969,9 +1972,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function.  Keeping
-these fields separate preserves backward compatibility with all generated
-binding code that constructs `ProviderConfig` using struct literal syntax.
+format, which are accessed via the `capabilities` function.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -1981,7 +1982,7 @@ binding code that constructs `ProviderConfig` using struct literal syntax.
 | `auth` | `Option<AuthConfig>` | `None` | Authentication scheme metadata (auth type + env var holding the key). |
 | `endpoints` | `Option<Vec<String>>` | `None` | Supported endpoint kinds (e.g. `chat`, `embeddings`). |
 | `model_prefixes` | `Option<Vec<String>>` | `None` | Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`). |
-| `param_mappings` | `Option<HashMap<String, String>>` | `None` | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`).  Applied automatically by `ConfigDrivenProvider.transform_request`. |
+| `param_mappings` | `Option<HashMap<String, String>>` | `None` | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`).  Applied automatically by `ConfigDrivenProvider::transform_request`. |
 
 ---
 
@@ -2037,7 +2038,7 @@ Response from the rerank endpoint.
 |-------|------|---------|-------------|
 | `id` | `Option<String>` | `None` | Unique identifier for this rerank request. |
 | `results` | `Vec<RerankResult>` | — | Reranked documents in order of relevance. |
-| `meta` | `Option<serde_json::Value>` | `/* serde(default) */` | Optional metadata about the reranking operation. |
+| `meta` | `Option<serde_json::Value>` | language default | Optional metadata about the reranking operation. |
 
 ---
 
@@ -2049,7 +2050,7 @@ A single reranked document with its relevance score.
 |-------|------|---------|-------------|
 | `index` | `u32` | — | Original document index in the input list. |
 | `relevance_score` | `f64` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `document` | `Option<RerankResultDocument>` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
+| `document` | `Option<RerankResultDocument>` | language default | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -2148,7 +2149,7 @@ An individual search result.
 | `title` | `String` | — | Result title. |
 | `url` | `String` | — | Result URL. |
 | `snippet` | `String` | — | Text snippet or excerpt from the page. |
-| `date` | `Option<String>` | `/* serde(default) */` | Publication or last-updated date, if available. |
+| `date` | `Option<String>` | language default | Publication or last-updated date, if available. |
 
 ---
 
@@ -2156,9 +2157,8 @@ An individual search result.
 
 The value broadcast from a singleflight leader to all followers.
 
-`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
-bump per follower, which is negligible under the burst loads this layer targets.
+The error value is shared so every follower receives the same upstream
+failure without cloning the underlying error.
 
 ---
 
@@ -2634,8 +2634,8 @@ How budget limits are enforced.
 
 | Value | Description |
 |-------|-------------|
-| `Hard` | Reject requests that would exceed the budget with `LiterLlmError.BudgetExceeded`. |
-| `Soft` | Allow requests through but emit a `tracing.warn!` when the budget is exceeded. |
+| `Hard` | Reject requests that would exceed the budget with `LiterLlmError::BudgetExceeded`. |
+| `Soft` | Allow requests through but emit a `tracing::warn!` when the budget is exceeded. |
 
 ---
 

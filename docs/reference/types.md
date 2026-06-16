@@ -28,7 +28,7 @@ A single reranked document with its relevance score.
 |-------|------|---------|-------------|
 | `index` | `u32` | — | Original document index in the input list. |
 | `relevance_score` | `f64` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `document` | `Option<RerankResultDocument>` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
+| `document` | `Option<RerankResultDocument>` | language default | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -51,7 +51,7 @@ An individual search result.
 | `title` | `String` | — | Result title. |
 | `url` | `String` | — | Result URL. |
 | `snippet` | `String` | — | Text snippet or excerpt from the page. |
-| `date` | `Option<String>` | `/* serde(default) */` | Publication or last-updated date, if available. |
+| `date` | `Option<String>` | language default | Publication or last-updated date, if available. |
 
 ---
 
@@ -59,9 +59,8 @@ An individual search result.
 
 The value broadcast from a singleflight leader to all followers.
 
-`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
-bump per follower, which is negligible under the burst loads this layer targets.
+The error value is shared so every follower receives the same upstream
+failure without cloning the underlying error.
 
 *Opaque type — fields are not directly accessible.*
 
@@ -861,9 +860,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function.  Keeping
-these fields separate preserves backward compatibility with all generated
-binding code that constructs `ProviderConfig` using struct literal syntax.
+format, which are accessed via the `capabilities` function.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -873,7 +870,7 @@ binding code that constructs `ProviderConfig` using struct literal syntax.
 | `auth` | `Option<AuthConfig>` | `None` | Authentication scheme metadata (auth type + env var holding the key). |
 | `endpoints` | `Vec<String>` | `None` | Supported endpoint kinds (e.g. `chat`, `embeddings`). |
 | `model_prefixes` | `Vec<String>` | `None` | Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`). |
-| `param_mappings` | `HashMap<String, String>` | `None` | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`).  Applied automatically by `ConfigDrivenProvider.transform_request`. |
+| `param_mappings` | `HashMap<String, String>` | `None` | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`).  Applied automatically by `ConfigDrivenProvider::transform_request`. |
 
 ---
 
@@ -944,9 +941,9 @@ Function definition exposed to the model.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Name of the function. Required and must be alphanumeric + underscores. |
-| `description` | `Option<String>` | `/* serde(default) */` | Human-readable description explaining what the function does. |
-| `parameters` | `Option<serde_json::Value>` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
-| `strict` | `Option<bool>` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
+| `description` | `Option<String>` | language default | Human-readable description explaining what the function does. |
+| `parameters` | `Option<serde_json::Value>` | language default | JSON Schema defining the function's parameters. |
+| `strict` | `Option<bool>` | language default | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -969,7 +966,7 @@ Function call details.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Function name. |
-| `arguments` | `String` | — | Arguments as a JSON string (parse with serde_json.from_str). |
+| `arguments` | `String` | — | Arguments as a JSON string (parse with serde_json::from_str). |
 
 ---
 
@@ -982,7 +979,7 @@ Embedding response.
 | `object` | `String` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `data` | `Vec<EmbeddingObject>` | — | List of embeddings. |
 | `model` | `String` | — | Model used to generate embeddings. |
-| `usage` | `Option<Usage>` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
+| `usage` | `Option<Usage>` | language default | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -1018,7 +1015,7 @@ Response from the rerank endpoint.
 |-------|------|---------|-------------|
 | `id` | `Option<String>` | `None` | Unique identifier for this rerank request. |
 | `results` | `Vec<RerankResult>` | — | Reranked documents in order of relevance. |
-| `meta` | `Option<serde_json::Value>` | `/* serde(default) */` | Optional metadata about the reranking operation. |
+| `meta` | `Option<serde_json::Value>` | language default | Optional metadata about the reranking operation. |
 
 ---
 
@@ -1041,7 +1038,7 @@ An OCR response.
 |-------|------|---------|-------------|
 | `pages` | `Vec<OcrPage>` | — | Extracted pages in order. |
 | `model` | `String` | — | Model/provider used for OCR. |
-| `usage` | `Option<Usage>` | `/* serde(default) */` | Token usage, if reported by the provider. |
+| `usage` | `Option<Usage>` | language default | Token usage, if reported by the provider. |
 
 ---
 
@@ -1053,8 +1050,8 @@ A single page of OCR output.
 |-------|------|---------|-------------|
 | `index` | `u32` | — | Page index (0-based). |
 | `markdown` | `String` | — | Extracted page content as Markdown. |
-| `images` | `Vec<OcrImage>` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `dimensions` | `Option<PageDimensions>` | `/* serde(default) */` | Page dimensions in pixels, if available. |
+| `images` | `Vec<OcrImage>` | language default | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `Option<PageDimensions>` | language default | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1065,7 +1062,7 @@ An image extracted from an OCR page.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String` | — | Unique image identifier within the document. |
-| `image_base64` | `Option<String>` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
+| `image_base64` | `Option<String>` | language default | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1110,8 +1107,8 @@ Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
 to pass it through (optionally modified), `Ok(None)` to drop the chunk,
 or `Err(e)` to propagate a stream error.
 
-The trait is object-safe so implementations can be stored in a
-`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+The trait is object-safe so multiple middleware implementations can be
+chained inside `StreamPipeline`.
 
 *Opaque type — fields are not directly accessible.*
 
@@ -1248,8 +1245,8 @@ How budget limits are enforced.
 
 | Variant | Description |
 |---------|-------------|
-| `Hard` | Reject requests that would exceed the budget with `LiterLlmError.BudgetExceeded`. |
-| `Soft` | Allow requests through but emit a `tracing.warn!` when the budget is exceeded. |
+| `Hard` | Reject requests that would exceed the budget with `LiterLlmError::BudgetExceeded`. |
+| `Soft` | Allow requests through but emit a `tracing::warn!` when the budget is exceeded. |
 
 ---
 

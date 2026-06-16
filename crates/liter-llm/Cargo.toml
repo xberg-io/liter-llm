@@ -41,7 +41,7 @@ native-http = [
 
 # WASM transport: browser / Node.js fetch API via gloo-timers.
 # Mutually exclusive with `native-http`.
-wasm-http = ["dep:reqwest", "dep:memchr", "dep:base64", "dep:gloo-timers"]
+wasm-http = ["dep:reqwest", "dep:memchr", "dep:base64", "dep:gloo-timers", "dep:web-time"]
 # (HTTP/3 feature is declared further down — see the http3 entry under transports.)
 # ---------------------------------------------------------------------------
 # Observability features
@@ -162,6 +162,7 @@ futures-core = { workspace = true }
 futures-util = { workspace = true, optional = true }
 gcp_auth = { workspace = true, optional = true }
 gloo-timers = { version = "0.4", features = ["futures"], optional = true }
+web-time = { version = "1", optional = true }
 hex = { workspace = true, optional = true }
 jsonwebtoken = { workspace = true, optional = true }
 memchr = { workspace = true, optional = true }

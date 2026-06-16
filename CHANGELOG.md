@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.3] - 2026-06-16
+
+### Fixed
+
+- **WASM build: `tokio::time` inside `wait_for_batch_impl`** — `crates/liter-llm/src/client/mod.rs` polled with `tokio::time::Instant` and `tokio::time::sleep` unconditionally, but `tokio` is gated behind the `native-http` feature. Under `wasm-http`-only builds (the WASM crate) compilation failed with `E0433: cannot find module or crate 'tokio'`. The function now switches to `web_time::Instant` + `gloo_timers::future::sleep` on `target_arch = "wasm32"`, with `web-time` added as an optional dep on the `wasm-http` feature.
+- **WASM build: leaked tower DTOs** — alef regen at v1.6.0 started emitting `From<liter_llm::tower::{CircuitState, HealthStatus, IntentPrototype, SingleflightResult}>` impls in `crates/liter-llm-wasm/src/lib.rs`, but `tower` is not enabled under `wasm-http`. Added the four types to `alef.toml` `[crates.wasm].exclude_types` alongside the existing config-DTO exclusions.
+- **Ruby gem build: missing feature declarations** — `packages/ruby/ext/liter_llm_rb/native/Cargo.toml` did not declare `native-http`/`opendal-cache`/`wasm-http`, so alef-emitted `#[cfg(feature = "native-http")]` gates in `src/lib.rs` resolved as false and the `ensure_crypto_provider` call site failed with `E0425: cannot find value in this scope`. Regen now writes the features section. Affected every Ruby gem variant (linux-x86_64, linux-aarch64, macos-arm64).
+- **PHP windows builds: `ext-php-rs` macro lookup** — `LiterLlmApi::ensure_crypto_provider` resolution failed inside `#[php_impl]`-generated code on `target_os = "windows"` (`E0599: no associated function or constant`). Other bindings (PyO3, NAPI, Rustler) handle the same pattern correctly, so this looks like an ext-php-rs upstream gap. Excluded `ensure_crypto_provider` from the PHP binding entirely via `alef.toml` — the function is a no-op on Windows anyway, and downstream PHP users rely on transitive invocation from internal `reqwest::Client` constructors.
+- **PHP PIE matrix: `php8.5` macos-arm64** — `shivammathur/setup-php@v2` does not yet ship a PHP 8.5 image for macOS arm64 runners (PHP 8.5 was released November 2025). Excluded that matrix cell from `publish.yaml` until the upstream action catches up. Linux + Windows PHP 8.5 builds remain in the matrix.
+
 ## [1.6.2] - 2026-06-16
 
 ### Fixed

@@ -152,14 +152,14 @@ impl Default for CacheConfig {
 /// writes it — separation of concerns is maintained by keeping the write path in
 /// the negative-cache layer.
 ///
-/// ### Why `Arc<LiterLlmError>` rather than a serialisable form?
+/// ### Why a shared error value rather than a serialisable form?
 ///
 /// `LiterLlmError` contains a `reqwest::Error` variant gated on `native-http`.
 /// That variant is not `Serialize`, so the enum cannot derive `Serialize`
 /// unconditionally.  Wrapping in `Arc` lets the in-memory store pass the value
 /// around cheaply without serialisation.  External stores (Redis, DynamoDB)
 /// that require serialisation should handle the `Error` variant explicitly in
-/// their `CacheStore` implementation, converting to/from a serialisable
+/// their `CacheStore` implementation, converting to and from a serialisable
 /// representation of the error.
 ///
 /// ### Serialisation contract
@@ -243,10 +243,10 @@ impl CachedResponse {
     /// Callers that only expect success responses should call this method and
     /// propagate the `Err`.
     ///
-    /// The in-memory `NegativeCacheLayer` stores errors via `Arc<LiterLlmError>`;
-    /// when converting back, `Arc::try_unwrap` is attempted first to avoid an
-    /// extra allocation.  If other holders exist (unlikely in normal operation),
-    /// the error's `Display` string is re-wrapped in `InternalError`.
+    /// The in-memory `NegativeCacheLayer` stores shared error values. When
+    /// converting back, the original error is reused when possible. If other
+    /// holders exist, the error's display string is re-wrapped in
+    /// `InternalError`.
     pub fn into_llm_response(self) -> Result<LlmResponse> {
         match self {
             Self::Chat(r) => Ok(LlmResponse::Chat(r)),

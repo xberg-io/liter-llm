@@ -122,8 +122,8 @@ pub(crate) fn pool_release(buf: BytesMut) {
 /// to pass it through (optionally modified), `Ok(None)` to drop the chunk,
 /// or `Err(e)` to propagate a stream error.
 ///
-/// The trait is object-safe so implementations can be stored in a
-/// `Vec<Box<dyn ChunkMiddleware>>` inside [`StreamPipeline`].
+/// The trait is object-safe so multiple middleware implementations can be
+/// chained inside [`StreamPipeline`].
 pub trait ChunkMiddleware: Send + Sync {
     /// Process a single chunk.
     ///

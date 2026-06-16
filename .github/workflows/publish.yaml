@@ -728,6 +728,16 @@ jobs:
                     - os: windows-latest
                       label: windows-x86_64
                       target: x86_64-pc-windows-msvc
+                exclude:
+                    # shivammathur/setup-php has no PHP 8.5 build for macos-arm64
+                    # as of 2026-06; PHP 8.5 was released Nov 2025 and the action
+                    # is still catching up. Re-enable once setup-php publishes
+                    # an 8.5 macos-arm64 image.
+                    - php: "8.5"
+                      platform:
+                          os: macos-latest
+                          label: macos-arm64
+                          target: aarch64-apple-darwin
         steps:
             - name: Checkout
               uses: actions/checkout@v6

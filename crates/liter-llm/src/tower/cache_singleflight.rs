@@ -51,9 +51,8 @@ type InFlightMap = Arc<DashMap<u64, broadcast::Sender<SingleflightResult>>>;
 
 /// The value broadcast from a singleflight leader to all followers.
 ///
-/// `Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-/// broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
-/// bump per follower, which is negligible under the burst loads this layer targets.
+/// The error value is shared so every follower receives the same upstream
+/// failure without cloning the underlying error.
 pub type SingleflightResult = std::result::Result<CachedResponse, Arc<LiterLlmError>>;
 
 // ─── SingleflightHandle ───────────────────────────────────────────────────────

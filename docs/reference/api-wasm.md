@@ -2,7 +2,7 @@
 title: "WebAssembly API Reference"
 ---
 
-## WebAssembly API Reference <span class="version-badge">v1.6.2</span>
+## WebAssembly API Reference <span class="version-badge">v1.6.3</span>
 
 ### Functions
 
@@ -127,7 +127,7 @@ Returns `true` if a provider with the given name was found and removed,
 
 **Errors:**
 
-Returns an error only if the internal lock is poisoned.
+Returns an error if the custom-provider registry cannot be updated.
 
 **Signature:**
 
@@ -158,9 +158,8 @@ const result = unregisterCustomProvider("value");
 Return the capability flags for a named provider.
 
 Performs an O(n) linear scan over the embedded registry (143 entries).
-Returns an owned value so that bindings can box/copy it across the FFI
-boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
-so this is a cheap memcpy of seven `bool` fields.
+Returns an owned value so bindings can pass capability data without
+borrowing registry internals.
 
 For unknown `provider_name` values the function returns an all-`false`
 sentinel so callers never need to handle `Option`.
@@ -382,8 +381,8 @@ checkBound("value", 42, 42, 42);
 Install the `ring` crypto provider as the rustls process default, idempotently.
 
 rustls 0.23+ removed the implicit default provider. This function installs
-`ring` once per process. Subsequent calls are no-ops. Calling it from a
-downstream Rust app that has already installed `aws-lc-rs` is safe — the
+`ring` once per process. Subsequent calls are no-ops. Calling it after
+another rustls crypto provider has already been installed is safe: the
 `Err` from `install_default()` is silently ignored.
 
 Called automatically by every internal `reqwest.Client` constructor
@@ -604,8 +603,8 @@ Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
 to pass it through (optionally modified), `Ok(None)` to drop the chunk,
 or `Err(e)` to propagate a stream error.
 
-The trait is object-safe so implementations can be stored in a
-`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+The trait is object-safe so multiple middleware implementations can be
+chained inside `StreamPipeline`.
 
 ##### Methods
 
@@ -761,480 +760,6 @@ headers are cached at construction to avoid redundant encoding on every request.
 
 ##### Methods
 
-###### chat()
-
-**Signature:**
-
-```typescript
-chat(req: ChatCompletionRequest): Promise<ChatCompletionResponse>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.chat(new ChatCompletionRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `ChatCompletionResponse`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### chatStream()
-
-**Signature:**
-
-```typescript
-chatStream(req: ChatCompletionRequest): Promise<string>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.chatStream(new ChatCompletionRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `string`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### embed()
-
-**Signature:**
-
-```typescript
-embed(req: EmbeddingRequest): Promise<EmbeddingResponse>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.embed(new EmbeddingRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `EmbeddingRequest` | Yes | The embedding request |
-
-**Returns:** `EmbeddingResponse`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### listModels()
-
-**Signature:**
-
-```typescript
-listModels(): Promise<ModelsListResponse>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.listModels();
-```
-
-**Returns:** `ModelsListResponse`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### imageGenerate()
-
-**Signature:**
-
-```typescript
-imageGenerate(req: CreateImageRequest): Promise<ImagesResponse>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.imageGenerate(new CreateImageRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateImageRequest` | Yes | The create image request |
-
-**Returns:** `ImagesResponse`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### speech()
-
-**Signature:**
-
-```typescript
-speech(req: CreateSpeechRequest): Promise<Buffer>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.speech(new CreateSpeechRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateSpeechRequest` | Yes | The create speech request |
-
-**Returns:** `Buffer`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### transcribe()
-
-**Signature:**
-
-```typescript
-transcribe(req: CreateTranscriptionRequest): Promise<TranscriptionResponse>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.transcribe(new CreateTranscriptionRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
-
-**Returns:** `TranscriptionResponse`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### moderate()
-
-**Signature:**
-
-```typescript
-moderate(req: ModerationRequest): Promise<ModerationResponse>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.moderate(new ModerationRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ModerationRequest` | Yes | The moderation request |
-
-**Returns:** `ModerationResponse`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### rerank()
-
-**Signature:**
-
-```typescript
-rerank(req: RerankRequest): Promise<RerankResponse>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.rerank(new RerankRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `RerankRequest` | Yes | The rerank request |
-
-**Returns:** `RerankResponse`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### search()
-
-**Signature:**
-
-```typescript
-search(req: SearchRequest): Promise<SearchResponse>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.search(new SearchRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `SearchRequest` | Yes | The search request |
-
-**Returns:** `SearchResponse`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### ocr()
-
-**Signature:**
-
-```typescript
-ocr(req: OcrRequest): Promise<OcrResponse>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.ocr(new OcrRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `OcrRequest` | Yes | The ocr request |
-
-**Returns:** `OcrResponse`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### createFile()
-
-**Signature:**
-
-```typescript
-createFile(req: CreateFileRequest): Promise<FileObject>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.createFile(new CreateFileRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateFileRequest` | Yes | The create file request |
-
-**Returns:** `FileObject`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### retrieveFile()
-
-**Signature:**
-
-```typescript
-retrieveFile(fileId: string): Promise<FileObject>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.retrieveFile("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `fileId` | `string` | Yes | The file id |
-
-**Returns:** `FileObject`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### deleteFile()
-
-**Signature:**
-
-```typescript
-deleteFile(fileId: string): Promise<DeleteResponse>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.deleteFile("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `fileId` | `string` | Yes | The file id |
-
-**Returns:** `DeleteResponse`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### listFiles()
-
-**Signature:**
-
-```typescript
-listFiles(query: FileListQuery): Promise<FileListResponse>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.listFiles(new FileListQuery());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `query` | `FileListQuery \| null` | No | The file list query |
-
-**Returns:** `FileListResponse`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### fileContent()
-
-**Signature:**
-
-```typescript
-fileContent(fileId: string): Promise<Buffer>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.fileContent("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `fileId` | `string` | Yes | The file id |
-
-**Returns:** `Buffer`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### createBatch()
-
-**Signature:**
-
-```typescript
-createBatch(req: CreateBatchRequest): Promise<BatchObject>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.createBatch(new CreateBatchRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateBatchRequest` | Yes | The create batch request |
-
-**Returns:** `BatchObject`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### retrieveBatch()
-
-**Signature:**
-
-```typescript
-retrieveBatch(batchId: string): Promise<BatchObject>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.retrieveBatch("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `batchId` | `string` | Yes | The batch id |
-
-**Returns:** `BatchObject`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### listBatches()
-
-**Signature:**
-
-```typescript
-listBatches(query: BatchListQuery): Promise<BatchListResponse>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.listBatches(new BatchListQuery());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `query` | `BatchListQuery \| null` | No | The batch list query |
-
-**Returns:** `BatchListResponse`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### cancelBatch()
-
-**Signature:**
-
-```typescript
-cancelBatch(batchId: string): Promise<BatchObject>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.cancelBatch("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `batchId` | `string` | Yes | The batch id |
-
-**Returns:** `BatchObject`
-
-**Errors:** Throws `Error` with a descriptive message.
-
 ###### fetchBatchForPolling()
 
 **Signature:**
@@ -1292,78 +817,6 @@ const result = await instance.waitForBatch("value", new WaitForBatchConfig());
 | `config` | `WaitForBatchConfig` | Yes | The configuration options |
 
 **Returns:** `BatchObject`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### createResponse()
-
-**Signature:**
-
-```typescript
-createResponse(req: CreateResponseRequest): Promise<ResponseObject>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.createResponse(new CreateResponseRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateResponseRequest` | Yes | The create response request |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### retrieveResponse()
-
-**Signature:**
-
-```typescript
-retrieveResponse(responseId: string): Promise<ResponseObject>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.retrieveResponse("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `responseId` | `string` | Yes | The response id |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Throws `Error` with a descriptive message.
-
-###### cancelResponse()
-
-**Signature:**
-
-```typescript
-cancelResponse(responseId: string): Promise<ResponseObject>
-```
-
-**Example:**
-
-```typescript
-const result = await instance.cancelResponse("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `responseId` | `string` | Yes | The response id |
-
-**Returns:** `ResponseObject`
 
 **Errors:** Throws `Error` with a descriptive message.
 
@@ -1438,7 +891,7 @@ Embedding response.
 | `object` | `string` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `data` | `Array<EmbeddingObject>` | — | List of embeddings. |
 | `model` | `string` | — | Model used to generate embeddings. |
-| `usage` | `Usage \| null` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
+| `usage` | `Usage \| null` | language default | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -1500,9 +953,9 @@ Function definition exposed to the model.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `string` | — | Name of the function. Required and must be alphanumeric + underscores. |
-| `description` | `string \| null` | `/* serde(default) */` | Human-readable description explaining what the function does. |
-| `parameters` | `unknown \| null` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
-| `strict` | `boolean \| null` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
+| `description` | `string \| null` | language default | Human-readable description explaining what the function does. |
+| `parameters` | `unknown \| null` | language default | JSON Schema defining the function's parameters. |
+| `strict` | `boolean \| null` | language default | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -1587,18 +1040,6 @@ Response containing generated images.
 |-------|------|---------|-------------|
 | `created` | `number` | — | Unix timestamp of image creation. |
 | `data` | `Array<Image>` | `[]` | List of generated images. |
-
----
-
-#### IntentPrototype
-
-An intent prototype: `(intent_name, prototype_embedding, target_model_id)`.
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | `string` | — | Human-readable name for the intent (used in logs/metrics). |
-| `embedding` | `Array<number>` | — | Pre-computed embedding vector for this intent. |
-| `model` | `string` | — | Model to route to when this intent is detected. |
 
 ---
 
@@ -1721,7 +1162,7 @@ An image extracted from an OCR page.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `string` | — | Unique image identifier within the document. |
-| `imageBase64` | `string \| null` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
+| `imageBase64` | `string \| null` | language default | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1733,8 +1174,8 @@ A single page of OCR output.
 |-------|------|---------|-------------|
 | `index` | `number` | — | Page index (0-based). |
 | `markdown` | `string` | — | Extracted page content as Markdown. |
-| `images` | `Array<OcrImage> \| null` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `dimensions` | `PageDimensions \| null` | `/* serde(default) */` | Page dimensions in pixels, if available. |
+| `images` | `Array<OcrImage> \| null` | language default | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `PageDimensions \| null` | language default | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1759,7 +1200,7 @@ An OCR response.
 |-------|------|---------|-------------|
 | `pages` | `Array<OcrPage>` | — | Extracted pages in order. |
 | `model` | `string` | — | Model/provider used for OCR. |
-| `usage` | `Usage \| null` | `/* serde(default) */` | Token usage, if reported by the provider. |
+| `usage` | `Usage \| null` | language default | Token usage, if reported by the provider. |
 
 ---
 
@@ -1821,9 +1262,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function.  Keeping
-these fields separate preserves backward compatibility with all generated
-binding code that constructs `ProviderConfig` using struct literal syntax.
+format, which are accessed via the `capabilities` function.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -1859,7 +1298,7 @@ Response from the rerank endpoint.
 |-------|------|---------|-------------|
 | `id` | `string \| null` | `null` | Unique identifier for this rerank request. |
 | `results` | `Array<RerankResult>` | — | Reranked documents in order of relevance. |
-| `meta` | `unknown \| null` | `/* serde(default) */` | Optional metadata about the reranking operation. |
+| `meta` | `unknown \| null` | language default | Optional metadata about the reranking operation. |
 
 ---
 
@@ -1871,7 +1310,7 @@ A single reranked document with its relevance score.
 |-------|------|---------|-------------|
 | `index` | `number` | — | Original document index in the input list. |
 | `relevanceScore` | `number` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `document` | `RerankResultDocument \| null` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
+| `document` | `RerankResultDocument \| null` | language default | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -1970,17 +1409,7 @@ An individual search result.
 | `title` | `string` | — | Result title. |
 | `url` | `string` | — | Result URL. |
 | `snippet` | `string` | — | Text snippet or excerpt from the page. |
-| `date` | `string \| null` | `/* serde(default) */` | Publication or last-updated date, if available. |
-
----
-
-#### SingleflightResult
-
-The value broadcast from a singleflight leader to all followers.
-
-`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
-bump per follower, which is negligible under the burst loads this layer targets.
+| `date` | `string \| null` | language default | Publication or last-updated date, if available. |
 
 ---
 
@@ -2447,29 +1876,6 @@ Auth scheme used by a provider.
 | `ApiKey` | `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). |
 | `None` | No authentication header required. |
 | `Unknown` | Unrecognised auth scheme — falls back to bearer. |
-
----
-
-#### CircuitState
-
-Observable state of a circuit breaker.
-
-| Value | Description |
-|-------|-------------|
-| `Closed` | Requests flow through normally. |
-| `Open` | All requests are rejected; the circuit is waiting for the backoff to elapse. |
-| `HalfOpen` | One probe request is allowed through to test service health. |
-
----
-
-#### HealthStatus
-
-The result of a single health probe.
-
-| Value | Description |
-|-------|-------------|
-| `Healthy` | The probe succeeded; the upstream is reachable. |
-| `Unhealthy` | The probe failed; the upstream may be down. |
 
 ---
 

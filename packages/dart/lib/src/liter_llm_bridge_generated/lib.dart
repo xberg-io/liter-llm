@@ -65,16 +65,15 @@ Future<void> registerCustomProvider({required CustomProviderConfig config}) =>
 ///
 /// **Errors:**
 ///
-/// Returns an error only if the internal lock is poisoned.
+/// Returns an error if the custom-provider registry cannot be updated.
 Future<bool> unregisterCustomProvider({required String name}) =>
     RustLib.instance.api.crateUnregisterCustomProvider(name: name);
 
 /// Return the capability flags for a named provider.
 ///
 /// Performs an O(n) linear scan over the embedded registry (143 entries).
-/// Returns an owned value so that bindings can box/copy it across the FFI
-/// boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
-/// so this is a cheap memcpy of seven `bool` fields.
+/// Returns an owned value so bindings can pass capability data without
+/// borrowing registry internals.
 ///
 /// For unknown `provider_name` values the function returns an all-`false`
 /// sentinel so callers never need to handle `Option`.
@@ -201,8 +200,8 @@ Future<void> checkBound({
 /// Install the `ring` crypto provider as the rustls process default, idempotently.
 ///
 /// rustls 0.23+ removed the implicit default provider. This function installs
-/// `ring` once per process. Subsequent calls are no-ops. Calling it from a
-/// downstream Rust app that has already installed `aws-lc-rs` is safe — the
+/// `ring` once per process. Subsequent calls are no-ops. Calling it after
+/// another rustls crypto provider has already been installed is safe: the
 /// `Err` from `install_default()` is silently ignored.
 ///
 /// Called automatically by every internal `reqwest.Client` constructor
@@ -2965,9 +2964,7 @@ class ProviderCapabilities {
 /// Static configuration for a single provider entry in providers.json.
 ///
 /// This struct deliberately does not include capability flags or streaming
-/// format, which are accessed via the [`capabilities`] function.  Keeping
-/// these fields separate preserves backward compatibility with all generated
-/// binding code that constructs `ProviderConfig` using struct literal syntax.
+/// format, which are accessed via the [`capabilities`] function.
 class ProviderConfig {
   /// Provider identifier (matches the entry key in providers.json).
   final String name;

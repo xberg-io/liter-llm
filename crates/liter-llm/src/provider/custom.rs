@@ -88,7 +88,7 @@ pub fn register_custom_provider(config: CustomProviderConfig) -> Result<()> {
 ///
 /// # Errors
 ///
-/// Returns an error only if the internal lock is poisoned.
+/// Returns an error if the custom-provider registry cannot be updated.
 pub fn unregister_custom_provider(name: &str) -> Result<bool> {
     let mut providers = CUSTOM_PROVIDERS.write().map_err(|e| LiterLlmError::ServerError {
         message: format!("custom provider registry lock poisoned: {e}"),

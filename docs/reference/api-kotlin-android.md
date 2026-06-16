@@ -2,7 +2,7 @@
 title: "Kotlin (Android) API Reference"
 ---
 
-## Kotlin (Android) API Reference <span class="version-badge">v1.6.2</span>
+## Kotlin (Android) API Reference <span class="version-badge">v1.6.3</span>
 
 ### Functions
 
@@ -130,7 +130,7 @@ Returns `true` if a provider with the given name was found and removed,
 
 **Errors:**
 
-Returns an error only if the internal lock is poisoned.
+Returns an error if the custom-provider registry cannot be updated.
 
 **Signature:**
 
@@ -162,9 +162,8 @@ val result = unregisterCustomProvider("value")
 Return the capability flags for a named provider.
 
 Performs an O(n) linear scan over the embedded registry (143 entries).
-Returns an owned value so that bindings can box/copy it across the FFI
-boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
-so this is a cheap memcpy of seven `bool` fields.
+Returns an owned value so bindings can pass capability data without
+borrowing registry internals.
 
 For unknown `provider_name` values the function returns an all-`false`
 sentinel so callers never need to handle `Option`.
@@ -389,8 +388,8 @@ checkBound("value", 42, 42, 42)
 Install the `ring` crypto provider as the rustls process default, idempotently.
 
 rustls 0.23+ removed the implicit default provider. This function installs
-`ring` once per process. Subsequent calls are no-ops. Calling it from a
-downstream Rust app that has already installed `aws-lc-rs` is safe — the
+`ring` once per process. Subsequent calls are no-ops. Calling it after
+another rustls crypto provider has already been installed is safe: the
 `Err` from `install_default()` is silently ignored.
 
 Called automatically by every internal `reqwest.Client` constructor
@@ -611,8 +610,8 @@ Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
 to pass it through (optionally modified), `Ok(None)` to drop the chunk,
 or `Err(e)` to propagate a stream error.
 
-The trait is object-safe so implementations can be stored in a
-`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+The trait is object-safe so multiple middleware implementations can be
+chained inside `StreamPipeline`.
 
 ##### Methods
 
@@ -769,500 +768,6 @@ headers are cached at construction to avoid redundant encoding on every request.
 
 ##### Methods
 
-###### chat()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun chat(req: ChatCompletionRequest): ChatCompletionResponse
-```
-
-**Example:**
-
-```kotlin
-val result = instance.chat(ChatCompletionRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `ChatCompletionResponse`
-
-**Errors:** Throws `Error`.
-
-###### chatStream()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun chatStream(req: ChatCompletionRequest): String
-```
-
-**Example:**
-
-```kotlin
-val result = instance.chatStream(ChatCompletionRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `String`
-
-**Errors:** Throws `Error`.
-
-###### embed()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun embed(req: EmbeddingRequest): EmbeddingResponse
-```
-
-**Example:**
-
-```kotlin
-val result = instance.embed(EmbeddingRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `EmbeddingRequest` | Yes | The embedding request |
-
-**Returns:** `EmbeddingResponse`
-
-**Errors:** Throws `Error`.
-
-###### listModels()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun listModels(): ModelsListResponse
-```
-
-**Example:**
-
-```kotlin
-val result = instance.listModels()
-```
-
-**Returns:** `ModelsListResponse`
-
-**Errors:** Throws `Error`.
-
-###### imageGenerate()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun imageGenerate(req: CreateImageRequest): ImagesResponse
-```
-
-**Example:**
-
-```kotlin
-val result = instance.imageGenerate(CreateImageRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateImageRequest` | Yes | The create image request |
-
-**Returns:** `ImagesResponse`
-
-**Errors:** Throws `Error`.
-
-###### speech()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun speech(req: CreateSpeechRequest): ByteArray
-```
-
-**Example:**
-
-```kotlin
-val result = instance.speech(CreateSpeechRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateSpeechRequest` | Yes | The create speech request |
-
-**Returns:** `ByteArray`
-
-**Errors:** Throws `Error`.
-
-###### transcribe()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun transcribe(req: CreateTranscriptionRequest): TranscriptionResponse
-```
-
-**Example:**
-
-```kotlin
-val result = instance.transcribe(CreateTranscriptionRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
-
-**Returns:** `TranscriptionResponse`
-
-**Errors:** Throws `Error`.
-
-###### moderate()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun moderate(req: ModerationRequest): ModerationResponse
-```
-
-**Example:**
-
-```kotlin
-val result = instance.moderate(ModerationRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ModerationRequest` | Yes | The moderation request |
-
-**Returns:** `ModerationResponse`
-
-**Errors:** Throws `Error`.
-
-###### rerank()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun rerank(req: RerankRequest): RerankResponse
-```
-
-**Example:**
-
-```kotlin
-val result = instance.rerank(RerankRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `RerankRequest` | Yes | The rerank request |
-
-**Returns:** `RerankResponse`
-
-**Errors:** Throws `Error`.
-
-###### search()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun search(req: SearchRequest): SearchResponse
-```
-
-**Example:**
-
-```kotlin
-val result = instance.search(SearchRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `SearchRequest` | Yes | The search request |
-
-**Returns:** `SearchResponse`
-
-**Errors:** Throws `Error`.
-
-###### ocr()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun ocr(req: OcrRequest): OcrResponse
-```
-
-**Example:**
-
-```kotlin
-val result = instance.ocr(OcrRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `OcrRequest` | Yes | The ocr request |
-
-**Returns:** `OcrResponse`
-
-**Errors:** Throws `Error`.
-
-###### createFile()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun createFile(req: CreateFileRequest): FileObject
-```
-
-**Example:**
-
-```kotlin
-val result = instance.createFile(CreateFileRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateFileRequest` | Yes | The create file request |
-
-**Returns:** `FileObject`
-
-**Errors:** Throws `Error`.
-
-###### retrieveFile()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun retrieveFile(fileId: String): FileObject
-```
-
-**Example:**
-
-```kotlin
-val result = instance.retrieveFile("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `fileId` | `String` | Yes | The file id |
-
-**Returns:** `FileObject`
-
-**Errors:** Throws `Error`.
-
-###### deleteFile()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun deleteFile(fileId: String): DeleteResponse
-```
-
-**Example:**
-
-```kotlin
-val result = instance.deleteFile("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `fileId` | `String` | Yes | The file id |
-
-**Returns:** `DeleteResponse`
-
-**Errors:** Throws `Error`.
-
-###### listFiles()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun listFiles(query: FileListQuery? = null): FileListResponse
-```
-
-**Example:**
-
-```kotlin
-val result = instance.listFiles(FileListQuery())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `query` | `FileListQuery?` | No | The file list query |
-
-**Returns:** `FileListResponse`
-
-**Errors:** Throws `Error`.
-
-###### fileContent()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun fileContent(fileId: String): ByteArray
-```
-
-**Example:**
-
-```kotlin
-val result = instance.fileContent("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `fileId` | `String` | Yes | The file id |
-
-**Returns:** `ByteArray`
-
-**Errors:** Throws `Error`.
-
-###### createBatch()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun createBatch(req: CreateBatchRequest): BatchObject
-```
-
-**Example:**
-
-```kotlin
-val result = instance.createBatch(CreateBatchRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateBatchRequest` | Yes | The create batch request |
-
-**Returns:** `BatchObject`
-
-**Errors:** Throws `Error`.
-
-###### retrieveBatch()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun retrieveBatch(batchId: String): BatchObject
-```
-
-**Example:**
-
-```kotlin
-val result = instance.retrieveBatch("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `batchId` | `String` | Yes | The batch id |
-
-**Returns:** `BatchObject`
-
-**Errors:** Throws `Error`.
-
-###### listBatches()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun listBatches(query: BatchListQuery? = null): BatchListResponse
-```
-
-**Example:**
-
-```kotlin
-val result = instance.listBatches(BatchListQuery())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `query` | `BatchListQuery?` | No | The batch list query |
-
-**Returns:** `BatchListResponse`
-
-**Errors:** Throws `Error`.
-
-###### cancelBatch()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun cancelBatch(batchId: String): BatchObject
-```
-
-**Example:**
-
-```kotlin
-val result = instance.cancelBatch("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `batchId` | `String` | Yes | The batch id |
-
-**Returns:** `BatchObject`
-
-**Errors:** Throws `Error`.
-
 ###### fetchBatchForPolling()
 
 **Signature:**
@@ -1324,81 +829,6 @@ val result = instance.waitForBatch("value", WaitForBatchConfig())
 **Returns:** `BatchObject`
 
 **Errors:** Throws `BatchWaitError`.
-
-###### createResponse()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun createResponse(req: CreateResponseRequest): ResponseObject
-```
-
-**Example:**
-
-```kotlin
-val result = instance.createResponse(CreateResponseRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateResponseRequest` | Yes | The create response request |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Throws `Error`.
-
-###### retrieveResponse()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun retrieveResponse(responseId: String): ResponseObject
-```
-
-**Example:**
-
-```kotlin
-val result = instance.retrieveResponse("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `responseId` | `String` | Yes | The response id |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Throws `Error`.
-
-###### cancelResponse()
-
-**Signature:**
-
-```kotlin
-@Throws(Error::class)
-fun cancelResponse(responseId: String): ResponseObject
-```
-
-**Example:**
-
-```kotlin
-val result = instance.cancelResponse("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `responseId` | `String` | Yes | The response id |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Throws `Error`.
 
 ---
 
@@ -1471,7 +901,7 @@ Embedding response.
 | `object` | `String` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `data` | `List<EmbeddingObject>` | — | List of embeddings. |
 | `model` | `String` | — | Model used to generate embeddings. |
-| `usage` | `Usage?` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
+| `usage` | `Usage?` | language default | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -1533,9 +963,9 @@ Function definition exposed to the model.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Name of the function. Required and must be alphanumeric + underscores. |
-| `description` | `String?` | `/* serde(default) */` | Human-readable description explaining what the function does. |
-| `parameters` | `Any?` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
-| `strict` | `Boolean?` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
+| `description` | `String?` | language default | Human-readable description explaining what the function does. |
+| `parameters` | `Any?` | language default | JSON Schema defining the function's parameters. |
+| `strict` | `Boolean?` | language default | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -1754,7 +1184,7 @@ An image extracted from an OCR page.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String` | — | Unique image identifier within the document. |
-| `imageBase64` | `String?` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
+| `imageBase64` | `String?` | language default | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1766,8 +1196,8 @@ A single page of OCR output.
 |-------|------|---------|-------------|
 | `index` | `Int` | — | Page index (0-based). |
 | `markdown` | `String` | — | Extracted page content as Markdown. |
-| `images` | `List<OcrImage>?` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `dimensions` | `PageDimensions?` | `/* serde(default) */` | Page dimensions in pixels, if available. |
+| `images` | `List<OcrImage>?` | language default | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `PageDimensions?` | language default | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1792,7 +1222,7 @@ An OCR response.
 |-------|------|---------|-------------|
 | `pages` | `List<OcrPage>` | — | Extracted pages in order. |
 | `model` | `String` | — | Model/provider used for OCR. |
-| `usage` | `Usage?` | `/* serde(default) */` | Token usage, if reported by the provider. |
+| `usage` | `Usage?` | language default | Token usage, if reported by the provider. |
 
 ---
 
@@ -1854,9 +1284,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function.  Keeping
-these fields separate preserves backward compatibility with all generated
-binding code that constructs `ProviderConfig` using struct literal syntax.
+format, which are accessed via the `capabilities` function.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -1892,7 +1320,7 @@ Response from the rerank endpoint.
 |-------|------|---------|-------------|
 | `id` | `String?` | `null` | Unique identifier for this rerank request. |
 | `results` | `List<RerankResult>` | — | Reranked documents in order of relevance. |
-| `meta` | `Any?` | `/* serde(default) */` | Optional metadata about the reranking operation. |
+| `meta` | `Any?` | language default | Optional metadata about the reranking operation. |
 
 ---
 
@@ -1904,7 +1332,7 @@ A single reranked document with its relevance score.
 |-------|------|---------|-------------|
 | `index` | `Int` | — | Original document index in the input list. |
 | `relevanceScore` | `Double` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `document` | `RerankResultDocument?` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
+| `document` | `RerankResultDocument?` | language default | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -2003,7 +1431,7 @@ An individual search result.
 | `title` | `String` | — | Result title. |
 | `url` | `String` | — | Result URL. |
 | `snippet` | `String` | — | Text snippet or excerpt from the page. |
-| `date` | `String?` | `/* serde(default) */` | Publication or last-updated date, if available. |
+| `date` | `String?` | language default | Publication or last-updated date, if available. |
 
 ---
 
@@ -2011,9 +1439,8 @@ An individual search result.
 
 The value broadcast from a singleflight leader to all followers.
 
-`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
-bump per follower, which is negligible under the burst loads this layer targets.
+The error value is shared so every follower receives the same upstream
+failure without cloning the underlying error.
 
 ---
 

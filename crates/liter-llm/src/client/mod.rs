@@ -1814,7 +1814,8 @@ impl BatchClient for DefaultClient {
 /// Method name avoids collision with the inherent `DefaultClient::retrieve_batch`
 /// so alef-generated bindings don't need to import this trait into scope.
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
-#[async_trait::async_trait]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait::async_trait)]
+#[cfg_attr(target_arch = "wasm32", async_trait::async_trait(?Send))]
 #[doc(hidden)]
 #[cfg_attr(alef, alef(skip))]
 pub trait BatchRetriever {
@@ -1823,7 +1824,8 @@ pub trait BatchRetriever {
 }
 
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
-#[async_trait::async_trait]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait::async_trait)]
+#[cfg_attr(target_arch = "wasm32", async_trait::async_trait(?Send))]
 impl BatchRetriever for DefaultClient {
     async fn fetch_batch_for_polling(&self, batch_id: &str) -> Result<BatchObject> {
         self.retrieve_batch(batch_id).await
@@ -1841,7 +1843,12 @@ pub async fn wait_for_batch_impl<R: BatchRetriever>(
     batch_id: &str,
     config: WaitForBatchConfig,
 ) -> std::result::Result<BatchObject, BatchWaitError> {
+    // `tokio::time` requires the `native-http` feature, so on `wasm-http` builds
+    // we fall back to `web_time::Instant` + `gloo_timers::future::sleep`.
+    #[cfg(not(target_arch = "wasm32"))]
     let started = tokio::time::Instant::now();
+    #[cfg(target_arch = "wasm32")]
+    let started = web_time::Instant::now();
     let mut interval_secs = config.initial_interval_secs;
 
     loop {
@@ -1859,7 +1866,10 @@ pub async fn wait_for_batch_impl<R: BatchRetriever>(
                         return Err(BatchWaitError::Timeout { timeout_secs });
                     }
                 }
+                #[cfg(not(target_arch = "wasm32"))]
                 tokio::time::sleep(Duration::from_secs_f64(interval_secs)).await;
+                #[cfg(target_arch = "wasm32")]
+                gloo_timers::future::sleep(Duration::from_secs_f64(interval_secs)).await;
                 let next =
                     (interval_secs as f32 * config.backoff_multiplier).min(config.max_interval_secs as f32) as f64;
                 interval_secs = next;

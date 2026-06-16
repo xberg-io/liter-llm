@@ -2,7 +2,7 @@
 title: "C# API Reference"
 ---
 
-## C# API Reference <span class="version-badge">v1.6.2</span>
+## C# API Reference <span class="version-badge">v1.6.3</span>
 
 ### Functions
 
@@ -127,7 +127,7 @@ Returns `true` if a provider with the given name was found and removed,
 
 **Errors:**
 
-Returns an error only if the internal lock is poisoned.
+Returns an error if the custom-provider registry cannot be updated.
 
 **Signature:**
 
@@ -158,9 +158,8 @@ var result = UnregisterCustomProvider("value");
 Return the capability flags for a named provider.
 
 Performs an O(n) linear scan over the embedded registry (143 entries).
-Returns an owned value so that bindings can box/copy it across the FFI
-boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
-so this is a cheap memcpy of seven `bool` fields.
+Returns an owned value so bindings can pass capability data without
+borrowing registry internals.
 
 For unknown `provider_name` values the function returns an all-`false`
 sentinel so callers never need to handle `Option`.
@@ -459,8 +458,8 @@ CheckBound("value", 42, 42, 42);
 Install the `ring` crypto provider as the rustls process default, idempotently.
 
 rustls 0.23+ removed the implicit default provider. This function installs
-`ring` once per process. Subsequent calls are no-ops. Calling it from a
-downstream Rust app that has already installed `aws-lc-rs` is safe — the
+`ring` once per process. Subsequent calls are no-ops. Calling it after
+another rustls crypto provider has already been installed is safe: the
 `Err` from `install_default()` is silently ignored.
 
 Called automatically by every internal `reqwest.Client` constructor
@@ -741,8 +740,8 @@ Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
 to pass it through (optionally modified), `Ok(None)` to drop the chunk,
 or `Err(e)` to propagate a stream error.
 
-The trait is object-safe so implementations can be stored in a
-`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+The trait is object-safe so multiple middleware implementations can be
+chained inside `StreamPipeline`.
 
 ##### Methods
 
@@ -898,480 +897,6 @@ headers are cached at construction to avoid redundant encoding on every request.
 
 ##### Methods
 
-###### Chat()
-
-**Signature:**
-
-```csharp
-public async Task<ChatCompletionResponse> ChatAsync(ChatCompletionRequest req)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.Chat(new ChatCompletionRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `ChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `ChatCompletionResponse`
-
-**Errors:** Throws `Error`.
-
-###### ChatStream()
-
-**Signature:**
-
-```csharp
-public async Task<string> ChatStreamAsync(ChatCompletionRequest req)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.ChatStream(new ChatCompletionRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `ChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `string`
-
-**Errors:** Throws `Error`.
-
-###### Embed()
-
-**Signature:**
-
-```csharp
-public async Task<EmbeddingResponse> EmbedAsync(EmbeddingRequest req)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.Embed(new EmbeddingRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `EmbeddingRequest` | Yes | The embedding request |
-
-**Returns:** `EmbeddingResponse`
-
-**Errors:** Throws `Error`.
-
-###### ListModels()
-
-**Signature:**
-
-```csharp
-public async Task<ModelsListResponse> ListModelsAsync()
-```
-
-**Example:**
-
-```csharp
-var result = await instance.ListModels();
-```
-
-**Returns:** `ModelsListResponse`
-
-**Errors:** Throws `Error`.
-
-###### ImageGenerate()
-
-**Signature:**
-
-```csharp
-public async Task<ImagesResponse> ImageGenerateAsync(CreateImageRequest req)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.ImageGenerate(new CreateImageRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `CreateImageRequest` | Yes | The create image request |
-
-**Returns:** `ImagesResponse`
-
-**Errors:** Throws `Error`.
-
-###### Speech()
-
-**Signature:**
-
-```csharp
-public async Task<byte[]> SpeechAsync(CreateSpeechRequest req)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.Speech(new CreateSpeechRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `CreateSpeechRequest` | Yes | The create speech request |
-
-**Returns:** `byte[]`
-
-**Errors:** Throws `Error`.
-
-###### Transcribe()
-
-**Signature:**
-
-```csharp
-public async Task<TranscriptionResponse> TranscribeAsync(CreateTranscriptionRequest req)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.Transcribe(new CreateTranscriptionRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
-
-**Returns:** `TranscriptionResponse`
-
-**Errors:** Throws `Error`.
-
-###### Moderate()
-
-**Signature:**
-
-```csharp
-public async Task<ModerationResponse> ModerateAsync(ModerationRequest req)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.Moderate(new ModerationRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `ModerationRequest` | Yes | The moderation request |
-
-**Returns:** `ModerationResponse`
-
-**Errors:** Throws `Error`.
-
-###### Rerank()
-
-**Signature:**
-
-```csharp
-public async Task<RerankResponse> RerankAsync(RerankRequest req)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.Rerank(new RerankRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `RerankRequest` | Yes | The rerank request |
-
-**Returns:** `RerankResponse`
-
-**Errors:** Throws `Error`.
-
-###### Search()
-
-**Signature:**
-
-```csharp
-public async Task<SearchResponse> SearchAsync(SearchRequest req)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.Search(new SearchRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `SearchRequest` | Yes | The search request |
-
-**Returns:** `SearchResponse`
-
-**Errors:** Throws `Error`.
-
-###### Ocr()
-
-**Signature:**
-
-```csharp
-public async Task<OcrResponse> OcrAsync(OcrRequest req)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.Ocr(new OcrRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `OcrRequest` | Yes | The ocr request |
-
-**Returns:** `OcrResponse`
-
-**Errors:** Throws `Error`.
-
-###### CreateFile()
-
-**Signature:**
-
-```csharp
-public async Task<FileObject> CreateFileAsync(CreateFileRequest req)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.CreateFile(new CreateFileRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `CreateFileRequest` | Yes | The create file request |
-
-**Returns:** `FileObject`
-
-**Errors:** Throws `Error`.
-
-###### RetrieveFile()
-
-**Signature:**
-
-```csharp
-public async Task<FileObject> RetrieveFileAsync(string fileId)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.RetrieveFile("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `FileId` | `string` | Yes | The file id |
-
-**Returns:** `FileObject`
-
-**Errors:** Throws `Error`.
-
-###### DeleteFile()
-
-**Signature:**
-
-```csharp
-public async Task<DeleteResponse> DeleteFileAsync(string fileId)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.DeleteFile("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `FileId` | `string` | Yes | The file id |
-
-**Returns:** `DeleteResponse`
-
-**Errors:** Throws `Error`.
-
-###### ListFiles()
-
-**Signature:**
-
-```csharp
-public async Task<FileListResponse> ListFilesAsync(FileListQuery query)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.ListFiles(new FileListQuery());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Query` | `FileListQuery?` | No | The file list query |
-
-**Returns:** `FileListResponse`
-
-**Errors:** Throws `Error`.
-
-###### FileContent()
-
-**Signature:**
-
-```csharp
-public async Task<byte[]> FileContentAsync(string fileId)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.FileContent("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `FileId` | `string` | Yes | The file id |
-
-**Returns:** `byte[]`
-
-**Errors:** Throws `Error`.
-
-###### CreateBatch()
-
-**Signature:**
-
-```csharp
-public async Task<BatchObject> CreateBatchAsync(CreateBatchRequest req)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.CreateBatch(new CreateBatchRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `CreateBatchRequest` | Yes | The create batch request |
-
-**Returns:** `BatchObject`
-
-**Errors:** Throws `Error`.
-
-###### RetrieveBatch()
-
-**Signature:**
-
-```csharp
-public async Task<BatchObject> RetrieveBatchAsync(string batchId)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.RetrieveBatch("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `BatchId` | `string` | Yes | The batch id |
-
-**Returns:** `BatchObject`
-
-**Errors:** Throws `Error`.
-
-###### ListBatches()
-
-**Signature:**
-
-```csharp
-public async Task<BatchListResponse> ListBatchesAsync(BatchListQuery query)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.ListBatches(new BatchListQuery());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Query` | `BatchListQuery?` | No | The batch list query |
-
-**Returns:** `BatchListResponse`
-
-**Errors:** Throws `Error`.
-
-###### CancelBatch()
-
-**Signature:**
-
-```csharp
-public async Task<BatchObject> CancelBatchAsync(string batchId)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.CancelBatch("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `BatchId` | `string` | Yes | The batch id |
-
-**Returns:** `BatchObject`
-
-**Errors:** Throws `Error`.
-
 ###### FetchBatchForPolling()
 
 **Signature:**
@@ -1431,78 +956,6 @@ var result = await instance.WaitForBatch("value", new WaitForBatchConfig());
 **Returns:** `BatchObject`
 
 **Errors:** Throws `BatchWaitError`.
-
-###### CreateResponse()
-
-**Signature:**
-
-```csharp
-public async Task<ResponseObject> CreateResponseAsync(CreateResponseRequest req)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.CreateResponse(new CreateResponseRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `Req` | `CreateResponseRequest` | Yes | The create response request |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Throws `Error`.
-
-###### RetrieveResponse()
-
-**Signature:**
-
-```csharp
-public async Task<ResponseObject> RetrieveResponseAsync(string responseId)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.RetrieveResponse("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `ResponseId` | `string` | Yes | The response id |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Throws `Error`.
-
-###### CancelResponse()
-
-**Signature:**
-
-```csharp
-public async Task<ResponseObject> CancelResponseAsync(string responseId)
-```
-
-**Example:**
-
-```csharp
-var result = await instance.CancelResponse("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `ResponseId` | `string` | Yes | The response id |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Throws `Error`.
 
 ---
 
@@ -1575,7 +1028,7 @@ Embedding response.
 | `Object` | `string` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `Data` | `List<EmbeddingObject>` | — | List of embeddings. |
 | `Model` | `string` | — | Model used to generate embeddings. |
-| `Usage` | `Usage?` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
+| `Usage` | `Usage?` | language default | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -1637,9 +1090,9 @@ Function definition exposed to the model.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `Name` | `string` | — | Name of the function. Required and must be alphanumeric + underscores. |
-| `Description` | `string?` | `/* serde(default) */` | Human-readable description explaining what the function does. |
-| `Parameters` | `object?` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
-| `Strict` | `bool?` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
+| `Description` | `string?` | language default | Human-readable description explaining what the function does. |
+| `Parameters` | `object?` | language default | JSON Schema defining the function's parameters. |
+| `Strict` | `bool?` | language default | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -1858,7 +1311,7 @@ An image extracted from an OCR page.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `Id` | `string` | — | Unique image identifier within the document. |
-| `ImageBase64` | `string?` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
+| `ImageBase64` | `string?` | language default | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1870,8 +1323,8 @@ A single page of OCR output.
 |-------|------|---------|-------------|
 | `Index` | `uint` | — | Page index (0-based). |
 | `Markdown` | `string` | — | Extracted page content as Markdown. |
-| `Images` | `List<OcrImage>?` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `Dimensions` | `PageDimensions?` | `/* serde(default) */` | Page dimensions in pixels, if available. |
+| `Images` | `List<OcrImage>?` | language default | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `Dimensions` | `PageDimensions?` | language default | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1896,7 +1349,7 @@ An OCR response.
 |-------|------|---------|-------------|
 | `Pages` | `List<OcrPage>` | — | Extracted pages in order. |
 | `Model` | `string` | — | Model/provider used for OCR. |
-| `Usage` | `Usage?` | `/* serde(default) */` | Token usage, if reported by the provider. |
+| `Usage` | `Usage?` | language default | Token usage, if reported by the provider. |
 
 ---
 
@@ -1958,9 +1411,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function.  Keeping
-these fields separate preserves backward compatibility with all generated
-binding code that constructs `ProviderConfig` using struct literal syntax.
+format, which are accessed via the `capabilities` function.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -2026,7 +1477,7 @@ Response from the rerank endpoint.
 |-------|------|---------|-------------|
 | `Id` | `string?` | `null` | Unique identifier for this rerank request. |
 | `Results` | `List<RerankResult>` | — | Reranked documents in order of relevance. |
-| `Meta` | `object?` | `/* serde(default) */` | Optional metadata about the reranking operation. |
+| `Meta` | `object?` | language default | Optional metadata about the reranking operation. |
 
 ---
 
@@ -2038,7 +1489,7 @@ A single reranked document with its relevance score.
 |-------|------|---------|-------------|
 | `Index` | `uint` | — | Original document index in the input list. |
 | `RelevanceScore` | `double` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `Document` | `RerankResultDocument?` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
+| `Document` | `RerankResultDocument?` | language default | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -2137,7 +1588,7 @@ An individual search result.
 | `Title` | `string` | — | Result title. |
 | `Url` | `string` | — | Result URL. |
 | `Snippet` | `string` | — | Text snippet or excerpt from the page. |
-| `Date` | `string?` | `/* serde(default) */` | Publication or last-updated date, if available. |
+| `Date` | `string?` | language default | Publication or last-updated date, if available. |
 
 ---
 
@@ -2145,9 +1596,8 @@ An individual search result.
 
 The value broadcast from a singleflight leader to all followers.
 
-`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
-bump per follower, which is negligible under the burst loads this layer targets.
+The error value is shared so every follower receives the same upstream
+failure without cloning the underlying error.
 
 ---
 

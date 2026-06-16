@@ -2,7 +2,7 @@
 title: "Swift API Reference"
 ---
 
-## Swift API Reference <span class="version-badge">v1.6.2</span>
+## Swift API Reference <span class="version-badge">v1.6.3</span>
 
 ### Functions
 
@@ -127,7 +127,7 @@ Returns `true` if a provider with the given name was found and removed,
 
 **Errors:**
 
-Returns an error only if the internal lock is poisoned.
+Returns an error if the custom-provider registry cannot be updated.
 
 **Signature:**
 
@@ -158,9 +158,8 @@ let result = try unregisterCustomProvider("value")
 Return the capability flags for a named provider.
 
 Performs an O(n) linear scan over the embedded registry (143 entries).
-Returns an owned value so that bindings can box/copy it across the FFI
-boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
-so this is a cheap memcpy of seven `bool` fields.
+Returns an owned value so bindings can pass capability data without
+borrowing registry internals.
 
 For unknown `provider_name` values the function returns an all-`false`
 sentinel so callers never need to handle `Option`.
@@ -433,8 +432,8 @@ try checkBound("value", 42, 42, 42)
 Install the `ring` crypto provider as the rustls process default, idempotently.
 
 rustls 0.23+ removed the implicit default provider. This function installs
-`ring` once per process. Subsequent calls are no-ops. Calling it from a
-downstream Rust app that has already installed `aws-lc-rs` is safe — the
+`ring` once per process. Subsequent calls are no-ops. Calling it after
+another rustls crypto provider has already been installed is safe: the
 `Err` from `install_default()` is silently ignored.
 
 Called automatically by every internal `reqwest.Client` constructor
@@ -715,8 +714,8 @@ Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
 to pass it through (optionally modified), `Ok(None)` to drop the chunk,
 or `Err(e)` to propagate a stream error.
 
-The trait is object-safe so implementations can be stored in a
-`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+The trait is object-safe so multiple middleware implementations can be
+chained inside `StreamPipeline`.
 
 ##### Methods
 
@@ -872,480 +871,6 @@ headers are cached at construction to avoid redundant encoding on every request.
 
 ##### Methods
 
-###### chat()
-
-**Signature:**
-
-```swift
-public func chat(req: ChatCompletionRequest) throws -> ChatCompletionResponse
-```
-
-**Example:**
-
-```swift
-let result = try instance.chat(ChatCompletionRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `ChatCompletionResponse`
-
-**Errors:** Throws `Error`.
-
-###### chatStream()
-
-**Signature:**
-
-```swift
-public func chatStream(req: ChatCompletionRequest) throws -> String
-```
-
-**Example:**
-
-```swift
-let result = try instance.chatStream(ChatCompletionRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `String`
-
-**Errors:** Throws `Error`.
-
-###### embed()
-
-**Signature:**
-
-```swift
-public func embed(req: EmbeddingRequest) throws -> EmbeddingResponse
-```
-
-**Example:**
-
-```swift
-let result = try instance.embed(EmbeddingRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `EmbeddingRequest` | Yes | The embedding request |
-
-**Returns:** `EmbeddingResponse`
-
-**Errors:** Throws `Error`.
-
-###### listModels()
-
-**Signature:**
-
-```swift
-public func listModels() throws -> ModelsListResponse
-```
-
-**Example:**
-
-```swift
-let result = try instance.listModels()
-```
-
-**Returns:** `ModelsListResponse`
-
-**Errors:** Throws `Error`.
-
-###### imageGenerate()
-
-**Signature:**
-
-```swift
-public func imageGenerate(req: CreateImageRequest) throws -> ImagesResponse
-```
-
-**Example:**
-
-```swift
-let result = try instance.imageGenerate(CreateImageRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateImageRequest` | Yes | The create image request |
-
-**Returns:** `ImagesResponse`
-
-**Errors:** Throws `Error`.
-
-###### speech()
-
-**Signature:**
-
-```swift
-public func speech(req: CreateSpeechRequest) throws -> Data
-```
-
-**Example:**
-
-```swift
-let result = try instance.speech(CreateSpeechRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateSpeechRequest` | Yes | The create speech request |
-
-**Returns:** `Data`
-
-**Errors:** Throws `Error`.
-
-###### transcribe()
-
-**Signature:**
-
-```swift
-public func transcribe(req: CreateTranscriptionRequest) throws -> TranscriptionResponse
-```
-
-**Example:**
-
-```swift
-let result = try instance.transcribe(CreateTranscriptionRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
-
-**Returns:** `TranscriptionResponse`
-
-**Errors:** Throws `Error`.
-
-###### moderate()
-
-**Signature:**
-
-```swift
-public func moderate(req: ModerationRequest) throws -> ModerationResponse
-```
-
-**Example:**
-
-```swift
-let result = try instance.moderate(ModerationRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ModerationRequest` | Yes | The moderation request |
-
-**Returns:** `ModerationResponse`
-
-**Errors:** Throws `Error`.
-
-###### rerank()
-
-**Signature:**
-
-```swift
-public func rerank(req: RerankRequest) throws -> RerankResponse
-```
-
-**Example:**
-
-```swift
-let result = try instance.rerank(RerankRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `RerankRequest` | Yes | The rerank request |
-
-**Returns:** `RerankResponse`
-
-**Errors:** Throws `Error`.
-
-###### search()
-
-**Signature:**
-
-```swift
-public func search(req: SearchRequest) throws -> SearchResponse
-```
-
-**Example:**
-
-```swift
-let result = try instance.search(SearchRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `SearchRequest` | Yes | The search request |
-
-**Returns:** `SearchResponse`
-
-**Errors:** Throws `Error`.
-
-###### ocr()
-
-**Signature:**
-
-```swift
-public func ocr(req: OcrRequest) throws -> OcrResponse
-```
-
-**Example:**
-
-```swift
-let result = try instance.ocr(OcrRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `OcrRequest` | Yes | The ocr request |
-
-**Returns:** `OcrResponse`
-
-**Errors:** Throws `Error`.
-
-###### createFile()
-
-**Signature:**
-
-```swift
-public func createFile(req: CreateFileRequest) throws -> FileObject
-```
-
-**Example:**
-
-```swift
-let result = try instance.createFile(CreateFileRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateFileRequest` | Yes | The create file request |
-
-**Returns:** `FileObject`
-
-**Errors:** Throws `Error`.
-
-###### retrieveFile()
-
-**Signature:**
-
-```swift
-public func retrieveFile(fileId: String) throws -> FileObject
-```
-
-**Example:**
-
-```swift
-let result = try instance.retrieveFile("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `fileId` | `String` | Yes | The file id |
-
-**Returns:** `FileObject`
-
-**Errors:** Throws `Error`.
-
-###### deleteFile()
-
-**Signature:**
-
-```swift
-public func deleteFile(fileId: String) throws -> DeleteResponse
-```
-
-**Example:**
-
-```swift
-let result = try instance.deleteFile("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `fileId` | `String` | Yes | The file id |
-
-**Returns:** `DeleteResponse`
-
-**Errors:** Throws `Error`.
-
-###### listFiles()
-
-**Signature:**
-
-```swift
-public func listFiles(query: FileListQuery? = nil) throws -> FileListResponse
-```
-
-**Example:**
-
-```swift
-let result = try instance.listFiles(FileListQuery())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `query` | `FileListQuery?` | No | The file list query |
-
-**Returns:** `FileListResponse`
-
-**Errors:** Throws `Error`.
-
-###### fileContent()
-
-**Signature:**
-
-```swift
-public func fileContent(fileId: String) throws -> Data
-```
-
-**Example:**
-
-```swift
-let result = try instance.fileContent("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `fileId` | `String` | Yes | The file id |
-
-**Returns:** `Data`
-
-**Errors:** Throws `Error`.
-
-###### createBatch()
-
-**Signature:**
-
-```swift
-public func createBatch(req: CreateBatchRequest) throws -> BatchObject
-```
-
-**Example:**
-
-```swift
-let result = try instance.createBatch(CreateBatchRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateBatchRequest` | Yes | The create batch request |
-
-**Returns:** `BatchObject`
-
-**Errors:** Throws `Error`.
-
-###### retrieveBatch()
-
-**Signature:**
-
-```swift
-public func retrieveBatch(batchId: String) throws -> BatchObject
-```
-
-**Example:**
-
-```swift
-let result = try instance.retrieveBatch("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `batchId` | `String` | Yes | The batch id |
-
-**Returns:** `BatchObject`
-
-**Errors:** Throws `Error`.
-
-###### listBatches()
-
-**Signature:**
-
-```swift
-public func listBatches(query: BatchListQuery? = nil) throws -> BatchListResponse
-```
-
-**Example:**
-
-```swift
-let result = try instance.listBatches(BatchListQuery())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `query` | `BatchListQuery?` | No | The batch list query |
-
-**Returns:** `BatchListResponse`
-
-**Errors:** Throws `Error`.
-
-###### cancelBatch()
-
-**Signature:**
-
-```swift
-public func cancelBatch(batchId: String) throws -> BatchObject
-```
-
-**Example:**
-
-```swift
-let result = try instance.cancelBatch("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `batchId` | `String` | Yes | The batch id |
-
-**Returns:** `BatchObject`
-
-**Errors:** Throws `Error`.
-
 ###### fetchBatchForPolling()
 
 **Signature:**
@@ -1405,78 +930,6 @@ let result = try instance.waitForBatch("value", WaitForBatchConfig())
 **Returns:** `BatchObject`
 
 **Errors:** Throws `BatchWaitError`.
-
-###### createResponse()
-
-**Signature:**
-
-```swift
-public func createResponse(req: CreateResponseRequest) throws -> ResponseObject
-```
-
-**Example:**
-
-```swift
-let result = try instance.createResponse(CreateResponseRequest())
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateResponseRequest` | Yes | The create response request |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Throws `Error`.
-
-###### retrieveResponse()
-
-**Signature:**
-
-```swift
-public func retrieveResponse(responseId: String) throws -> ResponseObject
-```
-
-**Example:**
-
-```swift
-let result = try instance.retrieveResponse("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `responseId` | `String` | Yes | The response id |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Throws `Error`.
-
-###### cancelResponse()
-
-**Signature:**
-
-```swift
-public func cancelResponse(responseId: String) throws -> ResponseObject
-```
-
-**Example:**
-
-```swift
-let result = try instance.cancelResponse("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `responseId` | `String` | Yes | The response id |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Throws `Error`.
 
 ---
 
@@ -1549,7 +1002,7 @@ Embedding response.
 | `object` | `String` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `data` | `[EmbeddingObject]` | — | List of embeddings. |
 | `model` | `String` | — | Model used to generate embeddings. |
-| `usage` | `Usage?` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
+| `usage` | `Usage?` | language default | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -1611,9 +1064,9 @@ Function definition exposed to the model.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Name of the function. Required and must be alphanumeric + underscores. |
-| `description` | `String?` | `/* serde(default) */` | Human-readable description explaining what the function does. |
-| `parameters` | `String?` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
-| `strict` | `Bool?` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
+| `description` | `String?` | language default | Human-readable description explaining what the function does. |
+| `parameters` | `String?` | language default | JSON Schema defining the function's parameters. |
+| `strict` | `Bool?` | language default | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -1832,7 +1285,7 @@ An image extracted from an OCR page.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String` | — | Unique image identifier within the document. |
-| `imageBase64` | `String?` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
+| `imageBase64` | `String?` | language default | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1844,8 +1297,8 @@ A single page of OCR output.
 |-------|------|---------|-------------|
 | `index` | `UInt32` | — | Page index (0-based). |
 | `markdown` | `String` | — | Extracted page content as Markdown. |
-| `images` | `[OcrImage]?` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `dimensions` | `PageDimensions?` | `/* serde(default) */` | Page dimensions in pixels, if available. |
+| `images` | `[OcrImage]?` | language default | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `PageDimensions?` | language default | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1870,7 +1323,7 @@ An OCR response.
 |-------|------|---------|-------------|
 | `pages` | `[OcrPage]` | — | Extracted pages in order. |
 | `model` | `String` | — | Model/provider used for OCR. |
-| `usage` | `Usage?` | `/* serde(default) */` | Token usage, if reported by the provider. |
+| `usage` | `Usage?` | language default | Token usage, if reported by the provider. |
 
 ---
 
@@ -1932,9 +1385,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function.  Keeping
-these fields separate preserves backward compatibility with all generated
-binding code that constructs `ProviderConfig` using struct literal syntax.
+format, which are accessed via the `capabilities` function.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -2000,7 +1451,7 @@ Response from the rerank endpoint.
 |-------|------|---------|-------------|
 | `id` | `String?` | `null` | Unique identifier for this rerank request. |
 | `results` | `[RerankResult]` | — | Reranked documents in order of relevance. |
-| `meta` | `String?` | `/* serde(default) */` | Optional metadata about the reranking operation. |
+| `meta` | `String?` | language default | Optional metadata about the reranking operation. |
 
 ---
 
@@ -2012,7 +1463,7 @@ A single reranked document with its relevance score.
 |-------|------|---------|-------------|
 | `index` | `UInt32` | — | Original document index in the input list. |
 | `relevanceScore` | `Double` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `document` | `RerankResultDocument?` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
+| `document` | `RerankResultDocument?` | language default | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -2111,7 +1562,7 @@ An individual search result.
 | `title` | `String` | — | Result title. |
 | `url` | `String` | — | Result URL. |
 | `snippet` | `String` | — | Text snippet or excerpt from the page. |
-| `date` | `String?` | `/* serde(default) */` | Publication or last-updated date, if available. |
+| `date` | `String?` | language default | Publication or last-updated date, if available. |
 
 ---
 
@@ -2119,9 +1570,8 @@ An individual search result.
 
 The value broadcast from a singleflight leader to all followers.
 
-`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
-bump per follower, which is negligible under the burst loads this layer targets.
+The error value is shared so every follower receives the same upstream
+failure without cloning the underlying error.
 
 ---
 

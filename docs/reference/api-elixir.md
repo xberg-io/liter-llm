@@ -2,7 +2,7 @@
 title: "Elixir API Reference"
 ---
 
-## Elixir API Reference <span class="version-badge">v1.6.2</span>
+## Elixir API Reference <span class="version-badge">v1.6.3</span>
 
 ### Functions
 
@@ -106,7 +106,7 @@ def register_custom_provider(config)
 **Example:**
 
 ```elixir
-:ok = register_custom_provider(%{{}})
+:ok = register_custom_provider(%{})
 ```
 
 **Parameters:**
@@ -130,7 +130,7 @@ Returns `true` if a provider with the given name was found and removed,
 
 **Errors:**
 
-Returns an error only if the internal lock is poisoned.
+Returns an error if the custom-provider registry cannot be updated.
 
 **Signature:**
 
@@ -162,9 +162,8 @@ def unregister_custom_provider(name)
 Return the capability flags for a named provider.
 
 Performs an O(n) linear scan over the embedded registry (143 entries).
-Returns an owned value so that bindings can box/copy it across the FFI
-boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
-so this is a cheap memcpy of seven `bool` fields.
+Returns an owned value so bindings can pass capability data without
+borrowing registry internals.
 
 For unknown `provider_name` values the function returns an all-`false`
 sentinel so callers never need to handle `Option`.
@@ -415,7 +414,7 @@ def count_request_tokens(model, req)
 **Example:**
 
 ```elixir
-{:ok, result} = count_request_tokens("value", %{{}})
+{:ok, result} = count_request_tokens("value", %{})
 ```
 
 **Parameters:**
@@ -472,8 +471,8 @@ def check_bound(context, current_len, incoming, limit)
 Install the `ring` crypto provider as the rustls process default, idempotently.
 
 rustls 0.23+ removed the implicit default provider. This function installs
-`ring` once per process. Subsequent calls are no-ops. Calling it from a
-downstream Rust app that has already installed `aws-lc-rs` is safe — the
+`ring` once per process. Subsequent calls are no-ops. Calling it after
+another rustls crypto provider has already been installed is safe: the
 `Err` from `install_default()` is silently ignored.
 
 Called automatically by every internal `reqwest.Client` constructor
@@ -755,8 +754,8 @@ Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
 to pass it through (optionally modified), `Ok(None)` to drop the chunk,
 or `Err(e)` to propagate a stream error.
 
-The trait is object-safe so implementations can be stored in a
-`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+The trait is object-safe so multiple middleware implementations can be
+chained inside `StreamPipeline`.
 
 ##### Functions
 
@@ -777,7 +776,7 @@ def process(chunk)
 **Example:**
 
 ```elixir
-{:ok, result} = instance.process(%{{}})
+{:ok, result} = instance.process(%{})
 ```
 
 **Parameters:**
@@ -912,480 +911,6 @@ headers are cached at construction to avoid redundant encoding on every request.
 
 ##### Functions
 
-###### chat()
-
-**Signature:**
-
-```elixir
-def chat(req)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.chat(%{{}})
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `ChatCompletionResponse`
-
-**Errors:** Returns `{:error, reason}`
-
-###### chat_stream()
-
-**Signature:**
-
-```elixir
-def chat_stream(req)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.chat_stream(%{{}})
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `String.t()`
-
-**Errors:** Returns `{:error, reason}`
-
-###### embed()
-
-**Signature:**
-
-```elixir
-def embed(req)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.embed(%{{}})
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `EmbeddingRequest` | Yes | The embedding request |
-
-**Returns:** `EmbeddingResponse`
-
-**Errors:** Returns `{:error, reason}`
-
-###### list_models()
-
-**Signature:**
-
-```elixir
-def list_models()
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.list_models()
-```
-
-**Returns:** `ModelsListResponse`
-
-**Errors:** Returns `{:error, reason}`
-
-###### image_generate()
-
-**Signature:**
-
-```elixir
-def image_generate(req)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.image_generate(%{{}})
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateImageRequest` | Yes | The create image request |
-
-**Returns:** `ImagesResponse`
-
-**Errors:** Returns `{:error, reason}`
-
-###### speech()
-
-**Signature:**
-
-```elixir
-def speech(req)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.speech(%{{}})
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateSpeechRequest` | Yes | The create speech request |
-
-**Returns:** `binary()`
-
-**Errors:** Returns `{:error, reason}`
-
-###### transcribe()
-
-**Signature:**
-
-```elixir
-def transcribe(req)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.transcribe(%{{}})
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
-
-**Returns:** `TranscriptionResponse`
-
-**Errors:** Returns `{:error, reason}`
-
-###### moderate()
-
-**Signature:**
-
-```elixir
-def moderate(req)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.moderate(%{{}})
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ModerationRequest` | Yes | The moderation request |
-
-**Returns:** `ModerationResponse`
-
-**Errors:** Returns `{:error, reason}`
-
-###### rerank()
-
-**Signature:**
-
-```elixir
-def rerank(req)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.rerank(%{{}})
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `RerankRequest` | Yes | The rerank request |
-
-**Returns:** `RerankResponse`
-
-**Errors:** Returns `{:error, reason}`
-
-###### search()
-
-**Signature:**
-
-```elixir
-def search(req)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.search(%{{}})
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `SearchRequest` | Yes | The search request |
-
-**Returns:** `SearchResponse`
-
-**Errors:** Returns `{:error, reason}`
-
-###### ocr()
-
-**Signature:**
-
-```elixir
-def ocr(req)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.ocr(%{{}})
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `OcrRequest` | Yes | The ocr request |
-
-**Returns:** `OcrResponse`
-
-**Errors:** Returns `{:error, reason}`
-
-###### create_file()
-
-**Signature:**
-
-```elixir
-def create_file(req)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.create_file(%{{}})
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateFileRequest` | Yes | The create file request |
-
-**Returns:** `FileObject`
-
-**Errors:** Returns `{:error, reason}`
-
-###### retrieve_file()
-
-**Signature:**
-
-```elixir
-def retrieve_file(file_id)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.retrieve_file("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `file_id` | `String.t()` | Yes | The file id |
-
-**Returns:** `FileObject`
-
-**Errors:** Returns `{:error, reason}`
-
-###### delete_file()
-
-**Signature:**
-
-```elixir
-def delete_file(file_id)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.delete_file("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `file_id` | `String.t()` | Yes | The file id |
-
-**Returns:** `DeleteResponse`
-
-**Errors:** Returns `{:error, reason}`
-
-###### list_files()
-
-**Signature:**
-
-```elixir
-def list_files(query)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.list_files(%{{}})
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `query` | `FileListQuery \| nil` | No | The file list query |
-
-**Returns:** `FileListResponse`
-
-**Errors:** Returns `{:error, reason}`
-
-###### file_content()
-
-**Signature:**
-
-```elixir
-def file_content(file_id)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.file_content("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `file_id` | `String.t()` | Yes | The file id |
-
-**Returns:** `binary()`
-
-**Errors:** Returns `{:error, reason}`
-
-###### create_batch()
-
-**Signature:**
-
-```elixir
-def create_batch(req)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.create_batch(%{{}})
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateBatchRequest` | Yes | The create batch request |
-
-**Returns:** `BatchObject`
-
-**Errors:** Returns `{:error, reason}`
-
-###### retrieve_batch()
-
-**Signature:**
-
-```elixir
-def retrieve_batch(batch_id)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.retrieve_batch("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `batch_id` | `String.t()` | Yes | The batch id |
-
-**Returns:** `BatchObject`
-
-**Errors:** Returns `{:error, reason}`
-
-###### list_batches()
-
-**Signature:**
-
-```elixir
-def list_batches(query)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.list_batches(%{{}})
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `query` | `BatchListQuery \| nil` | No | The batch list query |
-
-**Returns:** `BatchListResponse`
-
-**Errors:** Returns `{:error, reason}`
-
-###### cancel_batch()
-
-**Signature:**
-
-```elixir
-def cancel_batch(batch_id)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.cancel_batch("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `batch_id` | `String.t()` | Yes | The batch id |
-
-**Returns:** `BatchObject`
-
-**Errors:** Returns `{:error, reason}`
-
 ###### fetch_batch_for_polling()
 
 **Signature:**
@@ -1432,7 +957,7 @@ def wait_for_batch(batch_id, config)
 **Example:**
 
 ```elixir
-{:ok, result} = instance.wait_for_batch("value", %{{}})
+{:ok, result} = instance.wait_for_batch("value", %{})
 ```
 
 **Parameters:**
@@ -1443,78 +968,6 @@ def wait_for_batch(batch_id, config)
 | `config` | `WaitForBatchConfig` | Yes | The configuration options |
 
 **Returns:** `BatchObject`
-
-**Errors:** Returns `{:error, reason}`
-
-###### create_response()
-
-**Signature:**
-
-```elixir
-def create_response(req)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.create_response(%{{}})
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateResponseRequest` | Yes | The create response request |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Returns `{:error, reason}`
-
-###### retrieve_response()
-
-**Signature:**
-
-```elixir
-def retrieve_response(response_id)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.retrieve_response("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `response_id` | `String.t()` | Yes | The response id |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Returns `{:error, reason}`
-
-###### cancel_response()
-
-**Signature:**
-
-```elixir
-def cancel_response(response_id)
-```
-
-**Example:**
-
-```elixir
-{:ok, result} = instance.cancel_response("value")
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `response_id` | `String.t()` | Yes | The response id |
-
-**Returns:** `ResponseObject`
 
 **Errors:** Returns `{:error, reason}`
 
@@ -1589,7 +1042,7 @@ Embedding response.
 | `object` | `String.t()` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `data` | `list(EmbeddingObject)` | — | List of embeddings. |
 | `model` | `String.t()` | — | Model used to generate embeddings. |
-| `usage` | `Usage \| nil` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
+| `usage` | `Usage \| nil` | language default | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -1651,9 +1104,9 @@ Function definition exposed to the model.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String.t()` | — | Name of the function. Required and must be alphanumeric + underscores. |
-| `description` | `String.t() \| nil` | `/* serde(default) */` | Human-readable description explaining what the function does. |
-| `parameters` | `term() \| nil` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
-| `strict` | `boolean() \| nil` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
+| `description` | `String.t() \| nil` | language default | Human-readable description explaining what the function does. |
+| `parameters` | `term() \| nil` | language default | JSON Schema defining the function's parameters. |
+| `strict` | `boolean() \| nil` | language default | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -1872,7 +1325,7 @@ An image extracted from an OCR page.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String.t()` | — | Unique image identifier within the document. |
-| `image_base64` | `String.t() \| nil` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
+| `image_base64` | `String.t() \| nil` | language default | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1884,8 +1337,8 @@ A single page of OCR output.
 |-------|------|---------|-------------|
 | `index` | `integer()` | — | Page index (0-based). |
 | `markdown` | `String.t()` | — | Extracted page content as Markdown. |
-| `images` | `list(OcrImage) \| nil` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `dimensions` | `PageDimensions \| nil` | `/* serde(default) */` | Page dimensions in pixels, if available. |
+| `images` | `list(OcrImage) \| nil` | language default | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `PageDimensions \| nil` | language default | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1910,7 +1363,7 @@ An OCR response.
 |-------|------|---------|-------------|
 | `pages` | `list(OcrPage)` | — | Extracted pages in order. |
 | `model` | `String.t()` | — | Model/provider used for OCR. |
-| `usage` | `Usage \| nil` | `/* serde(default) */` | Token usage, if reported by the provider. |
+| `usage` | `Usage \| nil` | language default | Token usage, if reported by the provider. |
 
 ---
 
@@ -1972,9 +1425,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function.  Keeping
-these fields separate preserves backward compatibility with all generated
-binding code that constructs `ProviderConfig` using struct literal syntax.
+format, which are accessed via the `capabilities` function.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -2040,7 +1491,7 @@ Response from the rerank endpoint.
 |-------|------|---------|-------------|
 | `id` | `String.t() \| nil` | `nil` | Unique identifier for this rerank request. |
 | `results` | `list(RerankResult)` | — | Reranked documents in order of relevance. |
-| `meta` | `term() \| nil` | `/* serde(default) */` | Optional metadata about the reranking operation. |
+| `meta` | `term() \| nil` | language default | Optional metadata about the reranking operation. |
 
 ---
 
@@ -2052,7 +1503,7 @@ A single reranked document with its relevance score.
 |-------|------|---------|-------------|
 | `index` | `integer()` | — | Original document index in the input list. |
 | `relevance_score` | `float()` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `document` | `RerankResultDocument \| nil` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
+| `document` | `RerankResultDocument \| nil` | language default | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -2151,7 +1602,7 @@ An individual search result.
 | `title` | `String.t()` | — | Result title. |
 | `url` | `String.t()` | — | Result URL. |
 | `snippet` | `String.t()` | — | Text snippet or excerpt from the page. |
-| `date` | `String.t() \| nil` | `/* serde(default) */` | Publication or last-updated date, if available. |
+| `date` | `String.t() \| nil` | language default | Publication or last-updated date, if available. |
 
 ---
 
@@ -2159,9 +1610,8 @@ An individual search result.
 
 The value broadcast from a singleflight leader to all followers.
 
-`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
-bump per follower, which is negligible under the burst loads this layer targets.
+The error value is shared so every follower receives the same upstream
+failure without cloning the underlying error.
 
 ---
 

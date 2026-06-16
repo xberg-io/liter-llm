@@ -2,7 +2,7 @@
 title: "C API Reference"
 ---
 
-## C API Reference <span class="version-badge">v1.6.2</span>
+## C API Reference <span class="version-badge">v1.6.3</span>
 
 ### Functions
 
@@ -28,7 +28,7 @@ LiterllmDefaultClient* literllm_create_client(const char* api_key, const char* b
 **Example:**
 
 ```c
-LiterllmDefaultClient *result = literllm_create_client("value", "value", 42, 42, "value");
+LiterllmDefaultClient result = literllm_create_client("value", "value", 42, 42, "value");
 ```
 
 **Parameters:**
@@ -67,7 +67,7 @@ LiterllmDefaultClient* literllm_create_client_from_json(const char* json);
 **Example:**
 
 ```c
-LiterllmDefaultClient *result = literllm_create_client_from_json("value");
+LiterllmDefaultClient result = literllm_create_client_from_json("value");
 ```
 
 **Parameters:**
@@ -127,7 +127,7 @@ Returns `true` if a provider with the given name was found and removed,
 
 **Errors:**
 
-Returns an error only if the internal lock is poisoned.
+Returns an error if the custom-provider registry cannot be updated.
 
 **Signature:**
 
@@ -158,9 +158,8 @@ bool result = literllm_unregister_custom_provider("value");
 Return the capability flags for a named provider.
 
 Performs an O(n) linear scan over the embedded registry (143 entries).
-Returns an owned value so that bindings can box/copy it across the FFI
-boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
-so this is a cheap memcpy of seven `bool` fields.
+Returns an owned value so bindings can pass capability data without
+borrowing registry internals.
 
 For unknown `provider_name` values the function returns an all-`false`
 sentinel so callers never need to handle `Option`.
@@ -174,7 +173,7 @@ LiterllmProviderCapabilities* literllm_capabilities(const char* provider_name);
 **Example:**
 
 ```c
-LiterllmProviderCapabilities *result = literllm_capabilities("value");
+LiterllmProviderCapabilities result = literllm_capabilities("value");
 ```
 
 **Parameters:**
@@ -459,8 +458,8 @@ literllm_check_bound("value", 42, 42, 42);
 Install the `ring` crypto provider as the rustls process default, idempotently.
 
 rustls 0.23+ removed the implicit default provider. This function installs
-`ring` once per process. Subsequent calls are no-ops. Calling it from a
-downstream Rust app that has already installed `aws-lc-rs` is safe — the
+`ring` once per process. Subsequent calls are no-ops. Calling it after
+another rustls crypto provider has already been installed is safe: the
 `Err` from `install_default()` is silently ignored.
 
 Called automatically by every internal `reqwest.Client` constructor
@@ -610,7 +609,7 @@ LiterllmBudgetConfig literllm_default();
 **Example:**
 
 ```c
-LiterllmBudgetConfig *result = literllm_default();
+LiterllmBudgetConfig result = literllm_default();
 ```
 
 **Returns:** `LiterllmBudgetConfig`
@@ -640,7 +639,7 @@ LiterllmCacheConfig literllm_default();
 **Example:**
 
 ```c
-LiterllmCacheConfig *result = literllm_default();
+LiterllmCacheConfig result = literllm_default();
 ```
 
 **Returns:** `LiterllmCacheConfig`
@@ -741,8 +740,8 @@ Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
 to pass it through (optionally modified), `Ok(None)` to drop the chunk,
 or `Err(e)` to propagate a stream error.
 
-The trait is object-safe so implementations can be stored in a
-`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+The trait is object-safe so multiple middleware implementations can be
+chained inside `StreamPipeline`.
 
 ##### Methods
 
@@ -898,480 +897,6 @@ headers are cached at construction to avoid redundant encoding on every request.
 
 ##### Methods
 
-###### literllm_chat()
-
-**Signature:**
-
-```c
-LiterllmChatCompletionResponse literllm_chat(LiterllmChatCompletionRequest req);
-```
-
-**Example:**
-
-```c
-LiterllmChatCompletionResponse *result = literllm_chat(instance, (LiterllmChatCompletionRequest){0});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `LiterllmChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `LiterllmChatCompletionResponse`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_chat_stream()
-
-**Signature:**
-
-```c
-const char* literllm_chat_stream(LiterllmChatCompletionRequest req);
-```
-
-**Example:**
-
-```c
-const char *result = literllm_chat_stream(instance, (LiterllmChatCompletionRequest){0});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `LiterllmChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `const char*`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_embed()
-
-**Signature:**
-
-```c
-LiterllmEmbeddingResponse literllm_embed(LiterllmEmbeddingRequest req);
-```
-
-**Example:**
-
-```c
-LiterllmEmbeddingResponse *result = literllm_embed(instance, (LiterllmEmbeddingRequest){0});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `LiterllmEmbeddingRequest` | Yes | The embedding request |
-
-**Returns:** `LiterllmEmbeddingResponse`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_list_models()
-
-**Signature:**
-
-```c
-LiterllmModelsListResponse literllm_list_models();
-```
-
-**Example:**
-
-```c
-LiterllmModelsListResponse *result = literllm_list_models(instance);
-```
-
-**Returns:** `LiterllmModelsListResponse`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_image_generate()
-
-**Signature:**
-
-```c
-LiterllmImagesResponse literllm_image_generate(LiterllmCreateImageRequest req);
-```
-
-**Example:**
-
-```c
-LiterllmImagesResponse *result = literllm_image_generate(instance, (LiterllmCreateImageRequest){0});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `LiterllmCreateImageRequest` | Yes | The create image request |
-
-**Returns:** `LiterllmImagesResponse`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_speech()
-
-**Signature:**
-
-```c
-const uint8_t* literllm_speech(LiterllmCreateSpeechRequest req);
-```
-
-**Example:**
-
-```c
-const uint8_t *result = literllm_speech(instance, (LiterllmCreateSpeechRequest){0});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `LiterllmCreateSpeechRequest` | Yes | The create speech request |
-
-**Returns:** `const uint8_t*`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_transcribe()
-
-**Signature:**
-
-```c
-LiterllmTranscriptionResponse literllm_transcribe(LiterllmCreateTranscriptionRequest req);
-```
-
-**Example:**
-
-```c
-LiterllmTranscriptionResponse *result = literllm_transcribe(instance, (LiterllmCreateTranscriptionRequest){0});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `LiterllmCreateTranscriptionRequest` | Yes | The create transcription request |
-
-**Returns:** `LiterllmTranscriptionResponse`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_moderate()
-
-**Signature:**
-
-```c
-LiterllmModerationResponse literllm_moderate(LiterllmModerationRequest req);
-```
-
-**Example:**
-
-```c
-LiterllmModerationResponse *result = literllm_moderate(instance, (LiterllmModerationRequest){0});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `LiterllmModerationRequest` | Yes | The moderation request |
-
-**Returns:** `LiterllmModerationResponse`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_rerank()
-
-**Signature:**
-
-```c
-LiterllmRerankResponse literllm_rerank(LiterllmRerankRequest req);
-```
-
-**Example:**
-
-```c
-LiterllmRerankResponse *result = literllm_rerank(instance, (LiterllmRerankRequest){0});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `LiterllmRerankRequest` | Yes | The rerank request |
-
-**Returns:** `LiterllmRerankResponse`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_search()
-
-**Signature:**
-
-```c
-LiterllmSearchResponse literllm_search(LiterllmSearchRequest req);
-```
-
-**Example:**
-
-```c
-LiterllmSearchResponse *result = literllm_search(instance, (LiterllmSearchRequest){0});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `LiterllmSearchRequest` | Yes | The search request |
-
-**Returns:** `LiterllmSearchResponse`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_ocr()
-
-**Signature:**
-
-```c
-LiterllmOcrResponse literllm_ocr(LiterllmOcrRequest req);
-```
-
-**Example:**
-
-```c
-LiterllmOcrResponse *result = literllm_ocr(instance, (LiterllmOcrRequest){0});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `LiterllmOcrRequest` | Yes | The ocr request |
-
-**Returns:** `LiterllmOcrResponse`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_create_file()
-
-**Signature:**
-
-```c
-LiterllmFileObject literllm_create_file(LiterllmCreateFileRequest req);
-```
-
-**Example:**
-
-```c
-LiterllmFileObject *result = literllm_create_file(instance, (LiterllmCreateFileRequest){0});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `LiterllmCreateFileRequest` | Yes | The create file request |
-
-**Returns:** `LiterllmFileObject`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_retrieve_file()
-
-**Signature:**
-
-```c
-LiterllmFileObject literllm_retrieve_file(const char* file_id);
-```
-
-**Example:**
-
-```c
-LiterllmFileObject *result = literllm_retrieve_file(instance, "value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `file_id` | `const char*` | Yes | The file id |
-
-**Returns:** `LiterllmFileObject`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_delete_file()
-
-**Signature:**
-
-```c
-LiterllmDeleteResponse literllm_delete_file(const char* file_id);
-```
-
-**Example:**
-
-```c
-LiterllmDeleteResponse *result = literllm_delete_file(instance, "value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `file_id` | `const char*` | Yes | The file id |
-
-**Returns:** `LiterllmDeleteResponse`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_list_files()
-
-**Signature:**
-
-```c
-LiterllmFileListResponse literllm_list_files(LiterllmFileListQuery query);
-```
-
-**Example:**
-
-```c
-LiterllmFileListResponse *result = literllm_list_files(instance, NULL);
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `query` | `LiterllmFileListQuery*` | No | The file list query |
-
-**Returns:** `LiterllmFileListResponse`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_file_content()
-
-**Signature:**
-
-```c
-const uint8_t* literllm_file_content(const char* file_id);
-```
-
-**Example:**
-
-```c
-const uint8_t *result = literllm_file_content(instance, "value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `file_id` | `const char*` | Yes | The file id |
-
-**Returns:** `const uint8_t*`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_create_batch()
-
-**Signature:**
-
-```c
-LiterllmBatchObject literllm_create_batch(LiterllmCreateBatchRequest req);
-```
-
-**Example:**
-
-```c
-LiterllmBatchObject *result = literllm_create_batch(instance, (LiterllmCreateBatchRequest){0});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `LiterllmCreateBatchRequest` | Yes | The create batch request |
-
-**Returns:** `LiterllmBatchObject`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_retrieve_batch()
-
-**Signature:**
-
-```c
-LiterllmBatchObject literllm_retrieve_batch(const char* batch_id);
-```
-
-**Example:**
-
-```c
-LiterllmBatchObject *result = literllm_retrieve_batch(instance, "value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `batch_id` | `const char*` | Yes | The batch id |
-
-**Returns:** `LiterllmBatchObject`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_list_batches()
-
-**Signature:**
-
-```c
-LiterllmBatchListResponse literllm_list_batches(LiterllmBatchListQuery query);
-```
-
-**Example:**
-
-```c
-LiterllmBatchListResponse *result = literllm_list_batches(instance, NULL);
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `query` | `LiterllmBatchListQuery*` | No | The batch list query |
-
-**Returns:** `LiterllmBatchListResponse`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_cancel_batch()
-
-**Signature:**
-
-```c
-LiterllmBatchObject literllm_cancel_batch(const char* batch_id);
-```
-
-**Example:**
-
-```c
-LiterllmBatchObject *result = literllm_cancel_batch(instance, "value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `batch_id` | `const char*` | Yes | The batch id |
-
-**Returns:** `LiterllmBatchObject`
-
-**Errors:** Returns `NULL` on error.
-
 ###### literllm_fetch_batch_for_polling()
 
 **Signature:**
@@ -1383,7 +908,7 @@ LiterllmBatchObject literllm_fetch_batch_for_polling(const char* batch_id);
 **Example:**
 
 ```c
-LiterllmBatchObject *result = literllm_fetch_batch_for_polling(instance, "value");
+LiterllmBatchObject result = literllm_fetch_batch_for_polling(instance, "value");
 ```
 
 **Parameters:**
@@ -1418,7 +943,7 @@ LiterllmBatchObject literllm_wait_for_batch(const char* batch_id, LiterllmWaitFo
 **Example:**
 
 ```c
-LiterllmBatchObject *result = literllm_wait_for_batch(instance, "value", (LiterllmWaitForBatchConfig){0});
+LiterllmBatchObject result = literllm_wait_for_batch(instance, "value", (LiterllmWaitForBatchConfig){0});
 ```
 
 **Parameters:**
@@ -1429,78 +954,6 @@ LiterllmBatchObject *result = literllm_wait_for_batch(instance, "value", (Literl
 | `config` | `LiterllmWaitForBatchConfig` | Yes | The configuration options |
 
 **Returns:** `LiterllmBatchObject`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_create_response()
-
-**Signature:**
-
-```c
-LiterllmResponseObject literllm_create_response(LiterllmCreateResponseRequest req);
-```
-
-**Example:**
-
-```c
-LiterllmResponseObject *result = literllm_create_response(instance, (LiterllmCreateResponseRequest){0});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `LiterllmCreateResponseRequest` | Yes | The create response request |
-
-**Returns:** `LiterllmResponseObject`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_retrieve_response()
-
-**Signature:**
-
-```c
-LiterllmResponseObject literllm_retrieve_response(const char* response_id);
-```
-
-**Example:**
-
-```c
-LiterllmResponseObject *result = literllm_retrieve_response(instance, "value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `response_id` | `const char*` | Yes | The response id |
-
-**Returns:** `LiterllmResponseObject`
-
-**Errors:** Returns `NULL` on error.
-
-###### literllm_cancel_response()
-
-**Signature:**
-
-```c
-LiterllmResponseObject literllm_cancel_response(const char* response_id);
-```
-
-**Example:**
-
-```c
-LiterllmResponseObject *result = literllm_cancel_response(instance, "value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `response_id` | `const char*` | Yes | The response id |
-
-**Returns:** `LiterllmResponseObject`
 
 **Errors:** Returns `NULL` on error.
 
@@ -1575,7 +1028,7 @@ Embedding response.
 | `object` | `const char*` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `data` | `LiterllmEmbeddingObject*` | — | List of embeddings. |
 | `model` | `const char*` | — | Model used to generate embeddings. |
-| `usage` | `LiterllmUsage*` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
+| `usage` | `LiterllmUsage*` | language default | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -1637,9 +1090,9 @@ Function definition exposed to the model.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `const char*` | — | Name of the function. Required and must be alphanumeric + underscores. |
-| `description` | `const char**` | `/* serde(default) */` | Human-readable description explaining what the function does. |
-| `parameters` | `void**` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
-| `strict` | `bool*` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
+| `description` | `const char**` | language default | Human-readable description explaining what the function does. |
+| `parameters` | `void**` | language default | JSON Schema defining the function's parameters. |
+| `strict` | `bool*` | language default | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -1680,7 +1133,7 @@ LiterllmHealthStatus literllm_check(const char* upstream);
 **Example:**
 
 ```c
-LiterllmHealthStatus *result = literllm_check(instance, "value");
+LiterllmHealthStatus result = literllm_check(instance, "value");
 ```
 
 **Parameters:**
@@ -1858,7 +1311,7 @@ An image extracted from an OCR page.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `const char*` | — | Unique image identifier within the document. |
-| `image_base64` | `const char**` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
+| `image_base64` | `const char**` | language default | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1870,8 +1323,8 @@ A single page of OCR output.
 |-------|------|---------|-------------|
 | `index` | `uint32_t` | — | Page index (0-based). |
 | `markdown` | `const char*` | — | Extracted page content as Markdown. |
-| `images` | `LiterllmOcrImage**` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `dimensions` | `LiterllmPageDimensions*` | `/* serde(default) */` | Page dimensions in pixels, if available. |
+| `images` | `LiterllmOcrImage**` | language default | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `LiterllmPageDimensions*` | language default | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1896,7 +1349,7 @@ An OCR response.
 |-------|------|---------|-------------|
 | `pages` | `LiterllmOcrPage*` | — | Extracted pages in order. |
 | `model` | `const char*` | — | Model/provider used for OCR. |
-| `usage` | `LiterllmUsage*` | `/* serde(default) */` | Token usage, if reported by the provider. |
+| `usage` | `LiterllmUsage*` | language default | Token usage, if reported by the provider. |
 
 ---
 
@@ -1958,9 +1411,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function.  Keeping
-these fields separate preserves backward compatibility with all generated
-binding code that constructs `ProviderConfig` using struct literal syntax.
+format, which are accessed via the `capabilities` function.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -1997,7 +1448,7 @@ LiterllmRateLimitConfig literllm_default();
 **Example:**
 
 ```c
-LiterllmRateLimitConfig *result = literllm_default();
+LiterllmRateLimitConfig result = literllm_default();
 ```
 
 **Returns:** `LiterllmRateLimitConfig`
@@ -2026,7 +1477,7 @@ Response from the rerank endpoint.
 |-------|------|---------|-------------|
 | `id` | `const char**` | `NULL` | Unique identifier for this rerank request. |
 | `results` | `LiterllmRerankResult*` | — | Reranked documents in order of relevance. |
-| `meta` | `void**` | `/* serde(default) */` | Optional metadata about the reranking operation. |
+| `meta` | `void**` | language default | Optional metadata about the reranking operation. |
 
 ---
 
@@ -2038,7 +1489,7 @@ A single reranked document with its relevance score.
 |-------|------|---------|-------------|
 | `index` | `uint32_t` | — | Original document index in the input list. |
 | `relevance_score` | `double` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `document` | `LiterllmRerankResultDocument*` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
+| `document` | `LiterllmRerankResultDocument*` | language default | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -2137,7 +1588,7 @@ An individual search result.
 | `title` | `const char*` | — | Result title. |
 | `url` | `const char*` | — | Result URL. |
 | `snippet` | `const char*` | — | Text snippet or excerpt from the page. |
-| `date` | `const char**` | `/* serde(default) */` | Publication or last-updated date, if available. |
+| `date` | `const char**` | language default | Publication or last-updated date, if available. |
 
 ---
 
@@ -2145,9 +1596,8 @@ An individual search result.
 
 The value broadcast from a singleflight leader to all followers.
 
-`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
-bump per follower, which is negligible under the burst loads this layer targets.
+The error value is shared so every follower receives the same upstream
+failure without cloning the underlying error.
 
 ---
 
@@ -2344,7 +1794,7 @@ LiterllmWaitForBatchConfig literllm_default();
 **Example:**
 
 ```c
-LiterllmWaitForBatchConfig *result = literllm_default();
+LiterllmWaitForBatchConfig result = literllm_default();
 ```
 
 **Returns:** `LiterllmWaitForBatchConfig`

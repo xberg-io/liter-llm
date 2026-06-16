@@ -92,9 +92,8 @@ static DEFAULT_CAPABILITIES: ProviderCapabilities = ProviderCapabilities {
 /// Return the capability flags for a named provider.
 ///
 /// Performs an O(n) linear scan over the embedded registry (143 entries).
-/// Returns an owned value so that bindings can box/copy it across the FFI
-/// boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
-/// so this is a cheap memcpy of seven `bool` fields.
+/// Returns an owned value so bindings can pass capability data without
+/// borrowing registry internals.
 ///
 /// For unknown `provider_name` values the function returns an all-`false`
 /// sentinel so callers never need to handle `Option`.
@@ -133,9 +132,7 @@ fn registry() -> Result<&'static ProviderRegistry> {
 // ── Registry types (deserialised from providers.json) ────────────────────────
 
 /// Internal JSON shape: each provider entry with capability flags and streaming
-/// format, which are carried separately from the public [`ProviderConfig`] to
-/// preserve backward compatibility with binding code that constructs
-/// [`ProviderConfig`] using struct literal syntax.
+/// format, stored separately from the public [`ProviderConfig`] schema.
 #[derive(Debug, Deserialize)]
 struct ProviderEntry {
     #[serde(flatten)]
@@ -198,9 +195,7 @@ where
 /// Static configuration for a single provider entry in providers.json.
 ///
 /// This struct deliberately does not include capability flags or streaming
-/// format, which are accessed via the [`capabilities`] function.  Keeping
-/// these fields separate preserves backward compatibility with all generated
-/// binding code that constructs `ProviderConfig` using struct literal syntax.
+/// format, which are accessed via the [`capabilities`] function.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProviderConfig {
     /// Provider identifier (matches the entry key in providers.json).

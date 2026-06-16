@@ -2,7 +2,7 @@
 title: "Zig API Reference"
 ---
 
-## Zig API Reference <span class="version-badge">v1.6.2</span>
+## Zig API Reference <span class="version-badge">v1.6.3</span>
 
 ### Functions
 
@@ -127,7 +127,7 @@ Returns `true` if a provider with the given name was found and removed,
 
 **Errors:**
 
-Returns an error only if the internal lock is poisoned.
+Returns an error if the custom-provider registry cannot be updated.
 
 **Signature:**
 
@@ -158,9 +158,8 @@ const result = try unregisterCustomProvider("value");
 Return the capability flags for a named provider.
 
 Performs an O(n) linear scan over the embedded registry (143 entries).
-Returns an owned value so that bindings can box/copy it across the FFI
-boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
-so this is a cheap memcpy of seven `bool` fields.
+Returns an owned value so bindings can pass capability data without
+borrowing registry internals.
 
 For unknown `provider_name` values the function returns an all-`false`
 sentinel so callers never need to handle `Option`.
@@ -459,8 +458,8 @@ try checkBound("value", 42, 42, 42);
 Install the `ring` crypto provider as the rustls process default, idempotently.
 
 rustls 0.23+ removed the implicit default provider. This function installs
-`ring` once per process. Subsequent calls are no-ops. Calling it from a
-downstream Rust app that has already installed `aws-lc-rs` is safe — the
+`ring` once per process. Subsequent calls are no-ops. Calling it after
+another rustls crypto provider has already been installed is safe: the
 `Err` from `install_default()` is silently ignored.
 
 Called automatically by every internal `reqwest.Client` constructor
@@ -741,8 +740,8 @@ Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
 to pass it through (optionally modified), `Ok(None)` to drop the chunk,
 or `Err(e)` to propagate a stream error.
 
-The trait is object-safe so implementations can be stored in a
-`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+The trait is object-safe so multiple middleware implementations can be
+chained inside `StreamPipeline`.
 
 ##### Methods
 
@@ -898,480 +897,6 @@ headers are cached at construction to avoid redundant encoding on every request.
 
 ##### Methods
 
-###### chat()
-
-**Signature:**
-
-```zig
-pub fn chat(self: *const DefaultClient, req: ChatCompletionRequest) Error!ChatCompletionResponse
-```
-
-**Example:**
-
-```zig
-const result = try instance.chat(.{});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `ChatCompletionResponse`
-
-**Errors:** Throws `Error`.
-
-###### chatStream()
-
-**Signature:**
-
-```zig
-pub fn chatStream(self: *const DefaultClient, req: ChatCompletionRequest) Error![:0]const u8
-```
-
-**Example:**
-
-```zig
-const result = try instance.chatStream(.{});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `[:0]const u8`
-
-**Errors:** Throws `Error`.
-
-###### embed()
-
-**Signature:**
-
-```zig
-pub fn embed(self: *const DefaultClient, req: EmbeddingRequest) Error!EmbeddingResponse
-```
-
-**Example:**
-
-```zig
-const result = try instance.embed(.{});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `EmbeddingRequest` | Yes | The embedding request |
-
-**Returns:** `EmbeddingResponse`
-
-**Errors:** Throws `Error`.
-
-###### listModels()
-
-**Signature:**
-
-```zig
-pub fn listModels(self: *const DefaultClient) Error!ModelsListResponse
-```
-
-**Example:**
-
-```zig
-const result = try instance.listModels();
-```
-
-**Returns:** `ModelsListResponse`
-
-**Errors:** Throws `Error`.
-
-###### imageGenerate()
-
-**Signature:**
-
-```zig
-pub fn imageGenerate(self: *const DefaultClient, req: CreateImageRequest) Error!ImagesResponse
-```
-
-**Example:**
-
-```zig
-const result = try instance.imageGenerate(.{});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateImageRequest` | Yes | The create image request |
-
-**Returns:** `ImagesResponse`
-
-**Errors:** Throws `Error`.
-
-###### speech()
-
-**Signature:**
-
-```zig
-pub fn speech(self: *const DefaultClient, req: CreateSpeechRequest) Error![]const u8
-```
-
-**Example:**
-
-```zig
-const result = try instance.speech(.{});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateSpeechRequest` | Yes | The create speech request |
-
-**Returns:** `[]const u8`
-
-**Errors:** Throws `Error`.
-
-###### transcribe()
-
-**Signature:**
-
-```zig
-pub fn transcribe(self: *const DefaultClient, req: CreateTranscriptionRequest) Error!TranscriptionResponse
-```
-
-**Example:**
-
-```zig
-const result = try instance.transcribe(.{});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
-
-**Returns:** `TranscriptionResponse`
-
-**Errors:** Throws `Error`.
-
-###### moderate()
-
-**Signature:**
-
-```zig
-pub fn moderate(self: *const DefaultClient, req: ModerationRequest) Error!ModerationResponse
-```
-
-**Example:**
-
-```zig
-const result = try instance.moderate(.{});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ModerationRequest` | Yes | The moderation request |
-
-**Returns:** `ModerationResponse`
-
-**Errors:** Throws `Error`.
-
-###### rerank()
-
-**Signature:**
-
-```zig
-pub fn rerank(self: *const DefaultClient, req: RerankRequest) Error!RerankResponse
-```
-
-**Example:**
-
-```zig
-const result = try instance.rerank(.{});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `RerankRequest` | Yes | The rerank request |
-
-**Returns:** `RerankResponse`
-
-**Errors:** Throws `Error`.
-
-###### search()
-
-**Signature:**
-
-```zig
-pub fn search(self: *const DefaultClient, req: SearchRequest) Error!SearchResponse
-```
-
-**Example:**
-
-```zig
-const result = try instance.search(.{});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `SearchRequest` | Yes | The search request |
-
-**Returns:** `SearchResponse`
-
-**Errors:** Throws `Error`.
-
-###### ocr()
-
-**Signature:**
-
-```zig
-pub fn ocr(self: *const DefaultClient, req: OcrRequest) Error!OcrResponse
-```
-
-**Example:**
-
-```zig
-const result = try instance.ocr(.{});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `OcrRequest` | Yes | The ocr request |
-
-**Returns:** `OcrResponse`
-
-**Errors:** Throws `Error`.
-
-###### createFile()
-
-**Signature:**
-
-```zig
-pub fn createFile(self: *const DefaultClient, req: CreateFileRequest) Error!FileObject
-```
-
-**Example:**
-
-```zig
-const result = try instance.createFile(.{});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateFileRequest` | Yes | The create file request |
-
-**Returns:** `FileObject`
-
-**Errors:** Throws `Error`.
-
-###### retrieveFile()
-
-**Signature:**
-
-```zig
-pub fn retrieveFile(self: *const DefaultClient, file_id: [:0]const u8) Error!FileObject
-```
-
-**Example:**
-
-```zig
-const result = try instance.retrieveFile("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `fileId` | `[:0]const u8` | Yes | The file id |
-
-**Returns:** `FileObject`
-
-**Errors:** Throws `Error`.
-
-###### deleteFile()
-
-**Signature:**
-
-```zig
-pub fn deleteFile(self: *const DefaultClient, file_id: [:0]const u8) Error!DeleteResponse
-```
-
-**Example:**
-
-```zig
-const result = try instance.deleteFile("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `fileId` | `[:0]const u8` | Yes | The file id |
-
-**Returns:** `DeleteResponse`
-
-**Errors:** Throws `Error`.
-
-###### listFiles()
-
-**Signature:**
-
-```zig
-pub fn listFiles(self: *const DefaultClient, query: ?FileListQuery) Error!FileListResponse
-```
-
-**Example:**
-
-```zig
-const result = try instance.listFiles(.{});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `query` | `FileListQuery?` | No | The file list query |
-
-**Returns:** `FileListResponse`
-
-**Errors:** Throws `Error`.
-
-###### fileContent()
-
-**Signature:**
-
-```zig
-pub fn fileContent(self: *const DefaultClient, file_id: [:0]const u8) Error![]const u8
-```
-
-**Example:**
-
-```zig
-const result = try instance.fileContent("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `fileId` | `[:0]const u8` | Yes | The file id |
-
-**Returns:** `[]const u8`
-
-**Errors:** Throws `Error`.
-
-###### createBatch()
-
-**Signature:**
-
-```zig
-pub fn createBatch(self: *const DefaultClient, req: CreateBatchRequest) Error!BatchObject
-```
-
-**Example:**
-
-```zig
-const result = try instance.createBatch(.{});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateBatchRequest` | Yes | The create batch request |
-
-**Returns:** `BatchObject`
-
-**Errors:** Throws `Error`.
-
-###### retrieveBatch()
-
-**Signature:**
-
-```zig
-pub fn retrieveBatch(self: *const DefaultClient, batch_id: [:0]const u8) Error!BatchObject
-```
-
-**Example:**
-
-```zig
-const result = try instance.retrieveBatch("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `batchId` | `[:0]const u8` | Yes | The batch id |
-
-**Returns:** `BatchObject`
-
-**Errors:** Throws `Error`.
-
-###### listBatches()
-
-**Signature:**
-
-```zig
-pub fn listBatches(self: *const DefaultClient, query: ?BatchListQuery) Error!BatchListResponse
-```
-
-**Example:**
-
-```zig
-const result = try instance.listBatches(.{});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `query` | `BatchListQuery?` | No | The batch list query |
-
-**Returns:** `BatchListResponse`
-
-**Errors:** Throws `Error`.
-
-###### cancelBatch()
-
-**Signature:**
-
-```zig
-pub fn cancelBatch(self: *const DefaultClient, batch_id: [:0]const u8) Error!BatchObject
-```
-
-**Example:**
-
-```zig
-const result = try instance.cancelBatch("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `batchId` | `[:0]const u8` | Yes | The batch id |
-
-**Returns:** `BatchObject`
-
-**Errors:** Throws `Error`.
-
 ###### fetchBatchForPolling()
 
 **Signature:**
@@ -1431,78 +956,6 @@ const result = try instance.waitForBatch("value", .{});
 **Returns:** `BatchObject`
 
 **Errors:** Throws `BatchWaitError`.
-
-###### createResponse()
-
-**Signature:**
-
-```zig
-pub fn createResponse(self: *const DefaultClient, req: CreateResponseRequest) Error!ResponseObject
-```
-
-**Example:**
-
-```zig
-const result = try instance.createResponse(.{});
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateResponseRequest` | Yes | The create response request |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Throws `Error`.
-
-###### retrieveResponse()
-
-**Signature:**
-
-```zig
-pub fn retrieveResponse(self: *const DefaultClient, response_id: [:0]const u8) Error!ResponseObject
-```
-
-**Example:**
-
-```zig
-const result = try instance.retrieveResponse("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `responseId` | `[:0]const u8` | Yes | The response id |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Throws `Error`.
-
-###### cancelResponse()
-
-**Signature:**
-
-```zig
-pub fn cancelResponse(self: *const DefaultClient, response_id: [:0]const u8) Error!ResponseObject
-```
-
-**Example:**
-
-```zig
-const result = try instance.cancelResponse("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `responseId` | `[:0]const u8` | Yes | The response id |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Throws `Error`.
 
 ---
 
@@ -1575,7 +1028,7 @@ Embedding response.
 | `object` | `[:0]const u8` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `data` | `[]const EmbeddingObject` | — | List of embeddings. |
 | `model` | `[:0]const u8` | — | Model used to generate embeddings. |
-| `usage` | `Usage?` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
+| `usage` | `Usage?` | language default | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -1637,9 +1090,9 @@ Function definition exposed to the model.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `[:0]const u8` | — | Name of the function. Required and must be alphanumeric + underscores. |
-| `description` | `[:0]const u8?` | `/* serde(default) */` | Human-readable description explaining what the function does. |
-| `parameters` | `[:0]const u8?` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
-| `strict` | `bool?` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
+| `description` | `[:0]const u8?` | language default | Human-readable description explaining what the function does. |
+| `parameters` | `[:0]const u8?` | language default | JSON Schema defining the function's parameters. |
+| `strict` | `bool?` | language default | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -1858,7 +1311,7 @@ An image extracted from an OCR page.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `[:0]const u8` | — | Unique image identifier within the document. |
-| `imageBase64` | `[:0]const u8?` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
+| `imageBase64` | `[:0]const u8?` | language default | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1870,8 +1323,8 @@ A single page of OCR output.
 |-------|------|---------|-------------|
 | `index` | `u32` | — | Page index (0-based). |
 | `markdown` | `[:0]const u8` | — | Extracted page content as Markdown. |
-| `images` | `[]const OcrImage?` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `dimensions` | `PageDimensions?` | `/* serde(default) */` | Page dimensions in pixels, if available. |
+| `images` | `[]const OcrImage?` | language default | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `PageDimensions?` | language default | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1896,7 +1349,7 @@ An OCR response.
 |-------|------|---------|-------------|
 | `pages` | `[]const OcrPage` | — | Extracted pages in order. |
 | `model` | `[:0]const u8` | — | Model/provider used for OCR. |
-| `usage` | `Usage?` | `/* serde(default) */` | Token usage, if reported by the provider. |
+| `usage` | `Usage?` | language default | Token usage, if reported by the provider. |
 
 ---
 
@@ -1958,9 +1411,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function.  Keeping
-these fields separate preserves backward compatibility with all generated
-binding code that constructs `ProviderConfig` using struct literal syntax.
+format, which are accessed via the `capabilities` function.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -2026,7 +1477,7 @@ Response from the rerank endpoint.
 |-------|------|---------|-------------|
 | `id` | `[:0]const u8?` | `null` | Unique identifier for this rerank request. |
 | `results` | `[]const RerankResult` | — | Reranked documents in order of relevance. |
-| `meta` | `[:0]const u8?` | `/* serde(default) */` | Optional metadata about the reranking operation. |
+| `meta` | `[:0]const u8?` | language default | Optional metadata about the reranking operation. |
 
 ---
 
@@ -2038,7 +1489,7 @@ A single reranked document with its relevance score.
 |-------|------|---------|-------------|
 | `index` | `u32` | — | Original document index in the input list. |
 | `relevanceScore` | `f64` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `document` | `RerankResultDocument?` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
+| `document` | `RerankResultDocument?` | language default | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -2137,7 +1588,7 @@ An individual search result.
 | `title` | `[:0]const u8` | — | Result title. |
 | `url` | `[:0]const u8` | — | Result URL. |
 | `snippet` | `[:0]const u8` | — | Text snippet or excerpt from the page. |
-| `date` | `[:0]const u8?` | `/* serde(default) */` | Publication or last-updated date, if available. |
+| `date` | `[:0]const u8?` | language default | Publication or last-updated date, if available. |
 
 ---
 
@@ -2145,9 +1596,8 @@ An individual search result.
 
 The value broadcast from a singleflight leader to all followers.
 
-`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
-bump per follower, which is negligible under the burst loads this layer targets.
+The error value is shared so every follower receives the same upstream
+failure without cloning the underlying error.
 
 ---
 

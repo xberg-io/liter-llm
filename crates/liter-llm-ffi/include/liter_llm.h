@@ -89,8 +89,8 @@ typedef struct LITERLLMChoice LITERLLMChoice;
  * to pass it through (optionally modified), `Ok(None)` to drop the chunk,
  * or `Err(e)` to propagate a stream error.
  *
- * The trait is object-safe so implementations can be stored in a
- * `Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+ * The trait is object-safe so multiple middleware implementations can be
+ * chained inside `StreamPipeline`.
  */
 typedef struct LITERLLMChunkMiddleware LITERLLMChunkMiddleware;
 /**
@@ -353,9 +353,7 @@ typedef struct LITERLLMProviderCapabilities LITERLLMProviderCapabilities;
  * Static configuration for a single provider entry in providers.json.
  *
  * This struct deliberately does not include capability flags or streaming
- * format, which are accessed via the `capabilities` function.  Keeping
- * these fields separate preserves backward compatibility with all generated
- * binding code that constructs `ProviderConfig` using struct literal syntax.
+ * format, which are accessed via the `capabilities` function.
  */
 typedef struct LITERLLMProviderConfig LITERLLMProviderConfig;
 /**
@@ -421,9 +419,8 @@ typedef struct LITERLLMSearchResult LITERLLMSearchResult;
 /**
  * The value broadcast from a singleflight leader to all followers.
  *
- * `Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
- * broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
- * bump per follower, which is negligible under the burst loads this layer targets.
+ * The error value is shared so every follower receives the same upstream
+ * failure without cloning the underlying error.
  */
 typedef struct LITERLLMSingleflightResult LITERLLMSingleflightResult;
 /**
@@ -5817,7 +5814,7 @@ int32_t literllm_register_custom_provider(const LITERLLMCustomProviderConfig *co
  *
  * Returns `true` if a provider with the given name was found and removed,
  * `false` if no such provider existed.
- * \note Returns an error only if the internal lock is poisoned.
+ * \note Returns an error if the custom-provider registry cannot be updated.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
@@ -5827,9 +5824,8 @@ int32_t literllm_unregister_custom_provider(const char *name);
  * Return the capability flags for a named provider.
  *
  * Performs an O(n) linear scan over the embedded registry (143 entries).
- * Returns an owned value so that bindings can box/copy it across the FFI
- * boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
- * so this is a cheap memcpy of seven `bool` fields.
+ * Returns an owned value so bindings can pass capability data without
+ * borrowing registry internals.
  *
  * For unknown `provider_name` values the function returns an all-`false`
  * sentinel so callers never need to handle `Option`.
@@ -5985,8 +5981,8 @@ int32_t literllm_check_bound(const char *context,
  * Install the `ring` crypto provider as the rustls process default, idempotently.
  *
  * rustls 0.23+ removed the implicit default provider. This function installs
- * `ring` once per process. Subsequent calls are no-ops. Calling it from a
- * downstream Rust app that has already installed `aws-lc-rs` is safe â the
+ * `ring` once per process. Subsequent calls are no-ops. Calling it after
+ * another rustls crypto provider has already been installed is safe: the
  * `Err` from `install_default()` is silently ignored.
  *
  * Called automatically by every internal `reqwest::Client` constructor

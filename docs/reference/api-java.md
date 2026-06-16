@@ -2,7 +2,7 @@
 title: "Java API Reference"
 ---
 
-## Java API Reference <span class="version-badge">v1.6.2</span>
+## Java API Reference <span class="version-badge">v1.6.3</span>
 
 ### Functions
 
@@ -127,7 +127,7 @@ Returns `true` if a provider with the given name was found and removed,
 
 **Errors:**
 
-Returns an error only if the internal lock is poisoned.
+Returns an error if the custom-provider registry cannot be updated.
 
 **Signature:**
 
@@ -158,9 +158,8 @@ var result = unregisterCustomProvider("value");
 Return the capability flags for a named provider.
 
 Performs an O(n) linear scan over the embedded registry (143 entries).
-Returns an owned value so that bindings can box/copy it across the FFI
-boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
-so this is a cheap memcpy of seven `bool` fields.
+Returns an owned value so bindings can pass capability data without
+borrowing registry internals.
 
 For unknown `provider_name` values the function returns an all-`false`
 sentinel so callers never need to handle `Option`.
@@ -459,8 +458,8 @@ checkBound("value", 42, 42, 42);
 Install the `ring` crypto provider as the rustls process default, idempotently.
 
 rustls 0.23+ removed the implicit default provider. This function installs
-`ring` once per process. Subsequent calls are no-ops. Calling it from a
-downstream Rust app that has already installed `aws-lc-rs` is safe — the
+`ring` once per process. Subsequent calls are no-ops. Calling it after
+another rustls crypto provider has already been installed is safe: the
 `Err` from `install_default()` is silently ignored.
 
 Called automatically by every internal `reqwest.Client` constructor
@@ -741,8 +740,8 @@ Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
 to pass it through (optionally modified), `Ok(None)` to drop the chunk,
 or `Err(e)` to propagate a stream error.
 
-The trait is object-safe so implementations can be stored in a
-`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+The trait is object-safe so multiple middleware implementations can be
+chained inside `StreamPipeline`.
 
 ##### Methods
 
@@ -898,480 +897,6 @@ headers are cached at construction to avoid redundant encoding on every request.
 
 ##### Methods
 
-###### chat()
-
-**Signature:**
-
-```java
-public ChatCompletionResponse chat(ChatCompletionRequest req) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.chat(new ChatCompletionRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `ChatCompletionResponse`
-
-**Errors:** Throws `ErrorException`.
-
-###### chatStream()
-
-**Signature:**
-
-```java
-public String chatStream(ChatCompletionRequest req) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.chatStream(new ChatCompletionRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
-
-**Returns:** `String`
-
-**Errors:** Throws `ErrorException`.
-
-###### embed()
-
-**Signature:**
-
-```java
-public EmbeddingResponse embed(EmbeddingRequest req) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.embed(new EmbeddingRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `EmbeddingRequest` | Yes | The embedding request |
-
-**Returns:** `EmbeddingResponse`
-
-**Errors:** Throws `ErrorException`.
-
-###### listModels()
-
-**Signature:**
-
-```java
-public ModelsListResponse listModels() throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.listModels();
-```
-
-**Returns:** `ModelsListResponse`
-
-**Errors:** Throws `ErrorException`.
-
-###### imageGenerate()
-
-**Signature:**
-
-```java
-public ImagesResponse imageGenerate(CreateImageRequest req) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.imageGenerate(new CreateImageRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateImageRequest` | Yes | The create image request |
-
-**Returns:** `ImagesResponse`
-
-**Errors:** Throws `ErrorException`.
-
-###### speech()
-
-**Signature:**
-
-```java
-public byte[] speech(CreateSpeechRequest req) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.speech(new CreateSpeechRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateSpeechRequest` | Yes | The create speech request |
-
-**Returns:** `byte[]`
-
-**Errors:** Throws `ErrorException`.
-
-###### transcribe()
-
-**Signature:**
-
-```java
-public TranscriptionResponse transcribe(CreateTranscriptionRequest req) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.transcribe(new CreateTranscriptionRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
-
-**Returns:** `TranscriptionResponse`
-
-**Errors:** Throws `ErrorException`.
-
-###### moderate()
-
-**Signature:**
-
-```java
-public ModerationResponse moderate(ModerationRequest req) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.moderate(new ModerationRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `ModerationRequest` | Yes | The moderation request |
-
-**Returns:** `ModerationResponse`
-
-**Errors:** Throws `ErrorException`.
-
-###### rerank()
-
-**Signature:**
-
-```java
-public RerankResponse rerank(RerankRequest req) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.rerank(new RerankRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `RerankRequest` | Yes | The rerank request |
-
-**Returns:** `RerankResponse`
-
-**Errors:** Throws `ErrorException`.
-
-###### search()
-
-**Signature:**
-
-```java
-public SearchResponse search(SearchRequest req) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.search(new SearchRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `SearchRequest` | Yes | The search request |
-
-**Returns:** `SearchResponse`
-
-**Errors:** Throws `ErrorException`.
-
-###### ocr()
-
-**Signature:**
-
-```java
-public OcrResponse ocr(OcrRequest req) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.ocr(new OcrRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `OcrRequest` | Yes | The ocr request |
-
-**Returns:** `OcrResponse`
-
-**Errors:** Throws `ErrorException`.
-
-###### createFile()
-
-**Signature:**
-
-```java
-public FileObject createFile(CreateFileRequest req) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.createFile(new CreateFileRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateFileRequest` | Yes | The create file request |
-
-**Returns:** `FileObject`
-
-**Errors:** Throws `ErrorException`.
-
-###### retrieveFile()
-
-**Signature:**
-
-```java
-public FileObject retrieveFile(String fileId) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.retrieveFile("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `fileId` | `String` | Yes | The file id |
-
-**Returns:** `FileObject`
-
-**Errors:** Throws `ErrorException`.
-
-###### deleteFile()
-
-**Signature:**
-
-```java
-public DeleteResponse deleteFile(String fileId) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.deleteFile("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `fileId` | `String` | Yes | The file id |
-
-**Returns:** `DeleteResponse`
-
-**Errors:** Throws `ErrorException`.
-
-###### listFiles()
-
-**Signature:**
-
-```java
-public FileListResponse listFiles(FileListQuery query) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.listFiles(new FileListQuery());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `query` | `Optional<FileListQuery>` | No | The file list query |
-
-**Returns:** `FileListResponse`
-
-**Errors:** Throws `ErrorException`.
-
-###### fileContent()
-
-**Signature:**
-
-```java
-public byte[] fileContent(String fileId) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.fileContent("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `fileId` | `String` | Yes | The file id |
-
-**Returns:** `byte[]`
-
-**Errors:** Throws `ErrorException`.
-
-###### createBatch()
-
-**Signature:**
-
-```java
-public BatchObject createBatch(CreateBatchRequest req) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.createBatch(new CreateBatchRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateBatchRequest` | Yes | The create batch request |
-
-**Returns:** `BatchObject`
-
-**Errors:** Throws `ErrorException`.
-
-###### retrieveBatch()
-
-**Signature:**
-
-```java
-public BatchObject retrieveBatch(String batchId) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.retrieveBatch("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `batchId` | `String` | Yes | The batch id |
-
-**Returns:** `BatchObject`
-
-**Errors:** Throws `ErrorException`.
-
-###### listBatches()
-
-**Signature:**
-
-```java
-public BatchListResponse listBatches(BatchListQuery query) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.listBatches(new BatchListQuery());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `query` | `Optional<BatchListQuery>` | No | The batch list query |
-
-**Returns:** `BatchListResponse`
-
-**Errors:** Throws `ErrorException`.
-
-###### cancelBatch()
-
-**Signature:**
-
-```java
-public BatchObject cancelBatch(String batchId) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.cancelBatch("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `batchId` | `String` | Yes | The batch id |
-
-**Returns:** `BatchObject`
-
-**Errors:** Throws `ErrorException`.
-
 ###### fetchBatchForPolling()
 
 **Signature:**
@@ -1431,78 +956,6 @@ var result = instance.waitForBatch("value", new WaitForBatchConfig());
 **Returns:** `BatchObject`
 
 **Errors:** Throws `BatchWaitErrorException`.
-
-###### createResponse()
-
-**Signature:**
-
-```java
-public ResponseObject createResponse(CreateResponseRequest req) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.createResponse(new CreateResponseRequest());
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `req` | `CreateResponseRequest` | Yes | The create response request |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Throws `ErrorException`.
-
-###### retrieveResponse()
-
-**Signature:**
-
-```java
-public ResponseObject retrieveResponse(String responseId) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.retrieveResponse("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `responseId` | `String` | Yes | The response id |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Throws `ErrorException`.
-
-###### cancelResponse()
-
-**Signature:**
-
-```java
-public ResponseObject cancelResponse(String responseId) throws Error
-```
-
-**Example:**
-
-```java
-var result = instance.cancelResponse("value");
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `responseId` | `String` | Yes | The response id |
-
-**Returns:** `ResponseObject`
-
-**Errors:** Throws `ErrorException`.
 
 ---
 
@@ -1575,7 +1028,7 @@ Embedding response.
 | `object` | `String` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `data` | `List<EmbeddingObject>` | — | List of embeddings. |
 | `model` | `String` | — | Model used to generate embeddings. |
-| `usage` | `Optional<Usage>` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
+| `usage` | `Optional<Usage>` | language default | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -1637,9 +1090,9 @@ Function definition exposed to the model.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Name of the function. Required and must be alphanumeric + underscores. |
-| `description` | `Optional<String>` | `/* serde(default) */` | Human-readable description explaining what the function does. |
-| `parameters` | `Optional<Object>` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
-| `strict` | `Optional<Boolean>` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
+| `description` | `Optional<String>` | language default | Human-readable description explaining what the function does. |
+| `parameters` | `Optional<Object>` | language default | JSON Schema defining the function's parameters. |
+| `strict` | `Optional<Boolean>` | language default | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -1858,7 +1311,7 @@ An image extracted from an OCR page.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String` | — | Unique image identifier within the document. |
-| `imageBase64` | `Optional<String>` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
+| `imageBase64` | `Optional<String>` | language default | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1870,8 +1323,8 @@ A single page of OCR output.
 |-------|------|---------|-------------|
 | `index` | `int` | — | Page index (0-based). |
 | `markdown` | `String` | — | Extracted page content as Markdown. |
-| `images` | `Optional<List<OcrImage>>` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `dimensions` | `Optional<PageDimensions>` | `/* serde(default) */` | Page dimensions in pixels, if available. |
+| `images` | `Optional<List<OcrImage>>` | language default | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `Optional<PageDimensions>` | language default | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1896,7 +1349,7 @@ An OCR response.
 |-------|------|---------|-------------|
 | `pages` | `List<OcrPage>` | — | Extracted pages in order. |
 | `model` | `String` | — | Model/provider used for OCR. |
-| `usage` | `Optional<Usage>` | `/* serde(default) */` | Token usage, if reported by the provider. |
+| `usage` | `Optional<Usage>` | language default | Token usage, if reported by the provider. |
 
 ---
 
@@ -1958,9 +1411,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function.  Keeping
-these fields separate preserves backward compatibility with all generated
-binding code that constructs `ProviderConfig` using struct literal syntax.
+format, which are accessed via the `capabilities` function.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -2026,7 +1477,7 @@ Response from the rerank endpoint.
 |-------|------|---------|-------------|
 | `id` | `Optional<String>` | `null` | Unique identifier for this rerank request. |
 | `results` | `List<RerankResult>` | — | Reranked documents in order of relevance. |
-| `meta` | `Optional<Object>` | `/* serde(default) */` | Optional metadata about the reranking operation. |
+| `meta` | `Optional<Object>` | language default | Optional metadata about the reranking operation. |
 
 ---
 
@@ -2038,7 +1489,7 @@ A single reranked document with its relevance score.
 |-------|------|---------|-------------|
 | `index` | `int` | — | Original document index in the input list. |
 | `relevanceScore` | `double` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `document` | `Optional<RerankResultDocument>` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
+| `document` | `Optional<RerankResultDocument>` | language default | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -2137,7 +1588,7 @@ An individual search result.
 | `title` | `String` | — | Result title. |
 | `url` | `String` | — | Result URL. |
 | `snippet` | `String` | — | Text snippet or excerpt from the page. |
-| `date` | `Optional<String>` | `/* serde(default) */` | Publication or last-updated date, if available. |
+| `date` | `Optional<String>` | language default | Publication or last-updated date, if available. |
 
 ---
 
@@ -2145,9 +1596,8 @@ An individual search result.
 
 The value broadcast from a singleflight leader to all followers.
 
-`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
-bump per follower, which is negligible under the burst loads this layer targets.
+The error value is shared so every follower receives the same upstream
+failure without cloning the underlying error.
 
 ---
 

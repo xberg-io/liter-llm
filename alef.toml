@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.25.18"
+alef_version = "0.25.20"
 languages = [
   "python",
   "node",
@@ -116,6 +116,13 @@ output = "packages/ruby/sig/"
 
 [crates.php]
 composer_package = "kreuzberg-dev/liter-llm"
+# ext-php-rs's `#[php_impl]` macro can't resolve `Self::ensure_crypto_provider`
+# in the generated registration site on Windows targets when the inner body
+# is a free-fn call (`liter_llm::ensure_crypto_provider()`). Other bindings
+# (PyO3, NAPI, Rustler, etc.) handle this fine. Until ext-php-rs upstream is
+# patched, drop the PHP wrapper — it is a no-op on Windows anyway, and
+# downstream PHP users rarely touch rustls directly.
+exclude_functions = ["ensure_crypto_provider"]
 
 [crates.elixir]
 app_name = "liter_llm"
@@ -129,7 +136,19 @@ features = ["wasm-http"]
 # build uses the `wasm-http` feature which excludes `tower`. The configs aren't
 # reachable through `liter_llm::*` in that build, so skip them in the WASM
 # binding to avoid E0433 "cannot find `tower`" / "cannot find `BudgetConfig`" etc.
-exclude_types = ["BudgetConfig", "CacheConfig", "CacheBackend", "RateLimitConfig", "Enforcement"]
+exclude_types = [
+  "BudgetConfig",
+  "CacheConfig",
+  "CacheBackend",
+  "RateLimitConfig",
+  "Enforcement",
+  # Tower observability types — same rationale as the config DTOs above. Added
+  # in v1.6.0 alef regen and broke the WASM build (E0433: cannot find `tower`).
+  "CircuitState",
+  "HealthStatus",
+  "IntentPrototype",
+  "SingleflightResult",
+]
 # Token counting via HuggingFace `tokenizers` requires the optional `tokenizer`
 # feature on the core crate. That feature pulls in `hf-hub` (HTTP) and `fancy-regex`
 # which don't build cleanly for `wasm32-unknown-unknown` without the upstream
@@ -1944,7 +1963,7 @@ name = "liter_llm_ffi"
 name = "LiterLlm"
 
 [crates.e2e.registry.packages.zig]
-hash = "liter_llm-1.6.2-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
+hash = "liter_llm-1.6.3-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
 
 [crates.e2e.registry.packages.homebrew]
 tap = "kreuzberg-dev/homebrew-tap"

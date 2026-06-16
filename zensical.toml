@@ -57,7 +57,6 @@ nav = [
       { "TypeScript / Node.js" = "reference/api-typescript.md" },
       { "Go" = "reference/api-go.md" },
       { "Java" = "reference/api-java.md" },
-      { "Kotlin" = "reference/api-kotlin.md" },
       { "Kotlin (Android)" = "reference/api-kotlin-android.md" },
       { "C#" = "reference/api-csharp.md" },
       { "Ruby" = "reference/api-ruby.md" },
