@@ -55,6 +55,18 @@ An individual search result.
 
 ---
 
+#### SingleflightResult
+
+The value broadcast from a singleflight leader to all followers.
+
+`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
+broadcast channels require `T: Clone`. The `Arc` adds only a reference-count
+bump per follower, which is negligible under the burst loads this layer targets.
+
+*Opaque type — fields are not directly accessible.*
+
+---
+
 ### Configuration Types
 
 See [Configuration Reference](configuration.md) for detailed defaults and language-specific representations.
@@ -789,6 +801,22 @@ Token usage for a response.
 
 ---
 
+#### WaitForBatchConfig
+
+Configuration for polling a batch until terminal status.
+
+All time values are in seconds as `f64` so the struct bridges across FFI
+boundaries without requiring a `Duration` shim.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `initial_interval_secs` | `f64` | `5` | Initial interval between polls, in seconds. |
+| `max_interval_secs` | `f64` | `60` | Maximum interval between polls (backoff plateau), in seconds. |
+| `backoff_multiplier` | `f32` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
+| `timeout_secs` | `Option<f64>` | `None` | Optional timeout in seconds — polling fails if this duration is exceeded. |
+
+---
+
 #### CustomProviderConfig
 
 Configuration for registering a custom LLM provider at runtime.
@@ -802,9 +830,40 @@ Configuration for registering a custom LLM provider at runtime.
 
 ---
 
+#### ProviderCapabilities
+
+Static capability flags for a provider.
+
+Each flag indicates whether the provider's models *generally* support that
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
+OpenRouter, vLLM) the flags reflect the superset of available model
+capabilities — a flag being `True` means at least one model supports the
+feature, not every model.
+
+All flags default to `False` so that newly added providers are safe.
+
+Access via the crate-level `capabilities` function:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `vision` | `bool` | — | The provider accepts image input in chat messages. |
+| `reasoning` | `bool` | — | The provider supports extended-thinking / reasoning tokens. |
+| `structured_output` | `bool` | — | The provider supports JSON-mode or `response_format` structured output. |
+| `function_calling` | `bool` | — | The provider supports tool / function calling. |
+| `audio_in` | `bool` | — | The provider accepts audio as input. |
+| `audio_out` | `bool` | — | The provider can generate audio / TTS output. |
+| `video_in` | `bool` | — | The provider accepts video as input. |
+
+---
+
 #### ProviderConfig
 
 Static configuration for a single provider entry in providers.json.
+
+This struct deliberately does not include capability flags or streaming
+format, which are accessed via the `capabilities` function. Keeping
+these fields separate preserves backward compatibility with all generated
+binding code that constructs `ProviderConfig` using struct literal syntax.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -1043,6 +1102,44 @@ headers are cached at construction to avoid redundant encoding on every request.
 
 ---
 
+#### ChunkMiddleware
+
+A per-chunk transformation in the `StreamPipeline`.
+
+Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
+to pass it through (optionally modified), `Ok(None)` to drop the chunk,
+or `Err(e)` to propagate a stream error.
+
+The trait is object-safe so implementations can be stored in a
+`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+
+*Opaque type — fields are not directly accessible.*
+
+---
+
+#### HealthChecker
+
+Abstraction over a health probe strategy.
+
+Implementors issue a lightweight probe against `upstream` (typically a
+provider base URL or named identifier) and report `HealthStatus`.
+
+*Opaque type — fields are not directly accessible.*
+
+---
+
+#### IntentPrototype
+
+An intent prototype: `(intent_name, prototype_embedding, target_model_id)`.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `String` | — | Human-readable name for the intent (used in logs/metrics). |
+| `embedding` | `Vec<f64>` | — | Pre-computed embedding vector for this intent. |
+| `model` | `String` | — | Model to route to when this intent is detected. |
+
+---
+
 ### Enums
 
 #### AuthHeaderFormat
@@ -1095,6 +1192,18 @@ Storage backend for the response cache.
 |---------|------------|-------------|
 | `Memory` | `memory` | In-memory LRU cache (default). No external dependencies. |
 | `OpenDal` | `open_dal` | OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.). — Fields: `scheme`: `String`, `config`: `HashMap<String, String>` |
+
+---
+
+#### CircuitState
+
+Observable state of a circuit breaker.
+
+| Variant | Description |
+|---------|-------------|
+| `Closed` | Requests flow through normally. |
+| `Open` | All requests are rejected; the circuit is waiting for the backoff to elapse. |
+| `HalfOpen` | One probe request is allowed through to test service health. |
 
 ---
 
@@ -1169,6 +1278,17 @@ Why a choice stopped generating tokens.
 | `ContentFilter` | `content_filter` | Content filter |
 | `FunctionCall` | `function_call` | Deprecated legacy finish reason; retained for API compatibility. |
 | `Other` | `other` | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and switching to `#[serde(untagged)]` would change deserialization semantics for all variants.  The original value can be recovered by inspecting the raw JSON if needed. |
+
+---
+
+#### HealthStatus
+
+The result of a single health probe.
+
+| Variant | Description |
+|---------|-------------|
+| `Healthy` | The probe succeeded; the upstream is reachable. |
+| `Unhealthy` | The probe failed; the upstream may be down. |
 
 ---
 
@@ -1264,6 +1384,22 @@ Stop sequence(s) that cause the model to stop generating.
 |---------|-------------|
 | `Single` | Single stop sequence. — Fields: `_0`: `String` |
 | `Multiple` | Multiple stop sequences. — Fields: `_0`: `Vec<String>` |
+
+---
+
+#### StreamFormat
+
+The streaming wire format a provider uses for its response stream.
+
+Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
+a proprietary binary EventStream framing.
+
+Deserialized from the `streaming_format` JSON field via `serde`.
+
+| Variant | Wire value | Description |
+|---------|------------|-------------|
+| `Sse` | `sse` | Standard Server-Sent Events (text/event-stream). |
+| `AwsEventStream` | `aws_event_stream` | AWS EventStream binary framing (application/vnd.amazon.eventstream). |
 
 ---
 

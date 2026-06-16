@@ -23,12 +23,91 @@ pub(crate) fn unix_timestamp_secs() -> u64 {
 ///
 /// Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
 /// a proprietary binary EventStream framing.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum StreamFormat {
+///
+/// Deserialized from the `streaming_format` JSON field via [`serde`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum StreamFormat {
     /// Standard Server-Sent Events (text/event-stream).
+    #[default]
     Sse,
     /// AWS EventStream binary framing (application/vnd.amazon.eventstream).
     AwsEventStream,
+}
+
+// ── Provider capability flags ─────────────────────────────────────────────────
+
+/// Static capability flags for a provider.
+///
+/// Each flag indicates whether the provider's models *generally* support that
+/// feature.  For providers that aggregate many underlying models (e.g. Bedrock,
+/// OpenRouter, vLLM) the flags reflect the superset of available model
+/// capabilities — a flag being `true` means at least one model supports the
+/// feature, not every model.
+///
+/// All flags default to `false` so that newly added providers are safe.
+///
+/// Access via the crate-level [`capabilities`] function:
+///
+/// ```rust
+/// use liter_llm::capabilities;
+///
+/// let caps = capabilities("openai");
+/// assert!(caps.function_calling);
+/// assert!(caps.vision);
+///
+/// // Unknown providers return a default-all-false reference.
+/// let unknown = capabilities("my-private-model");
+/// assert!(!unknown.function_calling);
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub struct ProviderCapabilities {
+    /// The provider accepts image input in chat messages.
+    pub vision: bool,
+    /// The provider supports extended-thinking / reasoning tokens.
+    pub reasoning: bool,
+    /// The provider supports JSON-mode or `response_format` structured output.
+    pub structured_output: bool,
+    /// The provider supports tool / function calling.
+    pub function_calling: bool,
+    /// The provider accepts audio as input.
+    pub audio_in: bool,
+    /// The provider can generate audio / TTS output.
+    pub audio_out: bool,
+    /// The provider accepts video as input.
+    pub video_in: bool,
+}
+
+/// Static all-false sentinel returned by [`capabilities`] for unknown providers.
+static DEFAULT_CAPABILITIES: ProviderCapabilities = ProviderCapabilities {
+    vision: false,
+    reasoning: false,
+    structured_output: false,
+    function_calling: false,
+    audio_in: false,
+    audio_out: false,
+    video_in: false,
+};
+
+/// Return the capability flags for a named provider.
+///
+/// Performs an O(n) linear scan over the embedded registry (143 entries).
+/// Returns an owned value so that bindings can box/copy it across the FFI
+/// boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+/// so this is a cheap memcpy of seven `bool` fields.
+///
+/// For unknown `provider_name` values the function returns an all-`false`
+/// sentinel so callers never need to handle `Option`.
+pub fn capabilities(provider_name: &str) -> ProviderCapabilities {
+    let Ok(reg) = REGISTRY.as_ref() else {
+        return DEFAULT_CAPABILITIES;
+    };
+    for entry in &reg.providers {
+        if entry.config.name == provider_name {
+            return entry.capabilities;
+        }
+    }
+    DEFAULT_CAPABILITIES
 }
 
 // Embed the generated providers registry at compile time.
@@ -37,8 +116,11 @@ const PROVIDERS_JSON: &str = include_str!("../../schemas/providers.json");
 /// Lazy-initialised registry parsed from the embedded JSON.
 /// Stores a `Result` so that parse failures surface at call time rather than
 /// panicking the process (fix for the `.expect()` on LazyLock).
-static REGISTRY: LazyLock<std::result::Result<ProviderRegistry, String>> =
-    LazyLock::new(|| serde_json::from_str(PROVIDERS_JSON).map_err(|e| e.to_string()));
+static REGISTRY: LazyLock<std::result::Result<ProviderRegistry, String>> = LazyLock::new(|| {
+    serde_json::from_str::<ProviderRegistryRaw>(PROVIDERS_JSON)
+        .map(ProviderRegistry::from_raw)
+        .map_err(|e| e.to_string())
+});
 
 /// Access the registry, returning an error if the embedded JSON was invalid.
 fn registry() -> Result<&'static ProviderRegistry> {
@@ -50,15 +132,59 @@ fn registry() -> Result<&'static ProviderRegistry> {
 
 // ── Registry types (deserialised from providers.json) ────────────────────────
 
+/// Internal JSON shape: each provider entry with capability flags and streaming
+/// format, which are carried separately from the public [`ProviderConfig`] to
+/// preserve backward compatibility with binding code that constructs
+/// [`ProviderConfig`] using struct literal syntax.
 #[derive(Debug, Deserialize)]
-struct ProviderRegistry {
-    providers: Vec<ProviderConfig>,
+struct ProviderEntry {
+    #[serde(flatten)]
+    config: ProviderConfig,
+    #[serde(default)]
+    capabilities: ProviderCapabilities,
+    /// Streaming wire format for this provider.
+    ///
+    /// Deserialized from `providers.json` and available to future workstreams
+    /// via `ProviderEntry` (e.g. to drive per-provider streaming-format routing
+    /// without hardcoding the Bedrock special-case in `detect_provider`).
+    #[allow(dead_code)]
+    #[serde(default, rename = "streaming_format")]
+    stream_format: StreamFormat,
+}
+
+/// Intermediate deserialization target for `providers.json`.
+#[derive(Debug, Deserialize)]
+struct ProviderRegistryRaw {
+    providers: Vec<ProviderEntry>,
     /// Set of complex provider names for O(1) lookup.
     ///
     /// Deserialized from a JSON array; converted to a `HashSet` for fast
     /// membership tests in the hot `detect_provider` path.
     #[serde(default, deserialize_with = "deserialize_hashset")]
     complex_providers: HashSet<String>,
+}
+
+/// The parsed and indexed registry.
+///
+/// `providers` holds the full entries including capability flags and streaming
+/// format (for internal routing and capability lookup).  `configs` is a
+/// pre-extracted public-config slice returned by [`all_providers`].
+#[derive(Debug)]
+struct ProviderRegistry {
+    providers: Vec<ProviderEntry>,
+    configs: Vec<ProviderConfig>,
+    complex_providers: HashSet<String>,
+}
+
+impl ProviderRegistry {
+    fn from_raw(raw: ProviderRegistryRaw) -> Self {
+        let configs = raw.providers.iter().map(|e| e.config.clone()).collect();
+        Self {
+            configs,
+            providers: raw.providers,
+            complex_providers: raw.complex_providers,
+        }
+    }
 }
 
 fn deserialize_hashset<'de, D>(deserializer: D) -> std::result::Result<HashSet<String>, D::Error>
@@ -70,6 +196,11 @@ where
 }
 
 /// Static configuration for a single provider entry in providers.json.
+///
+/// This struct deliberately does not include capability flags or streaming
+/// format, which are accessed via the [`capabilities`] function.  Keeping
+/// these fields separate preserves backward compatibility with all generated
+/// binding code that constructs `ProviderConfig` using struct literal syntax.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProviderConfig {
     /// Provider identifier (matches the entry key in providers.json).
@@ -615,30 +746,30 @@ pub(crate) fn detect_provider(model: &str) -> Option<Box<dyn Provider>> {
         Err(_) => return None,
     };
 
-    // 6. Slash-prefix routing (e.g. "groq/llama3-70b").
+    // 10. Slash-prefix routing (e.g. "groq/llama3-70b").
     if let Some((prefix, _)) = model.split_once('/')
-        && let Some(cfg) = reg.providers.iter().find(|p| p.name == prefix)
-        && cfg.base_url.is_some()
-        && !reg.complex_providers.contains(&cfg.name)
+        && let Some(entry) = reg.providers.iter().find(|e| e.config.name == prefix)
+        && entry.config.base_url.is_some()
+        && !reg.complex_providers.contains(&entry.config.name)
     {
-        // cfg is &'static ProviderConfig because reg comes from LazyLock.
+        // entry.config is &'static ProviderConfig because reg comes from LazyLock.
         // Only use the registry entry if it has a usable base_url and is not
         // a complex provider requiring dedicated auth logic.
-        return Some(Box::new(ConfigDrivenProvider::new(cfg)));
+        return Some(Box::new(ConfigDrivenProvider::new(&entry.config)));
     }
 
-    // 7. Walk registry model_prefixes for unprefixed model names.
-    for cfg in &reg.providers {
-        if reg.complex_providers.contains(&cfg.name) {
+    // 11. Walk registry model_prefixes for unprefixed model names.
+    for entry in &reg.providers {
+        if reg.complex_providers.contains(&entry.config.name) {
             continue;
         }
-        if let Some(prefixes) = &cfg.model_prefixes {
+        if let Some(prefixes) = &entry.config.model_prefixes {
             let matches = prefixes
                 .iter()
                 .any(|p| model.starts_with(p.as_str()) && !p.ends_with('/'));
-            if matches && cfg.base_url.is_some() {
-                // cfg is &'static ProviderConfig because reg comes from LazyLock.
-                return Some(Box::new(ConfigDrivenProvider::new(cfg)));
+            if matches && entry.config.base_url.is_some() {
+                // entry.config is &'static ProviderConfig because reg comes from LazyLock.
+                return Some(Box::new(ConfigDrivenProvider::new(&entry.config)));
             }
         }
     }
@@ -649,8 +780,10 @@ pub(crate) fn detect_provider(model: &str) -> Option<Box<dyn Provider>> {
 /// Return all provider configs from the registry.
 ///
 /// Useful for tooling, documentation generation, or runtime enumeration.
+/// Returns the public [`ProviderConfig`] slice (without capability flags).
+/// To query capability flags for a specific provider use [`capabilities`].
 pub fn all_providers() -> Result<&'static [ProviderConfig]> {
-    Ok(&registry()?.providers)
+    Ok(&registry()?.configs)
 }
 
 /// Return the set of complex provider names.

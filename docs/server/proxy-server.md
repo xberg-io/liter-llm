@@ -4,7 +4,7 @@ description: "Run the liter-llm proxy as an OpenAI-compatible gateway with virtu
 
 # Proxy Server
 
-The `liter-llm` binary ships with a production proxy that speaks the OpenAI REST API on top of any of the 143 supported providers. It terminates Bearer auth, routes by model name, applies the full Tower middleware stack (cache, budget, rate limit, cooldown, health, fallback), and exposes OpenTelemetry spans.
+The `liter-llm` binary ships with a production proxy that speaks the OpenAI REST API on top of the 143 runtime providers. It terminates Bearer auth, routes by model name, applies the full Tower middleware stack (cache, budget, rate limit, cooldown, health, fallback), and exposes OpenTelemetry spans.
 
 Point any OpenAI SDK at the proxy URL and it works unchanged.
 
@@ -45,15 +45,30 @@ See [Proxy Configuration](proxy-configuration.md) for every config field.
 
 ## Command-line flags
 
-| Flag             | Default                           | Purpose                                                                                                  |
-| ---------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `--config`, `-c` | auto-discover                     | Path to `liter-llm-proxy.toml`. Walks from the current directory up to the filesystem root when omitted. |
-| `--host`         | `0.0.0.0`                         | Bind address. Overrides `[server].host`.                                                                 |
-| `--port`, `-p`   | `4000`                            | Bind port. Overrides `[server].port`.                                                                    |
-| `--master-key`   | reads env: `LITER_LLM_MASTER_KEY` | Master API key. Overrides `[general].master_key`.                                                        |
-| `--debug`        | off                               | Enable debug-level tracing. Equivalent to `RUST_LOG=debug`.                                              |
+| Flag              | Default                           | Purpose                                                                                                  |
+| ----------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `--config`, `-c`  | auto-discover                     | Path to `liter-llm-proxy.toml`. Walks from the current directory up to the filesystem root when omitted. |
+| `--host`          | `0.0.0.0`                         | Bind address. Overrides `[server].host`.                                                                 |
+| `--port`, `-p`    | `4000`                            | Bind port. Overrides `[server].port`.                                                                    |
+| `--master-key`    | reads env: `LITER_LLM_MASTER_KEY` | Master API key. Overrides `[general].master_key`.                                                        |
+| `--debug`         | off                               | Enable debug-level tracing. Equivalent to `RUST_LOG=debug`.                                              |
+| `--watch`         | off                               | Reload config after file saves, or subscribe to etcd when `--etcd-endpoint` is set.                      |
+| `--etcd-endpoint` | reads env: `LITER_LLM_ETCD_ENDPOINTS` | Comma-separated etcd endpoints for distributed config reload.                                         |
+| `--etcd-key`      | `/liter-llm/config`               | etcd key to watch when `--etcd-endpoint` is set.                                                         |
 
 CLI flags take precedence over config file values, which take precedence over defaults.
+
+For local file reloads, pass both `--config` and `--watch`:
+
+```bash
+liter-llm api --config ./liter-llm-proxy.toml --watch
+```
+
+For distributed reloads, pass `--watch --etcd-endpoint <url>` and optionally `--etcd-key <key>`:
+
+```bash
+liter-llm api --watch --etcd-endpoint http://127.0.0.1:2379 --etcd-key /liter-llm/config
+```
 
 ## Endpoints
 
@@ -73,6 +88,7 @@ The proxy exposes 23 API routes with 26 endpoints (verb+path combinations). All 
 | POST   | `/v1/rerank`               | `RerankRequest`         | Extended endpoint, not in OpenAI API.       |
 | POST   | `/v1/search`               | `SearchRequest`         | Extended endpoint.                          |
 | POST   | `/v1/ocr`                  | `OcrRequest`            | Extended endpoint.                          |
+| GET    | `/v1/realtime`             | WebSocket upgrade       | Realtime proxy endpoint.                    |
 
 ### Files
 
@@ -108,6 +124,8 @@ The proxy exposes 23 API routes with 26 endpoints (verb+path combinations). All 
 | GET    | `/health`           | public | Full status including configured model list.                                       |
 | GET    | `/health/liveness`  | public | Always returns 200 while the process is alive. Use as a Kubernetes liveness probe. |
 | GET    | `/health/readiness` | public | Returns 200 once the service pool is initialised. Use as a readiness probe.        |
+| GET    | `/healthz`          | public | Short liveness alias.                                                            |
+| GET    | `/readyz`           | public | Short readiness alias.                                                           |
 | GET    | `/openapi.json`     | public | Machine-readable OpenAPI 3.1 schema for every `/v1/*` route.                       |
 
 ## Request lifecycle
@@ -194,12 +212,12 @@ readinessProbe:
 | --------------------------------- | -------------------------- | ----------------------------------------- |
 | Request timeout                   | 600 s                      | `[server].request_timeout_secs`           |
 | Body size limit                   | 10 MiB                     | `[server].body_limit_bytes`               |
-| CORS origins                      | `*`                        | `[server].cors_origins`                   |
+| CORS origins                      | disabled (`[]`)            | `[server].cors_origins`                   |
 | Response compression              | always on                  | built in (`tower_http::CompressionLayer`) |
 | Panic handling                    | caught and returned as 500 | built in (`tower_http::CatchPanicLayer`)  |
 | `Authorization` redaction in logs | always on                  | built in (`SetSensitiveHeadersLayer`)     |
 
-CORS is wide open by default so the proxy works from any browser app during development. Restrict it to a known origin list before shipping to production.
+CORS is disabled by default. <span class="version-badge">Available by v1.5</span> Set `[server].cors_origins` to an explicit origin list for browser clients. A wildcard origin is supported for local development, but wildcard CORS deliberately does not allow credentialed `Authorization` headers.
 
 ## Verify a running instance
 

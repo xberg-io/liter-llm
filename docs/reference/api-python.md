@@ -2,7 +2,7 @@
 title: "Python API Reference"
 ---
 
-## Python API Reference <span class="version-badge">v1.5.1</span>
+## Python API Reference <span class="version-badge">v1.6.0</span>
 
 ### Functions
 
@@ -25,6 +25,12 @@ constructed, or if the resolved provider configuration is invalid.
 def create_client(api_key: str, base_url: str = None, timeout_secs: int = None, max_retries: int = None, model_hint: str = None) -> DefaultClient
 ```
 
+**Example:**
+
+```python
+result = create_client("value", base_url="value", timeout_secs=42, max_retries=42, model_hint="value")
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -36,6 +42,7 @@ def create_client(api_key: str, base_url: str = None, timeout_secs: int = None, 
 | `model_hint` | `str \| None` | No | The model hint |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Raises `Error`.
 
 ---
@@ -57,6 +64,12 @@ contains unknown fields.
 def create_client_from_json(json: str) -> DefaultClient
 ```
 
+**Example:**
+
+```python
+result = create_client_from_json("value")
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -64,6 +77,7 @@ def create_client_from_json(json: str) -> DefaultClient
 | `json` | `str` | Yes | The json |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Raises `Error`.
 
 ---
@@ -86,13 +100,20 @@ no model prefixes).
 def register_custom_provider(config: CustomProviderConfig) -> None
 ```
 
+**Example:**
+
+```python
+register_custom_provider(CustomProviderConfig())
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `config` | `CustomProviderConfig` | Yes | The configuration options |
 
-**Returns:** `None`
+**Returns:** No return value.
+
 **Errors:** Raises `Error`.
 
 ---
@@ -114,6 +135,12 @@ Returns an error only if the internal lock is poisoned.
 def unregister_custom_provider(name: str) -> bool
 ```
 
+**Example:**
+
+```python
+result = unregister_custom_provider("value")
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -121,7 +148,42 @@ def unregister_custom_provider(name: str) -> bool
 | `name` | `str` | Yes | The name |
 
 **Returns:** `bool`
+
 **Errors:** Raises `Error`.
+
+---
+
+#### capabilities()
+
+Return the capability flags for a named provider.
+
+Performs an O(n) linear scan over the embedded registry (142 entries).
+Returns an owned value so that bindings can box/copy it across the FFI
+boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+so this is a cheap memcpy of seven `bool` fields.
+
+For unknown `provider_name` values the function returns an all-`False`
+sentinel so callers never need to handle `Option`.
+
+**Signature:**
+
+```python
+def capabilities(provider_name: str) -> ProviderCapabilities
+```
+
+**Example:**
+
+```python
+result = capabilities("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `provider_name` | `str` | Yes | The provider name |
+
+**Returns:** `ProviderCapabilities`
 
 ---
 
@@ -130,6 +192,8 @@ def unregister_custom_provider(name: str) -> bool
 Return all provider configs from the registry.
 
 Useful for tooling, documentation generation, or runtime enumeration.
+Returns the public `ProviderConfig` slice (without capability flags).
+To query capability flags for a specific provider use `capabilities`.
 
 **Signature:**
 
@@ -137,7 +201,14 @@ Useful for tooling, documentation generation, or runtime enumeration.
 def all_providers() -> list[ProviderConfig]
 ```
 
+**Example:**
+
+```python
+result = all_providers()
+```
+
 **Returns:** `list[ProviderConfig]`
+
 **Errors:** Raises `Error`.
 
 ---
@@ -157,7 +228,14 @@ The returned reference points into the static registry — no allocation.
 def complex_provider_names() -> list[str]
 ```
 
+**Example:**
+
+```python
+result = complex_provider_names()
+```
+
 **Returns:** `list[str]`
+
 **Errors:** Raises `Error`.
 
 ---
@@ -178,6 +256,12 @@ are tried by stripping from the last `-` or `.` separator. For example,
 
 ```python
 def completion_cost(model: str, prompt_tokens: int, completion_tokens: int) -> float | None
+```
+
+**Example:**
+
+```python
+result = completion_cost("value", 42, 42)
 ```
 
 **Parameters:**
@@ -213,6 +297,12 @@ registry, mirroring `completion_cost`.
 def completion_cost_with_cache(model: str, prompt_tokens: int, cached_tokens: int, completion_tokens: int) -> float | None
 ```
 
+**Example:**
+
+```python
+result = completion_cost_with_cache("value", 42, 42, 42)
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -223,6 +313,32 @@ def completion_cost_with_cache(model: str, prompt_tokens: int, cached_tokens: in
 | `completion_tokens` | `int` | Yes | The completion tokens |
 
 **Returns:** `float | None`
+
+---
+
+#### clear()
+
+Remove all guardrails from the global registry.
+
+Primarily useful in tests to reset state between test cases.
+
+**Panics:**
+
+Panics if the global registry lock is poisoned.
+
+**Signature:**
+
+```python
+def clear() -> None
+```
+
+**Example:**
+
+```python
+clear()
+```
+
+**Returns:** No return value.
 
 ---
 
@@ -245,6 +361,12 @@ Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
 def count_tokens(model: str, text: str) -> int
 ```
 
+**Example:**
+
+```python
+result = count_tokens("value", "value")
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -253,6 +375,7 @@ def count_tokens(model: str, text: str) -> int
 | `text` | `str` | Yes | The text |
 
 **Returns:** `int`
+
 **Errors:** Raises `Error`.
 
 ---
@@ -277,6 +400,12 @@ if tokenization fails for any message.
 def count_request_tokens(model: str, req: ChatCompletionRequest) -> int
 ```
 
+**Example:**
+
+```python
+result = count_request_tokens("value", ChatCompletionRequest())
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -285,6 +414,42 @@ def count_request_tokens(model: str, req: ChatCompletionRequest) -> int
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
 **Returns:** `int`
+
+**Errors:** Raises `Error`.
+
+---
+
+#### check_bound()
+
+Assert that `current_len + incoming` does not exceed `limit`.
+
+Call this before appending `incoming` bytes to any buffer that must
+stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
+and emits a `tracing.warn!` with context.
+
+**Signature:**
+
+```python
+def check_bound(context: str, current_len: int, incoming: int, limit: int) -> None
+```
+
+**Example:**
+
+```python
+check_bound("value", 42, 42, 42)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `context` | `str` | Yes | The context |
+| `current_len` | `int` | Yes | The current len |
+| `incoming` | `int` | Yes | The incoming |
+| `limit` | `int` | Yes | The limit |
+
+**Returns:** No return value.
+
 **Errors:** Raises `Error`.
 
 ---
@@ -314,7 +479,13 @@ present and no crypto provider installation is needed.
 def ensure_crypto_provider() -> None
 ```
 
-**Returns:** `None`
+**Example:**
+
+```python
+ensure_crypto_provider()
+```
+
+**Returns:** No return value.
 
 ---
 
@@ -426,9 +597,9 @@ Configuration for budget enforcement.
 | `model_limits` | `dict[str, float]` | `{}` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
 | `enforcement` | `Enforcement` | `Enforcement.HARD` | Whether to reject requests or merely warn when a limit is exceeded. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -436,6 +607,14 @@ Configuration for budget enforcement.
 @staticmethod
 def default() -> BudgetConfig
 ```
+
+**Example:**
+
+```python
+result = BudgetConfig.default()
+```
+
+**Returns:** `BudgetConfig`
 
 ---
 
@@ -449,9 +628,9 @@ Configuration for the response cache.
 | `ttl` | `float` | `300000ms` | Time-to-live for each cached entry. |
 | `backend` | `CacheBackend` | `CacheBackend.MEMORY` | Storage backend to use. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -459,6 +638,14 @@ Configuration for the response cache.
 @staticmethod
 def default() -> CacheConfig
 ```
+
+**Example:**
+
+```python
+result = CacheConfig.default()
+```
+
+**Returns:** `CacheConfig`
 
 ---
 
@@ -545,6 +732,51 @@ A single completion choice.
 | `index` | `int` | — | Index of this choice in the choices array. |
 | `message` | `AssistantMessage` | — | The assistant's message response. |
 | `finish_reason` | `FinishReason \| None` | `None` | Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). |
+
+---
+
+#### ChunkMiddleware
+
+A per-chunk transformation in the `StreamPipeline`.
+
+Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
+to pass it through (optionally modified), `Ok(None)` to drop the chunk,
+or `Err(e)` to propagate a stream error.
+
+The trait is object-safe so implementations can be stored in a
+`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+
+##### Methods
+
+###### process()
+
+Process a single chunk.
+
+- `Ok(Some(chunk))` — emit (possibly transformed) chunk.
+- `Ok(None)` — drop this chunk silently.
+- `Err(e)` — propagate as a stream error.
+
+**Signature:**
+
+```python
+def process(self, chunk: ChatCompletionChunk) -> ChatCompletionChunk | None
+```
+
+**Example:**
+
+```python
+result = instance.process(ChatCompletionChunk())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `chunk` | `ChatCompletionChunk` | Yes | The chat completion chunk |
+
+**Returns:** `ChatCompletionChunk | None`
+
+**Errors:** Raises `Error`.
 
 ---
 
@@ -666,9 +898,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-### Methods
+##### Methods
 
-#### chat()
+###### chat()
 
 **Signature:**
 
@@ -676,7 +908,23 @@ headers are cached at construction to avoid redundant encoding on every request.
 def chat(self, req: ChatCompletionRequest) -> ChatCompletionResponse
 ```
 
-#### chat_stream()
+**Example:**
+
+```python
+result = instance.chat(ChatCompletionRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `ChatCompletionResponse`
+
+**Errors:** Raises `Error`.
+
+###### chat_stream()
 
 **Signature:**
 
@@ -684,7 +932,23 @@ def chat(self, req: ChatCompletionRequest) -> ChatCompletionResponse
 def chat_stream(self, req: ChatCompletionRequest) -> str
 ```
 
-#### embed()
+**Example:**
+
+```python
+result = instance.chat_stream(ChatCompletionRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `str`
+
+**Errors:** Raises `Error`.
+
+###### embed()
 
 **Signature:**
 
@@ -692,7 +956,23 @@ def chat_stream(self, req: ChatCompletionRequest) -> str
 def embed(self, req: EmbeddingRequest) -> EmbeddingResponse
 ```
 
-#### list_models()
+**Example:**
+
+```python
+result = instance.embed(EmbeddingRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `EmbeddingRequest` | Yes | The embedding request |
+
+**Returns:** `EmbeddingResponse`
+
+**Errors:** Raises `Error`.
+
+###### list_models()
 
 **Signature:**
 
@@ -700,7 +980,17 @@ def embed(self, req: EmbeddingRequest) -> EmbeddingResponse
 def list_models(self) -> ModelsListResponse
 ```
 
-#### image_generate()
+**Example:**
+
+```python
+result = instance.list_models()
+```
+
+**Returns:** `ModelsListResponse`
+
+**Errors:** Raises `Error`.
+
+###### image_generate()
 
 **Signature:**
 
@@ -708,7 +998,23 @@ def list_models(self) -> ModelsListResponse
 def image_generate(self, req: CreateImageRequest) -> ImagesResponse
 ```
 
-#### speech()
+**Example:**
+
+```python
+result = instance.image_generate(CreateImageRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateImageRequest` | Yes | The create image request |
+
+**Returns:** `ImagesResponse`
+
+**Errors:** Raises `Error`.
+
+###### speech()
 
 **Signature:**
 
@@ -716,7 +1022,23 @@ def image_generate(self, req: CreateImageRequest) -> ImagesResponse
 def speech(self, req: CreateSpeechRequest) -> bytes
 ```
 
-#### transcribe()
+**Example:**
+
+```python
+result = instance.speech(CreateSpeechRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateSpeechRequest` | Yes | The create speech request |
+
+**Returns:** `bytes`
+
+**Errors:** Raises `Error`.
+
+###### transcribe()
 
 **Signature:**
 
@@ -724,7 +1046,23 @@ def speech(self, req: CreateSpeechRequest) -> bytes
 def transcribe(self, req: CreateTranscriptionRequest) -> TranscriptionResponse
 ```
 
-#### moderate()
+**Example:**
+
+```python
+result = instance.transcribe(CreateTranscriptionRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
+
+**Returns:** `TranscriptionResponse`
+
+**Errors:** Raises `Error`.
+
+###### moderate()
 
 **Signature:**
 
@@ -732,7 +1070,23 @@ def transcribe(self, req: CreateTranscriptionRequest) -> TranscriptionResponse
 def moderate(self, req: ModerationRequest) -> ModerationResponse
 ```
 
-#### rerank()
+**Example:**
+
+```python
+result = instance.moderate(ModerationRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ModerationRequest` | Yes | The moderation request |
+
+**Returns:** `ModerationResponse`
+
+**Errors:** Raises `Error`.
+
+###### rerank()
 
 **Signature:**
 
@@ -740,7 +1094,23 @@ def moderate(self, req: ModerationRequest) -> ModerationResponse
 def rerank(self, req: RerankRequest) -> RerankResponse
 ```
 
-#### search()
+**Example:**
+
+```python
+result = instance.rerank(RerankRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `RerankRequest` | Yes | The rerank request |
+
+**Returns:** `RerankResponse`
+
+**Errors:** Raises `Error`.
+
+###### search()
 
 **Signature:**
 
@@ -748,7 +1118,23 @@ def rerank(self, req: RerankRequest) -> RerankResponse
 def search(self, req: SearchRequest) -> SearchResponse
 ```
 
-#### ocr()
+**Example:**
+
+```python
+result = instance.search(SearchRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `SearchRequest` | Yes | The search request |
+
+**Returns:** `SearchResponse`
+
+**Errors:** Raises `Error`.
+
+###### ocr()
 
 **Signature:**
 
@@ -756,7 +1142,23 @@ def search(self, req: SearchRequest) -> SearchResponse
 def ocr(self, req: OcrRequest) -> OcrResponse
 ```
 
-#### create_file()
+**Example:**
+
+```python
+result = instance.ocr(OcrRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `OcrRequest` | Yes | The ocr request |
+
+**Returns:** `OcrResponse`
+
+**Errors:** Raises `Error`.
+
+###### create_file()
 
 **Signature:**
 
@@ -764,7 +1166,23 @@ def ocr(self, req: OcrRequest) -> OcrResponse
 def create_file(self, req: CreateFileRequest) -> FileObject
 ```
 
-#### retrieve_file()
+**Example:**
+
+```python
+result = instance.create_file(CreateFileRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateFileRequest` | Yes | The create file request |
+
+**Returns:** `FileObject`
+
+**Errors:** Raises `Error`.
+
+###### retrieve_file()
 
 **Signature:**
 
@@ -772,7 +1190,23 @@ def create_file(self, req: CreateFileRequest) -> FileObject
 def retrieve_file(self, file_id: str) -> FileObject
 ```
 
-#### delete_file()
+**Example:**
+
+```python
+result = instance.retrieve_file("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `file_id` | `str` | Yes | The file id |
+
+**Returns:** `FileObject`
+
+**Errors:** Raises `Error`.
+
+###### delete_file()
 
 **Signature:**
 
@@ -780,7 +1214,23 @@ def retrieve_file(self, file_id: str) -> FileObject
 def delete_file(self, file_id: str) -> DeleteResponse
 ```
 
-#### list_files()
+**Example:**
+
+```python
+result = instance.delete_file("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `file_id` | `str` | Yes | The file id |
+
+**Returns:** `DeleteResponse`
+
+**Errors:** Raises `Error`.
+
+###### list_files()
 
 **Signature:**
 
@@ -788,7 +1238,23 @@ def delete_file(self, file_id: str) -> DeleteResponse
 def list_files(self, query: FileListQuery) -> FileListResponse
 ```
 
-#### file_content()
+**Example:**
+
+```python
+result = instance.list_files(query=FileListQuery())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `FileListQuery \| None` | No | The file list query |
+
+**Returns:** `FileListResponse`
+
+**Errors:** Raises `Error`.
+
+###### file_content()
 
 **Signature:**
 
@@ -796,7 +1262,23 @@ def list_files(self, query: FileListQuery) -> FileListResponse
 def file_content(self, file_id: str) -> bytes
 ```
 
-#### create_batch()
+**Example:**
+
+```python
+result = instance.file_content("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `file_id` | `str` | Yes | The file id |
+
+**Returns:** `bytes`
+
+**Errors:** Raises `Error`.
+
+###### create_batch()
 
 **Signature:**
 
@@ -804,7 +1286,23 @@ def file_content(self, file_id: str) -> bytes
 def create_batch(self, req: CreateBatchRequest) -> BatchObject
 ```
 
-#### retrieve_batch()
+**Example:**
+
+```python
+result = instance.create_batch(CreateBatchRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateBatchRequest` | Yes | The create batch request |
+
+**Returns:** `BatchObject`
+
+**Errors:** Raises `Error`.
+
+###### retrieve_batch()
 
 **Signature:**
 
@@ -812,7 +1310,23 @@ def create_batch(self, req: CreateBatchRequest) -> BatchObject
 def retrieve_batch(self, batch_id: str) -> BatchObject
 ```
 
-#### list_batches()
+**Example:**
+
+```python
+result = instance.retrieve_batch("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `str` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Raises `Error`.
+
+###### list_batches()
 
 **Signature:**
 
@@ -820,7 +1334,23 @@ def retrieve_batch(self, batch_id: str) -> BatchObject
 def list_batches(self, query: BatchListQuery) -> BatchListResponse
 ```
 
-#### cancel_batch()
+**Example:**
+
+```python
+result = instance.list_batches(query=BatchListQuery())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `BatchListQuery \| None` | No | The batch list query |
+
+**Returns:** `BatchListResponse`
+
+**Errors:** Raises `Error`.
+
+###### cancel_batch()
 
 **Signature:**
 
@@ -828,7 +1358,83 @@ def list_batches(self, query: BatchListQuery) -> BatchListResponse
 def cancel_batch(self, batch_id: str) -> BatchObject
 ```
 
-#### create_response()
+**Example:**
+
+```python
+result = instance.cancel_batch("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `str` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Raises `Error`.
+
+###### fetch_batch_for_polling()
+
+**Signature:**
+
+```python
+def fetch_batch_for_polling(self, batch_id: str) -> BatchObject
+```
+
+**Example:**
+
+```python
+result = instance.fetch_batch_for_polling("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `str` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Raises `Error`.
+
+###### wait_for_batch()
+
+Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
+
+Uses exponential backoff with configurable initial interval, maximum interval, and backoff multiplier.
+Optionally supports a timeout that aborts polling if exceeded.
+
+**Errors:**
+
+Returns `BatchWaitError.Failed` if the batch reaches a failure terminal status.
+Returns `BatchWaitError.Timeout` if the configured timeout is exceeded.
+Returns `BatchWaitError.Client` for underlying client errors.
+
+**Signature:**
+
+```python
+def wait_for_batch(self, batch_id: str, config: WaitForBatchConfig) -> BatchObject
+```
+
+**Example:**
+
+```python
+result = instance.wait_for_batch("value", WaitForBatchConfig())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `str` | Yes | The batch id |
+| `config` | `WaitForBatchConfig` | Yes | The configuration options |
+
+**Returns:** `BatchObject`
+
+**Errors:** Raises `BatchWaitError`.
+
+###### create_response()
 
 **Signature:**
 
@@ -836,7 +1442,23 @@ def cancel_batch(self, batch_id: str) -> BatchObject
 def create_response(self, req: CreateResponseRequest) -> ResponseObject
 ```
 
-#### retrieve_response()
+**Example:**
+
+```python
+result = instance.create_response(CreateResponseRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateResponseRequest` | Yes | The create response request |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Raises `Error`.
+
+###### retrieve_response()
 
 **Signature:**
 
@@ -844,13 +1466,45 @@ def create_response(self, req: CreateResponseRequest) -> ResponseObject
 def retrieve_response(self, response_id: str) -> ResponseObject
 ```
 
-#### cancel_response()
+**Example:**
+
+```python
+result = instance.retrieve_response("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `response_id` | `str` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Raises `Error`.
+
+###### cancel_response()
 
 **Signature:**
 
 ```python
 def cancel_response(self, response_id: str) -> ResponseObject
 ```
+
+**Example:**
+
+```python
+result = instance.cancel_response("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `response_id` | `str` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Raises `Error`.
 
 ---
 
@@ -1002,6 +1656,45 @@ Deprecated legacy function-role message body.
 
 ---
 
+#### HealthChecker
+
+Abstraction over a health probe strategy.
+
+Implementors issue a lightweight probe against `upstream` (typically a
+provider base URL or named identifier) and report `HealthStatus`.
+
+##### Methods
+
+###### check()
+
+Probe `upstream` and return its current `HealthStatus`.
+
+The parameter is taken by value (`String`) so that implementations can
+move it into the returned future without a clone, making the
+`'static + Send` bound on the future trivially satisfiable.
+
+**Signature:**
+
+```python
+def check(self, upstream: str) -> HealthStatus
+```
+
+**Example:**
+
+```python
+result = instance.check("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `upstream` | `str` | Yes | The upstream |
+
+**Returns:** `HealthStatus`
+
+---
+
 #### Image
 
 A single generated image, returned as either a URL or base64 data.
@@ -1033,6 +1726,18 @@ Response containing generated images.
 |-------|------|---------|-------------|
 | `created` | `int` | — | Unix timestamp of image creation. |
 | `data` | `list[Image]` | `[]` | List of generated images. |
+
+---
+
+#### IntentPrototype
+
+An intent prototype: `(intent_name, prototype_embedding, target_model_id)`.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `str` | — | Human-readable name for the intent (used in logs/metrics). |
+| `embedding` | `list[float]` | — | Pre-computed embedding vector for this intent. |
+| `model` | `str` | — | Model to route to when this intent is detected. |
 
 ---
 
@@ -1224,9 +1929,40 @@ discounted rate and the remainder at the regular input rate.
 
 ---
 
+#### ProviderCapabilities
+
+Static capability flags for a provider.
+
+Each flag indicates whether the provider's models *generally* support that
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
+OpenRouter, vLLM) the flags reflect the superset of available model
+capabilities — a flag being `True` means at least one model supports the
+feature, not every model.
+
+All flags default to `False` so that newly added providers are safe.
+
+Access via the crate-level `capabilities` function:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `vision` | `bool` | — | The provider accepts image input in chat messages. |
+| `reasoning` | `bool` | — | The provider supports extended-thinking / reasoning tokens. |
+| `structured_output` | `bool` | — | The provider supports JSON-mode or `response_format` structured output. |
+| `function_calling` | `bool` | — | The provider supports tool / function calling. |
+| `audio_in` | `bool` | — | The provider accepts audio as input. |
+| `audio_out` | `bool` | — | The provider can generate audio / TTS output. |
+| `video_in` | `bool` | — | The provider accepts video as input. |
+
+---
+
 #### ProviderConfig
 
 Static configuration for a single provider entry in providers.json.
+
+This struct deliberately does not include capability flags or streaming
+format, which are accessed via the `capabilities` function. Keeping
+these fields separate preserves backward compatibility with all generated
+binding code that constructs `ProviderConfig` using struct literal syntax.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -1250,9 +1986,9 @@ Configuration for per-model rate limits.
 | `tpm` | `int \| None` | `None` | Maximum tokens per window.  `None` means unlimited. |
 | `window` | `float` | `60000ms` | Fixed window duration (defaults to 60 s). |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -1260,6 +1996,14 @@ Configuration for per-model rate limits.
 @staticmethod
 def default() -> RateLimitConfig
 ```
+
+**Example:**
+
+```python
+result = RateLimitConfig.default()
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -1397,6 +2141,16 @@ An individual search result.
 | `url` | `str` | — | Result URL. |
 | `snippet` | `str` | — | Text snippet or excerpt from the page. |
 | `date` | `str \| None` | `/* serde(default) */` | Publication or last-updated date, if available. |
+
+---
+
+#### SingleflightResult
+
+The value broadcast from a singleflight leader to all followers.
+
+`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
+broadcast channels require `T: Clone`. The `Arc` adds only a reference-count
+bump per follower, which is negligible under the burst loads this layer targets.
 
 ---
 
@@ -1563,6 +2317,41 @@ User message in the conversation.
 |-------|------|---------|-------------|
 | `content` | `UserContent` | `UserContent.TEXT` | Message content as plain text or array of content parts (text, images, documents, audio). |
 | `name` | `str \| None` | `None` | Optional name for the user. |
+
+---
+
+#### WaitForBatchConfig
+
+Configuration for polling a batch until terminal status.
+
+All time values are in seconds as `f64` so the struct bridges across FFI
+boundaries without requiring a `Duration` shim.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `initial_interval_secs` | `float` | `5` | Initial interval between polls, in seconds. |
+| `max_interval_secs` | `float` | `60` | Maximum interval between polls (backoff plateau), in seconds. |
+| `backoff_multiplier` | `float` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
+| `timeout_secs` | `float \| None` | `None` | Optional timeout in seconds — polling fails if this duration is exceeded. |
+
+##### Methods
+
+###### default()
+
+**Signature:**
+
+```python
+@staticmethod
+def default() -> WaitForBatchConfig
+```
+
+**Example:**
+
+```python
+result = WaitForBatchConfig.default()
+```
+
+**Returns:** `WaitForBatchConfig`
 
 ---
 
@@ -1803,6 +2592,22 @@ How the API key is sent in the HTTP request.
 
 ---
 
+#### StreamFormat
+
+The streaming wire format a provider uses for its response stream.
+
+Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
+a proprietary binary EventStream framing.
+
+Deserialized from the `streaming_format` JSON field via `serde`.
+
+| Value | Description |
+|-------|-------------|
+| `SSE` | Standard Server-Sent Events (text/event-stream). |
+| `AWS_EVENT_STREAM` | AWS EventStream binary framing (application/vnd.amazon.eventstream). |
+
+---
+
 #### AuthType
 
 Auth scheme used by a provider.
@@ -1838,6 +2643,29 @@ Storage backend for the response cache.
 
 ---
 
+#### CircuitState
+
+Observable state of a circuit breaker.
+
+| Value | Description |
+|-------|-------------|
+| `CLOSED` | Requests flow through normally. |
+| `OPEN` | All requests are rejected; the circuit is waiting for the backoff to elapse. |
+| `HALF_OPEN` | One probe request is allowed through to test service health. |
+
+---
+
+#### HealthStatus
+
+The result of a single health probe.
+
+| Value | Description |
+|-------|-------------|
+| `HEALTHY` | The probe succeeded; the upstream is reachable. |
+| `UNHEALTHY` | The probe failed; the upstream may be down. |
+
+---
+
 ### Errors
 
 #### LiterLlmError
@@ -1865,5 +2693,7 @@ All errors that can occur when using `liter-llm`.
 | `HookRejected(LiterLlmError)` | hook rejected: {message} |
 | `InternalError(LiterLlmError)` | An internal logic error (e.g. unexpected Tower response variant). This should never surface in normal operation — if it does, it indicates a bug in the library. |
 | `OutboundForbidden(LiterLlmError)` | An outbound request was blocked by the active `OutboundPolicy`. Returned when `register_custom_provider` is called with a `base_url` that violates the policy (e.g. a private-range IP under `DenyPrivate`), or when the per-connection DNS resolver detects a forbidden address at connect time. |
+| `IdempotencyConflict(LiterLlmError)` | A different request body was submitted for an existing `Idempotency-Key`. Per the OpenAI `Idempotency-Key` convention, once a key is used with a particular request body, subsequent requests using the same key must carry an identical body.  A body mismatch is a hard error (not retryable). HTTP equivalent: 409 Conflict. |
+| `IdempotencyInFlight(LiterLlmError)` | The same `Idempotency-Key` is already in-flight (another request with the same key is currently being processed). The caller should wait briefly and retry.  The response is not yet available, and this request has been short-circuited to avoid running the operation twice. HTTP equivalent: 409 Conflict (retryable after a brief delay). |
 
 ---

@@ -25,15 +25,36 @@ pub mod auth;
 /// FFI-friendly client constructors used by the polyglot bindings.
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 pub mod bindings;
+/// Pluggable cache key derivation strategies ([`CacheKeyStrategy`], built-in impls).
+#[cfg(feature = "tower")]
+pub mod cache_key;
 /// High-level LLM client traits and the reqwest-backed [`client::DefaultClient`].
 pub mod client;
 /// Token-cost tracking helpers.
 pub mod cost;
+/// Embedding provider abstraction ([`EmbeddingProvider`], [`SelfHostedEmbeddingProvider`]).
+#[cfg(feature = "tower")]
+pub mod embedding;
 /// Public error types and the crate-wide [`Result`] alias.
 pub mod error;
+/// Vendor-neutral guardrail plugin system (trait, stage enum, registry, built-in primitives).
+pub mod guardrail;
 pub(crate) mod http;
+/// Canonical per-request usage events and pluggable sinks.
+pub mod observability;
 /// Provider catalog (built-in providers plus runtime registration of custom providers).
 pub mod provider;
+/// Unified Realtime API event schema and per-provider translator trait.
+pub mod realtime;
+/// Ingress/egress streaming pipeline with zero-copy passthrough optimisation.
+///
+/// Exposes [`streaming::IngressStream`], [`streaming::StreamPipeline`], and
+/// [`streaming::EgressStream`] for composing streaming request pipelines with
+/// optional per-chunk middleware and end-to-end cancellation.
+pub mod streaming;
+/// Generic multi-tenant primitives: [`tenant::TenantId`], [`tenant::TenantContext`],
+/// [`tenant::KeyResolver`], and [`tenant::InMemoryKeyResolver`].
+pub mod tenant;
 #[cfg(test)]
 mod tests;
 #[cfg(feature = "tokenizer")]
@@ -44,12 +65,22 @@ pub mod tokenizer;
 pub mod tower;
 /// Request/response DTOs shared across providers and bindings.
 pub mod types;
+/// Shared utility helpers (memory-bound guards, etc.).
+pub mod util;
+/// Vector store abstraction for the semantic cache tier ([`VectorStore`], [`InMemoryVectorStore`]).
+#[cfg(feature = "tower")]
+pub mod vectorstore;
 
 // Re-export key types at crate root.
 pub use client::{
-    BatchClient, BoxFuture, BoxStream, ClientConfig, ClientConfigBuilder, FileClient, FileConfig, LlmClient,
-    LlmClientRaw, ResponseClient,
+    BatchClient, BoxFuture, BoxStream, ClientBuilder, ClientConfig, ClientConfigBuilder, FileClient, FileConfig,
+    LlmClient, LlmClientRaw, ResponseClient,
 };
+// Batch polling helpers: WaitForBatchConfig and BatchWaitError are Tier C
+// (binding-public) — users call wait_for_batch from every language binding.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+pub use client::{BatchWaitError, WaitForBatchConfig};
+pub use http::transport::TransportConfig;
 // DefaultClient requires the native HTTP stack (reqwest on native or WASM fetch API).
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 pub use client::DefaultClient;
@@ -65,16 +96,44 @@ pub use error::{LiterLlmError, Result};
 // pattern that does not cross FFI cleanly).
 #[cfg(feature = "tower")]
 pub use tower::{BudgetConfig, CacheBackend, CacheConfig, Enforcement, RateLimitConfig};
+// Cache key strategies and vector store / embedding / guardrail abstractions
+// are surfaced at the crate root so bindings and application code can import
+// them without spelling out the full `tower::` path.
+#[cfg(feature = "tower")]
+pub use tower::{
+    CacheKeyStrategy, EmbeddingProvider, ExactHashStrategy, Guardrail, GuardrailContext, GuardrailDecision,
+    GuardrailStage, NoOpEmbeddingProvider, SystemPromptAwareStrategy, TenantScopedStrategy, VectorMatch, VectorStore,
+};
 // Re-export the public provider helper functions that are part of the crate's
 // public API even though the `provider` module itself is pub(crate).
 pub use cost::{completion_cost, completion_cost_with_cache};
 pub use provider::custom::{
     AuthHeaderFormat, CustomProviderConfig, register_custom_provider, unregister_custom_provider,
 };
-pub use provider::{AuthConfig, AuthType, ProviderConfig, all_providers, complex_provider_names};
+pub use provider::{
+    AuthConfig, AuthType, ProviderCapabilities, ProviderConfig, StreamFormat, all_providers, capabilities,
+    complex_provider_names,
+};
 #[cfg(feature = "tokenizer")]
 pub use tokenizer::{count_request_tokens, count_tokens};
 pub use types::*;
+
+// Realtime API public surface.
+pub use realtime::{
+    ContentPart, OpenAiRealtimeTranslator, RealtimeEnvelope, RealtimeEvent, RealtimeTranslator, ResponseStatus,
+};
+/// Tenant primitives re-exported at the crate root.
+///
+/// Importers can write `liter_llm::TenantId` without spelling out the
+/// `tenant::` path.
+///
+/// # Example
+///
+/// ```
+/// let id = liter_llm::TenantId::from("acme-corp");
+/// assert_eq!(id.as_ref(), "acme-corp");
+/// ```
+pub use tenant::{InMemoryKeyResolver, KeyResolver, KeyResolverError, ResolvedKey, TenantContext, TenantId};
 
 /// Install the `ring` crypto provider as the rustls process default, idempotently.
 ///

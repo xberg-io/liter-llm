@@ -2,7 +2,7 @@
 title: "Kotlin (Android) API Reference"
 ---
 
-## Kotlin (Android) API Reference <span class="version-badge">v1.5.1</span>
+## Kotlin (Android) API Reference <span class="version-badge">v1.6.0</span>
 
 ### Functions
 
@@ -26,6 +26,12 @@ constructed, or if the resolved provider configuration is invalid.
 fun createClient(apiKey: String, baseUrl: String? = null, timeoutSecs: Long? = null, maxRetries: Int? = null, modelHint: String? = null): DefaultClient
 ```
 
+**Example:**
+
+```kotlin
+val result = createClient("value", "value", 42, 42, "value")
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -37,6 +43,7 @@ fun createClient(apiKey: String, baseUrl: String? = null, timeoutSecs: Long? = n
 | `modelHint` | `String?` | No | The model hint |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Throws `Error`.
 
 ---
@@ -59,6 +66,12 @@ contains unknown fields.
 fun createClientFromJson(json: String): DefaultClient
 ```
 
+**Example:**
+
+```kotlin
+val result = createClientFromJson("value")
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -66,6 +79,7 @@ fun createClientFromJson(json: String): DefaultClient
 | `json` | `String` | Yes | The json |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Throws `Error`.
 
 ---
@@ -89,13 +103,20 @@ no model prefixes).
 fun registerCustomProvider(config: CustomProviderConfig)
 ```
 
+**Example:**
+
+```kotlin
+registerCustomProvider(CustomProviderConfig())
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `config` | `CustomProviderConfig` | Yes | The configuration options |
 
-**Returns:** `Unit`
+**Returns:** No return value.
+
 **Errors:** Throws `Error`.
 
 ---
@@ -118,6 +139,12 @@ Returns an error only if the internal lock is poisoned.
 fun unregisterCustomProvider(name: String): Boolean
 ```
 
+**Example:**
+
+```kotlin
+val result = unregisterCustomProvider("value")
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -125,7 +152,42 @@ fun unregisterCustomProvider(name: String): Boolean
 | `name` | `String` | Yes | The name |
 
 **Returns:** `Boolean`
+
 **Errors:** Throws `Error`.
+
+---
+
+#### capabilities()
+
+Return the capability flags for a named provider.
+
+Performs an O(n) linear scan over the embedded registry (142 entries).
+Returns an owned value so that bindings can box/copy it across the FFI
+boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+so this is a cheap memcpy of seven `bool` fields.
+
+For unknown `provider_name` values the function returns an all-`false`
+sentinel so callers never need to handle `Option`.
+
+**Signature:**
+
+```kotlin
+fun capabilities(providerName: String): ProviderCapabilities
+```
+
+**Example:**
+
+```kotlin
+val result = capabilities("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `providerName` | `String` | Yes | The provider name |
+
+**Returns:** `ProviderCapabilities`
 
 ---
 
@@ -134,6 +196,8 @@ fun unregisterCustomProvider(name: String): Boolean
 Return all provider configs from the registry.
 
 Useful for tooling, documentation generation, or runtime enumeration.
+Returns the public `ProviderConfig` slice (without capability flags).
+To query capability flags for a specific provider use `capabilities`.
 
 **Signature:**
 
@@ -142,7 +206,14 @@ Useful for tooling, documentation generation, or runtime enumeration.
 fun allProviders(): List<ProviderConfig>
 ```
 
+**Example:**
+
+```kotlin
+val result = allProviders()
+```
+
 **Returns:** `List<ProviderConfig>`
+
 **Errors:** Throws `Error`.
 
 ---
@@ -163,7 +234,14 @@ The returned reference points into the static registry — no allocation.
 fun complexProviderNames(): List<String>
 ```
 
+**Example:**
+
+```kotlin
+val result = complexProviderNames()
+```
+
 **Returns:** `List<String>`
+
 **Errors:** Throws `Error`.
 
 ---
@@ -184,6 +262,12 @@ are tried by stripping from the last `-` or `.` separator. For example,
 
 ```kotlin
 fun completionCost(model: String, promptTokens: Long, completionTokens: Long): Double?
+```
+
+**Example:**
+
+```kotlin
+val result = completionCost("value", 42, 42)
 ```
 
 **Parameters:**
@@ -219,6 +303,12 @@ registry, mirroring `completion_cost`.
 fun completionCostWithCache(model: String, promptTokens: Long, cachedTokens: Long, completionTokens: Long): Double?
 ```
 
+**Example:**
+
+```kotlin
+val result = completionCostWithCache("value", 42, 42, 42)
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -229,6 +319,68 @@ fun completionCostWithCache(model: String, promptTokens: Long, cachedTokens: Lon
 | `completionTokens` | `Long` | Yes | The completion tokens |
 
 **Returns:** `Double?`
+
+---
+
+#### clear()
+
+Remove all guardrails from the global registry.
+
+Primarily useful in tests to reset state between test cases.
+
+**Panics:**
+
+Panics if the global registry lock is poisoned.
+
+**Signature:**
+
+```kotlin
+fun clear()
+```
+
+**Example:**
+
+```kotlin
+clear()
+```
+
+**Returns:** No return value.
+
+---
+
+#### checkBound()
+
+Assert that `current_len + incoming` does not exceed `limit`.
+
+Call this before appending `incoming` bytes to any buffer that must
+stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
+and emits a `tracing.warn!` with context.
+
+**Signature:**
+
+```kotlin
+@Throws(Error::class)
+fun checkBound(context: String, currentLen: Long, incoming: Long, limit: Long)
+```
+
+**Example:**
+
+```kotlin
+checkBound("value", 42, 42, 42)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `context` | `String` | Yes | The context |
+| `currentLen` | `Long` | Yes | The current len |
+| `incoming` | `Long` | Yes | The incoming |
+| `limit` | `Long` | Yes | The limit |
+
+**Returns:** No return value.
+
+**Errors:** Throws `Error`.
 
 ---
 
@@ -257,7 +409,13 @@ present and no crypto provider installation is needed.
 fun ensureCryptoProvider()
 ```
 
-**Returns:** `Unit`
+**Example:**
+
+```kotlin
+ensureCryptoProvider()
+```
+
+**Returns:** No return value.
 
 ---
 
@@ -445,6 +603,52 @@ A single completion choice.
 
 ---
 
+#### ChunkMiddleware
+
+A per-chunk transformation in the `StreamPipeline`.
+
+Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
+to pass it through (optionally modified), `Ok(None)` to drop the chunk,
+or `Err(e)` to propagate a stream error.
+
+The trait is object-safe so implementations can be stored in a
+`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+
+##### Methods
+
+###### process()
+
+Process a single chunk.
+
+- `Ok(Some(chunk))` — emit (possibly transformed) chunk.
+- `Ok(None)` — drop this chunk silently.
+- `Err(e)` — propagate as a stream error.
+
+**Signature:**
+
+```kotlin
+@Throws(Error::class)
+fun process(chunk: ChatCompletionChunk): ChatCompletionChunk?
+```
+
+**Example:**
+
+```kotlin
+val result = instance.process(ChatCompletionChunk())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `chunk` | `ChatCompletionChunk` | Yes | The chat completion chunk |
+
+**Returns:** `ChatCompletionChunk?`
+
+**Errors:** Throws `Error`.
+
+---
+
 #### CreateBatchRequest
 
 Request to create a batch job.
@@ -563,9 +767,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-### Methods
+##### Methods
 
-#### chat()
+###### chat()
 
 **Signature:**
 
@@ -574,7 +778,23 @@ headers are cached at construction to avoid redundant encoding on every request.
 fun chat(req: ChatCompletionRequest): ChatCompletionResponse
 ```
 
-#### chatStream()
+**Example:**
+
+```kotlin
+val result = instance.chat(ChatCompletionRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `ChatCompletionResponse`
+
+**Errors:** Throws `Error`.
+
+###### chatStream()
 
 **Signature:**
 
@@ -583,7 +803,23 @@ fun chat(req: ChatCompletionRequest): ChatCompletionResponse
 fun chatStream(req: ChatCompletionRequest): String
 ```
 
-#### embed()
+**Example:**
+
+```kotlin
+val result = instance.chatStream(ChatCompletionRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `String`
+
+**Errors:** Throws `Error`.
+
+###### embed()
 
 **Signature:**
 
@@ -592,7 +828,23 @@ fun chatStream(req: ChatCompletionRequest): String
 fun embed(req: EmbeddingRequest): EmbeddingResponse
 ```
 
-#### listModels()
+**Example:**
+
+```kotlin
+val result = instance.embed(EmbeddingRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `EmbeddingRequest` | Yes | The embedding request |
+
+**Returns:** `EmbeddingResponse`
+
+**Errors:** Throws `Error`.
+
+###### listModels()
 
 **Signature:**
 
@@ -601,7 +853,17 @@ fun embed(req: EmbeddingRequest): EmbeddingResponse
 fun listModels(): ModelsListResponse
 ```
 
-#### imageGenerate()
+**Example:**
+
+```kotlin
+val result = instance.listModels()
+```
+
+**Returns:** `ModelsListResponse`
+
+**Errors:** Throws `Error`.
+
+###### imageGenerate()
 
 **Signature:**
 
@@ -610,7 +872,23 @@ fun listModels(): ModelsListResponse
 fun imageGenerate(req: CreateImageRequest): ImagesResponse
 ```
 
-#### speech()
+**Example:**
+
+```kotlin
+val result = instance.imageGenerate(CreateImageRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateImageRequest` | Yes | The create image request |
+
+**Returns:** `ImagesResponse`
+
+**Errors:** Throws `Error`.
+
+###### speech()
 
 **Signature:**
 
@@ -619,7 +897,23 @@ fun imageGenerate(req: CreateImageRequest): ImagesResponse
 fun speech(req: CreateSpeechRequest): ByteArray
 ```
 
-#### transcribe()
+**Example:**
+
+```kotlin
+val result = instance.speech(CreateSpeechRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateSpeechRequest` | Yes | The create speech request |
+
+**Returns:** `ByteArray`
+
+**Errors:** Throws `Error`.
+
+###### transcribe()
 
 **Signature:**
 
@@ -628,7 +922,23 @@ fun speech(req: CreateSpeechRequest): ByteArray
 fun transcribe(req: CreateTranscriptionRequest): TranscriptionResponse
 ```
 
-#### moderate()
+**Example:**
+
+```kotlin
+val result = instance.transcribe(CreateTranscriptionRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
+
+**Returns:** `TranscriptionResponse`
+
+**Errors:** Throws `Error`.
+
+###### moderate()
 
 **Signature:**
 
@@ -637,7 +947,23 @@ fun transcribe(req: CreateTranscriptionRequest): TranscriptionResponse
 fun moderate(req: ModerationRequest): ModerationResponse
 ```
 
-#### rerank()
+**Example:**
+
+```kotlin
+val result = instance.moderate(ModerationRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ModerationRequest` | Yes | The moderation request |
+
+**Returns:** `ModerationResponse`
+
+**Errors:** Throws `Error`.
+
+###### rerank()
 
 **Signature:**
 
@@ -646,7 +972,23 @@ fun moderate(req: ModerationRequest): ModerationResponse
 fun rerank(req: RerankRequest): RerankResponse
 ```
 
-#### search()
+**Example:**
+
+```kotlin
+val result = instance.rerank(RerankRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `RerankRequest` | Yes | The rerank request |
+
+**Returns:** `RerankResponse`
+
+**Errors:** Throws `Error`.
+
+###### search()
 
 **Signature:**
 
@@ -655,7 +997,23 @@ fun rerank(req: RerankRequest): RerankResponse
 fun search(req: SearchRequest): SearchResponse
 ```
 
-#### ocr()
+**Example:**
+
+```kotlin
+val result = instance.search(SearchRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `SearchRequest` | Yes | The search request |
+
+**Returns:** `SearchResponse`
+
+**Errors:** Throws `Error`.
+
+###### ocr()
 
 **Signature:**
 
@@ -664,7 +1022,23 @@ fun search(req: SearchRequest): SearchResponse
 fun ocr(req: OcrRequest): OcrResponse
 ```
 
-#### createFile()
+**Example:**
+
+```kotlin
+val result = instance.ocr(OcrRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `OcrRequest` | Yes | The ocr request |
+
+**Returns:** `OcrResponse`
+
+**Errors:** Throws `Error`.
+
+###### createFile()
 
 **Signature:**
 
@@ -673,7 +1047,23 @@ fun ocr(req: OcrRequest): OcrResponse
 fun createFile(req: CreateFileRequest): FileObject
 ```
 
-#### retrieveFile()
+**Example:**
+
+```kotlin
+val result = instance.createFile(CreateFileRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateFileRequest` | Yes | The create file request |
+
+**Returns:** `FileObject`
+
+**Errors:** Throws `Error`.
+
+###### retrieveFile()
 
 **Signature:**
 
@@ -682,7 +1072,23 @@ fun createFile(req: CreateFileRequest): FileObject
 fun retrieveFile(fileId: String): FileObject
 ```
 
-#### deleteFile()
+**Example:**
+
+```kotlin
+val result = instance.retrieveFile("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `fileId` | `String` | Yes | The file id |
+
+**Returns:** `FileObject`
+
+**Errors:** Throws `Error`.
+
+###### deleteFile()
 
 **Signature:**
 
@@ -691,7 +1097,23 @@ fun retrieveFile(fileId: String): FileObject
 fun deleteFile(fileId: String): DeleteResponse
 ```
 
-#### listFiles()
+**Example:**
+
+```kotlin
+val result = instance.deleteFile("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `fileId` | `String` | Yes | The file id |
+
+**Returns:** `DeleteResponse`
+
+**Errors:** Throws `Error`.
+
+###### listFiles()
 
 **Signature:**
 
@@ -700,7 +1122,23 @@ fun deleteFile(fileId: String): DeleteResponse
 fun listFiles(query: FileListQuery? = null): FileListResponse
 ```
 
-#### fileContent()
+**Example:**
+
+```kotlin
+val result = instance.listFiles(FileListQuery())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `FileListQuery?` | No | The file list query |
+
+**Returns:** `FileListResponse`
+
+**Errors:** Throws `Error`.
+
+###### fileContent()
 
 **Signature:**
 
@@ -709,7 +1147,23 @@ fun listFiles(query: FileListQuery? = null): FileListResponse
 fun fileContent(fileId: String): ByteArray
 ```
 
-#### createBatch()
+**Example:**
+
+```kotlin
+val result = instance.fileContent("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `fileId` | `String` | Yes | The file id |
+
+**Returns:** `ByteArray`
+
+**Errors:** Throws `Error`.
+
+###### createBatch()
 
 **Signature:**
 
@@ -718,7 +1172,23 @@ fun fileContent(fileId: String): ByteArray
 fun createBatch(req: CreateBatchRequest): BatchObject
 ```
 
-#### retrieveBatch()
+**Example:**
+
+```kotlin
+val result = instance.createBatch(CreateBatchRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateBatchRequest` | Yes | The create batch request |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error`.
+
+###### retrieveBatch()
 
 **Signature:**
 
@@ -727,7 +1197,23 @@ fun createBatch(req: CreateBatchRequest): BatchObject
 fun retrieveBatch(batchId: String): BatchObject
 ```
 
-#### listBatches()
+**Example:**
+
+```kotlin
+val result = instance.retrieveBatch("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `String` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error`.
+
+###### listBatches()
 
 **Signature:**
 
@@ -736,7 +1222,23 @@ fun retrieveBatch(batchId: String): BatchObject
 fun listBatches(query: BatchListQuery? = null): BatchListResponse
 ```
 
-#### cancelBatch()
+**Example:**
+
+```kotlin
+val result = instance.listBatches(BatchListQuery())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `BatchListQuery?` | No | The batch list query |
+
+**Returns:** `BatchListResponse`
+
+**Errors:** Throws `Error`.
+
+###### cancelBatch()
 
 **Signature:**
 
@@ -745,7 +1247,85 @@ fun listBatches(query: BatchListQuery? = null): BatchListResponse
 fun cancelBatch(batchId: String): BatchObject
 ```
 
-#### createResponse()
+**Example:**
+
+```kotlin
+val result = instance.cancelBatch("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `String` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error`.
+
+###### fetchBatchForPolling()
+
+**Signature:**
+
+```kotlin
+@Throws(Error::class)
+fun fetchBatchForPolling(batchId: String): BatchObject
+```
+
+**Example:**
+
+```kotlin
+val result = instance.fetchBatchForPolling("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `String` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error`.
+
+###### waitForBatch()
+
+Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
+
+Uses exponential backoff with configurable initial interval, maximum interval, and backoff multiplier.
+Optionally supports a timeout that aborts polling if exceeded.
+
+**Errors:**
+
+Returns `BatchWaitError.Failed` if the batch reaches a failure terminal status.
+Returns `BatchWaitError.Timeout` if the configured timeout is exceeded.
+Returns `BatchWaitError.Client` for underlying client errors.
+
+**Signature:**
+
+```kotlin
+@Throws(BatchWaitError::class)
+fun waitForBatch(batchId: String, config: WaitForBatchConfig): BatchObject
+```
+
+**Example:**
+
+```kotlin
+val result = instance.waitForBatch("value", WaitForBatchConfig())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `String` | Yes | The batch id |
+| `config` | `WaitForBatchConfig` | Yes | The configuration options |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `BatchWaitError`.
+
+###### createResponse()
 
 **Signature:**
 
@@ -754,7 +1334,23 @@ fun cancelBatch(batchId: String): BatchObject
 fun createResponse(req: CreateResponseRequest): ResponseObject
 ```
 
-#### retrieveResponse()
+**Example:**
+
+```kotlin
+val result = instance.createResponse(CreateResponseRequest())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateResponseRequest` | Yes | The create response request |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Throws `Error`.
+
+###### retrieveResponse()
 
 **Signature:**
 
@@ -763,7 +1359,23 @@ fun createResponse(req: CreateResponseRequest): ResponseObject
 fun retrieveResponse(responseId: String): ResponseObject
 ```
 
-#### cancelResponse()
+**Example:**
+
+```kotlin
+val result = instance.retrieveResponse("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `responseId` | `String` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Throws `Error`.
+
+###### cancelResponse()
 
 **Signature:**
 
@@ -771,6 +1383,22 @@ fun retrieveResponse(responseId: String): ResponseObject
 @Throws(Error::class)
 fun cancelResponse(responseId: String): ResponseObject
 ```
+
+**Example:**
+
+```kotlin
+val result = instance.cancelResponse("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `responseId` | `String` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Throws `Error`.
 
 ---
 
@@ -922,6 +1550,45 @@ Deprecated legacy function-role message body.
 
 ---
 
+#### HealthChecker
+
+Abstraction over a health probe strategy.
+
+Implementors issue a lightweight probe against `upstream` (typically a
+provider base URL or named identifier) and report `HealthStatus`.
+
+##### Methods
+
+###### check()
+
+Probe `upstream` and return its current `HealthStatus`.
+
+The parameter is taken by value (`String`) so that implementations can
+move it into the returned future without a clone, making the
+`'static + Send` bound on the future trivially satisfiable.
+
+**Signature:**
+
+```kotlin
+fun check(upstream: String): HealthStatus
+```
+
+**Example:**
+
+```kotlin
+val result = instance.check("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `upstream` | `String` | Yes | The upstream |
+
+**Returns:** `HealthStatus`
+
+---
+
 #### Image
 
 A single generated image, returned as either a URL or base64 data.
@@ -953,6 +1620,18 @@ Response containing generated images.
 |-------|------|---------|-------------|
 | `created` | `Long` | — | Unix timestamp of image creation. |
 | `data` | `List<Image>` | `[]` | List of generated images. |
+
+---
+
+#### IntentPrototype
+
+An intent prototype: `(intent_name, prototype_embedding, target_model_id)`.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `String` | — | Human-readable name for the intent (used in logs/metrics). |
+| `embedding` | `List<Double>` | — | Pre-computed embedding vector for this intent. |
+| `model` | `String` | — | Model to route to when this intent is detected. |
 
 ---
 
@@ -1144,9 +1823,40 @@ discounted rate and the remainder at the regular input rate.
 
 ---
 
+#### ProviderCapabilities
+
+Static capability flags for a provider.
+
+Each flag indicates whether the provider's models *generally* support that
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
+OpenRouter, vLLM) the flags reflect the superset of available model
+capabilities — a flag being `true` means at least one model supports the
+feature, not every model.
+
+All flags default to `false` so that newly added providers are safe.
+
+Access via the crate-level `capabilities` function:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `vision` | `Boolean` | — | The provider accepts image input in chat messages. |
+| `reasoning` | `Boolean` | — | The provider supports extended-thinking / reasoning tokens. |
+| `structuredOutput` | `Boolean` | — | The provider supports JSON-mode or `response_format` structured output. |
+| `functionCalling` | `Boolean` | — | The provider supports tool / function calling. |
+| `audioIn` | `Boolean` | — | The provider accepts audio as input. |
+| `audioOut` | `Boolean` | — | The provider can generate audio / TTS output. |
+| `videoIn` | `Boolean` | — | The provider accepts video as input. |
+
+---
+
 #### ProviderConfig
 
 Static configuration for a single provider entry in providers.json.
+
+This struct deliberately does not include capability flags or streaming
+format, which are accessed via the `capabilities` function. Keeping
+these fields separate preserves backward compatibility with all generated
+binding code that constructs `ProviderConfig` using struct literal syntax.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -1294,6 +2004,16 @@ An individual search result.
 | `url` | `String` | — | Result URL. |
 | `snippet` | `String` | — | Text snippet or excerpt from the page. |
 | `date` | `String?` | `/* serde(default) */` | Publication or last-updated date, if available. |
+
+---
+
+#### SingleflightResult
+
+The value broadcast from a singleflight leader to all followers.
+
+`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
+broadcast channels require `T: Clone`. The `Arc` adds only a reference-count
+bump per follower, which is negligible under the burst loads this layer targets.
 
 ---
 
@@ -1460,6 +2180,41 @@ User message in the conversation.
 |-------|------|---------|-------------|
 | `content` | `UserContent` | `UserContent.Text` | Message content as plain text or array of content parts (text, images, documents, audio). |
 | `name` | `String?` | `null` | Optional name for the user. |
+
+---
+
+#### WaitForBatchConfig
+
+Configuration for polling a batch until terminal status.
+
+All time values are in seconds as `f64` so the struct bridges across FFI
+boundaries without requiring a `Duration` shim.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `initialIntervalSecs` | `Double` | `5` | Initial interval between polls, in seconds. |
+| `maxIntervalSecs` | `Double` | `60` | Maximum interval between polls (backoff plateau), in seconds. |
+| `backoffMultiplier` | `Float` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
+| `timeoutSecs` | `Double?` | `null` | Optional timeout in seconds — polling fails if this duration is exceeded. |
+
+##### Methods
+
+###### default()
+
+**Signature:**
+
+```kotlin
+@JvmStatic
+fun default(): WaitForBatchConfig
+```
+
+**Example:**
+
+```kotlin
+val result = WaitForBatchConfig.default()
+```
+
+**Returns:** `WaitForBatchConfig`
 
 ---
 
@@ -1700,6 +2455,22 @@ How the API key is sent in the HTTP request.
 
 ---
 
+#### StreamFormat
+
+The streaming wire format a provider uses for its response stream.
+
+Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
+a proprietary binary EventStream framing.
+
+Deserialized from the `streaming_format` JSON field via `serde`.
+
+| Value | Description |
+|-------|-------------|
+| `Sse` | Standard Server-Sent Events (text/event-stream). |
+| `AwsEventStream` | AWS EventStream binary framing (application/vnd.amazon.eventstream). |
+
+---
+
 #### AuthType
 
 Auth scheme used by a provider.
@@ -1710,6 +2481,29 @@ Auth scheme used by a provider.
 | `ApiKey` | `x-api-key: <key>` header (also handles `"header"` and `"x-api-key"` aliases). |
 | `None` | No authentication header required. |
 | `Unknown` | Unrecognised auth scheme — falls back to bearer. |
+
+---
+
+#### CircuitState
+
+Observable state of a circuit breaker.
+
+| Value | Description |
+|-------|-------------|
+| `Closed` | Requests flow through normally. |
+| `Open` | All requests are rejected; the circuit is waiting for the backoff to elapse. |
+| `HalfOpen` | One probe request is allowed through to test service health. |
+
+---
+
+#### HealthStatus
+
+The result of a single health probe.
+
+| Value | Description |
+|-------|-------------|
+| `Healthy` | The probe succeeded; the upstream is reachable. |
+| `Unhealthy` | The probe failed; the upstream may be down. |
 
 ---
 
@@ -1738,5 +2532,7 @@ All errors that can occur when using `liter-llm`.
 | `HookRejected` | hook rejected: {message} |
 | `InternalError` | An internal logic error (e.g. unexpected Tower response variant). This should never surface in normal operation — if it does, it indicates a bug in the library. |
 | `OutboundForbidden` | An outbound request was blocked by the active `OutboundPolicy`. Returned when `register_custom_provider` is called with a `base_url` that violates the policy (e.g. a private-range IP under `DenyPrivate`), or when the per-connection DNS resolver detects a forbidden address at connect time. |
+| `IdempotencyConflict` | A different request body was submitted for an existing `Idempotency-Key`. Per the OpenAI `Idempotency-Key` convention, once a key is used with a particular request body, subsequent requests using the same key must carry an identical body.  A body mismatch is a hard error (not retryable). HTTP equivalent: 409 Conflict. |
+| `IdempotencyInFlight` | The same `Idempotency-Key` is already in-flight (another request with the same key is currently being processed). The caller should wait briefly and retry.  The response is not yet available, and this request has been short-circuited to avoid running the operation twice. HTTP equivalent: 409 Conflict (retryable after a brief delay). |
 
 ---

@@ -34,7 +34,7 @@
   "extra": {
     "pie": {
       "binary": {
-        "url-template": "https://github.com/kreuzberg-dev/liter-llm/releases/download/{Version}/php_liter_llm-{Version}_php{PhpVersion}-{Arch}-{OS}-{Libc}-{TSMode}.tgz"
+        "url-template": "https://github.com/kreuzberg-dev/liter-llm/releases/download/{Version}/php_liter_llm-{Version}_php{PhpVersion}-{Arch}-{OSLower}-{Libc}-{TSMode}.tgz"
       }
     }
   }

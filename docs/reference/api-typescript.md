@@ -2,7 +2,7 @@
 title: "TypeScript API Reference"
 ---
 
-## TypeScript API Reference <span class="version-badge">v1.5.1</span>
+## TypeScript API Reference <span class="version-badge">v1.6.0</span>
 
 ### Functions
 
@@ -25,6 +25,12 @@ constructed, or if the resolved provider configuration is invalid.
 function createClient(apiKey: string, baseUrl?: string, timeoutSecs?: number, maxRetries?: number, modelHint?: string): DefaultClient
 ```
 
+**Example:**
+
+```typescript
+const result = createClient("value", "value", 42, 42, "value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -36,6 +42,7 @@ function createClient(apiKey: string, baseUrl?: string, timeoutSecs?: number, ma
 | `modelHint` | `string \| null` | No | The model hint |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Throws `Error` with a descriptive message.
 
 ---
@@ -57,6 +64,12 @@ contains unknown fields.
 function createClientFromJson(json: string): DefaultClient
 ```
 
+**Example:**
+
+```typescript
+const result = createClientFromJson("value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -64,6 +77,7 @@ function createClientFromJson(json: string): DefaultClient
 | `json` | `string` | Yes | The json |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Throws `Error` with a descriptive message.
 
 ---
@@ -86,13 +100,20 @@ no model prefixes).
 function registerCustomProvider(config: CustomProviderConfig): void
 ```
 
+**Example:**
+
+```typescript
+registerCustomProvider(new CustomProviderConfig());
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `config` | `CustomProviderConfig` | Yes | The configuration options |
 
-**Returns:** `void`
+**Returns:** No return value.
+
 **Errors:** Throws `Error` with a descriptive message.
 
 ---
@@ -114,6 +135,12 @@ Returns an error only if the internal lock is poisoned.
 function unregisterCustomProvider(name: string): boolean
 ```
 
+**Example:**
+
+```typescript
+const result = unregisterCustomProvider("value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -121,7 +148,42 @@ function unregisterCustomProvider(name: string): boolean
 | `name` | `string` | Yes | The name |
 
 **Returns:** `boolean`
+
 **Errors:** Throws `Error` with a descriptive message.
+
+---
+
+#### capabilities()
+
+Return the capability flags for a named provider.
+
+Performs an O(n) linear scan over the embedded registry (142 entries).
+Returns an owned value so that bindings can box/copy it across the FFI
+boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+so this is a cheap memcpy of seven `bool` fields.
+
+For unknown `provider_name` values the function returns an all-`false`
+sentinel so callers never need to handle `Option`.
+
+**Signature:**
+
+```typescript
+function capabilities(providerName: string): ProviderCapabilities
+```
+
+**Example:**
+
+```typescript
+const result = capabilities("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `providerName` | `string` | Yes | The provider name |
+
+**Returns:** `ProviderCapabilities`
 
 ---
 
@@ -130,6 +192,8 @@ function unregisterCustomProvider(name: string): boolean
 Return all provider configs from the registry.
 
 Useful for tooling, documentation generation, or runtime enumeration.
+Returns the public `ProviderConfig` slice (without capability flags).
+To query capability flags for a specific provider use `capabilities`.
 
 **Signature:**
 
@@ -137,7 +201,14 @@ Useful for tooling, documentation generation, or runtime enumeration.
 function allProviders(): Array<ProviderConfig>
 ```
 
+**Example:**
+
+```typescript
+const result = allProviders();
+```
+
 **Returns:** `Array<ProviderConfig>`
+
 **Errors:** Throws `Error` with a descriptive message.
 
 ---
@@ -157,7 +228,14 @@ The returned reference points into the static registry — no allocation.
 function complexProviderNames(): Array<string>
 ```
 
+**Example:**
+
+```typescript
+const result = complexProviderNames();
+```
+
 **Returns:** `Array<string>`
+
 **Errors:** Throws `Error` with a descriptive message.
 
 ---
@@ -178,6 +256,12 @@ are tried by stripping from the last `-` or `.` separator. For example,
 
 ```typescript
 function completionCost(model: string, promptTokens: number, completionTokens: number): number | null
+```
+
+**Example:**
+
+```typescript
+const result = completionCost("value", 42, 42);
 ```
 
 **Parameters:**
@@ -213,6 +297,12 @@ registry, mirroring `completion_cost`.
 function completionCostWithCache(model: string, promptTokens: number, cachedTokens: number, completionTokens: number): number | null
 ```
 
+**Example:**
+
+```typescript
+const result = completionCostWithCache("value", 42, 42, 42);
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -223,6 +313,32 @@ function completionCostWithCache(model: string, promptTokens: number, cachedToke
 | `completionTokens` | `number` | Yes | The completion tokens |
 
 **Returns:** `number | null`
+
+---
+
+#### clear()
+
+Remove all guardrails from the global registry.
+
+Primarily useful in tests to reset state between test cases.
+
+**Panics:**
+
+Panics if the global registry lock is poisoned.
+
+**Signature:**
+
+```typescript
+function clear(): void
+```
+
+**Example:**
+
+```typescript
+clear();
+```
+
+**Returns:** No return value.
 
 ---
 
@@ -245,6 +361,12 @@ Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
 function countTokens(model: string, text: string): number
 ```
 
+**Example:**
+
+```typescript
+const result = countTokens("value", "value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -253,6 +375,7 @@ function countTokens(model: string, text: string): number
 | `text` | `string` | Yes | The text |
 
 **Returns:** `number`
+
 **Errors:** Throws `Error` with a descriptive message.
 
 ---
@@ -277,6 +400,12 @@ if tokenization fails for any message.
 function countRequestTokens(model: string, req: ChatCompletionRequest): number
 ```
 
+**Example:**
+
+```typescript
+const result = countRequestTokens("value", new ChatCompletionRequest());
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -285,6 +414,42 @@ function countRequestTokens(model: string, req: ChatCompletionRequest): number
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
 **Returns:** `number`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+---
+
+#### checkBound()
+
+Assert that `current_len + incoming` does not exceed `limit`.
+
+Call this before appending `incoming` bytes to any buffer that must
+stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
+and emits a `tracing.warn!` with context.
+
+**Signature:**
+
+```typescript
+function checkBound(context: string, currentLen: number, incoming: number, limit: number): void
+```
+
+**Example:**
+
+```typescript
+checkBound("value", 42, 42, 42);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `context` | `string` | Yes | The context |
+| `currentLen` | `number` | Yes | The current len |
+| `incoming` | `number` | Yes | The incoming |
+| `limit` | `number` | Yes | The limit |
+
+**Returns:** No return value.
+
 **Errors:** Throws `Error` with a descriptive message.
 
 ---
@@ -314,7 +479,13 @@ present and no crypto provider installation is needed.
 function ensureCryptoProvider(): void
 ```
 
-**Returns:** `void`
+**Example:**
+
+```typescript
+ensureCryptoProvider();
+```
+
+**Returns:** No return value.
 
 ---
 
@@ -426,15 +597,23 @@ Configuration for budget enforcement.
 | `modelLimits` | `Record<string, number>` | `{}` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
 | `enforcement` | `Enforcement` | `Enforcement.Hard` | Whether to reject requests or merely warn when a limit is exceeded. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): BudgetConfig
 ```
+
+**Example:**
+
+```typescript
+const result = BudgetConfig.default();
+```
+
+**Returns:** `BudgetConfig`
 
 ---
 
@@ -448,15 +627,23 @@ Configuration for the response cache.
 | `ttl` | `number` | `300000ms` | Time-to-live for each cached entry. |
 | `backend` | `CacheBackend` | `CacheBackend.Memory` | Storage backend to use. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): CacheConfig
 ```
+
+**Example:**
+
+```typescript
+const result = CacheConfig.default();
+```
+
+**Returns:** `CacheConfig`
 
 ---
 
@@ -543,6 +730,51 @@ A single completion choice.
 | `index` | `number` | — | Index of this choice in the choices array. |
 | `message` | `AssistantMessage` | — | The assistant's message response. |
 | `finishReason` | `FinishReason \| null` | `null` | Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). |
+
+---
+
+#### ChunkMiddleware
+
+A per-chunk transformation in the `StreamPipeline`.
+
+Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
+to pass it through (optionally modified), `Ok(None)` to drop the chunk,
+or `Err(e)` to propagate a stream error.
+
+The trait is object-safe so implementations can be stored in a
+`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+
+##### Methods
+
+###### process()
+
+Process a single chunk.
+
+- `Ok(Some(chunk))` — emit (possibly transformed) chunk.
+- `Ok(None)` — drop this chunk silently.
+- `Err(e)` — propagate as a stream error.
+
+**Signature:**
+
+```typescript
+process(chunk: ChatCompletionChunk): ChatCompletionChunk | null
+```
+
+**Example:**
+
+```typescript
+const result = instance.process(new ChatCompletionChunk());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `chunk` | `ChatCompletionChunk` | Yes | The chat completion chunk |
+
+**Returns:** `ChatCompletionChunk | null`
+
+**Errors:** Throws `Error` with a descriptive message.
 
 ---
 
@@ -664,191 +896,613 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-### Methods
+##### Methods
 
-#### chat()
-
-**Signature:**
-
-```typescript
-chat(req: ChatCompletionRequest): ChatCompletionResponse
-```
-
-#### chatStream()
+###### chat()
 
 **Signature:**
 
 ```typescript
-chatStream(req: ChatCompletionRequest): string
+chat(req: ChatCompletionRequest): Promise<ChatCompletionResponse>
 ```
 
-#### embed()
+**Example:**
+
+```typescript
+const result = await instance.chat(new ChatCompletionRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `ChatCompletionResponse`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### chatStream()
 
 **Signature:**
 
 ```typescript
-embed(req: EmbeddingRequest): EmbeddingResponse
+chatStream(req: ChatCompletionRequest): Promise<string>
 ```
 
-#### listModels()
+**Example:**
+
+```typescript
+const result = await instance.chatStream(new ChatCompletionRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `string`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### embed()
 
 **Signature:**
 
 ```typescript
-listModels(): ModelsListResponse
+embed(req: EmbeddingRequest): Promise<EmbeddingResponse>
 ```
 
-#### imageGenerate()
+**Example:**
+
+```typescript
+const result = await instance.embed(new EmbeddingRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `EmbeddingRequest` | Yes | The embedding request |
+
+**Returns:** `EmbeddingResponse`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### listModels()
 
 **Signature:**
 
 ```typescript
-imageGenerate(req: CreateImageRequest): ImagesResponse
+listModels(): Promise<ModelsListResponse>
 ```
 
-#### speech()
+**Example:**
+
+```typescript
+const result = await instance.listModels();
+```
+
+**Returns:** `ModelsListResponse`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### imageGenerate()
 
 **Signature:**
 
 ```typescript
-speech(req: CreateSpeechRequest): Buffer
+imageGenerate(req: CreateImageRequest): Promise<ImagesResponse>
 ```
 
-#### transcribe()
+**Example:**
+
+```typescript
+const result = await instance.imageGenerate(new CreateImageRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateImageRequest` | Yes | The create image request |
+
+**Returns:** `ImagesResponse`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### speech()
 
 **Signature:**
 
 ```typescript
-transcribe(req: CreateTranscriptionRequest): TranscriptionResponse
+speech(req: CreateSpeechRequest): Promise<Buffer>
 ```
 
-#### moderate()
+**Example:**
+
+```typescript
+const result = await instance.speech(new CreateSpeechRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateSpeechRequest` | Yes | The create speech request |
+
+**Returns:** `Buffer`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### transcribe()
 
 **Signature:**
 
 ```typescript
-moderate(req: ModerationRequest): ModerationResponse
+transcribe(req: CreateTranscriptionRequest): Promise<TranscriptionResponse>
 ```
 
-#### rerank()
+**Example:**
+
+```typescript
+const result = await instance.transcribe(new CreateTranscriptionRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
+
+**Returns:** `TranscriptionResponse`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### moderate()
 
 **Signature:**
 
 ```typescript
-rerank(req: RerankRequest): RerankResponse
+moderate(req: ModerationRequest): Promise<ModerationResponse>
 ```
 
-#### search()
+**Example:**
+
+```typescript
+const result = await instance.moderate(new ModerationRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ModerationRequest` | Yes | The moderation request |
+
+**Returns:** `ModerationResponse`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### rerank()
 
 **Signature:**
 
 ```typescript
-search(req: SearchRequest): SearchResponse
+rerank(req: RerankRequest): Promise<RerankResponse>
 ```
 
-#### ocr()
+**Example:**
+
+```typescript
+const result = await instance.rerank(new RerankRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `RerankRequest` | Yes | The rerank request |
+
+**Returns:** `RerankResponse`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### search()
 
 **Signature:**
 
 ```typescript
-ocr(req: OcrRequest): OcrResponse
+search(req: SearchRequest): Promise<SearchResponse>
 ```
 
-#### createFile()
+**Example:**
+
+```typescript
+const result = await instance.search(new SearchRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `SearchRequest` | Yes | The search request |
+
+**Returns:** `SearchResponse`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### ocr()
 
 **Signature:**
 
 ```typescript
-createFile(req: CreateFileRequest): FileObject
+ocr(req: OcrRequest): Promise<OcrResponse>
 ```
 
-#### retrieveFile()
+**Example:**
+
+```typescript
+const result = await instance.ocr(new OcrRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `OcrRequest` | Yes | The ocr request |
+
+**Returns:** `OcrResponse`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### createFile()
 
 **Signature:**
 
 ```typescript
-retrieveFile(fileId: string): FileObject
+createFile(req: CreateFileRequest): Promise<FileObject>
 ```
 
-#### deleteFile()
+**Example:**
+
+```typescript
+const result = await instance.createFile(new CreateFileRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateFileRequest` | Yes | The create file request |
+
+**Returns:** `FileObject`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### retrieveFile()
 
 **Signature:**
 
 ```typescript
-deleteFile(fileId: string): DeleteResponse
+retrieveFile(fileId: string): Promise<FileObject>
 ```
 
-#### listFiles()
+**Example:**
+
+```typescript
+const result = await instance.retrieveFile("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `fileId` | `string` | Yes | The file id |
+
+**Returns:** `FileObject`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### deleteFile()
 
 **Signature:**
 
 ```typescript
-listFiles(query: FileListQuery): FileListResponse
+deleteFile(fileId: string): Promise<DeleteResponse>
 ```
 
-#### fileContent()
+**Example:**
+
+```typescript
+const result = await instance.deleteFile("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `fileId` | `string` | Yes | The file id |
+
+**Returns:** `DeleteResponse`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### listFiles()
 
 **Signature:**
 
 ```typescript
-fileContent(fileId: string): Buffer
+listFiles(query: FileListQuery): Promise<FileListResponse>
 ```
 
-#### createBatch()
+**Example:**
+
+```typescript
+const result = await instance.listFiles(new FileListQuery());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `FileListQuery \| null` | No | The file list query |
+
+**Returns:** `FileListResponse`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### fileContent()
 
 **Signature:**
 
 ```typescript
-createBatch(req: CreateBatchRequest): BatchObject
+fileContent(fileId: string): Promise<Buffer>
 ```
 
-#### retrieveBatch()
+**Example:**
+
+```typescript
+const result = await instance.fileContent("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `fileId` | `string` | Yes | The file id |
+
+**Returns:** `Buffer`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### createBatch()
 
 **Signature:**
 
 ```typescript
-retrieveBatch(batchId: string): BatchObject
+createBatch(req: CreateBatchRequest): Promise<BatchObject>
 ```
 
-#### listBatches()
+**Example:**
+
+```typescript
+const result = await instance.createBatch(new CreateBatchRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateBatchRequest` | Yes | The create batch request |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### retrieveBatch()
 
 **Signature:**
 
 ```typescript
-listBatches(query: BatchListQuery): BatchListResponse
+retrieveBatch(batchId: string): Promise<BatchObject>
 ```
 
-#### cancelBatch()
+**Example:**
+
+```typescript
+const result = await instance.retrieveBatch("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `string` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### listBatches()
 
 **Signature:**
 
 ```typescript
-cancelBatch(batchId: string): BatchObject
+listBatches(query: BatchListQuery): Promise<BatchListResponse>
 ```
 
-#### createResponse()
+**Example:**
+
+```typescript
+const result = await instance.listBatches(new BatchListQuery());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `BatchListQuery \| null` | No | The batch list query |
+
+**Returns:** `BatchListResponse`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### cancelBatch()
 
 **Signature:**
 
 ```typescript
-createResponse(req: CreateResponseRequest): ResponseObject
+cancelBatch(batchId: string): Promise<BatchObject>
 ```
 
-#### retrieveResponse()
+**Example:**
+
+```typescript
+const result = await instance.cancelBatch("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `string` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### fetchBatchForPolling()
 
 **Signature:**
 
 ```typescript
-retrieveResponse(responseId: string): ResponseObject
+fetchBatchForPolling(batchId: string): Promise<BatchObject>
 ```
 
-#### cancelResponse()
+**Example:**
+
+```typescript
+const result = await instance.fetchBatchForPolling("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `string` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### waitForBatch()
+
+Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
+
+Uses exponential backoff with configurable initial interval, maximum interval, and backoff multiplier.
+Optionally supports a timeout that aborts polling if exceeded.
+
+**Errors:**
+
+Returns `BatchWaitError.Failed` if the batch reaches a failure terminal status.
+Returns `BatchWaitError.Timeout` if the configured timeout is exceeded.
+Returns `BatchWaitError.Client` for underlying client errors.
 
 **Signature:**
 
 ```typescript
-cancelResponse(responseId: string): ResponseObject
+waitForBatch(batchId: string, config: WaitForBatchConfig): Promise<BatchObject>
 ```
+
+**Example:**
+
+```typescript
+const result = await instance.waitForBatch("value", new WaitForBatchConfig());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `string` | Yes | The batch id |
+| `config` | `WaitForBatchConfig` | Yes | The configuration options |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### createResponse()
+
+**Signature:**
+
+```typescript
+createResponse(req: CreateResponseRequest): Promise<ResponseObject>
+```
+
+**Example:**
+
+```typescript
+const result = await instance.createResponse(new CreateResponseRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateResponseRequest` | Yes | The create response request |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### retrieveResponse()
+
+**Signature:**
+
+```typescript
+retrieveResponse(responseId: string): Promise<ResponseObject>
+```
+
+**Example:**
+
+```typescript
+const result = await instance.retrieveResponse("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `responseId` | `string` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### cancelResponse()
+
+**Signature:**
+
+```typescript
+cancelResponse(responseId: string): Promise<ResponseObject>
+```
+
+**Example:**
+
+```typescript
+const result = await instance.cancelResponse("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `responseId` | `string` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Throws `Error` with a descriptive message.
 
 ---
 
@@ -1000,6 +1654,45 @@ Deprecated legacy function-role message body.
 
 ---
 
+#### HealthChecker
+
+Abstraction over a health probe strategy.
+
+Implementors issue a lightweight probe against `upstream` (typically a
+provider base URL or named identifier) and report `HealthStatus`.
+
+##### Methods
+
+###### check()
+
+Probe `upstream` and return its current `HealthStatus`.
+
+The parameter is taken by value (`String`) so that implementations can
+move it into the returned future without a clone, making the
+`'static + Send` bound on the future trivially satisfiable.
+
+**Signature:**
+
+```typescript
+check(upstream: string): Promise<HealthStatus>
+```
+
+**Example:**
+
+```typescript
+const result = await instance.check("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `upstream` | `string` | Yes | The upstream |
+
+**Returns:** `HealthStatus`
+
+---
+
 #### Image
 
 A single generated image, returned as either a URL or base64 data.
@@ -1031,6 +1724,18 @@ Response containing generated images.
 |-------|------|---------|-------------|
 | `created` | `number` | — | Unix timestamp of image creation. |
 | `data` | `Array<Image>` | `[]` | List of generated images. |
+
+---
+
+#### IntentPrototype
+
+An intent prototype: `(intent_name, prototype_embedding, target_model_id)`.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `string` | — | Human-readable name for the intent (used in logs/metrics). |
+| `embedding` | `Array<number>` | — | Pre-computed embedding vector for this intent. |
+| `model` | `string` | — | Model to route to when this intent is detected. |
 
 ---
 
@@ -1222,9 +1927,40 @@ discounted rate and the remainder at the regular input rate.
 
 ---
 
+#### ProviderCapabilities
+
+Static capability flags for a provider.
+
+Each flag indicates whether the provider's models *generally* support that
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
+OpenRouter, vLLM) the flags reflect the superset of available model
+capabilities — a flag being `true` means at least one model supports the
+feature, not every model.
+
+All flags default to `false` so that newly added providers are safe.
+
+Access via the crate-level `capabilities` function:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `vision` | `boolean` | — | The provider accepts image input in chat messages. |
+| `reasoning` | `boolean` | — | The provider supports extended-thinking / reasoning tokens. |
+| `structuredOutput` | `boolean` | — | The provider supports JSON-mode or `response_format` structured output. |
+| `functionCalling` | `boolean` | — | The provider supports tool / function calling. |
+| `audioIn` | `boolean` | — | The provider accepts audio as input. |
+| `audioOut` | `boolean` | — | The provider can generate audio / TTS output. |
+| `videoIn` | `boolean` | — | The provider accepts video as input. |
+
+---
+
 #### ProviderConfig
 
 Static configuration for a single provider entry in providers.json.
+
+This struct deliberately does not include capability flags or streaming
+format, which are accessed via the `capabilities` function. Keeping
+these fields separate preserves backward compatibility with all generated
+binding code that constructs `ProviderConfig` using struct literal syntax.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -1248,15 +1984,23 @@ Configuration for per-model rate limits.
 | `tpm` | `number \| null` | `null` | Maximum tokens per window.  `null` means unlimited. |
 | `window` | `number` | `60000ms` | Fixed window duration (defaults to 60 s). |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): RateLimitConfig
 ```
+
+**Example:**
+
+```typescript
+const result = RateLimitConfig.default();
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -1394,6 +2138,16 @@ An individual search result.
 | `url` | `string` | — | Result URL. |
 | `snippet` | `string` | — | Text snippet or excerpt from the page. |
 | `date` | `string \| null` | `/* serde(default) */` | Publication or last-updated date, if available. |
+
+---
+
+#### SingleflightResult
+
+The value broadcast from a singleflight leader to all followers.
+
+`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
+broadcast channels require `T: Clone`. The `Arc` adds only a reference-count
+bump per follower, which is negligible under the burst loads this layer targets.
 
 ---
 
@@ -1560,6 +2314,40 @@ User message in the conversation.
 |-------|------|---------|-------------|
 | `content` | `UserContent` | `UserContent.Text` | Message content as plain text or array of content parts (text, images, documents, audio). |
 | `name` | `string \| null` | `null` | Optional name for the user. |
+
+---
+
+#### WaitForBatchConfig
+
+Configuration for polling a batch until terminal status.
+
+All time values are in seconds as `f64` so the struct bridges across FFI
+boundaries without requiring a `Duration` shim.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `initialIntervalSecs` | `number` | `5` | Initial interval between polls, in seconds. |
+| `maxIntervalSecs` | `number` | `60` | Maximum interval between polls (backoff plateau), in seconds. |
+| `backoffMultiplier` | `number` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
+| `timeoutSecs` | `number \| null` | `null` | Optional timeout in seconds — polling fails if this duration is exceeded. |
+
+##### Methods
+
+###### default()
+
+**Signature:**
+
+```typescript
+static default(): WaitForBatchConfig
+```
+
+**Example:**
+
+```typescript
+const result = WaitForBatchConfig.default();
+```
+
+**Returns:** `WaitForBatchConfig`
 
 ---
 
@@ -1800,6 +2588,22 @@ How the API key is sent in the HTTP request.
 
 ---
 
+#### StreamFormat
+
+The streaming wire format a provider uses for its response stream.
+
+Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
+a proprietary binary EventStream framing.
+
+Deserialized from the `streaming_format` JSON field via `serde`.
+
+| Value | Description |
+|-------|-------------|
+| `Sse` | Standard Server-Sent Events (text/event-stream). |
+| `AwsEventStream` | AWS EventStream binary framing (application/vnd.amazon.eventstream). |
+
+---
+
 #### AuthType
 
 Auth scheme used by a provider.
@@ -1835,6 +2639,29 @@ Storage backend for the response cache.
 
 ---
 
+#### CircuitState
+
+Observable state of a circuit breaker.
+
+| Value | Description |
+|-------|-------------|
+| `Closed` | Requests flow through normally. |
+| `Open` | All requests are rejected; the circuit is waiting for the backoff to elapse. |
+| `HalfOpen` | One probe request is allowed through to test service health. |
+
+---
+
+#### HealthStatus
+
+The result of a single health probe.
+
+| Value | Description |
+|-------|-------------|
+| `Healthy` | The probe succeeded; the upstream is reachable. |
+| `Unhealthy` | The probe failed; the upstream may be down. |
+
+---
+
 ### Errors
 
 #### LiterLlmError
@@ -1862,5 +2689,7 @@ Errors are thrown as plain `Error` objects with descriptive messages.
 | `HookRejected` | hook rejected: {message} |
 | `InternalError` | An internal logic error (e.g. unexpected Tower response variant). This should never surface in normal operation — if it does, it indicates a bug in the library. |
 | `OutboundForbidden` | An outbound request was blocked by the active `OutboundPolicy`. Returned when `register_custom_provider` is called with a `base_url` that violates the policy (e.g. a private-range IP under `DenyPrivate`), or when the per-connection DNS resolver detects a forbidden address at connect time. |
+| `IdempotencyConflict` | A different request body was submitted for an existing `Idempotency-Key`. Per the OpenAI `Idempotency-Key` convention, once a key is used with a particular request body, subsequent requests using the same key must carry an identical body.  A body mismatch is a hard error (not retryable). HTTP equivalent: 409 Conflict. |
+| `IdempotencyInFlight` | The same `Idempotency-Key` is already in-flight (another request with the same key is currently being processed). The caller should wait briefly and retry.  The response is not yet available, and this request has been short-circuited to avoid running the operation twice. HTTP equivalent: 409 Conflict (retryable after a brief delay). |
 
 ---

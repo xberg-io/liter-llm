@@ -116,7 +116,8 @@ Part of the kreuzberg.dev ecosystem:
 ## CLI Installation
 
 Homebrew:
-  brew tap kreuzberg-dev/tap && brew install liter-llm
+  brew trust kreuzberg-dev/tap
+  brew install kreuzberg-dev/tap/liter-llm
 
 Cargo:
   cargo install liter-llm-cli

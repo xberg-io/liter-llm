@@ -1,10 +1,16 @@
 use std::path::PathBuf;
+use std::time::Duration;
 
 use clap::Args;
 use liter_llm::provider::{OutboundPolicy, set_outbound_policy};
 use liter_llm_proxy::ProxyServer;
+use liter_llm_proxy::WatchMode;
 use liter_llm_proxy::config::{OutboundPolicyKind, ProxyConfig};
+use liter_llm_proxy::shutdown::{ShutdownCoordinator, ShutdownPhase};
 use secrecy::SecretString;
+
+/// Drain progress log interval.
+const DRAIN_LOG_INTERVAL: Duration = Duration::from_secs(1);
 
 #[derive(Args)]
 pub struct ApiArgs {
@@ -23,6 +29,26 @@ pub struct ApiArgs {
     /// Enable debug logging.
     #[arg(long)]
     pub debug: bool,
+    /// Enable hot-reload of the configuration file.
+    ///
+    /// When `--config` is set, watches that file for changes and reloads
+    /// automatically on every save.  When `--etcd-endpoint` is also set,
+    /// uses etcd instead of file watching.
+    #[arg(long)]
+    pub watch: bool,
+    /// etcd endpoint URL(s) for distributed config (comma-separated).
+    ///
+    /// Example: `http://127.0.0.1:2379`
+    ///
+    /// When provided together with `--watch`, the proxy subscribes to the
+    /// etcd key at `--etcd-key` for live configuration updates.
+    #[arg(long, value_delimiter = ',', env = "LITER_LLM_ETCD_ENDPOINTS")]
+    pub etcd_endpoint: Vec<String>,
+    /// etcd key to watch for proxy configuration (default: `/liter-llm/config`).
+    ///
+    /// Only used when `--etcd-endpoint` is set.
+    #[arg(long, default_value = "/liter-llm/config", env = "LITER_LLM_ETCD_KEY")]
+    pub etcd_key: String,
 }
 
 pub async fn run(args: ApiArgs) -> Result<(), String> {
@@ -43,8 +69,8 @@ pub async fn run(args: ApiArgs) -> Result<(), String> {
     // Apply CLI overrides (highest precedence).
     config.server.host.clone_from(&args.host);
     config.server.port = args.port;
-    if let Some(key) = args.master_key {
-        config.general.master_key = Some(SecretString::from(key));
+    if let Some(ref key) = args.master_key {
+        config.general.master_key = Some(SecretString::from(key.clone()));
     }
 
     // Warn when wildcard CORS is combined with a public-facing bind address.
@@ -64,7 +90,106 @@ pub async fn run(args: ApiArgs) -> Result<(), String> {
     let policy = build_outbound_policy(&config)?;
     set_outbound_policy(policy);
 
-    ProxyServer::new(config).serve().await
+    // Resolve the watch mode from CLI flags.
+    let watch_mode = resolve_watch_mode(&args)?;
+
+    // ── Shutdown coordinator ──────────────────────────────────────────────
+    let coordinator = ShutdownCoordinator::new();
+    let handle = coordinator.handle();
+
+    // Signal handler: SIGTERM / SIGINT → Draining; second signal → Aborted.
+    coordinator.spawn_signal_handler();
+
+    // Axum server — drains via the cancellation token.
+    let server_handle = handle.clone();
+    let server_task = tokio::spawn(async move {
+        ProxyServer::new(config)
+            .with_watch_mode(watch_mode)
+            .serve_with_shutdown(Some(server_handle))
+            .await
+    });
+
+    // Wait until we enter Draining (or beyond) before logging drain progress.
+    {
+        let mut drain_handle = handle.clone();
+        drain_handle.wait_for_drain_start().await;
+    }
+
+    let phase = handle.phase();
+    if phase >= ShutdownPhase::Draining {
+        tracing::info!("Draining — waiting for in-flight requests to complete...");
+    }
+
+    // Wait for the coordinator to finish draining all subsystems, emitting a
+    // progress log every DRAIN_LOG_INTERVAL so operators know draining is
+    // in progress.
+    let final_phase = drain_with_progress_log(coordinator, DRAIN_LOG_INTERVAL).await;
+
+    match final_phase {
+        ShutdownPhase::Drained => {
+            tracing::info!("graceful shutdown complete");
+        }
+        ShutdownPhase::Aborted => {
+            tracing::error!("shutdown aborted — some in-flight requests may have been dropped");
+        }
+        other => {
+            tracing::warn!(?other, "unexpected final shutdown phase");
+        }
+    }
+
+    // Await the server task to collect any error it returned.
+    match server_task.await {
+        Ok(Ok(())) => {}
+        Ok(Err(e)) => {
+            tracing::error!("server exited with error: {e}");
+            return Err(e);
+        }
+        Err(e) => {
+            tracing::error!("server task panicked: {e}");
+            return Err(format!("server task panicked: {e}"));
+        }
+    }
+
+    Ok(())
+}
+
+/// Translate CLI flags into a [`WatchMode`].
+fn resolve_watch_mode(args: &ApiArgs) -> Result<WatchMode, String> {
+    if !args.watch {
+        return Ok(WatchMode::Off);
+    }
+
+    if !args.etcd_endpoint.is_empty() {
+        return Ok(WatchMode::Etcd {
+            endpoints: args.etcd_endpoint.clone(),
+            key: args.etcd_key.clone(),
+        });
+    }
+
+    let path = args
+        .config
+        .clone()
+        .ok_or_else(|| "--watch requires --config <path> or --etcd-endpoint <url>".to_owned())?;
+
+    Ok(WatchMode::File { path })
+}
+
+/// Drive `coordinator` to completion while emitting a log line every `interval`.
+async fn drain_with_progress_log(coordinator: ShutdownCoordinator, interval: Duration) -> ShutdownPhase {
+    let mut ticker = tokio::time::interval(interval);
+    ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+
+    let drain_fut = coordinator.wait_for_drained();
+    tokio::pin!(drain_fut);
+
+    loop {
+        tokio::select! {
+            phase = &mut drain_fut => return phase,
+            _ = ticker.tick() => {
+                tracing::info!("still draining in-flight requests...");
+            }
+        }
+    }
 }
 
 /// Translate the proxy security config into a [`OutboundPolicy`].

@@ -106,6 +106,27 @@ pub enum LiterLlmError {
     /// the per-connection DNS resolver detects a forbidden address at connect time.
     #[error("outbound request to {url} forbidden: {reason}")]
     OutboundForbidden { url: String, reason: String },
+
+    /// A different request body was submitted for an existing `Idempotency-Key`.
+    ///
+    /// Per the OpenAI `Idempotency-Key` convention, once a key is used with a
+    /// particular request body, subsequent requests using the same key must carry
+    /// an identical body.  A body mismatch is a hard error (not retryable).
+    ///
+    /// HTTP equivalent: 409 Conflict.
+    #[error("idempotency conflict: key '{key}' was already used with a different request body")]
+    IdempotencyConflict { key: String },
+
+    /// The same `Idempotency-Key` is already in-flight (another request with the
+    /// same key is currently being processed).
+    ///
+    /// The caller should wait briefly and retry.  The response is not yet
+    /// available, and this request has been short-circuited to avoid running
+    /// the operation twice.
+    ///
+    /// HTTP equivalent: 409 Conflict (retryable after a brief delay).
+    #[error("idempotency key '{key}' is currently in-flight; retry after the first request completes")]
+    IdempotencyInFlight { key: String },
 }
 
 impl LiterLlmError {
@@ -136,6 +157,8 @@ impl LiterLlmError {
             Self::HookRejected { .. } => 0,
             Self::InternalError { .. } => 0,
             Self::OutboundForbidden { .. } => 0,
+            Self::IdempotencyConflict { .. } => 409,
+            Self::IdempotencyInFlight { .. } => 409,
         }
     }
 
@@ -183,6 +206,80 @@ impl LiterLlmError {
             Self::HookRejected { .. } => "HookRejected",
             Self::InternalError { .. } => "InternalError",
             Self::OutboundForbidden { .. } => "OutboundForbidden",
+            Self::IdempotencyConflict { .. } => "IdempotencyConflict",
+            Self::IdempotencyInFlight { .. } => "IdempotencyInFlight",
+        }
+    }
+
+    /// Create a version of this error suitable for broadcasting via singleflight.
+    ///
+    /// `LiterLlmError` is not `Clone` because some variants hold non-Clone types
+    /// (e.g. `reqwest::Error`).  This method produces a semantically equivalent
+    /// error that *is* owned and can be placed behind an `Arc` for broadcast.
+    /// Variants that cannot be cloned exactly are converted to their nearest
+    /// owned equivalent while preserving the error class (variant discriminant).
+    pub(crate) fn to_singleflight_error(&self) -> Self {
+        match self {
+            Self::Authentication { message, status } => Self::Authentication {
+                message: message.clone(),
+                status: *status,
+            },
+            Self::RateLimited { message, retry_after } => Self::RateLimited {
+                message: message.clone(),
+                retry_after: *retry_after,
+            },
+            Self::BadRequest { message, status } => Self::BadRequest {
+                message: message.clone(),
+                status: *status,
+            },
+            Self::ContextWindowExceeded { message } => Self::ContextWindowExceeded {
+                message: message.clone(),
+            },
+            Self::ContentPolicy { message } => Self::ContentPolicy {
+                message: message.clone(),
+            },
+            Self::NotFound { message } => Self::NotFound {
+                message: message.clone(),
+            },
+            Self::ServerError { message, status } => Self::ServerError {
+                message: message.clone(),
+                status: *status,
+            },
+            Self::ServiceUnavailable { message, status } => Self::ServiceUnavailable {
+                message: message.clone(),
+                status: *status,
+            },
+            Self::Timeout => Self::Timeout,
+            #[cfg(any(feature = "native-http", feature = "wasm-http"))]
+            Self::Network(e) => Self::InternalError { message: e.to_string() },
+            Self::Streaming { message } => Self::Streaming {
+                message: message.clone(),
+            },
+            Self::EndpointNotSupported { endpoint, provider } => Self::EndpointNotSupported {
+                endpoint: endpoint.clone(),
+                provider: provider.clone(),
+            },
+            Self::InvalidHeader { name, reason } => Self::InvalidHeader {
+                name: name.clone(),
+                reason: reason.clone(),
+            },
+            Self::Serialization(e) => Self::InternalError { message: e.to_string() },
+            Self::BudgetExceeded { message, model } => Self::BudgetExceeded {
+                message: message.clone(),
+                model: model.clone(),
+            },
+            Self::HookRejected { message } => Self::HookRejected {
+                message: message.clone(),
+            },
+            Self::InternalError { message } => Self::InternalError {
+                message: message.clone(),
+            },
+            Self::OutboundForbidden { url, reason } => Self::OutboundForbidden {
+                url: url.clone(),
+                reason: reason.clone(),
+            },
+            Self::IdempotencyConflict { key } => Self::IdempotencyConflict { key: key.clone() },
+            Self::IdempotencyInFlight { key } => Self::IdempotencyInFlight { key: key.clone() },
         }
     }
 

@@ -72,9 +72,9 @@
 	</a>
 </div>
 
-Universal LLM API client for Go. Access 143+ LLM providers through a single interface backed by the Rust core.
+Universal LLM API client for Go. Access 143 LLM providers through a single interface backed by the Rust core.
 
-> **Version 1.5.1**
+> **Version 1.6.0**
 > Report issues at [github.com/kreuzberg-dev/liter-llm](https://github.com/kreuzberg-dev/liter-llm/issues).
 
 ## What This Package Provides
@@ -117,7 +117,7 @@ Download from [GitHub Releases](https://github.com/kreuzberg-dev/liter-llm/relea
 
 ```bash
 # Example: Linux x86_64
-curl -LO https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.5.1/go-ffi-linux-x86_64.tar.gz
+curl -LO https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.6.0/go-ffi-linux-x86_64.tar.gz
 tar -xzf go-ffi-linux-x86_64.tar.gz
 
 mkdir -p ~/liter-llm/lib
@@ -157,7 +157,6 @@ CGO_LDFLAGS="-L$HOME/liter-llm/lib -lliter_llm_ffi" go build
 
 ## Quickstart
 
-
 ```go
 package main
 
@@ -186,7 +185,6 @@ func main() {
 }
 ```
 
-
 Build and run:
 
 ```bash
@@ -197,7 +195,6 @@ CGO_LDFLAGS="-L$HOME/liter-llm/lib -lliter_llm_ffi" go build
 ## Examples
 
 ### Streaming Responses
-
 
 ```go
 stream, err := client.ChatStream(ctx, literllm.ChatRequest{
@@ -214,9 +211,7 @@ for chunk := range stream.Chunks() {
 }
 ```
 
-
 ### Multiple Providers
-
 
 ```go
 // OpenAI
@@ -229,9 +224,7 @@ resp, _ = client.Chat(ctx, literllm.ChatRequest{Model: "anthropic/claude-3-5-son
 resp, _ = client.Chat(ctx, literllm.ChatRequest{Model: "groq/llama-3.1-70b-versatile", Messages: msgs})
 ```
 
-
 ### Context-Aware Requests
-
 
 ```go
 ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -246,7 +239,6 @@ if err != nil {
 }
 fmt.Println(resp.Content)
 ```
-
 
 ## Proxy Server
 
@@ -267,12 +259,13 @@ See the [proxy server documentation](https://docs.liter-llm.kreuzberg.dev/server
 
 ## Part of Kreuzberg.dev
 
-- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 90+ formats with optional OCR.
+- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
 - [Kreuzberg Cloud](https://github.com/kreuzberg-dev/kreuzberg-cloud) — managed extraction API with SDKs, dashboards, and observability.
 - [kreuzcrawl](https://github.com/kreuzberg-dev/kreuzcrawl) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
 - [html-to-markdown](https://github.com/kreuzberg-dev/html-to-markdown) — fast, lossless HTML→Markdown engine.
+- [liter-llm](https://github.com/kreuzberg-dev/liter-llm) — universal LLM API client with native bindings for 14 languages and 143 providers.
 - [tree-sitter-language-pack](https://github.com/kreuzberg-dev/tree-sitter-language-pack) — tree-sitter grammars and code-intelligence primitives.
-- [alef](https://github.com/kreuzberg-dev/alef) — the polyglot binding generator that produces this README and all per-language bindings.
+- [alef](https://github.com/kreuzberg-dev/alef) — the polyglot binding generator that produces every per-language binding across the 5 polyglot repos.
 - [Discord](https://discord.gg/xt9WY3GnKR) — community, roadmap, announcements.
 
 ## Troubleshooting

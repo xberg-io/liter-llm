@@ -44,12 +44,13 @@ go get {{ package_name }}
 For more details on FFI setup and native library linking, see the [Go README](https://github.com/kreuzberg-dev/liter-llm/blob/main/packages/go/README.md).
 
 {% elif pm == "maven" %}
+{% set maven_parts = package_name | split(":") %}
 Add to your `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>dev.kreuzberg</groupId>
-    <artifactId>liter-llm</artifactId>
+    <groupId>{{ maven_parts[0] }}</groupId>
+    <artifactId>{{ maven_parts[1] }}</artifactId>
     <version>{{ version }}</version>
 </dependency>
 ```
@@ -57,7 +58,7 @@ Add to your `pom.xml`:
 Or use Gradle:
 
 ```gradle
-implementation 'dev.kreuzberg:liter-llm:{{ version }}'
+implementation '{{ package_name }}:{{ version }}'
 ```
 
 {% elif pm == "rubygems" %}
@@ -174,12 +175,13 @@ go get {{ package_name }}
 ```
 
 {% elif pm == "maven" %}
+{% set maven_parts = package_name | split(":") %}
 **Maven:**
 
 ```xml
 <dependency>
-    <groupId>dev.kreuzberg</groupId>
-    <artifactId>liter-llm</artifactId>
+    <groupId>{{ maven_parts[0] }}</groupId>
+    <artifactId>{{ maven_parts[1] }}</artifactId>
     <version>{{ version }}</version>
 </dependency>
 ```
@@ -188,7 +190,7 @@ go get {{ package_name }}
 **Gradle:**
 
 ```gradle
-implementation 'dev.kreuzberg:liter-llm:{{ version }}'
+implementation '{{ package_name }}:{{ version }}'
 ```
 
 {% elif pm == "rubygems" %}

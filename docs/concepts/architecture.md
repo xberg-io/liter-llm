@@ -21,7 +21,7 @@ graph TB
     CORE --> FFI["liter-llm-ffi\nC shared library"]
 
     FFI --> GO["Go (cgo)"]
-    FFI --> JAVA["Java / Kotlin (Panama FFM)"]
+    FFI --> JAVA["Java / Kotlin JVM interop"]
     FFI --> CS["C# (P/Invoke)"]
     FFI --> RB["Ruby (Fiddle)"]
     FFI --> EX["Elixir (NIF)"]
@@ -36,7 +36,7 @@ The `liter-llm` core crate never depends on any binding. All knowledge flows in 
 
 ```text
 crates/liter-llm/src/
-  client/            # LlmClient trait + DefaultClient + ClientConfig builder
+  client/            # LlmClient + FileClient + BatchClient + ResponseClient + DefaultClient
   error.rs           # LiterLlmError enum (17 variants)
   cost.rs            # Per-call cost estimation
   tokenizer.rs       # HuggingFace tokenizer bridge (feature-gated)
@@ -47,7 +47,7 @@ crates/liter-llm/src/
   types/             # Request and response types (OpenAI wire format)
 
 crates/liter-llm/schemas/
-  providers.json     # 143 provider configurations (+ 4 complex provider entries)
+  providers.json     # 143 runtime providers plus schema metadata and complex-provider names
 ```
 
 ## Public surface
@@ -66,6 +66,8 @@ The core crate re-exports a curated set of symbols at its root:
 | Types             | All `types::*` submodules — `chat`, `embedding`, `image`, `audio`, `files`, `batch`, `responses`, `rerank`, `search`, `ocr`, `moderation`, `models`, `raw`, `common` |
 
 Internal modules (`http`) are `pub(crate)` and not part of the public API.
+
+`LlmClient` covers the core model operations: `chat`, `chat_stream`, `embed`, `list_models`, `image_generate`, `speech`, `transcribe`, `moderate`, `rerank`, `search`, and `ocr`. File uploads and retrieval use `FileClient`; batch jobs use `BatchClient`; OpenAI Responses API operations use `ResponseClient`.
 
 ## Tower middleware stack
 
@@ -139,7 +141,7 @@ All 14 bindings share the same Rust core. Four native-extension crates and one C
 | napi-rs          | `liter-llm-node` | TypeScript / Node.js                                  |
 | wasm-bindgen     | `liter-llm-wasm` | WebAssembly (browsers, Cloudflare Workers, Deno, Bun) |
 | ext-php-rs       | `liter-llm-php`  | PHP                                                   |
-| C ABI shared lib | `liter-llm-ffi`  | Go, Java, Kotlin, C#, Ruby, Elixir, Dart, Swift, Zig  |
+| C ABI shared lib | `liter-llm-ffi`  | Go, Java, Kotlin Android, C#, Ruby, Elixir, Dart, Swift, Zig  |
 
 The C FFI surface is the only one that exposes Rust types as opaque handles. All FFI-consuming bindings use their language-native FFI mechanism — cgo, Panama FFM, P/Invoke, Fiddle, NIF, `dart:ffi`, Swift's C interop, Zig's `@cImport` — to call the shared library. Error context (variant label, numeric code, message) is preserved across the boundary so each binding can throw a typed exception.
 

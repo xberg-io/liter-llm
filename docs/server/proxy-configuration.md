@@ -18,7 +18,7 @@ The proxy resolves config in this order, later values winning:
 
 1. Defaults from each struct's `Default` impl.
 2. **Either** auto-discovery of `liter-llm-proxy.toml` in the working directory walked upward to the filesystem root, **or** an explicit `--config <path>` file (mutually exclusive — `--config` disables auto-discovery).
-3. CLI flags (`--host`, `--port`, `--master-key`).
+3. CLI flags (`--host`, `--port`, `--master-key`; `--watch`, `--etcd-endpoint`, and `--etcd-key` select hot-reload mode).
 4. Environment variables read during `${VAR}` interpolation.
 
 See [Proxy Server > Command-line flags](proxy-server.md#command-line-flags) for the flag list.
@@ -33,7 +33,7 @@ HTTP listener settings.
 | `port`                 | u16          | `4000`              | Bind port.                                                                               |
 | `request_timeout_secs` | u64          | `600`               | Upper bound on request duration before the proxy returns 504.                            |
 | `body_limit_bytes`     | usize        | `10485760` (10 MiB) | Maximum request body size. Requests larger than this return 413.                         |
-| `cors_origins`         | list<string> | `["*"]`             | Allowed CORS origins. `["*"]` is wide open; replace with an explicit list in production. |
+| `cors_origins`         | list<string> | `[]`                | Allowed CORS origins. Empty disables CORS. Set explicit origins for browser clients. |
 
 --8<-- "snippets/toml/server/server.md"
 
@@ -92,6 +92,37 @@ Virtual API keys. Each key is a Bearer token with its own model allowlist, rate 
 | `budget_limit` | f64?         | none     | Lifetime spend cap in USD. Requests that would exceed the cap return 402. |
 
 --8<-- "snippets/toml/server/keys.md"
+
+Provider credentials can also be scoped to a virtual key. The proxy rotates among a key's `[[keys.provider_credentials]]` entries on 429 and 5xx responses.
+
+```toml
+[[keys]]
+key = "vk-prod"
+models = ["gpt-4o"]
+
+[[keys.provider_credentials]]
+provider = "openai"
+id = "primary"
+api_key = "${OPENAI_API_KEY_PRIMARY}"
+model_allowlist = ["gpt-4o"]
+
+[[keys.provider_credentials]]
+provider = "openai"
+id = "backup"
+api_key = "${OPENAI_API_KEY_BACKUP}"
+model_allowlist = ["gpt-4o"]
+```
+
+## `[mcp]`
+
+Authentication context for `liter-llm mcp --transport stdio`. HTTP MCP ignores this section because every `/mcp` request is authenticated with `Authorization: Bearer <key>`.
+
+| Field               | Type    | Default | Description                                                                 |
+| ------------------- | ------- | ------- | --------------------------------------------------------------------------- |
+| `stdio_key_id`      | string? | none    | Bind stdio MCP calls to an existing `[[keys]].key` virtual key.             |
+| `stdio_trust_local` | bool    | `false` | Treat the local stdio process as master access. Use only for trusted local clients. |
+
+At least one stdio mode must be configured. Prefer `stdio_key_id` for policy enforcement; without `stdio_key_id` or `stdio_trust_local = true`, the stdio MCP server refuses to start.
 
 ## `[rate_limit]`
 
@@ -171,6 +202,10 @@ Any `${VAR_NAME}` pattern inside a string value is replaced with the environment
 !!! Note "Unclosed braces are treated as literals"
 If a `${` is missing its closing `}`, the proxy leaves the text as-is rather than silently truncating. That makes typos easy to spot in logs.
 
+## Hot reload
+
+Use `liter-llm api --config ./liter-llm-proxy.toml --watch` to reload a local file after saves. Use `liter-llm api --watch --etcd-endpoint http://127.0.0.1:2379 --etcd-key /liter-llm/config` to watch distributed config from etcd.
+
 ## Validation
 
-The parser sets `deny_unknown_fields` on every struct. Any typo or unsupported field raises a `invalid TOML config` error with the line and column. Fix the typo and restart; the proxy does not hot-reload.
+The parser sets `deny_unknown_fields` on every struct. Any typo or unsupported field raises an `invalid TOML config` error with the line and column. Fix the typo and restart, or run with `--watch` so the proxy reloads the corrected file or etcd value.

@@ -141,3 +141,178 @@ let service = ServiceBuilder::new()
     .layer(CostTrackingLayer)     // inner: records cost inside the open span
     .service(LlmService::new(client));
 ```
+
+## Usage events
+
+Every request (success or failure) emits a `UsageEvent` after completion. Use
+`UsageSink` implementations to capture token counts, latency, cache state, and
+cost for billing, dashboards, or analytics.
+
+### UsageEvent fields
+
+| Field | Type | When set | Notes |
+|-------|------|----------|-------|
+| `request_id` | string | Always | Idempotency key or monotonic counter; use for deduplication |
+| `tenant_id` | Option<TenantId> | When tenant context attached | Populated by `LlmRequest::with_tenant_id` |
+| `model` | string | Always | Model name as submitted in the request |
+| `provider` | string | Always | Provider prefix (part before `/`); empty if no prefix |
+| `prompt_tokens` | u64 | Always | Zero for request types that do not report token counts |
+| `completion_tokens` | u64 | Always | Zero for non-streaming responses |
+| `cached_tokens` | u64 | Always | Provider-reported cached prompt tokens; zero if not reported |
+| `total_tokens` | u64 | Always | prompt + completion tokens |
+| `cost_usd` | Decimal | Always | Estimated USD cost; zero if model has no pricing entry |
+| `effective_model` | Option<String> | Sometimes | Provider-echoed model name from response when available |
+| `finish_reason` | Option<String> | Sometimes | Finish reason string from chat response choice |
+| `cache_state` | CacheState | Always | `Bypass`, `Miss`, `ExactHit`, `SemanticHit`, or `StaleHit` |
+| `outcome` | UsageEventOutcome | Always | `Success`, `Error`, `Cancelled`, or `TimedOut` |
+| `latency_ms` | u64 | Always | Request latency measured by the hooks layer, milliseconds |
+| `metadata` | HashMap | Always | Free-form attributes; sinks can inspect without adding struct fields |
+| `received_at` | SystemTime | Always | Wall-clock time event was created |
+
+### Effective_model
+
+Differs from `model` when routing or fallback rewrites the request. For example:
+
+- Request asks for `"openai/gpt-4o"`, provider echoes `"openai/gpt-4o-2024-08-06"`
+- Request asks for `"claude-3-5-sonnet"`, fallback chain retries via `"claude-3-5-opus"` and provider echoes the actual model
+
+Set to `None` for response variants that do not carry a model field: streaming
+responses, speech, image generation, transcription, rerank, list-models. Also
+`None` on error paths where no response body is available.
+
+### Cache state
+
+`CacheState` values describe the cache layer outcome:
+
+```rust
+pub enum CacheState {
+    Miss,        // No cache entry; provider was called
+    ExactHit,    // Exact-match cache hit; provider not called
+    SemanticHit, // Semantic-similarity hit; provider not called
+    StaleHit,    // TTL expired but stale entry served
+    Bypass,      // Cache lookup skipped (default; streaming, etc.)
+}
+```
+
+Task-local cell `CACHE_STATE_CELL` is written by `CacheService` and
+`cache_singleflight`. `HooksService` reads it after the inner service resolves
+and populates the event.
+
+## UsageSink trait
+
+Implement `UsageSink` to consume events:
+
+```rust
+pub trait UsageSink: Send + Sync + 'static {
+    fn emit(&self, event: UsageEvent)
+        -> impl Future<Output = Result<(), UsageSinkError>> + Send;
+}
+```
+
+Implementations should be cheap on the hot path — defer heavy I/O to a
+background task or channel. Errors from `emit` are logged but do not propagate
+to the LLM request caller.
+
+### LoggingUsageSink
+
+Built-in sink that emits each event as a structured `tracing` INFO event on
+the `gen_ai.usage` target:
+
+```rust
+use liter_llm::observability::LoggingUsageSink;
+
+let sink = LoggingUsageSink;
+// Use sink...
+```
+
+Useful in development and as a smoke-test default. No I/O is performed; always
+cheap.
+
+### MultiUsageSink
+
+Fan-out multiple sinks concurrently:
+
+```rust
+use liter_llm::observability::{LoggingUsageSink, MultiUsageSink};
+
+let multi = MultiUsageSink::from_sinks(vec![
+    Arc::new(LoggingUsageSink),
+]);
+
+// Or mix heterogeneous types via from_erased:
+let multi = MultiUsageSink::from_erased(vec![
+    Arc::new(LoggingUsageSink) as Arc<dyn UsageSinkErased>,
+    Arc::new(MyCustomSink::new()) as Arc<dyn UsageSinkErased>,
+]);
+```
+
+Individual sink errors are logged but do not cause `emit` to return `Err`.
+
+### Custom sink example
+
+```rust
+use liter_llm::observability::{UsageEvent, UsageSink, UsageSinkError};
+
+struct MetricsSink;
+
+impl UsageSink for MetricsSink {
+    async fn emit(&self, event: UsageEvent) -> Result<(), UsageSinkError> {
+        // Record to your metrics backend
+        println!(
+            "request_id={} model={} cost=${:.6} latency_ms={}",
+            event.request_id, event.model, event.cost_usd, event.latency_ms
+        );
+        Ok(())
+    }
+}
+```
+
+## Wiring sinks
+
+### Tower stack (Rust)
+
+Add `HooksLayer` to your tower stack with a sink:
+
+```rust
+use liter_llm::tower::hooks::HooksLayer;
+use tower::ServiceBuilder;
+
+let sink = Arc::new(LoggingUsageSink);
+let service = ServiceBuilder::new()
+    .layer(HooksLayer::new().with_usage_sink(sink))
+    .service(inner);
+```
+
+`HooksLayer` wraps the inner service and emits `UsageEvent` after every
+completed request.
+
+### Proxy (embedded or standalone)
+
+Inject a sink via `ProxyServer::with_usage_sink`:
+
+```rust
+use std::sync::Arc;
+use liter_llm_proxy::ProxyServer;
+use liter_llm::observability::LoggingUsageSink;
+
+let sink = Arc::new(LoggingUsageSink);
+
+ProxyServer::new(config)
+    .with_usage_sink(sink)
+    .serve_with_shutdown(None)
+    .await?;
+```
+
+See [Embedding the Proxy](../server/embedding.md) for a complete example.
+
+## Observability integration
+
+Export events to your observability backend by implementing `UsageSink`. For
+example:
+
+- Send to a message bus (Kafka, NATS, Pub/Sub) for downstream analytics
+- Write to a time-series database for dashboarding
+- Stream to a billing system for usage-based pricing
+- Log to an audit trail for compliance
+
+The `UsageEvent` is self-contained; no additional context is needed.

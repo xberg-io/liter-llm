@@ -10,7 +10,7 @@ Launch it with `liter-llm mcp`. The server supports two transports: `stdio` for 
 
 ## Quick start
 
-Run the server over stdio against an auto-discovered `liter-llm-proxy.toml`:
+Run the server over stdio against an auto-discovered `liter-llm-proxy.toml`. The config must include either `mcp.stdio_key_id` or `mcp.stdio_trust_local = true`:
 
 ```bash
 liter-llm mcp
@@ -22,7 +22,7 @@ Run over HTTP on the default port `3001`:
 liter-llm mcp --transport http --host 127.0.0.1 --port 3001
 ```
 
-The HTTP transport exposes a single endpoint: `POST /mcp`. Point any MCP HTTP client at `http://127.0.0.1:3001/mcp`.
+The HTTP transport exposes a single endpoint: `POST /mcp`. Point any MCP HTTP client at `http://127.0.0.1:3001/mcp` and include `Authorization: Bearer <master-or-virtual-key>` on every request.
 
 ## Command-line flags
 
@@ -141,10 +141,10 @@ liter-llm mcp --transport http --host 0.0.0.0 --port 3001
 
 --8<-- "snippets/toml/mcp/http.md"
 
-The HTTP endpoint is `POST /mcp`. Each request opens a short-lived session managed by `rmcp`'s `LocalSessionManager`. There is no authentication on the MCP HTTP transport itself, so bind to loopback or put it behind an authenticated reverse proxy.
+The HTTP endpoint is `POST /mcp`. Each request opens a short-lived session managed by `rmcp`'s `LocalSessionManager` and passes through the same `Authorization: Bearer <key>` middleware as the REST proxy. The resolved master key or virtual key is attached to the MCP request context before any tool runs. <span class="version-badge">Available by v1.5</span>
 
-!!! Warning "HTTP transport has no built-in auth"
-Unlike the REST proxy, `liter-llm mcp --transport http` does not check Bearer tokens. Do not expose it to the public internet without a reverse proxy that handles authentication.
+!!! Warning "HTTP transport requires Bearer auth"
+Do not expose the HTTP MCP transport without TLS and a real master or virtual key. Unauthenticated requests return 401 before the MCP handler runs.
 
 ## Shared configuration
 
@@ -154,13 +154,16 @@ The MCP server and the HTTP proxy use the same `ProxyConfig` loader. That means:
 - Glob overrides in `[[aliases]]` apply to MCP requests.
 - `[cache]` caches non-streaming responses across both surfaces.
 - `[files]` persists files uploaded via the `create_file` tool.
-- `[[keys]]` virtual keys are loaded but not enforced on MCP calls, since the transports are assumed trusted.
+- `[[keys]]` virtual keys are enforced on HTTP MCP requests via Bearer auth.
+- Stdio MCP calls use the configured startup context from `[mcp]`: `stdio_key_id` binds tools to one virtual key, while `stdio_trust_local = true` grants master context for trusted local clients.
 
-The master key is also loaded, but the MCP surface does not send Bearer tokens, so virtual-key RPM, TPM, and budget caps do not apply to MCP invocations today. Use `[rate_limit]` and `[budget]` for global caps that cover both surfaces.
+The master key is also loaded. HTTP clients present it as a Bearer token; stdio clients can only use master context when `stdio_trust_local = true` is set explicitly.
 
 ## Troubleshooting
 
-- **"tool call failed: model 'foo' not found"**: the `model` parameter passed to the tool does not match any `name` in `[[models]]`. Check `liter-llm-proxy.toml` and restart.
+- **"tool call failed: model 'foo' not found"**: the `model` parameter passed to the tool does not match any `name` in `[[models]]`. Check `liter-llm-proxy.toml` and restart or use `--watch`.
+- **stdio refuses to start**: add `[mcp] stdio_key_id = "vk-..."` for a configured virtual key, or `[mcp] stdio_trust_local = true` for a trusted local-only setup.
+- **HTTP returns 401**: include `Authorization: Bearer <master-or-virtual-key>` on the `POST /mcp` request.
 - **stdio transport hangs on startup**: the client expects a JSON-RPC handshake on stdin. Make sure you are launching `liter-llm mcp` from an MCP client, not an interactive shell.
 - **HTTP transport returns 404**: the endpoint is `/mcp`, not `/`. Every request is `POST /mcp`.
 - **Image or audio tools return empty content**: the underlying provider may not support the feature. Check [Providers](../providers.md) for per-provider capability.

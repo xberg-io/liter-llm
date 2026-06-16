@@ -273,7 +273,7 @@ impl LiterLlmMcp {
             .get_service(first_model)
             .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
 
-        let resp = svc.call(LlmRequest::ListModels).await.map_err(to_error_data)?;
+        let resp = svc.call(LlmRequest::ListModels()).await.map_err(to_error_data)?;
 
         match resp {
             LlmResponse::ListModels(r) => json_success(&r),
@@ -848,7 +848,7 @@ impl ServerHandler for LiterLlmMcp {
         InitializeResult::new(capabilities)
             .with_server_info(Implementation::new("liter-llm", env!("CARGO_PKG_VERSION")))
             .with_instructions(
-                "LiterLLM proxy — universal LLM API gateway with 142+ providers. \
+                "LiterLLM proxy — universal LLM API gateway with 143 providers. \
                  Use the chat tool to send completion requests, embed for embeddings, \
                  and the file/batch/response tools for management operations.",
             )
@@ -872,6 +872,7 @@ mod tests {
             rpm: None,
             tpm: None,
             budget_limit: None,
+            provider_credentials: vec![],
         };
         KeyContext::from_config(&cfg)
     }

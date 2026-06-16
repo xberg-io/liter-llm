@@ -736,6 +736,22 @@ Token usage for a response.
 
 ---
 
+### WaitForBatchConfig
+
+Configuration for polling a batch until terminal status.
+
+All time values are in seconds as `f64` so the struct bridges across FFI
+boundaries without requiring a `Duration` shim.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `initial_interval_secs` | `float` | `5` | Initial interval between polls, in seconds. |
+| `max_interval_secs` | `float` | `60` | Maximum interval between polls (backoff plateau), in seconds. |
+| `backoff_multiplier` | `float` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
+| `timeout_secs` | `float \| None` | `None` | Optional timeout in seconds — polling fails if this duration is exceeded. |
+
+---
+
 ### CustomProviderConfig
 
 Configuration for registering a custom LLM provider at runtime.
@@ -749,9 +765,40 @@ Configuration for registering a custom LLM provider at runtime.
 
 ---
 
+### ProviderCapabilities
+
+Static capability flags for a provider.
+
+Each flag indicates whether the provider's models *generally* support that
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
+OpenRouter, vLLM) the flags reflect the superset of available model
+capabilities — a flag being `True` means at least one model supports the
+feature, not every model.
+
+All flags default to `False` so that newly added providers are safe.
+
+Access via the crate-level `capabilities` function:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `vision` | `bool` | — | The provider accepts image input in chat messages. |
+| `reasoning` | `bool` | — | The provider supports extended-thinking / reasoning tokens. |
+| `structured_output` | `bool` | — | The provider supports JSON-mode or `response_format` structured output. |
+| `function_calling` | `bool` | — | The provider supports tool / function calling. |
+| `audio_in` | `bool` | — | The provider accepts audio as input. |
+| `audio_out` | `bool` | — | The provider can generate audio / TTS output. |
+| `video_in` | `bool` | — | The provider accepts video as input. |
+
+---
+
 ### ProviderConfig
 
 Static configuration for a single provider entry in providers.json.
+
+This struct deliberately does not include capability flags or streaming
+format, which are accessed via the `capabilities` function. Keeping
+these fields separate preserves backward compatibility with all generated
+binding code that constructs `ProviderConfig` using struct literal syntax.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|

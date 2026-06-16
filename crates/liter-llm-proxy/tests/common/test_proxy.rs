@@ -1,11 +1,15 @@
 use std::sync::Arc;
 
+use arc_swap::ArcSwap;
 use axum::Router;
+use liter_llm::observability::UsageSinkErased;
+use liter_llm::tenant::KeyResolver;
 
 use liter_llm_proxy::auth::KeyStore;
 use liter_llm_proxy::config::ProxyConfig;
 use liter_llm_proxy::file_store::FileStore;
 use liter_llm_proxy::routes::build_router;
+use liter_llm_proxy::secrets::{EnvVarSecretManager, SecretManagerRegistry};
 use liter_llm_proxy::service_pool::ServicePool;
 use liter_llm_proxy::state::AppState;
 
@@ -26,16 +30,63 @@ impl TestProxy {
 
     /// Create a proxy with a fully customised configuration.
     pub fn with_config(config: ProxyConfig) -> Self {
-        let service_pool = ServicePool::from_config(&config).expect("ServicePool::from_config");
+        let service_pool = ServicePool::from_config(&config, None).expect("ServicePool::from_config");
         let key_store = KeyStore::from_config(config.general.master_key.clone(), &config.keys);
         let file_store = FileStore::from_config(config.files.as_ref().unwrap_or(&Default::default()))
             .expect("FileStore::from_config");
 
+        let key_store = Arc::new(key_store);
         let state = AppState {
-            key_store: Arc::new(key_store),
+            key_store: key_store.clone(),
+            key_resolver: key_store,
             service_pool: Arc::new(service_pool),
             file_store: Arc::new(file_store),
-            config: Arc::new(config),
+            config: Arc::new(ArcSwap::new(Arc::new(config))),
+            secret_registry: Arc::new(
+                SecretManagerRegistry::builder()
+                    .register("env", Arc::new(EnvVarSecretManager::new()))
+                    .default_backend(Arc::new(EnvVarSecretManager::new()))
+                    .build(),
+            ),
+            shutdown: None,
+            usage_sink: None,
+        };
+
+        Self { state }
+    }
+
+    /// Create a proxy with injected key resolver and/or usage sink.
+    ///
+    /// Both overrides are optional: pass `None` to keep the default behaviour.
+    #[allow(dead_code)]
+    pub fn with_injection(
+        mock_url: &str,
+        key_resolver: Option<Arc<dyn KeyResolver>>,
+        usage_sink: Option<Arc<dyn UsageSinkErased>>,
+    ) -> Self {
+        let config = default_config(mock_url);
+        let service_pool = ServicePool::from_config(&config, usage_sink.clone()).expect("ServicePool::from_config");
+        let key_store = KeyStore::from_config(config.general.master_key.clone(), &config.keys);
+        let file_store = FileStore::from_config(config.files.as_ref().unwrap_or(&Default::default()))
+            .expect("FileStore::from_config");
+
+        let key_store = Arc::new(key_store);
+        let resolver: Arc<dyn KeyResolver> = key_resolver.unwrap_or_else(|| key_store.clone() as Arc<dyn KeyResolver>);
+
+        let state = AppState {
+            key_store,
+            key_resolver: resolver,
+            service_pool: Arc::new(service_pool),
+            file_store: Arc::new(file_store),
+            config: Arc::new(ArcSwap::new(Arc::new(config))),
+            secret_registry: Arc::new(
+                SecretManagerRegistry::builder()
+                    .register("env", Arc::new(EnvVarSecretManager::new()))
+                    .default_backend(Arc::new(EnvVarSecretManager::new()))
+                    .build(),
+            ),
+            shutdown: None,
+            usage_sink,
         };
 
         Self { state }

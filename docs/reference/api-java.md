@@ -2,7 +2,7 @@
 title: "Java API Reference"
 ---
 
-## Java API Reference <span class="version-badge">v1.5.1</span>
+## Java API Reference <span class="version-badge">v1.6.0</span>
 
 ### Functions
 
@@ -25,6 +25,12 @@ constructed, or if the resolved provider configuration is invalid.
 public static DefaultClient createClient(String apiKey, String baseUrl, long timeoutSecs, int maxRetries, String modelHint) throws Error
 ```
 
+**Example:**
+
+```java
+var result = createClient("value", "value", 42, 42, "value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -36,6 +42,7 @@ public static DefaultClient createClient(String apiKey, String baseUrl, long tim
 | `modelHint` | `Optional<String>` | No | The model hint |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Throws `ErrorException`.
 
 ---
@@ -57,6 +64,12 @@ contains unknown fields.
 public static DefaultClient createClientFromJson(String json) throws Error
 ```
 
+**Example:**
+
+```java
+var result = createClientFromJson("value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -64,6 +77,7 @@ public static DefaultClient createClientFromJson(String json) throws Error
 | `json` | `String` | Yes | The json |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Throws `ErrorException`.
 
 ---
@@ -86,13 +100,20 @@ no model prefixes).
 public static void registerCustomProvider(CustomProviderConfig config) throws Error
 ```
 
+**Example:**
+
+```java
+registerCustomProvider(new CustomProviderConfig());
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `config` | `CustomProviderConfig` | Yes | The configuration options |
 
-**Returns:** `void`
+**Returns:** No return value.
+
 **Errors:** Throws `ErrorException`.
 
 ---
@@ -114,6 +135,12 @@ Returns an error only if the internal lock is poisoned.
 public static boolean unregisterCustomProvider(String name) throws Error
 ```
 
+**Example:**
+
+```java
+var result = unregisterCustomProvider("value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -121,7 +148,42 @@ public static boolean unregisterCustomProvider(String name) throws Error
 | `name` | `String` | Yes | The name |
 
 **Returns:** `boolean`
+
 **Errors:** Throws `ErrorException`.
+
+---
+
+#### capabilities()
+
+Return the capability flags for a named provider.
+
+Performs an O(n) linear scan over the embedded registry (142 entries).
+Returns an owned value so that bindings can box/copy it across the FFI
+boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+so this is a cheap memcpy of seven `bool` fields.
+
+For unknown `provider_name` values the function returns an all-`false`
+sentinel so callers never need to handle `Option`.
+
+**Signature:**
+
+```java
+public static ProviderCapabilities capabilities(String providerName)
+```
+
+**Example:**
+
+```java
+var result = capabilities("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `providerName` | `String` | Yes | The provider name |
+
+**Returns:** `ProviderCapabilities`
 
 ---
 
@@ -130,6 +192,8 @@ public static boolean unregisterCustomProvider(String name) throws Error
 Return all provider configs from the registry.
 
 Useful for tooling, documentation generation, or runtime enumeration.
+Returns the public `ProviderConfig` slice (without capability flags).
+To query capability flags for a specific provider use `capabilities`.
 
 **Signature:**
 
@@ -137,7 +201,14 @@ Useful for tooling, documentation generation, or runtime enumeration.
 public static List<ProviderConfig> allProviders() throws Error
 ```
 
+**Example:**
+
+```java
+var result = allProviders();
+```
+
 **Returns:** `List<ProviderConfig>`
+
 **Errors:** Throws `ErrorException`.
 
 ---
@@ -157,7 +228,14 @@ The returned reference points into the static registry — no allocation.
 public static List<String> complexProviderNames() throws Error
 ```
 
+**Example:**
+
+```java
+var result = complexProviderNames();
+```
+
 **Returns:** `List<String>`
+
 **Errors:** Throws `ErrorException`.
 
 ---
@@ -178,6 +256,12 @@ are tried by stripping from the last `-` or `.` separator. For example,
 
 ```java
 public static Optional<Double> completionCost(String model, long promptTokens, long completionTokens)
+```
+
+**Example:**
+
+```java
+var result = completionCost("value", 42, 42);
 ```
 
 **Parameters:**
@@ -213,6 +297,12 @@ registry, mirroring `completion_cost`.
 public static Optional<Double> completionCostWithCache(String model, long promptTokens, long cachedTokens, long completionTokens)
 ```
 
+**Example:**
+
+```java
+var result = completionCostWithCache("value", 42, 42, 42);
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -223,6 +313,32 @@ public static Optional<Double> completionCostWithCache(String model, long prompt
 | `completionTokens` | `long` | Yes | The completion tokens |
 
 **Returns:** `Optional<Double>`
+
+---
+
+#### clear()
+
+Remove all guardrails from the global registry.
+
+Primarily useful in tests to reset state between test cases.
+
+**Panics:**
+
+Panics if the global registry lock is poisoned.
+
+**Signature:**
+
+```java
+public static void clear()
+```
+
+**Example:**
+
+```java
+clear();
+```
+
+**Returns:** No return value.
 
 ---
 
@@ -245,6 +361,12 @@ Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
 public static long countTokens(String model, String text) throws Error
 ```
 
+**Example:**
+
+```java
+var result = countTokens("value", "value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -253,6 +375,7 @@ public static long countTokens(String model, String text) throws Error
 | `text` | `String` | Yes | The text |
 
 **Returns:** `long`
+
 **Errors:** Throws `ErrorException`.
 
 ---
@@ -277,6 +400,12 @@ if tokenization fails for any message.
 public static long countRequestTokens(String model, ChatCompletionRequest req) throws Error
 ```
 
+**Example:**
+
+```java
+var result = countRequestTokens("value", new ChatCompletionRequest());
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -285,6 +414,42 @@ public static long countRequestTokens(String model, ChatCompletionRequest req) t
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
 **Returns:** `long`
+
+**Errors:** Throws `ErrorException`.
+
+---
+
+#### checkBound()
+
+Assert that `current_len + incoming` does not exceed `limit`.
+
+Call this before appending `incoming` bytes to any buffer that must
+stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
+and emits a `tracing.warn!` with context.
+
+**Signature:**
+
+```java
+public static void checkBound(String context, long currentLen, long incoming, long limit) throws Error
+```
+
+**Example:**
+
+```java
+checkBound("value", 42, 42, 42);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `context` | `String` | Yes | The context |
+| `currentLen` | `long` | Yes | The current len |
+| `incoming` | `long` | Yes | The incoming |
+| `limit` | `long` | Yes | The limit |
+
+**Returns:** No return value.
+
 **Errors:** Throws `ErrorException`.
 
 ---
@@ -314,7 +479,13 @@ present and no crypto provider installation is needed.
 public static void ensureCryptoProvider()
 ```
 
-**Returns:** `void`
+**Example:**
+
+```java
+ensureCryptoProvider();
+```
+
+**Returns:** No return value.
 
 ---
 
@@ -426,15 +597,23 @@ Configuration for budget enforcement.
 | `modelLimits` | `Map<String, Double>` | `Collections.emptyMap()` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
 | `enforcement` | `Enforcement` | `Enforcement.HARD` | Whether to reject requests or merely warn when a limit is exceeded. |
 
-### Methods
+##### Methods
 
-#### defaultOptions()
+###### defaultOptions()
 
 **Signature:**
 
 ```java
 public static BudgetConfig defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = BudgetConfig.defaultOptions();
+```
+
+**Returns:** `BudgetConfig`
 
 ---
 
@@ -448,15 +627,23 @@ Configuration for the response cache.
 | `ttl` | `Duration` | `300000ms` | Time-to-live for each cached entry. |
 | `backend` | `CacheBackend` | `CacheBackend.MEMORY` | Storage backend to use. |
 
-### Methods
+##### Methods
 
-#### defaultOptions()
+###### defaultOptions()
 
 **Signature:**
 
 ```java
 public static CacheConfig defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = CacheConfig.defaultOptions();
+```
+
+**Returns:** `CacheConfig`
 
 ---
 
@@ -543,6 +730,51 @@ A single completion choice.
 | `index` | `int` | — | Index of this choice in the choices array. |
 | `message` | `AssistantMessage` | — | The assistant's message response. |
 | `finishReason` | `Optional<FinishReason>` | `null` | Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). |
+
+---
+
+#### ChunkMiddleware
+
+A per-chunk transformation in the `StreamPipeline`.
+
+Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
+to pass it through (optionally modified), `Ok(None)` to drop the chunk,
+or `Err(e)` to propagate a stream error.
+
+The trait is object-safe so implementations can be stored in a
+`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+
+##### Methods
+
+###### process()
+
+Process a single chunk.
+
+- `Ok(Some(chunk))` — emit (possibly transformed) chunk.
+- `Ok(None)` — drop this chunk silently.
+- `Err(e)` — propagate as a stream error.
+
+**Signature:**
+
+```java
+public Optional<ChatCompletionChunk> process(ChatCompletionChunk chunk) throws Error
+```
+
+**Example:**
+
+```java
+var result = instance.process(new ChatCompletionChunk());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `chunk` | `ChatCompletionChunk` | Yes | The chat completion chunk |
+
+**Returns:** `Optional<ChatCompletionChunk>`
+
+**Errors:** Throws `ErrorException`.
 
 ---
 
@@ -664,9 +896,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-### Methods
+##### Methods
 
-#### chat()
+###### chat()
 
 **Signature:**
 
@@ -674,7 +906,23 @@ headers are cached at construction to avoid redundant encoding on every request.
 public ChatCompletionResponse chat(ChatCompletionRequest req) throws Error
 ```
 
-#### chatStream()
+**Example:**
+
+```java
+var result = instance.chat(new ChatCompletionRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `ChatCompletionResponse`
+
+**Errors:** Throws `ErrorException`.
+
+###### chatStream()
 
 **Signature:**
 
@@ -682,7 +930,23 @@ public ChatCompletionResponse chat(ChatCompletionRequest req) throws Error
 public String chatStream(ChatCompletionRequest req) throws Error
 ```
 
-#### embed()
+**Example:**
+
+```java
+var result = instance.chatStream(new ChatCompletionRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `String`
+
+**Errors:** Throws `ErrorException`.
+
+###### embed()
 
 **Signature:**
 
@@ -690,7 +954,23 @@ public String chatStream(ChatCompletionRequest req) throws Error
 public EmbeddingResponse embed(EmbeddingRequest req) throws Error
 ```
 
-#### listModels()
+**Example:**
+
+```java
+var result = instance.embed(new EmbeddingRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `EmbeddingRequest` | Yes | The embedding request |
+
+**Returns:** `EmbeddingResponse`
+
+**Errors:** Throws `ErrorException`.
+
+###### listModels()
 
 **Signature:**
 
@@ -698,7 +978,17 @@ public EmbeddingResponse embed(EmbeddingRequest req) throws Error
 public ModelsListResponse listModels() throws Error
 ```
 
-#### imageGenerate()
+**Example:**
+
+```java
+var result = instance.listModels();
+```
+
+**Returns:** `ModelsListResponse`
+
+**Errors:** Throws `ErrorException`.
+
+###### imageGenerate()
 
 **Signature:**
 
@@ -706,7 +996,23 @@ public ModelsListResponse listModels() throws Error
 public ImagesResponse imageGenerate(CreateImageRequest req) throws Error
 ```
 
-#### speech()
+**Example:**
+
+```java
+var result = instance.imageGenerate(new CreateImageRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateImageRequest` | Yes | The create image request |
+
+**Returns:** `ImagesResponse`
+
+**Errors:** Throws `ErrorException`.
+
+###### speech()
 
 **Signature:**
 
@@ -714,7 +1020,23 @@ public ImagesResponse imageGenerate(CreateImageRequest req) throws Error
 public byte[] speech(CreateSpeechRequest req) throws Error
 ```
 
-#### transcribe()
+**Example:**
+
+```java
+var result = instance.speech(new CreateSpeechRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateSpeechRequest` | Yes | The create speech request |
+
+**Returns:** `byte[]`
+
+**Errors:** Throws `ErrorException`.
+
+###### transcribe()
 
 **Signature:**
 
@@ -722,7 +1044,23 @@ public byte[] speech(CreateSpeechRequest req) throws Error
 public TranscriptionResponse transcribe(CreateTranscriptionRequest req) throws Error
 ```
 
-#### moderate()
+**Example:**
+
+```java
+var result = instance.transcribe(new CreateTranscriptionRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
+
+**Returns:** `TranscriptionResponse`
+
+**Errors:** Throws `ErrorException`.
+
+###### moderate()
 
 **Signature:**
 
@@ -730,7 +1068,23 @@ public TranscriptionResponse transcribe(CreateTranscriptionRequest req) throws E
 public ModerationResponse moderate(ModerationRequest req) throws Error
 ```
 
-#### rerank()
+**Example:**
+
+```java
+var result = instance.moderate(new ModerationRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ModerationRequest` | Yes | The moderation request |
+
+**Returns:** `ModerationResponse`
+
+**Errors:** Throws `ErrorException`.
+
+###### rerank()
 
 **Signature:**
 
@@ -738,7 +1092,23 @@ public ModerationResponse moderate(ModerationRequest req) throws Error
 public RerankResponse rerank(RerankRequest req) throws Error
 ```
 
-#### search()
+**Example:**
+
+```java
+var result = instance.rerank(new RerankRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `RerankRequest` | Yes | The rerank request |
+
+**Returns:** `RerankResponse`
+
+**Errors:** Throws `ErrorException`.
+
+###### search()
 
 **Signature:**
 
@@ -746,7 +1116,23 @@ public RerankResponse rerank(RerankRequest req) throws Error
 public SearchResponse search(SearchRequest req) throws Error
 ```
 
-#### ocr()
+**Example:**
+
+```java
+var result = instance.search(new SearchRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `SearchRequest` | Yes | The search request |
+
+**Returns:** `SearchResponse`
+
+**Errors:** Throws `ErrorException`.
+
+###### ocr()
 
 **Signature:**
 
@@ -754,7 +1140,23 @@ public SearchResponse search(SearchRequest req) throws Error
 public OcrResponse ocr(OcrRequest req) throws Error
 ```
 
-#### createFile()
+**Example:**
+
+```java
+var result = instance.ocr(new OcrRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `OcrRequest` | Yes | The ocr request |
+
+**Returns:** `OcrResponse`
+
+**Errors:** Throws `ErrorException`.
+
+###### createFile()
 
 **Signature:**
 
@@ -762,7 +1164,23 @@ public OcrResponse ocr(OcrRequest req) throws Error
 public FileObject createFile(CreateFileRequest req) throws Error
 ```
 
-#### retrieveFile()
+**Example:**
+
+```java
+var result = instance.createFile(new CreateFileRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateFileRequest` | Yes | The create file request |
+
+**Returns:** `FileObject`
+
+**Errors:** Throws `ErrorException`.
+
+###### retrieveFile()
 
 **Signature:**
 
@@ -770,7 +1188,23 @@ public FileObject createFile(CreateFileRequest req) throws Error
 public FileObject retrieveFile(String fileId) throws Error
 ```
 
-#### deleteFile()
+**Example:**
+
+```java
+var result = instance.retrieveFile("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `fileId` | `String` | Yes | The file id |
+
+**Returns:** `FileObject`
+
+**Errors:** Throws `ErrorException`.
+
+###### deleteFile()
 
 **Signature:**
 
@@ -778,7 +1212,23 @@ public FileObject retrieveFile(String fileId) throws Error
 public DeleteResponse deleteFile(String fileId) throws Error
 ```
 
-#### listFiles()
+**Example:**
+
+```java
+var result = instance.deleteFile("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `fileId` | `String` | Yes | The file id |
+
+**Returns:** `DeleteResponse`
+
+**Errors:** Throws `ErrorException`.
+
+###### listFiles()
 
 **Signature:**
 
@@ -786,7 +1236,23 @@ public DeleteResponse deleteFile(String fileId) throws Error
 public FileListResponse listFiles(FileListQuery query) throws Error
 ```
 
-#### fileContent()
+**Example:**
+
+```java
+var result = instance.listFiles(new FileListQuery());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `Optional<FileListQuery>` | No | The file list query |
+
+**Returns:** `FileListResponse`
+
+**Errors:** Throws `ErrorException`.
+
+###### fileContent()
 
 **Signature:**
 
@@ -794,7 +1260,23 @@ public FileListResponse listFiles(FileListQuery query) throws Error
 public byte[] fileContent(String fileId) throws Error
 ```
 
-#### createBatch()
+**Example:**
+
+```java
+var result = instance.fileContent("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `fileId` | `String` | Yes | The file id |
+
+**Returns:** `byte[]`
+
+**Errors:** Throws `ErrorException`.
+
+###### createBatch()
 
 **Signature:**
 
@@ -802,7 +1284,23 @@ public byte[] fileContent(String fileId) throws Error
 public BatchObject createBatch(CreateBatchRequest req) throws Error
 ```
 
-#### retrieveBatch()
+**Example:**
+
+```java
+var result = instance.createBatch(new CreateBatchRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateBatchRequest` | Yes | The create batch request |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `ErrorException`.
+
+###### retrieveBatch()
 
 **Signature:**
 
@@ -810,7 +1308,23 @@ public BatchObject createBatch(CreateBatchRequest req) throws Error
 public BatchObject retrieveBatch(String batchId) throws Error
 ```
 
-#### listBatches()
+**Example:**
+
+```java
+var result = instance.retrieveBatch("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `String` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `ErrorException`.
+
+###### listBatches()
 
 **Signature:**
 
@@ -818,7 +1332,23 @@ public BatchObject retrieveBatch(String batchId) throws Error
 public BatchListResponse listBatches(BatchListQuery query) throws Error
 ```
 
-#### cancelBatch()
+**Example:**
+
+```java
+var result = instance.listBatches(new BatchListQuery());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `Optional<BatchListQuery>` | No | The batch list query |
+
+**Returns:** `BatchListResponse`
+
+**Errors:** Throws `ErrorException`.
+
+###### cancelBatch()
 
 **Signature:**
 
@@ -826,7 +1356,83 @@ public BatchListResponse listBatches(BatchListQuery query) throws Error
 public BatchObject cancelBatch(String batchId) throws Error
 ```
 
-#### createResponse()
+**Example:**
+
+```java
+var result = instance.cancelBatch("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `String` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `ErrorException`.
+
+###### fetchBatchForPolling()
+
+**Signature:**
+
+```java
+public BatchObject fetchBatchForPolling(String batchId) throws Error
+```
+
+**Example:**
+
+```java
+var result = instance.fetchBatchForPolling("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `String` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `ErrorException`.
+
+###### waitForBatch()
+
+Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
+
+Uses exponential backoff with configurable initial interval, maximum interval, and backoff multiplier.
+Optionally supports a timeout that aborts polling if exceeded.
+
+**Errors:**
+
+Returns `BatchWaitError.Failed` if the batch reaches a failure terminal status.
+Returns `BatchWaitError.Timeout` if the configured timeout is exceeded.
+Returns `BatchWaitError.Client` for underlying client errors.
+
+**Signature:**
+
+```java
+public BatchObject waitForBatch(String batchId, WaitForBatchConfig config) throws BatchWaitError
+```
+
+**Example:**
+
+```java
+var result = instance.waitForBatch("value", new WaitForBatchConfig());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `String` | Yes | The batch id |
+| `config` | `WaitForBatchConfig` | Yes | The configuration options |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `BatchWaitErrorException`.
+
+###### createResponse()
 
 **Signature:**
 
@@ -834,7 +1440,23 @@ public BatchObject cancelBatch(String batchId) throws Error
 public ResponseObject createResponse(CreateResponseRequest req) throws Error
 ```
 
-#### retrieveResponse()
+**Example:**
+
+```java
+var result = instance.createResponse(new CreateResponseRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateResponseRequest` | Yes | The create response request |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Throws `ErrorException`.
+
+###### retrieveResponse()
 
 **Signature:**
 
@@ -842,13 +1464,45 @@ public ResponseObject createResponse(CreateResponseRequest req) throws Error
 public ResponseObject retrieveResponse(String responseId) throws Error
 ```
 
-#### cancelResponse()
+**Example:**
+
+```java
+var result = instance.retrieveResponse("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `responseId` | `String` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Throws `ErrorException`.
+
+###### cancelResponse()
 
 **Signature:**
 
 ```java
 public ResponseObject cancelResponse(String responseId) throws Error
 ```
+
+**Example:**
+
+```java
+var result = instance.cancelResponse("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `responseId` | `String` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Throws `ErrorException`.
 
 ---
 
@@ -1000,6 +1654,45 @@ Deprecated legacy function-role message body.
 
 ---
 
+#### HealthChecker
+
+Abstraction over a health probe strategy.
+
+Implementors issue a lightweight probe against `upstream` (typically a
+provider base URL or named identifier) and report `HealthStatus`.
+
+##### Methods
+
+###### check()
+
+Probe `upstream` and return its current `HealthStatus`.
+
+The parameter is taken by value (`String`) so that implementations can
+move it into the returned future without a clone, making the
+`'static + Send` bound on the future trivially satisfiable.
+
+**Signature:**
+
+```java
+public HealthStatus check(String upstream)
+```
+
+**Example:**
+
+```java
+var result = instance.check("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `upstream` | `String` | Yes | The upstream |
+
+**Returns:** `HealthStatus`
+
+---
+
 #### Image
 
 A single generated image, returned as either a URL or base64 data.
@@ -1031,6 +1724,18 @@ Response containing generated images.
 |-------|------|---------|-------------|
 | `created` | `long` | — | Unix timestamp of image creation. |
 | `data` | `List<Image>` | `Collections.emptyList()` | List of generated images. |
+
+---
+
+#### IntentPrototype
+
+An intent prototype: `(intent_name, prototype_embedding, target_model_id)`.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `String` | — | Human-readable name for the intent (used in logs/metrics). |
+| `embedding` | `List<Double>` | — | Pre-computed embedding vector for this intent. |
+| `model` | `String` | — | Model to route to when this intent is detected. |
 
 ---
 
@@ -1222,9 +1927,40 @@ discounted rate and the remainder at the regular input rate.
 
 ---
 
+#### ProviderCapabilities
+
+Static capability flags for a provider.
+
+Each flag indicates whether the provider's models *generally* support that
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
+OpenRouter, vLLM) the flags reflect the superset of available model
+capabilities — a flag being `true` means at least one model supports the
+feature, not every model.
+
+All flags default to `false` so that newly added providers are safe.
+
+Access via the crate-level `capabilities` function:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `vision` | `boolean` | — | The provider accepts image input in chat messages. |
+| `reasoning` | `boolean` | — | The provider supports extended-thinking / reasoning tokens. |
+| `structuredOutput` | `boolean` | — | The provider supports JSON-mode or `response_format` structured output. |
+| `functionCalling` | `boolean` | — | The provider supports tool / function calling. |
+| `audioIn` | `boolean` | — | The provider accepts audio as input. |
+| `audioOut` | `boolean` | — | The provider can generate audio / TTS output. |
+| `videoIn` | `boolean` | — | The provider accepts video as input. |
+
+---
+
 #### ProviderConfig
 
 Static configuration for a single provider entry in providers.json.
+
+This struct deliberately does not include capability flags or streaming
+format, which are accessed via the `capabilities` function. Keeping
+these fields separate preserves backward compatibility with all generated
+binding code that constructs `ProviderConfig` using struct literal syntax.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -1248,15 +1984,23 @@ Configuration for per-model rate limits.
 | `tpm` | `Optional<Long>` | `null` | Maximum tokens per window.  `null` means unlimited. |
 | `window` | `Duration` | `60000ms` | Fixed window duration (defaults to 60 s). |
 
-### Methods
+##### Methods
 
-#### defaultOptions()
+###### defaultOptions()
 
 **Signature:**
 
 ```java
 public static RateLimitConfig defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = RateLimitConfig.defaultOptions();
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -1394,6 +2138,16 @@ An individual search result.
 | `url` | `String` | — | Result URL. |
 | `snippet` | `String` | — | Text snippet or excerpt from the page. |
 | `date` | `Optional<String>` | `/* serde(default) */` | Publication or last-updated date, if available. |
+
+---
+
+#### SingleflightResult
+
+The value broadcast from a singleflight leader to all followers.
+
+`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
+broadcast channels require `T: Clone`. The `Arc` adds only a reference-count
+bump per follower, which is negligible under the burst loads this layer targets.
 
 ---
 
@@ -1560,6 +2314,40 @@ User message in the conversation.
 |-------|------|---------|-------------|
 | `content` | `UserContent` | `UserContent.TEXT` | Message content as plain text or array of content parts (text, images, documents, audio). |
 | `name` | `Optional<String>` | `null` | Optional name for the user. |
+
+---
+
+#### WaitForBatchConfig
+
+Configuration for polling a batch until terminal status.
+
+All time values are in seconds as `f64` so the struct bridges across FFI
+boundaries without requiring a `Duration` shim.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `initialIntervalSecs` | `double` | `5` | Initial interval between polls, in seconds. |
+| `maxIntervalSecs` | `double` | `60` | Maximum interval between polls (backoff plateau), in seconds. |
+| `backoffMultiplier` | `float` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
+| `timeoutSecs` | `Optional<Double>` | `null` | Optional timeout in seconds — polling fails if this duration is exceeded. |
+
+##### Methods
+
+###### defaultOptions()
+
+**Signature:**
+
+```java
+public static WaitForBatchConfig defaultOptions()
+```
+
+**Example:**
+
+```java
+var result = WaitForBatchConfig.defaultOptions();
+```
+
+**Returns:** `WaitForBatchConfig`
 
 ---
 
@@ -1800,6 +2588,22 @@ How the API key is sent in the HTTP request.
 
 ---
 
+#### StreamFormat
+
+The streaming wire format a provider uses for its response stream.
+
+Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
+a proprietary binary EventStream framing.
+
+Deserialized from the `streaming_format` JSON field via `serde`.
+
+| Value | Description |
+|-------|-------------|
+| `SSE` | Standard Server-Sent Events (text/event-stream). |
+| `AWS_EVENT_STREAM` | AWS EventStream binary framing (application/vnd.amazon.eventstream). |
+
+---
+
 #### AuthType
 
 Auth scheme used by a provider.
@@ -1835,6 +2639,29 @@ Storage backend for the response cache.
 
 ---
 
+#### CircuitState
+
+Observable state of a circuit breaker.
+
+| Value | Description |
+|-------|-------------|
+| `CLOSED` | Requests flow through normally. |
+| `OPEN` | All requests are rejected; the circuit is waiting for the backoff to elapse. |
+| `HALF_OPEN` | One probe request is allowed through to test service health. |
+
+---
+
+#### HealthStatus
+
+The result of a single health probe.
+
+| Value | Description |
+|-------|-------------|
+| `HEALTHY` | The probe succeeded; the upstream is reachable. |
+| `UNHEALTHY` | The probe failed; the upstream may be down. |
+
+---
+
 ### Errors
 
 #### LiterLlmError
@@ -1860,5 +2687,7 @@ All errors that can occur when using `liter-llm`.
 | `HOOK_REJECTED` | hook rejected: {message} |
 | `INTERNAL_ERROR` | An internal logic error (e.g. unexpected Tower response variant). This should never surface in normal operation — if it does, it indicates a bug in the library. |
 | `OUTBOUND_FORBIDDEN` | An outbound request was blocked by the active `OutboundPolicy`. Returned when `register_custom_provider` is called with a `base_url` that violates the policy (e.g. a private-range IP under `DenyPrivate`), or when the per-connection DNS resolver detects a forbidden address at connect time. |
+| `IDEMPOTENCY_CONFLICT` | A different request body was submitted for an existing `Idempotency-Key`. Per the OpenAI `Idempotency-Key` convention, once a key is used with a particular request body, subsequent requests using the same key must carry an identical body.  A body mismatch is a hard error (not retryable). HTTP equivalent: 409 Conflict. |
+| `IDEMPOTENCY_IN_FLIGHT` | The same `Idempotency-Key` is already in-flight (another request with the same key is currently being processed). The caller should wait briefly and retry.  The response is not yet available, and this request has been short-circuited to avoid running the operation twice. HTTP equivalent: 409 Conflict (retryable after a brief delay). |
 
 ---

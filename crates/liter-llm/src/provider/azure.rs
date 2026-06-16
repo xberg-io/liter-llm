@@ -461,7 +461,11 @@ mod tests {
         );
         assert!(body.get("top_p").is_none(), "top_p should be removed for O-series");
         // reasoning_effort preserved
-        assert_eq!(body.get("reasoning_effort").unwrap(), "high");
+        assert_eq!(
+            body.get("reasoning_effort")
+                .expect("reasoning_effort should be present"),
+            "high"
+        );
         // messages preserved
         assert!(body.get("messages").is_some());
     }
@@ -587,7 +591,12 @@ mod tests {
         let message = &body["choices"][0]["message"];
         assert_eq!(message["role"], "assistant");
         assert!(message["content"].is_null());
-        assert!(message["refusal"].as_str().unwrap().contains("Content filtered"));
+        assert!(
+            message["refusal"]
+                .as_str()
+                .expect("refusal should be a string")
+                .contains("Content filtered")
+        );
     }
 
     #[test]

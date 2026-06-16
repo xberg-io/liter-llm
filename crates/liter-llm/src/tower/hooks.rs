@@ -11,6 +11,12 @@
 //!
 //! Hooks are invoked sequentially in registration order.
 //!
+//! Attach a [`crate::observability::UsageSink`] via
+//! [`HooksLayer::with_usage_sink`] to receive one
+//! [`crate::observability::UsageEvent`] per completed request (success or
+//! error). The sink call is best-effort: errors are logged and do not affect
+//! the caller's response.
+//!
 //! # Example
 //!
 //! ```rust,ignore
@@ -24,19 +30,29 @@
 //!     .service(LlmService::new(client));
 //! ```
 
+use std::cell::Cell;
 use std::future::Future;
 use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering as AtomicOrdering};
 use std::task::{Context, Poll};
+use std::time::Instant;
 
 use futures_util::FutureExt as _;
 use tower::Layer;
 use tower::Service;
 
+use super::cache::CACHE_STATE_CELL;
 use super::types::{LlmRequest, LlmResponse};
 use crate::client::BoxFuture;
 use crate::error::{LiterLlmError, Result};
+use crate::observability::usage::{CacheState, UsageEvent, UsageEventOutcome, UsageSinkErased};
+
+// Process-scoped counter used as a fallback request-id when no idempotency
+// key is attached. Monotonically increasing; uniqueness across processes is
+// not guaranteed — this is a best-effort correlation aid.
+static REQUEST_COUNTER: AtomicU64 = AtomicU64::new(1);
 
 // ─── Hook Trait ──────────────────────────────────────────────────────────────
 
@@ -75,6 +91,7 @@ pub trait LlmHook: Send + Sync + 'static {
 #[cfg_attr(alef, alef(skip))]
 pub struct HooksLayer {
     hooks: Arc<Vec<Arc<dyn LlmHook>>>,
+    usage_sink: Option<Arc<dyn UsageSinkErased>>,
 }
 
 impl HooksLayer {
@@ -83,13 +100,27 @@ impl HooksLayer {
     /// Hooks are invoked sequentially in the order they appear in the vector.
     #[must_use]
     pub fn new(hooks: Vec<Arc<dyn LlmHook>>) -> Self {
-        Self { hooks: Arc::new(hooks) }
+        Self {
+            hooks: Arc::new(hooks),
+            usage_sink: None,
+        }
     }
 
     /// Convenience constructor for a single hook.
     #[must_use]
     pub fn single(hook: Arc<dyn LlmHook>) -> Self {
         Self::new(vec![hook])
+    }
+
+    /// Attach a [`crate::observability::UsageSink`] that receives one
+    /// [`crate::observability::UsageEvent`] per completed request.
+    ///
+    /// The sink is invoked after all post-hooks complete, on both the success
+    /// and error paths. Emit errors are logged and do not propagate.
+    #[must_use]
+    pub fn with_usage_sink<S: crate::observability::UsageSink>(mut self, sink: Arc<S>) -> Self {
+        self.usage_sink = Some(sink as Arc<dyn UsageSinkErased>);
+        self
     }
 }
 
@@ -100,6 +131,7 @@ impl<S> Layer<S> for HooksLayer {
         HooksService {
             inner,
             hooks: Arc::clone(&self.hooks),
+            usage_sink: self.usage_sink.clone(),
         }
     }
 }
@@ -111,6 +143,7 @@ impl<S> Layer<S> for HooksLayer {
 pub struct HooksService<S> {
     inner: S,
     hooks: Arc<Vec<Arc<dyn LlmHook>>>,
+    usage_sink: Option<Arc<dyn UsageSinkErased>>,
 }
 
 impl<S: Clone> Clone for HooksService<S> {
@@ -118,6 +151,7 @@ impl<S: Clone> Clone for HooksService<S> {
         Self {
             inner: self.inner.clone(),
             hooks: Arc::clone(&self.hooks),
+            usage_sink: self.usage_sink.clone(),
         }
     }
 }
@@ -137,6 +171,7 @@ where
 
     fn call(&mut self, req: LlmRequest) -> Self::Future {
         let hooks = Arc::clone(&self.hooks);
+        let usage_sink = self.usage_sink.clone();
         // Clone the request so we can pass it to post-hooks after the inner
         // service consumes the original.
         let req_clone = req.clone();
@@ -158,8 +193,37 @@ where
                 }
             }
 
-            match fut.await {
+            let start = Instant::now();
+
+            // Arm the cancellation guard: if this future is dropped before
+            // reaching the normal completion path (e.g. the caller drops the
+            // future mid-flight), the guard's `Drop` impl fires a detached
+            // `Cancelled` event to the sink.
+            let mut cancel_guard = usage_sink
+                .as_ref()
+                .map(|s| CancellationGuard::new(Arc::clone(s), req_clone.clone(), start));
+
+            // Scope the task-local so downstream layers (CacheLayer,
+            // SingleflightLayer) can call `record_cache_state` and update it.
+            // The initial value is Bypass: requests that never reach the cache
+            // layer (streaming, policy bypass, no CacheLayer in the stack) keep
+            // Bypass without any extra code in those paths.
+            //
+            // The cell is read inside the scope (before the future returns) and
+            // its value is paired with the inner result so it survives past the
+            // scope boundary.
+            let (inner_result, cache_state) = CACHE_STATE_CELL
+                .scope(Cell::new(CacheState::Bypass), async {
+                    let result = fut.await;
+                    let state = CACHE_STATE_CELL.with(|c| c.get());
+                    (result, state)
+                })
+                .await;
+
+            match inner_result {
                 Ok(resp) => {
+                    let latency_ms = start.elapsed().as_millis() as u64;
+
                     // Post-hooks (success path) — panics are logged but do not
                     // propagate so the caller still receives the response.
                     for hook in hooks.iter() {
@@ -171,9 +235,34 @@ where
                             tracing::error!("hook panicked during on_response");
                         }
                     }
+
+                    // Disarm the cancellation guard before the sink emit so that
+                    // `Drop` does not also fire a `Cancelled` event.
+                    if let Some(guard) = cancel_guard.take() {
+                        guard.disarm();
+                    }
+
+                    if let Some(sink) = usage_sink {
+                        let event =
+                            build_usage_event(&req_clone, &resp, latency_ms, UsageEventOutcome::Success, cache_state);
+                        // Detach the sink call so slow backends don't add to
+                        // caller-observed latency.  Errors are logged by the task.
+                        tokio::spawn(async move {
+                            if let Err(err) = sink.emit_erased(event).await {
+                                tracing::warn!(
+                                    target: "gen_ai.usage",
+                                    error = %err,
+                                    "usage sink emit failed"
+                                );
+                            }
+                        });
+                    }
+
                     Ok(resp)
                 }
                 Err(err) => {
+                    let latency_ms = start.elapsed().as_millis() as u64;
+
                     // Post-hooks (error path) — panics are logged but do not
                     // replace the original error.
                     for hook in hooks.iter() {
@@ -185,10 +274,223 @@ where
                             tracing::error!("hook panicked during on_error");
                         }
                     }
+
+                    // Disarm before emitting the real error event.
+                    if let Some(guard) = cancel_guard.take() {
+                        guard.disarm();
+                    }
+
+                    if let Some(sink) = usage_sink {
+                        let outcome = classify_error_outcome(&err);
+                        let event = build_error_usage_event(&req_clone, latency_ms, outcome, cache_state);
+                        // Detach: slow sink must not add to error-path latency.
+                        tokio::spawn(async move {
+                            if let Err(sink_err) = sink.emit_erased(event).await {
+                                tracing::warn!(
+                                    target: "gen_ai.usage",
+                                    error = %sink_err,
+                                    "usage sink emit failed on error path"
+                                );
+                            }
+                        });
+                    }
+
                     Err(err)
                 }
             }
         })
+    }
+}
+
+// ─── CancellationGuard ───────────────────────────────────────────────────────
+
+/// RAII guard that emits a [`UsageEventOutcome::Cancelled`] event when dropped
+/// while still armed.
+///
+/// The guard is created just before the inner service future is awaited and
+/// disarmed immediately before the normal sink emit on both success and error
+/// paths.  If the enclosing future is dropped mid-flight (caller cancellation),
+/// the guard fires a fire-and-forget `Cancelled` event via [`tokio::spawn`].
+struct CancellationGuard {
+    /// The sink to emit to, wrapped in an `Option` so `disarm` can take it.
+    inner: Option<CancellationGuardInner>,
+}
+
+struct CancellationGuardInner {
+    sink: Arc<dyn UsageSinkErased>,
+    req: LlmRequest,
+    start: Instant,
+}
+
+impl CancellationGuard {
+    fn new(sink: Arc<dyn UsageSinkErased>, req: LlmRequest, start: Instant) -> Self {
+        Self {
+            inner: Some(CancellationGuardInner { sink, req, start }),
+        }
+    }
+
+    /// Disarm: drop the guard without firing the cancellation event.
+    fn disarm(mut self) {
+        self.inner = None;
+    }
+}
+
+impl Drop for CancellationGuard {
+    fn drop(&mut self) {
+        let Some(inner) = self.inner.take() else { return };
+
+        let latency_ms = inner.start.elapsed().as_millis() as u64;
+        // On cancellation there is no response and the cache state is unknown;
+        // Bypass is the safest fallback.
+        let event = build_error_usage_event(&inner.req, latency_ms, UsageEventOutcome::Cancelled, CacheState::Bypass);
+        let sink = inner.sink;
+
+        // Fire-and-forget: if a Tokio runtime is active, spawn the emit.
+        // If not (e.g. a synchronous test context drops the future), the
+        // event is silently discarded — correct behavior since there is no
+        // runtime to deliver it to anyway.
+        if let Ok(handle) = tokio::runtime::Handle::try_current() {
+            handle.spawn(async move {
+                if let Err(err) = sink.emit_erased(event).await {
+                    tracing::warn!(
+                        target: "gen_ai.usage",
+                        error = %err,
+                        "usage sink emit failed for cancelled request"
+                    );
+                }
+            });
+        }
+    }
+}
+
+// ─── UsageEvent construction helpers ─────────────────────────────────────────
+
+/// Derive a stable `request_id` from the request's idempotency key,
+/// falling back to a process-scoped counter.
+fn request_id(req: &LlmRequest) -> String {
+    req.idempotency_key
+        .clone()
+        .unwrap_or_else(|| REQUEST_COUNTER.fetch_add(1, AtomicOrdering::Relaxed).to_string())
+}
+
+/// Extract the provider prefix from a model string (the part before `/`).
+fn provider_from_model(model: &str) -> String {
+    model.split_once('/').map(|(prefix, _)| prefix).unwrap_or("").to_owned()
+}
+
+/// Map a `LiterLlmError` to a `UsageEventOutcome`.
+fn classify_error_outcome(err: &LiterLlmError) -> UsageEventOutcome {
+    match err {
+        LiterLlmError::Timeout => UsageEventOutcome::TimedOut,
+        _ => UsageEventOutcome::Error,
+    }
+}
+
+/// Extract the provider-echoed model name from a response variant, when available.
+///
+/// Returns `None` for variants that do not carry a model field in their response
+/// body (streaming chunks, speech bytes, transcription, rerank, list-models,
+/// image generation).
+fn effective_model_from_response(resp: &LlmResponse) -> Option<String> {
+    match resp {
+        LlmResponse::Chat(r) => Some(r.model.clone()),
+        LlmResponse::Embed(r) => Some(r.model.clone()),
+        LlmResponse::Moderate(r) => Some(r.model.clone()),
+        LlmResponse::Ocr(r) => Some(r.model.clone()),
+        LlmResponse::Search(r) => Some(r.model.clone()),
+        // Streaming carries no aggregate model field; speech is raw bytes;
+        // transcription, rerank, and list-models have no provider-echoed model.
+        LlmResponse::ChatStream(_)
+        | LlmResponse::Speech(_)
+        | LlmResponse::Transcribe(_)
+        | LlmResponse::Rerank(_)
+        | LlmResponse::ListModels(_)
+        | LlmResponse::ImageGenerate(_) => None,
+    }
+}
+
+/// Build a `UsageEvent` from a successful response.
+fn build_usage_event(
+    req: &LlmRequest,
+    resp: &LlmResponse,
+    latency_ms: u64,
+    outcome: UsageEventOutcome,
+    cache_state: CacheState,
+) -> UsageEvent {
+    let model = req.model().unwrap_or("").to_owned();
+    let provider = provider_from_model(&model);
+
+    let (prompt_tokens, completion_tokens, cached_tokens, total_tokens) = resp
+        .usage()
+        .map(|u| {
+            let cached = u.prompt_tokens_details.as_ref().map_or(0, |d| d.cached_tokens);
+            (u.prompt_tokens, u.completion_tokens, cached, u.total_tokens)
+        })
+        .unwrap_or((0, 0, 0, 0));
+
+    // cost::completion_cost_with_cache returns Option<f64>; convert to Decimal.
+    let cost_usd = crate::cost::completion_cost_with_cache(&model, prompt_tokens, cached_tokens, completion_tokens)
+        .and_then(|f| rust_decimal::Decimal::try_from(f).ok())
+        .unwrap_or(rust_decimal::Decimal::ZERO);
+
+    let finish_reason = match resp {
+        LlmResponse::Chat(r) => r
+            .choices
+            .first()
+            .and_then(|c| c.finish_reason.as_ref())
+            .map(|fr| format!("{fr:?}").to_lowercase()),
+        _ => None,
+    };
+
+    let effective_model = effective_model_from_response(resp);
+
+    UsageEvent {
+        tenant_id: req.tenant_id.clone(),
+        request_id: request_id(req),
+        model,
+        provider,
+        prompt_tokens,
+        completion_tokens,
+        cached_tokens,
+        total_tokens,
+        cost_usd,
+        cache_state,
+        effective_model,
+        finish_reason,
+        outcome,
+        latency_ms,
+        metadata: std::collections::HashMap::new(),
+        received_at: std::time::SystemTime::now(),
+    }
+}
+
+/// Build a `UsageEvent` for the error path (no response available).
+fn build_error_usage_event(
+    req: &LlmRequest,
+    latency_ms: u64,
+    outcome: UsageEventOutcome,
+    cache_state: CacheState,
+) -> UsageEvent {
+    let model = req.model().unwrap_or("").to_owned();
+    let provider = provider_from_model(&model);
+
+    UsageEvent {
+        tenant_id: req.tenant_id.clone(),
+        request_id: request_id(req),
+        model,
+        provider,
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        cached_tokens: 0,
+        total_tokens: 0,
+        cost_usd: rust_decimal::Decimal::ZERO,
+        cache_state,
+        effective_model: None,
+        finish_reason: None,
+        outcome,
+        latency_ms,
+        metadata: std::collections::HashMap::new(),
+        received_at: std::time::SystemTime::now(),
     }
 }
 
@@ -203,9 +505,48 @@ mod tests {
     use tower::Service as _;
 
     use super::*;
+    use crate::observability::UsageSink;
+    use crate::observability::usage::{UsageEvent, UsageSinkError};
     use crate::tower::service::LlmService;
     use crate::tower::tests_common::{MockClient, chat_req};
     use crate::tower::types::{LlmRequest, LlmResponse};
+
+    // ── Shared sink helpers for new tests ────────────────────────────────────
+
+    /// In-test sink that records every received event.
+    #[derive(Default)]
+    struct VecSink {
+        events: Arc<std::sync::Mutex<Vec<UsageEvent>>>,
+    }
+
+    impl VecSink {
+        #[allow(dead_code)]
+        fn collected(&self) -> Vec<UsageEvent> {
+            self.events.lock().expect("lock poisoned").clone()
+        }
+    }
+
+    impl UsageSink for VecSink {
+        async fn emit(&self, event: UsageEvent) -> std::result::Result<(), UsageSinkError> {
+            self.events.lock().expect("lock poisoned").push(event);
+            Ok(())
+        }
+    }
+
+    /// Sink that waits 500 ms before completing — used to verify non-blocking
+    /// behaviour on the response path.
+    #[derive(Default)]
+    struct SlowSink {
+        events: Arc<std::sync::Mutex<Vec<UsageEvent>>>,
+    }
+
+    impl UsageSink for SlowSink {
+        async fn emit(&self, event: UsageEvent) -> std::result::Result<(), UsageSinkError> {
+            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            self.events.lock().expect("lock poisoned").push(event);
+            Ok(())
+        }
+    }
 
     // ── Test hook implementations ────────────────────────────────────────────
 
@@ -368,5 +709,81 @@ mod tests {
         let recorded = order.lock().expect("lock poisoned").clone();
         // Pre-hooks: 1, 2, 3 then post-hooks: 101, 102, 103
         assert_eq!(recorded, vec![1, 2, 3, 101, 102, 103]);
+    }
+
+    /// Verify that a slow sink does not block the caller's response path.
+    ///
+    /// The `SlowSink` sleeps 500 ms in `emit`; the request must return in
+    /// under 100 ms because the sink is spawned detached.
+    #[tokio::test]
+    async fn sink_does_not_block_response_path() {
+        let sink = Arc::new(SlowSink::default());
+        let inner = LlmService::new(MockClient::ok());
+        let mut svc = HooksLayer::new(vec![]).with_usage_sink(Arc::clone(&sink)).layer(inner);
+
+        let t0 = tokio::time::Instant::now();
+        svc.call(LlmRequest::Chat(chat_req("gpt-4")))
+            .await
+            .expect("should succeed");
+        let elapsed = t0.elapsed();
+
+        assert!(
+            elapsed < std::time::Duration::from_millis(100),
+            "response should return in <100 ms even with a slow sink; got {elapsed:?}"
+        );
+    }
+
+    /// When the response future is dropped before completion, the
+    /// `CancellationGuard` must fire exactly one `Cancelled` event.
+    #[tokio::test]
+    async fn cancelled_outcome_emitted_when_future_dropped() {
+        use std::task::{Context, Poll};
+
+        use tower::Service as _;
+
+        // An inner service that never resolves — its future just parks forever.
+        #[derive(Clone)]
+        struct PendingService;
+
+        impl tower::Service<LlmRequest> for PendingService {
+            type Response = LlmResponse;
+            type Error = LiterLlmError;
+            type Future = BoxFuture<'static, Result<LlmResponse>>;
+
+            fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<()>> {
+                Poll::Ready(Ok(()))
+            }
+
+            fn call(&mut self, _req: LlmRequest) -> Self::Future {
+                Box::pin(std::future::pending())
+            }
+        }
+
+        let sink = Arc::new(VecSink::default());
+        let events_ref = Arc::clone(&sink.events);
+
+        let mut svc = HooksLayer::new(vec![]).with_usage_sink(sink).layer(PendingService);
+
+        // Spawn the future so we can abort it to simulate cancellation.
+        let handle = tokio::spawn(async move { svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await });
+
+        // Give the future a tick to start (so the CancellationGuard is armed).
+        tokio::task::yield_now().await;
+
+        // Drop / abort the future before it completes.
+        handle.abort();
+        // Wait for the abort to complete and the guard's Drop to fire.
+        let _ = handle.await;
+
+        // Give the spawned emit task a moment to complete.
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+
+        let collected = events_ref.lock().expect("lock poisoned").clone();
+        assert_eq!(collected.len(), 1, "exactly one Cancelled event must be emitted");
+        assert_eq!(
+            collected[0].outcome,
+            crate::observability::UsageEventOutcome::Cancelled,
+            "outcome must be Cancelled"
+        );
     }
 }

@@ -2,7 +2,7 @@
 title: "Rust API Reference"
 ---
 
-## Rust API Reference <span class="version-badge">v1.5.1</span>
+## Rust API Reference <span class="version-badge">v1.6.0</span>
 
 ### Functions
 
@@ -25,6 +25,12 @@ constructed, or if the resolved provider configuration is invalid.
 pub fn create_client(api_key: &str, base_url: Option<String>, timeout_secs: Option<u64>, max_retries: Option<u32>, model_hint: Option<String>) -> Result<DefaultClient, Error>
 ```
 
+**Example:**
+
+```rust
+let result = create_client("value", "value", 42, 42, "value")?;
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -36,6 +42,7 @@ pub fn create_client(api_key: &str, base_url: Option<String>, timeout_secs: Opti
 | `model_hint` | `Option<String>` | No | The model hint |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Returns `Err(Error)`.
 
 ---
@@ -57,6 +64,12 @@ contains unknown fields.
 pub fn create_client_from_json(json: &str) -> Result<DefaultClient, Error>
 ```
 
+**Example:**
+
+```rust
+let result = create_client_from_json("value")?;
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -64,6 +77,7 @@ pub fn create_client_from_json(json: &str) -> Result<DefaultClient, Error>
 | `json` | `String` | Yes | The json |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Returns `Err(Error)`.
 
 ---
@@ -86,13 +100,20 @@ no model prefixes).
 pub fn register_custom_provider(config: CustomProviderConfig) -> Result<(), Error>
 ```
 
+**Example:**
+
+```rust
+register_custom_provider(CustomProviderConfig::default())?;
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `config` | `CustomProviderConfig` | Yes | The configuration options |
 
-**Returns:** `()`
+**Returns:** No return value.
+
 **Errors:** Returns `Err(Error)`.
 
 ---
@@ -114,6 +135,12 @@ Returns an error only if the internal lock is poisoned.
 pub fn unregister_custom_provider(name: &str) -> Result<bool, Error>
 ```
 
+**Example:**
+
+```rust
+let result = unregister_custom_provider("value")?;
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -121,7 +148,42 @@ pub fn unregister_custom_provider(name: &str) -> Result<bool, Error>
 | `name` | `String` | Yes | The name |
 
 **Returns:** `bool`
+
 **Errors:** Returns `Err(Error)`.
+
+---
+
+#### capabilities()
+
+Return the capability flags for a named provider.
+
+Performs an O(n) linear scan over the embedded registry (142 entries).
+Returns an owned value so that bindings can box/copy it across the FFI
+boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+so this is a cheap memcpy of seven `bool` fields.
+
+For unknown `provider_name` values the function returns an all-`false`
+sentinel so callers never need to handle `Option`.
+
+**Signature:**
+
+```rust
+pub fn capabilities(provider_name: &str) -> ProviderCapabilities
+```
+
+**Example:**
+
+```rust
+let result = capabilities("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `provider_name` | `String` | Yes | The provider name |
+
+**Returns:** `ProviderCapabilities`
 
 ---
 
@@ -130,6 +192,8 @@ pub fn unregister_custom_provider(name: &str) -> Result<bool, Error>
 Return all provider configs from the registry.
 
 Useful for tooling, documentation generation, or runtime enumeration.
+Returns the public `ProviderConfig` slice (without capability flags).
+To query capability flags for a specific provider use `capabilities`.
 
 **Signature:**
 
@@ -137,7 +201,14 @@ Useful for tooling, documentation generation, or runtime enumeration.
 pub fn all_providers() -> Result<Vec<ProviderConfig>, Error>
 ```
 
+**Example:**
+
+```rust
+let result = all_providers()?;
+```
+
 **Returns:** `Vec<ProviderConfig>`
+
 **Errors:** Returns `Err(Error)`.
 
 ---
@@ -157,7 +228,14 @@ The returned reference points into the static registry — no allocation.
 pub fn complex_provider_names() -> Result<Vec<String>, Error>
 ```
 
+**Example:**
+
+```rust
+let result = complex_provider_names()?;
+```
+
 **Returns:** `Vec<String>`
+
 **Errors:** Returns `Err(Error)`.
 
 ---
@@ -179,6 +257,16 @@ are tried by stripping from the last `-` or `.` separator. For example,
 ```rust
 pub fn completion_cost(model: &str, prompt_tokens: u64, completion_tokens: u64) -> Option<f64>
 ```
+
+**Example:**
+
+```rust
+use liter_llm::cost;
+
+let usd = cost::completion_cost("gpt-4o", 1_000, 500).expect("gpt-4o is a known model");
+// 1000 * 0.0000025 + 500 * 0.00001 = 0.0025 + 0.005 = 0.0075
+assert!((usd - 0.0075).abs() < 1e-9);
+```rust
 
 **Parameters:**
 
@@ -213,6 +301,12 @@ registry, mirroring `completion_cost`.
 pub fn completion_cost_with_cache(model: &str, prompt_tokens: u64, cached_tokens: u64, completion_tokens: u64) -> Option<f64>
 ```
 
+**Example:**
+
+```rust
+let result = completion_cost_with_cache("value", 42, 42, 42);
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -223,6 +317,32 @@ pub fn completion_cost_with_cache(model: &str, prompt_tokens: u64, cached_tokens
 | `completion_tokens` | `u64` | Yes | The completion tokens |
 
 **Returns:** `Option<f64>`
+
+---
+
+#### clear()
+
+Remove all guardrails from the global registry.
+
+Primarily useful in tests to reset state between test cases.
+
+**Panics:**
+
+Panics if the global registry lock is poisoned.
+
+**Signature:**
+
+```rust
+pub fn clear()
+```
+
+**Example:**
+
+```rust
+clear();
+```
+
+**Returns:** No return value.
 
 ---
 
@@ -245,6 +365,12 @@ Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
 pub fn count_tokens(model: &str, text: &str) -> Result<usize, Error>
 ```
 
+**Example:**
+
+```rust
+let result = count_tokens("value", "value")?;
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -253,6 +379,7 @@ pub fn count_tokens(model: &str, text: &str) -> Result<usize, Error>
 | `text` | `String` | Yes | The text |
 
 **Returns:** `usize`
+
 **Errors:** Returns `Err(Error)`.
 
 ---
@@ -277,6 +404,12 @@ if tokenization fails for any message.
 pub fn count_request_tokens(model: &str, req: ChatCompletionRequest) -> Result<usize, Error>
 ```
 
+**Example:**
+
+```rust
+let result = count_request_tokens("value", ChatCompletionRequest::default())?;
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -285,6 +418,43 @@ pub fn count_request_tokens(model: &str, req: ChatCompletionRequest) -> Result<u
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
 **Returns:** `usize`
+
+**Errors:** Returns `Err(Error)`.
+
+---
+
+#### check_bound()
+
+Assert that `current_len + incoming` does not exceed `limit`.
+
+Call this before appending `incoming` bytes to any buffer that must
+stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
+and emits a `tracing.warn!` with context.
+
+**Signature:**
+
+```rust
+pub fn check_bound(context: &str, current_len: usize, incoming: usize, limit: usize) -> Result<(), Error>
+```
+
+**Example:**
+
+```rust
+check_bound("SSE buffer", buffer.len(), chunk.len(), SSE_BUFFER_MAX_BYTES)?;
+buffer.push_str(chunk_str);
+```rust
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `context` | `String` | Yes | The context |
+| `current_len` | `usize` | Yes | The current len |
+| `incoming` | `usize` | Yes | The incoming |
+| `limit` | `usize` | Yes | The limit |
+
+**Returns:** No return value.
+
 **Errors:** Returns `Err(Error)`.
 
 ---
@@ -314,7 +484,13 @@ present and no crypto provider installation is needed.
 pub fn ensure_crypto_provider()
 ```
 
-**Returns:** `()`
+**Example:**
+
+```rust
+ensure_crypto_provider();
+```
+
+**Returns:** No return value.
 
 ---
 
@@ -426,15 +602,23 @@ Configuration for budget enforcement.
 | `model_limits` | `HashMap<String, f64>` | `HashMap::new()` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
 | `enforcement` | `Enforcement` | `Enforcement::Hard` | Whether to reject requests or merely warn when a limit is exceeded. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> BudgetConfig
 ```
+
+**Example:**
+
+```rust
+let result = BudgetConfig::default();
+```
+
+**Returns:** `BudgetConfig`
 
 ---
 
@@ -448,15 +632,23 @@ Configuration for the response cache.
 | `ttl` | `std::time::Duration` | `300000ms` | Time-to-live for each cached entry. |
 | `backend` | `CacheBackend` | `CacheBackend::Memory` | Storage backend to use. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> CacheConfig
 ```
+
+**Example:**
+
+```rust
+let result = CacheConfig::default();
+```
+
+**Returns:** `CacheConfig`
 
 ---
 
@@ -543,6 +735,51 @@ A single completion choice.
 | `index` | `u32` | — | Index of this choice in the choices array. |
 | `message` | `AssistantMessage` | — | The assistant's message response. |
 | `finish_reason` | `Option<FinishReason>` | `Default::default()` | Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). |
+
+---
+
+#### ChunkMiddleware
+
+A per-chunk transformation in the `StreamPipeline`.
+
+Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
+to pass it through (optionally modified), `Ok(None)` to drop the chunk,
+or `Err(e)` to propagate a stream error.
+
+The trait is object-safe so implementations can be stored in a
+`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+
+##### Methods
+
+###### process()
+
+Process a single chunk.
+
+- `Ok(Some(chunk))` — emit (possibly transformed) chunk.
+- `Ok(None)` — drop this chunk silently.
+- `Err(e)` — propagate as a stream error.
+
+**Signature:**
+
+```rust
+pub fn process(&self, chunk: ChatCompletionChunk) -> Result<Option<ChatCompletionChunk>, Error>
+```
+
+**Example:**
+
+```rust
+let result = instance.process(ChatCompletionChunk::default())?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `chunk` | `ChatCompletionChunk` | Yes | The chat completion chunk |
+
+**Returns:** `Option<ChatCompletionChunk>`
+
+**Errors:** Returns `Err(Error)`.
 
 ---
 
@@ -664,191 +901,619 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-### Methods
+##### Methods
 
-#### chat()
-
-**Signature:**
-
-```rust
-pub fn chat(&self, req: ChatCompletionRequest) -> ChatCompletionResponse
-```
-
-#### chat_stream()
+###### chat()
 
 **Signature:**
 
 ```rust
-pub fn chat_stream(&self, req: ChatCompletionRequest) -> String
+pub async fn chat(&self, req: ChatCompletionRequest) -> Result<ChatCompletionResponse, Error>
 ```
 
-#### embed()
+**Example:**
+
+```rust
+let result = instance.chat(ChatCompletionRequest::default()).await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `ChatCompletionResponse`
+
+**Errors:** Returns `Err(Error)`.
+
+###### chat_stream()
 
 **Signature:**
 
 ```rust
-pub fn embed(&self, req: EmbeddingRequest) -> EmbeddingResponse
+pub async fn chat_stream(&self, req: ChatCompletionRequest) -> Result<String, Error>
 ```
 
-#### list_models()
+**Example:**
+
+```rust
+let result = instance.chat_stream(ChatCompletionRequest::default()).await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `String`
+
+**Errors:** Returns `Err(Error)`.
+
+###### embed()
 
 **Signature:**
 
 ```rust
-pub fn list_models(&self) -> ModelsListResponse
+pub async fn embed(&self, req: EmbeddingRequest) -> Result<EmbeddingResponse, Error>
 ```
 
-#### image_generate()
+**Example:**
+
+```rust
+let result = instance.embed(EmbeddingRequest::default()).await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `EmbeddingRequest` | Yes | The embedding request |
+
+**Returns:** `EmbeddingResponse`
+
+**Errors:** Returns `Err(Error)`.
+
+###### list_models()
 
 **Signature:**
 
 ```rust
-pub fn image_generate(&self, req: CreateImageRequest) -> ImagesResponse
+pub async fn list_models(&self) -> Result<ModelsListResponse, Error>
 ```
 
-#### speech()
+**Example:**
+
+```rust
+let result = instance.list_models().await?;
+```
+
+**Returns:** `ModelsListResponse`
+
+**Errors:** Returns `Err(Error)`.
+
+###### image_generate()
 
 **Signature:**
 
 ```rust
-pub fn speech(&self, req: CreateSpeechRequest) -> Vec<u8>
+pub async fn image_generate(&self, req: CreateImageRequest) -> Result<ImagesResponse, Error>
 ```
 
-#### transcribe()
+**Example:**
+
+```rust
+let result = instance.image_generate(CreateImageRequest::default()).await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateImageRequest` | Yes | The create image request |
+
+**Returns:** `ImagesResponse`
+
+**Errors:** Returns `Err(Error)`.
+
+###### speech()
 
 **Signature:**
 
 ```rust
-pub fn transcribe(&self, req: CreateTranscriptionRequest) -> TranscriptionResponse
+pub async fn speech(&self, req: CreateSpeechRequest) -> Result<Vec<u8>, Error>
 ```
 
-#### moderate()
+**Example:**
+
+```rust
+let result = instance.speech(CreateSpeechRequest::default()).await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateSpeechRequest` | Yes | The create speech request |
+
+**Returns:** `Vec<u8>`
+
+**Errors:** Returns `Err(Error)`.
+
+###### transcribe()
 
 **Signature:**
 
 ```rust
-pub fn moderate(&self, req: ModerationRequest) -> ModerationResponse
+pub async fn transcribe(&self, req: CreateTranscriptionRequest) -> Result<TranscriptionResponse, Error>
 ```
 
-#### rerank()
+**Example:**
+
+```rust
+let result = instance.transcribe(CreateTranscriptionRequest::default()).await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
+
+**Returns:** `TranscriptionResponse`
+
+**Errors:** Returns `Err(Error)`.
+
+###### moderate()
 
 **Signature:**
 
 ```rust
-pub fn rerank(&self, req: RerankRequest) -> RerankResponse
+pub async fn moderate(&self, req: ModerationRequest) -> Result<ModerationResponse, Error>
 ```
 
-#### search()
+**Example:**
+
+```rust
+let result = instance.moderate(ModerationRequest::default()).await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `ModerationRequest` | Yes | The moderation request |
+
+**Returns:** `ModerationResponse`
+
+**Errors:** Returns `Err(Error)`.
+
+###### rerank()
 
 **Signature:**
 
 ```rust
-pub fn search(&self, req: SearchRequest) -> SearchResponse
+pub async fn rerank(&self, req: RerankRequest) -> Result<RerankResponse, Error>
 ```
 
-#### ocr()
+**Example:**
+
+```rust
+let result = instance.rerank(RerankRequest::default()).await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `RerankRequest` | Yes | The rerank request |
+
+**Returns:** `RerankResponse`
+
+**Errors:** Returns `Err(Error)`.
+
+###### search()
 
 **Signature:**
 
 ```rust
-pub fn ocr(&self, req: OcrRequest) -> OcrResponse
+pub async fn search(&self, req: SearchRequest) -> Result<SearchResponse, Error>
 ```
 
-#### create_file()
+**Example:**
+
+```rust
+let result = instance.search(SearchRequest::default()).await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `SearchRequest` | Yes | The search request |
+
+**Returns:** `SearchResponse`
+
+**Errors:** Returns `Err(Error)`.
+
+###### ocr()
 
 **Signature:**
 
 ```rust
-pub fn create_file(&self, req: CreateFileRequest) -> FileObject
+pub async fn ocr(&self, req: OcrRequest) -> Result<OcrResponse, Error>
 ```
 
-#### retrieve_file()
+**Example:**
+
+```rust
+let result = instance.ocr(OcrRequest::default()).await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `OcrRequest` | Yes | The ocr request |
+
+**Returns:** `OcrResponse`
+
+**Errors:** Returns `Err(Error)`.
+
+###### create_file()
 
 **Signature:**
 
 ```rust
-pub fn retrieve_file(&self, file_id: &str) -> FileObject
+pub async fn create_file(&self, req: CreateFileRequest) -> Result<FileObject, Error>
 ```
 
-#### delete_file()
+**Example:**
+
+```rust
+let result = instance.create_file(CreateFileRequest::default()).await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateFileRequest` | Yes | The create file request |
+
+**Returns:** `FileObject`
+
+**Errors:** Returns `Err(Error)`.
+
+###### retrieve_file()
 
 **Signature:**
 
 ```rust
-pub fn delete_file(&self, file_id: &str) -> DeleteResponse
+pub async fn retrieve_file(&self, file_id: &str) -> Result<FileObject, Error>
 ```
 
-#### list_files()
+**Example:**
+
+```rust
+let result = instance.retrieve_file("value").await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `file_id` | `String` | Yes | The file id |
+
+**Returns:** `FileObject`
+
+**Errors:** Returns `Err(Error)`.
+
+###### delete_file()
 
 **Signature:**
 
 ```rust
-pub fn list_files(&self, query: Option<FileListQuery>) -> FileListResponse
+pub async fn delete_file(&self, file_id: &str) -> Result<DeleteResponse, Error>
 ```
 
-#### file_content()
+**Example:**
+
+```rust
+let result = instance.delete_file("value").await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `file_id` | `String` | Yes | The file id |
+
+**Returns:** `DeleteResponse`
+
+**Errors:** Returns `Err(Error)`.
+
+###### list_files()
 
 **Signature:**
 
 ```rust
-pub fn file_content(&self, file_id: &str) -> Vec<u8>
+pub async fn list_files(&self, query: Option<FileListQuery>) -> Result<FileListResponse, Error>
 ```
 
-#### create_batch()
+**Example:**
+
+```rust
+let result = instance.list_files(FileListQuery::default()).await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `Option<FileListQuery>` | No | The file list query |
+
+**Returns:** `FileListResponse`
+
+**Errors:** Returns `Err(Error)`.
+
+###### file_content()
 
 **Signature:**
 
 ```rust
-pub fn create_batch(&self, req: CreateBatchRequest) -> BatchObject
+pub async fn file_content(&self, file_id: &str) -> Result<Vec<u8>, Error>
 ```
 
-#### retrieve_batch()
+**Example:**
+
+```rust
+let result = instance.file_content("value").await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `file_id` | `String` | Yes | The file id |
+
+**Returns:** `Vec<u8>`
+
+**Errors:** Returns `Err(Error)`.
+
+###### create_batch()
 
 **Signature:**
 
 ```rust
-pub fn retrieve_batch(&self, batch_id: &str) -> BatchObject
+pub async fn create_batch(&self, req: CreateBatchRequest) -> Result<BatchObject, Error>
 ```
 
-#### list_batches()
+**Example:**
+
+```rust
+let result = instance.create_batch(CreateBatchRequest::default()).await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateBatchRequest` | Yes | The create batch request |
+
+**Returns:** `BatchObject`
+
+**Errors:** Returns `Err(Error)`.
+
+###### retrieve_batch()
 
 **Signature:**
 
 ```rust
-pub fn list_batches(&self, query: Option<BatchListQuery>) -> BatchListResponse
+pub async fn retrieve_batch(&self, batch_id: &str) -> Result<BatchObject, Error>
 ```
 
-#### cancel_batch()
+**Example:**
+
+```rust
+let result = instance.retrieve_batch("value").await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `String` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Returns `Err(Error)`.
+
+###### list_batches()
 
 **Signature:**
 
 ```rust
-pub fn cancel_batch(&self, batch_id: &str) -> BatchObject
+pub async fn list_batches(&self, query: Option<BatchListQuery>) -> Result<BatchListResponse, Error>
 ```
 
-#### create_response()
+**Example:**
+
+```rust
+let result = instance.list_batches(BatchListQuery::default()).await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `Option<BatchListQuery>` | No | The batch list query |
+
+**Returns:** `BatchListResponse`
+
+**Errors:** Returns `Err(Error)`.
+
+###### cancel_batch()
 
 **Signature:**
 
 ```rust
-pub fn create_response(&self, req: CreateResponseRequest) -> ResponseObject
+pub async fn cancel_batch(&self, batch_id: &str) -> Result<BatchObject, Error>
 ```
 
-#### retrieve_response()
+**Example:**
+
+```rust
+let result = instance.cancel_batch("value").await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `String` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Returns `Err(Error)`.
+
+###### fetch_batch_for_polling()
 
 **Signature:**
 
 ```rust
-pub fn retrieve_response(&self, response_id: &str) -> ResponseObject
+pub async fn fetch_batch_for_polling(&self, batch_id: &str) -> Result<BatchObject, Error>
 ```
 
-#### cancel_response()
+**Example:**
+
+```rust
+let result = instance.fetch_batch_for_polling("value").await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `String` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Returns `Err(Error)`.
+
+###### wait_for_batch()
+
+Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
+
+Uses exponential backoff with configurable initial interval, maximum interval, and backoff multiplier.
+Optionally supports a timeout that aborts polling if exceeded.
+
+**Errors:**
+
+Returns `BatchWaitError.Failed` if the batch reaches a failure terminal status.
+Returns `BatchWaitError.Timeout` if the configured timeout is exceeded.
+Returns `BatchWaitError.Client` for underlying client errors.
 
 **Signature:**
 
 ```rust
-pub fn cancel_response(&self, response_id: &str) -> ResponseObject
+pub async fn wait_for_batch(&self, batch_id: &str, config: WaitForBatchConfig) -> Result<BatchObject, BatchWaitError>
 ```
+
+**Example:**
+
+```rust
+# use liter_llm::client::{DefaultClient, ClientConfig, WaitForBatchConfig};
+# async fn run() -> Result<(), Box<dyn std::error::Error>> {
+let client = DefaultClient::new(ClientConfig::new("api-key"), None)?;
+let batch = client.wait_for_batch("b-123", WaitForBatchConfig::default()).await?;
+println!("Batch completed: {:?}", batch.status);
+# Ok(())
+# }
+```rust
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `String` | Yes | The batch id |
+| `config` | `WaitForBatchConfig` | Yes | The configuration options |
+
+**Returns:** `BatchObject`
+
+**Errors:** Returns `Err(BatchWaitError)`.
+
+###### create_response()
+
+**Signature:**
+
+```rust
+pub async fn create_response(&self, req: CreateResponseRequest) -> Result<ResponseObject, Error>
+```
+
+**Example:**
+
+```rust
+let result = instance.create_response(CreateResponseRequest::default()).await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `req` | `CreateResponseRequest` | Yes | The create response request |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Returns `Err(Error)`.
+
+###### retrieve_response()
+
+**Signature:**
+
+```rust
+pub async fn retrieve_response(&self, response_id: &str) -> Result<ResponseObject, Error>
+```
+
+**Example:**
+
+```rust
+let result = instance.retrieve_response("value").await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `response_id` | `String` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Returns `Err(Error)`.
+
+###### cancel_response()
+
+**Signature:**
+
+```rust
+pub async fn cancel_response(&self, response_id: &str) -> Result<ResponseObject, Error>
+```
+
+**Example:**
+
+```rust
+let result = instance.cancel_response("value").await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `response_id` | `String` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Returns `Err(Error)`.
 
 ---
 
@@ -1000,6 +1665,45 @@ Deprecated legacy function-role message body.
 
 ---
 
+#### HealthChecker
+
+Abstraction over a health probe strategy.
+
+Implementors issue a lightweight probe against `upstream` (typically a
+provider base URL or named identifier) and report `HealthStatus`.
+
+##### Methods
+
+###### check()
+
+Probe `upstream` and return its current `HealthStatus`.
+
+The parameter is taken by value (`String`) so that implementations can
+move it into the returned future without a clone, making the
+`'static + Send` bound on the future trivially satisfiable.
+
+**Signature:**
+
+```rust
+pub async fn check(&self, upstream: &str) -> HealthStatus
+```
+
+**Example:**
+
+```rust
+let result = instance.check("value").await;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `upstream` | `String` | Yes | The upstream |
+
+**Returns:** `HealthStatus`
+
+---
+
 #### Image
 
 A single generated image, returned as either a URL or base64 data.
@@ -1031,6 +1735,18 @@ Response containing generated images.
 |-------|------|---------|-------------|
 | `created` | `u64` | — | Unix timestamp of image creation. |
 | `data` | `Vec<Image>` | `vec![]` | List of generated images. |
+
+---
+
+#### IntentPrototype
+
+An intent prototype: `(intent_name, prototype_embedding, target_model_id)`.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `String` | — | Human-readable name for the intent (used in logs/metrics). |
+| `embedding` | `Vec<f64>` | — | Pre-computed embedding vector for this intent. |
+| `model` | `String` | — | Model to route to when this intent is detected. |
 
 ---
 
@@ -1222,9 +1938,40 @@ discounted rate and the remainder at the regular input rate.
 
 ---
 
+#### ProviderCapabilities
+
+Static capability flags for a provider.
+
+Each flag indicates whether the provider's models *generally* support that
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
+OpenRouter, vLLM) the flags reflect the superset of available model
+capabilities — a flag being `true` means at least one model supports the
+feature, not every model.
+
+All flags default to `false` so that newly added providers are safe.
+
+Access via the crate-level `capabilities` function:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `vision` | `bool` | — | The provider accepts image input in chat messages. |
+| `reasoning` | `bool` | — | The provider supports extended-thinking / reasoning tokens. |
+| `structured_output` | `bool` | — | The provider supports JSON-mode or `response_format` structured output. |
+| `function_calling` | `bool` | — | The provider supports tool / function calling. |
+| `audio_in` | `bool` | — | The provider accepts audio as input. |
+| `audio_out` | `bool` | — | The provider can generate audio / TTS output. |
+| `video_in` | `bool` | — | The provider accepts video as input. |
+
+---
+
 #### ProviderConfig
 
 Static configuration for a single provider entry in providers.json.
+
+This struct deliberately does not include capability flags or streaming
+format, which are accessed via the `capabilities` function. Keeping
+these fields separate preserves backward compatibility with all generated
+binding code that constructs `ProviderConfig` using struct literal syntax.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -1248,15 +1995,23 @@ Configuration for per-model rate limits.
 | `tpm` | `Option<u64>` | `None` | Maximum tokens per window.  `None` means unlimited. |
 | `window` | `std::time::Duration` | `60000ms` | Fixed window duration (defaults to 60 s). |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> RateLimitConfig
 ```
+
+**Example:**
+
+```rust
+let result = RateLimitConfig::default();
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -1394,6 +2149,16 @@ An individual search result.
 | `url` | `String` | — | Result URL. |
 | `snippet` | `String` | — | Text snippet or excerpt from the page. |
 | `date` | `Option<String>` | `/* serde(default) */` | Publication or last-updated date, if available. |
+
+---
+
+#### SingleflightResult
+
+The value broadcast from a singleflight leader to all followers.
+
+`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
+broadcast channels require `T: Clone`. The `Arc` adds only a reference-count
+bump per follower, which is negligible under the burst loads this layer targets.
 
 ---
 
@@ -1560,6 +2325,40 @@ User message in the conversation.
 |-------|------|---------|-------------|
 | `content` | `UserContent` | `UserContent::Text` | Message content as plain text or array of content parts (text, images, documents, audio). |
 | `name` | `Option<String>` | `Default::default()` | Optional name for the user. |
+
+---
+
+#### WaitForBatchConfig
+
+Configuration for polling a batch until terminal status.
+
+All time values are in seconds as `f64` so the struct bridges across FFI
+boundaries without requiring a `Duration` shim.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `initial_interval_secs` | `f64` | `5` | Initial interval between polls, in seconds. |
+| `max_interval_secs` | `f64` | `60` | Maximum interval between polls (backoff plateau), in seconds. |
+| `backoff_multiplier` | `f32` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
+| `timeout_secs` | `Option<f64>` | `None` | Optional timeout in seconds — polling fails if this duration is exceeded. |
+
+##### Methods
+
+###### default()
+
+**Signature:**
+
+```rust
+pub fn default() -> WaitForBatchConfig
+```
+
+**Example:**
+
+```rust
+let result = WaitForBatchConfig::default();
+```
+
+**Returns:** `WaitForBatchConfig`
 
 ---
 
@@ -1800,6 +2599,22 @@ How the API key is sent in the HTTP request.
 
 ---
 
+#### StreamFormat
+
+The streaming wire format a provider uses for its response stream.
+
+Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
+a proprietary binary EventStream framing.
+
+Deserialized from the `streaming_format` JSON field via `serde`.
+
+| Value | Description |
+|-------|-------------|
+| `Sse` | Standard Server-Sent Events (text/event-stream). |
+| `AwsEventStream` | AWS EventStream binary framing (application/vnd.amazon.eventstream). |
+
+---
+
 #### AuthType
 
 Auth scheme used by a provider.
@@ -1835,6 +2650,29 @@ Storage backend for the response cache.
 
 ---
 
+#### CircuitState
+
+Observable state of a circuit breaker.
+
+| Value | Description |
+|-------|-------------|
+| `Closed` | Requests flow through normally. |
+| `Open` | All requests are rejected; the circuit is waiting for the backoff to elapse. |
+| `HalfOpen` | One probe request is allowed through to test service health. |
+
+---
+
+#### HealthStatus
+
+The result of a single health probe.
+
+| Value | Description |
+|-------|-------------|
+| `Healthy` | The probe succeeded; the upstream is reachable. |
+| `Unhealthy` | The probe failed; the upstream may be down. |
+
+---
+
 ### Errors
 
 #### LiterLlmError
@@ -1860,5 +2698,7 @@ All errors that can occur when using `liter-llm`.
 | `HookRejected` | hook rejected: {message} |
 | `InternalError` | An internal logic error (e.g. unexpected Tower response variant). This should never surface in normal operation — if it does, it indicates a bug in the library. |
 | `OutboundForbidden` | An outbound request was blocked by the active `OutboundPolicy`. Returned when `register_custom_provider` is called with a `base_url` that violates the policy (e.g. a private-range IP under `DenyPrivate`), or when the per-connection DNS resolver detects a forbidden address at connect time. |
+| `IdempotencyConflict` | A different request body was submitted for an existing `Idempotency-Key`. Per the OpenAI `Idempotency-Key` convention, once a key is used with a particular request body, subsequent requests using the same key must carry an identical body.  A body mismatch is a hard error (not retryable). HTTP equivalent: 409 Conflict. |
+| `IdempotencyInFlight` | The same `Idempotency-Key` is already in-flight (another request with the same key is currently being processed). The caller should wait briefly and retry.  The response is not yet available, and this request has been short-circuited to avoid running the operation twice. HTTP equivalent: 409 Conflict (retryable after a brief delay). |
 
 ---

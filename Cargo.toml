@@ -20,12 +20,41 @@ exclude = [
 resolver = "2"
 
 [workspace.lints.clippy]
+# --- Deny: correctness -------------------------------------------------------
+# Catches logic bugs that are almost certainly wrong.
+correctness = { level = "deny", priority = -1 }
+# --- Deny: suspicious --------------------------------------------------------
+# Catches patterns that are likely unintentional or misleading.
+suspicious = { level = "deny", priority = -1 }
+# --- Deny: perf --------------------------------------------------------------
+# Catches avoidable performance regressions.
+perf = { level = "deny", priority = -1 }
+# --- Warn: style -------------------------------------------------------------
+# Enforces consistent, idiomatic Rust — warn rather than deny so style issues
+# don't block non-style PRs.
+style = { level = "warn", priority = -1 }
+# --- Explicit allows ---------------------------------------------------------
+# unused-unit: generated FFI bridge shims (alef/swift-bridge) emit `-> ()`.
+# Denying this would require patching generated output on every regen.
+unused-unit = "allow"
+# needless-pass-by-value: public API takes owned values for FFI-friendliness;
+# changing signatures would break cross-language ABI stability.
+needless-pass-by-value = "allow"
+# module-name-repetitions: `LlmError`, `LlmClient` etc. are idiomatic in a
+# library crate named `liter-llm` — the repetition aids discoverability.
+module-name-repetitions = "allow"
+# missing-errors-doc: not all public functions are public API in the
+# rustdoc sense; requiring `# Errors` on every fn that returns `Result`
+# is too noisy during active development.
+missing-errors-doc = "allow"
+# missing-panics-doc: same rationale as missing-errors-doc.
+missing-panics-doc = "allow"
 
 [workspace.lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(alef)'] }
 
 [workspace.package]
-version = "1.5.1"
+version = "1.6.0"
 edition = "2024"
 license = "MIT"
 repository = "https://github.com/kreuzberg-dev/liter-llm"
@@ -35,8 +64,22 @@ description = "Universal LLM API client — 143 providers, streaming, tool calli
 keywords = ["llm", "openai", "api-client", "ai", "kreuzberg"]
 
 [workspace.dependencies]
+ahash = "0.8"
 anyhow = "1"
-axum = { version = "0.8", features = ["macros"] }
+arc-swap = "1"
+async-trait = "0.1"
+
+# Secret backends
+aws-config = { version = "1", default-features = false, features = ["rustls"] }
+aws-sdk-secretsmanager = { version = "1", default-features = false, features = ["rustls"] }
+chrono = { version = "0.4", default-features = false, features = ["std"] }
+vaultrs = { version = "0.8", default-features = false, features = ["rustls"] }
+
+axum = { version = "0.8", features = ["macros", "ws"] }
+# Optional global allocators — selected via `mimalloc`/`jemalloc` features on
+# `liter-llm-cli`.  Off by default; absence means the system allocator is used.
+mimalloc = { version = "0.1", default-features = false }
+tikv-jemallocator = { version = "0.6" }
 axum-extra = { version = "0.12", features = ["typed-header"] }
 base64 = "0.22"
 bytes = "1"
@@ -63,7 +106,7 @@ opendal = { version = "0.57", default-features = false, features = [
     "services-fs",
     "services-s3",
 ] }
-opentelemetry = "0.32"
+opentelemetry = { version = "0.32", features = ["metrics"] }
 pin-project-lite = "0.2"
 pyo3 = { version = "0.29", features = ["abi3-py310", "multiple-pymethods"] }
 pyo3-async-runtimes = { version = "0.29", features = ["tokio-runtime"] }
@@ -83,6 +126,7 @@ rmcp = { version = "1.7", features = [
     "transport-streamable-http-server",
     "server-side-http",
 ] }
+rust_decimal = { version = "1", features = ["serde"] }
 rustler = "0.38"
 rustls = { version = "0.23", default-features = false, features = [
     "ring",
@@ -104,8 +148,14 @@ tempfile = "3"
 
 # Error handling
 thiserror = "2"
+notify = { version = "8", features = ["macos_kqueue"] }
+etcd-client = { version = "0.15", default-features = false }
+hex = "0.4"
+sha2 = "0.10"
 tokenizers = { version = "0.23", default-features = false, features = ["http", "fancy-regex"] }
 tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = { version = "0.26", features = ["native-tls"] }
+tokio-util = { version = "0.7", features = ["rt"] }
 toml = "1.1"
 tower = { version = "0.5", features = [
     "retry",
@@ -115,6 +165,8 @@ tower = { version = "0.5", features = [
     "load-shed",
     "steer",
     "util",
+    "discover",
+    "ready-cache",
 ] }
 tower-http = { version = "0.6", features = [
     "follow-redirect",

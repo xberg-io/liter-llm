@@ -2,7 +2,7 @@
 title: "Go API Reference"
 ---
 
-## Go API Reference <span class="version-badge">v1.5.1</span>
+## Go API Reference <span class="version-badge">v1.6.0</span>
 
 ### Functions
 
@@ -25,6 +25,15 @@ constructed, or if the resolved provider configuration is invalid.
 func CreateClient(apiKey string, baseUrl string, timeoutSecs uint64, maxRetries uint32, modelHint string) (DefaultClient, error)
 ```
 
+**Example:**
+
+```go
+result, err := CreateClient("value", "value", 42, 42, "value")
+if err != nil {
+    return err
+}
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -36,6 +45,7 @@ func CreateClient(apiKey string, baseUrl string, timeoutSecs uint64, maxRetries 
 | `ModelHint` | `*string` | No | The model hint |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Returns `error`.
 
 ---
@@ -57,6 +67,15 @@ contains unknown fields.
 func CreateClientFromJson(json string) (DefaultClient, error)
 ```
 
+**Example:**
+
+```go
+result, err := CreateClientFromJson("value")
+if err != nil {
+    return err
+}
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -64,6 +83,7 @@ func CreateClientFromJson(json string) (DefaultClient, error)
 | `Json` | `string` | Yes | The json |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Returns `error`.
 
 ---
@@ -86,13 +106,22 @@ no model prefixes).
 func RegisterCustomProvider(config CustomProviderConfig) error
 ```
 
+**Example:**
+
+```go
+if err := RegisterCustomProvider(CustomProviderConfig{}); err != nil {
+    return err
+}
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `Config` | `CustomProviderConfig` | Yes | The configuration options |
 
-**Returns:** ``
+**Returns:** No return value.
+
 **Errors:** Returns `error`.
 
 ---
@@ -114,6 +143,15 @@ Returns an error only if the internal lock is poisoned.
 func UnregisterCustomProvider(name string) (bool, error)
 ```
 
+**Example:**
+
+```go
+result, err := UnregisterCustomProvider("value")
+if err != nil {
+    return err
+}
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -121,7 +159,42 @@ func UnregisterCustomProvider(name string) (bool, error)
 | `Name` | `string` | Yes | The name |
 
 **Returns:** `bool`
+
 **Errors:** Returns `error`.
+
+---
+
+#### Capabilities()
+
+Return the capability flags for a named provider.
+
+Performs an O(n) linear scan over the embedded registry (142 entries).
+Returns an owned value so that bindings can box/copy it across the FFI
+boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+so this is a cheap memcpy of seven `bool` fields.
+
+For unknown `provider_name` values the function returns an all-`false`
+sentinel so callers never need to handle `Option`.
+
+**Signature:**
+
+```go
+func Capabilities(providerName string) ProviderCapabilities
+```
+
+**Example:**
+
+```go
+result := Capabilities("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `ProviderName` | `string` | Yes | The provider name |
+
+**Returns:** `ProviderCapabilities`
 
 ---
 
@@ -130,6 +203,8 @@ func UnregisterCustomProvider(name string) (bool, error)
 Return all provider configs from the registry.
 
 Useful for tooling, documentation generation, or runtime enumeration.
+Returns the public `ProviderConfig` slice (without capability flags).
+To query capability flags for a specific provider use `capabilities`.
 
 **Signature:**
 
@@ -137,7 +212,17 @@ Useful for tooling, documentation generation, or runtime enumeration.
 func AllProviders() ([]ProviderConfig, error)
 ```
 
+**Example:**
+
+```go
+result, err := AllProviders()
+if err != nil {
+    return err
+}
+```
+
 **Returns:** `[]ProviderConfig`
+
 **Errors:** Returns `error`.
 
 ---
@@ -157,7 +242,17 @@ The returned reference points into the static registry — no allocation.
 func ComplexProviderNames() ([]string, error)
 ```
 
+**Example:**
+
+```go
+result, err := ComplexProviderNames()
+if err != nil {
+    return err
+}
+```
+
 **Returns:** `[]string`
+
 **Errors:** Returns `error`.
 
 ---
@@ -178,6 +273,12 @@ are tried by stripping from the last `-` or `.` separator. For example,
 
 ```go
 func CompletionCost(model string, promptTokens uint64, completionTokens uint64) *float64
+```
+
+**Example:**
+
+```go
+result := CompletionCost("value", 42, 42)
 ```
 
 **Parameters:**
@@ -213,6 +314,12 @@ registry, mirroring `completion_cost`.
 func CompletionCostWithCache(model string, promptTokens uint64, cachedTokens uint64, completionTokens uint64) *float64
 ```
 
+**Example:**
+
+```go
+result := CompletionCostWithCache("value", 42, 42, 42)
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -223,6 +330,32 @@ func CompletionCostWithCache(model string, promptTokens uint64, cachedTokens uin
 | `CompletionTokens` | `uint64` | Yes | The completion tokens |
 
 **Returns:** `*float64`
+
+---
+
+#### Clear()
+
+Remove all guardrails from the global registry.
+
+Primarily useful in tests to reset state between test cases.
+
+**Panics:**
+
+Panics if the global registry lock is poisoned.
+
+**Signature:**
+
+```go
+func Clear()
+```
+
+**Example:**
+
+```go
+Clear()
+```
+
+**Returns:** No return value.
 
 ---
 
@@ -245,6 +378,15 @@ Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
 func CountTokens(model string, text string) (int, error)
 ```
 
+**Example:**
+
+```go
+result, err := CountTokens("value", "value")
+if err != nil {
+    return err
+}
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -253,6 +395,7 @@ func CountTokens(model string, text string) (int, error)
 | `Text` | `string` | Yes | The text |
 
 **Returns:** `int`
+
 **Errors:** Returns `error`.
 
 ---
@@ -277,6 +420,15 @@ if tokenization fails for any message.
 func CountRequestTokens(model string, req ChatCompletionRequest) (int, error)
 ```
 
+**Example:**
+
+```go
+result, err := CountRequestTokens("value", ChatCompletionRequest{})
+if err != nil {
+    return err
+}
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -285,6 +437,44 @@ func CountRequestTokens(model string, req ChatCompletionRequest) (int, error)
 | `Req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
 **Returns:** `int`
+
+**Errors:** Returns `error`.
+
+---
+
+#### CheckBound()
+
+Assert that `current_len + incoming` does not exceed `limit`.
+
+Call this before appending `incoming` bytes to any buffer that must
+stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
+and emits a `tracing.warn!` with context.
+
+**Signature:**
+
+```go
+func CheckBound(context string, currentLen int, incoming int, limit int) error
+```
+
+**Example:**
+
+```go
+if err := CheckBound("value", 42, 42, 42); err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Context` | `string` | Yes | The context |
+| `CurrentLen` | `int` | Yes | The current len |
+| `Incoming` | `int` | Yes | The incoming |
+| `Limit` | `int` | Yes | The limit |
+
+**Returns:** No return value.
+
 **Errors:** Returns `error`.
 
 ---
@@ -314,7 +504,13 @@ present and no crypto provider installation is needed.
 func EnsureCryptoProvider()
 ```
 
-**Returns:** ``
+**Example:**
+
+```go
+EnsureCryptoProvider()
+```
+
+**Returns:** No return value.
 
 ---
 
@@ -426,15 +622,23 @@ Configuration for budget enforcement.
 | `ModelLimits` | `map[string]float64` | `nil` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
 | `Enforcement` | `Enforcement` | `Enforcement.Hard` | Whether to reject requests or merely warn when a limit is exceeded. |
 
-### Methods
+##### Methods
 
-#### Default()
+###### Default()
 
 **Signature:**
 
 ```go
 func (o *BudgetConfig) Default() BudgetConfig
 ```
+
+**Example:**
+
+```go
+result := BudgetConfig.Default()
+```
+
+**Returns:** `BudgetConfig`
 
 ---
 
@@ -448,15 +652,23 @@ Configuration for the response cache.
 | `Ttl` | `time.Duration` | `300000ms` | Time-to-live for each cached entry. |
 | `Backend` | `CacheBackend` | `CacheBackend.Memory` | Storage backend to use. |
 
-### Methods
+##### Methods
 
-#### Default()
+###### Default()
 
 **Signature:**
 
 ```go
 func (o *CacheConfig) Default() CacheConfig
 ```
+
+**Example:**
+
+```go
+result := CacheConfig.Default()
+```
+
+**Returns:** `CacheConfig`
 
 ---
 
@@ -543,6 +755,54 @@ A single completion choice.
 | `Index` | `uint32` | — | Index of this choice in the choices array. |
 | `Message` | `AssistantMessage` | — | The assistant's message response. |
 | `FinishReason` | `*FinishReason` | `nil` | Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). |
+
+---
+
+#### ChunkMiddleware
+
+A per-chunk transformation in the `StreamPipeline`.
+
+Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
+to pass it through (optionally modified), `Ok(None)` to drop the chunk,
+or `Err(e)` to propagate a stream error.
+
+The trait is object-safe so implementations can be stored in a
+`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+
+##### Methods
+
+###### Process()
+
+Process a single chunk.
+
+- `Ok(Some(chunk))` — emit (possibly transformed) chunk.
+- `Ok(None)` — drop this chunk silently.
+- `Err(e)` — propagate as a stream error.
+
+**Signature:**
+
+```go
+func (o *ChunkMiddleware) Process(chunk ChatCompletionChunk) (*ChatCompletionChunk, error)
+```
+
+**Example:**
+
+```go
+result, err := instance.Process(ChatCompletionChunk{})
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Chunk` | `ChatCompletionChunk` | Yes | The chat completion chunk |
+
+**Returns:** `*ChatCompletionChunk`
+
+**Errors:** Returns `error`.
 
 ---
 
@@ -664,9 +924,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-### Methods
+##### Methods
 
-#### Chat()
+###### Chat()
 
 **Signature:**
 
@@ -674,7 +934,26 @@ headers are cached at construction to avoid redundant encoding on every request.
 func (o *DefaultClient) Chat(req ChatCompletionRequest) (ChatCompletionResponse, error)
 ```
 
-#### ChatStream()
+**Example:**
+
+```go
+result, err := instance.Chat(ChatCompletionRequest{})
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `ChatCompletionResponse`
+
+**Errors:** Returns `error`.
+
+###### ChatStream()
 
 **Signature:**
 
@@ -682,7 +961,26 @@ func (o *DefaultClient) Chat(req ChatCompletionRequest) (ChatCompletionResponse,
 func (o *DefaultClient) ChatStream(req ChatCompletionRequest) (string, error)
 ```
 
-#### Embed()
+**Example:**
+
+```go
+result, err := instance.ChatStream(ChatCompletionRequest{})
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `string`
+
+**Errors:** Returns `error`.
+
+###### Embed()
 
 **Signature:**
 
@@ -690,7 +988,26 @@ func (o *DefaultClient) ChatStream(req ChatCompletionRequest) (string, error)
 func (o *DefaultClient) Embed(req EmbeddingRequest) (EmbeddingResponse, error)
 ```
 
-#### ListModels()
+**Example:**
+
+```go
+result, err := instance.Embed(EmbeddingRequest{})
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `EmbeddingRequest` | Yes | The embedding request |
+
+**Returns:** `EmbeddingResponse`
+
+**Errors:** Returns `error`.
+
+###### ListModels()
 
 **Signature:**
 
@@ -698,7 +1015,20 @@ func (o *DefaultClient) Embed(req EmbeddingRequest) (EmbeddingResponse, error)
 func (o *DefaultClient) ListModels() (ModelsListResponse, error)
 ```
 
-#### ImageGenerate()
+**Example:**
+
+```go
+result, err := instance.ListModels()
+if err != nil {
+    return err
+}
+```
+
+**Returns:** `ModelsListResponse`
+
+**Errors:** Returns `error`.
+
+###### ImageGenerate()
 
 **Signature:**
 
@@ -706,7 +1036,26 @@ func (o *DefaultClient) ListModels() (ModelsListResponse, error)
 func (o *DefaultClient) ImageGenerate(req CreateImageRequest) (ImagesResponse, error)
 ```
 
-#### Speech()
+**Example:**
+
+```go
+result, err := instance.ImageGenerate(CreateImageRequest{})
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `CreateImageRequest` | Yes | The create image request |
+
+**Returns:** `ImagesResponse`
+
+**Errors:** Returns `error`.
+
+###### Speech()
 
 **Signature:**
 
@@ -714,7 +1063,26 @@ func (o *DefaultClient) ImageGenerate(req CreateImageRequest) (ImagesResponse, e
 func (o *DefaultClient) Speech(req CreateSpeechRequest) ([]byte, error)
 ```
 
-#### Transcribe()
+**Example:**
+
+```go
+result, err := instance.Speech(CreateSpeechRequest{})
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `CreateSpeechRequest` | Yes | The create speech request |
+
+**Returns:** `[]byte`
+
+**Errors:** Returns `error`.
+
+###### Transcribe()
 
 **Signature:**
 
@@ -722,7 +1090,26 @@ func (o *DefaultClient) Speech(req CreateSpeechRequest) ([]byte, error)
 func (o *DefaultClient) Transcribe(req CreateTranscriptionRequest) (TranscriptionResponse, error)
 ```
 
-#### Moderate()
+**Example:**
+
+```go
+result, err := instance.Transcribe(CreateTranscriptionRequest{})
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
+
+**Returns:** `TranscriptionResponse`
+
+**Errors:** Returns `error`.
+
+###### Moderate()
 
 **Signature:**
 
@@ -730,7 +1117,26 @@ func (o *DefaultClient) Transcribe(req CreateTranscriptionRequest) (Transcriptio
 func (o *DefaultClient) Moderate(req ModerationRequest) (ModerationResponse, error)
 ```
 
-#### Rerank()
+**Example:**
+
+```go
+result, err := instance.Moderate(ModerationRequest{})
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `ModerationRequest` | Yes | The moderation request |
+
+**Returns:** `ModerationResponse`
+
+**Errors:** Returns `error`.
+
+###### Rerank()
 
 **Signature:**
 
@@ -738,7 +1144,26 @@ func (o *DefaultClient) Moderate(req ModerationRequest) (ModerationResponse, err
 func (o *DefaultClient) Rerank(req RerankRequest) (RerankResponse, error)
 ```
 
-#### Search()
+**Example:**
+
+```go
+result, err := instance.Rerank(RerankRequest{})
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `RerankRequest` | Yes | The rerank request |
+
+**Returns:** `RerankResponse`
+
+**Errors:** Returns `error`.
+
+###### Search()
 
 **Signature:**
 
@@ -746,7 +1171,26 @@ func (o *DefaultClient) Rerank(req RerankRequest) (RerankResponse, error)
 func (o *DefaultClient) Search(req SearchRequest) (SearchResponse, error)
 ```
 
-#### Ocr()
+**Example:**
+
+```go
+result, err := instance.Search(SearchRequest{})
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `SearchRequest` | Yes | The search request |
+
+**Returns:** `SearchResponse`
+
+**Errors:** Returns `error`.
+
+###### Ocr()
 
 **Signature:**
 
@@ -754,7 +1198,26 @@ func (o *DefaultClient) Search(req SearchRequest) (SearchResponse, error)
 func (o *DefaultClient) Ocr(req OcrRequest) (OcrResponse, error)
 ```
 
-#### CreateFile()
+**Example:**
+
+```go
+result, err := instance.Ocr(OcrRequest{})
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `OcrRequest` | Yes | The ocr request |
+
+**Returns:** `OcrResponse`
+
+**Errors:** Returns `error`.
+
+###### CreateFile()
 
 **Signature:**
 
@@ -762,7 +1225,26 @@ func (o *DefaultClient) Ocr(req OcrRequest) (OcrResponse, error)
 func (o *DefaultClient) CreateFile(req CreateFileRequest) (FileObject, error)
 ```
 
-#### RetrieveFile()
+**Example:**
+
+```go
+result, err := instance.CreateFile(CreateFileRequest{})
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `CreateFileRequest` | Yes | The create file request |
+
+**Returns:** `FileObject`
+
+**Errors:** Returns `error`.
+
+###### RetrieveFile()
 
 **Signature:**
 
@@ -770,7 +1252,26 @@ func (o *DefaultClient) CreateFile(req CreateFileRequest) (FileObject, error)
 func (o *DefaultClient) RetrieveFile(fileId string) (FileObject, error)
 ```
 
-#### DeleteFile()
+**Example:**
+
+```go
+result, err := instance.RetrieveFile("value")
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `FileId` | `string` | Yes | The file id |
+
+**Returns:** `FileObject`
+
+**Errors:** Returns `error`.
+
+###### DeleteFile()
 
 **Signature:**
 
@@ -778,7 +1279,26 @@ func (o *DefaultClient) RetrieveFile(fileId string) (FileObject, error)
 func (o *DefaultClient) DeleteFile(fileId string) (DeleteResponse, error)
 ```
 
-#### ListFiles()
+**Example:**
+
+```go
+result, err := instance.DeleteFile("value")
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `FileId` | `string` | Yes | The file id |
+
+**Returns:** `DeleteResponse`
+
+**Errors:** Returns `error`.
+
+###### ListFiles()
 
 **Signature:**
 
@@ -786,7 +1306,26 @@ func (o *DefaultClient) DeleteFile(fileId string) (DeleteResponse, error)
 func (o *DefaultClient) ListFiles(query FileListQuery) (FileListResponse, error)
 ```
 
-#### FileContent()
+**Example:**
+
+```go
+result, err := instance.ListFiles(FileListQuery{})
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Query` | `*FileListQuery` | No | The file list query |
+
+**Returns:** `FileListResponse`
+
+**Errors:** Returns `error`.
+
+###### FileContent()
 
 **Signature:**
 
@@ -794,7 +1333,26 @@ func (o *DefaultClient) ListFiles(query FileListQuery) (FileListResponse, error)
 func (o *DefaultClient) FileContent(fileId string) ([]byte, error)
 ```
 
-#### CreateBatch()
+**Example:**
+
+```go
+result, err := instance.FileContent("value")
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `FileId` | `string` | Yes | The file id |
+
+**Returns:** `[]byte`
+
+**Errors:** Returns `error`.
+
+###### CreateBatch()
 
 **Signature:**
 
@@ -802,7 +1360,26 @@ func (o *DefaultClient) FileContent(fileId string) ([]byte, error)
 func (o *DefaultClient) CreateBatch(req CreateBatchRequest) (BatchObject, error)
 ```
 
-#### RetrieveBatch()
+**Example:**
+
+```go
+result, err := instance.CreateBatch(CreateBatchRequest{})
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `CreateBatchRequest` | Yes | The create batch request |
+
+**Returns:** `BatchObject`
+
+**Errors:** Returns `error`.
+
+###### RetrieveBatch()
 
 **Signature:**
 
@@ -810,7 +1387,26 @@ func (o *DefaultClient) CreateBatch(req CreateBatchRequest) (BatchObject, error)
 func (o *DefaultClient) RetrieveBatch(batchId string) (BatchObject, error)
 ```
 
-#### ListBatches()
+**Example:**
+
+```go
+result, err := instance.RetrieveBatch("value")
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `BatchId` | `string` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Returns `error`.
+
+###### ListBatches()
 
 **Signature:**
 
@@ -818,7 +1414,26 @@ func (o *DefaultClient) RetrieveBatch(batchId string) (BatchObject, error)
 func (o *DefaultClient) ListBatches(query BatchListQuery) (BatchListResponse, error)
 ```
 
-#### CancelBatch()
+**Example:**
+
+```go
+result, err := instance.ListBatches(BatchListQuery{})
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Query` | `*BatchListQuery` | No | The batch list query |
+
+**Returns:** `BatchListResponse`
+
+**Errors:** Returns `error`.
+
+###### CancelBatch()
 
 **Signature:**
 
@@ -826,7 +1441,92 @@ func (o *DefaultClient) ListBatches(query BatchListQuery) (BatchListResponse, er
 func (o *DefaultClient) CancelBatch(batchId string) (BatchObject, error)
 ```
 
-#### CreateResponse()
+**Example:**
+
+```go
+result, err := instance.CancelBatch("value")
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `BatchId` | `string` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Returns `error`.
+
+###### FetchBatchForPolling()
+
+**Signature:**
+
+```go
+func (o *DefaultClient) FetchBatchForPolling(batchId string) (BatchObject, error)
+```
+
+**Example:**
+
+```go
+result, err := instance.FetchBatchForPolling("value")
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `BatchId` | `string` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Returns `error`.
+
+###### WaitForBatch()
+
+Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
+
+Uses exponential backoff with configurable initial interval, maximum interval, and backoff multiplier.
+Optionally supports a timeout that aborts polling if exceeded.
+
+**Errors:**
+
+Returns `BatchWaitError.Failed` if the batch reaches a failure terminal status.
+Returns `BatchWaitError.Timeout` if the configured timeout is exceeded.
+Returns `BatchWaitError.Client` for underlying client errors.
+
+**Signature:**
+
+```go
+func (o *DefaultClient) WaitForBatch(batchId string, config WaitForBatchConfig) (BatchObject, error)
+```
+
+**Example:**
+
+```go
+result, err := instance.WaitForBatch("value", WaitForBatchConfig{})
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `BatchId` | `string` | Yes | The batch id |
+| `Config` | `WaitForBatchConfig` | Yes | The configuration options |
+
+**Returns:** `BatchObject`
+
+**Errors:** Returns `error`.
+
+###### CreateResponse()
 
 **Signature:**
 
@@ -834,7 +1534,26 @@ func (o *DefaultClient) CancelBatch(batchId string) (BatchObject, error)
 func (o *DefaultClient) CreateResponse(req CreateResponseRequest) (ResponseObject, error)
 ```
 
-#### RetrieveResponse()
+**Example:**
+
+```go
+result, err := instance.CreateResponse(CreateResponseRequest{})
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `CreateResponseRequest` | Yes | The create response request |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Returns `error`.
+
+###### RetrieveResponse()
 
 **Signature:**
 
@@ -842,13 +1561,51 @@ func (o *DefaultClient) CreateResponse(req CreateResponseRequest) (ResponseObjec
 func (o *DefaultClient) RetrieveResponse(responseId string) (ResponseObject, error)
 ```
 
-#### CancelResponse()
+**Example:**
+
+```go
+result, err := instance.RetrieveResponse("value")
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `ResponseId` | `string` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Returns `error`.
+
+###### CancelResponse()
 
 **Signature:**
 
 ```go
 func (o *DefaultClient) CancelResponse(responseId string) (ResponseObject, error)
 ```
+
+**Example:**
+
+```go
+result, err := instance.CancelResponse("value")
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `ResponseId` | `string` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Returns `error`.
 
 ---
 
@@ -1000,6 +1757,45 @@ Deprecated legacy function-role message body.
 
 ---
 
+#### HealthChecker
+
+Abstraction over a health probe strategy.
+
+Implementors issue a lightweight probe against `upstream` (typically a
+provider base URL or named identifier) and report `HealthStatus`.
+
+##### Methods
+
+###### Check()
+
+Probe `upstream` and return its current `HealthStatus`.
+
+The parameter is taken by value (`String`) so that implementations can
+move it into the returned future without a clone, making the
+`'static + Send` bound on the future trivially satisfiable.
+
+**Signature:**
+
+```go
+func (o *HealthChecker) Check(upstream string) HealthStatus
+```
+
+**Example:**
+
+```go
+result := instance.Check("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Upstream` | `string` | Yes | The upstream |
+
+**Returns:** `HealthStatus`
+
+---
+
 #### Image
 
 A single generated image, returned as either a URL or base64 data.
@@ -1031,6 +1827,18 @@ Response containing generated images.
 |-------|------|---------|-------------|
 | `Created` | `uint64` | — | Unix timestamp of image creation. |
 | `Data` | `[]Image` | `nil` | List of generated images. |
+
+---
+
+#### IntentPrototype
+
+An intent prototype: `(intent_name, prototype_embedding, target_model_id)`.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Name` | `string` | — | Human-readable name for the intent (used in logs/metrics). |
+| `Embedding` | `[]float64` | — | Pre-computed embedding vector for this intent. |
+| `Model` | `string` | — | Model to route to when this intent is detected. |
 
 ---
 
@@ -1222,9 +2030,40 @@ discounted rate and the remainder at the regular input rate.
 
 ---
 
+#### ProviderCapabilities
+
+Static capability flags for a provider.
+
+Each flag indicates whether the provider's models *generally* support that
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
+OpenRouter, vLLM) the flags reflect the superset of available model
+capabilities — a flag being `true` means at least one model supports the
+feature, not every model.
+
+All flags default to `false` so that newly added providers are safe.
+
+Access via the crate-level `capabilities` function:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Vision` | `bool` | — | The provider accepts image input in chat messages. |
+| `Reasoning` | `bool` | — | The provider supports extended-thinking / reasoning tokens. |
+| `StructuredOutput` | `bool` | — | The provider supports JSON-mode or `response_format` structured output. |
+| `FunctionCalling` | `bool` | — | The provider supports tool / function calling. |
+| `AudioIn` | `bool` | — | The provider accepts audio as input. |
+| `AudioOut` | `bool` | — | The provider can generate audio / TTS output. |
+| `VideoIn` | `bool` | — | The provider accepts video as input. |
+
+---
+
 #### ProviderConfig
 
 Static configuration for a single provider entry in providers.json.
+
+This struct deliberately does not include capability flags or streaming
+format, which are accessed via the `capabilities` function. Keeping
+these fields separate preserves backward compatibility with all generated
+binding code that constructs `ProviderConfig` using struct literal syntax.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -1248,15 +2087,23 @@ Configuration for per-model rate limits.
 | `Tpm` | `*uint64` | `nil` | Maximum tokens per window.  `nil` means unlimited. |
 | `Window` | `time.Duration` | `60000ms` | Fixed window duration (defaults to 60 s). |
 
-### Methods
+##### Methods
 
-#### Default()
+###### Default()
 
 **Signature:**
 
 ```go
 func (o *RateLimitConfig) Default() RateLimitConfig
 ```
+
+**Example:**
+
+```go
+result := RateLimitConfig.Default()
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -1394,6 +2241,16 @@ An individual search result.
 | `Url` | `string` | — | Result URL. |
 | `Snippet` | `string` | — | Text snippet or excerpt from the page. |
 | `Date` | `*string` | `/* serde(default) */` | Publication or last-updated date, if available. |
+
+---
+
+#### SingleflightResult
+
+The value broadcast from a singleflight leader to all followers.
+
+`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
+broadcast channels require `T: Clone`. The `Arc` adds only a reference-count
+bump per follower, which is negligible under the burst loads this layer targets.
 
 ---
 
@@ -1560,6 +2417,40 @@ User message in the conversation.
 |-------|------|---------|-------------|
 | `Content` | `UserContent` | `UserContent.Text` | Message content as plain text or array of content parts (text, images, documents, audio). |
 | `Name` | `*string` | `nil` | Optional name for the user. |
+
+---
+
+#### WaitForBatchConfig
+
+Configuration for polling a batch until terminal status.
+
+All time values are in seconds as `f64` so the struct bridges across FFI
+boundaries without requiring a `Duration` shim.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `InitialIntervalSecs` | `float64` | `5` | Initial interval between polls, in seconds. |
+| `MaxIntervalSecs` | `float64` | `60` | Maximum interval between polls (backoff plateau), in seconds. |
+| `BackoffMultiplier` | `float32` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
+| `TimeoutSecs` | `*float64` | `nil` | Optional timeout in seconds — polling fails if this duration is exceeded. |
+
+##### Methods
+
+###### Default()
+
+**Signature:**
+
+```go
+func (o *WaitForBatchConfig) Default() WaitForBatchConfig
+```
+
+**Example:**
+
+```go
+result := WaitForBatchConfig.Default()
+```
+
+**Returns:** `WaitForBatchConfig`
 
 ---
 
@@ -1800,6 +2691,22 @@ How the API key is sent in the HTTP request.
 
 ---
 
+#### StreamFormat
+
+The streaming wire format a provider uses for its response stream.
+
+Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
+a proprietary binary EventStream framing.
+
+Deserialized from the `streaming_format` JSON field via `serde`.
+
+| Value | Description |
+|-------|-------------|
+| `Sse` | Standard Server-Sent Events (text/event-stream). |
+| `AwsEventStream` | AWS EventStream binary framing (application/vnd.amazon.eventstream). |
+
+---
+
 #### AuthType
 
 Auth scheme used by a provider.
@@ -1835,6 +2742,29 @@ Storage backend for the response cache.
 
 ---
 
+#### CircuitState
+
+Observable state of a circuit breaker.
+
+| Value | Description |
+|-------|-------------|
+| `Closed` | Requests flow through normally. |
+| `Open` | All requests are rejected; the circuit is waiting for the backoff to elapse. |
+| `HalfOpen` | One probe request is allowed through to test service health. |
+
+---
+
+#### HealthStatus
+
+The result of a single health probe.
+
+| Value | Description |
+|-------|-------------|
+| `Healthy` | The probe succeeded; the upstream is reachable. |
+| `Unhealthy` | The probe failed; the upstream may be down. |
+
+---
+
 ### Errors
 
 #### LiterLlmError
@@ -1860,5 +2790,7 @@ All errors that can occur when using `liter-llm`.
 | `HookRejected` | hook rejected: {message} |
 | `InternalError` | An internal logic error (e.g. unexpected Tower response variant). This should never surface in normal operation — if it does, it indicates a bug in the library. |
 | `OutboundForbidden` | An outbound request was blocked by the active `OutboundPolicy`. Returned when `register_custom_provider` is called with a `base_url` that violates the policy (e.g. a private-range IP under `DenyPrivate`), or when the per-connection DNS resolver detects a forbidden address at connect time. |
+| `IdempotencyConflict` | A different request body was submitted for an existing `Idempotency-Key`. Per the OpenAI `Idempotency-Key` convention, once a key is used with a particular request body, subsequent requests using the same key must carry an identical body.  A body mismatch is a hard error (not retryable). HTTP equivalent: 409 Conflict. |
+| `IdempotencyInFlight` | The same `Idempotency-Key` is already in-flight (another request with the same key is currently being processed). The caller should wait briefly and retry.  The response is not yet available, and this request has been short-circuited to avoid running the operation twice. HTTP equivalent: 409 Conflict (retryable after a brief delay). |
 
 ---

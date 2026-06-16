@@ -1,11 +1,11 @@
 ---
 title: liter-llm
-description: "liter-llm – Universal LLM API client. One Rust core, 14 native language bindings, 143 providers, an OpenAI-compatible proxy, and a built-in MCP server."
+description: "liter-llm – Universal LLM API client. One Rust core, 14 native language bindings, 143 runtime providers, an OpenAI-compatible proxy, and a built-in MCP server."
 ---
 
 ## Liter-llm
 
-A universal LLM API client with a Rust core and native bindings for 14 languages. One surface across 143 providers — chat, streaming, embeddings, rerank, image generation, speech, transcription, OCR, search, files, batches, moderation — plus an OpenAI-compatible proxy server and a Model Context Protocol server, both shipped in the same binary.
+A universal LLM API client with a Rust core and native bindings for 14 languages. One surface across 143 runtime providers — chat, streaming, embeddings, rerank, image generation, speech, transcription, OCR, search, files, batches, moderation — plus an OpenAI-compatible proxy server and a Model Context Protocol server, both shipped in the same binary.
 
 <div class="hero-badges" markdown>
 
@@ -24,15 +24,15 @@ A universal LLM API client with a Rust core and native bindings for 14 languages
 
 - :material-router-network:{ .lg .middle } **143 Providers**
 
-  OpenAI, Anthropic, Google, Bedrock, Vertex, Azure, Mistral, Cohere, GitHub Copilot, and 135 more — one client, one model-prefix routing scheme.
+  OpenAI, Anthropic, Google, Bedrock, Vertex, Azure, Mistral, Cohere, GitHub Copilot, and many more — one client, one model-prefix routing scheme.
 
 - :material-translate:{ .lg .middle } **14 Native Bindings**
 
-  Rust, Python, TypeScript, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, WebAssembly — plus a C FFI surface for everything else.
+  Rust, Python, TypeScript, Go, Java, Kotlin Android, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, WebAssembly — plus a C FFI surface for everything else.
 
 - :material-chat-processing:{ .lg .middle } **Full Endpoint Coverage**
 
-  Chat, streaming, tools, structured outputs, embeddings, rerank, images, speech, transcription, OCR, search, files, batches, moderation — all behind a single `LlmClient` trait.
+  `LlmClient` covers chat, chat streaming, embeddings, model listing, images, speech, transcription, moderation, rerank, search, and OCR. Files, batches, and responses use dedicated clients.
 
 - :material-server:{ .lg .middle } **Proxy & MCP Server**
 
@@ -60,11 +60,11 @@ A universal LLM API client with a Rust core and native bindings for 14 languages
 | **WebAssembly**       | `npm install @kreuzberg/liter-llm-wasm`                 | [API Reference](reference/api-wasm.md)       |
 | **Go**                | `go get github.com/kreuzberg-dev/liter-llm/packages/go` | [API Reference](reference/api-go.md)         |
 | **Java**              | Maven Central `dev.kreuzberg.literllm:liter-llm`        | [API Reference](reference/api-java.md)       |
-| **Kotlin**            | Maven `com.github.kreuzberg_dev:liter-llm-kotlin`       | [API Reference](reference/api-kotlin.md)     |
+| **Kotlin Android**    | Maven `dev.kreuzberg:liter-llm-android`                 | [API Reference](reference/api-kotlin-android.md) |
 | **C#**                | `dotnet add package LiterLlm`                           | [API Reference](reference/api-csharp.md)     |
 | **Ruby**              | `gem install liter_llm`                                 | [API Reference](reference/api-ruby.md)       |
 | **PHP**               | `composer require kreuzberg/liter-llm`                  | [API Reference](reference/api-php.md)        |
-| **Elixir**            | `{:liter_llm, "~> 1.4.0-rc.27"}`                        | [API Reference](reference/api-elixir.md)     |
+| **Elixir**            | `{:liter_llm, "~> 1.6.0-rc.1"}`                         | [API Reference](reference/api-elixir.md)     |
 | **Dart / Flutter**    | `dart pub add liter_llm`                                | [API Reference](reference/api-dart.md)       |
 | **Swift**             | Swift Package Manager                                   | [API Reference](reference/api-swift.md)      |
 | **Zig**               | `zig fetch --save` from GitHub                          | [API Reference](reference/api-zig.md)        |
@@ -131,7 +131,7 @@ A universal LLM API client with a Rust core and native bindings for 14 languages
 
 ---
 
-### Part of kreuzberg.dev
+### Part of Kreuzberg.dev
 
 <div class="grid cards" markdown>
 
@@ -193,7 +193,7 @@ A universal LLM API client with a Rust core and native bindings for 14 languages
 
 - :material-router-network:{ .lg .middle } **Providers**
 
-  Browse all 143 supported providers, model prefixes, auth modes, and endpoint coverage.
+  Browse all 143 runtime providers, model prefixes, auth modes, and endpoint coverage.
 
   [:octicons-arrow-right-24: Provider Registry](providers.md)
 

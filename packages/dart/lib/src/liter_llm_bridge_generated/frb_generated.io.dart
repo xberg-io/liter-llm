@@ -243,6 +243,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   UserMessage dco_decode_box_autoadd_user_message(dynamic raw);
 
   @protected
+  WaitForBatchConfig dco_decode_box_autoadd_wait_for_batch_config(dynamic raw);
+
+  @protected
   BudgetConfig dco_decode_budget_config(dynamic raw);
 
   @protected
@@ -265,6 +268,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Choice dco_decode_choice(dynamic raw);
+
+  @protected
+  CircuitState dco_decode_circuit_state(dynamic raw);
 
   @protected
   ContentPart dco_decode_content_part(dynamic raw);
@@ -345,6 +351,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   FunctionMessage dco_decode_function_message(dynamic raw);
+
+  @protected
+  HealthStatus dco_decode_health_status(dynamic raw);
 
   @protected
   int dco_decode_i_32(dynamic raw);
@@ -617,6 +626,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PromptTokensDetails dco_decode_prompt_tokens_details(dynamic raw);
 
   @protected
+  ProviderCapabilities dco_decode_provider_capabilities(dynamic raw);
+
+  @protected
   ProviderConfig dco_decode_provider_config(dynamic raw);
 
   @protected
@@ -686,6 +698,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   StreamDelta dco_decode_stream_delta(dynamic raw);
 
   @protected
+  StreamFormat dco_decode_stream_format(dynamic raw);
+
+  @protected
   StreamFunctionCall dco_decode_stream_function_call(dynamic raw);
 
   @protected
@@ -735,6 +750,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt dco_decode_usize(dynamic raw);
+
+  @protected
+  WaitForBatchConfig dco_decode_wait_for_batch_config(dynamic raw);
 
   @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
@@ -1029,6 +1047,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   UserMessage sse_decode_box_autoadd_user_message(SseDeserializer deserializer);
 
   @protected
+  WaitForBatchConfig sse_decode_box_autoadd_wait_for_batch_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   BudgetConfig sse_decode_budget_config(SseDeserializer deserializer);
 
   @protected
@@ -1059,6 +1082,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Choice sse_decode_choice(SseDeserializer deserializer);
+
+  @protected
+  CircuitState sse_decode_circuit_state(SseDeserializer deserializer);
 
   @protected
   ContentPart sse_decode_content_part(SseDeserializer deserializer);
@@ -1153,6 +1179,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   FunctionMessage sse_decode_function_message(SseDeserializer deserializer);
+
+  @protected
+  HealthStatus sse_decode_health_status(SseDeserializer deserializer);
 
   @protected
   int sse_decode_i_32(SseDeserializer deserializer);
@@ -1499,6 +1528,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  ProviderCapabilities sse_decode_provider_capabilities(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   ProviderConfig sse_decode_provider_config(SseDeserializer deserializer);
 
   @protected
@@ -1576,6 +1610,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   StreamDelta sse_decode_stream_delta(SseDeserializer deserializer);
 
   @protected
+  StreamFormat sse_decode_stream_format(SseDeserializer deserializer);
+
+  @protected
   StreamFunctionCall sse_decode_stream_function_call(
     SseDeserializer deserializer,
   );
@@ -1631,6 +1668,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
+
+  @protected
+  WaitForBatchConfig sse_decode_wait_for_batch_config(
+    SseDeserializer deserializer,
+  );
 
   @protected
   void sse_encode_AnyhowException(
@@ -2008,6 +2050,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_wait_for_batch_config(
+    WaitForBatchConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_budget_config(BudgetConfig self, SseSerializer serializer);
 
   @protected
@@ -2042,6 +2090,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_choice(Choice self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_circuit_state(CircuitState self, SseSerializer serializer);
 
   @protected
   void sse_encode_content_part(ContentPart self, SseSerializer serializer);
@@ -2174,6 +2225,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     FunctionMessage self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_health_status(HealthStatus self, SseSerializer serializer);
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
@@ -2617,6 +2671,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_provider_capabilities(
+    ProviderCapabilities self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_provider_config(
     ProviderConfig self,
     SseSerializer serializer,
@@ -2728,6 +2788,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_stream_delta(StreamDelta self, SseSerializer serializer);
 
   @protected
+  void sse_encode_stream_format(StreamFormat self, SseSerializer serializer);
+
+  @protected
   void sse_encode_stream_function_call(
     StreamFunctionCall self,
     SseSerializer serializer,
@@ -2792,6 +2855,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_wait_for_batch_config(
+    WaitForBatchConfig self,
+    SseSerializer serializer,
+  );
 }
 
 // Section: wire_class

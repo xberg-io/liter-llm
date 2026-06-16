@@ -83,6 +83,21 @@ typedef struct LITERLLMChatCompletionTool LITERLLMChatCompletionTool;
  */
 typedef struct LITERLLMChoice LITERLLMChoice;
 /**
+ * A per-chunk transformation in the `StreamPipeline`.
+ *
+ * Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
+ * to pass it through (optionally modified), `Ok(None)` to drop the chunk,
+ * or `Err(e)` to propagate a stream error.
+ *
+ * The trait is object-safe so implementations can be stored in a
+ * `Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+ */
+typedef struct LITERLLMChunkMiddleware LITERLLMChunkMiddleware;
+/**
+ * Observable state of a circuit breaker.
+ */
+typedef struct LITERLLMCircuitState LITERLLMCircuitState;
+/**
  * A single content part in a user message â text, image, document, or audio.
  */
 typedef struct LITERLLMContentPart LITERLLMContentPart;
@@ -201,6 +216,17 @@ typedef struct LITERLLMFunctionDefinition LITERLLMFunctionDefinition;
  */
 typedef struct LITERLLMFunctionMessage LITERLLMFunctionMessage;
 /**
+ * Abstraction over a health probe strategy.
+ *
+ * Implementors issue a lightweight probe against `upstream` (typically a
+ * provider base URL or named identifier) and report `HealthStatus`.
+ */
+typedef struct LITERLLMHealthChecker LITERLLMHealthChecker;
+/**
+ * The result of a single health probe.
+ */
+typedef struct LITERLLMHealthStatus LITERLLMHealthStatus;
+/**
  * A single generated image, returned as either a URL or base64 data.
  */
 typedef struct LITERLLMImage LITERLLMImage;
@@ -216,6 +242,10 @@ typedef struct LITERLLMImageUrl LITERLLMImageUrl;
  * Response containing generated images.
  */
 typedef struct LITERLLMImagesResponse LITERLLMImagesResponse;
+/**
+ * An intent prototype: `(intent_name, prototype_embedding, target_model_id)`.
+ */
+typedef struct LITERLLMIntentPrototype LITERLLMIntentPrototype;
 /**
  * JSON Schema specification for constrained output.
  */
@@ -294,7 +324,38 @@ typedef struct LITERLLMPageDimensions LITERLLMPageDimensions;
  */
 typedef struct LITERLLMPromptTokensDetails LITERLLMPromptTokensDetails;
 /**
+ * Static capability flags for a provider.
+ *
+ * Each flag indicates whether the provider's models *generally* support that
+ * feature.  For providers that aggregate many underlying models (e.g. Bedrock,
+ * OpenRouter, vLLM) the flags reflect the superset of available model
+ * capabilities â a flag being `true` means at least one model supports the
+ * feature, not every model.
+ *
+ * All flags default to `false` so that newly added providers are safe.
+ *
+ * Access via the crate-level `capabilities` function:
+ *
+ * ```rust
+ * use liter_llm::capabilities;
+ *
+ * let caps = capabilities("openai");
+ * assert!(caps.function_calling);
+ * assert!(caps.vision);
+ *
+ * // Unknown providers return a default-all-false reference.
+ * let unknown = capabilities("my-private-model");
+ * assert!(!unknown.function_calling);
+ * ```
+ */
+typedef struct LITERLLMProviderCapabilities LITERLLMProviderCapabilities;
+/**
  * Static configuration for a single provider entry in providers.json.
+ *
+ * This struct deliberately does not include capability flags or streaming
+ * format, which are accessed via the `capabilities` function.  Keeping
+ * these fields separate preserves backward compatibility with all generated
+ * binding code that constructs `ProviderConfig` using struct literal syntax.
  */
 typedef struct LITERLLMProviderConfig LITERLLMProviderConfig;
 /**
@@ -358,6 +419,14 @@ typedef struct LITERLLMSearchResponse LITERLLMSearchResponse;
  */
 typedef struct LITERLLMSearchResult LITERLLMSearchResult;
 /**
+ * The value broadcast from a singleflight leader to all followers.
+ *
+ * `Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
+ * broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
+ * bump per follower, which is negligible under the burst loads this layer targets.
+ */
+typedef struct LITERLLMSingleflightResult LITERLLMSingleflightResult;
+/**
  * Name of the specific function to invoke.
  */
 typedef struct LITERLLMSpecificFunction LITERLLMSpecificFunction;
@@ -377,6 +446,15 @@ typedef struct LITERLLMStreamChoice LITERLLMStreamChoice;
  * Incremental delta in a stream chunk.
  */
 typedef struct LITERLLMStreamDelta LITERLLMStreamDelta;
+/**
+ * The streaming wire format a provider uses for its response stream.
+ *
+ * Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
+ * a proprietary binary EventStream framing.
+ *
+ * Deserialized from the `streaming_format` JSON field via `serde`.
+ */
+typedef struct LITERLLMStreamFormat LITERLLMStreamFormat;
 /**
  * Partial function call details in a stream.
  */
@@ -437,6 +515,13 @@ typedef struct LITERLLMUserContent LITERLLMUserContent;
  * User message in the conversation.
  */
 typedef struct LITERLLMUserMessage LITERLLMUserMessage;
+/**
+ * Configuration for polling a batch until terminal status.
+ *
+ * All time values are in seconds as `f64` so the struct bridges across FFI
+ * boundaries without requiring a `Duration` shim.
+ */
+typedef struct LITERLLMWaitForBatchConfig LITERLLMWaitForBatchConfig;
 
 
 /**
@@ -4182,6 +4267,63 @@ uint64_t literllm_response_usage_output_tokens(const LITERLLMResponseUsage *ptr)
 uint64_t literllm_response_usage_total_tokens(const LITERLLMResponseUsage *ptr);
 
 /**
+ * Create a `WaitForBatchConfig` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `literllm_wait_for_batch_config_free`.
+ */
+LITERLLMWaitForBatchConfig *literllm_wait_for_batch_config_from_json(const char *json);
+
+/**
+ * Serialize a `WaitForBatchConfig` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_wait_for_batch_config_to_json(const LITERLLMWaitForBatchConfig *ptr);
+
+/**
+ * Free a `WaitForBatchConfig` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_wait_for_batch_config_free(LITERLLMWaitForBatchConfig *ptr);
+
+/**
+ * Get the `initial_interval_secs` field from a `WaitForBatchConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+double literllm_wait_for_batch_config_initial_interval_secs(const LITERLLMWaitForBatchConfig *ptr);
+
+/**
+ * Get the `max_interval_secs` field from a `WaitForBatchConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+double literllm_wait_for_batch_config_max_interval_secs(const LITERLLMWaitForBatchConfig *ptr);
+
+/**
+ * Get the `backoff_multiplier` field from a `WaitForBatchConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+float literllm_wait_for_batch_config_backoff_multiplier(const LITERLLMWaitForBatchConfig *ptr);
+
+/**
+ * Get the `timeout_secs` field from a `WaitForBatchConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+double literllm_wait_for_batch_config_timeout_secs(const LITERLLMWaitForBatchConfig *ptr);
+
+/**
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+LITERLLMWaitForBatchConfig *literllm_wait_for_batch_config_default(void);
+
+/**
  * Free a `DefaultClient` handle.
  * # Safety
  * Pointer must have been returned by this library, or be null.
@@ -4339,6 +4481,38 @@ LITERLLMBatchObject *literllm_default_client_cancel_batch(const LITERLLMDefaultC
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
+LITERLLMBatchObject *literllm_default_client_fetch_batch_for_polling(const LITERLLMDefaultClient *this_,
+                                                                     const char *batch_id);
+
+/**
+ * Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
+ *
+ * Uses exponential backoff with configurable initial interval, maximum interval, and backoff
+ * multiplier.
+ * Optionally supports a timeout that aborts polling if exceeded.
+ * \note Returns `BatchWaitError::Failed` if the batch reaches a failure terminal status.
+ * Returns `BatchWaitError::Timeout` if the configured timeout is exceeded.
+ * Returns `BatchWaitError::Client` for underlying client errors.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ * \code
+ * # use liter_llm::client::{DefaultClient, ClientConfig, WaitForBatchConfig};
+ * # async fn run() -> Result<(), Box<dyn std::error::Error>> {
+ * let client = DefaultClient::new(ClientConfig::new("api-key"), None)?;
+ * let batch = client.wait_for_batch("b-123", WaitForBatchConfig::default()).await?;
+ * println!("Batch completed: {:?}", batch.status);
+ * # Ok(())
+ * # }
+ * \endcode
+ */
+LITERLLMBatchObject *literllm_default_client_wait_for_batch(const LITERLLMDefaultClient *this_,
+                                                            const char *batch_id,
+                                                            const LITERLLMWaitForBatchConfig *config);
+
+/**
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
 LITERLLMResponseObject *literllm_default_client_create_response(const LITERLLMDefaultClient *this_,
                                                                 const LITERLLMCreateResponseRequest *req);
 
@@ -4406,6 +4580,78 @@ LITERLLMAuthHeaderFormat *literllm_custom_provider_config_auth_header(const LITE
  * Pointer must be a valid handle returned by this library.
  */
 char *literllm_custom_provider_config_model_prefixes(const LITERLLMCustomProviderConfig *ptr);
+
+/**
+ * Create a `ProviderCapabilities` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `literllm_provider_capabilities_free`.
+ */
+LITERLLMProviderCapabilities *literllm_provider_capabilities_from_json(const char *json);
+
+/**
+ * Serialize a `ProviderCapabilities` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_provider_capabilities_to_json(const LITERLLMProviderCapabilities *ptr);
+
+/**
+ * Free a `ProviderCapabilities` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_provider_capabilities_free(LITERLLMProviderCapabilities *ptr);
+
+/**
+ * Get the `vision` field from a `ProviderCapabilities`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_provider_capabilities_vision(const LITERLLMProviderCapabilities *ptr);
+
+/**
+ * Get the `reasoning` field from a `ProviderCapabilities`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_provider_capabilities_reasoning(const LITERLLMProviderCapabilities *ptr);
+
+/**
+ * Get the `structured_output` field from a `ProviderCapabilities`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_provider_capabilities_structured_output(const LITERLLMProviderCapabilities *ptr);
+
+/**
+ * Get the `function_calling` field from a `ProviderCapabilities`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_provider_capabilities_function_calling(const LITERLLMProviderCapabilities *ptr);
+
+/**
+ * Get the `audio_in` field from a `ProviderCapabilities`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_provider_capabilities_audio_in(const LITERLLMProviderCapabilities *ptr);
+
+/**
+ * Get the `audio_out` field from a `ProviderCapabilities`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_provider_capabilities_audio_out(const LITERLLMProviderCapabilities *ptr);
+
+/**
+ * Get the `video_in` field from a `ProviderCapabilities`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t literllm_provider_capabilities_video_in(const LITERLLMProviderCapabilities *ptr);
 
 /**
  * Create a `ProviderConfig` from a JSON string. Returns null on failure.
@@ -4617,6 +4863,13 @@ LITERLLMCacheBackend *literllm_cache_config_backend(const LITERLLMCacheConfig *p
 LITERLLMCacheConfig *literllm_cache_config_default(void);
 
 /**
+ * Free a `SingleflightResult` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_singleflight_result_free(LITERLLMSingleflightResult *ptr);
+
+/**
  * Create a `RateLimitConfig` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -4665,6 +4918,34 @@ uint64_t literllm_rate_limit_config_window(const LITERLLMRateLimitConfig *ptr);
  * freed with the appropriate free function.
  */
 LITERLLMRateLimitConfig *literllm_rate_limit_config_default(void);
+
+/**
+ * Free a `IntentPrototype` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_intent_prototype_free(LITERLLMIntentPrototype *ptr);
+
+/**
+ * Get the `name` field from a `IntentPrototype`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_intent_prototype_name(const LITERLLMIntentPrototype *ptr);
+
+/**
+ * Get the `embedding` field from a `IntentPrototype`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_intent_prototype_embedding(const LITERLLMIntentPrototype *ptr);
+
+/**
+ * Get the `model` field from a `IntentPrototype`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_intent_prototype_model(const LITERLLMIntentPrototype *ptr);
 
 /**
  * Convert an integer to a `Message` variant. Returns -1 on invalid input.
@@ -4952,6 +5233,21 @@ int32_t literllm_auth_header_format_from_i32(int32_t value);
 int32_t literllm_auth_header_format_from_str(const char *name);
 
 /**
+ * Convert an integer to a `StreamFormat` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t literllm_stream_format_from_i32(int32_t value);
+
+/**
+ * Convert a `StreamFormat` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t literllm_stream_format_from_str(const char *name);
+
+/**
  * Convert an integer to a `AuthType` variant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure all pointer arguments are valid or null.
@@ -4995,6 +5291,36 @@ int32_t literllm_cache_backend_from_i32(int32_t value);
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
 int32_t literllm_cache_backend_from_str(const char *name);
+
+/**
+ * Convert an integer to a `CircuitState` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t literllm_circuit_state_from_i32(int32_t value);
+
+/**
+ * Convert a `CircuitState` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t literllm_circuit_state_from_str(const char *name);
+
+/**
+ * Convert an integer to a `HealthStatus` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t literllm_health_status_from_i32(int32_t value);
+
+/**
+ * Convert a `HealthStatus` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t literllm_health_status_from_str(const char *name);
 
 /**
  * Free a heap-allocated `UserContent` returned by a pointer-returning FFI function.
@@ -5498,9 +5824,26 @@ int32_t literllm_register_custom_provider(const LITERLLMCustomProviderConfig *co
 int32_t literllm_unregister_custom_provider(const char *name);
 
 /**
+ * Return the capability flags for a named provider.
+ *
+ * Performs an O(n) linear scan over the embedded registry (142 entries).
+ * Returns an owned value so that bindings can box/copy it across the FFI
+ * boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+ * so this is a cheap memcpy of seven `bool` fields.
+ *
+ * For unknown `provider_name` values the function returns an all-`false`
+ * sentinel so callers never need to handle `Option`.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+LITERLLMProviderCapabilities *literllm_capabilities(const char *provider_name);
+
+/**
  * Return all provider configs from the registry.
  *
  * Useful for tooling, documentation generation, or runtime enumeration.
+ * Returns the public `ProviderConfig` slice (without capability flags).
+ * To query capability flags for a specific provider use `capabilities`.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
@@ -5551,7 +5894,7 @@ uintptr_t literllm_complex_provider_names_len(void);
  * \code
  * use liter_llm::cost;
  *
- * let usd = cost::completion_cost("gpt-4o", 1_000, 500).unwrap();
+ * let usd = cost::completion_cost("gpt-4o", 1_000, 500).expect("gpt-4o is a known model");
  * // 1000 * 0.0000025 + 500 * 0.00001 = 0.0025 + 0.005 = 0.0075
  * assert!((usd - 0.0075).abs() < 1e-9);
  * \endcode
@@ -5580,6 +5923,15 @@ double literllm_completion_cost_with_cache(const char *model,
                                            uint64_t prompt_tokens,
                                            uint64_t cached_tokens,
                                            uint64_t completion_tokens);
+
+/**
+ * Remove all guardrails from the global registry.
+ *
+ * Primarily useful in tests to reset state between test cases.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+void literllm_clear(void);
 
 /**
  * Count tokens in a text string using the tokenizer for the given model.
@@ -5611,6 +5963,25 @@ uintptr_t literllm_count_request_tokens(const char *model,
                                         const LITERLLMChatCompletionRequest *req);
 
 /**
+ * Assert that `current_len + incoming` does not exceed `limit`.
+ *
+ * Call this before appending `incoming` bytes to any buffer that must
+ * stay below `limit`.  Returns `Err(LiterLlmError::Streaming)` on overflow
+ * and emits a `tracing::warn!` with context.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ * \code
+ * check_bound("SSE buffer", buffer.len(), chunk.len(), SSE_BUFFER_MAX_BYTES)?;
+ * buffer.push_str(chunk_str);
+ * \endcode
+ */
+int32_t literllm_check_bound(const char *context,
+                             uintptr_t current_len,
+                             uintptr_t incoming,
+                             uintptr_t limit);
+
+#if !defined(SKIF_WINDOWS)
+/**
  * Install the `ring` crypto provider as the rustls process default, idempotently.
  *
  * rustls 0.23+ removed the implicit default provider. This function installs
@@ -5631,6 +6002,7 @@ uintptr_t literllm_count_request_tokens(const char *model,
  * freed with the appropriate free function.
  */
 void literllm_ensure_crypto_provider(void);
+#endif
 
 /**
  * Return the HTTP status code for the error pointed to by `err`.

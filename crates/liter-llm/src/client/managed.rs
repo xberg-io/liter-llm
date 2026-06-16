@@ -370,7 +370,7 @@ impl LlmClient for ManagedClient {
         if self.service.is_none() {
             return self.inner.list_models();
         }
-        let fut = self.call_service(LlmRequest::ListModels);
+        let fut = self.call_service(LlmRequest::ListModels());
         Box::pin(async move {
             match fut.await? {
                 LlmResponse::ListModels(r) => Ok(r),
@@ -647,7 +647,7 @@ mod tests {
 
         // Poison the mutex by panicking while holding the lock.
         let _ = thread::spawn(move || {
-            let _guard = m2.lock().unwrap();
+            let _guard = m2.lock().expect("acquiring test mutex should succeed");
             panic!("intentional panic to poison the mutex");
         })
         .join();

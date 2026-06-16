@@ -135,6 +135,7 @@ async fn virtual_key_denied_model_returns_403() {
         rpm: None,
         tpm: None,
         budget_limit: None,
+        provider_credentials: vec![],
     }];
     let proxy = common::test_proxy::TestProxy::with_config(config);
 

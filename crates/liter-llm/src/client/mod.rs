@@ -1,3 +1,5 @@
+/// Type-state builder for [`DefaultClient`] ([`ClientBuilder`]).
+pub mod builder;
 /// Client builder configuration ([`ClientConfig`] and related helpers).
 pub mod config;
 /// On-disk client configuration schema (TOML / JSON / YAML).
@@ -14,7 +16,7 @@ use std::sync::Arc;
 
 use futures_core::Stream;
 
-use crate::error::Result;
+use crate::error::{LiterLlmError, Result};
 use crate::types::audio::{CreateSpeechRequest, CreateTranscriptionRequest, TranscriptionResponse};
 use crate::types::batch::{BatchListQuery, BatchListResponse, BatchObject, CreateBatchRequest};
 use crate::types::files::{CreateFileRequest, DeleteResponse, FileListQuery, FileListResponse, FileObject};
@@ -34,16 +36,85 @@ use crate::types::{
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 use crate::auth::Credential;
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
-use crate::error::LiterLlmError;
-#[cfg(any(feature = "native-http", feature = "wasm-http"))]
 use crate::http;
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 use crate::provider::{self, OpenAiCompatibleProvider, OpenAiProvider, Provider};
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 use secrecy::ExposeSecret;
 
+pub use builder::{ClientBuilder, NoApiKey, NoProvider, WithApiKey, WithProvider};
 pub use config::{ClientConfig, ClientConfigBuilder};
 pub use config_file::FileConfig;
+
+use crate::types::batch::BatchStatus;
+use std::time::Duration;
+
+/// Configuration for polling a batch until terminal status.
+///
+/// All time values are in seconds as `f64` so the struct bridges across FFI
+/// boundaries without requiring a `Duration` shim.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct WaitForBatchConfig {
+    /// Initial interval between polls, in seconds.
+    pub initial_interval_secs: f64,
+    /// Maximum interval between polls (backoff plateau), in seconds.
+    pub max_interval_secs: f64,
+    /// Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll).
+    pub backoff_multiplier: f32,
+    /// Optional timeout in seconds — polling fails if this duration is exceeded.
+    pub timeout_secs: Option<f64>,
+}
+
+impl Default for WaitForBatchConfig {
+    fn default() -> Self {
+        Self {
+            initial_interval_secs: 5.0,
+            max_interval_secs: 60.0,
+            backoff_multiplier: 1.5,
+            timeout_secs: None,
+        }
+    }
+}
+
+/// Error type for batch polling operations.
+///
+/// All fields use FFI-friendly types so the error can be represented across
+/// every language binding without a shim. `Duration` fields are expressed
+/// as `f64` seconds; `LiterLlmError` is flattened to `message` + `code`.
+#[derive(Debug, thiserror::Error)]
+pub enum BatchWaitError {
+    /// Batch reached a terminal failure state.
+    #[error("batch reached terminal failure state: {status:?}")]
+    Failed {
+        /// Terminal batch status (Failed, Expired, or Cancelled).
+        status: BatchStatus,
+    },
+
+    /// Polling timed out before reaching terminal status.
+    #[error("polling timed out after {timeout_secs:.1}s")]
+    Timeout {
+        /// Configured timeout in seconds.
+        timeout_secs: f64,
+    },
+
+    /// Underlying client error, flattened to `message` + numeric `code`.
+    #[error("client error (code {code}): {message}")]
+    Client {
+        /// Human-readable error description.
+        message: String,
+        /// Numeric error code (HTTP status, or 0 for non-HTTP errors).
+        code: u32,
+    },
+}
+
+impl From<LiterLlmError> for BatchWaitError {
+    fn from(err: LiterLlmError) -> Self {
+        Self::Client {
+            code: u32::from(err.status_code()),
+            message: err.to_string(),
+        }
+    }
+}
 
 /// A boxed future returning `T`.
 #[cfg(not(target_arch = "wasm32"))]
@@ -562,6 +633,11 @@ impl DefaultClient {
             // support per-client timeout configuration.
             #[cfg(not(target_arch = "wasm32"))]
             let builder = builder.timeout(config.timeout);
+            // Apply transport config (connection pool, TCP keepalive, HTTP
+            // version negotiation).  WASM uses the browser fetch API which
+            // controls these settings independently.
+            #[cfg(not(target_arch = "wasm32"))]
+            let builder = config.transport.apply_to_builder(builder);
             builder.build().map_err(LiterLlmError::from)?
         };
 
@@ -1730,6 +1806,98 @@ impl BatchClient for DefaultClient {
                 .await?;
             serde_json::from_value::<BatchObject>(raw).map_err(LiterLlmError::from)
         })
+    }
+}
+
+/// Internal trait for batch retrieval, used to abstract polling logic for testability.
+///
+/// Method name avoids collision with the inherent `DefaultClient::retrieve_batch`
+/// so alef-generated bindings don't need to import this trait into scope.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+#[async_trait::async_trait]
+#[doc(hidden)]
+#[cfg_attr(alef, alef(skip))]
+pub trait BatchRetriever {
+    /// Retrieve a batch by ID for polling purposes.
+    async fn fetch_batch_for_polling(&self, batch_id: &str) -> Result<BatchObject>;
+}
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+#[async_trait::async_trait]
+impl BatchRetriever for DefaultClient {
+    async fn fetch_batch_for_polling(&self, batch_id: &str) -> Result<BatchObject> {
+        self.retrieve_batch(batch_id).await
+    }
+}
+
+/// Poll a batch until it reaches a terminal status.
+///
+/// This is the internal implementation shared by tests and `DefaultClient::wait_for_batch`.
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+#[doc(hidden)]
+#[cfg_attr(alef, alef(skip))]
+pub async fn wait_for_batch_impl<R: BatchRetriever>(
+    retriever: &R,
+    batch_id: &str,
+    config: WaitForBatchConfig,
+) -> std::result::Result<BatchObject, BatchWaitError> {
+    let started = tokio::time::Instant::now();
+    let mut interval_secs = config.initial_interval_secs;
+
+    loop {
+        let batch = retriever.fetch_batch_for_polling(batch_id).await?;
+
+        match batch.status {
+            BatchStatus::Completed => return Ok(batch),
+            BatchStatus::Failed | BatchStatus::Expired | BatchStatus::Cancelled => {
+                return Err(BatchWaitError::Failed { status: batch.status });
+            }
+            BatchStatus::Validating | BatchStatus::InProgress | BatchStatus::Finalizing | BatchStatus::Cancelling => {
+                if let Some(timeout_secs) = config.timeout_secs {
+                    let timeout = Duration::from_secs_f64(timeout_secs);
+                    if started.elapsed() >= timeout {
+                        return Err(BatchWaitError::Timeout { timeout_secs });
+                    }
+                }
+                tokio::time::sleep(Duration::from_secs_f64(interval_secs)).await;
+                let next =
+                    (interval_secs as f32 * config.backoff_multiplier).min(config.max_interval_secs as f32) as f64;
+                interval_secs = next;
+            }
+        }
+    }
+}
+
+#[cfg(any(feature = "native-http", feature = "wasm-http"))]
+impl DefaultClient {
+    /// Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
+    ///
+    /// Uses exponential backoff with configurable initial interval, maximum interval, and backoff multiplier.
+    /// Optionally supports a timeout that aborts polling if exceeded.
+    ///
+    /// # Errors
+    ///
+    /// Returns `BatchWaitError::Failed` if the batch reaches a failure terminal status.
+    /// Returns `BatchWaitError::Timeout` if the configured timeout is exceeded.
+    /// Returns `BatchWaitError::Client` for underlying client errors.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use liter_llm::client::{DefaultClient, ClientConfig, WaitForBatchConfig};
+    /// # async fn run() -> Result<(), Box<dyn std::error::Error>> {
+    /// let client = DefaultClient::new(ClientConfig::new("api-key"), None)?;
+    /// let batch = client.wait_for_batch("b-123", WaitForBatchConfig::default()).await?;
+    /// println!("Batch completed: {:?}", batch.status);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn wait_for_batch(
+        &self,
+        batch_id: &str,
+        config: WaitForBatchConfig,
+    ) -> std::result::Result<BatchObject, BatchWaitError> {
+        wait_for_batch_impl(self, batch_id, config).await
     }
 }
 

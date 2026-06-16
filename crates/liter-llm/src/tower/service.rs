@@ -6,7 +6,7 @@ use std::task::{Context, Poll};
 use futures_core::Stream;
 use tower::Service;
 
-use super::types::{LlmRequest, LlmResponse};
+use super::types::{LlmRequest, LlmRequestKind, LlmResponse};
 use crate::client::{BoxFuture, LlmClient};
 use crate::error::{LiterLlmError, Result};
 use crate::types::ChatCompletionChunk;
@@ -82,12 +82,12 @@ where
     fn call(&mut self, req: LlmRequest) -> Self::Future {
         let client = Arc::clone(&self.inner);
         Box::pin(async move {
-            match req {
-                LlmRequest::Chat(r) => {
+            match req.kind {
+                LlmRequestKind::Chat(r) => {
                     let resp = client.chat(r).await?;
                     Ok(LlmResponse::Chat(resp))
                 }
-                LlmRequest::ChatStream(r) => {
+                LlmRequestKind::ChatStream(r) => {
                     // Collect the stream into a Vec while the Arc-backed client is
                     // alive.  This avoids the unsound transmute that would otherwise
                     // be needed to extend the stream's borrow lifetime to 'static.
@@ -100,39 +100,39 @@ where
                         Box::pin(OwnedChunksStream { chunks });
                     Ok(LlmResponse::ChatStream(static_stream))
                 }
-                LlmRequest::Embed(r) => {
+                LlmRequestKind::Embed(r) => {
                     let resp = client.embed(r).await?;
                     Ok(LlmResponse::Embed(resp))
                 }
-                LlmRequest::ListModels => {
+                LlmRequestKind::ListModels => {
                     let resp = client.list_models().await?;
                     Ok(LlmResponse::ListModels(resp))
                 }
-                LlmRequest::ImageGenerate(r) => {
+                LlmRequestKind::ImageGenerate(r) => {
                     let resp = client.image_generate(r).await?;
                     Ok(LlmResponse::ImageGenerate(resp))
                 }
-                LlmRequest::Speech(r) => {
+                LlmRequestKind::Speech(r) => {
                     let resp = client.speech(r).await?;
                     Ok(LlmResponse::Speech(resp))
                 }
-                LlmRequest::Transcribe(r) => {
+                LlmRequestKind::Transcribe(r) => {
                     let resp = client.transcribe(r).await?;
                     Ok(LlmResponse::Transcribe(resp))
                 }
-                LlmRequest::Moderate(r) => {
+                LlmRequestKind::Moderate(r) => {
                     let resp = client.moderate(r).await?;
                     Ok(LlmResponse::Moderate(resp))
                 }
-                LlmRequest::Rerank(r) => {
+                LlmRequestKind::Rerank(r) => {
                     let resp = client.rerank(r).await?;
                     Ok(LlmResponse::Rerank(resp))
                 }
-                LlmRequest::Search(r) => {
+                LlmRequestKind::Search(r) => {
                     let resp = client.search(r).await?;
                     Ok(LlmResponse::Search(resp))
                 }
-                LlmRequest::Ocr(r) => {
+                LlmRequestKind::Ocr(r) => {
                     let resp = client.ocr(r).await?;
                     Ok(LlmResponse::Ocr(resp))
                 }

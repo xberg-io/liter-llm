@@ -22,9 +22,11 @@ pub struct McpArgs {
 pub async fn run(args: McpArgs) -> Result<(), String> {
     use std::sync::Arc;
 
+    use arc_swap::ArcSwap;
     use liter_llm_proxy::auth::{KeyContext, KeyStore};
     use liter_llm_proxy::file_store::FileStore;
     use liter_llm_proxy::mcp::{LiterLlmMcp, McpTransportKind};
+    use liter_llm_proxy::secrets::{EnvVarSecretManager, SecretManagerRegistry};
     use liter_llm_proxy::service_pool::ServicePool;
     use liter_llm_proxy::state::AppState;
     use rmcp::ServiceExt;
@@ -42,7 +44,7 @@ pub async fn run(args: McpArgs) -> Result<(), String> {
         ProxyConfig::discover()?.unwrap_or_default()
     };
 
-    let service_pool = Arc::new(ServicePool::from_config(&config)?);
+    let service_pool = Arc::new(ServicePool::from_config(&config, None)?);
     let key_store = Arc::new(KeyStore::from_config(config.general.master_key.clone(), &config.keys));
     let file_store = Arc::new(FileStore::from_config(
         config.files.as_ref().unwrap_or(&Default::default()),
@@ -100,9 +102,18 @@ pub async fn run(args: McpArgs) -> Result<(), String> {
 
             let app_state = AppState {
                 key_store: key_store.clone(),
+                key_resolver: key_store.clone(),
                 service_pool: service_pool.clone(),
                 file_store: file_store.clone(),
-                config: Arc::new(config.clone()),
+                config: Arc::new(ArcSwap::new(Arc::new(config.clone()))),
+                secret_registry: Arc::new(
+                    SecretManagerRegistry::builder()
+                        .register("env", Arc::new(EnvVarSecretManager::new()))
+                        .default_backend(Arc::new(EnvVarSecretManager::new()))
+                        .build(),
+                ),
+                shutdown: None,
+                usage_sink: None,
             };
 
             // For HTTP transport the actual KeyContext is resolved from the

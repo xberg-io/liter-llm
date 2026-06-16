@@ -2,7 +2,7 @@
 title: "C# API Reference"
 ---
 
-## C# API Reference <span class="version-badge">v1.5.1</span>
+## C# API Reference <span class="version-badge">v1.6.0</span>
 
 ### Functions
 
@@ -25,6 +25,12 @@ constructed, or if the resolved provider configuration is invalid.
 public static DefaultClient CreateClient(string apiKey, string? baseUrl = null, ulong? timeoutSecs = null, uint? maxRetries = null, string? modelHint = null)
 ```
 
+**Example:**
+
+```csharp
+var result = CreateClient("value", "value", 42, 42, "value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -36,6 +42,7 @@ public static DefaultClient CreateClient(string apiKey, string? baseUrl = null, 
 | `ModelHint` | `string?` | No | The model hint |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Throws `Error`.
 
 ---
@@ -57,6 +64,12 @@ contains unknown fields.
 public static DefaultClient CreateClientFromJson(string json)
 ```
 
+**Example:**
+
+```csharp
+var result = CreateClientFromJson("value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -64,6 +77,7 @@ public static DefaultClient CreateClientFromJson(string json)
 | `Json` | `string` | Yes | The json |
 
 **Returns:** `DefaultClient`
+
 **Errors:** Throws `Error`.
 
 ---
@@ -86,13 +100,20 @@ no model prefixes).
 public static void RegisterCustomProvider(CustomProviderConfig config)
 ```
 
+**Example:**
+
+```csharp
+RegisterCustomProvider(new CustomProviderConfig());
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `Config` | `CustomProviderConfig` | Yes | The configuration options |
 
-**Returns:** `void`
+**Returns:** No return value.
+
 **Errors:** Throws `Error`.
 
 ---
@@ -114,6 +135,12 @@ Returns an error only if the internal lock is poisoned.
 public static bool UnregisterCustomProvider(string name)
 ```
 
+**Example:**
+
+```csharp
+var result = UnregisterCustomProvider("value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -121,7 +148,42 @@ public static bool UnregisterCustomProvider(string name)
 | `Name` | `string` | Yes | The name |
 
 **Returns:** `bool`
+
 **Errors:** Throws `Error`.
+
+---
+
+#### Capabilities()
+
+Return the capability flags for a named provider.
+
+Performs an O(n) linear scan over the embedded registry (142 entries).
+Returns an owned value so that bindings can box/copy it across the FFI
+boundary without dealing with lifetimes. `ProviderCapabilities` is `Copy`,
+so this is a cheap memcpy of seven `bool` fields.
+
+For unknown `provider_name` values the function returns an all-`false`
+sentinel so callers never need to handle `Option`.
+
+**Signature:**
+
+```csharp
+public static ProviderCapabilities Capabilities(string providerName)
+```
+
+**Example:**
+
+```csharp
+var result = Capabilities("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `ProviderName` | `string` | Yes | The provider name |
+
+**Returns:** `ProviderCapabilities`
 
 ---
 
@@ -130,6 +192,8 @@ public static bool UnregisterCustomProvider(string name)
 Return all provider configs from the registry.
 
 Useful for tooling, documentation generation, or runtime enumeration.
+Returns the public `ProviderConfig` slice (without capability flags).
+To query capability flags for a specific provider use `capabilities`.
 
 **Signature:**
 
@@ -137,7 +201,14 @@ Useful for tooling, documentation generation, or runtime enumeration.
 public static List<ProviderConfig> AllProviders()
 ```
 
+**Example:**
+
+```csharp
+var result = AllProviders();
+```
+
 **Returns:** `List<ProviderConfig>`
+
 **Errors:** Throws `Error`.
 
 ---
@@ -157,7 +228,14 @@ The returned reference points into the static registry — no allocation.
 public static List<string> ComplexProviderNames()
 ```
 
+**Example:**
+
+```csharp
+var result = ComplexProviderNames();
+```
+
 **Returns:** `List<string>`
+
 **Errors:** Throws `Error`.
 
 ---
@@ -178,6 +256,12 @@ are tried by stripping from the last `-` or `.` separator. For example,
 
 ```csharp
 public static double? CompletionCost(string model, ulong promptTokens, ulong completionTokens)
+```
+
+**Example:**
+
+```csharp
+var result = CompletionCost("value", 42, 42);
 ```
 
 **Parameters:**
@@ -213,6 +297,12 @@ registry, mirroring `completion_cost`.
 public static double? CompletionCostWithCache(string model, ulong promptTokens, ulong cachedTokens, ulong completionTokens)
 ```
 
+**Example:**
+
+```csharp
+var result = CompletionCostWithCache("value", 42, 42, 42);
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -223,6 +313,32 @@ public static double? CompletionCostWithCache(string model, ulong promptTokens, 
 | `CompletionTokens` | `ulong` | Yes | The completion tokens |
 
 **Returns:** `double?`
+
+---
+
+#### Clear()
+
+Remove all guardrails from the global registry.
+
+Primarily useful in tests to reset state between test cases.
+
+**Panics:**
+
+Panics if the global registry lock is poisoned.
+
+**Signature:**
+
+```csharp
+public static void Clear()
+```
+
+**Example:**
+
+```csharp
+Clear();
+```
+
+**Returns:** No return value.
 
 ---
 
@@ -245,6 +361,12 @@ Returns `LiterLlmError.BadRequest` if the tokenizer cannot be loaded
 public static nuint CountTokens(string model, string text)
 ```
 
+**Example:**
+
+```csharp
+var result = CountTokens("value", "value");
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -253,6 +375,7 @@ public static nuint CountTokens(string model, string text)
 | `Text` | `string` | Yes | The text |
 
 **Returns:** `nuint`
+
 **Errors:** Throws `Error`.
 
 ---
@@ -277,6 +400,12 @@ if tokenization fails for any message.
 public static nuint CountRequestTokens(string model, ChatCompletionRequest req)
 ```
 
+**Example:**
+
+```csharp
+var result = CountRequestTokens("value", new ChatCompletionRequest());
+```
+
 **Parameters:**
 
 | Name | Type | Required | Description |
@@ -285,6 +414,42 @@ public static nuint CountRequestTokens(string model, ChatCompletionRequest req)
 | `Req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
 **Returns:** `nuint`
+
+**Errors:** Throws `Error`.
+
+---
+
+#### CheckBound()
+
+Assert that `current_len + incoming` does not exceed `limit`.
+
+Call this before appending `incoming` bytes to any buffer that must
+stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
+and emits a `tracing.warn!` with context.
+
+**Signature:**
+
+```csharp
+public static void CheckBound(string context, nuint currentLen, nuint incoming, nuint limit)
+```
+
+**Example:**
+
+```csharp
+CheckBound("value", 42, 42, 42);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Context` | `string` | Yes | The context |
+| `CurrentLen` | `nuint` | Yes | The current len |
+| `Incoming` | `nuint` | Yes | The incoming |
+| `Limit` | `nuint` | Yes | The limit |
+
+**Returns:** No return value.
+
 **Errors:** Throws `Error`.
 
 ---
@@ -314,7 +479,13 @@ present and no crypto provider installation is needed.
 public static void EnsureCryptoProvider()
 ```
 
-**Returns:** `void`
+**Example:**
+
+```csharp
+EnsureCryptoProvider();
+```
+
+**Returns:** No return value.
 
 ---
 
@@ -426,15 +597,23 @@ Configuration for budget enforcement.
 | `ModelLimits` | `Dictionary<string, double>` | `new Dictionary<string, double>()` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
 | `Enforcement` | `Enforcement` | `Enforcement.Hard` | Whether to reject requests or merely warn when a limit is exceeded. |
 
-### Methods
+##### Methods
 
-#### CreateDefault()
+###### CreateDefault()
 
 **Signature:**
 
 ```csharp
 public BudgetConfig CreateDefault()
 ```
+
+**Example:**
+
+```csharp
+var result = BudgetConfig.CreateDefault();
+```
+
+**Returns:** `BudgetConfig`
 
 ---
 
@@ -448,15 +627,23 @@ Configuration for the response cache.
 | `Ttl` | `TimeSpan` | `300000ms` | Time-to-live for each cached entry. |
 | `Backend` | `CacheBackend` | `CacheBackend.Memory` | Storage backend to use. |
 
-### Methods
+##### Methods
 
-#### CreateDefault()
+###### CreateDefault()
 
 **Signature:**
 
 ```csharp
 public CacheConfig CreateDefault()
 ```
+
+**Example:**
+
+```csharp
+var result = CacheConfig.CreateDefault();
+```
+
+**Returns:** `CacheConfig`
 
 ---
 
@@ -543,6 +730,51 @@ A single completion choice.
 | `Index` | `uint` | — | Index of this choice in the choices array. |
 | `Message` | `AssistantMessage` | — | The assistant's message response. |
 | `FinishReason` | `FinishReason?` | `null` | Why the model stopped generating (stop, length, tool_calls, content_filter, etc.). |
+
+---
+
+#### ChunkMiddleware
+
+A per-chunk transformation in the `StreamPipeline`.
+
+Each middleware receives a typed chunk and returns `Ok(Some(chunk))`
+to pass it through (optionally modified), `Ok(None)` to drop the chunk,
+or `Err(e)` to propagate a stream error.
+
+The trait is object-safe so implementations can be stored in a
+`Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
+
+##### Methods
+
+###### Process()
+
+Process a single chunk.
+
+- `Ok(Some(chunk))` — emit (possibly transformed) chunk.
+- `Ok(None)` — drop this chunk silently.
+- `Err(e)` — propagate as a stream error.
+
+**Signature:**
+
+```csharp
+public ChatCompletionChunk? Process(ChatCompletionChunk chunk)
+```
+
+**Example:**
+
+```csharp
+var result = instance.Process(new ChatCompletionChunk());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Chunk` | `ChatCompletionChunk` | Yes | The chat completion chunk |
+
+**Returns:** `ChatCompletionChunk?`
+
+**Errors:** Throws `Error`.
 
 ---
 
@@ -664,9 +896,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-### Methods
+##### Methods
 
-#### Chat()
+###### Chat()
 
 **Signature:**
 
@@ -674,7 +906,23 @@ headers are cached at construction to avoid redundant encoding on every request.
 public async Task<ChatCompletionResponse> ChatAsync(ChatCompletionRequest req)
 ```
 
-#### ChatStream()
+**Example:**
+
+```csharp
+var result = await instance.Chat(new ChatCompletionRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `ChatCompletionResponse`
+
+**Errors:** Throws `Error`.
+
+###### ChatStream()
 
 **Signature:**
 
@@ -682,7 +930,23 @@ public async Task<ChatCompletionResponse> ChatAsync(ChatCompletionRequest req)
 public async Task<string> ChatStreamAsync(ChatCompletionRequest req)
 ```
 
-#### Embed()
+**Example:**
+
+```csharp
+var result = await instance.ChatStream(new ChatCompletionRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `ChatCompletionRequest` | Yes | The chat completion request |
+
+**Returns:** `string`
+
+**Errors:** Throws `Error`.
+
+###### Embed()
 
 **Signature:**
 
@@ -690,7 +954,23 @@ public async Task<string> ChatStreamAsync(ChatCompletionRequest req)
 public async Task<EmbeddingResponse> EmbedAsync(EmbeddingRequest req)
 ```
 
-#### ListModels()
+**Example:**
+
+```csharp
+var result = await instance.Embed(new EmbeddingRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `EmbeddingRequest` | Yes | The embedding request |
+
+**Returns:** `EmbeddingResponse`
+
+**Errors:** Throws `Error`.
+
+###### ListModels()
 
 **Signature:**
 
@@ -698,7 +978,17 @@ public async Task<EmbeddingResponse> EmbedAsync(EmbeddingRequest req)
 public async Task<ModelsListResponse> ListModelsAsync()
 ```
 
-#### ImageGenerate()
+**Example:**
+
+```csharp
+var result = await instance.ListModels();
+```
+
+**Returns:** `ModelsListResponse`
+
+**Errors:** Throws `Error`.
+
+###### ImageGenerate()
 
 **Signature:**
 
@@ -706,7 +996,23 @@ public async Task<ModelsListResponse> ListModelsAsync()
 public async Task<ImagesResponse> ImageGenerateAsync(CreateImageRequest req)
 ```
 
-#### Speech()
+**Example:**
+
+```csharp
+var result = await instance.ImageGenerate(new CreateImageRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `CreateImageRequest` | Yes | The create image request |
+
+**Returns:** `ImagesResponse`
+
+**Errors:** Throws `Error`.
+
+###### Speech()
 
 **Signature:**
 
@@ -714,7 +1020,23 @@ public async Task<ImagesResponse> ImageGenerateAsync(CreateImageRequest req)
 public async Task<byte[]> SpeechAsync(CreateSpeechRequest req)
 ```
 
-#### Transcribe()
+**Example:**
+
+```csharp
+var result = await instance.Speech(new CreateSpeechRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `CreateSpeechRequest` | Yes | The create speech request |
+
+**Returns:** `byte[]`
+
+**Errors:** Throws `Error`.
+
+###### Transcribe()
 
 **Signature:**
 
@@ -722,7 +1044,23 @@ public async Task<byte[]> SpeechAsync(CreateSpeechRequest req)
 public async Task<TranscriptionResponse> TranscribeAsync(CreateTranscriptionRequest req)
 ```
 
-#### Moderate()
+**Example:**
+
+```csharp
+var result = await instance.Transcribe(new CreateTranscriptionRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `CreateTranscriptionRequest` | Yes | The create transcription request |
+
+**Returns:** `TranscriptionResponse`
+
+**Errors:** Throws `Error`.
+
+###### Moderate()
 
 **Signature:**
 
@@ -730,7 +1068,23 @@ public async Task<TranscriptionResponse> TranscribeAsync(CreateTranscriptionRequ
 public async Task<ModerationResponse> ModerateAsync(ModerationRequest req)
 ```
 
-#### Rerank()
+**Example:**
+
+```csharp
+var result = await instance.Moderate(new ModerationRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `ModerationRequest` | Yes | The moderation request |
+
+**Returns:** `ModerationResponse`
+
+**Errors:** Throws `Error`.
+
+###### Rerank()
 
 **Signature:**
 
@@ -738,7 +1092,23 @@ public async Task<ModerationResponse> ModerateAsync(ModerationRequest req)
 public async Task<RerankResponse> RerankAsync(RerankRequest req)
 ```
 
-#### Search()
+**Example:**
+
+```csharp
+var result = await instance.Rerank(new RerankRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `RerankRequest` | Yes | The rerank request |
+
+**Returns:** `RerankResponse`
+
+**Errors:** Throws `Error`.
+
+###### Search()
 
 **Signature:**
 
@@ -746,7 +1116,23 @@ public async Task<RerankResponse> RerankAsync(RerankRequest req)
 public async Task<SearchResponse> SearchAsync(SearchRequest req)
 ```
 
-#### Ocr()
+**Example:**
+
+```csharp
+var result = await instance.Search(new SearchRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `SearchRequest` | Yes | The search request |
+
+**Returns:** `SearchResponse`
+
+**Errors:** Throws `Error`.
+
+###### Ocr()
 
 **Signature:**
 
@@ -754,7 +1140,23 @@ public async Task<SearchResponse> SearchAsync(SearchRequest req)
 public async Task<OcrResponse> OcrAsync(OcrRequest req)
 ```
 
-#### CreateFile()
+**Example:**
+
+```csharp
+var result = await instance.Ocr(new OcrRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `OcrRequest` | Yes | The ocr request |
+
+**Returns:** `OcrResponse`
+
+**Errors:** Throws `Error`.
+
+###### CreateFile()
 
 **Signature:**
 
@@ -762,7 +1164,23 @@ public async Task<OcrResponse> OcrAsync(OcrRequest req)
 public async Task<FileObject> CreateFileAsync(CreateFileRequest req)
 ```
 
-#### RetrieveFile()
+**Example:**
+
+```csharp
+var result = await instance.CreateFile(new CreateFileRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `CreateFileRequest` | Yes | The create file request |
+
+**Returns:** `FileObject`
+
+**Errors:** Throws `Error`.
+
+###### RetrieveFile()
 
 **Signature:**
 
@@ -770,7 +1188,23 @@ public async Task<FileObject> CreateFileAsync(CreateFileRequest req)
 public async Task<FileObject> RetrieveFileAsync(string fileId)
 ```
 
-#### DeleteFile()
+**Example:**
+
+```csharp
+var result = await instance.RetrieveFile("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `FileId` | `string` | Yes | The file id |
+
+**Returns:** `FileObject`
+
+**Errors:** Throws `Error`.
+
+###### DeleteFile()
 
 **Signature:**
 
@@ -778,7 +1212,23 @@ public async Task<FileObject> RetrieveFileAsync(string fileId)
 public async Task<DeleteResponse> DeleteFileAsync(string fileId)
 ```
 
-#### ListFiles()
+**Example:**
+
+```csharp
+var result = await instance.DeleteFile("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `FileId` | `string` | Yes | The file id |
+
+**Returns:** `DeleteResponse`
+
+**Errors:** Throws `Error`.
+
+###### ListFiles()
 
 **Signature:**
 
@@ -786,7 +1236,23 @@ public async Task<DeleteResponse> DeleteFileAsync(string fileId)
 public async Task<FileListResponse> ListFilesAsync(FileListQuery query)
 ```
 
-#### FileContent()
+**Example:**
+
+```csharp
+var result = await instance.ListFiles(new FileListQuery());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Query` | `FileListQuery?` | No | The file list query |
+
+**Returns:** `FileListResponse`
+
+**Errors:** Throws `Error`.
+
+###### FileContent()
 
 **Signature:**
 
@@ -794,7 +1260,23 @@ public async Task<FileListResponse> ListFilesAsync(FileListQuery query)
 public async Task<byte[]> FileContentAsync(string fileId)
 ```
 
-#### CreateBatch()
+**Example:**
+
+```csharp
+var result = await instance.FileContent("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `FileId` | `string` | Yes | The file id |
+
+**Returns:** `byte[]`
+
+**Errors:** Throws `Error`.
+
+###### CreateBatch()
 
 **Signature:**
 
@@ -802,7 +1284,23 @@ public async Task<byte[]> FileContentAsync(string fileId)
 public async Task<BatchObject> CreateBatchAsync(CreateBatchRequest req)
 ```
 
-#### RetrieveBatch()
+**Example:**
+
+```csharp
+var result = await instance.CreateBatch(new CreateBatchRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `CreateBatchRequest` | Yes | The create batch request |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error`.
+
+###### RetrieveBatch()
 
 **Signature:**
 
@@ -810,7 +1308,23 @@ public async Task<BatchObject> CreateBatchAsync(CreateBatchRequest req)
 public async Task<BatchObject> RetrieveBatchAsync(string batchId)
 ```
 
-#### ListBatches()
+**Example:**
+
+```csharp
+var result = await instance.RetrieveBatch("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `BatchId` | `string` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error`.
+
+###### ListBatches()
 
 **Signature:**
 
@@ -818,7 +1332,23 @@ public async Task<BatchObject> RetrieveBatchAsync(string batchId)
 public async Task<BatchListResponse> ListBatchesAsync(BatchListQuery query)
 ```
 
-#### CancelBatch()
+**Example:**
+
+```csharp
+var result = await instance.ListBatches(new BatchListQuery());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Query` | `BatchListQuery?` | No | The batch list query |
+
+**Returns:** `BatchListResponse`
+
+**Errors:** Throws `Error`.
+
+###### CancelBatch()
 
 **Signature:**
 
@@ -826,7 +1356,83 @@ public async Task<BatchListResponse> ListBatchesAsync(BatchListQuery query)
 public async Task<BatchObject> CancelBatchAsync(string batchId)
 ```
 
-#### CreateResponse()
+**Example:**
+
+```csharp
+var result = await instance.CancelBatch("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `BatchId` | `string` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error`.
+
+###### FetchBatchForPolling()
+
+**Signature:**
+
+```csharp
+public async Task<BatchObject> FetchBatchForPollingAsync(string batchId)
+```
+
+**Example:**
+
+```csharp
+var result = await instance.FetchBatchForPolling("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `BatchId` | `string` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error`.
+
+###### WaitForBatch()
+
+Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
+
+Uses exponential backoff with configurable initial interval, maximum interval, and backoff multiplier.
+Optionally supports a timeout that aborts polling if exceeded.
+
+**Errors:**
+
+Returns `BatchWaitError.Failed` if the batch reaches a failure terminal status.
+Returns `BatchWaitError.Timeout` if the configured timeout is exceeded.
+Returns `BatchWaitError.Client` for underlying client errors.
+
+**Signature:**
+
+```csharp
+public async Task<BatchObject> WaitForBatchAsync(string batchId, WaitForBatchConfig config)
+```
+
+**Example:**
+
+```csharp
+var result = await instance.WaitForBatch("value", new WaitForBatchConfig());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `BatchId` | `string` | Yes | The batch id |
+| `Config` | `WaitForBatchConfig` | Yes | The configuration options |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `BatchWaitError`.
+
+###### CreateResponse()
 
 **Signature:**
 
@@ -834,7 +1440,23 @@ public async Task<BatchObject> CancelBatchAsync(string batchId)
 public async Task<ResponseObject> CreateResponseAsync(CreateResponseRequest req)
 ```
 
-#### RetrieveResponse()
+**Example:**
+
+```csharp
+var result = await instance.CreateResponse(new CreateResponseRequest());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Req` | `CreateResponseRequest` | Yes | The create response request |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Throws `Error`.
+
+###### RetrieveResponse()
 
 **Signature:**
 
@@ -842,13 +1464,45 @@ public async Task<ResponseObject> CreateResponseAsync(CreateResponseRequest req)
 public async Task<ResponseObject> RetrieveResponseAsync(string responseId)
 ```
 
-#### CancelResponse()
+**Example:**
+
+```csharp
+var result = await instance.RetrieveResponse("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `ResponseId` | `string` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Throws `Error`.
+
+###### CancelResponse()
 
 **Signature:**
 
 ```csharp
 public async Task<ResponseObject> CancelResponseAsync(string responseId)
 ```
+
+**Example:**
+
+```csharp
+var result = await instance.CancelResponse("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `ResponseId` | `string` | Yes | The response id |
+
+**Returns:** `ResponseObject`
+
+**Errors:** Throws `Error`.
 
 ---
 
@@ -1000,6 +1654,45 @@ Deprecated legacy function-role message body.
 
 ---
 
+#### HealthChecker
+
+Abstraction over a health probe strategy.
+
+Implementors issue a lightweight probe against `upstream` (typically a
+provider base URL or named identifier) and report `HealthStatus`.
+
+##### Methods
+
+###### Check()
+
+Probe `upstream` and return its current `HealthStatus`.
+
+The parameter is taken by value (`String`) so that implementations can
+move it into the returned future without a clone, making the
+`'static + Send` bound on the future trivially satisfiable.
+
+**Signature:**
+
+```csharp
+public async Task<HealthStatus> CheckAsync(string upstream)
+```
+
+**Example:**
+
+```csharp
+var result = await instance.Check("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Upstream` | `string` | Yes | The upstream |
+
+**Returns:** `HealthStatus`
+
+---
+
 #### Image
 
 A single generated image, returned as either a URL or base64 data.
@@ -1031,6 +1724,18 @@ Response containing generated images.
 |-------|------|---------|-------------|
 | `Created` | `ulong` | — | Unix timestamp of image creation. |
 | `Data` | `List<Image>` | `new List<Image>()` | List of generated images. |
+
+---
+
+#### IntentPrototype
+
+An intent prototype: `(intent_name, prototype_embedding, target_model_id)`.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Name` | `string` | — | Human-readable name for the intent (used in logs/metrics). |
+| `Embedding` | `List<double>` | — | Pre-computed embedding vector for this intent. |
+| `Model` | `string` | — | Model to route to when this intent is detected. |
 
 ---
 
@@ -1222,9 +1927,40 @@ discounted rate and the remainder at the regular input rate.
 
 ---
 
+#### ProviderCapabilities
+
+Static capability flags for a provider.
+
+Each flag indicates whether the provider's models *generally* support that
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
+OpenRouter, vLLM) the flags reflect the superset of available model
+capabilities — a flag being `true` means at least one model supports the
+feature, not every model.
+
+All flags default to `false` so that newly added providers are safe.
+
+Access via the crate-level `capabilities` function:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `Vision` | `bool` | — | The provider accepts image input in chat messages. |
+| `Reasoning` | `bool` | — | The provider supports extended-thinking / reasoning tokens. |
+| `StructuredOutput` | `bool` | — | The provider supports JSON-mode or `response_format` structured output. |
+| `FunctionCalling` | `bool` | — | The provider supports tool / function calling. |
+| `AudioIn` | `bool` | — | The provider accepts audio as input. |
+| `AudioOut` | `bool` | — | The provider can generate audio / TTS output. |
+| `VideoIn` | `bool` | — | The provider accepts video as input. |
+
+---
+
 #### ProviderConfig
 
 Static configuration for a single provider entry in providers.json.
+
+This struct deliberately does not include capability flags or streaming
+format, which are accessed via the `capabilities` function. Keeping
+these fields separate preserves backward compatibility with all generated
+binding code that constructs `ProviderConfig` using struct literal syntax.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -1248,15 +1984,23 @@ Configuration for per-model rate limits.
 | `Tpm` | `ulong?` | `null` | Maximum tokens per window.  `null` means unlimited. |
 | `Window` | `TimeSpan` | `60000ms` | Fixed window duration (defaults to 60 s). |
 
-### Methods
+##### Methods
 
-#### CreateDefault()
+###### CreateDefault()
 
 **Signature:**
 
 ```csharp
 public RateLimitConfig CreateDefault()
 ```
+
+**Example:**
+
+```csharp
+var result = RateLimitConfig.CreateDefault();
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -1394,6 +2138,16 @@ An individual search result.
 | `Url` | `string` | — | Result URL. |
 | `Snippet` | `string` | — | Text snippet or excerpt from the page. |
 | `Date` | `string?` | `/* serde(default) */` | Publication or last-updated date, if available. |
+
+---
+
+#### SingleflightResult
+
+The value broadcast from a singleflight leader to all followers.
+
+`Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
+broadcast channels require `T: Clone`. The `Arc` adds only a reference-count
+bump per follower, which is negligible under the burst loads this layer targets.
 
 ---
 
@@ -1560,6 +2314,40 @@ User message in the conversation.
 |-------|------|---------|-------------|
 | `Content` | `UserContent` | `UserContent.Text` | Message content as plain text or array of content parts (text, images, documents, audio). |
 | `Name` | `string?` | `null` | Optional name for the user. |
+
+---
+
+#### WaitForBatchConfig
+
+Configuration for polling a batch until terminal status.
+
+All time values are in seconds as `f64` so the struct bridges across FFI
+boundaries without requiring a `Duration` shim.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `InitialIntervalSecs` | `double` | `5` | Initial interval between polls, in seconds. |
+| `MaxIntervalSecs` | `double` | `60` | Maximum interval between polls (backoff plateau), in seconds. |
+| `BackoffMultiplier` | `float` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
+| `TimeoutSecs` | `double?` | `null` | Optional timeout in seconds — polling fails if this duration is exceeded. |
+
+##### Methods
+
+###### CreateDefault()
+
+**Signature:**
+
+```csharp
+public WaitForBatchConfig CreateDefault()
+```
+
+**Example:**
+
+```csharp
+var result = WaitForBatchConfig.CreateDefault();
+```
+
+**Returns:** `WaitForBatchConfig`
 
 ---
 
@@ -1800,6 +2588,22 @@ How the API key is sent in the HTTP request.
 
 ---
 
+#### StreamFormat
+
+The streaming wire format a provider uses for its response stream.
+
+Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
+a proprietary binary EventStream framing.
+
+Deserialized from the `streaming_format` JSON field via `serde`.
+
+| Value | Description |
+|-------|-------------|
+| `Sse` | Standard Server-Sent Events (text/event-stream). |
+| `AwsEventStream` | AWS EventStream binary framing (application/vnd.amazon.eventstream). |
+
+---
+
 #### AuthType
 
 Auth scheme used by a provider.
@@ -1835,6 +2639,29 @@ Storage backend for the response cache.
 
 ---
 
+#### CircuitState
+
+Observable state of a circuit breaker.
+
+| Value | Description |
+|-------|-------------|
+| `Closed` | Requests flow through normally. |
+| `Open` | All requests are rejected; the circuit is waiting for the backoff to elapse. |
+| `HalfOpen` | One probe request is allowed through to test service health. |
+
+---
+
+#### HealthStatus
+
+The result of a single health probe.
+
+| Value | Description |
+|-------|-------------|
+| `Healthy` | The probe succeeded; the upstream is reachable. |
+| `Unhealthy` | The probe failed; the upstream may be down. |
+
+---
+
 ### Errors
 
 #### LiterLlmError
@@ -1860,5 +2687,7 @@ All errors that can occur when using `liter-llm`.
 | `HookRejected` | hook rejected: {message} |
 | `InternalError` | An internal logic error (e.g. unexpected Tower response variant). This should never surface in normal operation — if it does, it indicates a bug in the library. |
 | `OutboundForbidden` | An outbound request was blocked by the active `OutboundPolicy`. Returned when `register_custom_provider` is called with a `base_url` that violates the policy (e.g. a private-range IP under `DenyPrivate`), or when the per-connection DNS resolver detects a forbidden address at connect time. |
+| `IdempotencyConflict` | A different request body was submitted for an existing `Idempotency-Key`. Per the OpenAI `Idempotency-Key` convention, once a key is used with a particular request body, subsequent requests using the same key must carry an identical body.  A body mismatch is a hard error (not retryable). HTTP equivalent: 409 Conflict. |
+| `IdempotencyInFlight` | The same `Idempotency-Key` is already in-flight (another request with the same key is currently being processed). The caller should wait briefly and retry.  The response is not yet available, and this request has been short-circuited to avoid running the operation twice. HTTP equivalent: 409 Conflict (retryable after a brief delay). |
 
 ---

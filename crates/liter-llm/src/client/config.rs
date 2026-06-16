@@ -6,6 +6,7 @@ use secrecy::SecretString;
 use crate::auth::CredentialProvider;
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 use crate::error::{LiterLlmError, Result};
+use crate::http::transport::TransportConfig;
 #[cfg(feature = "tower")]
 use crate::tower::{BudgetConfig, CacheConfig, CacheStore, LlmHook, RateLimitConfig};
 
@@ -101,6 +102,9 @@ pub struct ClientConfig {
     ///
     /// Has no effect on WASM targets, where `std::env::var` is unavailable.
     pub load_env: bool,
+
+    /// HTTP transport configuration for connection pooling, DNS caching, and protocol selection.
+    pub transport: TransportConfig,
 }
 
 #[cfg_attr(alef, alef(skip))]
@@ -115,6 +119,7 @@ impl ClientConfig {
             extra_headers: Vec::new(),
             credential_provider: None,
             load_env: true,
+            transport: TransportConfig::default(),
             #[cfg(feature = "tower")]
             cache_config: None,
             #[cfg(feature = "tower")]
@@ -383,6 +388,13 @@ impl ClientConfigBuilder {
     #[cfg(feature = "tower")]
     pub fn tracing(mut self, enabled: bool) -> Self {
         self.config.enable_tracing = enabled;
+        self
+    }
+
+    /// Set the HTTP transport configuration for connection pooling, DNS caching,
+    /// and protocol selection.
+    pub fn transport(mut self, config: TransportConfig) -> Self {
+        self.config.transport = config;
         self
     }
 

@@ -76,9 +76,9 @@ mod tests {
         let bytes = axum::body::Body::new(response.into_body())
             .collect()
             .await
-            .unwrap()
+            .expect("body collection should not fail")
             .to_bytes();
-        String::from_utf8(bytes.to_vec()).unwrap()
+        String::from_utf8(bytes.to_vec()).expect("body should be valid UTF-8")
     }
 
     /// Parse SSE events from a raw body string, returning only the `data:` payloads.
@@ -106,7 +106,12 @@ mod tests {
         let response = sse_response(mock_stream);
 
         assert_eq!(
-            response.headers().get("content-type").unwrap().to_str().unwrap(),
+            response
+                .headers()
+                .get("content-type")
+                .expect("content-type header should be present")
+                .to_str()
+                .expect("content-type should be valid ASCII"),
             "text/event-stream"
         );
 
@@ -117,7 +122,7 @@ mod tests {
         assert_eq!(events.len(), 4, "expected 4 events, got: {events:?}");
 
         // Verify first chunk is valid JSON with expected content.
-        let first: serde_json::Value = serde_json::from_str(&events[0]).unwrap();
+        let first: serde_json::Value = serde_json::from_str(&events[0]).expect("first event should be valid JSON");
         assert_eq!(first["id"], "c1");
         assert_eq!(first["choices"][0]["delta"]["content"], "Hello");
 

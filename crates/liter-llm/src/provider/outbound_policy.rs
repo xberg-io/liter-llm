@@ -369,25 +369,27 @@ mod tests {
 
     #[test]
     fn is_forbidden_ipv6_loopback() {
-        let ip: IpAddr = "::1".parse().unwrap();
+        let ip: IpAddr = "::1".parse().expect("::1 is a valid IPv6 address");
         assert!(is_forbidden(ip));
     }
 
     #[test]
     fn is_forbidden_ipv6_ula() {
-        let ip: IpAddr = "fc00::1".parse().unwrap();
+        let ip: IpAddr = "fc00::1".parse().expect("fc00::1 is a valid IPv6 address");
         assert!(is_forbidden(ip));
     }
 
     #[test]
     fn is_forbidden_ipv6_link_local() {
-        let ip: IpAddr = "fe80::1".parse().unwrap();
+        let ip: IpAddr = "fe80::1".parse().expect("fe80::1 is a valid IPv6 address");
         assert!(is_forbidden(ip));
     }
 
     #[test]
     fn is_forbidden_ipv6_public() {
-        let ip: IpAddr = "2001:4860:4860::8888".parse().unwrap(); // Google DNS
+        let ip: IpAddr = "2001:4860:4860::8888"
+            .parse()
+            .expect("Google DNS is a valid IPv6 address"); // Google DNS
         assert!(!is_forbidden(ip));
     }
 
@@ -460,7 +462,7 @@ mod tests {
     #[test]
     #[serial(outbound_policy)]
     fn validate_sync_allowlist_accepts_exact_origin() {
-        let allowed = vec![Url::parse("https://api.openai.com").unwrap()];
+        let allowed = vec![Url::parse("https://api.openai.com").expect("openai URL should be valid")];
         with_policy(OutboundPolicy::Allowlist(allowed), || {
             let result = validate_outbound_url_sync("https://api.openai.com/v1/chat/completions");
             assert!(result.is_ok(), "same-origin with different path should pass");
@@ -470,7 +472,7 @@ mod tests {
     #[test]
     #[serial(outbound_policy)]
     fn validate_sync_allowlist_rejects_other_host() {
-        let allowed = vec![Url::parse("https://api.openai.com").unwrap()];
+        let allowed = vec![Url::parse("https://api.openai.com").expect("openai URL should be valid")];
         with_policy(OutboundPolicy::Allowlist(allowed), || {
             let result = validate_outbound_url_sync("https://api.anthropic.com/");
             assert!(result.is_err(), "different host should be rejected");
@@ -535,7 +537,7 @@ mod tests {
     #[tokio::test]
     #[serial(outbound_policy)]
     async fn validate_async_allowlist_accepts_exact_origin() {
-        let allowed = vec![Url::parse("https://api.openai.com").unwrap()];
+        let allowed = vec![Url::parse("https://api.openai.com").expect("openai URL should be valid")];
         set_outbound_policy(OutboundPolicy::Allowlist(allowed));
         let result = validate_outbound_url("https://api.openai.com/v1/chat/completions").await;
         set_outbound_policy(OutboundPolicy::Off);
@@ -545,7 +547,7 @@ mod tests {
     #[tokio::test]
     #[serial(outbound_policy)]
     async fn validate_async_allowlist_rejects_other_host() {
-        let allowed = vec![Url::parse("https://api.openai.com").unwrap()];
+        let allowed = vec![Url::parse("https://api.openai.com").expect("openai URL should be valid")];
         set_outbound_policy(OutboundPolicy::Allowlist(allowed));
         let result = validate_outbound_url("https://api.anthropic.com/").await;
         set_outbound_policy(OutboundPolicy::Off);

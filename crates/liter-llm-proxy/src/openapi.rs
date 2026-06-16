@@ -66,8 +66,17 @@ impl Modify for SecurityAddon {
         crate::routes::health::health,
         crate::routes::health::liveness,
         crate::routes::health::readiness,
+        crate::routes::health::healthz,
+        crate::routes::health::readyz,
     ),
-    components(schemas(ProxyErrorBody, ProxyErrorDetail, crate::routes::health::HealthResponse)),
+    components(schemas(
+        ProxyErrorBody,
+        ProxyErrorDetail,
+        crate::routes::health::HealthResponse,
+        crate::routes::health::LivenessResponse,
+        crate::routes::health::ReadinessOkResponse,
+        crate::routes::health::ReadinessFailResponse,
+    )),
     tags(
         (name = "chat", description = "Chat completions"),
         (name = "embeddings", description = "Text embeddings"),

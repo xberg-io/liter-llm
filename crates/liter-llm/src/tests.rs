@@ -27,8 +27,8 @@ mod serde_tests {
             ..Default::default()
         };
 
-        let json = serde_json::to_string(&req).unwrap();
-        let parsed: ChatCompletionRequest = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&req).expect("serialization should not fail");
+        let parsed: ChatCompletionRequest = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed.model, "gpt-4");
         assert_eq!(parsed.messages.len(), 2);
         assert_eq!(parsed.temperature, Some(0.7));
@@ -57,11 +57,11 @@ mod serde_tests {
             }
         }"#;
 
-        let resp: ChatCompletionResponse = serde_json::from_str(json).unwrap();
+        let resp: ChatCompletionResponse = serde_json::from_str(json).expect("deserialization should not fail");
         assert_eq!(resp.id, "chatcmpl-abc123");
         assert_eq!(resp.choices.len(), 1);
         assert_eq!(resp.choices[0].message.content.as_deref(), Some("Hello!"));
-        assert_eq!(resp.usage.as_ref().unwrap().total_tokens, 15);
+        assert_eq!(resp.usage.as_ref().expect("usage should be present").total_tokens, 15);
     }
 
     #[test]
@@ -80,7 +80,7 @@ mod serde_tests {
             }]
         }"#;
 
-        let chunk: ChatCompletionChunk = serde_json::from_str(json).unwrap();
+        let chunk: ChatCompletionChunk = serde_json::from_str(json).expect("deserialization should not fail");
         assert_eq!(chunk.choices[0].delta.content.as_deref(), Some("Hello"));
         assert!(chunk.choices[0].finish_reason.is_none());
     }
@@ -102,11 +102,11 @@ mod serde_tests {
             function_call: None,
         });
 
-        let json = serde_json::to_string(&msg).unwrap();
-        let parsed: Message = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&msg).expect("serialization should not fail");
+        let parsed: Message = serde_json::from_str(&json).expect("deserialization should not fail");
 
         if let Message::Assistant(a) = parsed {
-            let calls = a.tool_calls.unwrap();
+            let calls = a.tool_calls.expect("tool_calls should be present");
             assert_eq!(calls.len(), 1);
             assert_eq!(calls[0].function.name, "get_weather");
         } else {
@@ -131,9 +131,9 @@ mod serde_tests {
             name: None,
         });
 
-        let json = serde_json::to_string(&msg).unwrap();
+        let json = serde_json::to_string(&msg).expect("serialization should not fail");
         assert!(json.contains("image_url"));
-        let _: Message = serde_json::from_str(&json).unwrap();
+        let _: Message = serde_json::from_str(&json).expect("deserialization should not fail");
     }
 
     #[test]
@@ -146,8 +146,8 @@ mod serde_tests {
             user: None,
         };
 
-        let json = serde_json::to_string(&req).unwrap();
-        let parsed: EmbeddingRequest = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&req).expect("serialization should not fail");
+        let parsed: EmbeddingRequest = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed.model, "text-embedding-3-small");
         assert_eq!(parsed.dimensions, Some(256));
     }
@@ -169,7 +169,7 @@ mod serde_tests {
             }
         }"#;
 
-        let resp: EmbeddingResponse = serde_json::from_str(json).unwrap();
+        let resp: EmbeddingResponse = serde_json::from_str(json).expect("deserialization should not fail");
         assert_eq!(resp.data.len(), 1);
         assert_eq!(resp.data[0].embedding.len(), 3);
     }
@@ -180,9 +180,9 @@ mod serde_tests {
             content: "You are a dev assistant.".into(),
             name: Some("devbot".into()),
         });
-        let json = serde_json::to_string(&msg).unwrap();
+        let json = serde_json::to_string(&msg).expect("serialization should not fail");
         assert!(json.contains("\"role\":\"developer\""));
-        let parsed: Message = serde_json::from_str(&json).unwrap();
+        let parsed: Message = serde_json::from_str(&json).expect("deserialization should not fail");
         if let Message::Developer(d) = parsed {
             assert_eq!(d.content, "You are a dev assistant.");
             assert_eq!(d.name.as_deref(), Some("devbot"));
@@ -197,9 +197,9 @@ mod serde_tests {
             content: r#"{"temperature": 72}"#.into(),
             name: "get_weather".into(),
         });
-        let json = serde_json::to_string(&msg).unwrap();
+        let json = serde_json::to_string(&msg).expect("serialization should not fail");
         assert!(json.contains("\"role\":\"function\""));
-        let parsed: Message = serde_json::from_str(&json).unwrap();
+        let parsed: Message = serde_json::from_str(&json).expect("deserialization should not fail");
         if let Message::Function(f) = parsed {
             assert_eq!(f.name, "get_weather");
         } else {
@@ -216,9 +216,9 @@ mod serde_tests {
             refusal: Some("I cannot help with that.".into()),
             function_call: None,
         });
-        let json = serde_json::to_string(&msg).unwrap();
+        let json = serde_json::to_string(&msg).expect("serialization should not fail");
         assert!(json.contains("refusal"));
-        let parsed: Message = serde_json::from_str(&json).unwrap();
+        let parsed: Message = serde_json::from_str(&json).expect("deserialization should not fail");
         if let Message::Assistant(a) = parsed {
             assert_eq!(a.refusal.as_deref(), Some("I cannot help with that."));
         } else {
@@ -229,9 +229,9 @@ mod serde_tests {
     #[test]
     fn finish_reason_function_call_serde() {
         let reason = FinishReason::FunctionCall;
-        let json = serde_json::to_string(&reason).unwrap();
+        let json = serde_json::to_string(&reason).expect("serialization should not fail");
         assert_eq!(json, "\"function_call\"");
-        let parsed: FinishReason = serde_json::from_str(&json).unwrap();
+        let parsed: FinishReason = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed, FinishReason::FunctionCall);
     }
 
@@ -249,7 +249,7 @@ mod serde_tests {
             }],
             "service_tier": "default"
         }"#;
-        let resp: ChatCompletionResponse = serde_json::from_str(json).unwrap();
+        let resp: ChatCompletionResponse = serde_json::from_str(json).expect("deserialization should not fail");
         assert_eq!(resp.service_tier.as_deref(), Some("default"));
     }
 
@@ -264,71 +264,71 @@ mod serde_tests {
             },
         };
 
-        let json = serde_json::to_string(&fmt).unwrap();
+        let json = serde_json::to_string(&fmt).expect("serialization should not fail");
         assert!(json.contains("json_schema"));
-        let _: ResponseFormat = serde_json::from_str(&json).unwrap();
+        let _: ResponseFormat = serde_json::from_str(&json).expect("deserialization should not fail");
     }
 
     #[test]
     fn finish_reason_other_unknown_string() {
         // Catch-all variant for unknown finish reasons from non-OpenAI providers
         let json = r#""custom_stop_reason""#;
-        let reason: FinishReason = serde_json::from_str(json).unwrap();
+        let reason: FinishReason = serde_json::from_str(json).expect("deserialization should not fail");
         assert_eq!(reason, FinishReason::Other);
     }
 
     #[test]
     fn finish_reason_stop_serde() {
         let reason = FinishReason::Stop;
-        let json = serde_json::to_string(&reason).unwrap();
+        let json = serde_json::to_string(&reason).expect("serialization should not fail");
         assert_eq!(json, "\"stop\"");
-        let parsed: FinishReason = serde_json::from_str(&json).unwrap();
+        let parsed: FinishReason = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed, FinishReason::Stop);
     }
 
     #[test]
     fn finish_reason_length_serde() {
         let reason = FinishReason::Length;
-        let json = serde_json::to_string(&reason).unwrap();
+        let json = serde_json::to_string(&reason).expect("serialization should not fail");
         assert_eq!(json, "\"length\"");
-        let parsed: FinishReason = serde_json::from_str(&json).unwrap();
+        let parsed: FinishReason = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed, FinishReason::Length);
     }
 
     #[test]
     fn embedding_format_float_serde() {
         let fmt = EmbeddingFormat::Float;
-        let json = serde_json::to_string(&fmt).unwrap();
+        let json = serde_json::to_string(&fmt).expect("serialization should not fail");
         assert_eq!(json, "\"float\"");
-        let parsed: EmbeddingFormat = serde_json::from_str(&json).unwrap();
+        let parsed: EmbeddingFormat = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed, EmbeddingFormat::Float);
     }
 
     #[test]
     fn embedding_format_base64_serde() {
         let fmt = EmbeddingFormat::Base64;
-        let json = serde_json::to_string(&fmt).unwrap();
+        let json = serde_json::to_string(&fmt).expect("serialization should not fail");
         assert_eq!(json, "\"base64\"");
-        let parsed: EmbeddingFormat = serde_json::from_str(&json).unwrap();
+        let parsed: EmbeddingFormat = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed, EmbeddingFormat::Base64);
     }
 
     #[test]
     fn embedding_input_single_string() {
         let input = EmbeddingInput::Single("hello world".into());
-        let json = serde_json::to_string(&input).unwrap();
+        let json = serde_json::to_string(&input).expect("serialization should not fail");
         assert_eq!(json, "\"hello world\"");
-        let parsed: EmbeddingInput = serde_json::from_str(&json).unwrap();
+        let parsed: EmbeddingInput = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed, input);
     }
 
     #[test]
     fn embedding_input_multiple_strings() {
         let input = EmbeddingInput::Multiple(vec!["hello".into(), "world".into(), "test".into()]);
-        let json = serde_json::to_string(&input).unwrap();
+        let json = serde_json::to_string(&input).expect("serialization should not fail");
         assert!(json.contains("hello"));
         assert!(json.contains("world"));
-        let parsed: EmbeddingInput = serde_json::from_str(&json).unwrap();
+        let parsed: EmbeddingInput = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed, input);
     }
 
@@ -342,8 +342,8 @@ mod serde_tests {
             user: Some("user-123".into()),
         };
 
-        let json = serde_json::to_string(&req).unwrap();
-        let parsed: EmbeddingRequest = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&req).expect("serialization should not fail");
+        let parsed: EmbeddingRequest = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed.encoding_format, Some(EmbeddingFormat::Base64));
         assert_eq!(parsed.dimensions, Some(1024));
         assert_eq!(parsed.user, Some("user-123".into()));
@@ -352,45 +352,45 @@ mod serde_tests {
     #[test]
     fn stop_sequence_single_serde() {
         let stop = StopSequence::Single("\\n".into());
-        let json = serde_json::to_string(&stop).unwrap();
+        let json = serde_json::to_string(&stop).expect("serialization should not fail");
         assert_eq!(json, "\"\\\\n\"");
-        let parsed: StopSequence = serde_json::from_str(&json).unwrap();
+        let parsed: StopSequence = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed, stop);
     }
 
     #[test]
     fn stop_sequence_multiple_serde() {
         let stop = StopSequence::Multiple(vec!["\\n".into(), "\\n\\n".into(), "[END]".into()]);
-        let json = serde_json::to_string(&stop).unwrap();
+        let json = serde_json::to_string(&stop).expect("serialization should not fail");
         assert!(json.contains("END"));
-        let parsed: StopSequence = serde_json::from_str(&json).unwrap();
+        let parsed: StopSequence = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed, stop);
     }
 
     #[test]
     fn tool_choice_mode_auto_serde() {
         let choice = ToolChoice::Mode(ToolChoiceMode::Auto);
-        let json = serde_json::to_string(&choice).unwrap();
+        let json = serde_json::to_string(&choice).expect("serialization should not fail");
         assert_eq!(json, "\"auto\"");
-        let parsed: ToolChoice = serde_json::from_str(&json).unwrap();
+        let parsed: ToolChoice = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed, choice);
     }
 
     #[test]
     fn tool_choice_mode_required_serde() {
         let choice = ToolChoice::Mode(ToolChoiceMode::Required);
-        let json = serde_json::to_string(&choice).unwrap();
+        let json = serde_json::to_string(&choice).expect("serialization should not fail");
         assert_eq!(json, "\"required\"");
-        let parsed: ToolChoice = serde_json::from_str(&json).unwrap();
+        let parsed: ToolChoice = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed, choice);
     }
 
     #[test]
     fn tool_choice_mode_none_serde() {
         let choice = ToolChoice::Mode(ToolChoiceMode::None);
-        let json = serde_json::to_string(&choice).unwrap();
+        let json = serde_json::to_string(&choice).expect("serialization should not fail");
         assert_eq!(json, "\"none\"");
-        let parsed: ToolChoice = serde_json::from_str(&json).unwrap();
+        let parsed: ToolChoice = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed, choice);
     }
 
@@ -402,35 +402,35 @@ mod serde_tests {
                 name: "get_weather".into(),
             },
         });
-        let json = serde_json::to_string(&choice).unwrap();
+        let json = serde_json::to_string(&choice).expect("serialization should not fail");
         assert!(json.contains("get_weather"));
-        let parsed: ToolChoice = serde_json::from_str(&json).unwrap();
+        let parsed: ToolChoice = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed, choice);
     }
 
     #[test]
     fn response_format_text_serde() {
         let fmt = ResponseFormat::Text;
-        let json = serde_json::to_string(&fmt).unwrap();
+        let json = serde_json::to_string(&fmt).expect("serialization should not fail");
         assert_eq!(json, "{\"type\":\"text\"}");
-        let parsed: ResponseFormat = serde_json::from_str(&json).unwrap();
+        let parsed: ResponseFormat = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed, fmt);
     }
 
     #[test]
     fn response_format_json_object_serde() {
         let fmt = ResponseFormat::JsonObject;
-        let json = serde_json::to_string(&fmt).unwrap();
+        let json = serde_json::to_string(&fmt).expect("serialization should not fail");
         assert_eq!(json, "{\"type\":\"json_object\"}");
-        let parsed: ResponseFormat = serde_json::from_str(&json).unwrap();
+        let parsed: ResponseFormat = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed, fmt);
     }
 
     #[test]
     fn chat_completion_request_default_round_trip() {
         let req = ChatCompletionRequest::default();
-        let json = serde_json::to_string(&req).unwrap();
-        let parsed: ChatCompletionRequest = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&req).expect("serialization should not fail");
+        let parsed: ChatCompletionRequest = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed, req);
         assert!(parsed.model.is_empty());
         assert!(parsed.messages.is_empty());
@@ -464,8 +464,8 @@ mod serde_tests {
             extra_body: None,
         };
 
-        let json = serde_json::to_string(&req1).unwrap();
-        let req2: ChatCompletionRequest = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&req1).expect("serialization should not fail");
+        let req2: ChatCompletionRequest = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(req1, req2);
     }
 
@@ -498,8 +498,8 @@ mod serde_tests {
             refusal: None,
             function_call: None,
         });
-        let json = serde_json::to_string(&msg).unwrap();
-        let parsed: Message = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&msg).expect("serialization should not fail");
+        let parsed: Message = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(msg, parsed);
     }
 
@@ -509,8 +509,8 @@ mod serde_tests {
             content: UserContent::Text("What's up?".into()),
             name: None,
         });
-        let json = serde_json::to_string(&msg).unwrap();
-        let parsed: Message = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&msg).expect("serialization should not fail");
+        let parsed: Message = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(msg, parsed);
     }
 
@@ -521,8 +521,8 @@ mod serde_tests {
             tool_call_id: "call_456".into(),
             name: Some("get_weather".into()),
         });
-        let json = serde_json::to_string(&msg).unwrap();
-        let parsed: Message = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&msg).expect("serialization should not fail");
+        let parsed: Message = serde_json::from_str(&json).expect("deserialization should not fail");
         if let Message::Tool(t) = parsed {
             assert_eq!(t.tool_call_id, "call_456");
             assert_eq!(t.name.as_deref(), Some("get_weather"));
@@ -547,8 +547,8 @@ mod serde_tests {
             ]),
             name: None,
         });
-        let json = serde_json::to_string(&msg).unwrap();
-        let parsed: Message = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&msg).expect("serialization should not fail");
+        let parsed: Message = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(msg, parsed);
     }
 
@@ -563,9 +563,9 @@ mod serde_tests {
             }]),
             name: None,
         });
-        let json = serde_json::to_string(&msg).unwrap();
+        let json = serde_json::to_string(&msg).expect("serialization should not fail");
         assert!(json.contains("\"detail\":\"auto\""));
-        let parsed: Message = serde_json::from_str(&json).unwrap();
+        let parsed: Message = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(msg, parsed);
     }
 
@@ -579,8 +579,8 @@ mod serde_tests {
             query: "What is Rust?".into(),
             ..Default::default()
         };
-        let json = serde_json::to_string(&req).unwrap();
-        let parsed: SearchRequest = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&req).expect("serialization should not fail");
+        let parsed: SearchRequest = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed.model, "brave/web-search");
         assert_eq!(parsed.query, "What is Rust?");
     }
@@ -605,10 +605,10 @@ mod serde_tests {
             search_domain_filter: Some(vec!["rust-lang.org".into()]),
             country: Some("US".into()),
         };
-        let json = serde_json::to_string(&req).unwrap();
+        let json = serde_json::to_string(&req).expect("serialization should not fail");
         assert!(json.contains("max_results"));
         assert!(json.contains("rust-lang.org"));
-        let parsed: SearchRequest = serde_json::from_str(&json).unwrap();
+        let parsed: SearchRequest = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed.max_results, Some(5));
         assert_eq!(parsed.country, Some("US".into()));
     }
@@ -622,7 +622,7 @@ mod serde_tests {
             ],
             "model": "brave/web-search"
         }"#;
-        let resp: SearchResponse = serde_json::from_str(json).unwrap();
+        let resp: SearchResponse = serde_json::from_str(json).expect("deserialization should not fail");
         assert_eq!(resp.results.len(), 1);
         assert_eq!(resp.model, "brave/web-search");
         assert_eq!(resp.results[0].title, "Rust");
@@ -641,8 +641,8 @@ mod serde_tests {
             pages: None,
             include_image_base64: None,
         };
-        let json = serde_json::to_string(&req).unwrap();
-        let parsed: OcrRequest = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&req).expect("serialization should not fail");
+        let parsed: OcrRequest = serde_json::from_str(&json).expect("deserialization should not fail");
         assert_eq!(parsed.model, "mistral/mistral-ocr-latest");
     }
 
@@ -652,7 +652,7 @@ mod serde_tests {
         let doc = OcrDocument::Url {
             url: "https://example.com".into(),
         };
-        let json = serde_json::to_string(&doc).unwrap();
+        let json = serde_json::to_string(&doc).expect("serialization should not fail");
         assert!(
             json.contains("document_url"),
             "expected 'document_url' tag in serialized output, got: {json}"
@@ -666,12 +666,12 @@ mod serde_tests {
             data: "dGVzdA==".into(),
             media_type: "application/pdf".into(),
         };
-        let json = serde_json::to_string(&doc).unwrap();
+        let json = serde_json::to_string(&doc).expect("serialization should not fail");
         assert!(
             json.contains("\"type\":\"base64\""),
             "expected 'base64' tag in serialized output, got: {json}"
         );
-        let parsed: OcrDocument = serde_json::from_str(&json).unwrap();
+        let parsed: OcrDocument = serde_json::from_str(&json).expect("deserialization should not fail");
         if let OcrDocument::Base64 { data, media_type } = parsed {
             assert_eq!(data, "dGVzdA==");
             assert_eq!(media_type, "application/pdf");
@@ -697,7 +697,7 @@ mod serde_tests {
             "pages": [{"index": 0, "markdown": "# Title"}],
             "model": "mistral/mistral-ocr-latest"
         }"##;
-        let resp: OcrResponse = serde_json::from_str(json).unwrap();
+        let resp: OcrResponse = serde_json::from_str(json).expect("deserialization should not fail");
         assert_eq!(resp.pages.len(), 1);
         assert_eq!(resp.pages[0].index, 0);
         assert!(resp.pages[0].markdown.contains("Title"));
@@ -727,14 +727,14 @@ mod provider_tests {
 
     #[test]
     fn detect_openai() {
-        let p = detect_provider("gpt-4").unwrap();
+        let p = detect_provider("gpt-4").expect("provider should be detected");
         assert_eq!(p.name(), "openai");
         assert_eq!(p.base_url(), "https://api.openai.com/v1");
     }
 
     #[test]
     fn detect_groq() {
-        let p = detect_provider("groq/llama3-70b").unwrap();
+        let p = detect_provider("groq/llama3-70b").expect("provider should be detected");
         assert_eq!(p.name(), "groq");
         assert_eq!(p.base_url(), "https://api.groq.com/openai/v1");
     }
@@ -744,14 +744,14 @@ mod provider_tests {
         // The registry uses the "mistral/" routing prefix for Mistral models.
         // Bare model names without a slash prefix return None; callers should
         // use the prefixed form "mistral/mistral-large-latest".
-        let p = detect_provider("mistral/mistral-large-latest").unwrap();
+        let p = detect_provider("mistral/mistral-large-latest").expect("provider should be detected");
         assert_eq!(p.name(), "mistral");
         assert_eq!(p.base_url(), "https://api.mistral.ai/v1");
     }
 
     #[test]
     fn detect_ollama() {
-        let p = detect_provider("ollama/llama3").unwrap();
+        let p = detect_provider("ollama/llama3").expect("provider should be detected");
         assert_eq!(p.name(), "ollama");
         assert_eq!(p.base_url(), "http://localhost:11434/v1");
     }
@@ -785,7 +785,7 @@ mod provider_tests {
         let provider = make_provider(AuthType::Bearer);
         let header = provider.auth_header("my-secret-key");
         assert!(header.is_some());
-        let (name, value) = header.unwrap();
+        let (name, value) = header.expect("auth header should be present");
         assert_eq!(name, "Authorization");
         assert_eq!(value, "Bearer my-secret-key");
     }
@@ -795,7 +795,7 @@ mod provider_tests {
         let provider = make_provider(AuthType::ApiKey);
         let header = provider.auth_header("my-secret-key");
         assert!(header.is_some());
-        let (name, value) = header.unwrap();
+        let (name, value) = header.expect("auth header should be present");
         assert_eq!(name, "x-api-key");
         assert_eq!(value, "my-secret-key");
     }
@@ -809,19 +809,19 @@ mod provider_tests {
 
     #[test]
     fn detect_deepseek() {
-        let p = detect_provider("deepseek/deepseek-chat").unwrap();
+        let p = detect_provider("deepseek/deepseek-chat").expect("provider should be detected");
         assert_eq!(p.name(), "deepseek");
     }
 
     #[test]
     fn detect_cerebras() {
-        let p = detect_provider("cerebras/llama-3.1-70b").unwrap();
+        let p = detect_provider("cerebras/llama-3.1-70b").expect("provider should be detected");
         assert_eq!(p.name(), "cerebras");
     }
 
     #[test]
     fn detect_openrouter() {
-        let p = detect_provider("openrouter/auto").unwrap();
+        let p = detect_provider("openrouter/auto").expect("provider should be detected");
         assert_eq!(p.name(), "openrouter");
     }
 
@@ -830,7 +830,7 @@ mod provider_tests {
         let provider = make_provider(AuthType::Unknown);
         let header = provider.auth_header("my-secret-key");
         assert!(header.is_some());
-        let (name, value) = header.unwrap();
+        let (name, value) = header.expect("auth header should be present");
         assert_eq!(name, "Authorization");
         assert!(value.contains("Bearer"));
     }
@@ -843,7 +843,7 @@ mod provider_tests {
 
     #[test]
     fn provider_strip_model_prefix_groq() {
-        let p = detect_provider("groq/llama3-70b").unwrap();
+        let p = detect_provider("groq/llama3-70b").expect("provider should be detected");
         let stripped = p.strip_model_prefix("groq/llama3-70b");
         assert_eq!(stripped, "llama3-70b");
     }
@@ -857,23 +857,23 @@ mod provider_tests {
 
     #[test]
     fn detect_anthropic_by_claude_prefix() {
-        let p = detect_provider("claude-3-5-sonnet-20241022").unwrap();
+        let p = detect_provider("claude-3-5-sonnet-20241022").expect("provider should be detected");
         assert_eq!(p.name(), "anthropic");
         assert_eq!(p.base_url(), "https://api.anthropic.com/v1");
     }
 
     #[test]
     fn detect_anthropic_by_slash_prefix() {
-        let p = detect_provider("anthropic/claude-3-5-sonnet-20241022").unwrap();
+        let p = detect_provider("anthropic/claude-3-5-sonnet-20241022").expect("provider should be detected");
         assert_eq!(p.name(), "anthropic");
     }
 
     #[test]
     fn anthropic_auth_header_uses_x_api_key() {
-        let p = detect_provider("claude-3-5-sonnet-20241022").unwrap();
+        let p = detect_provider("claude-3-5-sonnet-20241022").expect("provider should be detected");
         let header = p.auth_header("sk-ant-test");
         assert!(header.is_some());
-        let (name, value) = header.unwrap();
+        let (name, value) = header.expect("auth header should be present");
         assert_eq!(name, "x-api-key");
         assert_eq!(value, "sk-ant-test");
     }
@@ -890,7 +890,7 @@ mod provider_tests {
 
     #[test]
     fn anthropic_strips_prefix() {
-        let p = detect_provider("anthropic/claude-3-5-sonnet-20241022").unwrap();
+        let p = detect_provider("anthropic/claude-3-5-sonnet-20241022").expect("provider should be detected");
         assert_eq!(
             p.strip_model_prefix("anthropic/claude-3-5-sonnet-20241022"),
             "claude-3-5-sonnet-20241022"
@@ -909,23 +909,23 @@ mod provider_tests {
 
     #[test]
     fn detect_azure_by_prefix() {
-        let p = detect_provider("azure/gpt-4").unwrap();
+        let p = detect_provider("azure/gpt-4").expect("provider should be detected");
         assert_eq!(p.name(), "azure");
     }
 
     #[test]
     fn azure_auth_header_uses_api_key() {
-        let p = detect_provider("azure/gpt-4").unwrap();
+        let p = detect_provider("azure/gpt-4").expect("provider should be detected");
         let header = p.auth_header("my-azure-key");
         assert!(header.is_some());
-        let (name, value) = header.unwrap();
+        let (name, value) = header.expect("auth header should be present");
         assert_eq!(name, "api-key");
         assert_eq!(value, "my-azure-key");
     }
 
     #[test]
     fn azure_strips_prefix() {
-        let p = detect_provider("azure/gpt-4").unwrap();
+        let p = detect_provider("azure/gpt-4").expect("provider should be detected");
         assert_eq!(p.strip_model_prefix("azure/gpt-4"), "gpt-4");
     }
 
@@ -938,23 +938,23 @@ mod provider_tests {
 
     #[test]
     fn detect_vertex_ai_by_prefix() {
-        let p = detect_provider("vertex_ai/gemini-2.0-flash").unwrap();
+        let p = detect_provider("vertex_ai/gemini-2.0-flash").expect("provider should be detected");
         assert_eq!(p.name(), "vertex_ai");
     }
 
     #[test]
     fn vertex_ai_auth_header_uses_bearer() {
-        let p = detect_provider("vertex_ai/gemini-2.0-flash").unwrap();
+        let p = detect_provider("vertex_ai/gemini-2.0-flash").expect("provider should be detected");
         let header = p.auth_header("ya29.my-access-token");
         assert!(header.is_some(), "Expected an auth header");
-        let (name, value) = header.unwrap();
+        let (name, value) = header.expect("auth header should be present");
         assert_eq!(name, "Authorization");
         assert_eq!(value, "Bearer ya29.my-access-token");
     }
 
     #[test]
     fn vertex_ai_strips_prefix() {
-        let p = detect_provider("vertex_ai/gemini-2.0-flash").unwrap();
+        let p = detect_provider("vertex_ai/gemini-2.0-flash").expect("provider should be detected");
         assert_eq!(p.strip_model_prefix("vertex_ai/gemini-2.0-flash"), "gemini-2.0-flash");
     }
 
@@ -988,7 +988,8 @@ mod provider_tests {
 
     #[test]
     fn detect_bedrock_by_prefix() {
-        let p = detect_provider("bedrock/anthropic.claude-3-sonnet-20240229-v1:0").unwrap();
+        let p =
+            detect_provider("bedrock/anthropic.claude-3-sonnet-20240229-v1:0").expect("provider should be detected");
         assert_eq!(p.name(), "bedrock");
     }
 
@@ -1005,7 +1006,8 @@ mod provider_tests {
 
     #[test]
     fn bedrock_strips_prefix() {
-        let p = detect_provider("bedrock/anthropic.claude-3-sonnet-20240229-v1:0").unwrap();
+        let p =
+            detect_provider("bedrock/anthropic.claude-3-sonnet-20240229-v1:0").expect("provider should be detected");
         assert_eq!(
             p.strip_model_prefix("bedrock/anthropic.claude-3-sonnet-20240229-v1:0"),
             "anthropic.claude-3-sonnet-20240229-v1:0"
@@ -1026,7 +1028,8 @@ mod provider_tests {
     #[test]
     fn bedrock_auth_header_returns_none() {
         // SigV4 uses computed headers, not a static auth header.
-        let p = detect_provider("bedrock/anthropic.claude-3-sonnet-20240229-v1:0").unwrap();
+        let p =
+            detect_provider("bedrock/anthropic.claude-3-sonnet-20240229-v1:0").expect("provider should be detected");
         let header = p.auth_header("ignored-for-sigv4");
         assert!(header.is_none(), "BedrockProvider must return None for auth_header");
     }
@@ -1096,7 +1099,9 @@ mod provider_tests {
             "max_completion_tokens": 512
         });
 
-        provider.transform_request(&mut body).unwrap();
+        provider
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["max_tokens"], 512);
         assert!(body.get("max_completion_tokens").is_none());
@@ -1113,7 +1118,9 @@ mod provider_tests {
             "messages": []
         });
 
-        provider.transform_request(&mut body).unwrap();
+        provider
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert!(body.get("max_tokens").is_none());
         assert!(body.get("max_completion_tokens").is_none());
@@ -1128,7 +1135,9 @@ mod provider_tests {
             "max_completion_tokens": 512
         });
 
-        provider.transform_request(&mut body).unwrap();
+        provider
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         // Field untouched when no mappings configured
         assert_eq!(body["max_completion_tokens"], 512);
@@ -1148,7 +1157,9 @@ mod provider_tests {
             "frequency_penalty": 0.5
         });
 
-        provider.transform_request(&mut body).unwrap();
+        provider
+            .transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["max_tokens"], 512);
         assert_eq!(body["repetition_penalty"], 0.5);
@@ -1158,14 +1169,15 @@ mod provider_tests {
 
     #[test]
     fn real_provider_apertis_has_param_mappings() {
-        let p = detect_provider("apertis/some-model").unwrap();
+        let p = detect_provider("apertis/some-model").expect("provider should be detected");
         let mut body = serde_json::json!({
             "model": "some-model",
             "messages": [{"role": "user", "content": "hi"}],
             "max_completion_tokens": 256
         });
 
-        p.transform_request(&mut body).unwrap();
+        p.transform_request(&mut body)
+            .expect("transform_request should not fail");
 
         assert_eq!(body["max_tokens"], 256);
         assert!(body.get("max_completion_tokens").is_none());
@@ -1309,9 +1321,9 @@ mod retry_tests {
         use std::time::Duration;
         // With jitter in [0.5, 1.0] of the base delay, verify each attempt
         // stays within its expected range.  Base delays: 1s, 2s, 4s.
-        let d0 = should_retry(429, 0, 3, None).unwrap();
-        let d1 = should_retry(429, 1, 3, None).unwrap();
-        let d2 = should_retry(429, 2, 3, None).unwrap();
+        let d0 = should_retry(429, 0, 3, None).expect("should_retry should return Some for retryable status");
+        let d1 = should_retry(429, 1, 3, None).expect("should_retry should return Some for retryable status");
+        let d2 = should_retry(429, 2, 3, None).expect("should_retry should return Some for retryable status");
         assert!(d0 >= Duration::from_millis(500) && d0 <= Duration::from_secs(1));
         assert!(d1 >= Duration::from_secs(1) && d1 <= Duration::from_secs(2));
         assert!(d2 >= Duration::from_secs(2) && d2 <= Duration::from_secs(4));
@@ -1321,7 +1333,7 @@ mod retry_tests {
     fn retry_after_header_respected_on_429() {
         use std::time::Duration;
         let server_delay = Duration::from_secs(42);
-        let delay = should_retry(429, 0, 3, Some(server_delay)).unwrap();
+        let delay = should_retry(429, 0, 3, Some(server_delay)).expect("should retry on 429 with Retry-After");
         assert_eq!(delay, server_delay);
     }
 
@@ -1330,7 +1342,7 @@ mod retry_tests {
         use std::time::Duration;
         // Retry-After is only honoured for 429; on 500 we use exponential backoff.
         let server_delay = Duration::from_secs(42);
-        let delay = should_retry(500, 0, 3, Some(server_delay)).unwrap();
+        let delay = should_retry(500, 0, 3, Some(server_delay)).expect("should retry on 500");
         // Exponential backoff for attempt 0 = 1 s base, with jitter in [0.5, 1.0].
         assert!(delay >= Duration::from_millis(500) && delay <= Duration::from_secs(1));
     }
@@ -1347,11 +1359,11 @@ mod retry_tests {
     fn retry_on_504() {
         use std::time::Duration;
         // Jitter scales base delay by [0.5, 1.0], so we check ranges.
-        let d0 = should_retry(504, 0, 3, None).unwrap();
+        let d0 = should_retry(504, 0, 3, None).expect("should_retry should return Some for retryable status");
         assert!(d0 >= Duration::from_millis(500) && d0 <= Duration::from_secs(1));
-        let d1 = should_retry(504, 1, 3, None).unwrap();
+        let d1 = should_retry(504, 1, 3, None).expect("should_retry should return Some for retryable status");
         assert!(d1 >= Duration::from_secs(1) && d1 <= Duration::from_secs(2));
-        let d2 = should_retry(504, 2, 3, None).unwrap();
+        let d2 = should_retry(504, 2, 3, None).expect("should_retry should return Some for retryable status");
         assert!(d2 >= Duration::from_secs(2) && d2 <= Duration::from_secs(4));
     }
 
@@ -1365,7 +1377,7 @@ mod retry_tests {
     fn server_retry_after_capped_at_60s() {
         use std::time::Duration;
         let server_delay = Duration::from_secs(120);
-        let delay = should_retry(429, 0, 3, Some(server_delay)).unwrap();
+        let delay = should_retry(429, 0, 3, Some(server_delay)).expect("should retry on 429 with Retry-After");
         // Should be capped at 60 seconds
         assert_eq!(delay, Duration::from_secs(60));
     }
@@ -1374,7 +1386,7 @@ mod retry_tests {
     fn server_retry_after_under_cap() {
         use std::time::Duration;
         let server_delay = Duration::from_secs(30);
-        let delay = should_retry(429, 0, 3, Some(server_delay)).unwrap();
+        let delay = should_retry(429, 0, 3, Some(server_delay)).expect("should retry on 429 with Retry-After");
         // Under 60s cap, should use server value
         assert_eq!(delay, Duration::from_secs(30));
     }
@@ -1383,7 +1395,7 @@ mod retry_tests {
     fn exponential_backoff_caps_at_30s() {
         use std::time::Duration;
         // Attempt 5 would be 2^5 = 32 seconds, capped at 30, then jitter [0.5, 1.0].
-        let delay = should_retry(500, 5, 10, None).unwrap();
+        let delay = should_retry(500, 5, 10, None).expect("should_retry should return Some for retryable status");
         assert!(delay >= Duration::from_secs(15) && delay <= Duration::from_secs(30));
     }
 }
@@ -1395,7 +1407,9 @@ mod sse_tests {
     #[test]
     fn parse_valid_chunk() {
         let line = r#"data: {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1700000000,"model":"gpt-4","choices":[{"index":0,"delta":{"content":"Hi"},"finish_reason":null}]}"#;
-        let result = parse_sse_line(line).unwrap().unwrap();
+        let result = parse_sse_line(line)
+            .expect("parse_sse_line should not fail")
+            .expect("should yield a chunk");
         assert_eq!(result.choices[0].delta.content.as_deref(), Some("Hi"));
     }
 
@@ -1412,7 +1426,7 @@ mod sse_tests {
 
     #[test]
     fn parse_invalid_json() {
-        let result = parse_sse_line("data: {invalid}").unwrap();
+        let result = parse_sse_line("data: {invalid}").expect("parse_sse_line should not fail");
         assert!(result.is_err());
     }
 
@@ -1420,7 +1434,9 @@ mod sse_tests {
     fn parse_data_without_space() {
         // Some implementations emit "data:{json}" without a trailing space.
         let line = r#"data:{"id":"chatcmpl-123","object":"chat.completion.chunk","created":1700000000,"model":"gpt-4","choices":[{"index":0,"delta":{"content":"Hi"},"finish_reason":null}]}"#;
-        let result = parse_sse_line(line).unwrap().unwrap();
+        let result = parse_sse_line(line)
+            .expect("parse_sse_line should not fail")
+            .expect("should yield a chunk");
         assert_eq!(result.choices[0].delta.content.as_deref(), Some("Hi"));
     }
 
@@ -1439,16 +1455,192 @@ mod config_tests {
         // Test trailing slash removal
         let builder = ClientConfigBuilder::new("key").base_url("https://api.example.com/");
         let config = builder.build();
-        assert_eq!(config.base_url.unwrap(), "https://api.example.com");
+        assert_eq!(
+            config.base_url.expect("base_url should be present"),
+            "https://api.example.com"
+        );
 
         // Test multiple trailing slashes
         let builder = ClientConfigBuilder::new("key").base_url("https://api.example.com///");
         let config = builder.build();
-        assert_eq!(config.base_url.unwrap(), "https://api.example.com");
+        assert_eq!(
+            config.base_url.expect("base_url should be present"),
+            "https://api.example.com"
+        );
 
         // Test no trailing slash (remains unchanged)
         let builder = ClientConfigBuilder::new("key").base_url("https://api.example.com");
         let config = builder.build();
-        assert_eq!(config.base_url.unwrap(), "https://api.example.com");
+        assert_eq!(
+            config.base_url.expect("base_url should be present"),
+            "https://api.example.com"
+        );
+    }
+}
+
+// ── 2.F tests: capabilities, streaming_format, type-state builder ─────────────
+
+#[cfg(test)]
+mod capability_tests {
+    use crate::provider::{all_providers, capabilities};
+
+    /// Every provider must return a capabilities struct with all seven boolean
+    /// flags accessible.  The fact that registry parsing succeeded (all_providers
+    /// returns Ok) confirms the streaming_format field also parsed correctly
+    /// (any unknown value would cause a serde error that fails the registry load).
+    #[test]
+    fn schema_all_providers_have_capabilities_and_streaming_format() {
+        let providers = all_providers().expect("registry should load");
+        for cfg in providers {
+            // capabilities() accesses the internal ProviderEntry which carries
+            // the deserialized capabilities and streaming_format fields.
+            let caps = capabilities(&cfg.name);
+            let _: bool = caps.vision;
+            let _: bool = caps.reasoning;
+            let _: bool = caps.structured_output;
+            let _: bool = caps.function_calling;
+            let _: bool = caps.audio_in;
+            let _: bool = caps.audio_out;
+            let _: bool = caps.video_in;
+        }
+        assert!(!providers.is_empty(), "registry should have at least one provider");
+    }
+
+    /// The total number of providers in the embedded registry must equal 143.
+    #[test]
+    fn schema_provider_count_is_143() {
+        let providers = all_providers().expect("registry should load");
+        assert_eq!(
+            providers.len(),
+            143,
+            "expected 143 providers in providers.json, found {}",
+            providers.len()
+        );
+    }
+
+    /// OpenAI must have function_calling = true.
+    #[test]
+    fn capabilities_openai_function_calling() {
+        assert!(
+            capabilities("openai").function_calling,
+            "openai must advertise function_calling support"
+        );
+    }
+
+    /// OpenAI must have vision = true (gpt-4o supports image input).
+    #[test]
+    fn capabilities_openai_vision() {
+        assert!(capabilities("openai").vision, "openai must advertise vision support");
+    }
+
+    /// Anthropic must have reasoning = true (extended thinking tokens).
+    #[test]
+    fn capabilities_anthropic_reasoning() {
+        assert!(
+            capabilities("anthropic").reasoning,
+            "anthropic must advertise reasoning support"
+        );
+    }
+
+    /// Bedrock must have vision = true.
+    #[test]
+    fn capabilities_bedrock_has_vision() {
+        assert!(
+            capabilities("bedrock").vision,
+            "bedrock must advertise vision support (supported by Claude/Nova models)"
+        );
+    }
+
+    /// Bedrock entry must exist in the registry.
+    #[test]
+    fn schema_bedrock_entry_parsed_cleanly() {
+        let providers = all_providers().expect("registry should load");
+        let bedrock = providers.iter().find(|p| p.name == "bedrock");
+        assert!(bedrock.is_some(), "bedrock must be present in registry");
+    }
+
+    /// An unknown provider name must return the default (all-false) capabilities.
+    #[test]
+    fn capabilities_unknown_provider_returns_default() {
+        let caps = capabilities("this-provider-does-not-exist");
+        assert!(!caps.vision);
+        assert!(!caps.reasoning);
+        assert!(!caps.structured_output);
+        assert!(!caps.function_calling);
+        assert!(!caps.audio_in);
+        assert!(!caps.audio_out);
+        assert!(!caps.video_in);
+    }
+
+    /// Providers with only false flags (e.g. vector DBs) return a valid struct.
+    #[test]
+    fn capabilities_all_false_provider_is_valid() {
+        let caps = capabilities("milvus");
+        let _ = caps.vision;
+        let _ = caps.function_calling;
+    }
+}
+
+#[cfg(test)]
+mod builder_tests {
+    // Positive test: ClientBuilder::new().api_key().provider().build() compiles and succeeds.
+    //
+    // The negative compile-time test (calling .build() without api_key + provider)
+    // is enforced by the type-state.  The `build` method is only defined on
+    // `ClientBuilder<WithApiKey, WithProvider>`.  Uncommenting any of the
+    // following in a test would cause a compile error:
+    //
+    //   liter_llm::ClientBuilder::new().build();                     // no method `build`
+    //   liter_llm::ClientBuilder::new().api_key("k").build();        // no method `build`
+    //   liter_llm::ClientBuilder::new().provider("openai").build();  // no method `build`
+
+    use crate::client::builder::{ClientBuilder, NoApiKey, NoProvider, WithApiKey, WithProvider};
+
+    /// Type-state transitions: the builder returns the correct types at each step.
+    #[test]
+    fn builder_type_state_transitions() {
+        let _b: ClientBuilder<NoApiKey, NoProvider> = ClientBuilder::new();
+        let _b: ClientBuilder<WithApiKey, NoProvider> = ClientBuilder::new().api_key("sk-test");
+        let _b: ClientBuilder<NoApiKey, WithProvider> = ClientBuilder::new().provider("openai");
+        let _b: ClientBuilder<WithApiKey, WithProvider> = ClientBuilder::new().api_key("sk-test").provider("openai");
+    }
+
+    /// Optional knobs are available at any state and preserve the type state.
+    #[test]
+    fn builder_optional_knobs_preserve_state() {
+        use std::time::Duration;
+        let builder = ClientBuilder::new()
+            .api_key("sk-test")
+            .provider("openai")
+            .timeout(Duration::from_secs(30))
+            .max_retries(5)
+            .load_env(false)
+            .base_url("https://api.openai.com/v1");
+        let _: ClientBuilder<WithApiKey, WithProvider> = builder;
+    }
+
+    /// The default constructor produces a correctly typed builder.
+    #[test]
+    fn builder_default_produces_no_key_no_provider() {
+        let _: ClientBuilder<NoApiKey, NoProvider> = ClientBuilder::default();
+    }
+
+    /// build() succeeds with a valid key and provider.
+    #[cfg(any(feature = "native-http", feature = "wasm-http"))]
+    #[test]
+    fn builder_build_succeeds_with_key_and_provider() {
+        let result = ClientBuilder::new()
+            .api_key("sk-test-key")
+            .provider("openai")
+            .load_env(false)
+            .build();
+        assert!(result.is_ok(), "build() should succeed with key + provider");
+    }
+
+    /// api_key then provider and provider then api_key both produce WithApiKey+WithProvider.
+    #[test]
+    fn builder_order_independence() {
+        let _: ClientBuilder<WithApiKey, WithProvider> = ClientBuilder::new().api_key("k").provider("openai");
+        let _: ClientBuilder<WithApiKey, WithProvider> = ClientBuilder::new().provider("openai").api_key("k");
     }
 }

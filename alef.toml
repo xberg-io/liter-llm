@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.24.16"
+alef_version = "0.25.18"
 languages = [
   "python",
   "node",
@@ -242,9 +242,18 @@ types = [
   # Types with Arc<dyn Trait> / generics
   "ClientConfig",
   "ClientConfigBuilder",
+  "ClientBuilder",
+  "NoApiKey",
+  "WithApiKey",
+  "NoProvider",
+  "WithProvider",
   "PreparedRequest",
   "RawExchange",
   "RawStreamExchange",
+  "TransportConfig",
+  # BatchWaitError: thiserror types don't auto-bridge; source uses FFI-friendly
+  # fields (f64 seconds, flattened message+code) so C FFI can bridge manually.
+  "BatchWaitError",
   # Tower-internal Service request/response enums (externally tagged, contain
   # BoxStream/Bytes). Listed under both bare and Tower-prefixed names — alef
   # prefixes types extracted from the `tower::` module path with "Tower" to
@@ -260,23 +269,140 @@ types = [
   # Enforcement) are intentionally NOT excluded — they are exposed across all bindings.
   "BudgetState",
   "BudgetLayer",
+  "BudgetLedger",
+  "BudgetDimension",
+  "BudgetVerdict",
+  "BudgetSnapshot",
+  "CostRecordContext",
+  "CostCheckContext",
+  "DimensionLimits",
+  "InMemoryBudgetLedger",
+  "CacheKeyInput",
+  "ExactHashStrategy",
+  "SystemPromptAwareStrategy",
+  "TenantScopedStrategy",
+  "CacheDecision",
+  "CachePolicy",
+  "CachePolicyContext",
+  "StandardCachePolicy",
   "CacheStore",
   "InMemoryStore",
   "CacheLayer",
+  "CacheMetadata",
+  "CacheService",
   "OpenDalCacheStore",
+  "NegativeCacheLayer",
+  "SingleflightCoordinator",
+  "InMemorySingleflight",
+  "SingleflightHandle",
+  "SingleflightLayer",
+  "CircuitLayer",
   "CooldownLayer",
   "CostTrackingLayer",
   "FallbackLayer",
+  "FallbackChainLayer",
+  "FallbackChainService",
   "FallbackService",
+  "DefaultRetryPolicy",
+  "RetryPolicy",
+  "GuardrailLayer",
   "HealthCheckLayer",
   "HealthCheckService",
+  "PerProviderHealthCheck",
+  "HedgeLayer",
+  "IdempotencyEntry",
+  "IdempotencyStore",
+  "InMemoryIdempotencyStore",
+  "IdempotencyLayer",
   "LlmHook",
   "HooksLayer",
+  "MetricsLayer",
+  "MetricsService",
   "ModelRateLimitLayer",
+  "CostRateLimitConfig",
+  "CostRateLimitLayer",
+  "CostRateLimitService",
+  "RouteClassifier",
+  "ClassifierVerdictCache",
+  "KeywordClassifier",
+  "EmbeddingSimilarityClassifier",
+  "LlmClassifier",
+  "CascadeClassifier",
   "RouterState",
   "Router",
+  "StaticDiscover",
+  "DynamicRouter",
+  "RouterError",
+  "Weight",
+  "OpenAiRealtimeTranslator",
+  "RealtimeTranslator",
+  # RealtimeEvent is Tier C (binding-public) but alef v0.25.x cannot bridge
+  # serde_json::Value (Raw.payload) and doesn't generate Default for complex enums.
+  # realtime::ContentPart and realtime::ResponseStatus are marked alef(skip) at
+  # source level to avoid naming conflicts with types::ContentPart.
+  # Promote to fully Tier C in v1.7 after alef gains Value bridging support.
+  "RealtimeEvent",
+  "RealtimeEnvelope",
   "LlmService",
   "TracingLayer",
+  # v1.6.0 trait-stack extension points (Rust-only public, Tier B)
+  # Primary exclusion mechanism is alef(skip) at the source level;
+  # these entries are belt-and-braces for any transitively-referenced names.
+  "CircuitPolicy",
+  "ExponentialBackoffCircuit",
+  "HedgePolicy",
+  "FixedDelayHedge",
+  "UsageEvent",
+  "UsageSink",
+  "LoggingUsageSink",
+  "CacheState",
+  "UsageEventOutcome",
+  "UsageSinkError",
+  "CacheKeyStrategy",
+  "GuardrailStage",
+  "GuardrailDecision",
+  "CelAction",
+  "OnMatch",
+  "BatchRetriever",
+  "RetryClass",
+  "IdempotencyStoreError",
+  "HealthCheckConfig",
+  "UpstreamDiscover",
+  "ClassifyContext",
+  # Rust-only extension traits and implementations (async traits, Arc<dyn>, generic callbacks).
+  "EmbeddingProvider",
+  "SelfHostedEmbeddingProvider",
+  "NoOpEmbeddingProvider",
+  "Guardrail",
+  "GuardrailContext",
+  "GuardrailRegistry",
+  "RegexGuardrail",
+  "AllowListGuardrail",
+  "DenyListGuardrail",
+  "LengthCapGuardrail",
+  "PromptInjectionHeuristic",
+  "CelGuardrail",
+  "UsageSinkErased",
+  "MultiUsageSink",
+  "VectorStore",
+  "VectorMetadata",
+  "VectorMatch",
+  "InMemoryVectorStore",
+  "OpenDalVectorStore",
+  "IngressStream",
+  "StreamPipeline",
+  "EgressStream",
+  # Tenant key resolution is Rust/server infrastructure; binding clients use
+  # provider auth config instead of implementing async resolver traits.
+  # (TenantId is Tier C but currently excluded pending binding-surface audit in v1.7.)
+  "TenantId",
+  "TenantContext",
+  "ResolvedKey",
+  "KeyResolver",
+  "KeyResolverError",
+  "InMemoryKeyResolver",
+  "EtcdKeyResolver",
+  "EtcdKeyResolverConfig",
   # Auth credential providers (Arc<dyn>, async trait methods)
   "AzureAdCredentialProvider",
   "WebIdentityCredentialProvider",
@@ -321,8 +447,49 @@ methods = [
   # Methods that require binding→core From on output types (not yet supported)
   "ChatCompletionResponse.estimated_cost",
   "EmbeddingResponse.estimated_cost",
+  # Rust-only helper methods whose signatures expose builders, writers, formatters,
+  # classifier traits, or other values that do not cross generated bindings.
+  "TransportConfig.apply_to_builder",
+  "InMemoryKeyResolver.with_entries",
+  "InMemoryBudgetLedger.export_csv",
+  "DefaultRetryPolicy.classify",
+  "IdempotencyEntry.fmt",
+  "KeywordClassifier.new",
+  "EmbeddingSimilarityClassifier.new",
+  "LlmClassifier.new",
+  "Weight.fmt",
+  "OpenDalVectorStore.new",
+  "EtcdKeyResolver.resolve",
+  "OpenAiRealtimeTranslator.translate_inbound",
+  # v1.6.0 additions — Tier B helper methods
+  "GuardrailRegistry.register",
 ]
-functions = ["str_pair", "build_provider"]
+functions = [
+  "str_pair",
+  "build_provider",
+  "register",
+  "run_stage",
+  "should_hedge",
+  "wait_for_batch_impl",
+  "record_cache_state",
+  # Tower metrics emit helpers — internal infrastructure; called from Tower
+  # middleware modules but not part of the user-facing API.  The Python
+  # generator mishandles their Option<f64>/f64 mix and the FFI generator
+  # mishandles &'static returns; both are non-issues once excluded.
+  "record_cache_hit",
+  "record_cache_miss",
+  "record_cache_stale",
+  "record_circuit_trip",
+  "record_retry_attempt",
+  "record_cache_tier_hit",
+  "record_cache_tier_miss",
+  "record_budget_spend",
+  "record_budget_rejection",
+  "record_realtime_session_duration",
+  "record_realtime_event",
+  "record_realtime_bytes",
+  "init_meter",
+]
 
 [crates.lint.python]
 before = "uv sync --no-install-project --no-install-workspace"
@@ -628,6 +795,7 @@ status_code = "status_code"
 "ocr_page.index" = "uint32_t"
 "choice.index" = "uint32_t"
 "chat_completion_response.created" = "uint64_t"
+"chat_completion_response.usage" = "Usage"
 "images_response.created" = "uint64_t"
 # Opaque enum returns: the FFI returns a pointer to an opaque struct (e.g.
 # LITERLLMBatchStatus*) and the C codegen must convert via
@@ -677,6 +845,7 @@ client_factory = "create_client"
 trait_imports = ["LlmClient", "FileClient", "BatchClient", "ResponseClient"]
 
 [crates.e2e.call.overrides.csharp]
+class = "LiterLlmConverter"
 client_factory = "CreateClient"
 options_via = "from_json"
 
@@ -1775,7 +1944,7 @@ name = "liter_llm_ffi"
 name = "LiterLlm"
 
 [crates.e2e.registry.packages.zig]
-hash = "liter_llm-1.5.1-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
+hash = "liter_llm-1.6.0-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
 
 [crates.e2e.registry.packages.homebrew]
 tap = "kreuzberg-dev/homebrew-tap"
@@ -1862,6 +2031,11 @@ snippets_dir = "docs/snippets"
 output_pattern = "packages/{language}/README.md"
 discord_url = "https://discord.gg/xt9WY3GnKR"
 
+[crates.readme.targets.root]
+template = "root.md"
+output_path = "README.md"
+name = "liter-llm"
+
 [crates.readme.languages.rust]
 template = "language_package.md"
 output_path = "crates/liter-llm/README.md"
@@ -1869,7 +2043,7 @@ name = "Rust"
 package_name = "liter-llm"
 badge_url = "https://img.shields.io/crates/v/liter-llm?label=Rust&color=007ec6"
 docs_url = "https://docs.liter-llm.kreuzberg.dev"
-description = "Universal LLM API client for Rust. Access 143+ LLM providers through a single unified interface. Async/await with Tokio, streaming via BoxStream, composable Tower middleware stack, and compile-time type safety."
+description = "Universal LLM API client for Rust. Access 143 LLM providers through a single unified interface. Async/await with Tokio, streaming via BoxStream, composable Tower middleware stack, and compile-time type safety."
 package_manager = ["cargo"]
 optional_sections = ["async_support", "streaming_support", "tool_calling", "middleware_stack"]
 
@@ -1893,7 +2067,7 @@ name = "Python"
 package_name = "liter-llm"
 badge_url = "https://img.shields.io/pypi/v/liter-llm?label=Python&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
-description = "Universal LLM API client for Python. Access 143+ LLM providers through a single unified interface. Native async/await support, streaming responses, tool calling, and type-safe API."
+description = "Universal LLM API client for Python. Access 143 LLM providers through a single unified interface. Native async/await support, streaming responses, tool calling, and type-safe API."
 package_manager = ["pip"]
 optional_sections = ["async_support", "streaming_support", "tool_calling"]
 
@@ -1919,7 +2093,7 @@ name = "TypeScript (Node.js)"
 package_name = "@kreuzberg/liter-llm"
 badge_url = "https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=TypeScript&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
-description = "Universal LLM API client for TypeScript and Node.js. Access 143+ LLM providers through a single interface with native NAPI-RS bindings, async/await, streaming, tool calling, and full TypeScript type definitions."
+description = "Universal LLM API client for TypeScript and Node.js. Access 143 LLM providers through a single interface with native NAPI-RS bindings, async/await, streaming, tool calling, and full TypeScript type definitions."
 package_manager = ["npm", "pnpm", "yarn"]
 optional_sections = ["async_support", "streaming_support", "tool_calling"]
 
@@ -1945,7 +2119,7 @@ name = "Go"
 package_name = "github.com/kreuzberg-dev/liter-llm/packages/go"
 badge_url = "https://img.shields.io/github/v/tag/kreuzberg-dev/liter-llm?label=Go&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
-description = "Universal LLM API client for Go. Access 143+ LLM providers through a single interface with idiomatic Go API, context-aware async support, and CGO-based native performance."
+description = "Universal LLM API client for Go. Access 143 LLM providers through a single interface with idiomatic Go API, context-aware async support, and CGO-based native performance."
 package_manager = ["go get"]
 optional_sections = ["ffi_build_instructions"]
 
@@ -1969,7 +2143,7 @@ name = "Java"
 package_name = "dev.kreuzberg:liter-llm"
 badge_url = "https://img.shields.io/maven-central/v/dev.kreuzberg/liter-llm?label=Java&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
-description = "Universal LLM API client for Java. Access 143+ LLM providers through a single type-safe interface with Foreign Function & Memory API integration, async support, and native performance."
+description = "Universal LLM API client for Java. Access 143 LLM providers through a single type-safe interface with Foreign Function & Memory API integration, async support, and native performance."
 package_manager = ["maven", "gradle"]
 optional_sections = ["maven_gradle_setup", "async_support"]
 
@@ -1993,7 +2167,7 @@ name = "PHP"
 package_name = "kreuzberg/liter-llm"
 badge_url = "https://img.shields.io/packagist/v/kreuzberg/liter-llm?label=PHP&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
-description = "Universal LLM API client for PHP. Access 143+ LLM providers through a single interface with modern PHP 8.2+ support and a type-safe API."
+description = "Universal LLM API client for PHP. Access 143 LLM providers through a single interface with modern PHP 8.2+ support and a type-safe API."
 package_manager = ["composer"]
 
 [crates.readme.languages.php.features]
@@ -2013,7 +2187,7 @@ name = "Ruby"
 package_name = "liter_llm"
 badge_url = "https://img.shields.io/gem/v/liter_llm?label=Ruby&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
-description = "Universal LLM API client for Ruby. Access 143+ LLM providers through a single interface with idiomatic Ruby API and native performance."
+description = "Universal LLM API client for Ruby. Access 143 LLM providers through a single interface with idiomatic Ruby API and native performance."
 package_manager = ["rubygems", "bundler"]
 optional_sections = ["async_support", "streaming_support"]
 
@@ -2037,7 +2211,7 @@ name = "C#"
 package_name = "LiterLlm"
 badge_url = "https://img.shields.io/nuget/v/LiterLlm?label=C%23&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
-description = "Universal LLM API client for .NET. Access 143+ LLM providers through a single type-safe interface with full async/await support and .NET 8.0+ compatibility."
+description = "Universal LLM API client for .NET. Access 143 LLM providers through a single type-safe interface with full async/await support and .NET 8.0+ compatibility."
 package_manager = ["nuget"]
 optional_sections = ["async_support", "streaming_support"]
 
@@ -2061,7 +2235,7 @@ name = "Elixir"
 package_name = "liter_llm"
 badge_url = "https://img.shields.io/hexpm/v/liter_llm?label=Elixir&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
-description = "Universal LLM API client for Elixir. Access 143+ LLM providers through a single interface with native BEAM concurrency, OTP integration, and idiomatic Elixir API."
+description = "Universal LLM API client for Elixir. Access 143 LLM providers through a single interface with native BEAM concurrency, OTP integration, and idiomatic Elixir API."
 package_manager = ["mix"]
 optional_sections = ["async_support", "streaming_support"]
 
@@ -2086,7 +2260,7 @@ name = "WebAssembly"
 package_name = "@kreuzberg/liter-llm-wasm"
 badge_url = "https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
-description = "Universal LLM API client for browsers and WebAssembly runtimes. Access 143+ LLM providers with portable deployment across browsers, Deno, and Cloudflare Workers."
+description = "Universal LLM API client for browsers and WebAssembly runtimes. Access 143 LLM providers with portable deployment across browsers, Deno, and Cloudflare Workers."
 package_manager = ["npm", "pnpm", "yarn"]
 optional_sections = ["async_support", "streaming_support"]
 
@@ -2137,7 +2311,7 @@ package_manager = ["swift_package_manager"]
 install_command = """
 .package(url: \"https://github.com/kreuzberg-dev/liter-llm.git\", from: \"{{ version }}\")"""
 description = """
-Universal LLM API client for Swift. Access 143+ LLM providers through a single Swift Concurrency-native interface (async/await, AsyncSequence streaming) with Codable request/response types.
+Universal LLM API client for Swift. Access 143 LLM providers through a single Swift Concurrency-native interface (async/await, AsyncSequence streaming) with Codable request/response types.
 """
 
 [crates.readme.languages.swift.features]
@@ -2160,7 +2334,7 @@ package_manager = ["pub"]
 install_command = """
 dart pub add liter_llm:{{ version }}"""
 description = """
-Universal LLM API client for Dart/Flutter. Access 143+ LLM providers through a Dart-idiomatic Future/Stream API with `json_serializable`-friendly types.
+Universal LLM API client for Dart/Flutter. Access 143 LLM providers through a Dart-idiomatic Future/Stream API with `json_serializable`-friendly types.
 """
 
 [crates.readme.languages.dart.features]
@@ -2183,7 +2357,7 @@ package_manager = ["zig"]
 install_command = """
 zig fetch --save https://github.com/kreuzberg-dev/liter-llm/archive/refs/tags/v{{ version }}.tar.gz"""
 description = """
-Universal LLM API client for Zig. Access 143+ LLM providers through Zig's allocator-aware sync API with explicit error sets — no hidden allocations, no exceptions, deterministic resource lifetimes.
+Universal LLM API client for Zig. Access 143 LLM providers through Zig's allocator-aware sync API with explicit error sets — no hidden allocations, no exceptions, deterministic resource lifetimes.
 """
 
 [crates.readme.languages.zig.features]

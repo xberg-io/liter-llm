@@ -17,6 +17,10 @@
 //!   — per-model RPM / TPM rate limiting.
 //! - [`cache::CacheLayer`] / [`cache::CacheService`] — in-memory response
 //!   caching for non-streaming requests.
+//! - [`cache_negative::NegativeCacheLayer`] / [`cache_negative::NegativeCacheService`]
+//!   — negative-cache layer that caches upstream errors to prevent thundering-herd retries.
+//! - [`cache_singleflight::SingleflightLayer`] / [`cache_singleflight::SingleflightService`]
+//!   — singleflight deduplication layer that collapses concurrent identical requests.
 //! - [`cooldown::CooldownLayer`] / [`cooldown::CooldownService`] — deployment
 //!   cooldowns after transient errors.
 //! - [`health::HealthCheckLayer`] / [`health::HealthCheckService`] — periodic
@@ -25,6 +29,12 @@
 //!   spending budget enforcement (hard reject or soft warn).
 //! - [`hooks::HooksLayer`] / [`hooks::HooksService`] — user-defined pre/post
 //!   request hooks for guardrails, logging, and auditing.
+//! - [`metrics::MetricsLayer`] / [`metrics::MetricsService`] — OTel-native
+//!   GenAI semantic-convention metrics (histograms + counters).
+//! - [`circuit::CircuitLayer`] / [`circuit::CircuitService`] — circuit breaker
+//!   with pluggable [`circuit::CircuitPolicy`].
+//! - [`hedge::HedgeLayer`] / [`hedge::HedgeService`] — hedged retry that races
+//!   concurrent requests and cancels losers.
 //!
 //! # Example
 //!
@@ -43,21 +53,43 @@
 pub mod budget;
 /// Response-cache layer with pluggable in-memory backend.
 pub mod cache;
+/// Negative-cache layer that caches upstream errors to prevent thundering-herd retries.
+pub mod cache_negative;
 #[cfg(feature = "opendal-cache")]
 /// OpenDAL-backed cache backend for the response cache layer.
 pub mod cache_opendal;
+/// Per-request cache tier selection and bypass policy ([`CachePolicy`], [`StandardCachePolicy`]).
+pub mod cache_policy;
+/// Singleflight deduplication layer that collapses concurrent identical requests.
+pub mod cache_singleflight;
+/// Circuit-breaker layer with pluggable [`circuit::CircuitPolicy`].
+pub mod circuit;
 /// Cooldown layer that backs off after upstream failures.
 pub mod cooldown;
 /// Cost-tracking layer that attaches token / dollar accounting to each call.
 pub mod cost;
+/// Staging area for new error variants (circuit-open, hedge-exhausted).
+pub(crate) mod error;
 /// Fallback layer that retries a failed call against a sibling provider.
 pub mod fallback;
+/// Multi-step fallback chain layer with pluggable retry-classification policy.
+pub mod fallback_chain;
+/// Guardrail enforcement layer (content filtering, safety checks, policy evaluation).
+pub mod guardrail;
 /// Health-probe layer used by the router to score upstream providers.
 pub mod health;
+/// Hedged-retry layer that races concurrent requests and cancels losers.
+pub mod hedge;
 /// User-supplied request/response hooks (mutators, observers).
 pub mod hooks;
+/// Idempotency-Key dedup layer (OpenAI convention, pluggable store, 24h default TTL).
+pub mod idempotency;
+/// OTel-native GenAI semantic-convention metrics layer.
+pub mod metrics;
 /// Per-provider rate limiter.
 pub mod rate_limit;
+/// Semantic routing cascade — [`route_classify::RouteClassifier`] trait and built-in classifiers.
+pub mod route_classify;
 /// Provider routing strategies (round-robin, weighted, latency-aware).
 pub mod router;
 /// Wired-up Tower service type alias plus the public [`service::ManagedService`] entry-point.
@@ -74,17 +106,73 @@ pub mod types;
 // Re-export tower core types for convenient access
 pub use tower::ServiceExt;
 
-pub use budget::{BudgetConfig, BudgetLayer, BudgetService, BudgetState, Enforcement};
-pub use cache::{CacheBackend, CacheConfig, CacheLayer, CacheService, CacheStore, CachedResponse, InMemoryStore};
+// Re-export cache key strategies so users can reference them via `liter_llm::tower::*`
+// without spelling out the full internal module path.
+pub use crate::cache_key::{
+    CacheKeyInput, CacheKeyStrategy, ExactHashStrategy, SystemPromptAwareStrategy, TenantScopedStrategy,
+};
+// Re-export vector store abstractions (tower-gated module).
+pub use crate::vectorstore::{InMemoryVectorStore, VectorMatch, VectorMetadata, VectorStore};
+// Re-export the OpenDAL-backed vector store when the opendal-cache feature is active.
+#[cfg(feature = "opendal-cache")]
+pub use crate::vectorstore::OpenDalVectorStore;
+// Re-export embedding provider abstraction.
+pub use crate::embedding::{EmbeddingProvider, NoOpEmbeddingProvider, SelfHostedEmbeddingProvider};
+// Re-export guardrail types (unconditionally compiled, exposed through tower for ergonomics).
+pub use crate::guardrail::{Guardrail, GuardrailContext, GuardrailDecision, GuardrailStage};
+
+pub use budget::{
+    BudgetConfig, BudgetDimension, BudgetLayer, BudgetLedger, BudgetService, BudgetSnapshot, BudgetState,
+    BudgetVerdict, CostCheckContext, CostRecordContext, DimensionLimits, Enforcement, InMemoryBudgetLedger,
+    should_hedge,
+};
+pub use cache::{
+    CacheBackend, CacheConfig, CacheLayer, CacheMetadata, CacheService, CacheStore, CachedResponse, InMemoryStore,
+};
+pub use cache_negative::{FixedWindowNegativeCache, NegativeCacheLayer, NegativeCachePolicy, NegativeCacheService};
 #[cfg(feature = "opendal-cache")]
 pub use cache_opendal::OpenDalCacheStore;
+pub use cache_policy::{CacheDecision, CachePolicy, CachePolicyContext, StandardCachePolicy};
+pub use cache_singleflight::{
+    InMemorySingleflight, SingleflightCoordinator, SingleflightHandle, SingleflightLayer, SingleflightResult,
+    SingleflightService,
+};
+pub use circuit::{CircuitLayer, CircuitPolicy, CircuitService, CircuitState, ExponentialBackoffCircuit};
 pub use cooldown::{CooldownLayer, CooldownService};
 pub use cost::{CostTrackingLayer, CostTrackingService};
 pub use fallback::{FallbackLayer, FallbackService};
-pub use health::{HealthCheckLayer, HealthCheckService};
+pub use fallback_chain::{DefaultRetryPolicy, FallbackChainLayer, FallbackChainService, RetryClass, RetryPolicy};
+pub use guardrail::{GuardrailLayer, GuardrailService};
+pub use health::{
+    HealthCheckConfig, HealthCheckLayer, HealthCheckService, HealthChecker, HealthStatus, HttpProbeHealthChecker,
+    PerProviderHealthCheck,
+};
+pub use hedge::{FixedDelayHedge, HedgeLayer, HedgePolicy, HedgeService};
 pub use hooks::{HooksLayer, HooksService, LlmHook};
-pub use rate_limit::{ModelRateLimitLayer, ModelRateLimitService, RateLimitConfig};
-pub use router::{Router, RoutingStrategy};
+/// `IdempotencyStoreError` is accessible via the `tower` module.
+///
+/// ```rust
+/// use liter_llm::tower::IdempotencyStoreError;
+///
+/// fn _accepts_store_err(_e: IdempotencyStoreError) {}
+/// ```
+pub use idempotency::{
+    IdempotencyEntry, IdempotencyLayer, IdempotencyService, IdempotencyStore, IdempotencyStoreError,
+    InMemoryIdempotencyStore,
+};
+pub use metrics::{MetricsLayer, MetricsService};
+pub use rate_limit::{
+    CostRateLimitConfig, CostRateLimitLayer, CostRateLimitService, ModelRateLimitLayer, ModelRateLimitService,
+    RateLimitConfig,
+};
+pub use route_classify::{
+    CascadeClassifier, ClassifierVerdictCache, ClassifyContext, EmbeddingSimilarityClassifier, IntentPrototype,
+    KeywordClassifier, LlmClassifier, RouteClassifier,
+};
+pub use router::{
+    DEFAULT_CONCURRENCY_LIMIT, DynamicRouter, ProviderConfig, Router, RouterError, RoutingStrategy, StaticDiscover,
+    UpstreamDiscover, Weight,
+};
 pub use service::LlmService;
 pub use tracing::{TracingLayer, TracingService};
-pub use types::{LlmRequest, LlmResponse};
+pub use types::{LlmRequest, LlmRequestKind, LlmResponse};

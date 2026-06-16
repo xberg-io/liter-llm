@@ -350,8 +350,12 @@ mod tests {
             total_tokens: 1_050,
             prompt_tokens_details: None,
         };
-        let a = make_response("gpt-4", usage_with_cached).estimated_cost().unwrap();
-        let b = make_response("gpt-4", usage_no_details).estimated_cost().unwrap();
+        let a = make_response("gpt-4", usage_with_cached)
+            .estimated_cost()
+            .expect("cost estimation should succeed for known model");
+        let b = make_response("gpt-4", usage_no_details)
+            .estimated_cost()
+            .expect("cost estimation should succeed for known model");
         assert!((a - b).abs() < 1e-12);
     }
 
@@ -365,7 +369,7 @@ mod tests {
         }"#;
         let usage: Usage = serde_json::from_str(json).expect("valid OpenAI usage shape");
         assert_eq!(usage.prompt_tokens_details.as_ref().map(|d| d.cached_tokens), Some(30));
-        let reser = serde_json::to_string(&usage).unwrap();
+        let reser = serde_json::to_string(&usage).expect("serialization should not fail");
         assert!(reser.contains("\"cached_tokens\":30"));
     }
 }
