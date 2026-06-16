@@ -2,7 +2,7 @@
 title: "WebAssembly API Reference"
 ---
 
-## WebAssembly API Reference <span class="version-badge">v1.6.1</span>
+## WebAssembly API Reference <span class="version-badge">v1.6.2</span>
 
 ### Functions
 
@@ -790,18 +790,13 @@ const result = await instance.chat(new ChatCompletionRequest());
 **Signature:**
 
 ```typescript
-chatStream(req: ChatCompletionRequest): Promise<ChatStreamIterator>
+chatStream(req: ChatCompletionRequest): Promise<string>
 ```
 
 **Example:**
 
 ```typescript
-const stream = await instance.chatStream(new ChatCompletionRequest());
-while (true) {
-  const chunk = await stream.next();
-  if (chunk === null) break;
-  console.log(chunk);
-}
+const result = await instance.chatStream(new ChatCompletionRequest());
 ```
 
 **Parameters:**
@@ -810,7 +805,7 @@ while (true) {
 |------|------|----------|-------------|
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
-**Returns:** `Promise<ChatStreamIterator>`
+**Returns:** `string`
 
 **Errors:** Throws `Error` with a descriptive message.
 

@@ -2,7 +2,7 @@
 title: "TypeScript API Reference"
 ---
 
-## TypeScript API Reference <span class="version-badge">v1.6.1</span>
+## TypeScript API Reference <span class="version-badge">v1.6.2</span>
 
 ### Functions
 
@@ -927,16 +927,13 @@ const result = await instance.chat(new ChatCompletionRequest());
 **Signature:**
 
 ```typescript
-chatStream(req: ChatCompletionRequest): Promise<ChatStreamIterator>
+chatStream(req: ChatCompletionRequest): Promise<string>
 ```
 
 **Example:**
 
 ```typescript
-const stream = await instance.chatStream(new ChatCompletionRequest());
-for await (const chunk of stream) {
-  console.log(chunk);
-}
+const result = await instance.chatStream(new ChatCompletionRequest());
 ```
 
 **Parameters:**
@@ -945,7 +942,7 @@ for await (const chunk of stream) {
 |------|------|----------|-------------|
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
-**Returns:** `Promise<ChatStreamIterator>`
+**Returns:** `string`
 
 **Errors:** Throws `Error` with a descriptive message.
 

@@ -1,12 +1,17 @@
 {
   "name": "@kreuzberg/liter-llm-node",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "description": "Universal LLM API client with Rust-powered polyglot bindings.",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kreuzberg-dev/liter-llm.git"
   },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "*.node"
+  ],
   "main": "index.js",
   "types": "index.d.ts",
   "exports": {
@@ -16,18 +21,28 @@
       "default": "./index.js"
     }
   },
-  "files": ["index.js", "index.d.ts", "*.node"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "npx --yes -p @napi-rs/cli@^3.6.2 napi build --platform --release",
+    "artifacts": "npx --yes -p @napi-rs/cli@^3.6.2 napi artifacts",
+    "prepublishOnly": "npx --yes -p @napi-rs/cli@^3.6.2 napi prepublish -t npm --skip-optional-publish"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.6.2"
+  },
   "optionalDependencies": {
-    "@kreuzberg/liter-llm-node-linux-x64-gnu": "1.6.1",
-    "@kreuzberg/liter-llm-node-linux-arm64-gnu": "1.6.1",
-    "@kreuzberg/liter-llm-node-darwin-x64": "1.6.1",
-    "@kreuzberg/liter-llm-node-darwin-arm64": "1.6.1",
-    "@kreuzberg/liter-llm-node-win32-x64-msvc": "1.6.1",
-    "@kreuzberg/liter-llm-node-win32-arm64-msvc": "1.6.1"
+    "@kreuzberg/liter-llm-node-darwin-arm64": "1.6.2",
+    "@kreuzberg/liter-llm-node-darwin-x64": "1.6.2",
+    "@kreuzberg/liter-llm-node-linux-arm64-gnu": "1.6.2",
+    "@kreuzberg/liter-llm-node-linux-x64-gnu": "1.6.2",
+    "@kreuzberg/liter-llm-node-win32-arm64-msvc": "1.6.2",
+    "@kreuzberg/liter-llm-node-win32-x64-msvc": "1.6.2"
   },
   "napi": {
-    "packageName": "@kreuzberg/liter-llm-node",
     "binaryName": "liter-llm-node",
+    "packageName": "@kreuzberg/liter-llm-node",
     "targets": [
       "x86_64-unknown-linux-gnu",
       "aarch64-unknown-linux-gnu",
@@ -37,12 +52,7 @@
       "aarch64-pc-windows-msvc"
     ]
   },
-  "scripts": {
-    "build": "npx --yes -p @napi-rs/cli@^3.6.2 napi build --platform --release",
-    "artifacts": "npx --yes -p @napi-rs/cli@^3.6.2 napi artifacts",
-    "prepublishOnly": "npx --yes -p @napi-rs/cli@^3.6.2 napi prepublish -t npm --skip-optional-publish"
-  },
-  "engines": { "node": ">= 18" },
-  "publishConfig": { "access": "public" },
-  "devDependencies": { "@napi-rs/cli": "^3.6.2" }
+  "engines": {
+    "node": ">= 18"
+  }
 }

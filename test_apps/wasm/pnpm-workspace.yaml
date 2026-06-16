@@ -4,4 +4,4 @@ allowBuilds:
   esbuild: true
   tree-sitter: true
 minimumReleaseAgeExclude:
-  - '@kreuzberg/liter-llm-wasm@1.6.1'
+  - '@kreuzberg/liter-llm-wasm@1.6.2'

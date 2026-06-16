@@ -2,7 +2,7 @@
 title: "Java API Reference"
 ---
 
-## Java API Reference <span class="version-badge">v1.6.1</span>
+## Java API Reference <span class="version-badge">v1.6.2</span>
 
 ### Functions
 
@@ -927,15 +927,13 @@ var result = instance.chat(new ChatCompletionRequest());
 **Signature:**
 
 ```java
-public java.util.stream.Stream<ChatCompletionChunk> chatStream(ChatCompletionRequest req) throws LiterLlmRsException
+public String chatStream(ChatCompletionRequest req) throws Error
 ```
 
 **Example:**
 
 ```java
-try (var stream = instance.chatStream(new ChatCompletionRequest())) {
-    stream.forEach(System.out::println);
-}
+var result = instance.chatStream(new ChatCompletionRequest());
 ```
 
 **Parameters:**
@@ -944,7 +942,7 @@ try (var stream = instance.chatStream(new ChatCompletionRequest())) {
 |------|------|----------|-------------|
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
-**Returns:** `java.util.stream.Stream<ChatCompletionChunk>`
+**Returns:** `String`
 
 **Errors:** Throws `ErrorException`.
 

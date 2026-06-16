@@ -2,7 +2,7 @@
 title: "Kotlin (Android) API Reference"
 ---
 
-## Kotlin (Android) API Reference <span class="version-badge">v1.6.1</span>
+## Kotlin (Android) API Reference <span class="version-badge">v1.6.2</span>
 
 ### Functions
 
@@ -800,15 +800,13 @@ val result = instance.chat(ChatCompletionRequest())
 
 ```kotlin
 @Throws(Error::class)
-fun chatStream(req: ChatCompletionRequest): kotlinx.coroutines.flow.Flow<ChatCompletionChunk>
+fun chatStream(req: ChatCompletionRequest): String
 ```
 
 **Example:**
 
 ```kotlin
-instance.chatStream(ChatCompletionRequest()).collect { chunk ->
-    println(chunk)
-}
+val result = instance.chatStream(ChatCompletionRequest())
 ```
 
 **Parameters:**
@@ -817,7 +815,7 @@ instance.chatStream(ChatCompletionRequest()).collect { chunk ->
 |------|------|----------|-------------|
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
-**Returns:** `kotlinx.coroutines.flow.Flow<ChatCompletionChunk>`
+**Returns:** `String`
 
 **Errors:** Throws `Error`.
 

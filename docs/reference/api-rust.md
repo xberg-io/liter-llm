@@ -2,7 +2,7 @@
 title: "Rust API Reference"
 ---
 
-## Rust API Reference <span class="version-badge">v1.6.1</span>
+## Rust API Reference <span class="version-badge">v1.6.2</span>
 
 ### Functions
 
@@ -932,17 +932,13 @@ let result = instance.chat(ChatCompletionRequest::default()).await?;
 **Signature:**
 
 ```rust
-fn chat_stream(&self, req: ChatCompletionRequest) -> BoxFuture<'_, Result<BoxStream<'static, Result<ChatCompletionChunk>>>>
+pub async fn chat_stream(&self, req: ChatCompletionRequest) -> Result<String, Error>
 ```
 
 **Example:**
 
 ```rust
-let mut stream = instance.chat_stream(ChatCompletionRequest::default()).await?;
-while let Some(chunk) = stream.next().await {
-    let chunk = chunk?;
-    println!("{chunk:?}");
-}
+let result = instance.chat_stream(ChatCompletionRequest::default()).await?;
 ```
 
 **Parameters:**
@@ -951,7 +947,7 @@ while let Some(chunk) = stream.next().await {
 |------|------|----------|-------------|
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
-**Returns:** `BoxFuture<'_, Result<BoxStream<'static, Result<ChatCompletionChunk>>>>`
+**Returns:** `String`
 
 **Errors:** Returns `Err(Error)`.
 

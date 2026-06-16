@@ -2,7 +2,7 @@
 title: "Dart API Reference"
 ---
 
-## Dart API Reference <span class="version-badge">v1.6.1</span>
+## Dart API Reference <span class="version-badge">v1.6.2</span>
 
 ### Functions
 
@@ -927,15 +927,13 @@ final result = await instance.chat(ChatCompletionRequest());
 **Signature:**
 
 ```dart
-Stream<ChatCompletionChunk> chatStream(ChatCompletionRequest req)
+String chatStream(ChatCompletionRequest req)
 ```
 
 **Example:**
 
 ```dart
-await for (final chunk in instance.chatStream(ChatCompletionRequest())) {
-  print(chunk);
-}
+final result = await instance.chatStream(ChatCompletionRequest());
 ```
 
 **Parameters:**
@@ -944,7 +942,7 @@ await for (final chunk in instance.chatStream(ChatCompletionRequest())) {
 |------|------|----------|-------------|
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
-**Returns:** `Stream<ChatCompletionChunk>`
+**Returns:** `String`
 
 **Errors:** Throws `Error`.
 

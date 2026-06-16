@@ -2,7 +2,7 @@
 title: "PHP API Reference"
 ---
 
-## PHP API Reference <span class="version-badge">v1.6.1</span>
+## PHP API Reference <span class="version-badge">v1.6.2</span>
 
 ### Functions
 
@@ -927,16 +927,13 @@ $result = $instance->chat(new ChatCompletionRequest());
 **Signature:**
 
 ```php
-public function chatStream(ChatCompletionRequest $req): array<string>
+public function chatStream(ChatCompletionRequest $req): string
 ```
 
 **Example:**
 
 ```php
-foreach ($instance->chatStream(new ChatCompletionRequest()) as $chunkJson) {
-    $chunk = json_decode($chunkJson, false, flags: JSON_THROW_ON_ERROR);
-    echo $chunk->choices[0]->delta->content ?? '';
-}
+$result = $instance->chatStream(new ChatCompletionRequest());
 ```
 
 **Parameters:**
@@ -945,7 +942,7 @@ foreach ($instance->chatStream(new ChatCompletionRequest()) as $chunkJson) {
 |------|------|----------|-------------|
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
-**Returns:** `array<string>`
+**Returns:** `string`
 
 **Errors:** Throws `Error`.
 

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.2] - 2026-06-16
+
+### Fixed
+
+- **`to_singleflight_error` dead-code lint** — gated `LiterLlmError::to_singleflight_error` with `#[cfg(feature = "tower")]` so the method is not emitted when `cargo publish --verify` builds with default features (`default = ["native-http"]`). The method's only call sites live in `src/tower/cache_singleflight.rs`, which is itself feature-gated. Under `-D warnings` the dead-code lint rejected the build, blocking `Publish crates.io` and every per-platform `Build CLI binary`, `Build WASM`, and `Build Kotlin Android natives` job in the v1.6.0 and v1.6.1 release workflows. No artifacts reached PyPI, crates.io, npm, RubyGems, Maven Central, Packagist, Hex, NuGet, pub.dev, or the Homebrew tap from those tags.
+- **Release-runner `protoc` toolchain dep** — `kreuzberg-dev/actions/setup-rust@v1.8.70` now installs `protobuf-compiler` on every Linux/macOS/Windows runner. `etcd-client v0.15`'s `build.rs` shells out to `protoc`; `liter-llm-cli` pulls `etcd-client` transitively through `liter-llm-proxy`, so the v1.6.1 CLI binary builds panicked with `Failed to compile proto files: Could not find protoc`. v1.6.2's publish workflow consumes the floating `v1` tag which now carries the fix.
+
 ## [1.6.1] - 2026-06-16
 
 ### Fixed

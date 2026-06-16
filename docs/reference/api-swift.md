@@ -2,7 +2,7 @@
 title: "Swift API Reference"
 ---
 
-## Swift API Reference <span class="version-badge">v1.6.1</span>
+## Swift API Reference <span class="version-badge">v1.6.2</span>
 
 ### Functions
 
@@ -901,16 +901,13 @@ let result = try instance.chat(ChatCompletionRequest())
 **Signature:**
 
 ```swift
-public func chatStream(_ req: ChatCompletionRequest) async throws -> AsyncThrowingStream<ChatCompletionChunk, Error>
+public func chatStream(req: ChatCompletionRequest) throws -> String
 ```
 
 **Example:**
 
 ```swift
-let stream = try await instance.chatStream(ChatCompletionRequest())
-for try await chunk in stream {
-    print(chunk)
-}
+let result = try instance.chatStream(ChatCompletionRequest())
 ```
 
 **Parameters:**
@@ -919,7 +916,7 @@ for try await chunk in stream {
 |------|------|----------|-------------|
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
-**Returns:** `AsyncThrowingStream<ChatCompletionChunk, Error>`
+**Returns:** `String`
 
 **Errors:** Throws `Error`.
 

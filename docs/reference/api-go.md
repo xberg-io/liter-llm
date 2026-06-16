@@ -2,7 +2,7 @@
 title: "Go API Reference"
 ---
 
-## Go API Reference <span class="version-badge">v1.6.1</span>
+## Go API Reference <span class="version-badge">v1.6.2</span>
 
 ### Functions
 
@@ -958,18 +958,15 @@ if err != nil {
 **Signature:**
 
 ```go
-func (o *DefaultClient) ChatStream(req ChatCompletionRequest) (<-chan ChatCompletionChunk, error)
+func (o *DefaultClient) ChatStream(req ChatCompletionRequest) (string, error)
 ```
 
 **Example:**
 
 ```go
-stream, err := instance.ChatStream(ChatCompletionRequest{})
+result, err := instance.ChatStream(ChatCompletionRequest{})
 if err != nil {
     return err
-}
-for chunk := range stream {
-    fmt.Println(chunk)
 }
 ```
 
@@ -979,7 +976,7 @@ for chunk := range stream {
 |------|------|----------|-------------|
 | `Req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
-**Returns:** `(<-chan ChatCompletionChunk, error)`
+**Returns:** `string`
 
 **Errors:** Returns `error`.
 

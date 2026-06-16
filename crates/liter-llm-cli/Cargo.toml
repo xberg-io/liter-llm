@@ -30,8 +30,8 @@ default = []
 arc-swap = { workspace = true }
 axum = { workspace = true }
 clap = { workspace = true }
-liter-llm = { path = "../liter-llm", version = "1.6.1" }
-liter-llm-proxy = { path = "../liter-llm-proxy", version = "1.6.1" }
+liter-llm = { path = "../liter-llm", version = "1.6.2" }
+liter-llm-proxy = { path = "../liter-llm-proxy", version = "1.6.2" }
 mimalloc = { workspace = true, optional = true }
 rmcp = { workspace = true }
 secrecy = { workspace = true }

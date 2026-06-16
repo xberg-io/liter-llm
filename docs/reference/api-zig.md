@@ -2,7 +2,7 @@
 title: "Zig API Reference"
 ---
 
-## Zig API Reference <span class="version-badge">v1.6.1</span>
+## Zig API Reference <span class="version-badge">v1.6.2</span>
 
 ### Functions
 
@@ -922,22 +922,18 @@ const result = try instance.chat(.{});
 
 **Errors:** Throws `Error`.
 
-###### chat_stream()
+###### chatStream()
 
 **Signature:**
 
 ```zig
-pub fn chat_stream(self: *DefaultClient, req: []const u8) (Error||error{OutOfMemory})!ChatCompletionChunkStream
+pub fn chatStream(self: *const DefaultClient, req: ChatCompletionRequest) Error![:0]const u8
 ```
 
 **Example:**
 
 ```zig
-var stream = try instance.chat_stream("{}");
-defer stream.deinit();
-while (try stream.next()) |chunk| {
-    _ = chunk;
-}
+const result = try instance.chatStream(.{});
 ```
 
 **Parameters:**
@@ -946,7 +942,7 @@ while (try stream.next()) |chunk| {
 |------|------|----------|-------------|
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
-**Returns:** `ChatCompletionChunkStream`
+**Returns:** `[:0]const u8`
 
 **Errors:** Throws `Error`.
 

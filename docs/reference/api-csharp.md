@@ -2,7 +2,7 @@
 title: "C# API Reference"
 ---
 
-## C# API Reference <span class="version-badge">v1.6.1</span>
+## C# API Reference <span class="version-badge">v1.6.2</span>
 
 ### Functions
 
@@ -922,20 +922,18 @@ var result = await instance.Chat(new ChatCompletionRequest());
 
 **Errors:** Throws `Error`.
 
-###### ChatStreamAsync()
+###### ChatStream()
 
 **Signature:**
 
 ```csharp
-public async IAsyncEnumerable<ChatCompletionChunk> ChatStreamAsync(ChatCompletionRequest req, CancellationToken cancellationToken = default)
+public async Task<string> ChatStreamAsync(ChatCompletionRequest req)
 ```
 
 **Example:**
 
 ```csharp
-await foreach (var chunk in instance.ChatStreamAsync(new ChatCompletionRequest())) {
-    Console.WriteLine(chunk);
-}
+var result = await instance.ChatStream(new ChatCompletionRequest());
 ```
 
 **Parameters:**
@@ -944,7 +942,7 @@ await foreach (var chunk in instance.ChatStreamAsync(new ChatCompletionRequest()
 |------|------|----------|-------------|
 | `Req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
-**Returns:** `IAsyncEnumerable<ChatCompletionChunk>`
+**Returns:** `string`
 
 **Errors:** Throws `Error`.
 

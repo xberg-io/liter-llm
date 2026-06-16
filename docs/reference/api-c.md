@@ -2,7 +2,7 @@
 title: "C API Reference"
 ---
 
-## C API Reference <span class="version-badge">v1.6.1</span>
+## C API Reference <span class="version-badge">v1.6.2</span>
 
 ### Functions
 
@@ -922,26 +922,18 @@ LiterllmChatCompletionResponse *result = literllm_chat(instance, (LiterllmChatCo
 
 **Errors:** Returns `NULL` on error.
 
-###### literllm_default_client_chat_stream_start()
+###### literllm_chat_stream()
 
 **Signature:**
 
 ```c
-struct LITERLLMLiterllmDefaultClientChatStreamStreamHandle * literllm_default_client_chat_stream_start(const LITERLLMDefaultClient *client, const LITERLLMChatCompletionRequest *req);
+const char* literllm_chat_stream(LiterllmChatCompletionRequest req);
 ```
 
 **Example:**
 
 ```c
-struct LITERLLMLiterllmDefaultClientChatStreamStreamHandle * stream = literllm_default_client_chat_stream_start(instance, req);
-while (stream != NULL) {
-    LITERLLMChatCompletionChunk *chunk = literllm_default_client_chat_stream_next(stream);
-    if (chunk == NULL) {
-        break;
-    }
-    literllm_chat_completion_chunk_free(chunk);
-}
-literllm_default_client_chat_stream_free(stream);
+const char *result = literllm_chat_stream(instance, (LiterllmChatCompletionRequest){0});
 ```
 
 **Parameters:**
@@ -950,7 +942,7 @@ literllm_default_client_chat_stream_free(stream);
 |------|------|----------|-------------|
 | `req` | `LiterllmChatCompletionRequest` | Yes | The chat completion request |
 
-**Returns:** `struct LITERLLMLiterllmDefaultClientChatStreamStreamHandle *`
+**Returns:** `const char*`
 
 **Errors:** Returns `NULL` on error.
 

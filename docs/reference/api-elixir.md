@@ -2,7 +2,7 @@
 title: "Elixir API Reference"
 ---
 
-## Elixir API Reference <span class="version-badge">v1.6.1</span>
+## Elixir API Reference <span class="version-badge">v1.6.2</span>
 
 ### Functions
 
@@ -941,14 +941,13 @@ def chat(req)
 **Signature:**
 
 ```elixir
-def chat_stream(client, req)
+def chat_stream(req)
 ```
 
 **Example:**
 
 ```elixir
-{:ok, stream} = LiterLlm.chat_stream(instance, %{})
-Enum.each(stream, &IO.inspect/1)
+{:ok, result} = instance.chat_stream(%{{}})
 ```
 
 **Parameters:**
@@ -957,7 +956,7 @@ Enum.each(stream, &IO.inspect/1)
 |------|------|----------|-------------|
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
-**Returns:** `{:ok, Stream.t()}`
+**Returns:** `String.t()`
 
 **Errors:** Returns `{:error, reason}`
 

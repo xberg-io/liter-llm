@@ -2,7 +2,7 @@
 title: "Ruby API Reference"
 ---
 
-## Ruby API Reference <span class="version-badge">v1.6.1</span>
+## Ruby API Reference <span class="version-badge">v1.6.2</span>
 
 ### Functions
 
@@ -903,10 +903,7 @@ def chat_stream(req)
 **Example:**
 
 ```ruby
-stream = instance.chat_stream(ChatCompletionRequest.new)
-stream.each do |chunk|
-  puts chunk
-end
+result = instance.chat_stream(ChatCompletionRequest.new)
 ```
 
 **Parameters:**
@@ -915,7 +912,7 @@ end
 |------|------|----------|-------------|
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
-**Returns:** `ChatStreamIterator`
+**Returns:** `String`
 
 **Errors:** Raises `Error`.
 

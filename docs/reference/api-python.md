@@ -2,7 +2,7 @@
 title: "Python API Reference"
 ---
 
-## Python API Reference <span class="version-badge">v1.6.1</span>
+## Python API Reference <span class="version-badge">v1.6.2</span>
 
 ### Functions
 
@@ -929,15 +929,13 @@ result = instance.chat(ChatCompletionRequest())
 **Signature:**
 
 ```python
-async def chat_stream(self, req: ChatCompletionRequest) -> AsyncIterator[ChatCompletionChunk]
+def chat_stream(self, req: ChatCompletionRequest) -> str
 ```
 
 **Example:**
 
 ```python
-stream = instance.chat_stream(ChatCompletionRequest())
-async for chunk in stream:
-    print(chunk)
+result = instance.chat_stream(ChatCompletionRequest())
 ```
 
 **Parameters:**
@@ -946,7 +944,7 @@ async for chunk in stream:
 |------|------|----------|-------------|
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
-**Returns:** `AsyncIterator[ChatCompletionChunk]`
+**Returns:** `str`
 
 **Errors:** Raises `Error`.
 
