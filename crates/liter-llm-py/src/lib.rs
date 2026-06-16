@@ -4255,16 +4255,14 @@ impl ToolType {
         // Try to extract as string first
         if let Ok(s) = value.extract::<&str>() {
             let s_lower = s.to_lowercase();
-            match s_lower.as_str() {
-                "function" => return Ok(Self::Function),
-                _ => {}
+            if s_lower.as_str() == "function" {
+                return Ok(Self::Function);
             }
         }
         // Try to extract as integer (by discriminant value)
         if let Ok(n) = value.extract::<i32>() {
-            match n {
-                0 => return Ok(Self::Function),
-                _ => {}
+            if n == 0 {
+                return Ok(Self::Function);
             }
         }
         let type_name = stringify!(ToolType);

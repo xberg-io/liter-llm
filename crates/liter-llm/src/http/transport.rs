@@ -172,12 +172,14 @@ impl TransportConfig {
         // this hook.  TODO: wire when upstream support lands.
         let _ = self.dns_cache_ttl;
 
+        // `reqwest::ClientBuilder::http3_prior_knowledge` requires the upstream
+        // `reqwest/http3` feature, which itself depends on `--cfg reqwest_unstable`
+        // and is incompatible with `cargo clippy --all-features` runs in CI. Until
+        // reqwest stabilises its HTTP/3 surface we accept the `enable_http3` field
+        // but do not forward it to the builder.
+        // TODO: wire HTTP/3 when reqwest's http3 feature lands without nightly cfg.
         #[cfg(feature = "http3")]
-        let builder = if self.enable_http3 {
-            builder.http3_prior_knowledge()
-        } else {
-            builder
-        };
+        let _ = self.enable_http3;
 
         builder
     }
