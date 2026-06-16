@@ -72,7 +72,7 @@
 	</a>
 </div>
 
-Universal LLM API client for PHP. Access 143+ LLM providers through a single interface with modern PHP 8.2+ support and a type-safe API.
+Universal LLM API client for PHP. Access 143 LLM providers through a single interface with modern PHP 8.2+ support and a type-safe API.
 
 ## What This Package Provides
 
@@ -131,7 +131,7 @@ echo $result->choices[0]->message->content . PHP_EOL;
 
 ## Features
 
-### Supported Providers (143+)
+### Supported Providers (143)
 
 Route to any provider using the `provider/model` prefix convention:
 
@@ -151,7 +151,7 @@ Route to any provider using the `provider/model` prefix convention:
 
 ### Key Capabilities
 
-- **Provider Routing** -- Single client for 143+ LLM providers via `provider/model` prefix
+- **Provider Routing** -- Single client for 143 LLM providers via `provider/model` prefix
 - **Local LLMs** — Connect to locally-hosted models via Ollama, LM Studio, vLLM, llama.cpp, and other local inference servers
 - **Unified API** -- Consistent `chat`, `chat_stream`, `embeddings`, `list_models` interface
 - **Tool Calling** -- Function calling and tool use across all supporting providers
@@ -171,7 +171,7 @@ Built on a compiled Rust core for speed and safety:
 
 ## Provider Routing
 
-Route to 143+ providers using the `provider/model` prefix convention:
+Route to 143 providers using the `provider/model` prefix convention:
 
 ```text
 openai/gpt-4o
@@ -200,12 +200,13 @@ See the [proxy server documentation](https://docs.liter-llm.kreuzberg.dev/server
 
 ## Part of Kreuzberg.dev
 
-- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 90+ formats with optional OCR.
+- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
 - [Kreuzberg Cloud](https://github.com/kreuzberg-dev/kreuzberg-cloud) — managed extraction API with SDKs, dashboards, and observability.
 - [kreuzcrawl](https://github.com/kreuzberg-dev/kreuzcrawl) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
 - [html-to-markdown](https://github.com/kreuzberg-dev/html-to-markdown) — fast, lossless HTML→Markdown engine.
+- [liter-llm](https://github.com/kreuzberg-dev/liter-llm) — universal LLM API client with native bindings for 14 languages and 143 providers.
 - [tree-sitter-language-pack](https://github.com/kreuzberg-dev/tree-sitter-language-pack) — tree-sitter grammars and code-intelligence primitives.
-- [alef](https://github.com/kreuzberg-dev/alef) — the polyglot binding generator that produces this README and all per-language bindings.
+- [alef](https://github.com/kreuzberg-dev/alef) — the polyglot binding generator that produces every per-language binding across the 5 polyglot repos.
 - [Discord](https://discord.gg/xt9WY3GnKR) — community, roadmap, announcements.
 
 ## Contributing

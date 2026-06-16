@@ -2043,7 +2043,7 @@ name = "Rust"
 package_name = "liter-llm"
 badge_url = "https://img.shields.io/crates/v/liter-llm?label=Rust&color=007ec6"
 docs_url = "https://docs.liter-llm.kreuzberg.dev"
-description = "Universal LLM API client for Rust. Access 143+ LLM providers through a single unified interface. Async/await with Tokio, streaming via BoxStream, composable Tower middleware stack, and compile-time type safety."
+description = "Universal LLM API client for Rust. Access 143 LLM providers through a single unified interface. Async/await with Tokio, streaming via BoxStream, composable Tower middleware stack, and compile-time type safety."
 package_manager = ["cargo"]
 optional_sections = ["async_support", "streaming_support", "tool_calling", "middleware_stack"]
 
@@ -2067,7 +2067,7 @@ name = "Python"
 package_name = "liter-llm"
 badge_url = "https://img.shields.io/pypi/v/liter-llm?label=Python&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
-description = "Universal LLM API client for Python. Access 143+ LLM providers through a single unified interface. Native async/await support, streaming responses, tool calling, and type-safe API."
+description = "Universal LLM API client for Python. Access 143 LLM providers through a single unified interface. Native async/await support, streaming responses, tool calling, and type-safe API."
 package_manager = ["pip"]
 optional_sections = ["async_support", "streaming_support", "tool_calling"]
 
@@ -2093,7 +2093,7 @@ name = "TypeScript (Node.js)"
 package_name = "@kreuzberg/liter-llm"
 badge_url = "https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=TypeScript&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
-description = "Universal LLM API client for TypeScript and Node.js. Access 143+ LLM providers through a single interface with native NAPI-RS bindings, async/await, streaming, tool calling, and full TypeScript type definitions."
+description = "Universal LLM API client for TypeScript and Node.js. Access 143 LLM providers through a single interface with native NAPI-RS bindings, async/await, streaming, tool calling, and full TypeScript type definitions."
 package_manager = ["npm", "pnpm", "yarn"]
 optional_sections = ["async_support", "streaming_support", "tool_calling"]
 
@@ -2119,7 +2119,7 @@ name = "Go"
 package_name = "github.com/kreuzberg-dev/liter-llm/packages/go"
 badge_url = "https://img.shields.io/github/v/tag/kreuzberg-dev/liter-llm?label=Go&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
-description = "Universal LLM API client for Go. Access 143+ LLM providers through a single interface with idiomatic Go API, context-aware async support, and CGO-based native performance."
+description = "Universal LLM API client for Go. Access 143 LLM providers through a single interface with idiomatic Go API, context-aware async support, and CGO-based native performance."
 package_manager = ["go get"]
 optional_sections = ["ffi_build_instructions"]
 
@@ -2143,7 +2143,7 @@ name = "Java"
 package_name = "dev.kreuzberg:liter-llm"
 badge_url = "https://img.shields.io/maven-central/v/dev.kreuzberg/liter-llm?label=Java&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
-description = "Universal LLM API client for Java. Access 143+ LLM providers through a single type-safe interface with Foreign Function & Memory API integration, async support, and native performance."
+description = "Universal LLM API client for Java. Access 143 LLM providers through a single type-safe interface with Foreign Function & Memory API integration, async support, and native performance."
 package_manager = ["maven", "gradle"]
 optional_sections = ["maven_gradle_setup", "async_support"]
 
@@ -2167,7 +2167,7 @@ name = "PHP"
 package_name = "kreuzberg/liter-llm"
 badge_url = "https://img.shields.io/packagist/v/kreuzberg/liter-llm?label=PHP&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
-description = "Universal LLM API client for PHP. Access 143+ LLM providers through a single interface with modern PHP 8.2+ support and a type-safe API."
+description = "Universal LLM API client for PHP. Access 143 LLM providers through a single interface with modern PHP 8.2+ support and a type-safe API."
 package_manager = ["composer"]
 
 [crates.readme.languages.php.features]
@@ -2187,7 +2187,7 @@ name = "Ruby"
 package_name = "liter_llm"
 badge_url = "https://img.shields.io/gem/v/liter_llm?label=Ruby&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
-description = "Universal LLM API client for Ruby. Access 143+ LLM providers through a single interface with idiomatic Ruby API and native performance."
+description = "Universal LLM API client for Ruby. Access 143 LLM providers through a single interface with idiomatic Ruby API and native performance."
 package_manager = ["rubygems", "bundler"]
 optional_sections = ["async_support", "streaming_support"]
 
@@ -2211,7 +2211,7 @@ name = "C#"
 package_name = "LiterLlm"
 badge_url = "https://img.shields.io/nuget/v/LiterLlm?label=C%23&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
-description = "Universal LLM API client for .NET. Access 143+ LLM providers through a single type-safe interface with full async/await support and .NET 8.0+ compatibility."
+description = "Universal LLM API client for .NET. Access 143 LLM providers through a single type-safe interface with full async/await support and .NET 8.0+ compatibility."
 package_manager = ["nuget"]
 optional_sections = ["async_support", "streaming_support"]
 
@@ -2235,7 +2235,7 @@ name = "Elixir"
 package_name = "liter_llm"
 badge_url = "https://img.shields.io/hexpm/v/liter_llm?label=Elixir&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
-description = "Universal LLM API client for Elixir. Access 143+ LLM providers through a single interface with native BEAM concurrency, OTP integration, and idiomatic Elixir API."
+description = "Universal LLM API client for Elixir. Access 143 LLM providers through a single interface with native BEAM concurrency, OTP integration, and idiomatic Elixir API."
 package_manager = ["mix"]
 optional_sections = ["async_support", "streaming_support"]
 
@@ -2260,7 +2260,7 @@ name = "WebAssembly"
 package_name = "@kreuzberg/liter-llm-wasm"
 badge_url = "https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
-description = "Universal LLM API client for browsers and WebAssembly runtimes. Access 143+ LLM providers with portable deployment across browsers, Deno, and Cloudflare Workers."
+description = "Universal LLM API client for browsers and WebAssembly runtimes. Access 143 LLM providers with portable deployment across browsers, Deno, and Cloudflare Workers."
 package_manager = ["npm", "pnpm", "yarn"]
 optional_sections = ["async_support", "streaming_support"]
 
@@ -2311,7 +2311,7 @@ package_manager = ["swift_package_manager"]
 install_command = """
 .package(url: \"https://github.com/kreuzberg-dev/liter-llm.git\", from: \"{{ version }}\")"""
 description = """
-Universal LLM API client for Swift. Access 143+ LLM providers through a single Swift Concurrency-native interface (async/await, AsyncSequence streaming) with Codable request/response types.
+Universal LLM API client for Swift. Access 143 LLM providers through a single Swift Concurrency-native interface (async/await, AsyncSequence streaming) with Codable request/response types.
 """
 
 [crates.readme.languages.swift.features]
@@ -2334,7 +2334,7 @@ package_manager = ["pub"]
 install_command = """
 dart pub add liter_llm:{{ version }}"""
 description = """
-Universal LLM API client for Dart/Flutter. Access 143+ LLM providers through a Dart-idiomatic Future/Stream API with `json_serializable`-friendly types.
+Universal LLM API client for Dart/Flutter. Access 143 LLM providers through a Dart-idiomatic Future/Stream API with `json_serializable`-friendly types.
 """
 
 [crates.readme.languages.dart.features]
@@ -2357,7 +2357,7 @@ package_manager = ["zig"]
 install_command = """
 zig fetch --save https://github.com/kreuzberg-dev/liter-llm/archive/refs/tags/v{{ version }}.tar.gz"""
 description = """
-Universal LLM API client for Zig. Access 143+ LLM providers through Zig's allocator-aware sync API with explicit error sets — no hidden allocations, no exceptions, deterministic resource lifetimes.
+Universal LLM API client for Zig. Access 143 LLM providers through Zig's allocator-aware sync API with explicit error sets — no hidden allocations, no exceptions, deterministic resource lifetimes.
 """
 
 [crates.readme.languages.zig.features]
