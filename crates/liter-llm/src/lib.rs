@@ -119,9 +119,14 @@ pub use tokenizer::{count_request_tokens, count_tokens};
 pub use types::*;
 
 // Realtime API public surface.
-pub use realtime::{
-    ContentPart, OpenAiRealtimeTranslator, RealtimeEnvelope, RealtimeEvent, RealtimeTranslator, ResponseStatus,
-};
+// NOTE: `realtime::ContentPart` is intentionally NOT re-exported here.
+// `types::ContentPart` (the VLM/chat variant with `ImageUrl`, `Document`,
+// etc.) is already at the crate root via `pub use types::*`. Re-exporting
+// the realtime variant under the same name would shadow the types one and
+// break downstream consumers that rely on `liter_llm::ContentPart::ImageUrl`.
+// Callers that need the realtime variant must import it explicitly:
+// `use liter_llm::realtime::ContentPart as RealtimeContentPart;`
+pub use realtime::{OpenAiRealtimeTranslator, RealtimeEnvelope, RealtimeEvent, RealtimeTranslator, ResponseStatus};
 /// Tenant primitives re-exported at the crate root.
 ///
 /// Importers can write `liter_llm::TenantId` without spelling out the

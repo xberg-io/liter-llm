@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`ContentPart` crate-root shadow** — `src/lib.rs` did `pub use types::*` (which brings `types::ContentPart` to the crate root) and then explicitly `pub use realtime::ContentPart`, causing the realtime variant to shadow the types one. Downstream consumers writing `use liter_llm::ContentPart;` received the realtime variant, which has no `ImageUrl` variant, producing `E0599: no variant named 'ImageUrl' found for enum 'liter_llm::ContentPart'` in any VLM-OCR call site. The realtime `ContentPart` re-export is removed from `lib.rs`; callers that need it must import it explicitly as `liter_llm::realtime::ContentPart`. A compile-time regression test in `src/tests.rs` asserts that `crate::types::ContentPart::ImageUrl` is constructible through the crate root.
+
 ## [1.6.3] - 2026-06-16
 
 ### Fixed

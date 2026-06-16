@@ -1644,3 +1644,37 @@ mod builder_tests {
         let _: ClientBuilder<WithApiKey, WithProvider> = ClientBuilder::new().provider("openai").api_key("k");
     }
 }
+
+// Regression test: `liter_llm::ContentPart` must resolve to the VLM/chat
+// variant (types::ContentPart), not the realtime variant.  Before the fix,
+// `realtime::ContentPart` was re-exported at the crate root and shadowed
+// `types::ContentPart`, causing E0599 ("no variant named `ImageUrl`") in
+// downstream VLM-OCR consumers.
+#[cfg(test)]
+mod content_part_root_reexport_tests {
+    /// Importing `liter_llm::ContentPart` must expose the `ImageUrl` variant.
+    ///
+    /// This test would fail to *compile* (E0599) if the realtime variant
+    /// were still shadowing the types variant at the crate root.
+    #[test]
+    fn crate_root_content_part_has_image_url_variant() {
+        use crate::types::{ContentPart, ImageUrl};
+
+        let part = ContentPart::ImageUrl {
+            image_url: ImageUrl {
+                url: "https://example.com/image.png".into(),
+                detail: None,
+            },
+        };
+        assert!(matches!(part, ContentPart::ImageUrl { .. }));
+    }
+
+    /// The realtime variant is still accessible via its full module path.
+    #[test]
+    fn realtime_content_part_accessible_via_module_path() {
+        use crate::realtime::ContentPart as RealtimeContentPart;
+
+        let part = RealtimeContentPart::text("hello");
+        assert!(matches!(part, RealtimeContentPart::Text { .. }));
+    }
+}
