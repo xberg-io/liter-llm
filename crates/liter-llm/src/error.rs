@@ -218,6 +218,7 @@ impl LiterLlmError {
     /// error that *is* owned and can be placed behind an `Arc` for broadcast.
     /// Variants that cannot be cloned exactly are converted to their nearest
     /// owned equivalent while preserving the error class (variant discriminant).
+    #[cfg(feature = "tower")]
     pub(crate) fn to_singleflight_error(&self) -> Self {
         match self {
             Self::Authentication { message, status } => Self::Authentication {
