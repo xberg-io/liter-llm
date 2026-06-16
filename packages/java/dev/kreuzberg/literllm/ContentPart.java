@@ -13,31 +13,31 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", visible = false)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = ContentPart.Text.class, name = "text"),
-    @JsonSubTypes.Type(value = ContentPart.ImageUrl.class, name = "image_url"),
-    @JsonSubTypes.Type(value = ContentPart.Document.class, name = "document"),
-    @JsonSubTypes.Type(value = ContentPart.InputAudio.class, name = "input_audio")
+  @JsonSubTypes.Type(value = ContentPart.Text.class, name = "text"),
+  @JsonSubTypes.Type(value = ContentPart.ImageUrl.class, name = "image_url"),
+  @JsonSubTypes.Type(value = ContentPart.Document.class, name = "document"),
+  @JsonSubTypes.Type(value = ContentPart.InputAudio.class, name = "input_audio")
 })
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 public sealed interface ContentPart {
 
-    /**
-     * Plain text.
-     */
-    record Text(@JsonProperty("text") String text) implements ContentPart { }
+  /**
+   * Plain text.
+   */
+  record Text(@JsonProperty("text") String text) implements ContentPart {}
 
-    /**
-     * Image identified by URL (with optional detail level).
-     */
-    record ImageUrl(@JsonProperty("image_url") ImageUrl imageUrl) implements ContentPart { }
+  /**
+   * Image identified by URL (with optional detail level).
+   */
+  record ImageUrl(@JsonProperty("image_url") ImageUrl imageUrl) implements ContentPart {}
 
-    /**
-     * Document file (PDF, CSV, etc.) as base64 or URL.
-     */
-    record Document(@JsonProperty("document") DocumentContent document) implements ContentPart { }
+  /**
+   * Document file (PDF, CSV, etc.) as base64 or URL.
+   */
+  record Document(@JsonProperty("document") DocumentContent document) implements ContentPart {}
 
-    /**
-     * Audio input as base64.
-     */
-    record InputAudio(@JsonProperty("input_audio") AudioContent inputAudio) implements ContentPart { }
+  /**
+   * Audio input as base64.
+   */
+  record InputAudio(@JsonProperty("input_audio") AudioContent inputAudio) implements ContentPart {}
 }

@@ -2,7 +2,7 @@
 # alef:hash:a7c064e23690d6da0a7c0734d1219488b1ca34c78c93e3287518f9c69d67f638
 [package]
 name = "liter-llm-swift"
-version = "1.6.0-rc.1"
+version = "1.6.0"
 edition = "2024"
 license = "MIT"
 
@@ -40,7 +40,7 @@ ahash = "0.8"
 async-trait = "0.1"
 futures-util = "0.3"
 libc = "0.2"
-liter_llm = { version = "1.6.0-rc.1", path = "../../../crates/liter-llm", features = ["native-http", "full"], package = "liter-llm" }
+liter_llm = { version = "1.6.0", path = "../../../crates/liter-llm", features = ["native-http", "full"], package = "liter-llm" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 swift-bridge = "0.1.59"

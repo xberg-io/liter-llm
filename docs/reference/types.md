@@ -60,7 +60,7 @@ An individual search result.
 The value broadcast from a singleflight leader to all followers.
 
 `Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
-broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
+broadcast channels require `T: Clone`. The `Arc` adds only a reference-count
 bump per follower, which is negligible under the burst loads this layer targets.
 
 *Opaque type — fields are not directly accessible.*
@@ -835,7 +835,7 @@ Configuration for registering a custom LLM provider at runtime.
 Static capability flags for a provider.
 
 Each flag indicates whether the provider's models *generally* support that
-feature.  For providers that aggregate many underlying models (e.g. Bedrock,
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
 OpenRouter, vLLM) the flags reflect the superset of available model
 capabilities — a flag being `True` means at least one model supports the
 feature, not every model.
@@ -861,7 +861,7 @@ Access via the crate-level `capabilities` function:
 Static configuration for a single provider entry in providers.json.
 
 This struct deliberately does not include capability flags or streaming
-format, which are accessed via the `capabilities` function.  Keeping
+format, which are accessed via the `capabilities` function. Keeping
 these fields separate preserves backward compatibility with all generated
 binding code that constructs `ProviderConfig` using struct literal syntax.
 
@@ -1391,7 +1391,7 @@ Stop sequence(s) that cause the model to stop generating.
 
 The streaming wire format a provider uses for its response stream.
 
-Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
+Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
 a proprietary binary EventStream framing.
 
 Deserialized from the `streaming_format` JSON field via `serde`.

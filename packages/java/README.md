@@ -94,14 +94,14 @@ Install via one of the supported package managers:
 <dependency>
     <groupId>dev.kreuzberg</groupId>
     <artifactId>liter-llm</artifactId>
-    <version>1.6.0-rc.1</version>
+    <version>1.6.0</version>
 </dependency>
 ```
 
 **Gradle:**
 
 ```gradle
-implementation 'dev.kreuzberg:liter-llm:1.6.0-rc.1'
+implementation 'dev.kreuzberg:liter-llm:1.6.0'
 ```
 
 ### System Requirements
@@ -155,8 +155,9 @@ public class Main {
                 ))
                 .build();
             var stream = client.chatStream(request);
-            while (stream.hasNext()) {
-                var chunk = stream.next();
+            var iterator = stream.iterator();
+            while (iterator.hasNext()) {
+                var chunk = iterator.next();
                 var delta = chunk.choices().getFirst().delta().content();
                 if (delta != null) System.out.print(delta);
             }

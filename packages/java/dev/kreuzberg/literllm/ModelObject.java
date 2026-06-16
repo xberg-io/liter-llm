@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
@@ -19,60 +19,55 @@ public record ModelObject(
     @JsonProperty("id") String id,
     @JsonProperty("object") String object,
     @JsonProperty("created") long created,
-    @JsonProperty("owned_by") String ownedBy
-) {
-    public static Builder builder() {
-        return new Builder();
+    @JsonProperty("owned_by") String ownedBy) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String id = "";
+    private String object = "";
+    private long created = 0;
+
+    @JsonProperty("owned_by")
+    private String ownedBy = "";
+
+    /** Sets the id field. */
+    @JsonProperty("id")
+    public Builder withId(final String value) {
+      this.id = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String id = "";
-private String object = "";
-private long created = 0;
-        @JsonProperty("owned_by")
-private String ownedBy = "";
-
-        /** Sets the id field. */
-        @JsonProperty("id")
-        public Builder withId(final String value) {
-            this.id = value;
-            return this;
-        }
-
-        /** Sets the object field. */
-        @JsonProperty("object")
-        public Builder withObject(final String value) {
-            this.object = value;
-            return this;
-        }
-
-        /** Sets the created field. */
-        @JsonProperty("created")
-        public Builder withCreated(final long value) {
-            this.created = value;
-            return this;
-        }
-
-        /** Sets the ownedBy field. */
-        @JsonProperty("owned_by")
-        public Builder withOwnedBy(final String value) {
-            this.ownedBy = value;
-            return this;
-        }
-
-        /** Builds the ModelObject instance. */
-        public ModelObject build() {
-            return new ModelObject(
-                id,
-                object,
-                created,
-                ownedBy
-            );
-        }
+    /** Sets the object field. */
+    @JsonProperty("object")
+    public Builder withObject(final String value) {
+      this.object = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the created field. */
+    @JsonProperty("created")
+    public Builder withCreated(final long value) {
+      this.created = value;
+      return this;
+    }
+
+    /** Sets the ownedBy field. */
+    @JsonProperty("owned_by")
+    public Builder withOwnedBy(final String value) {
+      this.ownedBy = value;
+      return this;
+    }
+
+    /** Builds the ModelObject instance. */
+    public ModelObject build() {
+      return new ModelObject(id, object, created, ownedBy);
+    }
+  }
+  // CPD-ON
 }

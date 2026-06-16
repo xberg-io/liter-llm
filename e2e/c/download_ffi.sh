@@ -6,7 +6,7 @@
 set -euo pipefail
 
 REPO_URL="https://github.com/kreuzberg-dev/liter-llm"
-VERSION="1.6.0-rc.1"
+VERSION="1.6.0"
 FFI_PKG_NAME="liter-llm-ffi"
 FFI_DIR="ffi"
 

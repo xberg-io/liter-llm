@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -18,43 +18,40 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("PMD")
 public record AuthConfig(
     @JsonProperty("type") AuthType authType,
-    @Nullable @JsonProperty("env_var") String envVar
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("env_var") String envVar) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    @JsonProperty("type")
+    private AuthType authType = null;
+
+    @JsonProperty("env_var")
+    private String envVar = null;
+
+    /** Sets the authType field. */
+    @JsonProperty("type")
+    public Builder withAuthType(final AuthType value) {
+      this.authType = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-        @JsonProperty("type")
-private AuthType authType = null;
-        @JsonProperty("env_var")
-private String envVar = null;
-
-        /** Sets the authType field. */
-        @JsonProperty("type")
-        public Builder withAuthType(final AuthType value) {
-            this.authType = value;
-            return this;
-        }
-
-        /** Sets the envVar field. */
-        @JsonProperty("env_var")
-        public Builder withEnvVar(final @Nullable String value) {
-            this.envVar = value;
-            return this;
-        }
-
-        /** Builds the AuthConfig instance. */
-        public AuthConfig build() {
-            return new AuthConfig(
-                authType,
-                envVar
-            );
-        }
+    /** Sets the envVar field. */
+    @JsonProperty("env_var")
+    public Builder withEnvVar(final @Nullable String value) {
+      this.envVar = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Builds the AuthConfig instance. */
+    public AuthConfig build() {
+      return new AuthConfig(authType, envVar);
+    }
+  }
+  // CPD-ON
 }

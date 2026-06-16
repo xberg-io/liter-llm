@@ -10,7 +10,7 @@ const chunks = await client.chatStream({
 });
 
 let fullText = "";
-for (const chunk of chunks) {
+for await (const chunk of chunks) {
   const delta = chunk.choices?.[0]?.delta?.content;
   if (delta) {
     fullText += delta;

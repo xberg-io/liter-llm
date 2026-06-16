@@ -15,24 +15,25 @@ import java.lang.foreign.MemorySegment;
  */
 @SuppressWarnings("PMD")
 public class SingleflightResult implements AutoCloseable {
-    private final MemorySegment handle;
+  private final MemorySegment handle;
 
-    SingleflightResult(MemorySegment handle) {
-        this.handle = handle;
-    }
+  SingleflightResult(MemorySegment handle) {
+    this.handle = handle;
+  }
 
-    MemorySegment handle() {
-        return this.handle;
+  MemorySegment handle() {
+    return this.handle;
+  }
+
+  @Override
+  @SuppressWarnings("PMD.AvoidCatchingGenericException")
+  public void close() {
+    if (handle != null && !handle.equals(MemorySegment.NULL)) {
+      try {
+        NativeLib.LITERLLM_SINGLEFLIGHT_RESULT_FREE.invoke(handle);
+      } catch (Throwable e) {
+        throw new RuntimeException("Failed to free SingleflightResult: " + e.getMessage(), e);
+      }
     }
-    @Override
-    @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    public void close() {
-        if (handle != null && !handle.equals(MemorySegment.NULL)) {
-            try {
-                NativeLib.LITERLLM_SINGLEFLIGHT_RESULT_FREE.invoke(handle);
-            } catch (Throwable e) {
-                throw new RuntimeException("Failed to free SingleflightResult: " + e.getMessage(), e);
-            }
-        }
-    }
+  }
 }

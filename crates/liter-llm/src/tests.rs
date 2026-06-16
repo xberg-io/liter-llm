@@ -1506,14 +1506,14 @@ mod capability_tests {
         assert!(!providers.is_empty(), "registry should have at least one provider");
     }
 
-    /// The total number of providers in the embedded registry must equal 142.
+    /// The total number of providers in the embedded registry must equal 143.
     #[test]
-    fn schema_provider_count_is_142() {
+    fn schema_provider_count_is_143() {
         let providers = all_providers().expect("registry should load");
         assert_eq!(
             providers.len(),
-            142,
-            "expected 142 providers in providers.json, found {}",
+            143,
+            "expected 143 providers in providers.json, found {}",
             providers.len()
         );
     }

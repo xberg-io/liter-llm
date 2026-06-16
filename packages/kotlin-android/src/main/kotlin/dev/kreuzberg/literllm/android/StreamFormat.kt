@@ -28,8 +28,8 @@ package dev.kreuzberg.literllm.android
 /**
  * The streaming wire format a provider uses for its response stream.
  *
- * Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
- * a proprietary binary EventStream framing.
+ * Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses a proprietary binary
+ * EventStream framing.
  *
  * Deserialized from the `streaming_format` JSON field via `serde`.
  */

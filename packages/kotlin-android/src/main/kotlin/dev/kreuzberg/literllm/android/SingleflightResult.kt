@@ -28,10 +28,12 @@ package dev.kreuzberg.literllm.android
 /**
  * The value broadcast from a singleflight leader to all followers.
  *
- * `Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and
- * broadcast channels require `T: Clone`.  The `Arc` adds only a reference-count
- * bump per follower, which is negligible under the burst loads this layer targets.
+ * `Arc<LiterLlmError>` is used because `LiterLlmError` is not `Clone` and broadcast channels
+ * require `T: Clone`. The `Arc` adds only a reference-count bump per follower, which is negligible
+ * under the burst loads this layer targets.
  */
 class SingleflightResult internal constructor(internal val handle: Long) : AutoCloseable {
-    override fun close() { LiterLlmBridge.nativeFreeSingleflightResult(handle) }
+    override fun close() {
+        LiterLlmBridge.nativeFreeSingleflightResult(handle)
+    }
 }

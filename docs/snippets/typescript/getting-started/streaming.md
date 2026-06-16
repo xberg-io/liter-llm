@@ -9,7 +9,7 @@ const chunks = await client.chatStream({
   messages: [{ role: "user", content: "Tell me a story" }],
 });
 
-for (const chunk of chunks) {
+for await (const chunk of chunks) {
   process.stdout.write(chunk.choices?.[0]?.delta?.content ?? "");
 }
 console.log();

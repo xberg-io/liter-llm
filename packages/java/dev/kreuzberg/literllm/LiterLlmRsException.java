@@ -7,23 +7,23 @@ package dev.kreuzberg.literllm;
 /** Exception thrown by LiterLlmRs. */
 @SuppressWarnings({"checkstyle:LineLength", "PMD"})
 public class LiterLlmRsException extends Exception {
-    /** The error code. */
-    private final int code;
+  /** The error code. */
+  private final int code;
 
-    /** Creates a new LiterLlmRsException. */
-    public LiterLlmRsException(final int code, final String message) {
-        super(message);
-        this.code = code;
-    }
+  /** Creates a new LiterLlmRsException. */
+  public LiterLlmRsException(final int code, final String message) {
+    super(message);
+    this.code = code;
+  }
 
-    /** Creates a new LiterLlmRsException with a cause. */
-    public LiterLlmRsException(final String message, final Throwable cause) {
-        super(message, cause);
-        this.code = -1;
-    }
+  /** Creates a new LiterLlmRsException with a cause. */
+  public LiterLlmRsException(final String message, final Throwable cause) {
+    super(message, cause);
+    this.code = -1;
+  }
 
-    /** Returns the error code. */
-    public int getCode() {
-        return code;
-    }
+  /** Returns the error code. */
+  public int getCode() {
+    return code;
+  }
 }

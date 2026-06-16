@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -18,41 +18,37 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("PMD")
 public record StreamFunctionCall(
     @Nullable @JsonProperty("name") String name,
-    @Nullable @JsonProperty("arguments") String arguments
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("arguments") String arguments) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String name = null;
+    private String arguments = null;
+
+    /** Sets the name field. */
+    @JsonProperty("name")
+    public Builder withName(final @Nullable String value) {
+      this.name = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String name = null;
-private String arguments = null;
-
-        /** Sets the name field. */
-        @JsonProperty("name")
-        public Builder withName(final @Nullable String value) {
-            this.name = value;
-            return this;
-        }
-
-        /** Sets the arguments field. */
-        @JsonProperty("arguments")
-        public Builder withArguments(final @Nullable String value) {
-            this.arguments = value;
-            return this;
-        }
-
-        /** Builds the StreamFunctionCall instance. */
-        public StreamFunctionCall build() {
-            return new StreamFunctionCall(
-                name,
-                arguments
-            );
-        }
+    /** Sets the arguments field. */
+    @JsonProperty("arguments")
+    public Builder withArguments(final @Nullable String value) {
+      this.arguments = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Builds the StreamFunctionCall instance. */
+    public StreamFunctionCall build() {
+      return new StreamFunctionCall(name, arguments);
+    }
+  }
+  // CPD-ON
 }

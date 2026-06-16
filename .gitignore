@@ -78,6 +78,9 @@ packages/go/lib/
 !packages/go/.lib/**/*.so
 !packages/go/.lib/**/*.dylib
 !packages/go/.lib/**/*.dll
+# Local cargo-build copies the C header into .lib/<platform>/include/ for the Go
+# binding; the canonical tracked header is packages/go/include/liter_llm.h.
+packages/go/.lib/**/include/
 coverage.out
 
 # Elixir

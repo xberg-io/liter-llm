@@ -1,11 +1,11 @@
 ---
 title: liter-llm
-description: "liter-llm – Universal LLM API client. One Rust core, 14 native language bindings, 142 runtime providers, an OpenAI-compatible proxy, and a built-in MCP server."
+description: "liter-llm – Universal LLM API client. One Rust core, 14 native language bindings, 143 runtime providers, an OpenAI-compatible proxy, and a built-in MCP server."
 ---
 
 ## Liter-llm
 
-A universal LLM API client with a Rust core and native bindings for 14 languages. One surface across 142 runtime providers — chat, streaming, embeddings, rerank, image generation, speech, transcription, OCR, search, files, batches, moderation — plus an OpenAI-compatible proxy server and a Model Context Protocol server, both shipped in the same binary.
+A universal LLM API client with a Rust core and native bindings for 14 languages. One surface across 143 runtime providers — chat, streaming, embeddings, rerank, image generation, speech, transcription, OCR, search, files, batches, moderation — plus an OpenAI-compatible proxy server and a Model Context Protocol server, both shipped in the same binary.
 
 <div class="hero-badges" markdown>
 
@@ -22,7 +22,7 @@ A universal LLM API client with a Rust core and native bindings for 14 languages
 
 <div class="grid cards" markdown>
 
-- :material-router-network:{ .lg .middle } **142 Providers**
+- :material-router-network:{ .lg .middle } **143 Providers**
 
   OpenAI, Anthropic, Google, Bedrock, Vertex, Azure, Mistral, Cohere, GitHub Copilot, and many more — one client, one model-prefix routing scheme.
 
@@ -193,7 +193,7 @@ A universal LLM API client with a Rust core and native bindings for 14 languages
 
 - :material-router-network:{ .lg .middle } **Providers**
 
-  Browse all 142 runtime providers, model prefixes, auth modes, and endpoint coverage.
+  Browse all 143 runtime providers, model prefixes, auth modes, and endpoint coverage.
 
   [:octicons-arrow-right-24: Provider Registry](providers.md)
 

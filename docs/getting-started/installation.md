@@ -307,5 +307,5 @@ task build
 
 - [Chat & Streaming](../usage/chat.md) — make your first API call
 - [MCP & IDE Integration](../usage/mcp-integration.md) — wire liter-llm into VS Code, Claude Desktop, Cursor, Zed
-- [Provider Registry](../providers.md) — browse all 142 runtime providers
+- [Provider Registry](../providers.md) — browse all 143 runtime providers
 - [Configuration](../usage/configuration.md) — timeouts, retries, base-URL overrides, TOML config

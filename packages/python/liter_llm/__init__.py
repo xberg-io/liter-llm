@@ -347,4 +347,4 @@ __all__ = [
     "unregister_custom_provider",
 ]
 
-__version__ = "1.6.0-rc.1"
+__version__ = "1.6.0"

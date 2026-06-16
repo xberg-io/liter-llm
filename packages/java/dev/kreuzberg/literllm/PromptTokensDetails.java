@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -23,43 +23,40 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("PMD")
 public record PromptTokensDetails(
     @Nullable @JsonProperty("cached_tokens") Long cachedTokens,
-    @Nullable @JsonProperty("audio_tokens") Long audioTokens
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("audio_tokens") Long audioTokens) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    @JsonProperty("cached_tokens")
+    private Long cachedTokens = null;
+
+    @JsonProperty("audio_tokens")
+    private Long audioTokens = null;
+
+    /** Sets the cachedTokens field. */
+    @JsonProperty("cached_tokens")
+    public Builder withCachedTokens(final @Nullable Long value) {
+      this.cachedTokens = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-        @JsonProperty("cached_tokens")
-private Long cachedTokens = null;
-        @JsonProperty("audio_tokens")
-private Long audioTokens = null;
-
-        /** Sets the cachedTokens field. */
-        @JsonProperty("cached_tokens")
-        public Builder withCachedTokens(final @Nullable Long value) {
-            this.cachedTokens = value;
-            return this;
-        }
-
-        /** Sets the audioTokens field. */
-        @JsonProperty("audio_tokens")
-        public Builder withAudioTokens(final @Nullable Long value) {
-            this.audioTokens = value;
-            return this;
-        }
-
-        /** Builds the PromptTokensDetails instance. */
-        public PromptTokensDetails build() {
-            return new PromptTokensDetails(
-                cachedTokens,
-                audioTokens
-            );
-        }
+    /** Sets the audioTokens field. */
+    @JsonProperty("audio_tokens")
+    public Builder withAudioTokens(final @Nullable Long value) {
+      this.audioTokens = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Builds the PromptTokensDetails instance. */
+    public PromptTokensDetails build() {
+      return new PromptTokensDetails(cachedTokens, audioTokens);
+    }
+  }
+  // CPD-ON
 }

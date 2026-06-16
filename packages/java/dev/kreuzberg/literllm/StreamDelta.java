@@ -4,11 +4,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import java.util.List;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -22,70 +22,67 @@ public record StreamDelta(
     @Nullable @JsonProperty("content") String content,
     @Nullable @JsonProperty("tool_calls") List<StreamToolCall> toolCalls,
     @Nullable @JsonProperty("function_call") StreamFunctionCall functionCall,
-    @Nullable @JsonProperty("refusal") String refusal
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("refusal") String refusal) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String role = null;
+    private String content = null;
+
+    @JsonProperty("tool_calls")
+    private List<StreamToolCall> toolCalls = null;
+
+    @JsonProperty("function_call")
+    @Nullable
+    private StreamFunctionCall functionCall = null;
+
+    private String refusal = null;
+
+    /** Sets the role field. */
+    @JsonProperty("role")
+    public Builder withRole(final @Nullable String value) {
+      this.role = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String role = null;
-private String content = null;
-        @JsonProperty("tool_calls")
-private List<StreamToolCall> toolCalls = null;
-        @JsonProperty("function_call")
-        @Nullable private StreamFunctionCall functionCall = null;
-private String refusal = null;
-
-        /** Sets the role field. */
-        @JsonProperty("role")
-        public Builder withRole(final @Nullable String value) {
-            this.role = value;
-            return this;
-        }
-
-        /** Sets the content field. */
-        @JsonProperty("content")
-        public Builder withContent(final @Nullable String value) {
-            this.content = value;
-            return this;
-        }
-
-        /** Sets the toolCalls field. */
-        @JsonProperty("tool_calls")
-        public Builder withToolCalls(final @Nullable List<StreamToolCall> value) {
-            this.toolCalls = value;
-            return this;
-        }
-
-        /** Sets the functionCall field. */
-        @JsonProperty("function_call")
-        public Builder withFunctionCall(final @Nullable StreamFunctionCall value) {
-            this.functionCall = value;
-            return this;
-        }
-
-        /** Sets the refusal field. */
-        @JsonProperty("refusal")
-        public Builder withRefusal(final @Nullable String value) {
-            this.refusal = value;
-            return this;
-        }
-
-        /** Builds the StreamDelta instance. */
-        public StreamDelta build() {
-            return new StreamDelta(
-                role,
-                content,
-                toolCalls,
-                functionCall,
-                refusal
-            );
-        }
+    /** Sets the content field. */
+    @JsonProperty("content")
+    public Builder withContent(final @Nullable String value) {
+      this.content = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the toolCalls field. */
+    @JsonProperty("tool_calls")
+    public Builder withToolCalls(final @Nullable List<StreamToolCall> value) {
+      this.toolCalls = value;
+      return this;
+    }
+
+    /** Sets the functionCall field. */
+    @JsonProperty("function_call")
+    public Builder withFunctionCall(final @Nullable StreamFunctionCall value) {
+      this.functionCall = value;
+      return this;
+    }
+
+    /** Sets the refusal field. */
+    @JsonProperty("refusal")
+    public Builder withRefusal(final @Nullable String value) {
+      this.refusal = value;
+      return this;
+    }
+
+    /** Builds the StreamDelta instance. */
+    public StreamDelta build() {
+      return new StreamDelta(role, content, toolCalls, functionCall, refusal);
+    }
+  }
+  // CPD-ON
 }

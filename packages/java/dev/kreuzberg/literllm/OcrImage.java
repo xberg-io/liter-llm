@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -18,42 +18,39 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("PMD")
 public record OcrImage(
     @JsonProperty("id") String id,
-    @Nullable @JsonProperty("image_base64") String imageBase64
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("image_base64") String imageBase64) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String id = "";
+
+    @JsonProperty("image_base64")
+    private String imageBase64 = null;
+
+    /** Sets the id field. */
+    @JsonProperty("id")
+    public Builder withId(final String value) {
+      this.id = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String id = "";
-        @JsonProperty("image_base64")
-private String imageBase64 = null;
-
-        /** Sets the id field. */
-        @JsonProperty("id")
-        public Builder withId(final String value) {
-            this.id = value;
-            return this;
-        }
-
-        /** Sets the imageBase64 field. */
-        @JsonProperty("image_base64")
-        public Builder withImageBase64(final @Nullable String value) {
-            this.imageBase64 = value;
-            return this;
-        }
-
-        /** Builds the OcrImage instance. */
-        public OcrImage build() {
-            return new OcrImage(
-                id,
-                imageBase64
-            );
-        }
+    /** Sets the imageBase64 field. */
+    @JsonProperty("image_base64")
+    public Builder withImageBase64(final @Nullable String value) {
+      this.imageBase64 = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Builds the OcrImage instance. */
+    public OcrImage build() {
+      return new OcrImage(id, imageBase64);
+    }
+  }
+  // CPD-ON
 }

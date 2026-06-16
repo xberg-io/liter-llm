@@ -4,7 +4,7 @@ requires = [ "maturin>=1,<2" ]
 
 [project]
 name = "liter-llm"
-version = "1.6.0rc1"
+version = "1.6.0"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
 keywords = [ "anthropic", "api-client", "llm", "openai" ]
 license = "MIT"

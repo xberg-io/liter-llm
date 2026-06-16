@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
@@ -16,30 +16,28 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 @JsonDeserialize(builder = RerankResultDocument.Builder.class)
 @SuppressWarnings("PMD")
 public record RerankResultDocument(@JsonProperty("text") String text) {
-    public static Builder builder() {
-        return new Builder();
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String text = "";
+
+    /** Sets the text field. */
+    @JsonProperty("text")
+    public Builder withText(final String value) {
+      this.text = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String text = "";
-
-        /** Sets the text field. */
-        @JsonProperty("text")
-        public Builder withText(final String value) {
-            this.text = value;
-            return this;
-        }
-
-        /** Builds the RerankResultDocument instance. */
-        public RerankResultDocument build() {
-            return new RerankResultDocument(
-                text
-            );
-        }
+    /** Builds the RerankResultDocument instance. */
+    public RerankResultDocument build() {
+      return new RerankResultDocument(text);
     }
-    // CPD-ON
+  }
+  // CPD-ON
 }

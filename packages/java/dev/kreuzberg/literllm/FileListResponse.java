@@ -4,11 +4,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import java.util.List;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -20,51 +20,47 @@ import org.jspecify.annotations.Nullable;
 public record FileListResponse(
     @JsonProperty("object") String object,
     @JsonProperty("data") List<FileObject> data,
-    @Nullable @JsonProperty("has_more") Boolean hasMore
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("has_more") Boolean hasMore) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String object = "";
+    private List<FileObject> data = List.of();
+
+    @JsonProperty("has_more")
+    private Boolean hasMore = null;
+
+    /** Sets the object field. */
+    @JsonProperty("object")
+    public Builder withObject(final String value) {
+      this.object = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String object = "";
-private List<FileObject> data = List.of();
-        @JsonProperty("has_more")
-private Boolean hasMore = null;
-
-        /** Sets the object field. */
-        @JsonProperty("object")
-        public Builder withObject(final String value) {
-            this.object = value;
-            return this;
-        }
-
-        /** Sets the data field. */
-        @JsonProperty("data")
-        public Builder withData(final List<FileObject> value) {
-            this.data = value;
-            return this;
-        }
-
-        /** Sets the hasMore field. */
-        @JsonProperty("has_more")
-        public Builder withHasMore(final @Nullable Boolean value) {
-            this.hasMore = value;
-            return this;
-        }
-
-        /** Builds the FileListResponse instance. */
-        public FileListResponse build() {
-            return new FileListResponse(
-                object,
-                data,
-                hasMore
-            );
-        }
+    /** Sets the data field. */
+    @JsonProperty("data")
+    public Builder withData(final List<FileObject> value) {
+      this.data = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the hasMore field. */
+    @JsonProperty("has_more")
+    public Builder withHasMore(final @Nullable Boolean value) {
+      this.hasMore = value;
+      return this;
+    }
+
+    /** Builds the FileListResponse instance. */
+    public FileListResponse build() {
+      return new FileListResponse(object, data, hasMore);
+    }
+  }
+  // CPD-ON
 }

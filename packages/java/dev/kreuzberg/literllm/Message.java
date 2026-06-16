@@ -4,15 +4,15 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -23,129 +23,142 @@ import org.jspecify.annotations.Nullable;
 @JsonSerialize(using = MessageSerializer.class)
 public sealed interface Message {
 
-    record System(SystemMessage value) implements Message { }
+  record System(SystemMessage value) implements Message {}
 
-    record User(UserMessage value) implements Message { }
+  record User(UserMessage value) implements Message {}
 
-    record Assistant(AssistantMessage value) implements Message { }
+  record Assistant(AssistantMessage value) implements Message {}
 
-    record Tool(ToolMessage value) implements Message { }
+  record Tool(ToolMessage value) implements Message {}
 
-    record Developer(DeveloperMessage value) implements Message { }
+  record Developer(DeveloperMessage value) implements Message {}
 
-    /**
-     * Deprecated legacy function-role message; retained for API compatibility.
-     */
-    record Function(FunctionMessage value) implements Message { }
+  /**
+   * Deprecated legacy function-role message; retained for API compatibility.
+   */
+  record Function(FunctionMessage value) implements Message {}
 
-    /** Returns the System data if this is a System variant, otherwise null. */
-    default @Nullable SystemMessage system() {
-        return this instanceof System e ? e.value() : null;
-    }
+  /** Returns the System data if this is a System variant, otherwise null. */
+  default @Nullable SystemMessage system() {
+    return this instanceof System e ? e.value() : null;
+  }
 
-    /** Returns the User data if this is a User variant, otherwise null. */
-    default @Nullable UserMessage user() {
-        return this instanceof User e ? e.value() : null;
-    }
+  /** Returns the User data if this is a User variant, otherwise null. */
+  default @Nullable UserMessage user() {
+    return this instanceof User e ? e.value() : null;
+  }
 
-    /** Returns the Assistant data if this is a Assistant variant, otherwise null. */
-    default @Nullable AssistantMessage assistant() {
-        return this instanceof Assistant e ? e.value() : null;
-    }
+  /** Returns the Assistant data if this is a Assistant variant, otherwise null. */
+  default @Nullable AssistantMessage assistant() {
+    return this instanceof Assistant e ? e.value() : null;
+  }
 
-    /** Returns the Tool data if this is a Tool variant, otherwise null. */
-    default @Nullable ToolMessage tool() {
-        return this instanceof Tool e ? e.value() : null;
-    }
+  /** Returns the Tool data if this is a Tool variant, otherwise null. */
+  default @Nullable ToolMessage tool() {
+    return this instanceof Tool e ? e.value() : null;
+  }
 
-    /** Returns the Developer data if this is a Developer variant, otherwise null. */
-    default @Nullable DeveloperMessage developer() {
-        return this instanceof Developer e ? e.value() : null;
-    }
+  /** Returns the Developer data if this is a Developer variant, otherwise null. */
+  default @Nullable DeveloperMessage developer() {
+    return this instanceof Developer e ? e.value() : null;
+  }
 
-    /** Returns the Function data if this is a Function variant, otherwise null. */
-    default @Nullable FunctionMessage function() {
-        return this instanceof Function e ? e.value() : null;
-    }
-
+  /** Returns the Function data if this is a Function variant, otherwise null. */
+  default @Nullable FunctionMessage function() {
+    return this instanceof Function e ? e.value() : null;
+  }
 }
 
 // Custom deserializer for sealed interface with unwrapped variants
 class MessageDeserializer extends StdDeserializer<Message> {
-    MessageDeserializer() {
-        super(Message.class);
-    }
+  MessageDeserializer() {
+    super(Message.class);
+  }
 
-    @Override
-    public Message deserialize(JsonParser parser, DeserializationContext ctx)
-            throws java.io.IOException {
-        ObjectNode node = parser.getCodec().readTree(parser);
-        com.fasterxml.jackson.databind.JsonNode tagNode = node.get("role");
-        if (tagNode == null || tagNode.isNull()) {
-            throw new com.fasterxml.jackson.databind.JsonMappingException(
-                parser, "Missing discriminator field: role");
-        }
-        String tagValue = tagNode.asText();
-        node.remove("role");
-
-        return switch (tagValue) {
-            case "system" -> new Message.System(ctx.readTreeAsValue(node, SystemMessage.class));
-            case "user" -> new Message.User(ctx.readTreeAsValue(node, UserMessage.class));
-            case "assistant" -> new Message.Assistant(ctx.readTreeAsValue(node, AssistantMessage.class));
-            case "tool" -> new Message.Tool(ctx.readTreeAsValue(node, ToolMessage.class));
-            case "developer" -> new Message.Developer(ctx.readTreeAsValue(node, DeveloperMessage.class));
-            case "function" -> new Message.Function(ctx.readTreeAsValue(node, FunctionMessage.class));
-            default -> {
-                throw new com.fasterxml.jackson.databind.JsonMappingException(
-                    parser, "Unknown Message discriminator: " + tagValue);
-            }
-        };
+  @Override
+  public Message deserialize(JsonParser parser, DeserializationContext ctx)
+      throws java.io.IOException {
+    ObjectNode node = parser.getCodec().readTree(parser);
+    com.fasterxml.jackson.databind.JsonNode tagNode = node.get("role");
+    if (tagNode == null || tagNode.isNull()) {
+      throw new com.fasterxml.jackson.databind.JsonMappingException(
+          parser, "Missing discriminator field: role");
     }
+    String tagValue = tagNode.asText();
+    node.remove("role");
+
+    return switch (tagValue) {
+      case "system" -> new Message.System(ctx.readTreeAsValue(node, SystemMessage.class));
+      case "user" -> new Message.User(ctx.readTreeAsValue(node, UserMessage.class));
+      case "assistant" -> new Message.Assistant(ctx.readTreeAsValue(node, AssistantMessage.class));
+      case "tool" -> new Message.Tool(ctx.readTreeAsValue(node, ToolMessage.class));
+      case "developer" -> new Message.Developer(ctx.readTreeAsValue(node, DeveloperMessage.class));
+      case "function" -> new Message.Function(ctx.readTreeAsValue(node, FunctionMessage.class));
+      default -> {
+        throw new com.fasterxml.jackson.databind.JsonMappingException(
+            parser, "Unknown Message discriminator: " + tagValue);
+      }
+    };
+  }
 }
 
 // Custom serializer for sealed interface with unwrapped variants — emits
 // the discriminator tag alongside the inner record's fields (flat object).
 @SuppressWarnings("PMD")
 class MessageSerializer extends StdSerializer<Message> {
-    private static final com.fasterxml.jackson.databind.ObjectMapper MAPPER =
-        new com.fasterxml.jackson.databind.ObjectMapper()
-            .registerModule(new com.fasterxml.jackson.datatype.jdk8.Jdk8Module())
-            .setPropertyNamingStrategy(com.fasterxml.jackson.databind.PropertyNamingStrategies.SNAKE_CASE)
-            .setSerializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL);
+  private static final com.fasterxml.jackson.databind.ObjectMapper MAPPER =
+      new com.fasterxml.jackson.databind.ObjectMapper()
+          .registerModule(new com.fasterxml.jackson.datatype.jdk8.Jdk8Module())
+          .setPropertyNamingStrategy(
+              com.fasterxml.jackson.databind.PropertyNamingStrategies.SNAKE_CASE)
+          .setSerializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL);
 
-    MessageSerializer() {
-        super(Message.class);
+  MessageSerializer() {
+    super(Message.class);
+  }
+
+  @Override
+  public void serialize(Message value, JsonGenerator gen, SerializerProvider provider)
+      throws java.io.IOException {
+    String tag;
+    Object inner;
+    if (value instanceof Message.System v) {
+      tag = "system";
+      inner = v.value();
+    } else if (value instanceof Message.User v) {
+      tag = "user";
+      inner = v.value();
+    } else if (value instanceof Message.Assistant v) {
+      tag = "assistant";
+      inner = v.value();
+    } else if (value instanceof Message.Tool v) {
+      tag = "tool";
+      inner = v.value();
+    } else if (value instanceof Message.Developer v) {
+      tag = "developer";
+      inner = v.value();
+    } else if (value instanceof Message.Function v) {
+      tag = "function";
+      inner = v.value();
+    } else {
+      throw new com.fasterxml.jackson.databind.JsonMappingException(
+          gen, "Unknown Message variant: " + value.getClass().getName());
     }
 
-    @Override
-    public void serialize(Message value, JsonGenerator gen, SerializerProvider provider)
-            throws java.io.IOException {
-        String tag;
-        Object inner;if (value instanceof Message.System v) {
-            tag = "system";            inner = v.value();        }else if (value instanceof Message.User v) {
-            tag = "user";            inner = v.value();        }else if (value instanceof Message.Assistant v) {
-            tag = "assistant";            inner = v.value();        }else if (value instanceof Message.Tool v) {
-            tag = "tool";            inner = v.value();        }else if (value instanceof Message.Developer v) {
-            tag = "developer";            inner = v.value();        }else if (value instanceof Message.Function v) {
-            tag = "function";            inner = v.value();        }        else {
-            throw new com.fasterxml.jackson.databind.JsonMappingException(gen,
-                "Unknown Message variant: " + value.getClass().getName());
+    gen.writeStartObject();
+    gen.writeStringField("role", tag);
+    if (inner != null) {
+      com.fasterxml.jackson.databind.JsonNode tree = MAPPER.valueToTree(inner);
+      if (tree.isObject()) {
+        java.util.Iterator<java.util.Map.Entry<String, com.fasterxml.jackson.databind.JsonNode>>
+            it = tree.fields();
+        while (it.hasNext()) {
+          java.util.Map.Entry<String, com.fasterxml.jackson.databind.JsonNode> e = it.next();
+          gen.writeFieldName(e.getKey());
+          gen.writeTree(e.getValue());
         }
-
-        gen.writeStartObject();
-        gen.writeStringField("role", tag);
-        if (inner != null) {
-            com.fasterxml.jackson.databind.JsonNode tree = MAPPER.valueToTree(inner);
-            if (tree.isObject()) {
-                java.util.Iterator<java.util.Map.Entry<String, com.fasterxml.jackson.databind.JsonNode>> it =
-                    tree.fields();
-                while (it.hasNext()) {
-                    java.util.Map.Entry<String, com.fasterxml.jackson.databind.JsonNode> e = it.next();
-                    gen.writeFieldName(e.getKey());
-                    gen.writeTree(e.getValue());
-                }
-            }
-        }
-        gen.writeEndObject();
+      }
     }
+    gen.writeEndObject();
+  }
 }

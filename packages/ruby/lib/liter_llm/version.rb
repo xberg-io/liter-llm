@@ -6,5 +6,5 @@
 
 module LiterLlm
   ## The version string for this package.
-  VERSION = "1.6.0.pre.rc.1"
+  VERSION = "1.6.0"
 end

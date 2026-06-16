@@ -19,7 +19,13 @@ object LiterLlmBridge {
     }
 
     @Throws(LiterLlmBridgeException::class)
-    external fun nativeCreateClient(apiKey: String, baseUrl: String, timeoutSecs: Long, maxRetries: Int, modelHint: String): Long
+    external fun nativeCreateClient(
+        apiKey: String,
+        baseUrl: String,
+        timeoutSecs: Long,
+        maxRetries: Int,
+        modelHint: String,
+    ): Long
 
     @Throws(LiterLlmBridgeException::class)
     external fun nativeCreateClientFromJson(json: String): Long
@@ -33,26 +39,31 @@ object LiterLlmBridge {
     @Throws(LiterLlmBridgeException::class)
     external fun nativeCapabilities(providerName: String): String
 
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeAllProviders(): String
+    @Throws(LiterLlmBridgeException::class) external fun nativeAllProviders(): String
+
+    @Throws(LiterLlmBridgeException::class) external fun nativeComplexProviderNames(): String
 
     @Throws(LiterLlmBridgeException::class)
-    external fun nativeComplexProviderNames(): String
+    external fun nativeCompletionCost(
+        model: String,
+        promptTokens: Long,
+        completionTokens: Long,
+    ): String?
 
     @Throws(LiterLlmBridgeException::class)
-    external fun nativeCompletionCost(model: String, promptTokens: Long, completionTokens: Long): String?
+    external fun nativeCompletionCostWithCache(
+        model: String,
+        promptTokens: Long,
+        cachedTokens: Long,
+        completionTokens: Long,
+    ): String?
 
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeCompletionCostWithCache(model: String, promptTokens: Long, cachedTokens: Long, completionTokens: Long): String?
-
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeClear()
+    @Throws(LiterLlmBridgeException::class) external fun nativeClear()
 
     @Throws(LiterLlmBridgeException::class)
     external fun nativeCheckBound(context: String, currentLen: Long, incoming: Long, limit: Long)
 
-    @Throws(LiterLlmBridgeException::class)
-    external fun nativeEnsureCryptoProvider()
+    @Throws(LiterLlmBridgeException::class) external fun nativeEnsureCryptoProvider()
 
     // JNI external funs for client instance methods.
     @Throws(LiterLlmBridgeException::class)

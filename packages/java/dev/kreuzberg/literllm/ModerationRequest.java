@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -18,41 +18,37 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("PMD")
 public record ModerationRequest(
     @JsonProperty("input") ModerationInput input,
-    @Nullable @JsonProperty("model") String model
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("model") String model) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private ModerationInput input = null;
+    private String model = null;
+
+    /** Sets the input field. */
+    @JsonProperty("input")
+    public Builder withInput(final ModerationInput value) {
+      this.input = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private ModerationInput input = null;
-private String model = null;
-
-        /** Sets the input field. */
-        @JsonProperty("input")
-        public Builder withInput(final ModerationInput value) {
-            this.input = value;
-            return this;
-        }
-
-        /** Sets the model field. */
-        @JsonProperty("model")
-        public Builder withModel(final @Nullable String value) {
-            this.model = value;
-            return this;
-        }
-
-        /** Builds the ModerationRequest instance. */
-        public ModerationRequest build() {
-            return new ModerationRequest(
-                input,
-                model
-            );
-        }
+    /** Sets the model field. */
+    @JsonProperty("model")
+    public Builder withModel(final @Nullable String value) {
+      this.model = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Builds the ModerationRequest instance. */
+    public ModerationRequest build() {
+      return new ModerationRequest(input, model);
+    }
+  }
+  // CPD-ON
 }

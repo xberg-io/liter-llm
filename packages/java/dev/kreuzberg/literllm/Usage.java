@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -20,63 +20,61 @@ public record Usage(
     @Nullable @JsonProperty("prompt_tokens") Long promptTokens,
     @Nullable @JsonProperty("completion_tokens") Long completionTokens,
     @Nullable @JsonProperty("total_tokens") Long totalTokens,
-    @Nullable @JsonProperty("prompt_tokens_details") PromptTokensDetails promptTokensDetails
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("prompt_tokens_details") PromptTokensDetails promptTokensDetails) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    @JsonProperty("prompt_tokens")
+    private Long promptTokens = null;
+
+    @JsonProperty("completion_tokens")
+    private Long completionTokens = null;
+
+    @JsonProperty("total_tokens")
+    private Long totalTokens = null;
+
+    @JsonProperty("prompt_tokens_details")
+    @Nullable
+    private PromptTokensDetails promptTokensDetails = null;
+
+    /** Sets the promptTokens field. */
+    @JsonProperty("prompt_tokens")
+    public Builder withPromptTokens(final @Nullable Long value) {
+      this.promptTokens = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-        @JsonProperty("prompt_tokens")
-private Long promptTokens = null;
-        @JsonProperty("completion_tokens")
-private Long completionTokens = null;
-        @JsonProperty("total_tokens")
-private Long totalTokens = null;
-        @JsonProperty("prompt_tokens_details")
-        @Nullable private PromptTokensDetails promptTokensDetails = null;
-
-        /** Sets the promptTokens field. */
-        @JsonProperty("prompt_tokens")
-        public Builder withPromptTokens(final @Nullable Long value) {
-            this.promptTokens = value;
-            return this;
-        }
-
-        /** Sets the completionTokens field. */
-        @JsonProperty("completion_tokens")
-        public Builder withCompletionTokens(final @Nullable Long value) {
-            this.completionTokens = value;
-            return this;
-        }
-
-        /** Sets the totalTokens field. */
-        @JsonProperty("total_tokens")
-        public Builder withTotalTokens(final @Nullable Long value) {
-            this.totalTokens = value;
-            return this;
-        }
-
-        /** Sets the promptTokensDetails field. */
-        @JsonProperty("prompt_tokens_details")
-        public Builder withPromptTokensDetails(final @Nullable PromptTokensDetails value) {
-            this.promptTokensDetails = value;
-            return this;
-        }
-
-        /** Builds the Usage instance. */
-        public Usage build() {
-            return new Usage(
-                promptTokens,
-                completionTokens,
-                totalTokens,
-                promptTokensDetails
-            );
-        }
+    /** Sets the completionTokens field. */
+    @JsonProperty("completion_tokens")
+    public Builder withCompletionTokens(final @Nullable Long value) {
+      this.completionTokens = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the totalTokens field. */
+    @JsonProperty("total_tokens")
+    public Builder withTotalTokens(final @Nullable Long value) {
+      this.totalTokens = value;
+      return this;
+    }
+
+    /** Sets the promptTokensDetails field. */
+    @JsonProperty("prompt_tokens_details")
+    public Builder withPromptTokensDetails(final @Nullable PromptTokensDetails value) {
+      this.promptTokensDetails = value;
+      return this;
+    }
+
+    /** Builds the Usage instance. */
+    public Usage build() {
+      return new Usage(promptTokens, completionTokens, totalTokens, promptTokensDetails);
+    }
+  }
+  // CPD-ON
 }

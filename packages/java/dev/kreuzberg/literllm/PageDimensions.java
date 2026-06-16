@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
@@ -17,41 +17,37 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 @SuppressWarnings("PMD")
 public record PageDimensions(
     @JsonProperty("width") int width,
-    @JsonProperty("height") int height
-) {
-    public static Builder builder() {
-        return new Builder();
+    @JsonProperty("height") int height) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private int width = 0;
+    private int height = 0;
+
+    /** Sets the width field. */
+    @JsonProperty("width")
+    public Builder withWidth(final int value) {
+      this.width = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private int width = 0;
-private int height = 0;
-
-        /** Sets the width field. */
-        @JsonProperty("width")
-        public Builder withWidth(final int value) {
-            this.width = value;
-            return this;
-        }
-
-        /** Sets the height field. */
-        @JsonProperty("height")
-        public Builder withHeight(final int value) {
-            this.height = value;
-            return this;
-        }
-
-        /** Builds the PageDimensions instance. */
-        public PageDimensions build() {
-            return new PageDimensions(
-                width,
-                height
-            );
-        }
+    /** Sets the height field. */
+    @JsonProperty("height")
+    public Builder withHeight(final int value) {
+      this.height = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Builds the PageDimensions instance. */
+    public PageDimensions build() {
+      return new PageDimensions(width, height);
+    }
+  }
+  // CPD-ON
 }

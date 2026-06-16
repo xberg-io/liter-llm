@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
@@ -18,50 +18,45 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 public record DeleteResponse(
     @JsonProperty("id") String id,
     @JsonProperty("object") String object,
-    @JsonProperty("deleted") boolean deleted
-) {
-    public static Builder builder() {
-        return new Builder();
+    @JsonProperty("deleted") boolean deleted) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String id = "";
+    private String object = "";
+    private boolean deleted = false;
+
+    /** Sets the id field. */
+    @JsonProperty("id")
+    public Builder withId(final String value) {
+      this.id = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String id = "";
-private String object = "";
-private boolean deleted = false;
-
-        /** Sets the id field. */
-        @JsonProperty("id")
-        public Builder withId(final String value) {
-            this.id = value;
-            return this;
-        }
-
-        /** Sets the object field. */
-        @JsonProperty("object")
-        public Builder withObject(final String value) {
-            this.object = value;
-            return this;
-        }
-
-        /** Sets the deleted field. */
-        @JsonProperty("deleted")
-        public Builder withDeleted(final boolean value) {
-            this.deleted = value;
-            return this;
-        }
-
-        /** Builds the DeleteResponse instance. */
-        public DeleteResponse build() {
-            return new DeleteResponse(
-                id,
-                object,
-                deleted
-            );
-        }
+    /** Sets the object field. */
+    @JsonProperty("object")
+    public Builder withObject(final String value) {
+      this.object = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the deleted field. */
+    @JsonProperty("deleted")
+    public Builder withDeleted(final boolean value) {
+      this.deleted = value;
+      return this;
+    }
+
+    /** Builds the DeleteResponse instance. */
+    public DeleteResponse build() {
+      return new DeleteResponse(id, object, deleted);
+    }
+  }
+  // CPD-ON
 }

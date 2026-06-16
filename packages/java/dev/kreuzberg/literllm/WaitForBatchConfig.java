@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -23,66 +23,65 @@ public record WaitForBatchConfig(
     @JsonProperty("initial_interval_secs") double initialIntervalSecs,
     @JsonProperty("max_interval_secs") double maxIntervalSecs,
     @JsonProperty("backoff_multiplier") float backoffMultiplier,
-    @Nullable @JsonProperty("timeout_secs") Double timeoutSecs
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("timeout_secs") Double timeoutSecs) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    @JsonProperty("initial_interval_secs")
+    private double initialIntervalSecs = 0.0;
+
+    @JsonProperty("max_interval_secs")
+    private double maxIntervalSecs = 0.0;
+
+    @JsonProperty("backoff_multiplier")
+    private float backoffMultiplier = 0.0f;
+
+    @JsonProperty("timeout_secs")
+    private Double timeoutSecs = null;
+
+    /** Sets the initialIntervalSecs field. */
+    @JsonProperty("initial_interval_secs")
+    public Builder withInitialIntervalSecs(final double value) {
+      this.initialIntervalSecs = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-        @JsonProperty("initial_interval_secs")
-private double initialIntervalSecs = 0.0;
-        @JsonProperty("max_interval_secs")
-private double maxIntervalSecs = 0.0;
-        @JsonProperty("backoff_multiplier")
-private float backoffMultiplier = 0.0f;
-        @JsonProperty("timeout_secs")
-private Double timeoutSecs = null;
-
-        /** Sets the initialIntervalSecs field. */
-        @JsonProperty("initial_interval_secs")
-        public Builder withInitialIntervalSecs(final double value) {
-            this.initialIntervalSecs = value;
-            return this;
-        }
-
-        /** Sets the maxIntervalSecs field. */
-        @JsonProperty("max_interval_secs")
-        public Builder withMaxIntervalSecs(final double value) {
-            this.maxIntervalSecs = value;
-            return this;
-        }
-
-        /** Sets the backoffMultiplier field. */
-        @JsonProperty("backoff_multiplier")
-        public Builder withBackoffMultiplier(final float value) {
-            this.backoffMultiplier = value;
-            return this;
-        }
-
-        /** Sets the timeoutSecs field. */
-        @JsonProperty("timeout_secs")
-        public Builder withTimeoutSecs(final @Nullable double value) {
-            this.timeoutSecs = value;
-            return this;
-        }
-
-        /** Builds the WaitForBatchConfig instance. */
-        public WaitForBatchConfig build() {
-            return new WaitForBatchConfig(
-                initialIntervalSecs,
-                maxIntervalSecs,
-                backoffMultiplier,
-                timeoutSecs
-            );
-        }
+    /** Sets the maxIntervalSecs field. */
+    @JsonProperty("max_interval_secs")
+    public Builder withMaxIntervalSecs(final double value) {
+      this.maxIntervalSecs = value;
+      return this;
     }
-    // CPD-ON
-    public static WaitForBatchConfig defaultInstance() {
-        throw new UnsupportedOperationException("defaultInstance is not yet bridged via JNI; use the Builder instead.");
+
+    /** Sets the backoffMultiplier field. */
+    @JsonProperty("backoff_multiplier")
+    public Builder withBackoffMultiplier(final float value) {
+      this.backoffMultiplier = value;
+      return this;
     }
+
+    /** Sets the timeoutSecs field. */
+    @JsonProperty("timeout_secs")
+    public Builder withTimeoutSecs(final @Nullable double value) {
+      this.timeoutSecs = value;
+      return this;
+    }
+
+    /** Builds the WaitForBatchConfig instance. */
+    public WaitForBatchConfig build() {
+      return new WaitForBatchConfig(
+          initialIntervalSecs, maxIntervalSecs, backoffMultiplier, timeoutSecs);
+    }
+  }
+  // CPD-ON
+  public static WaitForBatchConfig defaultInstance() {
+    throw new UnsupportedOperationException(
+        "defaultInstance is not yet bridged via JNI; use the Builder instead.");
+  }
 }

@@ -4,11 +4,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.kreuzberg.literllm;
 
-import java.util.List;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -22,70 +22,65 @@ public record RerankRequest(
     @JsonProperty("query") String query,
     @JsonProperty("documents") List<RerankDocument> documents,
     @Nullable @JsonProperty("top_n") Integer topN,
-    @Nullable @JsonProperty("return_documents") Boolean returnDocuments
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("return_documents") Boolean returnDocuments) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String model = "";
+    private String query = "";
+    private List<RerankDocument> documents = List.of();
+
+    @JsonProperty("top_n")
+    private Integer topN = null;
+
+    @JsonProperty("return_documents")
+    private Boolean returnDocuments = null;
+
+    /** Sets the model field. */
+    @JsonProperty("model")
+    public Builder withModel(final String value) {
+      this.model = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String model = "";
-private String query = "";
-private List<RerankDocument> documents = List.of();
-        @JsonProperty("top_n")
-private Integer topN = null;
-        @JsonProperty("return_documents")
-private Boolean returnDocuments = null;
-
-        /** Sets the model field. */
-        @JsonProperty("model")
-        public Builder withModel(final String value) {
-            this.model = value;
-            return this;
-        }
-
-        /** Sets the query field. */
-        @JsonProperty("query")
-        public Builder withQuery(final String value) {
-            this.query = value;
-            return this;
-        }
-
-        /** Sets the documents field. */
-        @JsonProperty("documents")
-        public Builder withDocuments(final List<RerankDocument> value) {
-            this.documents = value;
-            return this;
-        }
-
-        /** Sets the topN field. */
-        @JsonProperty("top_n")
-        public Builder withTopN(final @Nullable Integer value) {
-            this.topN = value;
-            return this;
-        }
-
-        /** Sets the returnDocuments field. */
-        @JsonProperty("return_documents")
-        public Builder withReturnDocuments(final @Nullable Boolean value) {
-            this.returnDocuments = value;
-            return this;
-        }
-
-        /** Builds the RerankRequest instance. */
-        public RerankRequest build() {
-            return new RerankRequest(
-                model,
-                query,
-                documents,
-                topN,
-                returnDocuments
-            );
-        }
+    /** Sets the query field. */
+    @JsonProperty("query")
+    public Builder withQuery(final String value) {
+      this.query = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the documents field. */
+    @JsonProperty("documents")
+    public Builder withDocuments(final List<RerankDocument> value) {
+      this.documents = value;
+      return this;
+    }
+
+    /** Sets the topN field. */
+    @JsonProperty("top_n")
+    public Builder withTopN(final @Nullable Integer value) {
+      this.topN = value;
+      return this;
+    }
+
+    /** Sets the returnDocuments field. */
+    @JsonProperty("return_documents")
+    public Builder withReturnDocuments(final @Nullable Boolean value) {
+      this.returnDocuments = value;
+      return this;
+    }
+
+    /** Builds the RerankRequest instance. */
+    public RerankRequest build() {
+      return new RerankRequest(model, query, documents, topN, returnDocuments);
+    }
+  }
+  // CPD-ON
 }

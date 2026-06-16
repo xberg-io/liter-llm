@@ -15,8 +15,9 @@ public class Main {
                 .build();
             var sb = new StringBuilder();
             var stream = client.chatStream(request);
-            while (stream.hasNext()) {
-                var chunk = stream.next();
+            var iterator = stream.iterator();
+            while (iterator.hasNext()) {
+                var chunk = iterator.next();
                 var delta = chunk.choices().getFirst().delta().content();
                 if (delta != null) {
                     sb.append(delta);

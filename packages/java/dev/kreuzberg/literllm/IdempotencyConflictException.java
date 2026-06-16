@@ -12,13 +12,13 @@ package dev.kreuzberg.literllm;
  * HTTP equivalent: 409 Conflict.
  */
 public class IdempotencyConflictException extends LiterLlmErrorException {
-    /** Creates a new IdempotencyConflictException with the given message. */
-    public IdempotencyConflictException(final String message) {
-        super(message);
-    }
+  /** Creates a new IdempotencyConflictException with the given message. */
+  public IdempotencyConflictException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new IdempotencyConflictException with the given message and cause. */
-    public IdempotencyConflictException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new IdempotencyConflictException with the given message and cause. */
+  public IdempotencyConflictException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }
