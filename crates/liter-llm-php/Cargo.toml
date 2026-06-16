@@ -17,6 +17,10 @@ crate-type = ["cdylib"]
 
 [features]
 extension-module = []
+default = ["native-http", "opendal-cache", "wasm-http"]
+native-http = ["liter-llm/native-http"]
+opendal-cache = ["liter-llm/opendal-cache"]
+wasm-http = ["liter-llm/wasm-http"]
 
 [dependencies]
 ext-php-rs = "0.15.15"

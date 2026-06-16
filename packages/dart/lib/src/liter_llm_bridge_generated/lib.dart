@@ -515,6 +515,8 @@ abstract class DefaultClient implements RustOpaqueInterface {
 
   Future<EmbeddingResponse> embed({required EmbeddingRequest req});
 
+  Future<BatchObject> fetchBatchForPolling({required String batchId});
+
   Future<Uint8List> fileContent({required String fileId});
 
   Future<ImagesResponse> imageGenerate({required CreateImageRequest req});

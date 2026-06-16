@@ -112,7 +112,7 @@ registerCustomProvider(new CustomProviderConfig());
 |------|------|----------|-------------|
 | `config` | `CustomProviderConfig` | Yes | The configuration options |
 
-**Returns:** `void`
+**Returns:** No return value.
 
 **Errors:** Throws `Error` with a descriptive message.
 
@@ -338,7 +338,7 @@ function clear(): void
 clear();
 ```
 
-**Returns:** `void`
+**Returns:** No return value.
 
 ---
 
@@ -371,7 +371,7 @@ checkBound("value", 42, 42, 42);
 | `incoming` | `number` | Yes | The incoming |
 | `limit` | `number` | Yes | The limit |
 
-**Returns:** `void`
+**Returns:** No return value.
 
 **Errors:** Throws `Error` with a descriptive message.
 
@@ -408,7 +408,7 @@ function ensureCryptoProvider(): void
 ensureCryptoProvider();
 ```
 
-**Returns:** `void`
+**Returns:** No return value.
 
 ---
 
@@ -607,9 +607,9 @@ or `Err(e)` to propagate a stream error.
 The trait is object-safe so implementations can be stored in a
 `Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
 
-### Methods
+##### Methods
 
-#### process()
+###### process()
 
 Process a single chunk.
 
@@ -759,9 +759,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-### Methods
+##### Methods
 
-#### chat()
+###### chat()
 
 **Signature:**
 
@@ -785,7 +785,7 @@ const result = await instance.chat(new ChatCompletionRequest());
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### chatStream()
+###### chatStream()
 
 **Signature:**
 
@@ -809,7 +809,7 @@ const result = await instance.chatStream(new ChatCompletionRequest());
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### embed()
+###### embed()
 
 **Signature:**
 
@@ -833,7 +833,7 @@ const result = await instance.embed(new EmbeddingRequest());
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### listModels()
+###### listModels()
 
 **Signature:**
 
@@ -851,7 +851,7 @@ const result = await instance.listModels();
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### imageGenerate()
+###### imageGenerate()
 
 **Signature:**
 
@@ -875,7 +875,7 @@ const result = await instance.imageGenerate(new CreateImageRequest());
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### speech()
+###### speech()
 
 **Signature:**
 
@@ -899,7 +899,7 @@ const result = await instance.speech(new CreateSpeechRequest());
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### transcribe()
+###### transcribe()
 
 **Signature:**
 
@@ -923,7 +923,7 @@ const result = await instance.transcribe(new CreateTranscriptionRequest());
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### moderate()
+###### moderate()
 
 **Signature:**
 
@@ -947,7 +947,7 @@ const result = await instance.moderate(new ModerationRequest());
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### rerank()
+###### rerank()
 
 **Signature:**
 
@@ -971,7 +971,7 @@ const result = await instance.rerank(new RerankRequest());
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### search()
+###### search()
 
 **Signature:**
 
@@ -995,7 +995,7 @@ const result = await instance.search(new SearchRequest());
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### ocr()
+###### ocr()
 
 **Signature:**
 
@@ -1019,7 +1019,7 @@ const result = await instance.ocr(new OcrRequest());
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### createFile()
+###### createFile()
 
 **Signature:**
 
@@ -1043,7 +1043,7 @@ const result = await instance.createFile(new CreateFileRequest());
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### retrieveFile()
+###### retrieveFile()
 
 **Signature:**
 
@@ -1067,7 +1067,7 @@ const result = await instance.retrieveFile("value");
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### deleteFile()
+###### deleteFile()
 
 **Signature:**
 
@@ -1091,7 +1091,7 @@ const result = await instance.deleteFile("value");
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### listFiles()
+###### listFiles()
 
 **Signature:**
 
@@ -1115,7 +1115,7 @@ const result = await instance.listFiles(new FileListQuery());
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### fileContent()
+###### fileContent()
 
 **Signature:**
 
@@ -1139,7 +1139,7 @@ const result = await instance.fileContent("value");
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### createBatch()
+###### createBatch()
 
 **Signature:**
 
@@ -1163,7 +1163,7 @@ const result = await instance.createBatch(new CreateBatchRequest());
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### retrieveBatch()
+###### retrieveBatch()
 
 **Signature:**
 
@@ -1187,7 +1187,7 @@ const result = await instance.retrieveBatch("value");
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### listBatches()
+###### listBatches()
 
 **Signature:**
 
@@ -1211,7 +1211,7 @@ const result = await instance.listBatches(new BatchListQuery());
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### cancelBatch()
+###### cancelBatch()
 
 **Signature:**
 
@@ -1235,7 +1235,31 @@ const result = await instance.cancelBatch("value");
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### waitForBatch()
+###### fetchBatchForPolling()
+
+**Signature:**
+
+```typescript
+fetchBatchForPolling(batchId: string): Promise<BatchObject>
+```
+
+**Example:**
+
+```typescript
+const result = await instance.fetchBatchForPolling("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `string` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### waitForBatch()
 
 Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
 
@@ -1271,7 +1295,7 @@ const result = await instance.waitForBatch("value", new WaitForBatchConfig());
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### createResponse()
+###### createResponse()
 
 **Signature:**
 
@@ -1295,7 +1319,7 @@ const result = await instance.createResponse(new CreateResponseRequest());
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### retrieveResponse()
+###### retrieveResponse()
 
 **Signature:**
 
@@ -1319,7 +1343,7 @@ const result = await instance.retrieveResponse("value");
 
 **Errors:** Throws `Error` with a descriptive message.
 
-#### cancelResponse()
+###### cancelResponse()
 
 **Signature:**
 
@@ -1500,9 +1524,9 @@ Abstraction over a health probe strategy.
 Implementors issue a lightweight probe against `upstream` (typically a
 provider base URL or named identifier) and report `HealthStatus`.
 
-### Methods
+##### Methods
 
-#### check()
+###### check()
 
 Probe `upstream` and return its current `HealthStatus`.
 
@@ -2140,9 +2164,9 @@ boundaries without requiring a `Duration` shim.
 | `backoffMultiplier` | `number` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
 | `timeoutSecs` | `number \| null` | `null` | Optional timeout in seconds — polling fails if this duration is exceeded. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 

@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.25.15"
+alef_version = "0.25.18"
 languages = [
   "python",
   "node",
@@ -177,14 +177,7 @@ package_name = "LiterLlm"
 # Until alef-backend-swift wires Vec<Named> through needs_json_bridge, exclude
 # the function from the Swift binding (consumers can still call
 # RustBridge.allProviders() directly if needed).
-# `chat_stream` is excluded for Swift because alef-backend-swift fails to emit
-# `type DefaultClient;` inside the stream-handle extern "Rust" block (only the
-# stream-handle type is declared, but the `&DefaultClient` parameter requires
-# DefaultClient itself to be declared in the same bridge block). This is an
-# upstream alef-backend-swift codegen bug; once fixed, restore streaming for
-# Swift by removing `chat_stream` from this list. Swift consumers can still
-# stream by calling the OpenAI-compatible SSE endpoint directly until then.
-exclude_functions = ["all_providers", "chat_stream"]
+exclude_functions = ["all_providers"]
 
 [crates.swift.client_constructor_body]
 DefaultClient = """    let mut config = liter_llm::ClientConfig::new(api_key);
@@ -470,10 +463,6 @@ methods = [
   "OpenAiRealtimeTranslator.translate_inbound",
   # v1.6.0 additions — Tier B helper methods
   "GuardrailRegistry.register",
-  # BatchRetriever trait impl on DefaultClient — internal polling primitive,
-  # not part of the user-facing API.  Users call DefaultClient::wait_for_batch
-  # (Tier C, high-level) which dispatches through wait_for_batch_impl.
-  "DefaultClient.fetch_batch_for_polling",
 ]
 functions = [
   "str_pair",

@@ -1037,18 +1037,6 @@ void* __swift_bridge__$Vec_WaitForBatchConfig$get_mut(void* vec_ptr, uintptr_t i
 uintptr_t __swift_bridge__$Vec_WaitForBatchConfig$len(void* vec_ptr);
 void* __swift_bridge__$Vec_WaitForBatchConfig$as_ptr(void* vec_ptr);
 
-typedef struct DefaultClient DefaultClient;
-void __swift_bridge__$DefaultClient$_free(void* self);
-
-void* __swift_bridge__$Vec_DefaultClient$new(void);
-void __swift_bridge__$Vec_DefaultClient$drop(void* vec_ptr);
-void __swift_bridge__$Vec_DefaultClient$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_DefaultClient$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_DefaultClient$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_DefaultClient$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_DefaultClient$len(void* vec_ptr);
-void* __swift_bridge__$Vec_DefaultClient$as_ptr(void* vec_ptr);
-
 typedef struct CustomProviderConfig CustomProviderConfig;
 void __swift_bridge__$CustomProviderConfig$_free(void* self);
 
@@ -1836,6 +1824,7 @@ struct __private__ResultPtrAndPtr __swift_bridge__$default_client_create_batch(v
 struct __private__ResultPtrAndPtr __swift_bridge__$default_client_retrieve_batch(void* client, void* batch_id);
 struct __private__ResultPtrAndPtr __swift_bridge__$default_client_list_batches(void* client, void* query);
 struct __private__ResultPtrAndPtr __swift_bridge__$default_client_cancel_batch(void* client, void* batch_id);
+struct __private__ResultPtrAndPtr __swift_bridge__$default_client_fetch_batch_for_polling(void* client, void* batch_id);
 struct __private__ResultPtrAndPtr __swift_bridge__$default_client_wait_for_batch(void* client, void* batch_id, void* config);
 struct __private__ResultPtrAndPtr __swift_bridge__$default_client_create_response(void* client, void* req);
 struct __private__ResultPtrAndPtr __swift_bridge__$default_client_retrieve_response(void* client, void* response_id);
@@ -1913,6 +1902,7 @@ void __swift_bridge__$clear(void);
 struct __swift_bridge__$ResultUIntAndString __swift_bridge__$count_tokens(void* model, void* text);
 struct __swift_bridge__$ResultUIntAndString __swift_bridge__$count_request_tokens(void* model, void* req);
 void* __swift_bridge__$check_bound(void* context, uintptr_t current_len, uintptr_t incoming, uintptr_t limit);
+void __swift_bridge__$ensure_crypto_provider(void);
 struct __private__ResultPtrAndPtr __swift_bridge__$default_client_chat_stream_start(void* client, void* req);
 struct __private__ResultPtrAndPtr __swift_bridge__$DefaultClientChatStreamStreamHandle$next(void* self);
 struct __private__ResultPtrAndPtr __swift_bridge__$chat_completion_request_from_json(void* json);
@@ -2089,7 +2079,6 @@ void* __swift_bridge__$__alef_phantom_vec_response_object(void);
 void* __swift_bridge__$__alef_phantom_vec_response_output_item(void);
 void* __swift_bridge__$__alef_phantom_vec_response_usage(void);
 void* __swift_bridge__$__alef_phantom_vec_wait_for_batch_config(void);
-void* __swift_bridge__$__alef_phantom_vec_default_client(void);
 void* __swift_bridge__$__alef_phantom_vec_custom_provider_config(void);
 void* __swift_bridge__$__alef_phantom_vec_provider_capabilities(void);
 void* __swift_bridge__$__alef_phantom_vec_provider_config(void);
@@ -2124,6 +2113,7 @@ void* __swift_bridge__$__alef_phantom_vec_enforcement(void);
 void* __swift_bridge__$__alef_phantom_vec_cache_backend(void);
 void* __swift_bridge__$__alef_phantom_vec_circuit_state(void);
 void* __swift_bridge__$__alef_phantom_vec_health_status(void);
+void* __swift_bridge__$__alef_phantom_vec_default_client(void);
 typedef enum __swift_bridge__$ResultBoolAndString$Tag {__swift_bridge__$ResultBoolAndString$ResultOk, __swift_bridge__$ResultBoolAndString$ResultErr} __swift_bridge__$ResultBoolAndString$Tag;
 union __swift_bridge__$ResultBoolAndString$Fields {bool ok; void* err;};
 typedef struct __swift_bridge__$ResultBoolAndString{__swift_bridge__$ResultBoolAndString$Tag tag; union __swift_bridge__$ResultBoolAndString$Fields payload;} __swift_bridge__$ResultBoolAndString;

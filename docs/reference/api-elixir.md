@@ -115,7 +115,7 @@ def register_custom_provider(config)
 |------|------|----------|-------------|
 | `config` | `CustomProviderConfig` | Yes | The configuration options |
 
-**Returns:** `:ok`
+**Returns:** No return value.
 
 **Errors:** Returns `{:error, reason}`
 
@@ -348,7 +348,7 @@ def clear()
 :ok = clear()
 ```
 
-**Returns:** `:ok`
+**Returns:** No return value.
 
 ---
 
@@ -461,7 +461,7 @@ def check_bound(context, current_len, incoming, limit)
 | `incoming` | `integer()` | Yes | The incoming |
 | `limit` | `integer()` | Yes | The limit |
 
-**Returns:** `:ok`
+**Returns:** No return value.
 
 **Errors:** Returns `{:error, reason}`
 
@@ -499,7 +499,7 @@ def ensure_crypto_provider()
 :ok = ensure_crypto_provider()
 ```
 
-**Returns:** `:ok`
+**Returns:** No return value.
 
 ---
 
@@ -611,9 +611,9 @@ Configuration for budget enforcement.
 | `model_limits` | `map()` | `%{}` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
 | `enforcement` | `Enforcement` | `:hard` | Whether to reject requests or merely warn when a limit is exceeded. |
 
-### Functions
+##### Functions
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -641,9 +641,9 @@ Configuration for the response cache.
 | `ttl` | `integer()` | `300000ms` | Time-to-live for each cached entry. |
 | `backend` | `CacheBackend` | `:memory` | Storage backend to use. |
 
-### Functions
+##### Functions
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -758,9 +758,9 @@ or `Err(e)` to propagate a stream error.
 The trait is object-safe so implementations can be stored in a
 `Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
 
-### Functions
+##### Functions
 
-#### process()
+###### process()
 
 Process a single chunk.
 
@@ -910,9 +910,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-### Functions
+##### Functions
 
-#### chat()
+###### chat()
 
 **Signature:**
 
@@ -936,7 +936,7 @@ def chat(req)
 
 **Errors:** Returns `{:error, reason}`
 
-#### chat_stream()
+###### chat_stream()
 
 **Signature:**
 
@@ -960,7 +960,7 @@ def chat_stream(req)
 
 **Errors:** Returns `{:error, reason}`
 
-#### embed()
+###### embed()
 
 **Signature:**
 
@@ -984,7 +984,7 @@ def embed(req)
 
 **Errors:** Returns `{:error, reason}`
 
-#### list_models()
+###### list_models()
 
 **Signature:**
 
@@ -1002,7 +1002,7 @@ def list_models()
 
 **Errors:** Returns `{:error, reason}`
 
-#### image_generate()
+###### image_generate()
 
 **Signature:**
 
@@ -1026,7 +1026,7 @@ def image_generate(req)
 
 **Errors:** Returns `{:error, reason}`
 
-#### speech()
+###### speech()
 
 **Signature:**
 
@@ -1050,7 +1050,7 @@ def speech(req)
 
 **Errors:** Returns `{:error, reason}`
 
-#### transcribe()
+###### transcribe()
 
 **Signature:**
 
@@ -1074,7 +1074,7 @@ def transcribe(req)
 
 **Errors:** Returns `{:error, reason}`
 
-#### moderate()
+###### moderate()
 
 **Signature:**
 
@@ -1098,7 +1098,7 @@ def moderate(req)
 
 **Errors:** Returns `{:error, reason}`
 
-#### rerank()
+###### rerank()
 
 **Signature:**
 
@@ -1122,7 +1122,7 @@ def rerank(req)
 
 **Errors:** Returns `{:error, reason}`
 
-#### search()
+###### search()
 
 **Signature:**
 
@@ -1146,7 +1146,7 @@ def search(req)
 
 **Errors:** Returns `{:error, reason}`
 
-#### ocr()
+###### ocr()
 
 **Signature:**
 
@@ -1170,7 +1170,7 @@ def ocr(req)
 
 **Errors:** Returns `{:error, reason}`
 
-#### create_file()
+###### create_file()
 
 **Signature:**
 
@@ -1194,7 +1194,7 @@ def create_file(req)
 
 **Errors:** Returns `{:error, reason}`
 
-#### retrieve_file()
+###### retrieve_file()
 
 **Signature:**
 
@@ -1218,7 +1218,7 @@ def retrieve_file(file_id)
 
 **Errors:** Returns `{:error, reason}`
 
-#### delete_file()
+###### delete_file()
 
 **Signature:**
 
@@ -1242,7 +1242,7 @@ def delete_file(file_id)
 
 **Errors:** Returns `{:error, reason}`
 
-#### list_files()
+###### list_files()
 
 **Signature:**
 
@@ -1266,7 +1266,7 @@ def list_files(query)
 
 **Errors:** Returns `{:error, reason}`
 
-#### file_content()
+###### file_content()
 
 **Signature:**
 
@@ -1290,7 +1290,7 @@ def file_content(file_id)
 
 **Errors:** Returns `{:error, reason}`
 
-#### create_batch()
+###### create_batch()
 
 **Signature:**
 
@@ -1314,7 +1314,7 @@ def create_batch(req)
 
 **Errors:** Returns `{:error, reason}`
 
-#### retrieve_batch()
+###### retrieve_batch()
 
 **Signature:**
 
@@ -1338,7 +1338,7 @@ def retrieve_batch(batch_id)
 
 **Errors:** Returns `{:error, reason}`
 
-#### list_batches()
+###### list_batches()
 
 **Signature:**
 
@@ -1362,7 +1362,7 @@ def list_batches(query)
 
 **Errors:** Returns `{:error, reason}`
 
-#### cancel_batch()
+###### cancel_batch()
 
 **Signature:**
 
@@ -1386,7 +1386,31 @@ def cancel_batch(batch_id)
 
 **Errors:** Returns `{:error, reason}`
 
-#### wait_for_batch()
+###### fetch_batch_for_polling()
+
+**Signature:**
+
+```elixir
+def fetch_batch_for_polling(batch_id)
+```
+
+**Example:**
+
+```elixir
+{:ok, result} = instance.fetch_batch_for_polling("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `String.t()` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Returns `{:error, reason}`
+
+###### wait_for_batch()
 
 Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
 
@@ -1422,7 +1446,7 @@ def wait_for_batch(batch_id, config)
 
 **Errors:** Returns `{:error, reason}`
 
-#### create_response()
+###### create_response()
 
 **Signature:**
 
@@ -1446,7 +1470,7 @@ def create_response(req)
 
 **Errors:** Returns `{:error, reason}`
 
-#### retrieve_response()
+###### retrieve_response()
 
 **Signature:**
 
@@ -1470,7 +1494,7 @@ def retrieve_response(response_id)
 
 **Errors:** Returns `{:error, reason}`
 
-#### cancel_response()
+###### cancel_response()
 
 **Signature:**
 
@@ -1651,9 +1675,9 @@ Abstraction over a health probe strategy.
 Implementors issue a lightweight probe against `upstream` (typically a
 provider base URL or named identifier) and report `HealthStatus`.
 
-### Functions
+##### Functions
 
-#### check()
+###### check()
 
 Probe `upstream` and return its current `HealthStatus`.
 
@@ -1974,9 +1998,9 @@ Configuration for per-model rate limits.
 | `tpm` | `integer() \| nil` | `nil` | Maximum tokens per window.  `nil` means unlimited. |
 | `window` | `integer()` | `60000ms` | Fixed window duration (defaults to 60 s). |
 
-### Functions
+##### Functions
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -2321,9 +2345,9 @@ boundaries without requiring a `Duration` shim.
 | `backoff_multiplier` | `float()` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
 | `timeout_secs` | `float() \| nil` | `nil` | Optional timeout in seconds — polling fails if this duration is exceeded. |
 
-### Functions
+##### Functions
 
-#### default()
+###### default()
 
 **Signature:**
 

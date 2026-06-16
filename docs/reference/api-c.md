@@ -28,7 +28,7 @@ LiterllmDefaultClient* literllm_create_client(const char* api_key, const char* b
 **Example:**
 
 ```c
-void *result = literllm_create_client("value", "value", 42, 42, "value");
+LiterllmDefaultClient *result = literllm_create_client("value", "value", 42, 42, "value");
 ```
 
 **Parameters:**
@@ -67,7 +67,7 @@ LiterllmDefaultClient* literllm_create_client_from_json(const char* json);
 **Example:**
 
 ```c
-void *result = literllm_create_client_from_json("value");
+LiterllmDefaultClient *result = literllm_create_client_from_json("value");
 ```
 
 **Parameters:**
@@ -103,7 +103,7 @@ void literllm_register_custom_provider(LiterllmCustomProviderConfig config);
 **Example:**
 
 ```c
-literllm_register_custom_provider(NULL);
+literllm_register_custom_provider((LiterllmCustomProviderConfig){0});
 ```
 
 **Parameters:**
@@ -112,7 +112,7 @@ literllm_register_custom_provider(NULL);
 |------|------|----------|-------------|
 | `config` | `LiterllmCustomProviderConfig` | Yes | The configuration options |
 
-**Returns:** `void`
+**Returns:** No return value.
 
 **Errors:** Returns `NULL` on error.
 
@@ -138,7 +138,7 @@ bool literllm_unregister_custom_provider(const char* name);
 **Example:**
 
 ```c
-void *result = literllm_unregister_custom_provider("value");
+bool result = literllm_unregister_custom_provider("value");
 ```
 
 **Parameters:**
@@ -174,7 +174,7 @@ LiterllmProviderCapabilities* literllm_capabilities(const char* provider_name);
 **Example:**
 
 ```c
-void *result = literllm_capabilities("value");
+LiterllmProviderCapabilities *result = literllm_capabilities("value");
 ```
 
 **Parameters:**
@@ -204,7 +204,7 @@ LiterllmProviderConfig* literllm_all_providers();
 **Example:**
 
 ```c
-void *result = literllm_all_providers();
+LiterllmProviderConfig* result = literllm_all_providers();
 ```
 
 **Returns:** `LiterllmProviderConfig*`
@@ -231,7 +231,7 @@ const char** literllm_complex_provider_names();
 **Example:**
 
 ```c
-void *result = literllm_complex_provider_names();
+const char** result = literllm_complex_provider_names();
 ```
 
 **Returns:** `const char**`
@@ -261,7 +261,7 @@ double* literllm_completion_cost(const char* model, uint64_t prompt_tokens, uint
 **Example:**
 
 ```c
-void *result = literllm_completion_cost("value", 42, 42);
+double* result = literllm_completion_cost("value", 42, 42);
 ```
 
 **Parameters:**
@@ -300,7 +300,7 @@ double* literllm_completion_cost_with_cache(const char* model, uint64_t prompt_t
 **Example:**
 
 ```c
-void *result = literllm_completion_cost_with_cache("value", 42, 42, 42);
+double* result = literllm_completion_cost_with_cache("value", 42, 42, 42);
 ```
 
 **Parameters:**
@@ -338,7 +338,7 @@ void literllm_clear();
 literllm_clear();
 ```
 
-**Returns:** `void`
+**Returns:** No return value.
 
 ---
 
@@ -364,7 +364,7 @@ uintptr_t literllm_count_tokens(const char* model, const char* text);
 **Example:**
 
 ```c
-void *result = literllm_count_tokens("value", "value");
+uintptr_t result = literllm_count_tokens("value", "value");
 ```
 
 **Parameters:**
@@ -403,7 +403,7 @@ uintptr_t literllm_count_request_tokens(const char* model, LiterllmChatCompletio
 **Example:**
 
 ```c
-void *result = literllm_count_request_tokens("value", NULL);
+uintptr_t result = literllm_count_request_tokens("value", NULL);
 ```
 
 **Parameters:**
@@ -448,7 +448,7 @@ literllm_check_bound("value", 42, 42, 42);
 | `incoming` | `uintptr_t` | Yes | The incoming |
 | `limit` | `uintptr_t` | Yes | The limit |
 
-**Returns:** `void`
+**Returns:** No return value.
 
 **Errors:** Returns `NULL` on error.
 
@@ -485,7 +485,7 @@ void literllm_ensure_crypto_provider();
 literllm_ensure_crypto_provider();
 ```
 
-**Returns:** `void`
+**Returns:** No return value.
 
 ---
 
@@ -597,9 +597,9 @@ Configuration for budget enforcement.
 | `model_limits` | `void*` | `NULL` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
 | `enforcement` | `LiterllmEnforcement` | `LITERLLM_LITERLLM_HARD` | Whether to reject requests or merely warn when a limit is exceeded. |
 
-### Methods
+##### Methods
 
-#### literllm_default()
+###### literllm_default()
 
 **Signature:**
 
@@ -610,7 +610,7 @@ LiterllmBudgetConfig literllm_default();
 **Example:**
 
 ```c
-void *result = literllm_default();
+LiterllmBudgetConfig *result = literllm_default();
 ```
 
 **Returns:** `LiterllmBudgetConfig`
@@ -627,9 +627,9 @@ Configuration for the response cache.
 | `ttl` | `uint64_t` | `300000ms` | Time-to-live for each cached entry. |
 | `backend` | `LiterllmCacheBackend` | `LITERLLM_LITERLLM_MEMORY` | Storage backend to use. |
 
-### Methods
+##### Methods
 
-#### literllm_default()
+###### literllm_default()
 
 **Signature:**
 
@@ -640,7 +640,7 @@ LiterllmCacheConfig literllm_default();
 **Example:**
 
 ```c
-void *result = literllm_default();
+LiterllmCacheConfig *result = literllm_default();
 ```
 
 **Returns:** `LiterllmCacheConfig`
@@ -744,9 +744,9 @@ or `Err(e)` to propagate a stream error.
 The trait is object-safe so implementations can be stored in a
 `Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
 
-### Methods
+##### Methods
 
-#### literllm_process()
+###### literllm_process()
 
 Process a single chunk.
 
@@ -763,7 +763,7 @@ LiterllmChatCompletionChunk* literllm_process(LiterllmChatCompletionChunk chunk)
 **Example:**
 
 ```c
-void *result = literllm_process(instance, NULL);
+LiterllmChatCompletionChunk* result = literllm_process(instance, (LiterllmChatCompletionChunk){0});
 ```
 
 **Parameters:**
@@ -896,9 +896,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-### Methods
+##### Methods
 
-#### literllm_chat()
+###### literllm_chat()
 
 **Signature:**
 
@@ -909,7 +909,7 @@ LiterllmChatCompletionResponse literllm_chat(LiterllmChatCompletionRequest req);
 **Example:**
 
 ```c
-void *result = literllm_chat(instance, NULL);
+LiterllmChatCompletionResponse *result = literllm_chat(instance, (LiterllmChatCompletionRequest){0});
 ```
 
 **Parameters:**
@@ -922,7 +922,7 @@ void *result = literllm_chat(instance, NULL);
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_chat_stream()
+###### literllm_chat_stream()
 
 **Signature:**
 
@@ -933,7 +933,7 @@ const char* literllm_chat_stream(LiterllmChatCompletionRequest req);
 **Example:**
 
 ```c
-void *result = literllm_chat_stream(instance, NULL);
+const char *result = literllm_chat_stream(instance, (LiterllmChatCompletionRequest){0});
 ```
 
 **Parameters:**
@@ -946,7 +946,7 @@ void *result = literllm_chat_stream(instance, NULL);
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_embed()
+###### literllm_embed()
 
 **Signature:**
 
@@ -957,7 +957,7 @@ LiterllmEmbeddingResponse literllm_embed(LiterllmEmbeddingRequest req);
 **Example:**
 
 ```c
-void *result = literllm_embed(instance, NULL);
+LiterllmEmbeddingResponse *result = literllm_embed(instance, (LiterllmEmbeddingRequest){0});
 ```
 
 **Parameters:**
@@ -970,7 +970,7 @@ void *result = literllm_embed(instance, NULL);
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_list_models()
+###### literllm_list_models()
 
 **Signature:**
 
@@ -981,14 +981,14 @@ LiterllmModelsListResponse literllm_list_models();
 **Example:**
 
 ```c
-void *result = literllm_list_models(instance);
+LiterllmModelsListResponse *result = literllm_list_models(instance);
 ```
 
 **Returns:** `LiterllmModelsListResponse`
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_image_generate()
+###### literllm_image_generate()
 
 **Signature:**
 
@@ -999,7 +999,7 @@ LiterllmImagesResponse literllm_image_generate(LiterllmCreateImageRequest req);
 **Example:**
 
 ```c
-void *result = literllm_image_generate(instance, NULL);
+LiterllmImagesResponse *result = literllm_image_generate(instance, (LiterllmCreateImageRequest){0});
 ```
 
 **Parameters:**
@@ -1012,7 +1012,7 @@ void *result = literllm_image_generate(instance, NULL);
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_speech()
+###### literllm_speech()
 
 **Signature:**
 
@@ -1023,7 +1023,7 @@ const uint8_t* literllm_speech(LiterllmCreateSpeechRequest req);
 **Example:**
 
 ```c
-void *result = literllm_speech(instance, NULL);
+const uint8_t *result = literllm_speech(instance, (LiterllmCreateSpeechRequest){0});
 ```
 
 **Parameters:**
@@ -1036,7 +1036,7 @@ void *result = literllm_speech(instance, NULL);
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_transcribe()
+###### literllm_transcribe()
 
 **Signature:**
 
@@ -1047,7 +1047,7 @@ LiterllmTranscriptionResponse literllm_transcribe(LiterllmCreateTranscriptionReq
 **Example:**
 
 ```c
-void *result = literllm_transcribe(instance, NULL);
+LiterllmTranscriptionResponse *result = literllm_transcribe(instance, (LiterllmCreateTranscriptionRequest){0});
 ```
 
 **Parameters:**
@@ -1060,7 +1060,7 @@ void *result = literllm_transcribe(instance, NULL);
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_moderate()
+###### literllm_moderate()
 
 **Signature:**
 
@@ -1071,7 +1071,7 @@ LiterllmModerationResponse literllm_moderate(LiterllmModerationRequest req);
 **Example:**
 
 ```c
-void *result = literllm_moderate(instance, NULL);
+LiterllmModerationResponse *result = literllm_moderate(instance, (LiterllmModerationRequest){0});
 ```
 
 **Parameters:**
@@ -1084,7 +1084,7 @@ void *result = literllm_moderate(instance, NULL);
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_rerank()
+###### literllm_rerank()
 
 **Signature:**
 
@@ -1095,7 +1095,7 @@ LiterllmRerankResponse literllm_rerank(LiterllmRerankRequest req);
 **Example:**
 
 ```c
-void *result = literllm_rerank(instance, NULL);
+LiterllmRerankResponse *result = literllm_rerank(instance, (LiterllmRerankRequest){0});
 ```
 
 **Parameters:**
@@ -1108,7 +1108,7 @@ void *result = literllm_rerank(instance, NULL);
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_search()
+###### literllm_search()
 
 **Signature:**
 
@@ -1119,7 +1119,7 @@ LiterllmSearchResponse literllm_search(LiterllmSearchRequest req);
 **Example:**
 
 ```c
-void *result = literllm_search(instance, NULL);
+LiterllmSearchResponse *result = literllm_search(instance, (LiterllmSearchRequest){0});
 ```
 
 **Parameters:**
@@ -1132,7 +1132,7 @@ void *result = literllm_search(instance, NULL);
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_ocr()
+###### literllm_ocr()
 
 **Signature:**
 
@@ -1143,7 +1143,7 @@ LiterllmOcrResponse literllm_ocr(LiterllmOcrRequest req);
 **Example:**
 
 ```c
-void *result = literllm_ocr(instance, NULL);
+LiterllmOcrResponse *result = literllm_ocr(instance, (LiterllmOcrRequest){0});
 ```
 
 **Parameters:**
@@ -1156,7 +1156,7 @@ void *result = literllm_ocr(instance, NULL);
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_create_file()
+###### literllm_create_file()
 
 **Signature:**
 
@@ -1167,7 +1167,7 @@ LiterllmFileObject literllm_create_file(LiterllmCreateFileRequest req);
 **Example:**
 
 ```c
-void *result = literllm_create_file(instance, NULL);
+LiterllmFileObject *result = literllm_create_file(instance, (LiterllmCreateFileRequest){0});
 ```
 
 **Parameters:**
@@ -1180,7 +1180,7 @@ void *result = literllm_create_file(instance, NULL);
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_retrieve_file()
+###### literllm_retrieve_file()
 
 **Signature:**
 
@@ -1191,7 +1191,7 @@ LiterllmFileObject literllm_retrieve_file(const char* file_id);
 **Example:**
 
 ```c
-void *result = literllm_retrieve_file(instance, "value");
+LiterllmFileObject *result = literllm_retrieve_file(instance, "value");
 ```
 
 **Parameters:**
@@ -1204,7 +1204,7 @@ void *result = literllm_retrieve_file(instance, "value");
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_delete_file()
+###### literllm_delete_file()
 
 **Signature:**
 
@@ -1215,7 +1215,7 @@ LiterllmDeleteResponse literllm_delete_file(const char* file_id);
 **Example:**
 
 ```c
-void *result = literllm_delete_file(instance, "value");
+LiterllmDeleteResponse *result = literllm_delete_file(instance, "value");
 ```
 
 **Parameters:**
@@ -1228,7 +1228,7 @@ void *result = literllm_delete_file(instance, "value");
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_list_files()
+###### literllm_list_files()
 
 **Signature:**
 
@@ -1239,7 +1239,7 @@ LiterllmFileListResponse literllm_list_files(LiterllmFileListQuery query);
 **Example:**
 
 ```c
-void *result = literllm_list_files(instance, NULL);
+LiterllmFileListResponse *result = literllm_list_files(instance, NULL);
 ```
 
 **Parameters:**
@@ -1252,7 +1252,7 @@ void *result = literllm_list_files(instance, NULL);
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_file_content()
+###### literllm_file_content()
 
 **Signature:**
 
@@ -1263,7 +1263,7 @@ const uint8_t* literllm_file_content(const char* file_id);
 **Example:**
 
 ```c
-void *result = literllm_file_content(instance, "value");
+const uint8_t *result = literllm_file_content(instance, "value");
 ```
 
 **Parameters:**
@@ -1276,7 +1276,7 @@ void *result = literllm_file_content(instance, "value");
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_create_batch()
+###### literllm_create_batch()
 
 **Signature:**
 
@@ -1287,7 +1287,7 @@ LiterllmBatchObject literllm_create_batch(LiterllmCreateBatchRequest req);
 **Example:**
 
 ```c
-void *result = literllm_create_batch(instance, NULL);
+LiterllmBatchObject *result = literllm_create_batch(instance, (LiterllmCreateBatchRequest){0});
 ```
 
 **Parameters:**
@@ -1300,7 +1300,7 @@ void *result = literllm_create_batch(instance, NULL);
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_retrieve_batch()
+###### literllm_retrieve_batch()
 
 **Signature:**
 
@@ -1311,7 +1311,7 @@ LiterllmBatchObject literllm_retrieve_batch(const char* batch_id);
 **Example:**
 
 ```c
-void *result = literllm_retrieve_batch(instance, "value");
+LiterllmBatchObject *result = literllm_retrieve_batch(instance, "value");
 ```
 
 **Parameters:**
@@ -1324,7 +1324,7 @@ void *result = literllm_retrieve_batch(instance, "value");
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_list_batches()
+###### literllm_list_batches()
 
 **Signature:**
 
@@ -1335,7 +1335,7 @@ LiterllmBatchListResponse literllm_list_batches(LiterllmBatchListQuery query);
 **Example:**
 
 ```c
-void *result = literllm_list_batches(instance, NULL);
+LiterllmBatchListResponse *result = literllm_list_batches(instance, NULL);
 ```
 
 **Parameters:**
@@ -1348,7 +1348,7 @@ void *result = literllm_list_batches(instance, NULL);
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_cancel_batch()
+###### literllm_cancel_batch()
 
 **Signature:**
 
@@ -1359,7 +1359,7 @@ LiterllmBatchObject literllm_cancel_batch(const char* batch_id);
 **Example:**
 
 ```c
-void *result = literllm_cancel_batch(instance, "value");
+LiterllmBatchObject *result = literllm_cancel_batch(instance, "value");
 ```
 
 **Parameters:**
@@ -1372,7 +1372,31 @@ void *result = literllm_cancel_batch(instance, "value");
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_wait_for_batch()
+###### literllm_fetch_batch_for_polling()
+
+**Signature:**
+
+```c
+LiterllmBatchObject literllm_fetch_batch_for_polling(const char* batch_id);
+```
+
+**Example:**
+
+```c
+LiterllmBatchObject *result = literllm_fetch_batch_for_polling(instance, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `const char*` | Yes | The batch id |
+
+**Returns:** `LiterllmBatchObject`
+
+**Errors:** Returns `NULL` on error.
+
+###### literllm_wait_for_batch()
 
 Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
 
@@ -1394,7 +1418,7 @@ LiterllmBatchObject literllm_wait_for_batch(const char* batch_id, LiterllmWaitFo
 **Example:**
 
 ```c
-void *result = literllm_wait_for_batch(instance, "value", NULL);
+LiterllmBatchObject *result = literllm_wait_for_batch(instance, "value", (LiterllmWaitForBatchConfig){0});
 ```
 
 **Parameters:**
@@ -1408,7 +1432,7 @@ void *result = literllm_wait_for_batch(instance, "value", NULL);
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_create_response()
+###### literllm_create_response()
 
 **Signature:**
 
@@ -1419,7 +1443,7 @@ LiterllmResponseObject literllm_create_response(LiterllmCreateResponseRequest re
 **Example:**
 
 ```c
-void *result = literllm_create_response(instance, NULL);
+LiterllmResponseObject *result = literllm_create_response(instance, (LiterllmCreateResponseRequest){0});
 ```
 
 **Parameters:**
@@ -1432,7 +1456,7 @@ void *result = literllm_create_response(instance, NULL);
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_retrieve_response()
+###### literllm_retrieve_response()
 
 **Signature:**
 
@@ -1443,7 +1467,7 @@ LiterllmResponseObject literllm_retrieve_response(const char* response_id);
 **Example:**
 
 ```c
-void *result = literllm_retrieve_response(instance, "value");
+LiterllmResponseObject *result = literllm_retrieve_response(instance, "value");
 ```
 
 **Parameters:**
@@ -1456,7 +1480,7 @@ void *result = literllm_retrieve_response(instance, "value");
 
 **Errors:** Returns `NULL` on error.
 
-#### literllm_cancel_response()
+###### literllm_cancel_response()
 
 **Signature:**
 
@@ -1467,7 +1491,7 @@ LiterllmResponseObject literllm_cancel_response(const char* response_id);
 **Example:**
 
 ```c
-void *result = literllm_cancel_response(instance, "value");
+LiterllmResponseObject *result = literllm_cancel_response(instance, "value");
 ```
 
 **Parameters:**
@@ -1637,9 +1661,9 @@ Abstraction over a health probe strategy.
 Implementors issue a lightweight probe against `upstream` (typically a
 provider base URL or named identifier) and report `HealthStatus`.
 
-### Methods
+##### Methods
 
-#### literllm_check()
+###### literllm_check()
 
 Probe `upstream` and return its current `HealthStatus`.
 
@@ -1656,7 +1680,7 @@ LiterllmHealthStatus literllm_check(const char* upstream);
 **Example:**
 
 ```c
-void *result = literllm_check(instance, "value");
+LiterllmHealthStatus *result = literllm_check(instance, "value");
 ```
 
 **Parameters:**
@@ -1960,9 +1984,9 @@ Configuration for per-model rate limits.
 | `tpm` | `uint64_t*` | `NULL` | Maximum tokens per window.  `NULL` means unlimited. |
 | `window` | `uint64_t` | `60000ms` | Fixed window duration (defaults to 60 s). |
 
-### Methods
+##### Methods
 
-#### literllm_default()
+###### literllm_default()
 
 **Signature:**
 
@@ -1973,7 +1997,7 @@ LiterllmRateLimitConfig literllm_default();
 **Example:**
 
 ```c
-void *result = literllm_default();
+LiterllmRateLimitConfig *result = literllm_default();
 ```
 
 **Returns:** `LiterllmRateLimitConfig`
@@ -2307,9 +2331,9 @@ boundaries without requiring a `Duration` shim.
 | `backoff_multiplier` | `float` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
 | `timeout_secs` | `double*` | `NULL` | Optional timeout in seconds — polling fails if this duration is exceeded. |
 
-### Methods
+##### Methods
 
-#### literllm_default()
+###### literllm_default()
 
 **Signature:**
 
@@ -2320,7 +2344,7 @@ LiterllmWaitForBatchConfig literllm_default();
 **Example:**
 
 ```c
-void *result = literllm_default();
+LiterllmWaitForBatchConfig *result = literllm_default();
 ```
 
 **Returns:** `LiterllmWaitForBatchConfig`

@@ -24,7 +24,9 @@ ignored = ["ahash", "serde_json", "tokio", "futures-util"]
 crate-type = ["cdylib", "staticlib", "rlib"]
 
 [features]
-default = []
+default = ["native-http", "full"]
+native-http = ["liter-llm/native-http"]
+full = ["liter-llm/full"]
 
 [dependencies]
 ahash = "0.8"

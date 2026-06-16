@@ -11,7 +11,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryUrl>https://github.com/kreuzberg-dev/liter-llm</RepositoryUrl>
     <Authors>Na&apos;aman Hirschfeld</Authors>
-    <Company>Kreuzberg Team</Company>
+    <Company>Alef Team</Company>
     <Product>LiterLlm</Product>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>

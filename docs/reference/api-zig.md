@@ -112,7 +112,7 @@ try registerCustomProvider(.{});
 |------|------|----------|-------------|
 | `config` | `CustomProviderConfig` | Yes | The configuration options |
 
-**Returns:** `void`
+**Returns:** No return value.
 
 **Errors:** Throws `Error`.
 
@@ -338,7 +338,7 @@ pub fn clear() void
 clear();
 ```
 
-**Returns:** `void`
+**Returns:** No return value.
 
 ---
 
@@ -448,7 +448,7 @@ try checkBound("value", 42, 42, 42);
 | `incoming` | `u64` | Yes | The incoming |
 | `limit` | `u64` | Yes | The limit |
 
-**Returns:** `void`
+**Returns:** No return value.
 
 **Errors:** Throws `Error`.
 
@@ -485,7 +485,7 @@ pub fn ensure_crypto_provider() void
 ensureCryptoProvider();
 ```
 
-**Returns:** `void`
+**Returns:** No return value.
 
 ---
 
@@ -597,9 +597,9 @@ Configuration for budget enforcement.
 | `modelLimits` | `std.StringHashMap(f64)` | `{}` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
 | `enforcement` | `Enforcement` | `Enforcement.Hard` | Whether to reject requests or merely warn when a limit is exceeded. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -627,9 +627,9 @@ Configuration for the response cache.
 | `ttl` | `i64` | `300000ms` | Time-to-live for each cached entry. |
 | `backend` | `CacheBackend` | `CacheBackend.Memory` | Storage backend to use. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -744,9 +744,9 @@ or `Err(e)` to propagate a stream error.
 The trait is object-safe so implementations can be stored in a
 `Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
 
-### Methods
+##### Methods
 
-#### process()
+###### process()
 
 Process a single chunk.
 
@@ -896,9 +896,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-### Methods
+##### Methods
 
-#### chat()
+###### chat()
 
 **Signature:**
 
@@ -922,7 +922,7 @@ const result = try instance.chat(.{});
 
 **Errors:** Throws `Error`.
 
-#### chatStream()
+###### chatStream()
 
 **Signature:**
 
@@ -946,7 +946,7 @@ const result = try instance.chatStream(.{});
 
 **Errors:** Throws `Error`.
 
-#### embed()
+###### embed()
 
 **Signature:**
 
@@ -970,7 +970,7 @@ const result = try instance.embed(.{});
 
 **Errors:** Throws `Error`.
 
-#### listModels()
+###### listModels()
 
 **Signature:**
 
@@ -988,7 +988,7 @@ const result = try instance.listModels();
 
 **Errors:** Throws `Error`.
 
-#### imageGenerate()
+###### imageGenerate()
 
 **Signature:**
 
@@ -1012,7 +1012,7 @@ const result = try instance.imageGenerate(.{});
 
 **Errors:** Throws `Error`.
 
-#### speech()
+###### speech()
 
 **Signature:**
 
@@ -1036,7 +1036,7 @@ const result = try instance.speech(.{});
 
 **Errors:** Throws `Error`.
 
-#### transcribe()
+###### transcribe()
 
 **Signature:**
 
@@ -1060,7 +1060,7 @@ const result = try instance.transcribe(.{});
 
 **Errors:** Throws `Error`.
 
-#### moderate()
+###### moderate()
 
 **Signature:**
 
@@ -1084,7 +1084,7 @@ const result = try instance.moderate(.{});
 
 **Errors:** Throws `Error`.
 
-#### rerank()
+###### rerank()
 
 **Signature:**
 
@@ -1108,7 +1108,7 @@ const result = try instance.rerank(.{});
 
 **Errors:** Throws `Error`.
 
-#### search()
+###### search()
 
 **Signature:**
 
@@ -1132,7 +1132,7 @@ const result = try instance.search(.{});
 
 **Errors:** Throws `Error`.
 
-#### ocr()
+###### ocr()
 
 **Signature:**
 
@@ -1156,7 +1156,7 @@ const result = try instance.ocr(.{});
 
 **Errors:** Throws `Error`.
 
-#### createFile()
+###### createFile()
 
 **Signature:**
 
@@ -1180,7 +1180,7 @@ const result = try instance.createFile(.{});
 
 **Errors:** Throws `Error`.
 
-#### retrieveFile()
+###### retrieveFile()
 
 **Signature:**
 
@@ -1204,7 +1204,7 @@ const result = try instance.retrieveFile("value");
 
 **Errors:** Throws `Error`.
 
-#### deleteFile()
+###### deleteFile()
 
 **Signature:**
 
@@ -1228,7 +1228,7 @@ const result = try instance.deleteFile("value");
 
 **Errors:** Throws `Error`.
 
-#### listFiles()
+###### listFiles()
 
 **Signature:**
 
@@ -1252,7 +1252,7 @@ const result = try instance.listFiles(.{});
 
 **Errors:** Throws `Error`.
 
-#### fileContent()
+###### fileContent()
 
 **Signature:**
 
@@ -1276,7 +1276,7 @@ const result = try instance.fileContent("value");
 
 **Errors:** Throws `Error`.
 
-#### createBatch()
+###### createBatch()
 
 **Signature:**
 
@@ -1300,7 +1300,7 @@ const result = try instance.createBatch(.{});
 
 **Errors:** Throws `Error`.
 
-#### retrieveBatch()
+###### retrieveBatch()
 
 **Signature:**
 
@@ -1324,7 +1324,7 @@ const result = try instance.retrieveBatch("value");
 
 **Errors:** Throws `Error`.
 
-#### listBatches()
+###### listBatches()
 
 **Signature:**
 
@@ -1348,7 +1348,7 @@ const result = try instance.listBatches(.{});
 
 **Errors:** Throws `Error`.
 
-#### cancelBatch()
+###### cancelBatch()
 
 **Signature:**
 
@@ -1372,7 +1372,31 @@ const result = try instance.cancelBatch("value");
 
 **Errors:** Throws `Error`.
 
-#### waitForBatch()
+###### fetchBatchForPolling()
+
+**Signature:**
+
+```zig
+pub fn fetchBatchForPolling(self: *const DefaultClient, batch_id: [:0]const u8) Error!BatchObject
+```
+
+**Example:**
+
+```zig
+const result = try instance.fetchBatchForPolling("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `[:0]const u8` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error`.
+
+###### waitForBatch()
 
 Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
 
@@ -1408,7 +1432,7 @@ const result = try instance.waitForBatch("value", .{});
 
 **Errors:** Throws `BatchWaitError`.
 
-#### createResponse()
+###### createResponse()
 
 **Signature:**
 
@@ -1432,7 +1456,7 @@ const result = try instance.createResponse(.{});
 
 **Errors:** Throws `Error`.
 
-#### retrieveResponse()
+###### retrieveResponse()
 
 **Signature:**
 
@@ -1456,7 +1480,7 @@ const result = try instance.retrieveResponse("value");
 
 **Errors:** Throws `Error`.
 
-#### cancelResponse()
+###### cancelResponse()
 
 **Signature:**
 
@@ -1637,9 +1661,9 @@ Abstraction over a health probe strategy.
 Implementors issue a lightweight probe against `upstream` (typically a
 provider base URL or named identifier) and report `HealthStatus`.
 
-### Methods
+##### Methods
 
-#### check()
+###### check()
 
 Probe `upstream` and return its current `HealthStatus`.
 
@@ -1960,9 +1984,9 @@ Configuration for per-model rate limits.
 | `tpm` | `u64?` | `null` | Maximum tokens per window.  `null` means unlimited. |
 | `window` | `i64` | `60000ms` | Fixed window duration (defaults to 60 s). |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -2307,9 +2331,9 @@ boundaries without requiring a `Duration` shim.
 | `backoffMultiplier` | `f32` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
 | `timeoutSecs` | `f64?` | `null` | Optional timeout in seconds — polling fails if this duration is exceeded. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 

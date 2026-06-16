@@ -12,9 +12,11 @@ ignored = ["liter_llm"]
 [lib]
 crate-type = ["cdylib", "staticlib"]
 [features]
+default = ["native-http", "opendal-cache", "wasm-http"]
 native-http = ["liter_llm/native-http"]
 opendal-cache = ["liter_llm/opendal-cache"]
 wasm-http = ["liter_llm/wasm-http"]
+
 [dependencies]
 flutter_rust_bridge = "=2.12.0"
 futures-util = "0.3"

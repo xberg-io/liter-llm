@@ -130,6 +130,7 @@ pub fn build(b: *std.Build) void {
             chat_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    chat_run.step.dependOn(&batches_run.step);
     test_step.dependOn(&chat_run.step);
 
     const configuration_module = b.createModule(.{
@@ -157,6 +158,7 @@ pub fn build(b: *std.Build) void {
             configuration_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    configuration_run.step.dependOn(&chat_run.step);
     test_step.dependOn(&configuration_run.step);
 
     const contract_module = b.createModule(.{
@@ -184,6 +186,7 @@ pub fn build(b: *std.Build) void {
             contract_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    contract_run.step.dependOn(&configuration_run.step);
     test_step.dependOn(&contract_run.step);
 
     const custom_provider_module = b.createModule(.{
@@ -211,6 +214,7 @@ pub fn build(b: *std.Build) void {
             custom_provider_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    custom_provider_run.step.dependOn(&contract_run.step);
     test_step.dependOn(&custom_provider_run.step);
 
     const embed_module = b.createModule(.{
@@ -238,6 +242,7 @@ pub fn build(b: *std.Build) void {
             embed_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    embed_run.step.dependOn(&custom_provider_run.step);
     test_step.dependOn(&embed_run.step);
 
     const error_handling_module = b.createModule(.{
@@ -265,6 +270,7 @@ pub fn build(b: *std.Build) void {
             error_handling_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    error_handling_run.step.dependOn(&embed_run.step);
     test_step.dependOn(&error_handling_run.step);
 
     const files_module = b.createModule(.{
@@ -292,6 +298,7 @@ pub fn build(b: *std.Build) void {
             files_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    files_run.step.dependOn(&error_handling_run.step);
     test_step.dependOn(&files_run.step);
 
     const image_generate_module = b.createModule(.{
@@ -319,6 +326,7 @@ pub fn build(b: *std.Build) void {
             image_generate_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    image_generate_run.step.dependOn(&files_run.step);
     test_step.dependOn(&image_generate_run.step);
 
     const list_models_module = b.createModule(.{
@@ -346,6 +354,7 @@ pub fn build(b: *std.Build) void {
             list_models_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    list_models_run.step.dependOn(&image_generate_run.step);
     test_step.dependOn(&list_models_run.step);
 
     const moderate_module = b.createModule(.{
@@ -373,6 +382,7 @@ pub fn build(b: *std.Build) void {
             moderate_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    moderate_run.step.dependOn(&list_models_run.step);
     test_step.dependOn(&moderate_run.step);
 
     const ocr_module = b.createModule(.{
@@ -400,6 +410,7 @@ pub fn build(b: *std.Build) void {
             ocr_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    ocr_run.step.dependOn(&moderate_run.step);
     test_step.dependOn(&ocr_run.step);
 
     const parity_module = b.createModule(.{
@@ -427,6 +438,7 @@ pub fn build(b: *std.Build) void {
             parity_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    parity_run.step.dependOn(&ocr_run.step);
     test_step.dependOn(&parity_run.step);
 
     const rerank_module = b.createModule(.{
@@ -454,6 +466,7 @@ pub fn build(b: *std.Build) void {
             rerank_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    rerank_run.step.dependOn(&parity_run.step);
     test_step.dependOn(&rerank_run.step);
 
     const responses_module = b.createModule(.{
@@ -481,6 +494,7 @@ pub fn build(b: *std.Build) void {
             responses_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    responses_run.step.dependOn(&rerank_run.step);
     test_step.dependOn(&responses_run.step);
 
     const search_module = b.createModule(.{
@@ -508,6 +522,7 @@ pub fn build(b: *std.Build) void {
             search_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    search_run.step.dependOn(&responses_run.step);
     test_step.dependOn(&search_run.step);
 
     const smoke_module = b.createModule(.{
@@ -535,6 +550,7 @@ pub fn build(b: *std.Build) void {
             smoke_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    smoke_run.step.dependOn(&search_run.step);
     test_step.dependOn(&smoke_run.step);
 
     const speech_module = b.createModule(.{
@@ -562,6 +578,7 @@ pub fn build(b: *std.Build) void {
             speech_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    speech_run.step.dependOn(&smoke_run.step);
     test_step.dependOn(&speech_run.step);
 
     const tool_calling_module = b.createModule(.{
@@ -589,6 +606,7 @@ pub fn build(b: *std.Build) void {
             tool_calling_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    tool_calling_run.step.dependOn(&speech_run.step);
     test_step.dependOn(&tool_calling_run.step);
 
     const transcribe_module = b.createModule(.{
@@ -616,6 +634,7 @@ pub fn build(b: *std.Build) void {
             transcribe_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    transcribe_run.step.dependOn(&tool_calling_run.step);
     test_step.dependOn(&transcribe_run.step);
 
     const types_module = b.createModule(.{
@@ -643,6 +662,7 @@ pub fn build(b: *std.Build) void {
             types_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    types_run.step.dependOn(&transcribe_run.step);
     test_step.dependOn(&types_run.step);
 
 }

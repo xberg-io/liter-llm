@@ -112,7 +112,7 @@ register_custom_provider(CustomProviderConfig::default())?;
 |------|------|----------|-------------|
 | `config` | `CustomProviderConfig` | Yes | The configuration options |
 
-**Returns:** `()`
+**Returns:** No return value.
 
 **Errors:** Returns `Err(Error)`.
 
@@ -342,7 +342,7 @@ pub fn clear()
 clear();
 ```
 
-**Returns:** `()`
+**Returns:** No return value.
 
 ---
 
@@ -453,7 +453,7 @@ buffer.push_str(chunk_str);
 | `incoming` | `usize` | Yes | The incoming |
 | `limit` | `usize` | Yes | The limit |
 
-**Returns:** `()`
+**Returns:** No return value.
 
 **Errors:** Returns `Err(Error)`.
 
@@ -490,7 +490,7 @@ pub fn ensure_crypto_provider()
 ensure_crypto_provider();
 ```
 
-**Returns:** `()`
+**Returns:** No return value.
 
 ---
 
@@ -602,9 +602,9 @@ Configuration for budget enforcement.
 | `model_limits` | `HashMap<String, f64>` | `HashMap::new()` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
 | `enforcement` | `Enforcement` | `Enforcement::Hard` | Whether to reject requests or merely warn when a limit is exceeded. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -632,9 +632,9 @@ Configuration for the response cache.
 | `ttl` | `std::time::Duration` | `300000ms` | Time-to-live for each cached entry. |
 | `backend` | `CacheBackend` | `CacheBackend::Memory` | Storage backend to use. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -749,9 +749,9 @@ or `Err(e)` to propagate a stream error.
 The trait is object-safe so implementations can be stored in a
 `Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
 
-### Methods
+##### Methods
 
-#### process()
+###### process()
 
 Process a single chunk.
 
@@ -901,14 +901,14 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-### Methods
+##### Methods
 
-#### chat()
+###### chat()
 
 **Signature:**
 
 ```rust
-pub fn chat(&self, req: ChatCompletionRequest) -> Result<ChatCompletionResponse, Error>
+pub async fn chat(&self, req: ChatCompletionRequest) -> Result<ChatCompletionResponse, Error>
 ```
 
 **Example:**
@@ -927,12 +927,12 @@ let result = instance.chat(ChatCompletionRequest::default()).await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### chat_stream()
+###### chat_stream()
 
 **Signature:**
 
 ```rust
-pub fn chat_stream(&self, req: ChatCompletionRequest) -> Result<String, Error>
+pub async fn chat_stream(&self, req: ChatCompletionRequest) -> Result<String, Error>
 ```
 
 **Example:**
@@ -951,12 +951,12 @@ let result = instance.chat_stream(ChatCompletionRequest::default()).await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### embed()
+###### embed()
 
 **Signature:**
 
 ```rust
-pub fn embed(&self, req: EmbeddingRequest) -> Result<EmbeddingResponse, Error>
+pub async fn embed(&self, req: EmbeddingRequest) -> Result<EmbeddingResponse, Error>
 ```
 
 **Example:**
@@ -975,12 +975,12 @@ let result = instance.embed(EmbeddingRequest::default()).await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### list_models()
+###### list_models()
 
 **Signature:**
 
 ```rust
-pub fn list_models(&self) -> Result<ModelsListResponse, Error>
+pub async fn list_models(&self) -> Result<ModelsListResponse, Error>
 ```
 
 **Example:**
@@ -993,12 +993,12 @@ let result = instance.list_models().await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### image_generate()
+###### image_generate()
 
 **Signature:**
 
 ```rust
-pub fn image_generate(&self, req: CreateImageRequest) -> Result<ImagesResponse, Error>
+pub async fn image_generate(&self, req: CreateImageRequest) -> Result<ImagesResponse, Error>
 ```
 
 **Example:**
@@ -1017,12 +1017,12 @@ let result = instance.image_generate(CreateImageRequest::default()).await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### speech()
+###### speech()
 
 **Signature:**
 
 ```rust
-pub fn speech(&self, req: CreateSpeechRequest) -> Result<Vec<u8>, Error>
+pub async fn speech(&self, req: CreateSpeechRequest) -> Result<Vec<u8>, Error>
 ```
 
 **Example:**
@@ -1041,12 +1041,12 @@ let result = instance.speech(CreateSpeechRequest::default()).await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### transcribe()
+###### transcribe()
 
 **Signature:**
 
 ```rust
-pub fn transcribe(&self, req: CreateTranscriptionRequest) -> Result<TranscriptionResponse, Error>
+pub async fn transcribe(&self, req: CreateTranscriptionRequest) -> Result<TranscriptionResponse, Error>
 ```
 
 **Example:**
@@ -1065,12 +1065,12 @@ let result = instance.transcribe(CreateTranscriptionRequest::default()).await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### moderate()
+###### moderate()
 
 **Signature:**
 
 ```rust
-pub fn moderate(&self, req: ModerationRequest) -> Result<ModerationResponse, Error>
+pub async fn moderate(&self, req: ModerationRequest) -> Result<ModerationResponse, Error>
 ```
 
 **Example:**
@@ -1089,12 +1089,12 @@ let result = instance.moderate(ModerationRequest::default()).await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### rerank()
+###### rerank()
 
 **Signature:**
 
 ```rust
-pub fn rerank(&self, req: RerankRequest) -> Result<RerankResponse, Error>
+pub async fn rerank(&self, req: RerankRequest) -> Result<RerankResponse, Error>
 ```
 
 **Example:**
@@ -1113,12 +1113,12 @@ let result = instance.rerank(RerankRequest::default()).await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### search()
+###### search()
 
 **Signature:**
 
 ```rust
-pub fn search(&self, req: SearchRequest) -> Result<SearchResponse, Error>
+pub async fn search(&self, req: SearchRequest) -> Result<SearchResponse, Error>
 ```
 
 **Example:**
@@ -1137,12 +1137,12 @@ let result = instance.search(SearchRequest::default()).await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### ocr()
+###### ocr()
 
 **Signature:**
 
 ```rust
-pub fn ocr(&self, req: OcrRequest) -> Result<OcrResponse, Error>
+pub async fn ocr(&self, req: OcrRequest) -> Result<OcrResponse, Error>
 ```
 
 **Example:**
@@ -1161,12 +1161,12 @@ let result = instance.ocr(OcrRequest::default()).await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### create_file()
+###### create_file()
 
 **Signature:**
 
 ```rust
-pub fn create_file(&self, req: CreateFileRequest) -> Result<FileObject, Error>
+pub async fn create_file(&self, req: CreateFileRequest) -> Result<FileObject, Error>
 ```
 
 **Example:**
@@ -1185,12 +1185,12 @@ let result = instance.create_file(CreateFileRequest::default()).await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### retrieve_file()
+###### retrieve_file()
 
 **Signature:**
 
 ```rust
-pub fn retrieve_file(&self, file_id: &str) -> Result<FileObject, Error>
+pub async fn retrieve_file(&self, file_id: &str) -> Result<FileObject, Error>
 ```
 
 **Example:**
@@ -1209,12 +1209,12 @@ let result = instance.retrieve_file("value").await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### delete_file()
+###### delete_file()
 
 **Signature:**
 
 ```rust
-pub fn delete_file(&self, file_id: &str) -> Result<DeleteResponse, Error>
+pub async fn delete_file(&self, file_id: &str) -> Result<DeleteResponse, Error>
 ```
 
 **Example:**
@@ -1233,12 +1233,12 @@ let result = instance.delete_file("value").await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### list_files()
+###### list_files()
 
 **Signature:**
 
 ```rust
-pub fn list_files(&self, query: Option<FileListQuery>) -> Result<FileListResponse, Error>
+pub async fn list_files(&self, query: Option<FileListQuery>) -> Result<FileListResponse, Error>
 ```
 
 **Example:**
@@ -1257,12 +1257,12 @@ let result = instance.list_files(FileListQuery::default()).await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### file_content()
+###### file_content()
 
 **Signature:**
 
 ```rust
-pub fn file_content(&self, file_id: &str) -> Result<Vec<u8>, Error>
+pub async fn file_content(&self, file_id: &str) -> Result<Vec<u8>, Error>
 ```
 
 **Example:**
@@ -1281,12 +1281,12 @@ let result = instance.file_content("value").await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### create_batch()
+###### create_batch()
 
 **Signature:**
 
 ```rust
-pub fn create_batch(&self, req: CreateBatchRequest) -> Result<BatchObject, Error>
+pub async fn create_batch(&self, req: CreateBatchRequest) -> Result<BatchObject, Error>
 ```
 
 **Example:**
@@ -1305,12 +1305,12 @@ let result = instance.create_batch(CreateBatchRequest::default()).await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### retrieve_batch()
+###### retrieve_batch()
 
 **Signature:**
 
 ```rust
-pub fn retrieve_batch(&self, batch_id: &str) -> Result<BatchObject, Error>
+pub async fn retrieve_batch(&self, batch_id: &str) -> Result<BatchObject, Error>
 ```
 
 **Example:**
@@ -1329,12 +1329,12 @@ let result = instance.retrieve_batch("value").await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### list_batches()
+###### list_batches()
 
 **Signature:**
 
 ```rust
-pub fn list_batches(&self, query: Option<BatchListQuery>) -> Result<BatchListResponse, Error>
+pub async fn list_batches(&self, query: Option<BatchListQuery>) -> Result<BatchListResponse, Error>
 ```
 
 **Example:**
@@ -1353,12 +1353,12 @@ let result = instance.list_batches(BatchListQuery::default()).await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### cancel_batch()
+###### cancel_batch()
 
 **Signature:**
 
 ```rust
-pub fn cancel_batch(&self, batch_id: &str) -> Result<BatchObject, Error>
+pub async fn cancel_batch(&self, batch_id: &str) -> Result<BatchObject, Error>
 ```
 
 **Example:**
@@ -1377,7 +1377,31 @@ let result = instance.cancel_batch("value").await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### wait_for_batch()
+###### fetch_batch_for_polling()
+
+**Signature:**
+
+```rust
+pub async fn fetch_batch_for_polling(&self, batch_id: &str) -> Result<BatchObject, Error>
+```
+
+**Example:**
+
+```rust
+let result = instance.fetch_batch_for_polling("value").await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `String` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Returns `Err(Error)`.
+
+###### wait_for_batch()
 
 Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
 
@@ -1393,7 +1417,7 @@ Returns `BatchWaitError.Client` for underlying client errors.
 **Signature:**
 
 ```rust
-pub fn wait_for_batch(&self, batch_id: &str, config: WaitForBatchConfig) -> Result<BatchObject, BatchWaitError>
+pub async fn wait_for_batch(&self, batch_id: &str, config: WaitForBatchConfig) -> Result<BatchObject, BatchWaitError>
 ```
 
 **Example:**
@@ -1419,12 +1443,12 @@ println!("Batch completed: {:?}", batch.status);
 
 **Errors:** Returns `Err(BatchWaitError)`.
 
-#### create_response()
+###### create_response()
 
 **Signature:**
 
 ```rust
-pub fn create_response(&self, req: CreateResponseRequest) -> Result<ResponseObject, Error>
+pub async fn create_response(&self, req: CreateResponseRequest) -> Result<ResponseObject, Error>
 ```
 
 **Example:**
@@ -1443,12 +1467,12 @@ let result = instance.create_response(CreateResponseRequest::default()).await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### retrieve_response()
+###### retrieve_response()
 
 **Signature:**
 
 ```rust
-pub fn retrieve_response(&self, response_id: &str) -> Result<ResponseObject, Error>
+pub async fn retrieve_response(&self, response_id: &str) -> Result<ResponseObject, Error>
 ```
 
 **Example:**
@@ -1467,12 +1491,12 @@ let result = instance.retrieve_response("value").await?;
 
 **Errors:** Returns `Err(Error)`.
 
-#### cancel_response()
+###### cancel_response()
 
 **Signature:**
 
 ```rust
-pub fn cancel_response(&self, response_id: &str) -> Result<ResponseObject, Error>
+pub async fn cancel_response(&self, response_id: &str) -> Result<ResponseObject, Error>
 ```
 
 **Example:**
@@ -1648,9 +1672,9 @@ Abstraction over a health probe strategy.
 Implementors issue a lightweight probe against `upstream` (typically a
 provider base URL or named identifier) and report `HealthStatus`.
 
-### Methods
+##### Methods
 
-#### check()
+###### check()
 
 Probe `upstream` and return its current `HealthStatus`.
 
@@ -1661,7 +1685,7 @@ move it into the returned future without a clone, making the
 **Signature:**
 
 ```rust
-pub fn check(&self, upstream: &str) -> HealthStatus
+pub async fn check(&self, upstream: &str) -> HealthStatus
 ```
 
 **Example:**
@@ -1971,9 +1995,9 @@ Configuration for per-model rate limits.
 | `tpm` | `Option<u64>` | `None` | Maximum tokens per window.  `None` means unlimited. |
 | `window` | `std::time::Duration` | `60000ms` | Fixed window duration (defaults to 60 s). |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -2318,9 +2342,9 @@ boundaries without requiring a `Duration` shim.
 | `backoff_multiplier` | `f32` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
 | `timeout_secs` | `Option<f64>` | `None` | Optional timeout in seconds — polling fails if this duration is exceeded. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 

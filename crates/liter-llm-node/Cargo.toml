@@ -19,6 +19,12 @@ ignored = ["serde_json", "futures-util"]
 [lib]
 crate-type = ["cdylib"]
 
+[features]
+default = ["native-http", "opendal-cache", "wasm-http"]
+native-http = ["liter-llm/native-http"]
+opendal-cache = ["liter-llm/opendal-cache"]
+wasm-http = ["liter-llm/wasm-http"]
+
 [dependencies]
 futures-util = "0.3"
 liter-llm = { version = "1.6.0-rc.1", path = "../liter-llm", features = ["native-http", "full"] }

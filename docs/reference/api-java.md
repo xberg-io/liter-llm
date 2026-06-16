@@ -112,7 +112,7 @@ registerCustomProvider(new CustomProviderConfig());
 |------|------|----------|-------------|
 | `config` | `CustomProviderConfig` | Yes | The configuration options |
 
-**Returns:** `void`
+**Returns:** No return value.
 
 **Errors:** Throws `ErrorException`.
 
@@ -338,7 +338,7 @@ public static void clear()
 clear();
 ```
 
-**Returns:** `void`
+**Returns:** No return value.
 
 ---
 
@@ -448,7 +448,7 @@ checkBound("value", 42, 42, 42);
 | `incoming` | `long` | Yes | The incoming |
 | `limit` | `long` | Yes | The limit |
 
-**Returns:** `void`
+**Returns:** No return value.
 
 **Errors:** Throws `ErrorException`.
 
@@ -485,7 +485,7 @@ public static void ensureCryptoProvider()
 ensureCryptoProvider();
 ```
 
-**Returns:** `void`
+**Returns:** No return value.
 
 ---
 
@@ -597,9 +597,9 @@ Configuration for budget enforcement.
 | `modelLimits` | `Map<String, Double>` | `Collections.emptyMap()` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
 | `enforcement` | `Enforcement` | `Enforcement.HARD` | Whether to reject requests or merely warn when a limit is exceeded. |
 
-### Methods
+##### Methods
 
-#### defaultOptions()
+###### defaultOptions()
 
 **Signature:**
 
@@ -627,9 +627,9 @@ Configuration for the response cache.
 | `ttl` | `Duration` | `300000ms` | Time-to-live for each cached entry. |
 | `backend` | `CacheBackend` | `CacheBackend.MEMORY` | Storage backend to use. |
 
-### Methods
+##### Methods
 
-#### defaultOptions()
+###### defaultOptions()
 
 **Signature:**
 
@@ -744,9 +744,9 @@ or `Err(e)` to propagate a stream error.
 The trait is object-safe so implementations can be stored in a
 `Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
 
-### Methods
+##### Methods
 
-#### process()
+###### process()
 
 Process a single chunk.
 
@@ -896,9 +896,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-### Methods
+##### Methods
 
-#### chat()
+###### chat()
 
 **Signature:**
 
@@ -922,7 +922,7 @@ var result = instance.chat(new ChatCompletionRequest());
 
 **Errors:** Throws `ErrorException`.
 
-#### chatStream()
+###### chatStream()
 
 **Signature:**
 
@@ -946,7 +946,7 @@ var result = instance.chatStream(new ChatCompletionRequest());
 
 **Errors:** Throws `ErrorException`.
 
-#### embed()
+###### embed()
 
 **Signature:**
 
@@ -970,7 +970,7 @@ var result = instance.embed(new EmbeddingRequest());
 
 **Errors:** Throws `ErrorException`.
 
-#### listModels()
+###### listModels()
 
 **Signature:**
 
@@ -988,7 +988,7 @@ var result = instance.listModels();
 
 **Errors:** Throws `ErrorException`.
 
-#### imageGenerate()
+###### imageGenerate()
 
 **Signature:**
 
@@ -1012,7 +1012,7 @@ var result = instance.imageGenerate(new CreateImageRequest());
 
 **Errors:** Throws `ErrorException`.
 
-#### speech()
+###### speech()
 
 **Signature:**
 
@@ -1036,7 +1036,7 @@ var result = instance.speech(new CreateSpeechRequest());
 
 **Errors:** Throws `ErrorException`.
 
-#### transcribe()
+###### transcribe()
 
 **Signature:**
 
@@ -1060,7 +1060,7 @@ var result = instance.transcribe(new CreateTranscriptionRequest());
 
 **Errors:** Throws `ErrorException`.
 
-#### moderate()
+###### moderate()
 
 **Signature:**
 
@@ -1084,7 +1084,7 @@ var result = instance.moderate(new ModerationRequest());
 
 **Errors:** Throws `ErrorException`.
 
-#### rerank()
+###### rerank()
 
 **Signature:**
 
@@ -1108,7 +1108,7 @@ var result = instance.rerank(new RerankRequest());
 
 **Errors:** Throws `ErrorException`.
 
-#### search()
+###### search()
 
 **Signature:**
 
@@ -1132,7 +1132,7 @@ var result = instance.search(new SearchRequest());
 
 **Errors:** Throws `ErrorException`.
 
-#### ocr()
+###### ocr()
 
 **Signature:**
 
@@ -1156,7 +1156,7 @@ var result = instance.ocr(new OcrRequest());
 
 **Errors:** Throws `ErrorException`.
 
-#### createFile()
+###### createFile()
 
 **Signature:**
 
@@ -1180,7 +1180,7 @@ var result = instance.createFile(new CreateFileRequest());
 
 **Errors:** Throws `ErrorException`.
 
-#### retrieveFile()
+###### retrieveFile()
 
 **Signature:**
 
@@ -1204,7 +1204,7 @@ var result = instance.retrieveFile("value");
 
 **Errors:** Throws `ErrorException`.
 
-#### deleteFile()
+###### deleteFile()
 
 **Signature:**
 
@@ -1228,7 +1228,7 @@ var result = instance.deleteFile("value");
 
 **Errors:** Throws `ErrorException`.
 
-#### listFiles()
+###### listFiles()
 
 **Signature:**
 
@@ -1252,7 +1252,7 @@ var result = instance.listFiles(new FileListQuery());
 
 **Errors:** Throws `ErrorException`.
 
-#### fileContent()
+###### fileContent()
 
 **Signature:**
 
@@ -1276,7 +1276,7 @@ var result = instance.fileContent("value");
 
 **Errors:** Throws `ErrorException`.
 
-#### createBatch()
+###### createBatch()
 
 **Signature:**
 
@@ -1300,7 +1300,7 @@ var result = instance.createBatch(new CreateBatchRequest());
 
 **Errors:** Throws `ErrorException`.
 
-#### retrieveBatch()
+###### retrieveBatch()
 
 **Signature:**
 
@@ -1324,7 +1324,7 @@ var result = instance.retrieveBatch("value");
 
 **Errors:** Throws `ErrorException`.
 
-#### listBatches()
+###### listBatches()
 
 **Signature:**
 
@@ -1348,7 +1348,7 @@ var result = instance.listBatches(new BatchListQuery());
 
 **Errors:** Throws `ErrorException`.
 
-#### cancelBatch()
+###### cancelBatch()
 
 **Signature:**
 
@@ -1372,7 +1372,31 @@ var result = instance.cancelBatch("value");
 
 **Errors:** Throws `ErrorException`.
 
-#### waitForBatch()
+###### fetchBatchForPolling()
+
+**Signature:**
+
+```java
+public BatchObject fetchBatchForPolling(String batchId) throws Error
+```
+
+**Example:**
+
+```java
+var result = instance.fetchBatchForPolling("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `String` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `ErrorException`.
+
+###### waitForBatch()
 
 Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
 
@@ -1408,7 +1432,7 @@ var result = instance.waitForBatch("value", new WaitForBatchConfig());
 
 **Errors:** Throws `BatchWaitErrorException`.
 
-#### createResponse()
+###### createResponse()
 
 **Signature:**
 
@@ -1432,7 +1456,7 @@ var result = instance.createResponse(new CreateResponseRequest());
 
 **Errors:** Throws `ErrorException`.
 
-#### retrieveResponse()
+###### retrieveResponse()
 
 **Signature:**
 
@@ -1456,7 +1480,7 @@ var result = instance.retrieveResponse("value");
 
 **Errors:** Throws `ErrorException`.
 
-#### cancelResponse()
+###### cancelResponse()
 
 **Signature:**
 
@@ -1637,9 +1661,9 @@ Abstraction over a health probe strategy.
 Implementors issue a lightweight probe against `upstream` (typically a
 provider base URL or named identifier) and report `HealthStatus`.
 
-### Methods
+##### Methods
 
-#### check()
+###### check()
 
 Probe `upstream` and return its current `HealthStatus`.
 
@@ -1960,9 +1984,9 @@ Configuration for per-model rate limits.
 | `tpm` | `Optional<Long>` | `null` | Maximum tokens per window.  `null` means unlimited. |
 | `window` | `Duration` | `60000ms` | Fixed window duration (defaults to 60 s). |
 
-### Methods
+##### Methods
 
-#### defaultOptions()
+###### defaultOptions()
 
 **Signature:**
 
@@ -2307,9 +2331,9 @@ boundaries without requiring a `Duration` shim.
 | `backoffMultiplier` | `float` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
 | `timeoutSecs` | `Optional<Double>` | `null` | Optional timeout in seconds — polling fails if this duration is exceeded. |
 
-### Methods
+##### Methods
 
-#### defaultOptions()
+###### defaultOptions()
 
 **Signature:**
 

@@ -115,7 +115,7 @@ registerCustomProvider(CustomProviderConfig())
 |------|------|----------|-------------|
 | `config` | `CustomProviderConfig` | Yes | The configuration options |
 
-**Returns:** `Unit`
+**Returns:** No return value.
 
 **Errors:** Throws `Error`.
 
@@ -344,7 +344,7 @@ fun clear()
 clear()
 ```
 
-**Returns:** `Unit`
+**Returns:** No return value.
 
 ---
 
@@ -378,7 +378,7 @@ checkBound("value", 42, 42, 42)
 | `incoming` | `Long` | Yes | The incoming |
 | `limit` | `Long` | Yes | The limit |
 
-**Returns:** `Unit`
+**Returns:** No return value.
 
 **Errors:** Throws `Error`.
 
@@ -415,7 +415,7 @@ fun ensureCryptoProvider()
 ensureCryptoProvider()
 ```
 
-**Returns:** `Unit`
+**Returns:** No return value.
 
 ---
 
@@ -614,9 +614,9 @@ or `Err(e)` to propagate a stream error.
 The trait is object-safe so implementations can be stored in a
 `Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
 
-### Methods
+##### Methods
 
-#### process()
+###### process()
 
 Process a single chunk.
 
@@ -767,9 +767,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-### Methods
+##### Methods
 
-#### chat()
+###### chat()
 
 **Signature:**
 
@@ -794,7 +794,7 @@ val result = instance.chat(ChatCompletionRequest())
 
 **Errors:** Throws `Error`.
 
-#### chatStream()
+###### chatStream()
 
 **Signature:**
 
@@ -819,7 +819,7 @@ val result = instance.chatStream(ChatCompletionRequest())
 
 **Errors:** Throws `Error`.
 
-#### embed()
+###### embed()
 
 **Signature:**
 
@@ -844,7 +844,7 @@ val result = instance.embed(EmbeddingRequest())
 
 **Errors:** Throws `Error`.
 
-#### listModels()
+###### listModels()
 
 **Signature:**
 
@@ -863,7 +863,7 @@ val result = instance.listModels()
 
 **Errors:** Throws `Error`.
 
-#### imageGenerate()
+###### imageGenerate()
 
 **Signature:**
 
@@ -888,7 +888,7 @@ val result = instance.imageGenerate(CreateImageRequest())
 
 **Errors:** Throws `Error`.
 
-#### speech()
+###### speech()
 
 **Signature:**
 
@@ -913,7 +913,7 @@ val result = instance.speech(CreateSpeechRequest())
 
 **Errors:** Throws `Error`.
 
-#### transcribe()
+###### transcribe()
 
 **Signature:**
 
@@ -938,7 +938,7 @@ val result = instance.transcribe(CreateTranscriptionRequest())
 
 **Errors:** Throws `Error`.
 
-#### moderate()
+###### moderate()
 
 **Signature:**
 
@@ -963,7 +963,7 @@ val result = instance.moderate(ModerationRequest())
 
 **Errors:** Throws `Error`.
 
-#### rerank()
+###### rerank()
 
 **Signature:**
 
@@ -988,7 +988,7 @@ val result = instance.rerank(RerankRequest())
 
 **Errors:** Throws `Error`.
 
-#### search()
+###### search()
 
 **Signature:**
 
@@ -1013,7 +1013,7 @@ val result = instance.search(SearchRequest())
 
 **Errors:** Throws `Error`.
 
-#### ocr()
+###### ocr()
 
 **Signature:**
 
@@ -1038,7 +1038,7 @@ val result = instance.ocr(OcrRequest())
 
 **Errors:** Throws `Error`.
 
-#### createFile()
+###### createFile()
 
 **Signature:**
 
@@ -1063,7 +1063,7 @@ val result = instance.createFile(CreateFileRequest())
 
 **Errors:** Throws `Error`.
 
-#### retrieveFile()
+###### retrieveFile()
 
 **Signature:**
 
@@ -1088,7 +1088,7 @@ val result = instance.retrieveFile("value")
 
 **Errors:** Throws `Error`.
 
-#### deleteFile()
+###### deleteFile()
 
 **Signature:**
 
@@ -1113,7 +1113,7 @@ val result = instance.deleteFile("value")
 
 **Errors:** Throws `Error`.
 
-#### listFiles()
+###### listFiles()
 
 **Signature:**
 
@@ -1138,7 +1138,7 @@ val result = instance.listFiles(FileListQuery())
 
 **Errors:** Throws `Error`.
 
-#### fileContent()
+###### fileContent()
 
 **Signature:**
 
@@ -1163,7 +1163,7 @@ val result = instance.fileContent("value")
 
 **Errors:** Throws `Error`.
 
-#### createBatch()
+###### createBatch()
 
 **Signature:**
 
@@ -1188,7 +1188,7 @@ val result = instance.createBatch(CreateBatchRequest())
 
 **Errors:** Throws `Error`.
 
-#### retrieveBatch()
+###### retrieveBatch()
 
 **Signature:**
 
@@ -1213,7 +1213,7 @@ val result = instance.retrieveBatch("value")
 
 **Errors:** Throws `Error`.
 
-#### listBatches()
+###### listBatches()
 
 **Signature:**
 
@@ -1238,7 +1238,7 @@ val result = instance.listBatches(BatchListQuery())
 
 **Errors:** Throws `Error`.
 
-#### cancelBatch()
+###### cancelBatch()
 
 **Signature:**
 
@@ -1263,7 +1263,32 @@ val result = instance.cancelBatch("value")
 
 **Errors:** Throws `Error`.
 
-#### waitForBatch()
+###### fetchBatchForPolling()
+
+**Signature:**
+
+```kotlin
+@Throws(Error::class)
+fun fetchBatchForPolling(batchId: String): BatchObject
+```
+
+**Example:**
+
+```kotlin
+val result = instance.fetchBatchForPolling("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `String` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error`.
+
+###### waitForBatch()
 
 Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
 
@@ -1300,7 +1325,7 @@ val result = instance.waitForBatch("value", WaitForBatchConfig())
 
 **Errors:** Throws `BatchWaitError`.
 
-#### createResponse()
+###### createResponse()
 
 **Signature:**
 
@@ -1325,7 +1350,7 @@ val result = instance.createResponse(CreateResponseRequest())
 
 **Errors:** Throws `Error`.
 
-#### retrieveResponse()
+###### retrieveResponse()
 
 **Signature:**
 
@@ -1350,7 +1375,7 @@ val result = instance.retrieveResponse("value")
 
 **Errors:** Throws `Error`.
 
-#### cancelResponse()
+###### cancelResponse()
 
 **Signature:**
 
@@ -1532,9 +1557,9 @@ Abstraction over a health probe strategy.
 Implementors issue a lightweight probe against `upstream` (typically a
 provider base URL or named identifier) and report `HealthStatus`.
 
-### Methods
+##### Methods
 
-#### check()
+###### check()
 
 Probe `upstream` and return its current `HealthStatus`.
 
@@ -2172,9 +2197,9 @@ boundaries without requiring a `Duration` shim.
 | `backoffMultiplier` | `Float` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
 | `timeoutSecs` | `Double?` | `null` | Optional timeout in seconds — polling fails if this duration is exceeded. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 

@@ -4478,6 +4478,13 @@ LITERLLMBatchObject *literllm_default_client_cancel_batch(const LITERLLMDefaultC
                                                           const char *batch_id);
 
 /**
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+LITERLLMBatchObject *literllm_default_client_fetch_batch_for_polling(const LITERLLMDefaultClient *this_,
+                                                                     const char *batch_id);
+
+/**
  * Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
  *
  * Uses exponential backoff with configurable initial interval, maximum interval, and backoff
@@ -5973,6 +5980,7 @@ int32_t literllm_check_bound(const char *context,
                              uintptr_t incoming,
                              uintptr_t limit);
 
+#if !defined(SKIF_WINDOWS)
 /**
  * Install the `ring` crypto provider as the rustls process default, idempotently.
  *
@@ -5994,6 +6002,7 @@ int32_t literllm_check_bound(const char *context,
  * freed with the appropriate free function.
  */
 void literllm_ensure_crypto_provider(void);
+#endif
 
 /**
  * Return the HTTP status code for the error pointed to by `err`.

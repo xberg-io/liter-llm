@@ -112,7 +112,7 @@ register_custom_provider(CustomProviderConfig())
 |------|------|----------|-------------|
 | `config` | `CustomProviderConfig` | Yes | The configuration options |
 
-**Returns:** `None`
+**Returns:** No return value.
 
 **Errors:** Raises `Error`.
 
@@ -338,7 +338,7 @@ def clear() -> None
 clear()
 ```
 
-**Returns:** `None`
+**Returns:** No return value.
 
 ---
 
@@ -448,7 +448,7 @@ check_bound("value", 42, 42, 42)
 | `incoming` | `int` | Yes | The incoming |
 | `limit` | `int` | Yes | The limit |
 
-**Returns:** `None`
+**Returns:** No return value.
 
 **Errors:** Raises `Error`.
 
@@ -485,7 +485,7 @@ def ensure_crypto_provider() -> None
 ensure_crypto_provider()
 ```
 
-**Returns:** `None`
+**Returns:** No return value.
 
 ---
 
@@ -597,9 +597,9 @@ Configuration for budget enforcement.
 | `model_limits` | `dict[str, float]` | `{}` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
 | `enforcement` | `Enforcement` | `Enforcement.HARD` | Whether to reject requests or merely warn when a limit is exceeded. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -628,9 +628,9 @@ Configuration for the response cache.
 | `ttl` | `float` | `300000ms` | Time-to-live for each cached entry. |
 | `backend` | `CacheBackend` | `CacheBackend.MEMORY` | Storage backend to use. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -746,9 +746,9 @@ or `Err(e)` to propagate a stream error.
 The trait is object-safe so implementations can be stored in a
 `Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
 
-### Methods
+##### Methods
 
-#### process()
+###### process()
 
 Process a single chunk.
 
@@ -898,9 +898,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-### Methods
+##### Methods
 
-#### chat()
+###### chat()
 
 **Signature:**
 
@@ -924,7 +924,7 @@ result = instance.chat(ChatCompletionRequest())
 
 **Errors:** Raises `Error`.
 
-#### chat_stream()
+###### chat_stream()
 
 **Signature:**
 
@@ -948,7 +948,7 @@ result = instance.chat_stream(ChatCompletionRequest())
 
 **Errors:** Raises `Error`.
 
-#### embed()
+###### embed()
 
 **Signature:**
 
@@ -972,7 +972,7 @@ result = instance.embed(EmbeddingRequest())
 
 **Errors:** Raises `Error`.
 
-#### list_models()
+###### list_models()
 
 **Signature:**
 
@@ -990,7 +990,7 @@ result = instance.list_models()
 
 **Errors:** Raises `Error`.
 
-#### image_generate()
+###### image_generate()
 
 **Signature:**
 
@@ -1014,7 +1014,7 @@ result = instance.image_generate(CreateImageRequest())
 
 **Errors:** Raises `Error`.
 
-#### speech()
+###### speech()
 
 **Signature:**
 
@@ -1038,7 +1038,7 @@ result = instance.speech(CreateSpeechRequest())
 
 **Errors:** Raises `Error`.
 
-#### transcribe()
+###### transcribe()
 
 **Signature:**
 
@@ -1062,7 +1062,7 @@ result = instance.transcribe(CreateTranscriptionRequest())
 
 **Errors:** Raises `Error`.
 
-#### moderate()
+###### moderate()
 
 **Signature:**
 
@@ -1086,7 +1086,7 @@ result = instance.moderate(ModerationRequest())
 
 **Errors:** Raises `Error`.
 
-#### rerank()
+###### rerank()
 
 **Signature:**
 
@@ -1110,7 +1110,7 @@ result = instance.rerank(RerankRequest())
 
 **Errors:** Raises `Error`.
 
-#### search()
+###### search()
 
 **Signature:**
 
@@ -1134,7 +1134,7 @@ result = instance.search(SearchRequest())
 
 **Errors:** Raises `Error`.
 
-#### ocr()
+###### ocr()
 
 **Signature:**
 
@@ -1158,7 +1158,7 @@ result = instance.ocr(OcrRequest())
 
 **Errors:** Raises `Error`.
 
-#### create_file()
+###### create_file()
 
 **Signature:**
 
@@ -1182,7 +1182,7 @@ result = instance.create_file(CreateFileRequest())
 
 **Errors:** Raises `Error`.
 
-#### retrieve_file()
+###### retrieve_file()
 
 **Signature:**
 
@@ -1206,7 +1206,7 @@ result = instance.retrieve_file("value")
 
 **Errors:** Raises `Error`.
 
-#### delete_file()
+###### delete_file()
 
 **Signature:**
 
@@ -1230,7 +1230,7 @@ result = instance.delete_file("value")
 
 **Errors:** Raises `Error`.
 
-#### list_files()
+###### list_files()
 
 **Signature:**
 
@@ -1254,7 +1254,7 @@ result = instance.list_files(query=FileListQuery())
 
 **Errors:** Raises `Error`.
 
-#### file_content()
+###### file_content()
 
 **Signature:**
 
@@ -1278,7 +1278,7 @@ result = instance.file_content("value")
 
 **Errors:** Raises `Error`.
 
-#### create_batch()
+###### create_batch()
 
 **Signature:**
 
@@ -1302,7 +1302,7 @@ result = instance.create_batch(CreateBatchRequest())
 
 **Errors:** Raises `Error`.
 
-#### retrieve_batch()
+###### retrieve_batch()
 
 **Signature:**
 
@@ -1326,7 +1326,7 @@ result = instance.retrieve_batch("value")
 
 **Errors:** Raises `Error`.
 
-#### list_batches()
+###### list_batches()
 
 **Signature:**
 
@@ -1350,7 +1350,7 @@ result = instance.list_batches(query=BatchListQuery())
 
 **Errors:** Raises `Error`.
 
-#### cancel_batch()
+###### cancel_batch()
 
 **Signature:**
 
@@ -1374,7 +1374,31 @@ result = instance.cancel_batch("value")
 
 **Errors:** Raises `Error`.
 
-#### wait_for_batch()
+###### fetch_batch_for_polling()
+
+**Signature:**
+
+```python
+def fetch_batch_for_polling(self, batch_id: str) -> BatchObject
+```
+
+**Example:**
+
+```python
+result = instance.fetch_batch_for_polling("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batch_id` | `str` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Raises `Error`.
+
+###### wait_for_batch()
 
 Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
 
@@ -1410,7 +1434,7 @@ result = instance.wait_for_batch("value", WaitForBatchConfig())
 
 **Errors:** Raises `BatchWaitError`.
 
-#### create_response()
+###### create_response()
 
 **Signature:**
 
@@ -1434,7 +1458,7 @@ result = instance.create_response(CreateResponseRequest())
 
 **Errors:** Raises `Error`.
 
-#### retrieve_response()
+###### retrieve_response()
 
 **Signature:**
 
@@ -1458,7 +1482,7 @@ result = instance.retrieve_response("value")
 
 **Errors:** Raises `Error`.
 
-#### cancel_response()
+###### cancel_response()
 
 **Signature:**
 
@@ -1639,9 +1663,9 @@ Abstraction over a health probe strategy.
 Implementors issue a lightweight probe against `upstream` (typically a
 provider base URL or named identifier) and report `HealthStatus`.
 
-### Methods
+##### Methods
 
-#### check()
+###### check()
 
 Probe `upstream` and return its current `HealthStatus`.
 
@@ -1962,9 +1986,9 @@ Configuration for per-model rate limits.
 | `tpm` | `int \| None` | `None` | Maximum tokens per window.  `None` means unlimited. |
 | `window` | `float` | `60000ms` | Fixed window duration (defaults to 60 s). |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -2310,9 +2334,9 @@ boundaries without requiring a `Duration` shim.
 | `backoff_multiplier` | `float` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
 | `timeout_secs` | `float \| None` | `None` | Optional timeout in seconds — polling fails if this duration is exceeded. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 

@@ -112,7 +112,7 @@ RegisterCustomProvider(new CustomProviderConfig());
 |------|------|----------|-------------|
 | `Config` | `CustomProviderConfig` | Yes | The configuration options |
 
-**Returns:** `void`
+**Returns:** No return value.
 
 **Errors:** Throws `Error`.
 
@@ -338,7 +338,7 @@ public static void Clear()
 Clear();
 ```
 
-**Returns:** `void`
+**Returns:** No return value.
 
 ---
 
@@ -448,7 +448,7 @@ CheckBound("value", 42, 42, 42);
 | `Incoming` | `nuint` | Yes | The incoming |
 | `Limit` | `nuint` | Yes | The limit |
 
-**Returns:** `void`
+**Returns:** No return value.
 
 **Errors:** Throws `Error`.
 
@@ -485,7 +485,7 @@ public static void EnsureCryptoProvider()
 EnsureCryptoProvider();
 ```
 
-**Returns:** `void`
+**Returns:** No return value.
 
 ---
 
@@ -597,9 +597,9 @@ Configuration for budget enforcement.
 | `ModelLimits` | `Dictionary<string, double>` | `new Dictionary<string, double>()` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
 | `Enforcement` | `Enforcement` | `Enforcement.Hard` | Whether to reject requests or merely warn when a limit is exceeded. |
 
-### Methods
+##### Methods
 
-#### CreateDefault()
+###### CreateDefault()
 
 **Signature:**
 
@@ -627,9 +627,9 @@ Configuration for the response cache.
 | `Ttl` | `TimeSpan` | `300000ms` | Time-to-live for each cached entry. |
 | `Backend` | `CacheBackend` | `CacheBackend.Memory` | Storage backend to use. |
 
-### Methods
+##### Methods
 
-#### CreateDefault()
+###### CreateDefault()
 
 **Signature:**
 
@@ -744,9 +744,9 @@ or `Err(e)` to propagate a stream error.
 The trait is object-safe so implementations can be stored in a
 `Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
 
-### Methods
+##### Methods
 
-#### Process()
+###### Process()
 
 Process a single chunk.
 
@@ -896,9 +896,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-### Methods
+##### Methods
 
-#### Chat()
+###### Chat()
 
 **Signature:**
 
@@ -922,7 +922,7 @@ var result = await instance.Chat(new ChatCompletionRequest());
 
 **Errors:** Throws `Error`.
 
-#### ChatStream()
+###### ChatStream()
 
 **Signature:**
 
@@ -946,7 +946,7 @@ var result = await instance.ChatStream(new ChatCompletionRequest());
 
 **Errors:** Throws `Error`.
 
-#### Embed()
+###### Embed()
 
 **Signature:**
 
@@ -970,7 +970,7 @@ var result = await instance.Embed(new EmbeddingRequest());
 
 **Errors:** Throws `Error`.
 
-#### ListModels()
+###### ListModels()
 
 **Signature:**
 
@@ -988,7 +988,7 @@ var result = await instance.ListModels();
 
 **Errors:** Throws `Error`.
 
-#### ImageGenerate()
+###### ImageGenerate()
 
 **Signature:**
 
@@ -1012,7 +1012,7 @@ var result = await instance.ImageGenerate(new CreateImageRequest());
 
 **Errors:** Throws `Error`.
 
-#### Speech()
+###### Speech()
 
 **Signature:**
 
@@ -1036,7 +1036,7 @@ var result = await instance.Speech(new CreateSpeechRequest());
 
 **Errors:** Throws `Error`.
 
-#### Transcribe()
+###### Transcribe()
 
 **Signature:**
 
@@ -1060,7 +1060,7 @@ var result = await instance.Transcribe(new CreateTranscriptionRequest());
 
 **Errors:** Throws `Error`.
 
-#### Moderate()
+###### Moderate()
 
 **Signature:**
 
@@ -1084,7 +1084,7 @@ var result = await instance.Moderate(new ModerationRequest());
 
 **Errors:** Throws `Error`.
 
-#### Rerank()
+###### Rerank()
 
 **Signature:**
 
@@ -1108,7 +1108,7 @@ var result = await instance.Rerank(new RerankRequest());
 
 **Errors:** Throws `Error`.
 
-#### Search()
+###### Search()
 
 **Signature:**
 
@@ -1132,7 +1132,7 @@ var result = await instance.Search(new SearchRequest());
 
 **Errors:** Throws `Error`.
 
-#### Ocr()
+###### Ocr()
 
 **Signature:**
 
@@ -1156,7 +1156,7 @@ var result = await instance.Ocr(new OcrRequest());
 
 **Errors:** Throws `Error`.
 
-#### CreateFile()
+###### CreateFile()
 
 **Signature:**
 
@@ -1180,7 +1180,7 @@ var result = await instance.CreateFile(new CreateFileRequest());
 
 **Errors:** Throws `Error`.
 
-#### RetrieveFile()
+###### RetrieveFile()
 
 **Signature:**
 
@@ -1204,7 +1204,7 @@ var result = await instance.RetrieveFile("value");
 
 **Errors:** Throws `Error`.
 
-#### DeleteFile()
+###### DeleteFile()
 
 **Signature:**
 
@@ -1228,7 +1228,7 @@ var result = await instance.DeleteFile("value");
 
 **Errors:** Throws `Error`.
 
-#### ListFiles()
+###### ListFiles()
 
 **Signature:**
 
@@ -1252,7 +1252,7 @@ var result = await instance.ListFiles(new FileListQuery());
 
 **Errors:** Throws `Error`.
 
-#### FileContent()
+###### FileContent()
 
 **Signature:**
 
@@ -1276,7 +1276,7 @@ var result = await instance.FileContent("value");
 
 **Errors:** Throws `Error`.
 
-#### CreateBatch()
+###### CreateBatch()
 
 **Signature:**
 
@@ -1300,7 +1300,7 @@ var result = await instance.CreateBatch(new CreateBatchRequest());
 
 **Errors:** Throws `Error`.
 
-#### RetrieveBatch()
+###### RetrieveBatch()
 
 **Signature:**
 
@@ -1324,7 +1324,7 @@ var result = await instance.RetrieveBatch("value");
 
 **Errors:** Throws `Error`.
 
-#### ListBatches()
+###### ListBatches()
 
 **Signature:**
 
@@ -1348,7 +1348,7 @@ var result = await instance.ListBatches(new BatchListQuery());
 
 **Errors:** Throws `Error`.
 
-#### CancelBatch()
+###### CancelBatch()
 
 **Signature:**
 
@@ -1372,7 +1372,31 @@ var result = await instance.CancelBatch("value");
 
 **Errors:** Throws `Error`.
 
-#### WaitForBatch()
+###### FetchBatchForPolling()
+
+**Signature:**
+
+```csharp
+public async Task<BatchObject> FetchBatchForPollingAsync(string batchId)
+```
+
+**Example:**
+
+```csharp
+var result = await instance.FetchBatchForPolling("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `BatchId` | `string` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error`.
+
+###### WaitForBatch()
 
 Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
 
@@ -1408,7 +1432,7 @@ var result = await instance.WaitForBatch("value", new WaitForBatchConfig());
 
 **Errors:** Throws `BatchWaitError`.
 
-#### CreateResponse()
+###### CreateResponse()
 
 **Signature:**
 
@@ -1432,7 +1456,7 @@ var result = await instance.CreateResponse(new CreateResponseRequest());
 
 **Errors:** Throws `Error`.
 
-#### RetrieveResponse()
+###### RetrieveResponse()
 
 **Signature:**
 
@@ -1456,7 +1480,7 @@ var result = await instance.RetrieveResponse("value");
 
 **Errors:** Throws `Error`.
 
-#### CancelResponse()
+###### CancelResponse()
 
 **Signature:**
 
@@ -1637,9 +1661,9 @@ Abstraction over a health probe strategy.
 Implementors issue a lightweight probe against `upstream` (typically a
 provider base URL or named identifier) and report `HealthStatus`.
 
-### Methods
+##### Methods
 
-#### Check()
+###### Check()
 
 Probe `upstream` and return its current `HealthStatus`.
 
@@ -1960,9 +1984,9 @@ Configuration for per-model rate limits.
 | `Tpm` | `ulong?` | `null` | Maximum tokens per window.  `null` means unlimited. |
 | `Window` | `TimeSpan` | `60000ms` | Fixed window duration (defaults to 60 s). |
 
-### Methods
+##### Methods
 
-#### CreateDefault()
+###### CreateDefault()
 
 **Signature:**
 
@@ -2307,9 +2331,9 @@ boundaries without requiring a `Duration` shim.
 | `BackoffMultiplier` | `float` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
 | `TimeoutSecs` | `double?` | `null` | Optional timeout in seconds — polling fails if this duration is exceeded. |
 
-### Methods
+##### Methods
 
-#### CreateDefault()
+###### CreateDefault()
 
 **Signature:**
 

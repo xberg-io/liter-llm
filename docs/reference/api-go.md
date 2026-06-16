@@ -121,6 +121,7 @@ if err := RegisterCustomProvider(CustomProviderConfig{}); err != nil {
 | `Config` | `CustomProviderConfig` | Yes | The configuration options |
 
 **Returns:** No return value.
+
 **Errors:** Returns `error`.
 
 ---
@@ -473,6 +474,7 @@ if err := CheckBound("value", 42, 42, 42); err != nil {
 | `Limit` | `int` | Yes | The limit |
 
 **Returns:** No return value.
+
 **Errors:** Returns `error`.
 
 ---
@@ -620,9 +622,9 @@ Configuration for budget enforcement.
 | `ModelLimits` | `map[string]float64` | `nil` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
 | `Enforcement` | `Enforcement` | `Enforcement.Hard` | Whether to reject requests or merely warn when a limit is exceeded. |
 
-### Methods
+##### Methods
 
-#### Default()
+###### Default()
 
 **Signature:**
 
@@ -650,9 +652,9 @@ Configuration for the response cache.
 | `Ttl` | `time.Duration` | `300000ms` | Time-to-live for each cached entry. |
 | `Backend` | `CacheBackend` | `CacheBackend.Memory` | Storage backend to use. |
 
-### Methods
+##### Methods
 
-#### Default()
+###### Default()
 
 **Signature:**
 
@@ -767,9 +769,9 @@ or `Err(e)` to propagate a stream error.
 The trait is object-safe so implementations can be stored in a
 `Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
 
-### Methods
+##### Methods
 
-#### Process()
+###### Process()
 
 Process a single chunk.
 
@@ -922,9 +924,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-### Methods
+##### Methods
 
-#### Chat()
+###### Chat()
 
 **Signature:**
 
@@ -951,7 +953,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### ChatStream()
+###### ChatStream()
 
 **Signature:**
 
@@ -978,7 +980,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### Embed()
+###### Embed()
 
 **Signature:**
 
@@ -1005,7 +1007,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### ListModels()
+###### ListModels()
 
 **Signature:**
 
@@ -1026,7 +1028,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### ImageGenerate()
+###### ImageGenerate()
 
 **Signature:**
 
@@ -1053,7 +1055,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### Speech()
+###### Speech()
 
 **Signature:**
 
@@ -1080,7 +1082,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### Transcribe()
+###### Transcribe()
 
 **Signature:**
 
@@ -1107,7 +1109,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### Moderate()
+###### Moderate()
 
 **Signature:**
 
@@ -1134,7 +1136,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### Rerank()
+###### Rerank()
 
 **Signature:**
 
@@ -1161,7 +1163,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### Search()
+###### Search()
 
 **Signature:**
 
@@ -1188,7 +1190,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### Ocr()
+###### Ocr()
 
 **Signature:**
 
@@ -1215,7 +1217,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### CreateFile()
+###### CreateFile()
 
 **Signature:**
 
@@ -1242,7 +1244,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### RetrieveFile()
+###### RetrieveFile()
 
 **Signature:**
 
@@ -1269,7 +1271,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### DeleteFile()
+###### DeleteFile()
 
 **Signature:**
 
@@ -1296,7 +1298,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### ListFiles()
+###### ListFiles()
 
 **Signature:**
 
@@ -1323,7 +1325,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### FileContent()
+###### FileContent()
 
 **Signature:**
 
@@ -1350,7 +1352,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### CreateBatch()
+###### CreateBatch()
 
 **Signature:**
 
@@ -1377,7 +1379,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### RetrieveBatch()
+###### RetrieveBatch()
 
 **Signature:**
 
@@ -1404,7 +1406,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### ListBatches()
+###### ListBatches()
 
 **Signature:**
 
@@ -1431,7 +1433,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### CancelBatch()
+###### CancelBatch()
 
 **Signature:**
 
@@ -1458,7 +1460,34 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### WaitForBatch()
+###### FetchBatchForPolling()
+
+**Signature:**
+
+```go
+func (o *DefaultClient) FetchBatchForPolling(batchId string) (BatchObject, error)
+```
+
+**Example:**
+
+```go
+result, err := instance.FetchBatchForPolling("value")
+if err != nil {
+    return err
+}
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `BatchId` | `string` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Returns `error`.
+
+###### WaitForBatch()
 
 Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
 
@@ -1497,7 +1526,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### CreateResponse()
+###### CreateResponse()
 
 **Signature:**
 
@@ -1524,7 +1553,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### RetrieveResponse()
+###### RetrieveResponse()
 
 **Signature:**
 
@@ -1551,7 +1580,7 @@ if err != nil {
 
 **Errors:** Returns `error`.
 
-#### CancelResponse()
+###### CancelResponse()
 
 **Signature:**
 
@@ -1735,9 +1764,9 @@ Abstraction over a health probe strategy.
 Implementors issue a lightweight probe against `upstream` (typically a
 provider base URL or named identifier) and report `HealthStatus`.
 
-### Methods
+##### Methods
 
-#### Check()
+###### Check()
 
 Probe `upstream` and return its current `HealthStatus`.
 
@@ -2058,9 +2087,9 @@ Configuration for per-model rate limits.
 | `Tpm` | `*uint64` | `nil` | Maximum tokens per window.  `nil` means unlimited. |
 | `Window` | `time.Duration` | `60000ms` | Fixed window duration (defaults to 60 s). |
 
-### Methods
+##### Methods
 
-#### Default()
+###### Default()
 
 **Signature:**
 
@@ -2405,9 +2434,9 @@ boundaries without requiring a `Duration` shim.
 | `BackoffMultiplier` | `float32` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
 | `TimeoutSecs` | `*float64` | `nil` | Optional timeout in seconds — polling fails if this duration is exceeded. |
 
-### Methods
+##### Methods
 
-#### Default()
+###### Default()
 
 **Signature:**
 

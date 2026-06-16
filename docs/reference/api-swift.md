@@ -112,7 +112,7 @@ try registerCustomProvider(CustomProviderConfig())
 |------|------|----------|-------------|
 | `config` | `CustomProviderConfig` | Yes | The configuration options |
 
-**Returns:** `Void`
+**Returns:** No return value.
 
 **Errors:** Throws `Error`.
 
@@ -312,7 +312,7 @@ public static func clear()
 clear()
 ```
 
-**Returns:** `Void`
+**Returns:** No return value.
 
 ---
 
@@ -422,7 +422,7 @@ try checkBound("value", 42, 42, 42)
 | `incoming` | `UInt64` | Yes | The incoming |
 | `limit` | `UInt64` | Yes | The limit |
 
-**Returns:** `Void`
+**Returns:** No return value.
 
 **Errors:** Throws `Error`.
 
@@ -459,7 +459,7 @@ public static func ensureCryptoProvider()
 ensureCryptoProvider()
 ```
 
-**Returns:** `Void`
+**Returns:** No return value.
 
 ---
 
@@ -571,9 +571,9 @@ Configuration for budget enforcement.
 | `modelLimits` | `[String: Double]` | `{}` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
 | `enforcement` | `Enforcement` | `Enforcement.Hard` | Whether to reject requests or merely warn when a limit is exceeded. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -601,9 +601,9 @@ Configuration for the response cache.
 | `ttl` | `Duration` | `300000ms` | Time-to-live for each cached entry. |
 | `backend` | `CacheBackend` | `CacheBackend.Memory` | Storage backend to use. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -718,9 +718,9 @@ or `Err(e)` to propagate a stream error.
 The trait is object-safe so implementations can be stored in a
 `Vec<Box<dyn ChunkMiddleware>>` inside `StreamPipeline`.
 
-### Methods
+##### Methods
 
-#### process()
+###### process()
 
 Process a single chunk.
 
@@ -870,9 +870,9 @@ The provider is stored behind an `Arc` so it can be shared cheaply into
 async closures and streaming tasks. Pre-computed auth headers and extra
 headers are cached at construction to avoid redundant encoding on every request.
 
-### Methods
+##### Methods
 
-#### chat()
+###### chat()
 
 **Signature:**
 
@@ -896,7 +896,7 @@ let result = try instance.chat(ChatCompletionRequest())
 
 **Errors:** Throws `Error`.
 
-#### chatStream()
+###### chatStream()
 
 **Signature:**
 
@@ -920,7 +920,7 @@ let result = try instance.chatStream(ChatCompletionRequest())
 
 **Errors:** Throws `Error`.
 
-#### embed()
+###### embed()
 
 **Signature:**
 
@@ -944,7 +944,7 @@ let result = try instance.embed(EmbeddingRequest())
 
 **Errors:** Throws `Error`.
 
-#### listModels()
+###### listModels()
 
 **Signature:**
 
@@ -962,7 +962,7 @@ let result = try instance.listModels()
 
 **Errors:** Throws `Error`.
 
-#### imageGenerate()
+###### imageGenerate()
 
 **Signature:**
 
@@ -986,7 +986,7 @@ let result = try instance.imageGenerate(CreateImageRequest())
 
 **Errors:** Throws `Error`.
 
-#### speech()
+###### speech()
 
 **Signature:**
 
@@ -1010,7 +1010,7 @@ let result = try instance.speech(CreateSpeechRequest())
 
 **Errors:** Throws `Error`.
 
-#### transcribe()
+###### transcribe()
 
 **Signature:**
 
@@ -1034,7 +1034,7 @@ let result = try instance.transcribe(CreateTranscriptionRequest())
 
 **Errors:** Throws `Error`.
 
-#### moderate()
+###### moderate()
 
 **Signature:**
 
@@ -1058,7 +1058,7 @@ let result = try instance.moderate(ModerationRequest())
 
 **Errors:** Throws `Error`.
 
-#### rerank()
+###### rerank()
 
 **Signature:**
 
@@ -1082,7 +1082,7 @@ let result = try instance.rerank(RerankRequest())
 
 **Errors:** Throws `Error`.
 
-#### search()
+###### search()
 
 **Signature:**
 
@@ -1106,7 +1106,7 @@ let result = try instance.search(SearchRequest())
 
 **Errors:** Throws `Error`.
 
-#### ocr()
+###### ocr()
 
 **Signature:**
 
@@ -1130,7 +1130,7 @@ let result = try instance.ocr(OcrRequest())
 
 **Errors:** Throws `Error`.
 
-#### createFile()
+###### createFile()
 
 **Signature:**
 
@@ -1154,7 +1154,7 @@ let result = try instance.createFile(CreateFileRequest())
 
 **Errors:** Throws `Error`.
 
-#### retrieveFile()
+###### retrieveFile()
 
 **Signature:**
 
@@ -1178,7 +1178,7 @@ let result = try instance.retrieveFile("value")
 
 **Errors:** Throws `Error`.
 
-#### deleteFile()
+###### deleteFile()
 
 **Signature:**
 
@@ -1202,7 +1202,7 @@ let result = try instance.deleteFile("value")
 
 **Errors:** Throws `Error`.
 
-#### listFiles()
+###### listFiles()
 
 **Signature:**
 
@@ -1226,7 +1226,7 @@ let result = try instance.listFiles(FileListQuery())
 
 **Errors:** Throws `Error`.
 
-#### fileContent()
+###### fileContent()
 
 **Signature:**
 
@@ -1250,7 +1250,7 @@ let result = try instance.fileContent("value")
 
 **Errors:** Throws `Error`.
 
-#### createBatch()
+###### createBatch()
 
 **Signature:**
 
@@ -1274,7 +1274,7 @@ let result = try instance.createBatch(CreateBatchRequest())
 
 **Errors:** Throws `Error`.
 
-#### retrieveBatch()
+###### retrieveBatch()
 
 **Signature:**
 
@@ -1298,7 +1298,7 @@ let result = try instance.retrieveBatch("value")
 
 **Errors:** Throws `Error`.
 
-#### listBatches()
+###### listBatches()
 
 **Signature:**
 
@@ -1322,7 +1322,7 @@ let result = try instance.listBatches(BatchListQuery())
 
 **Errors:** Throws `Error`.
 
-#### cancelBatch()
+###### cancelBatch()
 
 **Signature:**
 
@@ -1346,7 +1346,31 @@ let result = try instance.cancelBatch("value")
 
 **Errors:** Throws `Error`.
 
-#### waitForBatch()
+###### fetchBatchForPolling()
+
+**Signature:**
+
+```swift
+public func fetchBatchForPolling(batchId: String) throws -> BatchObject
+```
+
+**Example:**
+
+```swift
+let result = try instance.fetchBatchForPolling("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `batchId` | `String` | Yes | The batch id |
+
+**Returns:** `BatchObject`
+
+**Errors:** Throws `Error`.
+
+###### waitForBatch()
 
 Poll a batch until it reaches a terminal status (Completed, Failed, Expired, Cancelled).
 
@@ -1382,7 +1406,7 @@ let result = try instance.waitForBatch("value", WaitForBatchConfig())
 
 **Errors:** Throws `BatchWaitError`.
 
-#### createResponse()
+###### createResponse()
 
 **Signature:**
 
@@ -1406,7 +1430,7 @@ let result = try instance.createResponse(CreateResponseRequest())
 
 **Errors:** Throws `Error`.
 
-#### retrieveResponse()
+###### retrieveResponse()
 
 **Signature:**
 
@@ -1430,7 +1454,7 @@ let result = try instance.retrieveResponse("value")
 
 **Errors:** Throws `Error`.
 
-#### cancelResponse()
+###### cancelResponse()
 
 **Signature:**
 
@@ -1611,9 +1635,9 @@ Abstraction over a health probe strategy.
 Implementors issue a lightweight probe against `upstream` (typically a
 provider base URL or named identifier) and report `HealthStatus`.
 
-### Methods
+##### Methods
 
-#### check()
+###### check()
 
 Probe `upstream` and return its current `HealthStatus`.
 
@@ -1934,9 +1958,9 @@ Configuration for per-model rate limits.
 | `tpm` | `UInt64?` | `null` | Maximum tokens per window.  `null` means unlimited. |
 | `window` | `Duration` | `60000ms` | Fixed window duration (defaults to 60 s). |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -2281,9 +2305,9 @@ boundaries without requiring a `Duration` shim.
 | `backoffMultiplier` | `Float` | `1.5` | Exponential backoff multiplier (e.g., 1.5 increases delay by 50% each poll). |
 | `timeoutSecs` | `Double?` | `null` | Optional timeout in seconds — polling fails if this duration is exceeded. |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
