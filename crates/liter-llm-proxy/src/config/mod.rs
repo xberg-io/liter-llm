@@ -11,9 +11,9 @@ pub use files::FileStorageConfig;
 pub use key::VirtualKeyConfig;
 pub use mcp::McpConfig;
 pub use model::{AliasEntry, ModelEntry};
-pub use provider::{ConfigError, ConfigEvent, ConfigProvider, FileWatchConfigProvider, StaticFileConfigProvider};
 #[cfg(feature = "etcd-watch")]
 pub use provider::EtcdConfigProvider;
+pub use provider::{ConfigError, ConfigEvent, ConfigProvider, FileWatchConfigProvider, StaticFileConfigProvider};
 pub use security::{OutboundPolicyKind, SecurityConfig};
 pub use server::ServerConfig;
 

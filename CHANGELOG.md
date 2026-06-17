@@ -7,13 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.4] - 2026-06-17
+
 ### Changed
 
-- Gate `etcd-client` behind optional `etcd-watch` feature; default CLI builds no longer require `protoc`.
+- Gate `etcd-client` behind optional `etcd-watch` feature; default CLI builds no longer require `protoc`. Resolves the Homebrew bottle source-build failure on v1.6.3.
+- Bump `alef` codegen pin to 0.25.24 (swift opaque-handle class triples, dart `() -> ()` cleanup, kotlin per-file ktfmt invocation, java PMD/palantir-java-format alignment, c e2e FFI tarball-name alignment, php `exclude_functions` filtering through to user-facing wrapper).
+- `liter_llm::tower::metrics::global_meter()` is now `pub` so downstream crates (`liter-llm-proxy`) can read the shared OTel meter without re-initialising.
 
 ### Fixed
 
 - **`ContentPart` crate-root shadow** — `src/lib.rs` did `pub use types::*` (which brings `types::ContentPart` to the crate root) and then explicitly `pub use realtime::ContentPart`, causing the realtime variant to shadow the types one. Downstream consumers writing `use liter_llm::ContentPart;` received the realtime variant, which has no `ImageUrl` variant, producing `E0599: no variant named 'ImageUrl' found for enum 'liter_llm::ContentPart'` in any VLM-OCR call site. The realtime `ContentPart` re-export is removed from `lib.rs`; callers that need it must import it explicitly as `liter_llm::realtime::ContentPart`. A compile-time regression test in `src/tests.rs` asserts that `crate::types::ContentPart::ImageUrl` is constructible through the crate root.
+- **rustdoc ICE in `liter-llm`** — bracketed intra-doc links to private items (`MAX_POOL_BUFFER_CAPACITY`, `post_stream_with_cancel`, `post_json`, `post_json_raw`, `retry::should_retry`, `LiterLlmError`, `ConfigDrivenProvider::transform_request`) in `http/`/`provider/` triggered an internal compiler error on rustc 1.95.0 during `doc_link_resolutions`. Stripped the link brackets so the doc strings reference the names as plain code identifiers. Also fixed bare URL in `CustomProviderConfig::base_url`.
+- **Missing-docs cleanup** — added documentation for `UsageSinkErased` trait and method, the four `tenant` modules (`context`, `etcd`, `in_memory`, `resolver`), the `http::transport` module, and the `RouterError::Discover { source }` struct field.
 
 ## [1.6.3] - 2026-06-16
 

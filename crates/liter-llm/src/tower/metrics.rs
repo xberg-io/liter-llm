@@ -77,7 +77,9 @@ mod inner {
     }
 
     /// Return the global meter, or `None` when [`init_meter`] has not been called.
-    pub(crate) fn global_meter() -> Option<&'static Meter> {
+    /// Exposed to downstream crates (e.g. `liter-llm-proxy`) so they can record
+    /// metrics against the same shared meter without re-initialising OTel.
+    pub fn global_meter() -> Option<&'static Meter> {
         METER.get()
     }
 

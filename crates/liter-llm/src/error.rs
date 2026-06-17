@@ -133,7 +133,7 @@ impl LiterLlmError {
     /// Returns the canonical HTTP status code associated with this error.
     ///
     /// Maps error variants to their originating HTTP status code as set by
-    /// [`LiterLlmError::from_status`].  Used by e2e assertions that check
+    /// the private `from_status` constructor. Used by e2e assertions that check
     /// `error.status_code` against the expected HTTP status.
     #[must_use]
     pub fn status_code(&self) -> u16 {

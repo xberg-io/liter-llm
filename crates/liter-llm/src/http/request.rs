@@ -22,8 +22,8 @@ pub(crate) fn retry_after_from_response(resp: &reqwest::Response) -> Option<std:
 ///
 /// - Attempt counting and the `max_retries` budget.
 /// - Parsing the `Retry-After` header before consuming the response body.
-/// - Exponential back-off via [`retry::should_retry`].
-/// - Reading the error body and mapping it to [`LiterLlmError`] on final failure.
+/// - Exponential back-off via `retry::should_retry`.
+/// - Reading the error body and mapping it to `LiterLlmError` on final failure.
 ///
 /// On success the **successful** `Response` is returned so the caller can
 /// choose how to consume the body (JSON deserialisation, byte stream, …).
@@ -69,7 +69,7 @@ where
 
 /// Send a POST request with a JSON body and return the raw response JSON.
 ///
-/// Like [`post_json`] but returns a `serde_json::Value` instead of deserializing
+/// Like `post_json` but returns a `serde_json::Value` instead of deserializing
 /// into a typed `T`.  This allows the caller to mutate the response (e.g. via a
 /// provider `transform_response`) before deserializing into the canonical type.
 ///
@@ -125,7 +125,7 @@ pub async fn post_json_raw(
 
 /// Send a POST request with a JSON body and return the raw response bytes.
 ///
-/// Identical to [`post_json_raw`] except it returns `bytes::Bytes` instead of
+/// Identical to `post_json_raw` except it returns `bytes::Bytes` instead of
 /// deserializing JSON.  Useful for endpoints that return binary data (e.g.
 /// text-to-speech audio).
 ///

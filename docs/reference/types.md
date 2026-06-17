@@ -27,8 +27,8 @@ A single reranked document with its relevance score.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `index` | `u32` | — | Original document index in the input list. |
-| `relevance_score` | `f64` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `document` | `Option<RerankResultDocument>` | language default | Original document content (if `return_documents` was true). |
+| `relevance_score` | `f64` | — | Relevance score in `\[0, 1\]`. Higher indicates more relevant. |
+| `document` | `Option<RerankResultDocument>` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -51,7 +51,7 @@ An individual search result.
 | `title` | `String` | — | Result title. |
 | `url` | `String` | — | Result URL. |
 | `snippet` | `String` | — | Text snippet or excerpt from the page. |
-| `date` | `Option<String>` | language default | Publication or last-updated date, if available. |
+| `date` | `Option<String>` | `/* serde(default) */` | Publication or last-updated date, if available. |
 
 ---
 
@@ -133,7 +133,7 @@ Assistant's response to a user message.
 |-------|------|---------|-------------|
 | `content` | `Option<String>` | `Default::default()` | The assistant's text response. Absent if tool calls are returned instead. |
 | `name` | `Option<String>` | `Default::default()` | Optional name for the assistant. |
-| `tool_calls` | `Vec<ToolCall>` | `vec![]` | Tool calls the model wants to execute, if any. |
+| `tool_calls` | `Vec<ToolCall>` | `vec!\[\]` | Tool calls the model wants to execute, if any. |
 | `refusal` | `Option<String>` | `Default::default()` | Refusal reason, if the model declined to respond per safety policies. |
 | `function_call` | `Option<FunctionCall>` | `Default::default()` | Deprecated legacy function_call field; retained for API compatibility. |
 
@@ -243,18 +243,18 @@ Chat completion request (compatible with OpenAI and similar APIs).
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `model` | `String` | — | Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`). |
-| `messages` | `Vec<Message>` | `vec![]` | Conversation history from oldest to newest. |
-| `temperature` | `Option<f64>` | `Default::default()` | Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0. |
-| `top_p` | `Option<f64>` | `Default::default()` | Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused. |
+| `messages` | `Vec<Message>` | `vec!\[\]` | Conversation history from oldest to newest. |
+| `temperature` | `Option<f64>` | `Default::default()` | Sampling temperature in `\[0.0, 2.0\]`. Higher increases randomness. Defaults to 1.0. |
+| `top_p` | `Option<f64>` | `Default::default()` | Nucleus sampling parameter in `\[0.0, 1.0\]`. Lower is more focused. |
 | `n` | `Option<u32>` | `Default::default()` | Number of chat completions to generate. Defaults to 1. |
 | `stream` | `Option<bool>` | `Default::default()` | Whether to stream the response. Managed by the client layer — do not set directly. |
 | `stop` | `Option<StopSequence>` | `Default::default()` | Stop sequence(s) that halt token generation. |
 | `max_tokens` | `Option<u64>` | `Default::default()` | Max output tokens. Different from max_completion_tokens in some providers. |
-| `presence_penalty` | `Option<f64>` | `Default::default()` | Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics. |
-| `frequency_penalty` | `Option<f64>` | `Default::default()` | Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens. |
+| `presence_penalty` | `Option<f64>` | `Default::default()` | Presence penalty in `\[-2.0, 2.0\]`. Positive discourages repeated topics. |
+| `frequency_penalty` | `Option<f64>` | `Default::default()` | Frequency penalty in `\[-2.0, 2.0\]`. Positive discourages repeated tokens. |
 | `logit_bias` | `HashMap<String, f64>` | `HashMap::new()` | Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic serialization order — important when hashing or signing requests. |
 | `user` | `Option<String>` | `Default::default()` | User identifier for request tracking and abuse detection. |
-| `tools` | `Vec<ChatCompletionTool>` | `vec![]` | Tools the model can invoke. |
+| `tools` | `Vec<ChatCompletionTool>` | `vec!\[\]` | Tools the model can invoke. |
 | `tool_choice` | `Option<ToolChoice>` | `Default::default()` | Tool usage mode (auto, required, none, or specific tool). |
 | `parallel_tool_calls` | `Option<bool>` | `Default::default()` | Whether the model can call multiple tools in parallel. Defaults to true. |
 | `response_format` | `Option<ResponseFormat>` | `Default::default()` | Output format constraint (text, JSON, JSON schema). |
@@ -285,7 +285,7 @@ Chat completion response from the API.
 | `object` | `String` | — | Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `created` | `u64` | — | Unix timestamp of response creation. |
 | `model` | `String` | — | Model used to generate the response. |
-| `choices` | `Vec<Choice>` | `vec![]` | List of completion choices. |
+| `choices` | `Vec<Choice>` | `vec!\[\]` | List of completion choices. |
 | `usage` | `Option<Usage>` | `Default::default()` | Token usage statistics. |
 | `system_fingerprint` | `Option<String>` | `Default::default()` | Fingerprint of the system configuration (OpenAI-specific). |
 | `service_tier` | `Option<String>` | `Default::default()` | Service tier used (OpenAI-specific). |
@@ -314,7 +314,7 @@ A streamed chunk of a chat completion response.
 | `object` | `String` | — | Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not fail parsing. |
 | `created` | `u64` | — | Unix timestamp of chunk creation. |
 | `model` | `String` | — | Model used to generate the chunk. |
-| `choices` | `Vec<StreamChoice>` | `vec![]` | Streaming choices (delta updates). |
+| `choices` | `Vec<StreamChoice>` | `vec!\[\]` | Streaming choices (delta updates). |
 | `usage` | `Option<Usage>` | `Default::default()` | Token usage (typically only in the final chunk). |
 | `system_fingerprint` | `Option<String>` | `Default::default()` | Fingerprint of the system configuration (OpenAI-specific). |
 | `service_tier` | `Option<String>` | `Default::default()` | Service tier used (OpenAI-specific). |
@@ -341,7 +341,7 @@ Incremental delta in a stream chunk.
 |-------|------|---------|-------------|
 | `role` | `Option<String>` | `Default::default()` | Role (typically present only in the first chunk). |
 | `content` | `Option<String>` | `Default::default()` | Partial content chunk (e.g., a few words of the response). |
-| `tool_calls` | `Vec<StreamToolCall>` | `vec![]` | Partial tool calls being streamed. |
+| `tool_calls` | `Vec<StreamToolCall>` | `vec!\[\]` | Partial tool calls being streamed. |
 | `function_call` | `Option<StreamFunctionCall>` | `Default::default()` | Deprecated legacy function_call delta; retained for API compatibility. |
 | `refusal` | `Option<String>` | `Default::default()` | Partial refusal message. |
 
@@ -409,7 +409,7 @@ Response containing generated images.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `created` | `u64` | — | Unix timestamp of image creation. |
-| `data` | `Vec<Image>` | `vec![]` | List of generated images. |
+| `data` | `Vec<Image>` | `vec!\[\]` | List of generated images. |
 
 ---
 
@@ -435,7 +435,7 @@ Request to generate speech audio from text.
 | `input` | `String` | — | Text to synthesize into speech. |
 | `voice` | `String` | — | Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). |
 | `response_format` | `Option<String>` | `Default::default()` | Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`). |
-| `speed` | `Option<f64>` | `Default::default()` | Playback speed in `[0.25, 4.0]`. Defaults to 1.0. |
+| `speed` | `Option<f64>` | `Default::default()` | Playback speed in `\[0.25, 4.0\]`. Defaults to 1.0. |
 
 ---
 
@@ -450,7 +450,7 @@ Request to transcribe audio into text.
 | `language` | `Option<String>` | `Default::default()` | Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. |
 | `prompt` | `Option<String>` | `Default::default()` | Optional text to guide the model (improves accuracy for domain-specific terms). |
 | `response_format` | `Option<String>` | `Default::default()` | Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`). |
-| `temperature` | `Option<f64>` | `Default::default()` | Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0. |
+| `temperature` | `Option<f64>` | `Default::default()` | Sampling temperature in `\[0.0, 1.0\]`. Higher increases variability. Defaults to 0. |
 
 ---
 
@@ -463,7 +463,7 @@ Response from a transcription request.
 | `text` | `String` | — | The transcribed text. |
 | `language` | `Option<String>` | `Default::default()` | Detected language (ISO-639-1 code). |
 | `duration` | `Option<f64>` | `Default::default()` | Total audio duration in seconds. |
-| `segments` | `Vec<TranscriptionSegment>` | `vec![]` | Detailed segment-level transcription (if response_format is "verbose_json"). |
+| `segments` | `Vec<TranscriptionSegment>` | `vec!\[\]` | Detailed segment-level transcription (if response_format is "verbose_json"). |
 
 ---
 
@@ -539,7 +539,7 @@ Request to rerank documents by relevance to a query.
 |-------|------|---------|-------------|
 | `model` | `String` | — | Model ID (e.g., `"cohere/rerank-english-v3.0"`). |
 | `query` | `String` | — | The search query. |
-| `documents` | `Vec<RerankDocument>` | `vec![]` | Documents to rerank. |
+| `documents` | `Vec<RerankDocument>` | `vec!\[\]` | Documents to rerank. |
 | `top_n` | `Option<u32>` | `Default::default()` | Return only the top N results. Optional. |
 | `return_documents` | `Option<bool>` | `Default::default()` | Include the document content in results. Defaults to false. |
 
@@ -554,7 +554,7 @@ A search request.
 | `model` | `String` | — | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). |
 | `query` | `String` | — | The search query string. |
 | `max_results` | `Option<u32>` | `Default::default()` | Maximum number of results to return. |
-| `search_domain_filter` | `Vec<String>` | `vec![]` | Domain filter — restrict results to specific domains. |
+| `search_domain_filter` | `Vec<String>` | `vec!\[\]` | Domain filter — restrict results to specific domains. |
 | `country` | `Option<String>` | `Default::default()` | Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). |
 
 ---
@@ -567,7 +567,7 @@ An OCR request.
 |-------|------|---------|-------------|
 | `model` | `String` | — | The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). |
 | `document` | `OcrDocument` | `OcrDocument::Url` | The document to process (URL or base64). |
-| `pages` | `Vec<u32>` | `vec![]` | Specific pages to process (1-indexed). `None` means all pages. |
+| `pages` | `Vec<u32>` | `vec!\[\]` | Specific pages to process (1-indexed). `None` means all pages. |
 | `include_image_base64` | `Option<bool>` | `Default::default()` | Whether to include base64-encoded images of each processed page. |
 
 ---
@@ -579,7 +579,7 @@ Response listing available models.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `object` | `String` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `data` | `Vec<ModelObject>` | `vec![]` | List of available models. |
+| `data` | `Vec<ModelObject>` | `vec!\[\]` | List of available models. |
 
 ---
 
@@ -631,7 +631,7 @@ Response from listing files.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `object` | `String` | — | Object type (always `"list"`). |
-| `data` | `Vec<FileObject>` | `vec![]` | List of file objects. |
+| `data` | `Vec<FileObject>` | `vec!\[\]` | List of file objects. |
 | `has_more` | `Option<bool>` | `Default::default()` | Whether more results are available. |
 
 ---
@@ -715,7 +715,7 @@ Response from listing batches.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `object` | `String` | — | Object type (always `"list"`). |
-| `data` | `Vec<BatchObject>` | `vec![]` | List of batch objects. |
+| `data` | `Vec<BatchObject>` | `vec!\[\]` | List of batch objects. |
 | `has_more` | `Option<bool>` | `Default::default()` | Whether more results are available. |
 | `first_id` | `Option<String>` | `Default::default()` | First batch ID in the result set (for pagination). |
 | `last_id` | `Option<String>` | `Default::default()` | Last batch ID in the result set (for pagination). |
@@ -742,8 +742,8 @@ Request to create a structured response.
 | `model` | `String` | — | Model ID. |
 | `input` | `serde_json::Value` | — | Input data to process (e.g., a document to extract from). |
 | `instructions` | `Option<String>` | `Default::default()` | Instructions for processing the input. |
-| `tools` | `Vec<ResponseTool>` | `vec![]` | Available tools the model can use. |
-| `temperature` | `Option<f64>` | `Default::default()` | Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0. |
+| `tools` | `Vec<ResponseTool>` | `vec!\[\]` | Available tools the model can use. |
+| `temperature` | `Option<f64>` | `Default::default()` | Sampling temperature in `\[0.0, 2.0\]`. Defaults to 1.0. |
 | `max_output_tokens` | `Option<u64>` | `Default::default()` | Maximum output tokens. |
 | `metadata` | `Option<serde_json::Value>` | `Default::default()` | Optional metadata. |
 
@@ -771,7 +771,7 @@ Response from a structured response request.
 | `created_at` | `u64` | — | Unix timestamp of response creation. |
 | `model` | `String` | — | Model used to generate the response. |
 | `status` | `String` | — | Status (e.g., `"succeeded"`, `"failed"`). |
-| `output` | `Vec<ResponseOutputItem>` | `vec![]` | Output items from the response. |
+| `output` | `Vec<ResponseOutputItem>` | `vec!\[\]` | Output items from the response. |
 | `usage` | `Option<ResponseUsage>` | `Default::default()` | Token usage. |
 | `error` | `Option<serde_json::Value>` | `Default::default()` | Error details (if status is "failed"). |
 
@@ -825,7 +825,7 @@ Configuration for registering a custom LLM provider at runtime.
 | `name` | `String` | — | Unique name for this provider (e.g., "my-provider"). |
 | `base_url` | `String` | — | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
 | `auth_header` | `AuthHeaderFormat` | — | Authentication header format. |
-| `model_prefixes` | `Vec<String>` | — | Model name prefixes that route to this provider (e.g., `["my-"]`). |
+| `model_prefixes` | `Vec<String>` | — | Model name prefixes that route to this provider (e.g., `\["my-"\]`). |
 
 ---
 
@@ -834,7 +834,7 @@ Configuration for registering a custom LLM provider at runtime.
 Static capability flags for a provider.
 
 Each flag indicates whether the provider's models *generally* support that
-feature.  For providers that aggregate many underlying models (e.g. Bedrock,
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
 OpenRouter, vLLM) the flags reflect the superset of available model
 capabilities — a flag being `True` means at least one model supports the
 feature, not every model.
@@ -869,7 +869,7 @@ format, which are accessed via the `capabilities` function.
 | `base_url` | `Option<String>` | `None` | Base URL used as the default for this provider's HTTP client. |
 | `auth` | `Option<AuthConfig>` | `None` | Authentication scheme metadata (auth type + env var holding the key). |
 | `endpoints` | `Vec<String>` | `None` | Supported endpoint kinds (e.g. `chat`, `embeddings`). |
-| `model_prefixes` | `Vec<String>` | `None` | Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`). |
+| `model_prefixes` | `Vec<String>` | `None` | Model-name prefixes claimed by this provider (e.g. `\["gpt-", "o1-"\]`). |
 | `param_mappings` | `HashMap<String, String>` | `None` | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`).  Applied automatically by `ConfigDrivenProvider::transform_request`. |
 
 ---
@@ -941,9 +941,9 @@ Function definition exposed to the model.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Name of the function. Required and must be alphanumeric + underscores. |
-| `description` | `Option<String>` | language default | Human-readable description explaining what the function does. |
-| `parameters` | `Option<serde_json::Value>` | language default | JSON Schema defining the function's parameters. |
-| `strict` | `Option<bool>` | language default | If true, enforce strict JSON schema validation for arguments. |
+| `description` | `Option<String>` | `/* serde(default) */` | Human-readable description explaining what the function does. |
+| `parameters` | `Option<serde_json::Value>` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
+| `strict` | `Option<bool>` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -979,7 +979,7 @@ Embedding response.
 | `object` | `String` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `data` | `Vec<EmbeddingObject>` | — | List of embeddings. |
 | `model` | `String` | — | Model used to generate embeddings. |
-| `usage` | `Option<Usage>` | language default | Token usage (input tokens only; embeddings have zero output tokens). |
+| `usage` | `Option<Usage>` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -1015,7 +1015,7 @@ Response from the rerank endpoint.
 |-------|------|---------|-------------|
 | `id` | `Option<String>` | `None` | Unique identifier for this rerank request. |
 | `results` | `Vec<RerankResult>` | — | Reranked documents in order of relevance. |
-| `meta` | `Option<serde_json::Value>` | language default | Optional metadata about the reranking operation. |
+| `meta` | `Option<serde_json::Value>` | `/* serde(default) */` | Optional metadata about the reranking operation. |
 
 ---
 
@@ -1038,7 +1038,7 @@ An OCR response.
 |-------|------|---------|-------------|
 | `pages` | `Vec<OcrPage>` | — | Extracted pages in order. |
 | `model` | `String` | — | Model/provider used for OCR. |
-| `usage` | `Option<Usage>` | language default | Token usage, if reported by the provider. |
+| `usage` | `Option<Usage>` | `/* serde(default) */` | Token usage, if reported by the provider. |
 
 ---
 
@@ -1050,8 +1050,8 @@ A single page of OCR output.
 |-------|------|---------|-------------|
 | `index` | `u32` | — | Page index (0-based). |
 | `markdown` | `String` | — | Extracted page content as Markdown. |
-| `images` | `Vec<OcrImage>` | language default | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `dimensions` | `Option<PageDimensions>` | language default | Page dimensions in pixels, if available. |
+| `images` | `Vec<OcrImage>` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `Option<PageDimensions>` | `/* serde(default) */` | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1062,7 +1062,7 @@ An image extracted from an OCR page.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String` | — | Unique image identifier within the document. |
-| `image_base64` | `Option<String>` | language default | Base64-encoded image data (if `include_image_base64` was true). |
+| `image_base64` | `Option<String>` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1274,7 +1274,7 @@ Why a choice stopped generating tokens.
 | `ToolCalls` | `tool_calls` | Tool calls |
 | `ContentFilter` | `content_filter` | Content filter |
 | `FunctionCall` | `function_call` | Deprecated legacy finish reason; retained for API compatibility. |
-| `Other` | `other` | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and switching to `#[serde(untagged)]` would change deserialization semantics for all variants.  The original value can be recovered by inspecting the raw JSON if needed. |
+| `Other` | `other` | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`).  Using `#\[serde(other)\]` requires a unit variant, and switching to `#\[serde(untagged)\]` would change deserialization semantics for all variants.  The original value can be recovered by inspecting the raw JSON if needed. |
 
 ---
 
@@ -1388,7 +1388,7 @@ Stop sequence(s) that cause the model to stop generating.
 
 The streaming wire format a provider uses for its response stream.
 
-Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
+Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
 a proprietary binary EventStream framing.
 
 Deserialized from the `streaming_format` JSON field via `serde`.

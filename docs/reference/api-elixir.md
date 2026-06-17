@@ -2,7 +2,7 @@
 title: "Elixir API Reference"
 ---
 
-## Elixir API Reference <span class="version-badge">v1.6.3</span>
+## Elixir API Reference <span class="version-badge">v1.6.4</span>
 
 ### Functions
 
@@ -106,7 +106,7 @@ def register_custom_provider(config)
 **Example:**
 
 ```elixir
-:ok = register_custom_provider(%{})
+:ok = register_custom_provider(%{{}})
 ```
 
 **Parameters:**
@@ -255,7 +255,7 @@ Returns `nil` if the model is not present in the embedded pricing registry.
 Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
 
 When an exact model name match is not found, progressively shorter prefixes
-are tried by stripping from the last `-` or `.` separator.  For example,
+are tried by stripping from the last `-` or `.` separator. For example,
 `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 
 **Signature:**
@@ -414,7 +414,7 @@ def count_request_tokens(model, req)
 **Example:**
 
 ```elixir
-{:ok, result} = count_request_tokens("value", %{})
+{:ok, result} = count_request_tokens("value", %{{}})
 ```
 
 **Parameters:**
@@ -435,7 +435,7 @@ def count_request_tokens(model, req)
 Assert that `current_len + incoming` does not exceed `limit`.
 
 Call this before appending `incoming` bytes to any buffer that must
-stay below `limit`.  Returns `Err(LiterLlmError.Streaming)` on overflow
+stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
 and emits a `tracing.warn!` with context.
 
 **Signature:**
@@ -512,7 +512,7 @@ Assistant's response to a user message.
 |-------|------|---------|-------------|
 | `content` | `String.t() \| nil` | `nil` | The assistant's text response. Absent if tool calls are returned instead. |
 | `name` | `String.t() \| nil` | `nil` | Optional name for the assistant. |
-| `tool_calls` | `list(ToolCall) \| nil` | `[]` | Tool calls the model wants to execute, if any. |
+| `tool_calls` | `list(ToolCall) \| nil` | `\[\]` | Tool calls the model wants to execute, if any. |
 | `refusal` | `String.t() \| nil` | `nil` | Refusal reason, if the model declined to respond per safety policies. |
 | `function_call` | `FunctionCall \| nil` | `nil` | Deprecated legacy function_call field; retained for API compatibility. |
 
@@ -558,7 +558,7 @@ Response from listing batches.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `object` | `String.t()` | — | Object type (always `"list"`). |
-| `data` | `list(BatchObject)` | `[]` | List of batch objects. |
+| `data` | `list(BatchObject)` | `\[\]` | List of batch objects. |
 | `has_more` | `boolean() \| nil` | `nil` | Whether more results are available. |
 | `first_id` | `String.t() \| nil` | `nil` | First batch ID in the result set (for pagination). |
 | `last_id` | `String.t() \| nil` | `nil` | Last batch ID in the result set (for pagination). |
@@ -670,7 +670,7 @@ A streamed chunk of a chat completion response.
 | `object` | `String.t()` | — | Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not fail parsing. |
 | `created` | `integer()` | — | Unix timestamp of chunk creation. |
 | `model` | `String.t()` | — | Model used to generate the chunk. |
-| `choices` | `list(StreamChoice)` | `[]` | Streaming choices (delta updates). |
+| `choices` | `list(StreamChoice)` | `\[\]` | Streaming choices (delta updates). |
 | `usage` | `Usage \| nil` | `nil` | Token usage (typically only in the final chunk). |
 | `system_fingerprint` | `String.t() \| nil` | `nil` | Fingerprint of the system configuration (OpenAI-specific). |
 | `service_tier` | `String.t() \| nil` | `nil` | Service tier used (OpenAI-specific). |
@@ -684,18 +684,18 @@ Chat completion request (compatible with OpenAI and similar APIs).
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `model` | `String.t()` | — | Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`). |
-| `messages` | `list(Message)` | `[]` | Conversation history from oldest to newest. |
-| `temperature` | `float() \| nil` | `nil` | Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0. |
-| `top_p` | `float() \| nil` | `nil` | Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused. |
+| `messages` | `list(Message)` | `\[\]` | Conversation history from oldest to newest. |
+| `temperature` | `float() \| nil` | `nil` | Sampling temperature in `\[0.0, 2.0\]`. Higher increases randomness. Defaults to 1.0. |
+| `top_p` | `float() \| nil` | `nil` | Nucleus sampling parameter in `\[0.0, 1.0\]`. Lower is more focused. |
 | `n` | `integer() \| nil` | `nil` | Number of chat completions to generate. Defaults to 1. |
 | `stream` | `boolean() \| nil` | `nil` | Whether to stream the response. Managed by the client layer — do not set directly. |
 | `stop` | `StopSequence \| nil` | `nil` | Stop sequence(s) that halt token generation. |
 | `max_tokens` | `integer() \| nil` | `nil` | Max output tokens. Different from max_completion_tokens in some providers. |
-| `presence_penalty` | `float() \| nil` | `nil` | Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics. |
-| `frequency_penalty` | `float() \| nil` | `nil` | Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens. |
+| `presence_penalty` | `float() \| nil` | `nil` | Presence penalty in `\[-2.0, 2.0\]`. Positive discourages repeated topics. |
+| `frequency_penalty` | `float() \| nil` | `nil` | Frequency penalty in `\[-2.0, 2.0\]`. Positive discourages repeated tokens. |
 | `logit_bias` | `map() \| nil` | `%{}` | Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic serialization order — important when hashing or signing requests. |
 | `user` | `String.t() \| nil` | `nil` | User identifier for request tracking and abuse detection. |
-| `tools` | `list(ChatCompletionTool) \| nil` | `[]` | Tools the model can invoke. |
+| `tools` | `list(ChatCompletionTool) \| nil` | `\[\]` | Tools the model can invoke. |
 | `tool_choice` | `ToolChoice \| nil` | `nil` | Tool usage mode (auto, required, none, or specific tool). |
 | `parallel_tool_calls` | `boolean() \| nil` | `nil` | Whether the model can call multiple tools in parallel. Defaults to true. |
 | `response_format` | `ResponseFormat \| nil` | `nil` | Output format constraint (text, JSON, JSON schema). |
@@ -716,7 +716,7 @@ Chat completion response from the API.
 | `object` | `String.t()` | — | Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `created` | `integer()` | — | Unix timestamp of response creation. |
 | `model` | `String.t()` | — | Model used to generate the response. |
-| `choices` | `list(Choice)` | `[]` | List of completion choices. |
+| `choices` | `list(Choice)` | `\[\]` | List of completion choices. |
 | `usage` | `Usage \| nil` | `nil` | Token usage statistics. |
 | `system_fingerprint` | `String.t() \| nil` | `nil` | Fingerprint of the system configuration (OpenAI-specific). |
 | `service_tier` | `String.t() \| nil` | `nil` | Service tier used (OpenAI-specific). |
@@ -776,7 +776,7 @@ def process(chunk)
 **Example:**
 
 ```elixir
-{:ok, result} = instance.process(%{})
+{:ok, result} = instance.process(%{{}})
 ```
 
 **Parameters:**
@@ -842,8 +842,8 @@ Request to create a structured response.
 | `model` | `String.t()` | — | Model ID. |
 | `input` | `term()` | — | Input data to process (e.g., a document to extract from). |
 | `instructions` | `String.t() \| nil` | `nil` | Instructions for processing the input. |
-| `tools` | `list(ResponseTool) \| nil` | `[]` | Available tools the model can use. |
-| `temperature` | `float() \| nil` | `nil` | Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0. |
+| `tools` | `list(ResponseTool) \| nil` | `\[\]` | Available tools the model can use. |
+| `temperature` | `float() \| nil` | `nil` | Sampling temperature in `\[0.0, 2.0\]`. Defaults to 1.0. |
 | `max_output_tokens` | `integer() \| nil` | `nil` | Maximum output tokens. |
 | `metadata` | `term() \| nil` | `nil` | Optional metadata. |
 
@@ -859,7 +859,7 @@ Request to generate speech audio from text.
 | `input` | `String.t()` | — | Text to synthesize into speech. |
 | `voice` | `String.t()` | — | Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). |
 | `response_format` | `String.t() \| nil` | `nil` | Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`). |
-| `speed` | `float() \| nil` | `nil` | Playback speed in `[0.25, 4.0]`. Defaults to 1.0. |
+| `speed` | `float() \| nil` | `nil` | Playback speed in `\[0.25, 4.0\]`. Defaults to 1.0. |
 
 ---
 
@@ -874,7 +874,7 @@ Request to transcribe audio into text.
 | `language` | `String.t() \| nil` | `nil` | Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. |
 | `prompt` | `String.t() \| nil` | `nil` | Optional text to guide the model (improves accuracy for domain-specific terms). |
 | `response_format` | `String.t() \| nil` | `nil` | Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`). |
-| `temperature` | `float() \| nil` | `nil` | Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0. |
+| `temperature` | `float() \| nil` | `nil` | Sampling temperature in `\[0.0, 1.0\]`. Higher increases variability. Defaults to 0. |
 
 ---
 
@@ -887,7 +887,7 @@ Configuration for registering a custom LLM provider at runtime.
 | `name` | `String.t()` | — | Unique name for this provider (e.g., "my-provider"). |
 | `base_url` | `String.t()` | — | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
 | `auth_header` | `AuthHeaderFormat` | — | Authentication header format. |
-| `model_prefixes` | `list(String.t())` | — | Model name prefixes that route to this provider (e.g., `["my-"]`). |
+| `model_prefixes` | `list(String.t())` | — | Model name prefixes that route to this provider (e.g., `\["my-"\]`). |
 
 ---
 
@@ -957,7 +957,7 @@ def wait_for_batch(batch_id, config)
 **Example:**
 
 ```elixir
-{:ok, result} = instance.wait_for_batch("value", %{})
+{:ok, result} = instance.wait_for_batch("value", %{{}})
 ```
 
 **Parameters:**
@@ -1042,7 +1042,7 @@ Embedding response.
 | `object` | `String.t()` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `data` | `list(EmbeddingObject)` | — | List of embeddings. |
 | `model` | `String.t()` | — | Model used to generate embeddings. |
-| `usage` | `Usage \| nil` | language default | Token usage (input tokens only; embeddings have zero output tokens). |
+| `usage` | `Usage \| nil` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -1065,7 +1065,7 @@ Response from listing files.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `object` | `String.t()` | — | Object type (always `"list"`). |
-| `data` | `list(FileObject)` | `[]` | List of file objects. |
+| `data` | `list(FileObject)` | `\[\]` | List of file objects. |
 | `has_more` | `boolean() \| nil` | `nil` | Whether more results are available. |
 
 ---
@@ -1104,9 +1104,9 @@ Function definition exposed to the model.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String.t()` | — | Name of the function. Required and must be alphanumeric + underscores. |
-| `description` | `String.t() \| nil` | language default | Human-readable description explaining what the function does. |
-| `parameters` | `term() \| nil` | language default | JSON Schema defining the function's parameters. |
-| `strict` | `boolean() \| nil` | language default | If true, enforce strict JSON schema validation for arguments. |
+| `description` | `String.t() \| nil` | `/* serde(default) */` | Human-readable description explaining what the function does. |
+| `parameters` | `term() \| nil` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
+| `strict` | `boolean() \| nil` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -1190,7 +1190,7 @@ Response containing generated images.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `created` | `integer()` | — | Unix timestamp of image creation. |
-| `data` | `list(Image)` | `[]` | List of generated images. |
+| `data` | `list(Image)` | `\[\]` | List of generated images. |
 
 ---
 
@@ -1239,7 +1239,7 @@ Response listing available models.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `object` | `String.t()` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `data` | `list(ModelObject)` | `[]` | List of available models. |
+| `data` | `list(ModelObject)` | `\[\]` | List of available models. |
 
 ---
 
@@ -1325,7 +1325,7 @@ An image extracted from an OCR page.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String.t()` | — | Unique image identifier within the document. |
-| `image_base64` | `String.t() \| nil` | language default | Base64-encoded image data (if `include_image_base64` was true). |
+| `image_base64` | `String.t() \| nil` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1337,8 +1337,8 @@ A single page of OCR output.
 |-------|------|---------|-------------|
 | `index` | `integer()` | — | Page index (0-based). |
 | `markdown` | `String.t()` | — | Extracted page content as Markdown. |
-| `images` | `list(OcrImage) \| nil` | language default | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `dimensions` | `PageDimensions \| nil` | language default | Page dimensions in pixels, if available. |
+| `images` | `list(OcrImage) \| nil` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `PageDimensions \| nil` | `/* serde(default) */` | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1350,7 +1350,7 @@ An OCR request.
 |-------|------|---------|-------------|
 | `model` | `String.t()` | — | The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). |
 | `document` | `OcrDocument` | `:url` | The document to process (URL or base64). |
-| `pages` | `list(integer()) \| nil` | `[]` | Specific pages to process (1-indexed). `nil` means all pages. |
+| `pages` | `list(integer()) \| nil` | `\[\]` | Specific pages to process (1-indexed). `nil` means all pages. |
 | `include_image_base64` | `boolean() \| nil` | `nil` | Whether to include base64-encoded images of each processed page. |
 
 ---
@@ -1363,7 +1363,7 @@ An OCR response.
 |-------|------|---------|-------------|
 | `pages` | `list(OcrPage)` | — | Extracted pages in order. |
 | `model` | `String.t()` | — | Model/provider used for OCR. |
-| `usage` | `Usage \| nil` | language default | Token usage, if reported by the provider. |
+| `usage` | `Usage \| nil` | `/* serde(default) */` | Token usage, if reported by the provider. |
 
 ---
 
@@ -1399,7 +1399,7 @@ discounted rate and the remainder at the regular input rate.
 Static capability flags for a provider.
 
 Each flag indicates whether the provider's models *generally* support that
-feature.  For providers that aggregate many underlying models (e.g. Bedrock,
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
 OpenRouter, vLLM) the flags reflect the superset of available model
 capabilities — a flag being `true` means at least one model supports the
 feature, not every model.
@@ -1434,7 +1434,7 @@ format, which are accessed via the `capabilities` function.
 | `base_url` | `String.t() \| nil` | `nil` | Base URL used as the default for this provider's HTTP client. |
 | `auth` | `AuthConfig \| nil` | `nil` | Authentication scheme metadata (auth type + env var holding the key). |
 | `endpoints` | `list(String.t()) \| nil` | `nil` | Supported endpoint kinds (e.g. `chat`, `embeddings`). |
-| `model_prefixes` | `list(String.t()) \| nil` | `nil` | Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`). |
+| `model_prefixes` | `list(String.t()) \| nil` | `nil` | Model-name prefixes claimed by this provider (e.g. `\["gpt-", "o1-"\]`). |
 | `param_mappings` | `map() \| nil` | `nil` | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`).  Applied automatically by `ConfigDrivenProvider.transform_request`. |
 
 ---
@@ -1477,7 +1477,7 @@ Request to rerank documents by relevance to a query.
 |-------|------|---------|-------------|
 | `model` | `String.t()` | — | Model ID (e.g., `"cohere/rerank-english-v3.0"`). |
 | `query` | `String.t()` | — | The search query. |
-| `documents` | `list(RerankDocument)` | `[]` | Documents to rerank. |
+| `documents` | `list(RerankDocument)` | `\[\]` | Documents to rerank. |
 | `top_n` | `integer() \| nil` | `nil` | Return only the top N results. Optional. |
 | `return_documents` | `boolean() \| nil` | `nil` | Include the document content in results. Defaults to false. |
 
@@ -1491,7 +1491,7 @@ Response from the rerank endpoint.
 |-------|------|---------|-------------|
 | `id` | `String.t() \| nil` | `nil` | Unique identifier for this rerank request. |
 | `results` | `list(RerankResult)` | — | Reranked documents in order of relevance. |
-| `meta` | `term() \| nil` | language default | Optional metadata about the reranking operation. |
+| `meta` | `term() \| nil` | `/* serde(default) */` | Optional metadata about the reranking operation. |
 
 ---
 
@@ -1502,8 +1502,8 @@ A single reranked document with its relevance score.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `index` | `integer()` | — | Original document index in the input list. |
-| `relevance_score` | `float()` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `document` | `RerankResultDocument \| nil` | language default | Original document content (if `return_documents` was true). |
+| `relevance_score` | `float()` | — | Relevance score in `\[0, 1\]`. Higher indicates more relevant. |
+| `document` | `RerankResultDocument \| nil` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -1528,7 +1528,7 @@ Response from a structured response request.
 | `created_at` | `integer()` | — | Unix timestamp of response creation. |
 | `model` | `String.t()` | — | Model used to generate the response. |
 | `status` | `String.t()` | — | Status (e.g., `"succeeded"`, `"failed"`). |
-| `output` | `list(ResponseOutputItem)` | `[]` | Output items from the response. |
+| `output` | `list(ResponseOutputItem)` | `\[\]` | Output items from the response. |
 | `usage` | `ResponseUsage \| nil` | `nil` | Token usage. |
 | `error` | `term() \| nil` | `nil` | Error details (if status is "failed"). |
 
@@ -1577,7 +1577,7 @@ A search request.
 | `model` | `String.t()` | — | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). |
 | `query` | `String.t()` | — | The search query string. |
 | `max_results` | `integer() \| nil` | `nil` | Maximum number of results to return. |
-| `search_domain_filter` | `list(String.t()) \| nil` | `[]` | Domain filter — restrict results to specific domains. |
+| `search_domain_filter` | `list(String.t()) \| nil` | `\[\]` | Domain filter — restrict results to specific domains. |
 | `country` | `String.t() \| nil` | `nil` | Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). |
 
 ---
@@ -1602,7 +1602,7 @@ An individual search result.
 | `title` | `String.t()` | — | Result title. |
 | `url` | `String.t()` | — | Result URL. |
 | `snippet` | `String.t()` | — | Text snippet or excerpt from the page. |
-| `date` | `String.t() \| nil` | language default | Publication or last-updated date, if available. |
+| `date` | `String.t() \| nil` | `/* serde(default) */` | Publication or last-updated date, if available. |
 
 ---
 
@@ -1656,7 +1656,7 @@ Incremental delta in a stream chunk.
 |-------|------|---------|-------------|
 | `role` | `String.t() \| nil` | `nil` | Role (typically present only in the first chunk). |
 | `content` | `String.t() \| nil` | `nil` | Partial content chunk (e.g., a few words of the response). |
-| `tool_calls` | `list(StreamToolCall) \| nil` | `[]` | Partial tool calls being streamed. |
+| `tool_calls` | `list(StreamToolCall) \| nil` | `\[\]` | Partial tool calls being streamed. |
 | `function_call` | `StreamFunctionCall \| nil` | `nil` | Deprecated legacy function_call delta; retained for API compatibility. |
 | `refusal` | `String.t() \| nil` | `nil` | Partial refusal message. |
 
@@ -1740,7 +1740,7 @@ Response from a transcription request.
 | `text` | `String.t()` | — | The transcribed text. |
 | `language` | `String.t() \| nil` | `nil` | Detected language (ISO-639-1 code). |
 | `duration` | `float() \| nil` | `nil` | Total audio duration in seconds. |
-| `segments` | `list(TranscriptionSegment) \| nil` | `[]` | Detailed segment-level transcription (if response_format is "verbose_json"). |
+| `segments` | `list(TranscriptionSegment) \| nil` | `\[\]` | Detailed segment-level transcription (if response_format is "verbose_json"). |
 
 ---
 
@@ -1939,7 +1939,7 @@ Why a choice stopped generating tokens.
 | `tool_calls` | Tool calls |
 | `content_filter` | Content filter |
 | `function_call` | Deprecated legacy finish reason; retained for API compatibility. |
-| `other` | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and switching to `#[serde(untagged)]` would change deserialization semantics for all variants.  The original value can be recovered by inspecting the raw JSON if needed. |
+| `other` | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`).  Using `#\[serde(other)\]` requires a unit variant, and switching to `#\[serde(untagged)\]` would change deserialization semantics for all variants.  The original value can be recovered by inspecting the raw JSON if needed. |
 
 ---
 
@@ -2056,7 +2056,7 @@ How the API key is sent in the HTTP request.
 
 The streaming wire format a provider uses for its response stream.
 
-Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
+Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
 a proprietary binary EventStream framing.
 
 Deserialized from the `streaming_format` JSON field via `serde`.

@@ -169,8 +169,14 @@ pub trait UsageSink: Send + Sync + 'static {
 // collections to [`MultiUsageSink::from_erased`] without reaching into the
 // crate internals.  The trait is intentionally not re-exported from the crate
 // root to discourage direct implementation — use [`UsageSink`] instead.
+/// Type-erased version of [`UsageSink`] used by [`MultiUsageSink`] to store
+/// heterogeneous sinks behind a single trait object. The blanket impl below
+/// applies to any [`UsageSink`], so downstream code should never implement
+/// this trait directly.
 #[cfg_attr(alef, alef(skip))]
 pub trait UsageSinkErased: Send + Sync + 'static {
+    /// Object-safe shim around [`UsageSink::emit`] returning a boxed future
+    /// so the trait remains dyn-compatible.
     fn emit_erased<'a>(
         &'a self,
         event: UsageEvent,

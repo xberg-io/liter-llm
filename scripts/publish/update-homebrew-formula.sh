@@ -59,6 +59,19 @@ else:
 head = re.sub(r"""^(\s*url\s+)["'][^"']*["']""", rf'\1"{new_url}"', head, count=1, flags=re.MULTILINE)
 head = re.sub(r"""^(\s*sha256\s+)["'][^"']*["']""", rf'\1"{new_sha}"', head, count=1, flags=re.MULTILINE)
 
+# liter-llm-cli pulls liter-llm-proxy -> etcd-client v0.15, whose build.rs
+# shells out to `protoc` (via prost-build). Without `protobuf` as a build
+# dep the source-from-bottle builders (sequoia, arm64_sequoia, x86_64_linux,
+# arm64_linux) fail when brew rebuilds from source. Inject idempotently.
+if "depends_on 'protobuf' => :build" not in head and 'depends_on "protobuf" => :build' not in head:
+    head = re.sub(
+        r"""(^\s*depends_on\s+['"]rust['"]\s+=>\s+:build[^\n]*\n)""",
+        r"\1  depends_on 'protobuf' => :build\n",
+        head,
+        count=1,
+        flags=re.MULTILINE,
+    )
+
 with open(formula_path, "w") as f:
     f.write(head + tail)
 PY

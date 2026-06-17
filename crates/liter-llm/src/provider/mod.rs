@@ -214,7 +214,7 @@ pub struct ProviderConfig {
     ///
     /// Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`)
     /// to the name this provider expects (e.g. `"max_tokens"`).  Applied
-    /// automatically by [`ConfigDrivenProvider::transform_request`].
+    /// automatically by `ConfigDrivenProvider::transform_request`.
     pub param_mappings: Option<HashMap<String, String>>,
 }
 

@@ -2,7 +2,7 @@
 title: "C API Reference"
 ---
 
-## C API Reference <span class="version-badge">v1.6.3</span>
+## C API Reference <span class="version-badge">v1.6.4</span>
 
 ### Functions
 
@@ -28,7 +28,7 @@ LiterllmDefaultClient* literllm_create_client(const char* api_key, const char* b
 **Example:**
 
 ```c
-LiterllmDefaultClient result = literllm_create_client("value", "value", 42, 42, "value");
+LiterllmDefaultClient *result = literllm_create_client("value", "value", 42, 42, "value");
 ```
 
 **Parameters:**
@@ -67,7 +67,7 @@ LiterllmDefaultClient* literllm_create_client_from_json(const char* json);
 **Example:**
 
 ```c
-LiterllmDefaultClient result = literllm_create_client_from_json("value");
+LiterllmDefaultClient *result = literllm_create_client_from_json("value");
 ```
 
 **Parameters:**
@@ -173,7 +173,7 @@ LiterllmProviderCapabilities* literllm_capabilities(const char* provider_name);
 **Example:**
 
 ```c
-LiterllmProviderCapabilities result = literllm_capabilities("value");
+LiterllmProviderCapabilities *result = literllm_capabilities("value");
 ```
 
 **Parameters:**
@@ -248,7 +248,7 @@ Returns `NULL` if the model is not present in the embedded pricing registry.
 Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
 
 When an exact model name match is not found, progressively shorter prefixes
-are tried by stripping from the last `-` or `.` separator.  For example,
+are tried by stripping from the last `-` or `.` separator. For example,
 `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 
 **Signature:**
@@ -423,7 +423,7 @@ uintptr_t result = literllm_count_request_tokens("value", NULL);
 Assert that `current_len + incoming` does not exceed `limit`.
 
 Call this before appending `incoming` bytes to any buffer that must
-stay below `limit`.  Returns `Err(LiterLlmError.Streaming)` on overflow
+stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
 and emits a `tracing.warn!` with context.
 
 **Signature:**
@@ -609,7 +609,7 @@ LiterllmBudgetConfig literllm_default();
 **Example:**
 
 ```c
-LiterllmBudgetConfig result = literllm_default();
+LiterllmBudgetConfig *result = literllm_default();
 ```
 
 **Returns:** `LiterllmBudgetConfig`
@@ -639,7 +639,7 @@ LiterllmCacheConfig literllm_default();
 **Example:**
 
 ```c
-LiterllmCacheConfig result = literllm_default();
+LiterllmCacheConfig *result = literllm_default();
 ```
 
 **Returns:** `LiterllmCacheConfig`
@@ -671,14 +671,14 @@ Chat completion request (compatible with OpenAI and similar APIs).
 |-------|------|---------|-------------|
 | `model` | `const char*` | — | Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`). |
 | `messages` | `LiterllmMessage*` | `NULL` | Conversation history from oldest to newest. |
-| `temperature` | `double*` | `NULL` | Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0. |
-| `top_p` | `double*` | `NULL` | Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused. |
+| `temperature` | `double*` | `NULL` | Sampling temperature in `\[0.0, 2.0\]`. Higher increases randomness. Defaults to 1.0. |
+| `top_p` | `double*` | `NULL` | Nucleus sampling parameter in `\[0.0, 1.0\]`. Lower is more focused. |
 | `n` | `uint32_t*` | `NULL` | Number of chat completions to generate. Defaults to 1. |
 | `stream` | `bool*` | `NULL` | Whether to stream the response. Managed by the client layer — do not set directly. |
 | `stop` | `LiterllmStopSequence*` | `NULL` | Stop sequence(s) that halt token generation. |
 | `max_tokens` | `uint64_t*` | `NULL` | Max output tokens. Different from max_completion_tokens in some providers. |
-| `presence_penalty` | `double*` | `NULL` | Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics. |
-| `frequency_penalty` | `double*` | `NULL` | Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens. |
+| `presence_penalty` | `double*` | `NULL` | Presence penalty in `\[-2.0, 2.0\]`. Positive discourages repeated topics. |
+| `frequency_penalty` | `double*` | `NULL` | Frequency penalty in `\[-2.0, 2.0\]`. Positive discourages repeated tokens. |
 | `logit_bias` | `void**` | `NULL` | Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic serialization order — important when hashing or signing requests. |
 | `user` | `const char**` | `NULL` | User identifier for request tracking and abuse detection. |
 | `tools` | `LiterllmChatCompletionTool**` | `NULL` | Tools the model can invoke. |
@@ -829,7 +829,7 @@ Request to create a structured response.
 | `input` | `void*` | — | Input data to process (e.g., a document to extract from). |
 | `instructions` | `const char**` | `NULL` | Instructions for processing the input. |
 | `tools` | `LiterllmResponseTool**` | `NULL` | Available tools the model can use. |
-| `temperature` | `double*` | `NULL` | Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0. |
+| `temperature` | `double*` | `NULL` | Sampling temperature in `\[0.0, 2.0\]`. Defaults to 1.0. |
 | `max_output_tokens` | `uint64_t*` | `NULL` | Maximum output tokens. |
 | `metadata` | `void**` | `NULL` | Optional metadata. |
 
@@ -845,7 +845,7 @@ Request to generate speech audio from text.
 | `input` | `const char*` | — | Text to synthesize into speech. |
 | `voice` | `const char*` | — | Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). |
 | `response_format` | `const char**` | `NULL` | Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`). |
-| `speed` | `double*` | `NULL` | Playback speed in `[0.25, 4.0]`. Defaults to 1.0. |
+| `speed` | `double*` | `NULL` | Playback speed in `\[0.25, 4.0\]`. Defaults to 1.0. |
 
 ---
 
@@ -860,7 +860,7 @@ Request to transcribe audio into text.
 | `language` | `const char**` | `NULL` | Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. |
 | `prompt` | `const char**` | `NULL` | Optional text to guide the model (improves accuracy for domain-specific terms). |
 | `response_format` | `const char**` | `NULL` | Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`). |
-| `temperature` | `double*` | `NULL` | Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0. |
+| `temperature` | `double*` | `NULL` | Sampling temperature in `\[0.0, 1.0\]`. Higher increases variability. Defaults to 0. |
 
 ---
 
@@ -873,7 +873,7 @@ Configuration for registering a custom LLM provider at runtime.
 | `name` | `const char*` | — | Unique name for this provider (e.g., "my-provider"). |
 | `base_url` | `const char*` | — | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
 | `auth_header` | `LiterllmAuthHeaderFormat` | — | Authentication header format. |
-| `model_prefixes` | `const char**` | — | Model name prefixes that route to this provider (e.g., `["my-"]`). |
+| `model_prefixes` | `const char**` | — | Model name prefixes that route to this provider (e.g., `\["my-"\]`). |
 
 ---
 
@@ -908,7 +908,7 @@ LiterllmBatchObject literllm_fetch_batch_for_polling(const char* batch_id);
 **Example:**
 
 ```c
-LiterllmBatchObject result = literllm_fetch_batch_for_polling(instance, "value");
+LiterllmBatchObject *result = literllm_fetch_batch_for_polling(instance, "value");
 ```
 
 **Parameters:**
@@ -943,7 +943,7 @@ LiterllmBatchObject literllm_wait_for_batch(const char* batch_id, LiterllmWaitFo
 **Example:**
 
 ```c
-LiterllmBatchObject result = literllm_wait_for_batch(instance, "value", (LiterllmWaitForBatchConfig){0});
+LiterllmBatchObject *result = literllm_wait_for_batch(instance, "value", (LiterllmWaitForBatchConfig){0});
 ```
 
 **Parameters:**
@@ -1028,7 +1028,7 @@ Embedding response.
 | `object` | `const char*` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `data` | `LiterllmEmbeddingObject*` | — | List of embeddings. |
 | `model` | `const char*` | — | Model used to generate embeddings. |
-| `usage` | `LiterllmUsage*` | language default | Token usage (input tokens only; embeddings have zero output tokens). |
+| `usage` | `LiterllmUsage*` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -1090,9 +1090,9 @@ Function definition exposed to the model.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `const char*` | — | Name of the function. Required and must be alphanumeric + underscores. |
-| `description` | `const char**` | language default | Human-readable description explaining what the function does. |
-| `parameters` | `void**` | language default | JSON Schema defining the function's parameters. |
-| `strict` | `bool*` | language default | If true, enforce strict JSON schema validation for arguments. |
+| `description` | `const char**` | `/* serde(default) */` | Human-readable description explaining what the function does. |
+| `parameters` | `void**` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
+| `strict` | `bool*` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -1133,7 +1133,7 @@ LiterllmHealthStatus literllm_check(const char* upstream);
 **Example:**
 
 ```c
-LiterllmHealthStatus result = literllm_check(instance, "value");
+LiterllmHealthStatus *result = literllm_check(instance, "value");
 ```
 
 **Parameters:**
@@ -1311,7 +1311,7 @@ An image extracted from an OCR page.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `const char*` | — | Unique image identifier within the document. |
-| `image_base64` | `const char**` | language default | Base64-encoded image data (if `include_image_base64` was true). |
+| `image_base64` | `const char**` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1323,8 +1323,8 @@ A single page of OCR output.
 |-------|------|---------|-------------|
 | `index` | `uint32_t` | — | Page index (0-based). |
 | `markdown` | `const char*` | — | Extracted page content as Markdown. |
-| `images` | `LiterllmOcrImage**` | language default | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `dimensions` | `LiterllmPageDimensions*` | language default | Page dimensions in pixels, if available. |
+| `images` | `LiterllmOcrImage**` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `LiterllmPageDimensions*` | `/* serde(default) */` | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1349,7 +1349,7 @@ An OCR response.
 |-------|------|---------|-------------|
 | `pages` | `LiterllmOcrPage*` | — | Extracted pages in order. |
 | `model` | `const char*` | — | Model/provider used for OCR. |
-| `usage` | `LiterllmUsage*` | language default | Token usage, if reported by the provider. |
+| `usage` | `LiterllmUsage*` | `/* serde(default) */` | Token usage, if reported by the provider. |
 
 ---
 
@@ -1385,7 +1385,7 @@ discounted rate and the remainder at the regular input rate.
 Static capability flags for a provider.
 
 Each flag indicates whether the provider's models *generally* support that
-feature.  For providers that aggregate many underlying models (e.g. Bedrock,
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
 OpenRouter, vLLM) the flags reflect the superset of available model
 capabilities — a flag being `true` means at least one model supports the
 feature, not every model.
@@ -1420,7 +1420,7 @@ format, which are accessed via the `capabilities` function.
 | `base_url` | `const char**` | `NULL` | Base URL used as the default for this provider's HTTP client. |
 | `auth` | `LiterllmAuthConfig*` | `NULL` | Authentication scheme metadata (auth type + env var holding the key). |
 | `endpoints` | `const char***` | `NULL` | Supported endpoint kinds (e.g. `chat`, `embeddings`). |
-| `model_prefixes` | `const char***` | `NULL` | Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`). |
+| `model_prefixes` | `const char***` | `NULL` | Model-name prefixes claimed by this provider (e.g. `\["gpt-", "o1-"\]`). |
 | `param_mappings` | `void**` | `NULL` | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`).  Applied automatically by `ConfigDrivenProvider.transform_request`. |
 
 ---
@@ -1448,7 +1448,7 @@ LiterllmRateLimitConfig literllm_default();
 **Example:**
 
 ```c
-LiterllmRateLimitConfig result = literllm_default();
+LiterllmRateLimitConfig *result = literllm_default();
 ```
 
 **Returns:** `LiterllmRateLimitConfig`
@@ -1477,7 +1477,7 @@ Response from the rerank endpoint.
 |-------|------|---------|-------------|
 | `id` | `const char**` | `NULL` | Unique identifier for this rerank request. |
 | `results` | `LiterllmRerankResult*` | — | Reranked documents in order of relevance. |
-| `meta` | `void**` | language default | Optional metadata about the reranking operation. |
+| `meta` | `void**` | `/* serde(default) */` | Optional metadata about the reranking operation. |
 
 ---
 
@@ -1488,8 +1488,8 @@ A single reranked document with its relevance score.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `index` | `uint32_t` | — | Original document index in the input list. |
-| `relevance_score` | `double` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `document` | `LiterllmRerankResultDocument*` | language default | Original document content (if `return_documents` was true). |
+| `relevance_score` | `double` | — | Relevance score in `\[0, 1\]`. Higher indicates more relevant. |
+| `document` | `LiterllmRerankResultDocument*` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -1588,7 +1588,7 @@ An individual search result.
 | `title` | `const char*` | — | Result title. |
 | `url` | `const char*` | — | Result URL. |
 | `snippet` | `const char*` | — | Text snippet or excerpt from the page. |
-| `date` | `const char**` | language default | Publication or last-updated date, if available. |
+| `date` | `const char**` | `/* serde(default) */` | Publication or last-updated date, if available. |
 
 ---
 
@@ -1794,7 +1794,7 @@ LiterllmWaitForBatchConfig literllm_default();
 **Example:**
 
 ```c
-LiterllmWaitForBatchConfig result = literllm_default();
+LiterllmWaitForBatchConfig *result = literllm_default();
 ```
 
 **Returns:** `LiterllmWaitForBatchConfig`
@@ -1925,7 +1925,7 @@ Why a choice stopped generating tokens.
 | `LITERLLM_TOOL_CALLS` | Tool calls |
 | `LITERLLM_CONTENT_FILTER` | Content filter |
 | `LITERLLM_FUNCTION_CALL` | Deprecated legacy finish reason; retained for API compatibility. |
-| `LITERLLM_OTHER` | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and switching to `#[serde(untagged)]` would change deserialization semantics for all variants.  The original value can be recovered by inspecting the raw JSON if needed. |
+| `LITERLLM_OTHER` | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`).  Using `#\[serde(other)\]` requires a unit variant, and switching to `#\[serde(untagged)\]` would change deserialization semantics for all variants.  The original value can be recovered by inspecting the raw JSON if needed. |
 
 ---
 
@@ -2042,7 +2042,7 @@ How the API key is sent in the HTTP request.
 
 The streaming wire format a provider uses for its response stream.
 
-Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
+Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
 a proprietary binary EventStream framing.
 
 Deserialized from the `streaming_format` JSON field via `serde`.

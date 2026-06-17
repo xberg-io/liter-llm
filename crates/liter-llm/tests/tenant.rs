@@ -299,9 +299,9 @@ async fn in_memory_resolver_concurrent_get_and_remove() {
         let resolver = Arc::clone(&resolver);
         let keys = keys.clone();
         set.spawn(async move {
-            for i in 0..keys.len() {
+            for (i, key) in keys.iter().enumerate() {
                 if i % 5 == r {
-                    let _ = resolver.remove(&keys[i]);
+                    let _ = resolver.remove(key);
                 }
             }
         });

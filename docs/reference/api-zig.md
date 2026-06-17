@@ -2,7 +2,7 @@
 title: "Zig API Reference"
 ---
 
-## Zig API Reference <span class="version-badge">v1.6.3</span>
+## Zig API Reference <span class="version-badge">v1.6.4</span>
 
 ### Functions
 
@@ -35,11 +35,11 @@ const result = try createClient("value", "value", 42, 42, "value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `apiKey` | `[:0]const u8` | Yes | The api key |
-| `baseUrl` | `[:0]const u8?` | No | The base url |
+| `apiKey` | `\[:0\]const u8` | Yes | The api key |
+| `baseUrl` | `\[:0\]const u8?` | No | The base url |
 | `timeoutSecs` | `u64?` | No | The timeout secs |
 | `maxRetries` | `u32?` | No | The max retries |
-| `modelHint` | `[:0]const u8?` | No | The model hint |
+| `modelHint` | `\[:0\]const u8?` | No | The model hint |
 
 **Returns:** `DefaultClient`
 
@@ -74,7 +74,7 @@ const result = try createClientFromJson("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `json` | `[:0]const u8` | Yes | The json |
+| `json` | `\[:0\]const u8` | Yes | The json |
 
 **Returns:** `DefaultClient`
 
@@ -145,7 +145,7 @@ const result = try unregisterCustomProvider("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `name` | `[:0]const u8` | Yes | The name |
+| `name` | `\[:0\]const u8` | Yes | The name |
 
 **Returns:** `bool`
 
@@ -180,7 +180,7 @@ const result = capabilities("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `providerName` | `[:0]const u8` | Yes | The provider name |
+| `providerName` | `\[:0\]const u8` | Yes | The provider name |
 
 **Returns:** `ProviderCapabilities`
 
@@ -248,7 +248,7 @@ Returns `null` if the model is not present in the embedded pricing registry.
 Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
 
 When an exact model name match is not found, progressively shorter prefixes
-are tried by stripping from the last `-` or `.` separator.  For example,
+are tried by stripping from the last `-` or `.` separator. For example,
 `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 
 **Signature:**
@@ -267,7 +267,7 @@ const result = completionCost("value", 42, 42);
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `model` | `[:0]const u8` | Yes | The model |
+| `model` | `\[:0\]const u8` | Yes | The model |
 | `promptTokens` | `u64` | Yes | The prompt tokens |
 | `completionTokens` | `u64` | Yes | The completion tokens |
 
@@ -306,7 +306,7 @@ const result = completionCostWithCache("value", 42, 42, 42);
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `model` | `[:0]const u8` | Yes | The model |
+| `model` | `\[:0\]const u8` | Yes | The model |
 | `promptTokens` | `u64` | Yes | The prompt tokens |
 | `cachedTokens` | `u64` | Yes | The cached tokens |
 | `completionTokens` | `u64` | Yes | The completion tokens |
@@ -370,8 +370,8 @@ const result = try countTokens("value", "value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `model` | `[:0]const u8` | Yes | The model |
-| `text` | `[:0]const u8` | Yes | The text |
+| `model` | `\[:0\]const u8` | Yes | The model |
+| `text` | `\[:0\]const u8` | Yes | The text |
 
 **Returns:** `u64`
 
@@ -409,7 +409,7 @@ const result = try countRequestTokens("value", .{});
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `model` | `[:0]const u8` | Yes | The model |
+| `model` | `\[:0\]const u8` | Yes | The model |
 | `req` | `ChatCompletionRequest` | Yes | The chat completion request |
 
 **Returns:** `u64`
@@ -423,7 +423,7 @@ const result = try countRequestTokens("value", .{});
 Assert that `current_len + incoming` does not exceed `limit`.
 
 Call this before appending `incoming` bytes to any buffer that must
-stay below `limit`.  Returns `Err(LiterLlmError.Streaming)` on overflow
+stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
 and emits a `tracing.warn!` with context.
 
 **Signature:**
@@ -442,7 +442,7 @@ try checkBound("value", 42, 42, 42);
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `context` | `[:0]const u8` | Yes | The context |
+| `context` | `\[:0\]const u8` | Yes | The context |
 | `currentLen` | `u64` | Yes | The current len |
 | `incoming` | `u64` | Yes | The incoming |
 | `limit` | `u64` | Yes | The limit |
@@ -496,10 +496,10 @@ Assistant's response to a user message.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `[:0]const u8?` | `null` | The assistant's text response. Absent if tool calls are returned instead. |
-| `name` | `[:0]const u8?` | `null` | Optional name for the assistant. |
-| `toolCalls` | `[]const ToolCall?` | `[]` | Tool calls the model wants to execute, if any. |
-| `refusal` | `[:0]const u8?` | `null` | Refusal reason, if the model declined to respond per safety policies. |
+| `content` | `\[:0\]const u8?` | `null` | The assistant's text response. Absent if tool calls are returned instead. |
+| `name` | `\[:0\]const u8?` | `null` | Optional name for the assistant. |
+| `toolCalls` | `\[\]const ToolCall?` | `\[\]` | Tool calls the model wants to execute, if any. |
+| `refusal` | `\[:0\]const u8?` | `null` | Refusal reason, if the model declined to respond per safety policies. |
 | `functionCall` | `FunctionCall?` | `null` | Deprecated legacy function_call field; retained for API compatibility. |
 
 ---
@@ -510,8 +510,8 @@ Audio content part for speech-capable models.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `data` | `[:0]const u8` | — | Base64-encoded audio data. |
-| `format` | `[:0]const u8` | — | Audio format (e.g., "wav", "mp3", "ogg"). |
+| `data` | `\[:0\]const u8` | — | Base64-encoded audio data. |
+| `format` | `\[:0\]const u8` | — | Audio format (e.g., "wav", "mp3", "ogg"). |
 
 ---
 
@@ -522,7 +522,7 @@ Auth configuration block.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `authType` | `AuthType` | — | Auth scheme classification. |
-| `envVar` | `[:0]const u8?` | `null` | Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`). Holds the variable name, never the secret value. |
+| `envVar` | `\[:0\]const u8?` | `null` | Name of the environment variable that holds the API key (e.g. `"OPENAI_API_KEY"`). Holds the variable name, never the secret value. |
 
 ---
 
@@ -533,7 +533,7 @@ Query parameters for listing batches.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `limit` | `u32?` | `null` | Maximum number of results to return. Defaults to 20. |
-| `after` | `[:0]const u8?` | `null` | Pagination cursor: return results after this batch ID. |
+| `after` | `\[:0\]const u8?` | `null` | Pagination cursor: return results after this batch ID. |
 
 ---
 
@@ -543,11 +543,11 @@ Response from listing batches.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `object` | `[:0]const u8` | — | Object type (always `"list"`). |
-| `data` | `[]const BatchObject` | `[]` | List of batch objects. |
+| `object` | `\[:0\]const u8` | — | Object type (always `"list"`). |
+| `data` | `\[\]const BatchObject` | `\[\]` | List of batch objects. |
 | `hasMore` | `bool?` | `null` | Whether more results are available. |
-| `firstId` | `[:0]const u8?` | `null` | First batch ID in the result set (for pagination). |
-| `lastId` | `[:0]const u8?` | `null` | Last batch ID in the result set (for pagination). |
+| `firstId` | `\[:0\]const u8?` | `null` | First batch ID in the result set (for pagination). |
+| `lastId` | `\[:0\]const u8?` | `null` | Last batch ID in the result set (for pagination). |
 
 ---
 
@@ -557,20 +557,20 @@ A batch job object.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `id` | `[:0]const u8` | — | Unique batch ID. |
-| `object` | `[:0]const u8` | — | Object type (always `"batch"`). |
-| `endpoint` | `[:0]const u8` | — | API endpoint (e.g., `"/v1/chat/completions"`). |
-| `inputFileId` | `[:0]const u8` | — | ID of the input file. |
-| `completionWindow` | `[:0]const u8` | — | Completion window (e.g., `"24h"`). |
+| `id` | `\[:0\]const u8` | — | Unique batch ID. |
+| `object` | `\[:0\]const u8` | — | Object type (always `"batch"`). |
+| `endpoint` | `\[:0\]const u8` | — | API endpoint (e.g., `"/v1/chat/completions"`). |
+| `inputFileId` | `\[:0\]const u8` | — | ID of the input file. |
+| `completionWindow` | `\[:0\]const u8` | — | Completion window (e.g., `"24h"`). |
 | `status` | `BatchStatus` | `BatchStatus.Validating` | Current job status. |
-| `outputFileId` | `[:0]const u8?` | `null` | ID of the output file (present when completed). |
-| `errorFileId` | `[:0]const u8?` | `null` | ID of the error file (present if some requests failed). |
+| `outputFileId` | `\[:0\]const u8?` | `null` | ID of the output file (present when completed). |
+| `errorFileId` | `\[:0\]const u8?` | `null` | ID of the error file (present if some requests failed). |
 | `createdAt` | `u64` | — | Unix timestamp of batch creation. |
 | `completedAt` | `u64?` | `null` | Unix timestamp of completion (if completed). |
 | `failedAt` | `u64?` | `null` | Unix timestamp of failure (if failed). |
 | `expiredAt` | `u64?` | `null` | Unix timestamp of expiration (if expired). |
 | `requestCounts` | `BatchRequestCounts?` | `null` | Request processing counts. |
-| `metadata` | `[:0]const u8?` | `null` | Metadata attached to the batch. |
+| `metadata` | `\[:0\]const u8?` | `null` | Metadata attached to the batch. |
 
 ---
 
@@ -652,14 +652,14 @@ A streamed chunk of a chat completion response.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `id` | `[:0]const u8` | — | Unique identifier for this stream. |
-| `object` | `[:0]const u8` | — | Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not fail parsing. |
+| `id` | `\[:0\]const u8` | — | Unique identifier for this stream. |
+| `object` | `\[:0\]const u8` | — | Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not fail parsing. |
 | `created` | `u64` | — | Unix timestamp of chunk creation. |
-| `model` | `[:0]const u8` | — | Model used to generate the chunk. |
-| `choices` | `[]const StreamChoice` | `[]` | Streaming choices (delta updates). |
+| `model` | `\[:0\]const u8` | — | Model used to generate the chunk. |
+| `choices` | `\[\]const StreamChoice` | `\[\]` | Streaming choices (delta updates). |
 | `usage` | `Usage?` | `null` | Token usage (typically only in the final chunk). |
-| `systemFingerprint` | `[:0]const u8?` | `null` | Fingerprint of the system configuration (OpenAI-specific). |
-| `serviceTier` | `[:0]const u8?` | `null` | Service tier used (OpenAI-specific). |
+| `systemFingerprint` | `\[:0\]const u8?` | `null` | Fingerprint of the system configuration (OpenAI-specific). |
+| `serviceTier` | `\[:0\]const u8?` | `null` | Service tier used (OpenAI-specific). |
 
 ---
 
@@ -669,26 +669,26 @@ Chat completion request (compatible with OpenAI and similar APIs).
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `model` | `[:0]const u8` | — | Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`). |
-| `messages` | `[]const Message` | `[]` | Conversation history from oldest to newest. |
-| `temperature` | `f64?` | `null` | Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0. |
-| `topP` | `f64?` | `null` | Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused. |
+| `model` | `\[:0\]const u8` | — | Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`). |
+| `messages` | `\[\]const Message` | `\[\]` | Conversation history from oldest to newest. |
+| `temperature` | `f64?` | `null` | Sampling temperature in `\[0.0, 2.0\]`. Higher increases randomness. Defaults to 1.0. |
+| `topP` | `f64?` | `null` | Nucleus sampling parameter in `\[0.0, 1.0\]`. Lower is more focused. |
 | `n` | `u32?` | `null` | Number of chat completions to generate. Defaults to 1. |
 | `stream` | `bool?` | `null` | Whether to stream the response. Managed by the client layer — do not set directly. |
 | `stop` | `StopSequence?` | `null` | Stop sequence(s) that halt token generation. |
 | `maxTokens` | `u64?` | `null` | Max output tokens. Different from max_completion_tokens in some providers. |
-| `presencePenalty` | `f64?` | `null` | Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics. |
-| `frequencyPenalty` | `f64?` | `null` | Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens. |
+| `presencePenalty` | `f64?` | `null` | Presence penalty in `\[-2.0, 2.0\]`. Positive discourages repeated topics. |
+| `frequencyPenalty` | `f64?` | `null` | Frequency penalty in `\[-2.0, 2.0\]`. Positive discourages repeated tokens. |
 | `logitBias` | `std.StringHashMap(f64)?` | `{}` | Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic serialization order — important when hashing or signing requests. |
-| `user` | `[:0]const u8?` | `null` | User identifier for request tracking and abuse detection. |
-| `tools` | `[]const ChatCompletionTool?` | `[]` | Tools the model can invoke. |
+| `user` | `\[:0\]const u8?` | `null` | User identifier for request tracking and abuse detection. |
+| `tools` | `\[\]const ChatCompletionTool?` | `\[\]` | Tools the model can invoke. |
 | `toolChoice` | `ToolChoice?` | `null` | Tool usage mode (auto, required, none, or specific tool). |
 | `parallelToolCalls` | `bool?` | `null` | Whether the model can call multiple tools in parallel. Defaults to true. |
 | `responseFormat` | `ResponseFormat?` | `null` | Output format constraint (text, JSON, JSON schema). |
 | `streamOptions` | `StreamOptions?` | `null` | Streaming options (e.g., include_usage). |
 | `seed` | `i64?` | `null` | Random seed for reproducible outputs. Provider support varies. |
 | `reasoningEffort` | `ReasoningEffort?` | `null` | Reasoning effort level (low, medium, high) for extended-thinking models. |
-| `extraBody` | `[:0]const u8?` | `null` | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc. |
+| `extraBody` | `\[:0\]const u8?` | `null` | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc. |
 
 ---
 
@@ -698,14 +698,14 @@ Chat completion response from the API.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `id` | `[:0]const u8` | — | Unique identifier for this response. |
-| `object` | `[:0]const u8` | — | Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
+| `id` | `\[:0\]const u8` | — | Unique identifier for this response. |
+| `object` | `\[:0\]const u8` | — | Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `created` | `u64` | — | Unix timestamp of response creation. |
-| `model` | `[:0]const u8` | — | Model used to generate the response. |
-| `choices` | `[]const Choice` | `[]` | List of completion choices. |
+| `model` | `\[:0\]const u8` | — | Model used to generate the response. |
+| `choices` | `\[\]const Choice` | `\[\]` | List of completion choices. |
 | `usage` | `Usage?` | `null` | Token usage statistics. |
-| `systemFingerprint` | `[:0]const u8?` | `null` | Fingerprint of the system configuration (OpenAI-specific). |
-| `serviceTier` | `[:0]const u8?` | `null` | Service tier used (OpenAI-specific). |
+| `systemFingerprint` | `\[:0\]const u8?` | `null` | Fingerprint of the system configuration (OpenAI-specific). |
+| `serviceTier` | `\[:0\]const u8?` | `null` | Service tier used (OpenAI-specific). |
 
 ---
 
@@ -783,10 +783,10 @@ Request to create a batch job.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `inputFileId` | `[:0]const u8` | — | ID of the uploaded input file (JSONL format). |
-| `endpoint` | `[:0]const u8` | — | API endpoint (e.g., `"/v1/chat/completions"`). |
-| `completionWindow` | `[:0]const u8` | — | Completion window (e.g., `"24h"`). |
-| `metadata` | `[:0]const u8?` | `null` | Optional metadata to attach to the batch. |
+| `inputFileId` | `\[:0\]const u8` | — | ID of the uploaded input file (JSONL format). |
+| `endpoint` | `\[:0\]const u8` | — | API endpoint (e.g., `"/v1/chat/completions"`). |
+| `completionWindow` | `\[:0\]const u8` | — | Completion window (e.g., `"24h"`). |
+| `metadata` | `\[:0\]const u8?` | `null` | Optional metadata to attach to the batch. |
 
 ---
 
@@ -796,9 +796,9 @@ Request to upload a file.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `file` | `[:0]const u8` | — | Base64-encoded file data. |
+| `file` | `\[:0\]const u8` | — | Base64-encoded file data. |
 | `purpose` | `FilePurpose` | `FilePurpose.Assistants` | Purpose for the file. |
-| `filename` | `[:0]const u8?` | `null` | Optional filename to associate with the upload. |
+| `filename` | `\[:0\]const u8?` | `null` | Optional filename to associate with the upload. |
 
 ---
 
@@ -808,14 +808,14 @@ Request to create images from a text prompt.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `prompt` | `[:0]const u8` | — | Text description of the image to generate. |
-| `model` | `[:0]const u8?` | `null` | Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset. |
+| `prompt` | `\[:0\]const u8` | — | Text description of the image to generate. |
+| `model` | `\[:0\]const u8?` | `null` | Model ID (e.g., `"dall-e-3"`). Optional; API may use default if unset. |
 | `n` | `u32?` | `null` | Number of images to generate. Defaults to 1. |
-| `size` | `[:0]const u8?` | `null` | Image size (e.g., `"1024x1024"`, `"1792x1024"`). |
-| `quality` | `[:0]const u8?` | `null` | Image quality: `"standard"` or `"hd"`. |
-| `style` | `[:0]const u8?` | `null` | Style: `"natural"` or `"vivid"` (DALL-E 3 only). |
-| `responseFormat` | `[:0]const u8?` | `null` | Response format: `"url"` or `"b64_json"`. |
-| `user` | `[:0]const u8?` | `null` | User identifier for request tracking. |
+| `size` | `\[:0\]const u8?` | `null` | Image size (e.g., `"1024x1024"`, `"1792x1024"`). |
+| `quality` | `\[:0\]const u8?` | `null` | Image quality: `"standard"` or `"hd"`. |
+| `style` | `\[:0\]const u8?` | `null` | Style: `"natural"` or `"vivid"` (DALL-E 3 only). |
+| `responseFormat` | `\[:0\]const u8?` | `null` | Response format: `"url"` or `"b64_json"`. |
+| `user` | `\[:0\]const u8?` | `null` | User identifier for request tracking. |
 
 ---
 
@@ -825,13 +825,13 @@ Request to create a structured response.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `model` | `[:0]const u8` | — | Model ID. |
-| `input` | `[:0]const u8` | — | Input data to process (e.g., a document to extract from). |
-| `instructions` | `[:0]const u8?` | `null` | Instructions for processing the input. |
-| `tools` | `[]const ResponseTool?` | `[]` | Available tools the model can use. |
-| `temperature` | `f64?` | `null` | Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0. |
+| `model` | `\[:0\]const u8` | — | Model ID. |
+| `input` | `\[:0\]const u8` | — | Input data to process (e.g., a document to extract from). |
+| `instructions` | `\[:0\]const u8?` | `null` | Instructions for processing the input. |
+| `tools` | `\[\]const ResponseTool?` | `\[\]` | Available tools the model can use. |
+| `temperature` | `f64?` | `null` | Sampling temperature in `\[0.0, 2.0\]`. Defaults to 1.0. |
 | `maxOutputTokens` | `u64?` | `null` | Maximum output tokens. |
-| `metadata` | `[:0]const u8?` | `null` | Optional metadata. |
+| `metadata` | `\[:0\]const u8?` | `null` | Optional metadata. |
 
 ---
 
@@ -841,11 +841,11 @@ Request to generate speech audio from text.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `model` | `[:0]const u8` | — | Model ID (e.g., `"tts-1"`, `"tts-1-hd"`). |
-| `input` | `[:0]const u8` | — | Text to synthesize into speech. |
-| `voice` | `[:0]const u8` | — | Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). |
-| `responseFormat` | `[:0]const u8?` | `null` | Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`). |
-| `speed` | `f64?` | `null` | Playback speed in `[0.25, 4.0]`. Defaults to 1.0. |
+| `model` | `\[:0\]const u8` | — | Model ID (e.g., `"tts-1"`, `"tts-1-hd"`). |
+| `input` | `\[:0\]const u8` | — | Text to synthesize into speech. |
+| `voice` | `\[:0\]const u8` | — | Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). |
+| `responseFormat` | `\[:0\]const u8?` | `null` | Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`). |
+| `speed` | `f64?` | `null` | Playback speed in `\[0.25, 4.0\]`. Defaults to 1.0. |
 
 ---
 
@@ -855,12 +855,12 @@ Request to transcribe audio into text.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `model` | `[:0]const u8` | — | Model ID (e.g., `"whisper-1"`). |
-| `file` | `[:0]const u8` | — | Base64-encoded audio file data. |
-| `language` | `[:0]const u8?` | `null` | Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. |
-| `prompt` | `[:0]const u8?` | `null` | Optional text to guide the model (improves accuracy for domain-specific terms). |
-| `responseFormat` | `[:0]const u8?` | `null` | Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`). |
-| `temperature` | `f64?` | `null` | Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0. |
+| `model` | `\[:0\]const u8` | — | Model ID (e.g., `"whisper-1"`). |
+| `file` | `\[:0\]const u8` | — | Base64-encoded audio file data. |
+| `language` | `\[:0\]const u8?` | `null` | Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. |
+| `prompt` | `\[:0\]const u8?` | `null` | Optional text to guide the model (improves accuracy for domain-specific terms). |
+| `responseFormat` | `\[:0\]const u8?` | `null` | Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`). |
+| `temperature` | `f64?` | `null` | Sampling temperature in `\[0.0, 1.0\]`. Higher increases variability. Defaults to 0. |
 
 ---
 
@@ -870,10 +870,10 @@ Configuration for registering a custom LLM provider at runtime.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `name` | `[:0]const u8` | — | Unique name for this provider (e.g., "my-provider"). |
-| `baseUrl` | `[:0]const u8` | — | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
+| `name` | `\[:0\]const u8` | — | Unique name for this provider (e.g., "my-provider"). |
+| `baseUrl` | `\[:0\]const u8` | — | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
 | `authHeader` | `AuthHeaderFormat` | — | Authentication header format. |
-| `modelPrefixes` | `[]const [:0]const u8` | — | Model name prefixes that route to this provider (e.g., `["my-"]`). |
+| `modelPrefixes` | `\[\]const \[:0\]const u8` | — | Model name prefixes that route to this provider (e.g., `\["my-"\]`). |
 
 ---
 
@@ -915,7 +915,7 @@ const result = try instance.fetchBatchForPolling("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `batchId` | `[:0]const u8` | Yes | The batch id |
+| `batchId` | `\[:0\]const u8` | Yes | The batch id |
 
 **Returns:** `BatchObject`
 
@@ -950,7 +950,7 @@ const result = try instance.waitForBatch("value", .{});
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `batchId` | `[:0]const u8` | Yes | The batch id |
+| `batchId` | `\[:0\]const u8` | Yes | The batch id |
 | `config` | `WaitForBatchConfig` | Yes | The configuration options |
 
 **Returns:** `BatchObject`
@@ -965,8 +965,8 @@ Response from a delete operation.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `id` | `[:0]const u8` | — | ID of the deleted resource. |
-| `object` | `[:0]const u8` | — | Object type. |
+| `id` | `\[:0\]const u8` | — | ID of the deleted resource. |
+| `object` | `\[:0\]const u8` | — | Object type. |
 | `deleted` | `bool` | — | Confirmation that the resource was deleted. |
 
 ---
@@ -977,8 +977,8 @@ Developer message (system-like message for Claude models).
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `[:0]const u8` | — | Developer-specific instructions or context. |
-| `name` | `[:0]const u8?` | `null` | Optional name for the developer message source. |
+| `content` | `\[:0\]const u8` | — | Developer-specific instructions or context. |
+| `name` | `\[:0\]const u8?` | `null` | Optional name for the developer message source. |
 
 ---
 
@@ -988,8 +988,8 @@ PDF/document content part for vision-capable models.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `data` | `[:0]const u8` | — | Base64-encoded document data or URL. |
-| `mediaType` | `[:0]const u8` | — | MIME type (e.g., "application/pdf", "text/csv"). |
+| `data` | `\[:0\]const u8` | — | Base64-encoded document data or URL. |
+| `mediaType` | `\[:0\]const u8` | — | MIME type (e.g., "application/pdf", "text/csv"). |
 
 ---
 
@@ -999,8 +999,8 @@ A single embedding vector.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `object` | `[:0]const u8` | — | Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `embedding` | `[]const f64` | — | The embedding vector. |
+| `object` | `\[:0\]const u8` | — | Always `"embedding"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
+| `embedding` | `\[\]const f64` | — | The embedding vector. |
 | `index` | `u32` | — | Index in the batch (corresponds to input order). |
 
 ---
@@ -1011,11 +1011,11 @@ Embedding request.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `model` | `[:0]const u8` | — | Model ID (e.g., `"text-embedding-3-small"`). |
+| `model` | `\[:0\]const u8` | — | Model ID (e.g., `"text-embedding-3-small"`). |
 | `input` | `EmbeddingInput` | `EmbeddingInput.Single` | Text or texts to embed. |
 | `encodingFormat` | `EmbeddingFormat?` | `null` | Output format: float (native) or base64. |
 | `dimensions` | `u32?` | `null` | Requested embedding dimensions (if supported by the model). |
-| `user` | `[:0]const u8?` | `null` | User identifier for request tracking. |
+| `user` | `\[:0\]const u8?` | `null` | User identifier for request tracking. |
 
 ---
 
@@ -1025,10 +1025,10 @@ Embedding response.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `object` | `[:0]const u8` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `data` | `[]const EmbeddingObject` | — | List of embeddings. |
-| `model` | `[:0]const u8` | — | Model used to generate embeddings. |
-| `usage` | `Usage?` | language default | Token usage (input tokens only; embeddings have zero output tokens). |
+| `object` | `\[:0\]const u8` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
+| `data` | `\[\]const EmbeddingObject` | — | List of embeddings. |
+| `model` | `\[:0\]const u8` | — | Model used to generate embeddings. |
+| `usage` | `Usage?` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -1038,9 +1038,9 @@ Query parameters for listing files.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `purpose` | `[:0]const u8?` | `null` | Filter by file purpose (e.g., `"batch"`, `"fine-tune"`). |
+| `purpose` | `\[:0\]const u8?` | `null` | Filter by file purpose (e.g., `"batch"`, `"fine-tune"`). |
 | `limit` | `u32?` | `null` | Maximum number of results to return. Defaults to 20. |
-| `after` | `[:0]const u8?` | `null` | Pagination cursor: return results after this file ID. |
+| `after` | `\[:0\]const u8?` | `null` | Pagination cursor: return results after this file ID. |
 
 ---
 
@@ -1050,8 +1050,8 @@ Response from listing files.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `object` | `[:0]const u8` | — | Object type (always `"list"`). |
-| `data` | `[]const FileObject` | `[]` | List of file objects. |
+| `object` | `\[:0\]const u8` | — | Object type (always `"list"`). |
+| `data` | `\[\]const FileObject` | `\[\]` | List of file objects. |
 | `hasMore` | `bool?` | `null` | Whether more results are available. |
 
 ---
@@ -1062,13 +1062,13 @@ An uploaded file object.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `id` | `[:0]const u8` | — | Unique file ID. |
-| `object` | `[:0]const u8` | — | Object type (always `"file"`). |
+| `id` | `\[:0\]const u8` | — | Unique file ID. |
+| `object` | `\[:0\]const u8` | — | Object type (always `"file"`). |
 | `bytes` | `u64` | — | File size in bytes. |
 | `createdAt` | `u64` | — | Unix timestamp of file creation. |
-| `filename` | `[:0]const u8` | — | Filename. |
-| `purpose` | `[:0]const u8` | — | File purpose. |
-| `status` | `[:0]const u8?` | `null` | Processing status (e.g., `"uploaded"`, `"processed"`). |
+| `filename` | `\[:0\]const u8` | — | Filename. |
+| `purpose` | `\[:0\]const u8` | — | File purpose. |
+| `status` | `\[:0\]const u8?` | `null` | Processing status (e.g., `"uploaded"`, `"processed"`). |
 
 ---
 
@@ -1078,8 +1078,8 @@ Function call details.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `name` | `[:0]const u8` | — | Function name. |
-| `arguments` | `[:0]const u8` | — | Arguments as a JSON string (parse with serde_json.from_str). |
+| `name` | `\[:0\]const u8` | — | Function name. |
+| `arguments` | `\[:0\]const u8` | — | Arguments as a JSON string (parse with serde_json.from_str). |
 
 ---
 
@@ -1089,10 +1089,10 @@ Function definition exposed to the model.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `name` | `[:0]const u8` | — | Name of the function. Required and must be alphanumeric + underscores. |
-| `description` | `[:0]const u8?` | language default | Human-readable description explaining what the function does. |
-| `parameters` | `[:0]const u8?` | language default | JSON Schema defining the function's parameters. |
-| `strict` | `bool?` | language default | If true, enforce strict JSON schema validation for arguments. |
+| `name` | `\[:0\]const u8` | — | Name of the function. Required and must be alphanumeric + underscores. |
+| `description` | `\[:0\]const u8?` | `/* serde(default) */` | Human-readable description explaining what the function does. |
+| `parameters` | `\[:0\]const u8?` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
+| `strict` | `bool?` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -1102,8 +1102,8 @@ Deprecated legacy function-role message body.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `[:0]const u8` | — | The extracted text content |
-| `name` | `[:0]const u8` | — | The name |
+| `content` | `\[:0\]const u8` | — | The extracted text content |
+| `name` | `\[:0\]const u8` | — | The name |
 
 ---
 
@@ -1140,7 +1140,7 @@ const result = instance.check("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `upstream` | `[:0]const u8` | Yes | The upstream |
+| `upstream` | `\[:0\]const u8` | Yes | The upstream |
 
 **Returns:** `HealthStatus`
 
@@ -1152,9 +1152,9 @@ A single generated image, returned as either a URL or base64 data.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `url` | `[:0]const u8?` | `null` | Image URL (if response_format was "url"). |
-| `b64Json` | `[:0]const u8?` | `null` | Base64-encoded image data (if response_format was "b64_json"). |
-| `revisedPrompt` | `[:0]const u8?` | `null` | The final prompt used to generate the image (DALL-E 3). |
+| `url` | `\[:0\]const u8?` | `null` | Image URL (if response_format was "url"). |
+| `b64Json` | `\[:0\]const u8?` | `null` | Base64-encoded image data (if response_format was "b64_json"). |
+| `revisedPrompt` | `\[:0\]const u8?` | `null` | The final prompt used to generate the image (DALL-E 3). |
 
 ---
 
@@ -1164,7 +1164,7 @@ An image URL reference with optional detail level for processing.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `url` | `[:0]const u8` | — | URL of the image (data URI or HTTP/HTTPS URL). |
+| `url` | `\[:0\]const u8` | — | URL of the image (data URI or HTTP/HTTPS URL). |
 | `detail` | `ImageDetail?` | `null` | Detail level: low (512x512), high (2x2 tiles), or auto (model-selected). |
 
 ---
@@ -1176,7 +1176,7 @@ Response containing generated images.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `created` | `u64` | — | Unix timestamp of image creation. |
-| `data` | `[]const Image` | `[]` | List of generated images. |
+| `data` | `\[\]const Image` | `\[\]` | List of generated images. |
 
 ---
 
@@ -1186,9 +1186,9 @@ An intent prototype: `(intent_name, prototype_embedding, target_model_id)`.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `name` | `[:0]const u8` | — | Human-readable name for the intent (used in logs/metrics). |
-| `embedding` | `[]const f64` | — | Pre-computed embedding vector for this intent. |
-| `model` | `[:0]const u8` | — | Model to route to when this intent is detected. |
+| `name` | `\[:0\]const u8` | — | Human-readable name for the intent (used in logs/metrics). |
+| `embedding` | `\[\]const f64` | — | Pre-computed embedding vector for this intent. |
+| `model` | `\[:0\]const u8` | — | Model to route to when this intent is detected. |
 
 ---
 
@@ -1198,9 +1198,9 @@ JSON Schema specification for constrained output.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `name` | `[:0]const u8` | — | Name of the schema (must be unique in the request). |
-| `description` | `[:0]const u8?` | `null` | Description of what the schema represents. |
-| `schema` | `[:0]const u8` | — | JSON Schema object defining the output structure. |
+| `name` | `\[:0\]const u8` | — | Name of the schema (must be unique in the request). |
+| `description` | `\[:0\]const u8?` | `null` | Description of what the schema represents. |
+| `schema` | `\[:0\]const u8` | — | JSON Schema object defining the output structure. |
 | `strict` | `bool?` | `null` | If true, enforce strict schema validation. |
 
 ---
@@ -1211,10 +1211,10 @@ A model available from the API.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `id` | `[:0]const u8` | — | Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`). |
-| `object` | `[:0]const u8` | — | Always `"model"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
+| `id` | `\[:0\]const u8` | — | Model ID (e.g., `"gpt-4o"`, `"claude-3-5-sonnet"`). |
+| `object` | `\[:0\]const u8` | — | Always `"model"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `created` | `u64` | — | Unix timestamp of model creation (or release date). |
-| `ownedBy` | `[:0]const u8` | — | Organization or entity that owns the model. |
+| `ownedBy` | `\[:0\]const u8` | — | Organization or entity that owns the model. |
 
 ---
 
@@ -1224,8 +1224,8 @@ Response listing available models.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `object` | `[:0]const u8` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `data` | `[]const ModelObject` | `[]` | List of available models. |
+| `object` | `\[:0\]const u8` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
+| `data` | `\[\]const ModelObject` | `\[\]` | List of available models. |
 
 ---
 
@@ -1276,7 +1276,7 @@ Request to classify content for policy violations.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `input` | `ModerationInput` | `ModerationInput.Single` | Text or texts to check. |
-| `model` | `[:0]const u8?` | `null` | Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset. |
+| `model` | `\[:0\]const u8?` | `null` | Model ID (e.g., `"text-moderation-latest"`). Optional; API uses default if unset. |
 
 ---
 
@@ -1286,9 +1286,9 @@ Response from the moderation endpoint.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `id` | `[:0]const u8` | — | Unique identifier for this moderation request. |
-| `model` | `[:0]const u8` | — | Model used for classification. |
-| `results` | `[]const ModerationResult` | — | Results for each input string. |
+| `id` | `\[:0\]const u8` | — | Unique identifier for this moderation request. |
+| `model` | `\[:0\]const u8` | — | Model used for classification. |
+| `results` | `\[\]const ModerationResult` | — | Results for each input string. |
 
 ---
 
@@ -1310,8 +1310,8 @@ An image extracted from an OCR page.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `id` | `[:0]const u8` | — | Unique image identifier within the document. |
-| `imageBase64` | `[:0]const u8?` | language default | Base64-encoded image data (if `include_image_base64` was true). |
+| `id` | `\[:0\]const u8` | — | Unique image identifier within the document. |
+| `imageBase64` | `\[:0\]const u8?` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1322,9 +1322,9 @@ A single page of OCR output.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `index` | `u32` | — | Page index (0-based). |
-| `markdown` | `[:0]const u8` | — | Extracted page content as Markdown. |
-| `images` | `[]const OcrImage?` | language default | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `dimensions` | `PageDimensions?` | language default | Page dimensions in pixels, if available. |
+| `markdown` | `\[:0\]const u8` | — | Extracted page content as Markdown. |
+| `images` | `\[\]const OcrImage?` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `PageDimensions?` | `/* serde(default) */` | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1334,9 +1334,9 @@ An OCR request.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `model` | `[:0]const u8` | — | The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). |
+| `model` | `\[:0\]const u8` | — | The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). |
 | `document` | `OcrDocument` | `OcrDocument.Url` | The document to process (URL or base64). |
-| `pages` | `[]const u32?` | `[]` | Specific pages to process (1-indexed). `null` means all pages. |
+| `pages` | `\[\]const u32?` | `\[\]` | Specific pages to process (1-indexed). `null` means all pages. |
 | `includeImageBase64` | `bool?` | `null` | Whether to include base64-encoded images of each processed page. |
 
 ---
@@ -1347,9 +1347,9 @@ An OCR response.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `pages` | `[]const OcrPage` | — | Extracted pages in order. |
-| `model` | `[:0]const u8` | — | Model/provider used for OCR. |
-| `usage` | `Usage?` | language default | Token usage, if reported by the provider. |
+| `pages` | `\[\]const OcrPage` | — | Extracted pages in order. |
+| `model` | `\[:0\]const u8` | — | Model/provider used for OCR. |
+| `usage` | `Usage?` | `/* serde(default) */` | Token usage, if reported by the provider. |
 
 ---
 
@@ -1385,7 +1385,7 @@ discounted rate and the remainder at the regular input rate.
 Static capability flags for a provider.
 
 Each flag indicates whether the provider's models *generally* support that
-feature.  For providers that aggregate many underlying models (e.g. Bedrock,
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
 OpenRouter, vLLM) the flags reflect the superset of available model
 capabilities — a flag being `true` means at least one model supports the
 feature, not every model.
@@ -1415,13 +1415,13 @@ format, which are accessed via the `capabilities` function.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `name` | `[:0]const u8` | — | Provider identifier (matches the entry key in providers.json). |
-| `displayName` | `[:0]const u8?` | `null` | Human-readable provider name shown in UIs. |
-| `baseUrl` | `[:0]const u8?` | `null` | Base URL used as the default for this provider's HTTP client. |
+| `name` | `\[:0\]const u8` | — | Provider identifier (matches the entry key in providers.json). |
+| `displayName` | `\[:0\]const u8?` | `null` | Human-readable provider name shown in UIs. |
+| `baseUrl` | `\[:0\]const u8?` | `null` | Base URL used as the default for this provider's HTTP client. |
 | `auth` | `AuthConfig?` | `null` | Authentication scheme metadata (auth type + env var holding the key). |
-| `endpoints` | `[]const [:0]const u8?` | `null` | Supported endpoint kinds (e.g. `chat`, `embeddings`). |
-| `modelPrefixes` | `[]const [:0]const u8?` | `null` | Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`). |
-| `paramMappings` | `std.StringHashMap([:0]const u8)?` | `null` | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`).  Applied automatically by `ConfigDrivenProvider.transform_request`. |
+| `endpoints` | `\[\]const \[:0\]const u8?` | `null` | Supported endpoint kinds (e.g. `chat`, `embeddings`). |
+| `modelPrefixes` | `\[\]const \[:0\]const u8?` | `null` | Model-name prefixes claimed by this provider (e.g. `\["gpt-", "o1-"\]`). |
+| `paramMappings` | `std.StringHashMap(\[:0\]const u8)?` | `null` | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`).  Applied automatically by `ConfigDrivenProvider.transform_request`. |
 
 ---
 
@@ -1461,9 +1461,9 @@ Request to rerank documents by relevance to a query.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `model` | `[:0]const u8` | — | Model ID (e.g., `"cohere/rerank-english-v3.0"`). |
-| `query` | `[:0]const u8` | — | The search query. |
-| `documents` | `[]const RerankDocument` | `[]` | Documents to rerank. |
+| `model` | `\[:0\]const u8` | — | Model ID (e.g., `"cohere/rerank-english-v3.0"`). |
+| `query` | `\[:0\]const u8` | — | The search query. |
+| `documents` | `\[\]const RerankDocument` | `\[\]` | Documents to rerank. |
 | `topN` | `u32?` | `null` | Return only the top N results. Optional. |
 | `returnDocuments` | `bool?` | `null` | Include the document content in results. Defaults to false. |
 
@@ -1475,9 +1475,9 @@ Response from the rerank endpoint.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `id` | `[:0]const u8?` | `null` | Unique identifier for this rerank request. |
-| `results` | `[]const RerankResult` | — | Reranked documents in order of relevance. |
-| `meta` | `[:0]const u8?` | language default | Optional metadata about the reranking operation. |
+| `id` | `\[:0\]const u8?` | `null` | Unique identifier for this rerank request. |
+| `results` | `\[\]const RerankResult` | — | Reranked documents in order of relevance. |
+| `meta` | `\[:0\]const u8?` | `/* serde(default) */` | Optional metadata about the reranking operation. |
 
 ---
 
@@ -1488,8 +1488,8 @@ A single reranked document with its relevance score.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `index` | `u32` | — | Original document index in the input list. |
-| `relevanceScore` | `f64` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `document` | `RerankResultDocument?` | language default | Original document content (if `return_documents` was true). |
+| `relevanceScore` | `f64` | — | Relevance score in `\[0, 1\]`. Higher indicates more relevant. |
+| `document` | `RerankResultDocument?` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -1499,7 +1499,7 @@ The text content of a reranked document, returned when `return_documents` is tru
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `text` | `[:0]const u8` | — | Document text. |
+| `text` | `\[:0\]const u8` | — | Document text. |
 
 ---
 
@@ -1509,14 +1509,14 @@ Response from a structured response request.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `id` | `[:0]const u8` | — | Unique response ID. |
-| `object` | `[:0]const u8` | — | Object type (e.g., `"response"`). |
+| `id` | `\[:0\]const u8` | — | Unique response ID. |
+| `object` | `\[:0\]const u8` | — | Object type (e.g., `"response"`). |
 | `createdAt` | `u64` | — | Unix timestamp of response creation. |
-| `model` | `[:0]const u8` | — | Model used to generate the response. |
-| `status` | `[:0]const u8` | — | Status (e.g., `"succeeded"`, `"failed"`). |
-| `output` | `[]const ResponseOutputItem` | `[]` | Output items from the response. |
+| `model` | `\[:0\]const u8` | — | Model used to generate the response. |
+| `status` | `\[:0\]const u8` | — | Status (e.g., `"succeeded"`, `"failed"`). |
+| `output` | `\[\]const ResponseOutputItem` | `\[\]` | Output items from the response. |
 | `usage` | `ResponseUsage?` | `null` | Token usage. |
-| `error` | `[:0]const u8?` | `null` | Error details (if status is "failed"). |
+| `error` | `\[:0\]const u8?` | `null` | Error details (if status is "failed"). |
 
 ---
 
@@ -1526,8 +1526,8 @@ A single output item from the response.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `itemType` | `[:0]const u8` | — | Output type (e.g., `"text"`, `"object"`, `"error"`). |
-| `content` | `[:0]const u8` | — | Output content (flattened into the object). |
+| `itemType` | `\[:0\]const u8` | — | Output type (e.g., `"text"`, `"object"`, `"error"`). |
+| `content` | `\[:0\]const u8` | — | Output content (flattened into the object). |
 
 ---
 
@@ -1537,8 +1537,8 @@ A tool available for the response request.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `toolType` | `[:0]const u8` | — | Tool type (e.g., "extractor", "search"). |
-| `config` | `[:0]const u8` | — | Tool configuration (flattened into the object). |
+| `toolType` | `\[:0\]const u8` | — | Tool type (e.g., "extractor", "search"). |
+| `config` | `\[:0\]const u8` | — | Tool configuration (flattened into the object). |
 
 ---
 
@@ -1560,11 +1560,11 @@ A search request.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `model` | `[:0]const u8` | — | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). |
-| `query` | `[:0]const u8` | — | The search query string. |
+| `model` | `\[:0\]const u8` | — | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). |
+| `query` | `\[:0\]const u8` | — | The search query string. |
 | `maxResults` | `u32?` | `null` | Maximum number of results to return. |
-| `searchDomainFilter` | `[]const [:0]const u8?` | `[]` | Domain filter — restrict results to specific domains. |
-| `country` | `[:0]const u8?` | `null` | Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). |
+| `searchDomainFilter` | `\[\]const \[:0\]const u8?` | `\[\]` | Domain filter — restrict results to specific domains. |
+| `country` | `\[:0\]const u8?` | `null` | Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). |
 
 ---
 
@@ -1574,8 +1574,8 @@ A search response.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `results` | `[]const SearchResult` | — | List of search results. |
-| `model` | `[:0]const u8` | — | Model/provider that performed the search. |
+| `results` | `\[\]const SearchResult` | — | List of search results. |
+| `model` | `\[:0\]const u8` | — | Model/provider that performed the search. |
 
 ---
 
@@ -1585,10 +1585,10 @@ An individual search result.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `title` | `[:0]const u8` | — | Result title. |
-| `url` | `[:0]const u8` | — | Result URL. |
-| `snippet` | `[:0]const u8` | — | Text snippet or excerpt from the page. |
-| `date` | `[:0]const u8?` | language default | Publication or last-updated date, if available. |
+| `title` | `\[:0\]const u8` | — | Result title. |
+| `url` | `\[:0\]const u8` | — | Result URL. |
+| `snippet` | `\[:0\]const u8` | — | Text snippet or excerpt from the page. |
+| `date` | `\[:0\]const u8?` | `/* serde(default) */` | Publication or last-updated date, if available. |
 
 ---
 
@@ -1607,7 +1607,7 @@ Name of the specific function to invoke.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `name` | `[:0]const u8` | — | Function name. |
+| `name` | `\[:0\]const u8` | — | Function name. |
 
 ---
 
@@ -1640,11 +1640,11 @@ Incremental delta in a stream chunk.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `role` | `[:0]const u8?` | `null` | Role (typically present only in the first chunk). |
-| `content` | `[:0]const u8?` | `null` | Partial content chunk (e.g., a few words of the response). |
-| `toolCalls` | `[]const StreamToolCall?` | `[]` | Partial tool calls being streamed. |
+| `role` | `\[:0\]const u8?` | `null` | Role (typically present only in the first chunk). |
+| `content` | `\[:0\]const u8?` | `null` | Partial content chunk (e.g., a few words of the response). |
+| `toolCalls` | `\[\]const StreamToolCall?` | `\[\]` | Partial tool calls being streamed. |
 | `functionCall` | `StreamFunctionCall?` | `null` | Deprecated legacy function_call delta; retained for API compatibility. |
-| `refusal` | `[:0]const u8?` | `null` | Partial refusal message. |
+| `refusal` | `\[:0\]const u8?` | `null` | Partial refusal message. |
 
 ---
 
@@ -1654,8 +1654,8 @@ Partial function call details in a stream.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `name` | `[:0]const u8?` | `null` | Function name (typically in the first chunk). |
-| `arguments` | `[:0]const u8?` | `null` | Partial JSON arguments chunk. |
+| `name` | `\[:0\]const u8?` | `null` | Function name (typically in the first chunk). |
+| `arguments` | `\[:0\]const u8?` | `null` | Partial JSON arguments chunk. |
 
 ---
 
@@ -1676,7 +1676,7 @@ A streaming tool call being built incrementally.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `index` | `u32` | — | Index of this tool call in the tool_calls array. |
-| `id` | `[:0]const u8?` | `null` | Tool call ID (typically in the first chunk for this call). |
+| `id` | `\[:0\]const u8?` | `null` | Tool call ID (typically in the first chunk for this call). |
 | `callType` | `ToolType?` | `null` | Tool type (typically "function"). |
 | `function` | `StreamFunctionCall?` | `null` | Partial function name and arguments. |
 
@@ -1688,8 +1688,8 @@ System message guiding model behavior for the entire conversation.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `[:0]const u8` | — | Instructions or context that apply throughout the conversation. |
-| `name` | `[:0]const u8?` | `null` | Optional name for the system message source. |
+| `content` | `\[:0\]const u8` | — | Instructions or context that apply throughout the conversation. |
+| `name` | `\[:0\]const u8?` | `null` | Optional name for the system message source. |
 
 ---
 
@@ -1699,7 +1699,7 @@ A tool call the model wants to execute.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `id` | `[:0]const u8` | — | Unique ID for this call, used to reference in tool result messages. |
+| `id` | `\[:0\]const u8` | — | Unique ID for this call, used to reference in tool result messages. |
 | `callType` | `ToolType` | — | Tool type (always "function"). |
 | `function` | `FunctionCall` | — | Function name and arguments. |
 
@@ -1711,9 +1711,9 @@ Tool execution result returned to the model.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `[:0]const u8` | — | Result of the tool execution. |
-| `toolCallId` | `[:0]const u8` | — | ID of the tool call this result responds to. |
-| `name` | `[:0]const u8?` | `null` | Optional tool/function name. |
+| `content` | `\[:0\]const u8` | — | Result of the tool execution. |
+| `toolCallId` | `\[:0\]const u8` | — | ID of the tool call this result responds to. |
+| `name` | `\[:0\]const u8?` | `null` | Optional tool/function name. |
 
 ---
 
@@ -1723,10 +1723,10 @@ Response from a transcription request.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `text` | `[:0]const u8` | — | The transcribed text. |
-| `language` | `[:0]const u8?` | `null` | Detected language (ISO-639-1 code). |
+| `text` | `\[:0\]const u8` | — | The transcribed text. |
+| `language` | `\[:0\]const u8?` | `null` | Detected language (ISO-639-1 code). |
 | `duration` | `f64?` | `null` | Total audio duration in seconds. |
-| `segments` | `[]const TranscriptionSegment?` | `[]` | Detailed segment-level transcription (if response_format is "verbose_json"). |
+| `segments` | `\[\]const TranscriptionSegment?` | `\[\]` | Detailed segment-level transcription (if response_format is "verbose_json"). |
 
 ---
 
@@ -1739,7 +1739,7 @@ A segment of transcribed audio with timing information.
 | `id` | `u32` | — | Segment index (0-based). |
 | `start` | `f64` | — | Start time in seconds. |
 | `end` | `f64` | — | End time in seconds. |
-| `text` | `[:0]const u8` | — | Transcribed text for this segment. |
+| `text` | `\[:0\]const u8` | — | Transcribed text for this segment. |
 
 ---
 
@@ -1763,7 +1763,7 @@ User message in the conversation.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `content` | `UserContent` | `UserContent.Text` | Message content as plain text or array of content parts (text, images, documents, audio). |
-| `name` | `[:0]const u8?` | `null` | Optional name for the user. |
+| `name` | `\[:0\]const u8?` | `null` | Optional name for the user. |
 
 ---
 
@@ -1824,8 +1824,8 @@ User message content as either plain text or a list of multimodal parts.
 
 | Value | Description |
 |-------|-------------|
-| `Text` | Plain text content. — Fields: `0`: `[:0]const u8` |
-| `Parts` | Array of content parts (text, images, documents, audio). — Fields: `0`: `[]const ContentPart` |
+| `Text` | Plain text content. — Fields: `0`: `\[:0\]const u8` |
+| `Parts` | Array of content parts (text, images, documents, audio). — Fields: `0`: `\[\]const ContentPart` |
 
 ---
 
@@ -1835,7 +1835,7 @@ A single content part in a user message — text, image, document, or audio.
 
 | Value | Description |
 |-------|-------------|
-| `Text` | Plain text. — Fields: `text`: `[:0]const u8` |
+| `Text` | Plain text. — Fields: `text`: `\[:0\]const u8` |
 | `ImageUrl` | Image identified by URL (with optional detail level). — Fields: `imageUrl`: `ImageUrl` |
 | `Document` | Document file (PDF, CSV, etc.) as base64 or URL. — Fields: `document`: `DocumentContent` |
 | `InputAudio` | Audio input as base64. — Fields: `inputAudio`: `AudioContent` |
@@ -1909,8 +1909,8 @@ Stop sequence(s) that cause the model to stop generating.
 
 | Value | Description |
 |-------|-------------|
-| `Single` | Single stop sequence. — Fields: `0`: `[:0]const u8` |
-| `Multiple` | Multiple stop sequences. — Fields: `0`: `[]const [:0]const u8` |
+| `Single` | Single stop sequence. — Fields: `0`: `\[:0\]const u8` |
+| `Multiple` | Multiple stop sequences. — Fields: `0`: `\[\]const \[:0\]const u8` |
 
 ---
 
@@ -1925,7 +1925,7 @@ Why a choice stopped generating tokens.
 | `ToolCalls` | Tool calls |
 | `ContentFilter` | Content filter |
 | `FunctionCall` | Deprecated legacy finish reason; retained for API compatibility. |
-| `Other` | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and switching to `#[serde(untagged)]` would change deserialization semantics for all variants.  The original value can be recovered by inspecting the raw JSON if needed. |
+| `Other` | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`).  Using `#\[serde(other)\]` requires a unit variant, and switching to `#\[serde(untagged)\]` would change deserialization semantics for all variants.  The original value can be recovered by inspecting the raw JSON if needed. |
 
 ---
 
@@ -1958,8 +1958,8 @@ Text or texts to embed.
 
 | Value | Description |
 |-------|-------------|
-| `Single` | Single text string. — Fields: `0`: `[:0]const u8` |
-| `Multiple` | Multiple text strings (batch embedding). — Fields: `0`: `[]const [:0]const u8` |
+| `Single` | Single text string. — Fields: `0`: `\[:0\]const u8` |
+| `Multiple` | Multiple text strings (batch embedding). — Fields: `0`: `\[\]const \[:0\]const u8` |
 
 ---
 
@@ -1969,8 +1969,8 @@ Input to the moderation endpoint — a single string or multiple strings.
 
 | Value | Description |
 |-------|-------------|
-| `Single` | Single text string. — Fields: `0`: `[:0]const u8` |
-| `Multiple` | Multiple text strings (batch moderation). — Fields: `0`: `[]const [:0]const u8` |
+| `Single` | Single text string. — Fields: `0`: `\[:0\]const u8` |
+| `Multiple` | Multiple text strings (batch moderation). — Fields: `0`: `\[\]const \[:0\]const u8` |
 
 ---
 
@@ -1980,8 +1980,8 @@ A document to be reranked — either a plain string or an object with a text fie
 
 | Value | Description |
 |-------|-------------|
-| `Text` | Plain text document content. — Fields: `0`: `[:0]const u8` |
-| `Object` | Document with explicit text field (may include metadata). — Fields: `text`: `[:0]const u8` |
+| `Text` | Plain text document content. — Fields: `0`: `\[:0\]const u8` |
+| `Object` | Document with explicit text field (may include metadata). — Fields: `text`: `\[:0\]const u8` |
 
 ---
 
@@ -1991,8 +1991,8 @@ Document input for OCR — either a URL or inline base64 data.
 
 | Value | Description |
 |-------|-------------|
-| `Url` | A publicly accessible document URL. — Fields: `url`: `[:0]const u8` |
-| `Base64` | Inline base64-encoded document data. — Fields: `data`: `[:0]const u8`, `mediaType`: `[:0]const u8` |
+| `Url` | A publicly accessible document URL. — Fields: `url`: `\[:0\]const u8` |
+| `Base64` | Inline base64-encoded document data. — Fields: `data`: `\[:0\]const u8`, `mediaType`: `\[:0\]const u8` |
 
 ---
 
@@ -2033,7 +2033,7 @@ How the API key is sent in the HTTP request.
 | Value | Description |
 |-------|-------------|
 | `Bearer` | Bearer token: `Authorization: Bearer <key>` |
-| `ApiKey` | Custom header: e.g., `X-Api-Key: <key>` — Fields: `0`: `[:0]const u8` |
+| `ApiKey` | Custom header: e.g., `X-Api-Key: <key>` — Fields: `0`: `\[:0\]const u8` |
 | `None` | No authentication required. |
 
 ---
@@ -2042,7 +2042,7 @@ How the API key is sent in the HTTP request.
 
 The streaming wire format a provider uses for its response stream.
 
-Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
+Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
 a proprietary binary EventStream framing.
 
 Deserialized from the `streaming_format` JSON field via `serde`.
@@ -2085,7 +2085,7 @@ Storage backend for the response cache.
 | Value | Description |
 |-------|-------------|
 | `Memory` | In-memory LRU cache (default). No external dependencies. |
-| `OpenDal` | OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.). — Fields: `scheme`: `[:0]const u8`, `config`: `std.StringHashMap([:0]const u8)` |
+| `OpenDal` | OpenDAL-backed storage. Supports 40+ backends (S3, Redis, GCS, local FS, etc.). — Fields: `scheme`: `\[:0\]const u8`, `config`: `std.StringHashMap(\[:0\]const u8)` |
 
 ---
 

@@ -69,7 +69,7 @@ Assistant's response to a user message.
 |-------|------|---------|-------------|
 | `content` | `str \| None` | `None` | The assistant's text response. Absent if tool calls are returned instead. |
 | `name` | `str \| None` | `None` | Optional name for the assistant. |
-| `tool_calls` | `list[ToolCall] \| None` | `[]` | Tool calls the model wants to execute, if any. |
+| `tool_calls` | `list\[ToolCall\] \| None` | `\[\]` | Tool calls the model wants to execute, if any. |
 | `refusal` | `str \| None` | `None` | Refusal reason, if the model declined to respond per safety policies. |
 | `function_call` | `FunctionCall \| None` | `None` | Deprecated legacy function_call field; retained for API compatibility. |
 
@@ -138,7 +138,7 @@ JSON Schema specification for constrained output.
 |-------|------|---------|-------------|
 | `name` | `str` | — | Name of the schema (must be unique in the request). |
 | `description` | `str \| None` | `None` | Description of what the schema represents. |
-| `schema` | `dict[str, Any]` | — | JSON Schema object defining the output structure. |
+| `schema` | `dict\[str, Any\]` | — | JSON Schema object defining the output structure. |
 | `strict` | `bool \| None` | `None` | If true, enforce strict schema validation. |
 
 ---
@@ -179,25 +179,25 @@ Chat completion request (compatible with OpenAI and similar APIs).
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `model` | `str` | — | Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`). |
-| `messages` | `list[Message]` | `[]` | Conversation history from oldest to newest. |
-| `temperature` | `float \| None` | `None` | Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0. |
-| `top_p` | `float \| None` | `None` | Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused. |
+| `messages` | `list\[Message\]` | `\[\]` | Conversation history from oldest to newest. |
+| `temperature` | `float \| None` | `None` | Sampling temperature in `\[0.0, 2.0\]`. Higher increases randomness. Defaults to 1.0. |
+| `top_p` | `float \| None` | `None` | Nucleus sampling parameter in `\[0.0, 1.0\]`. Lower is more focused. |
 | `n` | `int \| None` | `None` | Number of chat completions to generate. Defaults to 1. |
 | `stream` | `bool \| None` | `None` | Whether to stream the response. Managed by the client layer — do not set directly. |
 | `stop` | `StopSequence \| None` | `None` | Stop sequence(s) that halt token generation. |
 | `max_tokens` | `int \| None` | `None` | Max output tokens. Different from max_completion_tokens in some providers. |
-| `presence_penalty` | `float \| None` | `None` | Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics. |
-| `frequency_penalty` | `float \| None` | `None` | Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens. |
-| `logit_bias` | `dict[str, float] \| None` | `{}` | Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic serialization order — important when hashing or signing requests. |
+| `presence_penalty` | `float \| None` | `None` | Presence penalty in `\[-2.0, 2.0\]`. Positive discourages repeated topics. |
+| `frequency_penalty` | `float \| None` | `None` | Frequency penalty in `\[-2.0, 2.0\]`. Positive discourages repeated tokens. |
+| `logit_bias` | `dict\[str, float\] \| None` | `{}` | Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic serialization order — important when hashing or signing requests. |
 | `user` | `str \| None` | `None` | User identifier for request tracking and abuse detection. |
-| `tools` | `list[ChatCompletionTool] \| None` | `[]` | Tools the model can invoke. |
+| `tools` | `list\[ChatCompletionTool\] \| None` | `\[\]` | Tools the model can invoke. |
 | `tool_choice` | `ToolChoice \| None` | `None` | Tool usage mode (auto, required, none, or specific tool). |
 | `parallel_tool_calls` | `bool \| None` | `None` | Whether the model can call multiple tools in parallel. Defaults to true. |
 | `response_format` | `ResponseFormat \| None` | `None` | Output format constraint (text, JSON, JSON schema). |
 | `stream_options` | `StreamOptions \| None` | `None` | Streaming options (e.g., include_usage). |
 | `seed` | `int \| None` | `None` | Random seed for reproducible outputs. Provider support varies. |
 | `reasoning_effort` | `ReasoningEffort \| None` | `None` | Reasoning effort level (low, medium, high) for extended-thinking models. |
-| `extra_body` | `dict[str, Any] \| None` | `None` | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc. |
+| `extra_body` | `dict\[str, Any\] \| None` | `None` | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc. |
 
 ---
 
@@ -221,7 +221,7 @@ Chat completion response from the API.
 | `object` | `str` | — | Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `created` | `int` | — | Unix timestamp of response creation. |
 | `model` | `str` | — | Model used to generate the response. |
-| `choices` | `list[Choice]` | `[]` | List of completion choices. |
+| `choices` | `list\[Choice\]` | `\[\]` | List of completion choices. |
 | `usage` | `Usage \| None` | `None` | Token usage statistics. |
 | `system_fingerprint` | `str \| None` | `None` | Fingerprint of the system configuration (OpenAI-specific). |
 | `service_tier` | `str \| None` | `None` | Service tier used (OpenAI-specific). |
@@ -250,7 +250,7 @@ A streamed chunk of a chat completion response.
 | `object` | `str` | — | Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not fail parsing. |
 | `created` | `int` | — | Unix timestamp of chunk creation. |
 | `model` | `str` | — | Model used to generate the chunk. |
-| `choices` | `list[StreamChoice]` | `[]` | Streaming choices (delta updates). |
+| `choices` | `list\[StreamChoice\]` | `\[\]` | Streaming choices (delta updates). |
 | `usage` | `Usage \| None` | `None` | Token usage (typically only in the final chunk). |
 | `system_fingerprint` | `str \| None` | `None` | Fingerprint of the system configuration (OpenAI-specific). |
 | `service_tier` | `str \| None` | `None` | Service tier used (OpenAI-specific). |
@@ -277,7 +277,7 @@ Incremental delta in a stream chunk.
 |-------|------|---------|-------------|
 | `role` | `str \| None` | `None` | Role (typically present only in the first chunk). |
 | `content` | `str \| None` | `None` | Partial content chunk (e.g., a few words of the response). |
-| `tool_calls` | `list[StreamToolCall] \| None` | `[]` | Partial tool calls being streamed. |
+| `tool_calls` | `list\[StreamToolCall\] \| None` | `\[\]` | Partial tool calls being streamed. |
 | `function_call` | `StreamFunctionCall \| None` | `None` | Deprecated legacy function_call delta; retained for API compatibility. |
 | `refusal` | `str \| None` | `None` | Partial refusal message. |
 
@@ -345,7 +345,7 @@ Response containing generated images.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `created` | `int` | — | Unix timestamp of image creation. |
-| `data` | `list[Image]` | `[]` | List of generated images. |
+| `data` | `list\[Image\]` | `\[\]` | List of generated images. |
 
 ---
 
@@ -371,7 +371,7 @@ Request to generate speech audio from text.
 | `input` | `str` | — | Text to synthesize into speech. |
 | `voice` | `str` | — | Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). |
 | `response_format` | `str \| None` | `None` | Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`). |
-| `speed` | `float \| None` | `None` | Playback speed in `[0.25, 4.0]`. Defaults to 1.0. |
+| `speed` | `float \| None` | `None` | Playback speed in `\[0.25, 4.0\]`. Defaults to 1.0. |
 
 ---
 
@@ -386,7 +386,7 @@ Request to transcribe audio into text.
 | `language` | `str \| None` | `None` | Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. |
 | `prompt` | `str \| None` | `None` | Optional text to guide the model (improves accuracy for domain-specific terms). |
 | `response_format` | `str \| None` | `None` | Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`). |
-| `temperature` | `float \| None` | `None` | Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0. |
+| `temperature` | `float \| None` | `None` | Sampling temperature in `\[0.0, 1.0\]`. Higher increases variability. Defaults to 0. |
 
 ---
 
@@ -399,7 +399,7 @@ Response from a transcription request.
 | `text` | `str` | — | The transcribed text. |
 | `language` | `str \| None` | `None` | Detected language (ISO-639-1 code). |
 | `duration` | `float \| None` | `None` | Total audio duration in seconds. |
-| `segments` | `list[TranscriptionSegment] \| None` | `[]` | Detailed segment-level transcription (if response_format is "verbose_json"). |
+| `segments` | `list\[TranscriptionSegment\] \| None` | `\[\]` | Detailed segment-level transcription (if response_format is "verbose_json"). |
 
 ---
 
@@ -475,7 +475,7 @@ Request to rerank documents by relevance to a query.
 |-------|------|---------|-------------|
 | `model` | `str` | — | Model ID (e.g., `"cohere/rerank-english-v3.0"`). |
 | `query` | `str` | — | The search query. |
-| `documents` | `list[RerankDocument]` | `[]` | Documents to rerank. |
+| `documents` | `list\[RerankDocument\]` | `\[\]` | Documents to rerank. |
 | `top_n` | `int \| None` | `None` | Return only the top N results. Optional. |
 | `return_documents` | `bool \| None` | `None` | Include the document content in results. Defaults to false. |
 
@@ -490,7 +490,7 @@ A search request.
 | `model` | `str` | — | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). |
 | `query` | `str` | — | The search query string. |
 | `max_results` | `int \| None` | `None` | Maximum number of results to return. |
-| `search_domain_filter` | `list[str] \| None` | `[]` | Domain filter — restrict results to specific domains. |
+| `search_domain_filter` | `list\[str\] \| None` | `\[\]` | Domain filter — restrict results to specific domains. |
 | `country` | `str \| None` | `None` | Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). |
 
 ---
@@ -503,7 +503,7 @@ An OCR request.
 |-------|------|---------|-------------|
 | `model` | `str` | — | The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). |
 | `document` | `OcrDocument` | `OcrDocument.URL` | The document to process (URL or base64). |
-| `pages` | `list[int] \| None` | `[]` | Specific pages to process (1-indexed). `None` means all pages. |
+| `pages` | `list\[int\] \| None` | `\[\]` | Specific pages to process (1-indexed). `None` means all pages. |
 | `include_image_base64` | `bool \| None` | `None` | Whether to include base64-encoded images of each processed page. |
 
 ---
@@ -515,7 +515,7 @@ Response listing available models.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `object` | `str` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `data` | `list[ModelObject]` | `[]` | List of available models. |
+| `data` | `list\[ModelObject\]` | `\[\]` | List of available models. |
 
 ---
 
@@ -567,7 +567,7 @@ Response from listing files.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `object` | `str` | — | Object type (always `"list"`). |
-| `data` | `list[FileObject]` | `[]` | List of file objects. |
+| `data` | `list\[FileObject\]` | `\[\]` | List of file objects. |
 | `has_more` | `bool \| None` | `None` | Whether more results are available. |
 
 ---
@@ -605,7 +605,7 @@ Request to create a batch job.
 | `input_file_id` | `str` | — | ID of the uploaded input file (JSONL format). |
 | `endpoint` | `str` | — | API endpoint (e.g., `"/v1/chat/completions"`). |
 | `completion_window` | `str` | — | Completion window (e.g., `"24h"`). |
-| `metadata` | `dict[str, Any] \| None` | `None` | Optional metadata to attach to the batch. |
+| `metadata` | `dict\[str, Any\] \| None` | `None` | Optional metadata to attach to the batch. |
 
 ---
 
@@ -628,7 +628,7 @@ A batch job object.
 | `failed_at` | `int \| None` | `None` | Unix timestamp of failure (if failed). |
 | `expired_at` | `int \| None` | `None` | Unix timestamp of expiration (if expired). |
 | `request_counts` | `BatchRequestCounts \| None` | `None` | Request processing counts. |
-| `metadata` | `dict[str, Any] \| None` | `None` | Metadata attached to the batch. |
+| `metadata` | `dict\[str, Any\] \| None` | `None` | Metadata attached to the batch. |
 
 ---
 
@@ -651,7 +651,7 @@ Response from listing batches.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `object` | `str` | — | Object type (always `"list"`). |
-| `data` | `list[BatchObject]` | `[]` | List of batch objects. |
+| `data` | `list\[BatchObject\]` | `\[\]` | List of batch objects. |
 | `has_more` | `bool \| None` | `None` | Whether more results are available. |
 | `first_id` | `str \| None` | `None` | First batch ID in the result set (for pagination). |
 | `last_id` | `str \| None` | `None` | Last batch ID in the result set (for pagination). |
@@ -676,12 +676,12 @@ Request to create a structured response.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `model` | `str` | — | Model ID. |
-| `input` | `dict[str, Any]` | — | Input data to process (e.g., a document to extract from). |
+| `input` | `dict\[str, Any\]` | — | Input data to process (e.g., a document to extract from). |
 | `instructions` | `str \| None` | `None` | Instructions for processing the input. |
-| `tools` | `list[ResponseTool] \| None` | `[]` | Available tools the model can use. |
-| `temperature` | `float \| None` | `None` | Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0. |
+| `tools` | `list\[ResponseTool\] \| None` | `\[\]` | Available tools the model can use. |
+| `temperature` | `float \| None` | `None` | Sampling temperature in `\[0.0, 2.0\]`. Defaults to 1.0. |
 | `max_output_tokens` | `int \| None` | `None` | Maximum output tokens. |
-| `metadata` | `dict[str, Any] \| None` | `None` | Optional metadata. |
+| `metadata` | `dict\[str, Any\] \| None` | `None` | Optional metadata. |
 
 ---
 
@@ -692,7 +692,7 @@ A tool available for the response request.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `tool_type` | `str` | — | Tool type (e.g., "extractor", "search"). |
-| `config` | `dict[str, Any]` | — | Tool configuration (flattened into the object). |
+| `config` | `dict\[str, Any\]` | — | Tool configuration (flattened into the object). |
 
 ---
 
@@ -707,9 +707,9 @@ Response from a structured response request.
 | `created_at` | `int` | — | Unix timestamp of response creation. |
 | `model` | `str` | — | Model used to generate the response. |
 | `status` | `str` | — | Status (e.g., `"succeeded"`, `"failed"`). |
-| `output` | `list[ResponseOutputItem]` | `[]` | Output items from the response. |
+| `output` | `list\[ResponseOutputItem\]` | `\[\]` | Output items from the response. |
 | `usage` | `ResponseUsage \| None` | `None` | Token usage. |
-| `error` | `dict[str, Any] \| None` | `None` | Error details (if status is "failed"). |
+| `error` | `dict\[str, Any\] \| None` | `None` | Error details (if status is "failed"). |
 
 ---
 
@@ -720,7 +720,7 @@ A single output item from the response.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `item_type` | `str` | — | Output type (e.g., `"text"`, `"object"`, `"error"`). |
-| `content` | `dict[str, Any]` | — | Output content (flattened into the object). |
+| `content` | `dict\[str, Any\]` | — | Output content (flattened into the object). |
 
 ---
 
@@ -761,7 +761,7 @@ Configuration for registering a custom LLM provider at runtime.
 | `name` | `str` | — | Unique name for this provider (e.g., "my-provider"). |
 | `base_url` | `str` | — | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
 | `auth_header` | `AuthHeaderFormat` | — | Authentication header format. |
-| `model_prefixes` | `list[str]` | — | Model name prefixes that route to this provider (e.g., `["my-"]`). |
+| `model_prefixes` | `list\[str\]` | — | Model name prefixes that route to this provider (e.g., `\["my-"\]`). |
 
 ---
 
@@ -770,7 +770,7 @@ Configuration for registering a custom LLM provider at runtime.
 Static capability flags for a provider.
 
 Each flag indicates whether the provider's models *generally* support that
-feature.  For providers that aggregate many underlying models (e.g. Bedrock,
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
 OpenRouter, vLLM) the flags reflect the superset of available model
 capabilities — a flag being `True` means at least one model supports the
 feature, not every model.
@@ -804,9 +804,9 @@ format, which are accessed via the `capabilities` function.
 | `display_name` | `str \| None` | `None` | Human-readable provider name shown in UIs. |
 | `base_url` | `str \| None` | `None` | Base URL used as the default for this provider's HTTP client. |
 | `auth` | `AuthConfig \| None` | `None` | Authentication scheme metadata (auth type + env var holding the key). |
-| `endpoints` | `list[str] \| None` | `None` | Supported endpoint kinds (e.g. `chat`, `embeddings`). |
-| `model_prefixes` | `list[str] \| None` | `None` | Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`). |
-| `param_mappings` | `dict[str, str] \| None` | `None` | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`).  Applied automatically by `ConfigDrivenProvider.transform_request`. |
+| `endpoints` | `list\[str\] \| None` | `None` | Supported endpoint kinds (e.g. `chat`, `embeddings`). |
+| `model_prefixes` | `list\[str\] \| None` | `None` | Model-name prefixes claimed by this provider (e.g. `\["gpt-", "o1-"\]`). |
+| `param_mappings` | `dict\[str, str\] \| None` | `None` | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`).  Applied automatically by `ConfigDrivenProvider.transform_request`. |
 
 ---
 
@@ -828,7 +828,7 @@ Configuration for budget enforcement.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `global_limit` | `float \| None` | `None` | Maximum total spend across all models, in USD.  `None` means unlimited. |
-| `model_limits` | `dict[str, float]` | `{}` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
+| `model_limits` | `dict\[str, float\]` | `{}` | Per-model spending limits in USD.  Models not listed here are only constrained by `global_limit`. |
 | `enforcement` | `Enforcement` | `Enforcement.HARD` | Whether to reject requests or merely warn when a limit is exceeded. |
 
 ---
@@ -969,7 +969,7 @@ Why a choice stopped generating tokens.
 | `ToolCalls` | `tool_calls` | Tool calls |
 | `ContentFilter` | `content_filter` | Content filter |
 | `FunctionCall` | `function_call` | Deprecated legacy finish reason; retained for API compatibility. |
-| `Other` | `other` | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and switching to `#[serde(untagged)]` would change deserialization semantics for all variants.  The original value can be recovered by inspecting the raw JSON if needed. |
+| `Other` | `other` | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`).  Using `#\[serde(other)\]` requires a unit variant, and switching to `#\[serde(untagged)\]` would change deserialization semantics for all variants.  The original value can be recovered by inspecting the raw JSON if needed. |
 
 ---
 

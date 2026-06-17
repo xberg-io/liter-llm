@@ -1161,6 +1161,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "gloo-timers"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "482ce8a491a501da4cd806bd190275363d674f2845005c6ddbd5d3e1dd54495d"
+dependencies = [
+ "futures-channel",
+ "futures-core",
+ "js-sys",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "h2"
 version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1779,7 +1791,7 @@ checksum = "92daf443525c4cce67b150400bc2316076100ce0b3686209eb8cf3c31612e6f0"
 
 [[package]]
 name = "liter-llm"
-version = "1.6.3"
+version = "1.6.4"
 dependencies = [
  "ahash 0.8.12",
  "async-trait",
@@ -1791,6 +1803,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "gcp_auth",
+ "gloo-timers",
  "jsonwebtoken",
  "memchr",
  "opendal",
@@ -1813,11 +1826,12 @@ dependencies = [
  "tracing",
  "tracing-opentelemetry",
  "url",
+ "web-time",
 ]
 
 [[package]]
 name = "liter_llm_nif"
-version = "1.6.3"
+version = "1.6.4"
 dependencies = [
  "alloc-no-stdlib",
  "alloc-stdlib",

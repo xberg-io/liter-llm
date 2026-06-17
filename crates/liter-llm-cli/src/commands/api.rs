@@ -167,11 +167,9 @@ fn resolve_watch_mode(args: &ApiArgs) -> Result<WatchMode, String> {
         });
 
         #[cfg(not(feature = "etcd-watch"))]
-        return Err(
-            "--etcd-endpoint requires the 'etcd-watch' feature. \
+        return Err("--etcd-endpoint requires the 'etcd-watch' feature. \
              Rebuild liter-llm-cli with --features etcd-watch."
-                .to_owned(),
-        );
+            .to_owned());
     }
 
     let path = args

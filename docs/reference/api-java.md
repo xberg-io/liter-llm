@@ -2,7 +2,7 @@
 title: "Java API Reference"
 ---
 
-## Java API Reference <span class="version-badge">v1.6.3</span>
+## Java API Reference <span class="version-badge">v1.6.4</span>
 
 ### Functions
 
@@ -248,7 +248,7 @@ Returns `null` if the model is not present in the embedded pricing registry.
 Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
 
 When an exact model name match is not found, progressively shorter prefixes
-are tried by stripping from the last `-` or `.` separator.  For example,
+are tried by stripping from the last `-` or `.` separator. For example,
 `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 
 **Signature:**
@@ -423,7 +423,7 @@ var result = countRequestTokens("value", new ChatCompletionRequest());
 Assert that `current_len + incoming` does not exceed `limit`.
 
 Call this before appending `incoming` bytes to any buffer that must
-stay below `limit`.  Returns `Err(LiterLlmError.Streaming)` on overflow
+stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
 and emits a `tracing.warn!` with context.
 
 **Signature:**
@@ -671,14 +671,14 @@ Chat completion request (compatible with OpenAI and similar APIs).
 |-------|------|---------|-------------|
 | `model` | `String` | — | Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`). |
 | `messages` | `List<Message>` | `Collections.emptyList()` | Conversation history from oldest to newest. |
-| `temperature` | `Optional<Double>` | `null` | Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0. |
-| `topP` | `Optional<Double>` | `null` | Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused. |
+| `temperature` | `Optional<Double>` | `null` | Sampling temperature in `\[0.0, 2.0\]`. Higher increases randomness. Defaults to 1.0. |
+| `topP` | `Optional<Double>` | `null` | Nucleus sampling parameter in `\[0.0, 1.0\]`. Lower is more focused. |
 | `n` | `Optional<Integer>` | `null` | Number of chat completions to generate. Defaults to 1. |
 | `stream` | `Optional<Boolean>` | `null` | Whether to stream the response. Managed by the client layer — do not set directly. |
 | `stop` | `Optional<StopSequence>` | `null` | Stop sequence(s) that halt token generation. |
 | `maxTokens` | `Optional<Long>` | `null` | Max output tokens. Different from max_completion_tokens in some providers. |
-| `presencePenalty` | `Optional<Double>` | `null` | Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics. |
-| `frequencyPenalty` | `Optional<Double>` | `null` | Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens. |
+| `presencePenalty` | `Optional<Double>` | `null` | Presence penalty in `\[-2.0, 2.0\]`. Positive discourages repeated topics. |
+| `frequencyPenalty` | `Optional<Double>` | `null` | Frequency penalty in `\[-2.0, 2.0\]`. Positive discourages repeated tokens. |
 | `logitBias` | `Optional<Map<String, Double>>` | `Collections.emptyMap()` | Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic serialization order — important when hashing or signing requests. |
 | `user` | `Optional<String>` | `null` | User identifier for request tracking and abuse detection. |
 | `tools` | `Optional<List<ChatCompletionTool>>` | `Collections.emptyList()` | Tools the model can invoke. |
@@ -829,7 +829,7 @@ Request to create a structured response.
 | `input` | `Object` | — | Input data to process (e.g., a document to extract from). |
 | `instructions` | `Optional<String>` | `null` | Instructions for processing the input. |
 | `tools` | `Optional<List<ResponseTool>>` | `Collections.emptyList()` | Available tools the model can use. |
-| `temperature` | `Optional<Double>` | `null` | Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0. |
+| `temperature` | `Optional<Double>` | `null` | Sampling temperature in `\[0.0, 2.0\]`. Defaults to 1.0. |
 | `maxOutputTokens` | `Optional<Long>` | `null` | Maximum output tokens. |
 | `metadata` | `Optional<Object>` | `null` | Optional metadata. |
 
@@ -845,7 +845,7 @@ Request to generate speech audio from text.
 | `input` | `String` | — | Text to synthesize into speech. |
 | `voice` | `String` | — | Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). |
 | `responseFormat` | `Optional<String>` | `null` | Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`). |
-| `speed` | `Optional<Double>` | `null` | Playback speed in `[0.25, 4.0]`. Defaults to 1.0. |
+| `speed` | `Optional<Double>` | `null` | Playback speed in `\[0.25, 4.0\]`. Defaults to 1.0. |
 
 ---
 
@@ -860,7 +860,7 @@ Request to transcribe audio into text.
 | `language` | `Optional<String>` | `null` | Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. |
 | `prompt` | `Optional<String>` | `null` | Optional text to guide the model (improves accuracy for domain-specific terms). |
 | `responseFormat` | `Optional<String>` | `null` | Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`). |
-| `temperature` | `Optional<Double>` | `null` | Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0. |
+| `temperature` | `Optional<Double>` | `null` | Sampling temperature in `\[0.0, 1.0\]`. Higher increases variability. Defaults to 0. |
 
 ---
 
@@ -873,7 +873,7 @@ Configuration for registering a custom LLM provider at runtime.
 | `name` | `String` | — | Unique name for this provider (e.g., "my-provider"). |
 | `baseUrl` | `String` | — | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
 | `authHeader` | `AuthHeaderFormat` | — | Authentication header format. |
-| `modelPrefixes` | `List<String>` | — | Model name prefixes that route to this provider (e.g., `["my-"]`). |
+| `modelPrefixes` | `List<String>` | — | Model name prefixes that route to this provider (e.g., `\["my-"\]`). |
 
 ---
 
@@ -1028,7 +1028,7 @@ Embedding response.
 | `object` | `String` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `data` | `List<EmbeddingObject>` | — | List of embeddings. |
 | `model` | `String` | — | Model used to generate embeddings. |
-| `usage` | `Optional<Usage>` | language default | Token usage (input tokens only; embeddings have zero output tokens). |
+| `usage` | `Optional<Usage>` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -1090,9 +1090,9 @@ Function definition exposed to the model.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Name of the function. Required and must be alphanumeric + underscores. |
-| `description` | `Optional<String>` | language default | Human-readable description explaining what the function does. |
-| `parameters` | `Optional<Object>` | language default | JSON Schema defining the function's parameters. |
-| `strict` | `Optional<Boolean>` | language default | If true, enforce strict JSON schema validation for arguments. |
+| `description` | `Optional<String>` | `/* serde(default) */` | Human-readable description explaining what the function does. |
+| `parameters` | `Optional<Object>` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
+| `strict` | `Optional<Boolean>` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -1311,7 +1311,7 @@ An image extracted from an OCR page.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String` | — | Unique image identifier within the document. |
-| `imageBase64` | `Optional<String>` | language default | Base64-encoded image data (if `include_image_base64` was true). |
+| `imageBase64` | `Optional<String>` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1323,8 +1323,8 @@ A single page of OCR output.
 |-------|------|---------|-------------|
 | `index` | `int` | — | Page index (0-based). |
 | `markdown` | `String` | — | Extracted page content as Markdown. |
-| `images` | `Optional<List<OcrImage>>` | language default | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `dimensions` | `Optional<PageDimensions>` | language default | Page dimensions in pixels, if available. |
+| `images` | `Optional<List<OcrImage>>` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `Optional<PageDimensions>` | `/* serde(default) */` | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1349,7 +1349,7 @@ An OCR response.
 |-------|------|---------|-------------|
 | `pages` | `List<OcrPage>` | — | Extracted pages in order. |
 | `model` | `String` | — | Model/provider used for OCR. |
-| `usage` | `Optional<Usage>` | language default | Token usage, if reported by the provider. |
+| `usage` | `Optional<Usage>` | `/* serde(default) */` | Token usage, if reported by the provider. |
 
 ---
 
@@ -1385,7 +1385,7 @@ discounted rate and the remainder at the regular input rate.
 Static capability flags for a provider.
 
 Each flag indicates whether the provider's models *generally* support that
-feature.  For providers that aggregate many underlying models (e.g. Bedrock,
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
 OpenRouter, vLLM) the flags reflect the superset of available model
 capabilities — a flag being `true` means at least one model supports the
 feature, not every model.
@@ -1420,7 +1420,7 @@ format, which are accessed via the `capabilities` function.
 | `baseUrl` | `Optional<String>` | `null` | Base URL used as the default for this provider's HTTP client. |
 | `auth` | `Optional<AuthConfig>` | `null` | Authentication scheme metadata (auth type + env var holding the key). |
 | `endpoints` | `Optional<List<String>>` | `null` | Supported endpoint kinds (e.g. `chat`, `embeddings`). |
-| `modelPrefixes` | `Optional<List<String>>` | `null` | Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`). |
+| `modelPrefixes` | `Optional<List<String>>` | `null` | Model-name prefixes claimed by this provider (e.g. `\["gpt-", "o1-"\]`). |
 | `paramMappings` | `Optional<Map<String, String>>` | `null` | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`).  Applied automatically by `ConfigDrivenProvider.transform_request`. |
 
 ---
@@ -1477,7 +1477,7 @@ Response from the rerank endpoint.
 |-------|------|---------|-------------|
 | `id` | `Optional<String>` | `null` | Unique identifier for this rerank request. |
 | `results` | `List<RerankResult>` | — | Reranked documents in order of relevance. |
-| `meta` | `Optional<Object>` | language default | Optional metadata about the reranking operation. |
+| `meta` | `Optional<Object>` | `/* serde(default) */` | Optional metadata about the reranking operation. |
 
 ---
 
@@ -1488,8 +1488,8 @@ A single reranked document with its relevance score.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `index` | `int` | — | Original document index in the input list. |
-| `relevanceScore` | `double` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `document` | `Optional<RerankResultDocument>` | language default | Original document content (if `return_documents` was true). |
+| `relevanceScore` | `double` | — | Relevance score in `\[0, 1\]`. Higher indicates more relevant. |
+| `document` | `Optional<RerankResultDocument>` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -1588,7 +1588,7 @@ An individual search result.
 | `title` | `String` | — | Result title. |
 | `url` | `String` | — | Result URL. |
 | `snippet` | `String` | — | Text snippet or excerpt from the page. |
-| `date` | `Optional<String>` | language default | Publication or last-updated date, if available. |
+| `date` | `Optional<String>` | `/* serde(default) */` | Publication or last-updated date, if available. |
 
 ---
 
@@ -1925,7 +1925,7 @@ Why a choice stopped generating tokens.
 | `TOOL_CALLS` | Tool calls |
 | `CONTENT_FILTER` | Content filter |
 | `FUNCTION_CALL` | Deprecated legacy finish reason; retained for API compatibility. |
-| `OTHER` | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and switching to `#[serde(untagged)]` would change deserialization semantics for all variants.  The original value can be recovered by inspecting the raw JSON if needed. |
+| `OTHER` | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`).  Using `#\[serde(other)\]` requires a unit variant, and switching to `#\[serde(untagged)\]` would change deserialization semantics for all variants.  The original value can be recovered by inspecting the raw JSON if needed. |
 
 ---
 
@@ -2042,7 +2042,7 @@ How the API key is sent in the HTTP request.
 
 The streaming wire format a provider uses for its response stream.
 
-Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
+Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
 a proprietary binary EventStream framing.
 
 Deserialized from the `streaming_format` JSON field via `serde`.

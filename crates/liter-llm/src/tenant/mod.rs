@@ -15,10 +15,14 @@
 //! [`LlmRequest::with_tenant_id`].  Tower layers (budget, cache, hooks) read
 //! [`LlmRequest::tenant_id`] automatically.
 
+/// Tenant context propagation primitives (TenantContext, TenantId).
 pub mod context;
+/// Etcd-backed [`resolver::KeyResolver`] implementation for distributed setups.
 #[cfg(feature = "etcd-key-resolver")]
 pub mod etcd;
+/// In-memory [`resolver::KeyResolver`] implementation for single-process tenants.
 pub mod in_memory;
+/// `KeyResolver` trait + error type defining the per-tenant credential lookup contract.
 pub mod resolver;
 
 pub use context::{TenantContext, TenantId};

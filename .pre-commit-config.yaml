@@ -30,6 +30,10 @@ repos:
                 - --exclude=liter-llm-php
                 - --exclude=liter-llm-swift
                 - --exclude=liter-llm-dart
+                # Exclude CLI because `--all-features` activates both
+                # `mimalloc` and `jemalloc` (mutually-exclusive global allocators)
+                # which is a compile-time error by design (see allocator.rs).
+                - --exclude=liter-llm-cli
                 - --all-features
                 - --all-targets
                 - --
@@ -59,7 +63,7 @@ repos:
             args: ["--max=1000"]
             # Remediation backlog: existing files over the 1,000-LOC ceiling. New
             # files are subject to the cap. Shrink this list when files are split.
-            exclude: ^(crates/liter-llm-ffi/src/lib\.rs|crates/liter-llm-jni/src/lib\.rs|crates/liter-llm-node/src/lib\.rs|crates/liter-llm-php/src/lib\.rs|crates/liter-llm-py/src/lib\.rs|crates/liter-llm-wasm/src/lib\.rs|crates/liter-llm/src/client/mod\.rs|crates/liter-llm/src/provider/anthropic\.rs|crates/liter-llm/src/provider/bedrock\.rs|crates/liter-llm/src/provider/vertex\.rs|packages/dart/rust/src/frb_generated\.rs|packages/dart/rust/src/lib\.rs|packages/elixir/native/liter_llm_nif/src/lib\.rs|packages/ruby/ext/liter_llm_rb/src/lib\.rs|packages/swift/rust/src/lib\.rs)$
+            exclude: ^(crates/liter-llm-ffi/src/lib\.rs|crates/liter-llm-jni/src/lib\.rs|crates/liter-llm-node/src/lib\.rs|crates/liter-llm-php/src/lib\.rs|crates/liter-llm-py/src/lib\.rs|crates/liter-llm-wasm/src/lib\.rs|crates/liter-llm/src/client/mod\.rs|crates/liter-llm/src/provider/anthropic\.rs|crates/liter-llm/src/provider/bedrock\.rs|crates/liter-llm/src/provider/vertex\.rs|crates/liter-llm/src/tower/budget\.rs|crates/liter-llm/src/tower/cache\.rs|crates/liter-llm/src/tower/route_classify\.rs|crates/liter-llm/src/tower/router\.rs|packages/dart/rust/src/frb_generated\.rs|packages/dart/rust/src/lib\.rs|packages/elixir/native/liter_llm_nif/src/lib\.rs|packages/ruby/ext/liter_llm_rb/src/lib\.rs|packages/swift/rust/src/lib\.rs)$
 
           # Linters and checks
           - id: ai-rulez-generate

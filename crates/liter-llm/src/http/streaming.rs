@@ -33,7 +33,7 @@ thread_local! {
     /// Per-thread pool of reusable `BytesMut` scratch buffers.
     ///
     /// Only one buffer is kept per thread to bound memory.  Buffers that have
-    /// grown beyond [`MAX_POOL_BUFFER_CAPACITY`] are discarded so that a single
+    /// grown beyond `MAX_POOL_BUFFER_CAPACITY` are discarded so that a single
     /// large response doesn't permanently inflate per-thread memory.
     static BYTES_POOL: RefCell<Option<BytesMut>> = const { RefCell::new(None) };
 }
@@ -57,7 +57,7 @@ fn pool_acquire() -> BytesMut {
 
 /// Return a `BytesMut` buffer to the per-thread pool.
 ///
-/// Buffers exceeding [`MAX_POOL_BUFFER_CAPACITY`] are dropped instead of
+/// Buffers exceeding `MAX_POOL_BUFFER_CAPACITY` are dropped instead of
 /// being pooled to prevent memory growth after large-response processing.
 #[cfg(test)]
 fn pool_release(buf: BytesMut) {
@@ -75,7 +75,7 @@ fn pool_release(buf: BytesMut) {
 
 /// A token that can be used to cancel an in-progress streaming response.
 ///
-/// Pass to [`post_stream_with_cancel`] to abort the upstream SSE connection
+/// Pass to `post_stream_with_cancel` to abort the upstream SSE connection
 /// when the downstream client disconnects.
 ///
 /// Only available when the `native-http` feature is enabled.

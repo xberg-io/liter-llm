@@ -575,6 +575,7 @@ pub enum RouterError {
     /// Discovery stream returned an error.
     #[error("discovery error (code 2001): {source}")]
     Discover {
+        /// The underlying discovery stream error.
         source: tower::BoxError,
         /// Numeric code for cross-language error conversion.
         code: u32,

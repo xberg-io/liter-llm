@@ -2,7 +2,7 @@
 title: "Ruby API Reference"
 ---
 
-## Ruby API Reference <span class="version-badge">v1.6.3</span>
+## Ruby API Reference <span class="version-badge">v1.6.4</span>
 
 ### Functions
 
@@ -248,7 +248,7 @@ Returns `nil` if the model is not present in the embedded pricing registry.
 Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
 
 When an exact model name match is not found, progressively shorter prefixes
-are tried by stripping from the last `-` or `.` separator.  For example,
+are tried by stripping from the last `-` or `.` separator. For example,
 `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 
 **Signature:**
@@ -423,7 +423,7 @@ result = count_request_tokens("value", ChatCompletionRequest.new)
 Assert that `current_len + incoming` does not exceed `limit`.
 
 Call this before appending `incoming` bytes to any buffer that must
-stay below `limit`.  Returns `Err(LiterLlmError.Streaming)` on overflow
+stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
 and emits a `tracing.warn!` with context.
 
 **Signature:**
@@ -498,7 +498,7 @@ Assistant's response to a user message.
 |-------|------|---------|-------------|
 | `content` | `String?` | `nil` | The assistant's text response. Absent if tool calls are returned instead. |
 | `name` | `String?` | `nil` | Optional name for the assistant. |
-| `tool_calls` | `Array<ToolCall>?` | `[]` | Tool calls the model wants to execute, if any. |
+| `tool_calls` | `Array<ToolCall>?` | `\[\]` | Tool calls the model wants to execute, if any. |
 | `refusal` | `String?` | `nil` | Refusal reason, if the model declined to respond per safety policies. |
 | `function_call` | `FunctionCall?` | `nil` | Deprecated legacy function_call field; retained for API compatibility. |
 
@@ -544,7 +544,7 @@ Response from listing batches.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `object` | `String` | — | Object type (always `"list"`). |
-| `data` | `Array<BatchObject>` | `[]` | List of batch objects. |
+| `data` | `Array<BatchObject>` | `\[\]` | List of batch objects. |
 | `has_more` | `Boolean?` | `nil` | Whether more results are available. |
 | `first_id` | `String?` | `nil` | First batch ID in the result set (for pagination). |
 | `last_id` | `String?` | `nil` | Last batch ID in the result set (for pagination). |
@@ -626,7 +626,7 @@ A streamed chunk of a chat completion response.
 | `object` | `String` | — | Always `"chat.completion.chunk"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not fail parsing. |
 | `created` | `Integer` | — | Unix timestamp of chunk creation. |
 | `model` | `String` | — | Model used to generate the chunk. |
-| `choices` | `Array<StreamChoice>` | `[]` | Streaming choices (delta updates). |
+| `choices` | `Array<StreamChoice>` | `\[\]` | Streaming choices (delta updates). |
 | `usage` | `Usage?` | `nil` | Token usage (typically only in the final chunk). |
 | `system_fingerprint` | `String?` | `nil` | Fingerprint of the system configuration (OpenAI-specific). |
 | `service_tier` | `String?` | `nil` | Service tier used (OpenAI-specific). |
@@ -640,18 +640,18 @@ Chat completion request (compatible with OpenAI and similar APIs).
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `model` | `String` | — | Model ID (e.g., `"gpt-4o-mini"`, `"claude-3-5-sonnet"`). |
-| `messages` | `Array<Message>` | `[]` | Conversation history from oldest to newest. |
-| `temperature` | `Float?` | `nil` | Sampling temperature in `[0.0, 2.0]`. Higher increases randomness. Defaults to 1.0. |
-| `top_p` | `Float?` | `nil` | Nucleus sampling parameter in `[0.0, 1.0]`. Lower is more focused. |
+| `messages` | `Array<Message>` | `\[\]` | Conversation history from oldest to newest. |
+| `temperature` | `Float?` | `nil` | Sampling temperature in `\[0.0, 2.0\]`. Higher increases randomness. Defaults to 1.0. |
+| `top_p` | `Float?` | `nil` | Nucleus sampling parameter in `\[0.0, 1.0\]`. Lower is more focused. |
 | `n` | `Integer?` | `nil` | Number of chat completions to generate. Defaults to 1. |
 | `stream` | `Boolean?` | `nil` | Whether to stream the response. Managed by the client layer — do not set directly. |
 | `stop` | `StopSequence?` | `nil` | Stop sequence(s) that halt token generation. |
 | `max_tokens` | `Integer?` | `nil` | Max output tokens. Different from max_completion_tokens in some providers. |
-| `presence_penalty` | `Float?` | `nil` | Presence penalty in `[-2.0, 2.0]`. Positive discourages repeated topics. |
-| `frequency_penalty` | `Float?` | `nil` | Frequency penalty in `[-2.0, 2.0]`. Positive discourages repeated tokens. |
+| `presence_penalty` | `Float?` | `nil` | Presence penalty in `\[-2.0, 2.0\]`. Positive discourages repeated topics. |
+| `frequency_penalty` | `Float?` | `nil` | Frequency penalty in `\[-2.0, 2.0\]`. Positive discourages repeated tokens. |
 | `logit_bias` | `Hash{String=>Float}?` | `{}` | Token bias map.  Uses `BTreeMap` (sorted keys) for deterministic serialization order — important when hashing or signing requests. |
 | `user` | `String?` | `nil` | User identifier for request tracking and abuse detection. |
-| `tools` | `Array<ChatCompletionTool>?` | `[]` | Tools the model can invoke. |
+| `tools` | `Array<ChatCompletionTool>?` | `\[\]` | Tools the model can invoke. |
 | `tool_choice` | `ToolChoice?` | `nil` | Tool usage mode (auto, required, none, or specific tool). |
 | `parallel_tool_calls` | `Boolean?` | `nil` | Whether the model can call multiple tools in parallel. Defaults to true. |
 | `response_format` | `ResponseFormat?` | `nil` | Output format constraint (text, JSON, JSON schema). |
@@ -672,7 +672,7 @@ Chat completion response from the API.
 | `object` | `String` | — | Always `"chat.completion"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `created` | `Integer` | — | Unix timestamp of response creation. |
 | `model` | `String` | — | Model used to generate the response. |
-| `choices` | `Array<Choice>` | `[]` | List of completion choices. |
+| `choices` | `Array<Choice>` | `\[\]` | List of completion choices. |
 | `usage` | `Usage?` | `nil` | Token usage statistics. |
 | `system_fingerprint` | `String?` | `nil` | Fingerprint of the system configuration (OpenAI-specific). |
 | `service_tier` | `String?` | `nil` | Service tier used (OpenAI-specific). |
@@ -798,8 +798,8 @@ Request to create a structured response.
 | `model` | `String` | — | Model ID. |
 | `input` | `Object` | — | Input data to process (e.g., a document to extract from). |
 | `instructions` | `String?` | `nil` | Instructions for processing the input. |
-| `tools` | `Array<ResponseTool>?` | `[]` | Available tools the model can use. |
-| `temperature` | `Float?` | `nil` | Sampling temperature in `[0.0, 2.0]`. Defaults to 1.0. |
+| `tools` | `Array<ResponseTool>?` | `\[\]` | Available tools the model can use. |
+| `temperature` | `Float?` | `nil` | Sampling temperature in `\[0.0, 2.0\]`. Defaults to 1.0. |
 | `max_output_tokens` | `Integer?` | `nil` | Maximum output tokens. |
 | `metadata` | `Object?` | `nil` | Optional metadata. |
 
@@ -815,7 +815,7 @@ Request to generate speech audio from text.
 | `input` | `String` | — | Text to synthesize into speech. |
 | `voice` | `String` | — | Voice name (e.g., `"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`). |
 | `response_format` | `String?` | `nil` | Audio format (e.g., `"mp3"`, `"opus"`, `"aac"`, `"flac"`, `"wav"`, `"pcm"`). |
-| `speed` | `Float?` | `nil` | Playback speed in `[0.25, 4.0]`. Defaults to 1.0. |
+| `speed` | `Float?` | `nil` | Playback speed in `\[0.25, 4.0\]`. Defaults to 1.0. |
 
 ---
 
@@ -830,7 +830,7 @@ Request to transcribe audio into text.
 | `language` | `String?` | `nil` | Language ISO-639-1 code (e.g., `"en"`, `"fr"`, `"de"`). Optional; model auto-detects. |
 | `prompt` | `String?` | `nil` | Optional text to guide the model (improves accuracy for domain-specific terms). |
 | `response_format` | `String?` | `nil` | Output format (e.g., `"json"`, `"text"`, `"vtt"`, `"srt"`, `"verbose_json"`). |
-| `temperature` | `Float?` | `nil` | Sampling temperature in `[0.0, 1.0]`. Higher increases variability. Defaults to 0. |
+| `temperature` | `Float?` | `nil` | Sampling temperature in `\[0.0, 1.0\]`. Higher increases variability. Defaults to 0. |
 
 ---
 
@@ -843,7 +843,7 @@ Configuration for registering a custom LLM provider at runtime.
 | `name` | `String` | — | Unique name for this provider (e.g., "my-provider"). |
 | `base_url` | `String` | — | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
 | `auth_header` | `AuthHeaderFormat` | — | Authentication header format. |
-| `model_prefixes` | `Array<String>` | — | Model name prefixes that route to this provider (e.g., `["my-"]`). |
+| `model_prefixes` | `Array<String>` | — | Model name prefixes that route to this provider (e.g., `\["my-"\]`). |
 
 ---
 
@@ -998,7 +998,7 @@ Embedding response.
 | `object` | `String` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
 | `data` | `Array<EmbeddingObject>` | — | List of embeddings. |
 | `model` | `String` | — | Model used to generate embeddings. |
-| `usage` | `Usage?` | language default | Token usage (input tokens only; embeddings have zero output tokens). |
+| `usage` | `Usage?` | `/* serde(default) */` | Token usage (input tokens only; embeddings have zero output tokens). |
 
 ---
 
@@ -1021,7 +1021,7 @@ Response from listing files.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `object` | `String` | — | Object type (always `"list"`). |
-| `data` | `Array<FileObject>` | `[]` | List of file objects. |
+| `data` | `Array<FileObject>` | `\[\]` | List of file objects. |
 | `has_more` | `Boolean?` | `nil` | Whether more results are available. |
 
 ---
@@ -1060,9 +1060,9 @@ Function definition exposed to the model.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Name of the function. Required and must be alphanumeric + underscores. |
-| `description` | `String?` | language default | Human-readable description explaining what the function does. |
-| `parameters` | `Object?` | language default | JSON Schema defining the function's parameters. |
-| `strict` | `Boolean?` | language default | If true, enforce strict JSON schema validation for arguments. |
+| `description` | `String?` | `/* serde(default) */` | Human-readable description explaining what the function does. |
+| `parameters` | `Object?` | `/* serde(default) */` | JSON Schema defining the function's parameters. |
+| `strict` | `Boolean?` | `/* serde(default) */` | If true, enforce strict JSON schema validation for arguments. |
 
 ---
 
@@ -1146,7 +1146,7 @@ Response containing generated images.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `created` | `Integer` | — | Unix timestamp of image creation. |
-| `data` | `Array<Image>` | `[]` | List of generated images. |
+| `data` | `Array<Image>` | `\[\]` | List of generated images. |
 
 ---
 
@@ -1195,7 +1195,7 @@ Response listing available models.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `object` | `String` | — | Always `"list"` from OpenAI-compatible APIs.  Stored as a plain `String` so non-standard provider values do not break deserialization. |
-| `data` | `Array<ModelObject>` | `[]` | List of available models. |
+| `data` | `Array<ModelObject>` | `\[\]` | List of available models. |
 
 ---
 
@@ -1281,7 +1281,7 @@ An image extracted from an OCR page.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `String` | — | Unique image identifier within the document. |
-| `image_base64` | `String?` | language default | Base64-encoded image data (if `include_image_base64` was true). |
+| `image_base64` | `String?` | `/* serde(default) */` | Base64-encoded image data (if `include_image_base64` was true). |
 
 ---
 
@@ -1293,8 +1293,8 @@ A single page of OCR output.
 |-------|------|---------|-------------|
 | `index` | `Integer` | — | Page index (0-based). |
 | `markdown` | `String` | — | Extracted page content as Markdown. |
-| `images` | `Array<OcrImage>?` | language default | Embedded images extracted from the page (if `include_image_base64` was true). |
-| `dimensions` | `PageDimensions?` | language default | Page dimensions in pixels, if available. |
+| `images` | `Array<OcrImage>?` | `/* serde(default) */` | Embedded images extracted from the page (if `include_image_base64` was true). |
+| `dimensions` | `PageDimensions?` | `/* serde(default) */` | Page dimensions in pixels, if available. |
 
 ---
 
@@ -1306,7 +1306,7 @@ An OCR request.
 |-------|------|---------|-------------|
 | `model` | `String` | — | The model/provider to use (e.g. `"mistral/mistral-ocr-latest"`). |
 | `document` | `OcrDocument` | `:url` | The document to process (URL or base64). |
-| `pages` | `Array<Integer>?` | `[]` | Specific pages to process (1-indexed). `nil` means all pages. |
+| `pages` | `Array<Integer>?` | `\[\]` | Specific pages to process (1-indexed). `nil` means all pages. |
 | `include_image_base64` | `Boolean?` | `nil` | Whether to include base64-encoded images of each processed page. |
 
 ---
@@ -1319,7 +1319,7 @@ An OCR response.
 |-------|------|---------|-------------|
 | `pages` | `Array<OcrPage>` | — | Extracted pages in order. |
 | `model` | `String` | — | Model/provider used for OCR. |
-| `usage` | `Usage?` | language default | Token usage, if reported by the provider. |
+| `usage` | `Usage?` | `/* serde(default) */` | Token usage, if reported by the provider. |
 
 ---
 
@@ -1355,7 +1355,7 @@ discounted rate and the remainder at the regular input rate.
 Static capability flags for a provider.
 
 Each flag indicates whether the provider's models *generally* support that
-feature.  For providers that aggregate many underlying models (e.g. Bedrock,
+feature. For providers that aggregate many underlying models (e.g. Bedrock,
 OpenRouter, vLLM) the flags reflect the superset of available model
 capabilities — a flag being `true` means at least one model supports the
 feature, not every model.
@@ -1390,7 +1390,7 @@ format, which are accessed via the `capabilities` function.
 | `base_url` | `String?` | `nil` | Base URL used as the default for this provider's HTTP client. |
 | `auth` | `AuthConfig?` | `nil` | Authentication scheme metadata (auth type + env var holding the key). |
 | `endpoints` | `Array<String>?` | `nil` | Supported endpoint kinds (e.g. `chat`, `embeddings`). |
-| `model_prefixes` | `Array<String>?` | `nil` | Model-name prefixes claimed by this provider (e.g. `["gpt-", "o1-"]`). |
+| `model_prefixes` | `Array<String>?` | `nil` | Model-name prefixes claimed by this provider (e.g. `\["gpt-", "o1-"\]`). |
 | `param_mappings` | `Hash{String=>String}?` | `nil` | Parameter key renaming for this provider. Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`) to the name this provider expects (e.g. `"max_tokens"`).  Applied automatically by `ConfigDrivenProvider.transform_request`. |
 
 ---
@@ -1433,7 +1433,7 @@ Request to rerank documents by relevance to a query.
 |-------|------|---------|-------------|
 | `model` | `String` | — | Model ID (e.g., `"cohere/rerank-english-v3.0"`). |
 | `query` | `String` | — | The search query. |
-| `documents` | `Array<RerankDocument>` | `[]` | Documents to rerank. |
+| `documents` | `Array<RerankDocument>` | `\[\]` | Documents to rerank. |
 | `top_n` | `Integer?` | `nil` | Return only the top N results. Optional. |
 | `return_documents` | `Boolean?` | `nil` | Include the document content in results. Defaults to false. |
 
@@ -1447,7 +1447,7 @@ Response from the rerank endpoint.
 |-------|------|---------|-------------|
 | `id` | `String?` | `nil` | Unique identifier for this rerank request. |
 | `results` | `Array<RerankResult>` | — | Reranked documents in order of relevance. |
-| `meta` | `Object?` | language default | Optional metadata about the reranking operation. |
+| `meta` | `Object?` | `/* serde(default) */` | Optional metadata about the reranking operation. |
 
 ---
 
@@ -1458,8 +1458,8 @@ A single reranked document with its relevance score.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `index` | `Integer` | — | Original document index in the input list. |
-| `relevance_score` | `Float` | — | Relevance score in `[0, 1]`. Higher indicates more relevant. |
-| `document` | `RerankResultDocument?` | language default | Original document content (if `return_documents` was true). |
+| `relevance_score` | `Float` | — | Relevance score in `\[0, 1\]`. Higher indicates more relevant. |
+| `document` | `RerankResultDocument?` | `/* serde(default) */` | Original document content (if `return_documents` was true). |
 
 ---
 
@@ -1484,7 +1484,7 @@ Response from a structured response request.
 | `created_at` | `Integer` | — | Unix timestamp of response creation. |
 | `model` | `String` | — | Model used to generate the response. |
 | `status` | `String` | — | Status (e.g., `"succeeded"`, `"failed"`). |
-| `output` | `Array<ResponseOutputItem>` | `[]` | Output items from the response. |
+| `output` | `Array<ResponseOutputItem>` | `\[\]` | Output items from the response. |
 | `usage` | `ResponseUsage?` | `nil` | Token usage. |
 | `error` | `Object?` | `nil` | Error details (if status is "failed"). |
 
@@ -1533,7 +1533,7 @@ A search request.
 | `model` | `String` | — | The model/provider to use (e.g. `"brave/web-search"`, `"tavily/search"`). |
 | `query` | `String` | — | The search query string. |
 | `max_results` | `Integer?` | `nil` | Maximum number of results to return. |
-| `search_domain_filter` | `Array<String>?` | `[]` | Domain filter — restrict results to specific domains. |
+| `search_domain_filter` | `Array<String>?` | `\[\]` | Domain filter — restrict results to specific domains. |
 | `country` | `String?` | `nil` | Country code for localized results (ISO 3166-1 alpha-2, e.g., `"US"`, `"FR"`). |
 
 ---
@@ -1558,7 +1558,7 @@ An individual search result.
 | `title` | `String` | — | Result title. |
 | `url` | `String` | — | Result URL. |
 | `snippet` | `String` | — | Text snippet or excerpt from the page. |
-| `date` | `String?` | language default | Publication or last-updated date, if available. |
+| `date` | `String?` | `/* serde(default) */` | Publication or last-updated date, if available. |
 
 ---
 
@@ -1612,7 +1612,7 @@ Incremental delta in a stream chunk.
 |-------|------|---------|-------------|
 | `role` | `String?` | `nil` | Role (typically present only in the first chunk). |
 | `content` | `String?` | `nil` | Partial content chunk (e.g., a few words of the response). |
-| `tool_calls` | `Array<StreamToolCall>?` | `[]` | Partial tool calls being streamed. |
+| `tool_calls` | `Array<StreamToolCall>?` | `\[\]` | Partial tool calls being streamed. |
 | `function_call` | `StreamFunctionCall?` | `nil` | Deprecated legacy function_call delta; retained for API compatibility. |
 | `refusal` | `String?` | `nil` | Partial refusal message. |
 
@@ -1696,7 +1696,7 @@ Response from a transcription request.
 | `text` | `String` | — | The transcribed text. |
 | `language` | `String?` | `nil` | Detected language (ISO-639-1 code). |
 | `duration` | `Float?` | `nil` | Total audio duration in seconds. |
-| `segments` | `Array<TranscriptionSegment>?` | `[]` | Detailed segment-level transcription (if response_format is "verbose_json"). |
+| `segments` | `Array<TranscriptionSegment>?` | `\[\]` | Detailed segment-level transcription (if response_format is "verbose_json"). |
 
 ---
 
@@ -1895,7 +1895,7 @@ Why a choice stopped generating tokens.
 | `tool_calls` | Tool calls |
 | `content_filter` | Content filter |
 | `function_call` | Deprecated legacy finish reason; retained for API compatibility. |
-| `other` | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`).  Using `#[serde(other)]` requires a unit variant, and switching to `#[serde(untagged)]` would change deserialization semantics for all variants.  The original value can be recovered by inspecting the raw JSON if needed. |
+| `other` | Catch-all for unknown finish reasons returned by non-OpenAI providers. Note: this intentionally does **not** carry the original string (e.g. `Other(String)`).  Using `#\[serde(other)\]` requires a unit variant, and switching to `#\[serde(untagged)\]` would change deserialization semantics for all variants.  The original value can be recovered by inspecting the raw JSON if needed. |
 
 ---
 
@@ -2012,7 +2012,7 @@ How the API key is sent in the HTTP request.
 
 The streaming wire format a provider uses for its response stream.
 
-Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
+Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
 a proprietary binary EventStream framing.
 
 Deserialized from the `streaming_format` JSON field via `serde`.

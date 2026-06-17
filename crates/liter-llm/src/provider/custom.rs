@@ -26,7 +26,7 @@ static CUSTOM_PROVIDERS: RwLock<Vec<CustomProviderConfig>> = RwLock::new(Vec::ne
 pub struct CustomProviderConfig {
     /// Unique name for this provider (e.g., "my-provider").
     pub name: String,
-    /// Base URL for the provider's API (e.g., "https://api.my-provider.com/v1").
+    /// Base URL for the provider's API (e.g., `<https://api.my-provider.com/v1>`).
     pub base_url: String,
     /// Authentication header format.
     pub auth_header: AuthHeaderFormat,
