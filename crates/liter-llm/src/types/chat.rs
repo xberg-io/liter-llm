@@ -7,6 +7,35 @@ use super::common::{
 };
 use crate::cost;
 
+// ─── Modality ────────────────────────────────────────────────────────────────
+
+/// Output modality requested from the model.
+///
+/// Passed as `modalities: ["text", "audio"]` (OpenAI) or translated to
+/// `generationConfig.responseModalities` (Gemini / Vertex AI).
+///
+/// # Example
+///
+/// ```
+/// use liter_llm::types::{ChatCompletionRequest, Modality};
+///
+/// let req = ChatCompletionRequest {
+///     model: "gpt-4o-audio-preview".into(),
+///     modalities: Some(vec![Modality::Text, Modality::Audio]),
+///     ..Default::default()
+/// };
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Modality {
+    /// Text output (the default for all providers).
+    Text,
+    /// Audio / speech output.
+    Audio,
+    /// Image output (Gemini Imagen, gpt-image-1).
+    Image,
+}
+
 // ─── Finish Reason ────────────────────────────────────────────────────────────
 
 /// Why a choice stopped generating tokens.
@@ -119,6 +148,12 @@ pub struct ChatCompletionRequest {
     /// Reasoning effort level (low, medium, high) for extended-thinking models.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reasoning_effort: Option<ReasoningEffort>,
+    /// Output modalities to request from the model.
+    ///
+    /// For OpenAI audio models, pass `["text", "audio"]`. Vertex AI / Gemini
+    /// translates these to `generationConfig.responseModalities` (uppercase).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub modalities: Option<Vec<Modality>>,
     /// Provider-specific extra parameters merged into the request body.
     /// Use for guardrails, safety settings, grounding config, etc.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -357,6 +392,27 @@ mod tests {
             .estimated_cost()
             .expect("cost estimation should succeed for known model");
         assert!((a - b).abs() < 1e-12);
+    }
+
+    #[test]
+    fn modalities_serializes_when_present() {
+        let req = ChatCompletionRequest {
+            model: "gpt-4o-audio-preview".into(),
+            modalities: Some(vec![Modality::Text, Modality::Audio]),
+            ..Default::default()
+        };
+        let value = serde_json::to_value(&req).expect("must serialise");
+        assert_eq!(value["modalities"], serde_json::json!(["text", "audio"]));
+    }
+
+    #[test]
+    fn modalities_omitted_when_none() {
+        let req = ChatCompletionRequest {
+            model: "gpt-4o".into(),
+            ..Default::default()
+        };
+        let value = serde_json::to_value(&req).expect("must serialise");
+        assert!(value.get("modalities").is_none(), "modalities must be absent when None");
     }
 
     #[test]

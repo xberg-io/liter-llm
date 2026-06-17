@@ -60,7 +60,7 @@ mod serde_tests {
         let resp: ChatCompletionResponse = serde_json::from_str(json).expect("deserialization should not fail");
         assert_eq!(resp.id, "chatcmpl-abc123");
         assert_eq!(resp.choices.len(), 1);
-        assert_eq!(resp.choices[0].message.content.as_deref(), Some("Hello!"));
+        assert_eq!(resp.choices[0].message.text().as_deref(), Some("Hello!"));
         assert_eq!(resp.usage.as_ref().expect("usage should be present").total_tokens, 15);
     }
 
@@ -461,6 +461,7 @@ mod serde_tests {
             stream_options: None,
             seed: None,
             reasoning_effort: None,
+            modalities: None,
             extra_body: None,
         };
 

@@ -32,7 +32,10 @@ impl Default for Message {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct SystemMessage {
     /// Instructions or context that apply throughout the conversation.
-    pub content: String,
+    ///
+    /// Accepts either a plain text string or an array of content parts,
+    /// mirroring [`UserContent`] so that `Message::system_with_parts` works.
+    pub content: UserContent,
     /// Optional name for the system message source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
@@ -62,6 +65,44 @@ pub enum UserContent {
 impl Default for UserContent {
     fn default() -> Self {
         Self::Text(String::new())
+    }
+}
+
+impl UserContent {
+    /// Return the text content as an owned `String`. For `Text` returns the
+    /// inner string; for `Parts` concatenates every `ContentPart::Text` in order.
+    /// Returns `None` when the content carries no textual data (e.g. an
+    /// image-only `Parts` vec).
+    pub fn as_text(&self) -> Option<String> {
+        match self {
+            UserContent::Text(s) => Some(s.clone()),
+            UserContent::Parts(parts) => {
+                let texts: Vec<&str> = parts
+                    .iter()
+                    .filter_map(|p| match p {
+                        ContentPart::Text { text } => Some(text.as_str()),
+                        _ => None,
+                    })
+                    .collect();
+                if texts.is_empty() {
+                    None
+                } else {
+                    Some(texts.join(""))
+                }
+            }
+        }
+    }
+}
+
+impl From<String> for UserContent {
+    fn from(s: String) -> Self {
+        Self::Text(s)
+    }
+}
+
+impl From<&str> for UserContent {
+    fn from(s: &str) -> Self {
+        Self::Text(s.to_owned())
     }
 }
 
@@ -133,12 +174,70 @@ pub struct AudioContent {
     pub format: String,
 }
 
+/// Content shape for assistant messages.
+///
+/// `#[serde(untagged)]` means providers returning a plain scalar string for the
+/// `content` field still deserialise correctly into `AssistantContent::Text(_)`.
+/// Providers returning an array of typed parts (e.g. after an image-generation
+/// or audio-synthesis request) deserialise into `AssistantContent::Parts(_)`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum AssistantContent {
+    /// Plain text response (the common case for text-only models).
+    Text(String),
+    /// Structured parts — text, refusals, output images, output audio.
+    Parts(Vec<AssistantPart>),
+}
+
+impl From<String> for AssistantContent {
+    fn from(s: String) -> Self {
+        Self::Text(s)
+    }
+}
+
+impl From<&str> for AssistantContent {
+    fn from(s: &str) -> Self {
+        Self::Text(s.to_owned())
+    }
+}
+
+/// One part of a structured assistant response.
+///
+/// `#[serde(tag = "type", rename_all = "snake_case")]` matches OpenAI's
+/// parts-spec discriminator (`"type": "text"`, `"type": "output_image"`, …).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum AssistantPart {
+    /// A text segment of the response.
+    Text {
+        /// The text content of this part.
+        text: String,
+    },
+    /// A refusal — the model declined to respond.
+    Refusal {
+        /// The refusal reason.
+        refusal: String,
+    },
+    /// An image produced by the model (e.g. `gpt-image-1`, Gemini Imagen).
+    OutputImage {
+        /// Image URL or data URI referencing the generated image.
+        image_url: ImageUrl,
+    },
+    /// Audio produced by the model (e.g. `gpt-4o-audio-preview`).
+    OutputAudio {
+        /// Base64-encoded audio data and its format.
+        audio: AudioContent,
+    },
+}
+
 /// Assistant's response to a user message.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct AssistantMessage {
-    /// The assistant's text response. Absent if tool calls are returned instead.
+    /// The assistant's response: plain text, structured parts, or absent.
+    ///
+    /// `None` is valid when the model replies with tool calls only.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub content: Option<String>,
+    pub content: Option<AssistantContent>,
     /// Optional name for the assistant.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
@@ -151,6 +250,74 @@ pub struct AssistantMessage {
     /// Deprecated legacy function_call field; retained for API compatibility.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub function_call: Option<FunctionCall>,
+}
+
+impl AssistantMessage {
+    /// Return the assistant's textual response, concatenating all `Text` parts
+    /// if the content is structured.
+    ///
+    /// Returns `None` for `Refusal`-only or `OutputImage`-only responses.
+    pub fn text(&self) -> Option<String> {
+        match self.content.as_ref()? {
+            AssistantContent::Text(s) => Some(s.clone()),
+            AssistantContent::Parts(parts) => {
+                let texts: Vec<&str> = parts
+                    .iter()
+                    .filter_map(|p| match p {
+                        AssistantPart::Text { text } => Some(text.as_str()),
+                        _ => None,
+                    })
+                    .collect();
+                if texts.is_empty() { None } else { Some(texts.join("")) }
+            }
+        }
+    }
+
+    /// Return the refusal message, if the model declined to respond.
+    ///
+    /// Checks both the top-level `refusal` field and any `Refusal` parts
+    /// inside a structured `content`.
+    pub fn refusal_text(&self) -> Option<&str> {
+        if let Some(r) = self.refusal.as_deref() {
+            return Some(r);
+        }
+        if let Some(AssistantContent::Parts(parts)) = self.content.as_ref() {
+            for part in parts {
+                if let AssistantPart::Refusal { refusal } = part {
+                    return Some(refusal.as_str());
+                }
+            }
+        }
+        None
+    }
+
+    /// Return all [`AssistantPart::OutputImage`] parts in the response.
+    pub fn output_images(&self) -> Vec<&ImageUrl> {
+        let Some(AssistantContent::Parts(parts)) = self.content.as_ref() else {
+            return vec![];
+        };
+        parts
+            .iter()
+            .filter_map(|p| match p {
+                AssistantPart::OutputImage { image_url } => Some(image_url),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// Return all [`AssistantPart::OutputAudio`] parts in the response.
+    pub fn output_audio(&self) -> Vec<&AudioContent> {
+        let Some(AssistantContent::Parts(parts)) = self.content.as_ref() else {
+            return vec![];
+        };
+        parts
+            .iter()
+            .filter_map(|p| match p {
+                AssistantPart::OutputAudio { audio } => Some(audio),
+                _ => None,
+            })
+            .collect()
+    }
 }
 
 /// Tool execution result returned to the model.
@@ -201,6 +368,51 @@ impl Message {
         Self::User(UserMessage {
             content: UserContent::Parts(parts),
             name: None,
+        })
+    }
+
+    /// Build a system message with multimodal content parts.
+    ///
+    /// Most providers accept plain-text system messages; this constructor is
+    /// for providers (e.g. Anthropic) that support structured system content.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use liter_llm::types::{Message, ContentPart};
+    ///
+    /// let msg = Message::system_with_parts(vec![
+    ///     ContentPart::text("You are a helpful assistant."),
+    /// ]);
+    /// ```
+    pub fn system_with_parts(parts: Vec<ContentPart>) -> Self {
+        Self::System(SystemMessage {
+            content: UserContent::Parts(parts),
+            name: None,
+        })
+    }
+
+    /// Build an assistant message with structured output parts.
+    ///
+    /// Use when constructing synthetic assistant turns that include images,
+    /// audio, or refusals alongside text.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use liter_llm::types::{Message, AssistantPart};
+    ///
+    /// let msg = Message::assistant_with_parts(vec![
+    ///     AssistantPart::Text { text: "Here is the image:".into() },
+    /// ]);
+    /// ```
+    pub fn assistant_with_parts(parts: Vec<AssistantPart>) -> Self {
+        Self::Assistant(AssistantMessage {
+            content: Some(AssistantContent::Parts(parts)),
+            name: None,
+            tool_calls: None,
+            refusal: None,
+            function_call: None,
         })
     }
 }
@@ -470,6 +682,143 @@ mod tests {
         assert_eq!(rf["type"], "json_schema");
         assert_eq!(rf["json_schema"]["name"], "PersonSchema");
         assert_eq!(rf["json_schema"]["strict"], true);
+    }
+
+    // ── AssistantContent / AssistantPart ─────────────────────────────────────
+
+    #[test]
+    fn assistant_content_text_deserializes_from_scalar_string() {
+        let json = r#"{"role":"assistant","content":"hi"}"#;
+        let msg: Message = serde_json::from_str(json).expect("must deserialise");
+        let Message::Assistant(a) = msg else {
+            panic!("expected assistant")
+        };
+        assert_eq!(a.content, Some(AssistantContent::Text("hi".into())));
+    }
+
+    #[test]
+    fn assistant_content_parts_deserializes_from_array() {
+        let json = r#"{"role":"assistant","content":[{"type":"text","text":"hi"}]}"#;
+        let msg: Message = serde_json::from_str(json).expect("must deserialise");
+        let Message::Assistant(a) = msg else {
+            panic!("expected assistant")
+        };
+        assert_eq!(
+            a.content,
+            Some(AssistantContent::Parts(vec![AssistantPart::Text { text: "hi".into() }]))
+        );
+    }
+
+    #[test]
+    fn assistant_message_text_helper_with_text() {
+        let a = AssistantMessage {
+            content: Some(AssistantContent::Text("hello".into())),
+            ..Default::default()
+        };
+        assert_eq!(a.text(), Some("hello".into()));
+    }
+
+    #[test]
+    fn assistant_message_text_helper_with_parts() {
+        let a = AssistantMessage {
+            content: Some(AssistantContent::Parts(vec![
+                AssistantPart::Text { text: "foo".into() },
+                AssistantPart::Text { text: "bar".into() },
+            ])),
+            ..Default::default()
+        };
+        assert_eq!(a.text(), Some("foobar".into()));
+    }
+
+    #[test]
+    fn assistant_message_text_helper_with_refusal_only_is_none() {
+        let a = AssistantMessage {
+            content: Some(AssistantContent::Parts(vec![AssistantPart::Refusal {
+                refusal: "I cannot do that.".into(),
+            }])),
+            ..Default::default()
+        };
+        assert_eq!(a.text(), None);
+    }
+
+    #[test]
+    fn assistant_part_output_image_serializes() {
+        let part = AssistantPart::OutputImage {
+            image_url: ImageUrl {
+                url: "data:image/png;base64,aGk=".into(),
+                detail: None,
+            },
+        };
+        let json = serde_json::to_string(&part).expect("must serialise");
+        assert_eq!(
+            json,
+            r#"{"type":"output_image","image_url":{"url":"data:image/png;base64,aGk="}}"#
+        );
+    }
+
+    #[test]
+    fn assistant_part_output_audio_serializes() {
+        let part = AssistantPart::OutputAudio {
+            audio: AudioContent {
+                data: "aGk=".into(),
+                format: "wav".into(),
+            },
+        };
+        let json = serde_json::to_string(&part).expect("must serialise");
+        assert_eq!(
+            json,
+            r#"{"type":"output_audio","audio":{"data":"aGk=","format":"wav"}}"#
+        );
+    }
+
+    #[test]
+    fn message_system_with_parts_serializes() {
+        let msg = Message::system_with_parts(vec![ContentPart::text("You are helpful.")]);
+        let json = serde_json::to_string(&msg).expect("must serialise");
+        assert_eq!(
+            json,
+            r#"{"role":"system","content":[{"type":"text","text":"You are helpful."}]}"#
+        );
+    }
+
+    #[test]
+    fn message_assistant_with_parts_round_trips() {
+        let msg = Message::assistant_with_parts(vec![AssistantPart::Text { text: "ok".into() }]);
+        let json = serde_json::to_string(&msg).expect("must serialise");
+        assert_eq!(json, r#"{"role":"assistant","content":[{"type":"text","text":"ok"}]}"#);
+    }
+
+    #[test]
+    fn assistant_output_images_and_audio_helpers() {
+        let url = ImageUrl {
+            url: "data:image/png;base64,aGk=".into(),
+            detail: None,
+        };
+        let audio = AudioContent {
+            data: "aGk=".into(),
+            format: "wav".into(),
+        };
+        let a = AssistantMessage {
+            content: Some(AssistantContent::Parts(vec![
+                AssistantPart::OutputImage { image_url: url.clone() },
+                AssistantPart::OutputAudio { audio: audio.clone() },
+            ])),
+            ..Default::default()
+        };
+        assert_eq!(a.output_images(), vec![&url]);
+        assert_eq!(a.output_audio(), vec![&audio]);
+    }
+
+    #[test]
+    fn system_message_content_from_string_back_compat() {
+        // Providers that return `"content": "plain text"` for system messages
+        // must still round-trip via the untagged UserContent.
+        let json = r#"{"role":"system","content":"You are a helpful assistant."}"#;
+        let msg: Message = serde_json::from_str(json).expect("must deserialise");
+        let Message::System(s) = msg else {
+            panic!("expected system")
+        };
+        assert_eq!(s.content, UserContent::Text("You are a helpful assistant.".into()));
     }
 }
 

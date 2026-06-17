@@ -23,7 +23,7 @@ use std::sync::{Arc, LazyLock, RwLock};
 use tokenizers::Tokenizer;
 
 use crate::error::{LiterLlmError, Result};
-use crate::types::{ChatCompletionRequest, ContentPart, Message, UserContent};
+use crate::types::{AssistantContent, AssistantPart, ChatCompletionRequest, ContentPart, Message, UserContent};
 
 /// Process-global tokenizer cache keyed by HuggingFace tokenizer ID.
 static TOKENIZER_CACHE: LazyLock<RwLock<HashMap<String, Arc<Tokenizer>>>> =
@@ -126,6 +126,18 @@ fn content_part_text(part: &ContentPart) -> Option<&str> {
     }
 }
 
+/// Extract the text content from a single [`AssistantPart`].
+///
+/// Returns `Some(&str)` for `Text` parts, `None` for refusals / output media.
+fn assistant_part_text(part: &AssistantPart) -> Option<&str> {
+    match part {
+        AssistantPart::Text { text } => Some(text.as_str()),
+        AssistantPart::Refusal { .. }
+        | AssistantPart::OutputImage { .. }
+        | AssistantPart::OutputAudio { .. } => None,
+    }
+}
+
 /// Count tokens for a full [`ChatCompletionRequest`].
 ///
 /// Sums tokens across all message text contents plus a per-message overhead
@@ -141,54 +153,62 @@ pub fn count_request_tokens(model: &str, req: &ChatCompletionRequest) -> Result<
     let tokenizer = get_or_load_tokenizer(model)?;
     let mut total = 0usize;
 
-    for msg in &req.messages {
-        let text: &str = match msg {
-            Message::System(m) => &m.content,
-            Message::User(m) => match &m.content {
-                UserContent::Text(t) => t,
-                UserContent::Parts(parts) => {
-                    // Count each text part individually, skip non-text parts
-                    for part in parts {
-                        if let Some(text) = content_part_text(part) {
-                            let encoding = tokenizer.encode(text, false).map_err(|e| LiterLlmError::BadRequest {
-                                message: format!("tokenization failed: {e}"),
-                                status: 400,
-                            })?;
-                            total += encoding.get_ids().len();
-                        }
-                    }
-                    continue;
-                }
-            },
-            Message::Assistant(m) => {
-                if let Some(ref c) = m.content {
-                    c
-                } else {
-                    // Tool-call-only assistant message — count tool call arguments
-                    if let Some(ref calls) = m.tool_calls {
-                        for call in calls {
-                            let encoding = tokenizer.encode(call.function.arguments.as_str(), false).map_err(|e| {
-                                LiterLlmError::BadRequest {
-                                    message: format!("tokenization failed: {e}"),
-                                    status: 400,
-                                }
-                            })?;
-                            total += encoding.get_ids().len();
-                        }
-                    }
-                    continue;
-                }
-            }
-            Message::Tool(m) => &m.content,
-            Message::Developer(m) => &m.content,
-            Message::Function(m) => &m.content,
-        };
-
-        let encoding = tokenizer.encode(text, false).map_err(|e| LiterLlmError::BadRequest {
+    let encode = |t: &str| -> Result<usize> {
+        let encoding = tokenizer.encode(t, false).map_err(|e| LiterLlmError::BadRequest {
             message: format!("tokenization failed: {e}"),
             status: 400,
         })?;
-        total += encoding.get_ids().len();
+        Ok(encoding.get_ids().len())
+    };
+
+    for msg in &req.messages {
+        match msg {
+            Message::System(m) => match &m.content {
+                UserContent::Text(t) => total += encode(t)?,
+                UserContent::Parts(parts) => {
+                    for part in parts {
+                        if let Some(text) = content_part_text(part) {
+                            total += encode(text)?;
+                        }
+                    }
+                }
+            },
+            Message::User(m) => match &m.content {
+                UserContent::Text(t) => total += encode(t)?,
+                UserContent::Parts(parts) => {
+                    for part in parts {
+                        if let Some(text) = content_part_text(part) {
+                            total += encode(text)?;
+                        }
+                    }
+                }
+            },
+            Message::Assistant(m) => {
+                match &m.content {
+                    Some(AssistantContent::Text(t)) => total += encode(t)?,
+                    Some(AssistantContent::Parts(parts)) => {
+                        for part in parts {
+                            if let Some(text) = assistant_part_text(part) {
+                                total += encode(text)?;
+                            }
+                        }
+                    }
+                    None => {}
+                }
+                // Tool-call-only assistant messages also contribute their tool-call
+                // arguments to the token budget regardless of content shape.
+                if m.content.is_none()
+                    && let Some(ref calls) = m.tool_calls
+                {
+                    for call in calls {
+                        total += encode(call.function.arguments.as_str())?;
+                    }
+                }
+            }
+            Message::Tool(m) => total += encode(&m.content)?,
+            Message::Developer(m) => total += encode(&m.content)?,
+            Message::Function(m) => total += encode(&m.content)?,
+        }
     }
 
     // Per-message overhead: ~4 tokens for role tag, separators, and formatting
@@ -270,7 +290,7 @@ mod tests {
             model: "gpt-4o".to_owned(),
             messages: vec![
                 Message::System(crate::types::SystemMessage {
-                    content: "You are a helpful assistant.".to_owned(),
+                    content: UserContent::Text("You are a helpful assistant.".to_owned()),
                     name: None,
                 }),
                 Message::User(crate::types::UserMessage {

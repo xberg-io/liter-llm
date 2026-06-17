@@ -415,7 +415,7 @@ impl RouteClassifier for LlmClassifier {
                 model: self.model.clone(),
                 messages: vec![
                     Message::System(SystemMessage {
-                        content: self.system_prompt.clone(),
+                        content: crate::types::UserContent::Text(self.system_prompt.clone()),
                         name: None,
                     }),
                     Message::User(UserMessage {
@@ -434,7 +434,7 @@ impl RouteClassifier for LlmClassifier {
                 }
             };
 
-            let text = resp.choices.into_iter().next().and_then(|c| c.message.content)?;
+            let text = resp.choices.into_iter().next().and_then(|c| c.message.text())?;
 
             let model_id = Self::parse_model_from_response(&text);
 

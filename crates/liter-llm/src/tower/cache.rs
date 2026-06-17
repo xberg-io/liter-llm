@@ -785,7 +785,7 @@ fn strategy_key(strategy: &dyn CacheKeyStrategy, req: &LlmRequest) -> Option<(u6
             // Extract system prompt from the first System message.
             let system_prompt: Option<String> = r.messages.iter().find_map(|m| {
                 if let crate::types::Message::System(s) = m {
-                    Some(s.content.clone())
+                    s.content.as_text()
                 } else {
                     None
                 }

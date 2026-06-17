@@ -366,6 +366,19 @@ pub(crate) fn transform_gemini_request(body: &mut serde_json::Value) -> Result<(
         }
     }
 
+    // Translate modalities to Gemini's responseModalities (uppercase strings).
+    // OpenAI uses lowercase ("text", "audio", "image"); Gemini expects uppercase.
+    if let Some(modalities) = body.get("modalities").and_then(|m| m.as_array()) {
+        let gemini_modalities: Vec<serde_json::Value> = modalities
+            .iter()
+            .filter_map(|m| m.as_str())
+            .map(|m| json!(m.to_uppercase()))
+            .collect();
+        if !gemini_modalities.is_empty() {
+            gen_config["responseModalities"] = json!(gemini_modalities);
+        }
+    }
+
     // Translate OpenAI tools array to Gemini functionDeclarations.
     let mut tools_value = body.get("tools").and_then(|t| t.as_array()).map(|arr| {
         let declarations: Vec<serde_json::Value> = arr
@@ -615,12 +628,52 @@ pub(crate) fn transform_gemini_response(body: &mut serde_json::Value) -> Result<
         .cloned()
         .unwrap_or_default();
 
-    // Collect text content from parts.
-    let text: String = parts
+    // Collect text and inline_data parts, building AssistantPart JSON objects.
+    // Text-only responses fold into a scalar string for back-compat.
+    // Mixed or media-only responses emit an array of typed parts.
+    let mut text_parts: Vec<String> = vec![];
+    let mut output_parts: Vec<serde_json::Value> = vec![];
+    for p in &parts {
+        if let Some(t) = p.get("text").and_then(|t| t.as_str()) {
+            if !t.is_empty() {
+                text_parts.push(t.to_owned());
+                output_parts.push(json!({"type": "text", "text": t}));
+            }
+        } else if let Some(inline) = p.get("inlineData").or_else(|| p.get("inline_data")) {
+            let mime_type = inline
+                .get("mimeType")
+                .or_else(|| inline.get("mime_type"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("application/octet-stream");
+            let data = inline.get("data").and_then(|v| v.as_str()).unwrap_or("");
+            // Gemini already base64-encodes the data — wrap directly as data URL.
+            let data_url = format!("data:{mime_type};base64,{data}");
+            if mime_type.starts_with("image/") {
+                output_parts.push(json!({
+                    "type": "output_image",
+                    "image_url": {"url": data_url}
+                }));
+            } else if mime_type.starts_with("audio/") {
+                // Extract format from mime_type (e.g. "audio/wav" -> "wav").
+                let fmt = mime_type.split('/').nth(1).unwrap_or("wav");
+                output_parts.push(json!({
+                    "type": "output_audio",
+                    "audio": {"data": data, "format": fmt}
+                }));
+            } else {
+                // Unknown media type — emit as output_image with the data URL.
+                output_parts.push(json!({
+                    "type": "output_image",
+                    "image_url": {"url": data_url}
+                }));
+            }
+        }
+    }
+    // Back-compat: if all output is text, keep the scalar string form.
+    let has_non_text = output_parts
         .iter()
-        .filter_map(|p| p.get("text").and_then(|t| t.as_str()))
-        .collect::<Vec<_>>()
-        .join("");
+        .any(|p| p.get("type").and_then(|t| t.as_str()) != Some("text"));
+    let text: String = text_parts.join("");
 
     // Collect functionCall parts and convert to OpenAI tool_calls.
     // Each call gets a unique ID via an atomic counter to avoid collisions
@@ -664,7 +717,14 @@ pub(crate) fn transform_gemini_response(body: &mut serde_json::Value) -> Result<
 
     let response_id = body.get("responseId").cloned().unwrap_or_else(|| json!("gemini-resp"));
 
-    let content_value: serde_json::Value = if text.is_empty() { json!(null) } else { json!(text) };
+    let content_value: serde_json::Value = if has_non_text && !output_parts.is_empty() {
+        // Structured response with images/audio — emit as parts array.
+        json!(output_parts)
+    } else if text.is_empty() {
+        json!(null)
+    } else {
+        json!(text)
+    };
 
     let mut message = json!({"role": "assistant", "content": content_value});
     if !tool_calls.is_empty() {
@@ -1694,5 +1754,96 @@ mod tests {
     #[test]
     fn translate_tool_choice_none_input() {
         assert!(translate_tool_choice(None).is_none());
+    }
+
+    // ── inline_data response transform ──────────────────────────────────────
+
+    #[test]
+    fn transform_response_inline_data_image_emits_output_image() {
+        let mut body = json!({
+            "candidates": [{
+                "content": {
+                    "parts": [{
+                        "inlineData": {
+                            "mimeType": "image/png",
+                            "data": "aGk="
+                        }
+                    }]
+                },
+                "finishReason": "STOP"
+            }],
+            "usageMetadata": {"promptTokenCount": 10, "candidatesTokenCount": 5}
+        });
+        transform_gemini_response(&mut body).expect("transform must succeed");
+
+        let content = body.pointer("/choices/0/message/content").expect("content must be present");
+        assert!(content.is_array(), "content must be a parts array, got: {content}");
+        let parts = content.as_array().expect("array");
+        assert_eq!(parts.len(), 1);
+        assert_eq!(parts[0]["type"], "output_image");
+        assert_eq!(parts[0]["image_url"]["url"], "data:image/png;base64,aGk=");
+    }
+
+    #[test]
+    fn transform_response_inline_data_audio_emits_output_audio() {
+        let mut body = json!({
+            "candidates": [{
+                "content": {
+                    "parts": [{
+                        "inlineData": {
+                            "mimeType": "audio/wav",
+                            "data": "aGk="
+                        }
+                    }]
+                },
+                "finishReason": "STOP"
+            }],
+            "usageMetadata": {"promptTokenCount": 5, "candidatesTokenCount": 3}
+        });
+        transform_gemini_response(&mut body).expect("transform must succeed");
+
+        let content = body.pointer("/choices/0/message/content").expect("content must be present");
+        assert!(content.is_array(), "content must be a parts array");
+        let parts = content.as_array().expect("array");
+        assert_eq!(parts.len(), 1);
+        assert_eq!(parts[0]["type"], "output_audio");
+        assert_eq!(parts[0]["audio"]["data"], "aGk=");
+        assert_eq!(parts[0]["audio"]["format"], "wav");
+    }
+
+    #[test]
+    fn transform_response_text_only_back_compat() {
+        let mut body = json!({
+            "candidates": [{
+                "content": {
+                    "parts": [{"text": "Hello!"}]
+                },
+                "finishReason": "STOP"
+            }],
+            "usageMetadata": {"promptTokenCount": 5, "candidatesTokenCount": 3}
+        });
+        transform_gemini_response(&mut body).expect("transform must succeed");
+
+        let content = body.pointer("/choices/0/message/content").expect("content must be present");
+        // Text-only responses must stay as a scalar string for back-compat.
+        assert!(content.is_string(), "text-only response must be a scalar string, got: {content}");
+        assert_eq!(content.as_str().unwrap(), "Hello!");
+    }
+
+    #[test]
+    fn transform_request_response_modalities_translated() {
+        let mut body = json!({
+            "model": "gemini-2.0-flash",
+            "messages": [{"role": "user", "content": "hi"}],
+            "modalities": ["text", "image"]
+        });
+        transform_gemini_request(&mut body).expect("transform must succeed");
+
+        let modalities = body.pointer("/generationConfig/responseModalities")
+            .expect("responseModalities must be set");
+        assert!(modalities.is_array());
+        let arr = modalities.as_array().expect("array");
+        assert!(arr.contains(&json!("TEXT")), "expected TEXT in {arr:?}");
+        assert!(arr.contains(&json!("IMAGE")), "expected IMAGE in {arr:?}");
     }
 }
