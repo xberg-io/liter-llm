@@ -84,11 +84,7 @@ impl UserContent {
                         _ => None,
                     })
                     .collect();
-                if texts.is_empty() {
-                    None
-                } else {
-                    Some(texts.join(""))
-                }
+                if texts.is_empty() { None } else { Some(texts.join("")) }
             }
         }
     }
@@ -189,6 +185,13 @@ pub enum AssistantContent {
     Parts(Vec<AssistantPart>),
 }
 
+#[cfg_attr(alef, alef(skip))]
+impl Default for AssistantContent {
+    fn default() -> Self {
+        Self::Text(String::new())
+    }
+}
+
 impl From<String> for AssistantContent {
     fn from(s: String) -> Self {
         Self::Text(s)
@@ -228,6 +231,13 @@ pub enum AssistantPart {
         /// Base64-encoded audio data and its format.
         audio: AudioContent,
     },
+}
+
+#[cfg_attr(alef, alef(skip))]
+impl Default for AssistantPart {
+    fn default() -> Self {
+        Self::Text { text: String::new() }
+    }
 }
 
 /// Assistant's response to a user message.
@@ -1041,6 +1051,7 @@ pub struct JsonSchemaFormat {
     pub strict: Option<bool>,
 }
 
+#[cfg_attr(alef, alef(skip))]
 impl JsonSchemaFormat {
     /// Create a strict `json_schema` response format with the given name and schema.
     ///

@@ -97,7 +97,7 @@ async fn chat_multi_turn() {
 
     let resp = client.chat(req).await.unwrap();
 
-    let content = resp.choices[0].message.content.as_deref().unwrap_or("");
+    let content = resp.choices[0].message.text().unwrap_or_default();
     assert!(
         content.to_lowercase().contains("alice"),
         "expected response to contain 'alice', got: {content}"

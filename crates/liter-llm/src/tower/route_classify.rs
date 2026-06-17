@@ -727,7 +727,7 @@ mod tests {
                         choices: vec![Choice {
                             index: 0,
                             message: AssistantMessage {
-                                content: Some(text),
+                                content: Some(text.into()),
                                 name: None,
                                 tool_calls: None,
                                 refusal: None,

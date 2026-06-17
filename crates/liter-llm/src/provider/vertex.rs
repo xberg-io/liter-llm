@@ -1776,7 +1776,9 @@ mod tests {
         });
         transform_gemini_response(&mut body).expect("transform must succeed");
 
-        let content = body.pointer("/choices/0/message/content").expect("content must be present");
+        let content = body
+            .pointer("/choices/0/message/content")
+            .expect("content must be present");
         assert!(content.is_array(), "content must be a parts array, got: {content}");
         let parts = content.as_array().expect("array");
         assert_eq!(parts.len(), 1);
@@ -1802,7 +1804,9 @@ mod tests {
         });
         transform_gemini_response(&mut body).expect("transform must succeed");
 
-        let content = body.pointer("/choices/0/message/content").expect("content must be present");
+        let content = body
+            .pointer("/choices/0/message/content")
+            .expect("content must be present");
         assert!(content.is_array(), "content must be a parts array");
         let parts = content.as_array().expect("array");
         assert_eq!(parts.len(), 1);
@@ -1824,9 +1828,14 @@ mod tests {
         });
         transform_gemini_response(&mut body).expect("transform must succeed");
 
-        let content = body.pointer("/choices/0/message/content").expect("content must be present");
+        let content = body
+            .pointer("/choices/0/message/content")
+            .expect("content must be present");
         // Text-only responses must stay as a scalar string for back-compat.
-        assert!(content.is_string(), "text-only response must be a scalar string, got: {content}");
+        assert!(
+            content.is_string(),
+            "text-only response must be a scalar string, got: {content}"
+        );
         assert_eq!(content.as_str().unwrap(), "Hello!");
     }
 
@@ -1839,7 +1848,8 @@ mod tests {
         });
         transform_gemini_request(&mut body).expect("transform must succeed");
 
-        let modalities = body.pointer("/generationConfig/responseModalities")
+        let modalities = body
+            .pointer("/generationConfig/responseModalities")
             .expect("responseModalities must be set");
         assert!(modalities.is_array());
         let arr = modalities.as_array().expect("array");

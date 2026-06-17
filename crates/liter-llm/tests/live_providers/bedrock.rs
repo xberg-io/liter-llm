@@ -15,7 +15,7 @@ async fn chat_basic() {
 
     assert!(!resp.choices.is_empty(), "bedrock: choices should not be empty");
     assert!(
-        resp.choices[0].message.content.as_ref().is_some_and(|c| !c.is_empty()),
+        resp.choices[0].message.text().is_some_and(|c| !c.is_empty()),
         "bedrock: first choice content should be non-empty"
     );
     assert!(

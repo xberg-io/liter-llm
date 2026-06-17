@@ -13,7 +13,7 @@ async fn chat_basic() {
     // Vertex AI (like Google AI) doesn't include model name in responses.
     assert!(!resp.choices.is_empty(), "vertex_ai: choices should not be empty");
     assert!(
-        resp.choices[0].message.content.as_ref().is_some_and(|c| !c.is_empty()),
+        resp.choices[0].message.text().is_some_and(|c| !c.is_empty()),
         "vertex_ai: first choice content should be non-empty"
     );
     assert!(

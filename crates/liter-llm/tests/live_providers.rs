@@ -150,7 +150,7 @@ pub fn assert_chat_response_valid(resp: &liter_llm::ChatCompletionResponse, labe
     assert!(!resp.choices.is_empty(), "{label}: choices should not be empty");
     let choice = &resp.choices[0];
     assert!(
-        choice.message.content.as_ref().is_some_and(|c| !c.is_empty()),
+        choice.message.text().is_some_and(|c| !c.is_empty()),
         "{label}: first choice content should be non-empty"
     );
     assert!(

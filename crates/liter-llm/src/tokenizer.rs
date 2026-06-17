@@ -132,9 +132,7 @@ fn content_part_text(part: &ContentPart) -> Option<&str> {
 fn assistant_part_text(part: &AssistantPart) -> Option<&str> {
     match part {
         AssistantPart::Text { text } => Some(text.as_str()),
-        AssistantPart::Refusal { .. }
-        | AssistantPart::OutputImage { .. }
-        | AssistantPart::OutputAudio { .. } => None,
+        AssistantPart::Refusal { .. } | AssistantPart::OutputImage { .. } | AssistantPart::OutputAudio { .. } => None,
     }
 }
 

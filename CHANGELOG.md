@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Typed multimodal builders** — `liter_llm::image::{encode_data_url, decode_data_url, DecodedDataUrl}` with `IMAGE_PNG`/`IMAGE_JPEG`/`IMAGE_WEBP`/`IMAGE_TIFF` MIME constants. `decode_data_url` returns a named `DecodedDataUrl { mime, bytes }` struct rather than a tuple so polyglot bindings extract it as a typed object.
+- **`Message::user_with_parts(parts)`** — ergonomic constructor for multimodal user messages.
+- **`ContentPart::{text, image_data_url, image_url, image_with_detail, image_png, image_jpeg, image_webp, image_tiff}`** — typed constructors replacing hand-rolled struct construction.
+- **`ResponseFormat::{json_schema, json_object, text}`** + **`JsonSchemaFormat::new(name, schema).strict(bool).description(d)`** fluent builder. `new` defaults to `strict = Some(true)`. Provider-mapping rustdoc on `ResponseFormat` (OpenAI passthrough, Gemini/Vertex `responseMimeType`+`responseSchema`, Anthropic system-instruction injection).
+- **Multimodal output**: `AssistantContent` enum (`Text` / `Parts`) with `#[serde(untagged)]` back-compat; `AssistantPart` (`Text` / `Refusal` / `OutputImage` / `OutputAudio`) with `#[serde(tag = "type", rename_all = "snake_case")]`; `AssistantMessage::{text, refusal_text, output_images, output_audio}` accessors; `Message::{assistant_with_parts, system_with_parts}` constructors; `ChatCompletionRequest.modalities: Option<Vec<Modality>>` with `Modality::{Text, Audio, Image}`. Vertex `transform_response` preserves `inline_data` as `OutputImage`/`OutputAudio` (no base64 re-encode); OpenAI `transform_response` hoists `message.audio` into `Parts([Text(transcript), OutputAudio])`.
+
+### Changed
+
+- **BREAKING**: `AssistantMessage.content: Option<String>` → `Option<AssistantContent>`. Back-compat via `From<String>`/`From<&str>` for `AssistantContent` and the untagged serde variant — providers returning scalar `content` strings still deserialize as `Text(_)`.
+- **BREAKING**: `SystemMessage.content: String` → `UserContent`. Back-compat via `From<String>`/`From<&str>` for `UserContent`.
+- `liter-llm` makes `base64` an unconditional dependency (previously gated behind `native-http`/`wasm-http`) — `liter_llm::image::*` helpers are transport-agnostic.
+
+### Notes (not yet shipped)
+
+- **Bindings regeneration deferred**. The Rust core multimodal surface is ready, but `task alef:generate` against alef 0.25.32 surfaces backend bugs in PHP and WASM extraction of `#[serde(untagged)]` enums (`AssistantContent`) and nested complex types in enum variants (`OutputImage { image_url: ImageUrl }`, `OutputAudio { audio: AudioContent }`). The v1.7.0 cut is gated on alef fixes for those backends. v1.6.5 ships first per the existing release cycle.
+
 ## [1.6.4] - 2026-06-17
 
 ### Changed

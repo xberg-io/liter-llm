@@ -575,7 +575,11 @@ pub(crate) fn transform_openai_audio_response(body: &mut serde_json::Value) -> R
 
         let data = audio.get("data").and_then(|v| v.as_str()).unwrap_or("").to_owned();
         let format = audio.get("format").and_then(|v| v.as_str()).unwrap_or("wav").to_owned();
-        let transcript = audio.get("transcript").and_then(|v| v.as_str()).unwrap_or("").to_owned();
+        let transcript = audio
+            .get("transcript")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_owned();
 
         let mut parts: Vec<serde_json::Value> = vec![];
         if !transcript.is_empty() {
@@ -881,7 +885,9 @@ mod tests {
 
         transform_openai_audio_response(&mut body).expect("transform must succeed");
 
-        let content = body.pointer("/choices/0/message/content").expect("content must be present");
+        let content = body
+            .pointer("/choices/0/message/content")
+            .expect("content must be present");
         assert!(content.is_array(), "content must be a parts array, got: {content}");
         let parts = content.as_array().expect("array");
         // transcript emitted as text part, audio data as output_audio part.

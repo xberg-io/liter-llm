@@ -58,7 +58,7 @@ async fn local_chat_ollama() {
     assert!(!resp.choices.is_empty(), "should have at least one choice");
     let choice = &resp.choices[0];
     assert!(
-        choice.message.content.as_ref().is_some_and(|c| !c.is_empty()),
+        choice.message.text().is_some_and(|c| !c.is_empty()),
         "first choice content should be non-empty"
     );
     assert!(choice.finish_reason.is_some(), "finish_reason should be present");

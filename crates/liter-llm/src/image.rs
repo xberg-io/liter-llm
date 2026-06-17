@@ -13,12 +13,13 @@
 //! let url = encode_data_url(raw, Some(IMAGE_PNG));
 //! assert!(url.starts_with("data:image/png;base64,"));
 //!
-//! let (mime, decoded) = decode_data_url(&url).expect("valid data URL");
-//! assert_eq!(mime, IMAGE_PNG);
-//! assert_eq!(decoded, raw);
+//! let decoded = decode_data_url(&url).expect("valid data URL");
+//! assert_eq!(decoded.mime, IMAGE_PNG);
+//! assert_eq!(decoded.bytes, raw);
 //! ```
 
 use base64::Engine as _;
+use serde::{Deserialize, Serialize};
 
 /// MIME type constant for PNG images.
 pub const IMAGE_PNG: &str = "image/png";
@@ -53,7 +54,19 @@ pub fn encode_data_url(bytes: &[u8], mime: Option<&str>) -> String {
     format!("data:{mime};base64,{b64}")
 }
 
-/// Decode a base64 data URL into `(mime, bytes)`.
+/// Result of decoding a `data:` URL — MIME type and the decoded byte payload.
+///
+/// Named struct (rather than a tuple) so polyglot bindings can extract
+/// `decode_data_url` with a typed return rather than a sanitized scalar.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub struct DecodedDataUrl {
+    /// MIME type extracted from the URL prefix (verbatim, not normalised).
+    pub mime: String,
+    /// Decoded base64 payload.
+    pub bytes: Vec<u8>,
+}
+
+/// Decode a base64 data URL into [`DecodedDataUrl`].
 ///
 /// Returns `None` for:
 /// - Non-data URLs (strings that do not start with `"data:"`).
@@ -69,9 +82,9 @@ pub fn encode_data_url(bytes: &[u8], mime: Option<&str>) -> String {
 /// use liter_llm::image::{encode_data_url, decode_data_url, IMAGE_PNG};
 ///
 /// let url = encode_data_url(b"hello", Some(IMAGE_PNG));
-/// let (mime, bytes) = decode_data_url(&url).expect("valid data URL");
-/// assert_eq!(mime, IMAGE_PNG);
-/// assert_eq!(bytes, b"hello");
+/// let decoded = decode_data_url(&url).expect("valid data URL");
+/// assert_eq!(decoded.mime, IMAGE_PNG);
+/// assert_eq!(decoded.bytes, b"hello");
 ///
 /// // Non-data URLs return None.
 /// assert!(decode_data_url("https://example.com/img.png").is_none());
@@ -79,14 +92,14 @@ pub fn encode_data_url(bytes: &[u8], mime: Option<&str>) -> String {
 /// // Missing ;base64, marker returns None.
 /// assert!(decode_data_url("data:image/png,plaintext").is_none());
 /// ```
-pub fn decode_data_url(url: &str) -> Option<(String, Vec<u8>)> {
+pub fn decode_data_url(url: &str) -> Option<DecodedDataUrl> {
     let rest = url.strip_prefix("data:")?;
     let marker = ";base64,";
     let marker_pos = rest.find(marker)?;
     let mime = rest[..marker_pos].to_owned();
     let b64 = &rest[marker_pos + marker.len()..];
     let bytes = base64::engine::general_purpose::STANDARD.decode(b64).ok()?;
-    Some((mime, bytes))
+    Some(DecodedDataUrl { mime, bytes })
 }
 
 #[cfg(test)]
@@ -116,11 +129,9 @@ mod tests {
         let payload = b"round-trip bytes \x00\x01\x02";
         for mime in [IMAGE_PNG, IMAGE_JPEG, IMAGE_WEBP, IMAGE_TIFF] {
             let url = encode_data_url(payload, Some(mime));
-            let (decoded_mime, decoded_bytes) = decode_data_url(&url).unwrap_or_else(|| {
-                panic!("round-trip failed for mime={mime}");
-            });
-            assert_eq!(decoded_mime, mime, "mime mismatch for {mime}");
-            assert_eq!(decoded_bytes, payload, "bytes mismatch for {mime}");
+            let decoded = decode_data_url(&url).unwrap_or_else(|| panic!("round-trip failed for mime={mime}"));
+            assert_eq!(decoded.mime, mime, "mime mismatch for {mime}");
+            assert_eq!(decoded.bytes, payload, "bytes mismatch for {mime}");
         }
     }
 
@@ -153,10 +164,10 @@ mod tests {
         ];
         for &bytes in test_cases {
             let url = encode_data_url(bytes, Some(IMAGE_PNG));
-            let (mime, decoded) =
+            let decoded =
                 decode_data_url(&url).unwrap_or_else(|| panic!("round-trip failed for input len={}", bytes.len()));
-            assert_eq!(mime, IMAGE_PNG);
-            assert_eq!(decoded, bytes);
+            assert_eq!(decoded.mime, IMAGE_PNG);
+            assert_eq!(decoded.bytes, bytes);
         }
     }
 }

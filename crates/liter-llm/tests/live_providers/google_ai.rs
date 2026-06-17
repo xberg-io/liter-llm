@@ -13,7 +13,7 @@ async fn chat_basic() {
     // Gemini doesn't include model name in responses — skip model field check.
     assert!(!resp.choices.is_empty(), "google_ai: choices should not be empty");
     assert!(
-        resp.choices[0].message.content.as_ref().is_some_and(|c| !c.is_empty()),
+        resp.choices[0].message.text().is_some_and(|c| !c.is_empty()),
         "google_ai: first choice content should be non-empty"
     );
     assert!(
