@@ -35,13 +35,12 @@ native-http = [
     "dep:tokio",
     "dep:tokio-util",
     "dep:memchr",
-    "dep:base64",
     "dep:gcp_auth",
 ]
 
 # WASM transport: browser / Node.js fetch API via gloo-timers.
 # Mutually exclusive with `native-http`.
-wasm-http = ["dep:reqwest", "dep:memchr", "dep:base64", "dep:gloo-timers", "dep:web-time"]
+wasm-http = ["dep:reqwest", "dep:memchr", "dep:gloo-timers", "dep:web-time"]
 # (HTTP/3 feature is declared further down — see the http3 entry under transports.)
 # ---------------------------------------------------------------------------
 # Observability features
@@ -153,7 +152,11 @@ ahash = { workspace = true }
 async-trait = { workspace = true }
 aws-credential-types = { version = "1", optional = true }
 aws-sigv4 = { version = "1", features = ["sign-http", "http1"], optional = true }
-base64 = { workspace = true, optional = true }
+# Unconditional: `crate::image::{encode_data_url, decode_data_url}` are
+# transport-agnostic helpers used to build `data:` URIs for multimodal
+# `ContentPart::ImageUrl` payloads. Previously gated behind `native-http` /
+# `wasm-http`; unblocking those transports is no longer the only caller.
+base64 = { workspace = true }
 bytes = { workspace = true }
 cel-interpreter = { version = "0.8", optional = true }
 dashmap = { workspace = true }

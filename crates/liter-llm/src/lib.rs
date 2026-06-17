@@ -40,6 +40,12 @@ pub mod error;
 /// Vendor-neutral guardrail plugin system (trait, stage enum, registry, built-in primitives).
 pub mod guardrail;
 pub(crate) mod http;
+/// Base64 data URL encoding and decoding for inline image payloads.
+///
+/// Provides [`image::encode_data_url`] and [`image::decode_data_url`] for
+/// building `data:<mime>;base64,<b64>` strings used in
+/// [`ContentPart::ImageUrl`].
+pub mod image;
 /// Canonical per-request usage events and pluggable sinks.
 pub mod observability;
 /// Provider catalog (built-in providers plus runtime registration of custom providers).

@@ -182,6 +182,297 @@ pub struct FunctionMessage {
     pub name: String,
 }
 
+// ─── Ergonomic constructors ───────────────────────────────────────────────────
+
+impl Message {
+    /// Build a user message with multimodal content parts.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use liter_llm::types::{Message, ContentPart};
+    ///
+    /// let msg = Message::user_with_parts(vec![
+    ///     ContentPart::text("Describe this image:"),
+    ///     ContentPart::image_png(b"\x89PNG"),
+    /// ]);
+    /// ```
+    pub fn user_with_parts(parts: Vec<ContentPart>) -> Self {
+        Self::User(UserMessage {
+            content: UserContent::Parts(parts),
+            name: None,
+        })
+    }
+}
+
+impl ContentPart {
+    /// Create a text content part.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use liter_llm::types::ContentPart;
+    ///
+    /// let part = ContentPart::text("Hello, world!");
+    /// ```
+    pub fn text(s: impl Into<String>) -> Self {
+        Self::Text { text: s.into() }
+    }
+
+    /// Create an image content part from a data URL or HTTP/HTTPS URL.
+    ///
+    /// Both `image_data_url` and `image_url` produce identical output —
+    /// `ImageUrl { url, detail: None }`. The two names exist for caller
+    /// clarity: use `image_data_url` when passing a `data:` URI and
+    /// `image_url` when passing an HTTPS URL.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use liter_llm::types::ContentPart;
+    /// use liter_llm::image::{encode_data_url, IMAGE_PNG};
+    ///
+    /// let url = encode_data_url(b"\x89PNG", Some(IMAGE_PNG));
+    /// let part = ContentPart::image_data_url(url);
+    /// ```
+    pub fn image_data_url(url: impl Into<String>) -> Self {
+        Self::ImageUrl {
+            image_url: ImageUrl {
+                url: url.into(),
+                detail: None,
+            },
+        }
+    }
+
+    /// Create an image content part from an HTTP/HTTPS URL.
+    ///
+    /// Both `image_url` and `image_data_url` produce identical output —
+    /// `ImageUrl { url, detail: None }`. The two names exist for caller
+    /// clarity: use `image_url` when passing an HTTPS URL and
+    /// `image_data_url` when passing a `data:` URI.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use liter_llm::types::ContentPart;
+    ///
+    /// let part = ContentPart::image_url("https://example.com/photo.jpg");
+    /// ```
+    pub fn image_url(url: impl Into<String>) -> Self {
+        Self::ImageUrl {
+            image_url: ImageUrl {
+                url: url.into(),
+                detail: None,
+            },
+        }
+    }
+
+    /// Create an image content part with an explicit [`ImageDetail`] level.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use liter_llm::types::{ContentPart, ImageDetail};
+    ///
+    /// let part = ContentPart::image_with_detail(
+    ///     "https://example.com/photo.jpg",
+    ///     ImageDetail::High,
+    /// );
+    /// ```
+    pub fn image_with_detail(url: impl Into<String>, detail: ImageDetail) -> Self {
+        Self::ImageUrl {
+            image_url: ImageUrl {
+                url: url.into(),
+                detail: Some(detail),
+            },
+        }
+    }
+
+    /// Create an image content part from raw PNG bytes, encoding as a data URL.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use liter_llm::types::ContentPart;
+    ///
+    /// let part = ContentPart::image_png(b"\x89PNG\r\n\x1a\n");
+    /// ```
+    pub fn image_png(bytes: &[u8]) -> Self {
+        Self::image_data_url(crate::image::encode_data_url(bytes, Some(crate::image::IMAGE_PNG)))
+    }
+
+    /// Create an image content part from raw JPEG bytes, encoding as a data URL.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use liter_llm::types::ContentPart;
+    ///
+    /// let part = ContentPart::image_jpeg(b"\xff\xd8\xff");
+    /// ```
+    pub fn image_jpeg(bytes: &[u8]) -> Self {
+        Self::image_data_url(crate::image::encode_data_url(bytes, Some(crate::image::IMAGE_JPEG)))
+    }
+
+    /// Create an image content part from raw WebP bytes, encoding as a data URL.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use liter_llm::types::ContentPart;
+    ///
+    /// let part = ContentPart::image_webp(b"RIFF");
+    /// ```
+    pub fn image_webp(bytes: &[u8]) -> Self {
+        Self::image_data_url(crate::image::encode_data_url(bytes, Some(crate::image::IMAGE_WEBP)))
+    }
+
+    /// Create an image content part from raw TIFF bytes, encoding as a data URL.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use liter_llm::types::ContentPart;
+    ///
+    /// let part = ContentPart::image_tiff(b"II*\0");
+    /// ```
+    pub fn image_tiff(bytes: &[u8]) -> Self {
+        Self::image_data_url(crate::image::encode_data_url(bytes, Some(crate::image::IMAGE_TIFF)))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn content_part_text_constructor() {
+        let part = ContentPart::text("hi");
+        let json = serde_json::to_string(&part).expect("serialization should not fail");
+        assert_eq!(json, r#"{"type":"text","text":"hi"}"#);
+    }
+
+    #[test]
+    fn content_part_image_data_url_constructor() {
+        let part = ContentPart::image_data_url("data:image/png;base64,aGk=");
+        let json = serde_json::to_string(&part).expect("serialization should not fail");
+        assert_eq!(
+            json,
+            r#"{"type":"image_url","image_url":{"url":"data:image/png;base64,aGk="}}"#
+        );
+    }
+
+    #[test]
+    fn content_part_image_with_detail() {
+        let part = ContentPart::image_with_detail("https://example.com/img.png", ImageDetail::High);
+        let json = serde_json::to_string(&part).expect("serialization should not fail");
+        assert_eq!(
+            json,
+            r#"{"type":"image_url","image_url":{"url":"https://example.com/img.png","detail":"high"}}"#
+        );
+    }
+
+    #[test]
+    fn content_part_image_png_round_trip() {
+        let part = ContentPart::image_png(b"hi");
+        match &part {
+            ContentPart::ImageUrl { image_url } => {
+                assert!(
+                    image_url.url.starts_with("data:image/png;base64,"),
+                    "expected png data URL, got: {}",
+                    image_url.url
+                );
+            }
+            other => panic!("expected ImageUrl variant, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn message_user_with_parts() {
+        let msg = Message::user_with_parts(vec![
+            ContentPart::text("hello"),
+            ContentPart::image_data_url("data:image/png;base64,aGk="),
+        ]);
+        let json = serde_json::to_string(&msg).expect("serialization should not fail");
+        assert_eq!(
+            json,
+            r#"{"role":"user","content":[{"type":"text","text":"hello"},{"type":"image_url","image_url":{"url":"data:image/png;base64,aGk="}}]}"#
+        );
+    }
+
+    // ── ResponseFormat / JsonSchemaFormat constructors ──────────────────────
+
+    #[test]
+    fn json_schema_new_defaults_strict_true() {
+        let fmt = JsonSchemaFormat::new("S", serde_json::json!({}));
+        assert_eq!(fmt.strict, Some(true));
+        assert_eq!(fmt.description, None);
+        assert_eq!(fmt.name, "S");
+    }
+
+    #[test]
+    fn json_schema_strict_toggle() {
+        let fmt = JsonSchemaFormat::new("S", serde_json::json!({})).strict(false);
+        assert_eq!(fmt.strict, Some(false));
+    }
+
+    #[test]
+    fn json_schema_description_attaches() {
+        let fmt = JsonSchemaFormat::new("S", serde_json::json!({})).description("d");
+        assert_eq!(fmt.description.as_deref(), Some("d"));
+    }
+
+    #[test]
+    fn response_format_json_schema_serializes() {
+        let fmt = ResponseFormat::json_schema("S", serde_json::json!({"type": "object"}));
+        let value = serde_json::to_value(&fmt).expect("serialization must succeed");
+        assert_eq!(
+            value,
+            serde_json::json!({
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "S",
+                    "schema": {"type": "object"},
+                    "strict": true
+                }
+            })
+        );
+        // description must be absent (skip_serializing_if = "Option::is_none")
+        assert!(value["json_schema"].get("description").is_none());
+    }
+
+    #[test]
+    fn response_format_json_object_serializes() {
+        let value = serde_json::to_value(ResponseFormat::json_object()).expect("serialization must succeed");
+        assert_eq!(value, serde_json::json!({"type": "json_object"}));
+    }
+
+    #[test]
+    fn response_format_text_serializes() {
+        let value = serde_json::to_value(ResponseFormat::text()).expect("serialization must succeed");
+        assert_eq!(value, serde_json::json!({"type": "text"}));
+    }
+
+    #[test]
+    fn chat_request_serializes_response_format() {
+        use crate::types::chat::ChatCompletionRequest;
+        let request = ChatCompletionRequest {
+            model: "gpt-4o".into(),
+            messages: vec![],
+            response_format: Some(ResponseFormat::json_schema(
+                "PersonSchema",
+                serde_json::json!({"type": "object", "properties": {"name": {"type": "string"}}}),
+            )),
+            ..Default::default()
+        };
+        let value = serde_json::to_value(&request).expect("serialization must succeed");
+        let rf = &value["response_format"];
+        assert_eq!(rf["type"], "json_schema");
+        assert_eq!(rf["json_schema"]["name"], "PersonSchema");
+        assert_eq!(rf["json_schema"]["strict"], true);
+    }
+}
+
 // ─── Tools ───────────────────────────────────────────────────────────────────
 
 /// The type discriminator for tool/tool-call objects.
@@ -296,7 +587,39 @@ pub struct SpecificFunction {
 
 // ─── Response Format ─────────────────────────────────────────────────────────
 
-/// Response format constraint.
+/// Wire format for the chat completions `response_format` field.
+///
+/// # Provider mapping
+///
+/// - **OpenAI** (and OpenAI-compatible providers): emitted verbatim as
+///   `{"type": "json_schema", "json_schema": {...}}` per the
+///   chat-completions spec.
+/// - **Gemini / Vertex AI**: translated to
+///   `generationConfig.responseMimeType = "application/json"` and
+///   `generationConfig.responseSchema = <schema>`. The `name`,
+///   `description`, and `strict` fields are dropped — Gemini's
+///   structured-output API does not consume them.
+/// - **Anthropic**: no native JSON mode. A system instruction is
+///   prepended asking the model to respond with valid JSON.
+///   `strict` is advisory only; callers should still validate the
+///   returned JSON if the schema is load-bearing.
+///
+/// # Example
+///
+/// ```no_run
+/// # use liter_llm::types::{ResponseFormat, ChatCompletionRequest};
+/// # use serde_json::json;
+/// let request = ChatCompletionRequest {
+///     model: "gpt-4o".into(),
+///     messages: vec![],
+///     response_format: Some(ResponseFormat::json_schema(
+///         "PersonSchema",
+///         json!({ "type": "object", "properties": { "name": { "type": "string" } } }),
+///     )),
+///     ..Default::default()
+/// };
+/// # let _ = request;
+/// ```
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum ResponseFormat {
@@ -310,6 +633,47 @@ pub enum ResponseFormat {
     /// Output must conform to the specified JSON schema.
     #[serde(rename = "json_schema")]
     JsonSchema { json_schema: JsonSchemaFormat },
+}
+
+impl ResponseFormat {
+    /// Construct a `json_schema` response format with `strict = true`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use liter_llm::types::ResponseFormat;
+    /// # use serde_json::json;
+    /// let fmt = ResponseFormat::json_schema("MySchema", json!({"type": "object"}));
+    /// ```
+    pub fn json_schema(name: impl Into<String>, schema: serde_json::Value) -> Self {
+        Self::JsonSchema {
+            json_schema: JsonSchemaFormat::new(name, schema),
+        }
+    }
+
+    /// Construct a `json_object` response format (unvalidated JSON).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use liter_llm::types::ResponseFormat;
+    /// let fmt = ResponseFormat::json_object();
+    /// ```
+    pub fn json_object() -> Self {
+        Self::JsonObject
+    }
+
+    /// Construct a plain-text response format (the default).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use liter_llm::types::ResponseFormat;
+    /// let fmt = ResponseFormat::text();
+    /// ```
+    pub fn text() -> Self {
+        Self::Text
+    }
 }
 
 /// JSON Schema specification for constrained output.
@@ -326,6 +690,61 @@ pub struct JsonSchemaFormat {
     /// If true, enforce strict schema validation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub strict: Option<bool>,
+}
+
+impl JsonSchemaFormat {
+    /// Create a strict `json_schema` response format with the given name and schema.
+    ///
+    /// Defaults: `strict = Some(true)`, `description = None`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use liter_llm::types::JsonSchemaFormat;
+    /// # use serde_json::json;
+    /// let fmt = JsonSchemaFormat::new("PersonSchema", json!({"type": "object"}));
+    /// assert_eq!(fmt.strict, Some(true));
+    /// ```
+    pub fn new(name: impl Into<String>, schema: serde_json::Value) -> Self {
+        Self {
+            name: name.into(),
+            description: None,
+            schema,
+            strict: Some(true),
+        }
+    }
+
+    /// Override the strict-mode flag.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use liter_llm::types::JsonSchemaFormat;
+    /// # use serde_json::json;
+    /// let fmt = JsonSchemaFormat::new("S", json!({})).strict(false);
+    /// assert_eq!(fmt.strict, Some(false));
+    /// ```
+    #[must_use]
+    pub fn strict(mut self, on: bool) -> Self {
+        self.strict = Some(on);
+        self
+    }
+
+    /// Attach a description shown to the model.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use liter_llm::types::JsonSchemaFormat;
+    /// # use serde_json::json;
+    /// let fmt = JsonSchemaFormat::new("S", json!({})).description("A person object");
+    /// assert_eq!(fmt.description.as_deref(), Some("A person object"));
+    /// ```
+    #[must_use]
+    pub fn description(mut self, d: impl Into<String>) -> Self {
+        self.description = Some(d.into());
+        self
+    }
 }
 
 // ─── Usage ───────────────────────────────────────────────────────────────────
