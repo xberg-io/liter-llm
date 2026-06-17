@@ -2681,6 +2681,35 @@
 			"streaming_format": "sse"
 		},
 		{
+			"name": "pinstripes",
+			"display_name": "Pinstripes",
+			"base_url": "https://pinstripes.io/v1",
+			"auth": {
+				"type": "bearer",
+				"env_var": "PINSTRIPES_API_KEY"
+			},
+			"endpoints": [
+				"chat"
+			],
+			"model_prefixes": [
+				"deepseek-v4-flash",
+				"glm-4.5-air",
+				"qwen3-35b",
+				"minimax-m2.7"
+			],
+			"model_count": 4,
+			"capabilities": {
+				"vision": false,
+				"reasoning": false,
+				"structured_output": true,
+				"function_calling": true,
+				"audio_in": false,
+				"audio_out": false,
+				"video_in": false
+			},
+			"streaming_format": "sse"
+		},
+		{
 			"name": "pg_vector",
 			"display_name": "PG Vector",
 			"capabilities": {
