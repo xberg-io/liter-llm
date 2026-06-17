@@ -53,3 +53,14 @@ args = ["-y", "@playwright/mcp@latest"]
 
 [defaults]
 effort = "medium"
+
+[[marketplaces]]
+name = "basemind"
+source = "Goldziher/basemind"
+type = "github"
+
+[[plugins]]
+marketplace = "basemind"
+name = "basemind"
+scope = "project"
+enabled = true
