@@ -32,8 +32,12 @@ proxy = []
 secrets-aws = ["dep:aws-config", "dep:aws-sdk-secretsmanager"]
 secrets-vault = ["dep:vaultrs", "dep:chrono"]
 
-# `full` — all proxy features: otel + opendal-cache + both secret backends.
-full = ["otel", "opendal-cache", "proxy", "secrets-aws", "secrets-vault"]
+# `etcd-watch` — etcd-backed config watch via `etcd-client`. Off by default to
+# avoid the transitive `protoc`/`prost-build` requirement in sandboxed builds.
+etcd-watch = ["dep:etcd-client"]
+
+# `full` — all proxy features: otel + opendal-cache + both secret backends + etcd watch.
+full = ["otel", "opendal-cache", "proxy", "secrets-aws", "secrets-vault", "etcd-watch"]
 
 default = ["proxy"]
 
@@ -48,7 +52,7 @@ base64 = { workspace = true }
 bytes = { workspace = true }
 chrono = { workspace = true, optional = true }
 dashmap = { workspace = true }
-etcd-client = { workspace = true }
+etcd-client = { workspace = true, optional = true }
 futures-util = { workspace = true }
 http = { workspace = true }
 liter-llm = { path = "../liter-llm", version = "1.6.3", features = [

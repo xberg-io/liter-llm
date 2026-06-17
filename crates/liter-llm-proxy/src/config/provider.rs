@@ -1,19 +1,24 @@
 //! `ConfigProvider` trait and built-in implementations.
 //!
-//! The trait decouples the proxy from its configuration source. Three
-//! implementations are provided:
+//! The trait decouples the proxy from its configuration source. Two
+//! implementations are provided by default:
 //!
 //! - [`StaticFileConfigProvider`] — loads a TOML file once at startup; the
 //!   `watch` method returns a receiver that never yields (no live reload).
 //! - [`FileWatchConfigProvider`] — uses the `notify` crate to watch a TOML
 //!   file for changes; emits a [`ConfigEvent::Put`] on every save.
+//!
+//! A third implementation is available under the `etcd-watch` feature:
+//!
 //! - [`EtcdConfigProvider`] — watches an etcd key prefix; emits
 //!   [`ConfigEvent::Put`], [`ConfigEvent::Delete`], and
-//!   [`ConfigEvent::Resync`] per etcd watch semantics.
+//!   [`ConfigEvent::Resync`] per etcd watch semantics. Requires `protoc` at
+//!   build time.
 
 use std::future::Future;
 use std::path::{Path, PathBuf};
 use std::pin::Pin;
+#[cfg(feature = "etcd-watch")]
 use std::sync::Arc;
 use std::time::UNIX_EPOCH;
 
@@ -300,6 +305,7 @@ impl ConfigProvider for FileWatchConfigProvider {
 // EtcdConfigProvider
 // ---------------------------------------------------------------------------
 
+#[cfg(feature = "etcd-watch")]
 /// Watches an etcd key prefix for configuration changes.
 ///
 /// On startup, `load` fetches the value at `key`. The `watch` method opens
@@ -313,6 +319,7 @@ pub struct EtcdConfigProvider {
     key: String,
 }
 
+#[cfg(feature = "etcd-watch")]
 impl EtcdConfigProvider {
     /// Connect to an etcd cluster and return a provider that watches `key`.
     ///
@@ -328,6 +335,7 @@ impl EtcdConfigProvider {
     }
 }
 
+#[cfg(feature = "etcd-watch")]
 impl ConfigProvider for EtcdConfigProvider {
     fn load<'a>(&'a self) -> Pin<Box<dyn Future<Output = Result<ProxyConfig, ConfigError>> + Send + 'a>> {
         let client = Arc::clone(&self.client);
@@ -362,6 +370,7 @@ impl ConfigProvider for EtcdConfigProvider {
     }
 }
 
+#[cfg(feature = "etcd-watch")]
 /// Internal: drive the etcd watch stream, reconnecting on interruption.
 async fn etcd_watch_loop(
     client: Arc<tokio::sync::Mutex<etcd_client::Client>>,
@@ -647,6 +656,7 @@ port = 9001
     // complicate the production code path for marginal unit-test coverage
     // over generated protobuf stubs. The etcd client crate itself is tested
     // upstream. We test our *glue* logic at the integration level.
+    #[cfg(feature = "etcd-watch")]
     #[test]
     fn config_provider_etcd_type_is_send_sync() {
         // Compile-time assertion: EtcdConfigProvider satisfies ConfigProvider bounds.

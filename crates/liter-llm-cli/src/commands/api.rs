@@ -160,10 +160,18 @@ fn resolve_watch_mode(args: &ApiArgs) -> Result<WatchMode, String> {
     }
 
     if !args.etcd_endpoint.is_empty() {
+        #[cfg(feature = "etcd-watch")]
         return Ok(WatchMode::Etcd {
             endpoints: args.etcd_endpoint.clone(),
             key: args.etcd_key.clone(),
         });
+
+        #[cfg(not(feature = "etcd-watch"))]
+        return Err(
+            "--etcd-endpoint requires the 'etcd-watch' feature. \
+             Rebuild liter-llm-cli with --features etcd-watch."
+                .to_owned(),
+        );
     }
 
     let path = args

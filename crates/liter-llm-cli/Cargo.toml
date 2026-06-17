@@ -17,6 +17,10 @@ path = "src/main.rs"
 # OTel export bridge — forwarded to the proxy/core otel feature chain.
 otel = ["liter-llm-proxy/otel"]
 
+# etcd-backed config watch — enables `--etcd-endpoint` at runtime.
+# Off by default; avoids the transitive `protoc`/`prost-build` requirement.
+etcd-watch = ["liter-llm-proxy/etcd-watch"]
+
 # Global allocator selection — at most one should be enabled.
 # If neither is enabled, the system allocator (the Rust default) is used.
 # `mimalloc` and `jemalloc` are mutually exclusive; enabling both is a

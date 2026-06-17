@@ -33,6 +33,10 @@ pub enum WatchMode {
     /// Watch a local TOML file for changes via `notify`.
     File { path: std::path::PathBuf },
     /// Watch an etcd key prefix for changes.
+    ///
+    /// Only available when the `etcd-watch` feature is enabled. Rebuild with
+    /// `--features etcd-watch` to use this variant.
+    #[cfg(feature = "etcd-watch")]
     Etcd { endpoints: Vec<String>, key: String },
 }
 
@@ -142,6 +146,7 @@ impl ProxyServer {
                 let provider = Arc::new(config::FileWatchConfigProvider::new(path));
                 config::watcher::spawn_watcher(provider, Arc::clone(&arc_config), cancel.clone()).await;
             }
+            #[cfg(feature = "etcd-watch")]
             WatchMode::Etcd { endpoints, key } => {
                 let provider = config::EtcdConfigProvider::connect(endpoints, key)
                     .await
