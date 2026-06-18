@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-06-18
+
+### Fixed
+
+- **FFI build under `-D warnings`** — the regenerated `liter-llm-ffi` crate referenced `#[cfg(feature = "wasm-http")]` without declaring the feature, producing `unexpected cfg condition value: wasm-http` errors that broke CI Rust, CI E2E (Build FFI), CI Mobile, and the crates.io publish in v1.7.0. alef now declares non-default passthrough features via the configurable `[crates.ffi] extra_features` key, so `wasm-http` is declared (but not enabled) and survives regeneration.
+- **Java PMD on generated DTOs** — the new `DecodedDataUrl { mime, byte[] data }` value object tripped `ArrayIsStoredDirectly` / `MethodReturnsInternalArray`; alef's PMD ruleset now excludes these for generated DTOs.
+- **Docs strict build** — fixed a broken intra-doc link in `docs/usage/multimodal.md` (`../concepts/providers.md` → `../providers.md`).
+
 ## [1.7.0] - 2026-06-18
 
 ### Added

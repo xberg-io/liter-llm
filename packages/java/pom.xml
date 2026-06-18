@@ -6,7 +6,7 @@
 
     <groupId>dev.kreuzberg.literllm</groupId>
     <artifactId>liter-llm</artifactId>
-    <version>1.7.0</version>
+    <version>1.7.1</version>
     <packaging>jar</packaging>
 
     <name>liter-llm</name>
@@ -433,7 +433,7 @@
                         <configuration>
                             <publishingServerId>ossrh</publishingServerId>
                             <autoPublish>true</autoPublish>
-                            <waitUntil>published</waitUntil>
+                            <waitUntil>validated</waitUntil>
                             <waitMaxTime>7200</waitMaxTime>
                         </configuration>
                     </plugin>

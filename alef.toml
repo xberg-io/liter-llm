@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.25.40"
+alef_version = "0.25.43"
 languages = [
   "python",
   "node",
@@ -169,6 +169,11 @@ exclude_functions = ["count_tokens", "count_request_tokens"]
 prefix = "literllm"
 header_name = "liter_llm.h"
 lib_name = "liter_llm_ffi"
+# `wasm-http` is referenced in FFI `#[cfg(any(feature = "native-http", feature =
+# "wasm-http"))]` gates but is mutually exclusive with the default `native-http`
+# backend. Declare it (without enabling it) so `RUSTFLAGS="-D warnings"` builds
+# don't fail with `unexpected cfg condition value: wasm-http`.
+extra_features = ["wasm-http"]
 
 [crates.go]
 module = "github.com/kreuzberg-dev/liter-llm/packages/go"
@@ -1964,7 +1969,7 @@ name = "liter_llm_ffi"
 name = "LiterLlm"
 
 [crates.e2e.registry.packages.zig]
-hash = "liter_llm-1.7.0-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
+hash = "liter_llm-1.7.1-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
 
 [crates.e2e.registry.packages.homebrew]
 tap = "kreuzberg-dev/homebrew-tap"

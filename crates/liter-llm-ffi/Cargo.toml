@@ -1,6 +1,6 @@
 [package]
 name = "liter-llm-ffi"
-version = "1.7.0"
+version = "1.7.1"
 edition = "2021"
 license = "MIT"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
@@ -27,11 +27,12 @@ crate-type = ["cdylib", "staticlib", "rlib"]
 default = ["native-http", "full"]
 native-http = ["liter-llm/native-http"]
 full = ["liter-llm/full"]
+wasm-http = ["liter-llm/wasm-http"]
 
 [dependencies]
 ahash = "0.8"
 futures-util = "0.3"
-liter-llm = { path = "../liter-llm", version = "1.7.0", features = ["native-http", "full"] }
+liter-llm = { path = "../liter-llm", version = "1.7.1", features = ["native-http", "full"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
 

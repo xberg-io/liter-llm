@@ -622,4 +622,4 @@ Not all providers support all modalities. Refer to the table below for support:
 | **Image Output** | `dall-e-3` | — | `imagen-3` (Vertex) | — |
 | **Audio Output** | `gpt-4o-audio-*` | — | — | — |
 
-For details on provider-specific transformations, see [Providers](../concepts/providers.md).
+For details on provider-specific transformations, see [Providers](../providers.md).

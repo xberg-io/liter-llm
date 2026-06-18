@@ -13,7 +13,7 @@ from liter_llm import ChatCompletionRequest, UserMessage, ImageUrl
 
 async def describe_image():
     client = liter_llm.create_client(api_key="your-api-key")
-    
+
     req = ChatCompletionRequest(
         model="gpt-4o-mini",  # Vision-capable model
         messages=[
@@ -23,7 +23,7 @@ async def describe_image():
             ])
         ]
     )
-    
+
     resp = await liter_llm.chat(client, req)
     print(resp.choices[0].message.text())
 
@@ -41,13 +41,13 @@ from liter_llm import ChatCompletionRequest, UserMessage, ImageUrl
 
 async def analyze_local_image():
     client = liter_llm.create_client(api_key="your-api-key")
-    
+
     # Read image file
     image_bytes = Path("diagram.png").read_bytes()
-    
+
     # Encode as data URL
     data_url = liter_llm.encode_data_url(image_bytes, mime="image/png")
-    
+
     # Use in message
     req = ChatCompletionRequest(
         model="gpt-4o-mini",
@@ -58,7 +58,7 @@ async def analyze_local_image():
             ])
         ]
     )
-    
+
     resp = await liter_llm.chat(client, req)
     print(resp.choices[0].message.text())
 
@@ -74,14 +74,14 @@ import json
 import asyncio
 import liter_llm
 from liter_llm import (
-    ChatCompletionRequest, 
-    UserMessage, 
+    ChatCompletionRequest,
+    UserMessage,
     JsonSchemaFormat
 )
 
 async def extract_structured_data():
     client = liter_llm.create_client(api_key="your-api-key")
-    
+
     # Define output schema
     schema = {
         "type": "object",
@@ -92,7 +92,7 @@ async def extract_structured_data():
         },
         "required": ["person_name", "company", "role"]
     }
-    
+
     req = ChatCompletionRequest(
         model="gpt-4o-mini",
         messages=[
@@ -105,10 +105,10 @@ async def extract_structured_data():
             description="Extract person, company, and role"
         )
     )
-    
+
     resp = await liter_llm.chat(client, req)
     result_text = resp.choices[0].message.text()
-    
+
     # Parse structured output
     extracted = json.loads(result_text)
     print(f"Name: {extracted['person_name']}")
@@ -129,7 +129,7 @@ from liter_llm import ChatCompletionRequest, UserMessage, Modality
 
 async def multimodal_response():
     client = liter_llm.create_client(api_key="your-api-key")
-    
+
     req = ChatCompletionRequest(
         model="gpt-4o-mini",
         messages=[
@@ -137,14 +137,14 @@ async def multimodal_response():
         ],
         modalities=[Modality.TEXT, Modality.AUDIO]  # Request text + audio
     )
-    
+
     resp = await liter_llm.chat(client, req)
-    
+
     # Extract output
     msg = resp.choices[0].message
     text_output = msg.text()
     audio_outputs = msg.output_audio()
-    
+
     print(f"Text: {text_output}")
     print(f"Audio parts: {len(audio_outputs)}")
 
@@ -166,12 +166,12 @@ from liter_llm import (
 
 async def analyze_document():
     client = liter_llm.create_client(api_key="your-api-key")
-    
+
     # Read PDF and encode
     pdf_bytes = open("report.pdf", "rb").read()
     import base64
     b64_pdf = base64.b64encode(pdf_bytes).decode()
-    
+
     req = ChatCompletionRequest(
         model="gpt-4o-mini",
         messages=[
@@ -181,7 +181,7 @@ async def analyze_document():
             ])
         ]
     )
-    
+
     resp = await liter_llm.chat(client, req)
     print(resp.choices[0].message.text())
 
@@ -203,12 +203,12 @@ from liter_llm import (
 
 async def process_audio():
     client = liter_llm.create_client(api_key="your-api-key")
-    
+
     # Read audio and encode
     audio_bytes = open("recording.mp3", "rb").read()
     import base64
     b64_audio = base64.b64encode(audio_bytes).decode()
-    
+
     req = ChatCompletionRequest(
         model="gpt-4o-mini",
         messages=[
@@ -218,7 +218,7 @@ async def process_audio():
             ])
         ]
     )
-    
+
     resp = await liter_llm.chat(client, req)
     print(resp.choices[0].message.text())
 

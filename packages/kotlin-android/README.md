@@ -92,7 +92,7 @@ Install via one of the supported package managers:
 **Gradle:**
 
 ```gradle
-implementation 'dev.kreuzberg:liter-llm-android:1.7.0'
+implementation 'dev.kreuzberg:liter-llm-android:1.7.1'
 ```
 
 **Maven:**
@@ -101,7 +101,7 @@ implementation 'dev.kreuzberg:liter-llm-android:1.7.0'
 <dependency>
     <groupId>dev.kreuzberg</groupId>
     <artifactId>liter-llm-android</artifactId>
-    <version>1.7.0</version>
+    <version>1.7.1</version>
 </dependency>
 ```
 
