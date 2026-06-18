@@ -1,64 +1,64 @@
 {
-	"id": "smoke_chat_anthropic",
-	"description": "Basic chat completion against real Anthropic API",
-	"category": "smoke",
-	"tags": ["smoke", "anthropic", "chat"],
-	"call": "chat",
-	"input": {
-		"model": "anthropic/claude-sonnet-4-20250514",
-		"messages": [
-			{
-				"role": "user",
-				"content": "Say hello in exactly one word."
-			}
-		],
-		"max_tokens": 10
-	},
-	"env": {
-		"api_key_var": "ANTHROPIC_API_KEY"
-	},
-	"mock_response": {
-		"status": 200,
-		"body": {
-			"id": "chatcmpl-smoke002",
-			"object": "chat.completion",
-			"created": 1711000000,
-			"model": "claude-sonnet-4-20250514",
-			"choices": [
-				{
-					"index": 0,
-					"message": {
-						"role": "assistant",
-						"content": "Hello"
-					},
-					"finish_reason": "stop"
-				}
-			],
-			"usage": {
-				"prompt_tokens": 12,
-				"completion_tokens": 1,
-				"total_tokens": 13
-			}
-		}
-	},
-	"assertions": [
-		{
-			"type": "not_error"
-		},
-		{
-			"type": "not_error"
-		},
-		{
-			"type": "not_empty",
-			"field": "choices"
-		},
-		{
-			"type": "not_empty",
-			"field": "usage"
-		}
-	],
-	"skip": {
-		"languages": ["rust"],
-		"reason": "requires live API credentials not available in mock-based test environment"
-	}
+  "id": "smoke_chat_anthropic",
+  "description": "Basic chat completion against real Anthropic API",
+  "category": "smoke",
+  "tags": ["smoke", "anthropic", "chat"],
+  "call": "chat",
+  "input": {
+    "model": "anthropic/claude-sonnet-4-20250514",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Say hello in exactly one word."
+      }
+    ],
+    "max_tokens": 10
+  },
+  "env": {
+    "api_key_var": "ANTHROPIC_API_KEY"
+  },
+  "mock_response": {
+    "status": 200,
+    "body": {
+      "id": "chatcmpl-smoke002",
+      "object": "chat.completion",
+      "created": 1711000000,
+      "model": "claude-sonnet-4-20250514",
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "Hello"
+          },
+          "finish_reason": "stop"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 12,
+        "completion_tokens": 1,
+        "total_tokens": 13
+      }
+    }
+  },
+  "assertions": [
+    {
+      "type": "not_error"
+    },
+    {
+      "type": "not_error"
+    },
+    {
+      "type": "not_empty",
+      "field": "choices"
+    },
+    {
+      "type": "not_empty",
+      "field": "usage"
+    }
+  ],
+  "skip": {
+    "languages": ["rust"],
+    "reason": "requires live API credentials not available in mock-based test environment"
+  }
 }

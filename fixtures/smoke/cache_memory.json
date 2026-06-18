@@ -1,63 +1,63 @@
 {
-	"id": "smoke_cache_memory",
-	"description": "Test in-memory caching by sending identical requests twice",
-	"category": "smoke",
-	"tags": ["smoke", "openai", "cache"],
-	"call": "chat",
-	"input": {
-		"model": "openai/gpt-4o-mini",
-		"messages": [
-			{
-				"role": "user",
-				"content": "What is 2+2? Answer with just the number."
-			}
-		],
-		"max_tokens": 5
-	},
-	"env": {
-		"api_key_var": "OPENAI_API_KEY"
-	},
-	"mock_response": {
-		"status": 200,
-		"body": {
-			"id": "chatcmpl-smoke004",
-			"object": "chat.completion",
-			"created": 1711000000,
-			"model": "gpt-4o-mini",
-			"choices": [
-				{
-					"index": 0,
-					"message": {
-						"role": "assistant",
-						"content": "4"
-					},
-					"finish_reason": "stop"
-				}
-			],
-			"usage": {
-				"prompt_tokens": 16,
-				"completion_tokens": 1,
-				"total_tokens": 17
-			}
-		}
-	},
-	"assertions": [
-		{
-			"type": "not_error"
-		},
-		{
-			"type": "not_error"
-		},
-		{
-			"type": "not_empty",
-			"field": "choices"
-		},
-		{
-			"type": "not_error"
-		}
-	],
-	"skip": {
-		"languages": ["rust"],
-		"reason": "requires live API credentials not available in mock-based test environment"
-	}
+  "id": "smoke_cache_memory",
+  "description": "Test in-memory caching by sending identical requests twice",
+  "category": "smoke",
+  "tags": ["smoke", "openai", "cache"],
+  "call": "chat",
+  "input": {
+    "model": "openai/gpt-4o-mini",
+    "messages": [
+      {
+        "role": "user",
+        "content": "What is 2+2? Answer with just the number."
+      }
+    ],
+    "max_tokens": 5
+  },
+  "env": {
+    "api_key_var": "OPENAI_API_KEY"
+  },
+  "mock_response": {
+    "status": 200,
+    "body": {
+      "id": "chatcmpl-smoke004",
+      "object": "chat.completion",
+      "created": 1711000000,
+      "model": "gpt-4o-mini",
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "4"
+          },
+          "finish_reason": "stop"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 16,
+        "completion_tokens": 1,
+        "total_tokens": 17
+      }
+    }
+  },
+  "assertions": [
+    {
+      "type": "not_error"
+    },
+    {
+      "type": "not_error"
+    },
+    {
+      "type": "not_empty",
+      "field": "choices"
+    },
+    {
+      "type": "not_error"
+    }
+  ],
+  "skip": {
+    "languages": ["rust"],
+    "reason": "requires live API credentials not available in mock-based test environment"
+  }
 }

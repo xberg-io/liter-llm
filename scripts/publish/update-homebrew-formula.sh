@@ -59,14 +59,30 @@ else:
 head = re.sub(r"""^(\s*url\s+)["'][^"']*["']""", rf'\1"{new_url}"', head, count=1, flags=re.MULTILINE)
 head = re.sub(r"""^(\s*sha256\s+)["'][^"']*["']""", rf'\1"{new_sha}"', head, count=1, flags=re.MULTILINE)
 
-# liter-llm-cli pulls liter-llm-proxy -> etcd-client v0.15, whose build.rs
-# shells out to `protoc` (via prost-build). Without `protobuf` as a build
-# dep the source-from-bottle builders (sequoia, arm64_sequoia, x86_64_linux,
-# arm64_linux) fail when brew rebuilds from source. Inject idempotently.
+# liter-llm-cli pulls liter-llm-proxy -> etcd-client v0.15 (with the
+# `etcd-watch` feature) whose build.rs shells out to `protoc` via prost-build.
+# `etcd-watch` is off by default since v1.6.4, so this dep is only a no-op
+# safety net on default brew builds — but it does no harm to keep it. Idempotent.
 if "depends_on 'protobuf' => :build" not in head and 'depends_on "protobuf" => :build' not in head:
     head = re.sub(
         r"""(^\s*depends_on\s+['"]rust['"]\s+=>\s+:build[^\n]*\n)""",
         r"\1  depends_on 'protobuf' => :build\n",
+        head,
+        count=1,
+        flags=re.MULTILINE,
+    )
+
+# opendal-core (used by liter-llm-proxy's opendal-cache feature) unconditionally
+# pulls reqwest with `hyper-tls` -> `native-tls` -> `openssl-sys`. brew's
+# arm64_linux/x86_64_linux source-build sandbox lacks system OpenSSL, so the
+# `openssl-sys` build script fails with "Could not find directory of OpenSSL
+# installation". Without an upstream fix in opendal-core to honour `default-
+# features = false` on its reqwest dep, brew needs `openssl@3` as a build dep.
+# Idempotent injection.
+if "depends_on 'openssl@3' => :build" not in head and 'depends_on "openssl@3" => :build' not in head:
+    head = re.sub(
+        r"""(^\s*depends_on\s+['"]protobuf['"]\s+=>\s+:build[^\n]*\n)""",
+        r"\1  depends_on 'openssl@3' => :build\n",
         head,
         count=1,
         flags=re.MULTILINE,

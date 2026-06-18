@@ -2,7 +2,7 @@
 title: "Dart API Reference"
 ---
 
-## Dart API Reference <span class="version-badge">v1.6.4</span>
+## Dart API Reference <span class="version-badge">v1.7.0</span>
 
 ### Functions
 
@@ -79,6 +79,70 @@ final result = createClientFromJson("value");
 **Returns:** `DefaultClient`
 
 **Errors:** Throws `Error`.
+
+---
+
+#### encodeDataUrl()
+
+Encode bytes as a base64 data URL: `data:<mime>;base64,<b64>`.
+
+`mime` defaults to `IMAGE_PNG` when `null`.
+
+**Signature:**
+
+```dart
+String encodeDataUrl(Uint8List bytes, [String? mime])
+```
+
+**Example:**
+
+```dart
+final result = encodeDataUrl(Uint8List.fromList([100, 97, 116, 97]), "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `bytes` | `Uint8List` | Yes | The bytes |
+| `mime` | `String?` | No | The mime |
+
+**Returns:** `String`
+
+---
+
+#### decodeDataUrl()
+
+Decode a base64 data URL into `DecodedDataUrl`.
+
+Returns `null` for:
+
+- Non-data URLs (strings that do not start with `"data:"`).
+- Malformed prefixes (missing `";base64,"` marker).
+- Invalid base64 payloads.
+
+The returned MIME string is extracted verbatim from the URL prefix —
+it is not validated or normalised.
+
+**Signature:**
+
+```dart
+DecodedDataUrl? decodeDataUrl(String url)
+```
+
+**Example:**
+
+```dart
+final result = decodeDataUrl("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `url` | `String` | Yes | The URL to fetch |
+
+**Returns:** `DecodedDataUrl?`
 
 ---
 
@@ -488,6 +552,28 @@ ensureCryptoProvider();
 
 ---
 
+#### ensureCryptoProvider()
+
+No-op on Windows: reqwest uses native-tls (SChannel), so no rustls provider
+installation is needed. All callers use the same call site regardless of
+platform.
+
+**Signature:**
+
+```dart
+void ensureCryptoProvider()
+```
+
+**Example:**
+
+```dart
+ensureCryptoProvider();
+```
+
+**Returns:** No return value.
+
+---
+
 ### Types
 
 #### AssistantMessage
@@ -496,11 +582,91 @@ Assistant's response to a user message.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `String?` | `null` | The assistant's text response. Absent if tool calls are returned instead. |
+| `content` | `AssistantContent?` | `null` | The assistant's response: plain text, structured parts, or absent. `null` is valid when the model replies with tool calls only. |
 | `name` | `String?` | `null` | Optional name for the assistant. |
 | `toolCalls` | `List<ToolCall>?` | `\[\]` | Tool calls the model wants to execute, if any. |
 | `refusal` | `String?` | `null` | Refusal reason, if the model declined to respond per safety policies. |
 | `functionCall` | `FunctionCall?` | `null` | Deprecated legacy function_call field; retained for API compatibility. |
+
+##### Methods
+
+###### text()
+
+Return the assistant's textual response, concatenating all `Text` parts
+if the content is structured.
+
+Returns `null` for `Refusal`-only or `OutputImage`-only responses.
+
+**Signature:**
+
+```dart
+String? text()
+```
+
+**Example:**
+
+```dart
+final result = instance.text();
+```
+
+**Returns:** `String?`
+
+###### refusalText()
+
+Return the refusal message, if the model declined to respond.
+
+Checks both the top-level `refusal` field and any `Refusal` parts
+inside a structured `content`.
+
+**Signature:**
+
+```dart
+String? refusalText()
+```
+
+**Example:**
+
+```dart
+final result = instance.refusalText();
+```
+
+**Returns:** `String?`
+
+###### outputImages()
+
+Return all `AssistantPart.OutputImage` parts in the response.
+
+**Signature:**
+
+```dart
+List<ImageUrl> outputImages()
+```
+
+**Example:**
+
+```dart
+final result = instance.outputImages();
+```
+
+**Returns:** `List<ImageUrl>`
+
+###### outputAudio()
+
+Return all `AssistantPart.OutputAudio` parts in the response.
+
+**Signature:**
+
+```dart
+List<AudioContent> outputAudio()
+```
+
+**Example:**
+
+```dart
+final result = instance.outputAudio();
+```
+
+**Returns:** `List<AudioContent>`
 
 ---
 
@@ -688,6 +854,7 @@ Chat completion request (compatible with OpenAI and similar APIs).
 | `streamOptions` | `StreamOptions?` | `null` | Streaming options (e.g., include_usage). |
 | `seed` | `int?` | `null` | Random seed for reproducible outputs. Provider support varies. |
 | `reasoningEffort` | `ReasoningEffort?` | `null` | Reasoning effort level (low, medium, high) for extended-thinking models. |
+| `modalities` | `List<Modality>?` | `\[\]` | Output modalities to request from the model. For OpenAI audio models, pass `\["text", "audio"\]`. Vertex AI / Gemini translates these to `generationConfig.responseModalities` (uppercase). |
 | `extraBody` | `String?` | `null` | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc. |
 
 ---
@@ -871,9 +1038,23 @@ Configuration for registering a custom LLM provider at runtime.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Unique name for this provider (e.g., "my-provider"). |
-| `baseUrl` | `String` | — | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
+| `baseUrl` | `String` | — | Base URL for the provider's API (e.g., `<https://api.my-provider.com/v1>`). |
 | `authHeader` | `AuthHeaderFormat` | — | Authentication header format. |
 | `modelPrefixes` | `List<String>` | — | Model name prefixes that route to this provider (e.g., `\["my-"\]`). |
+
+---
+
+#### DecodedDataUrl
+
+Result of decoding a `data:` URL — MIME type and the decoded byte payload.
+
+Named struct (rather than a tuple) so polyglot bindings can extract
+`decode_data_url` with a typed return rather than a sanitized scalar.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `mime` | `String` | — | MIME type extracted from the URL prefix (verbatim, not normalised). |
+| `data` | `Uint8List` | — | Decoded base64 payload. |
 
 ---
 
@@ -1688,7 +1869,7 @@ System message guiding model behavior for the entire conversation.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `String` | — | Instructions or context that apply throughout the conversation. |
+| `content` | `UserContent` | `UserContent.Text` | Instructions or context that apply throughout the conversation. Accepts either a plain text string or an array of content parts, mirroring `UserContent` so that `Message.system_with_parts` works. |
 | `name` | `String?` | `null` | Optional name for the system message source. |
 
 ---
@@ -1854,6 +2035,38 @@ Image detail level controlling token cost and processing.
 
 ---
 
+#### AssistantContent
+
+Content shape for assistant messages.
+
+`#[serde(untagged)]` means providers returning a plain scalar string for the
+`content` field still deserialise correctly into `AssistantContent.Text(_)`.
+Providers returning an array of typed parts (e.g. after an image-generation
+or audio-synthesis request) deserialise into `AssistantContent.Parts(_)`.
+
+| Value | Description |
+|-------|-------------|
+| `Text` | Plain text response (the common case for text-only models). — Fields: `0`: `String` |
+| `Parts` | Structured parts — text, refusals, output images, output audio. — Fields: `0`: `List<AssistantPart>` |
+
+---
+
+#### AssistantPart
+
+One part of a structured assistant response.
+
+`#[serde(tag = "type", rename_all = "snake_case")]` matches OpenAI's
+parts-spec discriminator (`"type": "text"`, `"type": "output_image"`, …).
+
+| Value | Description |
+|-------|-------------|
+| `Text` | A text segment of the response. — Fields: `text`: `String` |
+| `Refusal` | A refusal — the model declined to respond. — Fields: `refusal`: `String` |
+| `OutputImage` | An image produced by the model (e.g. `gpt-image-1`, Gemini Imagen). — Fields: `imageUrl`: `ImageUrl` |
+| `OutputAudio` | Audio produced by the model (e.g. `gpt-4o-audio-preview`). — Fields: `audio`: `AudioContent` |
+
+---
+
 #### ToolType
 
 The type discriminator for tool/tool-call objects.
@@ -1893,7 +2106,24 @@ Tool choice mode.
 
 #### ResponseFormat
 
-Response format constraint.
+Wire format for the chat completions `response_format` field.
+
+### Provider mapping
+
+- **OpenAI** (and OpenAI-compatible providers): emitted verbatim as
+  `{"type": "json_schema", "json_schema": {...}}` per the
+  chat-completions spec.
+
+- **Gemini / Vertex AI**: translated to
+  `generationConfig.responseMimeType = "application/json"` and
+  `generationConfig.responseSchema = <schema>`. The `name`,
+  `description`, and `strict` fields are dropped — Gemini's
+  structured-output API does not consume them.
+
+- **Anthropic**: no native JSON mode. A system instruction is
+  prepended asking the model to respond with valid JSON.
+  `strict` is advisory only; callers should still validate the
+  returned JSON if the schema is load-bearing.
 
 | Value | Description |
 |-------|-------------|
@@ -1911,6 +2141,21 @@ Stop sequence(s) that cause the model to stop generating.
 |-------|-------------|
 | `Single` | Single stop sequence. — Fields: `0`: `String` |
 | `Multiple` | Multiple stop sequences. — Fields: `0`: `List<String>` |
+
+---
+
+#### Modality
+
+Output modality requested from the model.
+
+Passed as `modalities: ["text", "audio"]` (OpenAI) or translated to
+`generationConfig.responseModalities` (Gemini / Vertex AI).
+
+| Value | Description |
+|-------|-------------|
+| `Text` | Text output (the default for all providers). |
+| `Audio` | Audio / speech output. |
+| `Image` | Image output (Gemini Imagen, gpt-image-1). |
 
 ---
 

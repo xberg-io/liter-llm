@@ -2,7 +2,7 @@
 title: "Python API Reference"
 ---
 
-## Python API Reference <span class="version-badge">v1.6.4</span>
+## Python API Reference <span class="version-badge">v1.7.0</span>
 
 ### Functions
 
@@ -79,6 +79,70 @@ result = create_client_from_json("value")
 **Returns:** `DefaultClient`
 
 **Errors:** Raises `Error`.
+
+---
+
+#### encode_data_url()
+
+Encode bytes as a base64 data URL: `data:<mime>;base64,<b64>`.
+
+`mime` defaults to `IMAGE_PNG` when `None`.
+
+**Signature:**
+
+```python
+def encode_data_url(bytes: bytes, mime: str = None) -> str
+```
+
+**Example:**
+
+```python
+result = encode_data_url(b"data", mime="value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `bytes` | `bytes` | Yes | The bytes |
+| `mime` | `str \| None` | No | The mime |
+
+**Returns:** `str`
+
+---
+
+#### decode_data_url()
+
+Decode a base64 data URL into `DecodedDataUrl`.
+
+Returns `None` for:
+
+- Non-data URLs (strings that do not start with `"data:"`).
+- Malformed prefixes (missing `";base64,"` marker).
+- Invalid base64 payloads.
+
+The returned MIME string is extracted verbatim from the URL prefix —
+it is not validated or normalised.
+
+**Signature:**
+
+```python
+def decode_data_url(url: str) -> DecodedDataUrl | None
+```
+
+**Example:**
+
+```python
+result = decode_data_url("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `url` | `str` | Yes | The URL to fetch |
+
+**Returns:** `DecodedDataUrl | None`
 
 ---
 
@@ -488,6 +552,28 @@ ensure_crypto_provider()
 
 ---
 
+#### ensure_crypto_provider()
+
+No-op on Windows: reqwest uses native-tls (SChannel), so no rustls provider
+installation is needed. All callers use the same call site regardless of
+platform.
+
+**Signature:**
+
+```python
+def ensure_crypto_provider() -> None
+```
+
+**Example:**
+
+```python
+ensure_crypto_provider()
+```
+
+**Returns:** No return value.
+
+---
+
 ### Types
 
 #### AssistantMessage
@@ -496,11 +582,91 @@ Assistant's response to a user message.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `str \| None` | `None` | The assistant's text response. Absent if tool calls are returned instead. |
+| `content` | `AssistantContent \| None` | `None` | The assistant's response: plain text, structured parts, or absent. `None` is valid when the model replies with tool calls only. |
 | `name` | `str \| None` | `None` | Optional name for the assistant. |
 | `tool_calls` | `list\[ToolCall\] \| None` | `\[\]` | Tool calls the model wants to execute, if any. |
 | `refusal` | `str \| None` | `None` | Refusal reason, if the model declined to respond per safety policies. |
 | `function_call` | `FunctionCall \| None` | `None` | Deprecated legacy function_call field; retained for API compatibility. |
+
+##### Methods
+
+###### text()
+
+Return the assistant's textual response, concatenating all `Text` parts
+if the content is structured.
+
+Returns `None` for `Refusal`-only or `OutputImage`-only responses.
+
+**Signature:**
+
+```python
+def text(self) -> str | None
+```
+
+**Example:**
+
+```python
+result = instance.text()
+```
+
+**Returns:** `str | None`
+
+###### refusal_text()
+
+Return the refusal message, if the model declined to respond.
+
+Checks both the top-level `refusal` field and any `Refusal` parts
+inside a structured `content`.
+
+**Signature:**
+
+```python
+def refusal_text(self) -> str | None
+```
+
+**Example:**
+
+```python
+result = instance.refusal_text()
+```
+
+**Returns:** `str | None`
+
+###### output_images()
+
+Return all `AssistantPart.OutputImage` parts in the response.
+
+**Signature:**
+
+```python
+def output_images(self) -> list[ImageUrl]
+```
+
+**Example:**
+
+```python
+result = instance.output_images()
+```
+
+**Returns:** `list[ImageUrl]`
+
+###### output_audio()
+
+Return all `AssistantPart.OutputAudio` parts in the response.
+
+**Signature:**
+
+```python
+def output_audio(self) -> list[AudioContent]
+```
+
+**Example:**
+
+```python
+result = instance.output_audio()
+```
+
+**Returns:** `list[AudioContent]`
 
 ---
 
@@ -690,6 +856,7 @@ Chat completion request (compatible with OpenAI and similar APIs).
 | `stream_options` | `StreamOptions \| None` | `None` | Streaming options (e.g., include_usage). |
 | `seed` | `int \| None` | `None` | Random seed for reproducible outputs. Provider support varies. |
 | `reasoning_effort` | `ReasoningEffort \| None` | `None` | Reasoning effort level (low, medium, high) for extended-thinking models. |
+| `modalities` | `list\[Modality\] \| None` | `\[\]` | Output modalities to request from the model. For OpenAI audio models, pass `\["text", "audio"\]`. Vertex AI / Gemini translates these to `generationConfig.responseModalities` (uppercase). |
 | `extra_body` | `dict\[str, Any\] \| None` | `None` | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc. |
 
 ---
@@ -873,9 +1040,23 @@ Configuration for registering a custom LLM provider at runtime.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `str` | — | Unique name for this provider (e.g., "my-provider"). |
-| `base_url` | `str` | — | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
+| `base_url` | `str` | — | Base URL for the provider's API (e.g., `<https://api.my-provider.com/v1>`). |
 | `auth_header` | `AuthHeaderFormat` | — | Authentication header format. |
 | `model_prefixes` | `list\[str\]` | — | Model name prefixes that route to this provider (e.g., `\["my-"\]`). |
+
+---
+
+#### DecodedDataUrl
+
+Result of decoding a `data:` URL — MIME type and the decoded byte payload.
+
+Named struct (rather than a tuple) so polyglot bindings can extract
+`decode_data_url` with a typed return rather than a sanitized scalar.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `mime` | `str` | — | MIME type extracted from the URL prefix (verbatim, not normalised). |
+| `data` | `bytes` | — | Decoded base64 payload. |
 
 ---
 
@@ -1691,7 +1872,7 @@ System message guiding model behavior for the entire conversation.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `str` | — | Instructions or context that apply throughout the conversation. |
+| `content` | `UserContent` | `UserContent.TEXT` | Instructions or context that apply throughout the conversation. Accepts either a plain text string or an array of content parts, mirroring `UserContent` so that `Message.system_with_parts` works. |
 | `name` | `str \| None` | `None` | Optional name for the system message source. |
 
 ---
@@ -1858,6 +2039,38 @@ Image detail level controlling token cost and processing.
 
 ---
 
+#### AssistantContent
+
+Content shape for assistant messages.
+
+`#[serde(untagged)]` means providers returning a plain scalar string for the
+`content` field still deserialise correctly into `AssistantContent.Text(_)`.
+Providers returning an array of typed parts (e.g. after an image-generation
+or audio-synthesis request) deserialise into `AssistantContent.Parts(_)`.
+
+| Value | Description |
+|-------|-------------|
+| `TEXT` | Plain text response (the common case for text-only models). — Fields: `0`: `str` |
+| `PARTS` | Structured parts — text, refusals, output images, output audio. — Fields: `0`: `list\[AssistantPart\]` |
+
+---
+
+#### AssistantPart
+
+One part of a structured assistant response.
+
+`#[serde(tag = "type", rename_all = "snake_case")]` matches OpenAI's
+parts-spec discriminator (`"type": "text"`, `"type": "output_image"`, …).
+
+| Value | Description |
+|-------|-------------|
+| `TEXT` | A text segment of the response. — Fields: `text`: `str` |
+| `REFUSAL` | A refusal — the model declined to respond. — Fields: `refusal`: `str` |
+| `OUTPUT_IMAGE` | An image produced by the model (e.g. `gpt-image-1`, Gemini Imagen). — Fields: `image_url`: `ImageUrl` |
+| `OUTPUT_AUDIO` | Audio produced by the model (e.g. `gpt-4o-audio-preview`). — Fields: `audio`: `AudioContent` |
+
+---
+
 #### ToolType
 
 The type discriminator for tool/tool-call objects.
@@ -1897,7 +2110,24 @@ Tool choice mode.
 
 #### ResponseFormat
 
-Response format constraint.
+Wire format for the chat completions `response_format` field.
+
+### Provider mapping
+
+- **OpenAI** (and OpenAI-compatible providers): emitted verbatim as
+  `{"type": "json_schema", "json_schema": {...}}` per the
+  chat-completions spec.
+
+- **Gemini / Vertex AI**: translated to
+  `generationConfig.responseMimeType = "application/json"` and
+  `generationConfig.responseSchema = <schema>`. The `name`,
+  `description`, and `strict` fields are dropped — Gemini's
+  structured-output API does not consume them.
+
+- **Anthropic**: no native JSON mode. A system instruction is
+  prepended asking the model to respond with valid JSON.
+  `strict` is advisory only; callers should still validate the
+  returned JSON if the schema is load-bearing.
 
 | Value | Description |
 |-------|-------------|
@@ -1915,6 +2145,21 @@ Stop sequence(s) that cause the model to stop generating.
 |-------|-------------|
 | `SINGLE` | Single stop sequence. — Fields: `0`: `str` |
 | `MULTIPLE` | Multiple stop sequences. — Fields: `0`: `list\[str\]` |
+
+---
+
+#### Modality
+
+Output modality requested from the model.
+
+Passed as `modalities: ["text", "audio"]` (OpenAI) or translated to
+`generationConfig.responseModalities` (Gemini / Vertex AI).
+
+| Value | Description |
+|-------|-------------|
+| `TEXT` | Text output (the default for all providers). |
+| `AUDIO` | Audio / speech output. |
+| `IMAGE` | Image output (Gemini Imagen, gpt-image-1). |
 
 ---
 

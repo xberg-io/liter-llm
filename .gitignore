@@ -249,3 +249,6 @@ test_apps/swift_e2e/*.artifactbundle.zip
 .agents/
 .ai-rulez/.generated-manifest.json
 # END ai-rulez
+
+# basemind local index cache
+.basemind/

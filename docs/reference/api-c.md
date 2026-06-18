@@ -2,7 +2,7 @@
 title: "C API Reference"
 ---
 
-## C API Reference <span class="version-badge">v1.6.4</span>
+## C API Reference <span class="version-badge">v1.7.0</span>
 
 ### Functions
 
@@ -79,6 +79,70 @@ LiterllmDefaultClient *result = literllm_create_client_from_json("value");
 **Returns:** `LiterllmDefaultClient`
 
 **Errors:** Returns `NULL` on error.
+
+---
+
+#### literllm_encode_data_url()
+
+Encode bytes as a base64 data URL: `data:<mime>;base64,<b64>`.
+
+`mime` defaults to `IMAGE_PNG` when `NULL`.
+
+**Signature:**
+
+```c
+const char* literllm_encode_data_url(const uint8_t* bytes, const char* mime);
+```
+
+**Example:**
+
+```c
+const char *result = literllm_encode_data_url((const uint8_t *)"data", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `bytes` | `const uint8_t*` | Yes | The bytes |
+| `mime` | `const char**` | No | The mime |
+
+**Returns:** `const char*`
+
+---
+
+#### literllm_decode_data_url()
+
+Decode a base64 data URL into `DecodedDataUrl`.
+
+Returns `NULL` for:
+
+- Non-data URLs (strings that do not start with `"data:"`).
+- Malformed prefixes (missing `";base64,"` marker).
+- Invalid base64 payloads.
+
+The returned MIME string is extracted verbatim from the URL prefix —
+it is not validated or normalised.
+
+**Signature:**
+
+```c
+LiterllmDecodedDataUrl* literllm_decode_data_url(const char* url);
+```
+
+**Example:**
+
+```c
+LiterllmDecodedDataUrl* result = literllm_decode_data_url("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `url` | `const char*` | Yes | The URL to fetch |
+
+**Returns:** `LiterllmDecodedDataUrl*`
 
 ---
 
@@ -488,6 +552,28 @@ literllm_ensure_crypto_provider();
 
 ---
 
+#### literllm_ensure_crypto_provider()
+
+No-op on Windows: reqwest uses native-tls (SChannel), so no rustls provider
+installation is needed. All callers use the same call site regardless of
+platform.
+
+**Signature:**
+
+```c
+void literllm_ensure_crypto_provider();
+```
+
+**Example:**
+
+```c
+literllm_ensure_crypto_provider();
+```
+
+**Returns:** No return value.
+
+---
+
 ### Types
 
 #### LiterllmAssistantMessage
@@ -496,11 +582,91 @@ Assistant's response to a user message.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `const char**` | `NULL` | The assistant's text response. Absent if tool calls are returned instead. |
+| `content` | `LiterllmAssistantContent*` | `NULL` | The assistant's response: plain text, structured parts, or absent. `NULL` is valid when the model replies with tool calls only. |
 | `name` | `const char**` | `NULL` | Optional name for the assistant. |
 | `tool_calls` | `LiterllmToolCall**` | `NULL` | Tool calls the model wants to execute, if any. |
 | `refusal` | `const char**` | `NULL` | Refusal reason, if the model declined to respond per safety policies. |
 | `function_call` | `LiterllmFunctionCall*` | `NULL` | Deprecated legacy function_call field; retained for API compatibility. |
+
+##### Methods
+
+###### literllm_text()
+
+Return the assistant's textual response, concatenating all `Text` parts
+if the content is structured.
+
+Returns `NULL` for `Refusal`-only or `OutputImage`-only responses.
+
+**Signature:**
+
+```c
+const char** literllm_text();
+```
+
+**Example:**
+
+```c
+const char** result = literllm_text(instance);
+```
+
+**Returns:** `const char**`
+
+###### literllm_refusal_text()
+
+Return the refusal message, if the model declined to respond.
+
+Checks both the top-level `refusal` field and any `Refusal` parts
+inside a structured `content`.
+
+**Signature:**
+
+```c
+const char** literllm_refusal_text();
+```
+
+**Example:**
+
+```c
+const char** result = literllm_refusal_text(instance);
+```
+
+**Returns:** `const char**`
+
+###### literllm_output_images()
+
+Return all `AssistantPart.OutputImage` parts in the response.
+
+**Signature:**
+
+```c
+LiterllmImageUrl* literllm_output_images();
+```
+
+**Example:**
+
+```c
+LiterllmImageUrl* result = literllm_output_images(instance);
+```
+
+**Returns:** `LiterllmImageUrl*`
+
+###### literllm_output_audio()
+
+Return all `AssistantPart.OutputAudio` parts in the response.
+
+**Signature:**
+
+```c
+LiterllmAudioContent* literllm_output_audio();
+```
+
+**Example:**
+
+```c
+LiterllmAudioContent* result = literllm_output_audio(instance);
+```
+
+**Returns:** `LiterllmAudioContent*`
 
 ---
 
@@ -688,6 +854,7 @@ Chat completion request (compatible with OpenAI and similar APIs).
 | `stream_options` | `LiterllmStreamOptions*` | `NULL` | Streaming options (e.g., include_usage). |
 | `seed` | `int64_t*` | `NULL` | Random seed for reproducible outputs. Provider support varies. |
 | `reasoning_effort` | `LiterllmReasoningEffort*` | `NULL` | Reasoning effort level (low, medium, high) for extended-thinking models. |
+| `modalities` | `LiterllmModality**` | `NULL` | Output modalities to request from the model. For OpenAI audio models, pass `\["text", "audio"\]`. Vertex AI / Gemini translates these to `generationConfig.responseModalities` (uppercase). |
 | `extra_body` | `void**` | `NULL` | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc. |
 
 ---
@@ -871,9 +1038,23 @@ Configuration for registering a custom LLM provider at runtime.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `const char*` | — | Unique name for this provider (e.g., "my-provider"). |
-| `base_url` | `const char*` | — | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
+| `base_url` | `const char*` | — | Base URL for the provider's API (e.g., `<https://api.my-provider.com/v1>`). |
 | `auth_header` | `LiterllmAuthHeaderFormat` | — | Authentication header format. |
 | `model_prefixes` | `const char**` | — | Model name prefixes that route to this provider (e.g., `\["my-"\]`). |
+
+---
+
+#### LiterllmDecodedDataUrl
+
+Result of decoding a `data:` URL — MIME type and the decoded byte payload.
+
+Named struct (rather than a tuple) so polyglot bindings can extract
+`decode_data_url` with a typed return rather than a sanitized scalar.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `mime` | `const char*` | — | MIME type extracted from the URL prefix (verbatim, not normalised). |
+| `data` | `const uint8_t*` | — | Decoded base64 payload. |
 
 ---
 
@@ -1688,7 +1869,7 @@ System message guiding model behavior for the entire conversation.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `const char*` | — | Instructions or context that apply throughout the conversation. |
+| `content` | `LiterllmUserContent` | `LITERLLM_LITERLLM_TEXT` | Instructions or context that apply throughout the conversation. Accepts either a plain text string or an array of content parts, mirroring `UserContent` so that `Message.system_with_parts` works. |
 | `name` | `const char**` | `NULL` | Optional name for the system message source. |
 
 ---
@@ -1854,6 +2035,38 @@ Image detail level controlling token cost and processing.
 
 ---
 
+#### LiterllmAssistantContent
+
+Content shape for assistant messages.
+
+`#[serde(untagged)]` means providers returning a plain scalar string for the
+`content` field still deserialise correctly into `AssistantContent.Text(_)`.
+Providers returning an array of typed parts (e.g. after an image-generation
+or audio-synthesis request) deserialise into `AssistantContent.Parts(_)`.
+
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_TEXT` | Plain text response (the common case for text-only models). — Fields: `0`: `const char*` |
+| `LITERLLM_PARTS` | Structured parts — text, refusals, output images, output audio. — Fields: `0`: `LiterllmAssistantPart*` |
+
+---
+
+#### LiterllmAssistantPart
+
+One part of a structured assistant response.
+
+`#[serde(tag = "type", rename_all = "snake_case")]` matches OpenAI's
+parts-spec discriminator (`"type": "text"`, `"type": "output_image"`, …).
+
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_TEXT` | A text segment of the response. — Fields: `text`: `const char*` |
+| `LITERLLM_REFUSAL` | A refusal — the model declined to respond. — Fields: `refusal`: `const char*` |
+| `LITERLLM_OUTPUT_IMAGE` | An image produced by the model (e.g. `gpt-image-1`, Gemini Imagen). — Fields: `image_url`: `LiterllmImageUrl` |
+| `LITERLLM_OUTPUT_AUDIO` | Audio produced by the model (e.g. `gpt-4o-audio-preview`). — Fields: `audio`: `LiterllmAudioContent` |
+
+---
+
 #### LiterllmToolType
 
 The type discriminator for tool/tool-call objects.
@@ -1893,7 +2106,24 @@ Tool choice mode.
 
 #### LiterllmResponseFormat
 
-Response format constraint.
+Wire format for the chat completions `response_format` field.
+
+### Provider mapping
+
+- **OpenAI** (and OpenAI-compatible providers): emitted verbatim as
+  `{"type": "json_schema", "json_schema": {...}}` per the
+  chat-completions spec.
+
+- **Gemini / Vertex AI**: translated to
+  `generationConfig.responseMimeType = "application/json"` and
+  `generationConfig.responseSchema = <schema>`. The `name`,
+  `description`, and `strict` fields are dropped — Gemini's
+  structured-output API does not consume them.
+
+- **Anthropic**: no native JSON mode. A system instruction is
+  prepended asking the model to respond with valid JSON.
+  `strict` is advisory only; callers should still validate the
+  returned JSON if the schema is load-bearing.
 
 | Value | Description |
 |-------|-------------|
@@ -1911,6 +2141,21 @@ Stop sequence(s) that cause the model to stop generating.
 |-------|-------------|
 | `LITERLLM_SINGLE` | Single stop sequence. — Fields: `0`: `const char*` |
 | `LITERLLM_MULTIPLE` | Multiple stop sequences. — Fields: `0`: `const char**` |
+
+---
+
+#### LiterllmModality
+
+Output modality requested from the model.
+
+Passed as `modalities: ["text", "audio"]` (OpenAI) or translated to
+`generationConfig.responseModalities` (Gemini / Vertex AI).
+
+| Value | Description |
+|-------|-------------|
+| `LITERLLM_TEXT` | Text output (the default for all providers). |
+| `LITERLLM_AUDIO` | Audio / speech output. |
+| `LITERLLM_IMAGE` | Image output (Gemini Imagen, gpt-image-1). |
 
 ---
 

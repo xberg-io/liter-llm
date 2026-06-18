@@ -305,6 +305,49 @@ All bindings expose a unified `chat()` function:
 | WASM     | `await client.chat(request)`                                |
 | C FFI    | `literllm_default_client_chat(client, request)`             |
 
+## Multimodal I/O
+
+Send images and documents alongside text, request structured JSON responses, and receive images and audio from models.
+
+**Vision Input** — Pass images to vision-capable models as remote URLs or base64 data URLs:
+
+```python
+response = await client.chat({
+    "model": "openai/gpt-4o",
+    "messages": [{
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "What is in this image?"},
+            {"type": "image_url", "image_url": {"url": "https://..."}}
+        ]
+    }]
+})
+```
+
+**Structured JSON Output** — Request responses in a specific JSON schema:
+
+```python
+response = await client.chat({
+    "model": "openai/gpt-4o",
+    "messages": [{"role": "user", "content": "Extract entities..."}],
+    "response_format": {"type": "json_schema", "json_schema": {...}}
+})
+```
+
+**Multimodal Output** — Generate images (Gemini) or audio (OpenAI) in chat completions:
+
+```python
+response = await client.chat({
+    "model": "gpt-4o-audio-preview",
+    "messages": [{"role": "user", "content": "Tell me a story"}],
+    "modalities": ["text", "audio"]
+})
+text = response.choices[0].message.text()
+audio = response.choices[0].message.output_audio()
+```
+
+See [Multimodal I/O guide](https://docs.liter-llm.kreuzberg.dev/usage/multimodal/) for complete examples in all languages.
+
 ## Language READMEs
 
 | Language             | README                                                   | Binding      |

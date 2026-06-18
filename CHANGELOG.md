@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-06-18
+
 ### Added
 
 - **Typed multimodal builders** — `liter_llm::image::{encode_data_url, decode_data_url, DecodedDataUrl}` with `IMAGE_PNG`/`IMAGE_JPEG`/`IMAGE_WEBP`/`IMAGE_TIFF` MIME constants. `decode_data_url` returns a named `DecodedDataUrl { mime, bytes }` struct rather than a tuple so polyglot bindings extract it as a typed object.
@@ -20,10 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BREAKING**: `AssistantMessage.content: Option<String>` → `Option<AssistantContent>`. Back-compat via `From<String>`/`From<&str>` for `AssistantContent` and the untagged serde variant — providers returning scalar `content` strings still deserialize as `Text(_)`.
 - **BREAKING**: `SystemMessage.content: String` → `UserContent`. Back-compat via `From<String>`/`From<&str>` for `UserContent`.
 - `liter-llm` makes `base64` an unconditional dependency (previously gated behind `native-http`/`wasm-http`) — `liter_llm::image::*` helpers are transport-agnostic.
-
-### Notes (not yet shipped)
-
-- **Bindings regeneration deferred**. The Rust core multimodal surface is ready, but `task alef:generate` against alef 0.25.32 surfaces backend bugs in PHP and WASM extraction of `#[serde(untagged)]` enums (`AssistantContent`) and nested complex types in enum variants (`OutputImage { image_url: ImageUrl }`, `OutputAudio { audio: AudioContent }`). The v1.7.0 cut is gated on alef fixes for those backends. v1.6.5 ships first per the existing release cycle.
+- All polyglot bindings regenerated for the multimodal surface (alef 0.25.40 pin). PHP/WASM extraction of `#[serde(untagged)]` enums (`AssistantContent`) and nested complex enum-variant types (`OutputImage { image_url: ImageUrl }`, `OutputAudio { audio: AudioContent }`) is resolved upstream; bindings construct/access multimodal types via each language's native idiom.
 
 ## [1.6.4] - 2026-06-17
 

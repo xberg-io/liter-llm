@@ -59,7 +59,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String dco_decode_String(dynamic raw);
 
   @protected
+  AssistantContent dco_decode_assistant_content(dynamic raw);
+
+  @protected
   AssistantMessage dco_decode_assistant_message(dynamic raw);
+
+  @protected
+  AssistantPart dco_decode_assistant_part(dynamic raw);
 
   @protected
   AudioContent dco_decode_audio_content(dynamic raw);
@@ -90,6 +96,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   bool dco_decode_bool(dynamic raw);
+
+  @protected
+  AssistantContent dco_decode_box_autoadd_assistant_content(dynamic raw);
 
   @protected
   AssistantMessage dco_decode_box_autoadd_assistant_message(dynamic raw);
@@ -139,6 +148,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CustomProviderConfig dco_decode_box_autoadd_custom_provider_config(
     dynamic raw,
   );
+
+  @protected
+  DecodedDataUrl dco_decode_box_autoadd_decoded_data_url(dynamic raw);
 
   @protected
   DeveloperMessage dco_decode_box_autoadd_developer_message(dynamic raw);
@@ -301,6 +313,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CustomProviderConfig dco_decode_custom_provider_config(dynamic raw);
 
   @protected
+  DecodedDataUrl dco_decode_decoded_data_url(dynamic raw);
+
+  @protected
   DeleteResponse dco_decode_delete_response(dynamic raw);
 
   @protected
@@ -382,6 +397,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
+  List<AssistantPart> dco_decode_list_assistant_part(dynamic raw);
+
+  @protected
   List<BatchObject> dco_decode_list_batch_object(dynamic raw);
 
   @protected
@@ -406,6 +424,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<Message> dco_decode_list_message(dynamic raw);
 
   @protected
+  List<Modality> dco_decode_list_modality(dynamic raw);
+
+  @protected
   List<ModelObject> dco_decode_list_model_object(dynamic raw);
 
   @protected
@@ -422,6 +443,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Int64List dco_decode_list_prim_i_64_strict(dynamic raw);
+
+  @protected
+  List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
@@ -467,6 +491,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Message dco_decode_message(dynamic raw);
+
+  @protected
+  Modality dco_decode_modality(dynamic raw);
 
   @protected
   ModelObject dco_decode_model_object(dynamic raw);
@@ -517,6 +544,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String? dco_decode_opt_String(dynamic raw);
 
   @protected
+  AssistantContent? dco_decode_opt_box_autoadd_assistant_content(dynamic raw);
+
+  @protected
   AuthConfig? dco_decode_opt_box_autoadd_auth_config(dynamic raw);
 
   @protected
@@ -529,6 +559,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
+
+  @protected
+  DecodedDataUrl? dco_decode_opt_box_autoadd_decoded_data_url(dynamic raw);
 
   @protected
   EmbeddingFormat? dco_decode_opt_box_autoadd_embedding_format(dynamic raw);
@@ -600,6 +633,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<ChatCompletionTool>? dco_decode_opt_list_chat_completion_tool(
     dynamic raw,
   );
+
+  @protected
+  List<Modality>? dco_decode_opt_list_modality(dynamic raw);
 
   @protected
   List<OcrImage>? dco_decode_opt_list_ocr_image(dynamic raw);
@@ -795,7 +831,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
+  AssistantContent sse_decode_assistant_content(SseDeserializer deserializer);
+
+  @protected
   AssistantMessage sse_decode_assistant_message(SseDeserializer deserializer);
+
+  @protected
+  AssistantPart sse_decode_assistant_part(SseDeserializer deserializer);
 
   @protected
   AudioContent sse_decode_audio_content(SseDeserializer deserializer);
@@ -830,6 +872,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
+  AssistantContent sse_decode_box_autoadd_assistant_content(
+    SseDeserializer deserializer,
+  );
 
   @protected
   AssistantMessage sse_decode_box_autoadd_assistant_message(
@@ -895,6 +942,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CustomProviderConfig sse_decode_box_autoadd_custom_provider_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  DecodedDataUrl sse_decode_box_autoadd_decoded_data_url(
     SseDeserializer deserializer,
   );
 
@@ -1127,6 +1179,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  DecodedDataUrl sse_decode_decoded_data_url(SseDeserializer deserializer);
+
+  @protected
   DeleteResponse sse_decode_delete_response(SseDeserializer deserializer);
 
   @protected
@@ -1210,6 +1265,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
+  List<AssistantPart> sse_decode_list_assistant_part(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<BatchObject> sse_decode_list_batch_object(SseDeserializer deserializer);
 
   @protected
@@ -1238,6 +1298,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<Message> sse_decode_list_message(SseDeserializer deserializer);
 
   @protected
+  List<Modality> sse_decode_list_modality(SseDeserializer deserializer);
+
+  @protected
   List<ModelObject> sse_decode_list_model_object(SseDeserializer deserializer);
 
   @protected
@@ -1256,6 +1319,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Int64List sse_decode_list_prim_i_64_strict(SseDeserializer deserializer);
+
+  @protected
+  List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
@@ -1325,6 +1391,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Message sse_decode_message(SseDeserializer deserializer);
 
   @protected
+  Modality sse_decode_modality(SseDeserializer deserializer);
+
+  @protected
   ModelObject sse_decode_model_object(SseDeserializer deserializer);
 
   @protected
@@ -1385,6 +1454,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
+  AssistantContent? sse_decode_opt_box_autoadd_assistant_content(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   AuthConfig? sse_decode_opt_box_autoadd_auth_config(
     SseDeserializer deserializer,
   );
@@ -1401,6 +1475,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
+  DecodedDataUrl? sse_decode_opt_box_autoadd_decoded_data_url(
+    SseDeserializer deserializer,
+  );
 
   @protected
   EmbeddingFormat? sse_decode_opt_box_autoadd_embedding_format(
@@ -1496,6 +1575,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<ChatCompletionTool>? sse_decode_opt_list_chat_completion_tool(
     SseDeserializer deserializer,
   );
+
+  @protected
+  List<Modality>? sse_decode_opt_list_modality(SseDeserializer deserializer);
 
   @protected
   List<OcrImage>? sse_decode_opt_list_ocr_image(SseDeserializer deserializer);
@@ -1725,10 +1807,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
+  void sse_encode_assistant_content(
+    AssistantContent self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_assistant_message(
     AssistantMessage self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_assistant_part(AssistantPart self, SseSerializer serializer);
 
   @protected
   void sse_encode_audio_content(AudioContent self, SseSerializer serializer);
@@ -1771,6 +1862,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_assistant_content(
+    AssistantContent self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_assistant_message(
@@ -1850,6 +1947,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_custom_provider_config(
     CustomProviderConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_decoded_data_url(
+    DecodedDataUrl self,
     SseSerializer serializer,
   );
 
@@ -2142,6 +2245,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_decoded_data_url(
+    DecodedDataUrl self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_delete_response(
     DeleteResponse self,
     SseSerializer serializer,
@@ -2262,6 +2371,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_assistant_part(
+    List<AssistantPart> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_batch_object(
     List<BatchObject> self,
     SseSerializer serializer,
@@ -2301,6 +2416,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_message(List<Message> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_modality(List<Modality> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_model_object(
     List<ModelObject> self,
     SseSerializer serializer,
@@ -2329,6 +2447,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     Int64List self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_prim_u_8_strict(
@@ -2412,6 +2533,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_message(Message self, SseSerializer serializer);
 
   @protected
+  void sse_encode_modality(Modality self, SseSerializer serializer);
+
+  @protected
   void sse_encode_model_object(ModelObject self, SseSerializer serializer);
 
   @protected
@@ -2487,6 +2611,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_String(String? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_assistant_content(
+    AssistantContent? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_auth_config(
     AuthConfig? self,
     SseSerializer serializer,
@@ -2506,6 +2636,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_decoded_data_url(
+    DecodedDataUrl? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_embedding_format(
@@ -2621,6 +2757,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_opt_list_chat_completion_tool(
     List<ChatCompletionTool>? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_list_modality(
+    List<Modality>? self,
     SseSerializer serializer,
   );
 

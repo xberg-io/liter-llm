@@ -1,6 +1,6 @@
 [package]
 name = "liter-llm-ffi"
-version = "1.6.4"
+version = "1.7.0"
 edition = "2021"
 license = "MIT"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
@@ -26,16 +26,12 @@ crate-type = ["cdylib", "staticlib", "rlib"]
 [features]
 default = ["native-http", "full"]
 native-http = ["liter-llm/native-http"]
-# wasm-http is forwarded so wasm-targeted FFI builds compile against
-# liter-llm's WASM HTTP shim. Re-added after every `alef sync-versions`
-# pass, which strips features it doesn't know on the FFI crate.
-wasm-http = ["liter-llm/wasm-http"]
 full = ["liter-llm/full"]
 
 [dependencies]
 ahash = "0.8"
 futures-util = "0.3"
-liter-llm = { path = "../liter-llm", version = "1.6.4", features = ["native-http", "full"] }
+liter-llm = { path = "../liter-llm", version = "1.7.0", features = ["native-http", "full"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
 

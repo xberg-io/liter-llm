@@ -2,7 +2,7 @@
 title: "Elixir API Reference"
 ---
 
-## Elixir API Reference <span class="version-badge">v1.6.4</span>
+## Elixir API Reference <span class="version-badge">v1.7.0</span>
 
 ### Functions
 
@@ -81,6 +81,72 @@ def create_client_from_json(json)
 **Returns:** `DefaultClient`
 
 **Errors:** Returns `{:error, reason}`
+
+---
+
+#### encode_data_url()
+
+Encode bytes as a base64 data URL: `data:<mime>;base64,<b64>`.
+
+`mime` defaults to `IMAGE_PNG` when `nil`.
+
+**Signature:**
+
+```elixir
+@spec encode_data_url(bytes, mime) :: {:ok, term()} | {:error, term()}
+def encode_data_url(bytes, mime)
+```
+
+**Example:**
+
+```elixir
+{:ok, result} = encode_data_url(<<100, 97, 116, 97>>, "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `bytes` | `binary()` | Yes | The bytes |
+| `mime` | `String.t() \| nil` | No | The mime |
+
+**Returns:** `String.t()`
+
+---
+
+#### decode_data_url()
+
+Decode a base64 data URL into `DecodedDataUrl`.
+
+Returns `nil` for:
+
+- Non-data URLs (strings that do not start with `"data:"`).
+- Malformed prefixes (missing `";base64,"` marker).
+- Invalid base64 payloads.
+
+The returned MIME string is extracted verbatim from the URL prefix —
+it is not validated or normalised.
+
+**Signature:**
+
+```elixir
+@spec decode_data_url(url) :: {:ok, term()} | {:error, term()}
+def decode_data_url(url)
+```
+
+**Example:**
+
+```elixir
+{:ok, result} = decode_data_url("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `url` | `String.t()` | Yes | The URL to fetch |
+
+**Returns:** `DecodedDataUrl | nil`
 
 ---
 
@@ -502,6 +568,29 @@ def ensure_crypto_provider()
 
 ---
 
+#### ensure_crypto_provider()
+
+No-op on Windows: reqwest uses native-tls (SChannel), so no rustls provider
+installation is needed. All callers use the same call site regardless of
+platform.
+
+**Signature:**
+
+```elixir
+@spec ensure_crypto_provider() :: {:ok, term()} | {:error, term()}
+def ensure_crypto_provider()
+```
+
+**Example:**
+
+```elixir
+:ok = ensure_crypto_provider()
+```
+
+**Returns:** No return value.
+
+---
+
 ### Types
 
 #### AssistantMessage
@@ -510,11 +599,91 @@ Assistant's response to a user message.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `String.t() \| nil` | `nil` | The assistant's text response. Absent if tool calls are returned instead. |
+| `content` | `AssistantContent \| nil` | `nil` | The assistant's response: plain text, structured parts, or absent. `nil` is valid when the model replies with tool calls only. |
 | `name` | `String.t() \| nil` | `nil` | Optional name for the assistant. |
 | `tool_calls` | `list(ToolCall) \| nil` | `\[\]` | Tool calls the model wants to execute, if any. |
 | `refusal` | `String.t() \| nil` | `nil` | Refusal reason, if the model declined to respond per safety policies. |
 | `function_call` | `FunctionCall \| nil` | `nil` | Deprecated legacy function_call field; retained for API compatibility. |
+
+##### Functions
+
+###### text()
+
+Return the assistant's textual response, concatenating all `Text` parts
+if the content is structured.
+
+Returns `nil` for `Refusal`-only or `OutputImage`-only responses.
+
+**Signature:**
+
+```elixir
+def text()
+```
+
+**Example:**
+
+```elixir
+{:ok, result} = instance.text()
+```
+
+**Returns:** `String.t() | nil`
+
+###### refusal_text()
+
+Return the refusal message, if the model declined to respond.
+
+Checks both the top-level `refusal` field and any `Refusal` parts
+inside a structured `content`.
+
+**Signature:**
+
+```elixir
+def refusal_text()
+```
+
+**Example:**
+
+```elixir
+{:ok, result} = instance.refusal_text()
+```
+
+**Returns:** `String.t() | nil`
+
+###### output_images()
+
+Return all `AssistantPart.OutputImage` parts in the response.
+
+**Signature:**
+
+```elixir
+def output_images()
+```
+
+**Example:**
+
+```elixir
+{:ok, result} = instance.output_images()
+```
+
+**Returns:** `list(ImageUrl)`
+
+###### output_audio()
+
+Return all `AssistantPart.OutputAudio` parts in the response.
+
+**Signature:**
+
+```elixir
+def output_audio()
+```
+
+**Example:**
+
+```elixir
+{:ok, result} = instance.output_audio()
+```
+
+**Returns:** `list(AudioContent)`
 
 ---
 
@@ -702,6 +871,7 @@ Chat completion request (compatible with OpenAI and similar APIs).
 | `stream_options` | `StreamOptions \| nil` | `nil` | Streaming options (e.g., include_usage). |
 | `seed` | `integer() \| nil` | `nil` | Random seed for reproducible outputs. Provider support varies. |
 | `reasoning_effort` | `ReasoningEffort \| nil` | `nil` | Reasoning effort level (low, medium, high) for extended-thinking models. |
+| `modalities` | `list(Modality) \| nil` | `\[\]` | Output modalities to request from the model. For OpenAI audio models, pass `\["text", "audio"\]`. Vertex AI / Gemini translates these to `generationConfig.responseModalities` (uppercase). |
 | `extra_body` | `term() \| nil` | `nil` | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc. |
 
 ---
@@ -885,9 +1055,23 @@ Configuration for registering a custom LLM provider at runtime.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String.t()` | — | Unique name for this provider (e.g., "my-provider"). |
-| `base_url` | `String.t()` | — | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
+| `base_url` | `String.t()` | — | Base URL for the provider's API (e.g., `<https://api.my-provider.com/v1>`). |
 | `auth_header` | `AuthHeaderFormat` | — | Authentication header format. |
 | `model_prefixes` | `list(String.t())` | — | Model name prefixes that route to this provider (e.g., `\["my-"\]`). |
+
+---
+
+#### DecodedDataUrl
+
+Result of decoding a `data:` URL — MIME type and the decoded byte payload.
+
+Named struct (rather than a tuple) so polyglot bindings can extract
+`decode_data_url` with a typed return rather than a sanitized scalar.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `mime` | `String.t()` | — | MIME type extracted from the URL prefix (verbatim, not normalised). |
+| `data` | `binary()` | — | Decoded base64 payload. |
 
 ---
 
@@ -1702,7 +1886,7 @@ System message guiding model behavior for the entire conversation.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `String.t()` | — | Instructions or context that apply throughout the conversation. |
+| `content` | `UserContent` | `:text` | Instructions or context that apply throughout the conversation. Accepts either a plain text string or an array of content parts, mirroring `UserContent` so that `Message.system_with_parts` works. |
 | `name` | `String.t() \| nil` | `nil` | Optional name for the system message source. |
 
 ---
@@ -1868,6 +2052,38 @@ Image detail level controlling token cost and processing.
 
 ---
 
+#### AssistantContent
+
+Content shape for assistant messages.
+
+`#[serde(untagged)]` means providers returning a plain scalar string for the
+`content` field still deserialise correctly into `AssistantContent.Text(_)`.
+Providers returning an array of typed parts (e.g. after an image-generation
+or audio-synthesis request) deserialise into `AssistantContent.Parts(_)`.
+
+| Value | Description |
+|-------|-------------|
+| `text` | Plain text response (the common case for text-only models). — Fields: `0`: `String.t()` |
+| `parts` | Structured parts — text, refusals, output images, output audio. — Fields: `0`: `list(AssistantPart)` |
+
+---
+
+#### AssistantPart
+
+One part of a structured assistant response.
+
+`#[serde(tag = "type", rename_all = "snake_case")]` matches OpenAI's
+parts-spec discriminator (`"type": "text"`, `"type": "output_image"`, …).
+
+| Value | Description |
+|-------|-------------|
+| `text` | A text segment of the response. — Fields: `text`: `String.t()` |
+| `refusal` | A refusal — the model declined to respond. — Fields: `refusal`: `String.t()` |
+| `output_image` | An image produced by the model (e.g. `gpt-image-1`, Gemini Imagen). — Fields: `image_url`: `ImageUrl` |
+| `output_audio` | Audio produced by the model (e.g. `gpt-4o-audio-preview`). — Fields: `audio`: `AudioContent` |
+
+---
+
 #### ToolType
 
 The type discriminator for tool/tool-call objects.
@@ -1907,7 +2123,24 @@ Tool choice mode.
 
 #### ResponseFormat
 
-Response format constraint.
+Wire format for the chat completions `response_format` field.
+
+### Provider mapping
+
+- **OpenAI** (and OpenAI-compatible providers): emitted verbatim as
+  `{"type": "json_schema", "json_schema": {...}}` per the
+  chat-completions spec.
+
+- **Gemini / Vertex AI**: translated to
+  `generationConfig.responseMimeType = "application/json"` and
+  `generationConfig.responseSchema = <schema>`. The `name`,
+  `description`, and `strict` fields are dropped — Gemini's
+  structured-output API does not consume them.
+
+- **Anthropic**: no native JSON mode. A system instruction is
+  prepended asking the model to respond with valid JSON.
+  `strict` is advisory only; callers should still validate the
+  returned JSON if the schema is load-bearing.
 
 | Value | Description |
 |-------|-------------|
@@ -1925,6 +2158,21 @@ Stop sequence(s) that cause the model to stop generating.
 |-------|-------------|
 | `single` | Single stop sequence. — Fields: `0`: `String.t()` |
 | `multiple` | Multiple stop sequences. — Fields: `0`: `list(String.t())` |
+
+---
+
+#### Modality
+
+Output modality requested from the model.
+
+Passed as `modalities: ["text", "audio"]` (OpenAI) or translated to
+`generationConfig.responseModalities` (Gemini / Vertex AI).
+
+| Value | Description |
+|-------|-------------|
+| `text` | Text output (the default for all providers). |
+| `audio` | Audio / speech output. |
+| `image` | Image output (Gemini Imagen, gpt-image-1). |
 
 ---
 

@@ -79,6 +79,10 @@ mod inner {
     /// Return the global meter, or `None` when [`init_meter`] has not been called.
     /// Exposed to downstream crates (e.g. `liter-llm-proxy`) so they can record
     /// metrics against the same shared meter without re-initialising OTel.
+    ///
+    /// Hidden from alef extraction — the `opentelemetry::metrics::Meter` return
+    /// type does not bridge to any host language; this is an internal Rust API.
+    #[cfg_attr(alef, alef(skip))]
     pub fn global_meter() -> Option<&'static Meter> {
         METER.get()
     }

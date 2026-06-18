@@ -9,6 +9,7 @@ export {
   FinishReason,
   HealthStatus,
   ImageDetail,
+  Modality,
   ReasoningEffort,
   SingleflightResult,
   StreamFormat,
@@ -25,13 +26,17 @@ export {
   countTokens,
   createClient,
   createClientFromJson,
+  decodeDataUrl,
+  encodeDataUrl,
   ensureCryptoProvider,
   registerCustomProvider,
   unregisterCustomProvider,
 } from "@kreuzberg/liter-llm-node";
 
 export type {
+  AssistantContent,
   AssistantMessage,
+  AssistantPart,
   AudioContent,
   AuthConfig,
   AuthHeaderFormat,
@@ -55,6 +60,7 @@ export type {
   CreateSpeechRequest,
   CreateTranscriptionRequest,
   CustomProviderConfig,
+  DecodedDataUrl,
   DeleteResponse,
   DeveloperMessage,
   DocumentContent,

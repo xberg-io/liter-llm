@@ -12,6 +12,744 @@ part of 'lib.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
+mixin _$AssistantContent {
+
+ Object get field0;
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssistantContent&&const DeepCollectionEquality().equals(other.field0, field0));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(field0));
+
+@override
+String toString() {
+  return 'AssistantContent(field0: $field0)';
+}
+
+
+}
+
+/// @nodoc
+class $AssistantContentCopyWith<$Res>  {
+$AssistantContentCopyWith(AssistantContent _, $Res Function(AssistantContent) __);
+}
+
+
+/// Adds pattern-matching-related methods to [AssistantContent].
+extension AssistantContentPatterns on AssistantContent {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AssistantContent_Text value)?  text,TResult Function( AssistantContent_Parts value)?  parts,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case AssistantContent_Text() when text != null:
+return text(_that);case AssistantContent_Parts() when parts != null:
+return parts(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AssistantContent_Text value)  text,required TResult Function( AssistantContent_Parts value)  parts,}){
+final _that = this;
+switch (_that) {
+case AssistantContent_Text():
+return text(_that);case AssistantContent_Parts():
+return parts(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AssistantContent_Text value)?  text,TResult? Function( AssistantContent_Parts value)?  parts,}){
+final _that = this;
+switch (_that) {
+case AssistantContent_Text() when text != null:
+return text(_that);case AssistantContent_Parts() when parts != null:
+return parts(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String field0)?  text,TResult Function( List<AssistantPart> field0)?  parts,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case AssistantContent_Text() when text != null:
+return text(_that.field0);case AssistantContent_Parts() when parts != null:
+return parts(_that.field0);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String field0)  text,required TResult Function( List<AssistantPart> field0)  parts,}) {final _that = this;
+switch (_that) {
+case AssistantContent_Text():
+return text(_that.field0);case AssistantContent_Parts():
+return parts(_that.field0);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String field0)?  text,TResult? Function( List<AssistantPart> field0)?  parts,}) {final _that = this;
+switch (_that) {
+case AssistantContent_Text() when text != null:
+return text(_that.field0);case AssistantContent_Parts() when parts != null:
+return parts(_that.field0);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class AssistantContent_Text extends AssistantContent {
+  const AssistantContent_Text({required this.field0}): super._();
+  
+
+@override final  String field0;
+
+/// Create a copy of AssistantContent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AssistantContent_TextCopyWith<AssistantContent_Text> get copyWith => _$AssistantContent_TextCopyWithImpl<AssistantContent_Text>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssistantContent_Text&&(identical(other.field0, field0) || other.field0 == field0));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,field0);
+
+@override
+String toString() {
+  return 'AssistantContent.text(field0: $field0)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AssistantContent_TextCopyWith<$Res> implements $AssistantContentCopyWith<$Res> {
+  factory $AssistantContent_TextCopyWith(AssistantContent_Text value, $Res Function(AssistantContent_Text) _then) = _$AssistantContent_TextCopyWithImpl;
+@useResult
+$Res call({
+ String field0
+});
+
+
+
+
+}
+/// @nodoc
+class _$AssistantContent_TextCopyWithImpl<$Res>
+    implements $AssistantContent_TextCopyWith<$Res> {
+  _$AssistantContent_TextCopyWithImpl(this._self, this._then);
+
+  final AssistantContent_Text _self;
+  final $Res Function(AssistantContent_Text) _then;
+
+/// Create a copy of AssistantContent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? field0 = null,}) {
+  return _then(AssistantContent_Text(
+field0: null == field0 ? _self.field0 : field0 // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class AssistantContent_Parts extends AssistantContent {
+  const AssistantContent_Parts({required final  List<AssistantPart> field0}): _field0 = field0,super._();
+  
+
+ final  List<AssistantPart> _field0;
+@override List<AssistantPart> get field0 {
+  if (_field0 is EqualUnmodifiableListView) return _field0;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_field0);
+}
+
+
+/// Create a copy of AssistantContent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AssistantContent_PartsCopyWith<AssistantContent_Parts> get copyWith => _$AssistantContent_PartsCopyWithImpl<AssistantContent_Parts>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssistantContent_Parts&&const DeepCollectionEquality().equals(other._field0, _field0));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_field0));
+
+@override
+String toString() {
+  return 'AssistantContent.parts(field0: $field0)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AssistantContent_PartsCopyWith<$Res> implements $AssistantContentCopyWith<$Res> {
+  factory $AssistantContent_PartsCopyWith(AssistantContent_Parts value, $Res Function(AssistantContent_Parts) _then) = _$AssistantContent_PartsCopyWithImpl;
+@useResult
+$Res call({
+ List<AssistantPart> field0
+});
+
+
+
+
+}
+/// @nodoc
+class _$AssistantContent_PartsCopyWithImpl<$Res>
+    implements $AssistantContent_PartsCopyWith<$Res> {
+  _$AssistantContent_PartsCopyWithImpl(this._self, this._then);
+
+  final AssistantContent_Parts _self;
+  final $Res Function(AssistantContent_Parts) _then;
+
+/// Create a copy of AssistantContent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? field0 = null,}) {
+  return _then(AssistantContent_Parts(
+field0: null == field0 ? _self._field0 : field0 // ignore: cast_nullable_to_non_nullable
+as List<AssistantPart>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$AssistantPart {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssistantPart);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'AssistantPart()';
+}
+
+
+}
+
+/// @nodoc
+class $AssistantPartCopyWith<$Res>  {
+$AssistantPartCopyWith(AssistantPart _, $Res Function(AssistantPart) __);
+}
+
+
+/// Adds pattern-matching-related methods to [AssistantPart].
+extension AssistantPartPatterns on AssistantPart {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AssistantPart_Text value)?  text,TResult Function( AssistantPart_Refusal value)?  refusal,TResult Function( AssistantPart_OutputImage value)?  outputImage,TResult Function( AssistantPart_OutputAudio value)?  outputAudio,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case AssistantPart_Text() when text != null:
+return text(_that);case AssistantPart_Refusal() when refusal != null:
+return refusal(_that);case AssistantPart_OutputImage() when outputImage != null:
+return outputImage(_that);case AssistantPart_OutputAudio() when outputAudio != null:
+return outputAudio(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AssistantPart_Text value)  text,required TResult Function( AssistantPart_Refusal value)  refusal,required TResult Function( AssistantPart_OutputImage value)  outputImage,required TResult Function( AssistantPart_OutputAudio value)  outputAudio,}){
+final _that = this;
+switch (_that) {
+case AssistantPart_Text():
+return text(_that);case AssistantPart_Refusal():
+return refusal(_that);case AssistantPart_OutputImage():
+return outputImage(_that);case AssistantPart_OutputAudio():
+return outputAudio(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AssistantPart_Text value)?  text,TResult? Function( AssistantPart_Refusal value)?  refusal,TResult? Function( AssistantPart_OutputImage value)?  outputImage,TResult? Function( AssistantPart_OutputAudio value)?  outputAudio,}){
+final _that = this;
+switch (_that) {
+case AssistantPart_Text() when text != null:
+return text(_that);case AssistantPart_Refusal() when refusal != null:
+return refusal(_that);case AssistantPart_OutputImage() when outputImage != null:
+return outputImage(_that);case AssistantPart_OutputAudio() when outputAudio != null:
+return outputAudio(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String text)?  text,TResult Function( String refusal)?  refusal,TResult Function( ImageUrl imageUrl)?  outputImage,TResult Function( AudioContent audio)?  outputAudio,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case AssistantPart_Text() when text != null:
+return text(_that.text);case AssistantPart_Refusal() when refusal != null:
+return refusal(_that.refusal);case AssistantPart_OutputImage() when outputImage != null:
+return outputImage(_that.imageUrl);case AssistantPart_OutputAudio() when outputAudio != null:
+return outputAudio(_that.audio);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String text)  text,required TResult Function( String refusal)  refusal,required TResult Function( ImageUrl imageUrl)  outputImage,required TResult Function( AudioContent audio)  outputAudio,}) {final _that = this;
+switch (_that) {
+case AssistantPart_Text():
+return text(_that.text);case AssistantPart_Refusal():
+return refusal(_that.refusal);case AssistantPart_OutputImage():
+return outputImage(_that.imageUrl);case AssistantPart_OutputAudio():
+return outputAudio(_that.audio);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String text)?  text,TResult? Function( String refusal)?  refusal,TResult? Function( ImageUrl imageUrl)?  outputImage,TResult? Function( AudioContent audio)?  outputAudio,}) {final _that = this;
+switch (_that) {
+case AssistantPart_Text() when text != null:
+return text(_that.text);case AssistantPart_Refusal() when refusal != null:
+return refusal(_that.refusal);case AssistantPart_OutputImage() when outputImage != null:
+return outputImage(_that.imageUrl);case AssistantPart_OutputAudio() when outputAudio != null:
+return outputAudio(_that.audio);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class AssistantPart_Text extends AssistantPart {
+  const AssistantPart_Text({required this.text}): super._();
+  
+
+/// The text content of this part.
+ final  String text;
+
+/// Create a copy of AssistantPart
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AssistantPart_TextCopyWith<AssistantPart_Text> get copyWith => _$AssistantPart_TextCopyWithImpl<AssistantPart_Text>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssistantPart_Text&&(identical(other.text, text) || other.text == text));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,text);
+
+@override
+String toString() {
+  return 'AssistantPart.text(text: $text)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AssistantPart_TextCopyWith<$Res> implements $AssistantPartCopyWith<$Res> {
+  factory $AssistantPart_TextCopyWith(AssistantPart_Text value, $Res Function(AssistantPart_Text) _then) = _$AssistantPart_TextCopyWithImpl;
+@useResult
+$Res call({
+ String text
+});
+
+
+
+
+}
+/// @nodoc
+class _$AssistantPart_TextCopyWithImpl<$Res>
+    implements $AssistantPart_TextCopyWith<$Res> {
+  _$AssistantPart_TextCopyWithImpl(this._self, this._then);
+
+  final AssistantPart_Text _self;
+  final $Res Function(AssistantPart_Text) _then;
+
+/// Create a copy of AssistantPart
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? text = null,}) {
+  return _then(AssistantPart_Text(
+text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class AssistantPart_Refusal extends AssistantPart {
+  const AssistantPart_Refusal({required this.refusal}): super._();
+  
+
+/// The refusal reason.
+ final  String refusal;
+
+/// Create a copy of AssistantPart
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AssistantPart_RefusalCopyWith<AssistantPart_Refusal> get copyWith => _$AssistantPart_RefusalCopyWithImpl<AssistantPart_Refusal>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssistantPart_Refusal&&(identical(other.refusal, refusal) || other.refusal == refusal));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,refusal);
+
+@override
+String toString() {
+  return 'AssistantPart.refusal(refusal: $refusal)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AssistantPart_RefusalCopyWith<$Res> implements $AssistantPartCopyWith<$Res> {
+  factory $AssistantPart_RefusalCopyWith(AssistantPart_Refusal value, $Res Function(AssistantPart_Refusal) _then) = _$AssistantPart_RefusalCopyWithImpl;
+@useResult
+$Res call({
+ String refusal
+});
+
+
+
+
+}
+/// @nodoc
+class _$AssistantPart_RefusalCopyWithImpl<$Res>
+    implements $AssistantPart_RefusalCopyWith<$Res> {
+  _$AssistantPart_RefusalCopyWithImpl(this._self, this._then);
+
+  final AssistantPart_Refusal _self;
+  final $Res Function(AssistantPart_Refusal) _then;
+
+/// Create a copy of AssistantPart
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? refusal = null,}) {
+  return _then(AssistantPart_Refusal(
+refusal: null == refusal ? _self.refusal : refusal // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class AssistantPart_OutputImage extends AssistantPart {
+  const AssistantPart_OutputImage({required this.imageUrl}): super._();
+  
+
+/// Image URL or data URI referencing the generated image.
+ final  ImageUrl imageUrl;
+
+/// Create a copy of AssistantPart
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AssistantPart_OutputImageCopyWith<AssistantPart_OutputImage> get copyWith => _$AssistantPart_OutputImageCopyWithImpl<AssistantPart_OutputImage>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssistantPart_OutputImage&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,imageUrl);
+
+@override
+String toString() {
+  return 'AssistantPart.outputImage(imageUrl: $imageUrl)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AssistantPart_OutputImageCopyWith<$Res> implements $AssistantPartCopyWith<$Res> {
+  factory $AssistantPart_OutputImageCopyWith(AssistantPart_OutputImage value, $Res Function(AssistantPart_OutputImage) _then) = _$AssistantPart_OutputImageCopyWithImpl;
+@useResult
+$Res call({
+ ImageUrl imageUrl
+});
+
+
+
+
+}
+/// @nodoc
+class _$AssistantPart_OutputImageCopyWithImpl<$Res>
+    implements $AssistantPart_OutputImageCopyWith<$Res> {
+  _$AssistantPart_OutputImageCopyWithImpl(this._self, this._then);
+
+  final AssistantPart_OutputImage _self;
+  final $Res Function(AssistantPart_OutputImage) _then;
+
+/// Create a copy of AssistantPart
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? imageUrl = null,}) {
+  return _then(AssistantPart_OutputImage(
+imageUrl: null == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
+as ImageUrl,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class AssistantPart_OutputAudio extends AssistantPart {
+  const AssistantPart_OutputAudio({required this.audio}): super._();
+  
+
+/// Base64-encoded audio data and its format.
+ final  AudioContent audio;
+
+/// Create a copy of AssistantPart
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AssistantPart_OutputAudioCopyWith<AssistantPart_OutputAudio> get copyWith => _$AssistantPart_OutputAudioCopyWithImpl<AssistantPart_OutputAudio>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssistantPart_OutputAudio&&(identical(other.audio, audio) || other.audio == audio));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,audio);
+
+@override
+String toString() {
+  return 'AssistantPart.outputAudio(audio: $audio)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AssistantPart_OutputAudioCopyWith<$Res> implements $AssistantPartCopyWith<$Res> {
+  factory $AssistantPart_OutputAudioCopyWith(AssistantPart_OutputAudio value, $Res Function(AssistantPart_OutputAudio) _then) = _$AssistantPart_OutputAudioCopyWithImpl;
+@useResult
+$Res call({
+ AudioContent audio
+});
+
+
+
+
+}
+/// @nodoc
+class _$AssistantPart_OutputAudioCopyWithImpl<$Res>
+    implements $AssistantPart_OutputAudioCopyWith<$Res> {
+  _$AssistantPart_OutputAudioCopyWithImpl(this._self, this._then);
+
+  final AssistantPart_OutputAudio _self;
+  final $Res Function(AssistantPart_OutputAudio) _then;
+
+/// Create a copy of AssistantPart
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? audio = null,}) {
+  return _then(AssistantPart_OutputAudio(
+audio: null == audio ? _self.audio : audio // ignore: cast_nullable_to_non_nullable
+as AudioContent,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$AuthHeaderFormat {
 
 

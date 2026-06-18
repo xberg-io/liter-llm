@@ -59,15 +59,15 @@ tasks:
         desc: Run Node.js test_app smoke test
         dir: test_apps/node
         cmds:
-            - pnpm install
-            - pnpm exec vitest run tests/smoke.test.ts
+            - pnpm install --no-frozen-lockfile --config.minimumReleaseAge=0
+            - pnpm --config.minimumReleaseAge=0 exec vitest run tests/smoke.test.ts
 
     smoke:wasm:
         desc: Run WASM test_app smoke test
         dir: test_apps/wasm
         cmds:
-            - pnpm install
-            - pnpm exec vitest run tests/smoke.test.ts
+            - pnpm install --no-frozen-lockfile --config.minimumReleaseAge=0
+            - pnpm --config.minimumReleaseAge=0 exec vitest run tests/smoke.test.ts
 
     smoke:ruby:
         desc: Run Ruby test_app smoke test
@@ -120,6 +120,9 @@ tasks:
         desc: Run C test_app smoke test
         dir: test_apps/c
         cmds:
+            # Build the FFI lib locally so download_ffi.sh's auto-detect picks
+            # it up — avoids the GH-release 404 race when running before publish.
+            - cd ../.. && cargo build -p liter-llm-ffi --release
             - bash download_ffi.sh
             - make smoke
 
@@ -234,15 +237,15 @@ tasks:
         desc: Run Node.js test_app comprehensive tests
         dir: test_apps/node
         cmds:
-            - pnpm install
-            - pnpm exec vitest run
+            - pnpm install --no-frozen-lockfile --config.minimumReleaseAge=0
+            - pnpm --config.minimumReleaseAge=0 exec vitest run
 
     comprehensive:wasm:
         desc: Run WASM test_app comprehensive tests
         dir: test_apps/wasm
         cmds:
-            - pnpm install
-            - pnpm exec vitest run
+            - pnpm install --no-frozen-lockfile --config.minimumReleaseAge=0
+            - pnpm --config.minimumReleaseAge=0 exec vitest run
 
     comprehensive:ruby:
         desc: Run Ruby test_app comprehensive tests
@@ -292,6 +295,9 @@ tasks:
         desc: Run C test_app comprehensive tests
         dir: test_apps/c
         cmds:
+            # Build the FFI lib locally so download_ffi.sh's auto-detect picks
+            # it up — avoids the GH-release 404 race when running before publish.
+            - cd ../.. && cargo build -p liter-llm-ffi --release
             - bash download_ffi.sh
             - make test
 

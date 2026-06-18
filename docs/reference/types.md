@@ -76,7 +76,7 @@ System message guiding model behavior for the entire conversation.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `String` | — | Instructions or context that apply throughout the conversation. |
+| `content` | `UserContent` | `UserContent::Text` | Instructions or context that apply throughout the conversation. Accepts either a plain text string or an array of content parts, mirroring `UserContent` so that `Message::system_with_parts` works. |
 | `name` | `Option<String>` | `Default::default()` | Optional name for the system message source. |
 
 ---
@@ -131,7 +131,7 @@ Assistant's response to a user message.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `Option<String>` | `Default::default()` | The assistant's text response. Absent if tool calls are returned instead. |
+| `content` | `Option<AssistantContent>` | `Default::default()` | The assistant's response: plain text, structured parts, or absent. `None` is valid when the model replies with tool calls only. |
 | `name` | `Option<String>` | `Default::default()` | Optional name for the assistant. |
 | `tool_calls` | `Vec<ToolCall>` | `vec!\[\]` | Tool calls the model wants to execute, if any. |
 | `refusal` | `Option<String>` | `Default::default()` | Refusal reason, if the model declined to respond per safety policies. |
@@ -261,6 +261,7 @@ Chat completion request (compatible with OpenAI and similar APIs).
 | `stream_options` | `Option<StreamOptions>` | `Default::default()` | Streaming options (e.g., include_usage). |
 | `seed` | `Option<i64>` | `Default::default()` | Random seed for reproducible outputs. Provider support varies. |
 | `reasoning_effort` | `Option<ReasoningEffort>` | `Default::default()` | Reasoning effort level (low, medium, high) for extended-thinking models. |
+| `modalities` | `Vec<Modality>` | `vec!\[\]` | Output modalities to request from the model. For OpenAI audio models, pass `\["text", "audio"\]`. Vertex AI / Gemini translates these to `generationConfig.responseModalities` (uppercase). |
 | `extra_body` | `Option<serde_json::Value>` | `Default::default()` | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc. |
 
 ---
@@ -422,6 +423,20 @@ A single generated image, returned as either a URL or base64 data.
 | `url` | `Option<String>` | `Default::default()` | Image URL (if response_format was "url"). |
 | `b64_json` | `Option<String>` | `Default::default()` | Base64-encoded image data (if response_format was "b64_json"). |
 | `revised_prompt` | `Option<String>` | `Default::default()` | The final prompt used to generate the image (DALL-E 3). |
+
+---
+
+#### DecodedDataUrl
+
+Result of decoding a `data:` URL — MIME type and the decoded byte payload.
+
+Named struct (rather than a tuple) so polyglot bindings can extract
+`decode_data_url` with a typed return rather than a sanitized scalar.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `mime` | `String` | — | MIME type extracted from the URL prefix (verbatim, not normalised). |
+| `data` | `Vec<u8>` | — | Decoded base64 payload. |
 
 ---
 
@@ -823,7 +838,7 @@ Configuration for registering a custom LLM provider at runtime.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Unique name for this provider (e.g., "my-provider"). |
-| `base_url` | `String` | — | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
+| `base_url` | `String` | — | Base URL for the provider's API (e.g., `<https://api.my-provider.com/v1>`). |
 | `auth_header` | `AuthHeaderFormat` | — | Authentication header format. |
 | `model_prefixes` | `Vec<String>` | — | Model name prefixes that route to this provider (e.g., `\["my-"\]`). |
 
@@ -1139,6 +1154,38 @@ An intent prototype: `(intent_name, prototype_embedding, target_model_id)`.
 
 ### Enums
 
+#### AssistantContent
+
+Content shape for assistant messages.
+
+`#[serde(untagged)]` means providers returning a plain scalar string for the
+`content` field still deserialise correctly into `AssistantContent::Text(_)`.
+Providers returning an array of typed parts (e.g. after an image-generation
+or audio-synthesis request) deserialise into `AssistantContent::Parts(_)`.
+
+| Variant | Description |
+|---------|-------------|
+| `Text` | Plain text response (the common case for text-only models). — Fields: `_0`: `String` |
+| `Parts` | Structured parts — text, refusals, output images, output audio. — Fields: `_0`: `Vec<AssistantPart>` |
+
+---
+
+#### AssistantPart
+
+One part of a structured assistant response.
+
+`#[serde(tag = "type", rename_all = "snake_case")]` matches OpenAI's
+parts-spec discriminator (`"type": "text"`, `"type": "output_image"`, …).
+
+| Variant | Wire value | Description |
+|---------|------------|-------------|
+| `Text` | `text` | A text segment of the response. — Fields: `text`: `String` |
+| `Refusal` | `refusal` | A refusal — the model declined to respond. — Fields: `refusal`: `String` |
+| `OutputImage` | `output_image` | An image produced by the model (e.g. `gpt-image-1`, Gemini Imagen). — Fields: `image_url`: `ImageUrl` |
+| `OutputAudio` | `output_audio` | Audio produced by the model (e.g. `gpt-4o-audio-preview`). — Fields: `audio`: `AudioContent` |
+
+---
+
 #### AuthHeaderFormat
 
 How the API key is sent in the HTTP request.
@@ -1316,6 +1363,21 @@ A chat message in a conversation.
 
 ---
 
+#### Modality
+
+Output modality requested from the model.
+
+Passed as `modalities: ["text", "audio"]` (OpenAI) or translated to
+`generationConfig.responseModalities` (Gemini / Vertex AI).
+
+| Variant | Wire value | Description |
+|---------|------------|-------------|
+| `Text` | `text` | Text output (the default for all providers). |
+| `Audio` | `audio` | Audio / speech output. |
+| `Image` | `image` | Image output (Gemini Imagen, gpt-image-1). |
+
+---
+
 #### ModerationInput
 
 Input to the moderation endpoint — a single string or multiple strings.
@@ -1363,7 +1425,24 @@ A document to be reranked — either a plain string or an object with a text fie
 
 #### ResponseFormat
 
-Response format constraint.
+Wire format for the chat completions `response_format` field.
+
+### Provider mapping
+
+- **OpenAI** (and OpenAI-compatible providers): emitted verbatim as
+  `{"type": "json_schema", "json_schema": {...}}` per the
+  chat-completions spec.
+
+- **Gemini / Vertex AI**: translated to
+  `generationConfig.responseMimeType = "application/json"` and
+  `generationConfig.responseSchema = <schema>`. The `name`,
+  `description`, and `strict` fields are dropped — Gemini's
+  structured-output API does not consume them.
+
+- **Anthropic**: no native JSON mode. A system instruction is
+  prepended asking the model to respond with valid JSON.
+  `strict` is advisory only; callers should still validate the
+  returned JSON if the schema is load-bearing.
 
 | Variant | Wire value | Description |
 |---------|------------|-------------|

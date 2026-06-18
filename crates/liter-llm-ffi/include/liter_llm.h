@@ -11,9 +11,25 @@
 #include <stdlib.h>
 /* Opaque type forward declarations */
 /**
+ * Content shape for assistant messages.
+ *
+ * `#`serde(untagged)`` means providers returning a plain scalar string for the
+ * `content` field still deserialise correctly into `AssistantContent::Text(_)`.
+ * Providers returning an array of typed parts (e.g. after an image-generation
+ * or audio-synthesis request) deserialise into `AssistantContent::Parts(_)`.
+ */
+typedef struct LITERLLMAssistantContent LITERLLMAssistantContent;
+/**
  * Assistant's response to a user message.
  */
 typedef struct LITERLLMAssistantMessage LITERLLMAssistantMessage;
+/**
+ * One part of a structured assistant response.
+ *
+ * `#[serde(tag = "type", rename_all = "snake_case")]` matches OpenAI's
+ * parts-spec discriminator (`"type": "text"`, `"type": "output_image"`, â¦).
+ */
+typedef struct LITERLLMAssistantPart LITERLLMAssistantPart;
 /**
  * Audio content part for speech-capable models.
  */
@@ -129,6 +145,13 @@ typedef struct LITERLLMCreateTranscriptionRequest LITERLLMCreateTranscriptionReq
  * Configuration for registering a custom LLM provider at runtime.
  */
 typedef struct LITERLLMCustomProviderConfig LITERLLMCustomProviderConfig;
+/**
+ * Result of decoding a `data:` URL â MIME type and the decoded byte payload.
+ *
+ * Named struct (rather than a tuple) so polyglot bindings can extract
+ * `decode_data_url` with a typed return rather than a sanitized scalar.
+ */
+typedef struct LITERLLMDecodedDataUrl LITERLLMDecodedDataUrl;
 /**
  * Default client implementation backed by `reqwest`.
  *
@@ -259,6 +282,22 @@ typedef struct LITERLLMLiterLlmError LITERLLMLiterLlmError;
  */
 typedef struct LITERLLMMessage LITERLLMMessage;
 /**
+ * Output modality requested from the model.
+ *
+ * Passed as `modalities: ["text", "audio"]` (OpenAI) or translated to
+ * `generationConfig.responseModalities` (Gemini / Vertex AI).
+ * \code
+ * use liter_llm::types::{ChatCompletionRequest, Modality};
+ *
+ * let req = ChatCompletionRequest {
+ *     model: "gpt-4o-audio-preview".into(),
+ *     modalities: Some(vec![Modality::Text, Modality::Audio]),
+ *     ..Default::default()
+ * };
+ * \endcode
+ */
+typedef struct LITERLLMModality LITERLLMModality;
+/**
  * A model available from the API.
  */
 typedef struct LITERLLMModelObject LITERLLMModelObject;
@@ -385,7 +424,36 @@ typedef struct LITERLLMRerankResult LITERLLMRerankResult;
  */
 typedef struct LITERLLMRerankResultDocument LITERLLMRerankResultDocument;
 /**
- * Response format constraint.
+ * Wire format for the chat completions `response_format` field.
+ *
+ * # Provider mapping
+ *
+ * - **OpenAI** (and OpenAI-compatible providers): emitted verbatim as
+ *   `{"type": "json_schema", "json_schema": {...}}` per the
+ *   chat-completions spec.
+ * - **Gemini / Vertex AI**: translated to
+ *   `generationConfig.responseMimeType = "application/json"` and
+ *   `generationConfig.responseSchema = <schema>`. The `name`,
+ *   `description`, and `strict` fields are dropped â Gemini's
+ *   structured-output API does not consume them.
+ * - **Anthropic**: no native JSON mode. A system instruction is
+ *   prepended asking the model to respond with valid JSON.
+ *   `strict` is advisory only; callers should still validate the
+ *   returned JSON if the schema is load-bearing.
+ * \code
+ * # use liter_llm::types::{ResponseFormat, ChatCompletionRequest};
+ * # use serde_json::json;
+ * let request = ChatCompletionRequest {
+ *     model: "gpt-4o".into(),
+ *     messages: vec![],
+ *     response_format: Some(ResponseFormat::json_schema(
+ *         "PersonSchema",
+ *         json!({ "type": "object", "properties": { "name": { "type": "string" } } }),
+ *     )),
+ *     ..Default::default()
+ * };
+ * # let _ = request;
+ * \endcode
  */
 typedef struct LITERLLMResponseFormat LITERLLMResponseFormat;
 /**
@@ -649,7 +717,7 @@ void literllm_system_message_free(LITERLLMSystemMessage *ptr);
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-char *literllm_system_message_content(const LITERLLMSystemMessage *ptr);
+LITERLLMUserContent *literllm_system_message_content(const LITERLLMSystemMessage *ptr);
 
 /**
  * Get the `name` field from a `SystemMessage`.
@@ -834,7 +902,7 @@ void literllm_assistant_message_free(LITERLLMAssistantMessage *ptr);
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-char *literllm_assistant_message_content(const LITERLLMAssistantMessage *ptr);
+LITERLLMAssistantContent *literllm_assistant_message_content(const LITERLLMAssistantMessage *ptr);
 
 /**
  * Get the `name` field from a `AssistantMessage`.
@@ -863,6 +931,40 @@ char *literllm_assistant_message_refusal(const LITERLLMAssistantMessage *ptr);
  * Pointer must be a valid handle returned by this library.
  */
 LITERLLMFunctionCall *literllm_assistant_message_function_call(const LITERLLMAssistantMessage *ptr);
+
+/**
+ * Return the assistant's textual response, concatenating all `Text` parts
+ * if the content is structured.
+ *
+ * Returns `None` for `Refusal`-only or `OutputImage`-only responses.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+char *literllm_assistant_message_text(const LITERLLMAssistantMessage *this_);
+
+/**
+ * Return the refusal message, if the model declined to respond.
+ *
+ * Checks both the top-level `refusal` field and any `Refusal` parts
+ * inside a structured `content`.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+char *literllm_assistant_message_refusal_text(const LITERLLMAssistantMessage *this_);
+
+/**
+ * Return all `AssistantPart.OutputImage` parts in the response.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+char *literllm_assistant_message_output_images(const LITERLLMAssistantMessage *this_);
+
+/**
+ * Return all `AssistantPart.OutputAudio` parts in the response.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+char *literllm_assistant_message_output_audio(const LITERLLMAssistantMessage *this_);
 
 /**
  * Create a `ToolMessage` from a JSON string. Returns null on failure.
@@ -1512,6 +1614,13 @@ int64_t literllm_chat_completion_request_seed(const LITERLLMChatCompletionReques
  * Pointer must be a valid handle returned by this library.
  */
 LITERLLMReasoningEffort *literllm_chat_completion_request_reasoning_effort(const LITERLLMChatCompletionRequest *ptr);
+
+/**
+ * Get the `modalities` field from a `ChatCompletionRequest`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_chat_completion_request_modalities(const LITERLLMChatCompletionRequest *ptr);
 
 /**
  * Get the `extra_body` field from a `ChatCompletionRequest`.
@@ -2254,6 +2363,44 @@ char *literllm_image_b64_json(const LITERLLMImage *ptr);
  * Pointer must be a valid handle returned by this library.
  */
 char *literllm_image_revised_prompt(const LITERLLMImage *ptr);
+
+/**
+ * Create a `DecodedDataUrl` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `literllm_decoded_data_url_free`.
+ */
+LITERLLMDecodedDataUrl *literllm_decoded_data_url_from_json(const char *json);
+
+/**
+ * Serialize a `DecodedDataUrl` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_decoded_data_url_to_json(const LITERLLMDecodedDataUrl *ptr);
+
+/**
+ * Free a `DecodedDataUrl` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_decoded_data_url_free(LITERLLMDecodedDataUrl *ptr);
+
+/**
+ * Get the `mime` field from a `DecodedDataUrl`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *literllm_decoded_data_url_mime(const LITERLLMDecodedDataUrl *ptr);
+
+/**
+ * Get the `data` field from a `DecodedDataUrl`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint8_t *literllm_decoded_data_url_data(const LITERLLMDecodedDataUrl *ptr,
+                                        uintptr_t *out_len);
 
 /**
  * Create a `CreateSpeechRequest` from a JSON string. Returns null on failure.
@@ -5005,6 +5152,36 @@ int32_t literllm_image_detail_from_i32(int32_t value);
 int32_t literllm_image_detail_from_str(const char *name);
 
 /**
+ * Convert an integer to a `AssistantContent` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t literllm_assistant_content_from_i32(int32_t value);
+
+/**
+ * Convert a `AssistantContent` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t literllm_assistant_content_from_str(const char *name);
+
+/**
+ * Convert an integer to a `AssistantPart` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t literllm_assistant_part_from_i32(int32_t value);
+
+/**
+ * Convert a `AssistantPart` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t literllm_assistant_part_from_str(const char *name);
+
+/**
  * Convert an integer to a `ToolType` variant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure all pointer arguments are valid or null.
@@ -5078,6 +5255,21 @@ int32_t literllm_stop_sequence_from_i32(int32_t value);
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
 int32_t literllm_stop_sequence_from_str(const char *name);
+
+/**
+ * Convert an integer to a `Modality` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t literllm_modality_from_i32(int32_t value);
+
+/**
+ * Convert a `Modality` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t literllm_modality_from_str(const char *name);
 
 /**
  * Convert an integer to a `FinishReason` variant. Returns -1 on invalid input.
@@ -5368,6 +5560,31 @@ char *literllm_image_detail_to_json(const LITERLLMImageDetail *ptr);
  * The returned string must be freed with `literllm_free_string`.
  */
 char *literllm_image_detail_to_string(const LITERLLMImageDetail *ptr);
+
+/**
+ * Free a heap-allocated `AssistantContent` returned by a pointer-returning FFI function.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void literllm_assistant_content_free(LITERLLMAssistantContent *ptr);
+
+/**
+ * Serialize a heap-allocated `AssistantContent` to a JSON string.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_assistant_content_to_json(const LITERLLMAssistantContent *ptr);
+
+/**
+ * Render a heap-allocated `AssistantContent` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `literllm` function.
+ * The returned string must be freed with `literllm_free_string`.
+ */
+char *literllm_assistant_content_to_string(const LITERLLMAssistantContent *ptr);
 
 /**
  * Free a heap-allocated `ToolType` returned by a pointer-returning FFI function.
@@ -5798,6 +6015,69 @@ LITERLLMDefaultClient *literllm_create_client(const char *api_key,
 LITERLLMDefaultClient *literllm_create_client_from_json(const char *json);
 
 /**
+ * Encode bytes as a base64 data URL: `data:<mime>;base64,<b64>`.
+ *
+ * `mime` defaults to `IMAGE_PNG` when `None`.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ * \code
+ * use liter_llm::image::{encode_data_url, IMAGE_PNG, IMAGE_JPEG};
+ *
+ * let url = encode_data_url(b"\x89PNG", Some(IMAGE_PNG));
+ * assert!(url.starts_with("data:image/png;base64,"));
+ *
+ * let url_default = encode_data_url(b"\x89PNG", None);
+ * assert!(url_default.starts_with("data:image/png;base64,"));
+ *
+ * let jpeg_url = encode_data_url(b"\xff\xd8\xff", Some(IMAGE_JPEG));
+ * assert!(jpeg_url.starts_with("data:image/jpeg;base64,"));
+ * \endcode
+ */
+char *literllm_encode_data_url(const uint8_t *bytes,
+                               uintptr_t bytes_len,
+                               const char *mime);
+
+/**
+ * Return the byte length of the C string most recently returned by `literllm_encode_data_url` on this
+ * thread. Returns 0 when the primary call returned null or failed before producing a string. Enables
+ * safe slice construction in Zig and Java FFM Panama without a NUL-scan.
+ * \note SAFETY: Pointer arguments are ignored and are present only to keep the companion ABI aligned
+ * with `literllm_encode_data_url`.
+ */
+uintptr_t literllm_encode_data_url_len(const uint8_t *_bytes,
+                                       uintptr_t _bytes_len,
+                                       const char *_mime);
+
+/**
+ * Decode a base64 data URL into `DecodedDataUrl`.
+ *
+ * Returns `None` for:
+ * - Non-data URLs (strings that do not start with `"data:"`).
+ * - Malformed prefixes (missing `";base64,"` marker).
+ * - Invalid base64 payloads.
+ *
+ * The returned MIME string is extracted verbatim from the URL prefix â
+ * it is not validated or normalised.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ * \code
+ * use liter_llm::image::{encode_data_url, decode_data_url, IMAGE_PNG};
+ *
+ * let url = encode_data_url(b"hello", Some(IMAGE_PNG));
+ * let decoded = decode_data_url(&url).expect("valid data URL");
+ * assert_eq!(decoded.mime, IMAGE_PNG);
+ * assert_eq!(decoded.data, b"hello");
+ *
+ * // Non-data URLs return None.
+ * assert!(decode_data_url("https://example.com/img.png").is_none());
+ *
+ * // Missing ;base64, marker returns None.
+ * assert!(decode_data_url("data:image/png,plaintext").is_none());
+ * \endcode
+ */
+LITERLLMDecodedDataUrl *literllm_decode_data_url(const char *url);
+
+/**
  * Register a custom provider in the global runtime registry.
  *
  * The provider will be checked **before** all built-in providers during model
@@ -5976,7 +6256,7 @@ int32_t literllm_check_bound(const char *context,
                              uintptr_t incoming,
                              uintptr_t limit);
 
-#if !defined(SKIF_WINDOWS)
+#if (!defined(SKIF_WINDOWS) || defined(SKIF_WINDOWS))
 /**
  * Install the `ring` crypto provider as the rustls process default, idempotently.
  *

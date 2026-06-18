@@ -12,7 +12,7 @@ System message guiding model behavior for the entire conversation.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `str` | — | Instructions or context that apply throughout the conversation. |
+| `content` | `UserContent` | `UserContent.TEXT` | Instructions or context that apply throughout the conversation. Accepts either a plain text string or an array of content parts, mirroring `UserContent` so that `Message.system_with_parts` works. |
 | `name` | `str \| None` | `None` | Optional name for the system message source. |
 
 ---
@@ -67,7 +67,7 @@ Assistant's response to a user message.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `str \| None` | `None` | The assistant's text response. Absent if tool calls are returned instead. |
+| `content` | `AssistantContent \| None` | `None` | The assistant's response: plain text, structured parts, or absent. `None` is valid when the model replies with tool calls only. |
 | `name` | `str \| None` | `None` | Optional name for the assistant. |
 | `tool_calls` | `list\[ToolCall\] \| None` | `\[\]` | Tool calls the model wants to execute, if any. |
 | `refusal` | `str \| None` | `None` | Refusal reason, if the model declined to respond per safety policies. |
@@ -197,6 +197,7 @@ Chat completion request (compatible with OpenAI and similar APIs).
 | `stream_options` | `StreamOptions \| None` | `None` | Streaming options (e.g., include_usage). |
 | `seed` | `int \| None` | `None` | Random seed for reproducible outputs. Provider support varies. |
 | `reasoning_effort` | `ReasoningEffort \| None` | `None` | Reasoning effort level (low, medium, high) for extended-thinking models. |
+| `modalities` | `list\[Modality\] \| None` | `\[\]` | Output modalities to request from the model. For OpenAI audio models, pass `\["text", "audio"\]`. Vertex AI / Gemini translates these to `generationConfig.responseModalities` (uppercase). |
 | `extra_body` | `dict\[str, Any\] \| None` | `None` | Provider-specific extra parameters merged into the request body. Use for guardrails, safety settings, grounding config, etc. |
 
 ---
@@ -358,6 +359,20 @@ A single generated image, returned as either a URL or base64 data.
 | `url` | `str \| None` | `None` | Image URL (if response_format was "url"). |
 | `b64_json` | `str \| None` | `None` | Base64-encoded image data (if response_format was "b64_json"). |
 | `revised_prompt` | `str \| None` | `None` | The final prompt used to generate the image (DALL-E 3). |
+
+---
+
+### DecodedDataUrl
+
+Result of decoding a `data:` URL — MIME type and the decoded byte payload.
+
+Named struct (rather than a tuple) so polyglot bindings can extract
+`decode_data_url` with a typed return rather than a sanitized scalar.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `mime` | `str` | — | MIME type extracted from the URL prefix (verbatim, not normalised). |
+| `data` | `bytes` | — | Decoded base64 payload. |
 
 ---
 
@@ -759,7 +774,7 @@ Configuration for registering a custom LLM provider at runtime.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `str` | — | Unique name for this provider (e.g., "my-provider"). |
-| `base_url` | `str` | — | Base URL for the provider's API (e.g., "<https://api.my-provider.com/v1">). |
+| `base_url` | `str` | — | Base URL for the provider's API (e.g., `<https://api.my-provider.com/v1>`). |
 | `auth_header` | `AuthHeaderFormat` | — | Authentication header format. |
 | `model_prefixes` | `list\[str\]` | — | Model name prefixes that route to this provider (e.g., `\["my-"\]`). |
 
@@ -858,6 +873,22 @@ Configuration for per-model rate limits.
 ---
 
 ### Enums
+
+#### AssistantContent
+
+Content shape for assistant messages.
+
+`#[serde(untagged)]` means providers returning a plain scalar string for the
+`content` field still deserialise correctly into `AssistantContent.Text(_)`.
+Providers returning an array of typed parts (e.g. after an image-generation
+or audio-synthesis request) deserialise into `AssistantContent.Parts(_)`.
+
+| Variant | Description |
+|---------|-------------|
+| `Text` | Plain text response (the common case for text-only models). — Fields: `_0`: `String` |
+| `Parts` | Structured parts — text, refusals, output images, output audio. — Fields: `_0`: `Vec<AssistantPart>` |
+
+---
 
 #### AuthHeaderFormat
 
@@ -1000,6 +1031,21 @@ A chat message in a conversation.
 
 ---
 
+#### Modality
+
+Output modality requested from the model.
+
+Passed as `modalities: ["text", "audio"]` (OpenAI) or translated to
+`generationConfig.responseModalities` (Gemini / Vertex AI).
+
+| Variant | Wire value | Description |
+|---------|------------|-------------|
+| `Text` | `text` | Text output (the default for all providers). |
+| `Audio` | `audio` | Audio / speech output. |
+| `Image` | `image` | Image output (Gemini Imagen, gpt-image-1). |
+
+---
+
 #### ModerationInput
 
 Input to the moderation endpoint — a single string or multiple strings.
@@ -1047,7 +1093,24 @@ A document to be reranked — either a plain string or an object with a text fie
 
 #### ResponseFormat
 
-Response format constraint.
+Wire format for the chat completions `response_format` field.
+
+### Provider mapping
+
+- **OpenAI** (and OpenAI-compatible providers): emitted verbatim as
+  `{"type": "json_schema", "json_schema": {...}}` per the
+  chat-completions spec.
+
+- **Gemini / Vertex AI**: translated to
+  `generationConfig.responseMimeType = "application/json"` and
+  `generationConfig.responseSchema = <schema>`. The `name`,
+  `description`, and `strict` fields are dropped — Gemini's
+  structured-output API does not consume them.
+
+- **Anthropic**: no native JSON mode. A system instruction is
+  prepended asking the model to respond with valid JSON.
+  `strict` is advisory only; callers should still validate the
+  returned JSON if the schema is load-bearing.
 
 | Variant | Wire value | Description |
 |---------|------------|-------------|

@@ -569,6 +569,18 @@ void* __swift_bridge__$Vec_Image$get_mut(void* vec_ptr, uintptr_t index);
 uintptr_t __swift_bridge__$Vec_Image$len(void* vec_ptr);
 void* __swift_bridge__$Vec_Image$as_ptr(void* vec_ptr);
 
+typedef struct DecodedDataUrl DecodedDataUrl;
+void __swift_bridge__$DecodedDataUrl$_free(void* self);
+
+void* __swift_bridge__$Vec_DecodedDataUrl$new(void);
+void __swift_bridge__$Vec_DecodedDataUrl$drop(void* vec_ptr);
+void __swift_bridge__$Vec_DecodedDataUrl$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_DecodedDataUrl$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_DecodedDataUrl$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_DecodedDataUrl$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_DecodedDataUrl$len(void* vec_ptr);
+void* __swift_bridge__$Vec_DecodedDataUrl$as_ptr(void* vec_ptr);
+
 typedef struct CreateSpeechRequest CreateSpeechRequest;
 void __swift_bridge__$CreateSpeechRequest$_free(void* self);
 
@@ -1037,6 +1049,18 @@ void* __swift_bridge__$Vec_WaitForBatchConfig$get_mut(void* vec_ptr, uintptr_t i
 uintptr_t __swift_bridge__$Vec_WaitForBatchConfig$len(void* vec_ptr);
 void* __swift_bridge__$Vec_WaitForBatchConfig$as_ptr(void* vec_ptr);
 
+typedef struct DefaultClient DefaultClient;
+void __swift_bridge__$DefaultClient$_free(void* self);
+
+void* __swift_bridge__$Vec_DefaultClient$new(void);
+void __swift_bridge__$Vec_DefaultClient$drop(void* vec_ptr);
+void __swift_bridge__$Vec_DefaultClient$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_DefaultClient$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_DefaultClient$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_DefaultClient$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_DefaultClient$len(void* vec_ptr);
+void* __swift_bridge__$Vec_DefaultClient$as_ptr(void* vec_ptr);
+
 typedef struct CustomProviderConfig CustomProviderConfig;
 void __swift_bridge__$CustomProviderConfig$_free(void* self);
 
@@ -1193,6 +1217,30 @@ void* __swift_bridge__$Vec_ImageDetail$get_mut(void* vec_ptr, uintptr_t index);
 uintptr_t __swift_bridge__$Vec_ImageDetail$len(void* vec_ptr);
 void* __swift_bridge__$Vec_ImageDetail$as_ptr(void* vec_ptr);
 
+typedef struct AssistantContent AssistantContent;
+void __swift_bridge__$AssistantContent$_free(void* self);
+
+void* __swift_bridge__$Vec_AssistantContent$new(void);
+void __swift_bridge__$Vec_AssistantContent$drop(void* vec_ptr);
+void __swift_bridge__$Vec_AssistantContent$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_AssistantContent$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_AssistantContent$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_AssistantContent$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_AssistantContent$len(void* vec_ptr);
+void* __swift_bridge__$Vec_AssistantContent$as_ptr(void* vec_ptr);
+
+typedef struct AssistantPart AssistantPart;
+void __swift_bridge__$AssistantPart$_free(void* self);
+
+void* __swift_bridge__$Vec_AssistantPart$new(void);
+void __swift_bridge__$Vec_AssistantPart$drop(void* vec_ptr);
+void __swift_bridge__$Vec_AssistantPart$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_AssistantPart$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_AssistantPart$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_AssistantPart$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_AssistantPart$len(void* vec_ptr);
+void* __swift_bridge__$Vec_AssistantPart$as_ptr(void* vec_ptr);
+
 typedef struct ToolType ToolType;
 void __swift_bridge__$ToolType$_free(void* self);
 
@@ -1252,6 +1300,18 @@ void* __swift_bridge__$Vec_StopSequence$get(void* vec_ptr, uintptr_t index);
 void* __swift_bridge__$Vec_StopSequence$get_mut(void* vec_ptr, uintptr_t index);
 uintptr_t __swift_bridge__$Vec_StopSequence$len(void* vec_ptr);
 void* __swift_bridge__$Vec_StopSequence$as_ptr(void* vec_ptr);
+
+typedef struct Modality Modality;
+void __swift_bridge__$Modality$_free(void* self);
+
+void* __swift_bridge__$Vec_Modality$new(void);
+void __swift_bridge__$Vec_Modality$drop(void* vec_ptr);
+void __swift_bridge__$Vec_Modality$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_Modality$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_Modality$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_Modality$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_Modality$len(void* vec_ptr);
+void* __swift_bridge__$Vec_Modality$as_ptr(void* vec_ptr);
 
 typedef struct FinishReason FinishReason;
 void __swift_bridge__$FinishReason$_free(void* self);
@@ -1517,7 +1577,7 @@ void* __swift_bridge__$Usage$prompt_tokens_details(void* self);
 void* __swift_bridge__$PromptTokensDetails$new(uint64_t cached_tokens, uint64_t audio_tokens);
 uint64_t __swift_bridge__$PromptTokensDetails$cached_tokens(void* self);
 uint64_t __swift_bridge__$PromptTokensDetails$audio_tokens(void* self);
-void* __swift_bridge__$ChatCompletionRequest$new(void* model, void* messages, struct __private__OptionF64 temperature, struct __private__OptionF64 top_p, struct __private__OptionU32 n, struct __private__OptionBool stream, void* stop, struct __private__OptionU64 max_tokens, struct __private__OptionF64 presence_penalty, struct __private__OptionF64 frequency_penalty, void* logit_bias, void* user, void* tools, void* tool_choice, struct __private__OptionBool parallel_tool_calls, void* response_format, void* stream_options, struct __private__OptionI64 seed, void* reasoning_effort, void* extra_body);
+void* __swift_bridge__$ChatCompletionRequest$new(void* model, void* messages, struct __private__OptionF64 temperature, struct __private__OptionF64 top_p, struct __private__OptionU32 n, struct __private__OptionBool stream, void* stop, struct __private__OptionU64 max_tokens, struct __private__OptionF64 presence_penalty, struct __private__OptionF64 frequency_penalty, void* logit_bias, void* user, void* tools, void* tool_choice, struct __private__OptionBool parallel_tool_calls, void* response_format, void* stream_options, struct __private__OptionI64 seed, void* reasoning_effort, void* modalities, void* extra_body);
 void* __swift_bridge__$ChatCompletionRequest$model(void* self);
 void* __swift_bridge__$ChatCompletionRequest$messages(void* self);
 struct __private__OptionF64 __swift_bridge__$ChatCompletionRequest$temperature(void* self);
@@ -1537,6 +1597,7 @@ void* __swift_bridge__$ChatCompletionRequest$response_format(void* self);
 void* __swift_bridge__$ChatCompletionRequest$stream_options(void* self);
 struct __private__OptionI64 __swift_bridge__$ChatCompletionRequest$seed(void* self);
 void* __swift_bridge__$ChatCompletionRequest$reasoning_effort(void* self);
+void* __swift_bridge__$ChatCompletionRequest$modalities(void* self);
 void* __swift_bridge__$ChatCompletionRequest$extra_body(void* self);
 void* __swift_bridge__$StreamOptions$new(struct __private__OptionBool include_usage);
 struct __private__OptionBool __swift_bridge__$StreamOptions$include_usage(void* self);
@@ -1609,6 +1670,9 @@ void* __swift_bridge__$Image$new(void* url, void* b64_json, void* revised_prompt
 void* __swift_bridge__$Image$url(void* self);
 void* __swift_bridge__$Image$b64_json(void* self);
 void* __swift_bridge__$Image$revised_prompt(void* self);
+void* __swift_bridge__$DecodedDataUrl$new(void* mime, void* data);
+void* __swift_bridge__$DecodedDataUrl$mime(void* self);
+void* __swift_bridge__$DecodedDataUrl$data(void* self);
 void* __swift_bridge__$CreateSpeechRequest$new(void* model, void* input, void* voice, void* response_format, struct __private__OptionF64 speed);
 void* __swift_bridge__$CreateSpeechRequest$model(void* self);
 void* __swift_bridge__$CreateSpeechRequest$input(void* self);
@@ -1858,6 +1922,7 @@ void* __swift_bridge__$CacheConfig$new(uintptr_t max_entries, uint64_t ttl, void
 uintptr_t __swift_bridge__$CacheConfig$max_entries(void* self);
 uint64_t __swift_bridge__$CacheConfig$ttl(void* self);
 void* __swift_bridge__$CacheConfig$backend(void* self);
+void __swift_bridge__$singleflight_result_noop(void* client);
 void* __swift_bridge__$RateLimitConfig$new(struct __private__OptionU32 rpm, struct __private__OptionU64 tpm, uint64_t window);
 struct __private__OptionU32 __swift_bridge__$RateLimitConfig$rpm(void* self);
 struct __private__OptionU64 __swift_bridge__$RateLimitConfig$tpm(void* self);
@@ -1869,11 +1934,14 @@ void* __swift_bridge__$Message$to_string(void* self);
 void* __swift_bridge__$UserContent$to_string(void* self);
 void* __swift_bridge__$ContentPart$to_string(void* self);
 void* __swift_bridge__$ImageDetail$to_string(void* self);
+void* __swift_bridge__$AssistantContent$to_string(void* self);
+void* __swift_bridge__$AssistantPart$to_string(void* self);
 void* __swift_bridge__$ToolType$to_string(void* self);
 void* __swift_bridge__$ToolChoice$to_string(void* self);
 void* __swift_bridge__$ToolChoiceMode$to_string(void* self);
 void* __swift_bridge__$ResponseFormat$to_string(void* self);
 void* __swift_bridge__$StopSequence$to_string(void* self);
+void* __swift_bridge__$Modality$to_string(void* self);
 void* __swift_bridge__$FinishReason$to_string(void* self);
 void* __swift_bridge__$ReasoningEffort$to_string(void* self);
 void* __swift_bridge__$EmbeddingFormat$to_string(void* self);
@@ -1892,6 +1960,8 @@ void* __swift_bridge__$CircuitState$to_string(void* self);
 void* __swift_bridge__$HealthStatus$to_string(void* self);
 struct __private__ResultPtrAndPtr __swift_bridge__$create_client(void* api_key, void* base_url, struct __private__OptionU64 timeout_secs, struct __private__OptionU32 max_retries, void* model_hint);
 struct __private__ResultPtrAndPtr __swift_bridge__$create_client_from_json(void* json);
+void* __swift_bridge__$encode_data_url(void* bytes, void* mime);
+void* __swift_bridge__$decode_data_url(void* url);
 void* __swift_bridge__$register_custom_provider(void* config);
 struct __swift_bridge__$ResultBoolAndString __swift_bridge__$unregister_custom_provider(void* name);
 void* __swift_bridge__$capabilities(void* provider_name);
@@ -1951,6 +2021,7 @@ struct __private__ResultPtrAndPtr __swift_bridge__$embedding_response_from_json(
 struct __private__ResultPtrAndPtr __swift_bridge__$embedding_object_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$images_response_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$image_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$decoded_data_url_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$transcription_response_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$transcription_segment_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$moderation_response_from_json(void* json);
@@ -1988,11 +2059,14 @@ struct __private__ResultPtrAndPtr __swift_bridge__$message_from_json(void* json)
 struct __private__ResultPtrAndPtr __swift_bridge__$user_content_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$content_part_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$image_detail_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$assistant_content_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$assistant_part_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$tool_type_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$tool_choice_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$tool_choice_mode_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$response_format_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$stop_sequence_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$modality_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$finish_reason_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$reasoning_effort_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$embedding_format_from_json(void* json);
@@ -2040,6 +2114,7 @@ void* __swift_bridge__$__alef_phantom_vec_embedding_object(void);
 void* __swift_bridge__$__alef_phantom_vec_create_image_request(void);
 void* __swift_bridge__$__alef_phantom_vec_images_response(void);
 void* __swift_bridge__$__alef_phantom_vec_image(void);
+void* __swift_bridge__$__alef_phantom_vec_decoded_data_url(void);
 void* __swift_bridge__$__alef_phantom_vec_create_speech_request(void);
 void* __swift_bridge__$__alef_phantom_vec_create_transcription_request(void);
 void* __swift_bridge__$__alef_phantom_vec_transcription_response(void);
@@ -2092,11 +2167,14 @@ void* __swift_bridge__$__alef_phantom_vec_message(void);
 void* __swift_bridge__$__alef_phantom_vec_user_content(void);
 void* __swift_bridge__$__alef_phantom_vec_content_part(void);
 void* __swift_bridge__$__alef_phantom_vec_image_detail(void);
+void* __swift_bridge__$__alef_phantom_vec_assistant_content(void);
+void* __swift_bridge__$__alef_phantom_vec_assistant_part(void);
 void* __swift_bridge__$__alef_phantom_vec_tool_type(void);
 void* __swift_bridge__$__alef_phantom_vec_tool_choice(void);
 void* __swift_bridge__$__alef_phantom_vec_tool_choice_mode(void);
 void* __swift_bridge__$__alef_phantom_vec_response_format(void);
 void* __swift_bridge__$__alef_phantom_vec_stop_sequence(void);
+void* __swift_bridge__$__alef_phantom_vec_modality(void);
 void* __swift_bridge__$__alef_phantom_vec_finish_reason(void);
 void* __swift_bridge__$__alef_phantom_vec_reasoning_effort(void);
 void* __swift_bridge__$__alef_phantom_vec_embedding_format(void);
@@ -2113,7 +2191,6 @@ void* __swift_bridge__$__alef_phantom_vec_enforcement(void);
 void* __swift_bridge__$__alef_phantom_vec_cache_backend(void);
 void* __swift_bridge__$__alef_phantom_vec_circuit_state(void);
 void* __swift_bridge__$__alef_phantom_vec_health_status(void);
-void* __swift_bridge__$__alef_phantom_vec_default_client(void);
 typedef enum __swift_bridge__$ResultBoolAndString$Tag {__swift_bridge__$ResultBoolAndString$ResultOk, __swift_bridge__$ResultBoolAndString$ResultErr} __swift_bridge__$ResultBoolAndString$Tag;
 union __swift_bridge__$ResultBoolAndString$Fields {bool ok; void* err;};
 typedef struct __swift_bridge__$ResultBoolAndString{__swift_bridge__$ResultBoolAndString$Tag tag; union __swift_bridge__$ResultBoolAndString$Fields payload;} __swift_bridge__$ResultBoolAndString;

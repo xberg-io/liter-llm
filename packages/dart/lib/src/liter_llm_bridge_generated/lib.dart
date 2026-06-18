@@ -9,7 +9,7 @@ import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `IntentPrototype`, `SingleflightResult`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Create a new LLM client with simple scalar configuration.
 ///
@@ -45,6 +45,25 @@ Future<DefaultClient> createClient({
 /// contains unknown fields.
 Future<DefaultClient> createClientFromJson({required String json}) =>
     RustLib.instance.api.crateCreateClientFromJson(json: json);
+
+/// Encode bytes as a base64 data URL: `data:<mime>;base64,<b64>`.
+///
+/// `mime` defaults to `IMAGE_PNG` when `null`.
+Future<String> encodeDataUrl({required List<int> bytes, String? mime}) =>
+    RustLib.instance.api.crateEncodeDataUrl(bytes: bytes, mime: mime);
+
+/// Decode a base64 data URL into `DecodedDataUrl`.
+///
+/// Returns `null` for:
+///
+/// - Non-data URLs (strings that do not start with `"data:"`).
+/// - Malformed prefixes (missing `";base64,"` marker).
+/// - Invalid base64 payloads.
+///
+/// The returned MIME string is extracted verbatim from the URL prefix —
+/// it is not validated or normalised.
+Future<DecodedDataUrl?> decodeDataUrl({required String url}) =>
+    RustLib.instance.api.crateDecodeDataUrl(url: url);
 
 /// Register a custom provider in the global runtime registry.
 ///
@@ -331,6 +350,9 @@ Future<ImagesResponse> createImagesResponseFromJson({required String json}) =>
 Future<Image> createImageFromJson({required String json}) =>
     RustLib.instance.api.crateCreateImageFromJson(json: json);
 
+Future<DecodedDataUrl> createDecodedDataUrlFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateDecodedDataUrlFromJson(json: json);
+
 Future<CreateSpeechRequest> createCreateSpeechRequestFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateCreateSpeechRequestFromJson(json: json);
@@ -552,10 +574,25 @@ abstract class DefaultClient implements RustOpaqueInterface {
   });
 }
 
+@freezed
+sealed class AssistantContent with _$AssistantContent {
+  const AssistantContent._();
+
+  /// Plain text response (the common case for text-only models).
+  const factory AssistantContent.text({required String field0}) =
+      AssistantContent_Text;
+
+  /// Structured parts — text, refusals, output images, output audio.
+  const factory AssistantContent.parts({required List<AssistantPart> field0}) =
+      AssistantContent_Parts;
+}
+
 /// Assistant's response to a user message.
 class AssistantMessage {
-  /// The assistant's text response. Absent if tool calls are returned instead.
-  final String? content;
+  /// The assistant's response: plain text, structured parts, or absent.
+  ///
+  /// `None` is valid when the model replies with tool calls only.
+  final AssistantContent? content;
 
   /// Optional name for the assistant.
   final String? name;
@@ -595,6 +632,35 @@ class AssistantMessage {
           toolCalls == other.toolCalls &&
           refusal == other.refusal &&
           functionCall == other.functionCall;
+}
+
+@freezed
+sealed class AssistantPart with _$AssistantPart {
+  const AssistantPart._();
+
+  /// A text segment of the response.
+  const factory AssistantPart.text({
+    /// The text content of this part.
+    required String text,
+  }) = AssistantPart_Text;
+
+  /// A refusal — the model declined to respond.
+  const factory AssistantPart.refusal({
+    /// The refusal reason.
+    required String refusal,
+  }) = AssistantPart_Refusal;
+
+  /// An image produced by the model (e.g. `gpt-image-1`, Gemini Imagen).
+  const factory AssistantPart.outputImage({
+    /// Image URL or data URI referencing the generated image.
+    required ImageUrl imageUrl,
+  }) = AssistantPart_OutputImage;
+
+  /// Audio produced by the model (e.g. `gpt-4o-audio-preview`).
+  const factory AssistantPart.outputAudio({
+    /// Base64-encoded audio data and its format.
+    required AudioContent audio,
+  }) = AssistantPart_OutputAudio;
 }
 
 /// Audio content part for speech-capable models.
@@ -1100,6 +1166,12 @@ class ChatCompletionRequest {
   /// Reasoning effort level (low, medium, high) for extended-thinking models.
   final ReasoningEffort? reasoningEffort;
 
+  /// Output modalities to request from the model.
+  ///
+  /// For OpenAI audio models, pass `["text", "audio"]`. Vertex AI / Gemini
+  /// translates these to `generationConfig.responseModalities` (uppercase).
+  final List<Modality>? modalities;
+
   /// Provider-specific extra parameters merged into the request body.
   /// Use for guardrails, safety settings, grounding config, etc.
   final String? extraBody;
@@ -1124,6 +1196,7 @@ class ChatCompletionRequest {
     this.streamOptions,
     this.seed,
     this.reasoningEffort,
+    this.modalities,
     this.extraBody,
   });
 
@@ -1148,6 +1221,7 @@ class ChatCompletionRequest {
       streamOptions.hashCode ^
       seed.hashCode ^
       reasoningEffort.hashCode ^
+      modalities.hashCode ^
       extraBody.hashCode;
 
   @override
@@ -1174,6 +1248,7 @@ class ChatCompletionRequest {
           streamOptions == other.streamOptions &&
           seed == other.seed &&
           reasoningEffort == other.reasoningEffort &&
+          modalities == other.modalities &&
           extraBody == other.extraBody;
 }
 
@@ -1611,7 +1686,7 @@ class CustomProviderConfig {
   /// Unique name for this provider (e.g., "my-provider").
   final String name;
 
-  /// Base URL for the provider's API (e.g., "https://api.my-provider.com/v1").
+  /// Base URL for the provider's API (e.g., `<https://api.my-provider.com/v1>`).
   final String baseUrl;
 
   /// Authentication header format.
@@ -1643,6 +1718,31 @@ class CustomProviderConfig {
           baseUrl == other.baseUrl &&
           authHeader == other.authHeader &&
           modelPrefixes == other.modelPrefixes;
+}
+
+/// Result of decoding a `data:` URL — MIME type and the decoded byte payload.
+///
+/// Named struct (rather than a tuple) so polyglot bindings can extract
+/// `decode_data_url` with a typed return rather than a sanitized scalar.
+class DecodedDataUrl {
+  /// MIME type extracted from the URL prefix (verbatim, not normalised).
+  final String mime;
+
+  /// Decoded base64 payload.
+  final Uint8List data;
+
+  const DecodedDataUrl({required this.mime, required this.data});
+
+  @override
+  int get hashCode => mime.hashCode ^ data.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DecodedDataUrl &&
+          runtimeType == other.runtimeType &&
+          mime == other.mime &&
+          data == other.data;
 }
 
 /// Response from a delete operation.
@@ -2342,7 +2442,7 @@ sealed class LiterLlmError with _$LiterLlmError {
   /// Returns the canonical HTTP status code associated with this error.
   ///
   /// Maps error variants to their originating HTTP status code as set by
-  /// [`LiterLlmError::from_status`].  Used by e2e assertions that check
+  /// the private `from_status` constructor. Used by e2e assertions that check
   /// `error.status_code` against the expected HTTP status.
   Future<PlatformInt64> statusCode() =>
       RustLib.instance.api.crateLiterLlmErrorStatusCode(that: this);
@@ -2364,6 +2464,33 @@ sealed class Message with _$Message {
   /// Deprecated legacy function-role message; retained for API compatibility.
   const factory Message.function({required FunctionMessage field0}) =
       Message_Function;
+}
+
+/// Output modality requested from the model.
+///
+/// Passed as `modalities: ["text", "audio"]` (OpenAI) or translated to
+/// `generationConfig.responseModalities` (Gemini / Vertex AI).
+///
+/// # Example
+///
+/// ```
+/// use liter_llm::types::{ChatCompletionRequest, Modality};
+///
+/// let req = ChatCompletionRequest {
+///     model: "gpt-4o-audio-preview".into(),
+///     modalities: Some(vec![Modality::Text, Modality::Audio]),
+///     ..Default::default()
+/// };
+/// ```
+enum Modality {
+  /// Text output (the default for all providers).
+  text,
+
+  /// Audio / speech output.
+  audio,
+
+  /// Image output (Gemini Imagen, gpt-image-1).
+  image,
 }
 
 /// A model available from the API.
@@ -2988,7 +3115,7 @@ class ProviderConfig {
   ///
   /// Each entry maps an OpenAI-spec field name (e.g. `"max_completion_tokens"`)
   /// to the name this provider expects (e.g. `"max_tokens"`).  Applied
-  /// automatically by [`ConfigDrivenProvider::transform_request`].
+  /// automatically by `ConfigDrivenProvider::transform_request`.
   final Map<String, String>? paramMappings;
 
   const ProviderConfig({
@@ -3665,7 +3792,10 @@ class StreamToolCall {
 /// System message guiding model behavior for the entire conversation.
 class SystemMessage {
   /// Instructions or context that apply throughout the conversation.
-  final String content;
+  ///
+  /// Accepts either a plain text string or an array of content parts,
+  /// mirroring [`UserContent`] so that `Message::system_with_parts` works.
+  final UserContent content;
 
   /// Optional name for the system message source.
   final String? name;

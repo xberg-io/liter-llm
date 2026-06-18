@@ -15,7 +15,7 @@
 //!
 //! let decoded = decode_data_url(&url).expect("valid data URL");
 //! assert_eq!(decoded.mime, IMAGE_PNG);
-//! assert_eq!(decoded.bytes, raw);
+//! assert_eq!(decoded.data, raw);
 //! ```
 
 use base64::Engine as _;
@@ -63,7 +63,7 @@ pub struct DecodedDataUrl {
     /// MIME type extracted from the URL prefix (verbatim, not normalised).
     pub mime: String,
     /// Decoded base64 payload.
-    pub bytes: Vec<u8>,
+    pub data: Vec<u8>,
 }
 
 /// Decode a base64 data URL into [`DecodedDataUrl`].
@@ -84,7 +84,7 @@ pub struct DecodedDataUrl {
 /// let url = encode_data_url(b"hello", Some(IMAGE_PNG));
 /// let decoded = decode_data_url(&url).expect("valid data URL");
 /// assert_eq!(decoded.mime, IMAGE_PNG);
-/// assert_eq!(decoded.bytes, b"hello");
+/// assert_eq!(decoded.data, b"hello");
 ///
 /// // Non-data URLs return None.
 /// assert!(decode_data_url("https://example.com/img.png").is_none());
@@ -99,7 +99,7 @@ pub fn decode_data_url(url: &str) -> Option<DecodedDataUrl> {
     let mime = rest[..marker_pos].to_owned();
     let b64 = &rest[marker_pos + marker.len()..];
     let bytes = base64::engine::general_purpose::STANDARD.decode(b64).ok()?;
-    Some(DecodedDataUrl { mime, bytes })
+    Some(DecodedDataUrl { mime, data: bytes })
 }
 
 #[cfg(test)]
@@ -131,7 +131,7 @@ mod tests {
             let url = encode_data_url(payload, Some(mime));
             let decoded = decode_data_url(&url).unwrap_or_else(|| panic!("round-trip failed for mime={mime}"));
             assert_eq!(decoded.mime, mime, "mime mismatch for {mime}");
-            assert_eq!(decoded.bytes, payload, "bytes mismatch for {mime}");
+            assert_eq!(decoded.data, payload, "bytes mismatch for {mime}");
         }
     }
 
@@ -167,7 +167,7 @@ mod tests {
             let decoded =
                 decode_data_url(&url).unwrap_or_else(|| panic!("round-trip failed for input len={}", bytes.len()));
             assert_eq!(decoded.mime, IMAGE_PNG);
-            assert_eq!(decoded.bytes, bytes);
+            assert_eq!(decoded.data, bytes);
         }
     }
 }

@@ -192,6 +192,28 @@ impl Default for AssistantContent {
     }
 }
 
+impl AssistantContent {
+    /// Return the text content as an owned `String`. For `Text` returns the
+    /// inner string; for `Parts` concatenates every `AssistantPart::Text` in order.
+    /// Returns `None` when the content carries no textual data (e.g. an
+    /// image-only `Parts` vec).
+    pub fn as_text(&self) -> Option<String> {
+        match self {
+            AssistantContent::Text(s) => Some(s.clone()),
+            AssistantContent::Parts(parts) => {
+                let texts: Vec<&str> = parts
+                    .iter()
+                    .filter_map(|p| match p {
+                        AssistantPart::Text { text } => Some(text.as_str()),
+                        _ => None,
+                    })
+                    .collect();
+                if texts.is_empty() { None } else { Some(texts.join("")) }
+            }
+        }
+    }
+}
+
 impl From<String> for AssistantContent {
     fn from(s: String) -> Self {
         Self::Text(s)
@@ -302,28 +324,28 @@ impl AssistantMessage {
     }
 
     /// Return all [`AssistantPart::OutputImage`] parts in the response.
-    pub fn output_images(&self) -> Vec<&ImageUrl> {
+    pub fn output_images(&self) -> Vec<ImageUrl> {
         let Some(AssistantContent::Parts(parts)) = self.content.as_ref() else {
             return vec![];
         };
         parts
             .iter()
             .filter_map(|p| match p {
-                AssistantPart::OutputImage { image_url } => Some(image_url),
+                AssistantPart::OutputImage { image_url } => Some(image_url.clone()),
                 _ => None,
             })
             .collect()
     }
 
     /// Return all [`AssistantPart::OutputAudio`] parts in the response.
-    pub fn output_audio(&self) -> Vec<&AudioContent> {
+    pub fn output_audio(&self) -> Vec<AudioContent> {
         let Some(AssistantContent::Parts(parts)) = self.content.as_ref() else {
             return vec![];
         };
         parts
             .iter()
             .filter_map(|p| match p {
-                AssistantPart::OutputAudio { audio } => Some(audio),
+                AssistantPart::OutputAudio { audio } => Some(audio.clone()),
                 _ => None,
             })
             .collect()
@@ -815,8 +837,8 @@ mod tests {
             ])),
             ..Default::default()
         };
-        assert_eq!(a.output_images(), vec![&url]);
-        assert_eq!(a.output_audio(), vec![&audio]);
+        assert_eq!(a.output_images(), vec![url.clone()]);
+        assert_eq!(a.output_audio(), vec![audio.clone()]);
     }
 
     #[test]
@@ -1051,7 +1073,6 @@ pub struct JsonSchemaFormat {
     pub strict: Option<bool>,
 }
 
-#[cfg_attr(alef, alef(skip))]
 impl JsonSchemaFormat {
     /// Create a strict `json_schema` response format with the given name and schema.
     ///
@@ -1084,6 +1105,8 @@ impl JsonSchemaFormat {
     /// let fmt = JsonSchemaFormat::new("S", json!({})).strict(false);
     /// assert_eq!(fmt.strict, Some(false));
     /// ```
+    // Builder-pattern method: takes owned `self` (not expressible across FFI boundaries).
+    #[cfg_attr(alef, alef(skip))]
     #[must_use]
     pub fn strict(mut self, on: bool) -> Self {
         self.strict = Some(on);
@@ -1100,6 +1123,9 @@ impl JsonSchemaFormat {
     /// let fmt = JsonSchemaFormat::new("S", json!({})).description("A person object");
     /// assert_eq!(fmt.description.as_deref(), Some("A person object"));
     /// ```
+    // Builder-pattern method: takes owned `self` (not expressible across FFI boundaries).
+    // Also, the method name `description` collides with the struct field `description`.
+    #[cfg_attr(alef, alef(skip))]
     #[must_use]
     pub fn description(mut self, d: impl Into<String>) -> Self {
         self.description = Some(d.into());

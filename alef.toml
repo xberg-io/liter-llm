@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.25.24"
+alef_version = "0.25.40"
 languages = [
   "python",
   "node",
@@ -56,6 +56,7 @@ sources = [
   "crates/liter-llm/src/types/chat.rs",
   "crates/liter-llm/src/types/embedding.rs",
   "crates/liter-llm/src/types/image.rs",
+  "crates/liter-llm/src/image.rs",
   "crates/liter-llm/src/types/audio.rs",
   "crates/liter-llm/src/types/moderation.rs",
   "crates/liter-llm/src/types/rerank.rs",
@@ -1963,7 +1964,7 @@ name = "liter_llm_ffi"
 name = "LiterLlm"
 
 [crates.e2e.registry.packages.zig]
-hash = "liter_llm-1.6.4-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
+hash = "liter_llm-1.7.0-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
 
 [crates.e2e.registry.packages.homebrew]
 tap = "kreuzberg-dev/homebrew-tap"

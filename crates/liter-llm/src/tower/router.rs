@@ -463,7 +463,7 @@ where
                             .unwrap_or_default();
                         let system = r.messages.iter().find_map(|m| {
                             if let crate::types::Message::System(s) = m {
-                                Some(s.content.clone())
+                                s.content.as_text()
                             } else {
                                 None
                             }
