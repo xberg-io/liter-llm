@@ -2,7 +2,7 @@
 name: liter-llm
 description: >-
   Universal LLM API client for 143 providers with native bindings for
-  16 languages. Use when writing code that calls LLM APIs via liter-llm
+  14 languages. Use when writing code that calls LLM APIs via liter-llm
   in Python, TypeScript, Rust, Go, Java, C#, Ruby, PHP, Elixir, WASM, or C.
   Covers chat, streaming, embeddings, image generation, speech, transcription,
   moderation, reranking, search, OCR, tool calling, and configuration.
