@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	moduleVersion = "1.7.2"
+	moduleVersion = "1.7.3"
 	repoURL       = "https://github.com/kreuzberg-dev/liter-llm"
 	assetPrefix   = "liter-llm"
 )

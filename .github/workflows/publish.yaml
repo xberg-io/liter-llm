@@ -1896,11 +1896,43 @@ jobs:
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
-            - uses: actions/download-artifact@v7
+            - name: Download pre-built AARs from build matrix
+              uses: actions/download-artifact@v7
               with:
                   pattern: kotlin-android-*
-                  path: packages/kotlin-android/build/outputs/aar/
+                  path: kotlin-android-aars-prebuilt
                   merge-multiple: true
+            - name: Stage JNI libraries from build artifacts
+              shell: bash
+              run: |
+                  # The build-kotlin-android-natives job stages jniLibs into src/main/jniLibs/{abi}/
+                  # within its own workspace, then runs gradle assembleRelease to package them into AARs.
+                  # The pre-built AARs are uploaded as artifacts.
+                  #
+                  # To prevent gradle from rebuilding the AAR from source (which would lose jniLibs),
+                  # we extract the jniLibs from the pre-built AARs and re-stage them so that when
+                  # publishAndReleaseToMavenCentral re-assembles, it includes them.
+                  for aar in kotlin-android-aars-prebuilt/*.aar; do
+                    echo "Extracting jniLibs from $(basename "$aar")..."
+                    unzip -q "$aar" -d temp-aar-extract
+                    # Each pre-built AAR contains jni/{abi}/*.so (Android AAR structure)
+                    if [ -d temp-aar-extract/jni ]; then
+                      for abi_dir in temp-aar-extract/jni/*/; do
+                        abi=$(basename "$abi_dir")
+                        mkdir -p "packages/kotlin-android/src/main/jniLibs/$abi"
+                        find "$abi_dir" -type f -name "*.so" -exec cp {} "packages/kotlin-android/src/main/jniLibs/$abi/" \;
+                        echo "  Staged jniLibs/$abi from AAR"
+                      done
+                    fi
+                    rm -rf temp-aar-extract
+                  done
+                  # Verify jniLibs were staged
+                  if [ ! -d packages/kotlin-android/src/main/jniLibs ] || [ -z "$(find packages/kotlin-android/src/main/jniLibs -type f)" ]; then
+                    echo "ERROR: No jniLibs staged from AARs!" >&2
+                    exit 1
+                  fi
+                  echo "jniLibs staging complete:"
+                  find packages/kotlin-android/src/main/jniLibs -type f -exec ls -lh {} \;
             - uses: actions/setup-java@v5
               with:
                   distribution: temurin

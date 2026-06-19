@@ -2,7 +2,7 @@
 title: "TypeScript API Reference"
 ---
 
-## TypeScript API Reference <span class="version-badge">v1.7.2</span>
+## TypeScript API Reference <span class="version-badge">v1.7.3</span>
 
 ### Functions
 

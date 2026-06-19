@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.3] - 2026-06-19
+
+### Fixed
+
+- **Cross-language e2e for multimodal `message.content`.** The remaining bindings can now
+  string-assert the assistant content union (`AssistantContent`), fixing the e2e suites that
+  broke on it: Kotlin and Dart get a `text()` accessor on the sealed class; WASM returns the
+  display text (`String`) instead of a discriminant; Swift renders property access for
+  first-class result structs; Elixir reads the NIF struct's `.text`; PHP calls the message's
+  `text()` accessor. Generated via alef 0.25.48 (`untagged_union_text_types` +
+  `fields_display_as_text` extended to all backends).
+- **Android AAR packaging guard** — the Kotlin/Android publish now stages the cross-compiled
+  JNI `.so` libs into the AAR and fails loudly if `jni/` would be empty, so a jni-less AAR can
+  never be published.
+
 ## [1.7.2] - 2026-06-18
 
 ### Added

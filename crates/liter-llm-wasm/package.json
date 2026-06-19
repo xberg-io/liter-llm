@@ -1,6 +1,6 @@
 {
   "name": "@kreuzberg/liter-llm-wasm",
-  "version": "1.7.2",
+  "version": "1.7.3",
   "private": false,
   "description": "Universal LLM API client with Rust-powered polyglot bindings.",
   "license": "MIT",
