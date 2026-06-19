@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **chore(precommit,alef): standardize kotlin-android formatting on ktfmt --kotlinlang-style.** Drop the conflicting prek ktlint hook (it ran a destructive `--format` that fought ktfmt and rewrote alef's `///` doc comments), scope ktfmt to `packages/kotlin-android` with `--kotlinlang-style`, switch `alef.toml` kotlin format/check from gradle-ktlintFormat to ktfmt so alef and prek agree, and exclude the vendored Gradle wrapper from shellcheck. detekt remains. (`.pre-commit-config.yaml`, `alef.toml`)
+
 ## [1.7.3] - 2026-06-19
 
 ### Fixed

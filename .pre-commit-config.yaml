@@ -92,6 +92,7 @@ repos:
           - id: shellcheck
             args:
                 - -x
+            exclude: ^packages/kotlin-android/gradlew$
 
           - id: markdownlint-rumdl-strict
             # Alef-generated artifacts (snippets, agents, README partials, skills)
@@ -164,10 +165,11 @@ repos:
 
           - id: detekt
             files: ^packages/kotlin-android/.*\.kts?$
-          - id: ktlint
-            files: ^packages/kotlin-android/.*\.kts?$
-            args:
-                - --format
+            args: [--build-upon-default-config]
+          # NOTE: ktlint is intentionally NOT run on alef-generated kotlin-android.
+          # ktfmt (--kotlinlang-style) is the canonical formatter (matches alef:format);
+          # ktlint's always-format mode conflicts with ktfmt (blank-line-after-brace) and
+          # mangles alef's `///` doc comments into `// /`. detekt covers static analysis.
           - id: kotlin-dokka
 
           - id: rubocop-lint
@@ -258,6 +260,9 @@ repos:
             exclude: ^(e2e/|test_apps/)
           - id: palantir-java-format
           - id: ktfmt
+            files: ^packages/kotlin-android/.*\.kts?$
+            args:
+                - --kotlinlang-style
           - id: rubocop
             files: ^packages/ruby/(?!ext/).*\.rb$
             exclude: ^packages/ruby/lib/liter_llm/native\.rb$

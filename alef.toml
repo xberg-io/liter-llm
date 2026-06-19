@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.25.48"
+alef_version = "0.25.49"
 languages = [
   "python",
   "node",
@@ -547,9 +547,9 @@ before = "cargo build --release -p liter-llm-ffi"
 precondition = "test -d crates/liter-llm-ffi/src"
 
 [crates.lint.kotlin_android]
-precondition = "command -v gradle >/dev/null 2>&1"
-format = "cd packages/kotlin-android && gradle ktlintFormat --no-daemon"
-check = "cd packages/kotlin-android && gradle ktlintCheck --no-daemon"
+precondition = "command -v ktfmt >/dev/null 2>&1"
+format = "find packages/kotlin-android \\( -name build -o -name .gradle \\) -prune -o \\( -name '*.kt' -o -name '*.kts' \\) -type f -print0 | xargs -0 ktfmt --kotlinlang-style"
+check = "find packages/kotlin-android \\( -name build -o -name .gradle \\) -prune -o \\( -name '*.kt' -o -name '*.kts' \\) -type f -print0 | xargs -0 ktfmt --kotlinlang-style --dry-run --set-exit-if-changed"
 
 [crates.test.rust]
 precondition = "command -v cargo >/dev/null 2>&1"
