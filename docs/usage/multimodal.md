@@ -350,6 +350,181 @@ Embed images directly as base64 data URLs without hosting them remotely.
     println!("{:?}", response.choices[0].message.text());
     ```
 
+=== "TypeScript"
+
+    ```typescript
+    import { createClient, encodeDataUrl, IMAGE_PNG } from "@kreuzberg/liter-llm-node";
+    import { readFileSync } from "fs";
+
+    const client = createClient(process.env.OPENAI_API_KEY!);
+
+    // Encode local file
+    const pngBytes = readFileSync("photo.png");
+    const dataUrl = encodeDataUrl(pngBytes, IMAGE_PNG);
+
+    const response = await client.chat({
+        model: "gpt-4o",
+        messages: [
+            {
+                role: "user",
+                content: [
+                    { type: "text", text: "Describe this image" },
+                    { type: "image_url", image_url: { url: dataUrl } }
+                ]
+            }
+        ]
+    });
+
+    console.log(response.choices[0].message.text());
+    ```
+
+=== "Go"
+
+    ```go
+    package main
+
+    import (
+        "fmt"
+        "os"
+        llm "liter-llm"
+    )
+
+    func main() {
+        client, _ := llm.CreateClient("sk-...", nil, nil, nil, nil)
+
+        pngBytes, _ := os.ReadFile("photo.png")
+        dataUrl := llm.EncodeDataUrl(pngBytes, llm.ImagePng)
+
+        response, _ := client.Chat(&llm.ChatCompletionRequest{
+            Model: "gpt-4o",
+            Messages: []llm.Message{
+                &llm.UserMessage{
+                    Content: llm.NewUserContentParts([]llm.ContentPart{
+                        llm.NewContentPartText("Describe this image"),
+                        llm.NewContentPartImageUrl(llm.ImageUrl{
+                            URL: dataUrl,
+                        }),
+                    }),
+                },
+            },
+        })
+
+        fmt.Println(response.Choices[0].Message.Text())
+    }
+    ```
+
+=== "Java"
+
+    ```java
+    import dev.kreuzberg.literllm.*;
+    import java.nio.file.Files;
+    import java.nio.file.Paths;
+
+    DefaultClient client = LiterLlm.createClient("sk-...", null, null, null, null);
+
+    byte[] pngBytes = Files.readAllBytes(Paths.get("photo.png"));
+    String dataUrl = LiterLlm.encodeDataUrl(pngBytes, "image/png");
+
+    ChatCompletionRequest req = new ChatCompletionRequest()
+        .model("gpt-4o")
+        .messages(Arrays.asList(
+            new UserMessage()
+                .content(new UserContent(Arrays.asList(
+                    ContentPart.text("Describe this image"),
+                    ContentPart.imageUrl(new ImageUrl().url(dataUrl))
+                )))
+        ));
+
+    ChatCompletionResponse resp = client.chat(req);
+    System.out.println(resp.getChoices().get(0).getMessage().text());
+    ```
+
+=== "C#"
+
+    ```csharp
+    using LiterLlm;
+    using System.IO;
+
+    var client = LiterLlm.CreateClient("sk-...", null, null, null, null);
+
+    var pngBytes = File.ReadAllBytes("photo.png");
+    var dataUrl = LiterLlm.EncodeDataUrl(pngBytes, "image/png");
+
+    var response = await client.ChatAsync(new ChatCompletionRequest
+    {
+        Model = "gpt-4o",
+        Messages = new List<Message>
+        {
+            new UserMessage
+            {
+                Content = new UserContent(new List<ContentPart>
+                {
+                    ContentPart.Text("Describe this image"),
+                    ContentPart.ImageUrl(new ImageUrl { Url = dataUrl })
+                })
+            }
+        }
+    });
+
+    Console.WriteLine(response.Choices[0].Message.Text());
+    ```
+
+=== "Ruby"
+
+    ```ruby
+    require "liter_llm"
+
+    client = LiterLlm.create_client("sk-...", nil, nil, nil, nil)
+
+    png_bytes = File.read("photo.png", mode: "rb")
+    data_url = LiterLlm.encode_data_url(png_bytes, "image/png")
+
+    response = client.chat(
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Describe this image" },
+            { type: "image_url", image_url: { url: data_url } }
+          ]
+        }
+      ]
+    )
+
+    puts response.choices[0].message.text()
+    ```
+
+=== "PHP"
+
+    ```php
+    <?php
+    use Kreuzberg\LiterLlm\LiterLlm;
+
+    $client = LiterLlm::createClient("sk-...", null, null, null, null);
+
+    $pngBytes = file_get_contents("photo.png");
+    $dataUrl = LiterLlm::encodeDataUrl($pngBytes, "image/png");
+
+    $response = $client->chat([
+        "model" => "gpt-4o",
+        "messages" => [
+            [
+                "role" => "user",
+                "content" => [
+                    ["type" => "text", "text" => "Describe this image"],
+                    [
+                        "type" => "image_url",
+                        "image_url" => ["url" => $dataUrl]
+                    ]
+                ]
+            ]
+        ]
+    ]);
+
+    echo $response->choices[0]->message->text();
+    ```
+
 ## Structured JSON Output
 
 Request responses in a specific JSON schema format.
@@ -398,6 +573,117 @@ Simple JSON mode (any valid JSON object).
     }).await?;
 
     println!("{}", response.choices[0].message.text()?);
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    import { createClient, ResponseFormat } from "@kreuzberg/liter-llm-node";
+
+    const client = createClient(process.env.OPENAI_API_KEY!);
+
+    const response = await client.chat({
+        model: "gpt-4o",
+        messages: [
+            {
+                role: "user",
+                content: "Extract the main entities from: 'John Smith works at Acme Corp in NYC'"
+            }
+        ],
+        responseFormat: ResponseFormat.jsonObject()
+    });
+
+    console.log(response.choices[0].message.text());
+    ```
+
+=== "Go"
+
+    ```go
+    package main
+
+    import (
+        "fmt"
+        llm "liter-llm"
+    )
+
+    func main() {
+        client, _ := llm.CreateClient("sk-...", nil, nil, nil, nil)
+
+        response, _ := client.Chat(&llm.ChatCompletionRequest{
+            Model: "gpt-4o",
+            Messages: []llm.Message{
+                &llm.UserMessage{
+                    Content: "Extract the main entities from: 'John Smith works at Acme Corp in NYC'",
+                },
+            },
+            ResponseFormat: llm.ResponseFormatJsonObject(),
+        })
+
+        fmt.Println(response.Choices[0].Message.Text())
+    }
+    ```
+
+=== "Java"
+
+    ```java
+    import dev.kreuzberg.literllm.*;
+
+    DefaultClient client = LiterLlm.createClient("sk-...", null, null, null, null);
+
+    ChatCompletionRequest req = new ChatCompletionRequest()
+        .model("gpt-4o")
+        .messages(Arrays.asList(
+            new UserMessage()
+                .content("Extract the main entities from: 'John Smith works at Acme Corp in NYC'")
+        ))
+        .responseFormat(ResponseFormat.jsonObject());
+
+    ChatCompletionResponse resp = client.chat(req);
+    System.out.println(resp.getChoices().get(0).getMessage().text());
+    ```
+
+=== "C#"
+
+    ```csharp
+    using LiterLlm;
+
+    var client = LiterLlm.CreateClient("sk-...", null, null, null, null);
+
+    var response = await client.ChatAsync(new ChatCompletionRequest
+    {
+        Model = "gpt-4o",
+        Messages = new List<Message>
+        {
+            new UserMessage
+            {
+                Content = "Extract the main entities from: 'John Smith works at Acme Corp in NYC'"
+            }
+        },
+        ResponseFormat = ResponseFormat.JsonObject()
+    });
+
+    Console.WriteLine(response.Choices[0].Message.Text());
+    ```
+
+=== "Ruby"
+
+    ```ruby
+    require "liter_llm"
+
+    client = LiterLlm.create_client("sk-...", nil, nil, nil, nil)
+
+    response = client.chat(
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "user",
+          content: "Extract the main entities from: 'John Smith works at Acme Corp in NYC'"
+        }
+      ],
+      response_format: LiterLlm.response_format_json_object
+    )
+
+    puts response.choices[0].message.text()
     ```
 
 ### JSON Schema (Strict)
@@ -609,6 +895,157 @@ Request audio output from speech models.
             .decode(&audio.data)?;
         fs::write("response.wav", decoded)?;
     }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    import { createClient, Modality } from "@kreuzberg/liter-llm-node";
+    import { writeFileSync } from "fs";
+
+    const client = createClient(process.env.OPENAI_API_KEY!);
+
+    const response = await client.chat({
+        model: "gpt-4o-audio-preview",
+        messages: [
+            {
+                role: "user",
+                content: "Tell me about the history of AI"
+            }
+        ],
+        modalities: ["text", "audio"]
+    });
+
+    const text = response.choices[0].message.text();
+    const audioParts = response.choices[0].message.outputAudio();
+
+    console.log("Text:", text);
+    for (const audio of audioParts) {
+        const decoded = Buffer.from(audio.data, "base64");
+        writeFileSync("response.wav", decoded);
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    package main
+
+    import (
+        "encoding/base64"
+        "fmt"
+        "os"
+        llm "liter-llm"
+    )
+
+    func main() {
+        client, _ := llm.CreateClient("sk-...", nil, nil, nil, nil)
+
+        response, _ := client.Chat(&llm.ChatCompletionRequest{
+            Model: "gpt-4o-audio-preview",
+            Messages: []llm.Message{
+                &llm.UserMessage{
+                    Content: "Tell me about the history of AI",
+                },
+            },
+            Modalities: []llm.Modality{llm.ModText, llm.ModAudio},
+        })
+
+        msg := response.Choices[0].Message
+        fmt.Println("Text:", msg.Text())
+
+        for _, audio := range msg.OutputAudio() {
+            decoded, _ := base64.StdEncoding.DecodeString(audio.Data)
+            os.WriteFile("response.wav", decoded, 0644)
+        }
+    }
+    ```
+
+=== "Java"
+
+    ```java
+    import dev.kreuzberg.literllm.*;
+    import java.nio.file.Files;
+    import java.nio.file.Paths;
+    import java.util.Base64;
+
+    DefaultClient client = LiterLlm.createClient("sk-...", null, null, null, null);
+
+    ChatCompletionRequest req = new ChatCompletionRequest()
+        .model("gpt-4o-audio-preview")
+        .messages(Arrays.asList(
+            new UserMessage()
+                .content("Tell me about the history of AI")
+        ))
+        .modalities(Arrays.asList(Modality.TEXT, Modality.AUDIO));
+
+    ChatCompletionResponse resp = client.chat(req);
+    String text = resp.getChoices().get(0).getMessage().text();
+    System.out.println("Text: " + text);
+
+    for (AudioContent audio : resp.getChoices().get(0).getMessage().outputAudio()) {
+        byte[] decoded = Base64.getDecoder().decode(audio.data);
+        Files.write(Paths.get("response.wav"), decoded);
+    }
+    ```
+
+=== "C#"
+
+    ```csharp
+    using LiterLlm;
+    using System.IO;
+
+    var client = LiterLlm.CreateClient("sk-...", null, null, null, null);
+
+    var response = await client.ChatAsync(new ChatCompletionRequest
+    {
+        Model = "gpt-4o-audio-preview",
+        Messages = new List<Message>
+        {
+            new UserMessage
+            {
+                Content = "Tell me about the history of AI"
+            }
+        },
+        Modalities = new List<Modality> { Modality.Text, Modality.Audio }
+    });
+
+    var text = response.Choices[0].Message.Text();
+    Console.WriteLine($"Text: {text}");
+
+    foreach (var audio in response.Choices[0].Message.OutputAudio())
+    {
+        var decoded = Convert.FromBase64String(audio.Data);
+        await File.WriteAllBytesAsync("response.wav", decoded);
+    }
+    ```
+
+=== "Ruby"
+
+    ```ruby
+    require "liter_llm"
+    require "base64"
+
+    client = LiterLlm.create_client("sk-...", nil, nil, nil, nil)
+
+    response = client.chat(
+      model: "gpt-4o-audio-preview",
+      messages: [
+        {
+          role: "user",
+          content: "Tell me about the history of AI"
+        }
+      ],
+      modalities: ["text", "audio"]
+    )
+
+    text = response.choices[0].message.text
+    puts "Text: #{text}"
+
+    response.choices[0].message.output_audio.each do |audio|
+      decoded = Base64.decode64(audio.data)
+      File.write("response.wav", decoded)
+    end
     ```
 
 ## Provider Mapping

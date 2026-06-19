@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.4] - 2026-06-19
+
 ### Changed
 
 - **chore(precommit,alef): standardize kotlin-android formatting on ktfmt --kotlinlang-style.** Drop the conflicting prek ktlint hook (it ran a destructive `--format` that fought ktfmt and rewrote alef's `///` doc comments), scope ktfmt to `packages/kotlin-android` with `--kotlinlang-style`, switch `alef.toml` kotlin format/check from gradle-ktlintFormat to ktfmt so alef and prek agree, and exclude the vendored Gradle wrapper from shellcheck. detekt remains. (`.pre-commit-config.yaml`, `alef.toml`)
+
+### Fixed
+
+- **Content-union e2e gate completed across the remaining bindings** (regenerated with alef 0.25.49). The Dart binding now injects the `AssistantContent.text()` extension even when FRB emits the freezed mixin clause (`sealed class … with _$… {`); the PHP flat-enum conversion always emits an exhaustive wildcard for the `&str` tag match, so `alef(skip)`'d-`Default` enums (`Message`, `ContentPart`, `AssistantPart`, `OcrDocument`) compile; and the Node/NAPI binding keeps both `From` conversion directions for plain data enums used as struct fields (e.g. `AuthHeaderFormat` in `CustomProviderConfig`). Local e2e green for Python, Node, WASM, Elixir, and PHP.
+
+### Documentation
+
+- **Bindings parity docs.** Added a feature-by-language support matrix (chat, streaming, tool calling, embeddings, multimodal in/out, call idiom) across all 14 native bindings plus the C/FFI surface, expanded the multimodal cookbook with idiomatic examples in nine languages, and reconciled the binding count to a single "14 native bindings + C/FFI surface" across the README and docs (added Dart, Swift, Kotlin Android, and Zig to the README Language READMEs table).
 
 ## [1.7.3] - 2026-06-19
 

@@ -4,8 +4,7 @@ import java.util.zip.ZipFile
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    id("com.android.library") version "8.13.0"
-    kotlin("android") version "2.2.0"
+    id("com.android.library") version "9.2.0"
 }
 
 group = "dev.kreuzberg.literllm.android"
@@ -48,7 +47,7 @@ kotlin {
 
 dependencies {
     // Published Android AAR from Maven Central (verifies artifact resolution)
-    implementation("dev.kreuzberg:liter-llm-android:1.7.3")
+    implementation("dev.kreuzberg:liter-llm-android:1.7.4")
     // Jackson for JSON assertion helpers
     testImplementation("com.fasterxml.jackson.core:jackson-annotations:2.18.2")
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")
@@ -81,7 +80,7 @@ dependencies {
 tasks.register("verifyAarPublished") {
     description = "Verify the published Android AAR contains jni and classes.jar"
     doLast {
-        val aarCoord = "dev.kreuzberg:liter-llm-android:1.7.3"
+        val aarCoord = "dev.kreuzberg:liter-llm-android:1.7.4"
         val (groupId, artifactId, version) = run {
             val parts = aarCoord.split(':')
             Triple(parts[0], parts[1], parts[2])

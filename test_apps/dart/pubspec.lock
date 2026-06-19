@@ -89,6 +89,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.7"
+  ffi:
+    dependency: "direct main"
+    description:
+      name: ffi
+      sha256: "6d7fd89431262d8f3125e81b50d3847a091d846eafcd4fdb88dd06f36d705a45"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
   file:
     dependency: transitive
     description:
@@ -173,10 +181,10 @@ packages:
     dependency: "direct main"
     description:
       name: liter_llm
-      sha256: d460c705c865e1a7de459cfd2fd536d7c581e3f46087d06d021ba9ff02b0950f
+      sha256: "3610c627407186c761d392724990a4fe8792a441102633d1e66f455899ac82ee"
       url: "https://pub.dev"
     source: hosted
-    version: "1.5.0"
+    version: "1.7.3"
   logging:
     dependency: transitive
     description:

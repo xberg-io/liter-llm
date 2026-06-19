@@ -5,7 +5,7 @@ description: "liter-llm – Universal LLM API client. One Rust core, 14 native l
 
 ## Liter-llm
 
-A universal LLM API client with a Rust core and native bindings for 14 languages. One surface across 143 runtime providers — chat, streaming, embeddings, rerank, image generation, speech, transcription, OCR, search, files, batches, moderation — plus an OpenAI-compatible proxy server and a Model Context Protocol server, both shipped in the same binary.
+A universal LLM API client with a Rust core and 14 native language bindings (plus a shared C/FFI surface). One surface across 143 runtime providers — chat, streaming, embeddings, rerank, image generation, speech, transcription, OCR, search, files, batches, moderation — plus an OpenAI-compatible proxy server and a Model Context Protocol server, both shipped in the same binary.
 
 <div class="hero-badges" markdown>
 
@@ -28,7 +28,7 @@ A universal LLM API client with a Rust core and native bindings for 14 languages
 
 - :material-translate:{ .lg .middle } **14 Native Bindings**
 
-  Rust, Python, TypeScript, Go, Java, Kotlin Android, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, WebAssembly — plus a C FFI surface for everything else.
+  Rust, Python, TypeScript, Go, Java, Kotlin Android, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, and WebAssembly — plus a shared C/FFI surface.
 
 - :material-chat-processing:{ .lg .middle } **Full Endpoint Coverage**
 
@@ -71,6 +71,24 @@ A universal LLM API client with a Rust core and native bindings for 14 languages
 | **C (FFI)**           | Shared library + header                                 | [API Reference](reference/api-c.md)          |
 | **CLI**               | `cargo install liter-llm-cli`                           | [Proxy Server](server/proxy-server.md)       |
 | **Docker**            | `ghcr.io/kreuzberg-dev/liter-llm`                       | [Proxy Server](server/proxy-server.md)       |
+
+---
+
+### Feature Support
+
+All bindings are generated from one Rust core, so endpoint coverage is uniform; the only real difference is the call idiom (async/await vs. sync vs. an explicit `_async` suffix). The `C/FFI` column is the shared native surface the C-ABI bindings (Go, Java, Kotlin, C#, Dart, Swift, Zig) are built on.
+
+| Feature | Rust | Python | TS / Node | Go | Java | Kotlin | C# | Ruby | PHP | Elixir | Dart | Swift | Zig | WASM | C/FFI |
+|---------|:----:|:------:|:---------:|:--:|:----:|:------:|:--:|:----:|:---:|:------:|:----:|:-----:|:---:|:----:|:-----:|
+| **Chat** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Streaming** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Tool calling** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Embeddings** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Vision input** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Structured output** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Audio output** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Image output** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Call idiom** | `.await` | `await` | `await` | sync | sync | sync | `await` | `_async` | sync | `_async` | `await` | `async` | sync | `await` | sync |
 
 ---
 

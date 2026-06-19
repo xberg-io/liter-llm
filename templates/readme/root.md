@@ -360,6 +360,10 @@ See [Multimodal I/O guide](https://docs.liter-llm.kreuzberg.dev/usage/multimodal
 | Elixir               | [packages/elixir](packages/elixir/README.md)             | Rustler NIF  |
 | PHP                  | [packages/php](packages/php/README.md)                   | ext-php-rs   |
 | .NET (C#)            | [packages/csharp](packages/csharp/README.md)             | P/Invoke     |
+| Dart / Flutter       | [packages/dart](packages/dart/README.md)                 | flutter_rust_bridge |
+| Swift                | [packages/swift](packages/swift/README.md)               | C ABI        |
+| Kotlin Android       | [packages/kotlin-android](packages/kotlin-android/README.md) | JNI      |
+| Zig                  | [packages/zig](packages/zig/README.md)                   | C ABI        |
 | WebAssembly          | [crates/liter-llm-wasm](crates/liter-llm-wasm/README.md) | wasm-bindgen |
 | C/C++ (FFI)          | [crates/liter-llm-ffi](crates/liter-llm-ffi)             | C ABI        |
 
