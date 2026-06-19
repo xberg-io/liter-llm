@@ -214,6 +214,14 @@ impl AssistantContent {
     }
 }
 
+impl std::fmt::Display for AssistantContent {
+    /// Writes the textual content (see [`AssistantContent::as_text`]). Image-only
+    /// or refusal-only `Parts` carry no text and render as an empty string.
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_text().as_deref().unwrap_or(""))
+    }
+}
+
 impl From<String> for AssistantContent {
     fn from(s: String) -> Self {
         Self::Text(s)
@@ -739,6 +747,24 @@ mod tests {
             a.content,
             Some(AssistantContent::Parts(vec![AssistantPart::Text { text: "hi".into() }]))
         );
+    }
+
+    #[test]
+    fn assistant_content_display_renders_text() {
+        assert_eq!(AssistantContent::Text("hi there".into()).to_string(), "hi there");
+        let parts = AssistantContent::Parts(vec![
+            AssistantPart::Text { text: "a".into() },
+            AssistantPart::OutputImage {
+                image_url: ImageUrl::default(),
+            },
+            AssistantPart::Text { text: "b".into() },
+        ]);
+        assert_eq!(parts.to_string(), "ab");
+        // Image-only / non-text content renders as an empty string.
+        let image_only = AssistantContent::Parts(vec![AssistantPart::OutputImage {
+            image_url: ImageUrl::default(),
+        }]);
+        assert_eq!(image_only.to_string(), "");
     }
 
     #[test]

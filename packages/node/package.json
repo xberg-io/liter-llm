@@ -1,6 +1,6 @@
 {
 	"name": "@kreuzberg/liter-llm-node",
-	"version": "1.7.1",
+	"version": "1.7.2",
 	"description": "Universal LLM API client with Rust-powered polyglot bindings.",
 	"keywords": [
 		"anthropic",

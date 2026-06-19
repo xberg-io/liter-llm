@@ -1,15 +1,25 @@
 {
   "name": "@kreuzberg/liter-llm-node-darwin-arm64",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kreuzberg-dev/liter-llm.git"
   },
+  "files": [
+    "liter-llm-node.darwin-arm64.node"
+  ],
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "arm64"
+  ],
   "main": "liter-llm-node.darwin-arm64.node",
-  "files": ["liter-llm-node.darwin-arm64.node"],
-  "os": ["darwin"],
-  "cpu": ["arm64"],
-  "engines": { "node": ">= 18" },
-  "publishConfig": { "access": "public" }
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">= 18"
+  }
 }

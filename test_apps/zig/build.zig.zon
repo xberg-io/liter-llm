@@ -5,8 +5,8 @@
     .minimum_zig_version = "0.16.0",
     .dependencies = .{
         .liter_llm = .{
-            .url = "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.7.1/liter-llm-zig-v1.7.1.tar.gz",
-            .hash = "liter_llm-1.7.1-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL",
+            .url = "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.7.2/liter-llm-zig-v1.7.2.tar.gz",
+            .hash = "liter_llm-1.7.2-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL",
         },
     },
     .paths = .{

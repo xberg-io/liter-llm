@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.25.43"
+alef_version = "0.25.46"
 languages = [
   "python",
   "node",
@@ -85,6 +85,10 @@ sources = [
 version_from = "Cargo.toml"
 workspace_root = "."
 features = ["native-http", "full"]
+# AssistantContent is an untagged-union (Text | Parts). Emit a display-text
+# accessor (Go `Text()`, Java `text()`, C# `Text()`) mirroring the Rust
+# `Display` impl, so the e2e suites can string-assert `message.content`.
+untagged_union_text_types = ["AssistantContent"]
 
 [crates.python]
 module_name = "_internal_bindings"
@@ -716,6 +720,11 @@ exclude_categories = ["cache", "proxy", "budget", "hooks"]
 # but plain String on ResponseObject/FileObject) so they are configured per-call via
 # `enum_fields = { "status" = "..." }` overrides, not globally.
 fields_enum = ["choices[0].finish_reason", "choices[0].message.role"]
+# Fields whose value is a content-union type (AssistantContent) that implements
+# Display but not Deref<Target=str>. The generator emits the per-language text
+# accessor (Go `.Text()`, Java `.text()`, C# `.Text()`, Rust `to_string()`)
+# instead of a plain-string cast, which only compiles for Option<String>.
+fields_display_as_text = ["choices[0].message.content"]
 # Optional fields on result types — generator emits unwrap handling for these paths.
 fields_optional = [
   # ChatCompletionResponse
@@ -1969,7 +1978,7 @@ name = "liter_llm_ffi"
 name = "LiterLlm"
 
 [crates.e2e.registry.packages.zig]
-hash = "liter_llm-1.7.1-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
+hash = "liter_llm-1.7.2-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
 
 [crates.e2e.registry.packages.homebrew]
 tap = "kreuzberg-dev/homebrew-tap"

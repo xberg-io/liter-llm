@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-06-18
+
+### Added
+
+- **`Display` for `AssistantContent`** — renders the message text (`Text` variant verbatim; `Parts` variant concatenates its text segments, skipping non-text parts), enabling string assertions on `message.content` across the polyglot e2e suites.
+
+### Fixed
+
+- **Cross-language e2e content assertions** — the generated e2e suites stringified `choices[0].message.content` with plain-string casts that fail for the multimodal `AssistantContent` union (Go `string(*ptr)`, Java `Objects.toString`, C# `.ToString()`, Rust `.as_deref()`). alef 0.25.45's `fields_display_as_text` config now emits the per-language text accessor so the assertions compile and assert text content.
+
 ## [1.7.1] - 2026-06-18
 
 ### Fixed
