@@ -14,7 +14,7 @@ repos:
             stages:
                 - commit-msg
     - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
-      rev: v2.2.0
+      rev: v2.3.0
       hooks:
           # Alef verification
           - id: alef-verify
@@ -202,6 +202,10 @@ repos:
             files: ^packages/elixir/
           - id: ex-doc-coverage
 
+          - id: air-check
+            files: ^packages/r/.*\.[Rr]$
+          - id: lintr
+            files: ^packages/r/.*\.[Rr]$
           - id: roxygen2-check
             files: ^packages/r/R/.*\.R$
           - id: swiftlint
@@ -225,6 +229,7 @@ repos:
                 - --suppress=unusedStructMember
             require_serial: true
           - id: hadolint
+          - id: alef-docs-fresh
           - id: alef-snippets-validate
 
           - id: ai-rulez-validate
@@ -277,6 +282,8 @@ repos:
           - id: mix-format
             files: ^packages/elixir/
             exclude: ^packages/elixir/lib/liter_llm(/native)?\.ex$
+          - id: air-format
+            files: ^packages/r/.*\.[Rr]$
           - id: swift-format
             files: ^packages/swift/.*\.swift$
           - id: dart-format
@@ -287,19 +294,3 @@ repos:
             args:
                 - --style=file
             files: ^crates/liter-llm-ffi/tests/c/
-    - repo: local
-      hooks:
-          - id: alef-snippets-audit
-            name: alef snippets audit (snippet structural integrity)
-            entry: alef snippets audit --snippets docs/snippets
-            language: system
-            files: ^docs/snippets/
-            pass_filenames: false
-            require_serial: true
-          - id: alef-snippets-validate-syntax
-            name: alef snippets validate --level syntax
-            entry: alef snippets validate --snippets docs/snippets --level syntax
-            language: system
-            files: ^docs/snippets/
-            pass_filenames: false
-            require_serial: true
