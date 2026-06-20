@@ -8,6 +8,7 @@ liter-llm gives a single client surface — chat, streaming, tools, structured o
 
 - [Installation](https://docs.liter-llm.kreuzberg.dev/getting-started/installation/): Install for any of the 14 supported languages or pull the Docker image
 - [Configuration](https://docs.liter-llm.kreuzberg.dev/usage/configuration/): API keys, timeouts, retries, base-URL overrides
+- AI Coding Assistants: Install the plugin with `/plugin marketplace add kreuzberg-dev/plugins` then `/plugin install liter-llm@kreuzberg` — ships agent skills plus an MCP server, works with Claude Code, Codex, Cursor, Gemini, Copilot, and opencode
 
 ## Guides — Core
 
