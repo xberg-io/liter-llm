@@ -2844,19 +2844,21 @@ jobs:
                   token: ${{ steps.app-token.outputs.token }}
 
     cli-proxy:
-        name: Publish CLI proxy packages
-        # The npm trusted publisher is bound to this workflow file (publish.yaml), so the
-        # cli-proxy package must publish from here. Decoupled from the main release: this job
-        # fires only on its own `cli-proxy-v*` release tag, never on a library version release,
-        # so the main publish pipeline and the proxy release stay independent.
+        name: Publish CLI proxy package (npm)
+        # The npm trusted publisher is bound to this workflow file (publish.yaml). The publish
+        # runs inline here via the publish-npm composite action (which executes in this job's
+        # context) rather than delegating to a reusable workflow — otherwise npm's OIDC
+        # trusted-publishing check sees the reusable workflow's filename, not publish.yaml.
+        # Decoupled from the main release: fires only on its own `cli-proxy-v*` release tag.
         if: ${{ github.event_name == 'release' && startsWith(github.event.release.tag_name, 'cli-proxy-v') }}
+        runs-on: ubuntu-latest
         permissions:
             id-token: write
             contents: read
-        uses: kreuzberg-dev/actions/.github/workflows/reusable-cli-proxy-publish.yml@v1
-        with:
-            npm-package-dir: cli-proxy/npm
-            pypi-package-dir: cli-proxy/pypi
-            publish-npm: true
-            publish-pypi: false
-            dry-run: "false"
+        steps:
+            - uses: actions/checkout@v6
+            - uses: kreuzberg-dev/actions/publish-npm@v1
+              with:
+                  package-dir: cli-proxy/npm
+                  access: public
+                  provenance: "true"
