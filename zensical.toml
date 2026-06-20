@@ -17,6 +17,7 @@ nav = [
 
   { "Guides" = [
     { "Core" = [
+      { "AI Coding Assistants" = "usage/agent-skills.md" },
       { "Chat & Streaming" = "usage/chat.md" },
       { "Multimodal I/O" = "usage/multimodal.md" },
       { "Embeddings & Rerank" = "usage/embeddings.md" },
