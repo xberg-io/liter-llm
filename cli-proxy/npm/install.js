@@ -49,28 +49,24 @@ function httpGetBuffer(url, { headers = {} } = {}, maxRedirects = 5) {
     if (!/^https:\/\//i.test(url)) {
       return reject(new Error(`refusing non-https URL: ${url}`));
     }
-    const req = https.get(
-      url,
-      { headers: { "User-Agent": USER_AGENT, ...headers } },
-      (res) => {
-        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-          res.resume();
-          const next = res.headers.location;
-          if (!/^https:\/\//i.test(next)) {
-            return reject(new Error(`refusing non-https redirect to: ${next}`));
-          }
-          return httpGetBuffer(next, { headers }, maxRedirects - 1).then(resolve, reject);
+    const req = https.get(url, { headers: { "User-Agent": USER_AGENT, ...headers } }, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        res.resume();
+        const next = res.headers.location;
+        if (!/^https:\/\//i.test(next)) {
+          return reject(new Error(`refusing non-https redirect to: ${next}`));
         }
-        if (res.statusCode !== 200) {
-          res.resume();
-          return reject(new Error(`HTTP ${res.statusCode} for ${url}`));
-        }
-        const chunks = [];
-        res.on("data", (c) => chunks.push(c));
-        res.on("end", () => resolve(Buffer.concat(chunks)));
-        res.on("error", reject);
-      },
-    );
+        return httpGetBuffer(next, { headers }, maxRedirects - 1).then(resolve, reject);
+      }
+      if (res.statusCode !== 200) {
+        res.resume();
+        return reject(new Error(`HTTP ${res.statusCode} for ${url}`));
+      }
+      const chunks = [];
+      res.on("data", (c) => chunks.push(c));
+      res.on("end", () => resolve(Buffer.concat(chunks)));
+      res.on("error", reject);
+    });
     req.on("error", reject);
     req.setTimeout(60000, () => {
       req.destroy();
@@ -84,19 +80,71 @@ async function httpGetJson(url) {
   return JSON.parse(buf.toString("utf8"));
 }
 
-function assetScore(name) {
+// Signals that the release carries no standalone CLI for this platform (only
+// bindings/native-lib/brew-bottle artifacts). The launcher catches this by name
+// and prints a graceful install hint instead of a raw stack trace.
+export class CliUnavailableError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "CliUnavailableError";
+  }
+}
+
+// Substrings that mark an asset as a binding/native-lib/brew-bottle artifact —
+// never the standalone CLI. Matched case-insensitively anywhere in the name.
+const NON_CLI_PATTERNS = [
+  "-ffi",
+  "_ffi",
+  "ffi-",
+  "nif",
+  ".so",
+  ".dylib",
+  ".dll",
+  "artifactbundle",
+  ".bottle.",
+  "bottle",
+  "node",
+  "wheel",
+  ".whl",
+  "napi",
+];
+
+// True if the asset name matches any non-CLI artifact pattern.
+export function isNonCliArtifact(name) {
+  const n = (name || "").toLowerCase();
+  return NON_CLI_PATTERNS.some((pat) => n.includes(pat));
+}
+
+export function assetScore(name) {
   const n = (name || "").toLowerCase();
   let score = 0;
-  if (n.includes(BIN_NAME.toLowerCase())) score += 2;
-  if (n.includes("cli")) score += 1;
+  if (n.includes("cli")) score += 2;
+  if (n.includes(BIN_NAME.toLowerCase())) score += 1;
   return score;
+}
+
+// Pure asset-selection core: from a list of asset names, keep only triple-matched
+// .tar.gz/.zip archives that are NOT binding/native-lib/bottle artifacts, then
+// return the best (cli/bin-name preferred). Returns null when none qualify.
+export function selectArchiveName(names, triple) {
+  const survivors = (names || []).filter((name) => {
+    const n = (name || "").toLowerCase();
+    if (!n.includes(triple)) return false;
+    if (!(n.endsWith(".tar.gz") || n.endsWith(".zip"))) return false;
+    return !isNonCliArtifact(n);
+  });
+  if (survivors.length === 0) return null;
+  survivors.sort((a, b) => assetScore(b) - assetScore(a));
+  return survivors[0];
 }
 
 // Resolve the release (honoring LITER_LLM_CLI_VERSION to pin a tag) and pick the
 // archive asset for this platform plus an optional SHA256SUMS asset.
 //
-// Selection: among assets whose name contains the target triple and ends in
-// .tar.gz/.zip, prefer one whose name also contains the bin name or "cli".
+// Selection: among assets whose name contains the target triple, ends in
+// .tar.gz/.zip, and is NOT a binding/native-lib/bottle artifact, prefer one
+// whose name contains "cli" or the bin name. If none survive, the release has
+// no standalone CLI for this platform (CliUnavailableError).
 async function resolveRelease() {
   const triple = targetTriple();
   const pinned = process.env[VERSION_ENV];
@@ -104,22 +152,28 @@ async function resolveRelease() {
     ? `https://api.github.com/repos/${REPO}/releases/tags/${encodeURIComponent(pinned)}`
     : `https://api.github.com/repos/${REPO}/releases/latest`;
 
-  const release = await httpGetJson(apiUrl);
+  let release;
+  try {
+    release = await httpGetJson(apiUrl);
+  } catch (err) {
+    if (pinned && /HTTP 404/.test(err.message)) {
+      throw new Error(`release tag '${pinned}' not found`, { cause: err });
+    }
+    throw err;
+  }
   const assets = Array.isArray(release.assets) ? release.assets : [];
   const tag = release.tag_name || pinned || "latest";
 
-  const archives = assets.filter((a) => {
-    const n = (a.name || "").toLowerCase();
-    return n.includes(triple) && (n.endsWith(".tar.gz") || n.endsWith(".zip"));
-  });
-  if (archives.length === 0) {
-    throw new Error(
-      `no release asset matching target triple "${triple}" in ${REPO} release ${tag}`,
+  const chosenName = selectArchiveName(
+    assets.map((a) => a.name),
+    triple,
+  );
+  if (!chosenName) {
+    throw new CliUnavailableError(
+      `no standalone CLI asset for target triple "${triple}" in ${REPO} release ${tag}`,
     );
   }
-
-  archives.sort((a, b) => assetScore(b.name) - assetScore(a.name));
-  const archive = archives[0];
+  const archive = assets.find((a) => a.name === chosenName);
   const checksums = assets.find((a) => (a.name || "").toUpperCase().includes("SHA256SUMS"));
 
   return { tag, triple, archive, checksums };
@@ -209,7 +263,10 @@ function listZipEntries(archivePath) {
       ["-NoProfile", "-NonInteractive", "-Command", script, archivePath],
       { encoding: "utf8" },
     );
-    return out.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+    return out
+      .split(/\r?\n/)
+      .map((s) => s.trim())
+      .filter(Boolean);
   }
   const result = spawnSync("unzip", ["-Z1", archivePath]);
   if (result.status !== 0) {
@@ -299,7 +356,12 @@ function safeExtract(archivePath, archiveName, dest) {
     const binName = binaryName();
     const extractedBin = findBinary(tmpDir, binName);
     if (!extractedBin) {
-      throw new Error(`binary ${binName} not found after extracting ${archiveName}`);
+      // The chosen asset did not actually contain the CLI binary — treat the
+      // release as having no valid CLI for this platform rather than leaving a
+      // bad/partial install behind.
+      throw new CliUnavailableError(
+        `archive ${archiveName} did not contain expected CLI binary ${binName}`,
+      );
     }
     const finalBin = path.join(dest, binName);
     fs.copyFileSync(extractedBin, finalBin);
