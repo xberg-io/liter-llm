@@ -1,384 +1,275 @@
 # liter-llm
 
-<div align="center" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0;">
-  <!-- Built with -->
-  <a href="https://github.com/kreuzberg-dev/alef">
-    <img src="https://img.shields.io/badge/Bindings-alef%20%D7%90-007ec6" alt="Bindings">
-  </a>
-  <!-- Language Bindings -->
-  <a href="https://crates.io/crates/liter-llm">
-    <img src="https://img.shields.io/crates/v/liter-llm?label=Rust&color=007ec6" alt="Rust">
-  </a>
-  <a href="https://pypi.org/project/liter-llm/">
-    <img src="https://img.shields.io/pypi/v/liter-llm?label=Python&color=007ec6" alt="Python">
-  </a>
-  <a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-node">
-    <img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-node?label=Node.js&color=007ec6" alt="Node.js">
-  </a>
-  <a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-wasm">
-    <img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6" alt="WASM">
-  </a>
-  <a href="https://central.sonatype.com/artifact/dev.kreuzberg.literllm/liter-llm">
-    <img src="https://img.shields.io/maven-central/v/dev.kreuzberg.literllm/liter-llm?label=Java&color=007ec6" alt="Java">
-  </a>
-  <a href="https://github.com/kreuzberg-dev/liter-llm/tree/main/packages/go">
-    <img src="https://img.shields.io/github/v/tag/kreuzberg-dev/liter-llm?label=Go&color=007ec6" alt="Go">
-  </a>
-  <a href="https://www.nuget.org/packages/LiterLlm">
-    <img src="https://img.shields.io/nuget/v/LiterLlm?label=C%23&color=007ec6" alt="C#">
-  </a>
-  <a href="https://packagist.org/packages/kreuzberg-dev/liter-llm">
-    <img src="https://img.shields.io/packagist/v/kreuzberg-dev/liter-llm?label=PHP&color=007ec6" alt="PHP">
-  </a>
-  <a href="https://rubygems.org/gems/liter_llm">
-    <img src="https://img.shields.io/gem/v/liter_llm?label=Ruby&color=007ec6" alt="Ruby">
-  </a>
-  <a href="https://hex.pm/packages/liter_llm">
-    <img src="https://img.shields.io/hexpm/v/liter_llm?label=Elixir&color=007ec6" alt="Elixir">
-  </a>
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0">
+	<!-- Built with -->
+	<a href="https://github.com/kreuzberg-dev/alef">
+		<img src="https://img.shields.io/badge/Bindings-alef%20%D7%90-007ec6" alt="Bindings" />
+	</a>
+	<!-- Language Bindings -->
+	<a href="https://crates.io/crates/liter-llm">
+		<img src="https://img.shields.io/crates/v/liter-llm?label=Rust&color=007ec6" alt="Rust" />
+	</a>
+	<a href="https://pypi.org/project/liter-llm/">
+		<img src="https://img.shields.io/pypi/v/liter-llm?label=Python&color=007ec6" alt="Python" />
+	</a>
+	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-node">
+		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-node?label=Node.js&color=007ec6" alt="Node.js" />
+	</a>
+	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-wasm">
+		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6" alt="WASM" />
+	</a>
+	<a href="https://central.sonatype.com/artifact/dev.kreuzberg.literllm/liter-llm">
+		<img src="https://img.shields.io/maven-central/v/dev.kreuzberg.literllm/liter-llm?label=Java&color=007ec6" alt="Java" />
+	</a>
+	<a href="https://github.com/kreuzberg-dev/liter-llm/tree/main/packages/go">
+		<img src="https://img.shields.io/github/v/tag/kreuzberg-dev/liter-llm?label=Go&color=007ec6" alt="Go" />
+	</a>
+	<a href="https://www.nuget.org/packages/LiterLlm">
+		<img src="https://img.shields.io/nuget/v/LiterLlm?label=C%23&color=007ec6" alt="C#" />
+	</a>
+	<a href="https://packagist.org/packages/kreuzberg-dev/liter-llm">
+		<img src="https://img.shields.io/packagist/v/kreuzberg-dev/liter-llm?label=PHP&color=007ec6" alt="PHP" />
+	</a>
+	<a href="https://rubygems.org/gems/liter_llm">
+		<img src="https://img.shields.io/gem/v/liter_llm?label=Ruby&color=007ec6" alt="Ruby" />
+	</a>
+	<a href="https://hex.pm/packages/liter_llm">
+		<img src="https://img.shields.io/hexpm/v/liter_llm?label=Elixir&color=007ec6" alt="Elixir" />
+	</a>
+	<a href="https://github.com/kreuzberg-dev/liter-llm/pkgs/container/liter-llm">
+		<img src="https://img.shields.io/badge/Docker-007ec6?logo=docker&logoColor=white" alt="Docker" />
+	</a>
+	<a href="https://github.com/kreuzberg-dev/homebrew-tap/blob/main/Formula/liter-llm.rb">
+		<img src="https://img.shields.io/badge/Homebrew-007ec6?logo=homebrew&logoColor=white" alt="Homebrew" />
+	</a>
+	<a href="https://github.com/kreuzberg-dev/liter-llm/tree/main/crates/liter-llm-ffi">
+		<img src="https://img.shields.io/badge/C-FFI-007ec6" alt="C FFI" />
+	</a>
 
-  <a href="https://github.com/kreuzberg-dev/liter-llm/tree/main/crates/liter-llm-ffi">
-    <img src="https://img.shields.io/badge/C-FFI-007ec6" alt="C FFI">
-  </a>
-  <a href="https://github.com/kreuzberg-dev/liter-llm/pkgs/container/liter-llm">
-    <img src="https://img.shields.io/badge/Docker-ghcr.io-007ec6?logo=docker&logoColor=white" alt="Docker">
-  </a>
-  <a href="https://github.com/kreuzberg-dev/homebrew-tap/blob/main/Formula/liter-llm.rb">
-    <img src="https://img.shields.io/badge/Homebrew-007ec6?logo=homebrew&logoColor=white" alt="Homebrew">
-  </a>
+	<!-- Project Info -->
+	<a href="https://github.com/kreuzberg-dev/liter-llm/blob/main/LICENSE">
+		<img src="https://img.shields.io/badge/License-MIT-007ec6" alt="License" />
+	</a>
+	<a href="https://docs.liter-llm.kreuzberg.dev">
+		<img src="https://img.shields.io/badge/Docs-liter--llm-007ec6" alt="Docs" />
+	</a>
+</div>
 
-  <!-- Project Info -->
-  <a href="https://github.com/kreuzberg-dev/liter-llm/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-007ec6.svg" alt="License">
-  </a>
-  <a href="https://docs.liter-llm.kreuzberg.dev">
-    <img src="https://img.shields.io/badge/Docs-liter--llm-007ec6" alt="Docs">
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 28px 0 24px">
+	<a href="https://discord.gg/xt9WY3GnKR">
+		<img
+			height="22"
+			src="https://img.shields.io/badge/Discord-Chat-007ec6?logo=discord&logoColor=white"
+			alt="Join Discord"
+		/>
+	</a>
+</div>
+
+**A lighter, faster, safer universal LLM API client** — one Rust core, 14 native language bindings, 143 providers.
+
+## What and Why?
+
+liter-llm is a universal LLM API client compiled from the ground up in Rust: one core, 14 native language bindings, and 143 providers. No interpreter, no transitive dependency tree, no supply-chain surface area — and a drop-in OpenAI-compatible proxy plus an MCP server in a single 35 MB binary.
+
+- **Compiled Rust core** — no `pip install` supply chain, no `.pth` auto-execution hooks, no runtime dependency tree to compromise.
+- **Secrets stay secret** — API keys are wrapped in [`secrecy::SecretString`](https://docs.rs/secrecy/): zeroed on drop, redacted in logs, never serialized.
+- **Polyglot from day one** — Python, TypeScript, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, and WebAssembly, all thin wrappers over the same Rust core, plus a C/FFI surface for everything else.
+- **Observability built in** — production-grade [OpenTelemetry](https://opentelemetry.io/) with GenAI semantic conventions, not an afterthought callback system.
+- **Composable middleware** — rate limiting, caching, cost tracking, health checks, and fallback as [Tower](https://docs.rs/tower/) layers you stack like building blocks.
+
+We credit [litellm](https://github.com/BerriAI/litellm) for proving the category; our provider registry was bootstrapped from theirs. See [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
+
+### Features
+
+| Feature | Description |
+| ------- | ----------- |
+| **143 providers** | OpenAI, Anthropic, Google, AWS Bedrock, Groq, Mistral, Together, Fireworks, DeepSeek, Cohere, and 130+ more — compiled at build time |
+| **14 native bindings** | Rust, Python, Node.js, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, WebAssembly — plus a shared C/FFI surface |
+| **First-class streaming** | SSE and AWS EventStream binary protocol with zero-copy buffers |
+| **Proxy & MCP server** | Drop-in OpenAI-compatible proxy (22 endpoints) and MCP tool server in a 35 MB Docker image |
+| **Tower middleware** | Rate limiting, caching (40+ OpenDAL backends), cost tracking, budget enforcement, health checks, and fallback — all composable |
+| **Observability** | OpenTelemetry with GenAI semantic conventions, cost-tracking spans, and HTTP-level tracing |
+| **Tool calling** | Parallel tools, structured outputs, and JSON-schema validation |
+| **Search & OCR** | Web search across 12 providers, document OCR across 4 |
+| **TOML configuration** | `liter-llm.toml` auto-discovery, custom providers, cache backends, and middleware config |
+| **Local LLM support** | Ollama, LM Studio, vLLM, llama.cpp, LocalAI, and llamafile via OpenAI-compatible APIs |
+
+<div align="center">
+  <a href="https://github.com/kreuzberg-dev/liter-llm/stargazers">
+    <img src="docs/assets/star.gif" alt="Star liter-llm on GitHub" width="640">
   </a>
 </div>
 
-<div align="center" style="margin: 24px 0 0;">
-  <a href="https://kreuzberg.dev">
-    <img alt="kreuzberg.dev" src="https://github.com/user-attachments/assets/1b6c6ad7-3b6d-4171-b1c9-f2026cc9deb8" />
-  </a>
-</div>
-
-<div align="center" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 28px 0 24px;">
-  <a href="https://discord.gg/xt9WY3GnKR">
-    <img height="22" src="https://img.shields.io/badge/Discord-Chat-007ec6?logo=discord&logoColor=white" alt="Join Discord">
-  </a>
-</div>
-
-**A lighter, faster, safer universal LLM API client** -- one Rust core, 14 native language bindings, 143 providers.
-
-## Why liter-llm?
-
-A universal LLM API client, compiled from the ground up in Rust. No interpreter, no transitive dependency tree, no supply chain surface area. One binary, 14 native language bindings, 143 providers.
-
-- **Compiled Rust core.** No `pip install` supply chain. No `.pth` auto-execution hooks. No runtime dependency tree to compromise. The kind of [supply chain attack that hit litellm](https://www.xda-developers.com/popular-python-library-backdoor-machine/) in 2026 is structurally impossible here.
-- **Secrets stay secret.** API keys are wrapped in [`secrecy::SecretString`](https://docs.rs/secrecy/) -- zeroed on drop, redacted in logs, never serialized.
-- **Polyglot from day one.** Python, TypeScript, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, WebAssembly -- all thin wrappers around the same Rust core, plus a C/FFI surface for everything else. No reimplementation drift.
-- **Observability built in.** Production-grade [OpenTelemetry](https://opentelemetry.io/) with GenAI semantic conventions -- not an afterthought callback system.
-- **Composable middleware.** Rate limiting, caching, cost tracking, health checks, and fallback as [Tower](https://docs.rs/tower/) layers you stack like building blocks.
-
-We give credit to [litellm](https://github.com/BerriAI/litellm) for proving the category -- our provider registry was bootstrapped from theirs. See [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
-
-## Feature Comparison
-
-An honest look at where things stand. We're newer and leaner -- litellm has breadth we haven't matched yet, and we have depth they can't easily retrofit.
-
-|                        | liter-llm                                                                                             | litellm                                                            |
-| ---------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| **Language**           | Rust (compiled, memory-safe)                                                                          | Python                                                             |
-| **Bindings**           | 14 native (Rust, Python, TS, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, WASM) + C/FFI | Python (+ OpenAI-compatible proxy)                                 |
-| **Providers**          | 143 (compiled at build time)                                                                          | 100+ (runtime resolution)                                          |
-| **Streaming**          | SSE + AWS EventStream binary protocol                                                                 | SSE + AWS EventStream                                              |
-| **Observability**      | Built-in OpenTelemetry (GenAI semconv)                                                                | 40+ callback integrations                                          |
-| **API key safety**     | `secrecy::SecretString` (zeroed, redacted)                                                            | Plain strings                                                      |
-| **Middleware**         | Composable Tower stack                                                                                | Built-in callback system                                           |
-| **Proxy / Gateway**    | Yes (22 OpenAI-compatible endpoints, 35MB Docker)                                                     | Yes                                                                |
-| **Guardrails**         | --                                                                                                    | 10+ integrations, 4 execution modes (advanced: enterprise)         |
-| **Semantic caching**   | --                                                                                                    | Redis + Qdrant backends                                            |
-| **Virtual key mgmt**   | Yes (per-key model restrictions, RPM/TPM, budgets)                                                    | Yes (key rotation: enterprise)                                     |
-| **Management API**     | Config-driven (REST admin API planned)                                                                | Multi-tenant (teams, budgets, keys; tiers + reporting: enterprise) |
-| **Fine-tuning API**    | --                                                                                                    | Enterprise only                                                    |
-| **Load balancer**      | Fallback + round-robin via Tower router                                                               | Full router with strategies                                        |
-| **Cost tracking**      | Embedded pricing + OTEL spans                                                                         | Per-key/team/model budgets                                         |
-| **Rate limiting**      | Per-model RPM/TPM (Tower layer)                                                                       | Per-key/user/team/model                                            |
-| **Caching**            | In-memory LRU + 40+ backends via OpenDAL (S3, Redis, GCS, DynamoDB, disk, ...)                        | 7 backends (Redis, S3, GCS, disk, Qdrant)                          |
-| **Tool calling**       | Parallel tools, structured output, JSON schema                                                        | Full support                                                       |
-| **Embeddings**         | Yes                                                                                                   | Yes                                                                |
-| **Batch API**          | Yes                                                                                                   | Yes                                                                |
-| **Audio / Speech**     | Yes                                                                                                   | Yes                                                                |
-| **Lifecycle hooks**    | onRequest/onResponse/onError per-client                                                               | Callback integrations                                              |
-| **Budget enforcement** | Per-model + global limits, hard/soft modes                                                            | Per-key/team budgets                                               |
-| **Health checks**      | Automatic provider probes + cooldown                                                                  | --                                                                 |
-| **Custom providers**   | Runtime API + TOML config file                                                                        | Config + code-based                                                |
-| **Config files**       | TOML with auto-discovery (`liter-llm.toml`)                                                           | YAML proxy config                                                  |
-| **Search / OCR**       | 12 search + 4 OCR providers                                                                           | Yes                                                                |
-| **Image generation**   | Yes                                                                                                   | Yes                                                                |
-
-## Key Features
-
-- **143 providers** -- OpenAI, Anthropic, Google, AWS Bedrock, Groq, Mistral, Together AI, Fireworks, Perplexity, DeepSeek, Cohere, and [130+ more](schemas/providers.json)
-- **14 native bindings** -- Rust, Python, TypeScript/Node.js, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, WebAssembly (plus a C/FFI surface shared across them)
-- **First-class streaming** -- SSE and AWS EventStream binary protocol with zero-copy buffers
-- **TOML configuration** -- `liter-llm.toml` with auto-discovery, custom providers, cache backends, middleware config
-- **OpenTelemetry** -- GenAI semantic conventions, cost tracking spans, HTTP-level tracing
-- **Tower middleware** -- Rate limiting, caching (40+ OpenDAL backends), cost tracking, budget enforcement, health checks, cooldowns, hooks, fallback -- all composable
-- **Search & OCR** -- Web search across 12 providers, document OCR across 4 providers
-- **Tool calling** -- Parallel tools, structured outputs, JSON schema validation
-- **Embeddings** -- Dimension selection, base64 format, multi-provider support
-- **Per-request routing** -- Automatic provider detection from model name prefix, custom provider registration at runtime
-- **Schema-driven** -- Provider registry and API types compiled from JSON schemas, no runtime lookups
-- **Local LLM support** — Run models locally with Ollama, LM Studio, vLLM, llama.cpp, LocalAI, and llamafile via OpenAI-compatible APIs
-
-## Proxy Server & CLI
-
-Drop-in replacement for litellm's proxy -- 22 OpenAI-compatible endpoints. Install the `liter-llm` CLI (which ships both the proxy server and the MCP tool server) one of three ways:
-
-```bash
-# Homebrew (macOS / Linux)
-# Homebrew 6.0+ requires explicit trust for third-party taps.
-brew trust kreuzberg-dev/tap
-brew install kreuzberg-dev/tap/liter-llm
-
-# Pre-built binary (Linux x86_64/arm64, macOS arm64, Windows x86_64)
-curl -L https://github.com/kreuzberg-dev/liter-llm/releases/latest/download/liter-llm-${VERSION}-${TARGET}.tar.gz | tar xz
-
-# Docker (35MB image)
-docker run -p 4000:4000 -e LITER_LLM_MASTER_KEY=sk-your-key ghcr.io/kreuzberg-dev/liter-llm
-```
-
-Then call it like OpenAI:
-
-```bash
-curl http://localhost:4000/v1/chat/completions \
-  -H "Authorization: Bearer sk-your-key" \
-  -d '{"model": "openai/gpt-4o", "messages": [{"role": "user", "content": "Hello"}]}'
-```
-
-Or with a TOML config file:
-
-```toml
-# liter-llm-proxy.toml
-[general]
-master_key = "${LITER_LLM_MASTER_KEY}"
-
-[[models]]
-name = "gpt-4o"
-provider_model = "openai/gpt-4o"
-api_key = "${OPENAI_API_KEY}"
-
-[[models]]
-name = "claude-sonnet"
-provider_model = "anthropic/claude-sonnet-4-20250514"
-api_key = "${ANTHROPIC_API_KEY}"
-
-[[keys]]
-key = "sk-team-a"
-models = ["gpt-4o"]
-rpm = 100
-```
-
-**CLI:**
-
-```bash
-liter-llm api --config liter-llm-proxy.toml    # Start proxy server
-liter-llm mcp --transport stdio                 # Start MCP tool server
-```
-
-**Features:** Model routing, virtual API keys, per-key rate limiting (RPM/TPM), cost tracking, budget enforcement, response caching, SSE streaming, OpenAPI 3.1 spec at `/openapi.json`, MCP server with 22 tools, graceful shutdown.
-
-## Architecture
-
-```text
-liter-llm/
-├── crates/
-│   ├── liter-llm/           # Rust core library
-│   ├── liter-llm-py/        # Python (PyO3) core
-│   ├── liter-llm-node/      # Node.js (NAPI-RS) core
-│   ├── liter-llm-ffi/       # C-compatible FFI layer
-│   ├── liter-llm-php/       # PHP (ext-php-rs) core
-│   └── liter-llm-wasm/      # WebAssembly (wasm-bindgen) core
-├── packages/
-│   ├── python/               # Python package
-│   ├── typescript/           # TypeScript/Node.js package
-│   ├── go/                   # Go (cgo) module
-│   ├── java/                 # Java (Panama FFI) package
-│   ├── ruby/                 # Ruby (Magnus) gem
-│   ├── elixir/               # Elixir (Rustler NIF) package
-│   ├── csharp/               # .NET (P/Invoke) package
-│   └── php/                  # PHP (Composer) package
-└── schemas/                  # Provider registry and API schemas
-```
+<p align="center"><strong>⭐ Star this repo to show your support — it helps others discover liter-llm.</strong></p>
 
 ## Quick Start
 
-Install in your language of choice:
+### Language Packages
 
-| Language         | Install                                                                      |
-| ---------------- | ---------------------------------------------------------------------------- |
-| Python           | `pip install liter-llm`                                                      |
-| Node.js          | `pnpm add @kreuzberg/liter-llm-node`                                         |
-| Rust             | `cargo add liter-llm`                                                        |
-| Go               | `go get github.com/kreuzberg-dev/liter-llm/packages/go`                      |
-| Java             | `dev.kreuzberg.literllm:liter-llm` (Maven/Gradle)                            |
-| Ruby             | `gem install liter_llm`                                                      |
-| PHP              | `composer require kreuzberg-dev/liter-llm`                                   |
-| C#               | `dotnet add package LiterLlm`                                                |
-| Elixir           | `{:liter_llm, "~> 1.6.0"}` in mix.exs                                        |
-| Dart / Flutter   | `dart pub add liter_llm`                                                     |
-| Swift            | See [Swift package](packages/swift/README.md) -- `.binaryTarget` from release notes |
-| Kotlin (Android) | `dev.kreuzberg:liter-llm-android` (Maven Central)                            |
-| Zig              | See [Zig package](packages/zig/README.md)                                    |
-| WASM             | `pnpm add @kreuzberg/liter-llm-wasm`                                         |
-| C/FFI            | Build from source -- see [FFI crate](crates/liter-llm-ffi)                   |
+<details open>
+<summary><strong>Python</strong></summary>
 
-### Usage
-
-```python
-import asyncio
-import os
-
-from liter_llm import create_client
-from liter_llm._internal_bindings import ChatCompletionRequest
-
-async def main():
-    client = create_client(api_key=os.environ["OPENAI_API_KEY"])
-
-    # Chat with any provider using the provider/model prefix
-    request = ChatCompletionRequest.from_json(
-        '{"model":"openai/gpt-4o","messages":[{"role":"user","content":"Hello!"}]}'
-    )
-    response = await client.chat(request)
-    print(response.choices[0].message.content)
-
-    # Switch providers by changing the prefix -- no other code changes
-    request = ChatCompletionRequest.from_json(
-        '{"model":"anthropic/claude-sonnet-4-20250514","messages":[{"role":"user","content":"Hello!"}]}'
-    )
-    response = await client.chat(request)
-    print(response.choices[0].message.content)
-
-asyncio.run(main())
+```sh
+pip install liter-llm
 ```
 
-Or use a `liter-llm.toml` config file instead of passing everything in code:
+See [Python README](packages/python/README.md) for full documentation.
 
-```toml
-api_key = "sk-..."
-timeout_secs = 120
+</details>
 
-[cache]
-max_entries = 512
-ttl_seconds = 600
-backend = "redis"
-backend_config = { connection_string = "redis://localhost:6379" }
+<details>
+<summary><strong>Node.js</strong></summary>
 
-[budget]
-global_limit = 50.0
-enforcement = "hard"
-
-[[providers]]
-name = "my-provider"
-base_url = "https://my-llm.example.com/v1"
-model_prefixes = ["my-provider/"]
+```sh
+pnpm add @kreuzberg/liter-llm-node
 ```
 
-The same API is available in all 14 languages -- see the language READMEs below for idiomatic examples.
+See [Node.js README](crates/liter-llm-node/README.md) for full documentation.
 
-## Core API
+</details>
 
-All bindings expose a unified `chat()` function:
+<details>
+<summary><strong>Rust</strong></summary>
 
-| Language | Usage                                                       |
-| -------- | ----------------------------------------------------------- |
-| Rust     | `client.chat(request).await`                                |
-| Python   | `await client.chat(request)`                                |
-| Node.js  | `await client.chat(request)`                                |
-| Go       | `client.Chat(request)`                                      |
-| Java     | `client.chat(request)`                                      |
-| Ruby     | `client.chat_async(request)`                                |
-| Elixir   | `LiterLlm.defaultclient_chat_async(client, request)`        |
-| PHP      | `LiterLlm::createClient($apiKey)->chat($request)`           |
-| C#       | `await client.ChatAsync(request)`                           |
-| WASM     | `await client.chat(request)`                                |
-| C FFI    | `literllm_default_client_chat(client, request)`             |
-
-## Multimodal I/O
-
-Send images and documents alongside text, request structured JSON responses, and receive images and audio from models.
-
-**Vision Input** — Pass images to vision-capable models as remote URLs or base64 data URLs:
-
-```python
-response = await client.chat({
-    "model": "openai/gpt-4o",
-    "messages": [{
-        "role": "user",
-        "content": [
-            {"type": "text", "text": "What is in this image?"},
-            {"type": "image_url", "image_url": {"url": "https://..."}}
-        ]
-    }]
-})
+```sh
+cargo add liter-llm
 ```
 
-**Structured JSON Output** — Request responses in a specific JSON schema:
+See [Rust crate](crates/liter-llm) for full documentation.
 
-```python
-response = await client.chat({
-    "model": "openai/gpt-4o",
-    "messages": [{"role": "user", "content": "Extract entities..."}],
-    "response_format": {"type": "json_schema", "json_schema": {...}}
-})
+</details>
+
+<details>
+<summary><strong>Go</strong></summary>
+
+```sh
+go get github.com/kreuzberg-dev/liter-llm/packages/go
 ```
 
-**Multimodal Output** — Generate images (Gemini) or audio (OpenAI) in chat completions:
+See [Go README](packages/go/README.md) for full documentation.
 
-```python
-response = await client.chat({
-    "model": "gpt-4o-audio-preview",
-    "messages": [{"role": "user", "content": "Tell me a story"}],
-    "modalities": ["text", "audio"]
-})
-text = response.choices[0].message.text()
-audio = response.choices[0].message.output_audio()
+</details>
+
+<details>
+<summary><strong>Java</strong></summary>
+
+Available on Maven Central as `dev.kreuzberg.literllm:liter-llm`. See [Java README](packages/java/README.md) for the dependency snippet and current version.
+
+</details>
+
+<details>
+<summary><strong>Ruby</strong></summary>
+
+```sh
+gem install liter_llm
 ```
 
-See [Multimodal I/O guide](https://docs.liter-llm.kreuzberg.dev/usage/multimodal/) for complete examples in all languages.
+See [Ruby README](packages/ruby/README.md) for full documentation.
 
-## Language READMEs
+</details>
 
-| Language             | README                                                   | Binding      |
-| -------------------- | -------------------------------------------------------- | ------------ |
-| Python               | [packages/python](packages/python/README.md)             | PyO3         |
-| TypeScript / Node.js | [crates/liter-llm-node](crates/liter-llm-node/README.md) | NAPI-RS      |
-| Go                   | [packages/go](packages/go/README.md)                     | cgo          |
-| Java                 | [packages/java](packages/java/README.md)                 | Panama FFI   |
-| Ruby                 | [packages/ruby](packages/ruby/README.md)                 | Magnus       |
-| Elixir               | [packages/elixir](packages/elixir/README.md)             | Rustler NIF  |
-| PHP                  | [packages/php](packages/php/README.md)                   | ext-php-rs   |
-| .NET (C#)            | [packages/csharp](packages/csharp/README.md)             | P/Invoke     |
-| Dart / Flutter       | [packages/dart](packages/dart/README.md)                 | flutter_rust_bridge |
-| Swift                | [packages/swift](packages/swift/README.md)               | C ABI        |
-| Kotlin Android       | [packages/kotlin-android](packages/kotlin-android/README.md) | JNI      |
-| Zig                  | [packages/zig](packages/zig/README.md)                   | C ABI        |
-| WebAssembly          | [crates/liter-llm-wasm](crates/liter-llm-wasm/README.md) | wasm-bindgen |
-| C/C++ (FFI)          | [crates/liter-llm-ffi](crates/liter-llm-ffi)             | C ABI        |
+<details>
+<summary><strong>PHP</strong></summary>
 
-## Part of Kreuzberg.dev
+```sh
+composer require kreuzberg-dev/liter-llm
+```
 
-- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
-- [Kreuzberg Cloud](https://github.com/kreuzberg-dev/kreuzberg-cloud) — managed extraction API with SDKs, dashboards, and observability.
-- [kreuzcrawl](https://github.com/kreuzberg-dev/kreuzcrawl) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
-- [html-to-markdown](https://github.com/kreuzberg-dev/html-to-markdown) — fast, lossless HTML→Markdown engine.
-- [liter-llm](https://github.com/kreuzberg-dev/liter-llm) — universal LLM API client with native bindings for 14 languages and 143 providers.
-- [tree-sitter-language-pack](https://github.com/kreuzberg-dev/tree-sitter-language-pack) — tree-sitter grammars and code-intelligence primitives.
-- [alef](https://github.com/kreuzberg-dev/alef) — the polyglot binding generator that produces every per-language binding across the 5 polyglot repos.
-- [Discord](https://discord.gg/xt9WY3GnKR) — community, roadmap, announcements.
+See [PHP README](packages/php/README.md) for full documentation.
 
-## AI Coding Assistants
+</details>
+
+<details>
+<summary><strong>C#</strong></summary>
+
+```sh
+dotnet add package LiterLlm
+```
+
+See [.NET README](packages/csharp/README.md) for full documentation.
+
+</details>
+
+<details>
+<summary><strong>Elixir</strong></summary>
+
+Add `{:liter_llm, "~> 1.6"}` to your `mix.exs` dependencies. See [Elixir README](packages/elixir/README.md) for full documentation.
+
+</details>
+
+<details>
+<summary><strong>Dart / Flutter</strong></summary>
+
+```sh
+dart pub add liter_llm
+```
+
+See [Dart README](packages/dart/README.md) for full documentation.
+
+</details>
+
+<details>
+<summary><strong>Swift</strong></summary>
+
+Add via Swift Package Manager. See [Swift README](packages/swift/README.md) for full documentation.
+
+</details>
+
+<details>
+<summary><strong>Kotlin (Android)</strong></summary>
+
+Available on Maven Central as `dev.kreuzberg:liter-llm-android`. See [Kotlin README](packages/kotlin-android/README.md) for the dependency snippet and current version.
+
+</details>
+
+<details>
+<summary><strong>Zig</strong></summary>
+
+See [Zig README](packages/zig/README.md) for installation and usage.
+
+</details>
+
+<details>
+<summary><strong>WebAssembly</strong></summary>
+
+```sh
+pnpm add @kreuzberg/liter-llm-wasm
+```
+
+See [WebAssembly README](crates/liter-llm-wasm/README.md) for full documentation.
+
+</details>
+
+<details>
+<summary><strong>C/C++ (FFI)</strong></summary>
+
+Build from source as part of this workspace. See [FFI crate](crates/liter-llm-ffi) for full documentation.
+
+</details>
+
+<details>
+<summary><strong>CLI & Proxy Server</strong></summary>
+
+The `liter-llm` CLI ships both the OpenAI-compatible proxy and the MCP tool server.
+
+```sh
+brew install kreuzberg-dev/tap/liter-llm
+```
+
+```sh
+docker run -p 4000:4000 -e LITER_LLM_MASTER_KEY=sk-your-key ghcr.io/kreuzberg-dev/liter-llm
+```
+
+```sh
+liter-llm api --config liter-llm.toml   # OpenAI-compatible proxy (22 endpoints)
+liter-llm mcp --transport stdio         # MCP tool server
+```
+
+See the [proxy guide](https://docs.liter-llm.kreuzberg.dev/) for routing, virtual keys, and budgets.
+
+</details>
+
+### AI Coding Assistants
 
 Install the liter-llm plugin from the [`kreuzberg-dev/plugins`](https://github.com/kreuzberg-dev/plugins) marketplace. It ships the liter-llm agent skills (chat, streaming, tools, embeddings across 143 providers) and works with every major coding agent — expand your harness below.
 
@@ -400,12 +291,14 @@ Install the liter-llm plugin from the [`kreuzberg-dev/plugins`](https://github.c
 ```
 
 Then search for `liter-llm` and select **Install Plugin**.
+
 </details>
 
 <details>
 <summary><strong>Cursor</strong></summary>
 
 Settings → Plugins → Add from URL → `https://github.com/kreuzberg-dev/plugins`, then select **liter-llm**.
+
 </details>
 
 <details>
@@ -441,7 +334,12 @@ copilot plugin install liter-llm@kreuzberg
 <summary><strong>opencode</strong></summary>
 
 Not yet published as an opencode package. Install via any harness above (self-hosted marketplace); opencode support is tracked in [`kreuzberg-dev/plugins`](https://github.com/kreuzberg-dev/plugins).
+
 </details>
+
+## Documentation
+
+Full guides, the unified `chat()` API for every binding, multimodal I/O, the proxy/gateway, and the complete provider list live at **[docs.liter-llm.kreuzberg.dev](https://docs.liter-llm.kreuzberg.dev)**.
 
 ## Contributing
 
@@ -449,6 +347,16 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 
 Join our [Discord community](https://discord.gg/xt9WY3GnKR) for questions and discussion.
 
+## Part of Kreuzberg.dev
+
+- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Kreuzberg Cloud](https://github.com/kreuzberg-dev/kreuzberg-cloud) — managed extraction API with SDKs, dashboards, and observability.
+- [kreuzcrawl](https://github.com/kreuzberg-dev/kreuzcrawl) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
+- [html-to-markdown](https://github.com/kreuzberg-dev/html-to-markdown) — fast, lossless HTML→Markdown engine.
+- [liter-llm](https://github.com/kreuzberg-dev/liter-llm) — universal LLM API client with native bindings for 14 languages and 143 providers.
+- [tree-sitter-language-pack](https://github.com/kreuzberg-dev/tree-sitter-language-pack) — tree-sitter grammars and code-intelligence primitives.
+- [alef](https://github.com/kreuzberg-dev/alef) — the polyglot binding generator that produces every per-language binding across the 5 polyglot repos.
+
 ## License
 
-MIT -- see [LICENSE](LICENSE) for details.
+MIT — see [LICENSE](LICENSE) for details.

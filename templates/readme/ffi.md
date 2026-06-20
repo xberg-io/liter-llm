@@ -2,6 +2,8 @@
 
 {% include 'partials/badges.html' %}
 
+{% include 'partials/discord.html' %}
+
 Universal LLM API client with Rust-powered polyglot bindings.
 
 ## What This Package Provides
