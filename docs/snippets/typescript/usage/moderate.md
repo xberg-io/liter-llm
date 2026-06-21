@@ -1,7 +1,7 @@
 <!-- snippet:compile-only -->
 
 ```typescript
-import { createClient } from "@kreuzberg/liter-llm-node";
+import { createClient } from "@kreuzberg/liter-llm";
 
 const client = createClient(process.env.OPENAI_API_KEY!);
 const response = await client.moderate({

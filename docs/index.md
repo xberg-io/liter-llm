@@ -56,7 +56,7 @@ A universal LLM API client with a Rust core and 14 native language bindings (plu
 | :-------------------- | :------------------------------------------------------ | :------------------------------------------- |
 | **Rust**              | `cargo add liter-llm`                                   | [API Reference](reference/api-rust.md)       |
 | **Python**            | `pip install liter-llm`                                 | [API Reference](reference/api-python.md)     |
-| **TypeScript / Node** | `npm install @kreuzberg/liter-llm-node`                 | [API Reference](reference/api-typescript.md) |
+| **TypeScript / Node** | `npm install @kreuzberg/liter-llm`                 | [API Reference](reference/api-typescript.md) |
 | **WebAssembly**       | `npm install @kreuzberg/liter-llm-wasm`                 | [API Reference](reference/api-wasm.md)       |
 | **Go**                | `go get github.com/kreuzberg-dev/liter-llm/packages/go` | [API Reference](reference/api-go.md)         |
 | **Java**              | Maven Central `dev.kreuzberg.literllm:liter-llm`        | [API Reference](reference/api-java.md)       |
@@ -64,7 +64,7 @@ A universal LLM API client with a Rust core and 14 native language bindings (plu
 | **C#**                | `dotnet add package LiterLlm`                           | [API Reference](reference/api-csharp.md)     |
 | **Ruby**              | `gem install liter_llm`                                 | [API Reference](reference/api-ruby.md)       |
 | **PHP**               | `composer require kreuzberg-dev/liter-llm`              | [API Reference](reference/api-php.md)        |
-| **Elixir**            | `{:liter_llm, "~> 1.6.0"}`                              | [API Reference](reference/api-elixir.md)     |
+| **Elixir**            | `{:liter_llm, "~> 1.7"}`                                | [API Reference](reference/api-elixir.md)     |
 | **Dart / Flutter**    | `dart pub add liter_llm`                                | [API Reference](reference/api-dart.md)       |
 | **Swift**             | Swift Package Manager                                   | [API Reference](reference/api-swift.md)      |
 | **Zig**               | `zig fetch --save` from GitHub                          | [API Reference](reference/api-zig.md)        |
@@ -135,7 +135,7 @@ All bindings are generated from one Rust core, so endpoint coverage is uniform; 
 === "TypeScript"
 
     ```typescript title="index.ts"
-    import { createClient } from "@kreuzberg/liter-llm-node";
+    import { createClient } from "@kreuzberg/liter-llm";
 
     const client = createClient(process.env.OPENAI_API_KEY!);
 

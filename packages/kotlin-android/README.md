@@ -12,8 +12,8 @@
 	<a href="https://pypi.org/project/liter-llm/">
 		<img src="https://img.shields.io/pypi/v/liter-llm?label=Python&color=007ec6" alt="Python" />
 	</a>
-	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-node">
-		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-node?label=Node.js&color=007ec6" alt="Node.js" />
+	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm">
+		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=Node.js&color=007ec6" alt="Node.js" />
 	</a>
 	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-wasm">
 		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6" alt="WASM" />
@@ -92,7 +92,7 @@ Install via one of the supported package managers:
 **Gradle:**
 
 ```gradle
-implementation 'dev.kreuzberg:liter-llm-android:1.7.4'
+implementation 'dev.kreuzberg:liter-llm-android:1.7.5'
 ```
 
 **Maven:**
@@ -101,7 +101,7 @@ implementation 'dev.kreuzberg:liter-llm-android:1.7.4'
 <dependency>
     <groupId>dev.kreuzberg</groupId>
     <artifactId>liter-llm-android</artifactId>
-    <version>1.7.4</version>
+    <version>1.7.5</version>
 </dependency>
 ```
 

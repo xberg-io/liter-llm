@@ -42,7 +42,7 @@ Send images to vision-capable models as remote URLs or base64 data URLs.
 === "TypeScript"
 
     ```typescript
-    import { createClient, ImageDetail } from "@kreuzberg/liter-llm-node";
+    import { createClient, ImageDetail } from "@kreuzberg/liter-llm";
 
     const client = createClient({ apiKey: "sk-..." });
     const response = await client.chat({
@@ -353,7 +353,7 @@ Embed images directly as base64 data URLs without hosting them remotely.
 === "TypeScript"
 
     ```typescript
-    import { createClient, encodeDataUrl, IMAGE_PNG } from "@kreuzberg/liter-llm-node";
+    import { createClient, encodeDataUrl, IMAGE_PNG } from "@kreuzberg/liter-llm";
     import { readFileSync } from "fs";
 
     const client = createClient(process.env.OPENAI_API_KEY!);
@@ -578,7 +578,7 @@ Simple JSON mode (any valid JSON object).
 === "TypeScript"
 
     ```typescript
-    import { createClient, ResponseFormat } from "@kreuzberg/liter-llm-node";
+    import { createClient, ResponseFormat } from "@kreuzberg/liter-llm";
 
     const client = createClient(process.env.OPENAI_API_KEY!);
 
@@ -900,7 +900,7 @@ Request audio output from speech models.
 === "TypeScript"
 
     ```typescript
-    import { createClient, Modality } from "@kreuzberg/liter-llm-node";
+    import { createClient, Modality } from "@kreuzberg/liter-llm";
     import { writeFileSync } from "fs";
 
     const client = createClient(process.env.OPENAI_API_KEY!);

@@ -31,7 +31,7 @@ export {
   ensureCryptoProvider,
   registerCustomProvider,
   unregisterCustomProvider,
-} from "@kreuzberg/liter-llm-node";
+} from "@kreuzberg/liter-llm";
 
 export type {
   AssistantContent,
@@ -129,4 +129,4 @@ export type {
   UserContent,
   UserMessage,
   WaitForBatchConfig,
-} from "@kreuzberg/liter-llm-node";
+} from "@kreuzberg/liter-llm";

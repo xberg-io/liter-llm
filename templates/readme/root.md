@@ -60,7 +60,7 @@ See [Python README](packages/python/README.md) for full documentation.
 <summary><strong>Node.js</strong></summary>
 
 ```sh
-pnpm add @kreuzberg/liter-llm-node
+pnpm add @kreuzberg/liter-llm
 ```
 
 See [Node.js README](crates/liter-llm-node/README.md) for full documentation.

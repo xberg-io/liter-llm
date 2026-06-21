@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.5] - 2026-06-21
+
+### Changed
+
+- **npm: the primary package is now the bare `@kreuzberg/liter-llm`** (matching the kreuzcrawl convention), renamed from `@kreuzberg/liter-llm-node`. The napi `packageName` and all per-platform sub-packages use the bare prefix (`@kreuzberg/liter-llm-<rid>`); the `.node` `binaryName` stays `liter-llm-node`. (`alef.toml`, generated node binding, all README badges, docs, `pnpm-lock.yaml`)
+
+### Fixed
+
+- **Packagist: publish under the canonical `kreuzberg-dev/liter-llm` vendor** (matching html-to-markdown, kreuzcrawl, tree-sitter-language-pack) instead of the legacy `kreuzberg/liter-llm`. Fixes the registry-check coordinate and the `publish-packagist` step (`packagist-username`, `package-name`) in `publish.yaml`, plus the stale reference in `llms.txt`. The Maven registry-check coordinate is corrected to `dev.kreuzberg.literllm:liter-llm`.
+- **CI/release: `@kreuzberg/liter-llm-cli` now publishes on the main release** at the release version (previously decoupled on a separate `cli-proxy-v*` tag), gated behind the CLI-binary upload so the npm wrapper never ships ahead of the binaries it downloads.
+- **CI/release: disable sccache for release build jobs** so a transient sccache cache/DNS failure can no longer block a publish run (`publish.yaml`).
+- **docs: refresh stale install snippets** — Java/Kotlin/Swift/Zig version pins, the Java Maven coordinate, and the Elixir version range in `docs/getting-started/installation.md`, `docs/index.md`, and `llms.txt`.
+
 ## [1.7.4] - 2026-06-19
 
 ### Changed

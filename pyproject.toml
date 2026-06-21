@@ -72,6 +72,13 @@ lint.per-file-ignores."**/*.pyi" = [
   "A002", # builtin shadowing in type stubs (id, format, object)
   "D",    # docstrings not required in type stubs
 ]
+lint.per-file-ignores."cli-proxy/**/*.py" = [
+  "ANN",     # type annotations (urllib override with mandated signature)
+  "PLR0913", # too many args (urllib redirect_request override)
+  "PLR2004", # magic values (HTTP 200, string offsets, tarfile members)
+  "S",       # security (HTTPS-only, verified downloads)
+  "T201",    # print (intentional stderr diagnostics)
+]
 lint.per-file-ignores."e2e/python/**/*.*" = [
   "A001",    # builtin shadowing in generated test fixtures (id, type, format)
   "B017",    # blind pytest.raises(Exception) in generated error-handling tests

@@ -12,8 +12,8 @@
 	<a href="https://pypi.org/project/liter-llm/">
 		<img src="https://img.shields.io/pypi/v/liter-llm?label=Python&color=007ec6" alt="Python" />
 	</a>
-	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-node">
-		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-node?label=Node.js&color=007ec6" alt="Node.js" />
+	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm">
+		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=Node.js&color=007ec6" alt="Node.js" />
 	</a>
 	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-wasm">
 		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6" alt="WASM" />
@@ -99,7 +99,7 @@ Each release at <https://github.com/kreuzberg-dev/liter-llm/releases> attaches:
 ```swift
 .binaryTarget(
     name: "LiterLlm",
-    url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.7.4/LiterLlm-rs.artifactbundle.zip",
+    url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.7.5/LiterLlm-rs.artifactbundle.zip",
     checksum: "<CHECKSUM-FROM-RELEASE-NOTES>"
 )
 ```

@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.25.49"
+alef_version = "0.25.58"
 languages = [
   "python",
   "node",
@@ -99,7 +99,7 @@ run_wrapper = "uv run --no-sync"
 output = "packages/python/liter_llm/"
 
 [crates.node]
-package_name = "@kreuzberg/liter-llm-node"
+package_name = "@kreuzberg/liter-llm"
 exclude_platforms = ["linux-x64-musl", "linux-arm64-musl"]
 
 [crates.ruby]
@@ -1921,7 +1921,7 @@ type = "string"
 result_type = "ResponseObject"
 
 [crates.e2e.packages.node]
-name = "@kreuzberg/liter-llm-node"
+name = "@kreuzberg/liter-llm"
 
 [crates.e2e.packages.python]
 name = "liter-llm"
@@ -1942,7 +1942,7 @@ github_repo = "https://github.com/kreuzberg-dev/liter-llm"
 name = "liter-llm"
 
 [crates.e2e.registry.packages.node]
-name = "@kreuzberg/liter-llm-node"
+name = "@kreuzberg/liter-llm"
 
 [crates.e2e.registry.packages.wasm]
 name = "@kreuzberg/liter-llm-wasm"
@@ -1978,7 +1978,7 @@ name = "liter_llm_ffi"
 name = "LiterLlm"
 
 [crates.e2e.registry.packages.zig]
-hash = "liter_llm-1.7.4-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
+hash = "liter_llm-1.7.5-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
 
 [crates.e2e.registry.packages.homebrew]
 tap = "kreuzberg-dev/homebrew-tap"
@@ -2002,8 +2002,8 @@ expect_contains = "Usage"
 # used by ../html-to-markdown.
 [[workspace.sync.text_replacements]]
 path = "test_apps/node/package.json"
-search = '"@kreuzberg/liter-llm-node": "[^"]*"'
-replace = '"@kreuzberg/liter-llm-node": "{version}"'
+search = '"@kreuzberg/liter-llm": "[^"]*"'
+replace = '"@kreuzberg/liter-llm": "{version}"'
 
 [[workspace.sync.text_replacements]]
 path = "test_apps/wasm/package.json"
@@ -2075,8 +2075,8 @@ template = "language_package.md"
 output_path = "packages/node/README.md"
 language = "typescript"
 name = "TypeScript (Node.js)"
-package_name = "@kreuzberg/liter-llm-node"
-badge_url = "https://img.shields.io/npm/v/@kreuzberg/liter-llm-node?label=TypeScript&color=007ec6"
+package_name = "@kreuzberg/liter-llm"
+badge_url = "https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=TypeScript&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
 description = "Universal LLM API client for TypeScript and Node.js. Access 143 LLM providers through a single interface with native NAPI-RS bindings, async/await, streaming, tool calling, and full TypeScript type definitions."
 package_manager = ["npm", "pnpm", "yarn"]
@@ -2151,8 +2151,8 @@ tool_calling = "getting-started/tool_calling.md"
 template = "language_package.md"
 output_path = "crates/liter-llm-node/README.md"
 name = "TypeScript (Node.js)"
-package_name = "@kreuzberg/liter-llm-node"
-badge_url = "https://img.shields.io/npm/v/@kreuzberg/liter-llm-node?label=TypeScript&color=007ec6"
+package_name = "@kreuzberg/liter-llm"
+badge_url = "https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=TypeScript&color=007ec6"
 docs_url = "https://github.com/kreuzberg-dev/liter-llm"
 description = "Universal LLM API client for TypeScript and Node.js. Access 143 LLM providers through a single interface with native NAPI-RS bindings, async/await, streaming, tool calling, and full TypeScript type definitions."
 package_manager = ["npm", "pnpm", "yarn"]

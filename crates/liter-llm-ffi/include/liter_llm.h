@@ -5100,7 +5100,7 @@ char *literllm_intent_prototype_model(const LITERLLMIntentPrototype *ptr);
 int32_t literllm_message_from_i32(int32_t value);
 
 /**
- * Convert a `Message` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `Message` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5115,7 +5115,7 @@ int32_t literllm_message_from_str(const char *name);
 int32_t literllm_user_content_from_i32(int32_t value);
 
 /**
- * Convert a `UserContent` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `UserContent` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5130,7 +5130,7 @@ int32_t literllm_user_content_from_str(const char *name);
 int32_t literllm_content_part_from_i32(int32_t value);
 
 /**
- * Convert a `ContentPart` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `ContentPart` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5145,7 +5145,7 @@ int32_t literllm_content_part_from_str(const char *name);
 int32_t literllm_image_detail_from_i32(int32_t value);
 
 /**
- * Convert a `ImageDetail` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `ImageDetail` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5160,7 +5160,7 @@ int32_t literllm_image_detail_from_str(const char *name);
 int32_t literllm_assistant_content_from_i32(int32_t value);
 
 /**
- * Convert a `AssistantContent` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `AssistantContent` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5175,7 +5175,7 @@ int32_t literllm_assistant_content_from_str(const char *name);
 int32_t literllm_assistant_part_from_i32(int32_t value);
 
 /**
- * Convert a `AssistantPart` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `AssistantPart` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5190,7 +5190,7 @@ int32_t literllm_assistant_part_from_str(const char *name);
 int32_t literllm_tool_type_from_i32(int32_t value);
 
 /**
- * Convert a `ToolType` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `ToolType` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5205,7 +5205,7 @@ int32_t literllm_tool_type_from_str(const char *name);
 int32_t literllm_tool_choice_from_i32(int32_t value);
 
 /**
- * Convert a `ToolChoice` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `ToolChoice` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5220,7 +5220,7 @@ int32_t literllm_tool_choice_from_str(const char *name);
 int32_t literllm_tool_choice_mode_from_i32(int32_t value);
 
 /**
- * Convert a `ToolChoiceMode` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `ToolChoiceMode` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5235,7 +5235,7 @@ int32_t literllm_tool_choice_mode_from_str(const char *name);
 int32_t literllm_response_format_from_i32(int32_t value);
 
 /**
- * Convert a `ResponseFormat` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `ResponseFormat` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5250,7 +5250,7 @@ int32_t literllm_response_format_from_str(const char *name);
 int32_t literllm_stop_sequence_from_i32(int32_t value);
 
 /**
- * Convert a `StopSequence` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `StopSequence` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5265,7 +5265,7 @@ int32_t literllm_stop_sequence_from_str(const char *name);
 int32_t literllm_modality_from_i32(int32_t value);
 
 /**
- * Convert a `Modality` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `Modality` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5280,7 +5280,7 @@ int32_t literllm_modality_from_str(const char *name);
 int32_t literllm_finish_reason_from_i32(int32_t value);
 
 /**
- * Convert a `FinishReason` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `FinishReason` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5295,7 +5295,7 @@ int32_t literllm_finish_reason_from_str(const char *name);
 int32_t literllm_reasoning_effort_from_i32(int32_t value);
 
 /**
- * Convert a `ReasoningEffort` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `ReasoningEffort` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5310,7 +5310,7 @@ int32_t literllm_reasoning_effort_from_str(const char *name);
 int32_t literllm_embedding_format_from_i32(int32_t value);
 
 /**
- * Convert a `EmbeddingFormat` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `EmbeddingFormat` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5325,7 +5325,7 @@ int32_t literllm_embedding_format_from_str(const char *name);
 int32_t literllm_embedding_input_from_i32(int32_t value);
 
 /**
- * Convert a `EmbeddingInput` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `EmbeddingInput` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5340,7 +5340,7 @@ int32_t literllm_embedding_input_from_str(const char *name);
 int32_t literllm_moderation_input_from_i32(int32_t value);
 
 /**
- * Convert a `ModerationInput` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `ModerationInput` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5355,7 +5355,7 @@ int32_t literllm_moderation_input_from_str(const char *name);
 int32_t literllm_rerank_document_from_i32(int32_t value);
 
 /**
- * Convert a `RerankDocument` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `RerankDocument` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5370,7 +5370,7 @@ int32_t literllm_rerank_document_from_str(const char *name);
 int32_t literllm_ocr_document_from_i32(int32_t value);
 
 /**
- * Convert a `OcrDocument` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `OcrDocument` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5385,7 +5385,7 @@ int32_t literllm_ocr_document_from_str(const char *name);
 int32_t literllm_file_purpose_from_i32(int32_t value);
 
 /**
- * Convert a `FilePurpose` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `FilePurpose` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5400,7 +5400,7 @@ int32_t literllm_file_purpose_from_str(const char *name);
 int32_t literllm_batch_status_from_i32(int32_t value);
 
 /**
- * Convert a `BatchStatus` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `BatchStatus` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5415,7 +5415,7 @@ int32_t literllm_batch_status_from_str(const char *name);
 int32_t literllm_auth_header_format_from_i32(int32_t value);
 
 /**
- * Convert a `AuthHeaderFormat` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `AuthHeaderFormat` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5430,7 +5430,7 @@ int32_t literllm_auth_header_format_from_str(const char *name);
 int32_t literllm_stream_format_from_i32(int32_t value);
 
 /**
- * Convert a `StreamFormat` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `StreamFormat` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5445,7 +5445,7 @@ int32_t literllm_stream_format_from_str(const char *name);
 int32_t literllm_auth_type_from_i32(int32_t value);
 
 /**
- * Convert a `AuthType` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `AuthType` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5460,7 +5460,7 @@ int32_t literllm_auth_type_from_str(const char *name);
 int32_t literllm_enforcement_from_i32(int32_t value);
 
 /**
- * Convert a `Enforcement` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `Enforcement` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5475,7 +5475,7 @@ int32_t literllm_enforcement_from_str(const char *name);
 int32_t literllm_cache_backend_from_i32(int32_t value);
 
 /**
- * Convert a `CacheBackend` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `CacheBackend` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5490,7 +5490,7 @@ int32_t literllm_cache_backend_from_str(const char *name);
 int32_t literllm_circuit_state_from_i32(int32_t value);
 
 /**
- * Convert a `CircuitState` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `CircuitState` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -5505,7 +5505,7 @@ int32_t literllm_circuit_state_from_str(const char *name);
 int32_t literllm_health_status_from_i32(int32_t value);
 
 /**
- * Convert a `HealthStatus` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `HealthStatus` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */

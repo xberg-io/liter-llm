@@ -71,14 +71,14 @@ liter-llm mcp --transport stdio
     Requires Node.js 18+.
 
     ```bash
-    pnpm add @kreuzberg/liter-llm-node
+    pnpm add @kreuzberg/liter-llm
     ```
 
     Or with npm / yarn:
 
     ```bash
-    npm install @kreuzberg/liter-llm-node
-    yarn add @kreuzberg/liter-llm-node
+    npm install @kreuzberg/liter-llm
+    yarn add @kreuzberg/liter-llm
     ```
 
 === "Rust"
@@ -107,14 +107,14 @@ liter-llm mcp --transport stdio
     <dependency>
         <groupId>dev.kreuzberg.literllm</groupId>
         <artifactId>liter-llm</artifactId>
-        <version>1.6.0</version>
+        <version>1.7.5</version>
     </dependency>
     ```
 
     **Gradle:**
 
     ```kotlin
-    implementation("dev.kreuzberg.literllm:liter-llm:1.6.0")
+    implementation("dev.kreuzberg.literllm:liter-llm:1.7.5")
     ```
 
 === "Kotlin Android"
@@ -122,7 +122,7 @@ liter-llm mcp --transport stdio
     The generated Kotlin target is Android. JVM Kotlin applications should use the Java binding from Kotlin.
 
     ```kotlin
-    implementation("dev.kreuzberg:liter-llm-android:1.6.0")
+    implementation("dev.kreuzberg:liter-llm-android:1.7.5")
     ```
 
 === "C# / .NET"
@@ -162,7 +162,7 @@ liter-llm mcp --transport stdio
     ```elixir
     defp deps do
       [
-        {:liter_llm, "~> 1.6.0"}
+        {:liter_llm, "~> 1.7"}
       ]
     end
     ```
@@ -184,7 +184,7 @@ liter-llm mcp --transport stdio
     ```swift
     .binaryTarget(
         name: "LiterLlm",
-        url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.6.0/LiterLlm-rs.artifactbundle.zip",
+        url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.7.5/LiterLlm-rs.artifactbundle.zip",
         checksum: "<CHECKSUM-FROM-RELEASE-NOTES>"
     )
     ```
@@ -194,7 +194,7 @@ liter-llm mcp --transport stdio
     Requires Zig 0.16+.
 
     ```bash
-    zig fetch --save https://github.com/kreuzberg-dev/liter-llm/archive/refs/tags/v1.6.0.tar.gz
+    zig fetch --save https://github.com/kreuzberg-dev/liter-llm/archive/refs/tags/v1.7.5.tar.gz
     ```
 
 === "WebAssembly"
@@ -247,7 +247,7 @@ Or pass the key at client construction:
 === "TypeScript"
 
     ```typescript
-    import { createClient } from "@kreuzberg/liter-llm-node";
+    import { createClient } from "@kreuzberg/liter-llm";
 
     const client = createClient("sk-...");
     ```
@@ -277,7 +277,7 @@ Use environment variables or a secret manager. The Rust core wraps keys in `secr
 === "TypeScript"
 
     ```bash
-    node -e "import('@kreuzberg/liter-llm-node').then(m => { m.createClient('test'); console.log('ok') })"
+    node -e "import('@kreuzberg/liter-llm').then(m => { m.createClient('test'); console.log('ok') })"
     ```
 
 === "Rust"

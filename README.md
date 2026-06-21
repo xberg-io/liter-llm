@@ -12,8 +12,8 @@
 	<a href="https://pypi.org/project/liter-llm/">
 		<img src="https://img.shields.io/pypi/v/liter-llm?label=Python&color=007ec6" alt="Python" />
 	</a>
-	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-node">
-		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-node?label=Node.js&color=007ec6" alt="Node.js" />
+	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm">
+		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=Node.js&color=007ec6" alt="Node.js" />
 	</a>
 	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-wasm">
 		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6" alt="WASM" />
@@ -121,7 +121,7 @@ See [Python README](packages/python/README.md) for full documentation.
 <summary><strong>Node.js</strong></summary>
 
 ```sh
-pnpm add @kreuzberg/liter-llm-node
+pnpm add @kreuzberg/liter-llm
 ```
 
 See [Node.js README](crates/liter-llm-node/README.md) for full documentation.

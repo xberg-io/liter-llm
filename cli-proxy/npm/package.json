@@ -2,7 +2,6 @@
   "name": "@kreuzberg/liter-llm-cli",
   "version": "0.0.1",
   "description": "CLI proxy for liter-llm — downloads and runs the native liter-llm binary from GitHub releases.",
-  "type": "module",
   "license": "MIT",
   "author": "Na'aman Hirschfeld",
   "repository": {
@@ -17,10 +16,11 @@
     "bin/",
     "install.js"
   ],
-  "engines": {
-    "node": ">=18"
-  },
+  "type": "module",
   "publishConfig": {
     "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

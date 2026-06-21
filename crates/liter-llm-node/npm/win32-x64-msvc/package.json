@@ -1,6 +1,6 @@
 {
-  "name": "@kreuzberg/liter-llm-node-win32-x64-msvc",
-  "version": "1.7.4",
+  "name": "@kreuzberg/liter-llm-win32-x64-msvc",
+  "version": "1.7.5",
   "license": "MIT",
   "repository": {
     "type": "git",

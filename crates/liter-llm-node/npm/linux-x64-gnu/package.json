@@ -1,6 +1,6 @@
 {
-  "name": "@kreuzberg/liter-llm-node-linux-x64-gnu",
-  "version": "1.7.4",
+  "name": "@kreuzberg/liter-llm-linux-x64-gnu",
+  "version": "1.7.5",
   "license": "MIT",
   "repository": {
     "type": "git",

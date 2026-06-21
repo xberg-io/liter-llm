@@ -154,9 +154,9 @@ jobs:
                   {"name": "npm", "registry": "npm", "package": "@kreuzberg/liter-llm"},
                   {"name": "npm-wasm", "registry": "npm", "package": "@kreuzberg/liter-llm-wasm"},
                   {"name": "rubygems", "registry": "rubygems", "package": "liter_llm"},
-                  {"name": "maven", "registry": "maven", "package": "dev.kreuzberg:liter-llm"},
+                  {"name": "maven", "registry": "maven", "package": "dev.kreuzberg.literllm:liter-llm"},
                   {"name": "hex", "registry": "hex", "package": "liter_llm"},
-                  {"name": "packagist", "registry": "packagist", "package": "kreuzberg/liter-llm"},
+                  {"name": "packagist", "registry": "packagist", "package": "kreuzberg-dev/liter-llm"},
                   {"name": "nuget", "registry": "nuget", "package": "LiterLlm"},
                   {"name": "go", "registry": "github-release", "package": "liter-llm", "repo": "kreuzberg-dev/liter-llm", "asset-prefix": "liter-llm-go-v"}
                 ]
@@ -252,6 +252,7 @@ jobs:
               uses: kreuzberg-dev/actions/setup-rust@v1
               with:
                   cache-key-prefix: dart-native-${{ matrix.label }}
+                  use-sccache: false
 
             - name: Build liter-llm-dart cdylib
               run: cargo build -p liter-llm-dart --release
@@ -391,6 +392,8 @@ jobs:
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
             - uses: kreuzberg-dev/actions/setup-rust@v1
+              with:
+                  use-sccache: false
             - uses: actions/setup-python@v6
               with:
                   python-version: "3.14"
@@ -438,6 +441,7 @@ jobs:
             - uses: kreuzberg-dev/actions/setup-rust@v1
               with:
                   target: ${{ matrix.napi_target }}
+                  use-sccache: false
             - uses: actions/setup-node@v6
               with:
                   node-version: 22
@@ -470,6 +474,7 @@ jobs:
             - uses: kreuzberg-dev/actions/setup-rust@v1
               with:
                   target: wasm32-unknown-unknown
+                  use-sccache: false
             - name: Install wasm-pack
               run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
               shell: bash
@@ -537,7 +542,7 @@ jobs:
               uses: kreuzberg-dev/actions/setup-rust@v1
               with:
                   cache-key-prefix: publish-ruby-${{ matrix.label }}
-                  use-sccache: true
+                  use-sccache: false
 
             - name: Set up Ruby
               uses: ruby/setup-ruby@v1
@@ -650,6 +655,7 @@ jobs:
             - uses: kreuzberg-dev/actions/setup-rust@v1
               with:
                   target: ${{ matrix.target }}
+                  use-sccache: false
             - name: Rewrite native dependencies to registry versions
               if: needs.prepare.outputs.dry_run != 'true'
               uses: kreuzberg-dev/actions/rewrite-native-deps@v1
@@ -762,6 +768,7 @@ jobs:
               with:
                   cache-key-prefix: publish-php-${{ matrix.platform.label }}-php${{ matrix.php }}
                   toolchain: stable
+                  use-sccache: false
 
             - name: Install alef
               uses: kreuzberg-dev/actions/install-alef@v1
@@ -858,6 +865,7 @@ jobs:
               uses: kreuzberg-dev/actions/setup-rust@v1
               with:
                   target: ${{ matrix.target }}
+                  use-sccache: false
             - name: Install alef
               uses: kreuzberg-dev/actions/install-alef@v1
             - name: Build FFI
@@ -1041,6 +1049,7 @@ jobs:
             - uses: kreuzberg-dev/actions/setup-rust@v1
               with:
                   cache-key-prefix: publish-android-${{ matrix.abi }}
+                  use-sccache: false
             - uses: kreuzberg-dev/actions/setup-android-ndk@v1
             - name: Build liter-llm-jni for ${{ matrix.abi }}
               run: cargo ndk --target ${{ matrix.abi }} --platform 21 -- build -p liter-llm-jni --release
@@ -1436,6 +1445,8 @@ jobs:
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
             - uses: kreuzberg-dev/actions/setup-rust@v1
+              with:
+                  use-sccache: false
             - uses: kreuzberg-dev/actions/publish-crates@v1
               with:
                   crates: liter-llm liter-llm-ffi liter-llm-proxy liter-llm-cli
@@ -1553,7 +1564,7 @@ jobs:
                   JSON
                   fi
                   # --no-frozen-lockfile because crates/liter-llm-node/package.json declares
-                  # `optionalDependencies: @kreuzberg/liter-llm-node-<rid>@<version>` entries
+                  # `optionalDependencies: @kreuzberg/liter-llm-<rid>@<version>` entries
                   # for the per-platform stubs alef-scaffold emits for napi-rs, but those
                   # packages don't exist on npm yet at this point in the workflow — this very
                   # step is preparing to publish them. The default `--frozen-lockfile` rejects
@@ -1590,7 +1601,7 @@ jobs:
               uses: kreuzberg-dev/actions/wait-for-package@v1
               with:
                   registry: npm
-                  package: "@kreuzberg/liter-llm-node-linux-x64-gnu"
+                  package: "@kreuzberg/liter-llm-linux-x64-gnu"
                   version: ${{ needs.prepare.outputs.version }}
                   max-attempts: "25"
 
@@ -1599,7 +1610,7 @@ jobs:
               uses: kreuzberg-dev/actions/wait-for-package@v1
               with:
                   registry: npm
-                  package: "@kreuzberg/liter-llm-node-linux-arm64-gnu"
+                  package: "@kreuzberg/liter-llm-linux-arm64-gnu"
                   version: ${{ needs.prepare.outputs.version }}
                   max-attempts: "25"
 
@@ -1612,18 +1623,18 @@ jobs:
                   dry-run: ${{ needs.prepare.outputs.dry_run }}
                   provenance: "true"
 
-            - name: Wait for @kreuzberg/liter-llm-node to be available
+            - name: Wait for @kreuzberg/liter-llm to be available
               if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck.outputs.exists != 'true' }}
               uses: kreuzberg-dev/actions/wait-for-package@v1
               with:
                   registry: npm
-                  package: "@kreuzberg/liter-llm-node"
+                  package: "@kreuzberg/liter-llm"
                   version: ${{ needs.prepare.outputs.version }}
                   max-attempts: "25"
 
             - name: npm already published summary
               if: ${{ steps.recheck.outputs.exists == 'true' }}
-              run: echo "Node package @kreuzberg/liter-llm-node@${{ needs.prepare.outputs.version }} already published on npm — skipped." >> "$GITHUB_STEP_SUMMARY"
+              run: echo "Node package @kreuzberg/liter-llm@${{ needs.prepare.outputs.version }} already published on npm — skipped." >> "$GITHUB_STEP_SUMMARY"
 
     publish-wasm:
         name: Publish WASM package
@@ -2087,8 +2098,8 @@ jobs:
         steps:
             - uses: kreuzberg-dev/actions/publish-packagist@v1
               with:
-                  packagist-username: kreuzberg
-                  package-name: kreuzberg/liter-llm
+                  packagist-username: kreuzberg-dev
+                  package-name: kreuzberg-dev/liter-llm
                   version: ${{ needs.prepare.outputs.version }}
                   repository-url: https://github.com/kreuzberg-dev/liter-llm
                   dry-run: ${{ needs.prepare.outputs.dry_run }}
@@ -2180,6 +2191,7 @@ jobs:
             - uses: kreuzberg-dev/actions/setup-rust@v1
               with:
                   cache-key-prefix: publish-swift-artifactbundle
+                  use-sccache: false
 
             - uses: kreuzberg-dev/actions/build-swift-artifactbundle@v1
               id: build
@@ -2399,6 +2411,7 @@ jobs:
               with:
                   target: ${{ matrix.target }}
                   cache-key-prefix: publish-cli-${{ matrix.label }}
+                  use-sccache: false
             - name: Build CLI
               shell: bash
               run: cargo build --release -p liter-llm-cli --target ${{ matrix.target }}
@@ -2845,20 +2858,47 @@ jobs:
 
     cli-proxy:
         name: Publish CLI proxy package (npm)
+        needs: [prepare, validate-versions, upload-cli-binaries]
         # The npm trusted publisher is bound to this workflow file (publish.yaml). The publish
         # runs inline here via the publish-npm composite action (which executes in this job's
         # context) rather than delegating to a reusable workflow — otherwise npm's OIDC
         # trusted-publishing check sees the reusable workflow's filename, not publish.yaml.
-        # Decoupled from the main release: fires only on its own `cli-proxy-v*` release tag.
-        if: ${{ github.event_name == 'release' && startsWith(github.event.release.tag_name, 'cli-proxy-v') }}
+        #
+        # Wired into the main release: publishes @kreuzberg/liter-llm-cli at the release version
+        # once the standalone CLI binaries are on the GitHub release (install.js downloads them
+        # at install time). Gated on the same `release_homebrew` flag that controls CLI-binary
+        # uploads, so the npm wrapper never publishes ahead of the binaries it fetches.
+        if: |
+            always() &&
+            needs.prepare.outputs.dry_run != 'true' &&
+            needs.prepare.outputs.release_homebrew == 'true' &&
+            needs.validate-versions.result == 'success' &&
+            needs.upload-cli-binaries.result == 'success'
         runs-on: ubuntu-latest
         permissions:
             id-token: write
             contents: read
         steps:
             - uses: actions/checkout@v6
-            - uses: kreuzberg-dev/actions/publish-npm@v1
+              with:
+                  ref: ${{ needs.prepare.outputs.checkout_ref }}
+            - name: Stamp release version into cli-proxy package.json
+              shell: bash
+              run: |
+                  cd cli-proxy/npm
+                  npm version "${{ needs.prepare.outputs.version }}" --no-git-tag-version --allow-same-version
+            - name: Re-check npm before publish
+              id: recheck
+              uses: kreuzberg-dev/actions/check-registry@v1
+              with:
+                  registry: npm
+                  package: "@kreuzberg/liter-llm-cli"
+                  version: ${{ needs.prepare.outputs.version }}
+            - name: Publish CLI proxy package
+              if: ${{ steps.recheck.outputs.exists != 'true' }}
+              uses: kreuzberg-dev/actions/publish-npm@v1
               with:
                   package-dir: cli-proxy/npm
+                  npm-tag: ${{ needs.prepare.outputs.npm_tag }}
                   access: public
                   provenance: "true"

@@ -9,8 +9,8 @@ const TRIPLE = "aarch64-apple-darwin";
 test("isNonCliArtifact rejects bindings/native-lib/bottle artifacts", () => {
   const rejected = [
     "html-to-markdown-rs-ffi-v3.6.18-aarch64-apple-darwin.tar.gz",
-    "liter_llm_ffi-v1.7.4-aarch64-apple-darwin.tar.gz",
-    "libliter_llm_nif-v1.7.4-nif-2.17-aarch64-apple-darwin.so.tar.gz",
+    "liter_llm_ffi-v1.7.5-aarch64-apple-darwin.tar.gz",
+    "libliter_llm_nif-v1.7.5-nif-2.17-aarch64-apple-darwin.so.tar.gz",
     "libtree_sitter_language_pack_nif-v1.9.1-nif-2.16-aarch64-apple-darwin.so.tar.gz",
     "kreuzberg-0.1.0.bottle.tar.gz",
     "foo.dylib.tar.gz",
@@ -28,7 +28,7 @@ test("isNonCliArtifact accepts standalone CLI archives", () => {
   for (const name of [
     "kreuzberg-cli-aarch64-apple-darwin.tar.gz",
     "cli-aarch64-apple-darwin.tar.gz",
-    "liter-llm-1.7.4-aarch64-apple-darwin.tar.gz",
+    "liter-llm-1.7.5-aarch64-apple-darwin.tar.gz",
   ]) {
     assert.equal(isNonCliArtifact(name), false, `should accept ${name}`);
   }

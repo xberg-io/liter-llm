@@ -1,6 +1,6 @@
 [package]
 name = "liter-llm-dart"
-version = "1.7.4"
+version = "1.7.5"
 edition = "2024"
 license = "MIT"
 

@@ -12,8 +12,8 @@
 	<a href="https://pypi.org/project/liter-llm/">
 		<img src="https://img.shields.io/pypi/v/liter-llm?label=Python&color=007ec6" alt="Python" />
 	</a>
-	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-node">
-		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-node?label=Node.js&color=007ec6" alt="Node.js" />
+	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm">
+		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=Node.js&color=007ec6" alt="Node.js" />
 	</a>
 	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-wasm">
 		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6" alt="WASM" />
@@ -92,19 +92,19 @@ Install via one of the supported package managers:
 **npm:**
 
 ```bash
-npm install @kreuzberg/liter-llm-node
+npm install @kreuzberg/liter-llm
 ```
 
 **pnpm:**
 
 ```bash
-pnpm add @kreuzberg/liter-llm-node
+pnpm add @kreuzberg/liter-llm
 ```
 
 **yarn:**
 
 ```bash
-yarn add @kreuzberg/liter-llm-node
+yarn add @kreuzberg/liter-llm
 ```
 
 ### System Requirements
@@ -127,7 +127,7 @@ Pre-built binaries available for:
 Send a message to any provider using the `provider/model` prefix:
 
 ```typescript
-import { createClient } from "@kreuzberg/liter-llm-node";
+import { createClient } from "@kreuzberg/liter-llm";
 
 const client = createClient(process.env.OPENAI_API_KEY!);
 const response = await client.chat({
@@ -144,7 +144,7 @@ console.log(response.choices[0].message.content);
 Stream tokens in real time:
 
 ```typescript
-import { createClient } from "@kreuzberg/liter-llm-node";
+import { createClient } from "@kreuzberg/liter-llm";
 
 const client = createClient(process.env.OPENAI_API_KEY!);
 const chunks = await client.chatStream({
@@ -163,7 +163,7 @@ console.log();
 Define and invoke tools:
 
 ```typescript
-import { createClient, ToolType } from "@kreuzberg/liter-llm-node";
+import { createClient, ToolType } from "@kreuzberg/liter-llm";
 
 const client = createClient(process.env.OPENAI_API_KEY!);
 
