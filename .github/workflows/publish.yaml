@@ -2910,6 +2910,15 @@ jobs:
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
+            # setup-node gives npm a user-writable global prefix so the
+            # publish-npm action's in-place `npm install -g npm@latest` (needed
+            # for OIDC trusted publishing) doesn't EACCES writing to /usr/local.
+            # Mirrors the publish-node / publish-wasm jobs.
+            - name: Setup Node
+              uses: actions/setup-node@v6
+              with:
+                  node-version: 22
+                  registry-url: https://registry.npmjs.org/
             - name: Stamp release version into cli-proxy package.json
               shell: bash
               run: |
