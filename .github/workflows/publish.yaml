@@ -111,6 +111,20 @@ jobs:
               with:
                   available-targets: "crates,python,node,wasm,ruby,go,java,elixir,csharp,php,homebrew,kotlin,dart,zig,swift"
 
+            # Create the draft GitHub Release once, here in prepare, so every
+            # downstream upload job (swift, elixir, php, …) can assume it exists.
+            # Without this, jobs that lack their own ensure-release step (the
+            # Swift artifact-bundle upload) race ahead of release creation and
+            # fail with "release not found". Mirrors html-to-markdown's publish.
+            - name: Ensure GitHub Release exists for tag
+              if: ${{ steps.meta.outputs.is_tag == 'true' && steps.meta.outputs.dry_run != 'true' }}
+              uses: kreuzberg-dev/actions/publish-github-release@v1
+              with:
+                  tag: ${{ steps.meta.outputs.tag }}
+                  draft: "true"
+                  dry-run: ${{ steps.meta.outputs.dry_run }}
+                  token: ${{ steps.app-token.outputs.token }}
+
     # ─────────────────────────────────────────────────────────────────────────
     # Phase 2 — Validate version consistency
     # ─────────────────────────────────────────────────────────────────────────
