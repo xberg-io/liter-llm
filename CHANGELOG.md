@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.6] - 2026-06-22
+
+### Fixed
+
+- **Kotlin Android: the untagged content-union `text()` accessor now references the generated `value` property instead of the non-existent `field0`**, fixing a `:compileReleaseKotlin` failure (`Unresolved reference 'field0'`) that broke the Android AAR build. Regenerated from alef 0.25.60; the legitimate `field0` data-class properties (e.g. `LiterLlmError.Serialization`) are unaffected.
+
 ## [1.7.5] - 2026-06-21
 
 ### Changed
