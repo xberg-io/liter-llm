@@ -119,7 +119,11 @@ jobs:
                   java-version: "17"
             - uses: gradle/actions/setup-gradle@v6
               with:
-                  gradle-version: "8.13"
+                  # Provision the version declared in the kotlin-android wrapper so the
+                  # bare `gradle` invocation matches the alef-generated wrapper. AGP
+                  # (com.android.library) 9.2.0 requires Gradle >= 9.4.1; a hardcoded
+                  # 8.13 pin silently overrode the 9.6.0 wrapper and broke the build.
+                  gradle-version: "wrapper"
             - name: Assemble Android library aar
               working-directory: packages/kotlin-android
               run: gradle assembleRelease

@@ -393,7 +393,10 @@ jobs:
               if: matrix.lang == 'kotlin_android'
               uses: gradle/actions/setup-gradle@v6
               with:
-                  gradle-version: "8.13"
+                  # Provision the version from the kotlin-android wrapper. AGP
+                  # (com.android.library) 9.2.0 requires Gradle >= 9.4.1; a hardcoded
+                  # 8.13 pin silently overrode the wrapper and broke plugin-apply.
+                  gradle-version: "wrapper"
 
             - name: Setup .NET
               if: matrix.dotnet-version
