@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **MCP server: tool annotations on every tool.** Each MCP tool now advertises rmcp `ToolAnnotations` (a human-readable title plus `readOnlyHint`/`destructiveHint`/`idempotentHint`/`openWorldHint`) so clients can present them and decide auto-approval. Query tools are read-only; `create_*` mutate without being destructive; `delete_*`/`cancel_*` are destructive and idempotent; all reach external providers (`openWorldHint`).
+- **MCP server: prompts, resources, and argument completion.** Beyond tools, the server now exposes reusable prompt templates (`summarize`, `translate`, `extract`), catalog resources (`liter-llm://models`, `liter-llm://providers`, and the `liter-llm://pricing/{model}` / `liter-llm://provider/{name}` templates), and argument completion for `model` (from the configured models) and provider `name` (from the registry). `get_info` advertises tools, prompts, resources, and completions.
+
+### Fixed
+
+- **CI/release: create the draft GitHub Release once in the `prepare` job** so the Swift artifact-bundle upload (the only upload job without its own ensure-release step) can no longer race ahead of release creation and fail with "release not found". Mirrors the html-to-markdown publish pipeline.
+
 ## [1.7.6] - 2026-06-22
 
 ### Fixed
