@@ -1,27 +1,18 @@
 pub mod errors;
 pub mod params;
+mod tools;
 
 use std::sync::Arc;
 
+use rmcp::handler::server::router::prompt::PromptRouter;
 use rmcp::handler::server::router::tool::ToolRouter;
 use rmcp::handler::server::wrapper::Parameters;
 use rmcp::model::*;
 use rmcp::service::RequestContext;
-use rmcp::{RoleServer, ServerHandler, tool, tool_handler, tool_router};
-use tower::Service;
+use rmcp::{RoleServer, ServerHandler, prompt, prompt_handler, prompt_router, tool_handler};
 
-use liter_llm::client::{BatchClient, FileClient, ResponseClient};
-use liter_llm::tower::types::{LlmRequest, LlmResponse};
-use liter_llm::types::audio::{CreateSpeechRequest, CreateTranscriptionRequest};
-use liter_llm::types::batch::{BatchListQuery, CreateBatchRequest};
-use liter_llm::types::files::{CreateFileRequest, FileListQuery, FilePurpose};
-use liter_llm::types::image::CreateImageRequest;
-use liter_llm::types::moderation::ModerationRequest;
-use liter_llm::types::ocr::{OcrDocument, OcrRequest};
-use liter_llm::types::rerank::{RerankDocument, RerankRequest};
-use liter_llm::types::responses::CreateResponseRequest;
-use liter_llm::types::search::SearchRequest;
-use liter_llm::types::{ChatCompletionRequest, EmbeddingRequest};
+use liter_llm::cost::model_pricing;
+use liter_llm::provider::all_providers;
 
 use crate::auth::KeyContext;
 use crate::file_store::FileStore;
@@ -64,6 +55,8 @@ pub enum McpTransportKind {
 pub struct LiterLlmMcp {
     #[allow(dead_code)]
     tool_router: ToolRouter<Self>,
+    #[allow(dead_code)]
+    prompt_router: PromptRouter<Self>,
     service_pool: Arc<ServicePool>,
     #[allow(dead_code)]
     file_store: Arc<FileStore>,
@@ -85,6 +78,7 @@ impl LiterLlmMcp {
     ) -> Self {
         Self {
             tool_router: Self::tool_router(),
+            prompt_router: Self::prompt_router(),
             service_pool,
             file_store,
             default_ctx,
@@ -184,776 +178,226 @@ fn json_success<T: serde::Serialize>(value: &T) -> Result<CallToolResult, rmcp::
     Ok(CallToolResult::success(vec![Content::text(json)]))
 }
 
-// ─── Tool implementations ────────────────────────────────────────────────────
+// ─── Prompt templates ─────────────────────────────────────────────────────────
 
-#[tool_router]
+#[prompt_router]
 impl LiterLlmMcp {
-    // ── Chat & Embeddings ────────────────────────────────────────────────
-
-    #[tool(
-        description = "Send a chat completion request to an LLM",
-        annotations(title = "Chat Completion", read_only_hint = true, open_world_hint = true)
-    )]
-    async fn chat(
+    /// Summarise a block of text concisely.
+    #[prompt(name = "summarize", description = "Summarise a block of text concisely")]
+    async fn summarize_prompt(
         &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::ChatParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_model_access(&ctx, &params.model)?;
-
-        let req: ChatCompletionRequest = serde_json::from_value(serde_json::json!({
-            "model": params.model,
-            "messages": params.messages,
-            "temperature": params.temperature,
-            "max_tokens": params.max_tokens,
-        }))
-        .map_err(|e| rmcp::ErrorData::invalid_params(e.to_string(), None))?;
-
-        let mut svc = self
-            .service_pool
-            .get_service(&params.model)
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let resp = svc.call(LlmRequest::Chat(req)).await.map_err(to_error_data)?;
-
-        match resp {
-            LlmResponse::Chat(r) => json_success(&r),
-            other => Err(rmcp::ErrorData::internal_error(
-                format!("unexpected response variant: {other:?}"),
-                None,
-            )),
-        }
+        Parameters(args): Parameters<params::SummarizeArgs>,
+    ) -> Result<Vec<PromptMessage>, rmcp::ErrorData> {
+        let text = format!(
+            "Summarise the following text concisely while preserving its key points:\n\n{}",
+            args.text
+        );
+        Ok(vec![PromptMessage::new_text(PromptMessageRole::User, text)])
     }
 
-    #[tool(
-        description = "Generate text embeddings for the given input",
-        annotations(title = "Generate Embeddings", read_only_hint = true, open_world_hint = true)
-    )]
-    async fn embed(
+    /// Translate text into a target language.
+    #[prompt(name = "translate", description = "Translate text into a target language")]
+    async fn translate_prompt(
         &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::EmbedParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_model_access(&ctx, &params.model)?;
-
-        let req: EmbeddingRequest = serde_json::from_value(serde_json::json!({
-            "model": params.model,
-            "input": params.input,
-        }))
-        .map_err(|e| rmcp::ErrorData::invalid_params(e.to_string(), None))?;
-
-        let mut svc = self
-            .service_pool
-            .get_service(&params.model)
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let resp = svc.call(LlmRequest::Embed(req)).await.map_err(to_error_data)?;
-
-        match resp {
-            LlmResponse::Embed(r) => json_success(&r),
-            other => Err(rmcp::ErrorData::internal_error(
-                format!("unexpected response variant: {other:?}"),
-                None,
-            )),
-        }
+        Parameters(args): Parameters<params::TranslateArgs>,
+    ) -> Result<Vec<PromptMessage>, rmcp::ErrorData> {
+        let text = format!(
+            "Translate the following text into {}. Output only the translation:\n\n{}",
+            args.target_language, args.text
+        );
+        Ok(vec![PromptMessage::new_text(PromptMessageRole::User, text)])
     }
 
-    #[tool(
-        description = "List available models from configured providers",
-        annotations(title = "List Models", read_only_hint = true, open_world_hint = true)
+    /// Extract structured data from text following natural-language instructions.
+    #[prompt(
+        name = "extract",
+        description = "Extract structured data from text following instructions"
     )]
-    async fn list_models(
+    async fn extract_prompt(
         &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(_params): Parameters<params::EmptyParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        // Any authenticated key may list models — just ensure auth ran.
-        let _key_ctx = self.resolve_ctx(&ctx);
-
-        // Try to list models from the first available service.
-        let model_names = self.service_pool.model_names();
-        if model_names.is_empty() {
-            return Err(rmcp::ErrorData::internal_error("no models configured", None));
-        }
-
-        let first_model = model_names[0];
-        let mut svc = self
-            .service_pool
-            .get_service(first_model)
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let resp = svc.call(LlmRequest::ListModels()).await.map_err(to_error_data)?;
-
-        match resp {
-            LlmResponse::ListModels(r) => json_success(&r),
-            other => Err(rmcp::ErrorData::internal_error(
-                format!("unexpected response variant: {other:?}"),
-                None,
-            )),
-        }
+        Parameters(args): Parameters<params::ExtractArgs>,
+    ) -> Result<Vec<PromptMessage>, rmcp::ErrorData> {
+        let text = format!(
+            "Extract information from the text below following these instructions: {}\n\nText:\n{}",
+            args.instructions, args.text
+        );
+        Ok(vec![PromptMessage::new_text(PromptMessageRole::User, text)])
     }
+}
 
-    // ── Image generation ─────────────────────────────────────────────────
+// ─── Resource & completion catalog ──────────────────────────────────────────────
 
-    #[tool(
-        description = "Generate images from a text prompt",
-        annotations(title = "Generate Images", read_only_hint = true, open_world_hint = true)
-    )]
-    async fn generate_image(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::ImageParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        // When a model is specified, enforce access; otherwise fall back to
-        // the first configured model and enforce access against that.
-        let effective_model = match params.model.as_deref() {
-            Some(m) => m.to_owned(),
-            None => {
-                let names = self.service_pool.model_names();
-                names
-                    .first()
-                    .ok_or_else(|| rmcp::ErrorData::internal_error("no models configured", None))?
-                    .to_string()
-            }
-        };
-        self.require_model_access(&ctx, &effective_model)?;
+/// Resource URI for the configured-model list.
+const RESOURCE_MODELS: &str = "liter-llm://models";
+/// Resource URI for the built-in provider registry.
+const RESOURCE_PROVIDERS: &str = "liter-llm://providers";
+/// Resource-template prefix for per-model pricing.
+const RESOURCE_PRICING_PREFIX: &str = "liter-llm://pricing/";
+/// Resource-template prefix for per-provider detail.
+const RESOURCE_PROVIDER_PREFIX: &str = "liter-llm://provider/";
 
-        let req = CreateImageRequest {
-            prompt: params.prompt,
-            model: params.model.clone(),
-            n: params.n,
-            size: params.size,
-            quality: None,
-            style: None,
-            response_format: None,
-            user: None,
-        };
-
-        let mut svc = self
-            .service_pool
-            .get_service(&effective_model)
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let resp = svc.call(LlmRequest::ImageGenerate(req)).await.map_err(to_error_data)?;
-
-        match resp {
-            LlmResponse::ImageGenerate(r) => json_success(&r),
-            other => Err(rmcp::ErrorData::internal_error(
-                format!("unexpected response variant: {other:?}"),
-                None,
-            )),
-        }
+/// Resolve a resource URI to its JSON body.
+///
+/// Pure (takes the configured `model_names` explicitly) so unit tests can
+/// exercise it without constructing a live server, mirroring the
+/// [`LiterLlmMcp::check_model_access`] helper pattern.
+fn resource_body(uri: &str, model_names: &[&str]) -> Result<String, rmcp::ErrorData> {
+    let to_json = |v: &serde_json::Value| {
+        serde_json::to_string_pretty(v).map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))
+    };
+    if uri == RESOURCE_MODELS {
+        return serde_json::to_string_pretty(model_names)
+            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None));
     }
-
-    // ── Audio ────────────────────────────────────────────────────────────
-
-    #[tool(
-        description = "Generate speech audio from text (text-to-speech)",
-        annotations(title = "Text to Speech", read_only_hint = true, open_world_hint = true)
-    )]
-    async fn speech(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::SpeechParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_model_access(&ctx, &params.model)?;
-
-        let req = CreateSpeechRequest {
-            model: params.model.clone(),
-            input: params.input,
-            voice: params.voice,
-            response_format: None,
-            speed: None,
-        };
-
-        let mut svc = self
-            .service_pool
-            .get_service(&params.model)
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let resp = svc.call(LlmRequest::Speech(req)).await.map_err(to_error_data)?;
-
-        match resp {
-            LlmResponse::Speech(bytes) => {
-                use base64::Engine;
-                let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
-                Ok(CallToolResult::success(vec![Content::text(format!(
-                    "Audio generated ({} bytes). Base64: {}",
-                    bytes.len(),
-                    b64
-                ))]))
-            }
-            other => Err(rmcp::ErrorData::internal_error(
-                format!("unexpected response variant: {other:?}"),
-                None,
-            )),
-        }
+    if uri == RESOURCE_PROVIDERS {
+        let providers = all_providers().map_err(to_error_data)?;
+        return serde_json::to_string_pretty(providers)
+            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None));
     }
-
-    #[tool(
-        description = "Transcribe audio to text (speech-to-text)",
-        annotations(title = "Transcribe Audio", read_only_hint = true, open_world_hint = true)
-    )]
-    async fn transcribe(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::TranscribeParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_model_access(&ctx, &params.model)?;
-
-        let req = CreateTranscriptionRequest {
-            model: params.model.clone(),
-            file: params.file_base64,
-            language: None,
-            prompt: None,
-            response_format: None,
-            temperature: None,
-        };
-
-        let mut svc = self
-            .service_pool
-            .get_service(&params.model)
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let resp = svc.call(LlmRequest::Transcribe(req)).await.map_err(to_error_data)?;
-
-        match resp {
-            LlmResponse::Transcribe(r) => json_success(&r),
-            other => Err(rmcp::ErrorData::internal_error(
-                format!("unexpected response variant: {other:?}"),
-                None,
-            )),
-        }
+    if let Some(model) = uri.strip_prefix(RESOURCE_PRICING_PREFIX) {
+        let pricing = model_pricing(model)
+            .ok_or_else(|| rmcp::ErrorData::invalid_params(format!("no pricing for model '{model}'"), None))?;
+        return to_json(&serde_json::json!({
+            "model": model,
+            "input_cost_per_token": pricing.input_cost_per_token,
+            "output_cost_per_token": pricing.output_cost_per_token,
+            "cache_read_input_token_cost": pricing.cache_read_input_token_cost,
+            "cache_creation_input_token_cost": pricing.cache_creation_input_token_cost,
+        }));
     }
-
-    // ── Moderation ───────────────────────────────────────────────────────
-
-    #[tool(
-        description = "Check content against moderation policies",
-        annotations(title = "Moderate Content", read_only_hint = true, open_world_hint = true)
-    )]
-    async fn moderate(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::ModerateParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        // When a model is specified, enforce access; otherwise fall back to
-        // the first configured model and enforce access against that.
-        let effective_model = match params.model.as_deref() {
-            Some(m) => m.to_owned(),
-            None => {
-                let names = self.service_pool.model_names();
-                names
-                    .first()
-                    .ok_or_else(|| rmcp::ErrorData::internal_error("no models configured", None))?
-                    .to_string()
-            }
-        };
-        self.require_model_access(&ctx, &effective_model)?;
-
-        let req: ModerationRequest = serde_json::from_value(serde_json::json!({
-            "input": params.input,
-            "model": params.model,
-        }))
-        .map_err(|e| rmcp::ErrorData::invalid_params(e.to_string(), None))?;
-
-        let mut svc = self
-            .service_pool
-            .get_service(&effective_model)
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let resp = svc.call(LlmRequest::Moderate(req)).await.map_err(to_error_data)?;
-
-        match resp {
-            LlmResponse::Moderate(r) => json_success(&r),
-            other => Err(rmcp::ErrorData::internal_error(
-                format!("unexpected response variant: {other:?}"),
-                None,
-            )),
-        }
+    if let Some(name) = uri.strip_prefix(RESOURCE_PROVIDER_PREFIX) {
+        let providers = all_providers().map_err(to_error_data)?;
+        let provider = providers
+            .iter()
+            .find(|p| p.name == name)
+            .ok_or_else(|| rmcp::ErrorData::invalid_params(format!("unknown provider '{name}'"), None))?;
+        return serde_json::to_string_pretty(provider)
+            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None));
     }
-
-    // ── Rerank ───────────────────────────────────────────────────────────
-
-    #[tool(
-        description = "Rerank documents by relevance to a query",
-        annotations(title = "Rerank Documents", read_only_hint = true, open_world_hint = true)
-    )]
-    async fn rerank(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::RerankParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_model_access(&ctx, &params.model)?;
-
-        let req = RerankRequest {
-            model: params.model.clone(),
-            query: params.query,
-            documents: params.documents.into_iter().map(RerankDocument::Text).collect(),
-            top_n: None,
-            return_documents: None,
-        };
-
-        let mut svc = self
-            .service_pool
-            .get_service(&params.model)
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let resp = svc.call(LlmRequest::Rerank(req)).await.map_err(to_error_data)?;
-
-        match resp {
-            LlmResponse::Rerank(r) => json_success(&r),
-            other => Err(rmcp::ErrorData::internal_error(
-                format!("unexpected response variant: {other:?}"),
-                None,
-            )),
-        }
-    }
-
-    // ── Search ───────────────────────────────────────────────────────────
-
-    #[tool(
-        description = "Perform a web or document search",
-        annotations(title = "Search", read_only_hint = true, open_world_hint = true)
-    )]
-    async fn search(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::SearchParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_model_access(&ctx, &params.model)?;
-
-        let req = SearchRequest {
-            model: params.model.clone(),
-            query: params.query,
-            max_results: None,
-            search_domain_filter: None,
-            country: None,
-        };
-
-        let mut svc = self
-            .service_pool
-            .get_service(&params.model)
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let resp = svc.call(LlmRequest::Search(req)).await.map_err(to_error_data)?;
-
-        match resp {
-            LlmResponse::Search(r) => json_success(&r),
-            other => Err(rmcp::ErrorData::internal_error(
-                format!("unexpected response variant: {other:?}"),
-                None,
-            )),
-        }
-    }
-
-    // ── OCR ──────────────────────────────────────────────────────────────
-
-    #[tool(
-        description = "Extract text from an image or document via OCR",
-        annotations(title = "OCR Extract", read_only_hint = true, open_world_hint = true)
-    )]
-    async fn ocr(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::OcrParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_model_access(&ctx, &params.model)?;
-
-        let document = if let Some(url) = params.image_url {
-            OcrDocument::Url { url }
-        } else if let Some(data) = params.image_base64 {
-            let media_type = params.media_type.unwrap_or_else(|| "image/png".to_string());
-            OcrDocument::Base64 { data, media_type }
-        } else {
-            return Err(rmcp::ErrorData::invalid_params(
-                "either image_url or image_base64 must be provided",
-                None,
-            ));
-        };
-
-        let req = OcrRequest {
-            model: params.model.clone(),
-            document,
-            pages: None,
-            include_image_base64: None,
-        };
-
-        let mut svc = self
-            .service_pool
-            .get_service(&params.model)
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let resp = svc.call(LlmRequest::Ocr(req)).await.map_err(to_error_data)?;
-
-        match resp {
-            LlmResponse::Ocr(r) => json_success(&r),
-            other => Err(rmcp::ErrorData::internal_error(
-                format!("unexpected response variant: {other:?}"),
-                None,
-            )),
-        }
-    }
-
-    // ── File operations ──────────────────────────────────────────────────
-
-    #[tool(
-        description = "Upload a file to the LLM provider",
-        annotations(
-            title = "Upload File",
-            read_only_hint = false,
-            destructive_hint = false,
-            idempotent_hint = false,
-            open_world_hint = true
-        )
-    )]
-    async fn create_file(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::CreateFileParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_master(&ctx, "create_file")?;
-
-        let purpose: FilePurpose = serde_json::from_value(serde_json::Value::String(params.purpose)).map_err(|e| {
-            rmcp::ErrorData::invalid_params(
-                format!("invalid purpose (expected assistants, batch, fine-tune, or vision): {e}"),
-                None,
-            )
-        })?;
-
-        let req = CreateFileRequest {
-            file: params.file_base64,
-            purpose,
-            filename: Some(params.filename),
-        };
-
-        let client = self
-            .service_pool
-            .first_client()
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let result = client.create_file(req).await.map_err(to_error_data)?;
-        json_success(&result)
-    }
-
-    #[tool(
-        description = "List uploaded files",
-        annotations(title = "List Files", read_only_hint = true, open_world_hint = true)
-    )]
-    async fn list_files(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::ListFilesParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_master(&ctx, "list_files")?;
-
-        let query = if params.purpose.is_some() || params.limit.is_some() {
-            Some(FileListQuery {
-                purpose: params.purpose,
-                limit: params.limit,
-                after: None,
-            })
-        } else {
-            None
-        };
-
-        let client = self
-            .service_pool
-            .first_client()
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let result = client.list_files(query).await.map_err(to_error_data)?;
-        json_success(&result)
-    }
-
-    #[tool(
-        description = "Retrieve metadata for an uploaded file",
-        annotations(title = "Retrieve File", read_only_hint = true, open_world_hint = true)
-    )]
-    async fn retrieve_file(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::FileIdParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_master(&ctx, "retrieve_file")?;
-
-        let client = self
-            .service_pool
-            .first_client()
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let result = client.retrieve_file(&params.file_id).await.map_err(to_error_data)?;
-        json_success(&result)
-    }
-
-    #[tool(
-        description = "Delete an uploaded file",
-        annotations(
-            title = "Delete File",
-            read_only_hint = false,
-            destructive_hint = true,
-            idempotent_hint = true,
-            open_world_hint = true
-        )
-    )]
-    async fn delete_file(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::FileIdParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_master(&ctx, "delete_file")?;
-
-        let client = self
-            .service_pool
-            .first_client()
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let result = client.delete_file(&params.file_id).await.map_err(to_error_data)?;
-        json_success(&result)
-    }
-
-    #[tool(
-        description = "Retrieve the raw content of an uploaded file",
-        annotations(title = "Get File Content", read_only_hint = true, open_world_hint = true)
-    )]
-    async fn file_content(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::FileIdParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_master(&ctx, "file_content")?;
-
-        let client = self
-            .service_pool
-            .first_client()
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let bytes = client.file_content(&params.file_id).await.map_err(to_error_data)?;
-
-        use base64::Engine;
-        let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
-        Ok(CallToolResult::success(vec![Content::text(format!(
-            "File content ({} bytes). Base64: {b64}",
-            bytes.len()
-        ))]))
-    }
-
-    // ── Batch operations ─────────────────────────────────────────────────
-
-    #[tool(
-        description = "Create a new batch processing job",
-        annotations(
-            title = "Create Batch",
-            read_only_hint = false,
-            destructive_hint = false,
-            idempotent_hint = false,
-            open_world_hint = true
-        )
-    )]
-    async fn create_batch(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::CreateBatchParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_master(&ctx, "create_batch")?;
-
-        let req = CreateBatchRequest {
-            input_file_id: params.input_file_id,
-            endpoint: params.endpoint,
-            completion_window: params.completion_window,
-            metadata: None,
-        };
-
-        let client = self
-            .service_pool
-            .first_client()
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let result = client.create_batch(req).await.map_err(to_error_data)?;
-        json_success(&result)
-    }
-
-    #[tool(
-        description = "List batch processing jobs",
-        annotations(title = "List Batches", read_only_hint = true, open_world_hint = true)
-    )]
-    async fn list_batches(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::ListBatchesParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_master(&ctx, "list_batches")?;
-
-        let query = if params.limit.is_some() || params.after.is_some() {
-            Some(BatchListQuery {
-                limit: params.limit,
-                after: params.after,
-            })
-        } else {
-            None
-        };
-
-        let client = self
-            .service_pool
-            .first_client()
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let result = client.list_batches(query).await.map_err(to_error_data)?;
-        json_success(&result)
-    }
-
-    #[tool(
-        description = "Retrieve a batch processing job by ID",
-        annotations(title = "Retrieve Batch", read_only_hint = true, open_world_hint = true)
-    )]
-    async fn retrieve_batch(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::BatchIdParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_master(&ctx, "retrieve_batch")?;
-
-        let client = self
-            .service_pool
-            .first_client()
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let result = client.retrieve_batch(&params.batch_id).await.map_err(to_error_data)?;
-        json_success(&result)
-    }
-
-    #[tool(
-        description = "Cancel an in-progress batch processing job",
-        annotations(
-            title = "Cancel Batch",
-            read_only_hint = false,
-            destructive_hint = true,
-            idempotent_hint = true,
-            open_world_hint = true
-        )
-    )]
-    async fn cancel_batch(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::BatchIdParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_master(&ctx, "cancel_batch")?;
-
-        let client = self
-            .service_pool
-            .first_client()
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let result = client.cancel_batch(&params.batch_id).await.map_err(to_error_data)?;
-        json_success(&result)
-    }
-
-    // ── Response operations ──────────────────────────────────────────────
-
-    #[tool(
-        description = "Create a new response (Responses API)",
-        annotations(
-            title = "Create Response",
-            read_only_hint = false,
-            destructive_hint = false,
-            idempotent_hint = false,
-            open_world_hint = true
-        )
-    )]
-    async fn create_response(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::CreateResponseParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_model_access(&ctx, &params.model)?;
-
-        let req = CreateResponseRequest {
-            model: params.model,
-            input: params.input,
-            instructions: None,
-            tools: None,
-            temperature: None,
-            max_output_tokens: None,
-            metadata: None,
-        };
-
-        let client = self
-            .service_pool
-            .first_client()
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let result = client.create_response(req).await.map_err(to_error_data)?;
-        json_success(&result)
-    }
-
-    #[tool(
-        description = "Retrieve a response by ID (Responses API)",
-        annotations(title = "Retrieve Response", read_only_hint = true, open_world_hint = true)
-    )]
-    async fn retrieve_response(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::ResponseIdParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_master(&ctx, "retrieve_response")?;
-
-        let client = self
-            .service_pool
-            .first_client()
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let result = client
-            .retrieve_response(&params.response_id)
-            .await
-            .map_err(to_error_data)?;
-        json_success(&result)
-    }
-
-    #[tool(
-        description = "Cancel an in-progress response (Responses API)",
-        annotations(
-            title = "Cancel Response",
-            read_only_hint = false,
-            destructive_hint = true,
-            idempotent_hint = true,
-            open_world_hint = true
-        )
-    )]
-    async fn cancel_response(
-        &self,
-        ctx: RequestContext<RoleServer>,
-        Parameters(params): Parameters<params::ResponseIdParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        self.require_master(&ctx, "cancel_response")?;
-
-        let client = self
-            .service_pool
-            .first_client()
-            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-
-        let result = client
-            .cancel_response(&params.response_id)
-            .await
-            .map_err(to_error_data)?;
-        json_success(&result)
+    Err(rmcp::ErrorData::invalid_params(
+        format!("unknown resource uri: {uri}"),
+        None,
+    ))
+}
+
+/// Suggest completions for a prompt or resource-template argument.
+///
+/// Keys off the argument NAME (not the reference) so it serves both prompt
+/// arguments and resource-template variables. Returns up to 100 matches whose
+/// lowercased value starts with `partial`. Pure for testability.
+fn complete_values(arg_name: &str, partial: &str, model_names: &[&str]) -> Vec<String> {
+    const MAX: usize = 100;
+    let needle = partial.to_ascii_lowercase();
+    match arg_name {
+        "model" => model_names
+            .iter()
+            .filter(|m| m.to_ascii_lowercase().starts_with(&needle))
+            .take(MAX)
+            .map(|m| (*m).to_string())
+            .collect(),
+        "name" | "provider" => match all_providers() {
+            Ok(providers) => providers
+                .iter()
+                .map(|p| p.name.clone())
+                .filter(|n| n.to_ascii_lowercase().starts_with(&needle))
+                .take(MAX)
+                .collect(),
+            Err(_) => Vec::new(),
+        },
+        _ => Vec::new(),
     }
 }
 
 // ─── ServerHandler implementation ────────────────────────────────────────────
 
 #[tool_handler]
+#[prompt_handler]
 impl ServerHandler for LiterLlmMcp {
     fn get_info(&self) -> ServerInfo {
-        let mut capabilities = ServerCapabilities::default();
-        capabilities.tools = Some(ToolsCapability::default());
+        let capabilities = ServerCapabilities::builder()
+            .enable_tools()
+            .enable_prompts()
+            .enable_resources()
+            .enable_completions()
+            .build();
 
         InitializeResult::new(capabilities)
             .with_server_info(Implementation::new("liter-llm", env!("CARGO_PKG_VERSION")))
             .with_instructions(
                 "LiterLLM proxy — universal LLM API gateway with 143 providers. \
                  Use the chat tool to send completion requests, embed for embeddings, \
-                 and the file/batch/response tools for management operations.",
+                 and the file/batch/response tools for management operations. \
+                 Reusable prompt templates (summarize, translate, extract) and \
+                 catalog resources (liter-llm://models, liter-llm://providers, \
+                 liter-llm://pricing/{model}, liter-llm://provider/{name}) are also exposed.",
             )
+    }
+
+    async fn list_resources(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _ctx: RequestContext<RoleServer>,
+    ) -> Result<ListResourcesResult, rmcp::ErrorData> {
+        let resources = vec![
+            RawResource::new(RESOURCE_MODELS, "Configured Models")
+                .with_description("Model names configured in this proxy")
+                .with_mime_type("application/json")
+                .no_annotation(),
+            RawResource::new(RESOURCE_PROVIDERS, "Provider Registry")
+                .with_description("All built-in LLM providers")
+                .with_mime_type("application/json")
+                .no_annotation(),
+        ];
+        Ok(ListResourcesResult {
+            resources,
+            next_cursor: None,
+            meta: None,
+        })
+    }
+
+    async fn read_resource(
+        &self,
+        request: ReadResourceRequestParams,
+        _ctx: RequestContext<RoleServer>,
+    ) -> Result<ReadResourceResult, rmcp::ErrorData> {
+        let models = self.service_pool.model_names();
+        let json = resource_body(&request.uri, &models)?;
+        Ok(ReadResourceResult::new(vec![ResourceContents::text(
+            json,
+            &request.uri,
+        )]))
+    }
+
+    async fn list_resource_templates(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _ctx: RequestContext<RoleServer>,
+    ) -> Result<ListResourceTemplatesResult, rmcp::ErrorData> {
+        let resource_templates = vec![
+            RawResourceTemplate::new("liter-llm://pricing/{model}", "Model Pricing")
+                .with_description("Per-token pricing for a model")
+                .no_annotation(),
+            RawResourceTemplate::new("liter-llm://provider/{name}", "Provider Detail")
+                .with_description("Configuration for a single provider")
+                .no_annotation(),
+        ];
+        Ok(ListResourceTemplatesResult {
+            resource_templates,
+            next_cursor: None,
+            meta: None,
+        })
+    }
+
+    async fn complete(
+        &self,
+        request: CompleteRequestParams,
+        _ctx: RequestContext<RoleServer>,
+    ) -> Result<CompleteResult, rmcp::ErrorData> {
+        let models = self.service_pool.model_names();
+        let values = complete_values(&request.argument.name, &request.argument.value, &models);
+        let completion =
+            CompletionInfo::with_all_values(values).map_err(|e| rmcp::ErrorData::internal_error(e, None))?;
+        Ok(CompleteResult::new(completion))
     }
 }
 
@@ -1118,5 +562,76 @@ mod tests {
             assert_eq!(ann.destructive_hint, Some(true), "{name} should be destructive");
             assert_eq!(ann.idempotent_hint, Some(true), "{name} should be idempotent");
         }
+    }
+
+    // ── Prompts: the three templates are registered ───────────────────────
+
+    #[test]
+    fn prompt_router_lists_all_templates() {
+        let prompts = super::LiterLlmMcp::prompt_router().list_all();
+        let names: Vec<&str> = prompts.iter().map(|p| p.name.as_ref()).collect();
+        assert!(names.contains(&"summarize"), "missing summarize prompt: {names:?}");
+        assert!(names.contains(&"translate"), "missing translate prompt: {names:?}");
+        assert!(names.contains(&"extract"), "missing extract prompt: {names:?}");
+        assert_eq!(names.len(), 3, "unexpected prompt set: {names:?}");
+    }
+
+    // ── Resources: pure body resolver ─────────────────────────────────────
+
+    #[test]
+    fn resource_body_models_lists_configured_names() {
+        let models = ["openai/gpt-4o", "anthropic/claude-sonnet"];
+        let json = super::resource_body(super::RESOURCE_MODELS, &models).expect("models resource");
+        assert!(json.contains("openai/gpt-4o"), "models JSON missing entry: {json}");
+        assert!(
+            json.contains("anthropic/claude-sonnet"),
+            "models JSON missing entry: {json}"
+        );
+    }
+
+    #[test]
+    fn resource_body_providers_is_nonempty_json_array() {
+        let json = super::resource_body(super::RESOURCE_PROVIDERS, &[]).expect("providers resource");
+        assert!(
+            json.trim_start().starts_with('['),
+            "providers should be a JSON array: {json}"
+        );
+        // The built-in registry ships many providers; openai is always present.
+        assert!(json.contains("openai"), "providers JSON should include openai");
+    }
+
+    #[test]
+    fn resource_body_unknown_uri_is_invalid_params() {
+        let err = super::resource_body("liter-llm://nope", &[]).unwrap_err();
+        assert!(
+            err.message.contains("unknown resource uri"),
+            "unexpected error: {}",
+            err.message
+        );
+    }
+
+    // ── Completion: pure value resolver ───────────────────────────────────
+
+    #[test]
+    fn complete_values_filters_models_by_prefix() {
+        let models = ["openai/gpt-4o", "openai/gpt-4o-mini", "anthropic/claude-sonnet"];
+        let out = super::complete_values("model", "openai/", &models);
+        assert_eq!(out.len(), 2, "should match the two openai models: {out:?}");
+        assert!(out.iter().all(|m| m.starts_with("openai/")));
+
+        // Case-insensitive prefix.
+        let out = super::complete_values("model", "ANTHRO", &models);
+        assert_eq!(out, vec!["anthropic/claude-sonnet".to_string()]);
+
+        // Unknown argument names yield nothing.
+        assert!(super::complete_values("nonsense", "x", &models).is_empty());
+    }
+
+    #[test]
+    fn complete_values_filters_provider_names() {
+        // Provider names come from the global registry, independent of models.
+        let out = super::complete_values("name", "openai", &[]);
+        assert!(out.iter().any(|n| n == "openai"), "should suggest openai: {out:?}");
+        assert!(out.iter().all(|n| n.starts_with("openai")));
     }
 }

@@ -185,3 +185,39 @@ pub struct CreateResponseParams {
     /// Input content for the response (string or structured input).
     pub input: serde_json::Value,
 }
+
+// ── Prompt parameters ─────────────────────────────────────────────────────────
+
+/// Arguments for the `summarize` prompt template.
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+pub struct SummarizeArgs {
+    /// The text to summarise.
+    pub text: String,
+    /// Optional model hint — accepted but not used in the message body.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model: Option<String>,
+}
+
+/// Arguments for the `translate` prompt template.
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+pub struct TranslateArgs {
+    /// The text to translate.
+    pub text: String,
+    /// Target language (e.g. "Spanish", "Japanese").
+    pub target_language: String,
+    /// Optional model hint — accepted but not used in the message body.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model: Option<String>,
+}
+
+/// Arguments for the `extract` prompt template.
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+pub struct ExtractArgs {
+    /// The source text to extract information from.
+    pub text: String,
+    /// Natural-language instructions describing what to extract and in what format.
+    pub instructions: String,
+    /// Optional model hint — accepted but not used in the message body.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model: Option<String>,
+}
