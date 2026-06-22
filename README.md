@@ -248,24 +248,26 @@ Build from source as part of this workspace. See [FFI crate](crates/liter-llm-ff
 </details>
 
 <details>
-<summary><strong>CLI & Proxy Server</strong></summary>
+<summary><strong>CLI, Proxy & MCP Server</strong></summary>
 
-The `liter-llm` CLI ships both the OpenAI-compatible proxy and the MCP tool server.
+The `liter-llm` CLI ships both the OpenAI-compatible proxy and the MCP tool server. Install it any of these ways:
 
 ```sh
 brew install kreuzberg-dev/tap/liter-llm
-```
-
-```sh
+cargo install liter-llm-cli                 # from crates.io
+npx @kreuzberg/liter-llm-cli --help         # npm (self-installs the binary)
 docker run -p 4000:4000 -e LITER_LLM_MASTER_KEY=sk-your-key ghcr.io/kreuzberg-dev/liter-llm
 ```
 
+Then run the proxy or the MCP server:
+
 ```sh
-liter-llm api --config liter-llm.toml   # OpenAI-compatible proxy (22 endpoints)
-liter-llm mcp --transport stdio         # MCP tool server
+liter-llm api --config liter-llm-proxy.toml   # OpenAI-compatible proxy (22 endpoints)
+liter-llm mcp --transport stdio               # MCP tool server (stdio)
+liter-llm mcp --transport http --port 3001    # MCP tool server (Streamable HTTP)
 ```
 
-See the [proxy guide](https://docs.liter-llm.kreuzberg.dev/) for routing, virtual keys, and budgets.
+See the [MCP server guide](https://docs.liter-llm.kreuzberg.dev/server/mcp-server/) and the [proxy guide](https://docs.liter-llm.kreuzberg.dev/server/proxy-server/) for transports, routing, virtual keys, and budgets. To use the MCP server inside a coding agent, install the **liter-llm plugin** (below) — it auto-registers the server, no manual config required.
 
 </details>
 

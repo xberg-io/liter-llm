@@ -4104,9 +4104,9 @@ extension AssistantContentTextExt on AssistantContent {
   /// - Otherwise returns an empty string.
   String text() {
     return switch (this) {
-      AssistantContent_Text(:final text) => text,
-      AssistantContent_Parts(:final parts) => _extractTextFromContentParts(
-        parts,
+      AssistantContent_Text(:final field0) => field0,
+      AssistantContent_Parts(:final field0) => _extractTextFromContentParts(
+        field0,
       ),
       _ => '',
     };

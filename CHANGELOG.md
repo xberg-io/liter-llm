@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-06-22
+
 ### Added
 
 - **MCP server: tool annotations on every tool.** Each MCP tool now advertises rmcp `ToolAnnotations` (a human-readable title plus `readOnlyHint`/`destructiveHint`/`idempotentHint`/`openWorldHint`) so clients can present them and decide auto-approval. Query tools are read-only; `create_*` mutate without being destructive; `delete_*`/`cancel_*` are destructive and idempotent; all reach external providers (`openWorldHint`).
@@ -14,7 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Budget middleware: concurrent spend is no longer lost across a window rollover.** On weakly-ordered architectures (arm64) the window-reset path could drop a racing `fetch_add`; the rollover now subtracts the snapshotted prior total instead of storing zero, preserving every concurrent charge.
+- **CI: the Kotlin Android build provisions the wrapper-declared Gradle version** (`gradle-version: wrapper`) in `ci-mobile` and `ci-e2e`. AGP 9.2.0 requires Gradle >= 9.4.1; the previous hardcoded `8.13` pin silently overrode the 9.6.0 wrapper and broke `assembleRelease`.
+- **Swift & Dart: the untagged content-union `text()` accessor now references the generated payload field** instead of a non-existent binding, mirroring the 1.7.6 Kotlin fix. Regenerated from alef 0.26.3.
 - **CI/release: create the draft GitHub Release once in the `prepare` job** so the Swift artifact-bundle upload (the only upload job without its own ensure-release step) can no longer race ahead of release creation and fail with "release not found". Mirrors the html-to-markdown publish pipeline.
+
+### Changed
+
+- **Bindings regenerated from alef 0.26.3** (from 0.25.60): Swift capsule-pointer bridging via `usize` plus `.product` dependency wiring, `RustBridgeC.h` preserved across `alef all --clean`, and the content-union accessors above.
 
 ## [1.7.6] - 2026-06-22
 
