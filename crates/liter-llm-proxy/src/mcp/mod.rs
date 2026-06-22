@@ -190,7 +190,10 @@ fn json_success<T: serde::Serialize>(value: &T) -> Result<CallToolResult, rmcp::
 impl LiterLlmMcp {
     // ── Chat & Embeddings ────────────────────────────────────────────────
 
-    #[tool(description = "Send a chat completion request to an LLM")]
+    #[tool(
+        description = "Send a chat completion request to an LLM",
+        annotations(title = "Chat Completion", read_only_hint = true, open_world_hint = true)
+    )]
     async fn chat(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -222,7 +225,10 @@ impl LiterLlmMcp {
         }
     }
 
-    #[tool(description = "Generate text embeddings for the given input")]
+    #[tool(
+        description = "Generate text embeddings for the given input",
+        annotations(title = "Generate Embeddings", read_only_hint = true, open_world_hint = true)
+    )]
     async fn embed(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -252,7 +258,10 @@ impl LiterLlmMcp {
         }
     }
 
-    #[tool(description = "List available models from configured providers")]
+    #[tool(
+        description = "List available models from configured providers",
+        annotations(title = "List Models", read_only_hint = true, open_world_hint = true)
+    )]
     async fn list_models(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -286,7 +295,10 @@ impl LiterLlmMcp {
 
     // ── Image generation ─────────────────────────────────────────────────
 
-    #[tool(description = "Generate images from a text prompt")]
+    #[tool(
+        description = "Generate images from a text prompt",
+        annotations(title = "Generate Images", read_only_hint = true, open_world_hint = true)
+    )]
     async fn generate_image(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -335,7 +347,10 @@ impl LiterLlmMcp {
 
     // ── Audio ────────────────────────────────────────────────────────────
 
-    #[tool(description = "Generate speech audio from text (text-to-speech)")]
+    #[tool(
+        description = "Generate speech audio from text (text-to-speech)",
+        annotations(title = "Text to Speech", read_only_hint = true, open_world_hint = true)
+    )]
     async fn speech(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -375,7 +390,10 @@ impl LiterLlmMcp {
         }
     }
 
-    #[tool(description = "Transcribe audio to text (speech-to-text)")]
+    #[tool(
+        description = "Transcribe audio to text (speech-to-text)",
+        annotations(title = "Transcribe Audio", read_only_hint = true, open_world_hint = true)
+    )]
     async fn transcribe(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -410,7 +428,10 @@ impl LiterLlmMcp {
 
     // ── Moderation ───────────────────────────────────────────────────────
 
-    #[tool(description = "Check content against moderation policies")]
+    #[tool(
+        description = "Check content against moderation policies",
+        annotations(title = "Moderate Content", read_only_hint = true, open_world_hint = true)
+    )]
     async fn moderate(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -454,7 +475,10 @@ impl LiterLlmMcp {
 
     // ── Rerank ───────────────────────────────────────────────────────────
 
-    #[tool(description = "Rerank documents by relevance to a query")]
+    #[tool(
+        description = "Rerank documents by relevance to a query",
+        annotations(title = "Rerank Documents", read_only_hint = true, open_world_hint = true)
+    )]
     async fn rerank(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -488,7 +512,10 @@ impl LiterLlmMcp {
 
     // ── Search ───────────────────────────────────────────────────────────
 
-    #[tool(description = "Perform a web or document search")]
+    #[tool(
+        description = "Perform a web or document search",
+        annotations(title = "Search", read_only_hint = true, open_world_hint = true)
+    )]
     async fn search(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -522,7 +549,10 @@ impl LiterLlmMcp {
 
     // ── OCR ──────────────────────────────────────────────────────────────
 
-    #[tool(description = "Extract text from an image or document via OCR")]
+    #[tool(
+        description = "Extract text from an image or document via OCR",
+        annotations(title = "OCR Extract", read_only_hint = true, open_world_hint = true)
+    )]
     async fn ocr(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -567,7 +597,16 @@ impl LiterLlmMcp {
 
     // ── File operations ──────────────────────────────────────────────────
 
-    #[tool(description = "Upload a file to the LLM provider")]
+    #[tool(
+        description = "Upload a file to the LLM provider",
+        annotations(
+            title = "Upload File",
+            read_only_hint = false,
+            destructive_hint = false,
+            idempotent_hint = false,
+            open_world_hint = true
+        )
+    )]
     async fn create_file(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -597,7 +636,10 @@ impl LiterLlmMcp {
         json_success(&result)
     }
 
-    #[tool(description = "List uploaded files")]
+    #[tool(
+        description = "List uploaded files",
+        annotations(title = "List Files", read_only_hint = true, open_world_hint = true)
+    )]
     async fn list_files(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -624,7 +666,10 @@ impl LiterLlmMcp {
         json_success(&result)
     }
 
-    #[tool(description = "Retrieve metadata for an uploaded file")]
+    #[tool(
+        description = "Retrieve metadata for an uploaded file",
+        annotations(title = "Retrieve File", read_only_hint = true, open_world_hint = true)
+    )]
     async fn retrieve_file(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -641,7 +686,16 @@ impl LiterLlmMcp {
         json_success(&result)
     }
 
-    #[tool(description = "Delete an uploaded file")]
+    #[tool(
+        description = "Delete an uploaded file",
+        annotations(
+            title = "Delete File",
+            read_only_hint = false,
+            destructive_hint = true,
+            idempotent_hint = true,
+            open_world_hint = true
+        )
+    )]
     async fn delete_file(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -658,7 +712,10 @@ impl LiterLlmMcp {
         json_success(&result)
     }
 
-    #[tool(description = "Retrieve the raw content of an uploaded file")]
+    #[tool(
+        description = "Retrieve the raw content of an uploaded file",
+        annotations(title = "Get File Content", read_only_hint = true, open_world_hint = true)
+    )]
     async fn file_content(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -683,7 +740,16 @@ impl LiterLlmMcp {
 
     // ── Batch operations ─────────────────────────────────────────────────
 
-    #[tool(description = "Create a new batch processing job")]
+    #[tool(
+        description = "Create a new batch processing job",
+        annotations(
+            title = "Create Batch",
+            read_only_hint = false,
+            destructive_hint = false,
+            idempotent_hint = false,
+            open_world_hint = true
+        )
+    )]
     async fn create_batch(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -707,7 +773,10 @@ impl LiterLlmMcp {
         json_success(&result)
     }
 
-    #[tool(description = "List batch processing jobs")]
+    #[tool(
+        description = "List batch processing jobs",
+        annotations(title = "List Batches", read_only_hint = true, open_world_hint = true)
+    )]
     async fn list_batches(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -733,7 +802,10 @@ impl LiterLlmMcp {
         json_success(&result)
     }
 
-    #[tool(description = "Retrieve a batch processing job by ID")]
+    #[tool(
+        description = "Retrieve a batch processing job by ID",
+        annotations(title = "Retrieve Batch", read_only_hint = true, open_world_hint = true)
+    )]
     async fn retrieve_batch(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -750,7 +822,16 @@ impl LiterLlmMcp {
         json_success(&result)
     }
 
-    #[tool(description = "Cancel an in-progress batch processing job")]
+    #[tool(
+        description = "Cancel an in-progress batch processing job",
+        annotations(
+            title = "Cancel Batch",
+            read_only_hint = false,
+            destructive_hint = true,
+            idempotent_hint = true,
+            open_world_hint = true
+        )
+    )]
     async fn cancel_batch(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -769,7 +850,16 @@ impl LiterLlmMcp {
 
     // ── Response operations ──────────────────────────────────────────────
 
-    #[tool(description = "Create a new response (Responses API)")]
+    #[tool(
+        description = "Create a new response (Responses API)",
+        annotations(
+            title = "Create Response",
+            read_only_hint = false,
+            destructive_hint = false,
+            idempotent_hint = false,
+            open_world_hint = true
+        )
+    )]
     async fn create_response(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -796,7 +886,10 @@ impl LiterLlmMcp {
         json_success(&result)
     }
 
-    #[tool(description = "Retrieve a response by ID (Responses API)")]
+    #[tool(
+        description = "Retrieve a response by ID (Responses API)",
+        annotations(title = "Retrieve Response", read_only_hint = true, open_world_hint = true)
+    )]
     async fn retrieve_response(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -816,7 +909,16 @@ impl LiterLlmMcp {
         json_success(&result)
     }
 
-    #[tool(description = "Cancel an in-progress response (Responses API)")]
+    #[tool(
+        description = "Cancel an in-progress response (Responses API)",
+        annotations(
+            title = "Cancel Response",
+            read_only_hint = false,
+            destructive_hint = true,
+            idempotent_hint = true,
+            open_world_hint = true
+        )
+    )]
     async fn cancel_response(
         &self,
         ctx: RequestContext<RoleServer>,
@@ -950,5 +1052,71 @@ mod tests {
         let result = LiterLlmMcp::check_master_access(&key_ctx, "list_files");
         assert!(result.is_err());
         assert!(result.unwrap_err().message.contains("list_files"));
+    }
+
+    // ── Tool annotations: every tool advertises MCP hints ─────────────────
+
+    /// Every exposed tool must carry `ToolAnnotations` with a human title and
+    /// the open-world hint set (all tools reach external providers). Clients
+    /// rely on these hints to decide auto-approval and presentation, so a tool
+    /// shipped without them is a regression.
+    #[test]
+    fn every_tool_has_annotations_with_title_and_open_world() {
+        let tools = LiterLlmMcp::tool_router().list_all();
+        assert!(!tools.is_empty(), "tool router exposes no tools");
+        for tool in &tools {
+            let ann = tool
+                .annotations
+                .as_ref()
+                .unwrap_or_else(|| panic!("tool '{}' is missing annotations", tool.name));
+            assert!(
+                ann.title.as_deref().is_some_and(|t| !t.is_empty()),
+                "tool '{}' is missing an annotation title",
+                tool.name
+            );
+            assert_eq!(
+                ann.open_world_hint,
+                Some(true),
+                "tool '{}' must set open_world_hint (it calls external providers)",
+                tool.name
+            );
+        }
+    }
+
+    /// Spot-check the read-only / destructive classification so the hints stay
+    /// semantically correct: queries are read-only, `create_*` mutate without
+    /// being destructive, and `delete_*`/`cancel_*` are destructive.
+    #[test]
+    fn tool_annotation_classification_is_correct() {
+        let tools = LiterLlmMcp::tool_router().list_all();
+        let by_name = |name: &str| {
+            tools
+                .iter()
+                .find(|t| t.name == name)
+                .unwrap_or_else(|| panic!("tool '{name}' not found"))
+                .annotations
+                .clone()
+                .unwrap_or_else(|| panic!("tool '{name}' missing annotations"))
+        };
+
+        // Pure query tools are read-only.
+        for name in ["chat", "embed", "list_models", "list_files", "retrieve_batch"] {
+            assert_eq!(by_name(name).read_only_hint, Some(true), "{name} should be read-only");
+        }
+
+        // create_* mutate state but are not destructive.
+        for name in ["create_file", "create_batch", "create_response"] {
+            let ann = by_name(name);
+            assert_eq!(ann.read_only_hint, Some(false), "{name} should not be read-only");
+            assert_eq!(ann.destructive_hint, Some(false), "{name} should not be destructive");
+        }
+
+        // delete_* / cancel_* are destructive and idempotent.
+        for name in ["delete_file", "cancel_batch", "cancel_response"] {
+            let ann = by_name(name);
+            assert_eq!(ann.read_only_hint, Some(false), "{name} should not be read-only");
+            assert_eq!(ann.destructive_hint, Some(true), "{name} should be destructive");
+            assert_eq!(ann.idempotent_hint, Some(true), "{name} should be idempotent");
+        }
     }
 }
