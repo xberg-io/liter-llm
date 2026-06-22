@@ -226,25 +226,34 @@ impl WindowEntry {
     /// Return current spend in USD, resetting if the window has elapsed.
     ///
     /// Uses a `compare_exchange` CAS so that under concurrent calls exactly one
-    /// thread wins the rollover: it zeroes `spend_mc` and advances
-    /// `window_start_secs`.  Threads that lose the CAS (the window was already
-    /// rolled by the winner) simply re-read the (now-zeroed) counter.
+    /// thread wins the rollover.  The winner subtracts the snapshot of
+    /// `spend_mc` taken **before** the CAS (the old-window accumulation), so
+    /// that any concurrent `fetch_add` calls that land after the snapshot —
+    /// whether before or after the CAS — are preserved in the counter.
+    /// Threads that lose the CAS simply re-read the counter.
     fn spend_usd(&self, now: SystemTime) -> f64 {
         let now_secs = now.duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default().as_secs();
         let start = self.window_start_secs.load(Ordering::Acquire);
         if now_secs.saturating_sub(start) >= self.window_secs {
+            // Snapshot the old accumulation BEFORE the CAS.  Any `fetch_add`
+            // that races in after this snapshot is a new-window increment and
+            // must not be erased.
+            let old_mc = self.spend_mc.load(Ordering::Acquire);
+
             // CAS: only one thread advances the window start.  The loser sees
-            // `Err` and skips the reset — the winner already zeroed `spend_mc`.
+            // `Err` and skips the reset — the winner performs the rollover.
             if self
                 .window_start_secs
                 .compare_exchange(start, now_secs, Ordering::AcqRel, Ordering::Acquire)
                 .is_ok()
             {
-                // We won the race — zero the accumulator.
-                self.spend_mc.store(0, Ordering::Release);
+                // We won the race.  Subtract the pre-rollover snapshot from
+                // `spend_mc`.  Any `fetch_add` that arrived after `old_mc`
+                // was read — whether before or after the CAS — stays in the
+                // counter because `fetch_sub(old_mc)` only removes exactly the
+                // old-window amount, leaving racing new-window increments intact.
+                self.spend_mc.fetch_sub(old_mc, Ordering::AcqRel);
             }
-            // Whether we won or lost, the window has been reset.  Re-read the
-            // (now potentially zeroed) counter so we return the correct value.
         }
         microcents_to_usd(self.spend_mc.load(Ordering::Acquire))
     }
