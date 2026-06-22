@@ -8,6 +8,30 @@ The `liter-llm` binary can run as a Model Context Protocol (MCP) server. It expo
 
 Launch it with `liter-llm mcp`. The server supports two transports: `stdio` for local clients like Claude Desktop and Cursor, and `http` for network-attached clients using the [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports) transport.
 
+## Install the CLI
+
+The MCP server is part of the `liter-llm` binary. Install it any of these ways:
+
+```bash
+brew install kreuzberg-dev/tap/liter-llm   # Homebrew (macOS/Linux)
+cargo install liter-llm-cli                 # from crates.io
+npx @kreuzberg/liter-llm-cli --help         # npm — self-installs the binary
+docker run ghcr.io/kreuzberg-dev/liter-llm  # container image
+```
+
+A prebuilt binary is also attached to every [GitHub release](https://github.com/kreuzberg-dev/liter-llm/releases/latest).
+
+## Easiest: the liter-llm plugin
+
+To use the MCP server inside a coding agent (Claude Code, Cursor, Codex, Gemini CLI, Factory Droid, GitHub Copilot CLI), install the **liter-llm plugin** from the [`kreuzberg-dev/plugins`](https://github.com/kreuzberg-dev/plugins) marketplace. It auto-registers the `liter-llm` MCP server and resolves the binary for you on first run — no manual config:
+
+```text
+/plugin marketplace add kreuzberg-dev/plugins
+/plugin install liter-llm@kreuzberg
+```
+
+The rest of this page covers running and configuring the server directly.
+
 ## Quick start
 
 Run the server over stdio against an auto-discovered `liter-llm-proxy.toml`. The config must include either `mcp.stdio_key_id` or `mcp.stdio_trust_local = true`:
@@ -94,6 +118,16 @@ Virtual keys can call model-routed tools such as chat, embeddings, media, modera
 | `cancel_response`   | Cancel an in-progress response.        | `response_id`    |
 
 The full parameter schema for every tool is defined in `crates/liter-llm-proxy/src/mcp/params.rs` and surfaced to MCP clients as JSON Schema through `rmcp`.
+
+Every tool also carries [MCP tool annotations](https://modelcontextprotocol.io/specification/2025-06-18/server/tools#tool-annotations) — a human title plus `readOnlyHint`/`destructiveHint`/`idempotentHint`/`openWorldHint`. Query tools are read-only; `create_*` mutate without being destructive; `delete_*`/`cancel_*` are destructive and idempotent; all set `openWorldHint` since they reach external providers. <span class="version-badge">Available by v1.8</span>
+
+## Prompts, resources, and completion
+
+Beyond tools, the server advertises three more MCP capabilities. <span class="version-badge">Available by v1.8</span>
+
+- **Prompts** — reusable templates: `summarize`, `translate`, and `extract`.
+- **Resources** — read-only catalog endpoints: `liter-llm://models` (configured models) and `liter-llm://providers` (the built-in registry), plus the templates `liter-llm://pricing/{model}` and `liter-llm://provider/{name}`.
+- **Completion** — argument autocompletion for `model` (from the configured models) and provider `name` (from the registry).
 
 ## Claude Desktop
 
