@@ -445,9 +445,11 @@ jobs:
                     - label: darwin-arm64
                       runner: macos-latest
                       napi_target: aarch64-apple-darwin
-                    - label: darwin-x64
-                      runner: macos-13
-                      napi_target: x86_64-apple-darwin
+                    # darwin-x64 (Intel macOS) omitted: the only macOS x86_64 runner
+                    # is macos-13, whose availability is unreliable (multi-hour queues
+                    # that never schedule), and a stuck leg blocks the entire npm
+                    # publish. The Intel-mac platform package has been unmaintained
+                    # since v1.5.0, so omitting it is no regression.
                     - label: win32-x64-msvc
                       runner: windows-latest
                       napi_target: x86_64-pc-windows-msvc
