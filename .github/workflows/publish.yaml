@@ -445,9 +445,15 @@ jobs:
                     - label: darwin-arm64
                       runner: macos-latest
                       napi_target: aarch64-apple-darwin
+                    - label: darwin-x64
+                      runner: macos-13
+                      napi_target: x86_64-apple-darwin
                     - label: win32-x64-msvc
                       runner: windows-latest
                       napi_target: x86_64-pc-windows-msvc
+                    - label: win32-arm64-msvc
+                      runner: windows-latest
+                      napi_target: aarch64-pc-windows-msvc
         steps:
             - uses: actions/checkout@v6
               with:
@@ -1970,6 +1976,15 @@ jobs:
                   # we extract the jniLibs from the pre-built AARs and re-stage them so that when
                   # publishAndReleaseToMavenCentral re-assembles, it includes them.
                   for aar in kotlin-android-aars-prebuilt/*.aar; do
+                    # Validate archive integrity before extracting. A truncated
+                    # artifact transfer surfaces deep inside `unzip` as a cryptic
+                    # "bad zipfile offset (local header sig)"; test it up front and
+                    # fail with an actionable message instead.
+                    if ! unzip -tqq "$aar" >/dev/null 2>&1; then
+                      echo "ERROR: $(basename "$aar") is a corrupt/truncated zip ($(wc -c < "$aar") bytes)." >&2
+                      echo "This is typically a transient artifact-transfer failure; re-run this job." >&2
+                      exit 1
+                    fi
                     echo "Extracting jniLibs from $(basename "$aar")..."
                     unzip -q "$aar" -d temp-aar-extract
                     # Each pre-built AAR contains jni/{abi}/*.so (Android AAR structure)
