@@ -901,13 +901,16 @@ jobs:
               run: |
                   mkdir -p "ffi-staging/${RID}"
                   find "target/${TARGET}/release" -maxdepth 1 -type f \( -name '*.so' -o -name '*.dylib' -o -name '*.dll' -o -name '*.a' -o -name '*.dll.lib' \) -name '*liter_llm_ffi*' -exec cp {} "ffi-staging/${RID}/" \;
-                  # Copy cbindgen-generated header if present
-                  if [ -f crates/liter-llm-ffi/include/liter_llm_ffi.h ]; then
-                    mkdir -p ffi-staging/include
-                    cp crates/liter-llm-ffi/include/liter_llm_ffi.h ffi-staging/include/
-                  elif [ -f crates/liter-llm-ffi/liter_llm.h ]; then
-                    mkdir -p ffi-staging/include
-                    cp crates/liter-llm-ffi/liter_llm.h ffi-staging/include/
+                  # Stage the canonical cbindgen-generated C header. build.rs writes
+                  # it to include/liter_llm.h; fail hard rather than silently falling
+                  # back to a stale top-level header (which previously shipped an
+                  # out-of-date ABI to the zig package and broke @cImport).
+                  mkdir -p ffi-staging/include
+                  if [ -f crates/liter-llm-ffi/include/liter_llm.h ]; then
+                    cp crates/liter-llm-ffi/include/liter_llm.h ffi-staging/include/
+                  else
+                    echo "ERROR: cbindgen header crates/liter-llm-ffi/include/liter_llm.h missing" >&2
+                    exit 1
                   fi
               shell: bash
             - name: Package C FFI tarball
@@ -931,8 +934,9 @@ jobs:
                     -exec cp {} "$STAGE_DIR/lib/" \;
                   if [ -f crates/liter-llm-ffi/include/liter_llm.h ]; then
                     cp crates/liter-llm-ffi/include/liter_llm.h "$STAGE_DIR/include/"
-                  elif [ -f crates/liter-llm-ffi/liter_llm.h ]; then
-                    cp crates/liter-llm-ffi/liter_llm.h "$STAGE_DIR/include/"
+                  else
+                    echo "ERROR: cbindgen header crates/liter-llm-ffi/include/liter_llm.h missing" >&2
+                    exit 1
                   fi
                   mkdir -p dist/c-ffi
                   tar -czf "dist/c-ffi/${STAGE_DIR}.tar.gz" "$STAGE_DIR"
@@ -1099,10 +1103,22 @@ jobs:
               env:
                   PROJECT_VERSION: ${{ needs.prepare.outputs.version }}
               run: gradle "assembleRelease" "-Pversion=${PROJECT_VERSION}"
+            - name: Suffix AAR with ABI to avoid download collision
+              shell: bash
+              working-directory: packages/kotlin-android
+              run: |
+                  # gradle assembleRelease always emits the same basename
+                  # (liter-llm-android-release.aar) regardless of ABI. The publish
+                  # job downloads both matrix artifacts with merge-multiple: true,
+                  # which flattens them into one directory — identical basenames
+                  # then collide on the same path and tear the zip ("bad zipfile
+                  # offset"). Suffix with the ABI so the two AARs stay distinct.
+                  src=$(ls build/outputs/aar/*.aar)
+                  mv "$src" "build/outputs/aar/liter-llm-android-${{ matrix.abi }}.aar"
             - uses: actions/upload-artifact@v7
               with:
                   name: kotlin-android-${{ matrix.abi }}
-                  path: packages/kotlin-android/build/outputs/aar/*.aar
+                  path: packages/kotlin-android/build/outputs/aar/liter-llm-android-${{ matrix.abi }}.aar
                   retention-days: 14
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -2243,18 +2259,51 @@ jobs:
         timeout-minutes: 180
         outputs:
             checksum: ${{ steps.checksum.outputs.checksum }}
+            reused: ${{ steps.check-existing.outputs.reused }}
         steps:
+            - uses: actions/create-github-app-token@v2
+              id: app-token
+              with:
+                  app-id: ${{ secrets.BOT_APP_ID }}
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+                  owner: kreuzberg-dev
+
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
                   fetch-depth: 0
 
+            - name: Check if artifact already exists on release
+              id: check-existing
+              env:
+                  GH_TOKEN: ${{ steps.app-token.outputs.token }}
+                  VERSION: ${{ needs.prepare.outputs.version }}
+              run: |
+                  set -euo pipefail
+                  ARTIFACT_NAME="LiterLlm-rs.artifactbundle.zip"
+                  # Try to download the artifact from the GitHub release.
+                  if gh release view "v${VERSION}" >/dev/null 2>&1; then
+                    if gh release download "v${VERSION}" -p "${ARTIFACT_NAME}" -D /tmp 2>/dev/null; then
+                      # Artifact exists; compute its checksum.
+                      CHECKSUM=$(swift package compute-checksum "/tmp/${ARTIFACT_NAME}")
+                      echo "reused=true" >> "$GITHUB_OUTPUT"
+                      echo "checksum=${CHECKSUM}" >> "$GITHUB_OUTPUT"
+                      echo "Reusing existing artifact bundle with checksum: ${CHECKSUM}"
+                      exit 0
+                    fi
+                  fi
+                  # Release doesn't exist or artifact not found; proceed to build.
+                  echo "reused=false" >> "$GITHUB_OUTPUT"
+                  exit 0
+
             - uses: kreuzberg-dev/actions/setup-rust@v1
+              if: ${{ steps.check-existing.outputs.reused != 'true' }}
               with:
                   cache-key-prefix: publish-swift-artifactbundle
                   use-sccache: false
 
             - uses: kreuzberg-dev/actions/build-swift-artifactbundle@v1
+              if: ${{ steps.check-existing.outputs.reused != 'true' }}
               id: build
               with:
                   crate-name: liter-llm-swift
@@ -2263,16 +2312,24 @@ jobs:
                   output-dir: dist/swift-artifactbundle
                   build-profile: release
 
-            - name: Record checksum
+            - name: Record checksum from build or reused
               id: checksum
               run: |
-                  CHECKSUM=$(cat "${{ steps.build.outputs.bundle-zip }}.sha256" 2>/dev/null || swift package compute-checksum "${{ steps.build.outputs.bundle-zip }}")
+                  if [[ "${{ steps.check-existing.outputs.reused }}" == "true" ]]; then
+                    # Checksum already set by check-existing step
+                    CHECKSUM="${{ steps.check-existing.outputs.checksum }}"
+                  else
+                    # Compute from newly built artifact
+                    CHECKSUM=$(cat "${{ steps.build.outputs.bundle-zip }}.sha256" 2>/dev/null || swift package compute-checksum "${{ steps.build.outputs.bundle-zip }}")
+                  fi
                   echo "checksum=${CHECKSUM}" >> "$GITHUB_OUTPUT"
                   echo "Artifact bundle checksum: ${CHECKSUM}"
 
-            - name: Save checksum as job output
-              if: always()
-              run: echo "Checksum saved to swift-artifactbundle job output"
+            - name: Prepare artifact for upload
+              if: ${{ steps.check-existing.outputs.reused != 'true' }}
+              run: |
+                  mkdir -p dist/swift-artifactbundle
+                  cp "${{ steps.build.outputs.bundle-zip }}" dist/swift-artifactbundle/
 
             - uses: actions/upload-artifact@v7
               with:
@@ -2317,7 +2374,13 @@ jobs:
                   path: dist/swift
                   merge-multiple: true
 
+            - name: Skip asset upload if bundle was reused
+              if: ${{ needs.swift-artifactbundle.outputs.reused == 'true' }}
+              run: |
+                  echo "Bundle was reused from existing release asset; skipping upload"
+
             - uses: kreuzberg-dev/actions/upload-release-assets@v1
+              if: ${{ needs.swift-artifactbundle.outputs.reused != 'true' }}
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
                   working-directory: dist/swift
