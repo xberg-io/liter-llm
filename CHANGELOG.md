@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-06-23
+
+### Fixed
+
+- **CI E2E (kotlin_android): the host-JVM test project compiles again.** The generated `MockServerListener` implements the JUnit Platform `LauncherSessionListener` SPI (referencing `LauncherSession`/`LauncherSessionListener` at compile time), but the e2e `build.gradle.kts` scoped `junit-platform-launcher` as `testRuntimeOnly`, so `compileDebugUnitTestKotlin` failed with "Unresolved reference 'launcher'". Regenerated from alef 0.26.5, which now scopes it `testImplementation`.
+- **CI E2E (swift): the e2e link step now finds `liter_llm_ffi`.** The swift e2e `before` step built `liter-llm-swift` and the mock server but never `liter-llm-ffi`, so `libliter_llm_ffi.a` was absent from the linker search path (`ld: library 'liter_llm_ffi' not found`). The `[crates.test.swift].before` step now also runs `cargo build --release -p liter-llm-ffi`.
+- **CI E2E (node): the lockfile is back in sync.** `pnpm-lock.yaml` was stale against `crates/liter-llm-node/package.json` (missing `@napi-rs/cli ^3.6.2`) after the 1.8.0 bump, failing `pnpm install --frozen-lockfile`. Regenerated.
+
+### Changed
+
+- **Bindings regenerated from alef 0.26.5** (from 0.26.3): Swift bridge-glue re-materialization runs after the bridge crate is built, opaque-handle aliasing avoids capsule import collisions, and JSON-string overloads emit positional arguments for underscore-prefixed parameters.
+
 ## [1.8.0] - 2026-06-22
 
 ### Added

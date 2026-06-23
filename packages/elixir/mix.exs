@@ -4,7 +4,7 @@ defmodule LiterLlm.MixProject do
   def project do
     [
       app: :liter_llm,
-      version: "1.8.0",
+      version: "1.8.1",
       elixir: "~> 1.14",
       elixirc_paths: ["lib", Path.expand("../../packages/elixir/native/liter_llm_nif/src", __DIR__)],
       rustler_crates: [

@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.26.3"
+alef_version = "0.26.5"
 languages = [
   "python",
   "node",
@@ -566,7 +566,7 @@ e2e = [
 precondition = "command -v pnpm >/dev/null 2>&1"
 e2e = [
   "pnpm -r --filter=\"./crates/liter-llm-node\" run build",
-  "cd e2e/node && pnpm install && pnpm dlx vitest run",
+  "cd e2e/node && pnpm install --no-frozen-lockfile && pnpm dlx vitest run",
 ]
 
 [crates.test.go]
@@ -635,7 +635,7 @@ e2e = [
 # Same shape as dart — point the e2e step at e2e/swift_e2e/, not the
 # `packages/swift` placeholder, and start the mock HTTP server first.
 precondition = "command -v swift >/dev/null 2>&1"
-before = "cargo build --release -p liter-llm-swift && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+before = "cargo build --release -p liter-llm-swift && cargo build --release -p liter-llm-ffi && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 e2e = "scripts/e2e/run-with-mock-server.sh 'cd e2e/swift_e2e && swift test'"
 
 [crates.test.zig]
@@ -1978,7 +1978,7 @@ name = "liter_llm_ffi"
 name = "LiterLlm"
 
 [crates.e2e.registry.packages.zig]
-hash = "liter_llm-1.8.0-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
+hash = "liter_llm-1.8.1-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
 
 [crates.e2e.registry.packages.homebrew]
 tap = "kreuzberg-dev/homebrew-tap"
