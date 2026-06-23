@@ -2325,13 +2325,14 @@ jobs:
                   echo "checksum=${CHECKSUM}" >> "$GITHUB_OUTPUT"
                   echo "Artifact bundle checksum: ${CHECKSUM}"
 
-            - name: Prepare artifact for upload
-              if: ${{ steps.check-existing.outputs.reused != 'true' }}
-              run: |
-                  mkdir -p dist/swift-artifactbundle
-                  cp "${{ steps.build.outputs.bundle-zip }}" dist/swift-artifactbundle/
-
+            # The build action already writes the bundle into output-dir
+            # (dist/swift-artifactbundle), which is exactly the upload path below,
+            # so no separate staging copy is needed. A `cp` here would copy the
+            # file onto itself and fail with "are the same file" (exit 1). In the
+            # reused path the asset stays on the release and this job's uploaded
+            # artifact is unused (upload-swift-release is skipped when reused).
             - uses: actions/upload-artifact@v7
+              if: ${{ steps.check-existing.outputs.reused != 'true' }}
               with:
                   name: swift-artifactbundle
                   path: dist/swift-artifactbundle
