@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.2] - 2026-06-23
+
+### Fixed
+
+- **Publish (zig): the published zig package compiles again.** The "Stage FFI artifacts" step bundled a stale top-level `crates/liter-llm-ffi/liter_llm.h` (old ABI, missing `literllm_create_client`/`*_from_json`) into the `ffi-*` artifact, so the zig wrapper's `@cImport` resolved against an out-of-date header and every test failed to compile. The step now stages the canonical `include/liter_llm.h` (and fails hard if absent); the orphaned top-level header is removed.
+- **Publish (kotlin-android): the AAR no longer corrupts on download.** Both ABI matrix legs emitted the same filename `liter-llm-android-release.aar`; the publish job's `download-artifact … merge-multiple: true` collided them into one torn zip (`bad zipfile offset`). Each leg now uploads an ABI-suffixed `liter-llm-android-<abi>.aar`.
+- **Publish (swift): a rerun can no longer desync the artifact-bundle checksum.** The swift-artifactbundle job now reuses an existing release asset and its checksum instead of rebuilding a non-reproducible bundle, keeping the hosted bundle consistent with the `swift-<version>` tag.
+- **Swift test-app scaffold pins the checksum-bearing ref.** Regenerated from alef 0.26.7: the registry-mode `Package.swift` now uses `.package(url:, branch: "release/swift/<version>")` (which carries the substituted checksum) instead of `from: "<version>"` (which resolved the placeholder-bearing SemVer tag).
+
+### Changed
+
+- **Bindings regenerated from alef 0.26.7** (from 0.26.5): swift e2e scaffold branch pin and kotlin-android Gradle plugin/dependency bumps. Generated node e2e/test_apps emit `.npmrc` disabling frozen-lockfile.
+
 ## [1.8.1] - 2026-06-23
 
 ### Fixed

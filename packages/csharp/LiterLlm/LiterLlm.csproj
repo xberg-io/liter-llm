@@ -3,10 +3,10 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>LiterLlm</RootNamespace>
     <PackageId>LiterLlm</PackageId>
-    <Version>1.8.1</Version>
-    <AssemblyVersion>1.8.1.0</AssemblyVersion>
-    <FileVersion>1.8.1.0</FileVersion>
-    <InformationalVersion>1.8.1</InformationalVersion>
+    <Version>1.8.2</Version>
+    <AssemblyVersion>1.8.2.0</AssemblyVersion>
+    <FileVersion>1.8.2.0</FileVersion>
+    <InformationalVersion>1.8.2</InformationalVersion>
     <Description>Universal LLM API client with Rust-powered polyglot bindings.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryUrl>https://github.com/kreuzberg-dev/liter-llm</RepositoryUrl>

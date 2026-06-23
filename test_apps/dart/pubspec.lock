@@ -181,10 +181,10 @@ packages:
     dependency: "direct main"
     description:
       name: liter_llm
-      sha256: "3610c627407186c761d392724990a4fe8792a441102633d1e66f455899ac82ee"
+      sha256: ee44f24b17ba8b8db85002e7caa0f59f0309efa09605d606381c0dfa4da8e563
       url: "https://pub.dev"
     source: hosted
-    version: "1.7.3"
+    version: "1.8.1"
   logging:
     dependency: transitive
     description:
