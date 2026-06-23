@@ -445,6 +445,16 @@ jobs:
                   ffi-crate-dir: crates/liter-llm-ffi
                   ffi-lib-name: liter_llm_ffi
 
+            # The swift binding links libliter_llm_swift.a AND libliter_llm_ffi.a
+            # (see packages/swift/Package.swift). build-swift-package builds the
+            # former; swift is excluded from the FFI-artifact staging step above,
+            # so build the FFI staticlib here too or `swift test` fails to link
+            # with `ld: library 'liter_llm_ffi' not found`.
+            - name: Build FFI crate (swift)
+              if: matrix.lang == 'swift'
+              shell: bash
+              run: cargo build -p liter-llm-ffi --release
+
             - name: Build Swift package (macos / liter-llm-swift)
               if: matrix.lang == 'swift'
               uses: kreuzberg-dev/actions/build-swift-package@v1
