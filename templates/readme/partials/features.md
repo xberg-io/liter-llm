@@ -14,7 +14,7 @@ Route to any provider using the `provider/model` prefix convention:
 | **Google Vertex**  | `vertexai/gemini-1.5-pro`                                     |
 | **Amazon Bedrock** | `bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0`           |
 
-**[Complete Provider List](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)**
+**[Complete Provider List](https://github.com/xberg-io/liter-llm/blob/main/schemas/providers.json)**
 
 ### Key Capabilities
 

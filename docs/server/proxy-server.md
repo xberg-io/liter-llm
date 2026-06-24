@@ -160,7 +160,7 @@ docker run --rm -it \
   -v "$PWD/liter-llm-proxy.toml:/etc/liter-llm-proxy.toml:ro" \
   -e LITER_LLM_MASTER_KEY \
   -e OPENAI_API_KEY \
-  ghcr.io/kreuzberg-dev/liter-llm:latest \
+  ghcr.io/xberg-io/liter-llm:latest \
   api --config /etc/liter-llm-proxy.toml
 ```
 
@@ -169,7 +169,7 @@ docker run --rm -it \
 ```yaml
 services:
   liter-llm:
-    image: ghcr.io/kreuzberg-dev/liter-llm:latest
+    image: ghcr.io/xberg-io/liter-llm:latest
     command: api --config /etc/liter-llm-proxy.toml
     ports:
       - "4000:4000"

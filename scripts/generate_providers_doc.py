@@ -142,7 +142,7 @@ def generate_markdown(providers: list[dict[str, Any]]) -> str:
         "The full provider registry with base URLs, auth configuration, and model "
         "mappings is available at "
         "[schemas/providers.json]"
-        "(https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)."
+        "(https://github.com/xberg-io/liter-llm/blob/main/schemas/providers.json)."
     )
     lines.append("")
 

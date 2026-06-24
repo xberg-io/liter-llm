@@ -14,7 +14,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	pkg "github.com/kreuzberg-dev/liter-llm/packages/go"
+	pkg "github.com/xberg-io/liter-llm/packages/go"
 )
 
 func Test_EdgeBatchAlreadyCancelled(t *testing.T) {

@@ -41,7 +41,7 @@ permissions:
 jobs:
     rust:
         name: Rust (${{ matrix.os }})
-        if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
+        if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
         runs-on: ${{ matrix.os }}
         timeout-minutes: 60
         strategy:
@@ -55,23 +55,23 @@ jobs:
 
             - name: Free disk space
               if: runner.os == 'Linux'
-              uses: kreuzberg-dev/actions/free-disk-space-linux@v1
+              uses: xberg-io/actions/free-disk-space-linux@v1
               with:
                   show-initial: "false"
                   show-final: "true"
 
             - name: Setup Rust
-              uses: kreuzberg-dev/actions/setup-rust@v1
+              uses: xberg-io/actions/setup-rust@v1
               with:
                   cache-key-prefix: rust-${{ matrix.os }}
                   use-sccache: "true"
                   components: rustfmt, clippy, llvm-tools-preview
 
             - name: Setup PHP (required by ext-php-rs build script)
-              uses: kreuzberg-dev/actions/setup-php@v1
+              uses: xberg-io/actions/setup-php@v1
 
             - name: Install Task
-              uses: kreuzberg-dev/actions/install-task@v1
+              uses: xberg-io/actions/install-task@v1
 
             - name: Run Rust tests
               run: task rust:test

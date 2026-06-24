@@ -58,19 +58,19 @@ A universal LLM API client with a Rust core and 14 native language bindings (plu
 | **Python**            | `pip install liter-llm`                                 | [API Reference](reference/api-python.md)     |
 | **TypeScript / Node** | `npm install @kreuzberg/liter-llm`                 | [API Reference](reference/api-typescript.md) |
 | **WebAssembly**       | `npm install @kreuzberg/liter-llm-wasm`                 | [API Reference](reference/api-wasm.md)       |
-| **Go**                | `go get github.com/kreuzberg-dev/liter-llm/packages/go` | [API Reference](reference/api-go.md)         |
+| **Go**                | `go get github.com/xberg-io/liter-llm/packages/go` | [API Reference](reference/api-go.md)         |
 | **Java**              | Maven Central `dev.kreuzberg.literllm:liter-llm`        | [API Reference](reference/api-java.md)       |
 | **Kotlin Android**    | Maven `dev.kreuzberg:liter-llm-android`                 | [API Reference](reference/api-kotlin-android.md) |
 | **C#**                | `dotnet add package LiterLlm`                           | [API Reference](reference/api-csharp.md)     |
 | **Ruby**              | `gem install liter_llm`                                 | [API Reference](reference/api-ruby.md)       |
-| **PHP**               | `composer require kreuzberg-dev/liter-llm`              | [API Reference](reference/api-php.md)        |
+| **PHP**               | `composer require xberg-io/liter-llm`              | [API Reference](reference/api-php.md)        |
 | **Elixir**            | `{:liter_llm, "~> 1.7"}`                                | [API Reference](reference/api-elixir.md)     |
 | **Dart / Flutter**    | `dart pub add liter_llm`                                | [API Reference](reference/api-dart.md)       |
 | **Swift**             | Swift Package Manager                                   | [API Reference](reference/api-swift.md)      |
 | **Zig**               | `zig fetch --save` from GitHub                          | [API Reference](reference/api-zig.md)        |
 | **C (FFI)**           | Shared library + header                                 | [API Reference](reference/api-c.md)          |
 | **CLI**               | `cargo install liter-llm-cli`                           | [Proxy Server](server/proxy-server.md)       |
-| **Docker**            | `ghcr.io/kreuzberg-dev/liter-llm`                       | [Proxy Server](server/proxy-server.md)       |
+| **Docker**            | `ghcr.io/xberg-io/liter-llm`                       | [Proxy Server](server/proxy-server.md)       |
 
 ---
 
@@ -227,6 +227,6 @@ All bindings are generated from one Rust core, so endpoint coverage is uniform; 
 
 ### Getting Help
 
-- **Bugs & feature requests** — [Open an issue on GitHub](https://github.com/kreuzberg-dev/liter-llm/issues)
+- **Bugs & feature requests** — [Open an issue on GitHub](https://github.com/xberg-io/liter-llm/issues)
 - **Community chat** — [Join the Discord](https://discord.gg/xt9WY3GnKR)
 - **Contributing** — [Read the contributor guide](contributing.md)

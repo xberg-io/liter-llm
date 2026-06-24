@@ -196,7 +196,7 @@ mavenPublishing {
     pom {
         name.set("liter-llm-android")
         description.set("Universal LLM API client with Rust-powered polyglot bindings.")
-        url.set("https://github.com/kreuzberg-dev/liter-llm")
+        url.set("https://github.com/xberg-io/liter-llm")
         licenses {
             license {
                 name.set("MIT")
@@ -211,9 +211,9 @@ mavenPublishing {
         }
 
         scm {
-            url.set("https://github.com/kreuzberg-dev/liter-llm")
-            connection.set("scm:git:git://github.com/kreuzberg-dev/liter-llm.git")
-            developerConnection.set("scm:git:ssh://git@github.com:kreuzberg-dev/liter-llm.git")
+            url.set("https://github.com/xberg-io/liter-llm")
+            connection.set("scm:git:git://github.com/xberg-io/liter-llm.git")
+            developerConnection.set("scm:git:ssh://git@github.com:xberg-io/liter-llm.git")
         }
     }
 }

@@ -5,7 +5,7 @@
 **Do not open a public issue for security reports.**
 
 Preferred channel: open a private advisory at
-<https://github.com/kreuzberg-dev/liter-llm/security/advisories/new>.
+<https://github.com/xberg-io/liter-llm/security/advisories/new>.
 
 Alternative: email **<security@kreuzberg.dev>**.
 

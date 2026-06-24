@@ -7,7 +7,7 @@ description = "Universal LLM API client with Rust-powered polyglot bindings."
 readme = false
 keywords = ["anthropic", "api-client", "llm", "openai"]
 categories = []
-repository = "https://github.com/kreuzberg-dev/liter-llm"
+repository = "https://github.com/xberg-io/liter-llm"
 
 # `serde_json`, `ahash`, and `tokio` are emitted unconditionally above so the
 # manifest is stable across regens (and so the C FFI codegen can pull them in

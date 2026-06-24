@@ -10,7 +10,7 @@
 	],
 	"license": "MIT",
 	"author": "Na'aman Hirschfeld",
-	"repository": "https://github.com/kreuzberg-dev/liter-llm",
+	"repository": "https://github.com/xberg-io/liter-llm",
 	"files": [
 		"index.js",
 		"index.d.ts",

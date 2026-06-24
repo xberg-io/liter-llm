@@ -22,9 +22,9 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
 ]
-urls.Homepage = "https://github.com/kreuzberg-dev/liter-llm"
-urls.Issues = "https://github.com/kreuzberg-dev/liter-llm/issues"
-urls.Repository = "https://github.com/kreuzberg-dev/liter-llm.git"
+urls.Homepage = "https://github.com/xberg-io/liter-llm"
+urls.Issues = "https://github.com/xberg-io/liter-llm/issues"
+urls.Repository = "https://github.com/xberg-io/liter-llm.git"
 scripts.liter-llm = "liter_llm_cli.cli:main"
 
 [tool.hatch]

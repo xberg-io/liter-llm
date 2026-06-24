@@ -2,7 +2,7 @@
 
 <div align="center" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0">
 	<!-- Built with -->
-	<a href="https://github.com/kreuzberg-dev/alef">
+	<a href="https://github.com/xberg-io/alef">
 		<img src="https://img.shields.io/badge/Bindings-alef%20%D7%90-007ec6" alt="Bindings" />
 	</a>
 	<!-- Language Bindings -->
@@ -21,14 +21,14 @@
 	<a href="https://central.sonatype.com/artifact/dev.kreuzberg.literllm/liter-llm">
 		<img src="https://img.shields.io/maven-central/v/dev.kreuzberg.literllm/liter-llm?label=Java&color=007ec6" alt="Java" />
 	</a>
-	<a href="https://github.com/kreuzberg-dev/liter-llm/tree/main/packages/go">
-		<img src="https://img.shields.io/github/v/tag/kreuzberg-dev/liter-llm?label=Go&color=007ec6" alt="Go" />
+	<a href="https://github.com/xberg-io/liter-llm/tree/main/packages/go">
+		<img src="https://img.shields.io/github/v/tag/xberg-io/liter-llm?label=Go&color=007ec6" alt="Go" />
 	</a>
 	<a href="https://www.nuget.org/packages/LiterLlm">
 		<img src="https://img.shields.io/nuget/v/LiterLlm?label=C%23&color=007ec6" alt="C#" />
 	</a>
-	<a href="https://packagist.org/packages/kreuzberg-dev/liter-llm">
-		<img src="https://img.shields.io/packagist/v/kreuzberg-dev/liter-llm?label=PHP&color=007ec6" alt="PHP" />
+	<a href="https://packagist.org/packages/xberg-io/liter-llm">
+		<img src="https://img.shields.io/packagist/v/xberg-io/liter-llm?label=PHP&color=007ec6" alt="PHP" />
 	</a>
 	<a href="https://rubygems.org/gems/liter_llm">
 		<img src="https://img.shields.io/gem/v/liter_llm?label=Ruby&color=007ec6" alt="Ruby" />
@@ -36,18 +36,18 @@
 	<a href="https://hex.pm/packages/liter_llm">
 		<img src="https://img.shields.io/hexpm/v/liter_llm?label=Elixir&color=007ec6" alt="Elixir" />
 	</a>
-	<a href="https://github.com/kreuzberg-dev/liter-llm/pkgs/container/liter-llm">
+	<a href="https://github.com/xberg-io/liter-llm/pkgs/container/liter-llm">
 		<img src="https://img.shields.io/badge/Docker-007ec6?logo=docker&logoColor=white" alt="Docker" />
 	</a>
-	<a href="https://github.com/kreuzberg-dev/homebrew-tap/blob/main/Formula/liter-llm.rb">
+	<a href="https://github.com/xberg-io/homebrew-tap/blob/main/Formula/liter-llm.rb">
 		<img src="https://img.shields.io/badge/Homebrew-007ec6?logo=homebrew&logoColor=white" alt="Homebrew" />
 	</a>
-	<a href="https://github.com/kreuzberg-dev/liter-llm/tree/main/crates/liter-llm-ffi">
+	<a href="https://github.com/xberg-io/liter-llm/tree/main/crates/liter-llm-ffi">
 		<img src="https://img.shields.io/badge/C-FFI-007ec6" alt="C FFI" />
 	</a>
 
 	<!-- Project Info -->
-	<a href="https://github.com/kreuzberg-dev/liter-llm/blob/main/LICENSE">
+	<a href="https://github.com/xberg-io/liter-llm/blob/main/LICENSE">
 		<img src="https://img.shields.io/badge/License-MIT-007ec6" alt="License" />
 	</a>
 	<a href="https://docs.liter-llm.kreuzberg.dev">
@@ -153,8 +153,8 @@ Console.WriteLine();
 
 ### Next Steps
 
-- **[Provider Registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)** - Full list of supported providers
-- **[GitHub Repository](https://github.com/kreuzberg-dev/liter-llm)** - Source, issues, and discussions
+- **[Provider Registry](https://github.com/xberg-io/liter-llm/blob/main/schemas/providers.json)** - Full list of supported providers
+- **[GitHub Repository](https://github.com/xberg-io/liter-llm)** - Source, issues, and discussions
 
 ## Features
 
@@ -174,7 +174,7 @@ Route to any provider using the `provider/model` prefix convention:
 | **Google Vertex**  | `vertexai/gemini-1.5-pro`                                     |
 | **Amazon Bedrock** | `bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0`           |
 
-**[Complete Provider List](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)**
+**[Complete Provider List](https://github.com/xberg-io/liter-llm/blob/main/schemas/providers.json)**
 
 ### Key Capabilities
 
@@ -208,7 +208,7 @@ groq/llama-3.1-70b-versatile
 mistral/mistral-large-latest
 ```
 
-See the [provider registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json) for the full list.
+See the [provider registry](https://github.com/xberg-io/liter-llm/blob/main/schemas/providers.json) for the full list.
 
 ## Proxy, MCP Server & Plugin
 
@@ -218,41 +218,41 @@ See the [provider registry](https://github.com/kreuzberg-dev/liter-llm/blob/main
 Beyond the SDK, the `liter-llm` CLI ships an OpenAI-compatible proxy and a Model Context Protocol (MCP) server:
 
 ```bash
-brew install kreuzberg-dev/tap/liter-llm   # or: cargo install liter-llm-cli
+brew install xberg-io/tap/liter-llm   # or: cargo install liter-llm-cli
 liter-llm api --config liter-llm-proxy.toml   # OpenAI-compatible proxy
 liter-llm mcp --transport stdio               # MCP tool server
 
 # or run the proxy without installing:
-docker run -p 4000:4000 -e LITER_LLM_MASTER_KEY=sk-your-key ghcr.io/kreuzberg-dev/liter-llm
+docker run -p 4000:4000 -e LITER_LLM_MASTER_KEY=sk-your-key ghcr.io/xberg-io/liter-llm
 ```
 
-To use the MCP server inside a coding agent, install the **liter-llm plugin** from the [`kreuzberg-dev/plugins`](https://github.com/kreuzberg-dev/plugins) marketplace — it auto-registers the server. See the [MCP server](https://docs.liter-llm.kreuzberg.dev/server/mcp-server/) and [proxy server](https://docs.liter-llm.kreuzberg.dev/server/proxy-server/) guides for configuration, CLI usage, and agent integration.
+To use the MCP server inside a coding agent, install the **liter-llm plugin** from the [`xberg-io/plugins`](https://github.com/xberg-io/plugins) marketplace — it auto-registers the server. See the [MCP server](https://docs.liter-llm.kreuzberg.dev/server/mcp-server/) and [proxy server](https://docs.liter-llm.kreuzberg.dev/server/proxy-server/) guides for configuration, CLI usage, and agent integration.
 
 </details>
 
 ## Documentation
 
 - **[Documentation](https://docs.liter-llm.kreuzberg.dev)** -- Full docs and API reference
-- **[GitHub Repository](https://github.com/kreuzberg-dev/liter-llm)** -- Source, issues, and discussions
-- **[Provider Registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)** -- 143 supported providers
+- **[GitHub Repository](https://github.com/xberg-io/liter-llm)** -- Source, issues, and discussions
+- **[Provider Registry](https://github.com/xberg-io/liter-llm/blob/main/schemas/providers.json)** -- 143 supported providers
 
 ## Part of Kreuzberg.dev
 
-- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
-- [Kreuzberg Cloud](https://github.com/kreuzberg-dev/kreuzberg-cloud) — managed extraction API with SDKs, dashboards, and observability.
-- [kreuzcrawl](https://github.com/kreuzberg-dev/kreuzcrawl) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
-- [html-to-markdown](https://github.com/kreuzberg-dev/html-to-markdown) — fast, lossless HTML→Markdown engine.
-- [liter-llm](https://github.com/kreuzberg-dev/liter-llm) — universal LLM API client with native bindings for 14 languages and 143 providers.
-- [tree-sitter-language-pack](https://github.com/kreuzberg-dev/tree-sitter-language-pack) — tree-sitter grammars and code-intelligence primitives.
-- [alef](https://github.com/kreuzberg-dev/alef) — the polyglot binding generator that produces every per-language binding across the 5 polyglot repos.
+- [Kreuzberg](https://github.com/xberg-io/kreuzberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Kreuzberg Cloud](https://github.com/xberg-io/kreuzberg-cloud) — managed extraction API with SDKs, dashboards, and observability.
+- [kreuzcrawl](https://github.com/xberg-io/kreuzcrawl) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
+- [html-to-markdown](https://github.com/xberg-io/html-to-markdown) — fast, lossless HTML→Markdown engine.
+- [liter-llm](https://github.com/xberg-io/liter-llm) — universal LLM API client with native bindings for 14 languages and 143 providers.
+- [tree-sitter-language-pack](https://github.com/xberg-io/tree-sitter-language-pack) — tree-sitter grammars and code-intelligence primitives.
+- [alef](https://github.com/xberg-io/alef) — the polyglot binding generator that produces every per-language binding across the 5 polyglot repos.
 - [Discord](https://discord.gg/xt9WY3GnKR) — community, roadmap, announcements.
 
 ## Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](https://github.com/kreuzberg-dev/liter-llm/blob/main/CONTRIBUTING.md) for guidelines.
+Contributions are welcome! See [CONTRIBUTING.md](https://github.com/xberg-io/liter-llm/blob/main/CONTRIBUTING.md) for guidelines.
 
 Join our [Discord community](https://discord.gg/xt9WY3GnKR) for questions and discussion.
 
 ## License
 
-MIT -- see [LICENSE](https://github.com/kreuzberg-dev/liter-llm/blob/main/LICENSE) for details.
+MIT -- see [LICENSE](https://github.com/xberg-io/liter-llm/blob/main/LICENSE) for details.

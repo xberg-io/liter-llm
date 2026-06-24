@@ -9,7 +9,7 @@ version = "1.8.2"
 edition = "2024"
 license = "MIT"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
-repository = "https://github.com/kreuzberg-dev/liter-llm"
+repository = "https://github.com/xberg-io/liter-llm"
 keywords = ["llm", "api-client", "openai", "anthropic"]
 
 [package.metadata.cargo-machete]

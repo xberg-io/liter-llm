@@ -61,7 +61,7 @@ vars:
 
 # Preconditions for task setup:
 # - Rust toolchain (rustup) — install via https://rustup.rs
-# - alef CLI — install via cargo install --git https://github.com/kreuzberg-dev/alef
+# - alef CLI — install via cargo install --git https://github.com/xberg-io/alef
 # - prek — install via cargo install prek
 # - Per-language tools auto-skipped via alef preconditions; install as needed:
 #   - Python: uv, Node: pnpm (corepack enable), Ruby: bundle, PHP: composer

@@ -41,7 +41,7 @@ Install with go get:
 go get {{ package_name }}
 ```
 
-For more details on FFI setup and native library linking, see the [Go README](https://github.com/kreuzberg-dev/liter-llm/blob/main/packages/go/README.md).
+For more details on FFI setup and native library linking, see the [Go README](https://github.com/xberg-io/liter-llm/blob/main/packages/go/README.md).
 
 {% elif pm == "maven" %}
 {% set maven_parts = package_name | split(":") %}
@@ -114,7 +114,7 @@ Install-Package {{ package_name }}
 {% elif pm == "swift_package_manager" %}
 The Swift binding ships as a pre-built artifact bundle. No Rust toolchain required.
 
-Each release at <https://github.com/kreuzberg-dev/liter-llm/releases> attaches:
+Each release at <https://github.com/xberg-io/liter-llm/releases> attaches:
 
 - `LiterLlm-rs.artifactbundle.zip` — the prebuilt artifact bundle
 - `LiterLlm-rs.artifactbundle.zip.checksum` — the SwiftPM checksum
@@ -125,7 +125,7 @@ Each release at <https://github.com/kreuzberg-dev/liter-llm/releases> attaches:
 ```swift
 .binaryTarget(
     name: "LiterLlm",
-    url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v{{ version }}/LiterLlm-rs.artifactbundle.zip",
+    url: "https://github.com/xberg-io/liter-llm/releases/download/v{{ version }}/LiterLlm-rs.artifactbundle.zip",
     checksum: "<CHECKSUM-FROM-RELEASE-NOTES>"
 )
 ```
@@ -281,5 +281,5 @@ Pre-built binaries available for:
 - Pre-built artifact bundle for macOS (arm64, x86_64), iOS, iOS Simulator
 - API keys via environment variables (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
   {% else %}
-- See [Installation Guide](https://github.com/kreuzberg-dev/liter-llm#installation) for requirements
+- See [Installation Guide](https://github.com/xberg-io/liter-llm#installation) for requirements
   {% endif %}

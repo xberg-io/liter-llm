@@ -8,7 +8,7 @@ import crypto from "node:crypto";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync, execFileSync } from "node:child_process";
 
-const REPO = "kreuzberg-dev/liter-llm";
+const REPO = "xberg-io/liter-llm";
 const BIN_NAME = "liter-llm";
 const PKG_NAME = "liter-llm-cli";
 const VERSION_ENV = "LITER_LLM_CLI_VERSION";

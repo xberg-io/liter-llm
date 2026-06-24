@@ -71,7 +71,7 @@ permissions:
 jobs:
     build-ffi:
         name: Build FFI (${{ matrix.target }})
-        if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
+        if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
         runs-on: ${{ matrix.os }}
         timeout-minutes: ${{ matrix.os == 'windows-latest' && 120 || 60 }}
         strategy:
@@ -90,18 +90,18 @@ jobs:
             - uses: actions/checkout@v6
 
             - name: Setup Rust
-              uses: kreuzberg-dev/actions/setup-rust@v1
+              uses: xberg-io/actions/setup-rust@v1
               with:
                   cache-key-prefix: build-ffi-${{ matrix.target }}
                   target: ${{ matrix.target }}
 
             - name: Build FFI library
-              uses: kreuzberg-dev/actions/build-rust-ffi@v1
+              uses: xberg-io/actions/build-rust-ffi@v1
               with:
                   crate-name: liter-llm-ffi
 
             - name: Build CLI
-              uses: kreuzberg-dev/actions/build-rust-cli@v1
+              uses: xberg-io/actions/build-rust-cli@v1
               with:
                   package-name: liter-llm-cli
                   binary-name: liter-llm
@@ -127,7 +127,7 @@ jobs:
 
     e2e-tests:
         name: E2E (${{ matrix.lang }})
-        if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
+        if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
         needs: [build-ffi]
         # Swift e2e runs on macos-14 (Sonoma) rather than `macos-latest` (currently
         # macos-15 Sequoia). macOS 15 added a "Local Network" privacy permission
@@ -194,7 +194,7 @@ jobs:
             - uses: actions/checkout@v6
 
             - name: Setup Rust
-              uses: kreuzberg-dev/actions/setup-rust@v1
+              uses: xberg-io/actions/setup-rust@v1
               with:
                   cache-key-prefix: e2e-${{ matrix.lang }}
 
@@ -344,18 +344,18 @@ jobs:
 
             - name: Setup Python
               if: matrix.python-version
-              uses: kreuzberg-dev/actions/setup-python-env@v1
+              uses: xberg-io/actions/setup-python-env@v1
               with:
                   python-version: ${{ matrix.python-version }}
                   cache-prefix: e2e-py-${{ matrix.python-version }}
 
             - name: Setup Node
               if: matrix.node-version
-              uses: kreuzberg-dev/actions/setup-node-workspace@v1
+              uses: xberg-io/actions/setup-node-workspace@v1
 
             - name: Install WASI SDK
               if: matrix.lang == 'wasm'
-              uses: kreuzberg-dev/actions/install-wasi-sdk@v1
+              uses: xberg-io/actions/install-wasi-sdk@v1
 
             - name: Install wasm-pack
               if: matrix.lang == 'wasm'
@@ -406,14 +406,14 @@ jobs:
 
             - name: Setup PHP
               if: matrix.php-version
-              uses: kreuzberg-dev/actions/setup-php@v1
+              uses: xberg-io/actions/setup-php@v1
               with:
                   php-version: ${{ matrix.php-version }}
                   tools: composer
 
             - name: Setup Elixir
               if: matrix.elixir-version
-              uses: kreuzberg-dev/actions/setup-elixir@v1
+              uses: xberg-io/actions/setup-elixir@v1
               with:
                   elixir-version: ${{ matrix.elixir-version }}
                   otp-version: ${{ matrix.otp-version }}
@@ -430,17 +430,17 @@ jobs:
 
             - name: Setup Zig
               if: matrix.zig-version
-              uses: kreuzberg-dev/actions/setup-zig@v1
+              uses: xberg-io/actions/setup-zig@v1
               with:
                   version: ${{ matrix.zig-version }}
 
             - name: Setup C/C++ tools
               if: matrix.lang == 'c'
-              uses: kreuzberg-dev/actions/setup-c-cpp-tools@v1
+              uses: xberg-io/actions/setup-c-cpp-tools@v1
 
             - name: Setup Go CGO env
               if: matrix.lang == 'go'
-              uses: kreuzberg-dev/actions/setup-go-cgo-env@v1
+              uses: xberg-io/actions/setup-go-cgo-env@v1
               with:
                   ffi-crate-dir: crates/liter-llm-ffi
                   ffi-lib-name: liter_llm_ffi
@@ -457,7 +457,7 @@ jobs:
 
             - name: Build Swift package (macos / liter-llm-swift)
               if: matrix.lang == 'swift'
-              uses: kreuzberg-dev/actions/build-swift-package@v1
+              uses: xberg-io/actions/build-swift-package@v1
               with:
                   crate-name: liter-llm-swift
                   build-profile: release
@@ -473,10 +473,10 @@ jobs:
                   echo "LD_LIBRARY_PATH=${PWD}/target/release:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
 
             - name: Install Task
-              uses: kreuzberg-dev/actions/install-task@v1
+              uses: xberg-io/actions/install-task@v1
 
             - name: Install alef CLI
-              uses: kreuzberg-dev/actions/install-alef@v1
+              uses: xberg-io/actions/install-alef@v1
 
             - name: Run E2E tests
               run: ${{ matrix.test-cmd }}

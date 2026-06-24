@@ -24,7 +24,7 @@ from urllib.error import URLError
 from urllib.parse import quote, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
-REPO = "kreuzberg-dev/liter-llm"
+REPO = "xberg-io/liter-llm"
 BIN_NAME = "liter-llm"
 PKG_NAME = "liter-llm-cli"
 VERSION_ENV = "LITER_LLM_CLI_VERSION"

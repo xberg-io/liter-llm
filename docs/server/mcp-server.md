@@ -13,20 +13,20 @@ Launch it with `liter-llm mcp`. The server supports two transports: `stdio` for 
 The MCP server is part of the `liter-llm` binary. Install it any of these ways:
 
 ```bash
-brew install kreuzberg-dev/tap/liter-llm   # Homebrew (macOS/Linux)
+brew install xberg-io/tap/liter-llm   # Homebrew (macOS/Linux)
 cargo install liter-llm-cli                 # from crates.io
 npx @kreuzberg/liter-llm-cli --help         # npm — self-installs the binary
-docker run ghcr.io/kreuzberg-dev/liter-llm  # container image
+docker run ghcr.io/xberg-io/liter-llm  # container image
 ```
 
-A prebuilt binary is also attached to every [GitHub release](https://github.com/kreuzberg-dev/liter-llm/releases/latest).
+A prebuilt binary is also attached to every [GitHub release](https://github.com/xberg-io/liter-llm/releases/latest).
 
 ## Easiest: the liter-llm plugin
 
-To use the MCP server inside a coding agent (Claude Code, Cursor, Codex, Gemini CLI, Factory Droid, GitHub Copilot CLI), install the **liter-llm plugin** from the [`kreuzberg-dev/plugins`](https://github.com/kreuzberg-dev/plugins) marketplace. It auto-registers the `liter-llm` MCP server and resolves the binary for you on first run — no manual config:
+To use the MCP server inside a coding agent (Claude Code, Cursor, Codex, Gemini CLI, Factory Droid, GitHub Copilot CLI), install the **liter-llm plugin** from the [`xberg-io/plugins`](https://github.com/xberg-io/plugins) marketplace. It auto-registers the `liter-llm` MCP server and resolves the binary for you on first run — no manual config:
 
 ```text
-/plugin marketplace add kreuzberg-dev/plugins
+/plugin marketplace add xberg-io/plugins
 /plugin install liter-llm@kreuzberg
 ```
 

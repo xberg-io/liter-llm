@@ -57,7 +57,7 @@ HEADER_COMMENT = (
 )
 
 
-USER_AGENT = "liter-llm-pricing-generator/1.0 (+https://github.com/kreuzberg-dev/liter-llm)"
+USER_AGENT = "liter-llm-pricing-generator/1.0 (+https://github.com/xberg-io/liter-llm)"
 
 
 def fetch_catalog(url: str) -> dict[str, Any]:

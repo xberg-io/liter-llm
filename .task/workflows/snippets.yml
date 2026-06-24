@@ -11,7 +11,7 @@ tasks:
         status:
             - command -v alef
         cmds:
-            - cargo install --git https://github.com/kreuzberg-dev/alef --tag v{{.ALEF_VERSION}} alef-cli --locked --force
+            - cargo install --git https://github.com/xberg-io/alef --tag v{{.ALEF_VERSION}} alef-cli --locked --force
 
     list:
         desc: List all documentation snippets

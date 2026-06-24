@@ -57,7 +57,7 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(alef)'] }
 version = "1.8.2"
 edition = "2024"
 license = "MIT"
-repository = "https://github.com/kreuzberg-dev/liter-llm"
+repository = "https://github.com/xberg-io/liter-llm"
 homepage = "https://kreuzberg.dev"
 authors = ["Na'aman Hirschfeld <naaman@kreuzberg.dev>"]
 description = "Universal LLM API client — 143 providers, streaming, tool calling. Rust-powered with polyglot bindings."

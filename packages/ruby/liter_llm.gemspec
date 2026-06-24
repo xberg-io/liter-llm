@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Na'aman Hirschfeld"]
   spec.summary       = "Universal LLM API client with Rust-powered polyglot bindings."
   spec.description   = "Universal LLM API client with Rust-powered polyglot bindings."
-  spec.homepage      = "https://github.com/kreuzberg-dev/liter-llm"
+  spec.homepage      = "https://github.com/xberg-io/liter-llm"
 
   spec.license       = "MIT"
 

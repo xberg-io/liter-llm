@@ -7,7 +7,7 @@
 set -euo pipefail
 
 VERSION="1.8.2"
-TAP="kreuzberg-dev/homebrew-tap"
+TAP="xberg-io/homebrew-tap"
 CLI_FORMULA="liter-llm"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 

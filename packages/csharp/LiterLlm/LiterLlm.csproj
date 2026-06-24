@@ -9,7 +9,7 @@
     <InformationalVersion>1.8.2</InformationalVersion>
     <Description>Universal LLM API client with Rust-powered polyglot bindings.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <RepositoryUrl>https://github.com/kreuzberg-dev/liter-llm</RepositoryUrl>
+    <RepositoryUrl>https://github.com/xberg-io/liter-llm</RepositoryUrl>
     <Authors>Na&apos;aman Hirschfeld</Authors>
     <Company>Alef Team</Company>
     <Product>LiterLlm</Product>

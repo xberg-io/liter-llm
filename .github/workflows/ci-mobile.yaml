@@ -35,7 +35,7 @@ permissions:
 jobs:
     android-check:
         name: Android cargo check (${{ matrix.abi }})
-        if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
+        if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
         runs-on: ubuntu-latest
         timeout-minutes: 30
         strategy:
@@ -44,10 +44,10 @@ jobs:
                 abi: [arm64-v8a, x86_64]
         steps:
             - uses: actions/checkout@v6
-            - uses: kreuzberg-dev/actions/setup-rust@v1
+            - uses: xberg-io/actions/setup-rust@v1
               with:
                   cache-key-prefix: ci-mobile-android-${{ matrix.abi }}
-            - uses: kreuzberg-dev/actions/setup-android-ndk@v1
+            - uses: xberg-io/actions/setup-android-ndk@v1
             - name: cargo ndk check liter-llm-dart
               run: cargo ndk --target ${{ matrix.abi }} --platform 21 -- check -p liter-llm-dart
             - name: cargo ndk check liter-llm-ffi
@@ -55,7 +55,7 @@ jobs:
 
     ios-check:
         name: iOS cargo check (${{ matrix.target }})
-        if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
+        if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
         runs-on: macos-latest
         timeout-minutes: 30
         strategy:
@@ -64,7 +64,7 @@ jobs:
                 target: [aarch64-apple-ios, aarch64-apple-ios-sim]
         steps:
             - uses: actions/checkout@v6
-            - uses: kreuzberg-dev/actions/setup-rust@v1
+            - uses: xberg-io/actions/setup-rust@v1
               with:
                   target: ${{ matrix.target }}
                   cache-key-prefix: ci-mobile-ios-${{ matrix.target }}
@@ -75,20 +75,20 @@ jobs:
 
     xcframework-build:
         name: Build iOS XCFramework
-        if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
+        if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
         runs-on: macos-latest
         timeout-minutes: 45
         steps:
             - uses: actions/checkout@v6
-            - uses: kreuzberg-dev/actions/setup-rust@v1
-            - uses: kreuzberg-dev/actions/build-ios-xcframework@v1
+            - uses: xberg-io/actions/setup-rust@v1
+            - uses: xberg-io/actions/build-ios-xcframework@v1
               with:
                   crate-name: liter-llm-swift
                   build-profile: release
 
     kotlin-android-build:
         name: Build Kotlin Android (${{ matrix.abi }})
-        if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
+        if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
         runs-on: ubuntu-latest
         timeout-minutes: 30
         strategy:
@@ -97,10 +97,10 @@ jobs:
                 abi: [arm64-v8a, x86_64]
         steps:
             - uses: actions/checkout@v6
-            - uses: kreuzberg-dev/actions/setup-rust@v1
+            - uses: xberg-io/actions/setup-rust@v1
               with:
                   cache-key-prefix: ci-mobile-android-${{ matrix.abi }}
-            - uses: kreuzberg-dev/actions/setup-android-ndk@v1
+            - uses: xberg-io/actions/setup-android-ndk@v1
             - name: Build liter-llm-jni for ${{ matrix.abi }}
               run: cargo ndk --target ${{ matrix.abi }} --platform 21 -- build -p liter-llm-jni --release
             - name: Stage jniLibs

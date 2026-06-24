@@ -3,8 +3,8 @@ site_name = "liter-llm"
 site_description = "Universal LLM API client for 143 providers with polyglot bindings."
 site_url = "https://docs.liter-llm.kreuzberg.dev"
 site_author = "kreuzberg.dev"
-repo_name = "kreuzberg-dev/liter-llm"
-repo_url = "https://github.com/kreuzberg-dev/liter-llm"
+repo_name = "xberg-io/liter-llm"
+repo_url = "https://github.com/xberg-io/liter-llm"
 edit_uri = "edit/main/docs/"
 copyright = "Copyright &copy; 2024-2026 Kreuzberg.dev"
 extra_css = ["css/extra.css"]
@@ -200,7 +200,7 @@ repo.forks = true
 
 [[project.extra.social]]
 icon = "fontawesome/brands/github"
-link = "https://github.com/kreuzberg-dev/liter-llm"
+link = "https://github.com/xberg-io/liter-llm"
 name = "View on GitHub"
 
 [[project.extra.social]]
@@ -210,7 +210,7 @@ name = "View on PyPI"
 
 [[project.extra.social]]
 icon = "fontawesome/brands/docker"
-link = "https://github.com/kreuzberg-dev/liter-llm/pkgs/container/liter-llm"
+link = "https://github.com/xberg-io/liter-llm/pkgs/container/liter-llm"
 name = "View on GitHub Container Registry"
 
 [[project.extra.social]]

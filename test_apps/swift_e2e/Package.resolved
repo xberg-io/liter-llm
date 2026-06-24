@@ -4,7 +4,7 @@
     {
       "identity" : "liter-llm",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/kreuzberg-dev/liter-llm.git",
+      "location" : "https://github.com/xberg-io/liter-llm.git",
       "state" : {
         "revision" : "a5f95db561c8129020e0837031cc6f7126a1167a",
         "version" : "1.8.1"

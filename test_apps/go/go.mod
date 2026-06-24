@@ -1,8 +1,8 @@
-module github.com/kreuzberg-dev/liter-llm/packages/go/e2e
+module github.com/xberg-io/liter-llm/packages/go/e2e
 
 go 1.26
 
 require (
-	github.com/kreuzberg-dev/liter-llm/packages/go v1.8.2
+	github.com/xberg-io/liter-llm/packages/go v1.8.2
 	github.com/stretchr/testify v1.11.1
 )

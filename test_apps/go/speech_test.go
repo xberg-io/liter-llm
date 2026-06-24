@@ -11,7 +11,7 @@ import (
 	"os"
 	"testing"
 
-	pkg "github.com/kreuzberg-dev/liter-llm/packages/go"
+	pkg "github.com/xberg-io/liter-llm/packages/go"
 )
 
 func Test_EdgeSpeechAllVoices(t *testing.T) {

@@ -22,7 +22,7 @@ formula="${tap_dir}/Formula/liter-llm.rb"
   exit 1
 }
 
-tarball_url="https://github.com/kreuzberg-dev/liter-llm/archive/${tag}.tar.gz"
+tarball_url="https://github.com/xberg-io/liter-llm/archive/${tag}.tar.gz"
 
 echo "Updating Homebrew formula for liter-llm ${version} (tag ${tag})"
 

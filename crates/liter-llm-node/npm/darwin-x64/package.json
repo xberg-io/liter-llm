@@ -4,7 +4,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kreuzberg-dev/liter-llm.git"
+    "url": "git+https://github.com/xberg-io/liter-llm.git"
   },
   "files": [
     "liter-llm-node.darwin-x64.node"

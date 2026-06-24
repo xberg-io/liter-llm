@@ -31,7 +31,7 @@ ENV RUST_LOG=info
 
 EXPOSE 4000
 
-LABEL org.opencontainers.image.source="https://github.com/kreuzberg-dev/liter-llm"
+LABEL org.opencontainers.image.source="https://github.com/xberg-io/liter-llm"
 LABEL org.opencontainers.image.description="LiterLLM — OpenAI-compatible LLM proxy and MCP server with 142+ providers"
 LABEL org.opencontainers.image.licenses="MIT"
 

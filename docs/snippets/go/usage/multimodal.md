@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 
-	ll "github.com/kreuzberg-dev/liter-llm/packages/go"
+	ll "github.com/xberg-io/liter-llm/packages/go"
 )
 
 func main() {

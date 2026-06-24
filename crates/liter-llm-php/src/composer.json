@@ -1,5 +1,5 @@
 {
-  "name": "kreuzberg-dev/liter-llm",
+  "name": "xberg-io/liter-llm",
   "description": "Universal LLM API client with Rust-powered polyglot bindings.",
   "license": "MIT",
   "type": "php-ext",
@@ -34,7 +34,7 @@
   "extra": {
     "pie": {
       "binary": {
-        "url-template": "https://github.com/kreuzberg-dev/liter-llm/releases/download/{Version}/php_liter_llm-{Version}_php{PhpVersion}-{Arch}-{OSLower}-{Libc}-{TSMode}.tgz"
+        "url-template": "https://github.com/xberg-io/liter-llm/releases/download/{Version}/php_liter_llm-{Version}_php{PhpVersion}-{Arch}-{OSLower}-{Libc}-{TSMode}.tgz"
       }
     }
   }

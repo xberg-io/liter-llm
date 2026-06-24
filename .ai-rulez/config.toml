@@ -25,19 +25,19 @@ builtins = [
 
 [[includes]]
 name = "kreuzberg-core"
-source = "https://github.com/kreuzberg-dev/ai-rulez"
+source = "https://github.com/xberg-io/ai-rulez"
 path = "modules/core"
 merge_strategy = "local-override"
 
 [[includes]]
 name = "kreuzberg-cicd"
-source = "https://github.com/kreuzberg-dev/ai-rulez"
+source = "https://github.com/xberg-io/ai-rulez"
 path = "modules/cicd"
 merge_strategy = "local-override"
 
 [[installed_skills]]
 name = "alef"
-source = "https://github.com/kreuzberg-dev/alef.git"
+source = "https://github.com/xberg-io/alef.git"
 
 [[mcp_servers]]
 name = "ai-rulez"

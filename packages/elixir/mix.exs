@@ -27,7 +27,7 @@ defmodule LiterLlm.MixProject do
   defp package do
     [
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/kreuzberg-dev/liter-llm"},
+      links: %{"GitHub" => "https://github.com/xberg-io/liter-llm"},
       files:
         ~w(lib .formatter.exs mix.exs README* checksum-*.exs native/liter_llm_nif/Cargo.toml native/liter_llm_nif/Cargo.lock native/liter_llm_nif/src)
     ]

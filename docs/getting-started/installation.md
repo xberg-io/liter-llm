@@ -15,8 +15,8 @@ The CLI runs the proxy server and the MCP tool server. You don't need it if you 
 === "Homebrew"
 
     ```bash
-    brew trust kreuzberg-dev/tap
-    brew install kreuzberg-dev/tap/liter-llm
+    brew trust xberg-io/tap
+    brew install xberg-io/tap/liter-llm
     ```
 
 === "Cargo"
@@ -28,10 +28,10 @@ The CLI runs the proxy server and the MCP tool server. You don't need it if you 
 === "Docker"
 
     ```bash
-    docker pull ghcr.io/kreuzberg-dev/liter-llm:latest
+    docker pull ghcr.io/xberg-io/liter-llm:latest
     docker run -p 4000:4000 \
       -e LITER_LLM_MASTER_KEY=sk-your-key \
-      ghcr.io/kreuzberg-dev/liter-llm
+      ghcr.io/xberg-io/liter-llm
     ```
 
 Start the proxy:
@@ -94,7 +94,7 @@ liter-llm mcp --transport stdio
     Requires Go 1.26+.
 
     ```bash
-    go get github.com/kreuzberg-dev/liter-llm/packages/go
+    go get github.com/xberg-io/liter-llm/packages/go
     ```
 
 === "Java"
@@ -152,7 +152,7 @@ liter-llm mcp --transport stdio
     Requires PHP 8.2+.
 
     ```bash
-    composer require kreuzberg-dev/liter-llm
+    composer require xberg-io/liter-llm
     ```
 
 === "Elixir"
@@ -184,7 +184,7 @@ liter-llm mcp --transport stdio
     ```swift
     .binaryTarget(
         name: "LiterLlm",
-        url: "https://github.com/kreuzberg-dev/liter-llm/releases/download/v1.7.5/LiterLlm-rs.artifactbundle.zip",
+        url: "https://github.com/xberg-io/liter-llm/releases/download/v1.7.5/LiterLlm-rs.artifactbundle.zip",
         checksum: "<CHECKSUM-FROM-RELEASE-NOTES>"
     )
     ```
@@ -194,7 +194,7 @@ liter-llm mcp --transport stdio
     Requires Zig 0.16+.
 
     ```bash
-    zig fetch --save https://github.com/kreuzberg-dev/liter-llm/archive/refs/tags/v1.7.5.tar.gz
+    zig fetch --save https://github.com/xberg-io/liter-llm/archive/refs/tags/v1.7.5.tar.gz
     ```
 
 === "WebAssembly"
@@ -208,7 +208,7 @@ liter-llm mcp --transport stdio
     Build the shared library and C header from source:
 
     ```bash
-    git clone https://github.com/kreuzberg-dev/liter-llm.git
+    git clone https://github.com/xberg-io/liter-llm.git
     cd liter-llm
     cargo build --release -p liter-llm-ffi
     ```
@@ -300,7 +300,7 @@ If a prebuilt binary is not available for your platform, build from source with 
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-git clone https://github.com/kreuzberg-dev/liter-llm.git
+git clone https://github.com/xberg-io/liter-llm.git
 cd liter-llm
 task build
 ```

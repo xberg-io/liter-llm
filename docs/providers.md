@@ -195,4 +195,4 @@ response = await client.chat("custom/my-model",
 
 ## Provider Registry
 
-The full provider registry with base URLs, auth configuration, and model mappings is available at [schemas/providers.json](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json).
+The full provider registry with base URLs, auth configuration, and model mappings is available at [schemas/providers.json](https://github.com/xberg-io/liter-llm/blob/main/schemas/providers.json).

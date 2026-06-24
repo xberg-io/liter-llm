@@ -34,7 +34,7 @@ We credit [litellm](https://github.com/BerriAI/litellm) for proving the category
 | **Local LLM support** | Ollama, LM Studio, vLLM, llama.cpp, LocalAI, and llamafile via OpenAI-compatible APIs |
 
 <div align="center">
-  <a href="https://github.com/kreuzberg-dev/liter-llm/stargazers">
+  <a href="https://github.com/xberg-io/liter-llm/stargazers">
     <img src="docs/assets/star.gif" alt="Star liter-llm on GitHub" width="640">
   </a>
 </div>
@@ -82,7 +82,7 @@ See [Rust crate](crates/liter-llm) for full documentation.
 <summary><strong>Go</strong></summary>
 
 ```sh
-go get github.com/kreuzberg-dev/liter-llm/packages/go
+go get github.com/xberg-io/liter-llm/packages/go
 ```
 
 See [Go README](packages/go/README.md) for full documentation.
@@ -111,7 +111,7 @@ See [Ruby README](packages/ruby/README.md) for full documentation.
 <summary><strong>PHP</strong></summary>
 
 ```sh
-composer require kreuzberg-dev/liter-llm
+composer require xberg-io/liter-llm
 ```
 
 See [PHP README](packages/php/README.md) for full documentation.
@@ -192,10 +192,10 @@ Build from source as part of this workspace. See [FFI crate](crates/liter-llm-ff
 The `liter-llm` CLI ships both the OpenAI-compatible proxy and the MCP tool server. Install it any of these ways:
 
 ```sh
-brew install kreuzberg-dev/tap/liter-llm
+brew install xberg-io/tap/liter-llm
 cargo install liter-llm-cli                 # from crates.io
 npx @kreuzberg/liter-llm-cli --help         # npm (self-installs the binary)
-docker run -p 4000:4000 -e LITER_LLM_MASTER_KEY=sk-your-key ghcr.io/kreuzberg-dev/liter-llm
+docker run -p 4000:4000 -e LITER_LLM_MASTER_KEY=sk-your-key ghcr.io/xberg-io/liter-llm
 ```
 
 Then run the proxy or the MCP server:
@@ -212,13 +212,13 @@ See the [MCP server guide](https://docs.liter-llm.kreuzberg.dev/server/mcp-serve
 
 ### AI Coding Assistants
 
-Install the liter-llm plugin from the [`kreuzberg-dev/plugins`](https://github.com/kreuzberg-dev/plugins) marketplace. It ships the liter-llm agent skills (chat, streaming, tools, embeddings across 143 providers) and works with every major coding agent — expand your harness below.
+Install the liter-llm plugin from the [`xberg-io/plugins`](https://github.com/xberg-io/plugins) marketplace. It ships the liter-llm agent skills (chat, streaming, tools, embeddings across 143 providers) and works with every major coding agent — expand your harness below.
 
 <details open>
 <summary><strong>Claude Code</strong></summary>
 
 ```text
-/plugin marketplace add kreuzberg-dev/plugins
+/plugin marketplace add xberg-io/plugins
 /plugin install liter-llm@kreuzberg
 ```
 
@@ -228,7 +228,7 @@ Install the liter-llm plugin from the [`kreuzberg-dev/plugins`](https://github.c
 <summary><strong>Codex CLI</strong></summary>
 
 ```text
-/plugins add https://github.com/kreuzberg-dev/plugins
+/plugins add https://github.com/xberg-io/plugins
 ```
 
 Then search for `liter-llm` and select **Install Plugin**.
@@ -238,7 +238,7 @@ Then search for `liter-llm` and select **Install Plugin**.
 <details>
 <summary><strong>Cursor</strong></summary>
 
-Settings → Plugins → Add from URL → `https://github.com/kreuzberg-dev/plugins`, then select **liter-llm**.
+Settings → Plugins → Add from URL → `https://github.com/xberg-io/plugins`, then select **liter-llm**.
 
 </details>
 
@@ -246,7 +246,7 @@ Settings → Plugins → Add from URL → `https://github.com/kreuzberg-dev/plug
 <summary><strong>Gemini CLI</strong></summary>
 
 ```text
-gemini extensions install https://github.com/kreuzberg-dev/plugins
+gemini extensions install https://github.com/xberg-io/plugins
 ```
 
 </details>
@@ -255,7 +255,7 @@ gemini extensions install https://github.com/kreuzberg-dev/plugins
 <summary><strong>Factory Droid</strong></summary>
 
 ```text
-droid plugin marketplace add https://github.com/kreuzberg-dev/plugins
+droid plugin marketplace add https://github.com/xberg-io/plugins
 droid plugin install liter-llm@kreuzberg
 ```
 
@@ -265,7 +265,7 @@ droid plugin install liter-llm@kreuzberg
 <summary><strong>GitHub Copilot CLI</strong></summary>
 
 ```text
-copilot plugin marketplace add https://github.com/kreuzberg-dev/plugins
+copilot plugin marketplace add https://github.com/xberg-io/plugins
 copilot plugin install liter-llm@kreuzberg
 ```
 
@@ -274,7 +274,7 @@ copilot plugin install liter-llm@kreuzberg
 <details>
 <summary><strong>opencode</strong></summary>
 
-Not yet published as an opencode package. Install via any harness above (self-hosted marketplace); opencode support is tracked in [`kreuzberg-dev/plugins`](https://github.com/kreuzberg-dev/plugins).
+Not yet published as an opencode package. Install via any harness above (self-hosted marketplace); opencode support is tracked in [`xberg-io/plugins`](https://github.com/xberg-io/plugins).
 
 </details>
 
@@ -290,13 +290,13 @@ Join our [Discord community](https://discord.gg/xt9WY3GnKR) for questions and di
 
 ## Part of Kreuzberg.dev
 
-- [Kreuzberg](https://github.com/kreuzberg-dev/kreuzberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
-- [Kreuzberg Cloud](https://github.com/kreuzberg-dev/kreuzberg-cloud) — managed extraction API with SDKs, dashboards, and observability.
-- [kreuzcrawl](https://github.com/kreuzberg-dev/kreuzcrawl) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
-- [html-to-markdown](https://github.com/kreuzberg-dev/html-to-markdown) — fast, lossless HTML→Markdown engine.
-- [liter-llm](https://github.com/kreuzberg-dev/liter-llm) — universal LLM API client with native bindings for 14 languages and 143 providers.
-- [tree-sitter-language-pack](https://github.com/kreuzberg-dev/tree-sitter-language-pack) — tree-sitter grammars and code-intelligence primitives.
-- [alef](https://github.com/kreuzberg-dev/alef) — the polyglot binding generator that produces every per-language binding across the 5 polyglot repos.
+- [Kreuzberg](https://github.com/xberg-io/kreuzberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Kreuzberg Cloud](https://github.com/xberg-io/kreuzberg-cloud) — managed extraction API with SDKs, dashboards, and observability.
+- [kreuzcrawl](https://github.com/xberg-io/kreuzcrawl) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
+- [html-to-markdown](https://github.com/xberg-io/html-to-markdown) — fast, lossless HTML→Markdown engine.
+- [liter-llm](https://github.com/xberg-io/liter-llm) — universal LLM API client with native bindings for 14 languages and 143 providers.
+- [tree-sitter-language-pack](https://github.com/xberg-io/tree-sitter-language-pack) — tree-sitter grammars and code-intelligence primitives.
+- [alef](https://github.com/xberg-io/alef) — the polyglot binding generator that produces every per-language binding across the 5 polyglot repos.
 
 ## License
 

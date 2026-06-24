@@ -244,7 +244,7 @@ task c:e2e:test        # Run C E2E tests
 
 ## E2E Tests
 
-E2E tests are generated from JSON fixtures in `fixtures/` using [Alef](https://github.com/kreuzberg-dev/alef) and produce runnable test suites for each language binding.
+E2E tests are generated from JSON fixtures in `fixtures/` using [Alef](https://github.com/xberg-io/alef) and produce runnable test suites for each language binding.
 
 ```bash
 # Generate E2E tests for all languages
@@ -337,7 +337,7 @@ If models.dev is missing a model liter-llm needs to price, add the entry to `OVE
 
 ## Questions?
 
-- Check existing [issues](https://github.com/kreuzberg-dev/liter-llm/issues)
+- Check existing [issues](https://github.com/xberg-io/liter-llm/issues)
 - Join our [Discord community](https://discord.gg/xt9WY3GnKR)
 
 Thank you for contributing to liter-llm!

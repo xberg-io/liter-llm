@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	llm "github.com/kreuzberg-dev/liter-llm/packages/go"
+	llm "github.com/xberg-io/liter-llm/packages/go"
 )
 
 func main() {

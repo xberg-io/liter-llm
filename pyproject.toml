@@ -21,10 +21,10 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Typing :: Typed",
 ]
-urls.documentation = "https://github.com/kreuzberg-dev/liter-llm#readme"
-urls.homepage = "https://github.com/kreuzberg-dev/liter-llm"
-urls.issues = "https://github.com/kreuzberg-dev/liter-llm/issues"
-urls.repository = "https://github.com/kreuzberg-dev/liter-llm"
+urls.documentation = "https://github.com/xberg-io/liter-llm#readme"
+urls.homepage = "https://github.com/xberg-io/liter-llm"
+urls.issues = "https://github.com/xberg-io/liter-llm/issues"
+urls.repository = "https://github.com/xberg-io/liter-llm"
 
 [dependency-groups]
 dev = [

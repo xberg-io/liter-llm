@@ -22,7 +22,7 @@ languages = [
 enabled = false
 
 [workspace.generated_header]
-issues_url = "https://github.com/kreuzberg-dev/liter-llm/issues"
+issues_url = "https://github.com/xberg-io/liter-llm/issues"
 
 [workspace.sync]
 extra_paths = [
@@ -35,7 +35,7 @@ extra_paths = [
 [workspace.citation]
 title = "liter-llm"
 abstract = "Universal LLM API client with native bindings for 14 languages and 143 providers."
-repository-code = "https://github.com/kreuzberg-dev/liter-llm"
+repository-code = "https://github.com/xberg-io/liter-llm"
 url = "https://kreuzberg.dev"
 license = "MIT"
 date-released = "2026-05-17"
@@ -120,7 +120,7 @@ exclude_types = ["CacheBackend", "CacheConfig"]
 output = "packages/ruby/sig/"
 
 [crates.php]
-composer_package = "kreuzberg-dev/liter-llm"
+composer_package = "xberg-io/liter-llm"
 # ext-php-rs's `#[php_impl]` macro can't resolve `Self::ensure_crypto_provider`
 # in the generated registration site on Windows targets when the inner body
 # is a free-fn call (`liter_llm::ensure_crypto_provider()`). Other bindings
@@ -180,7 +180,7 @@ lib_name = "liter_llm_ffi"
 extra_features = ["wasm-http"]
 
 [crates.go]
-module = "github.com/kreuzberg-dev/liter-llm/packages/go"
+module = "github.com/xberg-io/liter-llm/packages/go"
 package_name = "literllm"
 
 [crates.java]
@@ -1936,7 +1936,7 @@ path = "../../packages/kotlin-android"
 
 [crates.e2e.registry]
 output = "test_apps"
-github_repo = "https://github.com/kreuzberg-dev/liter-llm"
+github_repo = "https://github.com/xberg-io/liter-llm"
 
 [crates.e2e.registry.packages.python]
 name = "liter-llm"
@@ -1951,7 +1951,7 @@ name = "@kreuzberg/liter-llm-wasm"
 name = "liter_llm"
 
 [crates.e2e.registry.packages.go]
-module = "github.com/kreuzberg-dev/liter-llm/packages/go"
+module = "github.com/xberg-io/liter-llm/packages/go"
 
 [crates.e2e.registry.packages.java]
 name = "dev.kreuzberg.literllm:liter-llm"
@@ -1960,7 +1960,7 @@ name = "dev.kreuzberg.literllm:liter-llm"
 name = "LiterLlm"
 
 [crates.e2e.registry.packages.php]
-name = "kreuzberg-dev/liter-llm"
+name = "xberg-io/liter-llm"
 
 [crates.e2e.registry.packages.kotlin_android]
 name = "dev.kreuzberg:liter-llm-android"
@@ -1981,7 +1981,7 @@ name = "LiterLlm"
 hash = "liter_llm-1.8.2-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
 
 [crates.e2e.registry.packages.homebrew]
-tap = "kreuzberg-dev/homebrew-tap"
+tap = "xberg-io/homebrew-tap"
 cli_formula = "liter-llm"
 # No ffi_formula — the liter-llm tap publishes only the CLI bottle. With
 # ffi_formula unset, alef's homebrew generator skips Brewfile/FFI sections
@@ -2032,13 +2032,13 @@ replace = 'Include="LiterLlm" Version="{version}"'
 
 [[workspace.sync.text_replacements]]
 path = "test_apps/php/composer.json"
-search = '"kreuzberg-dev/liter-llm": "[^"]*"'
-replace = '"kreuzberg-dev/liter-llm": "{version}"'
+search = '"xberg-io/liter-llm": "[^"]*"'
+replace = '"xberg-io/liter-llm": "{version}"'
 
 [[workspace.sync.text_replacements]]
 path = "test_apps/go/go.mod"
-search = 'github\.com/kreuzberg-dev/liter-llm/packages/go v[0-9][^\s]*'
-replace = "github.com/kreuzberg-dev/liter-llm/packages/go v{version}"
+search = 'github\.com/xberg-io/liter-llm/packages/go v[0-9][^\s]*'
+replace = "github.com/xberg-io/liter-llm/packages/go v{version}"
 
 [[workspace.sync.text_replacements]]
 path = "test_apps/rust/Cargo.toml"
@@ -2047,13 +2047,13 @@ replace = 'package = "liter-llm", version = "{version}"'
 
 [[workspace.sync.text_replacements]]
 path = "test_apps/swift_e2e/Package.swift"
-search = '\.package\(url: "https://github\.com/kreuzberg-dev/liter-llm\.git", from: "[^"]*"\)'
-replace = '.package(url: "https://github.com/kreuzberg-dev/liter-llm.git", from: "{version}")'
+search = '\.package\(url: "https://github\.com/xberg-io/liter-llm\.git", from: "[^"]*"\)'
+replace = '.package(url: "https://github.com/xberg-io/liter-llm.git", from: "{version}")'
 
 [crates.scaffold]
 description = "Universal LLM API client with Rust-powered polyglot bindings."
 license = "MIT"
-repository = "https://github.com/kreuzberg-dev/liter-llm"
+repository = "https://github.com/xberg-io/liter-llm"
 authors = ["Na'aman Hirschfeld"]
 keywords = ["llm", "api-client", "openai", "anthropic"]
 
@@ -2077,7 +2077,7 @@ language = "typescript"
 name = "TypeScript (Node.js)"
 package_name = "@kreuzberg/liter-llm"
 badge_url = "https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=TypeScript&color=007ec6"
-docs_url = "https://github.com/kreuzberg-dev/liter-llm"
+docs_url = "https://github.com/xberg-io/liter-llm"
 description = "Universal LLM API client for TypeScript and Node.js. Access 143 LLM providers through a single interface with native NAPI-RS bindings, async/await, streaming, tool calling, and full TypeScript type definitions."
 package_manager = ["npm", "pnpm", "yarn"]
 optional_sections = ["async_support", "streaming_support", "tool_calling"]
@@ -2127,7 +2127,7 @@ template = "language_package.md"
 name = "Python"
 package_name = "liter-llm"
 badge_url = "https://img.shields.io/pypi/v/liter-llm?label=Python&color=007ec6"
-docs_url = "https://github.com/kreuzberg-dev/liter-llm"
+docs_url = "https://github.com/xberg-io/liter-llm"
 description = "Universal LLM API client for Python. Access 143 LLM providers through a single unified interface. Native async/await support, streaming responses, tool calling, and type-safe API."
 package_manager = ["pip"]
 optional_sections = ["async_support", "streaming_support", "tool_calling"]
@@ -2153,7 +2153,7 @@ output_path = "crates/liter-llm-node/README.md"
 name = "TypeScript (Node.js)"
 package_name = "@kreuzberg/liter-llm"
 badge_url = "https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=TypeScript&color=007ec6"
-docs_url = "https://github.com/kreuzberg-dev/liter-llm"
+docs_url = "https://github.com/xberg-io/liter-llm"
 description = "Universal LLM API client for TypeScript and Node.js. Access 143 LLM providers through a single interface with native NAPI-RS bindings, async/await, streaming, tool calling, and full TypeScript type definitions."
 package_manager = ["npm", "pnpm", "yarn"]
 optional_sections = ["async_support", "streaming_support", "tool_calling"]
@@ -2177,9 +2177,9 @@ tool_calling = "getting-started/tool_calling.md"
 template = "go.md"
 output_path = "packages/go/README.md"
 name = "Go"
-package_name = "github.com/kreuzberg-dev/liter-llm/packages/go"
-badge_url = "https://img.shields.io/github/v/tag/kreuzberg-dev/liter-llm?label=Go&color=007ec6"
-docs_url = "https://github.com/kreuzberg-dev/liter-llm"
+package_name = "github.com/xberg-io/liter-llm/packages/go"
+badge_url = "https://img.shields.io/github/v/tag/xberg-io/liter-llm?label=Go&color=007ec6"
+docs_url = "https://github.com/xberg-io/liter-llm"
 description = "Universal LLM API client for Go. Access 143 LLM providers through a single interface with idiomatic Go API, context-aware async support, and CGO-based native performance."
 package_manager = ["go get"]
 optional_sections = ["ffi_build_instructions"]
@@ -2203,7 +2203,7 @@ template = "language_package.md"
 name = "Java"
 package_name = "dev.kreuzberg.literllm:liter-llm"
 badge_url = "https://img.shields.io/maven-central/v/dev.kreuzberg.literllm/liter-llm?label=Java&color=007ec6"
-docs_url = "https://github.com/kreuzberg-dev/liter-llm"
+docs_url = "https://github.com/xberg-io/liter-llm"
 description = "Universal LLM API client for Java. Access 143 LLM providers through a single type-safe interface with Foreign Function & Memory API integration, async support, and native performance."
 package_manager = ["maven", "gradle"]
 optional_sections = ["maven_gradle_setup", "async_support"]
@@ -2225,9 +2225,9 @@ streaming = "getting-started/streaming.md"
 [crates.readme.languages.php]
 template = "language_package.md"
 name = "PHP"
-package_name = "kreuzberg-dev/liter-llm"
-badge_url = "https://img.shields.io/packagist/v/kreuzberg-dev/liter-llm?label=PHP&color=007ec6"
-docs_url = "https://github.com/kreuzberg-dev/liter-llm"
+package_name = "xberg-io/liter-llm"
+badge_url = "https://img.shields.io/packagist/v/xberg-io/liter-llm?label=PHP&color=007ec6"
+docs_url = "https://github.com/xberg-io/liter-llm"
 description = "Universal LLM API client for PHP. Access 143 LLM providers through a single interface with modern PHP 8.2+ support and a type-safe API."
 package_manager = ["composer"]
 
@@ -2247,7 +2247,7 @@ template = "language_package.md"
 name = "Ruby"
 package_name = "liter_llm"
 badge_url = "https://img.shields.io/gem/v/liter_llm?label=Ruby&color=007ec6"
-docs_url = "https://github.com/kreuzberg-dev/liter-llm"
+docs_url = "https://github.com/xberg-io/liter-llm"
 description = "Universal LLM API client for Ruby. Access 143 LLM providers through a single interface with idiomatic Ruby API and native performance."
 package_manager = ["rubygems", "bundler"]
 optional_sections = ["async_support", "streaming_support"]
@@ -2271,7 +2271,7 @@ template = "language_package.md"
 name = "C#"
 package_name = "LiterLlm"
 badge_url = "https://img.shields.io/nuget/v/LiterLlm?label=C%23&color=007ec6"
-docs_url = "https://github.com/kreuzberg-dev/liter-llm"
+docs_url = "https://github.com/xberg-io/liter-llm"
 description = "Universal LLM API client for .NET. Access 143 LLM providers through a single type-safe interface with full async/await support and .NET 8.0+ compatibility."
 package_manager = ["nuget"]
 optional_sections = ["async_support", "streaming_support"]
@@ -2295,7 +2295,7 @@ template = "language_package.md"
 name = "Elixir"
 package_name = "liter_llm"
 badge_url = "https://img.shields.io/hexpm/v/liter_llm?label=Elixir&color=007ec6"
-docs_url = "https://github.com/kreuzberg-dev/liter-llm"
+docs_url = "https://github.com/xberg-io/liter-llm"
 description = "Universal LLM API client for Elixir. Access 143 LLM providers through a single interface with native BEAM concurrency, OTP integration, and idiomatic Elixir API."
 package_manager = ["mix"]
 optional_sections = ["async_support", "streaming_support"]
@@ -2320,7 +2320,7 @@ output_path = "crates/liter-llm-wasm/README.md"
 name = "WebAssembly"
 package_name = "@kreuzberg/liter-llm-wasm"
 badge_url = "https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6"
-docs_url = "https://github.com/kreuzberg-dev/liter-llm"
+docs_url = "https://github.com/xberg-io/liter-llm"
 description = "Universal LLM API client for browsers and WebAssembly runtimes. Access 143 LLM providers with portable deployment across browsers, Deno, and Cloudflare Workers."
 package_manager = ["npm", "pnpm", "yarn"]
 optional_sections = ["async_support", "streaming_support"]
@@ -2370,7 +2370,7 @@ name = "Swift"
 package_name = "LiterLlm"
 package_manager = ["swift_package_manager"]
 install_command = """
-.package(url: \"https://github.com/kreuzberg-dev/liter-llm.git\", from: \"{{ version }}\")"""
+.package(url: \"https://github.com/xberg-io/liter-llm.git\", from: \"{{ version }}\")"""
 description = """
 Universal LLM API client for Swift. Access 143 LLM providers through a single Swift Concurrency-native interface (async/await, AsyncSequence streaming) with Codable request/response types.
 """
@@ -2416,7 +2416,7 @@ name = "Zig"
 package_name = "liter_llm"
 package_manager = ["zig"]
 install_command = """
-zig fetch --save https://github.com/kreuzberg-dev/liter-llm/archive/refs/tags/v{{ version }}.tar.gz"""
+zig fetch --save https://github.com/xberg-io/liter-llm/archive/refs/tags/v{{ version }}.tar.gz"""
 description = """
 Universal LLM API client for Zig. Access 143 LLM providers through Zig's allocator-aware sync API with explicit error sets — no hidden allocations, no exceptions, deterministic resource lifetimes.
 """

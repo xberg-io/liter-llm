@@ -27,5 +27,5 @@ Define and invoke tools:
 
 ### Next Steps
 
-- **[Provider Registry](https://github.com/kreuzberg-dev/liter-llm/blob/main/schemas/providers.json)** - Full list of supported providers
-- **[GitHub Repository](https://github.com/kreuzberg-dev/liter-llm)** - Source, issues, and discussions
+- **[Provider Registry](https://github.com/xberg-io/liter-llm/blob/main/schemas/providers.json)** - Full list of supported providers
+- **[GitHub Repository](https://github.com/xberg-io/liter-llm)** - Source, issues, and discussions

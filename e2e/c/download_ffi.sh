@@ -5,7 +5,7 @@
 # To verify freshness: alef verify --exit-code
 set -euo pipefail
 
-REPO_URL="https://github.com/kreuzberg-dev/liter-llm"
+REPO_URL="https://github.com/xberg-io/liter-llm"
 VERSION="1.8.2"
 FFI_PKG_NAME="liter_llm_ffi"
 FFI_DIR="ffi"

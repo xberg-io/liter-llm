@@ -11,7 +11,7 @@
 
     <name>liter-llm</name>
     <description>Universal LLM API client with Rust-powered polyglot bindings.</description>
-    <url>https://github.com/kreuzberg-dev/liter-llm</url>
+    <url>https://github.com/xberg-io/liter-llm</url>
 
     <licenses>
         <license>
@@ -27,9 +27,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/kreuzberg-dev/liter-llm.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/kreuzberg-dev/liter-llm.git</developerConnection>
-        <url>https://github.com/kreuzberg-dev/liter-llm</url>
+        <connection>scm:git:git://github.com/xberg-io/liter-llm.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/xberg-io/liter-llm.git</developerConnection>
+        <url>https://github.com/xberg-io/liter-llm</url>
     </scm>
 
     <properties>

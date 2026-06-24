@@ -13,17 +13,17 @@ model name prefixes (e.g. "openai/gpt-4o" routes to OpenAI).
 
 Part of the kreuzberg.dev ecosystem:
 - **kreuzberg.dev** — Organization: https://kreuzberg.dev
-- **Kreuzberg** — Document intelligence for 91+ formats: https://github.com/kreuzberg-dev/kreuzberg
+- **Kreuzberg** — Document intelligence for 91+ formats: https://github.com/xberg-io/kreuzberg
   - Kreuzberg docs: https://docs.kreuzberg.dev
-- **html-to-markdown** — HTML to Markdown converter: https://github.com/kreuzberg-dev/html-to-markdown
-- **tree-sitter-language-pack** — Multi-language parsing: https://github.com/kreuzberg-dev/tree-sitter-language-pack
-- **liter-llm** — Universal LLM API client (this project): https://github.com/kreuzberg-dev/liter-llm
+- **html-to-markdown** — HTML to Markdown converter: https://github.com/xberg-io/html-to-markdown
+- **tree-sitter-language-pack** — Multi-language parsing: https://github.com/xberg-io/tree-sitter-language-pack
+- **liter-llm** — Universal LLM API client (this project): https://github.com/xberg-io/liter-llm
 
 ## Links
 
 - Website: https://kreuzberg.dev
 - Documentation: https://docs.liter-llm.kreuzberg.dev
-- GitHub: https://github.com/kreuzberg-dev/liter-llm
+- GitHub: https://github.com/xberg-io/liter-llm
 - Discord: https://discord.gg/xt9WY3GnKR
 - Contact: naaman@kreuzberg.dev
 
@@ -104,33 +104,33 @@ Part of the kreuzberg.dev ecosystem:
 | Rust | crates.io/crates/liter-llm | `cargo add liter-llm` |
 | Python | pypi.org/project/liter-llm | `pip install liter-llm` |
 | TypeScript/Node.js | npmjs.com/package/@kreuzberg/liter-llm | `pnpm add @kreuzberg/liter-llm` |
-| Go | github.com/kreuzberg-dev/liter-llm/packages/go | `go get github.com/kreuzberg-dev/liter-llm/packages/go` |
+| Go | github.com/xberg-io/liter-llm/packages/go | `go get github.com/xberg-io/liter-llm/packages/go` |
 | Java | dev.kreuzberg.literllm:liter-llm (Maven) | `implementation("dev.kreuzberg.literllm:liter-llm:1.7.5")` |
 | C# / .NET | NuGet: LiterLlm | `dotnet add package LiterLlm` |
 | Ruby | RubyGems: liter_llm | `gem install liter_llm` |
 | Elixir | Hex: liter_llm | `{:liter_llm, "~> 1.7"}` in mix.exs |
-| PHP | Packagist: kreuzberg-dev/liter-llm | `composer require kreuzberg-dev/liter-llm` |
+| PHP | Packagist: xberg-io/liter-llm | `composer require xberg-io/liter-llm` |
 | WebAssembly | npmjs.com/package/@kreuzberg/liter-llm-wasm | `pnpm add @kreuzberg/liter-llm-wasm` |
 | C / FFI | Build from source | `cargo build --release -p liter-llm-ffi` |
 
 ## CLI Installation
 
 Homebrew:
-  brew trust kreuzberg-dev/tap
-  brew install kreuzberg-dev/tap/liter-llm
+  brew trust xberg-io/tap
+  brew install xberg-io/tap/liter-llm
 
 Cargo:
   cargo install liter-llm-cli
 
 Docker:
-  docker pull ghcr.io/kreuzberg-dev/liter-llm
+  docker pull ghcr.io/xberg-io/liter-llm
 
 ## Proxy Server
 
 OpenAI-compatible API gateway with 22 endpoints. Drop-in replacement for litellm proxy.
 
 Docker quickstart (35MB Chainguard image):
-  docker run -p 4000:4000 -e LITER_LLM_MASTER_KEY=sk-key ghcr.io/kreuzberg-dev/liter-llm
+  docker run -p 4000:4000 -e LITER_LLM_MASTER_KEY=sk-key ghcr.io/xberg-io/liter-llm
 
 CLI:
   liter-llm api --config liter-llm-proxy.toml
@@ -268,7 +268,7 @@ import (
 	"fmt"
 	"os"
 
-	llm "github.com/kreuzberg-dev/liter-llm/packages/go"
+	llm "github.com/xberg-io/liter-llm/packages/go"
 )
 
 func main() {

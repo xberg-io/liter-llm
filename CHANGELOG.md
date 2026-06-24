@@ -64,7 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Packagist: publish under the canonical `kreuzberg-dev/liter-llm` vendor** (matching html-to-markdown, kreuzcrawl, tree-sitter-language-pack) instead of the legacy `kreuzberg/liter-llm`. Fixes the registry-check coordinate and the `publish-packagist` step (`packagist-username`, `package-name`) in `publish.yaml`, plus the stale reference in `llms.txt`. The Maven registry-check coordinate is corrected to `dev.kreuzberg.literllm:liter-llm`.
+- **Packagist: publish under the canonical `xberg-io/liter-llm` vendor** (matching html-to-markdown, kreuzcrawl, tree-sitter-language-pack) instead of the legacy `kreuzberg/liter-llm`. Fixes the registry-check coordinate and the `publish-packagist` step (`packagist-username`, `package-name`) in `publish.yaml`, plus the stale reference in `llms.txt`. The Maven registry-check coordinate is corrected to `dev.kreuzberg.literllm:liter-llm`.
 - **CI/release: `@kreuzberg/liter-llm-cli` now publishes on the main release** at the release version (previously decoupled on a separate `cli-proxy-v*` tag), gated behind the CLI-binary upload so the npm wrapper never ships ahead of the binaries it downloads.
 - **CI/release: disable sccache for release build jobs** so a transient sccache cache/DNS failure can no longer block a publish run (`publish.yaml`).
 - **docs: refresh stale install snippets** — Java/Kotlin/Swift/Zig version pins, the Java Maven coordinate, and the Elixir version range in `docs/getting-started/installation.md`, `docs/index.md`, and `llms.txt`.
@@ -162,7 +162,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **`to_singleflight_error` dead-code lint** — gated `LiterLlmError::to_singleflight_error` with `#[cfg(feature = "tower")]` so the method is not emitted when `cargo publish --verify` builds with default features (`default = ["native-http"]`). The method's only call sites live in `src/tower/cache_singleflight.rs`, which is itself feature-gated. Under `-D warnings` the dead-code lint rejected the build, blocking `Publish crates.io` and every per-platform `Build CLI binary`, `Build WASM`, and `Build Kotlin Android natives` job in the v1.6.0 and v1.6.1 release workflows. No artifacts reached PyPI, crates.io, npm, RubyGems, Maven Central, Packagist, Hex, NuGet, pub.dev, or the Homebrew tap from those tags.
-- **Release-runner `protoc` toolchain dep** — `kreuzberg-dev/actions/setup-rust@v1.8.70` now installs `protobuf-compiler` on every Linux/macOS/Windows runner. `etcd-client v0.15`'s `build.rs` shells out to `protoc`; `liter-llm-cli` pulls `etcd-client` transitively through `liter-llm-proxy`, so the v1.6.1 CLI binary builds panicked with `Failed to compile proto files: Could not find protoc`. v1.6.2's publish workflow consumes the floating `v1` tag which now carries the fix.
+- **Release-runner `protoc` toolchain dep** — `xberg-io/actions/setup-rust@v1.8.70` now installs `protobuf-compiler` on every Linux/macOS/Windows runner. `etcd-client v0.15`'s `build.rs` shells out to `protoc`; `liter-llm-cli` pulls `etcd-client` transitively through `liter-llm-proxy`, so the v1.6.1 CLI binary builds panicked with `Failed to compile proto files: Could not find protoc`. v1.6.2's publish workflow consumes the floating `v1` tag which now carries the fix.
 
 ## [1.6.1] - 2026-06-16
 
@@ -371,7 +371,7 @@ External security audit identified six exploitable gaps in the v1.4.1 codebase. 
 
 ### Tooling
 
-- **`kreuzberg-dev/pre-commit-hooks` bumped to v2.1.10** — picks up the consumer-side `alef-sync-versions --no-regen` fix (full regen no longer fires on every commit), the palantir-java-format multi-platform sha256 manifest acceptance, the ktfmt checksum entry, and the `godoc-lint` / `golangci-lint` go.work-aware module discovery (no longer scans stale `test_apps/swift_e2e/.build/checkouts/.../e2e/go/`).
+- **`xberg-io/pre-commit-hooks` bumped to v2.1.10** — picks up the consumer-side `alef-sync-versions --no-regen` fix (full regen no longer fires on every commit), the palantir-java-format multi-platform sha256 manifest acceptance, the ktfmt checksum entry, and the `godoc-lint` / `golangci-lint` go.work-aware module discovery (no longer scans stale `test_apps/swift_e2e/.build/checkouts/.../e2e/go/`).
 - **Project-local PMD ruleset** at `packages/java/pmd-ruleset.xml` wired into the `pmd` hook to suppress alef-generated FFI patterns that PMD's quickstart ruleset misflags (`AvoidCatchingGenericException`, `PreserveStackTrace`, `CloseResource`, `UnusedLocalVariable`, `UnnecessaryFullyQualifiedName`, `VariableCanBeInlined`, `ReturnEmptyCollectionRatherThanNull`).
 - **`deny.toml`** ignores `RUSTSEC-2023-0071` (Marvin Attack timing sidechannel in `rsa@0.9.x`, transitive via `opendal -> reqsign-core`). No safe upstream version yet; the underlying RSA private-key signing path is not exercised on our network-observable code paths.
 - **`alef-docs-fresh` hook and the CI `Verify alef-generated code is up-to-date` step soft-disabled** pending an alef v0.23.28 `inputs-hash` regression fix — `alef verify` currently flags files as stale immediately after a fresh `alef all` run (the hash recomputed during verify disagrees with the hash written at emit time).
@@ -395,7 +395,7 @@ Virtual-key holders who previously hit MCP tools without a model-access policy n
 
 - **Docker build**: removed stale `COPY tools/ tools/` from `docker/Dockerfile` — the `tools/` directory was deleted in v1.3.0 and the unfixed copy was failing every Docker image build since.
 - **`publish-crates` job timeout**: bumped `.github/workflows/publish.yaml` `publish-crates` `timeout-minutes` from 30 to 60. The 30-minute ceiling was cancelling mid-publish on busy `crates.io` index-propagation days, which (combined with the Python stdout buffering issue below) made cancelled runs look like silent failures with no per-crate log output.
-- **Upstream `kreuzberg-dev/actions` to v1.8.29**: `publish-crates/scripts/publish.py` now line-buffers stdout/stderr (`sys.stdout.reconfigure(line_buffering=True)`), so per-crate "Publishing X (n/total)..." progress survives job cancellation. Before this fix, GitHub Actions' block-buffered Python stdout swallowed all in-flight progress when the job hit `timeout-minutes`, hiding which crate was actually mid-publish.
+- **Upstream `xberg-io/actions` to v1.8.29**: `publish-crates/scripts/publish.py` now line-buffers stdout/stderr (`sys.stdout.reconfigure(line_buffering=True)`), so per-crate "Publishing X (n/total)..." progress survives job cancellation. Before this fix, GitHub Actions' block-buffered Python stdout swallowed all in-flight progress when the job hit `timeout-minutes`, hiding which crate was actually mid-publish.
 
 ### Notes
 
@@ -412,15 +412,15 @@ Virtual-key holders who previously hit MCP tools without a model-access policy n
 - CLI binary tarballs (Linux x86_64/aarch64, macOS aarch64, Windows x86_64) attached to GitHub Releases for direct download — closes #64.
 - `schemas/pricing.json` regenerated from [models.dev](https://models.dev) and now covers 4,219 models (up from 35); `scripts/generate_pricing.py` wired into `task generate:pricing`, `task update`, and `task upgrade`. Closes #48.
 - `Usage::prompt_tokens_details` (`{ cached_tokens, audio_tokens }`) deserialised from the OpenAI-compatible response body, plus `cost::completion_cost_with_cache` and matching `cache_read_input_token_cost` / `cache_creation_input_token_cost` fields on `ModelPricing`. `ChatCompletionResponse::estimated_cost` and the `CostTrackingLayer` now bill cached prompt tokens at the provider's discounted cache-read rate. `schemas/pricing.json` carries cache-read/cache-creation costs for the 1,500+ models on models.dev that publish them. Closes #65.
-- `ci-mobile`: new `.github/workflows/ci-mobile.yaml` running `android-check` (ubuntu, `arm64-v8a` + `x86_64` via `cargo ndk`), `ios-check` (macos, `aarch64-apple-ios` + `aarch64-apple-ios-sim`), and `xcframework-build` (macos, SPM-ready XCFramework + SHA256 checksum). Uses shared composite actions from `kreuzberg-dev/actions@v1`.
-- **Alef migration to v0.23.11**: the entire polyglot surface (16 language bindings — Python, Node, Ruby, PHP, Go, Java, C#, Kotlin Android, Elixir, WASM, C/FFI, Zig, Dart, Swift, Homebrew + Rust core) is regenerated end-to-end via [alef](https://github.com/kreuzberg-dev/alef). Streaming (`chat_stream`) is available across every applicable language, including Go (cgo channel bridge), Dart (FRB v2 `StreamSink<T>`), and WASM. Skipped-assertion total across e2e suites: 354 → 0.
+- `ci-mobile`: new `.github/workflows/ci-mobile.yaml` running `android-check` (ubuntu, `arm64-v8a` + `x86_64` via `cargo ndk`), `ios-check` (macos, `aarch64-apple-ios` + `aarch64-apple-ios-sim`), and `xcframework-build` (macos, SPM-ready XCFramework + SHA256 checksum). Uses shared composite actions from `xberg-io/actions@v1`.
+- **Alef migration to v0.23.11**: the entire polyglot surface (16 language bindings — Python, Node, Ruby, PHP, Go, Java, C#, Kotlin Android, Elixir, WASM, C/FFI, Zig, Dart, Swift, Homebrew + Rust core) is regenerated end-to-end via [alef](https://github.com/xberg-io/alef). Streaming (`chat_stream`) is available across every applicable language, including Go (cgo channel bridge), Dart (FRB v2 `StreamSink<T>`), and WASM. Skipped-assertion total across e2e suites: 354 → 0.
 
 ### Changed
 
 - **API rename**: `ResponseClient::retrieve_response` / `cancel_response` now take a parameter named `response_id` (was `id`). Positional callers are unaffected; named-arg callers must update. Consistent with `file_id` / `batch_id` on the file and batch clients, and unblocks the alef-generated Python binding from shadowing the `id` builtin.
 - **GitHub Release CLI assets** ship a single sorted `SHA256SUMS-<version>.txt` instead of one `.sha256` per archive — closes #67.
 - **WebAssembly build verified `mio`-free.** `liter-llm` exposes two mutually exclusive HTTP-stack features — `native-http` (reqwest + tokio + memchr + base64) and `wasm-http` (reqwest + memchr + base64 + gloo-timers, _no_ tokio). `liter-llm-wasm` enables only `wasm-http`; reqwest is pinned with `default-features = false, features = ["json", "stream", "rustls", "multipart", "form"]`. `cargo build --target wasm32-unknown-unknown -p liter-llm-wasm` pulls neither `mio` nor `tokio` — reqwest auto-routes to the browser/Node `fetch` API on `wasm32` targets.
-- **Ruby publish** vendors core crates exclusively via the shared `kreuzberg-dev/actions/rewrite-native-deps@v1` action (alef `publish prepare`, `vendor_mode = "core-only"`). The bespoke `scripts/ci/ruby/vendor-liter-llm-core.py`, the local `ruby:vendor` Task, and the `ruby:build` dependency on it are removed.
+- **Ruby publish** vendors core crates exclusively via the shared `xberg-io/actions/rewrite-native-deps@v1` action (alef `publish prepare`, `vendor_mode = "core-only"`). The bespoke `scripts/ci/ruby/vendor-liter-llm-core.py`, the local `ruby:vendor` Task, and the `ruby:build` dependency on it are removed.
 - **Repo hygiene**: `.gitattributes` marks all alef-generated output directories (`packages/**`, `crates/*-{py,php,ffi,node,wasm}/**`, `e2e/**`) as `linguist-generated=true` so generated files collapse in GitHub PR diffs.
 
 ### Fixed
@@ -437,7 +437,7 @@ Virtual-key holders who previously hit MCP tools without a model-access policy n
 
 ### Changed
 
-- **Alef migration**: All language bindings are now auto-generated by [alef](https://github.com/kreuzberg-dev/alef) instead of hand-written
+- **Alef migration**: All language bindings are now auto-generated by [alef](https://github.com/xberg-io/alef) instead of hand-written
 - `BoxFuture`/`BoxStream` type aliases no longer wrap `Result<T>` — all method signatures now explicitly return `Result<T>`
 - `provider` module is now public (was `pub(crate)`)
 - `ChatCompletionRequest.stream` field is now public (was `pub(crate)`)
@@ -479,7 +479,7 @@ Virtual-key holders who previously hit MCP tools without a model-access policy n
 
 ### Added
 
-- GitHub Copilot OAuth Device Flow credential provider (`copilot-auth` feature) — use your Copilot subscription as an LLM backend via `github_copilot/` model prefix ([#12](https://github.com/kreuzberg-dev/liter-llm/issues/12))
+- GitHub Copilot OAuth Device Flow credential provider (`copilot-auth` feature) — use your Copilot subscription as an LLM backend via `github_copilot/` model prefix ([#12](https://github.com/xberg-io/liter-llm/issues/12))
 - GitHub Copilot provider with OpenAI-compatible routing, required Copilot headers, per-request UUID, and `X-Initiator` header
 - E2E test fixtures for GitHub Copilot provider (chat + auth error)
 
@@ -496,13 +496,13 @@ Virtual-key holders who previously hit MCP tools without a model-access policy n
 
 ### Added
 
-- `LlmClientRaw` trait with `_raw` variants of all `LlmClient` methods, returning `RawExchange<T>` that exposes the final request body and raw provider response before normalization ([#13](https://github.com/kreuzberg-dev/liter-llm/issues/13))
+- `LlmClientRaw` trait with `_raw` variants of all `LlmClient` methods, returning `RawExchange<T>` that exposes the final request body and raw provider response before normalization ([#13](https://github.com/xberg-io/liter-llm/issues/13))
 - `RawExchange<T>` and `RawStreamExchange<S>` types for wire-level debugging and custom parsing
-- MCP & IDE integration documentation with setup guides for VS Code, GitHub Copilot, Claude Desktop, Cursor ([#12](https://github.com/kreuzberg-dev/liter-llm/issues/12))
+- MCP & IDE integration documentation with setup guides for VS Code, GitHub Copilot, Claude Desktop, Cursor ([#12](https://github.com/xberg-io/liter-llm/issues/12))
 
 ### Fixed
 
-- Docker image now published to `ghcr.io/kreuzberg-dev/liter-llm` ([#11](https://github.com/kreuzberg-dev/liter-llm/issues/11))
+- Docker image now published to `ghcr.io/xberg-io/liter-llm` ([#11](https://github.com/xberg-io/liter-llm/issues/11))
 - Docker publish workflow timeout increased from 60 to 360 minutes (multi-arch Rust builds via QEMU were timing out)
 - Bedrock `build_url` tests no longer flake due to `BEDROCK_CROSS_REGION` env var race condition
 
@@ -535,7 +535,7 @@ Virtual-key holders who previously hit MCP tools without a model-access policy n
 
 ### Added
 
-- Homebrew formula: `brew tap kreuzberg-dev/tap && brew install liter-llm`
+- Homebrew formula: `brew tap xberg-io/tap && brew install liter-llm`
 - Homebrew bottle builds (arm64_sequoia) in publish workflow
 - `liter-llm-proxy` and `liter-llm-cli` added to crates.io publish pipeline
 - Installation docs: CLI/Docker/Homebrew tabs
@@ -586,7 +586,7 @@ OpenAI-compatible LLM proxy server with CLI, MCP tool server, and Docker support
 ### CI/CD
 
 - `.github/workflows/ci-docker.yaml` — build + health test + schemathesis contract tests
-- `.github/workflows/publish-docker.yaml` — multi-arch (amd64/arm64) publish to `ghcr.io/kreuzberg-dev/liter-llm`
+- `.github/workflows/publish-docker.yaml` — multi-arch (amd64/arm64) publish to `ghcr.io/xberg-io/liter-llm`
 - Taskfile: `proxy:test`, `proxy:schemathesis`
 
 ## [1.0.0] - 2026-03-28
@@ -701,11 +701,11 @@ All bindings expose the full API surface with language-idiomatic conventions:
 
 </details>
 
-[1.4.0]: https://github.com/kreuzberg-dev/liter-llm/compare/v1.3.0...v1.4.0
-[1.3.0]: https://github.com/kreuzberg-dev/liter-llm/compare/v1.2.2...v1.3.0
-[1.2.2]: https://github.com/kreuzberg-dev/liter-llm/compare/v1.2.1...v1.2.2
-[1.2.1]: https://github.com/kreuzberg-dev/liter-llm/compare/v1.2.0...v1.2.1
-[1.2.0]: https://github.com/kreuzberg-dev/liter-llm/compare/v1.1.1...v1.2.0
-[1.1.1]: https://github.com/kreuzberg-dev/liter-llm/compare/v1.1.0...v1.1.1
-[1.1.0]: https://github.com/kreuzberg-dev/liter-llm/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/kreuzberg-dev/liter-llm/releases/tag/v1.0.0
+[1.4.0]: https://github.com/xberg-io/liter-llm/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/xberg-io/liter-llm/compare/v1.2.2...v1.3.0
+[1.2.2]: https://github.com/xberg-io/liter-llm/compare/v1.2.1...v1.2.2
+[1.2.1]: https://github.com/xberg-io/liter-llm/compare/v1.2.0...v1.2.1
+[1.2.0]: https://github.com/xberg-io/liter-llm/compare/v1.1.1...v1.2.0
+[1.1.1]: https://github.com/xberg-io/liter-llm/compare/v1.1.0...v1.1.1
+[1.1.0]: https://github.com/xberg-io/liter-llm/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/xberg-io/liter-llm/releases/tag/v1.0.0

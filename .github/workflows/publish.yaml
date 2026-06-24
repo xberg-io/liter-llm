@@ -99,7 +99,7 @@ jobs:
 
             - name: Retag for republish
               if: ${{ inputs.republish == true || github.event.client_payload.republish == true }}
-              uses: kreuzberg-dev/actions/retag-for-republish@v1
+              uses: xberg-io/actions/retag-for-republish@v1
               with:
                   tag: ${{ inputs.tag || github.event.client_payload.tag }}
               env:
@@ -107,7 +107,7 @@ jobs:
 
             - name: Extract release metadata
               id: meta
-              uses: kreuzberg-dev/actions/prepare-release-metadata@v1
+              uses: xberg-io/actions/prepare-release-metadata@v1
               with:
                   available-targets: "crates,python,node,wasm,ruby,go,java,elixir,csharp,php,homebrew,kotlin,dart,zig,swift"
 
@@ -118,7 +118,7 @@ jobs:
             # fail with "release not found". Mirrors html-to-markdown's publish.
             - name: Ensure GitHub Release exists for tag
               if: ${{ steps.meta.outputs.is_tag == 'true' && steps.meta.outputs.dry_run != 'true' }}
-              uses: kreuzberg-dev/actions/publish-github-release@v1
+              uses: xberg-io/actions/publish-github-release@v1
               with:
                   tag: ${{ steps.meta.outputs.tag }}
                   draft: "true"
@@ -139,7 +139,7 @@ jobs:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
 
             - name: Check version consistency
-              uses: kreuzberg-dev/actions/validate-versions@v1
+              uses: xberg-io/actions/validate-versions@v1
               with:
                   version: ${{ needs.prepare.outputs.version }}
                   manifest-paths: |
@@ -158,7 +158,7 @@ jobs:
     check-registries:
         name: Check registries
         needs: [prepare]
-        uses: kreuzberg-dev/actions/.github/workflows/reusable-check-registries.yml@main
+        uses: xberg-io/actions/.github/workflows/reusable-check-registries.yml@main
         with:
             version: ${{ needs.prepare.outputs.version }}
             registries: >-
@@ -170,9 +170,9 @@ jobs:
                   {"name": "rubygems", "registry": "rubygems", "package": "liter_llm"},
                   {"name": "maven", "registry": "maven", "package": "dev.kreuzberg.literllm:liter-llm"},
                   {"name": "hex", "registry": "hex", "package": "liter_llm"},
-                  {"name": "packagist", "registry": "packagist", "package": "kreuzberg-dev/liter-llm"},
+                  {"name": "packagist", "registry": "packagist", "package": "xberg-io/liter-llm"},
                   {"name": "nuget", "registry": "nuget", "package": "LiterLlm"},
-                  {"name": "go", "registry": "github-release", "package": "liter-llm", "repo": "kreuzberg-dev/liter-llm", "asset-prefix": "liter-llm-go-v"}
+                  {"name": "go", "registry": "github-release", "package": "liter-llm", "repo": "xberg-io/liter-llm", "asset-prefix": "liter-llm-go-v"}
                 ]
 
     registry-results:
@@ -228,7 +228,7 @@ jobs:
             exists: ${{ steps.check.outputs.exists }}
         steps:
             - id: check
-              uses: kreuzberg-dev/actions/check-registry@v1
+              uses: xberg-io/actions/check-registry@v1
               with:
                   registry: pub
                   package: liter_llm
@@ -263,7 +263,7 @@ jobs:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
 
             - name: Setup Rust
-              uses: kreuzberg-dev/actions/setup-rust@v1
+              uses: xberg-io/actions/setup-rust@v1
               with:
                   cache-key-prefix: dart-native-${{ matrix.label }}
                   use-sccache: false
@@ -341,7 +341,7 @@ jobs:
               # zig path only verifies the release tag exists. On a real release that's
               # always true, so it short-circuits `publish-zig` to skipped. Verify
               # the actual asset is present instead.
-              uses: kreuzberg-dev/actions/check-registry@v1
+              uses: xberg-io/actions/check-registry@v1
               with:
                   registry: github-release
                   package: liter-llm-zig-v${{ needs.prepare.outputs.version }}.tar.gz
@@ -379,7 +379,7 @@ jobs:
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
-            - uses: kreuzberg-dev/actions/build-python-wheels@v1
+            - uses: xberg-io/actions/build-python-wheels@v1
               with:
                   package-dir: packages/python
                   # abi3-py310 is enabled in pyo3 features → one wheel per platform covers 3.10+.
@@ -405,13 +405,13 @@ jobs:
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
-            - uses: kreuzberg-dev/actions/setup-rust@v1
+            - uses: xberg-io/actions/setup-rust@v1
               with:
                   use-sccache: false
             - uses: actions/setup-python@v6
               with:
                   python-version: "3.14"
-            - uses: kreuzberg-dev/actions/build-python-sdist@v1
+            - uses: xberg-io/actions/build-python-sdist@v1
               with:
                   package-dir: packages/python
                   output-dir: dist
@@ -460,7 +460,7 @@ jobs:
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
-            - uses: kreuzberg-dev/actions/setup-rust@v1
+            - uses: xberg-io/actions/setup-rust@v1
               with:
                   target: ${{ matrix.napi_target }}
                   use-sccache: false
@@ -493,7 +493,7 @@ jobs:
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
-            - uses: kreuzberg-dev/actions/setup-rust@v1
+            - uses: xberg-io/actions/setup-rust@v1
               with:
                   target: wasm32-unknown-unknown
                   use-sccache: false
@@ -561,7 +561,7 @@ jobs:
                   fetch-depth: 0
 
             - name: Setup Rust
-              uses: kreuzberg-dev/actions/setup-rust@v1
+              uses: xberg-io/actions/setup-rust@v1
               with:
                   cache-key-prefix: publish-ruby-${{ matrix.label }}
                   use-sccache: false
@@ -578,11 +578,11 @@ jobs:
               run: (gem install bundler -v 4.0.0 --no-document || gem install bundler --no-document) && bundler --version
 
             - name: Install Task
-              uses: kreuzberg-dev/actions/install-task@v1
+              uses: xberg-io/actions/install-task@v1
 
             - name: Rewrite native dependencies to registry versions
               if: needs.prepare.outputs.dry_run != 'true'
-              uses: kreuzberg-dev/actions/rewrite-native-deps@v1
+              uses: xberg-io/actions/rewrite-native-deps@v1
               with:
                   lang: ruby
 
@@ -674,13 +674,13 @@ jobs:
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
-            - uses: kreuzberg-dev/actions/setup-rust@v1
+            - uses: xberg-io/actions/setup-rust@v1
               with:
                   target: ${{ matrix.target }}
                   use-sccache: false
             - name: Rewrite native dependencies to registry versions
               if: needs.prepare.outputs.dry_run != 'true'
-              uses: kreuzberg-dev/actions/rewrite-native-deps@v1
+              uses: xberg-io/actions/rewrite-native-deps@v1
               with:
                   lang: elixir
             - name: Build Rustler NIF
@@ -781,22 +781,22 @@ jobs:
               shell: bash
 
             - name: Setup PHP
-              uses: kreuzberg-dev/actions/setup-php@v1
+              uses: xberg-io/actions/setup-php@v1
               with:
                   php-version: ${{ matrix.php }}
 
             - name: Setup Rust
-              uses: kreuzberg-dev/actions/setup-rust@v1
+              uses: xberg-io/actions/setup-rust@v1
               with:
                   cache-key-prefix: publish-php-${{ matrix.platform.label }}-php${{ matrix.php }}
                   toolchain: stable
                   use-sccache: false
 
             - name: Install alef
-              uses: kreuzberg-dev/actions/install-alef@v1
+              uses: xberg-io/actions/install-alef@v1
 
             - name: Build PHP extension
-              uses: kreuzberg-dev/actions/build-php-extension@v1
+              uses: xberg-io/actions/build-php-extension@v1
               with:
                   crate-name: liter-llm-php
                   lib-name: liter_llm_php
@@ -819,7 +819,7 @@ jobs:
                   "compiler=$compiler" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
             - name: Package PIE archive
-              uses: kreuzberg-dev/actions/package-php-pie@v1
+              uses: xberg-io/actions/package-php-pie@v1
               with:
                   php-version: ${{ matrix.php }}
                   php-ts: nts
@@ -884,12 +884,12 @@ jobs:
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
             - name: Setup Rust
-              uses: kreuzberg-dev/actions/setup-rust@v1
+              uses: xberg-io/actions/setup-rust@v1
               with:
                   target: ${{ matrix.target }}
                   use-sccache: false
             - name: Install alef
-              uses: kreuzberg-dev/actions/install-alef@v1
+              uses: xberg-io/actions/install-alef@v1
             - name: Build FFI
               shell: bash
               run: alef publish build --lang ffi --target ${{ matrix.target }}
@@ -1004,7 +1004,7 @@ jobs:
                   distribution: temurin
                   cache: maven
             - name: Setup Maven 3.9.11
-              uses: kreuzberg-dev/actions/setup-maven@v1
+              uses: xberg-io/actions/setup-maven@v1
             - name: Build Maven package
               run: mvn clean package -DskipTests -q
               working-directory: packages/java
@@ -1072,11 +1072,11 @@ jobs:
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
-            - uses: kreuzberg-dev/actions/setup-rust@v1
+            - uses: xberg-io/actions/setup-rust@v1
               with:
                   cache-key-prefix: publish-android-${{ matrix.abi }}
                   use-sccache: false
-            - uses: kreuzberg-dev/actions/setup-android-ndk@v1
+            - uses: xberg-io/actions/setup-android-ndk@v1
             - name: Build liter-llm-jni for ${{ matrix.abi }}
               run: cargo ndk --target ${{ matrix.abi }} --platform 21 -- build -p liter-llm-jni --release
             - name: Stage jniLibs
@@ -1146,7 +1146,7 @@ jobs:
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
             - name: Ensure GitHub release exists
-              uses: kreuzberg-dev/actions/publish-github-release@v1
+              uses: xberg-io/actions/publish-github-release@v1
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
                   draft: "true"
@@ -1158,7 +1158,7 @@ jobs:
                   path: c-ffi-release
                   merge-multiple: true
             - name: Upload to GitHub Release
-              uses: kreuzberg-dev/actions/upload-release-assets@v1
+              uses: xberg-io/actions/upload-release-assets@v1
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
                   assets: c-ffi-release/*.tar.gz
@@ -1187,7 +1187,7 @@ jobs:
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
             - name: Ensure GitHub release exists
-              uses: kreuzberg-dev/actions/publish-github-release@v1
+              uses: xberg-io/actions/publish-github-release@v1
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
                   draft: "true"
@@ -1199,7 +1199,7 @@ jobs:
                   path: go-ffi-release
                   merge-multiple: true
             - name: Upload to GitHub Release
-              uses: kreuzberg-dev/actions/upload-release-assets@v1
+              uses: xberg-io/actions/upload-release-assets@v1
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
                   assets: go-ffi-release/*.tar.gz
@@ -1207,7 +1207,7 @@ jobs:
                   token: ${{ steps.app-token.outputs.token }}
 
     # Commit the prebuilt shared libraries into packages/go/.lib/<platform>/ so
-    # that `go get github.com/kreuzberg-dev/liter-llm/packages/go@v{version}` ships
+    # that `go get github.com/xberg-io/liter-llm/packages/go@v{version}` ships
     # a self-contained cgo module.  cgo LDFLAGS use Go arch names (amd64/arm64) for
     # directories; alef release tarballs use its own names (x86_64/aarch64).
     # The mapping table below bridges the two naming conventions.
@@ -1332,7 +1332,7 @@ jobs:
                   fi
                   HEAD_SHA=$(git rev-parse HEAD)
                   # Create the packages/go/{tag} module tag on the new commit.
-                  # The Go module proxy resolves github.com/kreuzberg-dev/liter-llm/packages/go@v{version}
+                  # The Go module proxy resolves github.com/xberg-io/liter-llm/packages/go@v{version}
                   # from this tag, which now includes the prebuilt .lib/ shared libraries.
                   MODULE_TAG="packages/go/${TAG}"
                   # Use git CLI for tag creation. `gh api git/refs` returns 403
@@ -1368,7 +1368,7 @@ jobs:
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
             - name: Ensure GitHub release exists
-              uses: kreuzberg-dev/actions/publish-github-release@v1
+              uses: xberg-io/actions/publish-github-release@v1
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
                   draft: "true"
@@ -1380,7 +1380,7 @@ jobs:
                   path: elixir-nifs
                   merge-multiple: true
             - name: Upload to GitHub Release
-              uses: kreuzberg-dev/actions/upload-release-assets@v1
+              uses: xberg-io/actions/upload-release-assets@v1
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
                   assets: elixir-nifs/*.tar.gz
@@ -1404,7 +1404,7 @@ jobs:
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
             - name: Ensure GitHub release exists
-              uses: kreuzberg-dev/actions/publish-github-release@v1
+              uses: xberg-io/actions/publish-github-release@v1
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
                   draft: "true"
@@ -1416,7 +1416,7 @@ jobs:
                   path: dist/php-package
                   merge-multiple: true
             - name: Upload PHP PIE packages
-              uses: kreuzberg-dev/actions/upload-release-assets@v1
+              uses: xberg-io/actions/upload-release-assets@v1
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
                   assets: |
@@ -1445,7 +1445,7 @@ jobs:
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
             - name: Ensure GitHub release exists
-              uses: kreuzberg-dev/actions/publish-github-release@v1
+              uses: xberg-io/actions/publish-github-release@v1
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
                   draft: "true"
@@ -1457,7 +1457,7 @@ jobs:
                   path: kotlin-android-aars
                   merge-multiple: true
             - name: Upload aar bundles
-              uses: kreuzberg-dev/actions/upload-release-assets@v1
+              uses: xberg-io/actions/upload-release-assets@v1
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
                   assets: kotlin-android-aars/*.aar
@@ -1486,10 +1486,10 @@ jobs:
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
-            - uses: kreuzberg-dev/actions/setup-rust@v1
+            - uses: xberg-io/actions/setup-rust@v1
               with:
                   use-sccache: false
-            - uses: kreuzberg-dev/actions/publish-crates@v1
+            - uses: xberg-io/actions/publish-crates@v1
               with:
                   crates: liter-llm liter-llm-ffi liter-llm-proxy liter-llm-cli
                   version: ${{ needs.prepare.outputs.version }}
@@ -1515,7 +1515,7 @@ jobs:
             url: https://pypi.org/p/liter-llm
         steps:
             - name: Re-check PyPI before publishing
-              uses: kreuzberg-dev/actions/check-registry@v1
+              uses: xberg-io/actions/check-registry@v1
               id: recheck
               with:
                   registry: pypi
@@ -1536,7 +1536,7 @@ jobs:
               shell: bash
             - name: Publish to PyPI
               if: needs.prepare.outputs.dry_run != 'true' && (steps.recheck.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true')
-              uses: kreuzberg-dev/actions/publish-pypi@v1
+              uses: xberg-io/actions/publish-pypi@v1
               with:
                   packages-dir: dist/
                   dry-run: ${{ needs.prepare.outputs.dry_run }}
@@ -1624,7 +1624,7 @@ jobs:
 
             - name: Re-check npm before publish
               id: recheck
-              uses: kreuzberg-dev/actions/check-registry@v1
+              uses: xberg-io/actions/check-registry@v1
               with:
                   registry: npm
                   package: "@kreuzberg/liter-llm"
@@ -1632,7 +1632,7 @@ jobs:
 
             - name: Publish native binary packages
               if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck.outputs.exists != 'true' }}
-              uses: kreuzberg-dev/actions/publish-npm@v1
+              uses: xberg-io/actions/publish-npm@v1
               with:
                   packages-dir: crates/liter-llm-node/npm
                   npm-tag: ${{ needs.prepare.outputs.npm_tag }}
@@ -1640,7 +1640,7 @@ jobs:
 
             - name: Wait for npm indexing (x64)
               if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck.outputs.exists != 'true' }}
-              uses: kreuzberg-dev/actions/wait-for-package@v1
+              uses: xberg-io/actions/wait-for-package@v1
               with:
                   registry: npm
                   package: "@kreuzberg/liter-llm-linux-x64-gnu"
@@ -1649,7 +1649,7 @@ jobs:
 
             - name: Wait for npm indexing (ARM64)
               if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck.outputs.exists != 'true' }}
-              uses: kreuzberg-dev/actions/wait-for-package@v1
+              uses: xberg-io/actions/wait-for-package@v1
               with:
                   registry: npm
                   package: "@kreuzberg/liter-llm-linux-arm64-gnu"
@@ -1658,7 +1658,7 @@ jobs:
 
             - name: Publish main Node package
               if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck.outputs.exists != 'true' }}
-              uses: kreuzberg-dev/actions/publish-npm@v1
+              uses: xberg-io/actions/publish-npm@v1
               with:
                   package-dir: crates/liter-llm-node
                   npm-tag: ${{ needs.prepare.outputs.npm_tag }}
@@ -1667,7 +1667,7 @@ jobs:
 
             - name: Wait for @kreuzberg/liter-llm to be available
               if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck.outputs.exists != 'true' }}
-              uses: kreuzberg-dev/actions/wait-for-package@v1
+              uses: xberg-io/actions/wait-for-package@v1
               with:
                   registry: npm
                   package: "@kreuzberg/liter-llm"
@@ -1682,7 +1682,7 @@ jobs:
             # shared @kreuzberg/liter-llm-<rid> platform packages.
             - name: Re-check npm for the @kreuzberg/liter-llm-node alias
               id: recheck-node
-              uses: kreuzberg-dev/actions/check-registry@v1
+              uses: xberg-io/actions/check-registry@v1
               with:
                   registry: npm
                   package: "@kreuzberg/liter-llm-node"
@@ -1695,7 +1695,7 @@ jobs:
 
             - name: Publish @kreuzberg/liter-llm-node alias
               if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck-node.outputs.exists != 'true' }}
-              uses: kreuzberg-dev/actions/publish-npm@v1
+              uses: xberg-io/actions/publish-npm@v1
               with:
                   package-dir: crates/liter-llm-node
                   npm-tag: ${{ needs.prepare.outputs.npm_tag }}
@@ -1735,7 +1735,7 @@ jobs:
 
             - name: Check if version already published to npm
               id: npm_check
-              uses: kreuzberg-dev/actions/check-registry@v1
+              uses: xberg-io/actions/check-registry@v1
               with:
                   registry: npm
                   package: "@kreuzberg/liter-llm-wasm"
@@ -1747,7 +1747,7 @@ jobs:
 
             - name: Publish to npm
               if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.npm_check.outputs.exists != 'true' }}
-              uses: kreuzberg-dev/actions/publish-npm@v1
+              uses: xberg-io/actions/publish-npm@v1
               with:
                   package-dir: dist
                   npm-tag: ${{ needs.prepare.outputs.npm_tag }}
@@ -1756,7 +1756,7 @@ jobs:
 
             - name: Wait for npm indexing
               if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.npm_check.outputs.exists != 'true' }}
-              uses: kreuzberg-dev/actions/wait-for-package@v1
+              uses: xberg-io/actions/wait-for-package@v1
               with:
                   registry: npm
                   package: "@kreuzberg/liter-llm-wasm"
@@ -1820,7 +1820,7 @@ jobs:
 
             - name: Rewrite native dependencies to registry versions
               if: needs.prepare.outputs.dry_run != 'true'
-              uses: kreuzberg-dev/actions/rewrite-native-deps@v1
+              uses: xberg-io/actions/rewrite-native-deps@v1
               with:
                   lang: ruby
 
@@ -1859,7 +1859,7 @@ jobs:
 
             - name: Re-check RubyGems before publish
               id: recheck
-              uses: kreuzberg-dev/actions/check-registry@v1
+              uses: xberg-io/actions/check-registry@v1
               with:
                   registry: rubygems
                   package: liter_llm
@@ -1871,7 +1871,7 @@ jobs:
 
             - name: Publish gems to RubyGems
               if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck.outputs.exists != 'true' }}
-              uses: kreuzberg-dev/actions/publish-rubygems@v1
+              uses: xberg-io/actions/publish-rubygems@v1
               with:
                   gems-dir: dist
                   dry-run: ${{ needs.prepare.outputs.dry_run }}
@@ -1945,13 +1945,13 @@ jobs:
                   gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
                   gpg-passphrase: MAVEN_GPG_PASSPHRASE
             - name: Setup Maven 3.9.11
-              uses: kreuzberg-dev/actions/setup-maven@v1
+              uses: xberg-io/actions/setup-maven@v1
             - name: Configure Maven GPG
-              uses: kreuzberg-dev/actions/configure-maven-gpg@v1
+              uses: xberg-io/actions/configure-maven-gpg@v1
               with:
                   pom-file: packages/java/pom.xml
             - name: Release Maven package
-              uses: kreuzberg-dev/actions/publish-maven@v1
+              uses: xberg-io/actions/publish-maven@v1
               with:
                   pom-file: packages/java/pom.xml
                   maven-profile: publish
@@ -2028,9 +2028,9 @@ jobs:
                   distribution: temurin
                   java-version: "17"
                   cache: gradle
-            - uses: kreuzberg-dev/actions/setup-maven@v1
-            - uses: kreuzberg-dev/actions/configure-maven-gpg@v1
-            - uses: kreuzberg-dev/actions/publish-maven-gradle@v1
+            - uses: xberg-io/actions/setup-maven@v1
+            - uses: xberg-io/actions/configure-maven-gpg@v1
+            - uses: xberg-io/actions/publish-maven-gradle@v1
               with:
                   working-directory: packages/kotlin-android
                   gradle-task: publishAndReleaseToMavenCentral
@@ -2072,9 +2072,9 @@ jobs:
 
             - name: Generate checksums from GitHub release
               if: needs.prepare.outputs.dry_run != 'true'
-              uses: kreuzberg-dev/actions/generate-elixir-checksums@v1
+              uses: xberg-io/actions/generate-elixir-checksums@v1
               with:
-                  github-repo: kreuzberg-dev/liter-llm
+                  github-repo: xberg-io/liter-llm
                   tag: ${{ needs.prepare.outputs.tag }}
                   version: ${{ needs.prepare.outputs.version }}
                   lib-name: liter_llm_nif
@@ -2127,7 +2127,7 @@ jobs:
               working-directory: packages/elixir
               shell: bash
 
-            - uses: kreuzberg-dev/actions/publish-hex@v1
+            - uses: xberg-io/actions/publish-hex@v1
               with:
                   package-dir: packages/elixir
                   skip-docs: "true"
@@ -2154,7 +2154,7 @@ jobs:
               with:
                   name: nuget-packages
                   path: nuget-output
-            - uses: kreuzberg-dev/actions/publish-nuget@v1
+            - uses: xberg-io/actions/publish-nuget@v1
               with:
                   packages-dir: nuget-output
                   dry-run: ${{ needs.prepare.outputs.dry_run }}
@@ -2175,12 +2175,12 @@ jobs:
             id-token: write
         timeout-minutes: 15
         steps:
-            - uses: kreuzberg-dev/actions/publish-packagist@v1
+            - uses: xberg-io/actions/publish-packagist@v1
               with:
                   packagist-username: kreuzberg-dev
-                  package-name: kreuzberg-dev/liter-llm
+                  package-name: xberg-io/liter-llm
                   version: ${{ needs.prepare.outputs.version }}
-                  repository-url: https://github.com/kreuzberg-dev/liter-llm
+                  repository-url: https://github.com/xberg-io/liter-llm
                   dry-run: ${{ needs.prepare.outputs.dry_run }}
               env:
                   PACKAGIST_API_TOKEN: ${{ secrets.PACKAGIST_API_TOKEN }}
@@ -2226,7 +2226,7 @@ jobs:
                   pattern: ffi-*
                   path: ffi-artifacts
                   merge-multiple: true
-            - uses: kreuzberg-dev/actions/publish-zig@v1
+            - uses: xberg-io/actions/publish-zig@v1
               with:
                   working-directory: packages/zig
                   tag: ${{ needs.prepare.outputs.tag }}
@@ -2298,13 +2298,13 @@ jobs:
                   echo "reused=false" >> "$GITHUB_OUTPUT"
                   exit 0
 
-            - uses: kreuzberg-dev/actions/setup-rust@v1
+            - uses: xberg-io/actions/setup-rust@v1
               if: ${{ steps.check-existing.outputs.reused != 'true' }}
               with:
                   cache-key-prefix: publish-swift-artifactbundle
                   use-sccache: false
 
-            - uses: kreuzberg-dev/actions/build-swift-artifactbundle@v1
+            - uses: xberg-io/actions/build-swift-artifactbundle@v1
               if: ${{ steps.check-existing.outputs.reused != 'true' }}
               id: build
               with:
@@ -2382,7 +2382,7 @@ jobs:
               run: |
                   echo "Bundle was reused from existing release asset; skipping upload"
 
-            - uses: kreuzberg-dev/actions/upload-release-assets@v1
+            - uses: xberg-io/actions/upload-release-assets@v1
               if: ${{ needs.swift-artifactbundle.outputs.reused != 'true' }}
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
@@ -2469,7 +2469,7 @@ jobs:
                   VERSION: ${{ needs.prepare.outputs.version }}
               run: |
                   CHECKSUM=${{ needs.swift-artifactbundle.outputs.checksum }}
-                  ASSET_URL="https://github.com/kreuzberg-dev/liter-llm/releases/download/v${VERSION}/LiterLlm-rs.artifactbundle.zip"
+                  ASSET_URL="https://github.com/xberg-io/liter-llm/releases/download/v${VERSION}/LiterLlm-rs.artifactbundle.zip"
 
                   cat > /tmp/swift-notes.md << EOF
                   ## Swift Package Manager
@@ -2489,7 +2489,7 @@ jobs:
                   **Alternative — pin via tag-specific Swift package release:**
 
                   \`\`\`swift
-                  .package(url: "https://github.com/kreuzberg-dev/liter-llm", from: "swift-${VERSION}")
+                  .package(url: "https://github.com/xberg-io/liter-llm", from: "swift-${VERSION}")
                   \`\`\`
 
                   > The main repository's \`Package.swift\` uses placeholder values. Swift consumers pin to a tag-specific release in the \`swift-\` namespace (e.g. \`from: "swift-${VERSION}"\`), which includes the real artifact bundle checksum. Other languages continue to pin to \`from: "${VERSION}"\`.
@@ -2534,7 +2534,7 @@ jobs:
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
-            - uses: kreuzberg-dev/actions/setup-rust@v1
+            - uses: xberg-io/actions/setup-rust@v1
               with:
                   target: ${{ matrix.target }}
                   cache-key-prefix: publish-cli-${{ matrix.label }}
@@ -2640,7 +2640,7 @@ jobs:
                   rm -f "${shasum_files[@]}"
                   echo "Consolidated checksums:"
                   cat "${combined}"
-            - uses: kreuzberg-dev/actions/publish-github-release@v1
+            - uses: xberg-io/actions/publish-github-release@v1
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
                   artifacts: "dist/cli/*"
@@ -2665,13 +2665,13 @@ jobs:
         outputs:
             exists: ${{ steps.check.outputs.exists }}
         steps:
-            - uses: kreuzberg-dev/actions/check-registry@v1
+            - uses: xberg-io/actions/check-registry@v1
               id: check
               with:
                   registry: homebrew
                   package: liter-llm
                   version: ${{ needs.prepare.outputs.version }}
-                  tap-repo: kreuzberg-dev/homebrew-tap
+                  tap-repo: xberg-io/homebrew-tap
 
     publish-homebrew-formula:
         name: Update Homebrew formula
@@ -2706,7 +2706,7 @@ jobs:
             - name: Checkout homebrew-tap
               uses: actions/checkout@v6
               with:
-                  repository: kreuzberg-dev/homebrew-tap
+                  repository: xberg-io/homebrew-tap
                   token: ${{ steps.tap-token.outputs.token }}
                   path: homebrew-tap
                   persist-credentials: true
@@ -2769,18 +2769,18 @@ jobs:
 
             - name: Install Homebrew (Linux)
               if: ${{ matrix.install_brew }}
-              uses: kreuzberg-dev/actions/install-homebrew-linux@v1
+              uses: xberg-io/actions/install-homebrew-linux@v1
 
             - name: Build bottles
-              uses: kreuzberg-dev/actions/homebrew-build-bottles@v1
+              uses: xberg-io/actions/homebrew-build-bottles@v1
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
                   version: ${{ needs.prepare.outputs.version }}
-                  tap: kreuzberg-dev/homebrew-tap
+                  tap: xberg-io/homebrew-tap
                   formulas: |
                       liter-llm
                   out-dir: ${{ github.workspace }}/bottle-json
-                  github-repo: kreuzberg-dev/liter-llm
+                  github-repo: xberg-io/liter-llm
                   token: ${{ steps.app-token.outputs.token }}
 
             - uses: actions/upload-artifact@v7
@@ -2814,7 +2814,7 @@ jobs:
 
             - uses: actions/checkout@v6
               with:
-                  repository: kreuzberg-dev/homebrew-tap
+                  repository: xberg-io/homebrew-tap
                   token: ${{ steps.tap-token.outputs.token }}
                   path: homebrew-tap
                   persist-credentials: true
@@ -2825,7 +2825,7 @@ jobs:
                   pattern: homebrew-bottle-json-*
                   merge-multiple: true
 
-            - uses: kreuzberg-dev/actions/homebrew-merge-bottles@v1
+            - uses: xberg-io/actions/homebrew-merge-bottles@v1
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
                   version: ${{ needs.prepare.outputs.version }}
@@ -2833,7 +2833,7 @@ jobs:
                   json-dir: ${{ github.workspace }}/bottle-json
                   formulas: |
                       liter-llm
-                  github-repo: kreuzberg-dev/liter-llm
+                  github-repo: xberg-io/liter-llm
 
             - name: Commit and push bottle DSL
               working-directory: homebrew-tap
@@ -2898,7 +2898,7 @@ jobs:
 
             - name: Finalize release
               if: needs.prepare.outputs.dry_run != 'true'
-              uses: kreuzberg-dev/actions/finalize-release@v1
+              uses: xberg-io/actions/finalize-release@v1
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
                   token: ${{ steps.app-token.outputs.token }}
@@ -2976,7 +2976,7 @@ jobs:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
                   owner: kreuzberg-dev
-            - uses: kreuzberg-dev/actions/announce-release-discord@v1
+            - uses: xberg-io/actions/announce-release-discord@v1
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
                   webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
@@ -3025,14 +3025,14 @@ jobs:
                   npm version "${{ needs.prepare.outputs.version }}" --no-git-tag-version --allow-same-version
             - name: Re-check npm before publish
               id: recheck
-              uses: kreuzberg-dev/actions/check-registry@v1
+              uses: xberg-io/actions/check-registry@v1
               with:
                   registry: npm
                   package: "@kreuzberg/liter-llm-cli"
                   version: ${{ needs.prepare.outputs.version }}
             - name: Publish CLI proxy package
               if: ${{ steps.recheck.outputs.exists != 'true' }}
-              uses: kreuzberg-dev/actions/publish-npm@v1
+              uses: xberg-io/actions/publish-npm@v1
               with:
                   package-dir: cli-proxy/npm
                   npm-tag: ${{ needs.prepare.outputs.npm_tag }}

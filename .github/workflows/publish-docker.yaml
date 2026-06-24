@@ -69,7 +69,7 @@ jobs:
                   if [ "${{ inputs.force_republish }}" = "true" ]; then
                     echo "should_publish=true" >> "$GITHUB_OUTPUT"
                     echo "Force republish requested"
-                  elif docker manifest inspect ghcr.io/kreuzberg-dev/liter-llm:$TAG > /dev/null 2>&1; then
+                  elif docker manifest inspect ghcr.io/xberg-io/liter-llm:$TAG > /dev/null 2>&1; then
                     echo "should_publish=false" >> "$GITHUB_OUTPUT"
                     echo "Image already exists for $TAG"
                   else
@@ -157,24 +157,24 @@ jobs:
                   platforms: linux/amd64,linux/arm64
                   push: ${{ !inputs.dry_run }}
                   tags: |
-                      ghcr.io/kreuzberg-dev/liter-llm:${{ needs.prepare.outputs.tag }}
-                      ghcr.io/kreuzberg-dev/liter-llm:latest
+                      ghcr.io/xberg-io/liter-llm:${{ needs.prepare.outputs.tag }}
+                      ghcr.io/xberg-io/liter-llm:latest
                   cache-from: type=gha
                   cache-to: type=gha,mode=max,scope=publish-docker
                   labels: |
-                      org.opencontainers.image.source=https://github.com/kreuzberg-dev/liter-llm
+                      org.opencontainers.image.source=https://github.com/xberg-io/liter-llm
                       org.opencontainers.image.version=${{ needs.prepare.outputs.version }}
                       org.opencontainers.image.description=LiterLLM — OpenAI-compatible LLM proxy server
                       org.opencontainers.image.licenses=MIT
 
             - name: Pull published image for size check
               if: ${{ !inputs.dry_run }}
-              run: docker pull ghcr.io/kreuzberg-dev/liter-llm:${{ needs.prepare.outputs.tag }}
+              run: docker pull ghcr.io/xberg-io/liter-llm:${{ needs.prepare.outputs.tag }}
               shell: bash
 
             - name: Check image size
               if: ${{ !inputs.dry_run }}
-              uses: kreuzberg-dev/actions/check-docker-image-size@v1
+              uses: xberg-io/actions/check-docker-image-size@v1
               with:
-                  image: ghcr.io/kreuzberg-dev/liter-llm:${{ needs.prepare.outputs.tag }}
+                  image: ghcr.io/xberg-io/liter-llm:${{ needs.prepare.outputs.tag }}
                   label: liter-llm published

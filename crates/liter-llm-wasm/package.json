@@ -6,7 +6,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kreuzberg-dev/liter-llm",
+    "url": "https://github.com/xberg-io/liter-llm",
     "directory": "crates/liter-llm-wasm"
   },
   "files": [

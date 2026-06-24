@@ -285,7 +285,7 @@ services:
       - ollama_data:/root/.ollama
 
   liter-llm:
-    image: ghcr.io/kreuzberg-dev/liter-llm:latest
+    image: ghcr.io/xberg-io/liter-llm:latest
     ports:
       - "4000:4000"
     environment:

@@ -38,7 +38,7 @@ permissions:
 jobs:
     build:
         name: Build
-        if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
+        if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
         runs-on: ubuntu-latest
         timeout-minutes: 15
         steps:
@@ -53,7 +53,7 @@ jobs:
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Build documentation
-              uses: kreuzberg-dev/actions/build-docs@v1
+              uses: xberg-io/actions/build-docs@v1
               with:
                   strict: "true"
                   docs-group: docs
@@ -67,7 +67,7 @@ jobs:
 
     lint:
         name: Lint
-        if: github.repository == 'kreuzberg-dev/liter-llm' && github.actor != 'dependabot[bot]'
+        if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
         runs-on: ubuntu-latest
         timeout-minutes: 25
         steps:
@@ -79,7 +79,7 @@ jobs:
                   version: 3.x
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-            - uses: kreuzberg-dev/actions/setup-rust@v1
+            - uses: xberg-io/actions/setup-rust@v1
               with:
                   install-llvm-cov: "false"
                   cache-key-prefix: ci-docs-snippets
@@ -130,7 +130,7 @@ jobs:
                   version: "0.14.0"
 
             - name: Lint documentation
-              uses: kreuzberg-dev/actions/lint-docs@v1
+              uses: xberg-io/actions/lint-docs@v1
               with:
                   strict: "false"
                   validate-snippets: "true"
@@ -139,7 +139,7 @@ jobs:
     deploy:
         name: Deploy
         needs: [build, lint]
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && github.repository == 'kreuzberg-dev/liter-llm'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && github.repository == 'xberg-io/liter-llm'
         permissions:
             contents: read
             pages: write
