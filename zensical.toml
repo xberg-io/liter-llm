@@ -1,8 +1,8 @@
 [project]
 site_name = "liter-llm"
 site_description = "Universal LLM API client for 143 providers with polyglot bindings."
-site_url = "https://docs.liter-llm.kreuzberg.dev"
-site_author = "kreuzberg.dev"
+site_url = "https://docs.liter-llm.xberg.io"
+site_author = "xberg.io"
 repo_name = "xberg-io/liter-llm"
 repo_url = "https://github.com/xberg-io/liter-llm"
 edit_uri = "edit/main/docs/"
@@ -230,5 +230,5 @@ name = "Join our Discord"
 
 [[project.extra.social]]
 icon = "fontawesome/solid/globe"
-link = "https://kreuzberg.dev"
-name = "kreuzberg.dev"
+link = "https://xberg.io"
+name = "xberg.io"

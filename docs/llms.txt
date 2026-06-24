@@ -6,71 +6,71 @@ liter-llm gives a single client surface — chat, streaming, tools, structured o
 
 ## Get Started
 
-- [Installation](https://docs.liter-llm.kreuzberg.dev/getting-started/installation/): Install for any of the 14 supported languages or pull the Docker image
-- [Configuration](https://docs.liter-llm.kreuzberg.dev/usage/configuration/): API keys, timeouts, retries, base-URL overrides
-- [AI Coding Assistants](https://docs.liter-llm.kreuzberg.dev/usage/agent-skills/): Install the liter-llm plugin into Claude Code, Codex, Cursor, Gemini, Copilot, and other coding agents
+- [Installation](https://docs.liter-llm.xberg.io/getting-started/installation/): Install for any of the 14 supported languages or pull the Docker image
+- [Configuration](https://docs.liter-llm.xberg.io/usage/configuration/): API keys, timeouts, retries, base-URL overrides
+- [AI Coding Assistants](https://docs.liter-llm.xberg.io/usage/agent-skills/): Install the liter-llm plugin into Claude Code, Codex, Cursor, Gemini, Copilot, and other coding agents
 
 ## Guides — Core
 
-- [Chat & Streaming](https://docs.liter-llm.kreuzberg.dev/usage/chat/): Chat completions, streaming, tool calls, structured outputs
-- [Embeddings & Rerank](https://docs.liter-llm.kreuzberg.dev/usage/embeddings/): Embedding generation and result reranking
-- [Media](https://docs.liter-llm.kreuzberg.dev/usage/media/): Image generation, text-to-speech, transcription
-- [Search & OCR](https://docs.liter-llm.kreuzberg.dev/usage/search-ocr/): Web search and document OCR endpoints
-- [Files & Batches](https://docs.liter-llm.kreuzberg.dev/usage/files/): File uploads, batch jobs, async exchanges
+- [Chat & Streaming](https://docs.liter-llm.xberg.io/usage/chat/): Chat completions, streaming, tool calls, structured outputs
+- [Embeddings & Rerank](https://docs.liter-llm.xberg.io/usage/embeddings/): Embedding generation and result reranking
+- [Media](https://docs.liter-llm.xberg.io/usage/media/): Image generation, text-to-speech, transcription
+- [Search & OCR](https://docs.liter-llm.xberg.io/usage/search-ocr/): Web search and document OCR endpoints
+- [Files & Batches](https://docs.liter-llm.xberg.io/usage/files/): File uploads, batch jobs, async exchanges
 
 ## Guides — Advanced
 
-- [Authentication](https://docs.liter-llm.kreuzberg.dev/usage/authentication/): Azure AD, AWS Bedrock SigV4 + STS/IRSA, Vertex AI service-accounts, GitHub Copilot
-- [Fallback & Routing](https://docs.liter-llm.kreuzberg.dev/usage/fallback-routing/): Round-robin, weighted, latency-based, cost-based, ordered-fallback
-- [Local LLMs](https://docs.liter-llm.kreuzberg.dev/usage/local-llms/): Ollama, llama.cpp, and other OpenAI-compatible local runtimes
-- [Error Handling](https://docs.liter-llm.kreuzberg.dev/usage/error-handling/): Error taxonomy, retries, and recovery patterns
-- [Observability](https://docs.liter-llm.kreuzberg.dev/usage/observability/): Tracing, OpenTelemetry, cost tracking
+- [Authentication](https://docs.liter-llm.xberg.io/usage/authentication/): Azure AD, AWS Bedrock SigV4 + STS/IRSA, Vertex AI service-accounts, GitHub Copilot
+- [Fallback & Routing](https://docs.liter-llm.xberg.io/usage/fallback-routing/): Round-robin, weighted, latency-based, cost-based, ordered-fallback
+- [Local LLMs](https://docs.liter-llm.xberg.io/usage/local-llms/): Ollama, llama.cpp, and other OpenAI-compatible local runtimes
+- [Error Handling](https://docs.liter-llm.xberg.io/usage/error-handling/): Error taxonomy, retries, and recovery patterns
+- [Observability](https://docs.liter-llm.xberg.io/usage/observability/): Tracing, OpenTelemetry, cost tracking
 
 ## Deployment
 
-- [Proxy Server](https://docs.liter-llm.kreuzberg.dev/server/proxy-server/): OpenAI-compatible HTTP gateway with virtual keys and budgets
-- [Proxy Configuration](https://docs.liter-llm.kreuzberg.dev/server/proxy-configuration/): TOML schema for routes, fallbacks, rate limits
-- [MCP Server](https://docs.liter-llm.kreuzberg.dev/server/mcp-server/): Model Context Protocol tool server
-- [MCP & IDE Integration](https://docs.liter-llm.kreuzberg.dev/usage/mcp-integration/): VS Code, Claude Desktop, Cursor, Zed
+- [Proxy Server](https://docs.liter-llm.xberg.io/server/proxy-server/): OpenAI-compatible HTTP gateway with virtual keys and budgets
+- [Proxy Configuration](https://docs.liter-llm.xberg.io/server/proxy-configuration/): TOML schema for routes, fallbacks, rate limits
+- [MCP Server](https://docs.liter-llm.xberg.io/server/mcp-server/): Model Context Protocol tool server
+- [MCP & IDE Integration](https://docs.liter-llm.xberg.io/usage/mcp-integration/): VS Code, Claude Desktop, Cursor, Zed
 
 ## Concepts
 
-- [Architecture](https://docs.liter-llm.kreuzberg.dev/concepts/architecture/): Rust core, Tower middleware, binding layer, proxy server
-- [Feature Flags](https://docs.liter-llm.kreuzberg.dev/concepts/feature-flags/): Cargo features (`native-http`, `wasm-http`, `tower`, `otel`, `tokenizer`, etc.)
-- [Tokenizer](https://docs.liter-llm.kreuzberg.dev/concepts/tokenizer/): Token counting model
-- [Cost Estimation](https://docs.liter-llm.kreuzberg.dev/concepts/cost-estimation/): Pre-call and post-call cost computation
+- [Architecture](https://docs.liter-llm.xberg.io/concepts/architecture/): Rust core, Tower middleware, binding layer, proxy server
+- [Feature Flags](https://docs.liter-llm.xberg.io/concepts/feature-flags/): Cargo features (`native-http`, `wasm-http`, `tower`, `otel`, `tokenizer`, etc.)
+- [Tokenizer](https://docs.liter-llm.xberg.io/concepts/tokenizer/): Token counting model
+- [Cost Estimation](https://docs.liter-llm.xberg.io/concepts/cost-estimation/): Pre-call and post-call cost computation
 
 ## Reference
 
-- [Rust API](https://docs.liter-llm.kreuzberg.dev/reference/api-rust/)
-- [Python API](https://docs.liter-llm.kreuzberg.dev/reference/api-python/)
-- [TypeScript / Node API](https://docs.liter-llm.kreuzberg.dev/reference/api-typescript/)
-- [Go API](https://docs.liter-llm.kreuzberg.dev/reference/api-go/)
-- [Java API](https://docs.liter-llm.kreuzberg.dev/reference/api-java/)
-- [Kotlin Android API](https://docs.liter-llm.kreuzberg.dev/reference/api-kotlin-android/)
-- [C# API](https://docs.liter-llm.kreuzberg.dev/reference/api-csharp/)
-- [Ruby API](https://docs.liter-llm.kreuzberg.dev/reference/api-ruby/)
-- [PHP API](https://docs.liter-llm.kreuzberg.dev/reference/api-php/)
-- [Elixir API](https://docs.liter-llm.kreuzberg.dev/reference/api-elixir/)
-- [Dart API](https://docs.liter-llm.kreuzberg.dev/reference/api-dart/)
-- [Swift API](https://docs.liter-llm.kreuzberg.dev/reference/api-swift/)
-- [Zig API](https://docs.liter-llm.kreuzberg.dev/reference/api-zig/)
-- [WebAssembly API](https://docs.liter-llm.kreuzberg.dev/reference/api-wasm/)
-- [C / FFI](https://docs.liter-llm.kreuzberg.dev/reference/api-c/)
-- [Providers](https://docs.liter-llm.kreuzberg.dev/providers/): All 143 runtime providers with model prefixes
-- [Configuration](https://docs.liter-llm.kreuzberg.dev/reference/configuration/)
-- [Types](https://docs.liter-llm.kreuzberg.dev/reference/types/)
-- [Errors](https://docs.liter-llm.kreuzberg.dev/reference/errors/)
+- [Rust API](https://docs.liter-llm.xberg.io/reference/api-rust/)
+- [Python API](https://docs.liter-llm.xberg.io/reference/api-python/)
+- [TypeScript / Node API](https://docs.liter-llm.xberg.io/reference/api-typescript/)
+- [Go API](https://docs.liter-llm.xberg.io/reference/api-go/)
+- [Java API](https://docs.liter-llm.xberg.io/reference/api-java/)
+- [Kotlin Android API](https://docs.liter-llm.xberg.io/reference/api-kotlin-android/)
+- [C# API](https://docs.liter-llm.xberg.io/reference/api-csharp/)
+- [Ruby API](https://docs.liter-llm.xberg.io/reference/api-ruby/)
+- [PHP API](https://docs.liter-llm.xberg.io/reference/api-php/)
+- [Elixir API](https://docs.liter-llm.xberg.io/reference/api-elixir/)
+- [Dart API](https://docs.liter-llm.xberg.io/reference/api-dart/)
+- [Swift API](https://docs.liter-llm.xberg.io/reference/api-swift/)
+- [Zig API](https://docs.liter-llm.xberg.io/reference/api-zig/)
+- [WebAssembly API](https://docs.liter-llm.xberg.io/reference/api-wasm/)
+- [C / FFI](https://docs.liter-llm.xberg.io/reference/api-c/)
+- [Providers](https://docs.liter-llm.xberg.io/providers/): All 143 runtime providers with model prefixes
+- [Configuration](https://docs.liter-llm.xberg.io/reference/configuration/)
+- [Types](https://docs.liter-llm.xberg.io/reference/types/)
+- [Errors](https://docs.liter-llm.xberg.io/reference/errors/)
 
 ## Kreuzberg Ecosystem
 
-- [Kreuzberg](https://docs.kreuzberg.dev): Document intelligence: text, tables, metadata from 91+ formats with optional OCR
+- [Kreuzberg](https://docs.xberg.io): Document intelligence: text, tables, metadata from 91+ formats with optional OCR
 - [Kreuzberg Cloud](https://docs.kreuzberg.cloud): Managed extraction API with SDKs, dashboards, and observability
-- [kreuzcrawl](https://docs.kreuzcrawl.kreuzberg.dev): Web crawling and scraping with HTML to Markdown and headless-Chrome fallback
-- [html-to-markdown](https://docs.html-to-markdown.kreuzberg.dev): Fast, lossless HTML to Markdown engine
-- [tree-sitter-language-pack](https://docs.tree-sitter-language-pack.kreuzberg.dev): Tree-sitter grammars and code-intelligence primitives
+- [kreuzcrawl](https://docs.kreuzcrawl.xberg.io): Web crawling and scraping with HTML to Markdown and headless-Chrome fallback
+- [html-to-markdown](https://docs.html-to-markdown.xberg.io): Fast, lossless HTML to Markdown engine
+- [tree-sitter-language-pack](https://docs.tree-sitter-language-pack.xberg.io): Tree-sitter grammars and code-intelligence primitives
 
 ## More
 
-- [Contributing](https://docs.liter-llm.kreuzberg.dev/contributing/): Contribution guidelines and development setup
-- [Changelog](https://docs.liter-llm.kreuzberg.dev/CHANGELOG/): Release notes and version history
+- [Contributing](https://docs.liter-llm.xberg.io/contributing/): Contribution guidelines and development setup
+- [Changelog](https://docs.liter-llm.xberg.io/CHANGELOG/): Release notes and version history

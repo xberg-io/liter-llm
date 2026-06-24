@@ -655,7 +655,7 @@ All bindings expose the full API surface with language-idiomatic conventions:
 
 ### Documentation
 
-- MkDocs Material site at docs.liter-llm.kreuzberg.dev
+- MkDocs Material site at docs.liter-llm.xberg.io
 - 170+ code snippets across 10 languages
 - 11 API reference docs with full method coverage
 - Usage pages: Chat & Streaming, Embeddings & Rerank, Media, Search & OCR, Files & Batches, Configuration

@@ -36,7 +36,7 @@ extra_paths = [
 title = "liter-llm"
 abstract = "Universal LLM API client with native bindings for 14 languages and 143 providers."
 repository-code = "https://github.com/xberg-io/liter-llm"
-url = "https://kreuzberg.dev"
+url = "https://xberg.io"
 license = "MIT"
 date-released = "2026-05-17"
 
@@ -2103,7 +2103,7 @@ output_path = "crates/liter-llm/README.md"
 name = "Rust"
 package_name = "liter-llm"
 badge_url = "https://img.shields.io/crates/v/liter-llm?label=Rust&color=007ec6"
-docs_url = "https://docs.liter-llm.kreuzberg.dev"
+docs_url = "https://docs.liter-llm.xberg.io"
 description = "Universal LLM API client for Rust. Access 143 LLM providers through a single unified interface. Async/await with Tokio, streaming via BoxStream, composable Tower middleware stack, and compile-time type safety."
 package_manager = ["cargo"]
 optional_sections = ["async_support", "streaming_support", "tool_calling", "middleware_stack"]

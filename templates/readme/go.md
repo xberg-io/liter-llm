@@ -202,7 +202,7 @@ for _, model := range []string{
 
 ## API Reference
 
-- **[Documentation](https://docs.liter-llm.kreuzberg.dev)** -- Full docs and API reference
+- **[Documentation](https://docs.liter-llm.xberg.io)** -- Full docs and API reference
 - **GoDoc**: [pkg.go.dev/{{ package_name }}](https://pkg.go.dev/{{ package_name }})
 - **Provider Registry**: [schemas/providers.json](https://github.com/xberg-io/liter-llm/blob/main/schemas/providers.json)
 - **GitHub Repository**: [github.com/xberg-io/liter-llm](https://github.com/xberg-io/liter-llm)

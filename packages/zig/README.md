@@ -50,14 +50,14 @@
 	<a href="https://github.com/xberg-io/liter-llm/blob/main/LICENSE">
 		<img src="https://img.shields.io/badge/License-MIT-007ec6" alt="License" />
 	</a>
-	<a href="https://docs.liter-llm.kreuzberg.dev">
+	<a href="https://docs.liter-llm.xberg.io">
 		<img src="https://img.shields.io/badge/Docs-liter--llm-007ec6" alt="Docs" />
 	</a>
 </div>
 <div align="center" style="margin: 24px 0 0">
-	<a href="https://kreuzberg.dev">
+	<a href="https://xberg.io">
 		<img
-			alt="kreuzberg.dev"
+			alt="xberg.io"
 			src="https://github.com/user-attachments/assets/1b6c6ad7-3b6d-4171-b1c9-f2026cc9deb8"
 		/>
 	</a>
@@ -187,13 +187,13 @@ liter-llm mcp --transport stdio               # MCP tool server
 docker run -p 4000:4000 -e LITER_LLM_MASTER_KEY=sk-your-key ghcr.io/xberg-io/liter-llm
 ```
 
-To use the MCP server inside a coding agent, install the **liter-llm plugin** from the [`xberg-io/plugins`](https://github.com/xberg-io/plugins) marketplace — it auto-registers the server. See the [MCP server](https://docs.liter-llm.kreuzberg.dev/server/mcp-server/) and [proxy server](https://docs.liter-llm.kreuzberg.dev/server/proxy-server/) guides for configuration, CLI usage, and agent integration.
+To use the MCP server inside a coding agent, install the **liter-llm plugin** from the [`xberg-io/plugins`](https://github.com/xberg-io/plugins) marketplace — it auto-registers the server. See the [MCP server](https://docs.liter-llm.xberg.io/server/mcp-server/) and [proxy server](https://docs.liter-llm.xberg.io/server/proxy-server/) guides for configuration, CLI usage, and agent integration.
 
 </details>
 
 ## Documentation
 
-- **[Documentation](https://docs.liter-llm.kreuzberg.dev)** -- Full docs and API reference
+- **[Documentation](https://docs.liter-llm.xberg.io)** -- Full docs and API reference
 - **[GitHub Repository](https://github.com/xberg-io/liter-llm)** -- Source, issues, and discussions
 - **[Provider Registry](https://github.com/xberg-io/liter-llm/blob/main/schemas/providers.json)** -- 143 supported providers
 

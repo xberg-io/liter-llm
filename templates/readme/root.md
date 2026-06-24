@@ -206,7 +206,7 @@ liter-llm mcp --transport stdio               # MCP tool server (stdio)
 liter-llm mcp --transport http --port 3001    # MCP tool server (Streamable HTTP)
 ```
 
-See the [MCP server guide](https://docs.liter-llm.kreuzberg.dev/server/mcp-server/) and the [proxy guide](https://docs.liter-llm.kreuzberg.dev/server/proxy-server/) for transports, routing, virtual keys, and budgets. To use the MCP server inside a coding agent, install the **liter-llm plugin** (below) — it auto-registers the server, no manual config required.
+See the [MCP server guide](https://docs.liter-llm.xberg.io/server/mcp-server/) and the [proxy guide](https://docs.liter-llm.xberg.io/server/proxy-server/) for transports, routing, virtual keys, and budgets. To use the MCP server inside a coding agent, install the **liter-llm plugin** (below) — it auto-registers the server, no manual config required.
 
 </details>
 
@@ -280,7 +280,7 @@ Not yet published as an opencode package. Install via any harness above (self-ho
 
 ## Documentation
 
-Full guides, the unified `chat()` API for every binding, multimodal I/O, the proxy/gateway, and the complete provider list live at **[docs.liter-llm.kreuzberg.dev](https://docs.liter-llm.kreuzberg.dev)**.
+Full guides, the unified `chat()` API for every binding, multimodal I/O, the proxy/gateway, and the complete provider list live at **[docs.liter-llm.xberg.io](https://docs.liter-llm.xberg.io)**.
 
 ## Contributing
 

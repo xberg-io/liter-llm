@@ -50,7 +50,7 @@
 	<a href="https://github.com/xberg-io/liter-llm/blob/main/LICENSE">
 		<img src="https://img.shields.io/badge/License-MIT-007ec6" alt="License" />
 	</a>
-	<a href="https://docs.liter-llm.kreuzberg.dev">
+	<a href="https://docs.liter-llm.xberg.io">
 		<img src="https://img.shields.io/badge/Docs-liter--llm-007ec6" alt="Docs" />
 	</a>
 </div>

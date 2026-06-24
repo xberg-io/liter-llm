@@ -153,7 +153,7 @@ All bindings are generated from one Rust core, so endpoint coverage is uniform; 
 
 <div class="grid cards" markdown>
 
-- :material-file-document-multiple:{ .lg .middle } **[Kreuzberg](https://docs.kreuzberg.dev)**
+- :material-file-document-multiple:{ .lg .middle } **[Kreuzberg](https://docs.xberg.io)**
 
   Document intelligence — text, tables, and metadata from 96 file formats with optional OCR.
 
@@ -161,15 +161,15 @@ All bindings are generated from one Rust core, so endpoint coverage is uniform; 
 
   Managed document-extraction API with SDKs, dashboards, and observability built in.
 
-- :material-spider-web:{ .lg .middle } **[Kreuzcrawl](https://docs.kreuzcrawl.kreuzberg.dev)**
+- :material-spider-web:{ .lg .middle } **[Kreuzcrawl](https://docs.kreuzcrawl.xberg.io)**
 
   High-performance web crawling and scraping with always-on HTML→Markdown and headless-Chrome fallback.
 
-- :material-language-html5:{ .lg .middle } **[html-to-markdown](https://docs.html-to-markdown.kreuzberg.dev)**
+- :material-language-html5:{ .lg .middle } **[html-to-markdown](https://docs.html-to-markdown.xberg.io)**
 
   Fast, lossless HTML→Markdown engine — Rust core, the same conversion used by Kreuzcrawl.
 
-- :material-code-tags:{ .lg .middle } **[tree-sitter-language-pack](https://docs.tree-sitter-language-pack.kreuzberg.dev)**
+- :material-code-tags:{ .lg .middle } **[tree-sitter-language-pack](https://docs.tree-sitter-language-pack.xberg.io)**
 
   306 tree-sitter grammars and code-intelligence primitives.
 

@@ -39,7 +39,7 @@ bundle install
 
 ## Documentation
 
-- **[Documentation](https://docs.liter-llm.kreuzberg.dev)** -- Full docs and API reference
+- **[Documentation](https://docs.liter-llm.xberg.io)** -- Full docs and API reference
 - **[GitHub Repository](https://github.com/xberg-io/liter-llm)** -- Source, issues, and discussions
 - **[Provider Registry](https://github.com/xberg-io/liter-llm/blob/main/schemas/providers.json)** -- 143 supported providers
 
