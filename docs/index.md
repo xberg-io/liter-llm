@@ -157,7 +157,7 @@ All bindings are generated from one Rust core, so endpoint coverage is uniform; 
 
   Document intelligence — text, tables, and metadata from 96 file formats with optional OCR.
 
-- :material-cloud:{ .lg .middle } **[Kreuzberg Cloud](https://docs.kreuzberg.cloud)**
+- :material-cloud:{ .lg .middle } **[Xberg Enterprise](https://enterprise.xberg.io)**
 
   Managed document-extraction API with SDKs, dashboards, and observability built in.
 
