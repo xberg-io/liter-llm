@@ -24,13 +24,13 @@ builtins = [
 ]
 
 [[includes]]
-name = "kreuzberg-core"
+name = "xberg-core"
 source = "https://github.com/xberg-io/ai-rulez"
 path = "modules/core"
 merge_strategy = "local-override"
 
 [[includes]]
-name = "kreuzberg-cicd"
+name = "xberg-cicd"
 source = "https://github.com/xberg-io/ai-rulez"
 path = "modules/cicd"
 merge_strategy = "local-override"
