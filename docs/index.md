@@ -161,13 +161,13 @@ All bindings are generated from one Rust core, so endpoint coverage is uniform; 
 
   Managed document-extraction API with SDKs, dashboards, and observability built in.
 
-- :material-spider-web:{ .lg .middle } **[Kreuzcrawl](https://docs.kreuzcrawl.xberg.io)**
+- :material-spider-web:{ .lg .middle } **[Crawlberg](https://docs.crawlberg.xberg.io)**
 
   High-performance web crawling and scraping with always-on HTML→Markdown and headless-Chrome fallback.
 
 - :material-language-html5:{ .lg .middle } **[html-to-markdown](https://docs.html-to-markdown.xberg.io)**
 
-  Fast, lossless HTML→Markdown engine — Rust core, the same conversion used by Kreuzcrawl.
+  Fast, lossless HTML→Markdown engine — Rust core, the same conversion used by Crawlberg.
 
 - :material-code-tags:{ .lg .middle } **[tree-sitter-language-pack](https://docs.tree-sitter-language-pack.xberg.io)**
 
