@@ -5,7 +5,7 @@ description = "A universal LM API client with polyglot bindings — fast, type-s
 readme = "README.md"
 keywords = [ "ai", "api-client", "kreuzberg", "llm", "openai" ]
 license = "MIT"
-authors = [ { name = "Na'aman Hirschfeld", email = "naaman@kreuzberg.dev" } ]
+authors = [ { name = "Na'aman Hirschfeld", email = "naaman@xberg.io" } ]
 requires-python = ">=3.10"
 classifiers = [
   "Development Status :: 3 - Alpha",

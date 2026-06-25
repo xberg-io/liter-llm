@@ -25,7 +25,7 @@ Part of the xberg.io ecosystem:
 - Documentation: https://docs.liter-llm.xberg.io
 - GitHub: https://github.com/xberg-io/liter-llm
 - Discord: https://discord.gg/xt9WY3GnKR
-- Contact: naaman@kreuzberg.dev
+- Contact: naaman@xberg.io
 
 ## Capabilities
 
