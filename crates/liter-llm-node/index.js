@@ -10,9 +10,16 @@ const isMusl = () => {
   // "is musl" positive. Fall through to the filesystem heuristic instead: on
   // glibc systems `/lib64/ld-musl-x86_64.so.1` does not exist; on musl systems
   // it always does. statSync errors → not musl.
-  if (typeof process.report === "object" && typeof process.report.getReport === "function") {
+  if (
+    typeof process.report === "object" &&
+    typeof process.report.getReport === "function"
+  ) {
     const report = process.report.getReport();
-    if (report && report.header && typeof report.header.glibcVersion === "string") {
+    if (
+      report &&
+      report.header &&
+      typeof report.header.glibcVersion === "string"
+    ) {
       return false;
     }
   }
@@ -41,42 +48,12 @@ const tryLoadBinding = () => {
   // Optional-dep packages are named after `napi.packageName` (npm subpackage names),
   // which inherits any scope prefix from the parent package.
   const targets = [
-    [
-      "linux",
-      "x64",
-      "gnu",
-      "./liter-llm-node.linux-x64-gnu.node",
-      "@kreuzberg/liter-llm-linux-x64-gnu",
-    ],
-    [
-      "linux",
-      "arm64",
-      "gnu",
-      "./liter-llm-node.linux-arm64-gnu.node",
-      "@kreuzberg/liter-llm-linux-arm64-gnu",
-    ],
+    ["linux", "x64", "gnu", "./liter-llm-node.linux-x64-gnu.node", "@kreuzberg/liter-llm-linux-x64-gnu"],
+    ["linux", "arm64", "gnu", "./liter-llm-node.linux-arm64-gnu.node", "@kreuzberg/liter-llm-linux-arm64-gnu"],
     ["darwin", "x64", null, "./liter-llm-node.darwin-x64.node", "@kreuzberg/liter-llm-darwin-x64"],
-    [
-      "darwin",
-      "arm64",
-      null,
-      "./liter-llm-node.darwin-arm64.node",
-      "@kreuzberg/liter-llm-darwin-arm64",
-    ],
-    [
-      "win32",
-      "x64",
-      null,
-      "./liter-llm-node.win32-x64-msvc.node",
-      "@kreuzberg/liter-llm-win32-x64-msvc",
-    ],
-    [
-      "win32",
-      "arm64",
-      null,
-      "./liter-llm-node.win32-arm64-msvc.node",
-      "@kreuzberg/liter-llm-win32-arm64-msvc",
-    ],
+    ["darwin", "arm64", null, "./liter-llm-node.darwin-arm64.node", "@kreuzberg/liter-llm-darwin-arm64"],
+    ["win32", "x64", null, "./liter-llm-node.win32-x64-msvc.node", "@kreuzberg/liter-llm-win32-x64-msvc"],
+    ["win32", "arm64", null, "./liter-llm-node.win32-arm64-msvc.node", "@kreuzberg/liter-llm-win32-arm64-msvc"],
   ];
 
   for (const [plat, a, abi, localPath, optionalDep] of targets) {
@@ -116,7 +93,7 @@ tryLoadBinding();
 
 if (!nativeBinding) {
   throw new Error(
-    `Failed to load native binding for ${platform}-${arch}. Errors: ${loadErrors.join(", ")}`,
+    `Failed to load native binding for ${platform}-${arch}. Errors: ${loadErrors.join(", ")}`
   );
 }
 
