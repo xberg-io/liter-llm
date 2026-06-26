@@ -108,8 +108,14 @@ impl MockServer {
                     }
                 });
                 let body_str = response_body.to_string();
+                // `Connection: close` is required for correctness: this handler serves exactly one
+                // request per accepted connection, then loops back to `incoming()`. Without it the
+                // HTTP client may keep the socket alive and send a follow-up request on the same
+                // connection, which this server never reads — so the request is silently dropped
+                // and `requests()` undercounts. Closing each connection forces a fresh accept per
+                // request, making the captured-request count deterministic.
                 let response = format!(
-                    "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\n\r\n{}",
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
                     body_str.len(),
                     body_str
                 );
