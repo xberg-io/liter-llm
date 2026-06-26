@@ -1,7 +1,7 @@
 <!-- snippet:compile-only -->
 
 ```typescript
-import init, { createClient, WasmCreateBatchRequest } from "@kreuzberg/liter-llm-wasm";
+import init, { createClient, WasmCreateBatchRequest } from "@xberg-io/liter-llm-wasm";
 
 await init();
 

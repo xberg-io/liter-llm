@@ -26,7 +26,7 @@ exclude = [
   "github\\.com/.*/raw/",
 
   # Docs site self-references (404 until deployed)
-  "docs\\.liter-llm\\.kreuzberg\\.dev",
+  "docs\\.liter-llm\\.xberg\\.dev",
 
   # Placeholder provider URL used in docs examples
   "api\\.my-provider\\.com",

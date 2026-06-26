@@ -71,14 +71,14 @@ liter-llm mcp --transport stdio
     Requires Node.js 18+.
 
     ```bash
-    pnpm add @kreuzberg/liter-llm
+    pnpm add @xberg-io/liter-llm
     ```
 
     Or with npm / yarn:
 
     ```bash
-    npm install @kreuzberg/liter-llm
-    yarn add @kreuzberg/liter-llm
+    npm install @xberg-io/liter-llm
+    yarn add @xberg-io/liter-llm
     ```
 
 === "Rust"
@@ -105,7 +105,7 @@ liter-llm mcp --transport stdio
 
     ```xml
     <dependency>
-        <groupId>dev.kreuzberg.literllm</groupId>
+        <groupId>io.xberg.literllm</groupId>
         <artifactId>liter-llm</artifactId>
         <version>1.7.5</version>
     </dependency>
@@ -114,7 +114,7 @@ liter-llm mcp --transport stdio
     **Gradle:**
 
     ```kotlin
-    implementation("dev.kreuzberg.literllm:liter-llm:1.7.5")
+    implementation("io.xberg.literllm:liter-llm:1.7.5")
     ```
 
 === "Kotlin Android"
@@ -122,7 +122,7 @@ liter-llm mcp --transport stdio
     The generated Kotlin target is Android. JVM Kotlin applications should use the Java binding from Kotlin.
 
     ```kotlin
-    implementation("dev.kreuzberg:liter-llm-android:1.7.5")
+    implementation("io.xberg:liter-llm-android:1.7.5")
     ```
 
 === "C# / .NET"
@@ -200,7 +200,7 @@ liter-llm mcp --transport stdio
 === "WebAssembly"
 
     ```bash
-    pnpm add @kreuzberg/liter-llm-wasm
+    pnpm add @xberg-io/liter-llm-wasm
     ```
 
 === "C / FFI"
@@ -247,7 +247,7 @@ Or pass the key at client construction:
 === "TypeScript"
 
     ```typescript
-    import { createClient } from "@kreuzberg/liter-llm";
+    import { createClient } from "@xberg-io/liter-llm";
 
     const client = createClient("sk-...");
     ```
@@ -277,7 +277,7 @@ Use environment variables or a secret manager. The Rust core wraps keys in `secr
 === "TypeScript"
 
     ```bash
-    node -e "import('@kreuzberg/liter-llm').then(m => { m.createClient('test'); console.log('ok') })"
+    node -e "import('@xberg-io/liter-llm').then(m => { m.createClient('test'); console.log('ok') })"
     ```
 
 === "Rust"

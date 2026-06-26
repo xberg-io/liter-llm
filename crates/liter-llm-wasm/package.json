@@ -1,5 +1,5 @@
 {
-  "name": "@kreuzberg/liter-llm-wasm",
+  "name": "@xberg-io/liter-llm-wasm",
   "version": "1.8.2",
   "private": false,
   "description": "Universal LLM API client with Rust-powered polyglot bindings.",

@@ -61,7 +61,7 @@ repository = "https://github.com/xberg-io/liter-llm"
 homepage = "https://xberg.io"
 authors = ["Na'aman Hirschfeld <naaman@xberg.io>"]
 description = "Universal LLM API client — 143 providers, streaming, tool calling. Rust-powered with polyglot bindings."
-keywords = ["llm", "openai", "api-client", "ai", "kreuzberg"]
+keywords = ["llm", "openai", "api-client", "ai", "xberg"]
 
 [workspace.dependencies]
 ahash = "0.8"

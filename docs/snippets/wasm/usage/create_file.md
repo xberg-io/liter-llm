@@ -5,7 +5,7 @@ import init, {
   createClient,
   WasmCreateFileRequest,
   WasmFilePurpose,
-} from "@kreuzberg/liter-llm-wasm";
+} from "@xberg-io/liter-llm-wasm";
 
 await init();
 

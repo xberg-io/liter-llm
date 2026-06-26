@@ -6,7 +6,7 @@ import init, {
   WasmChatCompletionRequest,
   WasmMessage,
   WasmUserContent,
-} from "@kreuzberg/liter-llm-wasm";
+} from "@xberg-io/liter-llm-wasm";
 
 await init();
 

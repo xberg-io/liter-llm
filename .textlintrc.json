@@ -15,7 +15,7 @@
     },
     "terminology": {
       "defaultTerms": false,
-      "terms": ["Kreuzberg", "liter-llm"]
+      "terms": ["Xberg", "liter-llm"]
     },
     "no-zero-width-spaces": true,
     "@textlint-rule/no-invalid-control-character": true,

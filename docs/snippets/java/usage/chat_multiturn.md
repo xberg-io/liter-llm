@@ -1,7 +1,7 @@
 <!-- snippet:compile-only -->
 
 ```java
-import dev.kreuzberg.literllm.*;
+import io.xberg.literllm.*;
 import java.util.ArrayList;
 import java.util.List;
 

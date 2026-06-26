@@ -56,11 +56,11 @@ A universal LLM API client with a Rust core and 14 native language bindings (plu
 | :-------------------- | :------------------------------------------------------ | :------------------------------------------- |
 | **Rust**              | `cargo add liter-llm`                                   | [API Reference](reference/api-rust.md)       |
 | **Python**            | `pip install liter-llm`                                 | [API Reference](reference/api-python.md)     |
-| **TypeScript / Node** | `npm install @kreuzberg/liter-llm`                 | [API Reference](reference/api-typescript.md) |
-| **WebAssembly**       | `npm install @kreuzberg/liter-llm-wasm`                 | [API Reference](reference/api-wasm.md)       |
+| **TypeScript / Node** | `npm install @xberg-io/liter-llm`                 | [API Reference](reference/api-typescript.md) |
+| **WebAssembly**       | `npm install @xberg-io/liter-llm-wasm`                 | [API Reference](reference/api-wasm.md)       |
 | **Go**                | `go get github.com/xberg-io/liter-llm/packages/go` | [API Reference](reference/api-go.md)         |
-| **Java**              | Maven Central `dev.kreuzberg.literllm:liter-llm`        | [API Reference](reference/api-java.md)       |
-| **Kotlin Android**    | Maven `dev.kreuzberg:liter-llm-android`                 | [API Reference](reference/api-kotlin-android.md) |
+| **Java**              | Maven Central `io.xberg.literllm:liter-llm`        | [API Reference](reference/api-java.md)       |
+| **Kotlin Android**    | Maven `io.xberg:liter-llm-android`                 | [API Reference](reference/api-kotlin-android.md) |
 | **C#**                | `dotnet add package LiterLlm`                           | [API Reference](reference/api-csharp.md)     |
 | **Ruby**              | `gem install liter_llm`                                 | [API Reference](reference/api-ruby.md)       |
 | **PHP**               | `composer require xberg-io/liter-llm`              | [API Reference](reference/api-php.md)        |
@@ -135,7 +135,7 @@ All bindings are generated from one Rust core, so endpoint coverage is uniform; 
 === "TypeScript"
 
     ```typescript title="index.ts"
-    import { createClient } from "@kreuzberg/liter-llm";
+    import { createClient } from "@xberg-io/liter-llm";
 
     const client = createClient(process.env.OPENAI_API_KEY!);
 
@@ -149,11 +149,11 @@ All bindings are generated from one Rust core, so endpoint coverage is uniform; 
 
 ---
 
-### Part of Kreuzberg.dev
+### Part of Xberg.io
 
 <div class="grid cards" markdown>
 
-- :material-file-document-multiple:{ .lg .middle } **[Kreuzberg](https://docs.xberg.io)**
+- :material-file-document-multiple:{ .lg .middle } **[Xberg](https://docs.xberg.io)**
 
   Document intelligence — text, tables, and metadata from 96 file formats with optional OCR.
 
@@ -175,7 +175,7 @@ All bindings are generated from one Rust core, so endpoint coverage is uniform; 
 
 - :fontawesome-brands-discord:{ .lg .middle } **[Discord](https://discord.gg/xt9WY3GnKR)**
 
-  Join the Kreuzberg community for help, roadmap discussion, and announcements.
+  Join the Xberg community for help, roadmap discussion, and announcements.
 
 </div>
 

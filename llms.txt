@@ -13,8 +13,8 @@ model name prefixes (e.g. "openai/gpt-4o" routes to OpenAI).
 
 Part of the xberg.io ecosystem:
 - **xberg.io** — Organization: https://xberg.io
-- **Kreuzberg** — Document intelligence for 91+ formats: https://github.com/xberg-io/kreuzberg
-  - Kreuzberg docs: https://docs.xberg.io
+- **Xberg** — Document intelligence for 91+ formats: https://github.com/xberg-io/xberg
+  - Xberg docs: https://docs.xberg.io
 - **html-to-markdown** — HTML to Markdown converter: https://github.com/xberg-io/html-to-markdown
 - **tree-sitter-language-pack** — Multi-language parsing: https://github.com/xberg-io/tree-sitter-language-pack
 - **liter-llm** — Universal LLM API client (this project): https://github.com/xberg-io/liter-llm
@@ -103,14 +103,14 @@ Part of the xberg.io ecosystem:
 |----------|---------|---------|
 | Rust | crates.io/crates/liter-llm | `cargo add liter-llm` |
 | Python | pypi.org/project/liter-llm | `pip install liter-llm` |
-| TypeScript/Node.js | npmjs.com/package/@kreuzberg/liter-llm | `pnpm add @kreuzberg/liter-llm` |
+| TypeScript/Node.js | npmjs.com/package/@xberg-io/liter-llm | `pnpm add @xberg-io/liter-llm` |
 | Go | github.com/xberg-io/liter-llm/packages/go | `go get github.com/xberg-io/liter-llm/packages/go` |
-| Java | dev.kreuzberg.literllm:liter-llm (Maven) | `implementation("dev.kreuzberg.literllm:liter-llm:1.7.5")` |
+| Java | io.xberg.literllm:liter-llm (Maven) | `implementation("io.xberg.literllm:liter-llm:1.7.5")` |
 | C# / .NET | NuGet: LiterLlm | `dotnet add package LiterLlm` |
 | Ruby | RubyGems: liter_llm | `gem install liter_llm` |
 | Elixir | Hex: liter_llm | `{:liter_llm, "~> 1.7"}` in mix.exs |
 | PHP | Packagist: xberg-io/liter-llm | `composer require xberg-io/liter-llm` |
-| WebAssembly | npmjs.com/package/@kreuzberg/liter-llm-wasm | `pnpm add @kreuzberg/liter-llm-wasm` |
+| WebAssembly | npmjs.com/package/@xberg-io/liter-llm-wasm | `pnpm add @xberg-io/liter-llm-wasm` |
 | C / FFI | Build from source | `cargo build --release -p liter-llm-ffi` |
 
 ## CLI Installation
@@ -203,7 +203,7 @@ asyncio.run(main())
 ### TypeScript — Streaming
 
 ```typescript
-import { LlmClient } from "@kreuzberg/liter-llm";
+import { LlmClient } from "@xberg-io/liter-llm";
 
 const client = new LlmClient({ apiKey: process.env.OPENAI_API_KEY! });
 const chunks = await client.chatStream({

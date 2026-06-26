@@ -8,7 +8,7 @@ homepage.workspace = true
 authors.workspace = true
 description = "Universal LLM API client — 142+ providers, streaming, tool calling. Rust-powered, type-safe, compiled."
 readme = "README.md"
-keywords = ["llm", "openai", "api-client", "ai", "kreuzberg"]
+keywords = ["llm", "openai", "api-client", "ai", "xberg"]
 categories = ["api-bindings", "web-programming::http-client"]
 
 [package.metadata.cargo-machete]

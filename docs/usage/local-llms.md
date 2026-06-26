@@ -247,7 +247,7 @@ If your local provider runs on a non-default port or remote host, override the b
 === "TypeScript"
 
     ```typescript
-    import { createClient } from "@kreuzberg/liter-llm";
+    import { createClient } from "@xberg-io/liter-llm";
 
     const client = createClient("", "http://192.168.1.100:9000/v1");
     ```

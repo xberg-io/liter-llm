@@ -15,7 +15,7 @@ The MCP server is part of the `liter-llm` binary. Install it any of these ways:
 ```bash
 brew install xberg-io/tap/liter-llm   # Homebrew (macOS/Linux)
 cargo install liter-llm-cli                 # from crates.io
-npx @kreuzberg/liter-llm-cli --help         # npm — self-installs the binary
+npx @xberg-io/liter-llm-cli --help         # npm — self-installs the binary
 docker run ghcr.io/xberg-io/liter-llm  # container image
 ```
 
@@ -27,7 +27,7 @@ To use the MCP server inside a coding agent (Claude Code, Cursor, Codex, Gemini 
 
 ```text
 /plugin marketplace add xberg-io/plugins
-/plugin install liter-llm@kreuzberg
+/plugin install liter-llm@xberg
 ```
 
 The rest of this page covers running and configuring the server directly.

@@ -19,14 +19,14 @@
 	<a href="https://pypi.org/project/liter-llm/">
 		<img src="https://img.shields.io/pypi/v/liter-llm?label=Python&color=007ec6" alt="Python" />
 	</a>
-	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm">
-		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=Node.js&color=007ec6" alt="Node.js" />
+	<a href="https://www.npmjs.com/package/@xberg-io/liter-llm">
+		<img src="https://img.shields.io/npm/v/@xberg-io/liter-llm?label=Node.js&color=007ec6" alt="Node.js" />
 	</a>
-	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-wasm">
-		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6" alt="WASM" />
+	<a href="https://www.npmjs.com/package/@xberg-io/liter-llm-wasm">
+		<img src="https://img.shields.io/npm/v/@xberg-io/liter-llm-wasm?label=WASM&color=007ec6" alt="WASM" />
 	</a>
-	<a href="https://central.sonatype.com/artifact/dev.kreuzberg.literllm/liter-llm">
-		<img src="https://img.shields.io/maven-central/v/dev.kreuzberg.literllm/liter-llm?label=Java&color=007ec6" alt="Java" />
+	<a href="https://central.sonatype.com/artifact/io.xberg.literllm/liter-llm">
+		<img src="https://img.shields.io/maven-central/v/io.xberg.literllm/liter-llm?label=Java&color=007ec6" alt="Java" />
 	</a>
 	<a href="https://github.com/xberg-io/liter-llm/tree/main/packages/go">
 		<img src="https://img.shields.io/github/v/tag/xberg-io/liter-llm?label=Go&color=007ec6" alt="Go" />
@@ -80,7 +80,7 @@
 </div>
 
 Universal LLM API client for Android, packaged as an AAR with bundled JNI libraries for `arm64-v8a` and `x86_64`.
-Server-side Kotlin/JVM consumers should use the `dev.kreuzberg.literllm:liter-llm` Java package directly — Panama FFM is unavailable on Android, which is why Android ships as its own artifact.
+Server-side Kotlin/JVM consumers should use the `io.xberg.literllm:liter-llm` Java package directly — Panama FFM is unavailable on Android, which is why Android ships as its own artifact.
 
 ## What This Package Provides
 
@@ -99,14 +99,14 @@ Install via one of the supported package managers:
 **Gradle:**
 
 ```gradle
-implementation 'dev.kreuzberg:liter-llm-android:1.8.2'
+implementation 'io.xberg:liter-llm-android:1.8.2'
 ```
 
 **Maven:**
 
 ```xml
 <dependency>
-    <groupId>dev.kreuzberg</groupId>
+    <groupId>io.xberg</groupId>
     <artifactId>liter-llm-android</artifactId>
     <version>1.8.2</version>
 </dependency>
@@ -210,9 +210,9 @@ To use the MCP server inside a coding agent, install the **liter-llm plugin** fr
 - **[GitHub Repository](https://github.com/xberg-io/liter-llm)** -- Source, issues, and discussions
 - **[Provider Registry](https://github.com/xberg-io/liter-llm/blob/main/schemas/providers.json)** -- 143 supported providers
 
-## Part of Kreuzberg.dev
+## Part of Xberg.io
 
-- [Kreuzberg](https://github.com/xberg-io/kreuzberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Xberg](https://github.com/xberg-io/xberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
 - [Xberg Enterprise](https://github.com/xberg-io/xberg-enterprise) — managed extraction API with SDKs, dashboards, and observability.
 - [crawlberg](https://github.com/xberg-io/crawlberg) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
 - [html-to-markdown](https://github.com/xberg-io/html-to-markdown) — fast, lossless HTML→Markdown engine.

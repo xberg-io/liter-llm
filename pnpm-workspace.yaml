@@ -7,4 +7,4 @@ allowBuilds:
   esbuild: true
 minimumReleaseAge: 0
 minimumReleaseAgeExclude:
-  - '@kreuzberg/*'
+  - '@xberg-io/*'

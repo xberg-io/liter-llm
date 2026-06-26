@@ -99,7 +99,7 @@ run_wrapper = "uv run --no-sync"
 output = "packages/python/liter_llm/"
 
 [crates.node]
-package_name = "@kreuzberg/liter-llm"
+package_name = "@xberg-io/liter-llm"
 exclude_platforms = ["linux-x64-musl", "linux-arm64-musl"]
 
 [crates.ruby]
@@ -184,7 +184,7 @@ module = "github.com/xberg-io/liter-llm/packages/go"
 package_name = "literllm"
 
 [crates.java]
-package = "dev.kreuzberg.literllm"
+package = "io.xberg.literllm"
 project_file = "packages/java/pom.xml"
 
 [crates.csharp]
@@ -222,10 +222,10 @@ DefaultClient = """    let mut config = liter_llm::ClientConfig::new(api_key);
 # interop is total). Panama FFM is unavailable on Android (max JDK 17), which is
 # why Android needs its own JNI-based package with bundled .so files.
 # Emitted by alef-backend-kotlin-android (alef >= 0.16).
-package = "dev.kreuzberg.literllm.android"
-namespace = "dev.kreuzberg.literllm.android"
+package = "io.xberg.literllm.android"
+namespace = "io.xberg.literllm.android"
 artifact_id = "liter-llm-android"
-group_id = "dev.kreuzberg"
+group_id = "io.xberg"
 abis = ["arm64-v8a", "x86_64"]
 # Tower middleware config DTOs are excluded from the Android AAR for the same
 # reason they are excluded from the WASM binding: tower is not available in the
@@ -255,7 +255,7 @@ csharp = "packages/csharp/"
 zig = "packages/zig/src/"
 dart = "packages/dart/"
 swift = "packages/swift/Sources/LiterLlm/"
-kotlin_android = "packages/kotlin-android/src/main/kotlin/dev/kreuzberg/literllm/android/"
+kotlin_android = "packages/kotlin-android/src/main/kotlin/io/xberg/literllm/android/"
 
 [crates.exclude]
 types = [
@@ -1921,7 +1921,7 @@ type = "string"
 result_type = "ResponseObject"
 
 [crates.e2e.packages.node]
-name = "@kreuzberg/liter-llm"
+name = "@xberg-io/liter-llm"
 
 [crates.e2e.packages.python]
 name = "liter-llm"
@@ -1931,7 +1931,7 @@ name = "liter_llm"
 path = "../../packages/elixir"
 
 [crates.e2e.packages.kotlin_android]
-module = "dev.kreuzberg.literllm.android"
+module = "io.xberg.literllm.android"
 path = "../../packages/kotlin-android"
 
 [crates.e2e.registry]
@@ -1942,10 +1942,10 @@ github_repo = "https://github.com/xberg-io/liter-llm"
 name = "liter-llm"
 
 [crates.e2e.registry.packages.node]
-name = "@kreuzberg/liter-llm"
+name = "@xberg-io/liter-llm"
 
 [crates.e2e.registry.packages.wasm]
-name = "@kreuzberg/liter-llm-wasm"
+name = "@xberg-io/liter-llm-wasm"
 
 [crates.e2e.registry.packages.ruby]
 name = "liter_llm"
@@ -1954,7 +1954,7 @@ name = "liter_llm"
 module = "github.com/xberg-io/liter-llm/packages/go"
 
 [crates.e2e.registry.packages.java]
-name = "dev.kreuzberg.literllm:liter-llm"
+name = "io.xberg.literllm:liter-llm"
 
 [crates.e2e.registry.packages.csharp]
 name = "LiterLlm"
@@ -1963,7 +1963,7 @@ name = "LiterLlm"
 name = "xberg-io/liter-llm"
 
 [crates.e2e.registry.packages.kotlin_android]
-name = "dev.kreuzberg:liter-llm-android"
+name = "io.xberg:liter-llm-android"
 
 [crates.e2e.registry.packages.elixir]
 name = "liter_llm"
@@ -2002,13 +2002,13 @@ expect_contains = "Usage"
 # used by ../html-to-markdown.
 [[workspace.sync.text_replacements]]
 path = "test_apps/node/package.json"
-search = '"@kreuzberg/liter-llm": "[^"]*"'
-replace = '"@kreuzberg/liter-llm": "{version}"'
+search = '"@xberg-io/liter-llm": "[^"]*"'
+replace = '"@xberg-io/liter-llm": "{version}"'
 
 [[workspace.sync.text_replacements]]
 path = "test_apps/wasm/package.json"
-search = '"@kreuzberg/liter-llm-wasm": "[^"]*"'
-replace = '"@kreuzberg/liter-llm-wasm": "{version}"'
+search = '"@xberg-io/liter-llm-wasm": "[^"]*"'
+replace = '"@xberg-io/liter-llm-wasm": "{version}"'
 
 [[workspace.sync.text_replacements]]
 path = "test_apps/python/pyproject.toml"
@@ -2075,8 +2075,8 @@ template = "language_package.md"
 output_path = "packages/node/README.md"
 language = "typescript"
 name = "TypeScript (Node.js)"
-package_name = "@kreuzberg/liter-llm"
-badge_url = "https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=TypeScript&color=007ec6"
+package_name = "@xberg-io/liter-llm"
+badge_url = "https://img.shields.io/npm/v/@xberg-io/liter-llm?label=TypeScript&color=007ec6"
 docs_url = "https://github.com/xberg-io/liter-llm"
 description = "Universal LLM API client for TypeScript and Node.js. Access 143 LLM providers through a single interface with native NAPI-RS bindings, async/await, streaming, tool calling, and full TypeScript type definitions."
 package_manager = ["npm", "pnpm", "yarn"]
@@ -2151,8 +2151,8 @@ tool_calling = "getting-started/tool_calling.md"
 template = "language_package.md"
 output_path = "crates/liter-llm-node/README.md"
 name = "TypeScript (Node.js)"
-package_name = "@kreuzberg/liter-llm"
-badge_url = "https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=TypeScript&color=007ec6"
+package_name = "@xberg-io/liter-llm"
+badge_url = "https://img.shields.io/npm/v/@xberg-io/liter-llm?label=TypeScript&color=007ec6"
 docs_url = "https://github.com/xberg-io/liter-llm"
 description = "Universal LLM API client for TypeScript and Node.js. Access 143 LLM providers through a single interface with native NAPI-RS bindings, async/await, streaming, tool calling, and full TypeScript type definitions."
 package_manager = ["npm", "pnpm", "yarn"]
@@ -2201,8 +2201,8 @@ streaming = "getting-started/streaming.md"
 [crates.readme.languages.java]
 template = "language_package.md"
 name = "Java"
-package_name = "dev.kreuzberg.literllm:liter-llm"
-badge_url = "https://img.shields.io/maven-central/v/dev.kreuzberg.literllm/liter-llm?label=Java&color=007ec6"
+package_name = "io.xberg.literllm:liter-llm"
+badge_url = "https://img.shields.io/maven-central/v/io.xberg.literllm/liter-llm?label=Java&color=007ec6"
 docs_url = "https://github.com/xberg-io/liter-llm"
 description = "Universal LLM API client for Java. Access 143 LLM providers through a single type-safe interface with Foreign Function & Memory API integration, async support, and native performance."
 package_manager = ["maven", "gradle"]
@@ -2318,8 +2318,8 @@ streaming = "getting-started/streaming.md"
 template = "language_package.md"
 output_path = "crates/liter-llm-wasm/README.md"
 name = "WebAssembly"
-package_name = "@kreuzberg/liter-llm-wasm"
-badge_url = "https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6"
+package_name = "@xberg-io/liter-llm-wasm"
+badge_url = "https://img.shields.io/npm/v/@xberg-io/liter-llm-wasm?label=WASM&color=007ec6"
 docs_url = "https://github.com/xberg-io/liter-llm"
 description = "Universal LLM API client for browsers and WebAssembly runtimes. Access 143 LLM providers with portable deployment across browsers, Deno, and Cloudflare Workers."
 package_manager = ["npm", "pnpm", "yarn"]
@@ -2344,12 +2344,12 @@ name = "Kotlin (Android)"
 template = "language_package.md"
 output_path = "packages/kotlin-android/README.md"
 package_manager = ["gradle", "maven"]
-package_name = "dev.kreuzberg:liter-llm-android"
+package_name = "io.xberg:liter-llm-android"
 install_command = """
-implementation("dev.kreuzberg:liter-llm-android:{{ version }}")"""
+implementation("io.xberg:liter-llm-android:{{ version }}")"""
 description = """
 Universal LLM API client for Android, packaged as an AAR with bundled JNI libraries for `arm64-v8a` and `x86_64`.
-Server-side Kotlin/JVM consumers should use the `dev.kreuzberg.literllm:liter-llm` Java package directly — Panama FFM is unavailable on Android, which is why Android ships as its own artifact.
+Server-side Kotlin/JVM consumers should use the `io.xberg.literllm:liter-llm` Java package directly — Panama FFM is unavailable on Android, which is why Android ships as its own artifact.
 """
 
 [crates.readme.languages.kotlin_android.features]

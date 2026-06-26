@@ -1,7 +1,7 @@
 <!-- snippet:compile-only -->
 
 ```typescript
-import init, { createClient, WasmSearchRequest } from "@kreuzberg/liter-llm-wasm";
+import init, { createClient, WasmSearchRequest } from "@xberg-io/liter-llm-wasm";
 
 await init();
 

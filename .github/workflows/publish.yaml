@@ -87,7 +87,7 @@ jobs:
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
 
             - name: Checkout
               uses: actions/checkout@v6
@@ -165,10 +165,10 @@ jobs:
                 [
                   {"name": "cratesio", "registry": "cratesio", "package": "liter-llm"},
                   {"name": "pypi", "registry": "pypi", "package": "liter-llm"},
-                  {"name": "npm", "registry": "npm", "package": "@kreuzberg/liter-llm"},
-                  {"name": "npm-wasm", "registry": "npm", "package": "@kreuzberg/liter-llm-wasm"},
+                  {"name": "npm", "registry": "npm", "package": "@xberg-io/liter-llm"},
+                  {"name": "npm-wasm", "registry": "npm", "package": "@xberg-io/liter-llm-wasm"},
                   {"name": "rubygems", "registry": "rubygems", "package": "liter_llm"},
-                  {"name": "maven", "registry": "maven", "package": "dev.kreuzberg.literllm:liter-llm"},
+                  {"name": "maven", "registry": "maven", "package": "io.xberg.literllm:liter-llm"},
                   {"name": "hex", "registry": "hex", "package": "liter_llm"},
                   {"name": "packagist", "registry": "packagist", "package": "xberg-io/liter-llm"},
                   {"name": "nuget", "registry": "nuget", "package": "LiterLlm"},
@@ -516,7 +516,7 @@ jobs:
                   path = "crates/liter-llm-wasm/pkg/package.json"
                   with open(path) as f:
                     pkg = json.load(f)
-                  pkg["name"] = "@kreuzberg/liter-llm-wasm"
+                  pkg["name"] = "@xberg-io/liter-llm-wasm"
                   pkg["version"] = os.environ["VERSION"]
                   pkg["publishConfig"] = {"registry": "https://registry.npmjs.org/", "access": "public"}
                   with open(path, "w") as f:
@@ -1141,7 +1141,7 @@ jobs:
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
@@ -1182,7 +1182,7 @@ jobs:
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
@@ -1228,7 +1228,7 @@ jobs:
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
 
             - uses: actions/checkout@v6
               with:
@@ -1239,8 +1239,8 @@ jobs:
 
             - name: Setup Git
               run: |
-                  git config user.name "kreuzberg-dev-publisher[bot]"
-                  git config user.email "291994444+kreuzberg-dev-publisher[bot]@users.noreply.github.com"
+                  git config user.name "xberg-dev-publisher[bot]"
+                  git config user.email "291994444+xberg-dev-publisher[bot]@users.noreply.github.com"
               shell: bash
 
             - uses: actions/download-artifact@v7
@@ -1363,7 +1363,7 @@ jobs:
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
@@ -1399,7 +1399,7 @@ jobs:
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
@@ -1440,7 +1440,7 @@ jobs:
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
@@ -1606,7 +1606,7 @@ jobs:
                   JSON
                   fi
                   # --no-frozen-lockfile because crates/liter-llm-node/package.json declares
-                  # `optionalDependencies: @kreuzberg/liter-llm-<rid>@<version>` entries
+                  # `optionalDependencies: @xberg-io/liter-llm-<rid>@<version>` entries
                   # for the per-platform stubs alef-scaffold emits for napi-rs, but those
                   # packages don't exist on npm yet at this point in the workflow — this very
                   # step is preparing to publish them. The default `--frozen-lockfile` rejects
@@ -1627,7 +1627,7 @@ jobs:
               uses: xberg-io/actions/check-registry@v1
               with:
                   registry: npm
-                  package: "@kreuzberg/liter-llm"
+                  package: "@xberg-io/liter-llm"
                   version: ${{ needs.prepare.outputs.version }}
 
             - name: Publish native binary packages
@@ -1643,7 +1643,7 @@ jobs:
               uses: xberg-io/actions/wait-for-package@v1
               with:
                   registry: npm
-                  package: "@kreuzberg/liter-llm-linux-x64-gnu"
+                  package: "@xberg-io/liter-llm-linux-x64-gnu"
                   version: ${{ needs.prepare.outputs.version }}
                   max-attempts: "25"
 
@@ -1652,7 +1652,7 @@ jobs:
               uses: xberg-io/actions/wait-for-package@v1
               with:
                   registry: npm
-                  package: "@kreuzberg/liter-llm-linux-arm64-gnu"
+                  package: "@xberg-io/liter-llm-linux-arm64-gnu"
                   version: ${{ needs.prepare.outputs.version }}
                   max-attempts: "25"
 
@@ -1665,35 +1665,35 @@ jobs:
                   dry-run: ${{ needs.prepare.outputs.dry_run }}
                   provenance: "true"
 
-            - name: Wait for @kreuzberg/liter-llm to be available
+            - name: Wait for @xberg-io/liter-llm to be available
               if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck.outputs.exists != 'true' }}
               uses: xberg-io/actions/wait-for-package@v1
               with:
                   registry: npm
-                  package: "@kreuzberg/liter-llm"
+                  package: "@xberg-io/liter-llm"
                   version: ${{ needs.prepare.outputs.version }}
                   max-attempts: "25"
 
-            # Also publish the napi umbrella under the legacy @kreuzberg/liter-llm-node
+            # Also publish the napi umbrella under the legacy @xberg-io/liter-llm-node
             # name so both resolve identically. publish.py uses `npm publish
             # --ignore-scripts`, so the `prepublishOnly: napi prepublish` hook does not
             # run and won't reset the renamed `name`. Only the top-level `name` changes;
             # the napi `packageName` and `optionalDependencies` keep pointing at the
-            # shared @kreuzberg/liter-llm-<rid> platform packages.
-            - name: Re-check npm for the @kreuzberg/liter-llm-node alias
+            # shared @xberg-io/liter-llm-<rid> platform packages.
+            - name: Re-check npm for the @xberg-io/liter-llm-node alias
               id: recheck-node
               uses: xberg-io/actions/check-registry@v1
               with:
                   registry: npm
-                  package: "@kreuzberg/liter-llm-node"
+                  package: "@xberg-io/liter-llm-node"
                   version: ${{ needs.prepare.outputs.version }}
 
-            - name: Rename umbrella to @kreuzberg/liter-llm-node
+            - name: Rename umbrella to @xberg-io/liter-llm-node
               if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck-node.outputs.exists != 'true' }}
               shell: bash
-              run: npm pkg set name=@kreuzberg/liter-llm-node --prefix crates/liter-llm-node
+              run: npm pkg set name=@xberg-io/liter-llm-node --prefix crates/liter-llm-node
 
-            - name: Publish @kreuzberg/liter-llm-node alias
+            - name: Publish @xberg-io/liter-llm-node alias
               if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck-node.outputs.exists != 'true' }}
               uses: xberg-io/actions/publish-npm@v1
               with:
@@ -1704,7 +1704,7 @@ jobs:
 
             - name: npm already published summary
               if: ${{ steps.recheck.outputs.exists == 'true' }}
-              run: echo "Node package @kreuzberg/liter-llm@${{ needs.prepare.outputs.version }} already published on npm — skipped." >> "$GITHUB_STEP_SUMMARY"
+              run: echo "Node package @xberg-io/liter-llm@${{ needs.prepare.outputs.version }} already published on npm — skipped." >> "$GITHUB_STEP_SUMMARY"
 
     publish-wasm:
         name: Publish WASM package
@@ -1738,7 +1738,7 @@ jobs:
               uses: xberg-io/actions/check-registry@v1
               with:
                   registry: npm
-                  package: "@kreuzberg/liter-llm-wasm"
+                  package: "@xberg-io/liter-llm-wasm"
                   version: ${{ needs.prepare.outputs.version }}
 
             - name: WASM artifact summary
@@ -1759,7 +1759,7 @@ jobs:
               uses: xberg-io/actions/wait-for-package@v1
               with:
                   registry: npm
-                  package: "@kreuzberg/liter-llm-wasm"
+                  package: "@xberg-io/liter-llm-wasm"
                   version: ${{ needs.prepare.outputs.version }}
                   max-attempts: "25"
 
@@ -1767,9 +1767,9 @@ jobs:
               if: ${{ needs.prepare.outputs.dry_run != 'true' }}
               run: |
                   if [ "${{ steps.npm_check.outputs.exists }}" = "true" ]; then
-                    echo "WASM package @kreuzberg/liter-llm-wasm@${{ needs.prepare.outputs.version }} already published on npm — skipped." >> "$GITHUB_STEP_SUMMARY"
+                    echo "WASM package @xberg-io/liter-llm-wasm@${{ needs.prepare.outputs.version }} already published on npm — skipped." >> "$GITHUB_STEP_SUMMARY"
                   else
-                    echo "Published @kreuzberg/liter-llm-wasm@${{ needs.prepare.outputs.version }} to npm." >> "$GITHUB_STEP_SUMMARY"
+                    echo "Published @xberg-io/liter-llm-wasm@${{ needs.prepare.outputs.version }} to npm." >> "$GITHUB_STEP_SUMMARY"
                   fi
 
     publish-rubygems:
@@ -2061,7 +2061,7 @@ jobs:
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
 
             - uses: actions/checkout@v6
               with:
@@ -2084,8 +2084,8 @@ jobs:
             - name: Commit updated checksum file to main
               if: needs.prepare.outputs.dry_run != 'true'
               run: |
-                  git config user.name "kreuzberg-dev-publisher[bot]"
-                  git config user.email "291994444+kreuzberg-dev-publisher[bot]@users.noreply.github.com"
+                  git config user.name "xberg-dev-publisher[bot]"
+                  git config user.email "291994444+xberg-dev-publisher[bot]@users.noreply.github.com"
                   git add packages/elixir/checksum-Elixir.LiterLlm.Native.exs
                   if git diff --cached --quiet; then
                     echo "No checksum changes to commit — skipping"
@@ -2177,7 +2177,7 @@ jobs:
         steps:
             - uses: xberg-io/actions/publish-packagist@v1
               with:
-                  packagist-username: kreuzberg-dev
+                  packagist-username: xberg-io
                   package-name: xberg-io/liter-llm
                   version: ${{ needs.prepare.outputs.version }}
                   repository-url: https://github.com/xberg-io/liter-llm
@@ -2196,7 +2196,7 @@ jobs:
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
             - name: Dispatch publish-pubdev workflow
               env:
                   GH_TOKEN: ${{ steps.app-token.outputs.token }}
@@ -2217,7 +2217,7 @@ jobs:
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
             - uses: actions/checkout@v6
               with:
                   ref: ${{ needs.prepare.outputs.checkout_ref }}
@@ -2268,7 +2268,7 @@ jobs:
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
 
             - uses: actions/checkout@v6
               with:
@@ -2362,7 +2362,7 @@ jobs:
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
 
             - uses: actions/checkout@v6
               with:
@@ -2422,8 +2422,8 @@ jobs:
                   fi
 
                   # Configure git
-                  git config user.name "kreuzberg-dev-publisher[bot]"
-                  git config user.email "291994444+kreuzberg-dev-publisher[bot]@users.noreply.github.com"
+                  git config user.name "xberg-dev-publisher[bot]"
+                  git config user.email "291994444+xberg-dev-publisher[bot]@users.noreply.github.com"
 
                   # Commit the patched Package.swift to a temporary release branch
                   git add Package.swift
@@ -2612,7 +2612,7 @@ jobs:
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
             - uses: actions/checkout@v6
             - uses: actions/download-artifact@v7
               with:
@@ -2649,7 +2649,7 @@ jobs:
 
     # ── Homebrew (formula update + bottles) ──────────────────────────────────
     #
-    # Topology (mirrors kreuzberg / html-to-markdown):
+    # Topology (mirrors xberg / html-to-markdown):
     #   1. publish-homebrew-formula — bump Formula/liter-llm.rb source url+sha
     #      in the tap (no bottle DSL).
     #   2. homebrew-bottles         — real `brew install --build-bottle` per
@@ -2688,14 +2688,14 @@ jobs:
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
 
             - uses: actions/create-github-app-token@v2
               id: tap-token
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
                   repositories: homebrew-tap
 
             - name: Checkout source repo
@@ -2725,8 +2725,8 @@ jobs:
               env:
                   GH_TOKEN: ${{ steps.tap-token.outputs.token }}
               run: |
-                  git config user.name "kreuzberg-dev-publisher[bot]"
-                  git config user.email "291994444+kreuzberg-dev-publisher[bot]@users.noreply.github.com"
+                  git config user.name "xberg-dev-publisher[bot]"
+                  git config user.email "291994444+xberg-dev-publisher[bot]@users.noreply.github.com"
                   if git diff --quiet Formula/; then
                     echo "No formula changes; skipping commit."
                     exit 0
@@ -2757,7 +2757,7 @@ jobs:
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
 
             # actions/checkout@v6 regression on macos-15-intel: the includeIf-gated
             # credential helper isn't honored by git 2.54 on that runner image, so
@@ -2805,7 +2805,7 @@ jobs:
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
                   repositories: homebrew-tap
 
             - uses: actions/checkout@v6
@@ -2840,8 +2840,8 @@ jobs:
               env:
                   GH_TOKEN: ${{ steps.tap-token.outputs.token }}
               run: |
-                  git config user.name "kreuzberg-dev-publisher[bot]"
-                  git config user.email "291994444+kreuzberg-dev-publisher[bot]@users.noreply.github.com"
+                  git config user.name "xberg-dev-publisher[bot]"
+                  git config user.email "291994444+xberg-dev-publisher[bot]@users.noreply.github.com"
                   if git diff --quiet Formula/; then
                     echo "No bottle DSL changes; skipping commit."
                     exit 0
@@ -2890,7 +2890,7 @@ jobs:
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
 
             - uses: actions/checkout@v6
               with:
@@ -2975,7 +2975,7 @@ jobs:
               with:
                   app-id: ${{ secrets.BOT_APP_ID }}
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-                  owner: kreuzberg-dev
+                  owner: xberg-io
             - uses: xberg-io/actions/announce-release-discord@v1
               with:
                   tag: ${{ needs.prepare.outputs.tag }}
@@ -2991,7 +2991,7 @@ jobs:
         # context) rather than delegating to a reusable workflow — otherwise npm's OIDC
         # trusted-publishing check sees the reusable workflow's filename, not publish.yaml.
         #
-        # Wired into the main release: publishes @kreuzberg/liter-llm-cli at the release version
+        # Wired into the main release: publishes @xberg-io/liter-llm-cli at the release version
         # once the standalone CLI binaries are on the GitHub release (install.js downloads them
         # at install time). Gated on the same `release_homebrew` flag that controls CLI-binary
         # uploads, so the npm wrapper never publishes ahead of the binaries it fetches.
@@ -3028,7 +3028,7 @@ jobs:
               uses: xberg-io/actions/check-registry@v1
               with:
                   registry: npm
-                  package: "@kreuzberg/liter-llm-cli"
+                  package: "@xberg-io/liter-llm-cli"
                   version: ${{ needs.prepare.outputs.version }}
             - name: Publish CLI proxy package
               if: ${{ steps.recheck.outputs.exists != 'true' }}

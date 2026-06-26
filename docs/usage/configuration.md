@@ -170,7 +170,7 @@ The constructors below match the actual binding surface. Other bindings (Go, Jav
 === "TypeScript"
 
     ```typescript
-    import { createClient } from "@kreuzberg/liter-llm";
+    import { createClient } from "@xberg-io/liter-llm";
 
     const client = createClient(
       process.env.OPENAI_API_KEY!,
@@ -186,7 +186,7 @@ The constructors below match the actual binding surface. Other bindings (Go, Jav
     For richer configuration, serialize a `ClientConfig` and pass it to `createClientFromJson`:
 
     ```typescript
-    import { createClientFromJson } from "@kreuzberg/liter-llm";
+    import { createClientFromJson } from "@xberg-io/liter-llm";
 
     const client = createClientFromJson(JSON.stringify({
       api_key: process.env.OPENAI_API_KEY,

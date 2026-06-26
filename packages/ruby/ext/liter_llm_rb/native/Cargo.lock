@@ -1810,7 +1810,7 @@ checksum = "92daf443525c4cce67b150400bc2316076100ce0b3686209eb8cf3c31612e6f0"
 
 [[package]]
 name = "liter-llm"
-version = "1.7.0"
+version = "1.8.2"
 dependencies = [
  "ahash 0.8.12",
  "async-trait",
@@ -1850,7 +1850,7 @@ dependencies = [
 
 [[package]]
 name = "liter-llm-rb"
-version = "1.7.0"
+version = "1.8.2"
 dependencies = [
  "futures",
  "liter-llm",

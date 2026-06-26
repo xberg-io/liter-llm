@@ -42,7 +42,7 @@ Send images to vision-capable models as remote URLs or base64 data URLs.
 === "TypeScript"
 
     ```typescript
-    import { createClient, ImageDetail } from "@kreuzberg/liter-llm";
+    import { createClient, ImageDetail } from "@xberg-io/liter-llm";
 
     const client = createClient({ apiKey: "sk-..." });
     const response = await client.chat({
@@ -135,7 +135,7 @@ Send images to vision-capable models as remote URLs or base64 data URLs.
 === "Java"
 
     ```java
-    import dev.kreuzberg.literllm.*;
+    import io.xberg.literllm.*;
 
     DefaultClient client = LiterLlm.createClient("sk-...", null, null, null, null);
 
@@ -217,9 +217,9 @@ Send images to vision-capable models as remote URLs or base64 data URLs.
 
     ```php
     <?php
-    use Kreuzberg\LiterLlm\LiterLlm;
-    use Kreuzberg\LiterLlm\ContentPart;
-    use Kreuzberg\LiterLlm\ImageDetail;
+    use Xberg\LiterLlm\LiterLlm;
+    use Xberg\LiterLlm\ContentPart;
+    use Xberg\LiterLlm\ImageDetail;
 
     $client = LiterLlm::createClient("sk-...", null, null, null, null);
 
@@ -353,7 +353,7 @@ Embed images directly as base64 data URLs without hosting them remotely.
 === "TypeScript"
 
     ```typescript
-    import { createClient, encodeDataUrl, IMAGE_PNG } from "@kreuzberg/liter-llm";
+    import { createClient, encodeDataUrl, IMAGE_PNG } from "@xberg-io/liter-llm";
     import { readFileSync } from "fs";
 
     const client = createClient(process.env.OPENAI_API_KEY!);
@@ -416,7 +416,7 @@ Embed images directly as base64 data URLs without hosting them remotely.
 === "Java"
 
     ```java
-    import dev.kreuzberg.literllm.*;
+    import io.xberg.literllm.*;
     import java.nio.file.Files;
     import java.nio.file.Paths;
 
@@ -499,7 +499,7 @@ Embed images directly as base64 data URLs without hosting them remotely.
 
     ```php
     <?php
-    use Kreuzberg\LiterLlm\LiterLlm;
+    use Xberg\LiterLlm\LiterLlm;
 
     $client = LiterLlm::createClient("sk-...", null, null, null, null);
 
@@ -578,7 +578,7 @@ Simple JSON mode (any valid JSON object).
 === "TypeScript"
 
     ```typescript
-    import { createClient, ResponseFormat } from "@kreuzberg/liter-llm";
+    import { createClient, ResponseFormat } from "@xberg-io/liter-llm";
 
     const client = createClient(process.env.OPENAI_API_KEY!);
 
@@ -626,7 +626,7 @@ Simple JSON mode (any valid JSON object).
 === "Java"
 
     ```java
-    import dev.kreuzberg.literllm.*;
+    import io.xberg.literllm.*;
 
     DefaultClient client = LiterLlm.createClient("sk-...", null, null, null, null);
 
@@ -900,7 +900,7 @@ Request audio output from speech models.
 === "TypeScript"
 
     ```typescript
-    import { createClient, Modality } from "@kreuzberg/liter-llm";
+    import { createClient, Modality } from "@xberg-io/liter-llm";
     import { writeFileSync } from "fs";
 
     const client = createClient(process.env.OPENAI_API_KEY!);
@@ -964,7 +964,7 @@ Request audio output from speech models.
 === "Java"
 
     ```java
-    import dev.kreuzberg.literllm.*;
+    import io.xberg.literllm.*;
     import java.nio.file.Files;
     import java.nio.file.Paths;
     import java.util.Base64;

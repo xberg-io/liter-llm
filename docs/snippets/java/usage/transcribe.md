@@ -1,7 +1,7 @@
 <!-- snippet:compile-only -->
 
 ```java
-import dev.kreuzberg.literllm.*;
+import io.xberg.literllm.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;

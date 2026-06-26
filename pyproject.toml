@@ -3,7 +3,7 @@ name = "liter-llm"
 version = "1.2.2"
 description = "A universal LM API client with polyglot bindings — fast, type-safe, compiled"
 readme = "README.md"
-keywords = [ "ai", "api-client", "kreuzberg", "llm", "openai" ]
+keywords = [ "ai", "api-client", "llm", "openai", "xberg" ]
 license = "MIT"
 authors = [ { name = "Na'aman Hirschfeld", email = "naaman@xberg.io" } ]
 requires-python = ">=3.10"

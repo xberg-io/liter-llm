@@ -1,7 +1,7 @@
 <!-- snippet:compile-only -->
 
 ```typescript
-import { createClient } from "@kreuzberg/liter-llm";
+import { createClient } from "@xberg-io/liter-llm";
 
 // Positional args: apiKey, baseUrl?, timeoutSecs?, maxRetries?, modelHint?
 const client = createClient(

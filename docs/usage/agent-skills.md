@@ -15,7 +15,7 @@ Expand the section for your harness below.
 
 ```text
 /plugin marketplace add xberg-io/plugins
-/plugin install liter-llm@kreuzberg
+/plugin install liter-llm@xberg
 ```
 
 </details>
@@ -50,7 +50,7 @@ gemini extensions install https://github.com/xberg-io/plugins
 
 ```text
 droid plugin marketplace add https://github.com/xberg-io/plugins
-droid plugin install liter-llm@kreuzberg
+droid plugin install liter-llm@xberg
 ```
 
 </details>
@@ -60,7 +60,7 @@ droid plugin install liter-llm@kreuzberg
 
 ```text
 copilot plugin marketplace add https://github.com/xberg-io/plugins
-copilot plugin install liter-llm@kreuzberg
+copilot plugin install liter-llm@xberg
 ```
 
 </details>

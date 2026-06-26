@@ -1,7 +1,7 @@
 <!-- snippet:compile-only -->
 
 ```kotlin
-import dev.kreuzberg.literllm.android.*
+import io.xberg.literllm.android.*
 
 suspend fun main() {
     // Example snippet

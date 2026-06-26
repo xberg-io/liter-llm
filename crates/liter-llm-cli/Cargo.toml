@@ -7,7 +7,7 @@ repository.workspace = true
 homepage.workspace = true
 authors.workspace = true
 description = "CLI for liter-llm — start an OpenAI-compatible proxy server or MCP tool server."
-keywords = ["llm", "proxy", "cli", "openai", "kreuzberg"]
+keywords = ["llm", "proxy", "cli", "openai", "xberg"]
 
 [[bin]]
 name = "liter-llm"

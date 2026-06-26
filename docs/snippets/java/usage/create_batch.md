@@ -1,7 +1,7 @@
 <!-- snippet:compile-only -->
 
 ```java
-import dev.kreuzberg.literllm.*;
+import io.xberg.literllm.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {

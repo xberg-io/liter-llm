@@ -6,7 +6,7 @@ site_author = "xberg.io"
 repo_name = "xberg-io/liter-llm"
 repo_url = "https://github.com/xberg-io/liter-llm"
 edit_uri = "edit/main/docs/"
-copyright = "Copyright &copy; 2024-2026 Kreuzberg.dev"
+copyright = "Copyright &copy; 2024-2026 Xberg.io"
 extra_css = ["css/extra.css"]
 nav = [
   { "Home" = "index.md" },
@@ -215,7 +215,7 @@ name = "View on GitHub Container Registry"
 
 [[project.extra.social]]
 icon = "fontawesome/brands/npm"
-link = "https://www.npmjs.com/package/@kreuzberg/liter-llm"
+link = "https://www.npmjs.com/package/@xberg-io/liter-llm"
 name = "View on npm"
 
 [[project.extra.social]]

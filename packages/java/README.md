@@ -19,14 +19,14 @@
 	<a href="https://pypi.org/project/liter-llm/">
 		<img src="https://img.shields.io/pypi/v/liter-llm?label=Python&color=007ec6" alt="Python" />
 	</a>
-	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm">
-		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=Node.js&color=007ec6" alt="Node.js" />
+	<a href="https://www.npmjs.com/package/@xberg-io/liter-llm">
+		<img src="https://img.shields.io/npm/v/@xberg-io/liter-llm?label=Node.js&color=007ec6" alt="Node.js" />
 	</a>
-	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-wasm">
-		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6" alt="WASM" />
+	<a href="https://www.npmjs.com/package/@xberg-io/liter-llm-wasm">
+		<img src="https://img.shields.io/npm/v/@xberg-io/liter-llm-wasm?label=WASM&color=007ec6" alt="WASM" />
 	</a>
-	<a href="https://central.sonatype.com/artifact/dev.kreuzberg.literllm/liter-llm">
-		<img src="https://img.shields.io/maven-central/v/dev.kreuzberg.literllm/liter-llm?label=Java&color=007ec6" alt="Java" />
+	<a href="https://central.sonatype.com/artifact/io.xberg.literllm/liter-llm">
+		<img src="https://img.shields.io/maven-central/v/io.xberg.literllm/liter-llm?label=Java&color=007ec6" alt="Java" />
 	</a>
 	<a href="https://github.com/xberg-io/liter-llm/tree/main/packages/go">
 		<img src="https://img.shields.io/github/v/tag/xberg-io/liter-llm?label=Go&color=007ec6" alt="Go" />
@@ -99,7 +99,7 @@ Install via one of the supported package managers:
 
 ```xml
 <dependency>
-    <groupId>dev.kreuzberg.literllm</groupId>
+    <groupId>io.xberg.literllm</groupId>
     <artifactId>liter-llm</artifactId>
     <version>1.8.2</version>
 </dependency>
@@ -108,7 +108,7 @@ Install via one of the supported package managers:
 **Gradle:**
 
 ```gradle
-implementation 'dev.kreuzberg.literllm:liter-llm:1.8.2'
+implementation 'io.xberg.literllm:liter-llm:1.8.2'
 ```
 
 ### System Requirements
@@ -123,7 +123,7 @@ implementation 'dev.kreuzberg.literllm:liter-llm:1.8.2'
 Send a message to any provider using the `provider/model` prefix:
 
 ```java
-import dev.kreuzberg.literllm.*;
+import io.xberg.literllm.*;
 import java.util.List;
 
 public class Main {
@@ -149,7 +149,7 @@ public class Main {
 Stream tokens in real time:
 
 ```java
-import dev.kreuzberg.literllm.*;
+import io.xberg.literllm.*;
 import java.util.List;
 
 public class Main {
@@ -259,9 +259,9 @@ To use the MCP server inside a coding agent, install the **liter-llm plugin** fr
 - **[GitHub Repository](https://github.com/xberg-io/liter-llm)** -- Source, issues, and discussions
 - **[Provider Registry](https://github.com/xberg-io/liter-llm/blob/main/schemas/providers.json)** -- 143 supported providers
 
-## Part of Kreuzberg.dev
+## Part of Xberg.io
 
-- [Kreuzberg](https://github.com/xberg-io/kreuzberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Xberg](https://github.com/xberg-io/xberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
 - [Xberg Enterprise](https://github.com/xberg-io/xberg-enterprise) — managed extraction API with SDKs, dashboards, and observability.
 - [crawlberg](https://github.com/xberg-io/crawlberg) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
 - [html-to-markdown](https://github.com/xberg-io/html-to-markdown) — fast, lossless HTML→Markdown engine.

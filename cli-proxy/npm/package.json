@@ -1,5 +1,5 @@
 {
-  "name": "@kreuzberg/liter-llm-cli",
+  "name": "@xberg-io/liter-llm-cli",
   "version": "0.0.1",
   "description": "CLI proxy for liter-llm — downloads and runs the native liter-llm binary from GitHub releases.",
   "license": "MIT",

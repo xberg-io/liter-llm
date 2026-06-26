@@ -19,14 +19,14 @@
 	<a href="https://pypi.org/project/liter-llm/">
 		<img src="https://img.shields.io/pypi/v/liter-llm?label=Python&color=007ec6" alt="Python" />
 	</a>
-	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm">
-		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm?label=Node.js&color=007ec6" alt="Node.js" />
+	<a href="https://www.npmjs.com/package/@xberg-io/liter-llm">
+		<img src="https://img.shields.io/npm/v/@xberg-io/liter-llm?label=Node.js&color=007ec6" alt="Node.js" />
 	</a>
-	<a href="https://www.npmjs.com/package/@kreuzberg/liter-llm-wasm">
-		<img src="https://img.shields.io/npm/v/@kreuzberg/liter-llm-wasm?label=WASM&color=007ec6" alt="WASM" />
+	<a href="https://www.npmjs.com/package/@xberg-io/liter-llm-wasm">
+		<img src="https://img.shields.io/npm/v/@xberg-io/liter-llm-wasm?label=WASM&color=007ec6" alt="WASM" />
 	</a>
-	<a href="https://central.sonatype.com/artifact/dev.kreuzberg.literllm/liter-llm">
-		<img src="https://img.shields.io/maven-central/v/dev.kreuzberg.literllm/liter-llm?label=Java&color=007ec6" alt="Java" />
+	<a href="https://central.sonatype.com/artifact/io.xberg.literllm/liter-llm">
+		<img src="https://img.shields.io/maven-central/v/io.xberg.literllm/liter-llm?label=Java&color=007ec6" alt="Java" />
 	</a>
 	<a href="https://github.com/xberg-io/liter-llm/tree/main/packages/go">
 		<img src="https://img.shields.io/github/v/tag/xberg-io/liter-llm?label=Go&color=007ec6" alt="Go" />
@@ -128,7 +128,7 @@ See [Python README](packages/python/README.md) for full documentation.
 <summary><strong>Node.js</strong></summary>
 
 ```sh
-pnpm add @kreuzberg/liter-llm
+pnpm add @xberg-io/liter-llm
 ```
 
 See [Node.js README](crates/liter-llm-node/README.md) for full documentation.
@@ -160,7 +160,7 @@ See [Go README](packages/go/README.md) for full documentation.
 <details>
 <summary><strong>Java</strong></summary>
 
-Available on Maven Central as `dev.kreuzberg.literllm:liter-llm`. See [Java README](packages/java/README.md) for the dependency snippet and current version.
+Available on Maven Central as `io.xberg.literllm:liter-llm`. See [Java README](packages/java/README.md) for the dependency snippet and current version.
 
 </details>
 
@@ -225,7 +225,7 @@ Add via Swift Package Manager. See [Swift README](packages/swift/README.md) for 
 <details>
 <summary><strong>Kotlin (Android)</strong></summary>
 
-Available on Maven Central as `dev.kreuzberg:liter-llm-android`. See [Kotlin README](packages/kotlin-android/README.md) for the dependency snippet and current version.
+Available on Maven Central as `io.xberg:liter-llm-android`. See [Kotlin README](packages/kotlin-android/README.md) for the dependency snippet and current version.
 
 </details>
 
@@ -240,7 +240,7 @@ See [Zig README](packages/zig/README.md) for installation and usage.
 <summary><strong>WebAssembly</strong></summary>
 
 ```sh
-pnpm add @kreuzberg/liter-llm-wasm
+pnpm add @xberg-io/liter-llm-wasm
 ```
 
 See [WebAssembly README](crates/liter-llm-wasm/README.md) for full documentation.
@@ -262,7 +262,7 @@ The `liter-llm` CLI ships both the OpenAI-compatible proxy and the MCP tool serv
 ```sh
 brew install xberg-io/tap/liter-llm
 cargo install liter-llm-cli                 # from crates.io
-npx @kreuzberg/liter-llm-cli --help         # npm (self-installs the binary)
+npx @xberg-io/liter-llm-cli --help         # npm (self-installs the binary)
 docker run -p 4000:4000 -e LITER_LLM_MASTER_KEY=sk-your-key ghcr.io/xberg-io/liter-llm
 ```
 
@@ -287,7 +287,7 @@ Install the liter-llm plugin from the [`xberg-io/plugins`](https://github.com/xb
 
 ```text
 /plugin marketplace add xberg-io/plugins
-/plugin install liter-llm@kreuzberg
+/plugin install liter-llm@xberg
 ```
 
 </details>
@@ -324,7 +324,7 @@ gemini extensions install https://github.com/xberg-io/plugins
 
 ```text
 droid plugin marketplace add https://github.com/xberg-io/plugins
-droid plugin install liter-llm@kreuzberg
+droid plugin install liter-llm@xberg
 ```
 
 </details>
@@ -334,7 +334,7 @@ droid plugin install liter-llm@kreuzberg
 
 ```text
 copilot plugin marketplace add https://github.com/xberg-io/plugins
-copilot plugin install liter-llm@kreuzberg
+copilot plugin install liter-llm@xberg
 ```
 
 </details>
@@ -356,9 +356,9 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 
 Join our [Discord community](https://discord.gg/xt9WY3GnKR) for questions and discussion.
 
-## Part of Kreuzberg.dev
+## Part of Xberg.io
 
-- [Kreuzberg](https://github.com/xberg-io/kreuzberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Xberg](https://github.com/xberg-io/xberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
 - [Xberg Enterprise](https://github.com/xberg-io/xberg-enterprise) — managed extraction API with SDKs, dashboards, and observability.
 - [crawlberg](https://github.com/xberg-io/crawlberg) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
 - [html-to-markdown](https://github.com/xberg-io/html-to-markdown) — fast, lossless HTML→Markdown engine.

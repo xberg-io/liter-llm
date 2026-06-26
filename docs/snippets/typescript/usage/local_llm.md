@@ -1,7 +1,7 @@
 <!-- snippet:compile-only -->
 
 ```typescript
-import { createClient } from "@kreuzberg/liter-llm";
+import { createClient } from "@xberg-io/liter-llm";
 
 // No API key needed for local providers
 const client = createClient("", "http://localhost:11434/v1");

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Rebrand to Xberg.** All published package coordinates move off the `kreuzberg` brand: npm scope `@kreuzberg/*` → `@xberg-io/*` (main, the six napi platform packages, `-wasm`, and `-cli`); the Java/Maven and Kotlin Android namespace `dev.kreuzberg.literllm[.android]` → `io.xberg.literllm[.android]` (group id `dev.kreuzberg` → `io.xberg`), which relocates the generated Java/Kotlin source trees from `dev/kreuzberg/…` to `io/xberg/…`. Docs, badges, the ecosystem block (now links the `Xberg` product at `github.com/xberg-io/xberg`), the brand heading ("Part of Xberg.io"), and CI publishing references (`owner: xberg-io`, `ghcr.io/xberg-io`, packagist `xberg-io`, the `xberg-dev-publisher` app, `xberg-io/homebrew-tap`) are updated to match. The legal entity name "Kreuzberg, Inc." is unchanged. (`alef.toml`, templates, generated bindings, docs, `publish.yaml`)
+
 ## [1.8.2] - 2026-06-23
 
 ### Fixed

@@ -1,7 +1,7 @@
 <!-- snippet:compile-only -->
 
 ```typescript
-import { createClient, ToolType } from "@kreuzberg/liter-llm";
+import { createClient, ToolType } from "@xberg-io/liter-llm";
 
 const client = createClient(process.env.OPENAI_API_KEY!);
 

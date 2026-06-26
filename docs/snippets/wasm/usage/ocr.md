@@ -1,7 +1,7 @@
 <!-- snippet:compile-only -->
 
 ```typescript
-import init, { createClient, WasmOcrRequest } from "@kreuzberg/liter-llm-wasm";
+import init, { createClient, WasmOcrRequest } from "@xberg-io/liter-llm-wasm";
 
 await init();
 
