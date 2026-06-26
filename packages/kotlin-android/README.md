@@ -99,14 +99,14 @@ Install via one of the supported package managers:
 **Gradle:**
 
 ```gradle
-implementation 'io.xberg:liter-llm-android:1.9.0-rc.1'
+implementation 'io.xberg.literllm:liter-llm-android:1.9.0-rc.1'
 ```
 
 **Maven:**
 
 ```xml
 <dependency>
-    <groupId>io.xberg</groupId>
+    <groupId>io.xberg.literllm</groupId>
     <artifactId>liter-llm-android</artifactId>
     <version>1.9.0-rc.1</version>
 </dependency>

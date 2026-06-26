@@ -225,7 +225,7 @@ DefaultClient = """    let mut config = liter_llm::ClientConfig::new(api_key);
 package = "io.xberg.literllm.android"
 namespace = "io.xberg.literllm.android"
 artifact_id = "liter-llm-android"
-group_id = "io.xberg"
+group_id = "io.xberg.literllm"
 abis = ["arm64-v8a", "x86_64"]
 # Tower middleware config DTOs are excluded from the Android AAR for the same
 # reason they are excluded from the WASM binding: tower is not available in the
@@ -1963,7 +1963,7 @@ name = "LiterLlm"
 name = "xberg-io/liter-llm"
 
 [crates.e2e.registry.packages.kotlin_android]
-name = "io.xberg:liter-llm-android"
+name = "io.xberg.literllm:liter-llm-android"
 
 [crates.e2e.registry.packages.elixir]
 name = "liter_llm"
@@ -2344,9 +2344,9 @@ name = "Kotlin (Android)"
 template = "language_package.md"
 output_path = "packages/kotlin-android/README.md"
 package_manager = ["gradle", "maven"]
-package_name = "io.xberg:liter-llm-android"
+package_name = "io.xberg.literllm:liter-llm-android"
 install_command = """
-implementation("io.xberg:liter-llm-android:{{ version }}")"""
+implementation("io.xberg.literllm:liter-llm-android:{{ version }}")"""
 description = """
 Universal LLM API client for Android, packaged as an AAR with bundled JNI libraries for `arm64-v8a` and `x86_64`.
 Server-side Kotlin/JVM consumers should use the `io.xberg.literllm:liter-llm` Java package directly — Panama FFM is unavailable on Android, which is why Android ships as its own artifact.
