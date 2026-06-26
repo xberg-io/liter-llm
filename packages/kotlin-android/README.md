@@ -99,7 +99,7 @@ Install via one of the supported package managers:
 **Gradle:**
 
 ```gradle
-implementation 'io.xberg:liter-llm-android:1.8.2'
+implementation 'io.xberg:liter-llm-android:1.9.0-rc.1'
 ```
 
 **Maven:**
@@ -108,7 +108,7 @@ implementation 'io.xberg:liter-llm-android:1.8.2'
 <dependency>
     <groupId>io.xberg</groupId>
     <artifactId>liter-llm-android</artifactId>
-    <version>1.8.2</version>
+    <version>1.9.0-rc.1</version>
 </dependency>
 ```
 

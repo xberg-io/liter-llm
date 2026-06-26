@@ -22,7 +22,6 @@ updates:
     - package-ecosystem: "npm"
       directories:
           - "/"
-          - "/packages/typescript"
       patterns: ["*"]
       multi-ecosystem-group: "dependencies"
 

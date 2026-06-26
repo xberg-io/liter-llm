@@ -129,7 +129,7 @@ repos:
 
           - id: oxlint
             require_serial: true
-            exclude: ^(crates/liter-llm-node/index\.(d\.ts|js)|packages/(typescript|wasm)/src/index\.ts)$
+            exclude: ^(crates/liter-llm-node/index\.(d\.ts|js)|packages/wasm/src/index\.ts)$
           - id: tsc-typecheck
           - id: tsdoc-lint
 
@@ -260,7 +260,7 @@ repos:
             exclude: ^packages/python/liter_llm/(__init__\.py|api\.py|exceptions\.py|options\.py|_internal_bindings\.pyi)$
           - id: oxfmt
             require_serial: true
-            exclude: ^(crates/liter-llm-node/index\.(d\.ts|js)|packages/(typescript|wasm)/src/index\.ts)$
+            exclude: ^(crates/liter-llm-node/index\.(d\.ts|js)|packages/wasm/src/index\.ts)$
           - id: go-fmt
             exclude: ^(e2e/|test_apps/)
           - id: palantir-java-format

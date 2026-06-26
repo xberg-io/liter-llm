@@ -145,7 +145,7 @@ jobs:
                   manifest-paths: |
                       cargo=Cargo.toml
                       python=packages/python/pyproject.toml
-                      npm=packages/typescript/package.json
+                      npm=crates/liter-llm-node/package.json
                       gem=packages/ruby/liter_llm.gemspec
                       maven=packages/java/pom.xml
                       mix=packages/elixir/mix.exs

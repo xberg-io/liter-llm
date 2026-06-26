@@ -6,7 +6,7 @@
 
     <groupId>io.xberg.literllm</groupId>
     <artifactId>liter-llm</artifactId>
-    <version>1.8.2</version>
+    <version>1.9.0-rc.1</version>
     <packaging>jar</packaging>
 
     <name>liter-llm</name>

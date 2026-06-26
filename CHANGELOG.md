@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Rebrand to Xberg.** All published package coordinates move off the `kreuzberg` brand: npm scope `@kreuzberg/*` → `@xberg-io/*` (main, the six napi platform packages, `-wasm`, and `-cli`); the Java/Maven and Kotlin Android namespace `dev.kreuzberg.literllm[.android]` → `io.xberg.literllm[.android]` (group id `dev.kreuzberg` → `io.xberg`), which relocates the generated Java/Kotlin source trees from `dev/kreuzberg/…` to `io/xberg/…`. Docs, badges, the ecosystem block (now links the `Xberg` product at `github.com/xberg-io/xberg`), the brand heading ("Part of Xberg.io"), and CI publishing references (`owner: xberg-io`, `ghcr.io/xberg-io`, packagist `xberg-io`, the `xberg-dev-publisher` app, `xberg-io/homebrew-tap`) are updated to match. The legal entity name "Kreuzberg, Inc." is unchanged. (`alef.toml`, templates, generated bindings, docs, `publish.yaml`)
 
+### Removed
+
+- **Drop the unused legacy `packages/typescript` wrapper package.** It was a re-export barrel of the native `@xberg-io/liter-llm` binding and was never published. alef no longer generates it (the napi backend stopped emitting `packages/typescript`); the canonical TypeScript surface is the native package's bundled `index.d.ts`. Removed the directory and its references in the workspace list, `dependabot.yaml`, the `validate-versions` manifest path (now `crates/liter-llm-node/package.json`), the `node:typecheck` task, and the oxlint exclude.
+
 ## [1.8.2] - 2026-06-23
 
 ### Fixed

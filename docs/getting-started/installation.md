@@ -107,14 +107,14 @@ liter-llm mcp --transport stdio
     <dependency>
         <groupId>io.xberg.literllm</groupId>
         <artifactId>liter-llm</artifactId>
-        <version>1.7.5</version>
+        <version>1.9.0-rc.1</version>
     </dependency>
     ```
 
     **Gradle:**
 
     ```kotlin
-    implementation("io.xberg.literllm:liter-llm:1.7.5")
+    implementation("io.xberg.literllm:liter-llm:1.9.0-rc.1")
     ```
 
 === "Kotlin Android"
@@ -122,7 +122,7 @@ liter-llm mcp --transport stdio
     The generated Kotlin target is Android. JVM Kotlin applications should use the Java binding from Kotlin.
 
     ```kotlin
-    implementation("io.xberg:liter-llm-android:1.7.5")
+    implementation("io.xberg:liter-llm-android:1.9.0-rc.1")
     ```
 
 === "C# / .NET"
@@ -184,7 +184,7 @@ liter-llm mcp --transport stdio
     ```swift
     .binaryTarget(
         name: "LiterLlm",
-        url: "https://github.com/xberg-io/liter-llm/releases/download/v1.7.5/LiterLlm-rs.artifactbundle.zip",
+        url: "https://github.com/xberg-io/liter-llm/releases/download/v1.9.0-rc.1/LiterLlm-rs.artifactbundle.zip",
         checksum: "<CHECKSUM-FROM-RELEASE-NOTES>"
     )
     ```
@@ -194,7 +194,7 @@ liter-llm mcp --transport stdio
     Requires Zig 0.16+.
 
     ```bash
-    zig fetch --save https://github.com/xberg-io/liter-llm/archive/refs/tags/v1.7.5.tar.gz
+    zig fetch --save https://github.com/xberg-io/liter-llm/archive/refs/tags/v1.9.0-rc.1.tar.gz
     ```
 
 === "WebAssembly"

@@ -65,7 +65,7 @@ tasks:
     typecheck:
         desc: Check TypeScript types (tsc --noEmit)
         cmds:
-            - pnpm -C packages/typescript exec tsc --noEmit --project ../../tsconfig.json
+            - pnpm exec tsc --noEmit --project tsconfig.json
 
     clean:
         desc: Clean Node.js build artifacts

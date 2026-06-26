@@ -1,10 +1,9 @@
 {
-  "version": "1.8.2",
+  "version": "1.9.0-rc.1",
   "private": true,
   "workspaces": [
     "crates/liter-llm-node",
     "crates/liter-llm-wasm",
-    "packages/typescript",
     "e2e/node",
     "e2e/wasm"
   ],
