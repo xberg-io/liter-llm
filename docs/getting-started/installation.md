@@ -122,7 +122,7 @@ liter-llm mcp --transport stdio
     The generated Kotlin target is Android. JVM Kotlin applications should use the Java binding from Kotlin.
 
     ```kotlin
-    implementation("io.xberg:liter-llm-android:1.9.0-rc.1")
+    implementation("io.xberg.literllm:liter-llm-android:1.9.0-rc.1")
     ```
 
 === "C# / .NET"

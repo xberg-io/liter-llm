@@ -164,7 +164,7 @@ Add via Swift Package Manager. See [Swift README](packages/swift/README.md) for 
 <details>
 <summary><strong>Kotlin (Android)</strong></summary>
 
-Available on Maven Central as `io.xberg:liter-llm-android`. See [Kotlin README](packages/kotlin-android/README.md) for the dependency snippet and current version.
+Available on Maven Central as `io.xberg.literllm:liter-llm-android`. See [Kotlin README](packages/kotlin-android/README.md) for the dependency snippet and current version.
 
 </details>
 
