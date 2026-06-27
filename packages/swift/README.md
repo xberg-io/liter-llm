@@ -106,7 +106,7 @@ Each release at <https://github.com/xberg-io/liter-llm/releases> attaches:
 ```swift
 .binaryTarget(
     name: "LiterLlm",
-    url: "https://github.com/xberg-io/liter-llm/releases/download/v1.9.0-rc.2/LiterLlm-rs.artifactbundle.zip",
+    url: "https://github.com/xberg-io/liter-llm/releases/download/v1.9.0/LiterLlm-rs.artifactbundle.zip",
     checksum: "<CHECKSUM-FROM-RELEASE-NOTES>"
 )
 ```

@@ -1,16 +1,28 @@
 {
   "name": "@xberg-io/liter-llm-linux-x64-gnu",
-  "version": "1.9.0-rc.2",
+  "version": "1.9.0",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xberg-io/liter-llm.git"
   },
+  "files": [
+    "liter-llm-node.linux-x64-gnu.node"
+  ],
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "libc": [
+    "glibc"
+  ],
   "main": "liter-llm-node.linux-x64-gnu.node",
-  "files": ["liter-llm-node.linux-x64-gnu.node"],
-  "os": ["linux"],
-  "cpu": ["x64"],
-  "libc": ["glibc"],
-  "engines": { "node": ">= 18" },
-  "publishConfig": { "access": "public" }
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">= 18"
+  }
 }

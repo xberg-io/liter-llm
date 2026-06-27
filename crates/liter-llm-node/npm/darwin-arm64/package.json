@@ -1,15 +1,25 @@
 {
   "name": "@xberg-io/liter-llm-darwin-arm64",
-  "version": "1.9.0-rc.2",
+  "version": "1.9.0",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xberg-io/liter-llm.git"
   },
+  "files": [
+    "liter-llm-node.darwin-arm64.node"
+  ],
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "arm64"
+  ],
   "main": "liter-llm-node.darwin-arm64.node",
-  "files": ["liter-llm-node.darwin-arm64.node"],
-  "os": ["darwin"],
-  "cpu": ["arm64"],
-  "engines": { "node": ">= 18" },
-  "publishConfig": { "access": "public" }
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">= 18"
+  }
 }

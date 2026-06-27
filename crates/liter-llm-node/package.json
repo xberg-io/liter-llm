@@ -1,12 +1,17 @@
 {
   "name": "@xberg-io/liter-llm",
-  "version": "1.9.0-rc.2",
+  "version": "1.9.0",
   "description": "Universal LLM API client with Rust-powered polyglot bindings.",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xberg-io/liter-llm.git"
   },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "*.node"
+  ],
   "main": "index.js",
   "types": "index.d.ts",
   "exports": {
@@ -16,18 +21,28 @@
       "default": "./index.js"
     }
   },
-  "files": ["index.js", "index.d.ts", "*.node"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "npx --yes -p @napi-rs/cli@^3.6.2 napi build --platform --release",
+    "artifacts": "npx --yes -p @napi-rs/cli@^3.6.2 napi artifacts",
+    "prepublishOnly": "npx --yes -p @napi-rs/cli@^3.6.2 napi prepublish -t npm --skip-optional-publish"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.6.2"
+  },
   "optionalDependencies": {
-    "@xberg-io/liter-llm-linux-x64-gnu": "1.9.0-rc.2",
-    "@xberg-io/liter-llm-linux-arm64-gnu": "1.9.0-rc.2",
-    "@xberg-io/liter-llm-darwin-x64": "1.9.0-rc.2",
-    "@xberg-io/liter-llm-darwin-arm64": "1.9.0-rc.2",
-    "@xberg-io/liter-llm-win32-x64-msvc": "1.9.0-rc.2",
-    "@xberg-io/liter-llm-win32-arm64-msvc": "1.9.0-rc.2"
+    "@xberg-io/liter-llm-darwin-arm64": "1.9.0",
+    "@xberg-io/liter-llm-darwin-x64": "1.9.0",
+    "@xberg-io/liter-llm-linux-arm64-gnu": "1.9.0",
+    "@xberg-io/liter-llm-linux-x64-gnu": "1.9.0",
+    "@xberg-io/liter-llm-win32-arm64-msvc": "1.9.0",
+    "@xberg-io/liter-llm-win32-x64-msvc": "1.9.0"
   },
   "napi": {
-    "packageName": "@xberg-io/liter-llm",
     "binaryName": "liter-llm-node",
+    "packageName": "@xberg-io/liter-llm",
     "targets": [
       "x86_64-unknown-linux-gnu",
       "aarch64-unknown-linux-gnu",
@@ -37,12 +52,7 @@
       "aarch64-pc-windows-msvc"
     ]
   },
-  "scripts": {
-    "build": "npx --yes -p @napi-rs/cli@^3.6.2 napi build --platform --release",
-    "artifacts": "npx --yes -p @napi-rs/cli@^3.6.2 napi artifacts",
-    "prepublishOnly": "npx --yes -p @napi-rs/cli@^3.6.2 napi prepublish -t npm --skip-optional-publish"
-  },
-  "engines": { "node": ">= 18" },
-  "publishConfig": { "access": "public" },
-  "devDependencies": { "@napi-rs/cli": "^3.6.2" }
+  "engines": {
+    "node": ">= 18"
+  }
 }

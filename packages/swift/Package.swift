@@ -1,6 +1,6 @@
+import Foundation
 // swift-tools-version: 6.0
 import PackageDescription
-import Foundation
 
 // NOTE: Run `cargo build -p liter-llm-swift` and then rerun `alef generate`
 // before `swift build`. Alef materializes the swift-bridge Swift/C outputs into

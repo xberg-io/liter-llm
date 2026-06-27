@@ -102,7 +102,7 @@ dotnet add package XbergIo.LiterLlm
 Or via NuGet Package Manager:
 
 ```text
-Install-Package LiterLlm
+Install-Package XbergIo.LiterLlm
 ```
 
 ### System Requirements
