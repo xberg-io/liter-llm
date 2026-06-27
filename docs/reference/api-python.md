@@ -2,7 +2,7 @@
 title: "Python API Reference"
 ---
 
-## Python API Reference <span class="version-badge">v1.9.0-rc.1</span>
+## Python API Reference <span class="version-badge">v1.9.0-rc.2</span>
 
 ### Functions
 
@@ -312,7 +312,7 @@ Returns `None` if the model is not present in the embedded pricing registry.
 Returns `Some(cost_usd)` otherwise, where the value is in US dollars.
 
 When an exact model name match is not found, progressively shorter prefixes
-are tried by stripping from the last `-` or `.` separator. For example,
+are tried by stripping from the last `-` or `.` separator.  For example,
 `gpt-4-0613` will match `gpt-4` if no `gpt-4-0613` entry exists.
 
 **Signature:**
@@ -487,7 +487,7 @@ result = count_request_tokens("value", ChatCompletionRequest())
 Assert that `current_len + incoming` does not exceed `limit`.
 
 Call this before appending `incoming` bytes to any buffer that must
-stay below `limit`. Returns `Err(LiterLlmError.Streaming)` on overflow
+stay below `limit`.  Returns `Err(LiterLlmError.Streaming)` on overflow
 and emits a `tracing.warn!` with context.
 
 **Signature:**
@@ -1568,7 +1568,7 @@ discounted rate and the remainder at the regular input rate.
 Static capability flags for a provider.
 
 Each flag indicates whether the provider's models *generally* support that
-feature. For providers that aggregate many underlying models (e.g. Bedrock,
+feature.  For providers that aggregate many underlying models (e.g. Bedrock,
 OpenRouter, vLLM) the flags reflect the superset of available model
 capabilities — a flag being `True` means at least one model supports the
 feature, not every model.
@@ -2291,7 +2291,7 @@ How the API key is sent in the HTTP request.
 
 The streaming wire format a provider uses for its response stream.
 
-Most providers use standard Server-Sent Events (SSE). AWS Bedrock uses
+Most providers use standard Server-Sent Events (SSE).  AWS Bedrock uses
 a proprietary binary EventStream framing.
 
 Deserialized from the `streaming_format` JSON field via `serde`.

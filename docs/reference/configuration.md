@@ -785,7 +785,7 @@ Configuration for registering a custom LLM provider at runtime.
 Static capability flags for a provider.
 
 Each flag indicates whether the provider's models *generally* support that
-feature. For providers that aggregate many underlying models (e.g. Bedrock,
+feature.  For providers that aggregate many underlying models (e.g. Bedrock,
 OpenRouter, vLLM) the flags reflect the superset of available model
 capabilities — a flag being `True` means at least one model supports the
 feature, not every model.

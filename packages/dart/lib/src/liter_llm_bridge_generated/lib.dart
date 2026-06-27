@@ -4095,6 +4095,7 @@ class WaitForBatchConfig {
           timeoutSecs == other.timeoutSecs;
 }
 
+
 extension AssistantContentTextExt on AssistantContent {
   /// Returns the plain-text display value of this content.
   ///
@@ -4105,9 +4106,7 @@ extension AssistantContentTextExt on AssistantContent {
   String text() {
     return switch (this) {
       AssistantContent_Text(:final field0) => field0,
-      AssistantContent_Parts(:final field0) => _extractTextFromContentParts(
-        field0,
-      ),
+      AssistantContent_Parts(:final field0) => _extractTextFromContentParts(field0),
       _ => '',
     };
   }

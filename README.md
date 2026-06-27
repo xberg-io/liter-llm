@@ -200,7 +200,7 @@ See [.NET README](packages/csharp/README.md) for full documentation.
 <details>
 <summary><strong>Elixir</strong></summary>
 
-Add `{:liter_llm, "~> 1.7"}` to your `mix.exs` dependencies. See [Elixir README](packages/elixir/README.md) for full documentation.
+Add `{:liter_llm, "~> 1.6"}` to your `mix.exs` dependencies. See [Elixir README](packages/elixir/README.md) for full documentation.
 
 </details>
 

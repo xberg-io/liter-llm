@@ -22,7 +22,6 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   static final instance = RustLib._();
 
   RustLib._();
-
   /// Resolve the prebuilt native library from environment variable,
   /// package-relative location, or defer to flutter_rust_bridge's default loader.
   /// Returns `null` to defer to flutter_rust_bridge's default loader.
@@ -65,8 +64,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
       // Check FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR env var first.
       // This allows test harnesses to override library location for development.
-      final envDir =
-          Platform.environment['FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR'];
+      final envDir = Platform.environment['FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR'];
       if (envDir != null && envDir.isNotEmpty) {
         final absEnvDir = Directory(envDir).absolute.path;
         final libDir = Directory(absEnvDir);
@@ -107,9 +105,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
       final rid = computeRid();
       if (rid != null) {
-        final packageRoot = await Isolate.resolvePackageUri(
-          _DartCore.Uri.parse('package:liter_llm/liter_llm.dart'),
-        );
+        final packageRoot =
+            await Isolate.resolvePackageUri(_DartCore.Uri.parse('package:liter_llm/liter_llm.dart'));
         if (packageRoot != null) {
           final ridDir = packageRoot.resolve('src/native/$rid/');
           for (final candidate in candidates) {
@@ -123,9 +120,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
       }
 
       // Check legacy package-installed location as fallback.
-      final packageRoot = await Isolate.resolvePackageUri(
-        _DartCore.Uri.parse('package:liter_llm/liter_llm.dart'),
-      );
+      final packageRoot =
+          await Isolate.resolvePackageUri(_DartCore.Uri.parse('package:liter_llm/liter_llm.dart'));
       if (packageRoot != null) {
         final libDir = packageRoot.resolve('src/liter_llm_bridge_generated/');
         for (final candidate in candidates) {
@@ -151,8 +147,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
       try {
         final scriptPath = Platform.script.toFilePath();
         var dir = File(scriptPath).absolute.parent;
-        while (dir.parent.path != dir.path &&
-            !File('${dir.path}/pubspec.yaml').existsSync()) {
+        while (dir.parent.path != dir.path
+            && !File('${dir.path}/pubspec.yaml').existsSync()) {
           dir = dir.parent;
         }
         if (File('${dir.path}/pubspec.yaml').existsSync()) {

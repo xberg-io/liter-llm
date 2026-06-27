@@ -30,12 +30,7 @@
     "support-nts": true,
     "download-url-method": "pre-packaged-binary"
   },
-  "keywords": [
-    "anthropic",
-    "api-client",
-    "llm",
-    "openai"
-  ],
+  "keywords": ["anthropic", "api-client", "llm", "openai"],
   "extra": {
     "pie": {
       "binary": {
