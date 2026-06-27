@@ -61,7 +61,7 @@ A universal LLM API client with a Rust core and 14 native language bindings (plu
 | **Go**                | `go get github.com/xberg-io/liter-llm/packages/go` | [API Reference](reference/api-go.md)         |
 | **Java**              | Maven Central `io.xberg.literllm:liter-llm`        | [API Reference](reference/api-java.md)       |
 | **Kotlin Android**    | Maven `io.xberg.literllm:liter-llm-android`        | [API Reference](reference/api-kotlin-android.md) |
-| **C#**                | `dotnet add package LiterLlm`                           | [API Reference](reference/api-csharp.md)     |
+| **C#**                | `dotnet add package XbergIo.LiterLlm`                           | [API Reference](reference/api-csharp.md)     |
 | **Ruby**              | `gem install liter_llm`                                 | [API Reference](reference/api-ruby.md)       |
 | **PHP**               | `composer require xberg-io/liter-llm`              | [API Reference](reference/api-php.md)        |
 | **Elixir**            | `{:liter_llm, "~> 1.7"}`                                | [API Reference](reference/api-elixir.md)     |

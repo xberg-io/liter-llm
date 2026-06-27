@@ -96,7 +96,7 @@ Universal LLM API client for .NET. Access 143 LLM providers through a single typ
 Install via NuGet:
 
 ```bash
-dotnet add package LiterLlm
+dotnet add package XbergIo.LiterLlm
 ```
 
 Or via NuGet Package Manager:

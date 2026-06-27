@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>LiterLlm</RootNamespace>
-    <PackageId>LiterLlm</PackageId>
+    <PackageId>XbergIo.LiterLlm</PackageId>
     <Version>1.9.0-rc.2</Version>
     <AssemblyVersion>1.9.0.0</AssemblyVersion>
     <FileVersion>1.9.0.0</FileVersion>

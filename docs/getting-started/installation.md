@@ -130,7 +130,7 @@ liter-llm mcp --transport stdio
     Requires .NET 10+.
 
     ```bash
-    dotnet add package LiterLlm
+    dotnet add package XbergIo.LiterLlm
     ```
 
 === "Ruby"

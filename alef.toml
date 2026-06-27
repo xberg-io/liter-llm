@@ -189,6 +189,9 @@ project_file = "packages/java/pom.xml"
 
 [crates.csharp]
 namespace = "LiterLlm"
+# NuGet PackageId is org-prefixed for consistency (XbergIo.*); the C# code
+# namespace/RootNamespace stays `LiterLlm`.
+package_id = "XbergIo.LiterLlm"
 project_file = "packages/csharp/LiterLlm/LiterLlm.csproj"
 
 [crates.zig]
@@ -2269,8 +2272,8 @@ streaming = "getting-started/streaming.md"
 [crates.readme.languages.csharp]
 template = "language_package.md"
 name = "C#"
-package_name = "LiterLlm"
-badge_url = "https://img.shields.io/nuget/v/LiterLlm?label=C%23&color=007ec6"
+package_name = "XbergIo.LiterLlm"
+badge_url = "https://img.shields.io/nuget/v/XbergIo.LiterLlm?label=C%23&color=007ec6"
 docs_url = "https://github.com/xberg-io/liter-llm"
 description = "Universal LLM API client for .NET. Access 143 LLM providers through a single type-safe interface with full async/await support and .NET 8.0+ compatibility."
 package_manager = ["nuget"]
