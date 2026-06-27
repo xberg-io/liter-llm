@@ -1674,34 +1674,6 @@ jobs:
                   version: ${{ needs.prepare.outputs.version }}
                   max-attempts: "25"
 
-            # Also publish the napi umbrella under the legacy @xberg-io/liter-llm-node
-            # name so both resolve identically. publish.py uses `npm publish
-            # --ignore-scripts`, so the `prepublishOnly: napi prepublish` hook does not
-            # run and won't reset the renamed `name`. Only the top-level `name` changes;
-            # the napi `packageName` and `optionalDependencies` keep pointing at the
-            # shared @xberg-io/liter-llm-<rid> platform packages.
-            - name: Re-check npm for the @xberg-io/liter-llm-node alias
-              id: recheck-node
-              uses: xberg-io/actions/check-registry@v1
-              with:
-                  registry: npm
-                  package: "@xberg-io/liter-llm-node"
-                  version: ${{ needs.prepare.outputs.version }}
-
-            - name: Rename umbrella to @xberg-io/liter-llm-node
-              if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck-node.outputs.exists != 'true' }}
-              shell: bash
-              run: npm pkg set name=@xberg-io/liter-llm-node --prefix crates/liter-llm-node
-
-            - name: Publish @xberg-io/liter-llm-node alias
-              if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck-node.outputs.exists != 'true' }}
-              uses: xberg-io/actions/publish-npm@v1
-              with:
-                  package-dir: crates/liter-llm-node
-                  npm-tag: ${{ needs.prepare.outputs.npm_tag }}
-                  dry-run: ${{ needs.prepare.outputs.dry_run }}
-                  provenance: "true"
-
             - name: npm already published summary
               if: ${{ steps.recheck.outputs.exists == 'true' }}
               run: echo "Node package @xberg-io/liter-llm@${{ needs.prepare.outputs.version }} already published on npm — skipped." >> "$GITHUB_STEP_SUMMARY"
