@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.29.4"
+alef_version = "0.30.0"
 languages = [
   "python",
   "node",
@@ -20,6 +20,35 @@ languages = [
 
 [workspace.format]
 enabled = false
+
+[workspace.docs]
+reference_output = "docs/reference"
+
+[workspace.docs.cli]
+sources = [
+  "crates/liter-llm-cli/src/main.rs",
+  "crates/liter-llm-cli/src/commands/mod.rs",
+  "crates/liter-llm-cli/src/commands/api.rs",
+  "crates/liter-llm-cli/src/commands/mcp.rs",
+]
+
+[workspace.docs.mcp]
+sources = [
+  "crates/liter-llm-proxy/src/mcp/mod.rs",
+  "crates/liter-llm-proxy/src/mcp/tools.rs",
+]
+
+[workspace.docs.llms]
+template = "templates/docs/llms.txt.jinja"
+output = "docs/llms.txt"
+adopt_existing = true
+
+[workspace.docs.skills]
+template_dir = "templates/docs/skills"
+outputs = [".codex/skills", ".agents/skills", ".claude/skills"]
+
+[workspace.docs.snippets]
+dirs = ["docs/snippets"]
 
 [workspace.generated_header]
 issues_url = "https://github.com/xberg-io/liter-llm/issues"
