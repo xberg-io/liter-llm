@@ -44,13 +44,13 @@ Future<DefaultClient> createClient({
 /// Returns `LiterLlmError.BadRequest` if `json` is not valid JSON or
 /// contains unknown fields.
 Future<DefaultClient> createClientFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateClientFromJson(json: json);
+RustLib.instance.api.crateCreateClientFromJson(json: json);
 
 /// Encode bytes as a base64 data URL: `data:<mime>;base64,<b64>`.
 ///
 /// `mime` defaults to `IMAGE_PNG` when `null`.
 Future<String> encodeDataUrl({required List<int> bytes, String? mime}) =>
-    RustLib.instance.api.crateEncodeDataUrl(bytes: bytes, mime: mime);
+RustLib.instance.api.crateEncodeDataUrl(bytes: bytes, mime: mime);
 
 /// Decode a base64 data URL into `DecodedDataUrl`.
 ///
@@ -63,7 +63,7 @@ Future<String> encodeDataUrl({required List<int> bytes, String? mime}) =>
 /// The returned MIME string is extracted verbatim from the URL prefix —
 /// it is not validated or normalised.
 Future<DecodedDataUrl?> decodeDataUrl({required String url}) =>
-    RustLib.instance.api.crateDecodeDataUrl(url: url);
+RustLib.instance.api.crateDecodeDataUrl(url: url);
 
 /// Register a custom provider in the global runtime registry.
 ///
@@ -75,7 +75,7 @@ Future<DecodedDataUrl?> decodeDataUrl({required String url}) =>
 /// Returns an error if the config is invalid (empty name, empty base_url, or
 /// no model prefixes).
 Future<void> registerCustomProvider({required CustomProviderConfig config}) =>
-    RustLib.instance.api.crateRegisterCustomProvider(config: config);
+RustLib.instance.api.crateRegisterCustomProvider(config: config);
 
 /// Remove a previously registered custom provider by name.
 ///
@@ -86,7 +86,7 @@ Future<void> registerCustomProvider({required CustomProviderConfig config}) =>
 ///
 /// Returns an error if the custom-provider registry cannot be updated.
 Future<bool> unregisterCustomProvider({required String name}) =>
-    RustLib.instance.api.crateUnregisterCustomProvider(name: name);
+RustLib.instance.api.crateUnregisterCustomProvider(name: name);
 
 /// Return the capability flags for a named provider.
 ///
@@ -97,7 +97,7 @@ Future<bool> unregisterCustomProvider({required String name}) =>
 /// For unknown `provider_name` values the function returns an all-`false`
 /// sentinel so callers never need to handle `Option`.
 Future<ProviderCapabilities> capabilities({required String providerName}) =>
-    RustLib.instance.api.crateCapabilities(providerName: providerName);
+RustLib.instance.api.crateCapabilities(providerName: providerName);
 
 /// Return all provider configs from the registry.
 ///
@@ -105,7 +105,7 @@ Future<ProviderCapabilities> capabilities({required String providerName}) =>
 /// Returns the public `ProviderConfig` slice (without capability flags).
 /// To query capability flags for a specific provider use `capabilities`.
 Future<List<ProviderConfig>> allProviders() =>
-    RustLib.instance.api.crateAllProviders();
+RustLib.instance.api.crateAllProviders();
 
 /// Return the set of complex provider names.
 ///
@@ -114,7 +114,7 @@ Future<List<ProviderConfig>> allProviders() =>
 ///
 /// The returned reference points into the static registry — no allocation.
 Future<List<String>> complexProviderNames() =>
-    RustLib.instance.api.crateComplexProviderNames();
+RustLib.instance.api.crateComplexProviderNames();
 
 /// Calculate the estimated cost of a completion given a model name and token
 /// counts.
@@ -233,36 +233,36 @@ Future<void> checkBound({
 /// Windows builds use native-tls (SChannel) via reqwest, so rustls is not
 /// present and no crypto provider installation is needed.
 Future<void> ensureCryptoProvider() =>
-    RustLib.instance.api.crateEnsureCryptoProvider();
+RustLib.instance.api.crateEnsureCryptoProvider();
 
 Future<SystemMessage> createSystemMessageFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateSystemMessageFromJson(json: json);
+RustLib.instance.api.crateCreateSystemMessageFromJson(json: json);
 
 Future<UserMessage> createUserMessageFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateUserMessageFromJson(json: json);
+RustLib.instance.api.crateCreateUserMessageFromJson(json: json);
 
 Future<ImageUrl> createImageUrlFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateImageUrlFromJson(json: json);
+RustLib.instance.api.crateCreateImageUrlFromJson(json: json);
 
 Future<DocumentContent> createDocumentContentFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateDocumentContentFromJson(json: json);
+RustLib.instance.api.crateCreateDocumentContentFromJson(json: json);
 
 Future<AudioContent> createAudioContentFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateAudioContentFromJson(json: json);
+RustLib.instance.api.crateCreateAudioContentFromJson(json: json);
 
 Future<AssistantMessage> createAssistantMessageFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateAssistantMessageFromJson(json: json);
 
 Future<ToolMessage> createToolMessageFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateToolMessageFromJson(json: json);
+RustLib.instance.api.crateCreateToolMessageFromJson(json: json);
 
 Future<DeveloperMessage> createDeveloperMessageFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateDeveloperMessageFromJson(json: json);
 
 Future<FunctionMessage> createFunctionMessageFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateFunctionMessageFromJson(json: json);
+RustLib.instance.api.crateCreateFunctionMessageFromJson(json: json);
 
 Future<ChatCompletionTool> createChatCompletionToolFromJson({
   required String json,
@@ -273,10 +273,10 @@ Future<FunctionDefinition> createFunctionDefinitionFromJson({
 }) => RustLib.instance.api.crateCreateFunctionDefinitionFromJson(json: json);
 
 Future<ToolCall> createToolCallFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateToolCallFromJson(json: json);
+RustLib.instance.api.crateCreateToolCallFromJson(json: json);
 
 Future<FunctionCall> createFunctionCallFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateFunctionCallFromJson(json: json);
+RustLib.instance.api.crateCreateFunctionCallFromJson(json: json);
 
 Future<SpecificToolChoice> createSpecificToolChoiceFromJson({
   required String json,
@@ -291,7 +291,7 @@ Future<JsonSchemaFormat> createJsonSchemaFormatFromJson({
 }) => RustLib.instance.api.crateCreateJsonSchemaFormatFromJson(json: json);
 
 Future<Usage> createUsageFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateUsageFromJson(json: json);
+RustLib.instance.api.crateCreateUsageFromJson(json: json);
 
 Future<PromptTokensDetails> createPromptTokensDetailsFromJson({
   required String json,
@@ -302,28 +302,28 @@ Future<ChatCompletionRequest> createChatCompletionRequestFromJson({
 }) => RustLib.instance.api.crateCreateChatCompletionRequestFromJson(json: json);
 
 Future<StreamOptions> createStreamOptionsFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateStreamOptionsFromJson(json: json);
+RustLib.instance.api.crateCreateStreamOptionsFromJson(json: json);
 
 Future<ChatCompletionResponse> createChatCompletionResponseFromJson({
   required String json,
 }) =>
-    RustLib.instance.api.crateCreateChatCompletionResponseFromJson(json: json);
+RustLib.instance.api.crateCreateChatCompletionResponseFromJson(json: json);
 
 Future<Choice> createChoiceFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateChoiceFromJson(json: json);
+RustLib.instance.api.crateCreateChoiceFromJson(json: json);
 
 Future<ChatCompletionChunk> createChatCompletionChunkFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateChatCompletionChunkFromJson(json: json);
 
 Future<StreamChoice> createStreamChoiceFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateStreamChoiceFromJson(json: json);
+RustLib.instance.api.crateCreateStreamChoiceFromJson(json: json);
 
 Future<StreamDelta> createStreamDeltaFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateStreamDeltaFromJson(json: json);
+RustLib.instance.api.crateCreateStreamDeltaFromJson(json: json);
 
 Future<StreamToolCall> createStreamToolCallFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateStreamToolCallFromJson(json: json);
+RustLib.instance.api.crateCreateStreamToolCallFromJson(json: json);
 
 Future<StreamFunctionCall> createStreamFunctionCallFromJson({
   required String json,
@@ -338,20 +338,20 @@ Future<EmbeddingResponse> createEmbeddingResponseFromJson({
 }) => RustLib.instance.api.crateCreateEmbeddingResponseFromJson(json: json);
 
 Future<EmbeddingObject> createEmbeddingObjectFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateEmbeddingObjectFromJson(json: json);
+RustLib.instance.api.crateCreateEmbeddingObjectFromJson(json: json);
 
 Future<CreateImageRequest> createCreateImageRequestFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateCreateImageRequestFromJson(json: json);
 
 Future<ImagesResponse> createImagesResponseFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateImagesResponseFromJson(json: json);
+RustLib.instance.api.crateCreateImagesResponseFromJson(json: json);
 
 Future<Image> createImageFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateImageFromJson(json: json);
+RustLib.instance.api.crateCreateImageFromJson(json: json);
 
 Future<DecodedDataUrl> createDecodedDataUrlFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateDecodedDataUrlFromJson(json: json);
+RustLib.instance.api.crateCreateDecodedDataUrlFromJson(json: json);
 
 Future<CreateSpeechRequest> createCreateSpeechRequestFromJson({
   required String json,
@@ -394,72 +394,72 @@ Future<ModerationCategoryScores> createModerationCategoryScoresFromJson({
 );
 
 Future<RerankRequest> createRerankRequestFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateRerankRequestFromJson(json: json);
+RustLib.instance.api.crateCreateRerankRequestFromJson(json: json);
 
 Future<RerankResponse> createRerankResponseFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateRerankResponseFromJson(json: json);
+RustLib.instance.api.crateCreateRerankResponseFromJson(json: json);
 
 Future<RerankResult> createRerankResultFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateRerankResultFromJson(json: json);
+RustLib.instance.api.crateCreateRerankResultFromJson(json: json);
 
 Future<RerankResultDocument> createRerankResultDocumentFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateRerankResultDocumentFromJson(json: json);
 
 Future<SearchRequest> createSearchRequestFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateSearchRequestFromJson(json: json);
+RustLib.instance.api.crateCreateSearchRequestFromJson(json: json);
 
 Future<SearchResponse> createSearchResponseFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateSearchResponseFromJson(json: json);
+RustLib.instance.api.crateCreateSearchResponseFromJson(json: json);
 
 Future<SearchResult> createSearchResultFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateSearchResultFromJson(json: json);
+RustLib.instance.api.crateCreateSearchResultFromJson(json: json);
 
 Future<OcrRequest> createOcrRequestFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateOcrRequestFromJson(json: json);
+RustLib.instance.api.crateCreateOcrRequestFromJson(json: json);
 
 Future<OcrResponse> createOcrResponseFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateOcrResponseFromJson(json: json);
+RustLib.instance.api.crateCreateOcrResponseFromJson(json: json);
 
 Future<OcrPage> createOcrPageFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateOcrPageFromJson(json: json);
+RustLib.instance.api.crateCreateOcrPageFromJson(json: json);
 
 Future<OcrImage> createOcrImageFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateOcrImageFromJson(json: json);
+RustLib.instance.api.crateCreateOcrImageFromJson(json: json);
 
 Future<PageDimensions> createPageDimensionsFromJson({required String json}) =>
-    RustLib.instance.api.crateCreatePageDimensionsFromJson(json: json);
+RustLib.instance.api.crateCreatePageDimensionsFromJson(json: json);
 
 Future<ModelsListResponse> createModelsListResponseFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateModelsListResponseFromJson(json: json);
 
 Future<ModelObject> createModelObjectFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateModelObjectFromJson(json: json);
+RustLib.instance.api.crateCreateModelObjectFromJson(json: json);
 
 Future<CreateFileRequest> createCreateFileRequestFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateCreateFileRequestFromJson(json: json);
 
 Future<FileObject> createFileObjectFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateFileObjectFromJson(json: json);
+RustLib.instance.api.crateCreateFileObjectFromJson(json: json);
 
 Future<FileListResponse> createFileListResponseFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateFileListResponseFromJson(json: json);
 
 Future<FileListQuery> createFileListQueryFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateFileListQueryFromJson(json: json);
+RustLib.instance.api.crateCreateFileListQueryFromJson(json: json);
 
 Future<DeleteResponse> createDeleteResponseFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateDeleteResponseFromJson(json: json);
+RustLib.instance.api.crateCreateDeleteResponseFromJson(json: json);
 
 Future<CreateBatchRequest> createCreateBatchRequestFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateCreateBatchRequestFromJson(json: json);
 
 Future<BatchObject> createBatchObjectFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateBatchObjectFromJson(json: json);
+RustLib.instance.api.crateCreateBatchObjectFromJson(json: json);
 
 Future<BatchRequestCounts> createBatchRequestCountsFromJson({
   required String json,
@@ -470,24 +470,24 @@ Future<BatchListResponse> createBatchListResponseFromJson({
 }) => RustLib.instance.api.crateCreateBatchListResponseFromJson(json: json);
 
 Future<BatchListQuery> createBatchListQueryFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateBatchListQueryFromJson(json: json);
+RustLib.instance.api.crateCreateBatchListQueryFromJson(json: json);
 
 Future<CreateResponseRequest> createCreateResponseRequestFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateCreateResponseRequestFromJson(json: json);
 
 Future<ResponseTool> createResponseToolFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateResponseToolFromJson(json: json);
+RustLib.instance.api.crateCreateResponseToolFromJson(json: json);
 
 Future<ResponseObject> createResponseObjectFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateResponseObjectFromJson(json: json);
+RustLib.instance.api.crateCreateResponseObjectFromJson(json: json);
 
 Future<ResponseOutputItem> createResponseOutputItemFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateResponseOutputItemFromJson(json: json);
 
 Future<ResponseUsage> createResponseUsageFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateResponseUsageFromJson(json: json);
+RustLib.instance.api.crateCreateResponseUsageFromJson(json: json);
 
 Future<WaitForBatchConfig> createWaitForBatchConfigFromJson({
   required String json,
@@ -502,19 +502,19 @@ Future<ProviderCapabilities> createProviderCapabilitiesFromJson({
 }) => RustLib.instance.api.crateCreateProviderCapabilitiesFromJson(json: json);
 
 Future<ProviderConfig> createProviderConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateProviderConfigFromJson(json: json);
+RustLib.instance.api.crateCreateProviderConfigFromJson(json: json);
 
 Future<AuthConfig> createAuthConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateAuthConfigFromJson(json: json);
+RustLib.instance.api.crateCreateAuthConfigFromJson(json: json);
 
 Future<BudgetConfig> createBudgetConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateBudgetConfigFromJson(json: json);
+RustLib.instance.api.crateCreateBudgetConfigFromJson(json: json);
 
 Future<CacheConfig> createCacheConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateCacheConfigFromJson(json: json);
+RustLib.instance.api.crateCreateCacheConfigFromJson(json: json);
 
 Future<RateLimitConfig> createRateLimitConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateRateLimitConfigFromJson(json: json);
+RustLib.instance.api.crateCreateRateLimitConfigFromJson(json: json);
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DefaultClient>>
 abstract class DefaultClient implements RustOpaqueInterface {
@@ -580,11 +580,11 @@ sealed class AssistantContent with _$AssistantContent {
 
   /// Plain text response (the common case for text-only models).
   const factory AssistantContent.text({required String field0}) =
-      AssistantContent_Text;
+  AssistantContent_Text;
 
   /// Structured parts — text, refusals, output images, output audio.
   const factory AssistantContent.parts({required List<AssistantPart> field0}) =
-      AssistantContent_Parts;
+  AssistantContent_Parts;
 }
 
 /// Assistant's response to a user message.
@@ -616,22 +616,22 @@ class AssistantMessage {
 
   @override
   int get hashCode =>
-      content.hashCode ^
-      name.hashCode ^
-      toolCalls.hashCode ^
-      refusal.hashCode ^
-      functionCall.hashCode;
+  content.hashCode ^
+  name.hashCode ^
+  toolCalls.hashCode ^
+  refusal.hashCode ^
+  functionCall.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is AssistantMessage &&
-          runtimeType == other.runtimeType &&
-          content == other.content &&
-          name == other.name &&
-          toolCalls == other.toolCalls &&
-          refusal == other.refusal &&
-          functionCall == other.functionCall;
+  identical(this, other) ||
+  other is AssistantMessage &&
+  runtimeType == other.runtimeType &&
+  content == other.content &&
+  name == other.name &&
+  toolCalls == other.toolCalls &&
+  refusal == other.refusal &&
+  functionCall == other.functionCall;
 }
 
 @freezed
@@ -678,11 +678,11 @@ class AudioContent {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is AudioContent &&
-          runtimeType == other.runtimeType &&
-          data == other.data &&
-          format == other.format;
+  identical(this, other) ||
+  other is AudioContent &&
+  runtimeType == other.runtimeType &&
+  data == other.data &&
+  format == other.format;
 }
 
 /// Auth configuration block.
@@ -701,11 +701,11 @@ class AuthConfig {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is AuthConfig &&
-          runtimeType == other.runtimeType &&
-          authType == other.authType &&
-          envVar == other.envVar;
+  identical(this, other) ||
+  other is AuthConfig &&
+  runtimeType == other.runtimeType &&
+  authType == other.authType &&
+  envVar == other.envVar;
 }
 
 @freezed
@@ -717,7 +717,7 @@ sealed class AuthHeaderFormat with _$AuthHeaderFormat {
 
   /// Custom header: e.g., `X-Api-Key: <key>`
   const factory AuthHeaderFormat.apiKey({required String field0}) =
-      AuthHeaderFormat_ApiKey;
+  AuthHeaderFormat_ApiKey;
 
   /// No authentication required.
   const factory AuthHeaderFormat.none() = AuthHeaderFormat_None;
@@ -753,11 +753,11 @@ class BatchListQuery {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BatchListQuery &&
-          runtimeType == other.runtimeType &&
-          limit == other.limit &&
-          after == other.after;
+  identical(this, other) ||
+  other is BatchListQuery &&
+  runtimeType == other.runtimeType &&
+  limit == other.limit &&
+  after == other.after;
 }
 
 /// Response from listing batches.
@@ -787,22 +787,22 @@ class BatchListResponse {
 
   @override
   int get hashCode =>
-      object.hashCode ^
-      data.hashCode ^
-      hasMore.hashCode ^
-      firstId.hashCode ^
-      lastId.hashCode;
+  object.hashCode ^
+  data.hashCode ^
+  hasMore.hashCode ^
+  firstId.hashCode ^
+  lastId.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BatchListResponse &&
-          runtimeType == other.runtimeType &&
-          object == other.object &&
-          data == other.data &&
-          hasMore == other.hasMore &&
-          firstId == other.firstId &&
-          lastId == other.lastId;
+  identical(this, other) ||
+  other is BatchListResponse &&
+  runtimeType == other.runtimeType &&
+  object == other.object &&
+  data == other.data &&
+  hasMore == other.hasMore &&
+  firstId == other.firstId &&
+  lastId == other.lastId;
 }
 
 /// A batch job object.
@@ -868,40 +868,40 @@ class BatchObject {
 
   @override
   int get hashCode =>
-      id.hashCode ^
-      object.hashCode ^
-      endpoint.hashCode ^
-      inputFileId.hashCode ^
-      completionWindow.hashCode ^
-      status.hashCode ^
-      outputFileId.hashCode ^
-      errorFileId.hashCode ^
-      createdAt.hashCode ^
-      completedAt.hashCode ^
-      failedAt.hashCode ^
-      expiredAt.hashCode ^
-      requestCounts.hashCode ^
-      metadata.hashCode;
+  id.hashCode ^
+  object.hashCode ^
+  endpoint.hashCode ^
+  inputFileId.hashCode ^
+  completionWindow.hashCode ^
+  status.hashCode ^
+  outputFileId.hashCode ^
+  errorFileId.hashCode ^
+  createdAt.hashCode ^
+  completedAt.hashCode ^
+  failedAt.hashCode ^
+  expiredAt.hashCode ^
+  requestCounts.hashCode ^
+  metadata.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BatchObject &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          object == other.object &&
-          endpoint == other.endpoint &&
-          inputFileId == other.inputFileId &&
-          completionWindow == other.completionWindow &&
-          status == other.status &&
-          outputFileId == other.outputFileId &&
-          errorFileId == other.errorFileId &&
-          createdAt == other.createdAt &&
-          completedAt == other.completedAt &&
-          failedAt == other.failedAt &&
-          expiredAt == other.expiredAt &&
-          requestCounts == other.requestCounts &&
-          metadata == other.metadata;
+  identical(this, other) ||
+  other is BatchObject &&
+  runtimeType == other.runtimeType &&
+  id == other.id &&
+  object == other.object &&
+  endpoint == other.endpoint &&
+  inputFileId == other.inputFileId &&
+  completionWindow == other.completionWindow &&
+  status == other.status &&
+  outputFileId == other.outputFileId &&
+  errorFileId == other.errorFileId &&
+  createdAt == other.createdAt &&
+  completedAt == other.completedAt &&
+  failedAt == other.failedAt &&
+  expiredAt == other.expiredAt &&
+  requestCounts == other.requestCounts &&
+  metadata == other.metadata;
 }
 
 /// Request processing counts for a batch.
@@ -926,12 +926,12 @@ class BatchRequestCounts {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BatchRequestCounts &&
-          runtimeType == other.runtimeType &&
-          total == other.total &&
-          completed == other.completed &&
-          failed == other.failed;
+  identical(this, other) ||
+  other is BatchRequestCounts &&
+  runtimeType == other.runtimeType &&
+  total == other.total &&
+  completed == other.completed &&
+  failed == other.failed;
 }
 
 /// Status of a batch job.
@@ -981,16 +981,16 @@ class BudgetConfig {
 
   @override
   int get hashCode =>
-      globalLimit.hashCode ^ modelLimits.hashCode ^ enforcement.hashCode;
+  globalLimit.hashCode ^ modelLimits.hashCode ^ enforcement.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BudgetConfig &&
-          runtimeType == other.runtimeType &&
-          globalLimit == other.globalLimit &&
-          modelLimits == other.modelLimits &&
-          enforcement == other.enforcement;
+  identical(this, other) ||
+  other is BudgetConfig &&
+  runtimeType == other.runtimeType &&
+  globalLimit == other.globalLimit &&
+  modelLimits == other.modelLimits &&
+  enforcement == other.enforcement;
 }
 
 @freezed
@@ -1032,12 +1032,12 @@ class CacheConfig {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CacheConfig &&
-          runtimeType == other.runtimeType &&
-          maxEntries == other.maxEntries &&
-          ttl == other.ttl &&
-          backend == other.backend;
+  identical(this, other) ||
+  other is CacheConfig &&
+  runtimeType == other.runtimeType &&
+  maxEntries == other.maxEntries &&
+  ttl == other.ttl &&
+  backend == other.backend;
 }
 
 /// A streamed chunk of a chat completion response.
@@ -1080,28 +1080,28 @@ class ChatCompletionChunk {
 
   @override
   int get hashCode =>
-      id.hashCode ^
-      object.hashCode ^
-      created.hashCode ^
-      model.hashCode ^
-      choices.hashCode ^
-      usage.hashCode ^
-      systemFingerprint.hashCode ^
-      serviceTier.hashCode;
+  id.hashCode ^
+  object.hashCode ^
+  created.hashCode ^
+  model.hashCode ^
+  choices.hashCode ^
+  usage.hashCode ^
+  systemFingerprint.hashCode ^
+  serviceTier.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ChatCompletionChunk &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          object == other.object &&
-          created == other.created &&
-          model == other.model &&
-          choices == other.choices &&
-          usage == other.usage &&
-          systemFingerprint == other.systemFingerprint &&
-          serviceTier == other.serviceTier;
+  identical(this, other) ||
+  other is ChatCompletionChunk &&
+  runtimeType == other.runtimeType &&
+  id == other.id &&
+  object == other.object &&
+  created == other.created &&
+  model == other.model &&
+  choices == other.choices &&
+  usage == other.usage &&
+  systemFingerprint == other.systemFingerprint &&
+  serviceTier == other.serviceTier;
 }
 
 /// Chat completion request (compatible with OpenAI and similar APIs).
@@ -1202,54 +1202,54 @@ class ChatCompletionRequest {
 
   @override
   int get hashCode =>
-      model.hashCode ^
-      messages.hashCode ^
-      temperature.hashCode ^
-      topP.hashCode ^
-      n.hashCode ^
-      stream.hashCode ^
-      stop.hashCode ^
-      maxTokens.hashCode ^
-      presencePenalty.hashCode ^
-      frequencyPenalty.hashCode ^
-      logitBias.hashCode ^
-      user.hashCode ^
-      tools.hashCode ^
-      toolChoice.hashCode ^
-      parallelToolCalls.hashCode ^
-      responseFormat.hashCode ^
-      streamOptions.hashCode ^
-      seed.hashCode ^
-      reasoningEffort.hashCode ^
-      modalities.hashCode ^
-      extraBody.hashCode;
+  model.hashCode ^
+  messages.hashCode ^
+  temperature.hashCode ^
+  topP.hashCode ^
+  n.hashCode ^
+  stream.hashCode ^
+  stop.hashCode ^
+  maxTokens.hashCode ^
+  presencePenalty.hashCode ^
+  frequencyPenalty.hashCode ^
+  logitBias.hashCode ^
+  user.hashCode ^
+  tools.hashCode ^
+  toolChoice.hashCode ^
+  parallelToolCalls.hashCode ^
+  responseFormat.hashCode ^
+  streamOptions.hashCode ^
+  seed.hashCode ^
+  reasoningEffort.hashCode ^
+  modalities.hashCode ^
+  extraBody.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ChatCompletionRequest &&
-          runtimeType == other.runtimeType &&
-          model == other.model &&
-          messages == other.messages &&
-          temperature == other.temperature &&
-          topP == other.topP &&
-          n == other.n &&
-          stream == other.stream &&
-          stop == other.stop &&
-          maxTokens == other.maxTokens &&
-          presencePenalty == other.presencePenalty &&
-          frequencyPenalty == other.frequencyPenalty &&
-          logitBias == other.logitBias &&
-          user == other.user &&
-          tools == other.tools &&
-          toolChoice == other.toolChoice &&
-          parallelToolCalls == other.parallelToolCalls &&
-          responseFormat == other.responseFormat &&
-          streamOptions == other.streamOptions &&
-          seed == other.seed &&
-          reasoningEffort == other.reasoningEffort &&
-          modalities == other.modalities &&
-          extraBody == other.extraBody;
+  identical(this, other) ||
+  other is ChatCompletionRequest &&
+  runtimeType == other.runtimeType &&
+  model == other.model &&
+  messages == other.messages &&
+  temperature == other.temperature &&
+  topP == other.topP &&
+  n == other.n &&
+  stream == other.stream &&
+  stop == other.stop &&
+  maxTokens == other.maxTokens &&
+  presencePenalty == other.presencePenalty &&
+  frequencyPenalty == other.frequencyPenalty &&
+  logitBias == other.logitBias &&
+  user == other.user &&
+  tools == other.tools &&
+  toolChoice == other.toolChoice &&
+  parallelToolCalls == other.parallelToolCalls &&
+  responseFormat == other.responseFormat &&
+  streamOptions == other.streamOptions &&
+  seed == other.seed &&
+  reasoningEffort == other.reasoningEffort &&
+  modalities == other.modalities &&
+  extraBody == other.extraBody;
 }
 
 /// Chat completion response from the API.
@@ -1292,28 +1292,28 @@ class ChatCompletionResponse {
 
   @override
   int get hashCode =>
-      id.hashCode ^
-      object.hashCode ^
-      created.hashCode ^
-      model.hashCode ^
-      choices.hashCode ^
-      usage.hashCode ^
-      systemFingerprint.hashCode ^
-      serviceTier.hashCode;
+  id.hashCode ^
+  object.hashCode ^
+  created.hashCode ^
+  model.hashCode ^
+  choices.hashCode ^
+  usage.hashCode ^
+  systemFingerprint.hashCode ^
+  serviceTier.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ChatCompletionResponse &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          object == other.object &&
-          created == other.created &&
-          model == other.model &&
-          choices == other.choices &&
-          usage == other.usage &&
-          systemFingerprint == other.systemFingerprint &&
-          serviceTier == other.serviceTier;
+  identical(this, other) ||
+  other is ChatCompletionResponse &&
+  runtimeType == other.runtimeType &&
+  id == other.id &&
+  object == other.object &&
+  created == other.created &&
+  model == other.model &&
+  choices == other.choices &&
+  usage == other.usage &&
+  systemFingerprint == other.systemFingerprint &&
+  serviceTier == other.serviceTier;
 }
 
 /// A tool the model can invoke (currently, all tools are functions).
@@ -1331,11 +1331,11 @@ class ChatCompletionTool {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ChatCompletionTool &&
-          runtimeType == other.runtimeType &&
-          toolType == other.toolType &&
-          function == other.function;
+  identical(this, other) ||
+  other is ChatCompletionTool &&
+  runtimeType == other.runtimeType &&
+  toolType == other.toolType &&
+  function == other.function;
 }
 
 /// A single completion choice.
@@ -1356,12 +1356,12 @@ class Choice {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Choice &&
-          runtimeType == other.runtimeType &&
-          index == other.index &&
-          message == other.message &&
-          finishReason == other.finishReason;
+  identical(this, other) ||
+  other is Choice &&
+  runtimeType == other.runtimeType &&
+  index == other.index &&
+  message == other.message &&
+  finishReason == other.finishReason;
 }
 
 /// Observable state of a circuit breaker.
@@ -1385,15 +1385,15 @@ sealed class ContentPart with _$ContentPart {
 
   /// Image identified by URL (with optional detail level).
   const factory ContentPart.imageUrl({required ImageUrl imageUrl}) =
-      ContentPart_ImageUrl;
+  ContentPart_ImageUrl;
 
   /// Document file (PDF, CSV, etc.) as base64 or URL.
   const factory ContentPart.document({required DocumentContent document}) =
-      ContentPart_Document;
+  ContentPart_Document;
 
   /// Audio input as base64.
   const factory ContentPart.inputAudio({required AudioContent inputAudio}) =
-      ContentPart_InputAudio;
+  ContentPart_InputAudio;
 }
 
 /// Request to create a batch job.
@@ -1419,20 +1419,20 @@ class CreateBatchRequest {
 
   @override
   int get hashCode =>
-      inputFileId.hashCode ^
-      endpoint.hashCode ^
-      completionWindow.hashCode ^
-      metadata.hashCode;
+  inputFileId.hashCode ^
+  endpoint.hashCode ^
+  completionWindow.hashCode ^
+  metadata.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CreateBatchRequest &&
-          runtimeType == other.runtimeType &&
-          inputFileId == other.inputFileId &&
-          endpoint == other.endpoint &&
-          completionWindow == other.completionWindow &&
-          metadata == other.metadata;
+  identical(this, other) ||
+  other is CreateBatchRequest &&
+  runtimeType == other.runtimeType &&
+  inputFileId == other.inputFileId &&
+  endpoint == other.endpoint &&
+  completionWindow == other.completionWindow &&
+  metadata == other.metadata;
 }
 
 /// Request to upload a file.
@@ -1457,12 +1457,12 @@ class CreateFileRequest {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CreateFileRequest &&
-          runtimeType == other.runtimeType &&
-          file == other.file &&
-          purpose == other.purpose &&
-          filename == other.filename;
+  identical(this, other) ||
+  other is CreateFileRequest &&
+  runtimeType == other.runtimeType &&
+  file == other.file &&
+  purpose == other.purpose &&
+  filename == other.filename;
 }
 
 /// Request to create images from a text prompt.
@@ -1504,28 +1504,28 @@ class CreateImageRequest {
 
   @override
   int get hashCode =>
-      prompt.hashCode ^
-      model.hashCode ^
-      n.hashCode ^
-      size.hashCode ^
-      quality.hashCode ^
-      style.hashCode ^
-      responseFormat.hashCode ^
-      user.hashCode;
+  prompt.hashCode ^
+  model.hashCode ^
+  n.hashCode ^
+  size.hashCode ^
+  quality.hashCode ^
+  style.hashCode ^
+  responseFormat.hashCode ^
+  user.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CreateImageRequest &&
-          runtimeType == other.runtimeType &&
-          prompt == other.prompt &&
-          model == other.model &&
-          n == other.n &&
-          size == other.size &&
-          quality == other.quality &&
-          style == other.style &&
-          responseFormat == other.responseFormat &&
-          user == other.user;
+  identical(this, other) ||
+  other is CreateImageRequest &&
+  runtimeType == other.runtimeType &&
+  prompt == other.prompt &&
+  model == other.model &&
+  n == other.n &&
+  size == other.size &&
+  quality == other.quality &&
+  style == other.style &&
+  responseFormat == other.responseFormat &&
+  user == other.user;
 }
 
 /// Request to create a structured response.
@@ -1563,26 +1563,26 @@ class CreateResponseRequest {
 
   @override
   int get hashCode =>
-      model.hashCode ^
-      input.hashCode ^
-      instructions.hashCode ^
-      tools.hashCode ^
-      temperature.hashCode ^
-      maxOutputTokens.hashCode ^
-      metadata.hashCode;
+  model.hashCode ^
+  input.hashCode ^
+  instructions.hashCode ^
+  tools.hashCode ^
+  temperature.hashCode ^
+  maxOutputTokens.hashCode ^
+  metadata.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CreateResponseRequest &&
-          runtimeType == other.runtimeType &&
-          model == other.model &&
-          input == other.input &&
-          instructions == other.instructions &&
-          tools == other.tools &&
-          temperature == other.temperature &&
-          maxOutputTokens == other.maxOutputTokens &&
-          metadata == other.metadata;
+  identical(this, other) ||
+  other is CreateResponseRequest &&
+  runtimeType == other.runtimeType &&
+  model == other.model &&
+  input == other.input &&
+  instructions == other.instructions &&
+  tools == other.tools &&
+  temperature == other.temperature &&
+  maxOutputTokens == other.maxOutputTokens &&
+  metadata == other.metadata;
 }
 
 /// Request to generate speech audio from text.
@@ -1612,22 +1612,22 @@ class CreateSpeechRequest {
 
   @override
   int get hashCode =>
-      model.hashCode ^
-      input.hashCode ^
-      voice.hashCode ^
-      responseFormat.hashCode ^
-      speed.hashCode;
+  model.hashCode ^
+  input.hashCode ^
+  voice.hashCode ^
+  responseFormat.hashCode ^
+  speed.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CreateSpeechRequest &&
-          runtimeType == other.runtimeType &&
-          model == other.model &&
-          input == other.input &&
-          voice == other.voice &&
-          responseFormat == other.responseFormat &&
-          speed == other.speed;
+  identical(this, other) ||
+  other is CreateSpeechRequest &&
+  runtimeType == other.runtimeType &&
+  model == other.model &&
+  input == other.input &&
+  voice == other.voice &&
+  responseFormat == other.responseFormat &&
+  speed == other.speed;
 }
 
 /// Request to transcribe audio into text.
@@ -1661,24 +1661,24 @@ class CreateTranscriptionRequest {
 
   @override
   int get hashCode =>
-      model.hashCode ^
-      file.hashCode ^
-      language.hashCode ^
-      prompt.hashCode ^
-      responseFormat.hashCode ^
-      temperature.hashCode;
+  model.hashCode ^
+  file.hashCode ^
+  language.hashCode ^
+  prompt.hashCode ^
+  responseFormat.hashCode ^
+  temperature.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CreateTranscriptionRequest &&
-          runtimeType == other.runtimeType &&
-          model == other.model &&
-          file == other.file &&
-          language == other.language &&
-          prompt == other.prompt &&
-          responseFormat == other.responseFormat &&
-          temperature == other.temperature;
+  identical(this, other) ||
+  other is CreateTranscriptionRequest &&
+  runtimeType == other.runtimeType &&
+  model == other.model &&
+  file == other.file &&
+  language == other.language &&
+  prompt == other.prompt &&
+  responseFormat == other.responseFormat &&
+  temperature == other.temperature;
 }
 
 /// Configuration for registering a custom LLM provider at runtime.
@@ -1704,20 +1704,20 @@ class CustomProviderConfig {
 
   @override
   int get hashCode =>
-      name.hashCode ^
-      baseUrl.hashCode ^
-      authHeader.hashCode ^
-      modelPrefixes.hashCode;
+  name.hashCode ^
+  baseUrl.hashCode ^
+  authHeader.hashCode ^
+  modelPrefixes.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CustomProviderConfig &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          baseUrl == other.baseUrl &&
-          authHeader == other.authHeader &&
-          modelPrefixes == other.modelPrefixes;
+  identical(this, other) ||
+  other is CustomProviderConfig &&
+  runtimeType == other.runtimeType &&
+  name == other.name &&
+  baseUrl == other.baseUrl &&
+  authHeader == other.authHeader &&
+  modelPrefixes == other.modelPrefixes;
 }
 
 /// Result of decoding a `data:` URL — MIME type and the decoded byte payload.
@@ -1738,11 +1738,11 @@ class DecodedDataUrl {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is DecodedDataUrl &&
-          runtimeType == other.runtimeType &&
-          mime == other.mime &&
-          data == other.data;
+  identical(this, other) ||
+  other is DecodedDataUrl &&
+  runtimeType == other.runtimeType &&
+  mime == other.mime &&
+  data == other.data;
 }
 
 /// Response from a delete operation.
@@ -1767,12 +1767,12 @@ class DeleteResponse {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is DeleteResponse &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          object == other.object &&
-          deleted == other.deleted;
+  identical(this, other) ||
+  other is DeleteResponse &&
+  runtimeType == other.runtimeType &&
+  id == other.id &&
+  object == other.object &&
+  deleted == other.deleted;
 }
 
 /// Developer message (system-like message for Claude models).
@@ -1790,11 +1790,11 @@ class DeveloperMessage {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is DeveloperMessage &&
-          runtimeType == other.runtimeType &&
-          content == other.content &&
-          name == other.name;
+  identical(this, other) ||
+  other is DeveloperMessage &&
+  runtimeType == other.runtimeType &&
+  content == other.content &&
+  name == other.name;
 }
 
 /// PDF/document content part for vision-capable models.
@@ -1812,11 +1812,11 @@ class DocumentContent {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is DocumentContent &&
-          runtimeType == other.runtimeType &&
-          data == other.data &&
-          mediaType == other.mediaType;
+  identical(this, other) ||
+  other is DocumentContent &&
+  runtimeType == other.runtimeType &&
+  data == other.data &&
+  mediaType == other.mediaType;
 }
 
 /// The format in which the embedding vectors are returned.
@@ -1834,11 +1834,11 @@ sealed class EmbeddingInput with _$EmbeddingInput {
 
   /// Single text string.
   const factory EmbeddingInput.single({required String field0}) =
-      EmbeddingInput_Single;
+  EmbeddingInput_Single;
 
   /// Multiple text strings (batch embedding).
   const factory EmbeddingInput.multiple({required List<String> field0}) =
-      EmbeddingInput_Multiple;
+  EmbeddingInput_Multiple;
 }
 
 /// A single embedding vector.
@@ -1864,12 +1864,12 @@ class EmbeddingObject {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is EmbeddingObject &&
-          runtimeType == other.runtimeType &&
-          object == other.object &&
-          embedding == other.embedding &&
-          index == other.index;
+  identical(this, other) ||
+  other is EmbeddingObject &&
+  runtimeType == other.runtimeType &&
+  object == other.object &&
+  embedding == other.embedding &&
+  index == other.index;
 }
 
 /// Embedding request.
@@ -1899,22 +1899,22 @@ class EmbeddingRequest {
 
   @override
   int get hashCode =>
-      model.hashCode ^
-      input.hashCode ^
-      encodingFormat.hashCode ^
-      dimensions.hashCode ^
-      user.hashCode;
+  model.hashCode ^
+  input.hashCode ^
+  encodingFormat.hashCode ^
+  dimensions.hashCode ^
+  user.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is EmbeddingRequest &&
-          runtimeType == other.runtimeType &&
-          model == other.model &&
-          input == other.input &&
-          encodingFormat == other.encodingFormat &&
-          dimensions == other.dimensions &&
-          user == other.user;
+  identical(this, other) ||
+  other is EmbeddingRequest &&
+  runtimeType == other.runtimeType &&
+  model == other.model &&
+  input == other.input &&
+  encodingFormat == other.encodingFormat &&
+  dimensions == other.dimensions &&
+  user == other.user;
 }
 
 /// Embedding response.
@@ -1941,17 +1941,17 @@ class EmbeddingResponse {
 
   @override
   int get hashCode =>
-      object.hashCode ^ data.hashCode ^ model.hashCode ^ usage.hashCode;
+  object.hashCode ^ data.hashCode ^ model.hashCode ^ usage.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is EmbeddingResponse &&
-          runtimeType == other.runtimeType &&
-          object == other.object &&
-          data == other.data &&
-          model == other.model &&
-          usage == other.usage;
+  identical(this, other) ||
+  other is EmbeddingResponse &&
+  runtimeType == other.runtimeType &&
+  object == other.object &&
+  data == other.data &&
+  model == other.model &&
+  usage == other.usage;
 }
 
 /// How budget limits are enforced.
@@ -1983,12 +1983,12 @@ class FileListQuery {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is FileListQuery &&
-          runtimeType == other.runtimeType &&
-          purpose == other.purpose &&
-          limit == other.limit &&
-          after == other.after;
+  identical(this, other) ||
+  other is FileListQuery &&
+  runtimeType == other.runtimeType &&
+  purpose == other.purpose &&
+  limit == other.limit &&
+  after == other.after;
 }
 
 /// Response from listing files.
@@ -2013,12 +2013,12 @@ class FileListResponse {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is FileListResponse &&
-          runtimeType == other.runtimeType &&
-          object == other.object &&
-          data == other.data &&
-          hasMore == other.hasMore;
+  identical(this, other) ||
+  other is FileListResponse &&
+  runtimeType == other.runtimeType &&
+  object == other.object &&
+  data == other.data &&
+  hasMore == other.hasMore;
 }
 
 /// An uploaded file object.
@@ -2056,26 +2056,26 @@ class FileObject {
 
   @override
   int get hashCode =>
-      id.hashCode ^
-      object.hashCode ^
-      bytes.hashCode ^
-      createdAt.hashCode ^
-      filename.hashCode ^
-      purpose.hashCode ^
-      status.hashCode;
+  id.hashCode ^
+  object.hashCode ^
+  bytes.hashCode ^
+  createdAt.hashCode ^
+  filename.hashCode ^
+  purpose.hashCode ^
+  status.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is FileObject &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          object == other.object &&
-          bytes == other.bytes &&
-          createdAt == other.createdAt &&
-          filename == other.filename &&
-          purpose == other.purpose &&
-          status == other.status;
+  identical(this, other) ||
+  other is FileObject &&
+  runtimeType == other.runtimeType &&
+  id == other.id &&
+  object == other.object &&
+  bytes == other.bytes &&
+  createdAt == other.createdAt &&
+  filename == other.filename &&
+  purpose == other.purpose &&
+  status == other.status;
 }
 
 /// Purpose of an uploaded file.
@@ -2128,11 +2128,11 @@ class FunctionCall {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is FunctionCall &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          arguments == other.arguments;
+  identical(this, other) ||
+  other is FunctionCall &&
+  runtimeType == other.runtimeType &&
+  name == other.name &&
+  arguments == other.arguments;
 }
 
 /// Function definition exposed to the model.
@@ -2158,20 +2158,20 @@ class FunctionDefinition {
 
   @override
   int get hashCode =>
-      name.hashCode ^
-      description.hashCode ^
-      parameters.hashCode ^
-      strict.hashCode;
+  name.hashCode ^
+  description.hashCode ^
+  parameters.hashCode ^
+  strict.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is FunctionDefinition &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          description == other.description &&
-          parameters == other.parameters &&
-          strict == other.strict;
+  identical(this, other) ||
+  other is FunctionDefinition &&
+  runtimeType == other.runtimeType &&
+  name == other.name &&
+  description == other.description &&
+  parameters == other.parameters &&
+  strict == other.strict;
 }
 
 /// Deprecated legacy function-role message body.
@@ -2186,11 +2186,11 @@ class FunctionMessage {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is FunctionMessage &&
-          runtimeType == other.runtimeType &&
-          content == other.content &&
-          name == other.name;
+  identical(this, other) ||
+  other is FunctionMessage &&
+  runtimeType == other.runtimeType &&
+  content == other.content &&
+  name == other.name;
 }
 
 /// The result of a single health probe.
@@ -2220,12 +2220,12 @@ class Image {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Image &&
-          runtimeType == other.runtimeType &&
-          url == other.url &&
-          b64Json == other.b64Json &&
-          revisedPrompt == other.revisedPrompt;
+  identical(this, other) ||
+  other is Image &&
+  runtimeType == other.runtimeType &&
+  url == other.url &&
+  b64Json == other.b64Json &&
+  revisedPrompt == other.revisedPrompt;
 }
 
 /// Image detail level controlling token cost and processing.
@@ -2255,11 +2255,11 @@ class ImageUrl {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ImageUrl &&
-          runtimeType == other.runtimeType &&
-          url == other.url &&
-          detail == other.detail;
+  identical(this, other) ||
+  other is ImageUrl &&
+  runtimeType == other.runtimeType &&
+  url == other.url &&
+  detail == other.detail;
 }
 
 /// Response containing generated images.
@@ -2277,11 +2277,11 @@ class ImagesResponse {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ImagesResponse &&
-          runtimeType == other.runtimeType &&
-          created == other.created &&
-          data == other.data;
+  identical(this, other) ||
+  other is ImagesResponse &&
+  runtimeType == other.runtimeType &&
+  created == other.created &&
+  data == other.data;
 }
 
 /// JSON Schema specification for constrained output.
@@ -2307,17 +2307,17 @@ class JsonSchemaFormat {
 
   @override
   int get hashCode =>
-      name.hashCode ^ description.hashCode ^ schema.hashCode ^ strict.hashCode;
+  name.hashCode ^ description.hashCode ^ schema.hashCode ^ strict.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is JsonSchemaFormat &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          description == other.description &&
-          schema == other.schema &&
-          strict == other.strict;
+  identical(this, other) ||
+  other is JsonSchemaFormat &&
+  runtimeType == other.runtimeType &&
+  name == other.name &&
+  description == other.description &&
+  schema == other.schema &&
+  strict == other.strict;
 }
 
 @freezed
@@ -2340,11 +2340,11 @@ sealed class LiterLlmError with _$LiterLlmError {
     required PlatformInt64 status,
   }) = LiterLlmError_BadRequest;
   const factory LiterLlmError.contextWindowExceeded({required String message}) =
-      LiterLlmError_ContextWindowExceeded;
+  LiterLlmError_ContextWindowExceeded;
   const factory LiterLlmError.contentPolicy({required String message}) =
-      LiterLlmError_ContentPolicy;
+  LiterLlmError_ContentPolicy;
   const factory LiterLlmError.notFound({required String message}) =
-      LiterLlmError_NotFound;
+  LiterLlmError_NotFound;
 
   /// `status` preserves the exact HTTP status code received (500, or other 5xx not covered
   /// by `ServiceUnavailable`).
@@ -2367,7 +2367,7 @@ sealed class LiterLlmError with _$LiterLlmError {
   /// in individual SSE chunks, and buffer overflow conditions.  The `message`
   /// field contains a human-readable description of the specific failure.
   const factory LiterLlmError.streaming({required String message}) =
-      LiterLlmError_Streaming;
+  LiterLlmError_Streaming;
   const factory LiterLlmError.endpointNotSupported({
     required String endpoint,
     required String provider,
@@ -2377,20 +2377,20 @@ sealed class LiterLlmError with _$LiterLlmError {
     required String reason,
   }) = LiterLlmError_InvalidHeader;
   const factory LiterLlmError.serialization({required String field0}) =
-      LiterLlmError_Serialization;
+  LiterLlmError_Serialization;
   const factory LiterLlmError.budgetExceeded({
     required String message,
     required String model,
   }) = LiterLlmError_BudgetExceeded;
   const factory LiterLlmError.hookRejected({required String message}) =
-      LiterLlmError_HookRejected;
+  LiterLlmError_HookRejected;
 
   /// An internal logic error (e.g. unexpected Tower response variant).
   ///
   /// This should never surface in normal operation — if it does, it
   /// indicates a bug in the library.
   const factory LiterLlmError.internalError({required String message}) =
-      LiterLlmError_InternalError;
+  LiterLlmError_InternalError;
 
   /// An outbound request was blocked by the active `OutboundPolicy`.
   ///
@@ -2410,7 +2410,7 @@ sealed class LiterLlmError with _$LiterLlmError {
   ///
   /// HTTP equivalent: 409 Conflict.
   const factory LiterLlmError.idempotencyConflict({required String key}) =
-      LiterLlmError_IdempotencyConflict;
+  LiterLlmError_IdempotencyConflict;
 
   /// The same `Idempotency-Key` is already in-flight (another request with the
   /// same key is currently being processed).
@@ -2421,14 +2421,14 @@ sealed class LiterLlmError with _$LiterLlmError {
   ///
   /// HTTP equivalent: 409 Conflict (retryable after a brief delay).
   const factory LiterLlmError.idempotencyInFlight({required String key}) =
-      LiterLlmError_IdempotencyInFlight;
+  LiterLlmError_IdempotencyInFlight;
 
   /// Return the OpenTelemetry `error.type` string for this error variant.
   ///
   /// Used by the tracing middleware to record the `error.type` span attribute
   /// on failed requests per the GenAI semantic conventions.
   Future<String> errorType() =>
-      RustLib.instance.api.crateLiterLlmErrorErrorType(that: this);
+  RustLib.instance.api.crateLiterLlmErrorErrorType(that: this);
 
   /// Returns `true` for errors that are worth retrying on a different service
   /// or deployment (transient failures).
@@ -2437,7 +2437,7 @@ sealed class LiterLlmError with _$LiterLlmError {
   /// `Router` to decide whether to route to an
   /// alternative endpoint.
   Future<bool> isTransient() =>
-      RustLib.instance.api.crateLiterLlmErrorIsTransient(that: this);
+  RustLib.instance.api.crateLiterLlmErrorIsTransient(that: this);
 
   /// Returns the canonical HTTP status code associated with this error.
   ///
@@ -2445,7 +2445,7 @@ sealed class LiterLlmError with _$LiterLlmError {
   /// the private `from_status` constructor. Used by e2e assertions that check
   /// `error.status_code` against the expected HTTP status.
   Future<PlatformInt64> statusCode() =>
-      RustLib.instance.api.crateLiterLlmErrorStatusCode(that: this);
+  RustLib.instance.api.crateLiterLlmErrorStatusCode(that: this);
 }
 
 @freezed
@@ -2453,17 +2453,17 @@ sealed class Message with _$Message {
   const Message._();
 
   const factory Message.system({required SystemMessage field0}) =
-      Message_System;
+  Message_System;
   const factory Message.user({required UserMessage field0}) = Message_User;
   const factory Message.assistant({required AssistantMessage field0}) =
-      Message_Assistant;
+  Message_Assistant;
   const factory Message.tool({required ToolMessage field0}) = Message_Tool;
   const factory Message.developer({required DeveloperMessage field0}) =
-      Message_Developer;
+  Message_Developer;
 
   /// Deprecated legacy function-role message; retained for API compatibility.
   const factory Message.function({required FunctionMessage field0}) =
-      Message_Function;
+  Message_Function;
 }
 
 /// Output modality requested from the model.
@@ -2517,17 +2517,17 @@ class ModelObject {
 
   @override
   int get hashCode =>
-      id.hashCode ^ object.hashCode ^ created.hashCode ^ ownedBy.hashCode;
+  id.hashCode ^ object.hashCode ^ created.hashCode ^ ownedBy.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ModelObject &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          object == other.object &&
-          created == other.created &&
-          ownedBy == other.ownedBy;
+  identical(this, other) ||
+  other is ModelObject &&
+  runtimeType == other.runtimeType &&
+  id == other.id &&
+  object == other.object &&
+  created == other.created &&
+  ownedBy == other.ownedBy;
 }
 
 /// Response listing available models.
@@ -2546,11 +2546,11 @@ class ModelsListResponse {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ModelsListResponse &&
-          runtimeType == other.runtimeType &&
-          object == other.object &&
-          data == other.data;
+  identical(this, other) ||
+  other is ModelsListResponse &&
+  runtimeType == other.runtimeType &&
+  object == other.object &&
+  data == other.data;
 }
 
 /// Boolean flags for each moderation category.
@@ -2604,34 +2604,34 @@ class ModerationCategories {
 
   @override
   int get hashCode =>
-      sexual.hashCode ^
-      hate.hashCode ^
-      harassment.hashCode ^
-      selfHarm.hashCode ^
-      sexualMinors.hashCode ^
-      hateThreatening.hashCode ^
-      violenceGraphic.hashCode ^
-      selfHarmIntent.hashCode ^
-      selfHarmInstructions.hashCode ^
-      harassmentThreatening.hashCode ^
-      violence.hashCode;
+  sexual.hashCode ^
+  hate.hashCode ^
+  harassment.hashCode ^
+  selfHarm.hashCode ^
+  sexualMinors.hashCode ^
+  hateThreatening.hashCode ^
+  violenceGraphic.hashCode ^
+  selfHarmIntent.hashCode ^
+  selfHarmInstructions.hashCode ^
+  harassmentThreatening.hashCode ^
+  violence.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ModerationCategories &&
-          runtimeType == other.runtimeType &&
-          sexual == other.sexual &&
-          hate == other.hate &&
-          harassment == other.harassment &&
-          selfHarm == other.selfHarm &&
-          sexualMinors == other.sexualMinors &&
-          hateThreatening == other.hateThreatening &&
-          violenceGraphic == other.violenceGraphic &&
-          selfHarmIntent == other.selfHarmIntent &&
-          selfHarmInstructions == other.selfHarmInstructions &&
-          harassmentThreatening == other.harassmentThreatening &&
-          violence == other.violence;
+  identical(this, other) ||
+  other is ModerationCategories &&
+  runtimeType == other.runtimeType &&
+  sexual == other.sexual &&
+  hate == other.hate &&
+  harassment == other.harassment &&
+  selfHarm == other.selfHarm &&
+  sexualMinors == other.sexualMinors &&
+  hateThreatening == other.hateThreatening &&
+  violenceGraphic == other.violenceGraphic &&
+  selfHarmIntent == other.selfHarmIntent &&
+  selfHarmInstructions == other.selfHarmInstructions &&
+  harassmentThreatening == other.harassmentThreatening &&
+  violence == other.violence;
 }
 
 /// Confidence scores for each moderation category.
@@ -2685,34 +2685,34 @@ class ModerationCategoryScores {
 
   @override
   int get hashCode =>
-      sexual.hashCode ^
-      hate.hashCode ^
-      harassment.hashCode ^
-      selfHarm.hashCode ^
-      sexualMinors.hashCode ^
-      hateThreatening.hashCode ^
-      violenceGraphic.hashCode ^
-      selfHarmIntent.hashCode ^
-      selfHarmInstructions.hashCode ^
-      harassmentThreatening.hashCode ^
-      violence.hashCode;
+  sexual.hashCode ^
+  hate.hashCode ^
+  harassment.hashCode ^
+  selfHarm.hashCode ^
+  sexualMinors.hashCode ^
+  hateThreatening.hashCode ^
+  violenceGraphic.hashCode ^
+  selfHarmIntent.hashCode ^
+  selfHarmInstructions.hashCode ^
+  harassmentThreatening.hashCode ^
+  violence.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ModerationCategoryScores &&
-          runtimeType == other.runtimeType &&
-          sexual == other.sexual &&
-          hate == other.hate &&
-          harassment == other.harassment &&
-          selfHarm == other.selfHarm &&
-          sexualMinors == other.sexualMinors &&
-          hateThreatening == other.hateThreatening &&
-          violenceGraphic == other.violenceGraphic &&
-          selfHarmIntent == other.selfHarmIntent &&
-          selfHarmInstructions == other.selfHarmInstructions &&
-          harassmentThreatening == other.harassmentThreatening &&
-          violence == other.violence;
+  identical(this, other) ||
+  other is ModerationCategoryScores &&
+  runtimeType == other.runtimeType &&
+  sexual == other.sexual &&
+  hate == other.hate &&
+  harassment == other.harassment &&
+  selfHarm == other.selfHarm &&
+  sexualMinors == other.sexualMinors &&
+  hateThreatening == other.hateThreatening &&
+  violenceGraphic == other.violenceGraphic &&
+  selfHarmIntent == other.selfHarmIntent &&
+  selfHarmInstructions == other.selfHarmInstructions &&
+  harassmentThreatening == other.harassmentThreatening &&
+  violence == other.violence;
 }
 
 @freezed
@@ -2721,11 +2721,11 @@ sealed class ModerationInput with _$ModerationInput {
 
   /// Single text string.
   const factory ModerationInput.single({required String field0}) =
-      ModerationInput_Single;
+  ModerationInput_Single;
 
   /// Multiple text strings (batch moderation).
   const factory ModerationInput.multiple({required List<String> field0}) =
-      ModerationInput_Multiple;
+  ModerationInput_Multiple;
 }
 
 /// Request to classify content for policy violations.
@@ -2743,11 +2743,11 @@ class ModerationRequest {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ModerationRequest &&
-          runtimeType == other.runtimeType &&
-          input == other.input &&
-          model == other.model;
+  identical(this, other) ||
+  other is ModerationRequest &&
+  runtimeType == other.runtimeType &&
+  input == other.input &&
+  model == other.model;
 }
 
 /// Response from the moderation endpoint.
@@ -2772,12 +2772,12 @@ class ModerationResponse {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ModerationResponse &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          model == other.model &&
-          results == other.results;
+  identical(this, other) ||
+  other is ModerationResponse &&
+  runtimeType == other.runtimeType &&
+  id == other.id &&
+  model == other.model &&
+  results == other.results;
 }
 
 /// A single moderation classification result.
@@ -2799,16 +2799,16 @@ class ModerationResult {
 
   @override
   int get hashCode =>
-      flagged.hashCode ^ categories.hashCode ^ categoryScores.hashCode;
+  flagged.hashCode ^ categories.hashCode ^ categoryScores.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ModerationResult &&
-          runtimeType == other.runtimeType &&
-          flagged == other.flagged &&
-          categories == other.categories &&
-          categoryScores == other.categoryScores;
+  identical(this, other) ||
+  other is ModerationResult &&
+  runtimeType == other.runtimeType &&
+  flagged == other.flagged &&
+  categories == other.categories &&
+  categoryScores == other.categoryScores;
 }
 
 @freezed
@@ -2846,11 +2846,11 @@ class OcrImage {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is OcrImage &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          imageBase64 == other.imageBase64;
+  identical(this, other) ||
+  other is OcrImage &&
+  runtimeType == other.runtimeType &&
+  id == other.id &&
+  imageBase64 == other.imageBase64;
 }
 
 /// A single page of OCR output.
@@ -2876,20 +2876,20 @@ class OcrPage {
 
   @override
   int get hashCode =>
-      index.hashCode ^
-      markdown.hashCode ^
-      images.hashCode ^
-      dimensions.hashCode;
+  index.hashCode ^
+  markdown.hashCode ^
+  images.hashCode ^
+  dimensions.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is OcrPage &&
-          runtimeType == other.runtimeType &&
-          index == other.index &&
-          markdown == other.markdown &&
-          images == other.images &&
-          dimensions == other.dimensions;
+  identical(this, other) ||
+  other is OcrPage &&
+  runtimeType == other.runtimeType &&
+  index == other.index &&
+  markdown == other.markdown &&
+  images == other.images &&
+  dimensions == other.dimensions;
 }
 
 /// An OCR request.
@@ -2915,20 +2915,20 @@ class OcrRequest {
 
   @override
   int get hashCode =>
-      model.hashCode ^
-      document.hashCode ^
-      pages.hashCode ^
-      includeImageBase64.hashCode;
+  model.hashCode ^
+  document.hashCode ^
+  pages.hashCode ^
+  includeImageBase64.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is OcrRequest &&
-          runtimeType == other.runtimeType &&
-          model == other.model &&
-          document == other.document &&
-          pages == other.pages &&
-          includeImageBase64 == other.includeImageBase64;
+  identical(this, other) ||
+  other is OcrRequest &&
+  runtimeType == other.runtimeType &&
+  model == other.model &&
+  document == other.document &&
+  pages == other.pages &&
+  includeImageBase64 == other.includeImageBase64;
 }
 
 /// An OCR response.
@@ -2949,12 +2949,12 @@ class OcrResponse {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is OcrResponse &&
-          runtimeType == other.runtimeType &&
-          pages == other.pages &&
-          model == other.model &&
-          usage == other.usage;
+  identical(this, other) ||
+  other is OcrResponse &&
+  runtimeType == other.runtimeType &&
+  pages == other.pages &&
+  model == other.model &&
+  usage == other.usage;
 }
 
 /// Page dimensions in pixels.
@@ -2972,11 +2972,11 @@ class PageDimensions {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is PageDimensions &&
-          runtimeType == other.runtimeType &&
-          width == other.width &&
-          height == other.height;
+  identical(this, other) ||
+  other is PageDimensions &&
+  runtimeType == other.runtimeType &&
+  width == other.width &&
+  height == other.height;
 }
 
 /// Breakdown of tokens used in the prompt portion of a request.
@@ -3002,11 +3002,11 @@ class PromptTokensDetails {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is PromptTokensDetails &&
-          runtimeType == other.runtimeType &&
-          cachedTokens == other.cachedTokens &&
-          audioTokens == other.audioTokens;
+  identical(this, other) ||
+  other is PromptTokensDetails &&
+  runtimeType == other.runtimeType &&
+  cachedTokens == other.cachedTokens &&
+  audioTokens == other.audioTokens;
 }
 
 /// Static capability flags for a provider.
@@ -3066,26 +3066,26 @@ class ProviderCapabilities {
 
   @override
   int get hashCode =>
-      vision.hashCode ^
-      reasoning.hashCode ^
-      structuredOutput.hashCode ^
-      functionCalling.hashCode ^
-      audioIn.hashCode ^
-      audioOut.hashCode ^
-      videoIn.hashCode;
+  vision.hashCode ^
+  reasoning.hashCode ^
+  structuredOutput.hashCode ^
+  functionCalling.hashCode ^
+  audioIn.hashCode ^
+  audioOut.hashCode ^
+  videoIn.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ProviderCapabilities &&
-          runtimeType == other.runtimeType &&
-          vision == other.vision &&
-          reasoning == other.reasoning &&
-          structuredOutput == other.structuredOutput &&
-          functionCalling == other.functionCalling &&
-          audioIn == other.audioIn &&
-          audioOut == other.audioOut &&
-          videoIn == other.videoIn;
+  identical(this, other) ||
+  other is ProviderCapabilities &&
+  runtimeType == other.runtimeType &&
+  vision == other.vision &&
+  reasoning == other.reasoning &&
+  structuredOutput == other.structuredOutput &&
+  functionCalling == other.functionCalling &&
+  audioIn == other.audioIn &&
+  audioOut == other.audioOut &&
+  videoIn == other.videoIn;
 }
 
 /// Static configuration for a single provider entry in providers.json.
@@ -3130,26 +3130,26 @@ class ProviderConfig {
 
   @override
   int get hashCode =>
-      name.hashCode ^
-      displayName.hashCode ^
-      baseUrl.hashCode ^
-      auth.hashCode ^
-      endpoints.hashCode ^
-      modelPrefixes.hashCode ^
-      paramMappings.hashCode;
+  name.hashCode ^
+  displayName.hashCode ^
+  baseUrl.hashCode ^
+  auth.hashCode ^
+  endpoints.hashCode ^
+  modelPrefixes.hashCode ^
+  paramMappings.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ProviderConfig &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          displayName == other.displayName &&
-          baseUrl == other.baseUrl &&
-          auth == other.auth &&
-          endpoints == other.endpoints &&
-          modelPrefixes == other.modelPrefixes &&
-          paramMappings == other.paramMappings;
+  identical(this, other) ||
+  other is ProviderConfig &&
+  runtimeType == other.runtimeType &&
+  name == other.name &&
+  displayName == other.displayName &&
+  baseUrl == other.baseUrl &&
+  auth == other.auth &&
+  endpoints == other.endpoints &&
+  modelPrefixes == other.modelPrefixes &&
+  paramMappings == other.paramMappings;
 }
 
 /// Configuration for per-model rate limits.
@@ -3170,12 +3170,12 @@ class RateLimitConfig {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is RateLimitConfig &&
-          runtimeType == other.runtimeType &&
-          rpm == other.rpm &&
-          tpm == other.tpm &&
-          window == other.window;
+  identical(this, other) ||
+  other is RateLimitConfig &&
+  runtimeType == other.runtimeType &&
+  rpm == other.rpm &&
+  tpm == other.tpm &&
+  window == other.window;
 }
 
 /// Controls how much reasoning effort the model should use.
@@ -3187,11 +3187,11 @@ sealed class RerankDocument with _$RerankDocument {
 
   /// Plain text document content.
   const factory RerankDocument.text({required String field0}) =
-      RerankDocument_Text;
+  RerankDocument_Text;
 
   /// Document with explicit text field (may include metadata).
   const factory RerankDocument.object({required String text}) =
-      RerankDocument_Object;
+  RerankDocument_Object;
 }
 
 /// Request to rerank documents by relevance to a query.
@@ -3221,22 +3221,22 @@ class RerankRequest {
 
   @override
   int get hashCode =>
-      model.hashCode ^
-      query.hashCode ^
-      documents.hashCode ^
-      topN.hashCode ^
-      returnDocuments.hashCode;
+  model.hashCode ^
+  query.hashCode ^
+  documents.hashCode ^
+  topN.hashCode ^
+  returnDocuments.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is RerankRequest &&
-          runtimeType == other.runtimeType &&
-          model == other.model &&
-          query == other.query &&
-          documents == other.documents &&
-          topN == other.topN &&
-          returnDocuments == other.returnDocuments;
+  identical(this, other) ||
+  other is RerankRequest &&
+  runtimeType == other.runtimeType &&
+  model == other.model &&
+  query == other.query &&
+  documents == other.documents &&
+  topN == other.topN &&
+  returnDocuments == other.returnDocuments;
 }
 
 /// Response from the rerank endpoint.
@@ -3257,12 +3257,12 @@ class RerankResponse {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is RerankResponse &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          results == other.results &&
-          meta == other.meta;
+  identical(this, other) ||
+  other is RerankResponse &&
+  runtimeType == other.runtimeType &&
+  id == other.id &&
+  results == other.results &&
+  meta == other.meta;
 }
 
 /// A single reranked document with its relevance score.
@@ -3284,16 +3284,16 @@ class RerankResult {
 
   @override
   int get hashCode =>
-      index.hashCode ^ relevanceScore.hashCode ^ document.hashCode;
+  index.hashCode ^ relevanceScore.hashCode ^ document.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is RerankResult &&
-          runtimeType == other.runtimeType &&
-          index == other.index &&
-          relevanceScore == other.relevanceScore &&
-          document == other.document;
+  identical(this, other) ||
+  other is RerankResult &&
+  runtimeType == other.runtimeType &&
+  index == other.index &&
+  relevanceScore == other.relevanceScore &&
+  document == other.document;
 }
 
 /// The text content of a reranked document, returned when `return_documents` is true.
@@ -3308,10 +3308,10 @@ class RerankResultDocument {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is RerankResultDocument &&
-          runtimeType == other.runtimeType &&
-          text == other.text;
+  identical(this, other) ||
+  other is RerankResultDocument &&
+  runtimeType == other.runtimeType &&
+  text == other.text;
 }
 
 @freezed
@@ -3369,28 +3369,28 @@ class ResponseObject {
 
   @override
   int get hashCode =>
-      id.hashCode ^
-      object.hashCode ^
-      createdAt.hashCode ^
-      model.hashCode ^
-      status.hashCode ^
-      output.hashCode ^
-      usage.hashCode ^
-      error.hashCode;
+  id.hashCode ^
+  object.hashCode ^
+  createdAt.hashCode ^
+  model.hashCode ^
+  status.hashCode ^
+  output.hashCode ^
+  usage.hashCode ^
+  error.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ResponseObject &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          object == other.object &&
-          createdAt == other.createdAt &&
-          model == other.model &&
-          status == other.status &&
-          output == other.output &&
-          usage == other.usage &&
-          error == other.error;
+  identical(this, other) ||
+  other is ResponseObject &&
+  runtimeType == other.runtimeType &&
+  id == other.id &&
+  object == other.object &&
+  createdAt == other.createdAt &&
+  model == other.model &&
+  status == other.status &&
+  output == other.output &&
+  usage == other.usage &&
+  error == other.error;
 }
 
 /// A single output item from the response.
@@ -3408,11 +3408,11 @@ class ResponseOutputItem {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ResponseOutputItem &&
-          runtimeType == other.runtimeType &&
-          itemType == other.itemType &&
-          content == other.content;
+  identical(this, other) ||
+  other is ResponseOutputItem &&
+  runtimeType == other.runtimeType &&
+  itemType == other.itemType &&
+  content == other.content;
 }
 
 /// A tool available for the response request.
@@ -3430,11 +3430,11 @@ class ResponseTool {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ResponseTool &&
-          runtimeType == other.runtimeType &&
-          toolType == other.toolType &&
-          config == other.config;
+  identical(this, other) ||
+  other is ResponseTool &&
+  runtimeType == other.runtimeType &&
+  toolType == other.toolType &&
+  config == other.config;
 }
 
 /// Token usage for a response.
@@ -3456,16 +3456,16 @@ class ResponseUsage {
 
   @override
   int get hashCode =>
-      inputTokens.hashCode ^ outputTokens.hashCode ^ totalTokens.hashCode;
+  inputTokens.hashCode ^ outputTokens.hashCode ^ totalTokens.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ResponseUsage &&
-          runtimeType == other.runtimeType &&
-          inputTokens == other.inputTokens &&
-          outputTokens == other.outputTokens &&
-          totalTokens == other.totalTokens;
+  identical(this, other) ||
+  other is ResponseUsage &&
+  runtimeType == other.runtimeType &&
+  inputTokens == other.inputTokens &&
+  outputTokens == other.outputTokens &&
+  totalTokens == other.totalTokens;
 }
 
 /// A search request.
@@ -3495,22 +3495,22 @@ class SearchRequest {
 
   @override
   int get hashCode =>
-      model.hashCode ^
-      query.hashCode ^
-      maxResults.hashCode ^
-      searchDomainFilter.hashCode ^
-      country.hashCode;
+  model.hashCode ^
+  query.hashCode ^
+  maxResults.hashCode ^
+  searchDomainFilter.hashCode ^
+  country.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is SearchRequest &&
-          runtimeType == other.runtimeType &&
-          model == other.model &&
-          query == other.query &&
-          maxResults == other.maxResults &&
-          searchDomainFilter == other.searchDomainFilter &&
-          country == other.country;
+  identical(this, other) ||
+  other is SearchRequest &&
+  runtimeType == other.runtimeType &&
+  model == other.model &&
+  query == other.query &&
+  maxResults == other.maxResults &&
+  searchDomainFilter == other.searchDomainFilter &&
+  country == other.country;
 }
 
 /// A search response.
@@ -3528,11 +3528,11 @@ class SearchResponse {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is SearchResponse &&
-          runtimeType == other.runtimeType &&
-          results == other.results &&
-          model == other.model;
+  identical(this, other) ||
+  other is SearchResponse &&
+  runtimeType == other.runtimeType &&
+  results == other.results &&
+  model == other.model;
 }
 
 /// An individual search result.
@@ -3558,17 +3558,17 @@ class SearchResult {
 
   @override
   int get hashCode =>
-      title.hashCode ^ url.hashCode ^ snippet.hashCode ^ date.hashCode;
+  title.hashCode ^ url.hashCode ^ snippet.hashCode ^ date.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is SearchResult &&
-          runtimeType == other.runtimeType &&
-          title == other.title &&
-          url == other.url &&
-          snippet == other.snippet &&
-          date == other.date;
+  identical(this, other) ||
+  other is SearchResult &&
+  runtimeType == other.runtimeType &&
+  title == other.title &&
+  url == other.url &&
+  snippet == other.snippet &&
+  date == other.date;
 }
 
 /// Name of the specific function to invoke.
@@ -3583,10 +3583,10 @@ class SpecificFunction {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is SpecificFunction &&
-          runtimeType == other.runtimeType &&
-          name == other.name;
+  identical(this, other) ||
+  other is SpecificFunction &&
+  runtimeType == other.runtimeType &&
+  name == other.name;
 }
 
 /// Directive to call a specific tool.
@@ -3604,11 +3604,11 @@ class SpecificToolChoice {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is SpecificToolChoice &&
-          runtimeType == other.runtimeType &&
-          choiceType == other.choiceType &&
-          function == other.function;
+  identical(this, other) ||
+  other is SpecificToolChoice &&
+  runtimeType == other.runtimeType &&
+  choiceType == other.choiceType &&
+  function == other.function;
 }
 
 @freezed
@@ -3617,11 +3617,11 @@ sealed class StopSequence with _$StopSequence {
 
   /// Single stop sequence.
   const factory StopSequence.single({required String field0}) =
-      StopSequence_Single;
+  StopSequence_Single;
 
   /// Multiple stop sequences.
   const factory StopSequence.multiple({required List<String> field0}) =
-      StopSequence_Multiple;
+  StopSequence_Multiple;
 }
 
 /// A streaming choice with incremental delta.
@@ -3646,12 +3646,12 @@ class StreamChoice {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is StreamChoice &&
-          runtimeType == other.runtimeType &&
-          index == other.index &&
-          delta == other.delta &&
-          finishReason == other.finishReason;
+  identical(this, other) ||
+  other is StreamChoice &&
+  runtimeType == other.runtimeType &&
+  index == other.index &&
+  delta == other.delta &&
+  finishReason == other.finishReason;
 }
 
 /// Incremental delta in a stream chunk.
@@ -3681,22 +3681,22 @@ class StreamDelta {
 
   @override
   int get hashCode =>
-      role.hashCode ^
-      content.hashCode ^
-      toolCalls.hashCode ^
-      functionCall.hashCode ^
-      refusal.hashCode;
+  role.hashCode ^
+  content.hashCode ^
+  toolCalls.hashCode ^
+  functionCall.hashCode ^
+  refusal.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is StreamDelta &&
-          runtimeType == other.runtimeType &&
-          role == other.role &&
-          content == other.content &&
-          toolCalls == other.toolCalls &&
-          functionCall == other.functionCall &&
-          refusal == other.refusal;
+  identical(this, other) ||
+  other is StreamDelta &&
+  runtimeType == other.runtimeType &&
+  role == other.role &&
+  content == other.content &&
+  toolCalls == other.toolCalls &&
+  functionCall == other.functionCall &&
+  refusal == other.refusal;
 }
 
 /// The streaming wire format a provider uses for its response stream.
@@ -3728,11 +3728,11 @@ class StreamFunctionCall {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is StreamFunctionCall &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          arguments == other.arguments;
+  identical(this, other) ||
+  other is StreamFunctionCall &&
+  runtimeType == other.runtimeType &&
+  name == other.name &&
+  arguments == other.arguments;
 }
 
 /// Options for streaming responses.
@@ -3747,10 +3747,10 @@ class StreamOptions {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is StreamOptions &&
-          runtimeType == other.runtimeType &&
-          includeUsage == other.includeUsage;
+  identical(this, other) ||
+  other is StreamOptions &&
+  runtimeType == other.runtimeType &&
+  includeUsage == other.includeUsage;
 }
 
 /// A streaming tool call being built incrementally.
@@ -3776,17 +3776,17 @@ class StreamToolCall {
 
   @override
   int get hashCode =>
-      index.hashCode ^ id.hashCode ^ callType.hashCode ^ function.hashCode;
+  index.hashCode ^ id.hashCode ^ callType.hashCode ^ function.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is StreamToolCall &&
-          runtimeType == other.runtimeType &&
-          index == other.index &&
-          id == other.id &&
-          callType == other.callType &&
-          function == other.function;
+  identical(this, other) ||
+  other is StreamToolCall &&
+  runtimeType == other.runtimeType &&
+  index == other.index &&
+  id == other.id &&
+  callType == other.callType &&
+  function == other.function;
 }
 
 /// System message guiding model behavior for the entire conversation.
@@ -3807,11 +3807,11 @@ class SystemMessage {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is SystemMessage &&
-          runtimeType == other.runtimeType &&
-          content == other.content &&
-          name == other.name;
+  identical(this, other) ||
+  other is SystemMessage &&
+  runtimeType == other.runtimeType &&
+  content == other.content &&
+  name == other.name;
 }
 
 /// A tool call the model wants to execute.
@@ -3836,12 +3836,12 @@ class ToolCall {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ToolCall &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          callType == other.callType &&
-          function == other.function;
+  identical(this, other) ||
+  other is ToolCall &&
+  runtimeType == other.runtimeType &&
+  id == other.id &&
+  callType == other.callType &&
+  function == other.function;
 }
 
 @freezed
@@ -3850,11 +3850,11 @@ sealed class ToolChoice with _$ToolChoice {
 
   /// Predefined mode: auto, required, or none.
   const factory ToolChoice.mode({required ToolChoiceMode field0}) =
-      ToolChoice_Mode;
+  ToolChoice_Mode;
 
   /// Force a specific tool to be called.
   const factory ToolChoice.specific({required SpecificToolChoice field0}) =
-      ToolChoice_Specific;
+  ToolChoice_Specific;
 }
 
 /// Tool choice mode.
@@ -3891,12 +3891,12 @@ class ToolMessage {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ToolMessage &&
-          runtimeType == other.runtimeType &&
-          content == other.content &&
-          toolCallId == other.toolCallId &&
-          name == other.name;
+  identical(this, other) ||
+  other is ToolMessage &&
+  runtimeType == other.runtimeType &&
+  content == other.content &&
+  toolCallId == other.toolCallId &&
+  name == other.name;
 }
 
 /// The type discriminator for tool/tool-call objects.
@@ -3929,17 +3929,17 @@ class TranscriptionResponse {
 
   @override
   int get hashCode =>
-      text.hashCode ^ language.hashCode ^ duration.hashCode ^ segments.hashCode;
+  text.hashCode ^ language.hashCode ^ duration.hashCode ^ segments.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is TranscriptionResponse &&
-          runtimeType == other.runtimeType &&
-          text == other.text &&
-          language == other.language &&
-          duration == other.duration &&
-          segments == other.segments;
+  identical(this, other) ||
+  other is TranscriptionResponse &&
+  runtimeType == other.runtimeType &&
+  text == other.text &&
+  language == other.language &&
+  duration == other.duration &&
+  segments == other.segments;
 }
 
 /// A segment of transcribed audio with timing information.
@@ -3965,17 +3965,17 @@ class TranscriptionSegment {
 
   @override
   int get hashCode =>
-      id.hashCode ^ start.hashCode ^ end.hashCode ^ text.hashCode;
+  id.hashCode ^ start.hashCode ^ end.hashCode ^ text.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is TranscriptionSegment &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          start == other.start &&
-          end == other.end &&
-          text == other.text;
+  identical(this, other) ||
+  other is TranscriptionSegment &&
+  runtimeType == other.runtimeType &&
+  id == other.id &&
+  start == other.start &&
+  end == other.end &&
+  text == other.text;
 }
 
 /// Token-usage accounting returned by the provider on each completion / embedding call.
@@ -4003,20 +4003,20 @@ class Usage {
 
   @override
   int get hashCode =>
-      promptTokens.hashCode ^
-      completionTokens.hashCode ^
-      totalTokens.hashCode ^
-      promptTokensDetails.hashCode;
+  promptTokens.hashCode ^
+  completionTokens.hashCode ^
+  totalTokens.hashCode ^
+  promptTokensDetails.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Usage &&
-          runtimeType == other.runtimeType &&
-          promptTokens == other.promptTokens &&
-          completionTokens == other.completionTokens &&
-          totalTokens == other.totalTokens &&
-          promptTokensDetails == other.promptTokensDetails;
+  identical(this, other) ||
+  other is Usage &&
+  runtimeType == other.runtimeType &&
+  promptTokens == other.promptTokens &&
+  completionTokens == other.completionTokens &&
+  totalTokens == other.totalTokens &&
+  promptTokensDetails == other.promptTokensDetails;
 }
 
 @freezed
@@ -4028,7 +4028,7 @@ sealed class UserContent with _$UserContent {
 
   /// Array of content parts (text, images, documents, audio).
   const factory UserContent.parts({required List<ContentPart> field0}) =
-      UserContent_Parts;
+  UserContent_Parts;
 }
 
 /// User message in the conversation.
@@ -4046,11 +4046,11 @@ class UserMessage {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is UserMessage &&
-          runtimeType == other.runtimeType &&
-          content == other.content &&
-          name == other.name;
+  identical(this, other) ||
+  other is UserMessage &&
+  runtimeType == other.runtimeType &&
+  content == other.content &&
+  name == other.name;
 }
 
 /// Configuration for polling a batch until terminal status.
@@ -4079,21 +4079,22 @@ class WaitForBatchConfig {
 
   @override
   int get hashCode =>
-      initialIntervalSecs.hashCode ^
-      maxIntervalSecs.hashCode ^
-      backoffMultiplier.hashCode ^
-      timeoutSecs.hashCode;
+  initialIntervalSecs.hashCode ^
+  maxIntervalSecs.hashCode ^
+  backoffMultiplier.hashCode ^
+  timeoutSecs.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is WaitForBatchConfig &&
-          runtimeType == other.runtimeType &&
-          initialIntervalSecs == other.initialIntervalSecs &&
-          maxIntervalSecs == other.maxIntervalSecs &&
-          backoffMultiplier == other.backoffMultiplier &&
-          timeoutSecs == other.timeoutSecs;
+  identical(this, other) ||
+  other is WaitForBatchConfig &&
+  runtimeType == other.runtimeType &&
+  initialIntervalSecs == other.initialIntervalSecs &&
+  maxIntervalSecs == other.maxIntervalSecs &&
+  backoffMultiplier == other.backoffMultiplier &&
+  timeoutSecs == other.timeoutSecs;
 }
+
 
 extension AssistantContentTextExt on AssistantContent {
   /// Returns the plain-text display value of this content.
@@ -4105,9 +4106,7 @@ extension AssistantContentTextExt on AssistantContent {
   String text() {
     return switch (this) {
       AssistantContent_Text(:final field0) => field0,
-      AssistantContent_Parts(:final field0) => _extractTextFromContentParts(
-        field0,
-      ),
+      AssistantContent_Parts(:final field0) => _extractTextFromContentParts(field0),
       _ => '',
     };
   }

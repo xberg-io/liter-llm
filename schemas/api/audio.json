@@ -740,18 +740,7 @@
         },
         {
           "type": "string",
-          "enum": [
-            "alloy",
-            "ash",
-            "ballad",
-            "coral",
-            "echo",
-            "sage",
-            "shimmer",
-            "verse",
-            "marin",
-            "cedar"
-          ]
+          "enum": ["alloy", "ash", "ballad", "coral", "echo", "sage", "shimmer", "verse", "marin", "cedar"]
         }
       ]
     }

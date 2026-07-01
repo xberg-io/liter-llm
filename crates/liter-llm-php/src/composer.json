@@ -7,8 +7,6 @@
     "php": ">=8.2"
   },
   "require-dev": {
-    "phpstan/phpstan": "^2.1",
-    "friendsofphp/php-cs-fixer": "^3.95",
     "phpunit/phpunit": "^13.1"
   },
   "autoload": {
@@ -17,12 +15,11 @@
     }
   },
   "scripts": {
-    "phpstan": "php -d detect_unicode=0 vendor/bin/phpstan --configuration=phpstan.neon --memory-limit=512M",
-    "format": "php vendor/bin/php-cs-fixer fix --quiet",
-    "format:check": "php vendor/bin/php-cs-fixer fix --dry-run --quiet",
+    "format": "poly fmt --fix",
+    "format:check": "poly fmt --check",
     "test": "php vendor/bin/phpunit",
-    "lint": "@phpstan",
-    "lint:fix": "php vendor/bin/php-cs-fixer fix --quiet && php -d detect_unicode=0 vendor/bin/phpstan --configuration=phpstan.neon --memory-limit=512M"
+    "lint": "poly lint",
+    "lint:fix": "poly lint --fix && poly fmt --fix"
   },
   "php-ext": {
     "extension-name": "liter_llm",
@@ -30,12 +27,7 @@
     "support-nts": true,
     "download-url-method": "pre-packaged-binary"
   },
-  "keywords": [
-    "anthropic",
-    "api-client",
-    "llm",
-    "openai"
-  ],
+  "keywords": ["anthropic", "api-client", "llm", "openai"],
   "extra": {
     "pie": {
       "binary": {

@@ -1,21 +1,21 @@
 [workspace]
-alef_version = "0.30.0"
+alef_version = "0.30.2"
 languages = [
-  "python",
-  "node",
-  "ruby",
-  "php",
-  "ffi",
-  "go",
-  "java",
-  "csharp",
-  "elixir",
-  "wasm",
-  "zig",
-  "dart",
-  "swift",
-  "kotlin_android",
-  "jni",
+    "python",
+    "node",
+    "ruby",
+    "php",
+    "ffi",
+    "go",
+    "java",
+    "csharp",
+    "elixir",
+    "wasm",
+    "zig",
+    "dart",
+    "swift",
+    "kotlin_android",
+    "jni",
 ]
 
 [workspace.format]
@@ -26,17 +26,14 @@ reference_output = "docs/reference"
 
 [workspace.docs.cli]
 sources = [
-  "crates/liter-llm-cli/src/main.rs",
-  "crates/liter-llm-cli/src/commands/mod.rs",
-  "crates/liter-llm-cli/src/commands/api.rs",
-  "crates/liter-llm-cli/src/commands/mcp.rs",
+    "crates/liter-llm-cli/src/main.rs",
+    "crates/liter-llm-cli/src/commands/mod.rs",
+    "crates/liter-llm-cli/src/commands/api.rs",
+    "crates/liter-llm-cli/src/commands/mcp.rs",
 ]
 
 [workspace.docs.mcp]
-sources = [
-  "crates/liter-llm-proxy/src/mcp/mod.rs",
-  "crates/liter-llm-proxy/src/mcp/tools.rs",
-]
+sources = ["crates/liter-llm-proxy/src/mcp/mod.rs", "crates/liter-llm-proxy/src/mcp/tools.rs"]
 
 [workspace.docs.llms]
 template = "templates/docs/llms.txt.jinja"
@@ -55,10 +52,10 @@ issues_url = "https://github.com/xberg-io/liter-llm/issues"
 
 [workspace.sync]
 extra_paths = [
-  "package.json",
-  "crates/liter-llm-node/package.json",
-  "crates/liter-llm-node/npm/*/package.json",
-  "packages/node/package.json",
+    "package.json",
+    "crates/liter-llm-node/package.json",
+    "crates/liter-llm-node/npm/*/package.json",
+    "packages/node/package.json",
 ]
 
 [workspace.citation]
@@ -75,41 +72,67 @@ given-names = "Na'aman"
 email = "naaman@xberg.io"
 orcid = "https://orcid.org/0009-0000-2247-5072"
 
+# Repo-specific poly suppressions merged into the generated poly.toml. These
+# cover hand-written files (scripts, cli-proxy, README templates) formerly
+# suppressed by root pyproject [tool.ruff], which poly's native ruff/oxc
+# engines don't read (poly.toml is source of truth).
+[workspace.poly.per-file-ignores]
+"scripts/**/*.py" = [
+    "B904",
+    "BLE001",
+    "C901",
+    "D",
+    "G004",
+    "G201",
+    "PERF203",
+    "PERF401",
+    "PLC0415",
+    "PLR0912",
+    "PLR0915",
+    "PLW2901",
+    "PTH123",
+    "S",
+    "SIM105",
+    "T201",
+]
+"cli-proxy/**/*.py" = ["ANN", "PLR0913", "PLR2004", "S", "T201"]
+"templates/readme/**/*.md" = ["MD057"]
+
 [[crates]]
 name = "liter-llm"
 core_import = "liter_llm"
 sources = [
-  "crates/liter-llm/src/error.rs",
-  "crates/liter-llm/src/bindings.rs",
-  "crates/liter-llm/src/types/common.rs",
-  "crates/liter-llm/src/types/chat.rs",
-  "crates/liter-llm/src/types/embedding.rs",
-  "crates/liter-llm/src/types/image.rs",
-  "crates/liter-llm/src/image.rs",
-  "crates/liter-llm/src/types/audio.rs",
-  "crates/liter-llm/src/types/moderation.rs",
-  "crates/liter-llm/src/types/rerank.rs",
-  "crates/liter-llm/src/types/search.rs",
-  "crates/liter-llm/src/types/ocr.rs",
-  "crates/liter-llm/src/types/models.rs",
-  "crates/liter-llm/src/types/files.rs",
-  "crates/liter-llm/src/types/batch.rs",
-  "crates/liter-llm/src/types/responses.rs",
-  "crates/liter-llm/src/client/mod.rs",
-  "crates/liter-llm/src/provider/custom.rs",
-  # Provider registry public surface: ProviderConfig struct + all_providers /
-  # complex_provider_names lookup functions. ensure_crypto_provider lives in
-  # lib.rs and is also pulled in for native-http builds.
-  "crates/liter-llm/src/provider/mod.rs",
-  "crates/liter-llm/src/lib.rs",
-  # Tower middleware: expose public config DTOs (BudgetConfig, CacheConfig,
-  # RateLimitConfig + their enums Enforcement, CacheBackend). The accompanying
-  # Layer/Service/State types in these files are kept out of bindings via the
-  # [crates.exclude] list above per the locked decision (middleware composition
-  # remains a Rust pattern).
-  "crates/liter-llm/src/tower/budget.rs",
-  "crates/liter-llm/src/tower/cache.rs",
-  "crates/liter-llm/src/tower/rate_limit.rs",
+    "crates/liter-llm/src/error.rs",
+    "crates/liter-llm/src/bindings.rs",
+    "crates/liter-llm/src/types/common.rs",
+    "crates/liter-llm/src/types/chat.rs",
+    "crates/liter-llm/src/types/embedding.rs",
+    "crates/liter-llm/src/types/image.rs",
+    "crates/liter-llm/src/image.rs",
+    "crates/liter-llm/src/types/audio.rs",
+    "crates/liter-llm/src/types/moderation.rs",
+    "crates/liter-llm/src/types/rerank.rs",
+    "crates/liter-llm/src/types/search.rs",
+    "crates/liter-llm/src/types/ocr.rs",
+    "crates/liter-llm/src/types/models.rs",
+    "crates/liter-llm/src/types/files.rs",
+    "crates/liter-llm/src/types/batch.rs",
+    "crates/liter-llm/src/types/responses.rs",
+    "crates/liter-llm/src/client/mod.rs",
+    "crates/liter-llm/src/provider/custom.rs",
+    # Provider registry public surface: ProviderConfig struct + all_providers /
+    # complex_provider_names lookup functions. ensure_crypto_provider lives in
+    # lib.rs and is also pulled in for native-http builds.
+    "crates/liter-llm/src/provider/mod.rs",
+    "crates/liter-llm/src/lib.rs",
+    # Tower middleware: expose public config DTOs (BudgetConfig, CacheConfig,
+    # RateLimitConfig + their enums Enforcement, CacheBackend). The accompanying
+    # Layer/Service/State types in these files are kept out of bindings via the
+    # [crates.exclude] list above per the locked decision (middleware composition
+    # remains a Rust pattern).
+    "crates/liter-llm/src/tower/budget.rs",
+    "crates/liter-llm/src/tower/cache.rs",
+    "crates/liter-llm/src/tower/rate_limit.rs",
 ]
 version_from = "Cargo.toml"
 workspace_root = "."
@@ -171,17 +194,17 @@ features = ["wasm-http"]
 # reachable through `liter_llm::*` in that build, so skip them in the WASM
 # binding to avoid E0433 "cannot find `tower`" / "cannot find `BudgetConfig`" etc.
 exclude_types = [
-  "BudgetConfig",
-  "CacheConfig",
-  "CacheBackend",
-  "RateLimitConfig",
-  "Enforcement",
-  # Tower observability types — same rationale as the config DTOs above. Added
-  # in v1.6.0 alef regen and broke the WASM build (E0433: cannot find `tower`).
-  "CircuitState",
-  "HealthStatus",
-  "IntentPrototype",
-  "SingleflightResult",
+    "BudgetConfig",
+    "CacheConfig",
+    "CacheBackend",
+    "RateLimitConfig",
+    "Enforcement",
+    # Tower observability types — same rationale as the config DTOs above. Added
+    # in v1.6.0 alef regen and broke the WASM build (E0433: cannot find `tower`).
+    "CircuitState",
+    "HealthStatus",
+    "IntentPrototype",
+    "SingleflightResult",
 ]
 # Token counting via HuggingFace `tokenizers` requires the optional `tokenizer`
 # feature on the core crate. That feature pulls in `hf-hub` (HTTP) and `fancy-regex`
@@ -291,265 +314,265 @@ kotlin_android = "packages/kotlin-android/src/main/kotlin/io/xberg/literllm/andr
 
 [crates.exclude]
 types = [
-  # Traits (can't cross FFI)
-  "LlmClient",
-  "LlmClientRaw",
-  "BatchClient",
-  "FileClient",
-  "ResponseClient",
-  # Opaque async types
-  "BoxFuture",
-  "BoxStream",
-  # Types with Arc<dyn Trait> / generics
-  "ClientConfig",
-  "ClientConfigBuilder",
-  "ClientBuilder",
-  "NoApiKey",
-  "WithApiKey",
-  "NoProvider",
-  "WithProvider",
-  "PreparedRequest",
-  "RawExchange",
-  "RawStreamExchange",
-  "TransportConfig",
-  # BatchWaitError: thiserror types don't auto-bridge; source uses FFI-friendly
-  # fields (f64 seconds, flattened message+code) so C FFI can bridge manually.
-  "BatchWaitError",
-  # Tower-internal Service request/response enums (externally tagged, contain
-  # BoxStream/Bytes). Listed under both bare and Tower-prefixed names — alef
-  # prefixes types extracted from the `tower::` module path with "Tower" to
-  # disambiguate, so both spellings must be excluded.
-  "LlmRequest",
-  "LlmResponse",
-  "CachedResponse",
-  "TowerLlmRequest",
-  "TowerLlmResponse",
-  "TowerCachedResponse",
-  # Tower middleware Layer/Service/State wrappers (Rust-only middleware composition).
-  # Public config DTOs (BudgetConfig, CacheConfig, RateLimitConfig, CacheBackend,
-  # Enforcement) are intentionally NOT excluded — they are exposed across all bindings.
-  "BudgetState",
-  "BudgetLayer",
-  "BudgetLedger",
-  "BudgetDimension",
-  "BudgetVerdict",
-  "BudgetSnapshot",
-  "CostRecordContext",
-  "CostCheckContext",
-  "DimensionLimits",
-  "InMemoryBudgetLedger",
-  "CacheKeyInput",
-  "ExactHashStrategy",
-  "SystemPromptAwareStrategy",
-  "TenantScopedStrategy",
-  "CacheDecision",
-  "CachePolicy",
-  "CachePolicyContext",
-  "StandardCachePolicy",
-  "CacheStore",
-  "InMemoryStore",
-  "CacheLayer",
-  "CacheMetadata",
-  "CacheService",
-  "OpenDalCacheStore",
-  "NegativeCacheLayer",
-  "SingleflightCoordinator",
-  "InMemorySingleflight",
-  "SingleflightHandle",
-  "SingleflightLayer",
-  "CircuitLayer",
-  "CooldownLayer",
-  "CostTrackingLayer",
-  "FallbackLayer",
-  "FallbackChainLayer",
-  "FallbackChainService",
-  "FallbackService",
-  "DefaultRetryPolicy",
-  "RetryPolicy",
-  "GuardrailLayer",
-  "HealthCheckLayer",
-  "HealthCheckService",
-  "PerProviderHealthCheck",
-  "HedgeLayer",
-  "IdempotencyEntry",
-  "IdempotencyStore",
-  "InMemoryIdempotencyStore",
-  "IdempotencyLayer",
-  "LlmHook",
-  "HooksLayer",
-  "MetricsLayer",
-  "MetricsService",
-  "ModelRateLimitLayer",
-  "CostRateLimitConfig",
-  "CostRateLimitLayer",
-  "CostRateLimitService",
-  "RouteClassifier",
-  "ClassifierVerdictCache",
-  "KeywordClassifier",
-  "EmbeddingSimilarityClassifier",
-  "LlmClassifier",
-  "CascadeClassifier",
-  "RouterState",
-  "Router",
-  "StaticDiscover",
-  "DynamicRouter",
-  "RouterError",
-  "Weight",
-  "OpenAiRealtimeTranslator",
-  "RealtimeTranslator",
-  # RealtimeEvent is Tier C (binding-public) but alef v0.25.x cannot bridge
-  # serde_json::Value (Raw.payload) and doesn't generate Default for complex enums.
-  # realtime::ContentPart and realtime::ResponseStatus are marked alef(skip) at
-  # source level to avoid naming conflicts with types::ContentPart.
-  # Promote to fully Tier C in v1.7 after alef gains Value bridging support.
-  "RealtimeEvent",
-  "RealtimeEnvelope",
-  "LlmService",
-  "TracingLayer",
-  # v1.6.0 trait-stack extension points (Rust-only public, Tier B)
-  # Primary exclusion mechanism is alef(skip) at the source level;
-  # these entries are belt-and-braces for any transitively-referenced names.
-  "CircuitPolicy",
-  "ExponentialBackoffCircuit",
-  "HedgePolicy",
-  "FixedDelayHedge",
-  "UsageEvent",
-  "UsageSink",
-  "LoggingUsageSink",
-  "CacheState",
-  "UsageEventOutcome",
-  "UsageSinkError",
-  "CacheKeyStrategy",
-  "GuardrailStage",
-  "GuardrailDecision",
-  "CelAction",
-  "OnMatch",
-  "BatchRetriever",
-  "RetryClass",
-  "IdempotencyStoreError",
-  "HealthCheckConfig",
-  "UpstreamDiscover",
-  "ClassifyContext",
-  # Rust-only extension traits and implementations (async traits, Arc<dyn>, generic callbacks).
-  "EmbeddingProvider",
-  "SelfHostedEmbeddingProvider",
-  "NoOpEmbeddingProvider",
-  "Guardrail",
-  "GuardrailContext",
-  "GuardrailRegistry",
-  "RegexGuardrail",
-  "AllowListGuardrail",
-  "DenyListGuardrail",
-  "LengthCapGuardrail",
-  "PromptInjectionHeuristic",
-  "CelGuardrail",
-  "UsageSinkErased",
-  "MultiUsageSink",
-  "VectorStore",
-  "VectorMetadata",
-  "VectorMatch",
-  "InMemoryVectorStore",
-  "OpenDalVectorStore",
-  "IngressStream",
-  "StreamPipeline",
-  "EgressStream",
-  # Tenant key resolution is Rust/server infrastructure; binding clients use
-  # provider auth config instead of implementing async resolver traits.
-  # (TenantId is Tier C but currently excluded pending binding-surface audit in v1.7.)
-  "TenantId",
-  "TenantContext",
-  "ResolvedKey",
-  "KeyResolver",
-  "KeyResolverError",
-  "InMemoryKeyResolver",
-  "EtcdKeyResolver",
-  "EtcdKeyResolverConfig",
-  # Auth credential providers (Arc<dyn>, async trait methods)
-  "AzureAdCredentialProvider",
-  "WebIdentityCredentialProvider",
-  "GithubCopilotCredentialProvider",
-  "VertexOAuthCredentialProvider",
-  "VertexAdcCredentialProvider",
-  "CredentialProvider",
-  "StaticTokenProvider",
-  # File config (has provider Vec, enum fields)
-  "FileConfig",
-  "FileCacheConfig",
-  "FileBudgetConfig",
-  "FileRateLimitConfig",
-  "FileProviderConfig",
-  # Managed client (Tower-dependent)
-  "ManagedClient",
-  # Internal provider
-  "ModelPricing",
+    # Traits (can't cross FFI)
+    "LlmClient",
+    "LlmClientRaw",
+    "BatchClient",
+    "FileClient",
+    "ResponseClient",
+    # Opaque async types
+    "BoxFuture",
+    "BoxStream",
+    # Types with Arc<dyn Trait> / generics
+    "ClientConfig",
+    "ClientConfigBuilder",
+    "ClientBuilder",
+    "NoApiKey",
+    "WithApiKey",
+    "NoProvider",
+    "WithProvider",
+    "PreparedRequest",
+    "RawExchange",
+    "RawStreamExchange",
+    "TransportConfig",
+    # BatchWaitError: thiserror types don't auto-bridge; source uses FFI-friendly
+    # fields (f64 seconds, flattened message+code) so C FFI can bridge manually.
+    "BatchWaitError",
+    # Tower-internal Service request/response enums (externally tagged, contain
+    # BoxStream/Bytes). Listed under both bare and Tower-prefixed names — alef
+    # prefixes types extracted from the `tower::` module path with "Tower" to
+    # disambiguate, so both spellings must be excluded.
+    "LlmRequest",
+    "LlmResponse",
+    "CachedResponse",
+    "TowerLlmRequest",
+    "TowerLlmResponse",
+    "TowerCachedResponse",
+    # Tower middleware Layer/Service/State wrappers (Rust-only middleware composition).
+    # Public config DTOs (BudgetConfig, CacheConfig, RateLimitConfig, CacheBackend,
+    # Enforcement) are intentionally NOT excluded — they are exposed across all bindings.
+    "BudgetState",
+    "BudgetLayer",
+    "BudgetLedger",
+    "BudgetDimension",
+    "BudgetVerdict",
+    "BudgetSnapshot",
+    "CostRecordContext",
+    "CostCheckContext",
+    "DimensionLimits",
+    "InMemoryBudgetLedger",
+    "CacheKeyInput",
+    "ExactHashStrategy",
+    "SystemPromptAwareStrategy",
+    "TenantScopedStrategy",
+    "CacheDecision",
+    "CachePolicy",
+    "CachePolicyContext",
+    "StandardCachePolicy",
+    "CacheStore",
+    "InMemoryStore",
+    "CacheLayer",
+    "CacheMetadata",
+    "CacheService",
+    "OpenDalCacheStore",
+    "NegativeCacheLayer",
+    "SingleflightCoordinator",
+    "InMemorySingleflight",
+    "SingleflightHandle",
+    "SingleflightLayer",
+    "CircuitLayer",
+    "CooldownLayer",
+    "CostTrackingLayer",
+    "FallbackLayer",
+    "FallbackChainLayer",
+    "FallbackChainService",
+    "FallbackService",
+    "DefaultRetryPolicy",
+    "RetryPolicy",
+    "GuardrailLayer",
+    "HealthCheckLayer",
+    "HealthCheckService",
+    "PerProviderHealthCheck",
+    "HedgeLayer",
+    "IdempotencyEntry",
+    "IdempotencyStore",
+    "InMemoryIdempotencyStore",
+    "IdempotencyLayer",
+    "LlmHook",
+    "HooksLayer",
+    "MetricsLayer",
+    "MetricsService",
+    "ModelRateLimitLayer",
+    "CostRateLimitConfig",
+    "CostRateLimitLayer",
+    "CostRateLimitService",
+    "RouteClassifier",
+    "ClassifierVerdictCache",
+    "KeywordClassifier",
+    "EmbeddingSimilarityClassifier",
+    "LlmClassifier",
+    "CascadeClassifier",
+    "RouterState",
+    "Router",
+    "StaticDiscover",
+    "DynamicRouter",
+    "RouterError",
+    "Weight",
+    "OpenAiRealtimeTranslator",
+    "RealtimeTranslator",
+    # RealtimeEvent is Tier C (binding-public) but alef v0.25.x cannot bridge
+    # serde_json::Value (Raw.payload) and doesn't generate Default for complex enums.
+    # realtime::ContentPart and realtime::ResponseStatus are marked alef(skip) at
+    # source level to avoid naming conflicts with types::ContentPart.
+    # Promote to fully Tier C in v1.7 after alef gains Value bridging support.
+    "RealtimeEvent",
+    "RealtimeEnvelope",
+    "LlmService",
+    "TracingLayer",
+    # v1.6.0 trait-stack extension points (Rust-only public, Tier B)
+    # Primary exclusion mechanism is alef(skip) at the source level;
+    # these entries are belt-and-braces for any transitively-referenced names.
+    "CircuitPolicy",
+    "ExponentialBackoffCircuit",
+    "HedgePolicy",
+    "FixedDelayHedge",
+    "UsageEvent",
+    "UsageSink",
+    "LoggingUsageSink",
+    "CacheState",
+    "UsageEventOutcome",
+    "UsageSinkError",
+    "CacheKeyStrategy",
+    "GuardrailStage",
+    "GuardrailDecision",
+    "CelAction",
+    "OnMatch",
+    "BatchRetriever",
+    "RetryClass",
+    "IdempotencyStoreError",
+    "HealthCheckConfig",
+    "UpstreamDiscover",
+    "ClassifyContext",
+    # Rust-only extension traits and implementations (async traits, Arc<dyn>, generic callbacks).
+    "EmbeddingProvider",
+    "SelfHostedEmbeddingProvider",
+    "NoOpEmbeddingProvider",
+    "Guardrail",
+    "GuardrailContext",
+    "GuardrailRegistry",
+    "RegexGuardrail",
+    "AllowListGuardrail",
+    "DenyListGuardrail",
+    "LengthCapGuardrail",
+    "PromptInjectionHeuristic",
+    "CelGuardrail",
+    "UsageSinkErased",
+    "MultiUsageSink",
+    "VectorStore",
+    "VectorMetadata",
+    "VectorMatch",
+    "InMemoryVectorStore",
+    "OpenDalVectorStore",
+    "IngressStream",
+    "StreamPipeline",
+    "EgressStream",
+    # Tenant key resolution is Rust/server infrastructure; binding clients use
+    # provider auth config instead of implementing async resolver traits.
+    # (TenantId is Tier C but currently excluded pending binding-surface audit in v1.7.)
+    "TenantId",
+    "TenantContext",
+    "ResolvedKey",
+    "KeyResolver",
+    "KeyResolverError",
+    "InMemoryKeyResolver",
+    "EtcdKeyResolver",
+    "EtcdKeyResolverConfig",
+    # Auth credential providers (Arc<dyn>, async trait methods)
+    "AzureAdCredentialProvider",
+    "WebIdentityCredentialProvider",
+    "GithubCopilotCredentialProvider",
+    "VertexOAuthCredentialProvider",
+    "VertexAdcCredentialProvider",
+    "CredentialProvider",
+    "StaticTokenProvider",
+    # File config (has provider Vec, enum fields)
+    "FileConfig",
+    "FileCacheConfig",
+    "FileBudgetConfig",
+    "FileRateLimitConfig",
+    "FileProviderConfig",
+    # Managed client (Tower-dependent)
+    "ManagedClient",
+    # Internal provider
+    "ModelPricing",
 ]
 methods = [
-  # Raw methods on DefaultClient
-  "DefaultClient.chat_raw",
-  "DefaultClient.chat_stream_raw",
-  "DefaultClient.embed_raw",
-  "DefaultClient.image_generate_raw",
-  "DefaultClient.transcribe_raw",
-  "DefaultClient.moderate_raw",
-  "DefaultClient.rerank_raw",
-  "DefaultClient.search_raw",
-  "DefaultClient.ocr_raw",
-  # Constructor takes ClientConfig (excluded type) — use create_client() instead
-  "DefaultClient.new",
-  # Internal provider methods
-  "DefaultClient.resolve_provider_for_model",
-  "DefaultClient.resolve_auth_header",
-  "DefaultClient.resolve_auth_header_for_provider",
-  "DefaultClient.all_headers",
-  "DefaultClient.all_headers_for_provider",
-  "DefaultClient.prepare_request",
-  # Error internal HTTP-status parser (private helper)
-  "LiterLlmError.from_status",
-  # Methods that require binding→core From on output types (not yet supported)
-  "ChatCompletionResponse.estimated_cost",
-  "EmbeddingResponse.estimated_cost",
-  # Rust-only helper methods whose signatures expose builders, writers, formatters,
-  # classifier traits, or other values that do not cross generated bindings.
-  "TransportConfig.apply_to_builder",
-  "InMemoryKeyResolver.with_entries",
-  "InMemoryBudgetLedger.export_csv",
-  "DefaultRetryPolicy.classify",
-  "IdempotencyEntry.fmt",
-  "KeywordClassifier.new",
-  "EmbeddingSimilarityClassifier.new",
-  "LlmClassifier.new",
-  "Weight.fmt",
-  "OpenDalVectorStore.new",
-  "EtcdKeyResolver.resolve",
-  "OpenAiRealtimeTranslator.translate_inbound",
-  # v1.6.0 additions — Tier B helper methods
-  "GuardrailRegistry.register",
+    # Raw methods on DefaultClient
+    "DefaultClient.chat_raw",
+    "DefaultClient.chat_stream_raw",
+    "DefaultClient.embed_raw",
+    "DefaultClient.image_generate_raw",
+    "DefaultClient.transcribe_raw",
+    "DefaultClient.moderate_raw",
+    "DefaultClient.rerank_raw",
+    "DefaultClient.search_raw",
+    "DefaultClient.ocr_raw",
+    # Constructor takes ClientConfig (excluded type) — use create_client() instead
+    "DefaultClient.new",
+    # Internal provider methods
+    "DefaultClient.resolve_provider_for_model",
+    "DefaultClient.resolve_auth_header",
+    "DefaultClient.resolve_auth_header_for_provider",
+    "DefaultClient.all_headers",
+    "DefaultClient.all_headers_for_provider",
+    "DefaultClient.prepare_request",
+    # Error internal HTTP-status parser (private helper)
+    "LiterLlmError.from_status",
+    # Methods that require binding→core From on output types (not yet supported)
+    "ChatCompletionResponse.estimated_cost",
+    "EmbeddingResponse.estimated_cost",
+    # Rust-only helper methods whose signatures expose builders, writers, formatters,
+    # classifier traits, or other values that do not cross generated bindings.
+    "TransportConfig.apply_to_builder",
+    "InMemoryKeyResolver.with_entries",
+    "InMemoryBudgetLedger.export_csv",
+    "DefaultRetryPolicy.classify",
+    "IdempotencyEntry.fmt",
+    "KeywordClassifier.new",
+    "EmbeddingSimilarityClassifier.new",
+    "LlmClassifier.new",
+    "Weight.fmt",
+    "OpenDalVectorStore.new",
+    "EtcdKeyResolver.resolve",
+    "OpenAiRealtimeTranslator.translate_inbound",
+    # v1.6.0 additions — Tier B helper methods
+    "GuardrailRegistry.register",
 ]
 functions = [
-  "str_pair",
-  "build_provider",
-  "register",
-  "run_stage",
-  "should_hedge",
-  "wait_for_batch_impl",
-  "record_cache_state",
-  # Tower metrics emit helpers — internal infrastructure; called from Tower
-  # middleware modules but not part of the user-facing API.  The Python
-  # generator mishandles their Option<f64>/f64 mix and the FFI generator
-  # mishandles &'static returns; both are non-issues once excluded.
-  "record_cache_hit",
-  "record_cache_miss",
-  "record_cache_stale",
-  "record_circuit_trip",
-  "record_retry_attempt",
-  "record_cache_tier_hit",
-  "record_cache_tier_miss",
-  "record_budget_spend",
-  "record_budget_rejection",
-  "record_realtime_session_duration",
-  "record_realtime_event",
-  "record_realtime_bytes",
-  "init_meter",
+    "str_pair",
+    "build_provider",
+    "register",
+    "run_stage",
+    "should_hedge",
+    "wait_for_batch_impl",
+    "record_cache_state",
+    # Tower metrics emit helpers — internal infrastructure; called from Tower
+    # middleware modules but not part of the user-facing API.  The Python
+    # generator mishandles their Option<f64>/f64 mix and the FFI generator
+    # mishandles &'static returns; both are non-issues once excluded.
+    "record_cache_hit",
+    "record_cache_miss",
+    "record_cache_stale",
+    "record_circuit_trip",
+    "record_retry_attempt",
+    "record_cache_tier_hit",
+    "record_cache_tier_miss",
+    "record_budget_spend",
+    "record_budget_rejection",
+    "record_realtime_session_duration",
+    "record_realtime_event",
+    "record_realtime_bytes",
+    "init_meter",
 ]
 
 [crates.lint.python]
@@ -590,15 +613,15 @@ e2e = "cargo test --manifest-path e2e/rust/Cargo.toml"
 [crates.test.python]
 precondition = "command -v uv >/dev/null 2>&1"
 e2e = [
-  "cd e2e/python && uv sync --no-install-project --no-install-workspace",
-  "cd e2e/python && uv run --no-sync pytest tests/ -q",
+    "cd e2e/python && uv sync --no-install-project --no-install-workspace",
+    "cd e2e/python && uv run --no-sync pytest tests/ -q",
 ]
 
 [crates.test.node]
 precondition = "command -v pnpm >/dev/null 2>&1"
 e2e = [
-  "pnpm -r --filter=\"./crates/liter-llm-node\" run build",
-  "cd e2e/node && pnpm install --no-frozen-lockfile && pnpm dlx vitest run",
+    "pnpm -r --filter=\"./crates/liter-llm-node\" run build",
+    "cd e2e/node && pnpm install --no-frozen-lockfile && pnpm dlx vitest run",
 ]
 
 [crates.test.go]
@@ -630,16 +653,16 @@ precondition = "command -v php >/dev/null 2>&1 && command -v composer >/dev/null
 # fast with "Built extension not found" if it's missing.
 before = "cargo build --release -p liter-llm-php"
 e2e = [
-  "cd e2e/php && bash ../../scripts/ci/php/create-ci-php-ini.sh",
-  "cd e2e/php && composer install --no-progress --prefer-dist",
-  "cd e2e/php && php -c php-liter-llm.ini vendor/bin/phpunit",
+    "cd e2e/php && bash ../../scripts/ci/php/create-ci-php-ini.sh",
+    "cd e2e/php && composer install --no-progress --prefer-dist",
+    "cd e2e/php && php -c php-liter-llm.ini vendor/bin/phpunit",
 ]
 
 [crates.test.elixir]
 precondition = "command -v mix >/dev/null 2>&1"
 e2e = [
-  "cd e2e/elixir && LITER_LLM_BUILD=1 MIX_ENV=test mix deps.get",
-  "cd e2e/elixir && LITER_LLM_BUILD=1 MIX_ENV=test mix test",
+    "cd e2e/elixir && LITER_LLM_BUILD=1 MIX_ENV=test mix deps.get",
+    "cd e2e/elixir && LITER_LLM_BUILD=1 MIX_ENV=test mix test",
 ]
 
 [crates.test.wasm]
@@ -659,8 +682,8 @@ e2e = "cd e2e/c && make test"
 precondition = "command -v dart >/dev/null 2>&1"
 before = "cargo build --release -p liter-llm-dart && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 e2e = [
-  "cd e2e/dart && dart pub get",
-  "FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR=\"$PWD/target/release\" scripts/e2e/run-with-mock-server.sh 'cd e2e/dart && dart test'",
+    "cd e2e/dart && dart pub get",
+    "FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR=\"$PWD/target/release\" scripts/e2e/run-with-mock-server.sh 'cd e2e/dart && dart test'",
 ]
 
 [crates.test.swift]
@@ -723,22 +746,22 @@ output = "e2e"
 # ffi→c plus rust — is enumerated here verbatim so the only deviation is the
 # homebrew entry. Keep in sync with the workspace.languages list above.
 languages = [
-  "python",
-  "node",
-  "ruby",
-  "php",
-  "c",
-  "go",
-  "java",
-  "csharp",
-  "elixir",
-  "wasm",
-  "zig",
-  "dart",
-  "swift",
-  "kotlin_android",
-  "rust",
-  "homebrew",
+    "python",
+    "node",
+    "ruby",
+    "php",
+    "c",
+    "go",
+    "java",
+    "csharp",
+    "elixir",
+    "wasm",
+    "zig",
+    "dart",
+    "swift",
+    "kotlin_android",
+    "rust",
+    "homebrew",
 ]
 # Categories whose fixtures are NOT part of the public DefaultClient surface —
 # they exercise tower middleware (cache, router, fallback, budget, hooks) and
@@ -759,20 +782,20 @@ fields_enum = ["choices[0].finish_reason", "choices[0].message.role"]
 fields_display_as_text = ["choices[0].message.content"]
 # Optional fields on result types — generator emits unwrap handling for these paths.
 fields_optional = [
-  # ChatCompletionResponse
-  "usage",
-  "choices[0].message.content",
-  "choices[0].finish_reason",
-  "system_fingerprint",
-  # AssistantMessage.tool_calls is Option<Vec<ToolCall>>
-  "choices[0].message.tool_calls",
-  # ImageData optional fields
-  "data[0].url",
-  "data[0].b64_json",
-  # RerankResult.document is Option<RerankResultDocument>
-  "results[0].document",
-  # TranscriptionResponse.segments is Option<Vec<TranscriptionSegment>>
-  "segments",
+    # ChatCompletionResponse
+    "usage",
+    "choices[0].message.content",
+    "choices[0].finish_reason",
+    "system_fingerprint",
+    # AssistantMessage.tool_calls is Option<Vec<ToolCall>>
+    "choices[0].message.tool_calls",
+    # ImageData optional fields
+    "data[0].url",
+    "data[0].b64_json",
+    # RerankResult.document is Option<RerankResultDocument>
+    "results[0].document",
+    # TranscriptionResponse.segments is Option<Vec<TranscriptionSegment>>
+    "segments",
 ]
 # Fields that are Vec/array types — used with fields_optional to emit is_some_and checks.
 fields_array = ["choices[0].message.tool_calls", "segments"]
@@ -781,58 +804,58 @@ fields_array = ["choices[0].message.tool_calls", "segments"]
 # Excludes streaming-specific fields (stream_content, chunks, stream_complete),
 # middleware-only fields (cache_hit, cache_bypassed), and error pseudo-fields.
 result_fields = [
-  # Chat/embedding/moderation/rerank shared
-  "id",
-  "model",
-  "usage",
-  "object",
-  "created",
-  # Chat
-  "choices",
-  "system_fingerprint",
-  # Embedding
-  "data",
-  # Models
-  "models",
-  # Transcription
-  "text",
-  "language",
-  "duration",
-  "words",
-  "segments",
-  "task",
-  "audio",
-  # Image generation
-  "images",
-  # Moderation
-  "results",
-  "flagged",
-  # Rerank
-  "results_count",
-  # Search
-  "query",
-  # OCR
-  "pages",
-  # Files
-  "bytes",
-  "filename",
-  "purpose",
-  "status",
-  "has_more",
-  # Files/Batches delete
-  "deleted",
-  # Batch
-  "endpoint",
-  "errors",
-  "input_file_id",
-  "completion_window",
-  "request_counts",
-  # Responses API
-  "output",
-  "instructions",
-  "tools",
-  # Content
-  "content",
+    # Chat/embedding/moderation/rerank shared
+    "id",
+    "model",
+    "usage",
+    "object",
+    "created",
+    # Chat
+    "choices",
+    "system_fingerprint",
+    # Embedding
+    "data",
+    # Models
+    "models",
+    # Transcription
+    "text",
+    "language",
+    "duration",
+    "words",
+    "segments",
+    "task",
+    "audio",
+    # Image generation
+    "images",
+    # Moderation
+    "results",
+    "flagged",
+    # Rerank
+    "results_count",
+    # Search
+    "query",
+    # OCR
+    "pages",
+    # Files
+    "bytes",
+    "filename",
+    "purpose",
+    "status",
+    "has_more",
+    # Files/Batches delete
+    "deleted",
+    # Batch
+    "endpoint",
+    "errors",
+    "input_file_id",
+    "completion_window",
+    "request_counts",
+    # Responses API
+    "output",
+    "instructions",
+    "tools",
+    # Content
+    "content",
 ]
 # Fields that are method calls (no property access) — the Rust codegen emits
 # `()` for these so that `err.status_code` becomes `err.status_code()`.

@@ -5,29 +5,29 @@
 # Memory: ~3GB total (models + server overhead + inference headroom)
 
 services:
-    ollama:
-        image: ollama/ollama:latest
-        ports:
-            - "11434:11434"
-        volumes:
-            - ollama-data:/root/.ollama
-        entrypoint: >
-            sh -c "set -e &&
-            ollama serve &
-            sleep 5 &&
-            ollama pull qwen2:0.5b &&
-            ollama pull all-minilm &&
-            wait"
-        healthcheck:
-            test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags | grep -q qwen2"]
-            interval: 5s
-            timeout: 10s
-            retries: 60
-            start_period: 30s
-        deploy:
-            resources:
-                limits:
-                    memory: 3g
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    entrypoint: >
+      sh -c "set -e &&
+      ollama serve &
+      sleep 5 &&
+      ollama pull qwen2:0.5b &&
+      ollama pull all-minilm &&
+      wait"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags | grep -q qwen2"]
+      interval: 5s
+      timeout: 10s
+      retries: 60
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 3g
 
 volumes:
-    ollama-data:
+  ollama-data:

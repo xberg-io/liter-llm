@@ -10,22 +10,22 @@ const here = dirname(fileURLToPath(import.meta.url));
 const envPath = resolve(here, "..", "..", "..", ".env");
 
 if (existsSync(envPath)) {
-	const { config } = await import("dotenv");
-	config({ path: envPath });
+  const { config } = await import("dotenv");
+  config({ path: envPath });
 }
 
 const vitestBin = resolve(here, "..", "node_modules", ".bin", "vitest");
 const args = ["run", ...process.argv.slice(2)];
 
 const child = spawn(vitestBin, args, {
-	stdio: "inherit",
-	env: process.env,
+  stdio: "inherit",
+  env: process.env,
 });
 
 child.on("exit", (code, signal) => {
-	if (signal) {
-		process.kill(process.pid, signal);
-	} else {
-		process.exit(code ?? 0);
-	}
+  if (signal) {
+    process.kill(process.pid, signal);
+  } else {
+    process.exit(code ?? 0);
+  }
 });

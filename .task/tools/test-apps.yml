@@ -12,373 +12,373 @@ version: "3"
 # from a local workflow artifact in dry-run CI).
 
 tasks:
-    run:
-        desc: Run alef test-apps for every registry-mode language + brew + homebrew
-        cmds:
-            - alef test-apps run {{.CLI_ARGS}}
+  run:
+    desc: Run alef test-apps for every registry-mode language + brew + homebrew
+    cmds:
+      - alef test-apps run {{.CLI_ARGS}}
 
-    regenerate:scaffold:
-        desc: Regenerate alef test-app scaffolds for a single language (usage - task test-apps:regenerate:scaffold -- python)
-        cmds:
-            - alef test-apps generate {{.CLI_ARGS}}
+  regenerate:scaffold:
+    desc: Regenerate alef test-app scaffolds for a single language (usage - task test-apps:regenerate:scaffold -- python)
+    cmds:
+      - alef test-apps generate {{.CLI_ARGS}}
 
-    smoke:
-        desc: Run all test_app smoke tests
-        cmds:
-            - task: smoke:rust
-            - task: smoke:python
-            - task: smoke:node
-            - task: smoke:wasm
-            - task: smoke:ruby
-            - task: smoke:go
-            - task: smoke:java
-            - task: smoke:elixir
-            - task: smoke:php
-            - task: smoke:csharp
-            - task: smoke:c
-            - task: smoke:dart
-            - task: smoke:zig
-            - task: smoke:kotlin_android
-            - task: smoke:swift_e2e
-            - task: smoke:homebrew
+  smoke:
+    desc: Run all test_app smoke tests
+    cmds:
+      - task: smoke:rust
+      - task: smoke:python
+      - task: smoke:node
+      - task: smoke:wasm
+      - task: smoke:ruby
+      - task: smoke:go
+      - task: smoke:java
+      - task: smoke:elixir
+      - task: smoke:php
+      - task: smoke:csharp
+      - task: smoke:c
+      - task: smoke:dart
+      - task: smoke:zig
+      - task: smoke:kotlin_android
+      - task: smoke:swift_e2e
+      - task: smoke:homebrew
 
-    smoke:rust:
-        desc: Run Rust test_app smoke test
-        dir: test_apps/rust
-        cmds:
-            - cargo run
+  smoke:rust:
+    desc: Run Rust test_app smoke test
+    dir: test_apps/rust
+    cmds:
+      - cargo run
 
-    smoke:python:
-        desc: Run Python test_app smoke test
-        dir: test_apps/python
-        cmds:
-            - uv sync
-            - uv run pytest tests/test_smoke.py -v
+  smoke:python:
+    desc: Run Python test_app smoke test
+    dir: test_apps/python
+    cmds:
+      - uv sync
+      - uv run pytest tests/test_smoke.py -v
 
-    smoke:node:
-        desc: Run Node.js test_app smoke test
-        dir: test_apps/node
-        cmds:
-            - pnpm install --no-frozen-lockfile --config.minimumReleaseAge=0
-            - pnpm --config.minimumReleaseAge=0 exec vitest run tests/smoke.test.ts
+  smoke:node:
+    desc: Run Node.js test_app smoke test
+    dir: test_apps/node
+    cmds:
+      - pnpm install --no-frozen-lockfile --config.minimumReleaseAge=0
+      - pnpm --config.minimumReleaseAge=0 exec vitest run tests/smoke.test.ts
 
-    smoke:wasm:
-        desc: Run WASM test_app smoke test
-        dir: test_apps/wasm
-        cmds:
-            - pnpm install --no-frozen-lockfile --config.minimumReleaseAge=0
-            - pnpm --config.minimumReleaseAge=0 exec vitest run tests/smoke.test.ts
+  smoke:wasm:
+    desc: Run WASM test_app smoke test
+    dir: test_apps/wasm
+    cmds:
+      - pnpm install --no-frozen-lockfile --config.minimumReleaseAge=0
+      - pnpm --config.minimumReleaseAge=0 exec vitest run tests/smoke.test.ts
 
-    smoke:ruby:
-        desc: Run Ruby test_app smoke test
-        dir: test_apps/ruby
-        cmds:
-            - bundle install
-            - bundle exec rspec spec/smoke_spec.rb
+  smoke:ruby:
+    desc: Run Ruby test_app smoke test
+    dir: test_apps/ruby
+    cmds:
+      - bundle install
+      - bundle exec rspec spec/smoke_spec.rb
 
-    smoke:go:
-        desc: Run Go test_app smoke test
-        dir: test_apps/go
-        # GOWORK=off bypasses the root go.work (which lists ./e2e/go + ./packages/go).
-        # test_apps/go pulls the *published* module from pkg.go.dev and must NOT be
-        # shadowed by the local workspace.
-        env:
-            GOWORK: "off"
-        cmds:
-            - go mod download
-            - go test -v -run "Test_Smoke"
+  smoke:go:
+    desc: Run Go test_app smoke test
+    dir: test_apps/go
+    # GOWORK=off bypasses the root go.work (which lists ./e2e/go + ./packages/go).
+    # test_apps/go pulls the *published* module from pkg.go.dev and must NOT be
+    # shadowed by the local workspace.
+    env:
+      GOWORK: "off"
+    cmds:
+      - go mod download
+      - go test -v -run "Test_Smoke"
 
-    smoke:java:
-        desc: Run Java test_app smoke test
-        dir: test_apps/java
-        cmds:
-            - mvn test -Dtest=SmokeTest
+  smoke:java:
+    desc: Run Java test_app smoke test
+    dir: test_apps/java
+    cmds:
+      - mvn test -Dtest=SmokeTest
 
-    smoke:elixir:
-        desc: Run Elixir test_app smoke test
-        dir: test_apps/elixir
-        cmds:
-            - mix deps.get
-            - mix test test/smoke_test.exs
+  smoke:elixir:
+    desc: Run Elixir test_app smoke test
+    dir: test_apps/elixir
+    cmds:
+      - mix deps.get
+      - mix test test/smoke_test.exs
 
-    smoke:php:
-        desc: Run PHP test_app smoke test
-        dir: test_apps/php
-        cmds:
-            - bash install.sh
-            - composer install
-            - php -dextension=liter_llm vendor/bin/phpunit tests/SmokeTest.php
+  smoke:php:
+    desc: Run PHP test_app smoke test
+    dir: test_apps/php
+    cmds:
+      - bash install.sh
+      - composer install
+      - php -dextension=liter_llm vendor/bin/phpunit tests/SmokeTest.php
 
-    smoke:csharp:
-        desc: Run C# test_app smoke test
-        dir: test_apps/csharp
-        cmds:
-            - dotnet restore
-            - dotnet test --filter FullyQualifiedName~SmokeTests
+  smoke:csharp:
+    desc: Run C# test_app smoke test
+    dir: test_apps/csharp
+    cmds:
+      - dotnet restore
+      - dotnet test --filter FullyQualifiedName~SmokeTests
 
-    smoke:c:
-        desc: Run C test_app smoke test
-        dir: test_apps/c
-        cmds:
-            # Build the FFI lib locally so download_ffi.sh's auto-detect picks
-            # it up — avoids the GH-release 404 race when running before publish.
-            - cd ../.. && cargo build -p liter-llm-ffi --release
-            - bash download_ffi.sh
-            - make smoke
+  smoke:c:
+    desc: Run C test_app smoke test
+    dir: test_apps/c
+    cmds:
+      # Build the FFI lib locally so download_ffi.sh's auto-detect picks
+      # it up — avoids the GH-release 404 race when running before publish.
+      - cd ../.. && cargo build -p liter-llm-ffi --release
+      - bash download_ffi.sh
+      - make smoke
 
-    smoke:dart:
-        desc: Run Dart test_app smoke test
-        dir: test_apps/dart
-        cmds:
-            - dart pub get
-            - dart test test/smoke_test.dart
+  smoke:dart:
+    desc: Run Dart test_app smoke test
+    dir: test_apps/dart
+    cmds:
+      - dart pub get
+      - dart test test/smoke_test.dart
 
-    smoke:zig:
-        desc: Run Zig test_app smoke test
-        dir: test_apps/zig
-        cmds:
-            - zig build test
+  smoke:zig:
+    desc: Run Zig test_app smoke test
+    dir: test_apps/zig
+    cmds:
+      - zig build test
 
-    smoke:kotlin_android:
-        desc: Run Kotlin/Android test_app smoke test (host JVM)
-        dir: test_apps/kotlin_android
-        cmds:
-            - |
-                if [ -z "${ANDROID_HOME:-}${ANDROID_SDK_ROOT:-}" ]; then
-                  echo "SKIP: kotlin_android smoke requires ANDROID_HOME or ANDROID_SDK_ROOT"
-                  exit 0
-                fi
+  smoke:kotlin_android:
+    desc: Run Kotlin/Android test_app smoke test (host JVM)
+    dir: test_apps/kotlin_android
+    cmds:
+      - |
+        if [ -z "${ANDROID_HOME:-}${ANDROID_SDK_ROOT:-}" ]; then
+          echo "SKIP: kotlin_android smoke requires ANDROID_HOME or ANDROID_SDK_ROOT"
+          exit 0
+        fi
 
-                # Detect a compatible JDK (17 or 21). AGP 8.13.0 rejects JDK 25+ as the gradle daemon.
-                # The build.gradle.kts jvmToolchain(17) pins compilation JDK but NOT the gradle daemon,
-                # so we must override JAVA_HOME if the host JDK is too new.
-                detect_jdk() {
-                  if [ "$(uname)" = "Darwin" ]; then
-                    # macOS: try homebrew's openjdk@17 and openjdk@21 symlinks first,
-                    # then fall back to /usr/libexec/java_home (which may return newer versions).
-                    for dir in /opt/homebrew/opt/openjdk@17 /opt/homebrew/opt/openjdk@21; do
-                      if [ -d "$dir" ]; then
-                        echo "$dir"
-                        return 0
-                      fi
-                    done
-                    # Fall back to /usr/libexec/java_home for other JDK distributions
-                    /usr/libexec/java_home -v17 2>/dev/null || /usr/libexec/java_home -v21 2>/dev/null
-                  elif [ "$(uname)" = "Linux" ]; then
-                    # Linux: probe common install dirs; try update-alternatives first
-                    if command -v update-alternatives >/dev/null 2>&1; then
-                      java_path=$(update-alternatives --list java 2>/dev/null | grep -E 'java-17|java-21|openjdk-17|openjdk-21' | head -1)
-                      if [ -n "$java_path" ]; then
-                        dirname "$(dirname "$java_path")"
-                        return 0
-                      fi
-                    fi
-                    # Fall back to filesystem probes
-                    for dir in /usr/lib/jvm/java-17-openjdk* /usr/lib/jvm/java-21-openjdk* /usr/lib/jvm/temurin-17 /usr/lib/jvm/temurin-21; do
-                      if [ -d "$dir" ]; then
-                        echo "$dir"
-                        return 0
-                      fi
-                    done
-                  fi
-                  return 1
-                }
+        # Detect a compatible JDK (17 or 21). AGP 8.13.0 rejects JDK 25+ as the gradle daemon.
+        # The build.gradle.kts jvmToolchain(17) pins compilation JDK but NOT the gradle daemon,
+        # so we must override JAVA_HOME if the host JDK is too new.
+        detect_jdk() {
+          if [ "$(uname)" = "Darwin" ]; then
+            # macOS: try homebrew's openjdk@17 and openjdk@21 symlinks first,
+            # then fall back to /usr/libexec/java_home (which may return newer versions).
+            for dir in /opt/homebrew/opt/openjdk@17 /opt/homebrew/opt/openjdk@21; do
+              if [ -d "$dir" ]; then
+                echo "$dir"
+                return 0
+              fi
+            done
+            # Fall back to /usr/libexec/java_home for other JDK distributions
+            /usr/libexec/java_home -v17 2>/dev/null || /usr/libexec/java_home -v21 2>/dev/null
+          elif [ "$(uname)" = "Linux" ]; then
+            # Linux: probe common install dirs; try update-alternatives first
+            if command -v update-alternatives >/dev/null 2>&1; then
+              java_path=$(update-alternatives --list java 2>/dev/null | grep -E 'java-17|java-21|openjdk-17|openjdk-21' | head -1)
+              if [ -n "$java_path" ]; then
+                dirname "$(dirname "$java_path")"
+                return 0
+              fi
+            fi
+            # Fall back to filesystem probes
+            for dir in /usr/lib/jvm/java-17-openjdk* /usr/lib/jvm/java-21-openjdk* /usr/lib/jvm/temurin-17 /usr/lib/jvm/temurin-21; do
+              if [ -d "$dir" ]; then
+                echo "$dir"
+                return 0
+              fi
+            done
+          fi
+          return 1
+        }
 
-                JDK_HOME=$(detect_jdk)
-                if [ -n "$JDK_HOME" ]; then
-                  export JAVA_HOME="$JDK_HOME"
-                  export PATH="$JDK_HOME/bin:$PATH"
-                else
-                  echo "SKIP: kotlin_android smoke requires JDK 17 or 21. Install with: brew install openjdk@17 (macOS) or sdk install java 17.0.13-zulu (sdkman)"
-                  exit 0
-                fi
+        JDK_HOME=$(detect_jdk)
+        if [ -n "$JDK_HOME" ]; then
+          export JAVA_HOME="$JDK_HOME"
+          export PATH="$JDK_HOME/bin:$PATH"
+        else
+          echo "SKIP: kotlin_android smoke requires JDK 17 or 21. Install with: brew install openjdk@17 (macOS) or sdk install java 17.0.13-zulu (sdkman)"
+          exit 0
+        fi
 
-                ./gradlew test
+        ./gradlew test
 
-    smoke:swift_e2e:
-        desc: Run Swift test_app smoke test (binaryTarget artifact bundle)
-        dir: test_apps/swift_e2e
-        cmds:
-            - bash download_swift_artifact.sh
-            - swift test
+  smoke:swift_e2e:
+    desc: Run Swift test_app smoke test (binaryTarget artifact bundle)
+    dir: test_apps/swift_e2e
+    cmds:
+      - bash download_swift_artifact.sh
+      - swift test
 
-    smoke:homebrew:
-        desc: Run Homebrew CLI formula smoke test
-        dir: test_apps/homebrew
-        cmds:
-            - ./run_tests.sh
+  smoke:homebrew:
+    desc: Run Homebrew CLI formula smoke test
+    dir: test_apps/homebrew
+    cmds:
+      - ./run_tests.sh
 
-    comprehensive:
-        desc: Run all test_app comprehensive tests
-        cmds:
-            - task: comprehensive:python
-            - task: comprehensive:node
-            - task: comprehensive:wasm
-            - task: comprehensive:ruby
-            - task: comprehensive:go
-            - task: comprehensive:java
-            - task: comprehensive:csharp
-            - task: comprehensive:php
-            - task: comprehensive:elixir
-            - task: comprehensive:c
-            - task: comprehensive:dart
-            - task: comprehensive:zig
-            - task: comprehensive:kotlin_android
-            - task: comprehensive:swift_e2e
+  comprehensive:
+    desc: Run all test_app comprehensive tests
+    cmds:
+      - task: comprehensive:python
+      - task: comprehensive:node
+      - task: comprehensive:wasm
+      - task: comprehensive:ruby
+      - task: comprehensive:go
+      - task: comprehensive:java
+      - task: comprehensive:csharp
+      - task: comprehensive:php
+      - task: comprehensive:elixir
+      - task: comprehensive:c
+      - task: comprehensive:dart
+      - task: comprehensive:zig
+      - task: comprehensive:kotlin_android
+      - task: comprehensive:swift_e2e
 
-    comprehensive:python:
-        desc: Run Python test_app comprehensive tests
-        dir: test_apps/python
-        cmds:
-            - uv sync
-            - uv run pytest tests/ -v
+  comprehensive:python:
+    desc: Run Python test_app comprehensive tests
+    dir: test_apps/python
+    cmds:
+      - uv sync
+      - uv run pytest tests/ -v
 
-    comprehensive:node:
-        desc: Run Node.js test_app comprehensive tests
-        dir: test_apps/node
-        cmds:
-            - pnpm install --no-frozen-lockfile --config.minimumReleaseAge=0
-            - pnpm --config.minimumReleaseAge=0 exec vitest run
+  comprehensive:node:
+    desc: Run Node.js test_app comprehensive tests
+    dir: test_apps/node
+    cmds:
+      - pnpm install --no-frozen-lockfile --config.minimumReleaseAge=0
+      - pnpm --config.minimumReleaseAge=0 exec vitest run
 
-    comprehensive:wasm:
-        desc: Run WASM test_app comprehensive tests
-        dir: test_apps/wasm
-        cmds:
-            - pnpm install --no-frozen-lockfile --config.minimumReleaseAge=0
-            - pnpm --config.minimumReleaseAge=0 exec vitest run
+  comprehensive:wasm:
+    desc: Run WASM test_app comprehensive tests
+    dir: test_apps/wasm
+    cmds:
+      - pnpm install --no-frozen-lockfile --config.minimumReleaseAge=0
+      - pnpm --config.minimumReleaseAge=0 exec vitest run
 
-    comprehensive:ruby:
-        desc: Run Ruby test_app comprehensive tests
-        dir: test_apps/ruby
-        cmds:
-            - bundle install
-            - bundle exec rspec spec/
+  comprehensive:ruby:
+    desc: Run Ruby test_app comprehensive tests
+    dir: test_apps/ruby
+    cmds:
+      - bundle install
+      - bundle exec rspec spec/
 
-    comprehensive:go:
-        desc: Run Go test_app comprehensive tests
-        dir: test_apps/go
-        env:
-            GOWORK: "off"
-        cmds:
-            - go mod download
-            - go test -v ./...
+  comprehensive:go:
+    desc: Run Go test_app comprehensive tests
+    dir: test_apps/go
+    env:
+      GOWORK: "off"
+    cmds:
+      - go mod download
+      - go test -v ./...
 
-    comprehensive:java:
-        desc: Run Java test_app comprehensive tests
-        dir: test_apps/java
-        cmds:
-            - mvn test
+  comprehensive:java:
+    desc: Run Java test_app comprehensive tests
+    dir: test_apps/java
+    cmds:
+      - mvn test
 
-    comprehensive:csharp:
-        desc: Run C# test_app comprehensive tests
-        dir: test_apps/csharp
-        cmds:
-            - dotnet restore
-            - dotnet test
+  comprehensive:csharp:
+    desc: Run C# test_app comprehensive tests
+    dir: test_apps/csharp
+    cmds:
+      - dotnet restore
+      - dotnet test
 
-    comprehensive:php:
-        desc: Run PHP test_app comprehensive tests
-        dir: test_apps/php
-        cmds:
-            - bash install.sh
-            - composer install
-            - php -dextension=liter_llm vendor/bin/phpunit
+  comprehensive:php:
+    desc: Run PHP test_app comprehensive tests
+    dir: test_apps/php
+    cmds:
+      - bash install.sh
+      - composer install
+      - php -dextension=liter_llm vendor/bin/phpunit
 
-    comprehensive:elixir:
-        desc: Run Elixir test_app comprehensive tests
-        dir: test_apps/elixir
-        cmds:
-            - mix deps.get
-            - mix test
+  comprehensive:elixir:
+    desc: Run Elixir test_app comprehensive tests
+    dir: test_apps/elixir
+    cmds:
+      - mix deps.get
+      - mix test
 
-    comprehensive:c:
-        desc: Run C test_app comprehensive tests
-        dir: test_apps/c
-        cmds:
-            # Build the FFI lib locally so download_ffi.sh's auto-detect picks
-            # it up — avoids the GH-release 404 race when running before publish.
-            - cd ../.. && cargo build -p liter-llm-ffi --release
-            - bash download_ffi.sh
-            - make test
+  comprehensive:c:
+    desc: Run C test_app comprehensive tests
+    dir: test_apps/c
+    cmds:
+      # Build the FFI lib locally so download_ffi.sh's auto-detect picks
+      # it up — avoids the GH-release 404 race when running before publish.
+      - cd ../.. && cargo build -p liter-llm-ffi --release
+      - bash download_ffi.sh
+      - make test
 
-    comprehensive:dart:
-        desc: Run Dart test_app comprehensive tests
-        dir: test_apps/dart
-        cmds:
-            - dart pub get
-            - dart test
+  comprehensive:dart:
+    desc: Run Dart test_app comprehensive tests
+    dir: test_apps/dart
+    cmds:
+      - dart pub get
+      - dart test
 
-    comprehensive:zig:
-        desc: Run Zig test_app comprehensive tests
-        dir: test_apps/zig
-        cmds:
-            - zig build test
+  comprehensive:zig:
+    desc: Run Zig test_app comprehensive tests
+    dir: test_apps/zig
+    cmds:
+      - zig build test
 
-    comprehensive:kotlin_android:
-        desc: Run Kotlin/Android test_app comprehensive tests (host JVM)
-        dir: test_apps/kotlin_android
-        cmds:
-            - |
-                if [ -z "${ANDROID_HOME:-}${ANDROID_SDK_ROOT:-}" ]; then
-                  echo "SKIP: kotlin_android comprehensive requires ANDROID_HOME or ANDROID_SDK_ROOT"
-                  exit 0
-                fi
+  comprehensive:kotlin_android:
+    desc: Run Kotlin/Android test_app comprehensive tests (host JVM)
+    dir: test_apps/kotlin_android
+    cmds:
+      - |
+        if [ -z "${ANDROID_HOME:-}${ANDROID_SDK_ROOT:-}" ]; then
+          echo "SKIP: kotlin_android comprehensive requires ANDROID_HOME or ANDROID_SDK_ROOT"
+          exit 0
+        fi
 
-                # Detect a compatible JDK (17 or 21). AGP 8.13.0 rejects JDK 25+ as the gradle daemon.
-                # The build.gradle.kts jvmToolchain(17) pins compilation JDK but NOT the gradle daemon,
-                # so we must override JAVA_HOME if the host JDK is too new.
-                detect_jdk() {
-                  if [ "$(uname)" = "Darwin" ]; then
-                    # macOS: try homebrew's openjdk@17 and openjdk@21 symlinks first,
-                    # then fall back to /usr/libexec/java_home (which may return newer versions).
-                    for dir in /opt/homebrew/opt/openjdk@17 /opt/homebrew/opt/openjdk@21; do
-                      if [ -d "$dir" ]; then
-                        echo "$dir"
-                        return 0
-                      fi
-                    done
-                    # Fall back to /usr/libexec/java_home for other JDK distributions
-                    /usr/libexec/java_home -v17 2>/dev/null || /usr/libexec/java_home -v21 2>/dev/null
-                  elif [ "$(uname)" = "Linux" ]; then
-                    # Linux: probe common install dirs; try update-alternatives first
-                    if command -v update-alternatives >/dev/null 2>&1; then
-                      java_path=$(update-alternatives --list java 2>/dev/null | grep -E 'java-17|java-21|openjdk-17|openjdk-21' | head -1)
-                      if [ -n "$java_path" ]; then
-                        dirname "$(dirname "$java_path")"
-                        return 0
-                      fi
-                    fi
-                    # Fall back to filesystem probes
-                    for dir in /usr/lib/jvm/java-17-openjdk* /usr/lib/jvm/java-21-openjdk* /usr/lib/jvm/temurin-17 /usr/lib/jvm/temurin-21; do
-                      if [ -d "$dir" ]; then
-                        echo "$dir"
-                        return 0
-                      fi
-                    done
-                  fi
-                  return 1
-                }
+        # Detect a compatible JDK (17 or 21). AGP 8.13.0 rejects JDK 25+ as the gradle daemon.
+        # The build.gradle.kts jvmToolchain(17) pins compilation JDK but NOT the gradle daemon,
+        # so we must override JAVA_HOME if the host JDK is too new.
+        detect_jdk() {
+          if [ "$(uname)" = "Darwin" ]; then
+            # macOS: try homebrew's openjdk@17 and openjdk@21 symlinks first,
+            # then fall back to /usr/libexec/java_home (which may return newer versions).
+            for dir in /opt/homebrew/opt/openjdk@17 /opt/homebrew/opt/openjdk@21; do
+              if [ -d "$dir" ]; then
+                echo "$dir"
+                return 0
+              fi
+            done
+            # Fall back to /usr/libexec/java_home for other JDK distributions
+            /usr/libexec/java_home -v17 2>/dev/null || /usr/libexec/java_home -v21 2>/dev/null
+          elif [ "$(uname)" = "Linux" ]; then
+            # Linux: probe common install dirs; try update-alternatives first
+            if command -v update-alternatives >/dev/null 2>&1; then
+              java_path=$(update-alternatives --list java 2>/dev/null | grep -E 'java-17|java-21|openjdk-17|openjdk-21' | head -1)
+              if [ -n "$java_path" ]; then
+                dirname "$(dirname "$java_path")"
+                return 0
+              fi
+            fi
+            # Fall back to filesystem probes
+            for dir in /usr/lib/jvm/java-17-openjdk* /usr/lib/jvm/java-21-openjdk* /usr/lib/jvm/temurin-17 /usr/lib/jvm/temurin-21; do
+              if [ -d "$dir" ]; then
+                echo "$dir"
+                return 0
+              fi
+            done
+          fi
+          return 1
+        }
 
-                JDK_HOME=$(detect_jdk)
-                if [ -n "$JDK_HOME" ]; then
-                  export JAVA_HOME="$JDK_HOME"
-                  export PATH="$JDK_HOME/bin:$PATH"
-                else
-                  echo "SKIP: kotlin_android comprehensive requires JDK 17 or 21. Install with: brew install openjdk@17 (macOS) or sdk install java 17.0.13-zulu (sdkman)"
-                  exit 0
-                fi
+        JDK_HOME=$(detect_jdk)
+        if [ -n "$JDK_HOME" ]; then
+          export JAVA_HOME="$JDK_HOME"
+          export PATH="$JDK_HOME/bin:$PATH"
+        else
+          echo "SKIP: kotlin_android comprehensive requires JDK 17 or 21. Install with: brew install openjdk@17 (macOS) or sdk install java 17.0.13-zulu (sdkman)"
+          exit 0
+        fi
 
-                ./gradlew test
+        ./gradlew test
 
-    comprehensive:swift_e2e:
-        desc: Run Swift test_app comprehensive tests (binaryTarget artifact bundle)
-        dir: test_apps/swift_e2e
-        cmds:
-            - bash download_swift_artifact.sh
-            - swift test
+  comprehensive:swift_e2e:
+    desc: Run Swift test_app comprehensive tests (binaryTarget artifact bundle)
+    dir: test_apps/swift_e2e
+    cmds:
+      - bash download_swift_artifact.sh
+      - swift test
 
-    regenerate:
-        desc: Regenerate test_apps/ via alef and re-sync versions
-        cmds:
-            - alef e2e generate --registry
-            - alef sync-versions
+  regenerate:
+    desc: Regenerate test_apps/ via alef and re-sync versions
+    cmds:
+      - alef e2e generate --registry
+      - alef sync-versions

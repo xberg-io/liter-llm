@@ -12,10 +12,7 @@
   "bin": {
     "liter-llm": "bin/liter-llm.js"
   },
-  "files": [
-    "bin/",
-    "install.js"
-  ],
+  "files": ["bin/", "install.js"],
   "type": "module",
   "publishConfig": {
     "access": "public"

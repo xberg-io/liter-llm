@@ -3,23 +3,23 @@ name = "liter-llm"
 version = "1.2.2"
 description = "A universal LM API client with polyglot bindings — fast, type-safe, compiled"
 readme = "README.md"
-keywords = [ "ai", "api-client", "llm", "openai", "xberg" ]
+keywords = ["ai", "api-client", "llm", "openai", "xberg"]
 license = "MIT"
-authors = [ { name = "Na'aman Hirschfeld", email = "naaman@xberg.io" } ]
+authors = [{ name = "Na'aman Hirschfeld", email = "naaman@xberg.io" }]
 requires-python = ">=3.10"
 classifiers = [
-  "Development Status :: 3 - Alpha",
-  "Intended Audience :: Developers",
-  "Natural Language :: English",
-  "Programming Language :: Python",
-  "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
-  "Programming Language :: Python :: 3.14",
-  "Programming Language :: Python :: Implementation :: CPython",
-  "Typing :: Typed",
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Typing :: Typed",
 ]
 urls.documentation = "https://github.com/xberg-io/liter-llm#readme"
 urls.homepage = "https://github.com/xberg-io/liter-llm"
@@ -28,109 +28,17 @@ urls.repository = "https://github.com/xberg-io/liter-llm"
 
 [dependency-groups]
 dev = [
-  "anyio>=4.13.0",
-  "jinja2>=3.1.6",
-  "jsonschema>=4",
-  "mypy>=2.1.0",
-  "prek>=0.4.0",
-  "pytest>=9.0.3",
-  "pyyaml>=6.0.3",
-  "ruff>=0.15.13",
-  "typing-extensions>=4.15.0",
-  "uv-bump",
+    "anyio>=4.13.0",
+    "jinja2>=3.1.6",
+    "jsonschema>=4",
+    "pyrefly>=1.1.1",
+    "pytest>=9.0.3",
+    "pyyaml>=6.0.3",
+    "typing-extensions>=4.15.0",
+    "uv-bump",
 ]
-docs = [ "zensical" ]
+docs = ["zensical"]
 
 [tool.uv]
 sources.uv-bump = { git = "https://github.com/Goldziher/uv-bump" }
-workspace.exclude = [ "test_apps/*" ]
-
-[tool.ruff]
-target-version = "py310"
-line-length = 120
-src = [ "scripts", "tools/schema-bootstrap" ]
-exclude = [ "test_apps" ]
-format.docstring-code-line-length = 120
-format.docstring-code-format = true
-lint.select = [ "ALL" ]
-lint.ignore = [
-  "ANN401", # dynamically typed ANY
-  "COM812", # Conflicts with formatter
-  "D100",   # pydocstyle - missing docstring in public module
-  "D104",   # pydocstyle - missing docstring in public package
-  "D107",   # pydocstyle - missing docstring in __init__
-  "D205",   # pydocstyle - 1 blank line required between summary line and description
-  "E501",   # pycodestyle line too long, handled by ruff format
-  "EM",     # Exception messages
-  "FBT",    # Boolean values
-  "FIX",    # we allow todo and fixme comments
-  "ISC001", # Conflicts with formatter
-  "TD",     # we allow todo and fixme comments
-  "TRY",    # Try except block, rules are too strict
-]
-lint.per-file-ignores."**/*.pyi" = [
-  "A002", # builtin shadowing in type stubs (id, format, object)
-  "D",    # docstrings not required in type stubs
-]
-lint.per-file-ignores."cli-proxy/**/*.py" = [
-  "ANN",     # type annotations (urllib override with mandated signature)
-  "PLR0913", # too many args (urllib redirect_request override)
-  "PLR2004", # magic values (HTTP 200, string offsets, tarfile members)
-  "S",       # security (HTTPS-only, verified downloads)
-  "T201",    # print (intentional stderr diagnostics)
-]
-lint.per-file-ignores."e2e/python/**/*.*" = [
-  "A001",    # builtin shadowing in generated test fixtures (id, type, format)
-  "B017",    # blind pytest.raises(Exception) in generated error-handling tests
-  "D",       # docstrings not required in generated tests
-  "PLR2004", # magic values in assertions (generated test expectations)
-  "PT011",   # broad pytest.raises in generated error-handling tests
-  "RUF100",  # unused noqa in generated code
-  "S101",    # assert usage in tests
-]
-lint.per-file-ignores."packages/python/liter_llm/_internal_bindings.pyi" = [
-  "F401",   # unused import in alef-generated stub
-  "PYI026", # TypeAlias annotation not added by alef codegen
-  "RUF100", # noqa directives added by alef codegen may be redundant
-]
-lint.per-file-ignores."scripts/**/*.*" = [
-  "B904",    # raise without from
-  "BLE001",  # broad exception catch
-  "C901",    # complexity
-  "D",       # docstrings
-  "G004",    # f-string in logging
-  "G201",    # logging .exception vs .error
-  "PERF203", # try in loop
-  "PERF401", # list comprehension
-  "PLC0415", # import not at top
-  "PLR0912", # too many branches
-  "PLR0915", # too many statements
-  "PLW2901", # loop variable overwritten
-  "PTH123",  # open() vs Path.open()
-  "S",       # security (subprocess, etc.)
-  "SIM105",  # contextlib.suppress
-  "T201",    # print
-]
-lint.per-file-ignores."test_apps/python/**/*.*" = [
-  "A001",    # builtin shadowing in generated test fixtures
-  "D",       # docstrings not required in generated tests
-  "PLR2004", # magic values in assertions
-  "PT011",   # broad pytest.raises in generated error-handling tests
-  "RUF100",  # unused noqa in generated code
-  "S101",    # assert usage in tests
-]
-lint.isort.known-first-party = [ "scripts" ]
-lint.pydocstyle.convention = "google"
-
-[tool.pyproject-fmt]
-keep_full_version = true
-max_supported_python = "3.14"
-
-[tool.mypy]
-packages = [ "scripts" ]
-python_version = "3.10"
-disallow_untyped_decorators = true
-disallow_any_unimported = true
-show_error_codes = true
-strict = true
-warn_unreachable = true
+workspace.exclude = ["test_apps/*"]

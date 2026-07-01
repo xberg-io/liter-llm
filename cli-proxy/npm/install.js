@@ -169,9 +169,7 @@ async function resolveRelease() {
     triple,
   );
   if (!chosenName) {
-    throw new CliUnavailableError(
-      `no standalone CLI asset for target triple "${triple}" in ${REPO} release ${tag}`,
-    );
+    throw new CliUnavailableError(`no standalone CLI asset for target triple "${triple}" in ${REPO} release ${tag}`);
   }
   const archive = assets.find((a) => a.name === chosenName);
   const checksums = assets.find((a) => (a.name || "").toUpperCase().includes("SHA256SUMS"));
@@ -258,11 +256,9 @@ function listZipEntries(archivePath) {
       "Add-Type -AssemblyName System.IO.Compression.FileSystem;" +
       "[System.IO.Compression.ZipFile]::OpenRead($args[0]).Entries |" +
       " ForEach-Object { $_.FullName }";
-    const out = execFileSync(
-      "powershell",
-      ["-NoProfile", "-NonInteractive", "-Command", script, archivePath],
-      { encoding: "utf8" },
-    );
+    const out = execFileSync("powershell", ["-NoProfile", "-NonInteractive", "-Command", script, archivePath], {
+      encoding: "utf8",
+    });
     return out
       .split(/\r?\n/)
       .map((s) => s.trim())
@@ -359,9 +355,7 @@ function safeExtract(archivePath, archiveName, dest) {
       // The chosen asset did not actually contain the CLI binary — treat the
       // release as having no valid CLI for this platform rather than leaving a
       // bad/partial install behind.
-      throw new CliUnavailableError(
-        `archive ${archiveName} did not contain expected CLI binary ${binName}`,
-      );
+      throw new CliUnavailableError(`archive ${archiveName} did not contain expected CLI binary ${binName}`);
     }
     const finalBin = path.join(dest, binName);
     fs.copyFileSync(extractedBin, finalBin);

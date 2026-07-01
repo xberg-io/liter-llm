@@ -6,20 +6,10 @@
     "type": "git",
     "url": "git+https://github.com/xberg-io/liter-llm.git"
   },
-  "files": [
-    "liter-llm-node.darwin-x64.node"
-  ],
-  "os": [
-    "darwin"
-  ],
-  "cpu": [
-    "x64"
-  ],
   "main": "liter-llm-node.darwin-x64.node",
-  "publishConfig": {
-    "access": "public"
-  },
-  "engines": {
-    "node": ">= 18"
-  }
+  "files": ["liter-llm-node.darwin-x64.node"],
+  "os": ["darwin"],
+  "cpu": ["x64"],
+  "engines": { "node": ">= 22" },
+  "publishConfig": { "access": "public" }
 }

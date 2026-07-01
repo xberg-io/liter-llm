@@ -1,86 +1,86 @@
 version: "3"
 
 tasks:
-    deps:
-        desc: Install Node.js dependencies
-        dir: crates/liter-llm-node
-        cmds:
-            - pnpm install
+  deps:
+    desc: Install Node.js dependencies
+    dir: crates/liter-llm-node
+    cmds:
+      - pnpm install
 
-    install:
-        desc: Install Node.js dependencies (alias for deps)
-        cmds:
-            - task: deps
+  install:
+    desc: Install Node.js dependencies (alias for deps)
+    cmds:
+      - task: deps
 
-    update:
-        desc: Update Node/TypeScript dependencies (all workspace packages)
-        cmds:
-            - echo "Updating Node/TypeScript dependencies across workspace..."
-            - corepack up
-            - pnpm up --latest -r
-            - pnpm up --latest -w
+  update:
+    desc: Update Node/TypeScript dependencies (all workspace packages)
+    cmds:
+      - echo "Updating Node/TypeScript dependencies across workspace..."
+      - corepack up
+      - pnpm up --latest -r
+      - pnpm up --latest -w
 
-    build:
-        desc: Build NAPI-RS native module (release)
-        dir: crates/liter-llm-node
-        env:
-            PROJECT_ROOT: "{{.PROJECT_ROOT}}"
-        cmds:
-            - pnpm exec napi build --release
+  build:
+    desc: Build NAPI-RS native module (release)
+    dir: crates/liter-llm-node
+    env:
+      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+    cmds:
+      - pnpm exec napi build --release
 
-    build:dev:
-        desc: Build NAPI-RS native module (debug)
-        dir: crates/liter-llm-node
-        env:
-            PROJECT_ROOT: "{{.PROJECT_ROOT}}"
-        cmds:
-            - napi build
+  build:dev:
+    desc: Build NAPI-RS native module (debug)
+    dir: crates/liter-llm-node
+    env:
+      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+    cmds:
+      - napi build
 
-    test:
-        desc: Smoke test Node.js native module
-        dir: crates/liter-llm-node
-        cmds:
-            - node -e "const m = require('./'); console.log('Module loaded:', Object.keys(m))"
+  test:
+    desc: Smoke test Node.js native module
+    dir: crates/liter-llm-node
+    cmds:
+      - node -e "const m = require('./'); console.log('Module loaded:', Object.keys(m))"
 
-    lint:
-        desc: Lint TypeScript/JavaScript code
-        cmds:
-            - npx oxlint --fix .
+  lint:
+    desc: Lint TypeScript/JavaScript code
+    cmds:
+      - poly lint crates/liter-llm-node
 
-    lint:check:
-        desc: Check TypeScript/JavaScript linting (CI)
-        cmds:
-            - npx oxlint .
+  lint:check:
+    desc: Check TypeScript/JavaScript linting (CI)
+    cmds:
+      - poly lint crates/liter-llm-node
 
-    format:
-        desc: Format TypeScript/JavaScript code
-        cmds:
-            - npx oxfmt
+  format:
+    desc: Format TypeScript/JavaScript code
+    cmds:
+      - poly fmt --fix crates/liter-llm-node
 
-    format:check:
-        desc: Check TypeScript/JavaScript formatting (CI)
-        cmds:
-            - npx oxfmt --check
+  format:check:
+    desc: Check TypeScript/JavaScript formatting (CI)
+    cmds:
+      - poly fmt --check crates/liter-llm-node
 
-    typecheck:
-        desc: Check TypeScript types (tsc --noEmit)
-        cmds:
-            - pnpm exec tsc --noEmit --project tsconfig.json
+  typecheck:
+    desc: Check TypeScript types (tsc --noEmit)
+    cmds:
+      - pnpm exec tsc --noEmit --project tsconfig.json
 
-    clean:
-        desc: Clean Node.js build artifacts
-        dir: crates/liter-llm-node
-        cmds:
-            - rm -f *.node
+  clean:
+    desc: Clean Node.js build artifacts
+    dir: crates/liter-llm-node
+    cmds:
+      - rm -f *.node
 
-    e2e:generate:
-        desc: Generate TypeScript/Node E2E tests from fixtures
-        env:
-            PROJECT_ROOT: "{{.PROJECT_ROOT}}"
-        cmds:
-            - alef e2e generate --lang node
+  e2e:generate:
+    desc: Generate TypeScript/Node E2E tests from fixtures
+    env:
+      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+    cmds:
+      - alef e2e generate --lang node
 
-    e2e:test:
-        desc: Run TypeScript/Node E2E tests using Alef-configured test commands
-        cmds:
-            - alef test --lang node --e2e
+  e2e:test:
+    desc: Run TypeScript/Node E2E tests using Alef-configured test commands
+    cmds:
+      - alef test --lang node --e2e

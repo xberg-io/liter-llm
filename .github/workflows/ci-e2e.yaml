@@ -1,485 +1,485 @@
 name: CI E2E
 
 on:
-    push:
-        branches: [main]
-        paths:
-            - crates/**
-            - packages/**
-            - e2e/**
-            - fixtures/**
-            - schemas/**
-            - Cargo.toml
-            - Cargo.lock
-            - alef.toml
-            - pyproject.toml
-            - uv.lock
-            - package.json
-            - pnpm-lock.yaml
-            - pnpm-workspace.yaml
-            - Gemfile
-            - Gemfile.lock
-            - composer.json
-            - composer.lock
-            - go.mod
-            - go.sum
-            - .task/**
-            - Taskfile.yml
-            - .github/workflows/ci-e2e.yaml
-    pull_request:
-        branches: [main]
-        paths:
-            - crates/**
-            - packages/**
-            - e2e/**
-            - fixtures/**
-            - schemas/**
-            - Cargo.toml
-            - Cargo.lock
-            - alef.toml
-            - pyproject.toml
-            - uv.lock
-            - package.json
-            - pnpm-lock.yaml
-            - pnpm-workspace.yaml
-            - Gemfile
-            - Gemfile.lock
-            - composer.json
-            - composer.lock
-            - go.mod
-            - go.sum
-            - .task/**
-            - Taskfile.yml
-            - .github/workflows/ci-e2e.yaml
-    workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - crates/**
+      - packages/**
+      - e2e/**
+      - fixtures/**
+      - schemas/**
+      - Cargo.toml
+      - Cargo.lock
+      - alef.toml
+      - pyproject.toml
+      - uv.lock
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - Gemfile
+      - Gemfile.lock
+      - composer.json
+      - composer.lock
+      - go.mod
+      - go.sum
+      - .task/**
+      - Taskfile.yml
+      - .github/workflows/ci-e2e.yaml
+  pull_request:
+    branches: [main]
+    paths:
+      - crates/**
+      - packages/**
+      - e2e/**
+      - fixtures/**
+      - schemas/**
+      - Cargo.toml
+      - Cargo.lock
+      - alef.toml
+      - pyproject.toml
+      - uv.lock
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - Gemfile
+      - Gemfile.lock
+      - composer.json
+      - composer.lock
+      - go.mod
+      - go.sum
+      - .task/**
+      - Taskfile.yml
+      - .github/workflows/ci-e2e.yaml
+  workflow_dispatch:
 
 concurrency:
-    group: ci-e2e-${{ github.event.pull_request.number || github.ref }}
-    cancel-in-progress: true
+  group: ci-e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
-    CARGO_TERM_COLOR: always
-    CARGO_INCREMENTAL: 0
-    CARGO_PROFILE_DEV_DEBUG: 0
-    RUST_BACKTRACE: short
-    BUILD_PROFILE: ci
-    FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
+  RUST_BACKTRACE: short
+  BUILD_PROFILE: ci
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 permissions:
-    contents: read
+  contents: read
 
 jobs:
-    build-ffi:
-        name: Build FFI (${{ matrix.target }})
-        if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
-        runs-on: ${{ matrix.os }}
-        timeout-minutes: ${{ matrix.os == 'windows-latest' && 120 || 60 }}
-        strategy:
-            fail-fast: false
-            matrix:
-                include:
-                    - os: ubuntu-24.04-arm
-                      target: aarch64-unknown-linux-gnu
-                    - os: ubuntu-latest
-                      target: x86_64-unknown-linux-gnu
-                    - os: macos-latest
-                      target: aarch64-apple-darwin
-                    - os: windows-latest
-                      target: x86_64-pc-windows-msvc
-        steps:
-            - uses: actions/checkout@v6
+  build-ffi:
+    name: Build FFI (${{ matrix.target }})
+    if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: ${{ matrix.os == 'windows-latest' && 120 || 60 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@v6
 
-            - name: Setup Rust
-              uses: xberg-io/actions/setup-rust@v1
-              with:
-                  cache-key-prefix: build-ffi-${{ matrix.target }}
-                  target: ${{ matrix.target }}
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          cache-key-prefix: build-ffi-${{ matrix.target }}
+          target: ${{ matrix.target }}
 
-            - name: Build FFI library
-              uses: xberg-io/actions/build-rust-ffi@v1
-              with:
-                  crate-name: liter-llm-ffi
+      - name: Build FFI library
+        uses: xberg-io/actions/build-rust-ffi@v1
+        with:
+          crate-name: liter-llm-ffi
 
-            - name: Build CLI
-              uses: xberg-io/actions/build-rust-cli@v1
-              with:
-                  package-name: liter-llm-cli
-                  binary-name: liter-llm
+      - name: Build CLI
+        uses: xberg-io/actions/build-rust-cli@v1
+        with:
+          package-name: liter-llm-cli
+          binary-name: liter-llm
 
-            - name: Build mock-server (linux-arm64 only — consumed by e2e-tests)
-              if: matrix.target == 'aarch64-unknown-linux-gnu'
-              shell: bash
-              run: cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release
+      - name: Build mock-server (linux-arm64 only — consumed by e2e-tests)
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        shell: bash
+        run: cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release
 
-            - name: Upload FFI artifacts
-              uses: actions/upload-artifact@v7
-              with:
-                  name: ffi-${{ matrix.target }}
-                  path: |
-                      target/release/libliter_llm_ffi.*
-                      target/release/liter_llm_ffi.*
-                      crates/liter-llm-ffi/include/*.h
-                      target/release/liter-llm
-                      target/release/liter-llm.exe
-                      e2e/rust/target/release/mock-server
-                  retention-days: 7
-                  if-no-files-found: warn
+      - name: Upload FFI artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: ffi-${{ matrix.target }}
+          path: |
+            target/release/libliter_llm_ffi.*
+            target/release/liter_llm_ffi.*
+            crates/liter-llm-ffi/include/*.h
+            target/release/liter-llm
+            target/release/liter-llm.exe
+            e2e/rust/target/release/mock-server
+          retention-days: 7
+          if-no-files-found: warn
 
-    e2e-tests:
-        name: E2E (${{ matrix.lang }})
-        if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
-        needs: [build-ffi]
-        # Swift e2e runs on macos-14 (Sonoma) rather than `macos-latest` (currently
-        # macos-15 Sequoia). macOS 15 added a "Local Network" privacy permission
-        # that silently denies 127.0.0.1 connections from sandboxed processes —
-        # SwiftPM test binaries linked against the Rust staticlib hit this. Plain
-        # reqwest from CLI on the same host works fine; only the swift-test launch
-        # context is affected. macos-14 predates the permission and reaches the
-        # mock-server without prompting.
-        runs-on: ${{ matrix.lang == 'swift' && 'macos-14' || 'ubuntu-24.04-arm' }}
-        timeout-minutes: 60
-        strategy:
-            fail-fast: false
-            matrix:
-                include:
-                    - lang: rust
-                      test-cmd: "RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' task rust:e2e:test"
-                    - lang: python
-                      python-version: "3.13"
-                      test-cmd: "cd packages/python && uv sync --no-install-project --no-install-workspace && uvx maturin develop --release && cd ../.. && task python:e2e:test"
-                    - lang: node
-                      node-version: "24"
-                      test-cmd: "task node:build && task node:e2e:test"
-                    - lang: wasm
-                      node-version: "24"
-                      test-cmd: "RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' task wasm:build:node && (cd e2e/wasm && pnpm install --force) && RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' task wasm:e2e:test"
-                    - lang: go
-                      go-version: "1.26"
-                      test-cmd: "task go:e2e:test"
-                    - lang: ruby
-                      ruby-version: "3.4"
-                      test-cmd: "cd packages/ruby && bundle exec rake compile && cd ../.. && task ruby:e2e:test"
-                    - lang: java
-                      java-version: "25"
-                      test-cmd: "task java:e2e:test"
-                    - lang: csharp
-                      dotnet-version: "10.0.x"
-                      test-cmd: "task csharp:install && task csharp:e2e:test"
-                    - lang: php
-                      php-version: "8.4"
-                      test-cmd: "cd packages/php && composer install --no-progress --prefer-dist && cd ../.. && task php:build && task php:e2e:test"
-                    - lang: elixir
-                      elixir-version: "1.19"
-                      otp-version: "28"
-                      test-cmd: "cd packages/elixir && mix deps.get && cd ../.. && task elixir:build && task elixir:e2e:test"
-                    - lang: c
-                      test-cmd: "task c:e2e:test"
-                    - lang: dart
-                      dart-version: "stable"
-                      test-cmd: "alef test --lang dart --e2e"
-                    - lang: swift
-                      test-cmd: "cd e2e/swift_e2e && swift test"
-                    - lang: zig
-                      zig-version: "0.16.0"
-                      test-cmd: "alef test --lang zig --e2e"
-                    - lang: kotlin_android
-                      java-version: "21"
-                      test-cmd: |
-                          cargo build -p liter-llm-jni --release
-                          mkdir -p target/release-jni-lib
-                          cp target/release/libliterllm_jni.so target/release-jni-lib/
-                          LD_LIBRARY_PATH="$PWD/target/release-jni-lib:$LD_LIBRARY_PATH" \
-                            bash -c 'cd e2e/kotlin_android && gradle test'
-        steps:
-            - uses: actions/checkout@v6
+  e2e-tests:
+    name: E2E (${{ matrix.lang }})
+    if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
+    needs: [build-ffi]
+    # Swift e2e runs on macos-14 (Sonoma) rather than `macos-latest` (currently
+    # macos-15 Sequoia). macOS 15 added a "Local Network" privacy permission
+    # that silently denies 127.0.0.1 connections from sandboxed processes —
+    # SwiftPM test binaries linked against the Rust staticlib hit this. Plain
+    # reqwest from CLI on the same host works fine; only the swift-test launch
+    # context is affected. macos-14 predates the permission and reaches the
+    # mock-server without prompting.
+    runs-on: ${{ matrix.lang == 'swift' && 'macos-14' || 'ubuntu-24.04-arm' }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - lang: rust
+            test-cmd: "RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' task rust:e2e:test"
+          - lang: python
+            python-version: "3.13"
+            test-cmd: "cd packages/python && uv sync --no-install-project --no-install-workspace && uvx maturin develop --release && cd ../.. && task python:e2e:test"
+          - lang: node
+            node-version: "24"
+            test-cmd: "task node:build && task node:e2e:test"
+          - lang: wasm
+            node-version: "24"
+            test-cmd: "RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' task wasm:build:node && (cd e2e/wasm && pnpm install --force) && RUSTFLAGS='-A unpredictable-function-pointer-comparisons -A mismatched-lifetime-syntaxes' task wasm:e2e:test"
+          - lang: go
+            go-version: "1.26"
+            test-cmd: "task go:e2e:test"
+          - lang: ruby
+            ruby-version: "3.4"
+            test-cmd: "cd packages/ruby && bundle exec rake compile && cd ../.. && task ruby:e2e:test"
+          - lang: java
+            java-version: "25"
+            test-cmd: "task java:e2e:test"
+          - lang: csharp
+            dotnet-version: "10.0.x"
+            test-cmd: "task csharp:install && task csharp:e2e:test"
+          - lang: php
+            php-version: "8.4"
+            test-cmd: "cd packages/php && composer install --no-progress --prefer-dist && cd ../.. && task php:build && task php:e2e:test"
+          - lang: elixir
+            elixir-version: "1.19"
+            otp-version: "28"
+            test-cmd: "cd packages/elixir && mix deps.get && cd ../.. && task elixir:build && task elixir:e2e:test"
+          - lang: c
+            test-cmd: "task c:e2e:test"
+          - lang: dart
+            dart-version: "stable"
+            test-cmd: "alef test --lang dart --e2e"
+          - lang: swift
+            test-cmd: "cd e2e/swift_e2e && swift test"
+          - lang: zig
+            zig-version: "0.16.0"
+            test-cmd: "alef test --lang zig --e2e"
+          - lang: kotlin_android
+            java-version: "21"
+            test-cmd: |
+              cargo build -p liter-llm-jni --release
+              mkdir -p target/release-jni-lib
+              cp target/release/libliterllm_jni.so target/release-jni-lib/
+              LD_LIBRARY_PATH="$PWD/target/release-jni-lib:$LD_LIBRARY_PATH" \
+                bash -c 'cd e2e/kotlin_android && gradle test'
+    steps:
+      - uses: actions/checkout@v6
 
-            - name: Setup Rust
-              uses: xberg-io/actions/setup-rust@v1
-              with:
-                  cache-key-prefix: e2e-${{ matrix.lang }}
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          cache-key-prefix: e2e-${{ matrix.lang }}
 
-            - name: Download FFI artifacts
-              if: matrix.lang != 'swift' && matrix.lang != 'kotlin_android'
-              uses: actions/download-artifact@v7
-              with:
-                  name: ffi-aarch64-unknown-linux-gnu
-                  path: ffi-artifacts
+      - name: Download FFI artifacts
+        if: matrix.lang != 'swift' && matrix.lang != 'kotlin_android'
+        uses: actions/download-artifact@v7
+        with:
+          name: ffi-aarch64-unknown-linux-gnu
+          path: ffi-artifacts
 
-            - name: Stage FFI artifacts
-              if: matrix.lang != 'swift' && matrix.lang != 'kotlin_android'
-              shell: bash
-              run: |
-                  # upload-artifact preserves source paths, so the artifact mirrors:
-                  #   target/release/{libliter_llm_ffi.*, liter_llm_ffi.*, liter-llm, liter-llm.exe}
-                  #   crates/liter-llm-ffi/include/*.h
-                  #   e2e/rust/target/release/mock-server
-                  # Restore that structure under the workspace root.
-                  mkdir -p target/release target/debug crates/liter-llm-ffi/include e2e/rust/target/release
-                  if [ -d ffi-artifacts/target/release ]; then
-                    cp -a ffi-artifacts/target/release/. target/release/
-                  fi
-                  if [ -d ffi-artifacts/crates/liter-llm-ffi/include ]; then
-                    cp -a ffi-artifacts/crates/liter-llm-ffi/include/. crates/liter-llm-ffi/include/
-                  fi
-                  if [ -d ffi-artifacts/e2e/rust/target/release ]; then
-                    cp -a ffi-artifacts/e2e/rust/target/release/. e2e/rust/target/release/
-                  fi
-                  # Mirror release → debug so bindings (zig) that default to target/debug resolve.
-                  cp -a target/release/. target/debug/ 2>/dev/null || true
-                  chmod +x target/release/libliter_llm_ffi.so 2>/dev/null || true
-                  chmod +x target/debug/libliter_llm_ffi.so 2>/dev/null || true
-                  chmod +x target/release/liter-llm 2>/dev/null || true
-                  chmod +x e2e/rust/target/release/mock-server 2>/dev/null || true
+      - name: Stage FFI artifacts
+        if: matrix.lang != 'swift' && matrix.lang != 'kotlin_android'
+        shell: bash
+        run: |
+          # upload-artifact preserves source paths, so the artifact mirrors:
+          #   target/release/{libliter_llm_ffi.*, liter_llm_ffi.*, liter-llm, liter-llm.exe}
+          #   crates/liter-llm-ffi/include/*.h
+          #   e2e/rust/target/release/mock-server
+          # Restore that structure under the workspace root.
+          mkdir -p target/release target/debug crates/liter-llm-ffi/include e2e/rust/target/release
+          if [ -d ffi-artifacts/target/release ]; then
+            cp -a ffi-artifacts/target/release/. target/release/
+          fi
+          if [ -d ffi-artifacts/crates/liter-llm-ffi/include ]; then
+            cp -a ffi-artifacts/crates/liter-llm-ffi/include/. crates/liter-llm-ffi/include/
+          fi
+          if [ -d ffi-artifacts/e2e/rust/target/release ]; then
+            cp -a ffi-artifacts/e2e/rust/target/release/. e2e/rust/target/release/
+          fi
+          # Mirror release → debug so bindings (zig) that default to target/debug resolve.
+          cp -a target/release/. target/debug/ 2>/dev/null || true
+          chmod +x target/release/libliter_llm_ffi.so 2>/dev/null || true
+          chmod +x target/debug/libliter_llm_ffi.so 2>/dev/null || true
+          chmod +x target/release/liter-llm 2>/dev/null || true
+          chmod +x e2e/rust/target/release/mock-server 2>/dev/null || true
 
-            # kotlin_android runs on ubuntu-24.04-arm: download the pre-built linux-arm64
-            # mock-server from the build-ffi artifact and start it before gradle test.
-            - name: Download FFI artifacts (kotlin_android)
-              if: matrix.lang == 'kotlin_android'
-              uses: actions/download-artifact@v7
-              with:
-                  name: ffi-aarch64-unknown-linux-gnu
-                  path: ffi-artifacts
+      # kotlin_android runs on ubuntu-24.04-arm: download the pre-built linux-arm64
+      # mock-server from the build-ffi artifact and start it before gradle test.
+      - name: Download FFI artifacts (kotlin_android)
+        if: matrix.lang == 'kotlin_android'
+        uses: actions/download-artifact@v7
+        with:
+          name: ffi-aarch64-unknown-linux-gnu
+          path: ffi-artifacts
 
-            - name: Start mock-server (kotlin_android)
-              if: matrix.lang == 'kotlin_android'
-              shell: bash
-              run: |
-                  mkdir -p e2e/rust/target/release
-                  cp ffi-artifacts/e2e/rust/target/release/mock-server e2e/rust/target/release/mock-server
-                  chmod +x e2e/rust/target/release/mock-server
-                  # Start mock-server in background; capture its URL announcement from stdout.
-                  # MOCK_SERVER_NO_STDIN_WATCH=1 makes the binary wait on SIGTERM instead of
-                  # stdin EOF. Without it, when GitHub Actions ends this `Start mock-server`
-                  # step the per-step bash exits, the inherited stdin FD closes, and the
-                  # backgrounded mock-server reads EOF and exits before the test step can
-                  # connect. Redirecting stdin from /dev/null avoids the inherited FD
-                  # entirely; the env var swaps the lifetime watcher to ctrl_c().
-                  MOCK_URL_FILE=$(mktemp)
-                  # `fixtures` resolves relative to the binary's CWD; we run from the repo
-                  # root so pass the absolute path. mock-server's default of
-                  # `../../fixtures` only matches the `cd e2e/<lang>` launch pattern that
-                  # the other harnesses use.
-                  MOCK_SERVER_NO_STDIN_WATCH=1 e2e/rust/target/release/mock-server \
-                    "$GITHUB_WORKSPACE/fixtures" > "$MOCK_URL_FILE" 2>/dev/null </dev/null &
-                  # Wait until the server prints its URL (up to 10 s).
-                  n=0
-                  until grep -q "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" 2>/dev/null || [ "$n" -ge 100 ]; do
-                    sleep 0.1
-                    n=$((n + 1))
-                  done
-                  MOCK_SERVER_URL=$(grep "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" | head -1 | cut -d= -f2-)
-                  echo "MOCK_SERVER_URL=${MOCK_SERVER_URL}" >> "$GITHUB_ENV"
+      - name: Start mock-server (kotlin_android)
+        if: matrix.lang == 'kotlin_android'
+        shell: bash
+        run: |
+          mkdir -p e2e/rust/target/release
+          cp ffi-artifacts/e2e/rust/target/release/mock-server e2e/rust/target/release/mock-server
+          chmod +x e2e/rust/target/release/mock-server
+          # Start mock-server in background; capture its URL announcement from stdout.
+          # MOCK_SERVER_NO_STDIN_WATCH=1 makes the binary wait on SIGTERM instead of
+          # stdin EOF. Without it, when GitHub Actions ends this `Start mock-server`
+          # step the per-step bash exits, the inherited stdin FD closes, and the
+          # backgrounded mock-server reads EOF and exits before the test step can
+          # connect. Redirecting stdin from /dev/null avoids the inherited FD
+          # entirely; the env var swaps the lifetime watcher to ctrl_c().
+          MOCK_URL_FILE=$(mktemp)
+          # `fixtures` resolves relative to the binary's CWD; we run from the repo
+          # root so pass the absolute path. mock-server's default of
+          # `../../fixtures` only matches the `cd e2e/<lang>` launch pattern that
+          # the other harnesses use.
+          MOCK_SERVER_NO_STDIN_WATCH=1 e2e/rust/target/release/mock-server \
+            "$GITHUB_WORKSPACE/fixtures" > "$MOCK_URL_FILE" 2>/dev/null </dev/null &
+          # Wait until the server prints its URL (up to 10 s).
+          n=0
+          until grep -q "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" 2>/dev/null || [ "$n" -ge 100 ]; do
+            sleep 0.1
+            n=$((n + 1))
+          done
+          MOCK_SERVER_URL=$(grep "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" | head -1 | cut -d= -f2-)
+          echo "MOCK_SERVER_URL=${MOCK_SERVER_URL}" >> "$GITHUB_ENV"
 
-            # macos-14 ships Swift 5.10 in /usr/bin/swift; alef-emitted Package.swift
-            # files pin `swift-tools-version: 6.0`, so we have to point xcode-select at
-            # the bundled Xcode 16+ before any `swift test`. The runner has multiple
-            # Xcode installs side-by-side; pick the newest with a Swift 6 toolchain.
-            - name: Select Xcode 16 (swift)
-              if: matrix.lang == 'swift'
-              shell: bash
-              run: |
-                  # Find the newest /Applications/Xcode_*.app with Swift >= 6.0.
-                  best_xcode=""
-                  best_swift=""
-                  for app in /Applications/Xcode_*.app; do
-                    [ -d "$app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin" ] || continue
-                    ver=$("$app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift" --version 2>/dev/null \
-                      | head -1 | sed -E 's/.* version ([0-9.]+).*/\1/')
-                    [ -z "$ver" ] && continue
-                    major=$(echo "$ver" | cut -d. -f1)
-                    if [ "$major" -ge 6 ]; then
-                      if [ -z "$best_swift" ] || [ "$(printf '%s\n%s' "$ver" "$best_swift" | sort -V | tail -1)" = "$ver" ]; then
-                        best_swift="$ver"
-                        best_xcode="$app"
-                      fi
-                    fi
-                  done
-                  if [ -z "$best_xcode" ]; then
-                    echo "No Xcode with Swift >= 6 found on this runner" >&2
-                    ls -la /Applications/Xcode_*.app 2>&1 || true
-                    exit 1
-                  fi
-                  echo "Using $best_xcode (Swift $best_swift)"
-                  sudo xcode-select -s "$best_xcode/Contents/Developer"
-                  swift --version
+      # macos-14 ships Swift 5.10 in /usr/bin/swift; alef-emitted Package.swift
+      # files pin `swift-tools-version: 6.0`, so we have to point xcode-select at
+      # the bundled Xcode 16+ before any `swift test`. The runner has multiple
+      # Xcode installs side-by-side; pick the newest with a Swift 6 toolchain.
+      - name: Select Xcode 16 (swift)
+        if: matrix.lang == 'swift'
+        shell: bash
+        run: |
+          # Find the newest /Applications/Xcode_*.app with Swift >= 6.0.
+          best_xcode=""
+          best_swift=""
+          for app in /Applications/Xcode_*.app; do
+            [ -d "$app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin" ] || continue
+            ver=$("$app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift" --version 2>/dev/null \
+              | head -1 | sed -E 's/.* version ([0-9.]+).*/\1/')
+            [ -z "$ver" ] && continue
+            major=$(echo "$ver" | cut -d. -f1)
+            if [ "$major" -ge 6 ]; then
+              if [ -z "$best_swift" ] || [ "$(printf '%s\n%s' "$ver" "$best_swift" | sort -V | tail -1)" = "$ver" ]; then
+                best_swift="$ver"
+                best_xcode="$app"
+              fi
+            fi
+          done
+          if [ -z "$best_xcode" ]; then
+            echo "No Xcode with Swift >= 6 found on this runner" >&2
+            ls -la /Applications/Xcode_*.app 2>&1 || true
+            exit 1
+          fi
+          echo "Using $best_xcode (Swift $best_swift)"
+          sudo xcode-select -s "$best_xcode/Contents/Developer"
+          swift --version
 
-            # swift runs on macos-14: the linux-arm64 mock-server binary cannot run
-            # here, so build mock-server from source before swift test.
-            - name: Build mock-server (swift)
-              if: matrix.lang == 'swift'
-              shell: bash
-              run: cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release
+      # swift runs on macos-14: the linux-arm64 mock-server binary cannot run
+      # here, so build mock-server from source before swift test.
+      - name: Build mock-server (swift)
+        if: matrix.lang == 'swift'
+        shell: bash
+        run: cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release
 
-            - name: Start mock-server (swift)
-              if: matrix.lang == 'swift'
-              shell: bash
-              run: |
-                  # Start mock-server in background; capture its URL announcement from stdout.
-                  # MOCK_SERVER_NO_STDIN_WATCH=1 makes the binary wait on SIGTERM instead of
-                  # stdin EOF. Without it, when GitHub Actions ends this `Start mock-server`
-                  # step the per-step bash exits, the inherited stdin FD closes, and the
-                  # backgrounded mock-server reads EOF and exits before the test step can
-                  # connect. Redirecting stdin from /dev/null avoids the inherited FD
-                  # entirely; the env var swaps the lifetime watcher to ctrl_c().
-                  MOCK_URL_FILE=$(mktemp)
-                  # `fixtures` resolves relative to the binary's CWD; we run from the repo
-                  # root so pass the absolute path. mock-server's default of
-                  # `../../fixtures` only matches the `cd e2e/<lang>` launch pattern that
-                  # the other harnesses use.
-                  MOCK_SERVER_NO_STDIN_WATCH=1 e2e/rust/target/release/mock-server \
-                    "$GITHUB_WORKSPACE/fixtures" > "$MOCK_URL_FILE" 2>/dev/null </dev/null &
-                  # Wait until the server prints its URL (up to 10 s).
-                  n=0
-                  until grep -q "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" 2>/dev/null || [ "$n" -ge 100 ]; do
-                    sleep 0.1
-                    n=$((n + 1))
-                  done
-                  MOCK_SERVER_URL=$(grep "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" | head -1 | cut -d= -f2-)
-                  echo "MOCK_SERVER_URL=${MOCK_SERVER_URL}" >> "$GITHUB_ENV"
+      - name: Start mock-server (swift)
+        if: matrix.lang == 'swift'
+        shell: bash
+        run: |
+          # Start mock-server in background; capture its URL announcement from stdout.
+          # MOCK_SERVER_NO_STDIN_WATCH=1 makes the binary wait on SIGTERM instead of
+          # stdin EOF. Without it, when GitHub Actions ends this `Start mock-server`
+          # step the per-step bash exits, the inherited stdin FD closes, and the
+          # backgrounded mock-server reads EOF and exits before the test step can
+          # connect. Redirecting stdin from /dev/null avoids the inherited FD
+          # entirely; the env var swaps the lifetime watcher to ctrl_c().
+          MOCK_URL_FILE=$(mktemp)
+          # `fixtures` resolves relative to the binary's CWD; we run from the repo
+          # root so pass the absolute path. mock-server's default of
+          # `../../fixtures` only matches the `cd e2e/<lang>` launch pattern that
+          # the other harnesses use.
+          MOCK_SERVER_NO_STDIN_WATCH=1 e2e/rust/target/release/mock-server \
+            "$GITHUB_WORKSPACE/fixtures" > "$MOCK_URL_FILE" 2>/dev/null </dev/null &
+          # Wait until the server prints its URL (up to 10 s).
+          n=0
+          until grep -q "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" 2>/dev/null || [ "$n" -ge 100 ]; do
+            sleep 0.1
+            n=$((n + 1))
+          done
+          MOCK_SERVER_URL=$(grep "^MOCK_SERVER_URL=" "$MOCK_URL_FILE" | head -1 | cut -d= -f2-)
+          echo "MOCK_SERVER_URL=${MOCK_SERVER_URL}" >> "$GITHUB_ENV"
 
-            - name: Create WASM pkg stub
-              if: matrix.node-version || matrix.lang == 'wasm'
-              shell: bash
-              run: mkdir -p crates/liter-llm-wasm/pkg/nodejs && echo '{"name":"liter_llm","version":"0.0.0"}' > crates/liter-llm-wasm/pkg/nodejs/package.json
+      - name: Create WASM pkg stub
+        if: matrix.node-version || matrix.lang == 'wasm'
+        shell: bash
+        run: mkdir -p crates/liter-llm-wasm/pkg/nodejs && echo '{"name":"liter_llm","version":"0.0.0"}' > crates/liter-llm-wasm/pkg/nodejs/package.json
 
-            - name: Setup Python
-              if: matrix.python-version
-              uses: xberg-io/actions/setup-python-env@v1
-              with:
-                  python-version: ${{ matrix.python-version }}
-                  cache-prefix: e2e-py-${{ matrix.python-version }}
+      - name: Setup Python
+        if: matrix.python-version
+        uses: xberg-io/actions/setup-python-env@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache-prefix: e2e-py-${{ matrix.python-version }}
 
-            - name: Setup Node
-              if: matrix.node-version
-              uses: xberg-io/actions/setup-node-workspace@v1
+      - name: Setup Node
+        if: matrix.node-version
+        uses: xberg-io/actions/setup-node-workspace@v1
 
-            - name: Install WASI SDK
-              if: matrix.lang == 'wasm'
-              uses: xberg-io/actions/install-wasi-sdk@v1
+      - name: Install WASI SDK
+        if: matrix.lang == 'wasm'
+        uses: xberg-io/actions/install-wasi-sdk@v1
 
-            - name: Install wasm-pack
-              if: matrix.lang == 'wasm'
-              shell: bash
-              run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Install wasm-pack
+        if: matrix.lang == 'wasm'
+        shell: bash
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
-            - name: Setup Go
-              if: matrix.go-version
-              uses: actions/setup-go@v6
-              with:
-                  go-version: ${{ matrix.go-version }}
+      - name: Setup Go
+        if: matrix.go-version
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go-version }}
 
-            - name: Setup Ruby
-              if: matrix.ruby-version
-              uses: ruby/setup-ruby@v1
-              with:
-                  ruby-version: ${{ matrix.ruby-version }}
-                  bundler-cache: true
-                  working-directory: packages/ruby
+      - name: Setup Ruby
+        if: matrix.ruby-version
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
+          working-directory: packages/ruby
 
-            - name: Setup Java
-              if: matrix.java-version
-              uses: actions/setup-java@v5
-              with:
-                  distribution: temurin
-                  java-version: ${{ matrix.java-version }}
+      - name: Setup Java
+        if: matrix.java-version
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java-version }}
 
-            - name: Setup Android SDK
-              if: matrix.lang == 'kotlin_android'
-              uses: android-actions/setup-android@v4
-              with:
-                  packages: ""
+      - name: Setup Android SDK
+        if: matrix.lang == 'kotlin_android'
+        uses: android-actions/setup-android@v4
+        with:
+          packages: ""
 
-            - name: Setup Gradle
-              if: matrix.lang == 'kotlin_android'
-              uses: gradle/actions/setup-gradle@v6
-              with:
-                  # Provision the version from the kotlin-android wrapper. AGP
-                  # (com.android.library) 9.2.0 requires Gradle >= 9.4.1; a hardcoded
-                  # 8.13 pin silently overrode the wrapper and broke plugin-apply.
-                  gradle-version: "wrapper"
+      - name: Setup Gradle
+        if: matrix.lang == 'kotlin_android'
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          # Provision the version from the kotlin-android wrapper. AGP
+          # (com.android.library) 9.2.0 requires Gradle >= 9.4.1; a hardcoded
+          # 8.13 pin silently overrode the wrapper and broke plugin-apply.
+          gradle-version: "wrapper"
 
-            - name: Setup .NET
-              if: matrix.dotnet-version
-              uses: actions/setup-dotnet@v5
-              with:
-                  dotnet-version: ${{ matrix.dotnet-version }}
+      - name: Setup .NET
+        if: matrix.dotnet-version
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
 
-            - name: Setup PHP
-              if: matrix.php-version
-              uses: xberg-io/actions/setup-php@v1
-              with:
-                  php-version: ${{ matrix.php-version }}
-                  tools: composer
+      - name: Setup PHP
+        if: matrix.php-version
+        uses: xberg-io/actions/setup-php@v1
+        with:
+          php-version: ${{ matrix.php-version }}
+          tools: composer
 
-            - name: Setup Elixir
-              if: matrix.elixir-version
-              uses: xberg-io/actions/setup-elixir@v1
-              with:
-                  elixir-version: ${{ matrix.elixir-version }}
-                  otp-version: ${{ matrix.otp-version }}
+      - name: Setup Elixir
+        if: matrix.elixir-version
+        uses: xberg-io/actions/setup-elixir@v1
+        with:
+          elixir-version: ${{ matrix.elixir-version }}
+          otp-version: ${{ matrix.otp-version }}
 
-            - name: Setup Dart
-              if: matrix.dart-version
-              uses: dart-lang/setup-dart@v1
-              with:
-                  sdk: ${{ matrix.dart-version }}
+      - name: Setup Dart
+        if: matrix.dart-version
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ matrix.dart-version }}
 
-            - name: Install flutter_rust_bridge_codegen
-              if: matrix.lang == 'dart'
-              run: cargo install flutter_rust_bridge_codegen --locked
+      - name: Install flutter_rust_bridge_codegen
+        if: matrix.lang == 'dart'
+        run: cargo install flutter_rust_bridge_codegen --locked
 
-            - name: Setup Zig
-              if: matrix.zig-version
-              uses: xberg-io/actions/setup-zig@v1
-              with:
-                  version: ${{ matrix.zig-version }}
+      - name: Setup Zig
+        if: matrix.zig-version
+        uses: xberg-io/actions/setup-zig@v1
+        with:
+          version: ${{ matrix.zig-version }}
 
-            - name: Setup C/C++ tools
-              if: matrix.lang == 'c'
-              uses: xberg-io/actions/setup-c-cpp-tools@v1
+      - name: Setup C/C++ tools
+        if: matrix.lang == 'c'
+        uses: xberg-io/actions/setup-c-cpp-tools@v1
 
-            - name: Setup Go CGO env
-              if: matrix.lang == 'go'
-              uses: xberg-io/actions/setup-go-cgo-env@v1
-              with:
-                  ffi-crate-dir: crates/liter-llm-ffi
-                  ffi-lib-name: liter_llm_ffi
+      - name: Setup Go CGO env
+        if: matrix.lang == 'go'
+        uses: xberg-io/actions/setup-go-cgo-env@v1
+        with:
+          ffi-crate-dir: crates/liter-llm-ffi
+          ffi-lib-name: liter_llm_ffi
 
-            # The swift binding links libliter_llm_swift.a AND libliter_llm_ffi.a
-            # (see packages/swift/Package.swift). build-swift-package builds the
-            # former; swift is excluded from the FFI-artifact staging step above,
-            # so build the FFI staticlib here too or `swift test` fails to link
-            # with `ld: library 'liter_llm_ffi' not found`.
-            - name: Build FFI crate (swift)
-              if: matrix.lang == 'swift'
-              shell: bash
-              run: cargo build -p liter-llm-ffi --release
+      # The swift binding links libliter_llm_swift.a AND libliter_llm_ffi.a
+      # (see packages/swift/Package.swift). build-swift-package builds the
+      # former; swift is excluded from the FFI-artifact staging step above,
+      # so build the FFI staticlib here too or `swift test` fails to link
+      # with `ld: library 'liter_llm_ffi' not found`.
+      - name: Build FFI crate (swift)
+        if: matrix.lang == 'swift'
+        shell: bash
+        run: cargo build -p liter-llm-ffi --release
 
-            - name: Build Swift package (macos / liter-llm-swift)
-              if: matrix.lang == 'swift'
-              uses: xberg-io/actions/build-swift-package@v1
-              with:
-                  crate-name: liter-llm-swift
-                  build-profile: release
+      - name: Build Swift package (macos / liter-llm-swift)
+        if: matrix.lang == 'swift'
+        uses: xberg-io/actions/build-swift-package@v1
+        with:
+          crate-name: liter-llm-swift
+          build-profile: release
 
-            - name: Setup library paths for FFI bindings
-              if: |
-                  matrix.lang == 'go' || matrix.lang == 'java' ||
-                  matrix.lang == 'csharp' || matrix.lang == 'elixir' ||
-                  matrix.lang == 'zig' || matrix.lang == 'c'
-              shell: bash
-              run: |
-                  echo "PKG_CONFIG_PATH=${PWD}/crates/liter-llm-ffi:${PKG_CONFIG_PATH:-}" >> "$GITHUB_ENV"
-                  echo "LD_LIBRARY_PATH=${PWD}/target/release:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
+      - name: Setup library paths for FFI bindings
+        if: |
+          matrix.lang == 'go' || matrix.lang == 'java' ||
+          matrix.lang == 'csharp' || matrix.lang == 'elixir' ||
+          matrix.lang == 'zig' || matrix.lang == 'c'
+        shell: bash
+        run: |
+          echo "PKG_CONFIG_PATH=${PWD}/crates/liter-llm-ffi:${PKG_CONFIG_PATH:-}" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=${PWD}/target/release:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
 
-            - name: Install Task
-              uses: xberg-io/actions/install-task@v1
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
 
-            - name: Install alef CLI
-              uses: xberg-io/actions/install-alef@v1
+      - name: Install alef CLI
+        uses: xberg-io/actions/install-alef@v1
 
-            - name: Run E2E tests
-              run: ${{ matrix.test-cmd }}
-              shell: bash
-              env:
-                  RUST_BACKTRACE: full
+      - name: Run E2E tests
+        run: ${{ matrix.test-cmd }}
+        shell: bash
+        env:
+          RUST_BACKTRACE: full

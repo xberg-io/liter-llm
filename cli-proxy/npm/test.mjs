@@ -44,17 +44,11 @@ test("selectArchiveName picks the cli archive over an ffi archive", () => {
 });
 
 test("selectArchiveName prefers a bin-name/cli archive among survivors", () => {
-  const names = [
-    "xberg-1.0.0-aarch64-apple-darwin.tar.gz",
-    "xberg-cli-aarch64-apple-darwin.tar.gz",
-  ];
+  const names = ["xberg-1.0.0-aarch64-apple-darwin.tar.gz", "xberg-cli-aarch64-apple-darwin.tar.gz"];
   assert.equal(selectArchiveName(names, TRIPLE), "xberg-cli-aarch64-apple-darwin.tar.gz");
 });
 
 test("selectArchiveName returns null when only non-CLI artifacts exist", () => {
-  const names = [
-    "crawlberg-ffi-v0.3.0-aarch64-apple-darwin.tar.gz",
-    "libfoo-nif-2.17-aarch64-apple-darwin.so.tar.gz",
-  ];
+  const names = ["crawlberg-ffi-v0.3.0-aarch64-apple-darwin.tar.gz", "libfoo-nif-2.17-aarch64-apple-darwin.so.tar.gz"];
   assert.equal(selectArchiveName(names, TRIPLE), null);
 });

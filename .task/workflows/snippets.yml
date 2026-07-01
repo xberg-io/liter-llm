@@ -1,55 +1,55 @@
 version: "3"
 
 vars:
-    RUNNER: "alef snippets"
-    SNIPPETS_DIR: "docs/snippets"
-    ALEF_VERSION: "0.16.72"
+  RUNNER: "alef snippets"
+  SNIPPETS_DIR: "docs/snippets"
+  ALEF_VERSION: "0.16.72"
 
 tasks:
-    install:
-        desc: Install alef (snippets is now an alef subcommand)
-        status:
-            - command -v alef
-        cmds:
-            - cargo install --git https://github.com/xberg-io/alef --tag v{{.ALEF_VERSION}} alef-cli --locked --force
+  install:
+    desc: Install alef (snippets is now an alef subcommand)
+    status:
+      - command -v alef
+    cmds:
+      - cargo install --git https://github.com/xberg-io/alef --tag v{{.ALEF_VERSION}} alef-cli --locked --force
 
-    list:
-        desc: List all documentation snippets
-        cmds:
-            - "{{.RUNNER}} list --snippets {{.SNIPPETS_DIR}}"
+  list:
+    desc: List all documentation snippets
+    cmds:
+      - "{{.RUNNER}} list --snippets {{.SNIPPETS_DIR}}"
 
-    list:lang:
-        desc: List snippets for specific languages (set LANGUAGES=rust,python)
-        requires:
-            vars: [LANGUAGES]
-        cmds:
-            - "{{.RUNNER}} list --snippets {{.SNIPPETS_DIR}} --languages {{.LANGUAGES}}"
+  list:lang:
+    desc: List snippets for specific languages (set LANGUAGES=rust,python)
+    requires:
+      vars: [LANGUAGES]
+    cmds:
+      - "{{.RUNNER}} list --snippets {{.SNIPPETS_DIR}} --languages {{.LANGUAGES}}"
 
-    audit:
-        desc: Audit snippet inventory + report coverage gaps across bindings
-        cmds:
-            - "{{.RUNNER}} audit --snippets {{.SNIPPETS_DIR}}"
+  audit:
+    desc: Audit snippet inventory + report coverage gaps across bindings
+    cmds:
+      - "{{.RUNNER}} audit --snippets {{.SNIPPETS_DIR}}"
 
-    validate:syntax:
-        desc: Syntax-check all snippets
-        cmds:
-            - "{{.RUNNER}} validate --snippets {{.SNIPPETS_DIR}} --level syntax"
+  validate:syntax:
+    desc: Syntax-check all snippets
+    cmds:
+      - "{{.RUNNER}} validate --snippets {{.SNIPPETS_DIR}} --level syntax"
 
-    validate:compile:
-        desc: Compile-check all snippets
-        cmds:
-            - "{{.RUNNER}} validate --snippets {{.SNIPPETS_DIR}} --level compile"
+  validate:compile:
+    desc: Compile-check all snippets
+    cmds:
+      - "{{.RUNNER}} validate --snippets {{.SNIPPETS_DIR}} --level compile"
 
-    validate:run:
-        desc: Run all snippets
-        cmds:
-            - "{{.RUNNER}} validate --snippets {{.SNIPPETS_DIR}} --level run"
+  validate:run:
+    desc: Run all snippets
+    cmds:
+      - "{{.RUNNER}} validate --snippets {{.SNIPPETS_DIR}} --level run"
 
-    validate:lang:
-        desc: Validate snippets for specific languages (set LANGUAGES=rust,python LEVEL=syntax)
-        requires:
-            vars: [LANGUAGES]
-        vars:
-            LEVEL: '{{ .LEVEL | default "syntax" }}'
-        cmds:
-            - "{{.RUNNER}} validate --snippets {{.SNIPPETS_DIR}} --languages {{.LANGUAGES}} --level {{.LEVEL}}"
+  validate:lang:
+    desc: Validate snippets for specific languages (set LANGUAGES=rust,python LEVEL=syntax)
+    requires:
+      vars: [LANGUAGES]
+    vars:
+      LEVEL: '{{ .LEVEL | default "syntax" }}'
+    cmds:
+      - "{{.RUNNER}} validate --snippets {{.SNIPPETS_DIR}} --languages {{.LANGUAGES}} --level {{.LEVEL}}"

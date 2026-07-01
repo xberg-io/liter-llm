@@ -223,6 +223,7 @@ todo.md
 .pnpm-store/
 .env*
 .alef/
+.polylint/
 *.pyd
 .gems/
 vendor/bundle/
@@ -249,10 +250,6 @@ test_apps/swift_e2e/*.artifactbundle.zip
 # basemind local index cache
 .basemind/
 
-# BEGIN ai-rulez (DO NOT EDIT - managed by ai-rulez)
-.agents/
-.ai-rulez/.generated-manifest.json
-# END ai-rulez
 
 # Alef-generated skills are source-controlled; other agent-local state stays ignored.
 !.codex/
@@ -285,3 +282,7 @@ test_apps/swift_e2e/*.artifactbundle.zip
 !.claude/skills/cli/SKILL.md
 !.claude/skills/mcp/
 !.claude/skills/mcp/SKILL.md
+
+# BEGIN ai-rulez (DO NOT EDIT - managed by ai-rulez)
+.ai-rulez/.generated-manifest.json
+# END ai-rulez

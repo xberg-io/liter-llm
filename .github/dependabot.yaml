@@ -1,63 +1,63 @@
 version: 2
 
 multi-ecosystem-groups:
-    dependencies:
-        schedule:
-            interval: "weekly"
+  dependencies:
+    schedule:
+      interval: "weekly"
 
 updates:
-    - package-ecosystem: "cargo"
-      directories:
-          - "/"
-      patterns: ["*"]
-      multi-ecosystem-group: "dependencies"
+  - package-ecosystem: "cargo"
+    directories:
+      - "/"
+    patterns: ["*"]
+    multi-ecosystem-group: "dependencies"
 
-    - package-ecosystem: "pip"
-      directories:
-          - "/"
-          - "/packages/python"
-      patterns: ["*"]
-      multi-ecosystem-group: "dependencies"
+  - package-ecosystem: "pip"
+    directories:
+      - "/"
+      - "/packages/python"
+    patterns: ["*"]
+    multi-ecosystem-group: "dependencies"
 
-    - package-ecosystem: "npm"
-      directories:
-          - "/"
-      patterns: ["*"]
-      multi-ecosystem-group: "dependencies"
+  - package-ecosystem: "npm"
+    directories:
+      - "/"
+    patterns: ["*"]
+    multi-ecosystem-group: "dependencies"
 
-    - package-ecosystem: "gomod"
-      directories:
-          - "/packages/go"
-      patterns: ["*"]
-      multi-ecosystem-group: "dependencies"
+  - package-ecosystem: "gomod"
+    directories:
+      - "/packages/go"
+    patterns: ["*"]
+    multi-ecosystem-group: "dependencies"
 
-    - package-ecosystem: "bundler"
-      directories:
-          - "/packages/ruby"
-      patterns: ["*"]
-      multi-ecosystem-group: "dependencies"
+  - package-ecosystem: "bundler"
+    directories:
+      - "/packages/ruby"
+    patterns: ["*"]
+    multi-ecosystem-group: "dependencies"
 
-    - package-ecosystem: "composer"
-      directories:
-          - "/"
-          - "/packages/php"
-      patterns: ["*"]
-      multi-ecosystem-group: "dependencies"
+  - package-ecosystem: "composer"
+    directories:
+      - "/"
+      - "/packages/php"
+    patterns: ["*"]
+    multi-ecosystem-group: "dependencies"
 
-    - package-ecosystem: "maven"
-      directories:
-          - "/packages/java"
-      patterns: ["*"]
-      multi-ecosystem-group: "dependencies"
+  - package-ecosystem: "maven"
+    directories:
+      - "/packages/java"
+    patterns: ["*"]
+    multi-ecosystem-group: "dependencies"
 
-    - package-ecosystem: "nuget"
-      directories:
-          - "/packages/csharp"
-      patterns: ["*"]
-      multi-ecosystem-group: "dependencies"
+  - package-ecosystem: "nuget"
+    directories:
+      - "/packages/csharp"
+    patterns: ["*"]
+    multi-ecosystem-group: "dependencies"
 
-    - package-ecosystem: "mix"
-      directories:
-          - "/packages/elixir"
-      patterns: ["*"]
-      multi-ecosystem-group: "dependencies"
+  - package-ecosystem: "mix"
+    directories:
+      - "/packages/elixir"
+    patterns: ["*"]
+    multi-ecosystem-group: "dependencies"

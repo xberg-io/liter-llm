@@ -1,182 +1,182 @@
 version: "3"
 
 vars:
-    GO_VERSION: "1.26"
+  GO_VERSION: "1.26"
 
 tasks:
-    install:
-        desc: Install Go tools and modules
-        dir: packages/go
-        cmds:
-            - cmd: go mod tidy
-              platforms: [linux, darwin]
-            - cmd: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
-              platforms: [linux, darwin]
-            - cmd: pwsh -Command "cd packages/go; go mod tidy"
-              platforms: [windows]
+  install:
+    desc: Install Go tools and modules
+    dir: packages/go
+    cmds:
+      - cmd: go mod tidy
+        platforms: [linux, darwin]
+      - cmd: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+        platforms: [linux, darwin]
+      - cmd: pwsh -Command "cd packages/go; go mod tidy"
+        platforms: [windows]
 
-    setup:
-        desc: Setup Go tools and modules (alias for install)
-        cmds:
-            - task: go:install
+  setup:
+    desc: Setup Go tools and modules (alias for install)
+    cmds:
+      - task: go:install
 
-    build:ffi:
-        desc: Build FFI static library for Go
-        env:
-            PROJECT_ROOT: "{{.PROJECT_ROOT}}"
-        cmds:
-            - cargo build -p liter-llm-ffi --release
+  build:ffi:
+    desc: Build FFI static library for Go
+    env:
+      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+    cmds:
+      - cargo build -p liter-llm-ffi --release
 
-    build:
-        desc: Build Go bindings (requires Rust FFI to be built first)
-        dir: packages/go
-        env:
-            CGO_ENABLED: "1"
-        cmds:
-            - go build ./...
+  build:
+    desc: Build Go bindings (requires Rust FFI to be built first)
+    dir: packages/go
+    env:
+      CGO_ENABLED: "1"
+    cmds:
+      - go build ./...
 
-    build:dev:
-        desc: Build Go bindings in debug mode (requires Rust FFI to be built first)
-        dir: packages/go
-        env:
-            CGO_ENABLED: "1"
-        cmds:
-            - go build ./...
+  build:dev:
+    desc: Build Go bindings in debug mode (requires Rust FFI to be built first)
+    dir: packages/go
+    env:
+      CGO_ENABLED: "1"
+    cmds:
+      - go build ./...
 
-    build:release:
-        desc: Build Go bindings in release mode (optimized, requires Rust FFI to be built first)
-        dir: packages/go
-        env:
-            CGO_ENABLED: "1"
-        cmds:
-            - go build -ldflags="-s -w" ./...
+  build:release:
+    desc: Build Go bindings in release mode (optimized, requires Rust FFI to be built first)
+    dir: packages/go
+    env:
+      CGO_ENABLED: "1"
+    cmds:
+      - go build -ldflags="-s -w" ./...
 
-    build:ci:
-        desc: Build Go bindings in CI mode (requires Rust FFI to be built first)
-        dir: packages/go
-        env:
-            CGO_ENABLED: "1"
-        cmds:
-            - go build ./...
+  build:ci:
+    desc: Build Go bindings in CI mode (requires Rust FFI to be built first)
+    dir: packages/go
+    env:
+      CGO_ENABLED: "1"
+    cmds:
+      - go build ./...
 
-    test:
-        desc: Run Go unit tests
-        deps: [build:ffi]
-        dir: packages/go
-        env:
-            PROJECT_ROOT: "{{.PROJECT_ROOT}}"
-            CGO_ENABLED: "1"
-        cmds:
-            - go test -v ./...
+  test:
+    desc: Run Go unit tests
+    deps: [build:ffi]
+    dir: packages/go
+    env:
+      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+      CGO_ENABLED: "1"
+    cmds:
+      - go test -v ./...
 
-    test:ci:
-        desc: Run Go tests in CI mode
-        dir: packages/go
-        env:
-            RUST_BACKTRACE: "full"
-            RUST_LIB_BACKTRACE: "1"
-            CI: "true"
-            CGO_ENABLED: "1"
-        cmds:
-            - go test -timeout 10m -v ./...
+  test:ci:
+    desc: Run Go tests in CI mode
+    dir: packages/go
+    env:
+      RUST_BACKTRACE: "full"
+      RUST_LIB_BACKTRACE: "1"
+      CI: "true"
+      CGO_ENABLED: "1"
+    cmds:
+      - go test -timeout 10m -v ./...
 
-    test:verbose:
-        desc: Run Go tests with verbose output
-        dir: packages/go
-        cmds:
-            - go test -v ./...
+  test:verbose:
+    desc: Run Go tests with verbose output
+    dir: packages/go
+    cmds:
+      - go test -v ./...
 
-    lint:
-        desc: Lint and format Go code with auto-fix (golangci-lint + gofmt)
-        dir: packages/go
-        env:
-            CGO_ENABLED: "1"
-        cmds:
-            - cmd: gofmt -w . && golangci-lint run ./...
-              platforms: [linux, darwin]
-            - cmd: pwsh -Command "cd packages/go; gofmt -w .; golangci-lint run ./..."
-              platforms: [windows]
+  lint:
+    desc: Lint and format Go code with auto-fix (golangci-lint + gofmt)
+    dir: packages/go
+    env:
+      CGO_ENABLED: "1"
+    cmds:
+      - cmd: gofmt -w . && golangci-lint run ./...
+        platforms: [linux, darwin]
+      - cmd: pwsh -Command "cd packages/go; gofmt -w .; golangci-lint run ./..."
+        platforms: [windows]
 
-    lint:check:
-        desc: Lint and format Go code in check-only mode (golangci-lint + gofmt, no fixes)
-        dir: packages/go
-        env:
-            CGO_ENABLED: "1"
-        cmds:
-            - cmd: golangci-lint run ./...
-              platforms: [linux, darwin]
-            - cmd: pwsh -Command "cd packages/go; golangci-lint run ./..."
-              platforms: [windows]
+  lint:check:
+    desc: Lint and format Go code in check-only mode (golangci-lint + gofmt, no fixes)
+    dir: packages/go
+    env:
+      CGO_ENABLED: "1"
+    cmds:
+      - cmd: golangci-lint run ./...
+        platforms: [linux, darwin]
+      - cmd: pwsh -Command "cd packages/go; golangci-lint run ./..."
+        platforms: [windows]
 
-    format:
-        desc: Format Go code with modifications (gofmt)
-        dir: packages/go
-        cmds:
-            - gofmt -w .
+  format:
+    desc: Format Go code with modifications (gofmt)
+    dir: packages/go
+    cmds:
+      - gofmt -w .
 
-    format:check:
-        desc: Check Go code formatting without modifications (gofmt)
-        dir: packages/go
-        cmds:
-            - cmd: test -z "$(gofmt -l .)"
-              platforms: [linux, darwin]
-            - cmd: pwsh -Command "cd packages/go; $diff = gofmt -l .; if ($diff) { Write-Error 'Go formatting issues found'; exit 1 }"
-              platforms: [windows]
+  format:check:
+    desc: Check Go code formatting without modifications (gofmt)
+    dir: packages/go
+    cmds:
+      - cmd: test -z "$(gofmt -l .)"
+        platforms: [linux, darwin]
+      - cmd: pwsh -Command "cd packages/go; $diff = gofmt -l .; if ($diff) { Write-Error 'Go formatting issues found'; exit 1 }"
+        platforms: [windows]
 
-    vendor:
-        desc: Vendor FFI artifacts into Go package for distribution
-        deps: [build:ffi]
-        cmds:
-            - python3 scripts/ci/go/vendor-ffi.py
-        env:
-            PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+  vendor:
+    desc: Vendor FFI artifacts into Go package for distribution
+    deps: [build:ffi]
+    cmds:
+      - python3 scripts/ci/go/vendor-ffi.py
+    env:
+      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
 
-    vendor:clean:
-        desc: Remove vendored FFI artifacts from Go package
-        cmds:
-            - python3 scripts/ci/go/vendor-ffi.py --clean
-        env:
-            PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+  vendor:clean:
+    desc: Remove vendored FFI artifacts from Go package
+    cmds:
+      - python3 scripts/ci/go/vendor-ffi.py --clean
+    env:
+      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
 
-    clean:
-        desc: Clean Go build cache
-        dir: packages/go
-        cmds:
-            - go clean -cache
+  clean:
+    desc: Clean Go build cache
+    dir: packages/go
+    cmds:
+      - go clean -cache
 
-    update:
-        desc: Update Go dependencies and linters
-        dir: packages/go
-        cmds:
-            - echo "Updating Go dependencies and linters..."
-            - cmd: go get -u ./... && go mod tidy
-              platforms: [linux, darwin]
-            - cmd: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
-              platforms: [linux, darwin]
-            - cmd: pwsh -Command "cd packages/go; go get -u ./...; go mod tidy"
-              platforms: [windows]
+  update:
+    desc: Update Go dependencies and linters
+    dir: packages/go
+    cmds:
+      - echo "Updating Go dependencies and linters..."
+      - cmd: go get -u ./... && go mod tidy
+        platforms: [linux, darwin]
+      - cmd: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+        platforms: [linux, darwin]
+      - cmd: pwsh -Command "cd packages/go; go get -u ./...; go mod tidy"
+        platforms: [windows]
 
-    e2e:generate:
-        desc: Generate Go E2E tests from fixtures
-        env:
-            PROJECT_ROOT: "{{.PROJECT_ROOT}}"
-        cmds:
-            - alef e2e generate --lang go
-            - gofmt -w e2e/go/
+  e2e:generate:
+    desc: Generate Go E2E tests from fixtures
+    env:
+      PROJECT_ROOT: "{{.PROJECT_ROOT}}"
+    cmds:
+      - alef e2e generate --lang go
+      - gofmt -w e2e/go/
 
-    e2e:lint:
-        desc: Lint Go bindings using Alef-configured lint commands
-        cmds:
-            - alef lint --lang go
+  e2e:lint:
+    desc: Lint Go bindings using Alef-configured lint commands
+    cmds:
+      - alef lint --lang go
 
-    e2e:test:
-        desc: Run Go E2E tests using Alef-configured test commands
-        cmds:
-            - alef test --lang go --e2e
+  e2e:test:
+    desc: Run Go E2E tests using Alef-configured test commands
+    cmds:
+      - alef test --lang go --e2e
 
-    e2e:verify:
-        desc: Regenerate and validate Go E2E suite (generate + lint + test)
-        cmds:
-            - task: e2e:generate
-            - task: e2e:lint
-            - task: e2e:test
+  e2e:verify:
+    desc: Regenerate and validate Go E2E suite (generate + lint + test)
+    cmds:
+      - task: e2e:generate
+      - task: e2e:lint
+      - task: e2e:test

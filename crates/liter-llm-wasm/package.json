@@ -9,18 +9,16 @@
     "url": "https://github.com/xberg-io/liter-llm",
     "directory": "crates/liter-llm-wasm"
   },
-  "files": [
-    "pkg",
-    "*.wasm",
-    "*.d.ts",
-    "README.md"
-  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
+  "files": ["pkg", "*.wasm", "*.d.ts", "README.md"],
   "main": "pkg/nodejs/liter_llm_wasm.js",
   "module": "pkg/web/liter_llm_wasm.js",
   "types": "pkg/nodejs/liter_llm_wasm.d.ts",
-  "publishConfig": {
-    "access": "public"
+  "engines": {
+    "node": ">= 22"
   },
   "scripts": {
     "build": "wasm-pack build --target nodejs --out-dir pkg/nodejs",

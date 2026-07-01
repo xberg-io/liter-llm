@@ -1,7 +1,7 @@
 version: "3"
 
 tasks:
-    ai-rulez:
-        desc: Generate ai-rulez configuration files (CLAUDE.md, etc.)
-        cmds:
-            - npx -y ai-rulez@latest generate
+  ai-rulez:
+    desc: Generate ai-rulez configuration files (CLAUDE.md, etc.)
+    cmds:
+      - npx -y ai-rulez@latest generate

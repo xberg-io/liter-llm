@@ -12,7 +12,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
-    if (dart.library.js_interop) 'frb_generated.web.dart';
+if (dart.library.js_interop) 'frb_generated.web.dart';
 import 'lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
@@ -22,7 +22,6 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   static final instance = RustLib._();
 
   RustLib._();
-
   /// Resolve the prebuilt native library from environment variable,
   /// package-relative location, or defer to flutter_rust_bridge's default loader.
   /// Returns `null` to defer to flutter_rust_bridge's default loader.
@@ -65,8 +64,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
       // Check FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR env var first.
       // This allows test harnesses to override library location for development.
-      final envDir =
-          Platform.environment['FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR'];
+      final envDir = Platform.environment['FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR'];
       if (envDir != null && envDir.isNotEmpty) {
         final absEnvDir = Directory(envDir).absolute.path;
         final libDir = Directory(absEnvDir);
@@ -107,9 +105,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
       final rid = computeRid();
       if (rid != null) {
-        final packageRoot = await Isolate.resolvePackageUri(
-          _DartCore.Uri.parse('package:liter_llm/liter_llm.dart'),
-        );
+        final packageRoot =
+        await Isolate.resolvePackageUri(_DartCore.Uri.parse('package:liter_llm/liter_llm.dart'));
         if (packageRoot != null) {
           final ridDir = packageRoot.resolve('src/native/$rid/');
           for (final candidate in candidates) {
@@ -123,9 +120,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
       }
 
       // Check legacy package-installed location as fallback.
-      final packageRoot = await Isolate.resolvePackageUri(
-        _DartCore.Uri.parse('package:liter_llm/liter_llm.dart'),
-      );
+      final packageRoot =
+      await Isolate.resolvePackageUri(_DartCore.Uri.parse('package:liter_llm/liter_llm.dart'));
       if (packageRoot != null) {
         final libDir = packageRoot.resolve('src/liter_llm_bridge_generated/');
         for (final candidate in candidates) {
@@ -151,8 +147,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
       try {
         final scriptPath = Platform.script.toFilePath();
         var dir = File(scriptPath).absolute.parent;
-        while (dir.parent.path != dir.path &&
-            !File('${dir.path}/pubspec.yaml').existsSync()) {
+        while (dir.parent.path != dir.path
+          && !File('${dir.path}/pubspec.yaml').existsSync()) {
           dir = dir.parent;
         }
         if (File('${dir.path}/pubspec.yaml').existsSync()) {
@@ -213,18 +209,18 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
   @override
   ApiImplConstructor<RustLibApiImpl, RustLibWire> get apiImplConstructor =>
-      RustLibApiImpl.new;
+  RustLibApiImpl.new;
 
   @override
   WireConstructor<RustLibWire> get wireConstructor =>
-      RustLibWire.fromExternalLibrary;
+  RustLibWire.fromExternalLibrary;
 
   @override
   Future<void> executeRustInitializers() async {}
 
   @override
   ExternalLibraryLoaderConfig get defaultExternalLibraryLoaderConfig =>
-      kDefaultExternalLibraryLoaderConfig;
+  kDefaultExternalLibraryLoaderConfig;
 
   @override
   String get codegenVersion => '2.12.0';
@@ -233,12 +229,12 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   int get rustContentHash => 1912415588;
 
   static const kDefaultExternalLibraryLoaderConfig =
-      ExternalLibraryLoaderConfig(
-        stem: 'liter_llm_dart',
-        ioDirectory: 'rust/target/release/',
-        webPrefix: 'pkg/',
-        wasmBindgenName: 'wasm_bindgen',
-      );
+  ExternalLibraryLoaderConfig(
+    stem: 'liter_llm_dart',
+    ioDirectory: 'rust/target/release/',
+    webPrefix: 'pkg/',
+    wasmBindgenName: 'wasm_bindgen',
+  );
 }
 
 abstract class RustLibApi extends BaseApi {
@@ -759,10 +755,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDefaultClientCancelBatchConstMeta =>
-      const TaskConstMeta(
-        debugName: "DefaultClient_cancel_batch",
-        argNames: ["that", "batchId"],
-      );
+  const TaskConstMeta(
+    debugName: "DefaultClient_cancel_batch",
+    argNames: ["that", "batchId"],
+  );
 
   @override
   Future<ResponseObject> crateDefaultClientCancelResponse({
@@ -797,10 +793,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDefaultClientCancelResponseConstMeta =>
-      const TaskConstMeta(
-        debugName: "DefaultClient_cancel_response",
-        argNames: ["that", "responseId"],
-      );
+  const TaskConstMeta(
+    debugName: "DefaultClient_cancel_response",
+    argNames: ["that", "responseId"],
+  );
 
   @override
   Future<ChatCompletionResponse> crateDefaultClientChat({
@@ -877,10 +873,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDefaultClientChatStreamConstMeta =>
-      const TaskConstMeta(
-        debugName: "DefaultClient_chat_stream",
-        argNames: ["that", "req", "sink"],
-      );
+  const TaskConstMeta(
+    debugName: "DefaultClient_chat_stream",
+    argNames: ["that", "req", "sink"],
+  );
 
   @override
   Future<BatchObject> crateDefaultClientCreateBatch({
@@ -915,10 +911,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDefaultClientCreateBatchConstMeta =>
-      const TaskConstMeta(
-        debugName: "DefaultClient_create_batch",
-        argNames: ["that", "req"],
-      );
+  const TaskConstMeta(
+    debugName: "DefaultClient_create_batch",
+    argNames: ["that", "req"],
+  );
 
   @override
   Future<FileObject> crateDefaultClientCreateFile({
@@ -953,10 +949,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDefaultClientCreateFileConstMeta =>
-      const TaskConstMeta(
-        debugName: "DefaultClient_create_file",
-        argNames: ["that", "req"],
-      );
+  const TaskConstMeta(
+    debugName: "DefaultClient_create_file",
+    argNames: ["that", "req"],
+  );
 
   @override
   Future<ResponseObject> crateDefaultClientCreateResponse({
@@ -991,10 +987,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDefaultClientCreateResponseConstMeta =>
-      const TaskConstMeta(
-        debugName: "DefaultClient_create_response",
-        argNames: ["that", "req"],
-      );
+  const TaskConstMeta(
+    debugName: "DefaultClient_create_response",
+    argNames: ["that", "req"],
+  );
 
   @override
   Future<DeleteResponse> crateDefaultClientDeleteFile({
@@ -1029,10 +1025,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDefaultClientDeleteFileConstMeta =>
-      const TaskConstMeta(
-        debugName: "DefaultClient_delete_file",
-        argNames: ["that", "fileId"],
-      );
+  const TaskConstMeta(
+    debugName: "DefaultClient_delete_file",
+    argNames: ["that", "fileId"],
+  );
 
   @override
   Future<EmbeddingResponse> crateDefaultClientEmbed({
@@ -1104,10 +1100,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDefaultClientFetchBatchForPollingConstMeta =>
-      const TaskConstMeta(
-        debugName: "DefaultClient_fetch_batch_for_polling",
-        argNames: ["that", "batchId"],
-      );
+  const TaskConstMeta(
+    debugName: "DefaultClient_fetch_batch_for_polling",
+    argNames: ["that", "batchId"],
+  );
 
   @override
   Future<Uint8List> crateDefaultClientFileContent({
@@ -1142,10 +1138,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDefaultClientFileContentConstMeta =>
-      const TaskConstMeta(
-        debugName: "DefaultClient_file_content",
-        argNames: ["that", "fileId"],
-      );
+  const TaskConstMeta(
+    debugName: "DefaultClient_file_content",
+    argNames: ["that", "fileId"],
+  );
 
   @override
   Future<ImagesResponse> crateDefaultClientImageGenerate({
@@ -1180,10 +1176,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDefaultClientImageGenerateConstMeta =>
-      const TaskConstMeta(
-        debugName: "DefaultClient_image_generate",
-        argNames: ["that", "req"],
-      );
+  const TaskConstMeta(
+    debugName: "DefaultClient_image_generate",
+    argNames: ["that", "req"],
+  );
 
   @override
   Future<BatchListResponse> crateDefaultClientListBatches({
@@ -1218,10 +1214,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDefaultClientListBatchesConstMeta =>
-      const TaskConstMeta(
-        debugName: "DefaultClient_list_batches",
-        argNames: ["that", "query"],
-      );
+  const TaskConstMeta(
+    debugName: "DefaultClient_list_batches",
+    argNames: ["that", "query"],
+  );
 
   @override
   Future<FileListResponse> crateDefaultClientListFiles({
@@ -1256,10 +1252,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDefaultClientListFilesConstMeta =>
-      const TaskConstMeta(
-        debugName: "DefaultClient_list_files",
-        argNames: ["that", "query"],
-      );
+  const TaskConstMeta(
+    debugName: "DefaultClient_list_files",
+    argNames: ["that", "query"],
+  );
 
   @override
   Future<ModelsListResponse> crateDefaultClientListModels({
@@ -1292,10 +1288,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDefaultClientListModelsConstMeta =>
-      const TaskConstMeta(
-        debugName: "DefaultClient_list_models",
-        argNames: ["that"],
-      );
+  const TaskConstMeta(
+    debugName: "DefaultClient_list_models",
+    argNames: ["that"],
+  );
 
   @override
   Future<ModerationResponse> crateDefaultClientModerate({
@@ -1441,10 +1437,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDefaultClientRetrieveBatchConstMeta =>
-      const TaskConstMeta(
-        debugName: "DefaultClient_retrieve_batch",
-        argNames: ["that", "batchId"],
-      );
+  const TaskConstMeta(
+    debugName: "DefaultClient_retrieve_batch",
+    argNames: ["that", "batchId"],
+  );
 
   @override
   Future<FileObject> crateDefaultClientRetrieveFile({
@@ -1479,10 +1475,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDefaultClientRetrieveFileConstMeta =>
-      const TaskConstMeta(
-        debugName: "DefaultClient_retrieve_file",
-        argNames: ["that", "fileId"],
-      );
+  const TaskConstMeta(
+    debugName: "DefaultClient_retrieve_file",
+    argNames: ["that", "fileId"],
+  );
 
   @override
   Future<ResponseObject> crateDefaultClientRetrieveResponse({
@@ -1517,10 +1513,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDefaultClientRetrieveResponseConstMeta =>
-      const TaskConstMeta(
-        debugName: "DefaultClient_retrieve_response",
-        argNames: ["that", "responseId"],
-      );
+  const TaskConstMeta(
+    debugName: "DefaultClient_retrieve_response",
+    argNames: ["that", "responseId"],
+  );
 
   @override
   Future<SearchResponse> crateDefaultClientSearch({
@@ -1629,10 +1625,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDefaultClientTranscribeConstMeta =>
-      const TaskConstMeta(
-        debugName: "DefaultClient_transcribe",
-        argNames: ["that", "req"],
-      );
+  const TaskConstMeta(
+    debugName: "DefaultClient_transcribe",
+    argNames: ["that", "req"],
+  );
 
   @override
   Future<BatchObject> crateDefaultClientWaitForBatch({
@@ -1669,10 +1665,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDefaultClientWaitForBatchConstMeta =>
-      const TaskConstMeta(
-        debugName: "DefaultClient_wait_for_batch",
-        argNames: ["that", "batchId", "config"],
-      );
+  const TaskConstMeta(
+    debugName: "DefaultClient_wait_for_batch",
+    argNames: ["that", "batchId", "config"],
+  );
 
   @override
   Future<List<ProviderConfig>> crateAllProviders() {
@@ -1699,7 +1695,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateAllProvidersConstMeta =>
-      const TaskConstMeta(debugName: "all_providers", argNames: []);
+  const TaskConstMeta(debugName: "all_providers", argNames: []);
 
   @override
   Future<ProviderCapabilities> crateCapabilities({
@@ -1796,7 +1792,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateClearConstMeta =>
-      const TaskConstMeta(debugName: "clear", argNames: []);
+  const TaskConstMeta(debugName: "clear", argNames: []);
 
   @override
   Future<double?> crateCompletionCost({
@@ -1868,10 +1864,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCompletionCostWithCacheConstMeta =>
-      const TaskConstMeta(
-        debugName: "completion_cost_with_cache",
-        argNames: ["model", "promptTokens", "cachedTokens", "completionTokens"],
-      );
+  const TaskConstMeta(
+    debugName: "completion_cost_with_cache",
+    argNames: ["model", "promptTokens", "cachedTokens", "completionTokens"],
+  );
 
   @override
   Future<List<String>> crateComplexProviderNames() {
@@ -1898,7 +1894,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateComplexProviderNamesConstMeta =>
-      const TaskConstMeta(debugName: "complex_provider_names", argNames: []);
+  const TaskConstMeta(debugName: "complex_provider_names", argNames: []);
 
   @override
   Future<PlatformInt64> crateCountRequestTokens({
@@ -1996,10 +1992,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateAssistantMessageFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_assistant_message_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_assistant_message_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<AudioContent> crateCreateAudioContentFromJson({required String json}) {
@@ -2027,10 +2023,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateAudioContentFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_audio_content_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_audio_content_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<AuthConfig> crateCreateAuthConfigFromJson({required String json}) {
@@ -2058,10 +2054,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateAuthConfigFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_auth_config_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_auth_config_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<BatchListQuery> crateCreateBatchListQueryFromJson({
@@ -2091,10 +2087,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateBatchListQueryFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_batch_list_query_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_batch_list_query_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<BatchListResponse> crateCreateBatchListResponseFromJson({
@@ -2124,10 +2120,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateBatchListResponseFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_batch_list_response_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_batch_list_response_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<BatchObject> crateCreateBatchObjectFromJson({required String json}) {
@@ -2155,10 +2151,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateBatchObjectFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_batch_object_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_batch_object_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<BatchRequestCounts> crateCreateBatchRequestCountsFromJson({
@@ -2188,10 +2184,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateBatchRequestCountsFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_batch_request_counts_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_batch_request_counts_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<BudgetConfig> crateCreateBudgetConfigFromJson({required String json}) {
@@ -2219,10 +2215,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateBudgetConfigFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_budget_config_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_budget_config_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<CacheConfig> crateCreateCacheConfigFromJson({required String json}) {
@@ -2250,10 +2246,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateCacheConfigFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_cache_config_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_cache_config_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ChatCompletionChunk> crateCreateChatCompletionChunkFromJson({
@@ -2283,10 +2279,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateChatCompletionChunkFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_chat_completion_chunk_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_chat_completion_chunk_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ChatCompletionRequest> crateCreateChatCompletionRequestFromJson({
@@ -2316,10 +2312,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateChatCompletionRequestFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_chat_completion_request_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_chat_completion_request_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ChatCompletionResponse> crateCreateChatCompletionResponseFromJson({
@@ -2349,10 +2345,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateChatCompletionResponseFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_chat_completion_response_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_chat_completion_response_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ChatCompletionTool> crateCreateChatCompletionToolFromJson({
@@ -2382,10 +2378,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateChatCompletionToolFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_chat_completion_tool_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_chat_completion_tool_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<Choice> crateCreateChoiceFromJson({required String json}) {
@@ -2443,7 +2439,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient,
+          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient,
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateCreateClientConstMeta,
@@ -2474,7 +2470,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient,
+          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient,
           decodeErrorData: sse_decode_String,
         ),
         constMeta: kCrateCreateClientFromJsonConstMeta,
@@ -2517,10 +2513,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateCreateBatchRequestFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_create_batch_request_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_create_batch_request_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<CreateFileRequest> crateCreateCreateFileRequestFromJson({
@@ -2550,10 +2546,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateCreateFileRequestFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_create_file_request_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_create_file_request_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<CreateImageRequest> crateCreateCreateImageRequestFromJson({
@@ -2583,10 +2579,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateCreateImageRequestFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_create_image_request_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_create_image_request_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<CreateResponseRequest> crateCreateCreateResponseRequestFromJson({
@@ -2616,10 +2612,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateCreateResponseRequestFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_create_response_request_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_create_response_request_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<CreateSpeechRequest> crateCreateCreateSpeechRequestFromJson({
@@ -2649,10 +2645,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateCreateSpeechRequestFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_create_speech_request_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_create_speech_request_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<CreateTranscriptionRequest>
@@ -2681,10 +2677,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateCreateTranscriptionRequestFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_create_transcription_request_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_create_transcription_request_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<CustomProviderConfig> crateCreateCustomProviderConfigFromJson({
@@ -2714,10 +2710,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateCustomProviderConfigFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_custom_provider_config_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_custom_provider_config_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<DecodedDataUrl> crateCreateDecodedDataUrlFromJson({
@@ -2747,10 +2743,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateDecodedDataUrlFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_decoded_data_url_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_decoded_data_url_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<DeleteResponse> crateCreateDeleteResponseFromJson({
@@ -2780,10 +2776,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateDeleteResponseFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_delete_response_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_delete_response_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<DeveloperMessage> crateCreateDeveloperMessageFromJson({
@@ -2813,10 +2809,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateDeveloperMessageFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_developer_message_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_developer_message_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<DocumentContent> crateCreateDocumentContentFromJson({
@@ -2846,10 +2842,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateDocumentContentFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_document_content_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_document_content_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<EmbeddingObject> crateCreateEmbeddingObjectFromJson({
@@ -2879,10 +2875,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateEmbeddingObjectFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_embedding_object_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_embedding_object_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<EmbeddingRequest> crateCreateEmbeddingRequestFromJson({
@@ -2912,10 +2908,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateEmbeddingRequestFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_embedding_request_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_embedding_request_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<EmbeddingResponse> crateCreateEmbeddingResponseFromJson({
@@ -2945,10 +2941,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateEmbeddingResponseFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_embedding_response_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_embedding_response_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<FileListQuery> crateCreateFileListQueryFromJson({
@@ -2978,10 +2974,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateFileListQueryFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_file_list_query_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_file_list_query_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<FileListResponse> crateCreateFileListResponseFromJson({
@@ -3011,10 +3007,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateFileListResponseFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_file_list_response_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_file_list_response_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<FileObject> crateCreateFileObjectFromJson({required String json}) {
@@ -3042,10 +3038,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateFileObjectFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_file_object_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_file_object_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<FunctionCall> crateCreateFunctionCallFromJson({required String json}) {
@@ -3073,10 +3069,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateFunctionCallFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_function_call_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_function_call_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<FunctionDefinition> crateCreateFunctionDefinitionFromJson({
@@ -3106,10 +3102,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateFunctionDefinitionFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_function_definition_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_function_definition_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<FunctionMessage> crateCreateFunctionMessageFromJson({
@@ -3139,10 +3135,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateFunctionMessageFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_function_message_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_function_message_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<Image> crateCreateImageFromJson({required String json}) {
@@ -3200,10 +3196,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateImageUrlFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_image_url_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_image_url_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ImagesResponse> crateCreateImagesResponseFromJson({
@@ -3233,10 +3229,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateImagesResponseFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_images_response_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_images_response_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<JsonSchemaFormat> crateCreateJsonSchemaFormatFromJson({
@@ -3266,10 +3262,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateJsonSchemaFormatFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_json_schema_format_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_json_schema_format_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ModelObject> crateCreateModelObjectFromJson({required String json}) {
@@ -3297,10 +3293,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateModelObjectFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_model_object_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_model_object_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ModelsListResponse> crateCreateModelsListResponseFromJson({
@@ -3330,10 +3326,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateModelsListResponseFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_models_list_response_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_models_list_response_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ModerationCategories> crateCreateModerationCategoriesFromJson({
@@ -3363,10 +3359,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateModerationCategoriesFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_moderation_categories_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_moderation_categories_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ModerationCategoryScores> crateCreateModerationCategoryScoresFromJson({
@@ -3396,10 +3392,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateModerationCategoryScoresFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_moderation_category_scores_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_moderation_category_scores_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ModerationRequest> crateCreateModerationRequestFromJson({
@@ -3429,10 +3425,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateModerationRequestFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_moderation_request_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_moderation_request_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ModerationResponse> crateCreateModerationResponseFromJson({
@@ -3462,10 +3458,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateModerationResponseFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_moderation_response_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_moderation_response_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ModerationResult> crateCreateModerationResultFromJson({
@@ -3495,10 +3491,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateModerationResultFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_moderation_result_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_moderation_result_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<OcrImage> crateCreateOcrImageFromJson({required String json}) {
@@ -3526,10 +3522,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateOcrImageFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_ocr_image_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_ocr_image_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<OcrPage> crateCreateOcrPageFromJson({required String json}) {
@@ -3587,10 +3583,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateOcrRequestFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_ocr_request_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_ocr_request_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<OcrResponse> crateCreateOcrResponseFromJson({required String json}) {
@@ -3618,10 +3614,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateOcrResponseFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_ocr_response_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_ocr_response_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<PageDimensions> crateCreatePageDimensionsFromJson({
@@ -3651,10 +3647,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreatePageDimensionsFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_page_dimensions_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_page_dimensions_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<PromptTokensDetails> crateCreatePromptTokensDetailsFromJson({
@@ -3684,10 +3680,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreatePromptTokensDetailsFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_prompt_tokens_details_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_prompt_tokens_details_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ProviderCapabilities> crateCreateProviderCapabilitiesFromJson({
@@ -3717,10 +3713,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateProviderCapabilitiesFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_provider_capabilities_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_provider_capabilities_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ProviderConfig> crateCreateProviderConfigFromJson({
@@ -3750,10 +3746,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateProviderConfigFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_provider_config_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_provider_config_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<RateLimitConfig> crateCreateRateLimitConfigFromJson({
@@ -3783,10 +3779,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateRateLimitConfigFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_rate_limit_config_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_rate_limit_config_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<RerankRequest> crateCreateRerankRequestFromJson({
@@ -3816,10 +3812,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateRerankRequestFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_rerank_request_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_rerank_request_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<RerankResponse> crateCreateRerankResponseFromJson({
@@ -3849,10 +3845,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateRerankResponseFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_rerank_response_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_rerank_response_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<RerankResultDocument> crateCreateRerankResultDocumentFromJson({
@@ -3882,10 +3878,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateRerankResultDocumentFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_rerank_result_document_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_rerank_result_document_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<RerankResult> crateCreateRerankResultFromJson({required String json}) {
@@ -3913,10 +3909,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateRerankResultFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_rerank_result_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_rerank_result_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ResponseObject> crateCreateResponseObjectFromJson({
@@ -3946,10 +3942,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateResponseObjectFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_response_object_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_response_object_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ResponseOutputItem> crateCreateResponseOutputItemFromJson({
@@ -3979,10 +3975,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateResponseOutputItemFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_response_output_item_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_response_output_item_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ResponseTool> crateCreateResponseToolFromJson({required String json}) {
@@ -4010,10 +4006,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateResponseToolFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_response_tool_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_response_tool_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ResponseUsage> crateCreateResponseUsageFromJson({
@@ -4043,10 +4039,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateResponseUsageFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_response_usage_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_response_usage_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<SearchRequest> crateCreateSearchRequestFromJson({
@@ -4076,10 +4072,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateSearchRequestFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_search_request_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_search_request_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<SearchResponse> crateCreateSearchResponseFromJson({
@@ -4109,10 +4105,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateSearchResponseFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_search_response_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_search_response_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<SearchResult> crateCreateSearchResultFromJson({required String json}) {
@@ -4140,10 +4136,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateSearchResultFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_search_result_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_search_result_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<SpecificFunction> crateCreateSpecificFunctionFromJson({
@@ -4173,10 +4169,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateSpecificFunctionFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_specific_function_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_specific_function_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<SpecificToolChoice> crateCreateSpecificToolChoiceFromJson({
@@ -4206,10 +4202,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateSpecificToolChoiceFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_specific_tool_choice_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_specific_tool_choice_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<StreamChoice> crateCreateStreamChoiceFromJson({required String json}) {
@@ -4237,10 +4233,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateStreamChoiceFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_stream_choice_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_stream_choice_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<StreamDelta> crateCreateStreamDeltaFromJson({required String json}) {
@@ -4268,10 +4264,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateStreamDeltaFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_stream_delta_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_stream_delta_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<StreamFunctionCall> crateCreateStreamFunctionCallFromJson({
@@ -4301,10 +4297,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateStreamFunctionCallFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_stream_function_call_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_stream_function_call_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<StreamOptions> crateCreateStreamOptionsFromJson({
@@ -4334,10 +4330,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateStreamOptionsFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_stream_options_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_stream_options_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<StreamToolCall> crateCreateStreamToolCallFromJson({
@@ -4367,10 +4363,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateStreamToolCallFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_stream_tool_call_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_stream_tool_call_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<SystemMessage> crateCreateSystemMessageFromJson({
@@ -4400,10 +4396,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateSystemMessageFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_system_message_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_system_message_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ToolCall> crateCreateToolCallFromJson({required String json}) {
@@ -4431,10 +4427,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateToolCallFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_tool_call_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_tool_call_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<ToolMessage> crateCreateToolMessageFromJson({required String json}) {
@@ -4462,10 +4458,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateToolMessageFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_tool_message_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_tool_message_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<TranscriptionResponse> crateCreateTranscriptionResponseFromJson({
@@ -4495,10 +4491,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateTranscriptionResponseFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_transcription_response_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_transcription_response_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<TranscriptionSegment> crateCreateTranscriptionSegmentFromJson({
@@ -4528,10 +4524,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateTranscriptionSegmentFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_transcription_segment_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_transcription_segment_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<Usage> crateCreateUsageFromJson({required String json}) {
@@ -4589,10 +4585,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateUserMessageFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_user_message_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_user_message_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<WaitForBatchConfig> crateCreateWaitForBatchConfigFromJson({
@@ -4622,10 +4618,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateWaitForBatchConfigFromJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "create_wait_for_batch_config_from_json",
-        argNames: ["json"],
-      );
+  const TaskConstMeta(
+    debugName: "create_wait_for_batch_config_from_json",
+    argNames: ["json"],
+  );
 
   @override
   Future<DecodedDataUrl?> crateDecodeDataUrl({required String url}) {
@@ -4653,7 +4649,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateDecodeDataUrlConstMeta =>
-      const TaskConstMeta(debugName: "decode_data_url", argNames: ["url"]);
+  const TaskConstMeta(debugName: "decode_data_url", argNames: ["url"]);
 
   @override
   Future<String> crateEncodeDataUrl({required List<int> bytes, String? mime}) {
@@ -4711,7 +4707,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateEnsureCryptoProviderConstMeta =>
-      const TaskConstMeta(debugName: "ensure_crypto_provider", argNames: []);
+  const TaskConstMeta(debugName: "ensure_crypto_provider", argNames: []);
 
   @override
   Future<String> crateLiterLlmErrorErrorType({required LiterLlmError that}) {
@@ -4739,10 +4735,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateLiterLlmErrorErrorTypeConstMeta =>
-      const TaskConstMeta(
-        debugName: "liter_llm_error_error_type",
-        argNames: ["that"],
-      );
+  const TaskConstMeta(
+    debugName: "liter_llm_error_error_type",
+    argNames: ["that"],
+  );
 
   @override
   Future<bool> crateLiterLlmErrorIsTransient({required LiterLlmError that}) {
@@ -4770,10 +4766,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateLiterLlmErrorIsTransientConstMeta =>
-      const TaskConstMeta(
-        debugName: "liter_llm_error_is_transient",
-        argNames: ["that"],
-      );
+  const TaskConstMeta(
+    debugName: "liter_llm_error_is_transient",
+    argNames: ["that"],
+  );
 
   @override
   Future<PlatformInt64> crateLiterLlmErrorStatusCode({
@@ -4803,10 +4799,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateLiterLlmErrorStatusCodeConstMeta =>
-      const TaskConstMeta(
-        debugName: "liter_llm_error_status_code",
-        argNames: ["that"],
-      );
+  const TaskConstMeta(
+    debugName: "liter_llm_error_status_code",
+    argNames: ["that"],
+  );
 
   @override
   Future<void> crateRegisterCustomProvider({
@@ -4836,10 +4832,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateRegisterCustomProviderConstMeta =>
-      const TaskConstMeta(
-        debugName: "register_custom_provider",
-        argNames: ["config"],
-      );
+  const TaskConstMeta(
+    debugName: "register_custom_provider",
+    argNames: ["config"],
+  );
 
   @override
   Future<bool> crateUnregisterCustomProvider({required String name}) {
@@ -4867,18 +4863,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateUnregisterCustomProviderConstMeta =>
-      const TaskConstMeta(
-        debugName: "unregister_custom_provider",
-        argNames: ["name"],
-      );
+  const TaskConstMeta(
+    debugName: "unregister_custom_provider",
+    argNames: ["name"],
+  );
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_DefaultClient => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient;
+  .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient;
 
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_DefaultClient => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient;
+  .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDefaultClient;
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
@@ -4949,13 +4945,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return AssistantContent_Text(field0: dco_decode_String(raw[1]));
+      return AssistantContent_Text(field0: dco_decode_String(raw[1]));
       case 1:
-        return AssistantContent_Parts(
+      return AssistantContent_Parts(
           field0: dco_decode_list_assistant_part(raw[1]),
         );
       default:
-        throw Exception("unreachable");
+      throw Exception("unreachable");
     }
   }
 
@@ -4964,7 +4960,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return AssistantMessage(
       content: dco_decode_opt_box_autoadd_assistant_content(arr[0]),
       name: dco_decode_opt_String(arr[1]),
@@ -4979,19 +4975,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return AssistantPart_Text(text: dco_decode_String(raw[1]));
+      return AssistantPart_Text(text: dco_decode_String(raw[1]));
       case 1:
-        return AssistantPart_Refusal(refusal: dco_decode_String(raw[1]));
+      return AssistantPart_Refusal(refusal: dco_decode_String(raw[1]));
       case 2:
-        return AssistantPart_OutputImage(
+      return AssistantPart_OutputImage(
           imageUrl: dco_decode_box_autoadd_image_url(raw[1]),
         );
       case 3:
-        return AssistantPart_OutputAudio(
+      return AssistantPart_OutputAudio(
           audio: dco_decode_box_autoadd_audio_content(raw[1]),
         );
       default:
-        throw Exception("unreachable");
+      throw Exception("unreachable");
     }
   }
 
@@ -5000,7 +4996,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return AudioContent(
       data: dco_decode_String(arr[0]),
       format: dco_decode_String(arr[1]),
@@ -5012,7 +5008,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return AuthConfig(
       authType: dco_decode_auth_type(arr[0]),
       envVar: dco_decode_opt_String(arr[1]),
@@ -5024,13 +5020,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return AuthHeaderFormat_Bearer();
+      return AuthHeaderFormat_Bearer();
       case 1:
-        return AuthHeaderFormat_ApiKey(field0: dco_decode_String(raw[1]));
+      return AuthHeaderFormat_ApiKey(field0: dco_decode_String(raw[1]));
       case 2:
-        return AuthHeaderFormat_None();
+      return AuthHeaderFormat_None();
       default:
-        throw Exception("unreachable");
+      throw Exception("unreachable");
     }
   }
 
@@ -5045,7 +5041,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return BatchListQuery(
       limit: dco_decode_opt_box_autoadd_i_64(arr[0]),
       after: dco_decode_opt_String(arr[1]),
@@ -5057,7 +5053,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return BatchListResponse(
       object: dco_decode_String(arr[0]),
       data: dco_decode_list_batch_object(arr[1]),
@@ -5072,7 +5068,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 14)
-      throw Exception('unexpected arr length: expect 14 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 14 but see ${arr.length}');
     return BatchObject(
       id: dco_decode_String(arr[0]),
       object: dco_decode_String(arr[1]),
@@ -5096,7 +5092,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return BatchRequestCounts(
       total: dco_decode_i_64(arr[0]),
       completed: dco_decode_i_64(arr[1]),
@@ -5440,7 +5436,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return BudgetConfig(
       globalLimit: dco_decode_opt_box_autoadd_f_64(arr[0]),
       modelLimits: dco_decode_Map_String_f_64_None(arr[1]),
@@ -5453,14 +5449,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return CacheBackend_Memory();
+      return CacheBackend_Memory();
       case 1:
-        return CacheBackend_OpenDal(
+      return CacheBackend_OpenDal(
           scheme: dco_decode_String(raw[1]),
           config: dco_decode_Map_String_String_None(raw[2]),
         );
       default:
-        throw Exception("unreachable");
+      throw Exception("unreachable");
     }
   }
 
@@ -5469,7 +5465,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return CacheConfig(
       maxEntries: dco_decode_i_64(arr[0]),
       ttl: dco_decode_i_64(arr[1]),
@@ -5482,7 +5478,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 8)
-      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
     return ChatCompletionChunk(
       id: dco_decode_String(arr[0]),
       object: dco_decode_String(arr[1]),
@@ -5500,7 +5496,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 21)
-      throw Exception('unexpected arr length: expect 21 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 21 but see ${arr.length}');
     return ChatCompletionRequest(
       model: dco_decode_String(arr[0]),
       messages: dco_decode_list_message(arr[1]),
@@ -5531,7 +5527,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 8)
-      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
     return ChatCompletionResponse(
       id: dco_decode_String(arr[0]),
       object: dco_decode_String(arr[1]),
@@ -5549,7 +5545,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return ChatCompletionTool(
       toolType: dco_decode_tool_type(arr[0]),
       function: dco_decode_function_definition(arr[1]),
@@ -5561,7 +5557,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return Choice(
       index: dco_decode_i_64(arr[0]),
       message: dco_decode_assistant_message(arr[1]),
@@ -5580,21 +5576,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return ContentPart_Text(text: dco_decode_String(raw[1]));
+      return ContentPart_Text(text: dco_decode_String(raw[1]));
       case 1:
-        return ContentPart_ImageUrl(
+      return ContentPart_ImageUrl(
           imageUrl: dco_decode_box_autoadd_image_url(raw[1]),
         );
       case 2:
-        return ContentPart_Document(
+      return ContentPart_Document(
           document: dco_decode_box_autoadd_document_content(raw[1]),
         );
       case 3:
-        return ContentPart_InputAudio(
+      return ContentPart_InputAudio(
           inputAudio: dco_decode_box_autoadd_audio_content(raw[1]),
         );
       default:
-        throw Exception("unreachable");
+      throw Exception("unreachable");
     }
   }
 
@@ -5603,7 +5599,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return CreateBatchRequest(
       inputFileId: dco_decode_String(arr[0]),
       endpoint: dco_decode_String(arr[1]),
@@ -5617,7 +5613,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return CreateFileRequest(
       file: dco_decode_String(arr[0]),
       purpose: dco_decode_file_purpose(arr[1]),
@@ -5630,7 +5626,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 8)
-      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
     return CreateImageRequest(
       prompt: dco_decode_String(arr[0]),
       model: dco_decode_opt_String(arr[1]),
@@ -5648,7 +5644,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 7)
-      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return CreateResponseRequest(
       model: dco_decode_String(arr[0]),
       input: dco_decode_String(arr[1]),
@@ -5665,7 +5661,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return CreateSpeechRequest(
       model: dco_decode_String(arr[0]),
       input: dco_decode_String(arr[1]),
@@ -5682,7 +5678,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 6)
-      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return CreateTranscriptionRequest(
       model: dco_decode_String(arr[0]),
       file: dco_decode_String(arr[1]),
@@ -5698,7 +5694,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return CustomProviderConfig(
       name: dco_decode_String(arr[0]),
       baseUrl: dco_decode_String(arr[1]),
@@ -5712,7 +5708,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return DecodedDataUrl(
       mime: dco_decode_String(arr[0]),
       data: dco_decode_list_prim_u_8_strict(arr[1]),
@@ -5724,7 +5720,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return DeleteResponse(
       id: dco_decode_String(arr[0]),
       object: dco_decode_String(arr[1]),
@@ -5737,7 +5733,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return DeveloperMessage(
       content: dco_decode_String(arr[0]),
       name: dco_decode_opt_String(arr[1]),
@@ -5749,7 +5745,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return DocumentContent(
       data: dco_decode_String(arr[0]),
       mediaType: dco_decode_String(arr[1]),
@@ -5767,11 +5763,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return EmbeddingInput_Single(field0: dco_decode_String(raw[1]));
+      return EmbeddingInput_Single(field0: dco_decode_String(raw[1]));
       case 1:
-        return EmbeddingInput_Multiple(field0: dco_decode_list_String(raw[1]));
+      return EmbeddingInput_Multiple(field0: dco_decode_list_String(raw[1]));
       default:
-        throw Exception("unreachable");
+      throw Exception("unreachable");
     }
   }
 
@@ -5780,7 +5776,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return EmbeddingObject(
       object: dco_decode_String(arr[0]),
       embedding: dco_decode_list_prim_f_64_strict(arr[1]),
@@ -5793,7 +5789,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return EmbeddingRequest(
       model: dco_decode_String(arr[0]),
       input: dco_decode_embedding_input(arr[1]),
@@ -5808,7 +5804,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return EmbeddingResponse(
       object: dco_decode_String(arr[0]),
       data: dco_decode_list_embedding_object(arr[1]),
@@ -5834,7 +5830,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return FileListQuery(
       purpose: dco_decode_opt_String(arr[0]),
       limit: dco_decode_opt_box_autoadd_i_64(arr[1]),
@@ -5847,7 +5843,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return FileListResponse(
       object: dco_decode_String(arr[0]),
       data: dco_decode_list_file_object(arr[1]),
@@ -5860,7 +5856,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 7)
-      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return FileObject(
       id: dco_decode_String(arr[0]),
       object: dco_decode_String(arr[1]),
@@ -5889,7 +5885,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return FunctionCall(
       name: dco_decode_String(arr[0]),
       arguments: dco_decode_String(arr[1]),
@@ -5901,7 +5897,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return FunctionDefinition(
       name: dco_decode_String(arr[0]),
       description: dco_decode_opt_String(arr[1]),
@@ -5915,7 +5911,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return FunctionMessage(
       content: dco_decode_String(arr[0]),
       name: dco_decode_String(arr[1]),
@@ -5945,7 +5941,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return Image(
       url: dco_decode_opt_String(arr[0]),
       b64Json: dco_decode_opt_String(arr[1]),
@@ -5964,7 +5960,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return ImageUrl(
       url: dco_decode_String(arr[0]),
       detail: dco_decode_opt_box_autoadd_image_detail(arr[1]),
@@ -5976,7 +5972,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return ImagesResponse(
       created: dco_decode_i_64(arr[0]),
       data: dco_decode_list_image(arr[1]),
@@ -5988,7 +5984,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return JsonSchemaFormat(
       name: dco_decode_String(arr[0]),
       description: dco_decode_opt_String(arr[1]),
@@ -6183,8 +6179,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>)
-        .map(dco_decode_transcription_segment)
-        .toList();
+    .map(dco_decode_transcription_segment)
+    .toList();
   }
 
   @protected
@@ -6192,78 +6188,78 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return LiterLlmError_Authentication(
+      return LiterLlmError_Authentication(
           message: dco_decode_String(raw[1]),
           status: dco_decode_i_64(raw[2]),
         );
       case 1:
-        return LiterLlmError_RateLimited(
+      return LiterLlmError_RateLimited(
           message: dco_decode_String(raw[1]),
           retryAfter: dco_decode_i_64(raw[2]),
         );
       case 2:
-        return LiterLlmError_BadRequest(
+      return LiterLlmError_BadRequest(
           message: dco_decode_String(raw[1]),
           status: dco_decode_i_64(raw[2]),
         );
       case 3:
-        return LiterLlmError_ContextWindowExceeded(
+      return LiterLlmError_ContextWindowExceeded(
           message: dco_decode_String(raw[1]),
         );
       case 4:
-        return LiterLlmError_ContentPolicy(message: dco_decode_String(raw[1]));
+      return LiterLlmError_ContentPolicy(message: dco_decode_String(raw[1]));
       case 5:
-        return LiterLlmError_NotFound(message: dco_decode_String(raw[1]));
+      return LiterLlmError_NotFound(message: dco_decode_String(raw[1]));
       case 6:
-        return LiterLlmError_ServerError(
+      return LiterLlmError_ServerError(
           message: dco_decode_String(raw[1]),
           status: dco_decode_i_64(raw[2]),
         );
       case 7:
-        return LiterLlmError_ServiceUnavailable(
+      return LiterLlmError_ServiceUnavailable(
           message: dco_decode_String(raw[1]),
           status: dco_decode_i_64(raw[2]),
         );
       case 8:
-        return LiterLlmError_Timeout();
+      return LiterLlmError_Timeout();
       case 9:
-        return LiterLlmError_Streaming(message: dco_decode_String(raw[1]));
+      return LiterLlmError_Streaming(message: dco_decode_String(raw[1]));
       case 10:
-        return LiterLlmError_EndpointNotSupported(
+      return LiterLlmError_EndpointNotSupported(
           endpoint: dco_decode_String(raw[1]),
           provider: dco_decode_String(raw[2]),
         );
       case 11:
-        return LiterLlmError_InvalidHeader(
+      return LiterLlmError_InvalidHeader(
           name: dco_decode_String(raw[1]),
           reason: dco_decode_String(raw[2]),
         );
       case 12:
-        return LiterLlmError_Serialization(field0: dco_decode_String(raw[1]));
+      return LiterLlmError_Serialization(field0: dco_decode_String(raw[1]));
       case 13:
-        return LiterLlmError_BudgetExceeded(
+      return LiterLlmError_BudgetExceeded(
           message: dco_decode_String(raw[1]),
           model: dco_decode_String(raw[2]),
         );
       case 14:
-        return LiterLlmError_HookRejected(message: dco_decode_String(raw[1]));
+      return LiterLlmError_HookRejected(message: dco_decode_String(raw[1]));
       case 15:
-        return LiterLlmError_InternalError(message: dco_decode_String(raw[1]));
+      return LiterLlmError_InternalError(message: dco_decode_String(raw[1]));
       case 16:
-        return LiterLlmError_OutboundForbidden(
+      return LiterLlmError_OutboundForbidden(
           url: dco_decode_String(raw[1]),
           reason: dco_decode_String(raw[2]),
         );
       case 17:
-        return LiterLlmError_IdempotencyConflict(
+      return LiterLlmError_IdempotencyConflict(
           key: dco_decode_String(raw[1]),
         );
       case 18:
-        return LiterLlmError_IdempotencyInFlight(
+      return LiterLlmError_IdempotencyInFlight(
           key: dco_decode_String(raw[1]),
         );
       default:
-        throw Exception("unreachable");
+      throw Exception("unreachable");
     }
   }
 
@@ -6272,31 +6268,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return Message_System(
+      return Message_System(
           field0: dco_decode_box_autoadd_system_message(raw[1]),
         );
       case 1:
-        return Message_User(
+      return Message_User(
           field0: dco_decode_box_autoadd_user_message(raw[1]),
         );
       case 2:
-        return Message_Assistant(
+      return Message_Assistant(
           field0: dco_decode_box_autoadd_assistant_message(raw[1]),
         );
       case 3:
-        return Message_Tool(
+      return Message_Tool(
           field0: dco_decode_box_autoadd_tool_message(raw[1]),
         );
       case 4:
-        return Message_Developer(
+      return Message_Developer(
           field0: dco_decode_box_autoadd_developer_message(raw[1]),
         );
       case 5:
-        return Message_Function(
+      return Message_Function(
           field0: dco_decode_box_autoadd_function_message(raw[1]),
         );
       default:
-        throw Exception("unreachable");
+      throw Exception("unreachable");
     }
   }
 
@@ -6311,7 +6307,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return ModelObject(
       id: dco_decode_String(arr[0]),
       object: dco_decode_String(arr[1]),
@@ -6325,7 +6321,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return ModelsListResponse(
       object: dco_decode_String(arr[0]),
       data: dco_decode_list_model_object(arr[1]),
@@ -6337,7 +6333,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 11)
-      throw Exception('unexpected arr length: expect 11 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 11 but see ${arr.length}');
     return ModerationCategories(
       sexual: dco_decode_bool(arr[0]),
       hate: dco_decode_bool(arr[1]),
@@ -6358,7 +6354,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 11)
-      throw Exception('unexpected arr length: expect 11 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 11 but see ${arr.length}');
     return ModerationCategoryScores(
       sexual: dco_decode_f_64(arr[0]),
       hate: dco_decode_f_64(arr[1]),
@@ -6379,11 +6375,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return ModerationInput_Single(field0: dco_decode_String(raw[1]));
+      return ModerationInput_Single(field0: dco_decode_String(raw[1]));
       case 1:
-        return ModerationInput_Multiple(field0: dco_decode_list_String(raw[1]));
+      return ModerationInput_Multiple(field0: dco_decode_list_String(raw[1]));
       default:
-        throw Exception("unreachable");
+      throw Exception("unreachable");
     }
   }
 
@@ -6392,7 +6388,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return ModerationRequest(
       input: dco_decode_moderation_input(arr[0]),
       model: dco_decode_opt_String(arr[1]),
@@ -6404,7 +6400,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return ModerationResponse(
       id: dco_decode_String(arr[0]),
       model: dco_decode_String(arr[1]),
@@ -6417,7 +6413,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return ModerationResult(
       flagged: dco_decode_bool(arr[0]),
       categories: dco_decode_moderation_categories(arr[1]),
@@ -6430,14 +6426,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return OcrDocument_Url(url: dco_decode_String(raw[1]));
+      return OcrDocument_Url(url: dco_decode_String(raw[1]));
       case 1:
-        return OcrDocument_Base64(
+      return OcrDocument_Base64(
           data: dco_decode_String(raw[1]),
           mediaType: dco_decode_String(raw[2]),
         );
       default:
-        throw Exception("unreachable");
+      throw Exception("unreachable");
     }
   }
 
@@ -6446,7 +6442,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return OcrImage(
       id: dco_decode_String(arr[0]),
       imageBase64: dco_decode_opt_String(arr[1]),
@@ -6458,7 +6454,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return OcrPage(
       index: dco_decode_i_64(arr[0]),
       markdown: dco_decode_String(arr[1]),
@@ -6472,7 +6468,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return OcrRequest(
       model: dco_decode_String(arr[0]),
       document: dco_decode_ocr_document(arr[1]),
@@ -6486,7 +6482,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return OcrResponse(
       pages: dco_decode_list_ocr_page(arr[0]),
       model: dco_decode_String(arr[1]),
@@ -6536,8 +6532,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null
-        ? null
-        : dco_decode_box_autoadd_batch_request_counts(raw);
+    ? null
+    : dco_decode_box_autoadd_batch_request_counts(raw);
   }
 
   @protected
@@ -6606,8 +6602,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null
-        ? null
-        : dco_decode_box_autoadd_prompt_tokens_details(raw);
+    ? null
+    : dco_decode_box_autoadd_prompt_tokens_details(raw);
   }
 
   @protected
@@ -6622,8 +6618,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null
-        ? null
-        : dco_decode_box_autoadd_rerank_result_document(raw);
+    ? null
+    : dco_decode_box_autoadd_rerank_result_document(raw);
   }
 
   @protected
@@ -6650,8 +6646,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null
-        ? null
-        : dco_decode_box_autoadd_stream_function_call(raw);
+    ? null
+    : dco_decode_box_autoadd_stream_function_call(raw);
   }
 
   @protected
@@ -6741,7 +6737,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return PageDimensions(
       width: dco_decode_i_64(arr[0]),
       height: dco_decode_i_64(arr[1]),
@@ -6753,7 +6749,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return PromptTokensDetails(
       cachedTokens: dco_decode_i_64(arr[0]),
       audioTokens: dco_decode_i_64(arr[1]),
@@ -6765,7 +6761,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 7)
-      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return ProviderCapabilities(
       vision: dco_decode_bool(arr[0]),
       reasoning: dco_decode_bool(arr[1]),
@@ -6782,7 +6778,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 7)
-      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return ProviderConfig(
       name: dco_decode_String(arr[0]),
       displayName: dco_decode_opt_String(arr[1]),
@@ -6799,7 +6795,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return RateLimitConfig(
       rpm: dco_decode_opt_box_autoadd_i_64(arr[0]),
       tpm: dco_decode_opt_box_autoadd_i_64(arr[1]),
@@ -6838,11 +6834,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return RerankDocument_Text(field0: dco_decode_String(raw[1]));
+      return RerankDocument_Text(field0: dco_decode_String(raw[1]));
       case 1:
-        return RerankDocument_Object(text: dco_decode_String(raw[1]));
+      return RerankDocument_Object(text: dco_decode_String(raw[1]));
       default:
-        throw Exception("unreachable");
+      throw Exception("unreachable");
     }
   }
 
@@ -6851,7 +6847,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return RerankRequest(
       model: dco_decode_String(arr[0]),
       query: dco_decode_String(arr[1]),
@@ -6866,7 +6862,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return RerankResponse(
       id: dco_decode_opt_String(arr[0]),
       results: dco_decode_list_rerank_result(arr[1]),
@@ -6879,7 +6875,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return RerankResult(
       index: dco_decode_i_64(arr[0]),
       relevanceScore: dco_decode_f_64(arr[1]),
@@ -6892,7 +6888,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 1)
-      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
     return RerankResultDocument(text: dco_decode_String(arr[0]));
   }
 
@@ -6901,15 +6897,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return ResponseFormat_Text();
+      return ResponseFormat_Text();
       case 1:
-        return ResponseFormat_JsonObject();
+      return ResponseFormat_JsonObject();
       case 2:
-        return ResponseFormat_JsonSchema(
+      return ResponseFormat_JsonSchema(
           jsonSchema: dco_decode_box_autoadd_json_schema_format(raw[1]),
         );
       default:
-        throw Exception("unreachable");
+      throw Exception("unreachable");
     }
   }
 
@@ -6918,7 +6914,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 8)
-      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
     return ResponseObject(
       id: dco_decode_String(arr[0]),
       object: dco_decode_String(arr[1]),
@@ -6936,7 +6932,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return ResponseOutputItem(
       itemType: dco_decode_String(arr[0]),
       content: dco_decode_String(arr[1]),
@@ -6948,7 +6944,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return ResponseTool(
       toolType: dco_decode_String(arr[0]),
       config: dco_decode_String(arr[1]),
@@ -6960,7 +6956,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return ResponseUsage(
       inputTokens: dco_decode_i_64(arr[0]),
       outputTokens: dco_decode_i_64(arr[1]),
@@ -6973,7 +6969,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return SearchRequest(
       model: dco_decode_String(arr[0]),
       query: dco_decode_String(arr[1]),
@@ -6988,7 +6984,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return SearchResponse(
       results: dco_decode_list_search_result(arr[0]),
       model: dco_decode_String(arr[1]),
@@ -7000,7 +6996,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return SearchResult(
       title: dco_decode_String(arr[0]),
       url: dco_decode_String(arr[1]),
@@ -7014,7 +7010,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 1)
-      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
     return SpecificFunction(name: dco_decode_String(arr[0]));
   }
 
@@ -7023,7 +7019,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return SpecificToolChoice(
       choiceType: dco_decode_tool_type(arr[0]),
       function: dco_decode_specific_function(arr[1]),
@@ -7035,11 +7031,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return StopSequence_Single(field0: dco_decode_String(raw[1]));
+      return StopSequence_Single(field0: dco_decode_String(raw[1]));
       case 1:
-        return StopSequence_Multiple(field0: dco_decode_list_String(raw[1]));
+      return StopSequence_Multiple(field0: dco_decode_list_String(raw[1]));
       default:
-        throw Exception("unreachable");
+      throw Exception("unreachable");
     }
   }
 
@@ -7048,7 +7044,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return StreamChoice(
       index: dco_decode_i_64(arr[0]),
       delta: dco_decode_stream_delta(arr[1]),
@@ -7061,7 +7057,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return StreamDelta(
       role: dco_decode_opt_String(arr[0]),
       content: dco_decode_opt_String(arr[1]),
@@ -7082,7 +7078,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return StreamFunctionCall(
       name: dco_decode_opt_String(arr[0]),
       arguments: dco_decode_opt_String(arr[1]),
@@ -7094,7 +7090,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 1)
-      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
     return StreamOptions(includeUsage: dco_decode_opt_box_autoadd_bool(arr[0]));
   }
 
@@ -7103,7 +7099,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return StreamToolCall(
       index: dco_decode_i_64(arr[0]),
       id: dco_decode_opt_String(arr[1]),
@@ -7117,7 +7113,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return SystemMessage(
       content: dco_decode_user_content(arr[0]),
       name: dco_decode_opt_String(arr[1]),
@@ -7129,7 +7125,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return ToolCall(
       id: dco_decode_String(arr[0]),
       callType: dco_decode_tool_type(arr[1]),
@@ -7142,13 +7138,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return ToolChoice_Mode(field0: dco_decode_tool_choice_mode(raw[1]));
+      return ToolChoice_Mode(field0: dco_decode_tool_choice_mode(raw[1]));
       case 1:
-        return ToolChoice_Specific(
+      return ToolChoice_Specific(
           field0: dco_decode_box_autoadd_specific_tool_choice(raw[1]),
         );
       default:
-        throw Exception("unreachable");
+      throw Exception("unreachable");
     }
   }
 
@@ -7163,7 +7159,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return ToolMessage(
       content: dco_decode_String(arr[0]),
       toolCallId: dco_decode_String(arr[1]),
@@ -7182,7 +7178,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return TranscriptionResponse(
       text: dco_decode_String(arr[0]),
       language: dco_decode_opt_String(arr[1]),
@@ -7196,7 +7192,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return TranscriptionSegment(
       id: dco_decode_i_64(arr[0]),
       start: dco_decode_f_64(arr[1]),
@@ -7222,7 +7218,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return Usage(
       promptTokens: dco_decode_i_64(arr[0]),
       completionTokens: dco_decode_i_64(arr[1]),
@@ -7238,11 +7234,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return UserContent_Text(field0: dco_decode_String(raw[1]));
+      return UserContent_Text(field0: dco_decode_String(raw[1]));
       case 1:
-        return UserContent_Parts(field0: dco_decode_list_content_part(raw[1]));
+      return UserContent_Parts(field0: dco_decode_list_content_part(raw[1]));
       default:
-        throw Exception("unreachable");
+      throw Exception("unreachable");
     }
   }
 
@@ -7251,7 +7247,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return UserMessage(
       content: dco_decode_user_content(arr[0]),
       name: dco_decode_opt_String(arr[1]),
@@ -7269,7 +7265,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return WaitForBatchConfig(
       initialIntervalSecs: dco_decode_f_64(arr[0]),
       maxIntervalSecs: dco_decode_f_64(arr[1]),
@@ -7362,13 +7358,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        var var_field0 = sse_decode_String(deserializer);
-        return AssistantContent_Text(field0: var_field0);
+      var var_field0 = sse_decode_String(deserializer);
+      return AssistantContent_Text(field0: var_field0);
       case 1:
-        var var_field0 = sse_decode_list_assistant_part(deserializer);
-        return AssistantContent_Parts(field0: var_field0);
+      var var_field0 = sse_decode_list_assistant_part(deserializer);
+      return AssistantContent_Parts(field0: var_field0);
       default:
-        throw UnimplementedError('');
+      throw UnimplementedError('');
     }
   }
 
@@ -7400,19 +7396,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        var var_text = sse_decode_String(deserializer);
-        return AssistantPart_Text(text: var_text);
+      var var_text = sse_decode_String(deserializer);
+      return AssistantPart_Text(text: var_text);
       case 1:
-        var var_refusal = sse_decode_String(deserializer);
-        return AssistantPart_Refusal(refusal: var_refusal);
+      var var_refusal = sse_decode_String(deserializer);
+      return AssistantPart_Refusal(refusal: var_refusal);
       case 2:
-        var var_imageUrl = sse_decode_box_autoadd_image_url(deserializer);
-        return AssistantPart_OutputImage(imageUrl: var_imageUrl);
+      var var_imageUrl = sse_decode_box_autoadd_image_url(deserializer);
+      return AssistantPart_OutputImage(imageUrl: var_imageUrl);
       case 3:
-        var var_audio = sse_decode_box_autoadd_audio_content(deserializer);
-        return AssistantPart_OutputAudio(audio: var_audio);
+      var var_audio = sse_decode_box_autoadd_audio_content(deserializer);
+      return AssistantPart_OutputAudio(audio: var_audio);
       default:
-        throw UnimplementedError('');
+      throw UnimplementedError('');
     }
   }
 
@@ -7439,14 +7435,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        return AuthHeaderFormat_Bearer();
+      return AuthHeaderFormat_Bearer();
       case 1:
-        var var_field0 = sse_decode_String(deserializer);
-        return AuthHeaderFormat_ApiKey(field0: var_field0);
+      var var_field0 = sse_decode_String(deserializer);
+      return AuthHeaderFormat_ApiKey(field0: var_field0);
       case 2:
-        return AuthHeaderFormat_None();
+      return AuthHeaderFormat_None();
       default:
-        throw UnimplementedError('');
+      throw UnimplementedError('');
     }
   }
 
@@ -7960,13 +7956,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        return CacheBackend_Memory();
+      return CacheBackend_Memory();
       case 1:
-        var var_scheme = sse_decode_String(deserializer);
-        var var_config = sse_decode_Map_String_String_None(deserializer);
-        return CacheBackend_OpenDal(scheme: var_scheme, config: var_config);
+      var var_scheme = sse_decode_String(deserializer);
+      var var_config = sse_decode_Map_String_String_None(deserializer);
+      return CacheBackend_OpenDal(scheme: var_scheme, config: var_config);
       default:
-        throw UnimplementedError('');
+      throw UnimplementedError('');
     }
   }
 
@@ -8129,21 +8125,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        var var_text = sse_decode_String(deserializer);
-        return ContentPart_Text(text: var_text);
+      var var_text = sse_decode_String(deserializer);
+      return ContentPart_Text(text: var_text);
       case 1:
-        var var_imageUrl = sse_decode_box_autoadd_image_url(deserializer);
-        return ContentPart_ImageUrl(imageUrl: var_imageUrl);
+      var var_imageUrl = sse_decode_box_autoadd_image_url(deserializer);
+      return ContentPart_ImageUrl(imageUrl: var_imageUrl);
       case 2:
-        var var_document = sse_decode_box_autoadd_document_content(
+      var var_document = sse_decode_box_autoadd_document_content(
           deserializer,
         );
-        return ContentPart_Document(document: var_document);
+      return ContentPart_Document(document: var_document);
       case 3:
-        var var_inputAudio = sse_decode_box_autoadd_audio_content(deserializer);
-        return ContentPart_InputAudio(inputAudio: var_inputAudio);
+      var var_inputAudio = sse_decode_box_autoadd_audio_content(deserializer);
+      return ContentPart_InputAudio(inputAudio: var_inputAudio);
       default:
-        throw UnimplementedError('');
+      throw UnimplementedError('');
     }
   }
 
@@ -8331,13 +8327,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        var var_field0 = sse_decode_String(deserializer);
-        return EmbeddingInput_Single(field0: var_field0);
+      var var_field0 = sse_decode_String(deserializer);
+      return EmbeddingInput_Single(field0: var_field0);
       case 1:
-        var var_field0 = sse_decode_list_String(deserializer);
-        return EmbeddingInput_Multiple(field0: var_field0);
+      var var_field0 = sse_decode_list_String(deserializer);
+      return EmbeddingInput_Multiple(field0: var_field0);
       default:
-        throw UnimplementedError('');
+      throw UnimplementedError('');
     }
   }
 
@@ -8956,96 +8952,96 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        var var_message = sse_decode_String(deserializer);
-        var var_status = sse_decode_i_64(deserializer);
-        return LiterLlmError_Authentication(
+      var var_message = sse_decode_String(deserializer);
+      var var_status = sse_decode_i_64(deserializer);
+      return LiterLlmError_Authentication(
           message: var_message,
           status: var_status,
         );
       case 1:
-        var var_message = sse_decode_String(deserializer);
-        var var_retryAfter = sse_decode_i_64(deserializer);
-        return LiterLlmError_RateLimited(
+      var var_message = sse_decode_String(deserializer);
+      var var_retryAfter = sse_decode_i_64(deserializer);
+      return LiterLlmError_RateLimited(
           message: var_message,
           retryAfter: var_retryAfter,
         );
       case 2:
-        var var_message = sse_decode_String(deserializer);
-        var var_status = sse_decode_i_64(deserializer);
-        return LiterLlmError_BadRequest(
+      var var_message = sse_decode_String(deserializer);
+      var var_status = sse_decode_i_64(deserializer);
+      return LiterLlmError_BadRequest(
           message: var_message,
           status: var_status,
         );
       case 3:
-        var var_message = sse_decode_String(deserializer);
-        return LiterLlmError_ContextWindowExceeded(message: var_message);
+      var var_message = sse_decode_String(deserializer);
+      return LiterLlmError_ContextWindowExceeded(message: var_message);
       case 4:
-        var var_message = sse_decode_String(deserializer);
-        return LiterLlmError_ContentPolicy(message: var_message);
+      var var_message = sse_decode_String(deserializer);
+      return LiterLlmError_ContentPolicy(message: var_message);
       case 5:
-        var var_message = sse_decode_String(deserializer);
-        return LiterLlmError_NotFound(message: var_message);
+      var var_message = sse_decode_String(deserializer);
+      return LiterLlmError_NotFound(message: var_message);
       case 6:
-        var var_message = sse_decode_String(deserializer);
-        var var_status = sse_decode_i_64(deserializer);
-        return LiterLlmError_ServerError(
+      var var_message = sse_decode_String(deserializer);
+      var var_status = sse_decode_i_64(deserializer);
+      return LiterLlmError_ServerError(
           message: var_message,
           status: var_status,
         );
       case 7:
-        var var_message = sse_decode_String(deserializer);
-        var var_status = sse_decode_i_64(deserializer);
-        return LiterLlmError_ServiceUnavailable(
+      var var_message = sse_decode_String(deserializer);
+      var var_status = sse_decode_i_64(deserializer);
+      return LiterLlmError_ServiceUnavailable(
           message: var_message,
           status: var_status,
         );
       case 8:
-        return LiterLlmError_Timeout();
+      return LiterLlmError_Timeout();
       case 9:
-        var var_message = sse_decode_String(deserializer);
-        return LiterLlmError_Streaming(message: var_message);
+      var var_message = sse_decode_String(deserializer);
+      return LiterLlmError_Streaming(message: var_message);
       case 10:
-        var var_endpoint = sse_decode_String(deserializer);
-        var var_provider = sse_decode_String(deserializer);
-        return LiterLlmError_EndpointNotSupported(
+      var var_endpoint = sse_decode_String(deserializer);
+      var var_provider = sse_decode_String(deserializer);
+      return LiterLlmError_EndpointNotSupported(
           endpoint: var_endpoint,
           provider: var_provider,
         );
       case 11:
-        var var_name = sse_decode_String(deserializer);
-        var var_reason = sse_decode_String(deserializer);
-        return LiterLlmError_InvalidHeader(name: var_name, reason: var_reason);
+      var var_name = sse_decode_String(deserializer);
+      var var_reason = sse_decode_String(deserializer);
+      return LiterLlmError_InvalidHeader(name: var_name, reason: var_reason);
       case 12:
-        var var_field0 = sse_decode_String(deserializer);
-        return LiterLlmError_Serialization(field0: var_field0);
+      var var_field0 = sse_decode_String(deserializer);
+      return LiterLlmError_Serialization(field0: var_field0);
       case 13:
-        var var_message = sse_decode_String(deserializer);
-        var var_model = sse_decode_String(deserializer);
-        return LiterLlmError_BudgetExceeded(
+      var var_message = sse_decode_String(deserializer);
+      var var_model = sse_decode_String(deserializer);
+      return LiterLlmError_BudgetExceeded(
           message: var_message,
           model: var_model,
         );
       case 14:
-        var var_message = sse_decode_String(deserializer);
-        return LiterLlmError_HookRejected(message: var_message);
+      var var_message = sse_decode_String(deserializer);
+      return LiterLlmError_HookRejected(message: var_message);
       case 15:
-        var var_message = sse_decode_String(deserializer);
-        return LiterLlmError_InternalError(message: var_message);
+      var var_message = sse_decode_String(deserializer);
+      return LiterLlmError_InternalError(message: var_message);
       case 16:
-        var var_url = sse_decode_String(deserializer);
-        var var_reason = sse_decode_String(deserializer);
-        return LiterLlmError_OutboundForbidden(
+      var var_url = sse_decode_String(deserializer);
+      var var_reason = sse_decode_String(deserializer);
+      return LiterLlmError_OutboundForbidden(
           url: var_url,
           reason: var_reason,
         );
       case 17:
-        var var_key = sse_decode_String(deserializer);
-        return LiterLlmError_IdempotencyConflict(key: var_key);
+      var var_key = sse_decode_String(deserializer);
+      return LiterLlmError_IdempotencyConflict(key: var_key);
       case 18:
-        var var_key = sse_decode_String(deserializer);
-        return LiterLlmError_IdempotencyInFlight(key: var_key);
+      var var_key = sse_decode_String(deserializer);
+      return LiterLlmError_IdempotencyInFlight(key: var_key);
       default:
-        throw UnimplementedError('');
+      throw UnimplementedError('');
     }
   }
 
@@ -9056,25 +9052,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        var var_field0 = sse_decode_box_autoadd_system_message(deserializer);
-        return Message_System(field0: var_field0);
+      var var_field0 = sse_decode_box_autoadd_system_message(deserializer);
+      return Message_System(field0: var_field0);
       case 1:
-        var var_field0 = sse_decode_box_autoadd_user_message(deserializer);
-        return Message_User(field0: var_field0);
+      var var_field0 = sse_decode_box_autoadd_user_message(deserializer);
+      return Message_User(field0: var_field0);
       case 2:
-        var var_field0 = sse_decode_box_autoadd_assistant_message(deserializer);
-        return Message_Assistant(field0: var_field0);
+      var var_field0 = sse_decode_box_autoadd_assistant_message(deserializer);
+      return Message_Assistant(field0: var_field0);
       case 3:
-        var var_field0 = sse_decode_box_autoadd_tool_message(deserializer);
-        return Message_Tool(field0: var_field0);
+      var var_field0 = sse_decode_box_autoadd_tool_message(deserializer);
+      return Message_Tool(field0: var_field0);
       case 4:
-        var var_field0 = sse_decode_box_autoadd_developer_message(deserializer);
-        return Message_Developer(field0: var_field0);
+      var var_field0 = sse_decode_box_autoadd_developer_message(deserializer);
+      return Message_Developer(field0: var_field0);
       case 5:
-        var var_field0 = sse_decode_box_autoadd_function_message(deserializer);
-        return Message_Function(field0: var_field0);
+      var var_field0 = sse_decode_box_autoadd_function_message(deserializer);
+      return Message_Function(field0: var_field0);
       default:
-        throw UnimplementedError('');
+      throw UnimplementedError('');
     }
   }
 
@@ -9179,13 +9175,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        var var_field0 = sse_decode_String(deserializer);
-        return ModerationInput_Single(field0: var_field0);
+      var var_field0 = sse_decode_String(deserializer);
+      return ModerationInput_Single(field0: var_field0);
       case 1:
-        var var_field0 = sse_decode_list_String(deserializer);
-        return ModerationInput_Multiple(field0: var_field0);
+      var var_field0 = sse_decode_list_String(deserializer);
+      return ModerationInput_Multiple(field0: var_field0);
       default:
-        throw UnimplementedError('');
+      throw UnimplementedError('');
     }
   }
 
@@ -9236,14 +9232,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        var var_url = sse_decode_String(deserializer);
-        return OcrDocument_Url(url: var_url);
+      var var_url = sse_decode_String(deserializer);
+      return OcrDocument_Url(url: var_url);
       case 1:
-        var var_data = sse_decode_String(deserializer);
-        var var_mediaType = sse_decode_String(deserializer);
-        return OcrDocument_Base64(data: var_data, mediaType: var_mediaType);
+      var var_data = sse_decode_String(deserializer);
+      var var_mediaType = sse_decode_String(deserializer);
+      return OcrDocument_Base64(data: var_data, mediaType: var_mediaType);
       default:
-        throw UnimplementedError('');
+      throw UnimplementedError('');
     }
   }
 
@@ -9863,13 +9859,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        var var_field0 = sse_decode_String(deserializer);
-        return RerankDocument_Text(field0: var_field0);
+      var var_field0 = sse_decode_String(deserializer);
+      return RerankDocument_Text(field0: var_field0);
       case 1:
-        var var_text = sse_decode_String(deserializer);
-        return RerankDocument_Object(text: var_text);
+      var var_text = sse_decode_String(deserializer);
+      return RerankDocument_Object(text: var_text);
       default:
-        throw UnimplementedError('');
+      throw UnimplementedError('');
     }
   }
 
@@ -9930,16 +9926,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        return ResponseFormat_Text();
+      return ResponseFormat_Text();
       case 1:
-        return ResponseFormat_JsonObject();
+      return ResponseFormat_JsonObject();
       case 2:
-        var var_jsonSchema = sse_decode_box_autoadd_json_schema_format(
+      var var_jsonSchema = sse_decode_box_autoadd_json_schema_format(
           deserializer,
         );
-        return ResponseFormat_JsonSchema(jsonSchema: var_jsonSchema);
+      return ResponseFormat_JsonSchema(jsonSchema: var_jsonSchema);
       default:
-        throw UnimplementedError('');
+      throw UnimplementedError('');
     }
   }
 
@@ -10064,13 +10060,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        var var_field0 = sse_decode_String(deserializer);
-        return StopSequence_Single(field0: var_field0);
+      var var_field0 = sse_decode_String(deserializer);
+      return StopSequence_Single(field0: var_field0);
       case 1:
-        var var_field0 = sse_decode_list_String(deserializer);
-        return StopSequence_Multiple(field0: var_field0);
+      var var_field0 = sse_decode_list_String(deserializer);
+      return StopSequence_Multiple(field0: var_field0);
       default:
-        throw UnimplementedError('');
+      throw UnimplementedError('');
     }
   }
 
@@ -10173,15 +10169,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        var var_field0 = sse_decode_tool_choice_mode(deserializer);
-        return ToolChoice_Mode(field0: var_field0);
+      var var_field0 = sse_decode_tool_choice_mode(deserializer);
+      return ToolChoice_Mode(field0: var_field0);
       case 1:
-        var var_field0 = sse_decode_box_autoadd_specific_tool_choice(
+      var var_field0 = sse_decode_box_autoadd_specific_tool_choice(
           deserializer,
         );
-        return ToolChoice_Specific(field0: var_field0);
+      return ToolChoice_Specific(field0: var_field0);
       default:
-        throw UnimplementedError('');
+      throw UnimplementedError('');
     }
   }
 
@@ -10264,7 +10260,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_completionTokens = sse_decode_i_64(deserializer);
     var var_totalTokens = sse_decode_i_64(deserializer);
     var var_promptTokensDetails =
-        sse_decode_opt_box_autoadd_prompt_tokens_details(deserializer);
+    sse_decode_opt_box_autoadd_prompt_tokens_details(deserializer);
     return Usage(
       promptTokens: var_promptTokens,
       completionTokens: var_completionTokens,
@@ -10280,13 +10276,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-        var var_field0 = sse_decode_String(deserializer);
-        return UserContent_Text(field0: var_field0);
+      var var_field0 = sse_decode_String(deserializer);
+      return UserContent_Text(field0: var_field0);
       case 1:
-        var var_field0 = sse_decode_list_content_part(deserializer);
-        return UserContent_Parts(field0: var_field0);
+      var var_field0 = sse_decode_list_content_part(deserializer);
+      return UserContent_Parts(field0: var_field0);
       default:
-        throw UnimplementedError('');
+      throw UnimplementedError('');
     }
   }
 
@@ -10424,11 +10420,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case AssistantContent_Text(field0: final field0):
-        sse_encode_i_32(0, serializer);
-        sse_encode_String(field0, serializer);
+      sse_encode_i_32(0, serializer);
+      sse_encode_String(field0, serializer);
       case AssistantContent_Parts(field0: final field0):
-        sse_encode_i_32(1, serializer);
-        sse_encode_list_assistant_part(field0, serializer);
+      sse_encode_i_32(1, serializer);
+      sse_encode_list_assistant_part(field0, serializer);
     }
   }
 
@@ -10450,17 +10446,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case AssistantPart_Text(text: final text):
-        sse_encode_i_32(0, serializer);
-        sse_encode_String(text, serializer);
+      sse_encode_i_32(0, serializer);
+      sse_encode_String(text, serializer);
       case AssistantPart_Refusal(refusal: final refusal):
-        sse_encode_i_32(1, serializer);
-        sse_encode_String(refusal, serializer);
+      sse_encode_i_32(1, serializer);
+      sse_encode_String(refusal, serializer);
       case AssistantPart_OutputImage(imageUrl: final imageUrl):
-        sse_encode_i_32(2, serializer);
-        sse_encode_box_autoadd_image_url(imageUrl, serializer);
+      sse_encode_i_32(2, serializer);
+      sse_encode_box_autoadd_image_url(imageUrl, serializer);
       case AssistantPart_OutputAudio(audio: final audio):
-        sse_encode_i_32(3, serializer);
-        sse_encode_box_autoadd_audio_content(audio, serializer);
+      sse_encode_i_32(3, serializer);
+      sse_encode_box_autoadd_audio_content(audio, serializer);
     }
   }
 
@@ -10486,12 +10482,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case AuthHeaderFormat_Bearer():
-        sse_encode_i_32(0, serializer);
+      sse_encode_i_32(0, serializer);
       case AuthHeaderFormat_ApiKey(field0: final field0):
-        sse_encode_i_32(1, serializer);
-        sse_encode_String(field0, serializer);
+      sse_encode_i_32(1, serializer);
+      sse_encode_String(field0, serializer);
       case AuthHeaderFormat_None():
-        sse_encode_i_32(2, serializer);
+      sse_encode_i_32(2, serializer);
     }
   }
 
@@ -11032,11 +11028,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case CacheBackend_Memory():
-        sse_encode_i_32(0, serializer);
+      sse_encode_i_32(0, serializer);
       case CacheBackend_OpenDal(scheme: final scheme, config: final config):
-        sse_encode_i_32(1, serializer);
-        sse_encode_String(scheme, serializer);
-        sse_encode_Map_String_String_None(config, serializer);
+      sse_encode_i_32(1, serializer);
+      sse_encode_String(scheme, serializer);
+      sse_encode_Map_String_String_None(config, serializer);
     }
   }
 
@@ -11141,17 +11137,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case ContentPart_Text(text: final text):
-        sse_encode_i_32(0, serializer);
-        sse_encode_String(text, serializer);
+      sse_encode_i_32(0, serializer);
+      sse_encode_String(text, serializer);
       case ContentPart_ImageUrl(imageUrl: final imageUrl):
-        sse_encode_i_32(1, serializer);
-        sse_encode_box_autoadd_image_url(imageUrl, serializer);
+      sse_encode_i_32(1, serializer);
+      sse_encode_box_autoadd_image_url(imageUrl, serializer);
       case ContentPart_Document(document: final document):
-        sse_encode_i_32(2, serializer);
-        sse_encode_box_autoadd_document_content(document, serializer);
+      sse_encode_i_32(2, serializer);
+      sse_encode_box_autoadd_document_content(document, serializer);
       case ContentPart_InputAudio(inputAudio: final inputAudio):
-        sse_encode_i_32(3, serializer);
-        sse_encode_box_autoadd_audio_content(inputAudio, serializer);
+      sse_encode_i_32(3, serializer);
+      sse_encode_box_autoadd_audio_content(inputAudio, serializer);
     }
   }
 
@@ -11306,11 +11302,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case EmbeddingInput_Single(field0: final field0):
-        sse_encode_i_32(0, serializer);
-        sse_encode_String(field0, serializer);
+      sse_encode_i_32(0, serializer);
+      sse_encode_String(field0, serializer);
       case EmbeddingInput_Multiple(field0: final field0):
-        sse_encode_i_32(1, serializer);
-        sse_encode_list_String(field0, serializer);
+      sse_encode_i_32(1, serializer);
+      sse_encode_list_String(field0, serializer);
     }
   }
 
@@ -11860,91 +11856,91 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         message: final message,
         status: final status,
       ):
-        sse_encode_i_32(0, serializer);
-        sse_encode_String(message, serializer);
-        sse_encode_i_64(status, serializer);
+      sse_encode_i_32(0, serializer);
+      sse_encode_String(message, serializer);
+      sse_encode_i_64(status, serializer);
       case LiterLlmError_RateLimited(
         message: final message,
         retryAfter: final retryAfter,
       ):
-        sse_encode_i_32(1, serializer);
-        sse_encode_String(message, serializer);
-        sse_encode_i_64(retryAfter, serializer);
+      sse_encode_i_32(1, serializer);
+      sse_encode_String(message, serializer);
+      sse_encode_i_64(retryAfter, serializer);
       case LiterLlmError_BadRequest(
         message: final message,
         status: final status,
       ):
-        sse_encode_i_32(2, serializer);
-        sse_encode_String(message, serializer);
-        sse_encode_i_64(status, serializer);
+      sse_encode_i_32(2, serializer);
+      sse_encode_String(message, serializer);
+      sse_encode_i_64(status, serializer);
       case LiterLlmError_ContextWindowExceeded(message: final message):
-        sse_encode_i_32(3, serializer);
-        sse_encode_String(message, serializer);
+      sse_encode_i_32(3, serializer);
+      sse_encode_String(message, serializer);
       case LiterLlmError_ContentPolicy(message: final message):
-        sse_encode_i_32(4, serializer);
-        sse_encode_String(message, serializer);
+      sse_encode_i_32(4, serializer);
+      sse_encode_String(message, serializer);
       case LiterLlmError_NotFound(message: final message):
-        sse_encode_i_32(5, serializer);
-        sse_encode_String(message, serializer);
+      sse_encode_i_32(5, serializer);
+      sse_encode_String(message, serializer);
       case LiterLlmError_ServerError(
         message: final message,
         status: final status,
       ):
-        sse_encode_i_32(6, serializer);
-        sse_encode_String(message, serializer);
-        sse_encode_i_64(status, serializer);
+      sse_encode_i_32(6, serializer);
+      sse_encode_String(message, serializer);
+      sse_encode_i_64(status, serializer);
       case LiterLlmError_ServiceUnavailable(
         message: final message,
         status: final status,
       ):
-        sse_encode_i_32(7, serializer);
-        sse_encode_String(message, serializer);
-        sse_encode_i_64(status, serializer);
+      sse_encode_i_32(7, serializer);
+      sse_encode_String(message, serializer);
+      sse_encode_i_64(status, serializer);
       case LiterLlmError_Timeout():
-        sse_encode_i_32(8, serializer);
+      sse_encode_i_32(8, serializer);
       case LiterLlmError_Streaming(message: final message):
-        sse_encode_i_32(9, serializer);
-        sse_encode_String(message, serializer);
+      sse_encode_i_32(9, serializer);
+      sse_encode_String(message, serializer);
       case LiterLlmError_EndpointNotSupported(
         endpoint: final endpoint,
         provider: final provider,
       ):
-        sse_encode_i_32(10, serializer);
-        sse_encode_String(endpoint, serializer);
-        sse_encode_String(provider, serializer);
+      sse_encode_i_32(10, serializer);
+      sse_encode_String(endpoint, serializer);
+      sse_encode_String(provider, serializer);
       case LiterLlmError_InvalidHeader(name: final name, reason: final reason):
-        sse_encode_i_32(11, serializer);
-        sse_encode_String(name, serializer);
-        sse_encode_String(reason, serializer);
+      sse_encode_i_32(11, serializer);
+      sse_encode_String(name, serializer);
+      sse_encode_String(reason, serializer);
       case LiterLlmError_Serialization(field0: final field0):
-        sse_encode_i_32(12, serializer);
-        sse_encode_String(field0, serializer);
+      sse_encode_i_32(12, serializer);
+      sse_encode_String(field0, serializer);
       case LiterLlmError_BudgetExceeded(
         message: final message,
         model: final model,
       ):
-        sse_encode_i_32(13, serializer);
-        sse_encode_String(message, serializer);
-        sse_encode_String(model, serializer);
+      sse_encode_i_32(13, serializer);
+      sse_encode_String(message, serializer);
+      sse_encode_String(model, serializer);
       case LiterLlmError_HookRejected(message: final message):
-        sse_encode_i_32(14, serializer);
-        sse_encode_String(message, serializer);
+      sse_encode_i_32(14, serializer);
+      sse_encode_String(message, serializer);
       case LiterLlmError_InternalError(message: final message):
-        sse_encode_i_32(15, serializer);
-        sse_encode_String(message, serializer);
+      sse_encode_i_32(15, serializer);
+      sse_encode_String(message, serializer);
       case LiterLlmError_OutboundForbidden(
         url: final url,
         reason: final reason,
       ):
-        sse_encode_i_32(16, serializer);
-        sse_encode_String(url, serializer);
-        sse_encode_String(reason, serializer);
+      sse_encode_i_32(16, serializer);
+      sse_encode_String(url, serializer);
+      sse_encode_String(reason, serializer);
       case LiterLlmError_IdempotencyConflict(key: final key):
-        sse_encode_i_32(17, serializer);
-        sse_encode_String(key, serializer);
+      sse_encode_i_32(17, serializer);
+      sse_encode_String(key, serializer);
       case LiterLlmError_IdempotencyInFlight(key: final key):
-        sse_encode_i_32(18, serializer);
-        sse_encode_String(key, serializer);
+      sse_encode_i_32(18, serializer);
+      sse_encode_String(key, serializer);
     }
   }
 
@@ -11953,23 +11949,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case Message_System(field0: final field0):
-        sse_encode_i_32(0, serializer);
-        sse_encode_box_autoadd_system_message(field0, serializer);
+      sse_encode_i_32(0, serializer);
+      sse_encode_box_autoadd_system_message(field0, serializer);
       case Message_User(field0: final field0):
-        sse_encode_i_32(1, serializer);
-        sse_encode_box_autoadd_user_message(field0, serializer);
+      sse_encode_i_32(1, serializer);
+      sse_encode_box_autoadd_user_message(field0, serializer);
       case Message_Assistant(field0: final field0):
-        sse_encode_i_32(2, serializer);
-        sse_encode_box_autoadd_assistant_message(field0, serializer);
+      sse_encode_i_32(2, serializer);
+      sse_encode_box_autoadd_assistant_message(field0, serializer);
       case Message_Tool(field0: final field0):
-        sse_encode_i_32(3, serializer);
-        sse_encode_box_autoadd_tool_message(field0, serializer);
+      sse_encode_i_32(3, serializer);
+      sse_encode_box_autoadd_tool_message(field0, serializer);
       case Message_Developer(field0: final field0):
-        sse_encode_i_32(4, serializer);
-        sse_encode_box_autoadd_developer_message(field0, serializer);
+      sse_encode_i_32(4, serializer);
+      sse_encode_box_autoadd_developer_message(field0, serializer);
       case Message_Function(field0: final field0):
-        sse_encode_i_32(5, serializer);
-        sse_encode_box_autoadd_function_message(field0, serializer);
+      sse_encode_i_32(5, serializer);
+      sse_encode_box_autoadd_function_message(field0, serializer);
     }
   }
 
@@ -12044,11 +12040,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case ModerationInput_Single(field0: final field0):
-        sse_encode_i_32(0, serializer);
-        sse_encode_String(field0, serializer);
+      sse_encode_i_32(0, serializer);
+      sse_encode_String(field0, serializer);
       case ModerationInput_Multiple(field0: final field0):
-        sse_encode_i_32(1, serializer);
-        sse_encode_list_String(field0, serializer);
+      sse_encode_i_32(1, serializer);
+      sse_encode_list_String(field0, serializer);
     }
   }
 
@@ -12089,12 +12085,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case OcrDocument_Url(url: final url):
-        sse_encode_i_32(0, serializer);
-        sse_encode_String(url, serializer);
+      sse_encode_i_32(0, serializer);
+      sse_encode_String(url, serializer);
       case OcrDocument_Base64(data: final data, mediaType: final mediaType):
-        sse_encode_i_32(1, serializer);
-        sse_encode_String(data, serializer);
-        sse_encode_String(mediaType, serializer);
+      sse_encode_i_32(1, serializer);
+      sse_encode_String(data, serializer);
+      sse_encode_String(mediaType, serializer);
     }
   }
 
@@ -12698,11 +12694,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case RerankDocument_Text(field0: final field0):
-        sse_encode_i_32(0, serializer);
-        sse_encode_String(field0, serializer);
+      sse_encode_i_32(0, serializer);
+      sse_encode_String(field0, serializer);
       case RerankDocument_Object(text: final text):
-        sse_encode_i_32(1, serializer);
-        sse_encode_String(text, serializer);
+      sse_encode_i_32(1, serializer);
+      sse_encode_String(text, serializer);
     }
   }
 
@@ -12755,12 +12751,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case ResponseFormat_Text():
-        sse_encode_i_32(0, serializer);
+      sse_encode_i_32(0, serializer);
       case ResponseFormat_JsonObject():
-        sse_encode_i_32(1, serializer);
+      sse_encode_i_32(1, serializer);
       case ResponseFormat_JsonSchema(jsonSchema: final jsonSchema):
-        sse_encode_i_32(2, serializer);
-        sse_encode_box_autoadd_json_schema_format(jsonSchema, serializer);
+      sse_encode_i_32(2, serializer);
+      sse_encode_box_autoadd_json_schema_format(jsonSchema, serializer);
     }
   }
 
@@ -12858,11 +12854,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case StopSequence_Single(field0: final field0):
-        sse_encode_i_32(0, serializer);
-        sse_encode_String(field0, serializer);
+      sse_encode_i_32(0, serializer);
+      sse_encode_String(field0, serializer);
       case StopSequence_Multiple(field0: final field0):
-        sse_encode_i_32(1, serializer);
-        sse_encode_list_String(field0, serializer);
+      sse_encode_i_32(1, serializer);
+      sse_encode_list_String(field0, serializer);
     }
   }
 
@@ -12941,11 +12937,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case ToolChoice_Mode(field0: final field0):
-        sse_encode_i_32(0, serializer);
-        sse_encode_tool_choice_mode(field0, serializer);
+      sse_encode_i_32(0, serializer);
+      sse_encode_tool_choice_mode(field0, serializer);
       case ToolChoice_Specific(field0: final field0):
-        sse_encode_i_32(1, serializer);
-        sse_encode_box_autoadd_specific_tool_choice(field0, serializer);
+      sse_encode_i_32(1, serializer);
+      sse_encode_box_autoadd_specific_tool_choice(field0, serializer);
     }
   }
 
@@ -13024,11 +13020,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case UserContent_Text(field0: final field0):
-        sse_encode_i_32(0, serializer);
-        sse_encode_String(field0, serializer);
+      sse_encode_i_32(0, serializer);
+      sse_encode_String(field0, serializer);
       case UserContent_Parts(field0: final field0):
-        sse_encode_i_32(1, serializer);
-        sse_encode_list_content_part(field0, serializer);
+      sse_encode_i_32(1, serializer);
+      sse_encode_list_content_part(field0, serializer);
     }
   }
 
@@ -13062,117 +13058,117 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 class DefaultClientImpl extends RustOpaque implements DefaultClient {
   // Not to be used by end users
   DefaultClientImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
+  : super.frbInternalDcoDecode(wire, _kStaticData);
 
   // Not to be used by end users
   DefaultClientImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+  : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_DefaultClient,
+    RustLib.instance.api.rust_arc_increment_strong_count_DefaultClient,
     rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_DefaultClient,
+    RustLib.instance.api.rust_arc_decrement_strong_count_DefaultClient,
     rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_DefaultClientPtr,
+    RustLib.instance.api.rust_arc_decrement_strong_count_DefaultClientPtr,
   );
 
   Future<BatchObject> cancelBatch({required String batchId}) => RustLib
-      .instance
-      .api
-      .crateDefaultClientCancelBatch(that: this, batchId: batchId);
+  .instance
+  .api
+  .crateDefaultClientCancelBatch(that: this, batchId: batchId);
 
   Future<ResponseObject> cancelResponse({required String responseId}) => RustLib
-      .instance
-      .api
-      .crateDefaultClientCancelResponse(that: this, responseId: responseId);
+  .instance
+  .api
+  .crateDefaultClientCancelResponse(that: this, responseId: responseId);
 
   Future<ChatCompletionResponse> chat({required ChatCompletionRequest req}) =>
-      RustLib.instance.api.crateDefaultClientChat(that: this, req: req);
+  RustLib.instance.api.crateDefaultClientChat(that: this, req: req);
 
   Stream<ChatCompletionChunk> chatStream({
     required ChatCompletionRequest req,
   }) => RustLib.instance.api.crateDefaultClientChatStream(that: this, req: req);
 
   Future<BatchObject> createBatch({required CreateBatchRequest req}) =>
-      RustLib.instance.api.crateDefaultClientCreateBatch(that: this, req: req);
+  RustLib.instance.api.crateDefaultClientCreateBatch(that: this, req: req);
 
   Future<FileObject> createFile({required CreateFileRequest req}) =>
-      RustLib.instance.api.crateDefaultClientCreateFile(that: this, req: req);
+  RustLib.instance.api.crateDefaultClientCreateFile(that: this, req: req);
 
   Future<ResponseObject> createResponse({required CreateResponseRequest req}) =>
-      RustLib.instance.api.crateDefaultClientCreateResponse(
-        that: this,
-        req: req,
-      );
+  RustLib.instance.api.crateDefaultClientCreateResponse(
+    that: this,
+    req: req,
+  );
 
   Future<DeleteResponse> deleteFile({required String fileId}) => RustLib
-      .instance
-      .api
-      .crateDefaultClientDeleteFile(that: this, fileId: fileId);
+  .instance
+  .api
+  .crateDefaultClientDeleteFile(that: this, fileId: fileId);
 
   Future<EmbeddingResponse> embed({required EmbeddingRequest req}) =>
-      RustLib.instance.api.crateDefaultClientEmbed(that: this, req: req);
+  RustLib.instance.api.crateDefaultClientEmbed(that: this, req: req);
 
   Future<BatchObject> fetchBatchForPolling({required String batchId}) => RustLib
-      .instance
-      .api
-      .crateDefaultClientFetchBatchForPolling(that: this, batchId: batchId);
+  .instance
+  .api
+  .crateDefaultClientFetchBatchForPolling(that: this, batchId: batchId);
 
   Future<Uint8List> fileContent({required String fileId}) => RustLib
-      .instance
-      .api
-      .crateDefaultClientFileContent(that: this, fileId: fileId);
+  .instance
+  .api
+  .crateDefaultClientFileContent(that: this, fileId: fileId);
 
   Future<ImagesResponse> imageGenerate({required CreateImageRequest req}) =>
-      RustLib.instance.api.crateDefaultClientImageGenerate(
-        that: this,
-        req: req,
-      );
+  RustLib.instance.api.crateDefaultClientImageGenerate(
+    that: this,
+    req: req,
+  );
 
   Future<BatchListResponse> listBatches({BatchListQuery? query}) => RustLib
-      .instance
-      .api
-      .crateDefaultClientListBatches(that: this, query: query);
+  .instance
+  .api
+  .crateDefaultClientListBatches(that: this, query: query);
 
   Future<FileListResponse> listFiles({FileListQuery? query}) => RustLib
-      .instance
-      .api
-      .crateDefaultClientListFiles(that: this, query: query);
+  .instance
+  .api
+  .crateDefaultClientListFiles(that: this, query: query);
 
   Future<ModelsListResponse> listModels() =>
-      RustLib.instance.api.crateDefaultClientListModels(that: this);
+  RustLib.instance.api.crateDefaultClientListModels(that: this);
 
   Future<ModerationResponse> moderate({required ModerationRequest req}) =>
-      RustLib.instance.api.crateDefaultClientModerate(that: this, req: req);
+  RustLib.instance.api.crateDefaultClientModerate(that: this, req: req);
 
   Future<OcrResponse> ocr({required OcrRequest req}) =>
-      RustLib.instance.api.crateDefaultClientOcr(that: this, req: req);
+  RustLib.instance.api.crateDefaultClientOcr(that: this, req: req);
 
   Future<RerankResponse> rerank({required RerankRequest req}) =>
-      RustLib.instance.api.crateDefaultClientRerank(that: this, req: req);
+  RustLib.instance.api.crateDefaultClientRerank(that: this, req: req);
 
   Future<BatchObject> retrieveBatch({required String batchId}) => RustLib
-      .instance
-      .api
-      .crateDefaultClientRetrieveBatch(that: this, batchId: batchId);
+  .instance
+  .api
+  .crateDefaultClientRetrieveBatch(that: this, batchId: batchId);
 
   Future<FileObject> retrieveFile({required String fileId}) => RustLib
-      .instance
-      .api
-      .crateDefaultClientRetrieveFile(that: this, fileId: fileId);
+  .instance
+  .api
+  .crateDefaultClientRetrieveFile(that: this, fileId: fileId);
 
   Future<ResponseObject> retrieveResponse({required String responseId}) =>
-      RustLib.instance.api.crateDefaultClientRetrieveResponse(
-        that: this,
-        responseId: responseId,
-      );
+  RustLib.instance.api.crateDefaultClientRetrieveResponse(
+    that: this,
+    responseId: responseId,
+  );
 
   Future<SearchResponse> search({required SearchRequest req}) =>
-      RustLib.instance.api.crateDefaultClientSearch(that: this, req: req);
+  RustLib.instance.api.crateDefaultClientSearch(that: this, req: req);
 
   Future<Uint8List> speech({required CreateSpeechRequest req}) =>
-      RustLib.instance.api.crateDefaultClientSpeech(that: this, req: req);
+  RustLib.instance.api.crateDefaultClientSpeech(that: this, req: req);
 
   Future<TranscriptionResponse> transcribe({
     required CreateTranscriptionRequest req,

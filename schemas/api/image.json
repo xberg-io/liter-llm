@@ -79,13 +79,7 @@
             },
             {
               "type": "string",
-              "enum": [
-                "gpt-image-1.5",
-                "dall-e-2",
-                "gpt-image-1",
-                "gpt-image-1-mini",
-                "chatgpt-image-latest"
-              ],
+              "enum": ["gpt-image-1.5", "dall-e-2", "gpt-image-1", "gpt-image-1-mini", "chatgpt-image-latest"],
               "x-stainless-const": true
             }
           ],
@@ -246,16 +240,7 @@
         },
         "size": {
           "type": "string",
-          "enum": [
-            "auto",
-            "1024x1024",
-            "1536x1024",
-            "1024x1536",
-            "256x256",
-            "512x512",
-            "1792x1024",
-            "1024x1792"
-          ],
+          "enum": ["auto", "1024x1024", "1536x1024", "1024x1536", "256x256", "512x512", "1792x1024", "1024x1792"],
           "default": "auto",
           "example": "1024x1024",
           "nullable": true,
