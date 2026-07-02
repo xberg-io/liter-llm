@@ -1,6 +1,6 @@
 [package]
 name = "liter-llm-node"
-version = "1.9.1"
+version = "1.9.2"
 edition = "2024"
 license = "MIT"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
@@ -27,7 +27,7 @@ wasm-http = ["liter-llm/wasm-http"]
 
 [dependencies]
 futures-util = "0.3"
-liter-llm = { version = "1.9.1", path = "../liter-llm", features = ["native-http", "full"] }
+liter-llm = { version = "1.9.2", path = "../liter-llm", features = ["native-http", "full"] }
 napi = { version = "3", features = ["async", "serde-json"] }
 napi-derive = "3"
 serde = { version = "1", features = ["derive"] }

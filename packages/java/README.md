@@ -101,14 +101,14 @@ Install via one of the supported package managers:
 <dependency>
     <groupId>io.xberg.literllm</groupId>
     <artifactId>liter-llm</artifactId>
-    <version>1.9.0</version>
+    <version>1.9.2</version>
 </dependency>
 ```
 
 **Gradle:**
 
 ```gradle
-implementation 'io.xberg.literllm:liter-llm:1.9.0'
+implementation 'io.xberg.literllm:liter-llm:1.9.2'
 ```
 
 ### System Requirements
