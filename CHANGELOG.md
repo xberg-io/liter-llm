@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.1] - 2026-07-02
+
+### Changed
+
+- **Upgrade dependencies and regenerate all bindings** with alef 0.30.11.
+- Add `[workspace] extra_clippy_allows = ["single_match", "collapsible_match"]` to
+  `alef.toml` so the generated single-variant enum-from-int bindings pass
+  `clippy -D warnings`.
+
+### Fixed
+
+- Correct the **HashiCorp** vendor name spelling in the proxy Vault secret backend
+  (`HashiCorpVaultProvider`/`Builder`), its comments, docs, and this changelog.
+
 ## [1.9.0] - 2026-06-27
 
 Stable release promoting 1.9.0-rc.2 (fully published green). No code changes

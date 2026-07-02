@@ -1,6 +1,6 @@
 [package]
 name = "liter-llm-rb"
-version = "1.9.0"
+version = "1.9.1"
 edition = "2024"
 license = "MIT"
 description = "Universal LLM API client with Rust-powered polyglot bindings."
@@ -24,7 +24,7 @@ wasm-http = ["liter-llm/wasm-http"]
 
 [dependencies]
 futures = "0.3"
-liter-llm = { version = "1.9.0", path = "../../../../../crates/liter-llm", features = ["native-http", "full"] }
+liter-llm = { version = "1.9.1", path = "../../../../../crates/liter-llm", features = ["native-http", "full"] }
 magnus = "0.8"
 rb-sys = ">=0.9, <0.9.128"
 serde = { version = "1", features = ["derive"] }
