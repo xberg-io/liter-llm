@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.2] - 2026-07-02
+
+### Fixed
+
+- **Ruby: allow Ruby 4.x.** Drop the `< 4.0` upper bound on the gem's
+  `required_ruby_version` (now `>= 3.2.0`), so installing/updating the gem no
+  longer fails on Ruby 4.0+. Fixes #136.
+
 ## [1.9.1] - 2026-07-02
 
 ### Changed
