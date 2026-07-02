@@ -1,6 +1,6 @@
-//! Integration tests for [`liter_llm_proxy::secrets::HashCorpVaultProvider`].
+//! Integration tests for [`liter_llm_proxy::secrets::HashiCorpVaultProvider`].
 //!
-//! These tests are written against the public `HashCorpVaultProvider::get`
+//! These tests are written against the public `HashiCorpVaultProvider::get`
 //! contract and target the KV-v2 `/v1/<mount>/data/<path>` response shape.
 //!
 //! # Mocking harness
@@ -15,12 +15,12 @@
 
 #![cfg(feature = "secrets-vault")]
 
-use liter_llm_proxy::secrets::{HashCorpVaultProvider, SecretError, SecretManager};
+use liter_llm_proxy::secrets::{HashiCorpVaultProvider, SecretError, SecretManager};
 use secrecy::ExposeSecret;
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
-/// `HashCorpVaultProvider::get` must extract the `.data.data.<field>` field
+/// `HashiCorpVaultProvider::get` must extract the `.data.data.<field>` field
 /// from a Vault KV-v2 read response.
 #[tokio::test]
 async fn fetch_kv_v2_path_extracts_data_data_field() {
@@ -77,7 +77,7 @@ async fn fetch_kv_v2_path_extracts_data_data_field() {
         .mount(&server)
         .await;
 
-    let provider = HashCorpVaultProvider::builder()
+    let provider = HashiCorpVaultProvider::builder()
         .address(server.uri())
         .token("test-token")
         .build()
@@ -105,7 +105,7 @@ async fn fetch_returns_error_on_403() {
         .mount(&server)
         .await;
 
-    let provider = HashCorpVaultProvider::builder()
+    let provider = HashiCorpVaultProvider::builder()
         .address(server.uri())
         .token("test-token")
         .build()

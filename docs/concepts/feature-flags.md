@@ -33,7 +33,7 @@ The proxy crate adds three server-side feature flags:
 | --------------- | ------- | ----------------------------------------------------------------------------------------------- |
 | `proxy`         | yes     | OpenAI-compatible proxy routes, MCP server, files, batches, and responses endpoints.             |
 | `secrets-aws`   | no      | AWS Secrets Manager backend for `aws://` secret names.                                           |
-| `secrets-vault` | no      | HashCorp Vault KV-v2 backend for `vault://` secret names. The `env://` backend is always built. |
+| `secrets-vault` | no      | HashiCorp Vault KV-v2 backend for `vault://` secret names. The `env://` backend is always built. |
 
 ## Feature availability
 

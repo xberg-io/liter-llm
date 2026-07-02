@@ -1,4 +1,4 @@
-//! [`HashCorpVaultProvider`] — HashCorp Vault KV-v2 backend.
+//! [`HashiCorpVaultProvider`] — HashiCorp Vault KV-v2 backend.
 //!
 //! Uses [`vaultrs`] to talk to the Vault HTTP API.  Secrets are fetched from
 //! the KV-v2 secrets engine.  Responses are cached with a configurable TTL
@@ -11,9 +11,9 @@
 //! # Configuration
 //!
 //! ```rust,ignore
-//! use liter_llm_proxy::secrets::HashCorpVaultProvider;
+//! use liter_llm_proxy::secrets::HashiCorpVaultProvider;
 //!
-//! let provider = HashCorpVaultProvider::builder()
+//! let provider = HashiCorpVaultProvider::builder()
 //!     .address("https://vault.example.com")
 //!     .token("s.xxxx")
 //!     .mount("secret")           // KV-v2 mount (default "secret")
@@ -119,17 +119,17 @@ impl SecretCache {
 // Provider
 // ---------------------------------------------------------------------------
 
-/// HashCorp Vault KV-v2 secret manager.
-pub struct HashCorpVaultProvider {
+/// HashiCorp Vault KV-v2 secret manager.
+pub struct HashiCorpVaultProvider {
     client: Arc<VaultClient>,
     mount: String,
     cache: Arc<SecretCache>,
 }
 
-impl HashCorpVaultProvider {
+impl HashiCorpVaultProvider {
     /// Return a builder for this provider.
-    pub fn builder() -> HashCorpVaultProviderBuilder {
-        HashCorpVaultProviderBuilder::default()
+    pub fn builder() -> HashiCorpVaultProviderBuilder {
+        HashiCorpVaultProviderBuilder::default()
     }
 
     /// Look up a KV-v2 path in the form `"path/to/secret"` and field
@@ -209,7 +209,7 @@ impl HashCorpVaultProvider {
     }
 }
 
-impl SecretManager for HashCorpVaultProvider {
+impl SecretManager for HashiCorpVaultProvider {
     fn backend(&self) -> &'static str {
         "hashicorp-vault"
     }
@@ -295,16 +295,16 @@ impl SecretManager for HashCorpVaultProvider {
 // Builder
 // ---------------------------------------------------------------------------
 
-/// Builder for [`HashCorpVaultProvider`].
+/// Builder for [`HashiCorpVaultProvider`].
 #[derive(Default)]
-pub struct HashCorpVaultProviderBuilder {
+pub struct HashiCorpVaultProviderBuilder {
     address: Option<String>,
     token: Option<String>,
     mount: Option<String>,
     cache_ttl: Option<Duration>,
 }
 
-impl HashCorpVaultProviderBuilder {
+impl HashiCorpVaultProviderBuilder {
     /// Set the Vault server address (e.g. `"https://vault.example.com"`).
     pub fn address(mut self, address: impl Into<String>) -> Self {
         self.address = Some(address.into());
@@ -347,7 +347,7 @@ impl HashCorpVaultProviderBuilder {
     /// config-file injection — an address pointing at `127.0.0.1:8200`,
     /// `169.254.169.254`, or any other private/link-local range is rejected
     /// when the policy is `DenyPrivate` (the proxy default).
-    pub fn build(self) -> Result<HashCorpVaultProvider, SecretError> {
+    pub fn build(self) -> Result<HashiCorpVaultProvider, SecretError> {
         let address = self.address.unwrap_or_else(|| "http://127.0.0.1:8200".to_owned());
         let token = self
             .token
@@ -373,7 +373,7 @@ impl HashCorpVaultProviderBuilder {
         let client = VaultClient::new(settings)
             .map_err(|e| SecretError::backend_msg(format!("failed to create Vault client: {e}")))?;
 
-        Ok(HashCorpVaultProvider {
+        Ok(HashiCorpVaultProvider {
             client: Arc::new(client),
             mount,
             cache: Arc::new(SecretCache::new(cache_ttl)),
@@ -450,7 +450,7 @@ mod tests {
         set_outbound_policy(OutboundPolicy::DenyPrivate);
 
         // Loopback addresses are forbidden under DenyPrivate.
-        let err_loopback = HashCorpVaultProvider::builder()
+        let err_loopback = HashiCorpVaultProvider::builder()
             .address("http://127.0.0.1:8200")
             .token("test-token")
             .build()
@@ -470,7 +470,7 @@ mod tests {
         }
 
         // Link-local / cloud-metadata addresses are also forbidden.
-        let err_metadata = HashCorpVaultProvider::builder()
+        let err_metadata = HashiCorpVaultProvider::builder()
             .address("http://169.254.169.254/latest/meta-data/")
             .token("test-token")
             .build()
@@ -532,7 +532,7 @@ mod tests {
     fn builder_defaults_produce_provider() {
         // This test doesn't need a real Vault server — it only checks that the
         // builder constructs the object without panicking.
-        let result = HashCorpVaultProvider::builder()
+        let result = HashiCorpVaultProvider::builder()
             .address("http://127.0.0.1:8200")
             .token("test-token")
             .build();
@@ -544,7 +544,7 @@ mod tests {
 
     #[test]
     fn builder_custom_mount() {
-        let provider = HashCorpVaultProvider::builder()
+        let provider = HashiCorpVaultProvider::builder()
             .address("http://127.0.0.1:8200")
             .token("tok")
             .mount("kv")

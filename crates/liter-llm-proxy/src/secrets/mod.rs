@@ -6,7 +6,7 @@
 //!
 //! - `env://NAME` — environment variable `NAME` (always available)
 //! - `aws://PATH` — AWS Secrets Manager (requires `secrets-aws` feature)
-//! - `vault://PATH` — HashCorp Vault KV-v2 (requires `secrets-vault` feature)
+//! - `vault://PATH` — HashiCorp Vault KV-v2 (requires `secrets-vault` feature)
 //!
 //! When no scheme is present, the registry uses its configured default backend.
 //!
@@ -44,7 +44,7 @@ pub use registry::SecretManagerRegistry;
 pub use aws::AwsSecretsManagerProvider;
 
 #[cfg(feature = "secrets-vault")]
-pub use vault::HashCorpVaultProvider;
+pub use vault::HashiCorpVaultProvider;
 
 // ---------------------------------------------------------------------------
 // Error type

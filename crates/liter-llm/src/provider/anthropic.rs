@@ -990,7 +990,7 @@ fn convert_tool_choice(tool_choice: &Value) -> Option<Value> {
 /// OpenAI: `{"type": "function", "function": {"name": "X", "description": "Y", "parameters": Z}}`
 /// Anthropic: `{"name": "X", "description": "Y", "input_schema": Z}`
 ///
-/// Also normalises `input_schema.type` to `"object"` if absent or mis-typed.
+/// Also normalises `input_schema.type` to `"object"` if absent or mistyped.
 fn convert_tool_to_anthropic(tool: &Value) -> Value {
     let function = tool.get("function");
     let name = function.and_then(|f| f.get("name")).cloned().unwrap_or(json!(""));
