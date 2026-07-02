@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.30.2"
+alef_version = "0.30.10"
 languages = [
     "python",
     "node",
@@ -17,6 +17,9 @@ languages = [
     "kotlin_android",
     "jni",
 ]
+# Generated single-variant enum-from-int bindings emit `match n { 0 => .., _ => {} }`,
+# which trips clippy's single_match/collapsible_match under `-D warnings`.
+extra_clippy_allows = ["single_match", "collapsible_match"]
 
 [workspace.format]
 enabled = false

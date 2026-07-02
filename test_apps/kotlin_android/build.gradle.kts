@@ -49,14 +49,14 @@ dependencies {
     // Published Android AAR from Maven Central (verifies artifact resolution)
     implementation("io.xberg.literllm:liter-llm-android:1.9.0")
     // Jackson for JSON assertion helpers
-    testImplementation("com.fasterxml.jackson.core:jackson-annotations:2.18.2")
-    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")
-    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.18.2")
+    testImplementation("com.fasterxml.jackson.core:jackson-annotations:2.19.0")
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.19.0")
+    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.19.0")
 
     // jackson-module-kotlin registers constructors/properties for Kotlin data
     // classes, which have no default constructor and cannot be deserialized by
     // plain Jackson without this module.
-    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.2")
+    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.19.0")
 
     // jspecify for null-safety annotations on wrapped types
     testImplementation("org.jspecify:jspecify:1.0.0")
