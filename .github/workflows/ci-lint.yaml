@@ -23,98 +23,10 @@ permissions:
   contents: read
 
 jobs:
-  lint:
-    name: Lint
+  validate:
+    name: Validate
     if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
-    runs-on: ubuntu-24.04-arm
-    timeout-minutes: 30
-    env:
-      CARGO_TERM_COLOR: always
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup Rust
-        uses: xberg-io/actions/setup-rust@v1
-        with:
-          cache-key-prefix: lint
-          components: rustfmt, clippy
-
-      - name: Create WASM pkg stub
-        run: mkdir -p crates/liter-llm-wasm/pkg/nodejs && echo '{"name":"liter_llm","version":"0.0.0"}' > crates/liter-llm-wasm/pkg/nodejs/package.json
-        shell: bash
-
-      - name: Setup Python
-        uses: xberg-io/actions/setup-python-env@v1
-        with:
-          python-version: "3.13"
-          cache-prefix: lint-py
-
-      - name: Setup Node
-        uses: xberg-io/actions/setup-node-workspace@v1
-
-      - name: Setup Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: "1.26"
-
-      - name: Setup Java
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "25"
-
-      - name: Setup Elixir
-        uses: xberg-io/actions/setup-elixir@v1
-
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.4"
-          bundler-cache: true
-          working-directory: packages/ruby
-
-      - name: Setup PHP
-        uses: xberg-io/actions/setup-php@v1
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: "10.0.x"
-
-      - name: Setup C/C++ Tools
-        uses: xberg-io/actions/setup-c-cpp-tools@v1
-
-      - name: Install Task
-        uses: xberg-io/actions/install-task@v1
-
-      - name: Install alef CLI
-        uses: xberg-io/actions/install-alef@v1
-
-      # `alef verify` temporarily disabled in CI: alef v0.23.28 has an
-      # `inputs-hash` regression where verify flags files as stale
-      # immediately after a fresh `alef all` run (the hash recomputed
-      # during verify disagrees with the hash written at emit time).
-      # Re-enable once alef ships a fix. Also disabled in
-      # .pre-commit-config.yaml (alef-docs-fresh hook).
-      - name: Verify alef-generated code is up-to-date
-        run: alef verify --exit-code || echo "alef-verify temporarily soft-failed (v0.23.28 hash regression)"
-        shell: bash
-
-      - name: Fetch Elixir deps (needed by mix-format + mix-credo)
-        working-directory: packages/elixir
-        run: mix deps.get
-        shell: bash
-
-      - name: Install poly
-        uses: Goldziher/polylint@v0
-
-      - name: Check formatting
-        run: poly fmt --check .
-
-      - name: Lint
-        run: poly lint .
-
-      - name: Validate Providers Doc
-        run: task generate:providers-doc:check
-        shell: bash
+    uses: xberg-io/actions/.github/workflows/reusable-validate.yml@v1
+    with:
+      setup-rust: true
+      setup-python: true
