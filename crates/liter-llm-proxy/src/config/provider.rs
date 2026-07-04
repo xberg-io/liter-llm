@@ -381,10 +381,10 @@ async fn etcd_watch_loop(
 
     loop {
         // Attempt to open a watch stream.
-        let (mut watcher, mut stream) = {
+        let mut stream = {
             let mut guard = client.lock().await;
             match guard.watch(key.as_str(), Some(WatchOptions::new().with_prefix())).await {
-                Ok(pair) => pair,
+                Ok(stream) => stream,
                 Err(err) => {
                     tracing::warn!("etcd watch connect failed: {err}; retrying in 5s");
                     tokio::time::sleep(std::time::Duration::from_secs(5)).await;
@@ -409,7 +409,7 @@ async fn etcd_watch_loop(
                                             match toml::from_str::<ProxyConfig>(&expanded) {
                                                 Ok(config) => {
                                                     if tx.send(ConfigEvent::Put { revision, config }).await.is_err() {
-                                                        let _ = watcher.cancel().await;
+                                                        let _ = stream.cancel(resp.watch_id()).await;
                                                         return;
                                                     }
                                                 }
@@ -430,7 +430,7 @@ async fn etcd_watch_loop(
                                     .map(|kv| String::from_utf8_lossy(kv.key()).into_owned())
                                     .unwrap_or_default();
                                 if tx.send(ConfigEvent::Delete { revision, path }).await.is_err() {
-                                    let _ = watcher.cancel().await;
+                                    let _ = stream.cancel(resp.watch_id()).await;
                                     return;
                                 }
                             }

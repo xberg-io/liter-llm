@@ -60,7 +60,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 
 use cel_interpreter::objects::{Key, Map, Value};
-use cel_interpreter::{Context, ParseError, Program};
+use cel_interpreter::{Context, Program};
 
 use super::{Guardrail, GuardrailContext, GuardrailDecision, GuardrailStage};
 
@@ -119,6 +119,18 @@ pub struct CelGuardrail {
     fail_open: bool,
 }
 
+/// Error returned when a CEL expression cannot be compiled.
+///
+/// Wraps the underlying `cel-interpreter` parse failure as an owned message.
+/// The message is kept opaque and does not expose the third-party error type,
+/// keeping the public surface `Send + Sync` and FFI-friendly. Some malformed
+/// inputs cause the parser to panic rather than return an error; those panics
+/// are caught and surfaced through this type so construction never aborts.
+#[cfg_attr(alef, alef(skip))]
+#[derive(Debug, thiserror::Error)]
+#[error("invalid CEL expression: {0}")]
+pub struct CelCompileError(String);
+
 impl CelGuardrail {
     /// Create a new [`CelGuardrail`].
     ///
@@ -136,8 +148,18 @@ impl CelGuardrail {
         expression: &str,
         on_true: CelAction,
         stages: &'static [GuardrailStage],
-    ) -> Result<Self, ParseError> {
-        let program = Program::compile(expression)?;
+    ) -> Result<Self, CelCompileError> {
+        // `Program::compile` returns `Err` for most malformed input, but some
+        // inputs make the underlying ANTLR-based parser panic. Catch both so a
+        // bad expression can never abort the caller (e.g. proxy startup).
+        let compiled = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| Program::compile(expression)));
+        let program = match compiled {
+            Ok(Ok(program)) => program,
+            Ok(Err(parse_errors)) => return Err(CelCompileError(parse_errors.to_string())),
+            Err(_panic) => {
+                return Err(CelCompileError(format!("parser panicked on expression {expression:?}")));
+            }
+        };
         Ok(Self {
             guardrail_name: name,
             program,

@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.3] - 2026-07-04
+
+### Changed
+
+- **Upgrade all dependencies to latest and regenerate all bindings** with alef
+  0.31.0. Notable major bumps: `rmcp` 1.7 → 2.1, `etcd-client` 0.15 → 0.19,
+  `tokio-tungstenite` 0.26 → 0.29, `tower-http` 0.6 → 0.7, `sha2` 0.10 → 0.11,
+  `cel-interpreter` 0.8 → 0.10, and `tikv-jemallocator` 0.6 → 0.7.
+
+### Fixed
+
+- **CEL guardrail: adapt to `cel-interpreter` 0.10.** `Program::compile` now
+  returns `ParseErrors`, and the new ANTLR-based parser can panic on some
+  malformed input. `CelGuardrail::new` now catches those panics and returns a
+  `CelCompileError`, so an invalid expression can never abort the caller (e.g.
+  proxy startup).
+- **Proxy MCP server: adapt to `rmcp` 2.1 model changes** (`RawResource` →
+  `Resource`, `RawResourceTemplate` → `ResourceTemplate`, `Content` →
+  `ContentBlock`, `PromptMessageRole` → `Role`).
+- **Proxy etcd config watcher: adapt to `etcd-client` 0.19,** whose `watch` now
+  returns a single `WatchStream` and moves `cancel` onto the stream.
+
 ## [1.9.2] - 2026-07-02
 
 ### Fixed

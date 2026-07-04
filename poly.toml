@@ -21,6 +21,7 @@ exclude = [
     "templates/readme/**",
     "test_documents/**",
     "vendor/**",
+    "**/Cargo.toml",
 ]
 
 [lint.markdown.rumdl]
@@ -242,6 +243,7 @@ polylint = { exclude = [
     "templates/readme/**",
     "test_documents/**",
     "vendor/**",
+    "**/Cargo.toml",
 ] }
 polyfmt = { exclude = [
     "**/*.freezed.dart",
@@ -265,6 +267,7 @@ polyfmt = { exclude = [
     "templates/readme/**",
     "test_documents/**",
     "vendor/**",
+    "**/Cargo.toml",
 ] }
 file_safety = { exclude = [
     "**/*.freezed.dart",
@@ -288,6 +291,7 @@ file_safety = { exclude = [
     "templates/readme/**",
     "test_documents/**",
     "vendor/**",
+    "**/Cargo.toml",
 ] }
 cargo = true
 commit = { stages = ["commit-msg"] }

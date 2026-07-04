@@ -218,7 +218,7 @@ impl LiterLlmMcp {
             LlmResponse::Speech(bytes) => {
                 use base64::Engine;
                 let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
-                Ok(CallToolResult::success(vec![Content::text(format!(
+                Ok(CallToolResult::success(vec![ContentBlock::text(format!(
                     "Audio generated ({} bytes). Base64: {}",
                     bytes.len(),
                     b64
@@ -573,7 +573,7 @@ impl LiterLlmMcp {
 
         use base64::Engine;
         let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
-        Ok(CallToolResult::success(vec![Content::text(format!(
+        Ok(CallToolResult::success(vec![ContentBlock::text(format!(
             "File content ({} bytes). Base64: {b64}",
             bytes.len()
         ))]))

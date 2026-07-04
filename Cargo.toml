@@ -12,7 +12,11 @@ members = [
     "packages/dart/rust",
     "packages/swift/rust",
 ]
-exclude = ["e2e/rust", "packages/elixir/native/liter_llm_nif", "packages/ruby/ext/liter_llm_rb/native"]
+exclude = [
+    "e2e/rust",
+    "packages/elixir/native/liter_llm_nif",
+    "packages/ruby/ext/liter_llm_rb/native",
+]
 resolver = "2"
 
 [workspace.lints.clippy]
@@ -50,7 +54,7 @@ missing-panics-doc = "allow"
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(alef)'] }
 
 [workspace.package]
-version = "1.9.2"
+version = "1.9.3"
 edition = "2024"
 license = "MIT"
 repository = "https://github.com/xberg-io/liter-llm"
@@ -68,34 +72,35 @@ async-trait = "0.1"
 # Secret backends
 aws-config = { version = "1", default-features = false, features = ["rustls"] }
 aws-sdk-secretsmanager = { version = "1", default-features = false, features = ["rustls"] }
-chrono = { version = "0.4", default-features = false, features = ["std"] }
-vaultrs = { version = "0.8", default-features = false, features = ["rustls"] }
 
 axum = { version = "0.8", features = ["macros", "ws"] }
-# Optional global allocators — selected via `mimalloc`/`jemalloc` features on
-# `liter-llm-cli`.  Off by default; absence means the system allocator is used.
-mimalloc = { version = "0.1", default-features = false }
-tikv-jemallocator = { version = "0.6" }
 axum-extra = { version = "0.12", features = ["typed-header"] }
 base64 = "0.22"
 bytes = "1"
+chrono = { version = "0.4", default-features = false, features = ["std"] }
 
 # CLI (for tools)
 clap = { version = "4", features = ["derive", "env"] }
 dashmap = "6"
+etcd-client = { version = "0.19", default-features = false }
 futures-core = "0.3"
 futures-util = "0.3"
-http = "1"
 gcp_auth = { version = "0.12", default-features = false, features = ["ring"] }
+hex = "0.4"
+http = "1"
 jsonschema = "0.46"
 jsonwebtoken = { version = "10", default-features = false, features = ["use_pem"] }
 
 # Binding frameworks
 magnus = "0.8"
 memchr = "2"
+# Optional global allocators — selected via `mimalloc`/`jemalloc` features on
+# `liter-llm-cli`.  Off by default; absence means the system allocator is used.
+mimalloc = { version = "0.1", default-features = false }
 napi = { version = "3", features = ["napi4", "serde-json", "async"] }
 napi-build = "2"
 napi-derive = "3"
+notify = { version = "8", features = ["macos_kqueue"] }
 opendal = { version = "0.57", default-features = false, features = [
     "services-memory",
     "services-redis",
@@ -110,7 +115,7 @@ rayon = "1"
 rb-sys = "0.9"
 # Async / HTTP — TLS-agnostic base only; each crate adds TLS features target-conditionally
 reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "multipart", "form"] }
-rmcp = { version = "1.7", features = [
+rmcp = { version = "2.1", features = [
     "server",
     "macros",
     "transport-io",
@@ -126,18 +131,16 @@ schemars = "1"
 
 # Security
 secrecy = { version = "0.10", features = ["serde"] }
-subtle = "2.6"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serial_test = "3"
+sha2 = "0.11"
+subtle = "2.6"
 tempfile = "3"
 
 # Error handling
 thiserror = "2"
-notify = { version = "8", features = ["macos_kqueue"] }
-etcd-client = { version = "0.15", default-features = false }
-hex = "0.4"
-sha2 = "0.10"
+tikv-jemallocator = { version = "0.7" }
 tokenizers = { version = "0.23", default-features = false, features = ["http", "fancy-regex"] }
 tokio = { version = "1", features = ["full"] }
 # Use `rustls-tls-native-roots` so tokio-tungstenite does NOT pull
@@ -146,7 +149,7 @@ tokio = { version = "1", features = ["full"] }
 # downstream consumer of liter-llm-proxy). The rest of the stack already uses
 # rustls (reqwest, etc.); pulling native-tls just for tungstenite was the
 # only thing keeping openssl-sys in the dep tree.
-tokio-tungstenite = { version = "0.26", default-features = false, features = [
+tokio-tungstenite = { version = "0.29", default-features = false, features = [
     "connect",
     "handshake",
     "rustls-tls-native-roots",
@@ -164,7 +167,7 @@ tower = { version = "0.5", features = [
     "discover",
     "ready-cache",
 ] }
-tower-http = { version = "0.6", features = [
+tower-http = { version = "0.7", features = [
     "follow-redirect",
     "set-header",
     "sensitive-headers",
@@ -182,6 +185,7 @@ tracing-opentelemetry = "0.33"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 url = "2.5"
 utoipa = { version = "5.5", features = ["axum_extras"] }
+vaultrs = { version = "0.8", default-features = false, features = ["rustls"] }
 walkdir = "2.5"
 wasm-bindgen = "0.2"
 wasm-bindgen-test = "0.3"

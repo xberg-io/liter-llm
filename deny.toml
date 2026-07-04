@@ -17,6 +17,13 @@ ignore = [
     # opendal is used here for object-store backed file storage; RSA private keys are never
     # signed locally on a network-observable code path in our usage. Revisit when patched.
     "RUSTSEC-2023-0071",
+    # quick-xml DoS advisories (quadratic duplicate-attribute check; unbounded namespace
+    # allocation). Transitive via opendal -> opendal-core/reqsign-aws-v4, which pin
+    # quick-xml 0.39/0.40; the fix lands in quick-xml >= 0.41. opendal 0.57 (latest) has no
+    # release bumping past it yet, and our XML parsing only touches trusted object-store
+    # responses. Revisit when opendal upgrades quick-xml.
+    "RUSTSEC-2026-0194",
+    "RUSTSEC-2026-0195",
 ]
 
 [licenses]

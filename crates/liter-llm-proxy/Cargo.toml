@@ -37,7 +37,14 @@ secrets-vault = ["dep:vaultrs", "dep:chrono"]
 etcd-watch = ["dep:etcd-client"]
 
 # `full` — all proxy features: otel + opendal-cache + both secret backends + etcd watch.
-full = ["otel", "opendal-cache", "proxy", "secrets-aws", "secrets-vault", "etcd-watch"]
+full = [
+    "otel",
+    "opendal-cache",
+    "proxy",
+    "secrets-aws",
+    "secrets-vault",
+    "etcd-watch",
+]
 
 default = ["proxy"]
 
@@ -55,7 +62,7 @@ dashmap = { workspace = true }
 etcd-client = { workspace = true, optional = true }
 futures-util = { workspace = true }
 http = { workspace = true }
-liter-llm = { path = "../liter-llm", version = "1.9.2", features = ["native-http", "tower", "tracing"] }
+liter-llm = { path = "../liter-llm", version = "1.9.3", features = ["native-http", "tower", "tracing"] }
 notify = { workspace = true }
 opendal = { workspace = true }
 

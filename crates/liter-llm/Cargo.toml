@@ -158,7 +158,7 @@ aws-sigv4 = { version = "1", features = ["sign-http", "http1"], optional = true 
 # `wasm-http`; unblocking those transports is no longer the only caller.
 base64 = { workspace = true }
 bytes = { workspace = true }
-cel-interpreter = { version = "0.8", optional = true }
+cel-interpreter = { version = "0.10", optional = true }
 dashmap = { workspace = true }
 etcd-client = { workspace = true, optional = true }
 futures-core = { workspace = true }

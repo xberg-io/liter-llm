@@ -175,7 +175,7 @@ impl LiterLlmMcp {
 /// Serialize a value to pretty JSON and wrap it in a successful `CallToolResult`.
 fn json_success<T: serde::Serialize>(value: &T) -> Result<CallToolResult, rmcp::ErrorData> {
     let json = serde_json::to_string_pretty(value).map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
-    Ok(CallToolResult::success(vec![Content::text(json)]))
+    Ok(CallToolResult::success(vec![ContentBlock::text(json)]))
 }
 
 // ─── Prompt templates ─────────────────────────────────────────────────────────
@@ -192,7 +192,7 @@ impl LiterLlmMcp {
             "Summarise the following text concisely while preserving its key points:\n\n{}",
             args.text
         );
-        Ok(vec![PromptMessage::new_text(PromptMessageRole::User, text)])
+        Ok(vec![PromptMessage::new_text(Role::User, text)])
     }
 
     /// Translate text into a target language.
@@ -205,7 +205,7 @@ impl LiterLlmMcp {
             "Translate the following text into {}. Output only the translation:\n\n{}",
             args.target_language, args.text
         );
-        Ok(vec![PromptMessage::new_text(PromptMessageRole::User, text)])
+        Ok(vec![PromptMessage::new_text(Role::User, text)])
     }
 
     /// Extract structured data from text following natural-language instructions.
@@ -221,7 +221,7 @@ impl LiterLlmMcp {
             "Extract information from the text below following these instructions: {}\n\nText:\n{}",
             args.instructions, args.text
         );
-        Ok(vec![PromptMessage::new_text(PromptMessageRole::User, text)])
+        Ok(vec![PromptMessage::new_text(Role::User, text)])
     }
 }
 
@@ -339,14 +339,12 @@ impl ServerHandler for LiterLlmMcp {
         _ctx: RequestContext<RoleServer>,
     ) -> Result<ListResourcesResult, rmcp::ErrorData> {
         let resources = vec![
-            RawResource::new(RESOURCE_MODELS, "Configured Models")
+            Resource::new(RESOURCE_MODELS, "Configured Models")
                 .with_description("Model names configured in this proxy")
-                .with_mime_type("application/json")
-                .no_annotation(),
-            RawResource::new(RESOURCE_PROVIDERS, "Provider Registry")
+                .with_mime_type("application/json"),
+            Resource::new(RESOURCE_PROVIDERS, "Provider Registry")
                 .with_description("All built-in LLM providers")
-                .with_mime_type("application/json")
-                .no_annotation(),
+                .with_mime_type("application/json"),
         ];
         Ok(ListResourcesResult {
             resources,
@@ -374,12 +372,10 @@ impl ServerHandler for LiterLlmMcp {
         _ctx: RequestContext<RoleServer>,
     ) -> Result<ListResourceTemplatesResult, rmcp::ErrorData> {
         let resource_templates = vec![
-            RawResourceTemplate::new("liter-llm://pricing/{model}", "Model Pricing")
-                .with_description("Per-token pricing for a model")
-                .no_annotation(),
-            RawResourceTemplate::new("liter-llm://provider/{name}", "Provider Detail")
-                .with_description("Configuration for a single provider")
-                .no_annotation(),
+            ResourceTemplate::new("liter-llm://pricing/{model}", "Model Pricing")
+                .with_description("Per-token pricing for a model"),
+            ResourceTemplate::new("liter-llm://provider/{name}", "Provider Detail")
+                .with_description("Configuration for a single provider"),
         ];
         Ok(ListResourceTemplatesResult {
             resource_templates,
