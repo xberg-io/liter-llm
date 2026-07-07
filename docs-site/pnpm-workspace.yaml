@@ -1,0 +1,5 @@
+# Standalone workspace root so `pnpm install` here does not join the repo-root
+# napi workspace; docs-site keeps its own isolated pnpm-lock.yaml.
+allowBuilds:
+  esbuild: true
+  sharp: true

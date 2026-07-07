@@ -37,7 +37,6 @@ dev = [
     "typing-extensions>=4.15.0",
     "uv-bump",
 ]
-docs = ["zensical"]
 
 [tool.uv]
 sources.uv-bump = { git = "https://github.com/Goldziher/uv-bump" }

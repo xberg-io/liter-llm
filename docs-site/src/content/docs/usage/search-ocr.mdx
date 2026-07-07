@@ -1,0 +1,192 @@
+---
+description: "Web search and document OCR with liter-llm."
+title: "Search & OCR"
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+import { Content as Snip_python_usage_search } from "../../../snippets/python/usage/search.md";
+import { Content as Snip_typescript_usage_search } from "../../../snippets/typescript/usage/search.md";
+import { Content as Snip_rust_usage_search } from "../../../snippets/rust/usage/search.md";
+import { Content as Snip_go_usage_search } from "../../../snippets/go/usage/search.md";
+import { Content as Snip_java_usage_search } from "../../../snippets/java/usage/search.md";
+import { Content as Snip_csharp_usage_search } from "../../../snippets/csharp/usage/search.md";
+import { Content as Snip_ruby_usage_search } from "../../../snippets/ruby/usage/search.md";
+import { Content as Snip_php_usage_search } from "../../../snippets/php/usage/search.md";
+import { Content as Snip_elixir_usage_search } from "../../../snippets/elixir/usage/search.md";
+import { Content as Snip_wasm_usage_search } from "../../../snippets/wasm/usage/search.md";
+import { Content as Snip_python_usage_ocr } from "../../../snippets/python/usage/ocr.md";
+import { Content as Snip_typescript_usage_ocr } from "../../../snippets/typescript/usage/ocr.md";
+import { Content as Snip_rust_usage_ocr } from "../../../snippets/rust/usage/ocr.md";
+import { Content as Snip_go_usage_ocr } from "../../../snippets/go/usage/ocr.md";
+import { Content as Snip_java_usage_ocr } from "../../../snippets/java/usage/ocr.md";
+import { Content as Snip_csharp_usage_ocr } from "../../../snippets/csharp/usage/ocr.md";
+import { Content as Snip_ruby_usage_ocr } from "../../../snippets/ruby/usage/ocr.md";
+import { Content as Snip_php_usage_ocr } from "../../../snippets/php/usage/ocr.md";
+import { Content as Snip_elixir_usage_ocr } from "../../../snippets/elixir/usage/ocr.md";
+import { Content as Snip_wasm_usage_ocr } from "../../../snippets/wasm/usage/ocr.md";
+
+## Search
+
+Search the web or documents across 12 providers (Brave, Tavily, Google PSE, etc.):
+
+<Tabs syncKey="lang">
+<TabItem label="Python">
+
+<Snip_python_usage_search />
+
+</TabItem>
+<TabItem label="TypeScript">
+
+<Snip_typescript_usage_search />
+
+</TabItem>
+<TabItem label="Rust">
+
+<Snip_rust_usage_search />
+
+</TabItem>
+<TabItem label="Go">
+
+<Snip_go_usage_search />
+
+</TabItem>
+<TabItem label="Java">
+
+<Snip_java_usage_search />
+
+</TabItem>
+<TabItem label="C#">
+
+<Snip_csharp_usage_search />
+
+</TabItem>
+<TabItem label="Ruby">
+
+<Snip_ruby_usage_search />
+
+</TabItem>
+<TabItem label="PHP">
+
+<Snip_php_usage_search />
+
+</TabItem>
+<TabItem label="Elixir">
+
+<Snip_elixir_usage_search />
+
+</TabItem>
+<TabItem label="WASM">
+
+<Snip_wasm_usage_search />
+
+</TabItem>
+</Tabs>
+
+### Search Parameters
+
+| Parameter              | Type   | Description                                 |
+| ---------------------- | ------ | ------------------------------------------- |
+| `model`                | string | Search provider (e.g. `"brave/web-search"`) |
+| `query`                | string | Search query                                |
+| `max_results`          | int    | Maximum results to return                   |
+| `search_domain_filter` | array  | Restrict to specific domains                |
+| `country`              | string | ISO country code for localized results      |
+
+### Search Providers
+
+The registry ships 12 search providers. Browse the full [Providers](/providers/) capability matrix; the most common are:
+
+| Provider    | Prefix         |
+| ----------- | -------------- |
+| Brave       | `brave/`       |
+| Tavily      | `tavily/`      |
+| Google PSE  | `google_pse/`  |
+| Serper      | `serper/`      |
+| DuckDuckGo  | `duckduckgo/`  |
+| Exa         | `exa_ai/`      |
+| Firecrawl   | `firecrawl/`   |
+| Linkup      | `linkup/`      |
+| Parallel AI | `parallel_ai/` |
+| Perplexity  | `perplexity/`  |
+| SearXNG     | `searxng/`     |
+| DataForSEO  | `dataforseo/`  |
+
+## OCR
+
+Extract text from documents via OCR across 4 providers (Mistral, Azure Doc Intelligence, etc.):
+
+<Tabs syncKey="lang">
+<TabItem label="Python">
+
+<Snip_python_usage_ocr />
+
+</TabItem>
+<TabItem label="TypeScript">
+
+<Snip_typescript_usage_ocr />
+
+</TabItem>
+<TabItem label="Rust">
+
+<Snip_rust_usage_ocr />
+
+</TabItem>
+<TabItem label="Go">
+
+<Snip_go_usage_ocr />
+
+</TabItem>
+<TabItem label="Java">
+
+<Snip_java_usage_ocr />
+
+</TabItem>
+<TabItem label="C#">
+
+<Snip_csharp_usage_ocr />
+
+</TabItem>
+<TabItem label="Ruby">
+
+<Snip_ruby_usage_ocr />
+
+</TabItem>
+<TabItem label="PHP">
+
+<Snip_php_usage_ocr />
+
+</TabItem>
+<TabItem label="Elixir">
+
+<Snip_elixir_usage_ocr />
+
+</TabItem>
+<TabItem label="WASM">
+
+<Snip_wasm_usage_ocr />
+
+</TabItem>
+</Tabs>
+
+### OCR Parameters
+
+| Parameter              | Type   | Description                                        |
+| ---------------------- | ------ | -------------------------------------------------- |
+| `model`                | string | OCR provider (e.g. `"mistral/mistral-ocr-latest"`) |
+| `document`             | object | Document input (URL or base64)                     |
+| `pages`                | array  | Specific pages to process (1-indexed)              |
+| `include_image_base64` | bool   | Include extracted images                           |
+
+### Document Input Formats
+
+**URL:**
+
+```json
+{ "type": "document_url", "url": "https://example.com/invoice.pdf" }
+```
+
+**Base64:**
+
+```json
+{ "type": "base64", "data": "...", "media_type": "application/pdf" }
+```

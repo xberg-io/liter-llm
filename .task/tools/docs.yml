@@ -1,57 +1,82 @@
 version: "3"
 
+# Documentation build + lint + snippet workflows.
+# The docs site is an Astro Starlight project under docs-site/ that consumes the
+# shared @xberg-io/docs-theme. Snippet commands wrap `alef snippets` and target
+# the relocated docs-site/src/snippets tree.
+
 tasks:
   build:
     desc: Build documentation
     cmds:
-      - uv run --no-sync --group docs zensical build --clean
+      - pnpm --dir docs-site install --frozen-lockfile
+      - pnpm --dir docs-site build
 
   build:strict:
-    desc: Build documentation in strict mode (CI-equivalent)
+    desc: Build documentation (CI-equivalent; astro build fails on errors)
     cmds:
-      - uv run --no-sync --group docs zensical build --strict --clean
+      - pnpm --dir docs-site install --frozen-lockfile
+      - pnpm --dir docs-site build
 
   serve:
     desc: Serve documentation locally with live reload
     cmds:
-      - uv run --no-sync --group docs zensical serve
+      - pnpm --dir docs-site install
+      - pnpm --dir docs-site dev
 
   lint:links:
     desc: Check links with lychee
     cmds:
-      - lychee --offline --root-dir "$PWD/docs" --exclude-path "docs/overrides" docs/ README.md
+      - lychee --offline docs-site/src/content/docs README.md
 
   lint:prose:
     desc: Lint prose with textlint
     cmds:
-      - npx textlint 'docs/**/*.md'
+      - npx textlint 'docs-site/src/content/docs/**/*.{md,mdx}'
+
+  # Snippet commands target docs-site/src/snippets — the canonical hand-written
+  # snippets imported into Starlight tabs. The alef-emitted docs-site reference
+  # tree is validated separately via `alef docs`.
 
   snippets:list:
-    desc: List all documentation snippets discovered under docs/snippets
+    desc: List all documentation snippets discovered by alef
     cmds:
-      - alef snippets list --snippets docs/snippets
+      - alef snippets list --snippets docs-site/src/snippets
 
-  snippets:gaps:
-    desc: Report snippet coverage gaps (missing variants, unreferenced files, etc.)
+  snippets:list:lang:
+    desc: List snippets filtered to specific languages (LANGUAGES=rust,python)
+    requires:
+      vars: [LANGUAGES]
     cmds:
-      - alef snippets gaps --snippets docs/snippets --docs docs --required-languages rust,python,typescript,go,ruby,php,java,csharp,elixir,c,swift,dart,kotlin,zig
-
-  snippets:audit:
-    desc: Run structural audit (frontmatter, fences, includes)
-    cmds:
-      - alef snippets audit --snippets docs/snippets --docs docs
+      - alef snippets list --snippets docs-site/src/snippets --languages {{.LANGUAGES}}
 
   snippets:validate:
-    desc: Validate every snippet at syntax level (alias of snippets:validate:syntax for ../actions/lint-docs)
+    desc: Syntax-validate all snippet entries via alef
     cmds:
-      - task: snippets:validate:syntax
+      - alef snippets validate --snippets docs-site/src/snippets --timeout 120
 
-  snippets:validate:syntax:
-    desc: Validate every snippet at syntax level
+  snippets:validate:lang:
+    desc: Validate snippets for specific languages (LANGUAGES=rust,python LEVEL=syntax)
+    requires:
+      vars: [LANGUAGES]
+    vars:
+      LEVEL: '{{ .LEVEL | default "syntax" }}'
     cmds:
-      - alef snippets validate --snippets docs/snippets --level syntax --timeout 120
+      - alef snippets validate --snippets docs-site/src/snippets --languages {{.LANGUAGES}} --level {{.LEVEL}}
 
-  snippets:validate:compile:
-    desc: Validate every snippet at compile level
+  snippets:gaps:
+    desc: Report unreferenced snippets + missing language variants
     cmds:
-      - alef snippets validate --snippets docs/snippets --level compile --timeout 300
+      - alef snippets gaps --snippets docs-site/src/snippets --docs docs-site/src/content/docs
+
+  snippets:audit:
+    desc: Audit snippet structure under docs-site/src/snippets
+    cmds:
+      - alef snippets audit --snippets docs-site/src/snippets
+
+  snippets:all:
+    desc: Run audit + gaps + validate (canonical docs:snippets gate)
+    cmds:
+      - alef snippets audit --snippets docs-site/src/snippets
+      - alef snippets gaps --snippets docs-site/src/snippets --docs docs-site/src/content/docs
+      - alef snippets validate --snippets docs-site/src/snippets --timeout 120

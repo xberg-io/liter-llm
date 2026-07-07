@@ -4,162 +4,28 @@ on:
   push:
     branches: [main]
     paths:
-      - "docs/**"
-      - "pyproject.toml"
-      - "uv.lock"
-      - "zensical.toml"
-      - ".lychee.toml"
-      - ".github/workflows/ci-docs.yaml"
+      - "docs-site/**"
       - "alef.toml"
-      - ".task/tools/docs.yml"
+      - ".github/workflows/ci-docs.yaml"
   pull_request:
     branches: [main]
     paths:
-      - "docs/**"
-      - "pyproject.toml"
-      - "uv.lock"
-      - "zensical.toml"
-      - ".lychee.toml"
-      - ".github/workflows/ci-docs.yaml"
+      - "docs-site/**"
       - "alef.toml"
-      - ".task/tools/docs.yml"
+      - ".github/workflows/ci-docs.yaml"
   workflow_dispatch:
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
-concurrency:
-  group: ci-docs-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: ci-docs-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  build:
-    name: Build
-    if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Install Task
-        uses: arduino/setup-task@v2
-        with:
-          version: 3.x
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build documentation
-        uses: xberg-io/actions/build-docs@v1
-        with:
-          strict: "true"
-          docs-group: docs
-
-      - name: Upload site artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: docs-site
-          path: site/
-          retention-days: 1
-
-  lint:
-    name: Lint
-    if: github.repository == 'xberg-io/liter-llm' && github.actor != 'dependabot[bot]'
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Install Task
-        uses: arduino/setup-task@v2
-        with:
-          version: 3.x
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: xberg-io/actions/setup-rust@v1
-        with:
-          install-llvm-cov: "false"
-          cache-key-prefix: ci-docs-snippets
-
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-
-      - name: Setup Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: "1.24"
-
-      - name: Setup Java
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "21"
-
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.3"
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: "9.0.x"
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@2.37.2
-        with:
-          php-version: "8.4"
-
-      - name: Setup Elixir
-        uses: erlef/setup-beam@v1
-        with:
-          otp-version: "27"
-          elixir-version: "1.17"
-
-      - name: Setup Dart
-        uses: dart-lang/setup-dart@v1
-
-      - name: Setup Zig
-        uses: mlugg/setup-zig@v2
-        with:
-          version: "0.14.0"
-
-      - name: Lint documentation
-        uses: xberg-io/actions/lint-docs@v1
-        with:
-          strict: "false"
-          validate-snippets: "true"
-          alef-ref: "v0.20.14"
-
-  deploy:
-    name: Deploy
-    needs: [build, lint]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && github.repository == 'xberg-io/liter-llm'
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download site artifact
-        uses: actions/download-artifact@v7
-        with:
-          name: docs-site
-          path: site/
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: site
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
+  docs:
+    uses: xberg-io/actions/.github/workflows/reusable-docs-deploy.yml@v1
+    with:
+      deploy: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}

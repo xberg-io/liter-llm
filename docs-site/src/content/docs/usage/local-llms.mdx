@@ -1,0 +1,428 @@
+---
+description: "Run LLMs locally with Ollama, LM Studio, vLLM, and llamafile — no API key required."
+title: "Local LLMs"
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+import { Content as Snip_python_usage_local_llm } from "../../../snippets/python/usage/local_llm.md";
+import { Content as Snip_typescript_usage_local_llm } from "../../../snippets/typescript/usage/local_llm.md";
+import { Content as Snip_rust_usage_local_llm } from "../../../snippets/rust/usage/local_llm.md";
+import { Content as Snip_go_usage_local_llm } from "../../../snippets/go/usage/local_llm.md";
+
+Liter-llm routes to any local inference engine that exposes an OpenAI-compatible API. Run models on your own hardware with zero cloud dependencies and no API key.
+
+## Supported Providers
+
+| Provider                                               | Default URL                 | Prefix                    | Notes                                                                |
+| ------------------------------------------------------ | --------------------------- | ------------------------- | -------------------------------------------------------------------- |
+| [Ollama](https://ollama.ai)                            | `http://localhost:11434/v1` | `ollama/`                 | Most popular, easy setup                                             |
+| [LM Studio](https://lmstudio.ai)                       | `http://localhost:1234/v1`  | `lmstudio/`               | GUI-based, beginner-friendly                                         |
+| [vLLM](https://docs.vllm.ai)                           | `http://localhost:8000/v1`  | `vllm/`                   | High-throughput serving                                              |
+| [llamafile](https://github.com/Mozilla-Ocho/llamafile) | `http://localhost:8080/v1`  | `llamafile/`              | Single-file executable                                               |
+
+All of these providers are registered in the [provider registry](/providers/). LocalAI and llama.cpp are also built in with the `localai/` and `llamacpp/` prefixes. For any other OpenAI-compatible server, use a [custom provider](/usage/configuration/#custom-providers) — register the prefix and base URL once, then route to it like any other provider.
+
+All listed engines also support streaming via SSE and model listing via `/v1/models`. Tool calling, vision, and multimodal inputs work through the chat endpoint where the underlying model supports them.
+
+## Quick Start with Ollama
+
+### 1. Install Ollama
+
+```bash
+# macOS / Linux
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# Or via Homebrew
+brew install ollama
+```
+
+### 2. Pull a Model
+
+```bash
+ollama pull qwen2:0.5b
+```
+
+### 3. Use with liter-llm
+
+<Tabs syncKey="lang">
+<TabItem label="Python">
+
+<Snip_python_usage_local_llm />
+
+</TabItem>
+<TabItem label="TypeScript">
+
+<Snip_typescript_usage_local_llm />
+
+</TabItem>
+<TabItem label="Rust">
+
+<Snip_rust_usage_local_llm />
+
+</TabItem>
+<TabItem label="Go">
+
+<Snip_go_usage_local_llm />
+
+</TabItem>
+</Tabs>
+
+:::tip[No API key required]
+Local providers do not require an API key. Pass an empty string (`""`) as the `api_key` parameter.
+:::
+
+## Model Naming Convention
+
+Liter-llm uses the standard `provider/model-name` prefix convention for local providers, just like cloud providers:
+
+```text
+ollama/llama3.2          -> Ollama running Llama 3.2
+ollama/qwen2:0.5b        -> Ollama running Qwen2 0.5B
+lmstudio/my-model        -> LM Studio
+vllm/meta-llama/Llama-3  -> vLLM
+llamafile/my-model       -> llamafile
+```
+
+The prefix determines which base URL and configuration to use. The model name after the `/` is forwarded to the local server as-is.
+
+## Streaming
+
+All local providers support streaming responses via Server-Sent Events (SSE), identical to the cloud provider streaming interface:
+
+<Tabs syncKey="lang">
+<TabItem label="Python">
+
+```python
+async for chunk in client.chat_stream(
+    model="ollama/qwen2:0.5b",
+    messages=[{"role": "user", "content": "Hello!"}],
+):
+    print(chunk.choices[0].delta.content, end="")
+```
+
+</TabItem>
+<TabItem label="Rust">
+
+```rust
+use futures_util::StreamExt;
+
+let mut stream = client.chat_stream(request).await?;
+while let Some(chunk) = stream.next().await {
+    let chunk = chunk?;
+    if let Some(content) = &chunk.choices[0].delta.content {
+        print!("{content}");
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Embeddings
+
+Several local providers support embedding models. Use the standard embeddings API:
+
+<Tabs syncKey="lang">
+<TabItem label="Python">
+
+```python
+response = await client.embed(
+    model="ollama/all-minilm",
+    input="The quick brown fox",
+)
+print(f"Dimensions: {len(response.data[0].embedding)}")
+```
+
+</TabItem>
+<TabItem label="Rust">
+
+```rust
+let response = client.embed(EmbeddingRequest {
+    model: "ollama/all-minilm".into(),
+    input: EmbeddingInput::Single("The quick brown fox".into()),
+    ..Default::default()
+}).await?;
+```
+
+</TabItem>
+</Tabs>
+
+Popular local embedding models include `all-minilm` (384 dims), `nomic-embed-text` (768 dims), and `mxbai-embed-large` (1024 dims) on Ollama.
+
+## Provider Configuration
+
+### Ollama
+
+Ollama runs on port 11434 by default. No additional configuration is needed:
+
+```toml
+# liter-llm.toml
+api_key = ""
+
+[[providers]]
+name = "ollama"
+base_url = "http://localhost:11434/v1"
+model_prefixes = ["ollama/"]
+```
+
+:::note[Ollama model names]
+Ollama uses its own model naming (e.g., `llama3.2`, `qwen2:0.5b`, `codellama:13b`). Use `ollama list` to see installed models.
+:::
+
+### LM Studio
+
+LM Studio runs on port 1234 by default. Load a model in the LM Studio GUI, then use it:
+
+```toml
+# liter-llm.toml
+api_key = ""
+
+[[providers]]
+name = "lmstudio"
+base_url = "http://localhost:1234/v1"
+model_prefixes = ["lmstudio/"]
+```
+
+### VLLM
+
+Start vLLM with the OpenAI-compatible server:
+
+```bash
+python -m vllm.entrypoints.openai.api_server \
+    --model meta-llama/Llama-3-8B \
+    --port 8000
+```
+
+```toml
+# liter-llm.toml
+api_key = ""
+
+[[providers]]
+name = "vllm"
+base_url = "http://localhost:8000/v1"
+model_prefixes = ["vllm/"]
+```
+
+### Llama.cpp
+
+Start the llama.cpp server:
+
+```bash
+./llama-server -m model.gguf --port 8080
+```
+
+```toml
+# liter-llm.toml
+api_key = ""
+
+[[providers]]
+name = "llamacpp"
+base_url = "http://localhost:8080/v1"
+model_prefixes = ["llamacpp/"]
+```
+
+### LocalAI
+
+```bash
+docker run -p 8080:8080 localai/localai:latest
+```
+
+```toml
+# liter-llm.toml
+api_key = ""
+
+[[providers]]
+name = "localai"
+base_url = "http://localhost:8080/v1"
+model_prefixes = ["localai/"]
+```
+
+### Llamafile
+
+Download and run a llamafile:
+
+```bash
+chmod +x llava-v1.5-7b-q4.llamafile
+./llava-v1.5-7b-q4.llamafile --server --port 8080
+```
+
+```toml
+# liter-llm.toml
+api_key = ""
+
+[[providers]]
+name = "llamafile"
+base_url = "http://localhost:8080/v1"
+model_prefixes = ["llamafile/"]
+```
+
+## Custom Base URL
+
+If your local provider runs on a non-default port or remote host, override the base URL when constructing the client:
+
+<Tabs syncKey="lang">
+<TabItem label="Python">
+
+```python
+from liter_llm import create_client
+
+client = create_client(api_key="", base_url="http://192.168.1.100:9000/v1")
+```
+
+</TabItem>
+<TabItem label="TypeScript">
+
+```typescript
+import { createClient } from "@xberg-io/liter-llm";
+
+const client = createClient("", "http://192.168.1.100:9000/v1");
+```
+
+</TabItem>
+<TabItem label="Rust">
+
+```rust
+use liter_llm::{ClientConfigBuilder, DefaultClient};
+
+let config = ClientConfigBuilder::new("")
+    .base_url("http://192.168.1.100:9000/v1")
+    .build();
+let client = DefaultClient::new(config, None)?;
+```
+
+</TabItem>
+</Tabs>
+
+Or in `liter-llm.toml`:
+
+```toml
+api_key = ""
+base_url = "http://192.168.1.100:9000/v1"
+```
+
+## Docker Compose
+
+Run Ollama alongside the liter-llm proxy for a self-contained local setup:
+
+```yaml
+# docker-compose.local.yaml
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  liter-llm:
+    image: ghcr.io/xberg-io/liter-llm:latest
+    ports:
+      - "4000:4000"
+    environment:
+      - LITER_LLM_API_KEY=""
+    volumes:
+      - ./liter-llm-proxy.toml:/etc/liter-llm/liter-llm-proxy.toml
+    depends_on:
+      - ollama
+
+volumes:
+  ollama_data:
+```
+
+Example proxy config for local use:
+
+```toml
+# liter-llm-proxy.toml
+[server]
+host = "0.0.0.0"
+port = 4000
+
+[[providers]]
+name = "ollama"
+base_url = "http://ollama:11434/v1"
+model_prefixes = ["ollama/"]
+```
+
+Start the stack:
+
+```bash
+docker compose -f docker-compose.local.yaml up -d
+
+# Pull a model into Ollama
+docker exec -it $(docker compose -f docker-compose.local.yaml ps -q ollama) \
+    ollama pull qwen2:0.5b
+
+# Chat via the proxy
+curl http://localhost:4000/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -d '{"model": "ollama/qwen2:0.5b", "messages": [{"role": "user", "content": "Hello!"}]}'
+```
+
+## Troubleshooting
+
+### Connection Refused
+
+```text
+Error: connection refused (os error 111)
+```
+
+The local server is not running or is on a different port. Verify:
+
+```bash
+# Check if Ollama is running
+curl http://localhost:11434/v1/models
+
+# Check if the port is in use
+lsof -i :11434
+```
+
+:::tip
+Make sure the server is started **before** making requests. Ollama starts automatically on macOS but may need `ollama serve` on Linux.
+:::
+
+### Model Not Found
+
+```text
+Error: model "llama3.2" not found
+```
+
+The model is not downloaded. Pull it first:
+
+```bash
+# Ollama
+ollama pull llama3.2
+
+# Check installed models
+ollama list
+```
+
+### Timeout Errors
+
+Local models can be slow to load on first request (especially large models). Increase the timeout:
+
+```toml
+# liter-llm.toml
+timeout_secs = 300  # 5 minutes for initial model load
+```
+
+### Docker Networking
+
+When running liter-llm in Docker and a local provider on the host:
+
+- **Linux**: Use `http://host.docker.internal:11434/v1` or `http://172.17.0.1:11434/v1`
+- **macOS/Windows**: Use `http://host.docker.internal:11434/v1`
+
+```toml
+# liter-llm-proxy.toml (inside Docker)
+[[providers]]
+name = "ollama"
+base_url = "http://host.docker.internal:11434/v1"
+model_prefixes = ["ollama/"]
+```
+
+### GPU / Performance
+
+- **Ollama**: Automatically uses GPU if available. Check with `ollama ps`.
+- **vLLM**: Pass `--tensor-parallel-size N` for multi-GPU.
+- **llama.cpp**: Use `-ngl N` to offload N layers to GPU.
+- **LocalAI**: Set `GPU_LAYERS` environment variable.

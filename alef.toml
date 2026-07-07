@@ -25,7 +25,7 @@ extra_clippy_allows = ["single_match", "collapsible_match"]
 enabled = false
 
 [workspace.docs]
-reference_output = "docs/reference"
+reference_output = "docs-site/src/content/docs/reference"
 
 [workspace.docs.cli]
 sources = [
@@ -38,17 +38,12 @@ sources = [
 [workspace.docs.mcp]
 sources = ["crates/liter-llm-proxy/src/mcp/mod.rs", "crates/liter-llm-proxy/src/mcp/tools.rs"]
 
-[workspace.docs.llms]
-template = "templates/docs/llms.txt.jinja"
-output = "docs/llms.txt"
-adopt_existing = true
-
 [workspace.docs.skills]
 template_dir = "templates/docs/skills"
 outputs = [".codex/skills", ".agents/skills", ".claude/skills"]
 
 [workspace.docs.snippets]
-dirs = ["docs/snippets"]
+dirs = ["docs-site/src/snippets"]
 
 [workspace.generated_header]
 issues_url = "https://github.com/xberg-io/liter-llm/issues"

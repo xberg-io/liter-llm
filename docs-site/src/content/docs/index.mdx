@@ -1,0 +1,170 @@
+---
+title: liter-llm
+description: >-
+  Universal LLM API client with a Rust core and native bindings for 14 languages and 143 providers,
+  an OpenAI-compatible proxy server, and a built-in MCP server.
+template: splash
+hero:
+  tagline: >-
+    One universal LLM API client across 143 providers — chat, streaming, embeddings, rerank, images,
+    speech, transcription, OCR, search, files, and batches. A Rust core, 14 native language bindings,
+    an OpenAI-compatible proxy, and a built-in MCP server in one binary.
+  image:
+    file: ../../assets/hero-logo.svg
+  actions:
+    - text: Installation
+      link: /getting-started/installation/
+      icon: download
+      variant: primary
+    - text: Browse Providers
+      link: /providers/
+      icon: right-arrow
+      variant: minimal
+    - text: View on GitHub
+      link: https://github.com/xberg-io/liter-llm
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard, Tabs, TabItem } from "@astrojs/starlight/components";
+
+## Why liter-llm
+
+<CardGrid>
+	<Card title="143 Providers" icon="random">
+		OpenAI, Anthropic, Google, Bedrock, Vertex, Azure, Mistral, Cohere, GitHub Copilot, and many
+		more — one client, one model-prefix routing scheme.
+	</Card>
+	<Card title="14 Native Bindings" icon="translate">
+		Rust, Python, TypeScript, Go, Java, Kotlin Android, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, and
+		WebAssembly — plus a shared C/FFI surface.
+	</Card>
+	<Card title="Full Endpoint Coverage" icon="document">
+		Chat, streaming, tool calling, embeddings, model listing, images, speech, transcription,
+		moderation, rerank, search, and OCR. Files, batches, and responses use dedicated clients.
+	</Card>
+	<Card title="Proxy & MCP Server" icon="setting">
+		Drop-in OpenAI-compatible proxy with virtual keys, budgets, fallbacks, and observability. The
+		same binary exposes a Model Context Protocol server for AI agents.
+	</Card>
+	<Card title="Cloud-Native Auth" icon="laptop">
+		Azure AD, AWS Bedrock SigV4 with STS/IRSA, Vertex AI service-account OAuth2, and GitHub Copilot —
+		automatic token caching, refresh, and rotation.
+	</Card>
+	<Card title="Routing & Fallback" icon="magnifier">
+		Round-robin, weighted, latency-based, cost-based, and ordered-fallback strategies. Per-request
+		override or proxy-level config.
+	</Card>
+</CardGrid>
+
+## Language support
+
+| Language              | Package                                             | Docs                                             |
+| :-------------------- | :-------------------------------------------------- | :----------------------------------------------- |
+| **Rust**              | `cargo add liter-llm`                               | [API Reference](/reference/api-rust/)            |
+| **Python**            | `pip install liter-llm`                             | [API Reference](/reference/api-python/)          |
+| **TypeScript / Node** | `npm install @xberg-io/liter-llm`                   | [API Reference](/reference/api-typescript/)      |
+| **WebAssembly**       | `npm install @xberg-io/liter-llm-wasm`              | [API Reference](/reference/api-wasm/)            |
+| **Go**                | `go get github.com/xberg-io/liter-llm/packages/go`  | [API Reference](/reference/api-go/)              |
+| **Java**              | Maven Central `io.xberg.literllm:liter-llm`         | [API Reference](/reference/api-java/)            |
+| **Kotlin (Android)**  | Maven `io.xberg.literllm:liter-llm-android`         | [API Reference](/reference/api-kotlin-android/)  |
+| **C#**                | `dotnet add package XbergIo.LiterLlm`               | [API Reference](/reference/api-csharp/)          |
+| **Ruby**              | `gem install liter_llm`                             | [API Reference](/reference/api-ruby/)            |
+| **PHP**               | `composer require xberg-io/liter-llm`               | [API Reference](/reference/api-php/)             |
+| **Elixir**            | `{:liter_llm, "~> 1.7"}`                            | [API Reference](/reference/api-elixir/)          |
+| **Dart / Flutter**    | `dart pub add liter_llm`                            | [API Reference](/reference/api-dart/)            |
+| **Swift**             | Swift Package Manager                               | [API Reference](/reference/api-swift/)           |
+| **Zig**               | `zig fetch --save` from GitHub                      | [API Reference](/reference/api-zig/)             |
+| **C (FFI)**           | Shared library + header                             | [API Reference](/reference/api-c/)               |
+| **CLI**               | `cargo install liter-llm-cli`                       | [Proxy Server](/server/proxy-server/)            |
+| **Docker**            | `ghcr.io/xberg-io/liter-llm`                        | [Proxy Server](/server/proxy-server/)            |
+
+## Quick example
+
+<Tabs syncKey="lang">
+<TabItem label="Rust">
+
+```rust title="src/main.rs"
+use liter_llm::{ChatCompletionRequest, ClientConfigBuilder, DefaultClient, LlmClient, Message};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = ClientConfigBuilder::new(std::env::var("OPENAI_API_KEY")?).build();
+    let client = DefaultClient::new(config, None)?;
+
+    let request = ChatCompletionRequest::builder("openai/gpt-4o-mini")
+        .add_user_message("Summarize liter-llm in one sentence.")
+        .build()?;
+
+    let response = client.chat(request).await?;
+    println!("{}", response.choices[0].message.content_text().unwrap_or(""));
+    Ok(())
+}
+```
+
+</TabItem>
+<TabItem label="Python">
+
+```python title="main.py"
+import asyncio
+import os
+from liter_llm import create_client
+
+async def main():
+    client = create_client(api_key=os.environ["OPENAI_API_KEY"])
+    response = await client.chat({
+        "model": "openai/gpt-4o-mini",
+        "messages": [{"role": "user", "content": "Summarize liter-llm in one sentence."}],
+    })
+    print(response["choices"][0]["message"]["content"])
+
+asyncio.run(main())
+```
+
+</TabItem>
+<TabItem label="TypeScript">
+
+```typescript title="index.ts"
+import { createClient } from "@xberg-io/liter-llm";
+
+const client = createClient(process.env.OPENAI_API_KEY!);
+
+const response = await client.chat({
+  model: "openai/gpt-4o-mini",
+  messages: [{ role: "user", content: "Summarize liter-llm in one sentence." }],
+});
+
+console.log(response.choices[0].message.content);
+```
+
+</TabItem>
+</Tabs>
+
+## Part of Xberg.io
+
+<CardGrid>
+	<LinkCard title="Xberg" href="https://github.com/xberg-io/xberg" description="Document intelligence: text, tables, metadata from 91+ formats with optional OCR." />
+	<LinkCard title="Xberg Enterprise" href="https://github.com/xberg-io/xberg-enterprise" description="Managed extraction API with SDKs, dashboards, and observability." />
+	<LinkCard title="crawlberg" href="https://github.com/xberg-io/crawlberg" description="Web crawling and scraping with HTML→Markdown and headless-Chrome fallback." />
+	<LinkCard title="html-to-markdown" href="https://github.com/xberg-io/html-to-markdown" description="Fast, lossless HTML→Markdown engine." />
+	<LinkCard title="liter-llm" href="https://github.com/xberg-io/liter-llm" description="Universal LLM API client with native bindings for 14 languages and 143 providers." />
+	<LinkCard title="tree-sitter-language-pack" href="https://github.com/xberg-io/tree-sitter-language-pack" description="Tree-sitter grammars and code-intelligence primitives." />
+	<LinkCard title="alef" href="https://github.com/xberg-io/alef" description="The polyglot binding generator that produces every per-language binding across the 5 polyglot repos." />
+</CardGrid>
+
+## Explore the docs
+
+<CardGrid>
+	<LinkCard title="Get Started" href="/getting-started/installation/" description="Install liter-llm for your language, set an API key, and make your first call." />
+	<LinkCard title="Guides" href="/usage/chat/" description="Chat, embeddings, media, search, fallback routing, authentication, and the proxy/MCP servers." />
+	<LinkCard title="Concepts" href="/concepts/architecture/" description="Architecture, feature flags, the tokenizer model, and the cost-estimation pipeline." />
+	<LinkCard title="Reference" href="/reference/api-rust/" description="Per-language API docs, the configuration schema, type catalogue, and error matrix." />
+	<LinkCard title="Providers" href="/providers/" description="All 143 runtime providers, model prefixes, auth modes, and endpoint coverage." />
+	<LinkCard title="Proxy & MCP" href="/server/proxy-server/" description="Run the OpenAI-compatible proxy and the Model Context Protocol server from one binary." />
+</CardGrid>
+
+## Getting help
+
+- **Bugs & feature requests** — [Open an issue on GitHub](https://github.com/xberg-io/liter-llm/issues)
+- **Community chat** — [Join the Discord](https://discord.gg/xt9WY3GnKR)
+- **Contributing** — [Read the contributor guide](/contributing/)

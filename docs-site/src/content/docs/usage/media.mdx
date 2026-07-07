@@ -1,0 +1,313 @@
+---
+description: "Image generation, text-to-speech, speech-to-text, and content moderation with liter-llm."
+title: "Media (Images, Speech, Transcription)"
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+import { Content as Snip_python_usage_image_generate } from "../../../snippets/python/usage/image_generate.md";
+import { Content as Snip_typescript_usage_image_generate } from "../../../snippets/typescript/usage/image_generate.md";
+import { Content as Snip_rust_usage_image_generate } from "../../../snippets/rust/usage/image_generate.md";
+import { Content as Snip_go_usage_image_generate } from "../../../snippets/go/usage/image_generate.md";
+import { Content as Snip_java_usage_image_generate } from "../../../snippets/java/usage/image_generate.md";
+import { Content as Snip_csharp_usage_image_generate } from "../../../snippets/csharp/usage/image_generate.md";
+import { Content as Snip_ruby_usage_image_generate } from "../../../snippets/ruby/usage/image_generate.md";
+import { Content as Snip_php_usage_image_generate } from "../../../snippets/php/usage/image_generate.md";
+import { Content as Snip_elixir_usage_image_generate } from "../../../snippets/elixir/usage/image_generate.md";
+import { Content as Snip_wasm_usage_image_generate } from "../../../snippets/wasm/usage/image_generate.md";
+import { Content as Snip_python_usage_speech } from "../../../snippets/python/usage/speech.md";
+import { Content as Snip_typescript_usage_speech } from "../../../snippets/typescript/usage/speech.md";
+import { Content as Snip_rust_usage_speech } from "../../../snippets/rust/usage/speech.md";
+import { Content as Snip_go_usage_speech } from "../../../snippets/go/usage/speech.md";
+import { Content as Snip_java_usage_speech } from "../../../snippets/java/usage/speech.md";
+import { Content as Snip_csharp_usage_speech } from "../../../snippets/csharp/usage/speech.md";
+import { Content as Snip_ruby_usage_speech } from "../../../snippets/ruby/usage/speech.md";
+import { Content as Snip_php_usage_speech } from "../../../snippets/php/usage/speech.md";
+import { Content as Snip_elixir_usage_speech } from "../../../snippets/elixir/usage/speech.md";
+import { Content as Snip_wasm_usage_speech } from "../../../snippets/wasm/usage/speech.md";
+import { Content as Snip_python_usage_transcribe } from "../../../snippets/python/usage/transcribe.md";
+import { Content as Snip_typescript_usage_transcribe } from "../../../snippets/typescript/usage/transcribe.md";
+import { Content as Snip_rust_usage_transcribe } from "../../../snippets/rust/usage/transcribe.md";
+import { Content as Snip_go_usage_transcribe } from "../../../snippets/go/usage/transcribe.md";
+import { Content as Snip_java_usage_transcribe } from "../../../snippets/java/usage/transcribe.md";
+import { Content as Snip_csharp_usage_transcribe } from "../../../snippets/csharp/usage/transcribe.md";
+import { Content as Snip_ruby_usage_transcribe } from "../../../snippets/ruby/usage/transcribe.md";
+import { Content as Snip_php_usage_transcribe } from "../../../snippets/php/usage/transcribe.md";
+import { Content as Snip_elixir_usage_transcribe } from "../../../snippets/elixir/usage/transcribe.md";
+import { Content as Snip_wasm_usage_transcribe } from "../../../snippets/wasm/usage/transcribe.md";
+import { Content as Snip_python_usage_moderate } from "../../../snippets/python/usage/moderate.md";
+import { Content as Snip_typescript_usage_moderate } from "../../../snippets/typescript/usage/moderate.md";
+import { Content as Snip_rust_usage_moderate } from "../../../snippets/rust/usage/moderate.md";
+import { Content as Snip_go_usage_moderate } from "../../../snippets/go/usage/moderate.md";
+import { Content as Snip_java_usage_moderate } from "../../../snippets/java/usage/moderate.md";
+import { Content as Snip_csharp_usage_moderate } from "../../../snippets/csharp/usage/moderate.md";
+import { Content as Snip_ruby_usage_moderate } from "../../../snippets/ruby/usage/moderate.md";
+import { Content as Snip_php_usage_moderate } from "../../../snippets/php/usage/moderate.md";
+import { Content as Snip_elixir_usage_moderate } from "../../../snippets/elixir/usage/moderate.md";
+import { Content as Snip_wasm_usage_moderate } from "../../../snippets/wasm/usage/moderate.md";
+
+## Image Generation
+
+Generate images from text prompts:
+
+<Tabs syncKey="lang">
+<TabItem label="Python">
+
+<Snip_python_usage_image_generate />
+
+</TabItem>
+<TabItem label="TypeScript">
+
+<Snip_typescript_usage_image_generate />
+
+</TabItem>
+<TabItem label="Rust">
+
+<Snip_rust_usage_image_generate />
+
+</TabItem>
+<TabItem label="Go">
+
+<Snip_go_usage_image_generate />
+
+</TabItem>
+<TabItem label="Java">
+
+<Snip_java_usage_image_generate />
+
+</TabItem>
+<TabItem label="C#">
+
+<Snip_csharp_usage_image_generate />
+
+</TabItem>
+<TabItem label="Ruby">
+
+<Snip_ruby_usage_image_generate />
+
+</TabItem>
+<TabItem label="PHP">
+
+<Snip_php_usage_image_generate />
+
+</TabItem>
+<TabItem label="Elixir">
+
+<Snip_elixir_usage_image_generate />
+
+</TabItem>
+<TabItem label="WASM">
+
+<Snip_wasm_usage_image_generate />
+
+</TabItem>
+</Tabs>
+
+### Image Parameters
+
+| Parameter | Type   | Description                                              |
+| --------- | ------ | -------------------------------------------------------- |
+| `model`   | string | Image model (e.g. `"openai/dall-e-3"`)                   |
+| `prompt`  | string | Text description of the image                            |
+| `n`       | int    | Number of images to generate                             |
+| `size`    | string | Image size (`"1024x1024"`, `"1792x1024"`, `"1024x1792"`) |
+| `quality` | string | Quality level (`"standard"` or `"hd"`)                   |
+| `style`   | string | Style (`"vivid"` or `"natural"`)                         |
+
+## Text-to-Speech
+
+Generate audio from text:
+
+<Tabs syncKey="lang">
+<TabItem label="Python">
+
+<Snip_python_usage_speech />
+
+</TabItem>
+<TabItem label="TypeScript">
+
+<Snip_typescript_usage_speech />
+
+</TabItem>
+<TabItem label="Rust">
+
+<Snip_rust_usage_speech />
+
+</TabItem>
+<TabItem label="Go">
+
+<Snip_go_usage_speech />
+
+</TabItem>
+<TabItem label="Java">
+
+<Snip_java_usage_speech />
+
+</TabItem>
+<TabItem label="C#">
+
+<Snip_csharp_usage_speech />
+
+</TabItem>
+<TabItem label="Ruby">
+
+<Snip_ruby_usage_speech />
+
+</TabItem>
+<TabItem label="PHP">
+
+<Snip_php_usage_speech />
+
+</TabItem>
+<TabItem label="Elixir">
+
+<Snip_elixir_usage_speech />
+
+</TabItem>
+<TabItem label="WASM">
+
+<Snip_wasm_usage_speech />
+
+</TabItem>
+</Tabs>
+
+### Speech Parameters
+
+| Parameter         | Type   | Description                                                                    |
+| ----------------- | ------ | ------------------------------------------------------------------------------ |
+| `model`           | string | TTS model (e.g. `"openai/tts-1"`)                                              |
+| `input`           | string | Text to synthesize                                                             |
+| `voice`           | string | Voice preset (`"alloy"`, `"echo"`, `"fable"`, `"onyx"`, `"nova"`, `"shimmer"`) |
+| `response_format` | string | Audio format (`"mp3"`, `"opus"`, `"aac"`, `"flac"`)                            |
+| `speed`           | float  | Playback speed (0.25-4.0)                                                      |
+
+## Speech-to-Text
+
+Transcribe audio to text:
+
+<Tabs syncKey="lang">
+<TabItem label="Python">
+
+<Snip_python_usage_transcribe />
+
+</TabItem>
+<TabItem label="TypeScript">
+
+<Snip_typescript_usage_transcribe />
+
+</TabItem>
+<TabItem label="Rust">
+
+<Snip_rust_usage_transcribe />
+
+</TabItem>
+<TabItem label="Go">
+
+<Snip_go_usage_transcribe />
+
+</TabItem>
+<TabItem label="Java">
+
+<Snip_java_usage_transcribe />
+
+</TabItem>
+<TabItem label="C#">
+
+<Snip_csharp_usage_transcribe />
+
+</TabItem>
+<TabItem label="Ruby">
+
+<Snip_ruby_usage_transcribe />
+
+</TabItem>
+<TabItem label="PHP">
+
+<Snip_php_usage_transcribe />
+
+</TabItem>
+<TabItem label="Elixir">
+
+<Snip_elixir_usage_transcribe />
+
+</TabItem>
+<TabItem label="WASM">
+
+<Snip_wasm_usage_transcribe />
+
+</TabItem>
+</Tabs>
+
+### Transcription Parameters
+
+| Parameter         | Type   | Description                                          |
+| ----------------- | ------ | ---------------------------------------------------- |
+| `model`           | string | STT model (e.g. `"openai/whisper-1"`)                |
+| `file`            | bytes  | Audio file data                                      |
+| `language`        | string | ISO-639-1 language code                              |
+| `prompt`          | string | Optional context hint                                |
+| `temperature`     | float  | Sampling temperature                                 |
+| `response_format` | string | Output format (`"json"`, `"text"`, `"srt"`, `"vtt"`) |
+
+## Content Moderation
+
+Classify content for policy violations:
+
+<Tabs syncKey="lang">
+<TabItem label="Python">
+
+<Snip_python_usage_moderate />
+
+</TabItem>
+<TabItem label="TypeScript">
+
+<Snip_typescript_usage_moderate />
+
+</TabItem>
+<TabItem label="Rust">
+
+<Snip_rust_usage_moderate />
+
+</TabItem>
+<TabItem label="Go">
+
+<Snip_go_usage_moderate />
+
+</TabItem>
+<TabItem label="Java">
+
+<Snip_java_usage_moderate />
+
+</TabItem>
+<TabItem label="C#">
+
+<Snip_csharp_usage_moderate />
+
+</TabItem>
+<TabItem label="Ruby">
+
+<Snip_ruby_usage_moderate />
+
+</TabItem>
+<TabItem label="PHP">
+
+<Snip_php_usage_moderate />
+
+</TabItem>
+<TabItem label="Elixir">
+
+<Snip_elixir_usage_moderate />
+
+</TabItem>
+<TabItem label="WASM">
+
+<Snip_wasm_usage_moderate />
+
+</TabItem>
+</Tabs>
+
+### Moderation Parameters
+
+| Parameter | Type         | Description                                               |
+| --------- | ------------ | --------------------------------------------------------- |
+| `input`   | string/array | Content to classify                                       |
+| `model`   | string       | Moderation model (e.g. `"openai/omni-moderation-latest"`) |
