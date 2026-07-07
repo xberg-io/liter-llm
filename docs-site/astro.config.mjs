@@ -97,6 +97,8 @@ export default defineConfig({
             items: [
               { label: "API", items: API_LANGUAGES },
               { label: "Providers", slug: "providers" },
+              { label: "CLI", slug: "reference/cli" },
+              { label: "MCP", slug: "reference/mcp" },
               { label: "Configuration", slug: "reference/configuration" },
               { label: "Types", slug: "reference/types" },
               { label: "Errors", slug: "reference/errors" },

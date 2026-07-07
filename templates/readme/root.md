@@ -40,13 +40,7 @@ We credit [litellm](https://github.com/BerriAI/litellm) for proving the category
 | **TOML configuration** | `liter-llm.toml` auto-discovery, custom providers, cache backends, and middleware config |
 | **Local LLM support** | Ollama, LM Studio, vLLM, llama.cpp, LocalAI, and llamafile via OpenAI-compatible APIs |
 
-<div align="center">
-  <a href="https://github.com/xberg-io/liter-llm/stargazers">
-    <img src="docs/assets/star.gif" alt="Star liter-llm on GitHub" width="640">
-  </a>
-</div>
-
-<p align="center"><strong>⭐ Star this repo to show your support — it helps others discover liter-llm.</strong></p>
+<p align="center"><strong>⭐ <a href="https://github.com/xberg-io/liter-llm/stargazers">Star this repo</a> to show your support — it helps others discover liter-llm.</strong></p>
 
 ## Quick Start
 

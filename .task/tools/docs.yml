@@ -27,7 +27,9 @@ tasks:
   lint:links:
     desc: Check links with lychee
     cmds:
-      - lychee --offline docs-site/src/content/docs README.md
+      # Link-check the built site so root-relative links resolve against dist/.
+      - task: build
+      - lychee --offline --config .lychee.toml --root-dir "$PWD/docs-site/dist" docs-site/dist README.md
 
   lint:prose:
     desc: Lint prose with textlint
