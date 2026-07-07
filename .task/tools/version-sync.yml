@@ -6,12 +6,9 @@ vars:
 
 tasks:
   sync:
-    desc: "Synchronize version across all package manifests and regenerate everything"
+    desc: "Synchronize version across all package manifests"
     cmds:
       - "{{.ALEF}} sync-versions"
-      - "{{.ALEF}} readme"
-      - "{{.ALEF}} generate --clean"
-      - "{{.ALEF}} e2e generate"
 
   check:
     desc: "Check if versions are synchronized (dry-run)"

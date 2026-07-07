@@ -1,6 +1,18 @@
 // swift-format-ignore-file
 import RustBridgeC
 
+public func assistantMessageTextFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$assistant_message_text_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func assistantMessageRefusalTextFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$assistant_message_refusal_text_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func assistantMessageOutputImagesFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$assistant_message_output_images_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func assistantMessageOutputAudioFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$assistant_message_output_audio_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
 public func createDefaultClient<GenericIntoRustString: IntoRustString>(_ api_key: GenericIntoRustString, _ base_url: Optional<GenericIntoRustString>) throws -> DefaultClient {
     try { let val = __swift_bridge__$create_default_client({ let rustString = api_key.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { if let rustString = optionalStringIntoRustString(base_url) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()); if val.is_ok { return DefaultClient(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }

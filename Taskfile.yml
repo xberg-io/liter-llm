@@ -78,6 +78,7 @@ tasks:
     cmds:
       - task: rust:install
       - alef setup
+      - command -v poly >/dev/null 2>&1 || brew install goldziher/tap/poly
       - poly hooks install
 
   setup:sdkman:
@@ -209,9 +210,9 @@ tasks:
       - alef extract
 
   alef:generate:
-    desc: Fast regeneration of all alef-managed files (bindings, stubs, scaffolding, READMEs, e2e, test_apps, docs). Runs `alef all --clean --format=false` so post-generation formatters stay opt-in via `task alef:format`.
+    desc: Fast regeneration of all alef-managed files (bindings, stubs, scaffolding, READMEs, e2e, test_apps, docs). Runs `alef all --clean` (formatting is always applied).
     cmds:
-      - alef all --clean --format=false
+      - alef all --clean
 
   alef:all:
     desc: Run full alef pipeline (extract + generate + stubs + scaffold + readme + docs + e2e)

@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.31.0"
+alef_version = "0.33.0"
 languages = [
     "python",
     "node",
@@ -69,6 +69,16 @@ family-names = "Hirschfeld"
 given-names = "Na'aman"
 email = "naaman@xberg.io"
 orcid = "https://orcid.org/0009-0000-2247-5072"
+
+# Spell-checker allowlist. Key = the spelling typos would flag; value = intended
+# spelling (set equal to suppress a false-positive without auto-correcting).
+# Emitted as `[lint.typos.extend_words]` in the generated poly.toml.
+[workspace.poly.typos.extend-words]
+# HashiCorp Vault vendor name ("Hashi" fragment) in changelog + vault code
+Hashi = "Hashi"
+# German words in real source / test strings
+ein = "ein"
+ist = "ist"
 
 # Repo-specific poly suppressions merged into the generated poly.toml. These
 # cover hand-written files (scripts, cli-proxy, README templates) formerly
@@ -2114,7 +2124,7 @@ keywords = ["llm", "api-client", "openai", "anthropic"]
 
 [crates.readme]
 template_dir = "templates/readme"
-snippets_dir = "docs/snippets"
+snippets_dir = "docs-site/src/snippets"
 output_pattern = "packages/{language}/README.md"
 discord_url = "https://discord.gg/xt9WY3GnKR"
 

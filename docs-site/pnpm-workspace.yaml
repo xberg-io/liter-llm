@@ -4,4 +4,4 @@ allowBuilds:
   esbuild: true
   sharp: true
 minimumReleaseAgeExclude:
-  - '@xberg-io/docs-theme@0.1.0'
+  - "@xberg-io/docs-theme@0.1.0"
