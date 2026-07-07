@@ -72,17 +72,19 @@
   </a>
 </div>
 
-**A lighter, faster, safer universal LLM API client** — one Rust core, 14 native language bindings, 143 providers.
+**One API for every LLM — in your language, without the rewrites.**
 
 ## What and Why?
 
-liter-llm is a universal LLM API client compiled from the ground up in Rust: one core, 14 native language bindings, and 143 providers. No interpreter, no transitive dependency tree, no supply-chain surface area — and a drop-in OpenAI-compatible proxy plus an MCP server in a single 35 MB binary.
+liter-llm gives you a single, consistent way to call any large language model. Reach 143 providers — OpenAI, Anthropic, Google, Bedrock, and more — through one client, and switch models by changing a name instead of your code. The same client ships to 14 languages, all built on one Rust core, so you get identical behavior everywhere. Need a gateway? Point your existing OpenAI SDK at the built-in, drop-in proxy — no rewrites, no separate service to run.
 
-- **Compiled Rust core** — no `pip install` supply chain, no `.pth` auto-execution hooks, no runtime dependency tree to compromise.
-- **Secrets stay secret** — API keys are wrapped in [`secrecy::SecretString`](https://docs.rs/secrecy/): zeroed on drop, redacted in logs, never serialized.
-- **Polyglot from day one** — Python, TypeScript, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, and WebAssembly, all thin wrappers over the same Rust core, plus a C/FFI surface for everything else.
-- **Observability built in** — production-grade [OpenTelemetry](https://opentelemetry.io/) with GenAI semantic conventions, not an afterthought callback system.
-- **Composable middleware** — rate limiting, caching, cost tracking, health checks, and fallback as [Tower](https://docs.rs/tower/) layers you stack like building blocks.
+- **Work with any provider without rewrites** — 143 providers behind one API; change the model name to switch, your code stays the same.
+- **Use it from your language** — Python, TypeScript, Go, Java, Kotlin, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, and WebAssembly, all built on the same Rust core, plus a C/FFI surface for everything else.
+- **Secure by default** — API keys are wrapped, redacted from logs, and never serialized; cloud auth for Azure, AWS, and Vertex refreshes and rotates for you.
+- **One small binary** — the client, a drop-in OpenAI-compatible proxy, and an MCP server for AI agents ship in a single 35 MB binary with no interpreter and no dependency tree to compromise.
+- **Stay up when a provider fails** — route by cost, latency, or weight and fall back automatically, with built-in rate limiting, caching, and cost tracking.
+
+Deeper details — observability, middleware, and the full endpoint list — live in the [documentation](https://docs.liter-llm.xberg.io).
 
 We credit [litellm](https://github.com/BerriAI/litellm) for proving the category; our provider registry was bootstrapped from theirs. See [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
 

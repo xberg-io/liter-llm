@@ -35,7 +35,47 @@ export default defineConfig({
           "143 providers, an OpenAI-compatible proxy server, and a built-in MCP server.",
         githubUrl: "https://github.com/xberg-io/liter-llm",
         editBaseUrl: "https://github.com/xberg-io/liter-llm/edit/main/docs-site/",
-        plugins: [starlightLlmsTxt()],
+        plugins: [
+          starlightLlmsTxt({
+            customSets: [
+              {
+                label: "Get Started",
+                description: "Install liter-llm for your language and make a first call.",
+                paths: ["getting-started/**"],
+              },
+              {
+                label: "Guides",
+                description:
+                  "Task-focused guides: chat, multimodal, embeddings, media, search, files, " +
+                  "configuration, authentication, routing, and the proxy and MCP servers.",
+                paths: ["usage/**", "server/**", "guides/**"],
+              },
+              {
+                label: "Concepts",
+                description: "Architecture, feature flags, the tokenizer model, and cost estimation.",
+                paths: ["concepts/**"],
+              },
+              {
+                label: "Reference",
+                description:
+                  "Per-language API reference, the provider list, CLI, MCP, configuration, " + "types, and errors.",
+                paths: ["reference/**", "providers"],
+              },
+              {
+                label: "More",
+                description: "Contributing, changelog, and the Xberg.io ecosystem.",
+                paths: ["contributing", "changelog", "ecosystem"],
+              },
+            ],
+            optionalLinks: [
+              {
+                label: "GitHub",
+                url: "https://github.com/xberg-io/liter-llm",
+                description: "Source code and issues",
+              },
+            ],
+          }),
+        ],
         sidebar: [
           { label: "Home", link: "/" },
           {
@@ -48,7 +88,7 @@ export default defineConfig({
               {
                 label: "Core",
                 items: [
-                  { label: "AI Coding Assistants", slug: "usage/agent-skills" },
+                  { label: "AI Coding Assistants", slug: "guides/ai-coding-assistants" },
                   { label: "Chat & Streaming", slug: "usage/chat" },
                   { label: "Multimodal I/O", slug: "usage/multimodal" },
                   { label: "Embeddings & Rerank", slug: "usage/embeddings" },

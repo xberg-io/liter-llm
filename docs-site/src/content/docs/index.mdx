@@ -6,9 +6,8 @@ description: >-
 template: splash
 hero:
   tagline: >-
-    One universal LLM API client across 143 providers — chat, streaming, embeddings, rerank, images,
-    speech, transcription, OCR, search, files, and batches. A Rust core, 14 native language bindings,
-    an OpenAI-compatible proxy, and a built-in MCP server in one binary.
+    One API for every LLM. Call 143 providers from your own language, switch models without
+    rewriting code, and run a drop-in OpenAI-compatible proxy — all from a single binary.
   image:
     dark: ../../assets/hero-logo.svg
     light: ../../assets/hero-logo-light.svg
@@ -32,29 +31,29 @@ import { Card, CardGrid, LinkCard, Tabs, TabItem } from "@astrojs/starlight/comp
 ## Why liter-llm
 
 <CardGrid>
-	<Card title="143 Providers" icon="random">
-		OpenAI, Anthropic, Google, Bedrock, Vertex, Azure, Mistral, Cohere, GitHub Copilot, and many
-		more — one client, one model-prefix routing scheme.
+	<Card title="Work with any LLM provider without rewrites" icon="random">
+		Reach 143 providers — OpenAI, Anthropic, Google, Bedrock, Azure, Mistral, and more — through one
+		client. Change the model name to switch providers; your code stays the same.
 	</Card>
-	<Card title="14 Native Bindings" icon="translate">
-		Rust, Python, TypeScript, Go, Java, Kotlin Android, C#, Ruby, PHP, Elixir, Dart, Swift, Zig, and
-		WebAssembly — plus a shared C/FFI surface.
+	<Card title="Your language, identical results" icon="translate">
+		The same client ships to 14 languages — Python, TypeScript, Go, Java, Ruby, PHP, and more — all
+		built on one Rust core, so behavior matches everywhere.
 	</Card>
-	<Card title="Full Endpoint Coverage" icon="document">
-		Chat, streaming, tool calling, embeddings, model listing, images, speech, transcription,
-		moderation, rerank, search, and OCR. Files, batches, and responses use dedicated clients.
+	<Card title="Chat, embeddings, images, speech — one API" icon="document">
+		Chat and streaming, tool calling, embeddings and rerank, images, speech and transcription,
+		moderation, search, and OCR. One consistent surface for every task.
 	</Card>
-	<Card title="Proxy & MCP Server" icon="setting">
-		Drop-in OpenAI-compatible proxy with virtual keys, budgets, fallbacks, and observability. The
-		same binary exposes a Model Context Protocol server for AI agents.
+	<Card title="Drop-in OpenAI-compatible proxy" icon="setting">
+		Point your existing OpenAI SDK at the built-in proxy to add virtual keys, budgets, and
+		fallbacks. The same binary also serves your AI agents.
 	</Card>
-	<Card title="Cloud-Native Auth" icon="laptop">
-		Azure AD, AWS Bedrock SigV4 with STS/IRSA, Vertex AI service-account OAuth2, and GitHub Copilot —
-		automatic token caching, refresh, and rotation.
+	<Card title="Secure by default" icon="laptop">
+		API keys are wrapped, redacted from logs, and never serialized. Cloud auth for Azure, AWS, and
+		Vertex is handled for you — tokens refresh and rotate automatically.
 	</Card>
-	<Card title="Routing & Fallback" icon="magnifier">
-		Round-robin, weighted, latency-based, cost-based, and ordered-fallback strategies. Per-request
-		override or proxy-level config.
+	<Card title="Stay up when a provider goes down" icon="magnifier">
+		Route by cost, latency, or weight, and fall back to another provider on failure — so one
+		outage doesn't take your app down. Set it per request or once in the proxy.
 	</Card>
 </CardGrid>
 
