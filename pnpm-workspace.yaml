@@ -8,3 +8,8 @@ allowBuilds:
 minimumReleaseAge: 0
 minimumReleaseAgeExclude:
   - "@xberg-io/*"
+
+# pnpm settings migrated from .npmrc (npm warns on kebab-case keys it does not recognize)
+sharedWorkspaceLockfile: true
+autoInstallPeers: true
+hoist: true
