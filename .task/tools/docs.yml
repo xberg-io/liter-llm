@@ -1,10 +1,5 @@
 version: "3"
 
-# Documentation build + lint + snippet workflows.
-# The docs site is an Astro Starlight project under docs-site/ that consumes the
-# shared @xberg-io/docs-theme. Snippet commands wrap `alef snippets` and target
-# the relocated docs-site/src/snippets tree.
-
 tasks:
   build:
     desc: Build documentation
@@ -27,7 +22,6 @@ tasks:
   lint:links:
     desc: Check links with lychee
     cmds:
-      # Link-check the built site so root-relative links resolve against dist/.
       - task: build
       - lychee --offline --config .lychee.toml --root-dir "$PWD/docs-site/dist" docs-site/dist README.md
 
@@ -35,10 +29,6 @@ tasks:
     desc: Lint prose with textlint
     cmds:
       - npx textlint 'docs-site/src/content/docs/**/*.{md,mdx}'
-
-  # Snippet commands target docs-site/src/snippets — the canonical hand-written
-  # snippets imported into Starlight tabs. The alef-emitted docs-site reference
-  # tree is validated separately via `alef docs`.
 
   snippets:list:
     desc: List all documentation snippets discovered by alef

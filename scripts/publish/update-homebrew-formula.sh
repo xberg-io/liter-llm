@@ -1,14 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Update Formula/liter-llm.rb in the homebrew-tap with the new tag's URL and
-# source-tarball SHA256. The bottle DSL is updated separately by the
-# `homebrew-merge-bottles@v1` action after bottles are built.
-#
-# Usage (env vars):
 #   TAG=v1.4.0-rc.31 VERSION=1.4.0-rc.31 \
-#   TAP_DIR=/path/to/homebrew-tap \
-#   ./update-homebrew-formula.sh
 
 tag="${TAG:?TAG is required (e.g. v1.4.0-rc.31)}"
 version="${VERSION:?VERSION is required (e.g. 1.4.0-rc.31)}"
@@ -39,9 +32,6 @@ sha256=$(curl -fsSL "$tarball_url" | shasum -a 256 | awk '{print $1}')
 echo "  url:    $tarball_url"
 echo "  sha256: $sha256"
 
-# Update the top-level url + sha256 lines (the ones outside `bottle do ... end`).
-# Match `url "..."` on one line, `sha256 "..."` on the next, only when both come
-# before the `bottle do` block.
 python3 - "$formula" "$tarball_url" "$sha256" <<'PY'
 import re
 import sys

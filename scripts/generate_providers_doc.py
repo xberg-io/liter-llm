@@ -23,7 +23,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA_PATH = PROJECT_ROOT / "schemas" / "providers.json"
 OUTPUT_PATH = PROJECT_ROOT / "docs" / "providers.md"
 
-# Endpoint columns to display in the table
 ENDPOINT_COLUMNS = ["chat", "embedding", "image", "audio", "moderation"]
 
 CHECK = ":white_check_mark:"
@@ -56,13 +55,11 @@ def generate_markdown(providers: list[dict[str, Any]]) -> str:
 
     lines: list[str] = []
 
-    # Front matter
     lines.append("---")
     lines.append(f'description: "Complete list of {count} supported LLM providers"')
     lines.append("---")
     lines.append("")
 
-    # Title and intro
     lines.append("# Supported Providers")
     lines.append("")
     lines.append(
@@ -74,11 +71,9 @@ def generate_markdown(providers: list[dict[str, Any]]) -> str:
     )
     lines.append("")
 
-    # Table header
     lines.append("| Provider | Prefix | Chat | Embeddings | Image | Audio | Moderation |")
     lines.append("| --- | --- | :---: | :---: | :---: | :---: | :---: |")
 
-    # Table rows
     for p in sorted_providers:
         display = p["display_name"]
         prefix = provider_prefix(p)
@@ -90,7 +85,6 @@ def generate_markdown(providers: list[dict[str, Any]]) -> str:
     lines.append(f"*{count} providers total.*")
     lines.append("")
 
-    # Usage section
     lines.append("## Usage")
     lines.append("")
     lines.append("Use any provider by prefixing the model name with the provider's routing prefix:")
@@ -117,7 +111,6 @@ def generate_markdown(providers: list[dict[str, Any]]) -> str:
     lines.append("```")
     lines.append("")
 
-    # Custom providers section
     lines.append("## Custom Providers")
     lines.append("")
     lines.append(
@@ -135,7 +128,6 @@ def generate_markdown(providers: list[dict[str, Any]]) -> str:
     lines.append("```")
     lines.append("")
 
-    # Link to raw JSON
     lines.append("## Provider Registry")
     lines.append("")
     lines.append(

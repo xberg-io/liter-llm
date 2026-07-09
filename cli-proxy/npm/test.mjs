@@ -1,5 +1,3 @@
-// Unit tests for the asset-selection core in install.js.
-// Run with: node --test test.mjs   (not shipped in the npm tarball)
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { isNonCliArtifact, selectArchiveName } from "./install.js";

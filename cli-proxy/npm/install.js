@@ -1,5 +1,3 @@
-// postinstall: download, verify, and extract the native liter-llm binary
-// into ./bin so the launcher can exec it. All diagnostics go to stderr.
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -14,7 +12,6 @@ const PKG_NAME = "liter-llm-cli";
 const VERSION_ENV = "LITER_LLM_CLI_VERSION";
 const USER_AGENT = "liter-llm-cli-npm-proxy";
 
-// Map Node's platform/arch to the Rust target triple embedded in asset names.
 function targetTriple() {
   const type = os.type();
   const arch = os.arch();
@@ -40,9 +37,6 @@ function binaryName() {
   return os.type() === "Windows_NT" ? `${BIN_NAME}.exe` : BIN_NAME;
 }
 
-// GET a URL following redirects, returning the response body as a Buffer.
-// Every hop (initial request and every redirect target) MUST be https; any
-// other scheme is rejected to prevent downgrade/SSRF via a malicious Location.
 function httpGetBuffer(url, { headers = {} } = {}, maxRedirects = 5) {
   return new Promise((resolve, reject) => {
     if (maxRedirects < 0) return reject(new Error("too many redirects"));
@@ -80,9 +74,6 @@ async function httpGetJson(url) {
   return JSON.parse(buf.toString("utf8"));
 }
 
-// Signals that the release carries no standalone CLI for this platform (only
-// bindings/native-lib/brew-bottle artifacts). The launcher catches this by name
-// and prints a graceful install hint instead of a raw stack trace.
 export class CliUnavailableError extends Error {
   constructor(message) {
     super(message);
@@ -90,8 +81,6 @@ export class CliUnavailableError extends Error {
   }
 }
 
-// Substrings that mark an asset as a binding/native-lib/brew-bottle artifact —
-// never the standalone CLI. Matched case-insensitively anywhere in the name.
 const NON_CLI_PATTERNS = [
   "-ffi",
   "_ffi",
@@ -109,7 +98,6 @@ const NON_CLI_PATTERNS = [
   "napi",
 ];
 
-// True if the asset name matches any non-CLI artifact pattern.
 export function isNonCliArtifact(name) {
   const n = (name || "").toLowerCase();
   return NON_CLI_PATTERNS.some((pat) => n.includes(pat));
@@ -123,9 +111,6 @@ export function assetScore(name) {
   return score;
 }
 
-// Pure asset-selection core: from a list of asset names, keep only triple-matched
-// .tar.gz/.zip archives that are NOT binding/native-lib/bottle artifacts, then
-// return the best (cli/bin-name preferred). Returns null when none qualify.
 export function selectArchiveName(names, triple) {
   const survivors = (names || []).filter((name) => {
     const n = (name || "").toLowerCase();
@@ -138,13 +123,6 @@ export function selectArchiveName(names, triple) {
   return survivors[0];
 }
 
-// Resolve the release (honoring LITER_LLM_CLI_VERSION to pin a tag) and pick the
-// archive asset for this platform plus an optional SHA256SUMS asset.
-//
-// Selection: among assets whose name contains the target triple, ends in
-// .tar.gz/.zip, and is NOT a binding/native-lib/bottle artifact, prefer one
-// whose name contains "cli" or the bin name. If none survive, the release has
-// no standalone CLI for this platform (CliUnavailableError).
 async function resolveRelease() {
   const triple = targetTriple();
   const pinned = process.env[VERSION_ENV];
@@ -180,7 +158,6 @@ async function resolveRelease() {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BIN_DIR = path.join(__dirname, "bin");
 
-// Parse a `sha256<space>filename` checksums file; return the digest for name.
 function expectedDigest(text, assetName) {
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim();
@@ -215,18 +192,15 @@ async function verifyOrWarn(archiveBuf, archiveName, checksums) {
   process.stderr.write(`Checksum verified for ${archiveName}.\n`);
 }
 
-// Reject archive entry names that could escape the extraction directory:
-// absolute paths (POSIX or Windows drive/UNC) or any component equal to "..".
 function isUnsafeEntry(name) {
   const entry = String(name).replace(/\\/g, "/").trim();
   if (!entry) return false;
   if (entry.startsWith("/")) return true;
-  if (/^[a-zA-Z]:/.test(entry)) return true; // Windows drive letter
-  if (entry.startsWith("//")) return true; // UNC
+  if (/^[a-zA-Z]:/.test(entry)) return true;
+  if (entry.startsWith("//")) return true;
   return entry.split("/").some((part) => part === "..");
 }
 
-// List the entries of a gzipped tar without extracting (`tar -tzf`).
 function listTarEntries(archivePath) {
   const result = spawnSync("tar", ["-tzf", archivePath]);
   if (result.status !== 0) {
@@ -248,7 +222,6 @@ function extractTarGz(archivePath, destDir) {
   }
 }
 
-// List the entries of a zip without extracting (`unzip -Z1`, or PowerShell on Windows).
 function listZipEntries(archivePath) {
   if (os.type() === "Windows_NT") {
     const script =
@@ -278,7 +251,6 @@ function listZipEntries(archivePath) {
 
 function extractZip(archivePath, destDir) {
   if (os.type() === "Windows_NT") {
-    // No string interpolation into a -Command: all path data passed as literal args.
     const result = spawnSync("powershell", [
       "-NoProfile",
       "-NonInteractive",
@@ -303,7 +275,6 @@ function extractZip(archivePath, destDir) {
   }
 }
 
-// Locate the binary anywhere under dir (archives may nest it in a subdir).
 function findBinary(dir, name) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
@@ -317,7 +288,6 @@ function findBinary(dir, name) {
   return null;
 }
 
-// Find a directory named `name` anywhere under dir.
 function findDir(dir, name) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
@@ -328,10 +298,6 @@ function findDir(dir, name) {
   return null;
 }
 
-// Validate every archive entry, extract into an isolated temp dir, then copy
-// out ONLY the expected binary (by basename) plus an optional sibling lib/ dir.
-// Nothing else from the archive is honored, so a malicious member can never
-// land outside dest even if extraction tooling mishandled it.
 function safeExtract(archivePath, archiveName, dest) {
   const isZip = archiveName.toLowerCase().endsWith(".zip");
   const entries = isZip ? listZipEntries(archivePath) : listTarEntries(archivePath);
@@ -352,15 +318,11 @@ function safeExtract(archivePath, archiveName, dest) {
     const binName = binaryName();
     const extractedBin = findBinary(tmpDir, binName);
     if (!extractedBin) {
-      // The chosen asset did not actually contain the CLI binary — treat the
-      // release as having no valid CLI for this platform rather than leaving a
-      // bad/partial install behind.
       throw new CliUnavailableError(`archive ${archiveName} did not contain expected CLI binary ${binName}`);
     }
     const finalBin = path.join(dest, binName);
     fs.copyFileSync(extractedBin, finalBin);
 
-    // Copy a sibling lib/ directory if present (some platforms ship shared libs).
     const libDir = findDir(tmpDir, "lib");
     if (libDir) {
       fs.cpSync(libDir, path.join(dest, "lib"), { recursive: true });
@@ -380,9 +342,7 @@ export async function main() {
       const sizeOk = stat.size > 0;
       const execOk = os.type() === "Windows_NT" || (stat.mode & 0o111) !== 0;
       if (sizeOk && execOk) return;
-    } catch {
-      // fall through and re-download
-    }
+    } catch {}
   }
 
   fs.mkdirSync(BIN_DIR, { recursive: true });
@@ -393,7 +353,6 @@ export async function main() {
   const archiveBuf = await httpGetBuffer(archive.browser_download_url);
   await verifyOrWarn(archiveBuf, archive.name, checksums);
 
-  // Stage the archive in an isolated temp dir; never extract straight into BIN_DIR.
   const stageDir = fs.mkdtempSync(path.join(os.tmpdir(), `${PKG_NAME}-dl-`));
   try {
     const archivePath = path.join(stageDir, path.basename(archive.name));
@@ -409,9 +368,6 @@ export async function main() {
   process.stderr.write(`${BIN_NAME} installed.\n`);
 }
 
-// Run automatically only when invoked directly (npm postinstall: `node install.js`).
-// When imported by the launcher, the launcher calls main() explicitly instead of
-// relying on import side-effects (ESM caches modules, so a second import is a no-op).
 if (import.meta.url === pathToFileURL(process.argv[1] || "").href) {
   main().catch((err) => {
     process.stderr.write(`Error installing ${BIN_NAME}: ${err.message}\n`);

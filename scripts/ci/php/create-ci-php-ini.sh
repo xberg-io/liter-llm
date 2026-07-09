@@ -2,9 +2,6 @@
 
 set -e
 
-# This script creates a php.ini file for CI testing that loads the built PHP extension.
-# This allows PHPUnit to find and load the locally-built extension without requiring
-# system-wide installation or sudo access.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../../" && pwd)"
@@ -18,7 +15,6 @@ echo "Target dir: $TARGET_DIR"
 echo "Output file: $INI_FILE"
 echo ""
 
-# Determine the extension file based on OS
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   EXT_FILE="libliter_llm_php.so"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
@@ -44,17 +40,12 @@ echo "Found built extension: $BUILT_EXT"
 echo "Extension file size: $(du -h "$BUILT_EXT" | cut -f1)"
 echo ""
 
-# Convert paths to format acceptable by PHP on Windows (forward slashes)
 if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
-  # On Windows with MSYS, convert backslashes to forward slashes
   DISPLAY_DIR="${TARGET_DIR//\\/\/}"
 else
   DISPLAY_DIR="$TARGET_DIR"
 fi
 
-# Create the ini file with absolute path
-# We load the Liter-llm extension with its full path to avoid overriding extension_dir
-# This allows core PHP extensions to be loaded from their default location
 if cat >"$INI_FILE" <<EOF; then
 ; Liter-llm PHP Extension Configuration for CI Testing
 ; This file is generated automatically by create-ci-php-ini.sh

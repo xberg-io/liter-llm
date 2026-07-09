@@ -1,15 +1,5 @@
 version: "3"
 
-# E2E workflow tasks: orchestrate fixture-driven cross-language e2e suites.
-#
-# Each per-language e2e suite is self-contained: it spawns its own mock HTTP
-# server (the `mock-server` binary built from `e2e/rust/src/main.rs`) and
-# invokes the language binding under test against the local mock URL.
-#
-# The Rust suite is the exception: it uses an in-process MockServer per test
-# (see `e2e/rust/tests/mock_server.rs`) and does not need the standalone
-# binary.
-
 tasks:
   mock-server:build:
     desc: Build the standalone e2e mock HTTP server binary (used by non-Rust suites)

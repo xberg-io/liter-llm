@@ -59,14 +59,6 @@ vars:
   VERSION:
     sh: python3 -c "import tomllib; print(tomllib.load(open('Cargo.toml','rb'))['workspace']['package']['version'])"
 
-# Preconditions for task setup:
-# - Rust toolchain (rustup) — install via https://rustup.rs
-# - alef CLI — install via cargo install --git https://github.com/xberg-io/alef
-# - poly — install via cargo install --git https://github.com/xberg-io/poly
-# - Per-language tools auto-skipped via alef preconditions; install as needed:
-#   - Python: uv, Node: pnpm (corepack enable), Ruby: bundle, PHP: composer
-#   - Go: go, Java: mvn (use sdkman: task setup:sdkman), C#: dotnet, Elixir: mix
-
 tasks:
   default:
     desc: Show available tasks
@@ -203,7 +195,6 @@ tasks:
       - task: rust:clean
       - alef clean
 
-  # Alef binding generation
   alef:extract:
     desc: Extract API surface from Rust source
     cmds:

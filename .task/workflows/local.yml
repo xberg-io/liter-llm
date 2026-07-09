@@ -27,7 +27,6 @@ tasks:
   test:
     desc: Run local LLM integration tests (requires Ollama running)
     cmds:
-      # Sequential: all tests share single Ollama instance; parallel would cause contention
       - >
         cargo test -p liter-llm --test local_llm
         -- --ignored --test-threads=1

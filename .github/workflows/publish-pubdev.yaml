@@ -1,16 +1,5 @@
 name: Publish pub.dev
 
-# pub.dev OIDC trusted publishing rejects tokens originating from `release`
-# events; only `push` and `workflow_dispatch` are accepted.
-#
-# The main `publish.yaml` workflow cannot directly publish to pub.dev when
-# triggered by the GitHub release event. Instead, it dispatches this workflow
-# with the run_id of the main workflow, and this workflow downloads the
-# `dart-package-assembled` artifact from that run.
-#
-# One-time setup: on pub.dev → liter_llm package → Admin → Automated publishing,
-# set the workflow path to `.github/workflows/publish-pubdev.yaml`.
-
 on:
   workflow_dispatch:
     inputs:

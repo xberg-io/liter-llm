@@ -46,9 +46,6 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Phase 1 — Prepare
-# ─────────────────────────────────────────────────────────────────────────────
 jobs:
   prepare:
     name: Prepare
@@ -56,9 +53,6 @@ jobs:
     timeout-minutes: 15
     outputs:
       tag: ${{ steps.meta.outputs.tag }}
-      # In dry-run dispatches, the tag from alef's release-metadata
-      # (e.g. refs/tags/v0.0.0-dryrun) doesn't exist as a real git ref,
-      # so downstream checkouts would 404. Fall back to the dispatch ref.
       checkout_ref: ${{ steps.meta.outputs.dry_run == 'true' && (inputs.ref || github.ref) || steps.meta.outputs.checkout_ref }}
       version: ${{ steps.meta.outputs.version }}
       is_tag: ${{ steps.meta.outputs.is_tag }}
@@ -111,11 +105,6 @@ jobs:
         with:
           available-targets: "crates,python,node,wasm,ruby,go,java,elixir,csharp,php,homebrew,kotlin,dart,zig,swift"
 
-      # Create the draft GitHub Release once, here in prepare, so every
-      # downstream upload job (swift, elixir, php, …) can assume it exists.
-      # Without this, jobs that lack their own ensure-release step (the
-      # Swift artifact-bundle upload) race ahead of release creation and
-      # fail with "release not found". Mirrors html-to-markdown's publish.
       - name: Ensure GitHub Release exists for tag
         if: ${{ steps.meta.outputs.is_tag == 'true' && steps.meta.outputs.dry_run != 'true' }}
         uses: xberg-io/actions/publish-github-release@v1
@@ -125,9 +114,6 @@ jobs:
           dry-run: ${{ steps.meta.outputs.dry_run }}
           token: ${{ steps.app-token.outputs.token }}
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # Phase 2 — Validate version consistency
-  # ─────────────────────────────────────────────────────────────────────────
   validate-versions:
     name: Validate versions
     needs: prepare
@@ -152,9 +138,6 @@ jobs:
             csproj=packages/csharp/LiterLlm.csproj
             composer=composer.json
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # Phase 3 — Idempotency checks (all parallel)
-  # ─────────────────────────────────────────────────────────────────────────
   check-registries:
     name: Check registries
     needs: [prepare]
@@ -216,9 +199,6 @@ jobs:
           fi
         shell: bash
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # Phase 3b — Pub.dev registry checks
-  # ─────────────────────────────────────────────────────────────────────────
   check-pub:
     name: Check pub.dev for Dart package
     needs: prepare
@@ -245,7 +225,6 @@ jobs:
           - label: macos-arm64
             runner: macos-latest
             lib_name: libliter_llm_dart.dylib
-            # Published name inside lib/src/liter_llm_bridge_generated/
             pub_name: libliter_llm_dart.dylib
           - label: linux-x86_64
             runner: ubuntu-latest
@@ -337,10 +316,6 @@ jobs:
       exists: ${{ steps.check.outputs.exists }}
     steps:
       - id: check
-        # `registry: github-release` (not `registry: zig`) — alef check-registry's
-        # zig path only verifies the release tag exists. On a real release that's
-        # always true, so it short-circuits `publish-zig` to skipped. Verify
-        # the actual asset is present instead.
         uses: xberg-io/actions/check-registry@v1
         with:
           registry: github-release
@@ -349,11 +324,6 @@ jobs:
           repo: ${{ github.repository }}
           assets: liter-llm-zig-v${{ needs.prepare.outputs.version }}.tar.gz
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # Phase 4 — Build jobs
-  # ─────────────────────────────────────────────────────────────────────────
-
-  # ── Python wheels ──────────────────────────────────────────────────────────
   build-python-wheels:
     name: Build Python wheels (${{ matrix.label }})
     needs: [prepare, registry-results]
@@ -382,13 +352,8 @@ jobs:
       - uses: xberg-io/actions/build-python-wheels@v1
         with:
           package-dir: packages/python
-          # abi3-py310 is enabled in pyo3 features → one wheel per platform covers 3.10+.
-          # Without this override, cibuildwheel rebuilds for cp310/cp311/cp312/cp313/cp314 = 5x duplicates.
           cibw-build: "cp310-*"
           cibw-skip: "*-musllinux* *-win32 *-manylinux_i686 *-macosx_x86_64"
-          # The alef-generated .cargo/config.toml pins the aarch64-linux-gnu linker
-          # to `aarch64-linux-gnu-gcc` (cross-compile name), but manylinux containers
-          # running natively on arm64 only ship plain `cc`/`gcc`. Override per-target.
           cibw-environment: 'MATURIN_BUILD_ARGS="--compatibility linux" CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=cc'
           artifact-name: python-wheel-${{ matrix.label }}
 
@@ -422,7 +387,6 @@ jobs:
           path: dist/*.tar.gz
           retention-days: 14
 
-  # ── Node.js NAPI native ────────────────────────────────────────────────────
   build-node-native:
     name: Build Node native (${{ matrix.label }})
     needs: [prepare, registry-results]
@@ -445,11 +409,6 @@ jobs:
           - label: darwin-arm64
             runner: macos-latest
             napi_target: aarch64-apple-darwin
-          # darwin-x64 (Intel macOS) omitted: the only macOS x86_64 runner
-          # is macos-13, whose availability is unreliable (multi-hour queues
-          # that never schedule), and a stuck leg blocks the entire npm
-          # publish. The Intel-mac platform package has been unmaintained
-          # since v1.5.0, so omitting it is no regression.
           - label: win32-x64-msvc
             runner: windows-latest
             napi_target: x86_64-pc-windows-msvc
@@ -479,7 +438,6 @@ jobs:
           path: crates/liter-llm-node/*.node
           retention-days: 14
 
-  # ── WebAssembly ────────────────────────────────────────────────────────────
   build-wasm:
     name: Build WASM
     needs: [prepare, registry-results]
@@ -529,7 +487,6 @@ jobs:
           path: crates/liter-llm-wasm/pkg/
           retention-days: 14
 
-  # ── Ruby gems ──────────────────────────────────────────────────────────────
   build-ruby-gem:
     name: Build Ruby gem (${{ matrix.label }})
     needs: [prepare, registry-results, publish-crates]
@@ -640,7 +597,6 @@ jobs:
           retention-days: 14
           compression-level: 0
 
-  # ── Elixir NIFs ────────────────────────────────────────────────────────────
   build-elixir-nifs:
     name: Build Elixir NIFs (${{ matrix.label }})
     needs: [prepare, registry-results, publish-crates]
@@ -728,7 +684,6 @@ jobs:
           path: nif-tarballs/*.tar.gz
           retention-days: 14
 
-  # ── PHP extension ──────────────────────────────────────────────────────────
   build-php:
     name: Build PHP PIE binary (php${{ matrix.php }} ${{ matrix.platform.label }})
     needs: [prepare, publish-crates]
@@ -757,10 +712,6 @@ jobs:
             label: windows-x86_64
             target: x86_64-pc-windows-msvc
         exclude:
-          # shivammathur/setup-php has no PHP 8.5 build for macos-arm64
-          # as of 2026-06; PHP 8.5 was released Nov 2025 and the action
-          # is still catching up. Re-enable once setup-php publishes
-          # an 8.5 macos-arm64 image.
           - php: "8.5"
             platform:
               os: macos-latest
@@ -841,7 +792,6 @@ jobs:
             dist/php-package/php_*.zip.sha256
           retention-days: 14
 
-  # ── Rust FFI (shared for Go / Java / C# / C consumers) ────────────────────
   build-ffi:
     name: Build Rust FFI (${{ matrix.label }})
     needs: [prepare, validate-versions, registry-results]
@@ -960,7 +910,6 @@ jobs:
           path: go-ffi-dist/
           retention-days: 14
 
-  # ── Java package assembly ──────────────────────────────────────────────────
   build-java-package:
     name: Build Java package
     needs: [prepare, registry-results, build-ffi]
@@ -1015,7 +964,6 @@ jobs:
           path: packages/java/target/*.jar
           retention-days: 14
 
-  # ── C# NuGet assembly ──────────────────────────────────────────────────────
   build-csharp-package:
     name: Build C# NuGet package
     needs: [prepare, registry-results, build-ffi]
@@ -1055,7 +1003,6 @@ jobs:
           path: nuget-output/*.nupkg
           retention-days: 14
 
-  # ── Kotlin Android natives (.aar) ──────────────────────────────────────────
   build-kotlin-android-natives:
     name: Build Kotlin Android natives (${{ matrix.abi }})
     needs: [prepare, registry-results]
@@ -1095,10 +1042,6 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v6
         with:
-          # Provision the version declared in the kotlin-android wrapper so the
-          # bare `gradle` invocation below matches the alef-generated wrapper.
-          # AGP (com.android.library) 9.2.0 requires Gradle >= 9.4.1; a hardcoded
-          # 8.13 pin here silently overrode the 9.6.0 wrapper and broke the build.
           gradle-version: "wrapper"
       - name: Assemble Android library aar
         working-directory: packages/kotlin-android
@@ -1123,9 +1066,6 @@ jobs:
           path: packages/kotlin-android/build/outputs/aar/liter-llm-android-${{ matrix.abi }}.aar
           retention-days: 14
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # Phase 5 — Upload release assets (Go FFI, C FFI, Elixir NIFs)
-  # ─────────────────────────────────────────────────────────────────────────
   upload-c-ffi:
     name: Upload C FFI assets
     needs: [prepare, validate-versions, build-ffi]
@@ -1206,11 +1146,6 @@ jobs:
           dry-run: ${{ needs.prepare.outputs.dry_run }}
           token: ${{ steps.app-token.outputs.token }}
 
-  # Commit the prebuilt shared libraries into packages/go/.lib/<platform>/ so
-  # that `go get github.com/xberg-io/liter-llm/packages/go@v{version}` ships
-  # a self-contained cgo module.  cgo LDFLAGS use Go arch names (amd64/arm64) for
-  # directories; alef release tarballs use its own names (x86_64/aarch64).
-  # The mapping table below bridges the two naming conventions.
   publish-go-module:
     name: Bundle Go FFI libs and publish Go module tag
     needs: [prepare, validate-versions, registry-results, build-ffi, upload-go-ffi]
@@ -1464,10 +1399,6 @@ jobs:
           fail-if-empty: "false"
           dry-run: ${{ needs.prepare.outputs.dry_run }}
           token: ${{ steps.app-token.outputs.token }}
-
-  # ─────────────────────────────────────────────────────────────────────────
-  # Phase 6 — Publish jobs (conditional on check + build results)
-  # ─────────────────────────────────────────────────────────────────────────
 
   publish-crates:
     name: Publish crates.io
@@ -1873,13 +1804,6 @@ jobs:
         with:
           name: maven-packages
           path: packages/java/target
-      # The publish-maven composite action runs `mvn clean deploy`, which
-      # wipes packages/java/target before rebuilding the jar from source.
-      # Re-stage the per-platform FFI native libraries into
-      # packages/java/src/main/resources/natives/{rid}/ so the deploy-time
-      # rebuild includes them as JAR resources — otherwise the central jar
-      # ships with no bundled natives and NativeLib.loadNativeLibrary fails
-      # at runtime with UnsatisfiedLinkError. See rc.33 java test-app failure.
       - uses: actions/download-artifact@v7
         with:
           pattern: ffi-*
@@ -2203,20 +2127,8 @@ jobs:
           working-directory: packages/zig
           tag: ${{ needs.prepare.outputs.tag }}
           token: ${{ steps.app-token.outputs.token }}
-          # Override the auto-detected package-name (`liter_llm` from
-          # build.zig.zon) to match the alef-emitted test_app URL pattern
-          # `{crate-name}-zig-v{version}.tar.gz`. Without this, the asset
-          # uploads as `liter_llm-v{version}.tar.gz` while
-          # test_apps/zig fetches `liter-llm-zig-v{version}.tar.gz`
-          # → 404 + consumer build.zig.zon TODO hash.
+          # ~keep → 404 + consumer build.zig.zon TODO hash.
           package-name: liter-llm-zig
-          # Multi-platform packaging: the action bundles per-RID FFI libs
-          # from ffi-artifacts/{linux-x64,linux-arm64,osx-arm64,win-x64}/
-          # into packages/zig/lib/<canonical-target>/, patches the .paths
-          # allowlist, and rewrites packages/zig/build.zig to select the
-          # right lib subdir from Zig's compile-time target. Replaces the
-          # previous manual bundle + raw-tar fallback that shipped the
-          # in-tree build.zig pointing at ../../target/release.
           multi-platform-ffi-dir: ffi-artifacts
           module-name: liter_llm
           ffi-lib-name: liter_llm_ffi
@@ -2224,7 +2136,6 @@ jobs:
           dry-run: ${{ needs.prepare.outputs.dry_run }}
           update-existing: "true"
 
-  # ── Swift Artifact Bundle (pre-built XCFramework for .binaryTarget consumers) ─
   swift-artifactbundle:
     name: Build Swift Artifact Bundle
     needs: [prepare]
@@ -2299,12 +2210,6 @@ jobs:
           echo "checksum=${CHECKSUM}" >> "$GITHUB_OUTPUT"
           echo "Artifact bundle checksum: ${CHECKSUM}"
 
-      # The build action already writes the bundle into output-dir
-      # (dist/swift-artifactbundle), which is exactly the upload path below,
-      # so no separate staging copy is needed. A `cp` here would copy the
-      # file onto itself and fail with "are the same file" (exit 1). In the
-      # reused path the asset stays on the release and this job's uploaded
-      # artifact is unused (upload-swift-release is skipped when reused).
       - uses: actions/upload-artifact@v7
         if: ${{ steps.check-existing.outputs.reused != 'true' }}
         with:
@@ -2472,7 +2377,6 @@ jobs:
 
           gh release edit "v${VERSION}" --notes-file /tmp/swift-notes.md
 
-  # ── CLI binary tarballs (for direct download, non-brew/non-docker users) ─
   build-cli-binaries:
     name: Build CLI binary (${{ matrix.label }})
     needs: [prepare, validate-versions]
@@ -2564,12 +2468,6 @@ jobs:
   upload-cli-binaries:
     name: Upload CLI binaries to GitHub Release
     needs: [prepare, build-cli-binaries]
-    # Upload whatever CLI binaries actually built. The matrix has
-    # `fail-fast: false`, so a single platform failure (e.g. Windows MSVC)
-    # mustn't drop the linux/macos artifacts on the floor. Require the
-    # parent matrix to have at least started (not cancelled) and check that
-    # at least one artifact was produced via download-artifact's
-    # `if-no-files-found: error` below.
     if: |
       always() &&
       needs.prepare.outputs.dry_run != 'true' &&
@@ -2592,9 +2490,6 @@ jobs:
           path: dist/cli
           merge-multiple: true
       - name: Consolidate per-archive checksums into SHA256SUMS
-        # Per-platform jobs each emit a `<archive>.sha256` (sha256sum-format).
-        # Combine them into a single file so the GitHub release surface lists
-        # one checksum artifact instead of one per CLI archive (#67).
         shell: bash
         env:
           VERSION: ${{ needs.prepare.outputs.version }}
@@ -2619,16 +2514,6 @@ jobs:
           draft: "false"
           token: ${{ steps.app-token.outputs.token }}
 
-  # ── Homebrew (formula update + bottles) ──────────────────────────────────
-  #
-  # Topology (mirrors xberg / html-to-markdown):
-  #   1. publish-homebrew-formula — bump Formula/liter-llm.rb source url+sha
-  #      in the tap (no bottle DSL).
-  #   2. homebrew-bottles         — real `brew install --build-bottle` per
-  #      platform via homebrew-build-bottles@v1, uploads bottle tarballs to
-  #      the GitHub release and saves JSON manifests as artifacts.
-  #   3. publish-homebrew-bottles — homebrew-merge-bottles@v1 aggregates the
-  #      JSON manifests into a `bottle do` block and commits it to the tap.
   check-homebrew:
     name: Check Homebrew tap for formula
     needs: [prepare]
@@ -2731,10 +2616,6 @@ jobs:
           private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           owner: xberg-io
 
-      # actions/checkout@v6 regression on macos-15-intel: the includeIf-gated
-      # credential helper isn't honored by git 2.54 on that runner image, so
-      # the fetch falls back to interactive auth and fails. v5 writes the
-      # extraheader directly into .git/config and works on every runner.
       - uses: actions/checkout@v5
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
@@ -2822,14 +2703,7 @@ jobs:
           git commit -m "liter-llm ${{ needs.prepare.outputs.version }}: add bottle DSL"
           git push origin HEAD
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # Phase 7 — Finalize
-  # ─────────────────────────────────────────────────────────────────────────
   # NOTE: per-channel verify-install jobs are rebuilt in the test_apps plan
-  # (Phase 3). The previous `verify-install-python` was wired against an
-  # empty `test_apps/python` stub and consistently red post-publish; it is
-  # removed here and re-introduced alongside its 11 siblings once alef
-  # emits a real registry-mode `test_apps/` tree.
 
   release-finalize:
     name: Finalize release
@@ -2874,8 +2748,6 @@ jobs:
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           token: ${{ steps.app-token.outputs.token }}
-          # go-module-path omitted: publish-go-module creates packages/go/{tag}
-          # on a commit that includes the bundled .lib/ prebuilt libraries.
 
       - name: Publish summary
         env:
@@ -2958,15 +2830,6 @@ jobs:
   cli-proxy:
     name: Publish CLI proxy package (npm)
     needs: [prepare, validate-versions, upload-cli-binaries]
-    # The npm trusted publisher is bound to this workflow file (publish.yaml). The publish
-    # runs inline here via the publish-npm composite action (which executes in this job's
-    # context) rather than delegating to a reusable workflow — otherwise npm's OIDC
-    # trusted-publishing check sees the reusable workflow's filename, not publish.yaml.
-    #
-    # Wired into the main release: publishes @xberg-io/liter-llm-cli at the release version
-    # once the standalone CLI binaries are on the GitHub release (install.js downloads them
-    # at install time). Gated on the same `release_homebrew` flag that controls CLI-binary
-    # uploads, so the npm wrapper never publishes ahead of the binaries it fetches.
     if: |
       always() &&
       needs.prepare.outputs.dry_run != 'true' &&
@@ -2981,10 +2844,6 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      # setup-node gives npm a user-writable global prefix so the
-      # publish-npm action's in-place `npm install -g npm@latest` (needed
-      # for OIDC trusted publishing) doesn't EACCES writing to /usr/local.
-      # Mirrors the publish-node / publish-wasm jobs.
       - name: Setup Node
         uses: actions/setup-node@v6
         with:

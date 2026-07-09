@@ -17,8 +17,6 @@ languages = [
     "kotlin_android",
     "jni",
 ]
-# Generated single-variant enum-from-int bindings emit `match n { 0 => .., _ => {} }`,
-# which trips clippy's single_match/collapsible_match under `-D warnings`.
 extra_clippy_allows = ["single_match", "collapsible_match"]
 
 [workspace.format]
@@ -70,20 +68,11 @@ given-names = "Na'aman"
 email = "naaman@xberg.io"
 orcid = "https://orcid.org/0009-0000-2247-5072"
 
-# Spell-checker allowlist. Key = the spelling typos would flag; value = intended
-# spelling (set equal to suppress a false-positive without auto-correcting).
-# Emitted as `[lint.typos.extend_words]` in the generated poly.toml.
 [workspace.poly.typos.extend-words]
-# HashiCorp Vault vendor name ("Hashi" fragment) in changelog + vault code
 Hashi = "Hashi"
-# German words in real source / test strings
 ein = "ein"
 ist = "ist"
 
-# Repo-specific poly suppressions merged into the generated poly.toml. These
-# cover hand-written files (scripts, cli-proxy, README templates) formerly
-# suppressed by root pyproject [tool.ruff], which poly's native ruff/oxc
-# engines don't read (poly.toml is source of truth).
 [workspace.poly.per-file-ignores]
 "scripts/**/*.py" = [
     "B904",
@@ -128,16 +117,8 @@ sources = [
     "crates/liter-llm/src/types/responses.rs",
     "crates/liter-llm/src/client/mod.rs",
     "crates/liter-llm/src/provider/custom.rs",
-    # Provider registry public surface: ProviderConfig struct + all_providers /
-    # complex_provider_names lookup functions. ensure_crypto_provider lives in
-    # lib.rs and is also pulled in for native-http builds.
     "crates/liter-llm/src/provider/mod.rs",
     "crates/liter-llm/src/lib.rs",
-    # Tower middleware: expose public config DTOs (BudgetConfig, CacheConfig,
-    # RateLimitConfig + their enums Enforcement, CacheBackend). The accompanying
-    # Layer/Service/State types in these files are kept out of bindings via the
-    # [crates.exclude] list above per the locked decision (middleware composition
-    # remains a Rust pattern).
     "crates/liter-llm/src/tower/budget.rs",
     "crates/liter-llm/src/tower/cache.rs",
     "crates/liter-llm/src/tower/rate_limit.rs",
@@ -145,9 +126,6 @@ sources = [
 version_from = "Cargo.toml"
 workspace_root = "."
 features = ["native-http", "full"]
-# AssistantContent is an untagged-union (Text | Parts). Emit a display-text
-# accessor (Go `Text()`, Java `text()`, C# `Text()`) mirroring the Rust
-# `Display` impl, so the e2e suites can string-assert `message.content`.
 untagged_union_text_types = ["AssistantContent"]
 
 [crates.python]
@@ -164,16 +142,7 @@ exclude_platforms = ["linux-x64-musl", "linux-arm64-musl"]
 
 [crates.ruby]
 gem_name = "liter_llm"
-# TODO(alef): Magnus codegen has a known limitation around `Map<K, V>` fields inside
-# enum variants — `field_type_for_serde_inner` collapses them to `String` at the binding
-# struct level, but the shared conversion-arm codegen still emits
-# `.into_iter().map(...).collect()` for the core→binding direction, which fails to
-# type-check against a `String` field. Excluding `CacheBackend` (which has Map-in-variant)
-# also forces `CacheConfig` out of the Ruby surface because `CacheConfig.backend: CacheBackend`
-# still references the excluded type from a non-excluded struct context.
-# Track the proper Magnus codegen fix as part of the broader "expose everything in all
-# bindings" effort. Until then, Ruby ships with the other Tower configs (BudgetConfig,
-# RateLimitConfig, Enforcement) plus all the request/response DTOs.
+# ~keep TODO(alef): Magnus codegen has a known limitation around `Map<K, V>` fields inside
 exclude_types = ["CacheBackend", "CacheConfig"]
 
 [crates.ruby.stubs]
@@ -182,11 +151,6 @@ output = "packages/ruby/sig/"
 [crates.php]
 composer_package = "xberg-io/liter-llm"
 # ext-php-rs's `#[php_impl]` macro can't resolve `Self::ensure_crypto_provider`
-# in the generated registration site on Windows targets when the inner body
-# is a free-fn call (`liter_llm::ensure_crypto_provider()`). Other bindings
-# (PyO3, NAPI, Rustler, etc.) handle this fine. Until ext-php-rs upstream is
-# patched, drop the PHP wrapper — it is a no-op on Windows anyway, and
-# downstream PHP users rarely touch rustls directly.
 exclude_functions = ["ensure_crypto_provider"]
 
 [crates.elixir]
@@ -197,35 +161,19 @@ futures-util = "0.3"
 
 [crates.wasm]
 features = ["wasm-http"]
-# Tower middleware config DTOs are exposed in every other binding, but the WASM
-# build uses the `wasm-http` feature which excludes `tower`. The configs aren't
-# reachable through `liter_llm::*` in that build, so skip them in the WASM
-# binding to avoid E0433 "cannot find `tower`" / "cannot find `BudgetConfig`" etc.
 exclude_types = [
     "BudgetConfig",
     "CacheConfig",
     "CacheBackend",
     "RateLimitConfig",
     "Enforcement",
-    # Tower observability types — same rationale as the config DTOs above. Added
-    # in v1.6.0 alef regen and broke the WASM build (E0433: cannot find `tower`).
     "CircuitState",
     "HealthStatus",
     "IntentPrototype",
     "SingleflightResult",
 ]
-# Token counting via HuggingFace `tokenizers` requires the optional `tokenizer`
-# feature on the core crate. That feature pulls in `hf-hub` (HTTP) and `fancy-regex`
-# which don't build cleanly for `wasm32-unknown-unknown` without the upstream
-# `unstable_wasm` feature. Excluding these functions keeps WASM lean — apps that
-# need token counting on the browser/edge should fetch counts from a server.
 exclude_functions = ["count_tokens", "count_request_tokens"]
 
-# JNI is a transitive language used by the Java and Kotlin Android bindings; it
-# has no standalone package directory. Its liter-llm dep uses default features
-# (no `tokenizer`), so the tokenizer-backed functions aren't reachable through
-# `liter_llm::*` in the JNI build. Token counting on Android is unusual; users
-# that need it can call a server-side endpoint.
 [crates.jni]
 exclude_functions = ["count_tokens", "count_request_tokens"]
 
@@ -234,9 +182,6 @@ prefix = "literllm"
 header_name = "liter_llm.h"
 lib_name = "liter_llm_ffi"
 # `wasm-http` is referenced in FFI `#[cfg(any(feature = "native-http", feature =
-# "wasm-http"))]` gates but is mutually exclusive with the default `native-http`
-# backend. Declare it (without enabling it) so `RUSTFLAGS="-D warnings"` builds
-# don't fail with `unexpected cfg condition value: wasm-http`.
 extra_features = ["wasm-http"]
 
 [crates.go]
@@ -249,8 +194,6 @@ project_file = "packages/java/pom.xml"
 
 [crates.csharp]
 namespace = "LiterLlm"
-# NuGet PackageId is org-prefixed for consistency (XbergIo.*); the C# code
-# namespace/RootNamespace stays `LiterLlm`.
 package_id = "XbergIo.LiterLlm"
 project_file = "packages/csharp/LiterLlm/LiterLlm.csproj"
 
@@ -262,13 +205,6 @@ package_name = "liter_llm"
 
 [crates.swift]
 package_name = "LiterLlm"
-# all_providers returns Vec<ProviderConfig>; swift-bridge transports as
-# RustVec<ProviderConfig> whose iteration yields ProviderConfigRef. There is no
-# symmetric init for borrowed refs, so the alef-emitted forwarder cannot wrap
-# each element back into ProviderConfig without a per-element JSON roundtrip.
-# Until alef-backend-swift wires Vec<Named> through needs_json_bridge, exclude
-# the function from the Swift binding (consumers can still call
-# RustBridge.allProviders() directly if needed).
 exclude_functions = ["all_providers"]
 
 [crates.swift.client_constructor_body]
@@ -281,27 +217,12 @@ DefaultClient = """    let mut config = liter_llm::ClientConfig::new(api_key);
         .map(DefaultClient)"""
 
 [crates.kotlin_android]
-# Android AAR — Kotlin/JVM consumers use the Java package directly (Kotlin/Java
-# interop is total). Panama FFM is unavailable on Android (max JDK 17), which is
-# why Android needs its own JNI-based package with bundled .so files.
-# Emitted by alef-backend-kotlin-android (alef >= 0.16).
 package = "io.xberg.literllm.android"
 namespace = "io.xberg.literllm.android"
 artifact_id = "liter-llm-android"
 group_id = "io.xberg.literllm"
 abis = ["arm64-v8a", "x86_64"]
-# Tower middleware config DTOs are excluded from the Android AAR for the same
-# reason they are excluded from the WASM binding: tower is not available in the
-# Android JNI build, so these types are unreachable and must not be emitted.
 exclude_types = ["BudgetConfig", "CacheConfig", "CacheBackend", "RateLimitConfig", "Enforcement"]
-# count_tokens/count_request_tokens are gated behind the core crate's
-# `tokenizer` feature (HuggingFace tokenizers). The JNI crate's liter-llm dep
-# uses default features (tokenizer off), so these functions aren't reachable
-# through `liter_llm::*` in the JNI build, and `tokenizers` itself doesn't
-# build cleanly on the Android NDK toolchain. Apps that need token counting on
-# Android should call a server-side endpoint. The alef-backend-jni emitter
-# reads exclude_functions from this kotlin_android config (not from
-# [crates.jni]), so this is the canonical location for both bindings.
 exclude_functions = ["count_tokens", "count_request_tokens"]
 
 [crates.output]
@@ -322,16 +243,13 @@ kotlin_android = "packages/kotlin-android/src/main/kotlin/io/xberg/literllm/andr
 
 [crates.exclude]
 types = [
-    # Traits (can't cross FFI)
     "LlmClient",
     "LlmClientRaw",
     "BatchClient",
     "FileClient",
     "ResponseClient",
-    # Opaque async types
     "BoxFuture",
     "BoxStream",
-    # Types with Arc<dyn Trait> / generics
     "ClientConfig",
     "ClientConfigBuilder",
     "ClientBuilder",
@@ -343,22 +261,13 @@ types = [
     "RawExchange",
     "RawStreamExchange",
     "TransportConfig",
-    # BatchWaitError: thiserror types don't auto-bridge; source uses FFI-friendly
-    # fields (f64 seconds, flattened message+code) so C FFI can bridge manually.
     "BatchWaitError",
-    # Tower-internal Service request/response enums (externally tagged, contain
-    # BoxStream/Bytes). Listed under both bare and Tower-prefixed names — alef
-    # prefixes types extracted from the `tower::` module path with "Tower" to
-    # disambiguate, so both spellings must be excluded.
     "LlmRequest",
     "LlmResponse",
     "CachedResponse",
     "TowerLlmRequest",
     "TowerLlmResponse",
     "TowerCachedResponse",
-    # Tower middleware Layer/Service/State wrappers (Rust-only middleware composition).
-    # Public config DTOs (BudgetConfig, CacheConfig, RateLimitConfig, CacheBackend,
-    # Enforcement) are intentionally NOT excluded — they are exposed across all bindings.
     "BudgetState",
     "BudgetLayer",
     "BudgetLedger",
@@ -428,18 +337,10 @@ types = [
     "Weight",
     "OpenAiRealtimeTranslator",
     "RealtimeTranslator",
-    # RealtimeEvent is Tier C (binding-public) but alef v0.25.x cannot bridge
-    # serde_json::Value (Raw.payload) and doesn't generate Default for complex enums.
-    # realtime::ContentPart and realtime::ResponseStatus are marked alef(skip) at
-    # source level to avoid naming conflicts with types::ContentPart.
-    # Promote to fully Tier C in v1.7 after alef gains Value bridging support.
     "RealtimeEvent",
     "RealtimeEnvelope",
     "LlmService",
     "TracingLayer",
-    # v1.6.0 trait-stack extension points (Rust-only public, Tier B)
-    # Primary exclusion mechanism is alef(skip) at the source level;
-    # these entries are belt-and-braces for any transitively-referenced names.
     "CircuitPolicy",
     "ExponentialBackoffCircuit",
     "HedgePolicy",
@@ -461,7 +362,6 @@ types = [
     "HealthCheckConfig",
     "UpstreamDiscover",
     "ClassifyContext",
-    # Rust-only extension traits and implementations (async traits, Arc<dyn>, generic callbacks).
     "EmbeddingProvider",
     "SelfHostedEmbeddingProvider",
     "NoOpEmbeddingProvider",
@@ -484,9 +384,6 @@ types = [
     "IngressStream",
     "StreamPipeline",
     "EgressStream",
-    # Tenant key resolution is Rust/server infrastructure; binding clients use
-    # provider auth config instead of implementing async resolver traits.
-    # (TenantId is Tier C but currently excluded pending binding-surface audit in v1.7.)
     "TenantId",
     "TenantContext",
     "ResolvedKey",
@@ -495,7 +392,6 @@ types = [
     "InMemoryKeyResolver",
     "EtcdKeyResolver",
     "EtcdKeyResolverConfig",
-    # Auth credential providers (Arc<dyn>, async trait methods)
     "AzureAdCredentialProvider",
     "WebIdentityCredentialProvider",
     "GithubCopilotCredentialProvider",
@@ -503,19 +399,15 @@ types = [
     "VertexAdcCredentialProvider",
     "CredentialProvider",
     "StaticTokenProvider",
-    # File config (has provider Vec, enum fields)
     "FileConfig",
     "FileCacheConfig",
     "FileBudgetConfig",
     "FileRateLimitConfig",
     "FileProviderConfig",
-    # Managed client (Tower-dependent)
     "ManagedClient",
-    # Internal provider
     "ModelPricing",
 ]
 methods = [
-    # Raw methods on DefaultClient
     "DefaultClient.chat_raw",
     "DefaultClient.chat_stream_raw",
     "DefaultClient.embed_raw",
@@ -525,22 +417,16 @@ methods = [
     "DefaultClient.rerank_raw",
     "DefaultClient.search_raw",
     "DefaultClient.ocr_raw",
-    # Constructor takes ClientConfig (excluded type) — use create_client() instead
     "DefaultClient.new",
-    # Internal provider methods
     "DefaultClient.resolve_provider_for_model",
     "DefaultClient.resolve_auth_header",
     "DefaultClient.resolve_auth_header_for_provider",
     "DefaultClient.all_headers",
     "DefaultClient.all_headers_for_provider",
     "DefaultClient.prepare_request",
-    # Error internal HTTP-status parser (private helper)
     "LiterLlmError.from_status",
-    # Methods that require binding→core From on output types (not yet supported)
     "ChatCompletionResponse.estimated_cost",
     "EmbeddingResponse.estimated_cost",
-    # Rust-only helper methods whose signatures expose builders, writers, formatters,
-    # classifier traits, or other values that do not cross generated bindings.
     "TransportConfig.apply_to_builder",
     "InMemoryKeyResolver.with_entries",
     "InMemoryBudgetLedger.export_csv",
@@ -553,7 +439,6 @@ methods = [
     "OpenDalVectorStore.new",
     "EtcdKeyResolver.resolve",
     "OpenAiRealtimeTranslator.translate_inbound",
-    # v1.6.0 additions — Tier B helper methods
     "GuardrailRegistry.register",
 ]
 functions = [
@@ -564,10 +449,6 @@ functions = [
     "should_hedge",
     "wait_for_batch_impl",
     "record_cache_state",
-    # Tower metrics emit helpers — internal infrastructure; called from Tower
-    # middleware modules but not part of the user-facing API.  The Python
-    # generator mishandles their Option<f64>/f64 mix and the FFI generator
-    # mishandles &'static returns; both are non-issues once excluded.
     "record_cache_hit",
     "record_cache_miss",
     "record_cache_stale",
@@ -635,9 +516,6 @@ e2e = [
 [crates.test.go]
 precondition = "command -v go >/dev/null 2>&1"
 before = "cargo build -p liter-llm-ffi --release && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
-# Tests read `os.Getenv("MOCK_SERVER_URL")` to compose per-fixture base URLs;
-# without the mock-server wrapper that env var is empty and every test fails
-# with "builder error" (reqwest URL parse on scheme-less paths).
 e2e = "scripts/e2e/run-with-mock-server.sh 'cd e2e/go && go test -v ./...'"
 
 [crates.test.java]
@@ -656,9 +534,6 @@ e2e = ["cd e2e/ruby && bundle install", "cd e2e/ruby && bundle exec rspec"]
 
 [crates.test.php]
 precondition = "command -v php >/dev/null 2>&1 && command -v composer >/dev/null 2>&1"
-# Build the php cdylib (libliter_llm_php.dylib/so/dll) before the e2e suite —
-# `create-ci-php-ini.sh` reads `target/release/libliter_llm_php.*` and fails
-# fast with "Built extension not found" if it's missing.
 before = "cargo build --release -p liter-llm-php"
 e2e = [
     "cd e2e/php && bash ../../scripts/ci/php/create-ci-php-ini.sh",
@@ -683,10 +558,6 @@ before = "cargo build -p liter-llm-ffi --release && cargo build --manifest-path 
 e2e = "cd e2e/c && make test"
 
 [crates.test.dart]
-# `alef test --lang dart` defaults to `cd packages/dart && dart test`, which only
-# exercises the placeholder unit test. The real fixture-driven suite lives in
-# e2e/dart/ and needs the mock HTTP server up plus FRB pointed at the cdylib in
-# target/release.
 precondition = "command -v dart >/dev/null 2>&1"
 before = "cargo build --release -p liter-llm-dart && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 e2e = [
@@ -695,43 +566,26 @@ e2e = [
 ]
 
 [crates.test.swift]
-# Same shape as dart — point the e2e step at e2e/swift_e2e/, not the
-# `packages/swift` placeholder, and start the mock HTTP server first.
 precondition = "command -v swift >/dev/null 2>&1"
 before = "cargo build --release -p liter-llm-swift && cargo build --release -p liter-llm-ffi && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 e2e = "scripts/e2e/run-with-mock-server.sh 'cd e2e/swift_e2e && swift test'"
 
 [crates.test.zig]
-# Same shape as dart/swift — point at e2e/zig, not the `packages/zig` placeholder.
-# Build the FFI cdylib in --release because the generated zig project links against
-# target/release/libliter_llm_ffi.* (see e2e/zig/build.zig).
 precondition = "command -v zig >/dev/null 2>&1"
 before = "cargo build -p liter-llm-ffi --release && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 e2e = "scripts/e2e/run-with-mock-server.sh 'cd e2e/zig && zig build test'"
 
 [crates.test.kotlin_android]
-# The e2e suite lives in e2e/kotlin_android/src/test/ (JVM unit tests via JNA
-# loading the JNI cdylib), NOT in src/androidTest/. They run on the host JVM
-# without an Android emulator. Instrumented tests on a managed emulator
-# (pixel6api34) are still configured but only exercised under
-# `./gradlew pixel6api34DebugAndroidTest` and not part of the canonical
-# `task e2e:test:all` flow yet.
 precondition = "command -v gradle >/dev/null 2>&1"
 before = "cargo build --release -p liter-llm-ffi -p liter-llm-jni && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 e2e = "scripts/e2e/run-with-mock-server.sh 'cd e2e/kotlin_android && gradle test --no-daemon'"
 
 [crates.update.python]
-# Override alef's default (which cds into crates/liter-llm-py/src/ and triggers
-# a maturin build with a wrong manifest-path). Run from repo root with the
-# project/workspace install skipped — we just want the dep graph resolved/upgraded.
 precondition = "command -v uv >/dev/null 2>&1"
 update = "uv sync --upgrade --no-install-project --no-install-workspace"
 upgrade = "uv sync --all-packages --all-extras --upgrade --no-install-project --no-install-workspace"
 
 [crates.update.kotlin_android]
-# `gradle dependencyUpdates` is a report-only command (does not bump versions)
-# and ben-manes versions plugin v0.52.0 throws ConcurrentModificationException
-# on Gradle 9.x. Make it a no-op until alef bumps the plugin upstream.
 precondition = "command -v gradle >/dev/null 2>&1"
 update = "echo 'kotlin-android: dependencyUpdates skipped (plugin v0.52.0 incompatible with Gradle 9; report-only no-op)'"
 upgrade = "echo 'kotlin-android: dependencyUpdates skipped (plugin v0.52.0 incompatible with Gradle 9; report-only no-op)'"
@@ -749,10 +603,6 @@ cmake_config = true
 [crates.e2e]
 fixtures = "fixtures"
 output = "e2e"
-# Explicit language list so the `homebrew` test-app generator (which has no
-# Language enum variant) is opted in. The default — workspace.languages mapped
-# ffi→c plus rust — is enumerated here verbatim so the only deviation is the
-# homebrew entry. Keep in sync with the workspace.languages list above.
 languages = [
     "python",
     "node",
@@ -771,61 +621,32 @@ languages = [
     "rust",
     "homebrew",
 ]
-# Categories whose fixtures are NOT part of the public DefaultClient surface —
-# they exercise tower middleware (cache, router, fallback, budget, hooks) and
-# the proxy server's HTTP layer. Coverage lives in `crates/liter-llm/tests/*`
-# (Rust integration) and `crates/liter-llm-proxy/tests/*` (proxy server tests),
-# not in cross-language e2e bindings.
 exclude_categories = ["cache", "proxy", "budget", "hooks"]
-# Fields whose values are enum types — assertions use _alef_e2e_text() instead of .strip().
 # NOTE: only include paths that are *always* enum-typed across every result type they
-# appear on. `status` / `purpose` are context-dependent (BatchStatus on BatchObject,
-# but plain String on ResponseObject/FileObject) so they are configured per-call via
-# `enum_fields = { "status" = "..." }` overrides, not globally.
 fields_enum = ["choices[0].finish_reason", "choices[0].message.role"]
-# Fields whose value is a content-union type (AssistantContent) that implements
-# Display but not Deref<Target=str>. The generator emits the per-language text
-# accessor (Go `.Text()`, Java `.text()`, C# `.Text()`, Rust `to_string()`)
-# instead of a plain-string cast, which only compiles for Option<String>.
 fields_display_as_text = ["choices[0].message.content"]
-# Optional fields on result types — generator emits unwrap handling for these paths.
 fields_optional = [
-    # ChatCompletionResponse
     "usage",
     "choices[0].message.content",
     "choices[0].finish_reason",
     "system_fingerprint",
-    # AssistantMessage.tool_calls is Option<Vec<ToolCall>>
     "choices[0].message.tool_calls",
-    # ImageData optional fields
     "data[0].url",
     "data[0].b64_json",
-    # RerankResult.document is Option<RerankResultDocument>
     "results[0].document",
-    # TranscriptionResponse.segments is Option<Vec<TranscriptionSegment>>
     "segments",
 ]
-# Fields that are Vec/array types — used with fields_optional to emit is_some_and checks.
 fields_array = ["choices[0].message.tool_calls", "segments"]
-# Top-level result fields present on at least one result type.
-# Assertions on fields NOT in this list are emitted as comments (skipped).
-# Excludes streaming-specific fields (stream_content, chunks, stream_complete),
-# middleware-only fields (cache_hit, cache_bypassed), and error pseudo-fields.
 result_fields = [
-    # Chat/embedding/moderation/rerank shared
     "id",
     "model",
     "usage",
     "object",
     "created",
-    # Chat
     "choices",
     "system_fingerprint",
-    # Embedding
     "data",
-    # Models
     "models",
-    # Transcription
     "text",
     "language",
     "duration",
@@ -833,51 +654,33 @@ result_fields = [
     "segments",
     "task",
     "audio",
-    # Image generation
     "images",
-    # Moderation
     "results",
     "flagged",
-    # Rerank
     "results_count",
-    # Search
     "query",
-    # OCR
     "pages",
-    # Files
     "bytes",
     "filename",
     "purpose",
     "status",
     "has_more",
-    # Files/Batches delete
     "deleted",
-    # Batch
     "endpoint",
     "errors",
     "input_file_id",
     "completion_window",
     "request_counts",
-    # Responses API
     "output",
     "instructions",
     "tools",
-    # Content
     "content",
 ]
-# Fields that are method calls (no property access) — the Rust codegen emits
-# `()` for these so that `err.status_code` becomes `err.status_code()`.
 fields_method_calls = ["status_code"]
 
-# Aliases for error-type field access.  When a fixture has
-# `field = "error.<sub>"` the Rust e2e generator resolves `<sub>` through this
-# map to the actual field/method name on the error type.
 [crates.e2e.error_field_aliases]
 status_code = "status_code"
 
-# C FFI primitive accessor return types — used by the C e2e codegen to emit
-# typed local variables (uint64_t/int32_t/double/...) instead of char* for
-# leaf field accessors that return scalars in the FFI header.
 [crates.e2e.fields_c_types]
 "usage.prompt_tokens" = "uint64_t"
 "usage.completion_tokens" = "uint64_t"
@@ -894,10 +697,6 @@ status_code = "status_code"
 "chat_completion_response.created" = "uint64_t"
 "chat_completion_response.usage" = "Usage"
 "images_response.created" = "uint64_t"
-# Opaque enum returns: the FFI returns a pointer to an opaque struct (e.g.
-# LITERLLMBatchStatus*) and the C codegen must convert via
-# {prefix}_{enum_snake}_to_string before string-comparing. Pair with a per-call
-# `enum_fields = { "status" = "BatchStatus" }` override on each C call site.
 "batch_object.status" = "BatchStatus"
 
 [crates.e2e.call]
@@ -922,9 +721,6 @@ php_client_factory = "createClient"
 [crates.e2e.call.overrides.wasm]
 client_factory = "createClient"
 options_type = "WasmChatCompletionRequest"
-# Fields whose wasm-bindgen setter expects BigInt (Rust u64/i64). The chat
-# request struct uses these for maxTokens (u64) and seed (i64); per-call
-# wasm overrides extend this set when their request struct adds more.
 bigint_fields = ["maxTokens", "seed"]
 
 [crates.e2e.call.overrides.c]
@@ -1010,9 +806,6 @@ enum_fields = { "choices[0].finish_reason" = "FinishReason", "choices[0].message
 
 [crates.e2e.calls.chat.overrides.wasm]
 options_type = "WasmChatCompletionRequest"
-# wasm-bindgen exposes Rust enums as numeric discriminants. Map enum-typed
-# result fields to their JS class so `equals` assertions compare
-# `WasmFinishReason.Stop` instead of `(value ?? "").trim() === "stop"`.
 result_enum_fields = { "choices[0].finish_reason" = "WasmFinishReason" }
 
 [crates.e2e.calls.chat.overrides.dart]
@@ -1029,10 +822,6 @@ path = "/chat/completions"
 module = "liter_llm"
 async = true
 streaming = true
-# Streaming chat fixtures assert on `chunks`, `chunks.length`, `stream_complete`,
-# and other virtual stream fields. Alef >= 0.23.0 requires explicit opt-in via
-# the `streaming` recipe (the `chunks` recipe gates non-virtual chunked-content
-# fields like `chunks_have_content`, not the virtual chunk-list itself).
 assertion_recipes = ["streaming", "chunks"]
 
 [[crates.e2e.calls.chat_stream.args]]
@@ -1213,14 +1002,10 @@ type = "json_object"
 owned = true
 
 [crates.e2e.calls.speech.overrides.rust]
-# speech() returns bytes::Bytes in Rust — not a struct with fields.
 result_is_simple = true
 
 [crates.e2e.calls.speech.overrides.c]
 options_type = "CreateSpeechRequest"
-# speech() uses the byte-buffer out-pointer FFI shape — the codegen emits
-# `int32_t literllm_default_client_speech(client, req, &out_ptr, &out_len, &out_cap)`
-# and frees with `literllm_free_bytes`. No SpeechResponse handle exists.
 result_is_bytes = true
 
 [crates.e2e.calls.speech.overrides.csharp]
@@ -1269,8 +1054,6 @@ result_is_simple = true
 [crates.e2e.calls.speech.overrides.dart]
 options_type = "CreateSpeechRequest"
 options_via = "from_json"
-# speech() returns Uint8List in dart (raw audio bytes), not a wrapper struct
-# with an `audio` accessor — treat the result as a bytes scalar.
 result_is_simple = true
 
 [crates.e2e.calls.speech.overrides.swift]
@@ -1666,14 +1449,12 @@ field = "input.file_id"
 type = "string"
 
 [crates.e2e.calls.file_content.overrides.rust]
-# file_content() returns bytes::Bytes in Rust — not a struct with fields.
 result_is_simple = true
 
 [crates.e2e.calls.file_content.overrides.node]
 result_is_simple = true
 
 [crates.e2e.calls.file_content.overrides.python]
-# file_content() returns `bytes` directly in Python — not a struct.
 result_is_simple = true
 
 [crates.e2e.calls.file_content.overrides.ruby]
@@ -1691,17 +1472,12 @@ result_is_simple = true
 result_is_bytes = true
 
 [crates.e2e.calls.file_content.overrides.c]
-# file_content() uses the byte-buffer out-pointer FFI shape — the codegen emits
-# `int32_t literllm_default_client_file_content(client, file_id, &out_ptr, &out_len, &out_cap)`
-# and frees with `literllm_free_bytes`. No FileContentResponse handle exists.
 result_is_bytes = true
 
 [crates.e2e.calls.file_content.overrides.swift]
-# file_content() returns Data in Swift — not a struct with fields.
 result_is_simple = true
 
 [crates.e2e.calls.file_content.overrides.dart]
-# file_content() returns Uint8List in dart — not a struct with a `content` accessor.
 result_is_simple = true
 
 [crates.e2e.calls.create_batch]
@@ -1933,7 +1709,6 @@ options_type = "LiterLlm::CreateResponseRequest"
 
 [crates.e2e.calls.create_response.overrides.wasm]
 options_type = "WasmCreateResponseRequest"
-# WasmCreateResponseRequest.maxOutputTokens is u64 — wasm-bindgen requires BigInt.
 bigint_fields = ["maxOutputTokens"]
 
 [crates.e2e.calls.create_response.overrides.dart]
@@ -1955,10 +1730,6 @@ async = true
 function = "defaultclient_retrieve_response"
 
 [[crates.e2e.calls.retrieve_response.args]]
-# `response_id` (not bare `id`) — `id` shadows Python's `id` builtin
-# (rejected by ruff A002) and is ambiguous in languages like Ruby where
-# `id` is a common method name. Matches the parameter name in the Rust
-# trait `ResponseClient::retrieve_response(response_id: &str)`.
 name = "response_id"
 field = "input.response_id"
 type = "string"
@@ -2046,9 +1817,6 @@ hash = "liter_llm-1.9.3-ITuy7j8Hy2Yavk0BjGZ43I0Ix2GL"
 [crates.e2e.registry.packages.homebrew]
 tap = "xberg-io/homebrew-tap"
 cli_formula = "liter-llm"
-# No ffi_formula — the liter-llm tap publishes only the CLI bottle. With
-# ffi_formula unset, alef's homebrew generator skips Brewfile/FFI sections
-# and only exercises the CLI via cli_tests below.
 
 [[crates.e2e.registry.packages.homebrew.cli_tests]]
 name = "version"
@@ -2060,9 +1828,6 @@ name = "help"
 command = "$CLI_FORMULA --help"
 expect_contains = "Usage"
 
-# test_apps version sync — anchor on package-name strings so unrelated semver
-# tokens (junit, jackson, vitest, etc.) aren't clobbered. Mirrors the pattern
-# used by ../html-to-markdown.
 [[workspace.sync.text_replacements]]
 path = "test_apps/node/package.json"
 search = '"@xberg-io/liter-llm": "[^"]*"'
