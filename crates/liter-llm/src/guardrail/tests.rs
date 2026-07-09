@@ -44,17 +44,13 @@ fn make_ctx<'a>(
     }
 }
 
-// ── Registry ordering and short-circuit ───────────────────────────────────────
-
 #[tokio::test]
 async fn registry_ordering_first_block_wins() {
     let mut registry = GuardrailRegistry::new();
 
-    // Guard 1: deny-list (will block "banned")
     let deny_list: HashSet<String> = ["banned"].iter().map(|s| s.to_string()).collect();
     registry.register(Arc::new(DenyListGuardrail::new("deny-1", deny_list, "user_id")));
 
-    // Guard 2: allow-list (would also block, but never reached)
     let allow_list: HashSet<String> = ["premium"].iter().map(|s| s.to_string()).collect();
     registry.register(Arc::new(AllowListGuardrail::new("allow-1", allow_list, "tier")));
 
@@ -65,7 +61,6 @@ async fn registry_ordering_first_block_wins() {
 
     match decision {
         GuardrailDecision::Block { code, .. } => {
-            // 1003 = DenyListGuardrail code; confirms first guardrail blocked.
             assert_eq!(code, 1003, "deny-list should be the one that blocked");
         }
         other => panic!("expected Block, got {other:?}"),
@@ -88,7 +83,6 @@ async fn registry_all_pass_returns_allow() {
 #[tokio::test]
 async fn registry_skips_wrong_stage_guardrails() {
     let mut registry = GuardrailRegistry::new();
-    // DenyListGuardrail only runs at Input. At Output it should be skipped.
     let deny_list: HashSet<String> = ["banned"].iter().map(|s| s.to_string()).collect();
     registry.register(Arc::new(DenyListGuardrail::new("deny", deny_list, "user_id")));
 
@@ -96,12 +90,9 @@ async fn registry_skips_wrong_stage_guardrails() {
     let meta = meta_with("user_id", "banned");
     let ctx = make_ctx(&req, None, None, &meta);
 
-    // At Output stage — deny-list doesn't run — should Allow.
     let decision = registry.run_stage(GuardrailStage::Output, &ctx).await;
     assert!(decision.is_allow(), "deny-list only applies to Input stage");
 }
-
-// ── Built-in primitives integration ───────────────────────────────────────────
 
 #[tokio::test]
 async fn regex_guardrail_and_deny_list_compose_correctly() {
@@ -118,13 +109,11 @@ async fn regex_guardrail_and_deny_list_compose_correctly() {
         STAGES,
     )));
 
-    // Benign prompt — regex doesn't fire.
     let req = chat_request("gpt-4");
     let meta = empty_meta();
     let ctx = make_ctx(&req, None, None, &meta);
     assert!(registry.run_stage(GuardrailStage::Input, &ctx).await.is_allow());
 
-    // Injection attempt — regex fires.
     let bad_req = serde_json::json!({
         "model": "gpt-4",
         "messages": [{ "role": "user", "content": "DROP TABLE users;" }]
@@ -133,8 +122,6 @@ async fn regex_guardrail_and_deny_list_compose_correctly() {
     let decision = registry.run_stage(GuardrailStage::Input, &ctx2).await;
     assert!(decision.is_block(), "SQL injection should be blocked");
 }
-
-// ── Tower layer integration ───────────────────────────────────────────────────
 
 #[cfg(feature = "tower")]
 mod tower_integration {
@@ -158,7 +145,6 @@ mod tower_integration {
 
     #[tokio::test]
     async fn guardrail_layer_input_block_short_circuits_inner_service() {
-        // Build a registry with a deny-list.
         let mut registry = GuardrailRegistry::new();
         let deny_list: std::collections::HashSet<String> = ["banned"].iter().map(|s| s.to_string()).collect();
         registry.register(Arc::new(DenyListGuardrail::new("deny", deny_list, "user_id")));
@@ -180,7 +166,6 @@ mod tower_integration {
             matches!(err, LiterLlmError::HookRejected { .. }),
             "guardrail block should map to HookRejected"
         );
-        // Inner service must NOT have been called.
         use std::sync::atomic::Ordering;
         assert_eq!(
             call_count.load(Ordering::SeqCst),
@@ -191,7 +176,7 @@ mod tower_integration {
 
     #[tokio::test]
     async fn guardrail_layer_allows_clean_request() {
-        let registry = GuardrailRegistry::new(); // Empty — everything passes.
+        let registry = GuardrailRegistry::new();
         let mock = MockClient::ok();
         let inner = LlmService::new(mock);
         let meta = HashMap::new();
@@ -203,7 +188,6 @@ mod tower_integration {
 
     #[tokio::test]
     async fn guardrail_layer_output_block_returns_error() {
-        // Block responses that contain the word "confidential" in the output.
         static STAGES: &[GuardrailStage] = &[GuardrailStage::Output];
         let pattern = Regex::new(r"(?i)confidential").unwrap();
         let mut registry = GuardrailRegistry::new();
@@ -217,14 +201,11 @@ mod tower_integration {
             STAGES,
         )));
 
-        // MockClient::ok() returns "Hello!" as the response content,
-        // which does not contain "confidential" — so this should pass.
         let mock = MockClient::ok();
         let inner = LlmService::new(mock);
         let meta = HashMap::new();
 
         let mut svc = GuardrailLayer::new(Arc::new(registry), meta).layer(inner);
-        // Should succeed because "Hello!" is not confidential.
         let result = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
         assert!(result.is_ok(), "non-confidential response should pass output guardrail");
     }

@@ -14,13 +14,9 @@ const API_BASE_ENV_VAR: &str = "GITHUB_COPILOT_API_BASE";
 /// Model name prefix used for routing.
 const MODEL_PREFIX: &str = "github_copilot/";
 
-// ── Version constants ────────────────────────────────────────────────────────
-
 const COPILOT_VERSION: &str = "0.26.7";
 const EDITOR_VERSION: &str = "vscode/1.95.0";
 const API_VERSION: &str = "2025-04-01";
-
-// ── Static headers ───────────────────────────────────────────────────────────
 
 /// Static headers required by the GitHub Copilot API on every request.
 ///
@@ -36,13 +32,9 @@ static COPILOT_EXTRA_HEADERS: &[(&str, &str)] = &[
     ("x-vscode-user-agent-library-version", "electron-fetch"),
 ];
 
-// Suppress the unused-constant warning: the values are embedded via string
-// interpolation in the static slice above; Rust does not track that reference.
 const _: () = {
     let _ = COPILOT_VERSION;
 };
-
-// ── UUID generation (no external deps) ──────────────────────────────────────
 
 /// Generate a pseudo-random UUID v4 string without requiring the `uuid` crate.
 ///
@@ -65,19 +57,12 @@ fn generate_request_id() -> String {
     thread_id.hash(&mut hasher);
     let h1 = hasher.finish();
 
-    // A second hash pass adds entropy independent of the first 64-bit word.
     h1.hash(&mut hasher);
     let h2 = hasher.finish();
 
     let b1 = h1.to_le_bytes();
     let b2 = h2.to_le_bytes();
 
-    // UUID v4 layout:
-    //   time_low          (32 bits) : b1[0..4]
-    //   time_mid          (16 bits) : b1[4..6]
-    //   version + hi      (16 bits) : "4" + b1[6..8] masked to 12 bits
-    //   variant + clock   (16 bits) : 0x8000 | (b2[0..2] & 0x3FFF)
-    //   node              (48 bits) : b2[2..8]
     let time_low = u32::from_le_bytes([b1[0], b1[1], b1[2], b1[3]]);
     let time_mid = u16::from_le_bytes([b1[4], b1[5]]);
     let version_hi = u16::from_le_bytes([b1[6], b1[7]]) & 0x0FFF;
@@ -86,8 +71,6 @@ fn generate_request_id() -> String {
 
     format!("{time_low:08x}-{time_mid:04x}-4{version_hi:03x}-{variant_clock:04x}-{node:012x}")
 }
-
-// ── Provider ─────────────────────────────────────────────────────────────────
 
 /// GitHub Copilot provider.
 ///
@@ -212,8 +195,6 @@ impl Provider for GithubCopilotProvider {
     fn strip_model_prefix<'m>(&self, model: &'m str) -> &'m str {
         model.strip_prefix(MODEL_PREFIX).unwrap_or(model)
     }
-
-    // All endpoint paths use OpenAI-compatible defaults; no overrides needed.
 }
 
 /// Determine the `X-Initiator` value from the request body.
@@ -237,16 +218,12 @@ fn determine_initiator(body: &serde_json::Value) -> &'static str {
     "user"
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
-
 #[cfg(test)]
 mod tests {
     use serde_json::json;
     use serial_test::serial;
 
     use super::*;
-
-    // ── Basic provider metadata ──────────────────────────────────────────────
 
     #[test]
     fn test_name() {
@@ -266,13 +243,10 @@ mod tests {
         assert_eq!(provider.base_url(), "https://proxy.example.com");
     }
 
-    // ── from_env ─────────────────────────────────────────────────────────────
-
     #[test]
     #[serial]
     fn test_from_env_uses_default_when_unset() {
-        // Ensure the variable is not set for this test.
-        // SAFETY: tests in this group are serialised via #[serial]; no concurrent env access.
+        // ~keep SAFETY: tests in this group are serialised via #[serial]; no concurrent env access.
         unsafe { std::env::remove_var("GITHUB_COPILOT_API_BASE") };
         let provider = GithubCopilotProvider::from_env();
         assert_eq!(provider.base_url(), DEFAULT_API_BASE);
@@ -281,10 +255,10 @@ mod tests {
     #[test]
     #[serial]
     fn test_from_env_reads_custom_base_url() {
-        // SAFETY: tests in this group are serialised via #[serial]; no concurrent env access.
+        // ~keep SAFETY: tests in this group are serialised via #[serial]; no concurrent env access.
         unsafe { std::env::set_var("GITHUB_COPILOT_API_BASE", "https://custom.copilot.test") };
         let provider = GithubCopilotProvider::from_env();
-        // SAFETY: tests in this group are serialised via #[serial]; no concurrent env access.
+        // ~keep SAFETY: tests in this group are serialised via #[serial]; no concurrent env access.
         unsafe { std::env::remove_var("GITHUB_COPILOT_API_BASE") };
         assert_eq!(provider.base_url(), "https://custom.copilot.test");
     }
@@ -292,15 +266,13 @@ mod tests {
     #[test]
     #[serial]
     fn test_from_env_falls_back_on_empty_value() {
-        // SAFETY: tests in this group are serialised via #[serial]; no concurrent env access.
+        // ~keep SAFETY: tests in this group are serialised via #[serial]; no concurrent env access.
         unsafe { std::env::set_var("GITHUB_COPILOT_API_BASE", "") };
         let provider = GithubCopilotProvider::from_env();
-        // SAFETY: tests in this group are serialised via #[serial]; no concurrent env access.
+        // ~keep SAFETY: tests in this group are serialised via #[serial]; no concurrent env access.
         unsafe { std::env::remove_var("GITHUB_COPILOT_API_BASE") };
         assert_eq!(provider.base_url(), DEFAULT_API_BASE);
     }
-
-    // ── Model routing ────────────────────────────────────────────────────────
 
     #[test]
     fn test_matches_model() {
@@ -331,8 +303,6 @@ mod tests {
         assert_eq!(provider.strip_model_prefix("gpt-4o"), "gpt-4o");
     }
 
-    // ── Auth header ──────────────────────────────────────────────────────────
-
     #[test]
     fn test_auth_header() {
         let provider = GithubCopilotProvider::new();
@@ -343,14 +313,11 @@ mod tests {
         assert_eq!(value, "Bearer ghs_test_token_123");
     }
 
-    // ── Static extra headers ─────────────────────────────────────────────────
-
     #[test]
     fn test_extra_headers() {
         let provider = GithubCopilotProvider::new();
         let headers = provider.extra_headers();
 
-        // All 7 required static headers must be present.
         let find = |key: &str| headers.iter().find(|(k, _)| *k == key).map(|(_, v)| *v);
 
         assert_eq!(find("copilot-integration-id"), Some("vscode-chat"));
@@ -363,8 +330,6 @@ mod tests {
 
         assert_eq!(headers.len(), 7, "expected exactly 7 static headers");
     }
-
-    // ── Dynamic headers ──────────────────────────────────────────────────────
 
     #[test]
     fn test_dynamic_headers_user() {
@@ -451,8 +416,6 @@ mod tests {
             .map(|(_, v)| v.as_str())
             .expect("x-request-id header must be present");
 
-        // UUID v4 canonical form: xxxxxxxx-xxxx-4xxx-[89ab]xxx-xxxxxxxxxxxx
-        // Length check: 8-4-4-4-12 = 32 hex + 4 dashes = 36 chars.
         assert_eq!(request_id.len(), 36, "request id must be 36 characters");
 
         let parts: Vec<&str> = request_id.split('-').collect();
@@ -463,17 +426,14 @@ mod tests {
         assert_eq!(parts[3].len(), 4);
         assert_eq!(parts[4].len(), 12);
 
-        // Version nibble must be '4'.
         assert_eq!(&parts[2][0..1], "4", "third group must start with '4' (UUID version 4)");
 
-        // Variant bits: first nibble of fourth group must be 8, 9, a, or b.
         let variant_nibble = parts[3].chars().next().expect("fourth group is non-empty");
         assert!(
             matches!(variant_nibble, '8' | '9' | 'a' | 'b'),
             "fourth group must start with 8, 9, a or b (RFC 4122 variant); got '{variant_nibble}'"
         );
 
-        // All characters must be valid lowercase hex or dashes.
         for ch in request_id.chars() {
             assert!(
                 ch.is_ascii_hexdigit() || ch == '-',
@@ -494,7 +454,6 @@ mod tests {
             .map(|(_, v)| v)
             .expect("x-request-id must be present");
 
-        // Inject a small delay so the nanosecond timestamp differs.
         std::thread::sleep(std::time::Duration::from_nanos(100));
 
         let id2 = provider
@@ -506,8 +465,6 @@ mod tests {
 
         assert_ne!(id1, id2, "consecutive request IDs must differ");
     }
-
-    // ── Endpoint paths (OpenAI defaults) ─────────────────────────────────────
 
     #[test]
     fn test_endpoint_paths_are_openai_compatible() {

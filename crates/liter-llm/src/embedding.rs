@@ -18,8 +18,6 @@ use crate::client::LlmClient;
 use crate::error::Result;
 use crate::types::EmbeddingRequest;
 
-// ── EmbeddingProvider trait ───────────────────────────────────────────────────
-
 /// Pluggable embedding provider.
 ///
 /// Implement this trait to convert arbitrary text into a dense vector for
@@ -42,8 +40,6 @@ pub trait EmbeddingProvider: Send + Sync + 'static {
     /// of any store used alongside this provider.
     fn dim(&self) -> usize;
 }
-
-// ── SelfHostedEmbeddingProvider ───────────────────────────────────────────────
 
 /// Embedding provider that calls back into the liter-llm [`LlmClient::embed`]
 /// API.
@@ -100,10 +96,6 @@ impl EmbeddingProvider for SelfHostedEmbeddingProvider {
         let client = Arc::clone(&self.client);
         Box::pin(async move {
             let resp = client.embed(req).await?;
-            // Extract the first embedding vector.
-            // The LLM API returns f64 embeddings; VectorStore operates on f32.
-            // Truncate precision at the boundary — f32 is sufficient for cosine
-            // similarity lookups and halves memory usage.
             let vec: Vec<f32> = resp
                 .data
                 .into_iter()
@@ -118,8 +110,6 @@ impl EmbeddingProvider for SelfHostedEmbeddingProvider {
         self.dim
     }
 }
-
-// ── NoOpEmbeddingProvider ─────────────────────────────────────────────────────
 
 /// A no-op embedding provider that returns a zero vector of the configured
 /// dimensionality.
@@ -143,8 +133,6 @@ impl EmbeddingProvider for NoOpEmbeddingProvider {
     }
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
-
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
@@ -164,8 +152,6 @@ mod tests {
         search::{SearchRequest, SearchResponse},
     };
 
-    // ── NoOpEmbeddingProvider tests ───────────────────────────────────────────
-
     #[tokio::test]
     async fn no_op_embedding_provider_returns_zero_vector() {
         let provider = NoOpEmbeddingProvider { dim: 4 };
@@ -181,8 +167,6 @@ mod tests {
         let vec = provider.embed("test").await.unwrap();
         assert_eq!(vec.len(), provider.dim());
     }
-
-    // ── SelfHostedEmbeddingProvider tests ─────────────────────────────────────
 
     /// A mock client that returns a fixed embedding vector.
     #[derive(Clone)]

@@ -54,16 +54,8 @@ use crate::error::{LiterLlmError, Result};
 use crate::provider::StreamFormat;
 use crate::types::ChatCompletionChunk;
 
-// ---------------------------------------------------------------------------
-// Re-export the CancellationToken under a stable path
-// ---------------------------------------------------------------------------
-
 #[cfg(feature = "native-http")]
 pub use tokio_util::sync::CancellationToken;
-
-// ---------------------------------------------------------------------------
-// Cancel-field type alias (mirrors the one in http::streaming)
-// ---------------------------------------------------------------------------
 
 #[cfg(feature = "native-http")]
 type CancelField = Option<CancellationToken>;
@@ -71,13 +63,9 @@ type CancelField = Option<CancellationToken>;
 #[cfg(not(feature = "native-http"))]
 type CancelField = Option<std::convert::Infallible>;
 
-// ---------------------------------------------------------------------------
-// BytesMut pool — production (not test-only)
-// ---------------------------------------------------------------------------
-
 /// Maximum capacity a reclaimed `BytesMut` buffer may have before it is
 /// discarded rather than returned to the pool.
-const MAX_POOL_BUFFER_CAPACITY: usize = 64 * 1024; // 64 KiB
+const MAX_POOL_BUFFER_CAPACITY: usize = 64 * 1024;
 
 thread_local! {
     /// Per-thread pool of reusable `BytesMut` scratch buffers used by
@@ -109,12 +97,8 @@ pub(crate) fn pool_release(buf: BytesMut) {
             *cell.borrow_mut() = Some(buf);
         });
     }
-    // Buffers larger than the cap are silently dropped.
+    // ~keep Oversized buffers are deliberately not returned to the thread-local pool.
 }
-
-// ---------------------------------------------------------------------------
-// ChunkMiddleware trait
-// ---------------------------------------------------------------------------
 
 /// A per-chunk transformation in the [`StreamPipeline`].
 ///
@@ -133,16 +117,11 @@ pub trait ChunkMiddleware: Send + Sync {
     fn process(&self, chunk: ChatCompletionChunk) -> Result<Option<ChatCompletionChunk>>;
 }
 
-// Allow using `Arc<dyn ChunkMiddleware>` as a middleware.
 impl<M: ChunkMiddleware + ?Sized> ChunkMiddleware for Arc<M> {
     fn process(&self, chunk: ChatCompletionChunk) -> Result<Option<ChatCompletionChunk>> {
         (**self).process(chunk)
     }
 }
-
-// ---------------------------------------------------------------------------
-// IngressStream
-// ---------------------------------------------------------------------------
 
 pin_project! {
     /// Typed decoder: parses raw upstream bytes into [`ChatCompletionChunk`]s.
@@ -198,7 +177,6 @@ where
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let mut this = self.project();
 
-        // Check cancellation before doing any work.
         #[cfg(feature = "native-http")]
         if this.cancel.as_ref().is_some_and(|t| t.is_cancelled()) {
             *this.done = true;
@@ -206,7 +184,6 @@ where
         }
 
         loop {
-            // Process complete lines in the buffer.
             if let Some(offset) = memchr_newline(&this.buffer.as_bytes()[*this.cursor..]) {
                 let newline_pos = *this.cursor + offset;
                 let line = this.buffer[*this.cursor..newline_pos].trim_end_matches('\r').trim();
@@ -239,7 +216,6 @@ where
                 continue;
             }
 
-            // Need more bytes.
             if *this.done {
                 let remaining = this.buffer.len() - *this.cursor;
                 if remaining > 0 {
@@ -249,7 +225,6 @@ where
                 return Poll::Ready(None);
             }
 
-            // Re-check cancellation before blocking on inner stream.
             #[cfg(feature = "native-http")]
             if this.cancel.as_ref().is_some_and(|t| t.is_cancelled()) {
                 *this.done = true;
@@ -258,7 +233,7 @@ where
 
             match this.inner.as_mut().poll_next(cx) {
                 Poll::Ready(Some(Ok(bytes))) => {
-                    const MAX_BUFFER_BYTES: usize = 1024 * 1024; // 1 MiB
+                    const MAX_BUFFER_BYTES: usize = 1024 * 1024;
                     if this.buffer.len() + bytes.len() > MAX_BUFFER_BYTES {
                         *this.done = true;
                         return Poll::Ready(Some(Err(LiterLlmError::Streaming {
@@ -287,10 +262,6 @@ where
         }
     }
 }
-
-// ---------------------------------------------------------------------------
-// StreamPipeline
-// ---------------------------------------------------------------------------
 
 pin_project! {
     /// Composable middleware chain operating on typed [`ChatCompletionChunk`]s.
@@ -344,7 +315,6 @@ where
             return Poll::Ready(None);
         }
 
-        // Check cancellation first.
         #[cfg(feature = "native-http")]
         if this.cancel.as_ref().is_some_and(|t| t.is_cancelled()) {
             *this.done = true;
@@ -352,7 +322,6 @@ where
         }
 
         loop {
-            // Check cancellation at the top of each iteration.
             #[cfg(feature = "native-http")]
             if this.cancel.as_ref().is_some_and(|t| t.is_cancelled()) {
                 *this.done = true;
@@ -367,10 +336,6 @@ where
                 }
                 Poll::Ready(Some(Err(e))) => return Poll::Ready(Some(Err(e))),
                 Poll::Ready(Some(Ok(chunk))) => {
-                    // Apply each middleware in order.
-                    // `accumulator` wraps the chunk so we can move it into
-                    // `process()` and receive the (possibly mutated) chunk back
-                    // without cloning.  `None` means the middleware dropped it.
                     let mut accumulator: Option<ChatCompletionChunk> = Some(chunk);
                     let mut error: Option<LiterLlmError> = None;
 
@@ -380,7 +345,6 @@ where
                             Some(c) => match mw.process(c) {
                                 Ok(Some(next)) => accumulator = Some(next),
                                 Ok(None) => {
-                                    // Middleware dropped the chunk.
                                     accumulator = None;
                                     break;
                                 }
@@ -397,7 +361,6 @@ where
                     }
                     match accumulator {
                         None => {
-                            // Chunk was consumed by middleware; fetch the next one.
                             continue;
                         }
                         Some(final_chunk) => return Poll::Ready(Some(Ok(final_chunk))),
@@ -407,10 +370,6 @@ where
         }
     }
 }
-
-// ---------------------------------------------------------------------------
-// EgressStream
-// ---------------------------------------------------------------------------
 
 /// Which egress encoding path to use.
 enum EgressMode {
@@ -441,7 +400,6 @@ enum EgressMode {
 enum EgressEncoding {
     /// Serialise to OpenAI SSE: `data: <json>\n\n`
     OpenAiSse,
-    // Future: AwsEventStream variant when that egress path is needed.
 }
 
 pin_project! {
@@ -485,17 +443,9 @@ impl<S> EgressStream<S> {
         middleware_count: usize,
         cancel: CancelField,
     ) -> Self {
-        // Passthrough is safe only when:
-        //   1. wire formats match (no transcoding needed), and
-        //   2. no middleware is present (middleware requires typed chunks,
-        //      which means ingress already decoded — but egress could still
-        //      re-encode to the same format from typed chunks; we only skip
-        //      serialisation when we can guarantee the bytes are identical to
-        //      what ingress received, which requires no mutation by middleware).
         let mode = if ingress_format == egress_format && middleware_count == 0 {
             EgressMode::Passthrough
         } else {
-            // Select the egress encoding based on the requested egress format.
             let encoding = match egress_format {
                 StreamFormat::Sse | StreamFormat::AwsEventStream => EgressEncoding::OpenAiSse,
             };
@@ -524,7 +474,6 @@ where
             return Poll::Ready(None);
         }
 
-        // Check cancellation first.
         #[cfg(feature = "native-http")]
         if this.cancel.as_ref().is_some_and(|t| t.is_cancelled()) {
             *this.done = true;
@@ -539,7 +488,6 @@ where
             }
             Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(e))),
             Poll::Ready(Some(Ok(chunk))) => {
-                // Check cancellation after waking.
                 #[cfg(feature = "native-http")]
                 if this.cancel.as_ref().is_some_and(|t| t.is_cancelled()) {
                     *this.done = true;
@@ -548,17 +496,7 @@ where
 
                 match this.mode {
                     EgressMode::Passthrough => {
-                        // In passthrough mode we received a typed chunk from the
-                        // IngressStream but there is no middleware that mutated it.
-                        // Re-serialise to OpenAI SSE.  The bytes content is
-                        // semantically identical to what the upstream sent (because
-                        // no middleware ran), but we still need to produce Bytes.
-                        //
-                        // Note: true zero-copy passthrough (bypassing IngressStream
-                        // entirely) requires a different wiring not covered by this
-                        // Stream combinator design — the pipeline always operates on
-                        // typed items.  This "passthrough" mode avoids any
-                        // *additional* encode round-trip beyond the ingress decode.
+                        // ~keep Passthrough still re-serializes typed chunks; true zero-copy needs different wiring.
                         Poll::Ready(Some(encode_sse_chunk(&chunk)))
                     }
                     EgressMode::ParseAndEncode(EgressEncoding::OpenAiSse) => {
@@ -592,17 +530,11 @@ fn encode_sse_chunk(chunk: &ChatCompletionChunk) -> Result<Bytes> {
     buf.extend_from_slice(json.as_bytes());
     buf.extend_from_slice(b"\n\n");
 
-    // Freeze a copy of the assembled frame, then clear the buffer so the
-    // pool gets back a buffer with its original backing pointer.
     let frozen = Bytes::copy_from_slice(&buf);
     buf.clear();
     pool_release(buf);
     Ok(frozen)
 }
-
-// ---------------------------------------------------------------------------
-// Internal utility: newline search (avoids direct memchr dependency here)
-// ---------------------------------------------------------------------------
 
 #[inline]
 fn memchr_newline(haystack: &[u8]) -> Option<usize> {
@@ -618,10 +550,6 @@ fn compact_buffer(buffer: &mut String, cursor: &mut usize) {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 #[cfg(test)]
 mod tests {
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -629,8 +557,6 @@ mod tests {
     use futures_util::StreamExt;
 
     use super::*;
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     /// Build a minimal `ChatCompletionChunk` for testing.
     fn make_chunk(content: &str) -> ChatCompletionChunk {
@@ -682,8 +608,6 @@ mod tests {
         futures_util::stream::iter(vec![Ok::<_, reqwest::Error>(Bytes::from(joined))])
     }
 
-    // ── BytesMut pool tests ───────────────────────────────────────────────────
-
     #[test]
     fn egress_pool_reuses_buffer() {
         let buf = pool_acquire();
@@ -715,8 +639,6 @@ mod tests {
         pool_release(acquired);
     }
 
-    // ── IngressStream tests ───────────────────────────────────────────────────
-
     #[tokio::test]
     async fn ingress_stream_parses_sse() {
         let chunk = make_chunk("hello");
@@ -738,11 +660,8 @@ mod tests {
             .expect("should be Ok");
         assert_eq!(result.choices[0].delta.content.as_deref(), Some("hello"));
 
-        // Next poll should be None (stream ended after [DONE]).
         assert!(stream.next().await.is_none());
     }
-
-    // ── StreamPipeline tests ──────────────────────────────────────────────────
 
     #[tokio::test]
     async fn pipeline_applies_middleware_in_order() {
@@ -766,8 +685,6 @@ mod tests {
         assert_eq!(result, chunk);
     }
 
-    // ── EgressStream tests ────────────────────────────────────────────────────
-
     #[tokio::test]
     async fn egress_stream_encodes_to_sse() {
         let chunk = make_chunk("world");
@@ -786,8 +703,6 @@ mod tests {
         assert_eq!(decoded.choices[0].delta.content.as_deref(), Some("world"));
     }
 
-    // ── Format passthrough optimisation tests ─────────────────────────────────
-
     /// `ingress_egress_passthrough_avoids_reparse`:
     /// When SSE-in, SSE-out, and no middleware, the EgressStream uses
     /// `Passthrough` mode.  We verify this via the `parse_count` probe
@@ -798,7 +713,6 @@ mod tests {
         let sse_line = chunk_to_sse(&chunk);
         let done = "data: [DONE]\n\n".to_string();
 
-        // Count how many times the parse function is called.
         let parse_count = Arc::new(AtomicUsize::new(0));
         let parse_count_clone = Arc::clone(&parse_count);
 
@@ -814,22 +728,17 @@ mod tests {
             None,
         );
 
-        // No middleware → EgressStream selects Passthrough mode.
         let pipeline = StreamPipeline::new(ingress, vec![], None);
         let mut egress = EgressStream::new(pipeline, StreamFormat::Sse, StreamFormat::Sse, 0, None);
 
-        // Drain the stream.
         let mut byte_count = 0usize;
         while let Some(item) = egress.next().await {
             let bytes = item.expect("should be Ok");
             byte_count += bytes.len();
         }
 
-        // The chunk was encoded to SSE bytes.
         assert!(byte_count > 0, "should have produced some output bytes");
 
-        // Parse was called exactly once (ingress decode only; egress in
-        // passthrough mode skips a second full JSON decode).
         assert_eq!(
             parse_count.load(Ordering::Relaxed),
             1,
@@ -859,7 +768,6 @@ mod tests {
         );
 
         let mw = Box::new(AppendMiddleware) as Box<dyn ChunkMiddleware>;
-        // middleware_count=1 → EgressStream uses ParseAndEncode.
         let pipeline = StreamPipeline::new(ingress, vec![mw], None);
         let mut egress = EgressStream::new(pipeline, StreamFormat::Sse, StreamFormat::Sse, 1, None);
 
@@ -868,7 +776,6 @@ mod tests {
         let json_part = text.trim_start_matches("data: ").trim_end_matches("\n\n");
         let decoded: ChatCompletionChunk = serde_json::from_str(json_part).expect("should deserialise");
 
-        // The middleware appended " [mw]" — confirming parse-encode round trip.
         assert_eq!(
             decoded.choices[0].delta.content.as_deref(),
             Some("before [mw]"),
@@ -885,11 +792,8 @@ mod tests {
     async fn aws_event_stream_ingress_sse_egress_round_trips() {
         let chunk = make_chunk("bedrock content");
 
-        // Simulate EventStreamParser output: a typed stream of chunks.
-        // `iter` returns an `Unpin` stream so it can be used directly.
         let inner = futures_util::stream::iter(vec![Ok::<ChatCompletionChunk, LiterLlmError>(chunk.clone())]);
 
-        // Different formats → EgressStream must encode.
         let pipeline = StreamPipeline::new(inner, vec![], None);
         let mut egress = EgressStream::new(pipeline, StreamFormat::AwsEventStream, StreamFormat::Sse, 0, None);
 
@@ -913,7 +817,6 @@ mod tests {
     async fn cancellation_propagates_through_pipeline_layers() {
         use std::time::Duration;
 
-        // Build an inner stream that never ends.
         struct NeverStream;
         impl Stream for NeverStream {
             type Item = std::result::Result<Bytes, reqwest::Error>;
@@ -934,14 +837,13 @@ mod tests {
         let pipeline = StreamPipeline::new(ingress, vec![], Some(cancel_clone.clone()));
         let mut egress = EgressStream::new(pipeline, StreamFormat::Sse, StreamFormat::Sse, 0, Some(cancel_clone));
 
-        // Cancel the token, then assert all 3 layers drain promptly.
         token.cancel();
 
         let deadline = tokio::time::Instant::now() + Duration::from_millis(50);
         let result = tokio::time::timeout_at(deadline, egress.next()).await;
 
         match result {
-            Ok(None) => {} // clean shutdown
+            Ok(None) => {}
             Ok(Some(_)) => panic!("cancelled pipeline should yield None, not a chunk"),
             Err(_elapsed) => panic!("cancelled pipeline did not terminate within 50ms"),
         }
@@ -952,12 +854,10 @@ mod tests {
     /// buffer pointer is reused across streams (confirming the pool is active).
     #[tokio::test]
     async fn bytes_pool_reused_in_egress_under_load() {
-        // Seed the pool with a known buffer.
         let sentinel = pool_acquire();
         let sentinel_ptr = sentinel.as_ptr();
         pool_release(sentinel);
 
-        // Run 100 chunks through the egress encoder.
         for _ in 0..100 {
             let chunk = make_chunk("x");
             let inner = futures_util::stream::iter(vec![Ok::<_, LiterLlmError>(chunk)]);
@@ -969,7 +869,6 @@ mod tests {
             }
         }
 
-        // After all 100 streams, the pool slot should still hold a reused buffer.
         let reclaimed = pool_acquire();
         assert_eq!(
             reclaimed.as_ptr(),

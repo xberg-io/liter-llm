@@ -45,8 +45,6 @@ pub struct SecurityConfig {
     pub outbound_allowlist: Vec<String>,
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
-
 #[cfg(test)]
 mod tests {
     use super::*;

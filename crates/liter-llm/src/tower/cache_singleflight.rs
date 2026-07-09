@@ -44,18 +44,13 @@ use crate::client::BoxFuture;
 use crate::error::{LiterLlmError, Result};
 use crate::observability::usage::CacheState;
 
-// Type alias for the shared in-flight map.
 type InFlightMap = Arc<DashMap<u64, broadcast::Sender<SingleflightResult>>>;
-
-// ─── SingleflightResult ───────────────────────────────────────────────────────
 
 /// The value broadcast from a singleflight leader to all followers.
 ///
 /// The error value is shared so every follower receives the same upstream
 /// failure without cloning the underlying error.
 pub type SingleflightResult = std::result::Result<CachedResponse, Arc<LiterLlmError>>;
-
-// ─── SingleflightHandle ───────────────────────────────────────────────────────
 
 /// Outcome of [`SingleflightCoordinator::join`].
 ///
@@ -82,8 +77,6 @@ pub enum SingleflightHandle {
     },
 }
 
-// ─── SingleflightCoordinator trait ────────────────────────────────────────────
-
 /// Pluggable singleflight coordination strategy.
 ///
 /// Implement this trait to provide distributed singleflight coordination (e.g.
@@ -98,8 +91,6 @@ pub trait SingleflightCoordinator: Send + Sync + 'static {
     /// the leader (must do upstream work) or a follower (must await the leader).
     fn join<'a>(&'a self, key: u64) -> Pin<Box<dyn Future<Output = SingleflightHandle> + Send + 'a>>;
 }
-
-// ─── InMemorySingleflight ─────────────────────────────────────────────────────
 
 /// In-memory singleflight coordinator backed by a [`DashMap`] of broadcast channels.
 ///
@@ -145,23 +136,14 @@ impl SingleflightCoordinator for InMemorySingleflight {
 
             match self.in_flight.entry(key) {
                 Entry::Vacant(slot) => {
-                    // This caller is the leader: create the channel and claim the entry.
                     let (tx, _) = broadcast::channel::<SingleflightResult>(1);
                     let tx_for_map = tx.clone();
                     slot.insert(tx_for_map);
 
-                    // Clone the `Arc` so the `complete` closure can own a reference
-                    // to the map independently of the coordinator's lifetime.
+                    // ~keep `complete` must own the map so cleanup outlives the coordinator borrow.
                     let map = Arc::clone(&self.in_flight);
 
-                    // Wrap sender in an `Arc` shared between the `complete` closure
-                    // and a `LeaderDropGuard`.  The guard ensures that if `complete`
-                    // is dropped without being called (e.g. task abort / cancellation),
-                    // the map entry is removed.  Removing the map entry drops the
-                    // `tx_for_map` clone held there; combined with dropping `tx` from
-                    // the closure, all `Sender` clones are freed, closing the broadcast
-                    // channel.  Followers blocked on `recv.recv()` then receive
-                    // `RecvError::Closed` rather than hanging indefinitely.
+                    // ~keep LeaderDropGuard removes abandoned entries so followers receive Closed, not a hang.
                     let guard = LeaderDropGuard {
                         map: Arc::clone(&map),
                         key,
@@ -169,27 +151,17 @@ impl SingleflightCoordinator for InMemorySingleflight {
                     };
 
                     let complete = Box::new(move |result: SingleflightResult| {
-                        // Disarm the drop guard — normal completion handles cleanup.
                         let mut g = guard;
                         g.disarmed = true;
 
-                        // Send BEFORE removing the map entry (bug 5 fix).
-                        //
-                        // With the old remove-then-send order, a new caller arriving
-                        // between the remove and the send sees a Vacant slot, becomes
-                        // a leader, and starts a duplicate upstream call.  Sending
-                        // first ensures any subscriber that joined before complete()
-                        // receives the result before the entry is removed.
+                        // ~keep Send before removing the map entry to avoid a duplicate leader race.
                         let _ = tx.send(result);
-                        // Remove after broadcasting so the next distinct request
-                        // starts a fresh singleflight round.
                         map.remove(&key);
                     });
 
                     SingleflightHandle::Leader { complete }
                 }
                 Entry::Occupied(entry) => {
-                    // Subsequent caller: subscribe to the existing channel.
                     let recv = entry.get().subscribe();
                     SingleflightHandle::Follower { recv }
                 }
@@ -220,14 +192,10 @@ struct LeaderDropGuard {
 impl Drop for LeaderDropGuard {
     fn drop(&mut self) {
         if !self.disarmed {
-            // Leader was cancelled without completing — remove the map entry
-            // to close the broadcast channel and unblock any followers.
             self.map.remove(&self.key);
         }
     }
 }
-
-// ─── SingleflightLayer ────────────────────────────────────────────────────────
 
 /// Tower [`Layer`] that collapses concurrent identical requests into one
 /// upstream call via a [`SingleflightCoordinator`].
@@ -254,8 +222,6 @@ impl<C: SingleflightCoordinator, S> Layer<S> for SingleflightLayer<C> {
         }
     }
 }
-
-// ─── SingleflightService ──────────────────────────────────────────────────────
 
 /// Tower service produced by [`SingleflightLayer`].
 #[cfg_attr(alef, alef(skip))]
@@ -308,10 +274,6 @@ where
     fn call(&mut self, req: LlmRequest) -> Self::Future {
         let key = singleflight_key(&req);
 
-        // Non-deduplicatable requests pass straight through.
-        // The `async move { fut.await }` would normally trigger `redundant_async_block`
-        // but is required here because `Self::Future` is `BoxFuture<'static, ...>` while
-        // `S::Future` is the inner service's concrete future type — they are distinct types.
         let Some(key) = key else {
             let fut = self.inner.call(req);
             #[allow(clippy::redundant_async_block)]
@@ -320,69 +282,43 @@ where
 
         let coordinator = Arc::clone(&self.coordinator);
 
-        // Tower contract: `poll_ready` readied `self.inner` for exactly one call.
-        // We must consume that readied slot for the leader path and leave `self.inner`
-        // in a fresh (un-readied) state for the next `poll_ready`/`call` cycle.
-        //
-        // Pattern: clone the service to obtain a fresh standby, then `mem::replace`
-        // so that `inner` holds the poll_ready'd instance and `self.inner` holds the
-        // fresh clone.  Only the leader ever invokes `inner.call(req)`; followers drop
-        // `inner` without calling it, which is safe because `call` was never invoked.
+        // ~keep The leader must consume the poll_ready slot; followers may drop it without calling.
+        // ~keep Leave a fresh un-readied clone for the next poll_ready/call cycle.
         let clone = self.inner.clone();
         let mut inner = std::mem::replace(&mut self.inner, clone);
 
         Box::pin(async move {
             match coordinator.join(key).await {
                 SingleflightHandle::Leader { complete } => {
-                    // Leader is the sole caller of `inner.call`.  This satisfies Tower's
-                    // contract: exactly one `call` per `poll_ready`.
+                    // ~keep Leader is the sole caller, preserving one call per poll_ready.
                     let result = inner.call(req).await;
-                    // Convert the upstream result into a `SingleflightResult` to
-                    // broadcast.  Success path clones the inner response into a
-                    // `CachedResponse` so followers receive the same value.
                     let sf_result: SingleflightResult = match &result {
                         Ok(resp) => match resp {
                             LlmResponse::Chat(r) => Ok(CachedResponse::Chat(r.clone())),
                             LlmResponse::Embed(r) => Ok(CachedResponse::Embed(r.clone())),
-                            // For non-cacheable response variants (should not reach here
-                            // given the key derivation guard above), broadcast a synthetic
-                            // error and return the real response to the leader only.
                             _ => Err(Arc::new(LiterLlmError::InternalError {
                                 message: "singleflight: non-cacheable response variant in leader".into(),
                             })),
                         },
-                        // Preserve the original error variant so followers receive
-                        // the semantically correct error class (e.g. `RateLimited`,
-                        // not a downgraded `InternalError`).  `LiterLlmError` is
-                        // not `Clone`, so `to_singleflight_error` produces an owned
-                        // semantically-equivalent value for the broadcast Arc.
+                        // ~keep Preserve error class for followers even though LiterLlmError is not Clone.
                         Err(e) => Err(Arc::new(e.to_singleflight_error())),
                     };
                     complete(sf_result);
                     result
                 }
                 SingleflightHandle::Follower { mut recv } => {
-                    // Follower never calls `inner.call(req)` — safe to drop because
-                    // Tower only prohibits calling after poll_ready; skipping the call
-                    // is always allowed.
+                    // ~keep Followers never call the readied service; dropping without call is allowed.
                     drop(inner);
                     match recv.recv().await {
                         Ok(Ok(cached)) => {
-                            // From the follower's perspective, it received the
-                            // leader's result without performing an upstream call —
-                            // semantically equivalent to an exact cache hit.
                             record_cache_state(CacheState::ExactHit);
                             cached.into_llm_response()
                         }
                         Ok(Err(arc_err)) => {
-                            // Use `to_singleflight_error` rather than the `try_unwrap`
-                            // fallback so that the original error variant is preserved
-                            // even when the `Arc` has multiple strong references
-                            // (broadcast clones the Arc for each subscriber).
+                            // ~keep Preserve error variant even when broadcast leaves multiple Arc refs.
                             Err(Arc::try_unwrap(arc_err).unwrap_or_else(|arc| arc.to_singleflight_error()))
                         }
                         Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
-                            // Ring-buffer overflow: resubscribe to drain the latest value.
                             tracing::debug!(skipped = n, "singleflight follower lagged; resubscribing");
                             let mut rx2 = recv.resubscribe();
                             match rx2.recv().await {
@@ -407,8 +343,6 @@ where
         })
     }
 }
-
-// ─── Tests ────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -547,18 +481,15 @@ mod tests {
         let coordinator = Arc::new(InMemorySingleflight::new());
         let layer = SingleflightLayer::new(Arc::clone(&coordinator));
 
-        // Use a barrier so all spawned tasks arrive at `call` simultaneously.
         let barrier = Arc::new(tokio::sync::Barrier::new(100));
 
         let handles: Vec<_> = (0..100)
             .map(|_| {
-                // Each task gets its own clone that shares the coordinator Arc.
                 let svc = layer.layer(LlmService::new(client.clone()));
                 let barrier = Arc::clone(&barrier);
                 tokio::spawn(async move {
                     barrier.wait().await;
                     let mut svc = svc;
-                    // Tower contract: call poll_ready before call.
                     use tower::Service as _;
                     futures_util::future::poll_fn(|cx| svc.poll_ready(cx)).await.unwrap();
                     svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await
@@ -571,8 +502,6 @@ mod tests {
         assert_eq!(success_count, 100, "all 100 callers should get a successful response");
 
         let calls = call_count.load(Ordering::SeqCst);
-        // With a 50ms delay in the upstream, all 100 tasks arrive while the
-        // leader awaits — singleflight should collapse to exactly 1 call.
         assert_eq!(
             calls, 1,
             "inner service must be called exactly once under burst; got {calls}"
@@ -606,7 +535,6 @@ mod tests {
             .collect();
 
         let results: Vec<_> = futures_util::future::join_all(handles).await;
-        // Extract the model field from each response to verify they are identical.
         let models: Vec<String> = results
             .into_iter()
             .map(|join_result| {
@@ -620,7 +548,6 @@ mod tests {
             })
             .collect();
 
-        // All responses should carry the same model string set by MockClient.
         let first = &models[0];
         assert!(
             models.iter().all(|m| m == first),
@@ -635,8 +562,6 @@ mod tests {
     /// complete before followers arrive, causing multiple "leader" rounds.
     #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
     async fn singleflight_leader_error_propagates_to_followers() {
-        // Use a slow failing client so all 10 tasks arrive while the leader is still
-        // awaiting its upstream call.
         let inner_client = MockClient::failing_rate_limited();
         let slow_client = SlowClient {
             inner: inner_client,
@@ -663,11 +588,8 @@ mod tests {
         let results: Vec<_> = futures_util::future::join_all(handles).await;
         let error_count = results.iter().filter(|r| r.as_ref().unwrap().is_err()).count();
 
-        // All callers should receive an error.
         assert_eq!(error_count, 10, "all callers must receive the leader's error");
 
-        // With a 50 ms delay, all 10 tasks arrive while the leader is awaiting;
-        // inner should be called exactly once.
         let calls = call_count.load(Ordering::SeqCst);
         assert_eq!(
             calls, 1,
@@ -735,7 +657,6 @@ mod tests {
                     let mut svc = svc;
                     use tower::Service as _;
                     futures_util::future::poll_fn(|cx| svc.poll_ready(cx)).await.unwrap();
-                    // Each task uses a distinct model name → distinct cache key.
                     svc.call(LlmRequest::Chat(chat_req(&format!("gpt-4-model-{i}")))).await
                 })
             })
@@ -751,8 +672,6 @@ mod tests {
             "each distinct key must produce its own upstream call; got {calls}"
         );
     }
-
-    // ── Pass-3 review tests ──────────────────────────────────────────────────
 
     /// 100 concurrent callers for the same key must collapse to exactly one
     /// inner call; all 100 must receive the identical leader response.
@@ -782,15 +701,12 @@ mod tests {
 
         let results: Vec<_> = futures_util::future::join_all(handles).await;
 
-        // All 100 callers must succeed.
         let success_count = results.iter().filter(|r| r.as_ref().unwrap().is_ok()).count();
         assert_eq!(success_count, 100, "all 100 callers should get a successful response");
 
-        // Inner must have been called exactly once.
         let calls = call_count.load(Ordering::SeqCst);
         assert_eq!(calls, 1, "inner service called {calls} times; expected exactly 1");
 
-        // All 100 responses must carry the same model string.
         let models: Vec<String> = results
             .into_iter()
             .map(|r| match r.unwrap().unwrap() {
@@ -821,10 +737,8 @@ mod tests {
         let coordinator = Arc::new(InMemorySingleflight::new());
         let key: u64 = 0xDEAD_BEEF;
 
-        // One-shot: leader signals when it has called join() and obtained the Leader handle.
         let (ready_tx, ready_rx) = tokio::sync::oneshot::channel::<()>();
-        // Barrier: main + 10 followers → main waits until all followers have called join().
-        let all_subscribed = Arc::new(tokio::sync::Barrier::new(11)); // 10 followers + main
+        let all_subscribed = Arc::new(tokio::sync::Barrier::new(11));
 
         let leader_handle = tokio::spawn({
             let coordinator = Arc::clone(&coordinator);
@@ -832,10 +746,7 @@ mod tests {
                 let handle = coordinator.join(key).await;
                 match handle {
                     SingleflightHandle::Leader { complete: _complete } => {
-                        // Signal main: the channel is now open; followers can subscribe.
                         let _ = ready_tx.send(());
-                        // Park until aborted — `_complete` is dropped on task cancellation,
-                        // which triggers `LeaderDropGuard::drop` and closes the channel.
                         std::future::pending::<()>().await;
                     }
                     SingleflightHandle::Follower { .. } => panic!("first join must be Leader"),
@@ -843,11 +754,8 @@ mod tests {
             }
         });
 
-        // Wait until the leader has registered the key.
         ready_rx.await.expect("leader must signal readiness");
 
-        // Spawn 10 followers; each waits at the barrier after subscribing so we know
-        // all followers are subscribed before we abort the leader.
         let follower_handles: Vec<_> = (0..10)
             .map(|_| {
                 let coordinator = Arc::clone(&coordinator);
@@ -857,25 +765,18 @@ mod tests {
                         SingleflightHandle::Follower { recv } => recv,
                         SingleflightHandle::Leader { .. } => panic!("subsequent joins must be Follower"),
                     };
-                    // Signal that this follower has subscribed.
                     barrier.wait().await;
-                    // Now wait for the result.
                     let mut recv = recv;
                     recv.recv().await
                 })
             })
             .collect();
 
-        // Wait until all 10 followers have subscribed.
         all_subscribed.wait().await;
 
-        // Abort the leader — `LeaderDropGuard` removes the map entry,
-        // dropping `tx_for_map`; combined with `_complete` going out of scope,
-        // all senders are freed and the channel closes.
         leader_handle.abort();
         let _ = leader_handle.await;
 
-        // All 10 followers must receive RecvError::Closed.
         for handle in follower_handles {
             let result = handle.await.expect("follower task must not panic");
             assert!(
@@ -935,24 +836,20 @@ mod tests {
         let coordinator = Arc::new(InMemorySingleflight::new());
         let key: u64 = 0xC0FF_EE00;
 
-        // Leader joins first.
         let complete = match coordinator.join(key).await {
             SingleflightHandle::Leader { complete } => complete,
             SingleflightHandle::Follower { .. } => panic!("first join must be Leader"),
         };
 
-        // Follower joins while the entry is still in the map.
         let mut recv = match coordinator.join(key).await {
             SingleflightHandle::Follower { recv } => recv,
             SingleflightHandle::Leader { .. } => panic!("second join must be Follower"),
         };
 
-        // Leader completes: send first, remove second.
         complete(Ok(CachedResponse::Chat(
             crate::tower::tests_common::make_chat_response("gpt-4"),
         )));
 
-        // Follower must receive the result (not RecvError::Closed).
         let received = recv.recv().await.expect("follower must receive leader result");
         assert!(received.is_ok(), "follower must receive success result");
     }

@@ -52,11 +52,6 @@ pub async fn run(args: McpArgs) -> Result<(), String> {
 
     match args.transport.as_str() {
         "stdio" => {
-            // Resolve the default KeyContext for the stdio transport.
-            //
-            // stdio has no per-request auth headers, so auth is established
-            // once at startup via `[mcp]` config.  Failing to configure it
-            // is a security misconfiguration; refuse to start.
             let default_ctx = match (&config.mcp.stdio_key_id, config.mcp.stdio_trust_local) {
                 (Some(key_id), _) => {
                     let key_cfg = key_store.get(key_id).ok_or_else(|| {
@@ -116,11 +111,6 @@ pub async fn run(args: McpArgs) -> Result<(), String> {
                 usage_sink: None,
             };
 
-            // For HTTP transport the actual KeyContext is resolved from the
-            // per-request axum extensions injected by validate_api_key.
-            // `KeyContext::master()` is used as a safe fallback; it should
-            // never be reached in a correctly wired deployment (the middleware
-            // will 401 before the MCP handler runs).
             let http_service = StreamableHttpService::new(
                 move || {
                     let sp = service_pool.clone();
@@ -131,7 +121,6 @@ pub async fn run(args: McpArgs) -> Result<(), String> {
                 Default::default(),
             );
 
-            // Wire the auth middleware so every request to /mcp is validated.
             let router = axum::Router::new()
                 .nest_service("/mcp", http_service)
                 .layer(axum::middleware::from_fn_with_state(

@@ -56,7 +56,6 @@ async fn run_watcher(provider: Arc<dyn ConfigProvider>, swap: Arc<ArcSwap<ProxyC
                 match event {
                     Some(ev) => handle_event(ev, &swap),
                     None => {
-                        // Channel closed — provider dropped or watch ended.
                         tracing::warn!("config watcher: watch channel closed; watcher stopping");
                         return;
                     }
@@ -81,8 +80,7 @@ fn handle_event(event: ConfigEvent, swap: &Arc<ArcSwap<ProxyConfig>>) {
             swap.store(Arc::new(config));
         }
         ConfigEvent::Delete { revision, path } => {
-            // A delete means the config key was removed. We keep the
-            // last-known-good configuration in place and log an error.
+            // ~keep Deleted config keys retain the last-known-good configuration.
             tracing::error!(
                 revision,
                 path = %path,
@@ -110,33 +108,17 @@ async fn open_watch_stream(provider: &dyn ConfigProvider) -> Result<mpsc::Receiv
         }
     }
 
-    // Final attempt — propagate the error.
+    // ~keep The final watch attempt propagates its error instead of sleeping again.
     provider.watch().await
 }
 
-// ---------------------------------------------------------------------------
-// OTel metric stubs
-//
-// Full OTel export is gated behind the `otel` feature. These thin wrappers
-// use `tracing` events as the fallback so metrics appear in logs even without
-// the OTel pipeline connected.
-// ---------------------------------------------------------------------------
-
 fn increment_counter(name: &'static str) {
     tracing::debug!(metric = name, value = 1_u64, "metric counter increment");
-    // When the `otel` feature is enabled, the tracing-opentelemetry bridge
-    // picks this up automatically via the span attributes. A dedicated
-    // opentelemetry::global::meter() call can be wired in here when Phase 5
-    // adds the full metrics pipeline.
 }
 
 fn record_revision(name: &'static str, revision: u64) {
     tracing::debug!(metric = name, value = revision, "metric gauge record");
 }
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
@@ -151,8 +133,6 @@ mod tests {
     use super::*;
     use crate::config::ProxyConfig;
     use crate::config::provider::{ConfigError, ConfigEvent, ConfigProvider};
-
-    // ── Helpers ──────────────────────────────────────────────────────────
 
     /// A `ConfigProvider` that returns a fixed config from `load` and can be
     /// driven externally via a pre-seeded event sender.
@@ -195,40 +175,24 @@ mod tests {
         c
     }
 
-    // ── arc_swap_reconfig_does_not_block_inflight_requests ───────────────
-    //
-    // Verifies snapshot semantics: a reload happening concurrently with a
-    // read returns the old config to the reader that already loaded it.
-
     #[tokio::test]
     async fn arc_swap_reconfig_does_not_block_inflight_requests() {
         let initial = Arc::new(base_config(1000));
         let swap = Arc::new(ArcSwap::from(Arc::clone(&initial)));
 
-        // Simulate an "in-flight" request that captures the config snapshot
-        // at entry, then waits before reading from it.
         let snap_before_reload = swap.load_full();
         assert_eq!(snap_before_reload.server.port, 1000);
 
-        // Perform a hot-reload concurrently.
         let updated = Arc::new(base_config(2000));
         swap.store(Arc::clone(&updated));
 
-        // The snapshot taken before the reload is unaffected.
         assert_eq!(
             snap_before_reload.server.port, 1000,
             "in-flight request should see the old config"
         );
 
-        // Subsequent loads see the new config.
         assert_eq!(swap.load().server.port, 2000, "new requests should see updated config");
     }
-
-    // ── arc_swap_reconfig_invalid_config_keeps_existing ──────────────────
-    //
-    // Simulates a Put with an invalid ProxyConfig by sending a parse error
-    // signal through the watcher. The watcher logs the error and keeps the
-    // existing config untouched.
 
     #[tokio::test]
     async fn arc_swap_reconfig_invalid_config_keeps_existing() {
@@ -241,10 +205,8 @@ mod tests {
 
         spawn_watcher(Arc::clone(&provider_arc), Arc::clone(&swap), cancel.clone()).await;
 
-        // Allow the watcher to start.
         tokio::time::sleep(std::time::Duration::from_millis(20)).await;
 
-        // Send a Delete event (simulates config removal — watcher keeps existing).
         tx.send(ConfigEvent::Delete {
             revision: 1,
             path: "/config/proxy".into(),
@@ -252,10 +214,8 @@ mod tests {
         .await
         .expect("send");
 
-        // Give the watcher time to process.
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
 
-        // Config must be unchanged.
         assert_eq!(
             swap.load().server.port,
             3000,
@@ -264,8 +224,6 @@ mod tests {
 
         cancel.cancel();
     }
-
-    // ── Watcher applies Put event ─────────────────────────────────────────
 
     #[tokio::test]
     async fn watcher_applies_put_event() {
@@ -286,7 +244,6 @@ mod tests {
         .await
         .expect("send");
 
-        // Wait for the watcher to apply the event.
         let deadline = std::time::Instant::now() + std::time::Duration::from_millis(200);
         while swap.load().server.port != 5000 {
             if std::time::Instant::now() > deadline {
@@ -298,8 +255,6 @@ mod tests {
         assert_eq!(swap.load().server.port, 5000);
         cancel.cancel();
     }
-
-    // ── Watcher applies Resync event ─────────────────────────────────────
 
     #[tokio::test]
     async fn watcher_applies_resync_event() {

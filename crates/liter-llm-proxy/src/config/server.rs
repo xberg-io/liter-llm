@@ -43,7 +43,7 @@ impl Default for ServerConfig {
             port: default_port(),
             request_timeout_secs: default_request_timeout(),
             body_limit_bytes: default_body_limit(),
-            cors_origins: default_cors(), // empty — CORS disabled by default
+            cors_origins: default_cors(),
         }
     }
 }

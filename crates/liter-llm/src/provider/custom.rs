@@ -12,8 +12,6 @@ use serde::{Deserialize, Serialize};
 use super::Provider;
 use crate::error::{LiterLlmError, Result};
 
-// ── Global custom-provider registry ──────────────────────────────────────────
-
 /// Thread-safe registry of runtime-registered custom providers.
 ///
 /// Uses `RwLock` so that reads (the hot path inside `detect_provider`) only
@@ -46,8 +44,6 @@ pub enum AuthHeaderFormat {
     None,
 }
 
-// ── Public API ───────────────────────────────────────────────────────────────
-
 /// Register a custom provider in the global runtime registry.
 ///
 /// The provider will be checked **before** all built-in providers during model
@@ -59,11 +55,7 @@ pub enum AuthHeaderFormat {
 /// no model prefixes).
 pub fn register_custom_provider(config: CustomProviderConfig) -> Result<()> {
     validate_config(&config)?;
-    // Validate the base_url against the current outbound policy.  This uses
-    // the synchronous helper so the function stays sync (no async callers to
-    // update, no tokio runtime assumption).  Literal-IP private addresses are
-    // caught here; hostname-based SSRF is caught at connect time by the
-    // GuardedResolver installed in the reqwest client.
+    // ~keep Sync outbound validation catches literal private IPs; GuardedResolver handles DNS SSRF.
     crate::provider::validate_outbound_url_sync(&config.base_url)?;
 
     let mut providers = CUSTOM_PROVIDERS.write().map_err(|e| LiterLlmError::ServerError {
@@ -71,7 +63,6 @@ pub fn register_custom_provider(config: CustomProviderConfig) -> Result<()> {
         status: 500,
     })?;
 
-    // Replace existing entry with the same name, or append.
     if let Some(existing) = providers.iter_mut().find(|p| p.name == config.name) {
         *existing = config;
     } else {
@@ -130,8 +121,6 @@ pub(crate) fn clear_custom_providers() {
     }
 }
 
-// ── Validation ───────────────────────────────────────────────────────────────
-
 fn validate_config(config: &CustomProviderConfig) -> Result<()> {
     if config.name.trim().is_empty() {
         return Err(LiterLlmError::BadRequest {
@@ -161,8 +150,6 @@ fn validate_config(config: &CustomProviderConfig) -> Result<()> {
     }
     Ok(())
 }
-
-// ── Provider implementation ──────────────────────────────────────────────────
 
 /// A runtime-registered custom provider.
 ///
@@ -197,8 +184,6 @@ impl Provider for CustomProvider {
     }
 }
 
-// ── Tests ────────────────────────────────────────────────────────────────────
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -232,11 +217,9 @@ mod tests {
         assert_eq!(provider.name(), "my-provider");
         assert_eq!(provider.base_url(), "https://api.my-provider.com/v1");
 
-        // Also detect via slash-prefix routing.
         let provider2 = detect_custom_provider("my-provider/llama-70b");
         assert!(provider2.is_some(), "should detect custom provider by slash prefix");
 
-        // Non-matching model should not detect.
         let none = detect_custom_provider("gpt-4");
         assert!(none.is_none(), "should not match unrelated model");
     }
@@ -263,7 +246,6 @@ mod tests {
             "should no longer detect after unregister"
         );
 
-        // Unregistering again returns false.
         let removed_again = unregister_custom_provider("ephemeral").expect("unregister should succeed");
         assert!(!removed_again, "should return false when provider not found");
     }

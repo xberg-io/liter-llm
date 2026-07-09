@@ -10,7 +10,6 @@ async fn chat_basic() {
 
     let resp = client.chat(simple_chat_request("gemini-2.5-flash-lite")).await.unwrap();
 
-    // Gemini doesn't include model name in responses — skip model field check.
     assert!(!resp.choices.is_empty(), "google_ai: choices should not be empty");
     assert!(
         resp.choices[0].message.text().is_some_and(|c| !c.is_empty()),

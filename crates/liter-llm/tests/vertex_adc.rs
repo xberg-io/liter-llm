@@ -27,8 +27,6 @@ mod adc_tests {
     use liter_llm::auth::CredentialProvider;
     use liter_llm::auth::vertex_adc::VertexAdcCredentialProvider;
 
-    // ── Minimal mock metadata server ─────────────────────────────────────────
-
     /// Response the mock server will return for each incoming request.
     #[derive(Clone)]
     struct MockResponse {
@@ -58,10 +56,8 @@ mod adc_tests {
                     let Ok(mut stream) = stream else { break };
                     let mut reader = BufReader::new(stream.try_clone().unwrap());
 
-                    // Read and discard the request line + headers so the client
-                    // does not stall waiting for the server to drain the socket.
                     let mut line = String::new();
-                    let _ = reader.read_line(&mut line); // request line
+                    let _ = reader.read_line(&mut line);
                     loop {
                         let mut header = String::new();
                         if reader.read_line(&mut header).is_err() || header.trim().is_empty() {
@@ -118,16 +114,12 @@ mod adc_tests {
     /// expose that.  Instead, we expose a `with_metadata_url` constructor
     /// specifically for testing.
     fn build_provider_with_mock(server: &MockMetadataServer) -> VertexAdcCredentialProvider {
-        // We expose a test-only constructor that overrides the metadata URL.
-        // The production `new()` path uses the real 169.254.169.254 address.
         VertexAdcCredentialProvider::with_metadata_url(server.base_url.clone())
     }
 
     fn token_json(token: &str, expires_in: u64) -> String {
         format!(r#"{{"access_token":"{token}","expires_in":{expires_in},"token_type":"Bearer"}}"#)
     }
-
-    // ── Tests ─────────────────────────────────────────────────────────────────
 
     #[tokio::test]
     async fn first_call_hits_metadata_server_and_returns_token() {
@@ -158,9 +150,7 @@ mod adc_tests {
         });
         let provider = build_provider_with_mock(&server);
 
-        // First call — populates the cache.
         let _ = provider.resolve().await.expect("first resolve should succeed");
-        // Second call — should be served from cache.
         let _ = provider.resolve().await.expect("second resolve should succeed");
 
         assert_eq!(
@@ -176,9 +166,7 @@ mod adc_tests {
             status: 500,
             body: r#"{"error":"internal"}"#.to_owned(),
         });
-        let provider = build_provider_with_mock(&server)
-            // Disable the gcp_auth fallback so we can test the error path in isolation.
-            .without_gcp_auth_fallback();
+        let provider = build_provider_with_mock(&server).without_gcp_auth_fallback();
 
         let result = provider.resolve().await;
 

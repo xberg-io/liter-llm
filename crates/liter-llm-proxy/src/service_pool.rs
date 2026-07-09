@@ -58,8 +58,8 @@ pub struct ServicePool {
     default_client: Option<Arc<DefaultClient>>,
 }
 
-// SAFETY: `SyncBoxService` wraps a `Mutex<BoxCloneService>` which is `Send + Sync`.
-// `Arc<DefaultClient>` is `Send + Sync`. The compiler verifies these bounds.
+// ~keep SAFETY: `SyncBoxService` wraps a `Mutex<BoxCloneService>` which is `Send + Sync`.
+// ~keep `Arc<DefaultClient>` is `Send + Sync`. The compiler verifies these bounds.
 
 impl ServicePool {
     /// Build a pool from the proxy configuration.
@@ -76,8 +76,6 @@ impl ServicePool {
     /// Returns an error string if a `DefaultClient` cannot be constructed for
     /// any model entry.
     pub fn from_config(config: &ProxyConfig, usage_sink: Option<Arc<dyn UsageSinkErased>>) -> Result<Self, String> {
-        // Group model entries by name, preserving insertion order for the
-        // first-entry-wins rule.
         let mut grouped: HashMap<String, Vec<&ModelEntry>> = HashMap::new();
         for entry in &config.models {
             grouped.entry(entry.name.clone()).or_default().push(entry);
@@ -88,13 +86,11 @@ impl ServicePool {
         let mut default_client: Option<Arc<DefaultClient>> = None;
 
         for (name, entries) in &grouped {
-            // Use the first entry for now (round-robin is v2).
             let entry = entries[0];
 
             let client = build_client(entry, config)?;
             let client_arc = Arc::new(client);
 
-            // Capture the very first client for deterministic `first_client()`.
             if default_client.is_none() {
                 default_client = Some(Arc::clone(&client_arc));
             }
@@ -202,7 +198,6 @@ fn build_service_stack(
     let base = LlmService::new_from_arc(client);
     let mut svc: Bcs = tower::util::BoxCloneService::new(base);
 
-    // 1. Cache (innermost).
     if let Some(ref cache_cfg) = config.cache {
         let max_entries = cache_cfg.max_entries.unwrap_or(256);
         let ttl = Duration::from_secs(cache_cfg.ttl_seconds.unwrap_or(300));
@@ -215,7 +210,6 @@ fn build_service_stack(
         svc = tower::util::BoxCloneService::new(layer.layer(svc));
     }
 
-    // 2. HealthCheck.
     if let Some(ref health_cfg) = config.health
         && let Some(interval_secs) = health_cfg.interval_secs
     {
@@ -223,13 +217,11 @@ fn build_service_stack(
         svc = tower::util::BoxCloneService::new(layer.layer(svc));
     }
 
-    // 3. Cooldown.
     if let Some(ref cooldown_cfg) = config.cooldown {
         let layer = CooldownLayer::new(Duration::from_secs(cooldown_cfg.duration_secs));
         svc = tower::util::BoxCloneService::new(layer.layer(svc));
     }
 
-    // 4. RateLimit.
     if let Some(ref rl_cfg) = config.rate_limit {
         let tower_rl_cfg = RateLimitConfig {
             rpm: rl_cfg.rpm,
@@ -240,12 +232,10 @@ fn build_service_stack(
         svc = tower::util::BoxCloneService::new(layer.layer(svc));
     }
 
-    // 5. CostTracking.
     if config.general.enable_cost_tracking {
         svc = tower::util::BoxCloneService::new(CostTrackingLayer.layer(svc));
     }
 
-    // 6. Budget.
     if let Some(ref budget_cfg) = config.budget {
         let enforcement = match budget_cfg.enforcement {
             crate::config::EnforcementMode::Soft => Enforcement::Soft,
@@ -261,15 +251,12 @@ fn build_service_stack(
         svc = tower::util::BoxCloneService::new(layer.layer(svc));
     }
 
-    // 7. Tracing.
     if config.general.enable_tracing {
         svc = tower::util::BoxCloneService::new(TracingLayer.layer(svc));
     }
 
-    // 8. HooksLayer with usage sink (outermost, only when a sink is configured).
-    //    Sits outside Tracing so every request — cache hits included — emits an event.
-    //    Bridge: `UsageSink` uses RPITIT (not dyn-compatible) so we wrap the
-    //    erased sink in `MultiUsageSink` which implements `UsageSink` directly.
+    // ~keep HooksLayer sits outside Tracing so every request, including cache hits, emits usage.
+    // ~keep `UsageSink` uses RPITIT and is not dyn-compatible, so `MultiUsageSink` erases it.
     if let Some(sink) = usage_sink {
         let multi = Arc::new(MultiUsageSink::from_erased(vec![sink]));
         let layer = HooksLayer::new(vec![]).with_usage_sink(multi);
@@ -444,7 +431,6 @@ api_key = "sk-2"
         .expect("valid TOML");
 
         let pool = ServicePool::from_config(&config, None).expect("should build");
-        // Only one entry in the pool despite two config entries with same name.
         assert_eq!(pool.services.len(), 1);
         assert!(pool.get_service("gpt").is_ok());
     }

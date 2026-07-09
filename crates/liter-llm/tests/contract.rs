@@ -21,15 +21,11 @@ use std::collections::HashMap;
 use jsonschema::{Retrieve, Uri};
 use serde_json::{Value, json};
 
-// ── Schema sources ──────────────────────────────────────────────────────────
-
 const CHAT_COMPLETION_SCHEMA: &str = include_str!("../../../schemas/api/chat_completion.json");
 const EMBEDDING_SCHEMA: &str = include_str!("../../../schemas/api/embedding.json");
 const MODELS_SCHEMA: &str = include_str!("../../../schemas/api/models.json");
 const ERRORS_SCHEMA: &str = include_str!("../../../schemas/api/errors.json");
 const COMMON_SCHEMA: &str = include_str!("../../../schemas/api/common.json");
-
-// ── Custom retriever for cross-file $ref resolution ──────────────────────────
 
 /// Serves statically known schema files so that `$ref` values such as
 /// `"common.json#/$defs/CompletionUsage"` resolve without network access.
@@ -40,10 +36,6 @@ struct StaticRetriever {
 impl StaticRetriever {
     fn new() -> Self {
         let mut schemas = HashMap::new();
-        // Register every schema under the URI that the jsonschema crate will
-        // request.  Because the root document has no `$id`, its base is
-        // `json-schema:///`, so `"common.json"` resolves to
-        // `"json-schema:///common.json"`.
         schemas.insert("json-schema:///common.json", COMMON_SCHEMA);
         schemas.insert("json-schema:///chat_completion.json", CHAT_COMPLETION_SCHEMA);
         schemas.insert("json-schema:///embedding.json", EMBEDDING_SCHEMA);
@@ -63,8 +55,6 @@ impl Retrieve for StaticRetriever {
     }
 }
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
 /// Build a validator for `def_name` from `primary_schema`.
 ///
 /// Cross-file `$ref` pointers are resolved via `StaticRetriever`.  The
@@ -79,8 +69,6 @@ fn build_validator(primary_schema: &str, def_name: &str) -> jsonschema::Validato
         "Schema definition '{def_name}' not found in primary schema"
     );
 
-    // Attach the primary schema's $defs to the root so intra-file
-    // `#/$defs/Foo` refs continue to work.
     let mut root = def;
     if let Some(defs) = primary["$defs"].as_object() {
         root["$defs"] = Value::Object(defs.clone());
@@ -103,8 +91,6 @@ fn assert_valid(validator: &jsonschema::Validator, instance: &Value, label: &str
         errors.join("\n")
     );
 }
-
-// ── Chat completion response ─────────────────────────────────────────────────
 
 /// The `CreateChatCompletionResponse` definition requires:
 ///   choices[].finish_reason  — string enum (non-nullable at top level)
@@ -148,32 +134,22 @@ fn chat_completion_response_matches_schema() {
 
     let mut json = serde_json::to_value(&response).unwrap();
 
-    // The schema requires choices[].message.role == "assistant" and
-    // choices[].message.refusal (string | null).  Our AssistantMessage does
-    // not serialize `role` because it is inferred from context, and omits null
-    // optional fields.  We patch the serialised value to satisfy the schema.
     let choices = json["choices"].as_array_mut().unwrap();
     for choice in choices.iter_mut() {
         let msg = &mut choice["message"];
-        // role is mandatory in the schema
         msg["role"] = json!("assistant");
-        // refusal must be present as null when absent
         if msg.get("refusal").is_none() {
             msg["refusal"] = json!(null);
         }
-        // content must be present (string | null)
         if msg.get("content").is_none() {
             msg["content"] = json!(null);
         }
-        // logprobs is required in choices (anyOf object|null)
         choice["logprobs"] = json!(null);
     }
 
     let validator = build_validator(CHAT_COMPLETION_SCHEMA, "CreateChatCompletionResponse");
     assert_valid(&validator, &json, "CreateChatCompletionResponse");
 }
-
-// ── Chat completion chunk (streaming) ────────────────────────────────────────
 
 /// `CreateChatCompletionStreamResponse` choices require `delta`, `finish_reason`,
 /// and `index`.
@@ -214,18 +190,12 @@ fn chat_completion_chunk_matches_schema() {
     assert_valid(&validator, &json, "CreateChatCompletionStreamResponse");
 }
 
-// ── Embedding response ───────────────────────────────────────────────────────
-
 /// `CreateEmbeddingResponse` requires `object`, `model`, `data`, `usage`.
 /// The embedded usage requires `prompt_tokens` and `total_tokens`.
 /// Our `EmbeddingResponse` marks `usage` as `Option<Usage>` so we test the
 /// populated path here.
 #[test]
 fn embedding_response_matches_schema() {
-    // Build the JSON instance directly so we control the shape precisely.
-    // The schema's inline usage object only requires prompt_tokens + total_tokens;
-    // extra fields are allowed by the open schema, so our Usage with
-    // completion_tokens is also valid.
     let instance = json!({
         "object": "list",
         "model": "text-embedding-3-small",
@@ -262,8 +232,6 @@ fn embedding_object_matches_schema() {
     let validator = build_validator(EMBEDDING_SCHEMA, "Embedding");
     assert_valid(&validator, &json, "Embedding");
 }
-
-// ── Models list response ─────────────────────────────────────────────────────
 
 #[test]
 fn models_list_response_matches_schema() {
@@ -302,8 +270,6 @@ fn model_object_matches_schema() {
     let validator = build_validator(MODELS_SCHEMA, "Model");
     assert_valid(&validator, &json, "Model");
 }
-
-// ── Error response ───────────────────────────────────────────────────────────
 
 /// Validate the `ErrorResponse` wrapper and the inner `Error` object.
 #[test]

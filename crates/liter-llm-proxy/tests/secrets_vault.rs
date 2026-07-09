@@ -26,7 +26,6 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 async fn fetch_kv_v2_path_extracts_data_data_field() {
     let server = MockServer::start().await;
 
-    // KV-v2 read: GET /v1/secret/data/foo → { data: { data: { value: "abc" }, metadata: {...} } }
     Mock::given(method("GET"))
         .and(path("/v1/secret/data/foo"))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
@@ -51,9 +50,6 @@ async fn fetch_kv_v2_path_extracts_data_data_field() {
         .mount(&server)
         .await;
 
-    // Metadata read used opportunistically by fetch_from_vault.  We mount a
-    // plausible response so the metadata branch succeeds; if it fails, the
-    // provider falls back to default metadata which is still acceptable.
     Mock::given(method("GET"))
         .and(path("/v1/secret/metadata/foo"))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({

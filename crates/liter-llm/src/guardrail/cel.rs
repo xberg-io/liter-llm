@@ -64,13 +64,9 @@ use cel_interpreter::{Context, Program};
 
 use super::{Guardrail, GuardrailContext, GuardrailDecision, GuardrailStage};
 
-// ── Error code for guardrail evaluation failures ──────────────────────────────
-
 /// Numeric error code returned when a CEL expression cannot be evaluated and
 /// the guardrail is configured to fail-closed (the default).
 const CEL_EVAL_ERROR_CODE: u32 = 4001;
-
-// ── Action when CEL expression evaluates to true ──────────────────────────────
 
 /// The action taken when a [`CelGuardrail`]'s expression evaluates to `true`.
 #[cfg_attr(alef, alef(skip))]
@@ -89,8 +85,6 @@ pub enum CelAction {
         new_payload: serde_json::Value,
     },
 }
-
-// ── CelGuardrail ──────────────────────────────────────────────────────────────
 
 /// Evaluates a CEL expression against the [`GuardrailContext`] and applies
 /// `on_true` when the expression evaluates to `true`.
@@ -149,9 +143,7 @@ impl CelGuardrail {
         on_true: CelAction,
         stages: &'static [GuardrailStage],
     ) -> Result<Self, CelCompileError> {
-        // `Program::compile` returns `Err` for most malformed input, but some
-        // inputs make the underlying ANTLR-based parser panic. Catch both so a
-        // bad expression can never abort the caller (e.g. proxy startup).
+        // ~keep Catch both parse errors and ANTLR parser panics so bad CEL cannot abort startup.
         let compiled = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| Program::compile(expression)));
         let program = match compiled {
             Ok(Ok(program)) => program,
@@ -201,10 +193,8 @@ impl Guardrail for CelGuardrail {
         Box::pin(async move {
             let mut cel_ctx = Context::default();
 
-            // Bind `request` — always present.
             cel_ctx.add_variable_from_value("request", json_value_to_cel(ctx.request));
 
-            // Bind `response` — empty map when not at Output stage.
             let response_val = ctx.response.map(json_value_to_cel).unwrap_or_else(|| {
                 Value::Map(Map {
                     map: Arc::new(HashMap::new()),
@@ -212,11 +202,9 @@ impl Guardrail for CelGuardrail {
             });
             cel_ctx.add_variable_from_value("response", response_val);
 
-            // Bind `chunk` — empty string when not at OutputChunk stage.
             let chunk_str = ctx.chunk.unwrap_or("").to_string();
             cel_ctx.add_variable_from_value("chunk", Value::String(Arc::new(chunk_str)));
 
-            // Bind `metadata` as a CEL map.
             cel_ctx.add_variable_from_value("metadata", metadata_to_cel(ctx.metadata));
 
             match self.program.execute(&cel_ctx) {
@@ -230,17 +218,9 @@ impl Guardrail for CelGuardrail {
                     },
                 },
 
-                // Expression evaluated to false — allow the request.
                 Ok(Value::Bool(false)) => GuardrailDecision::Allow,
 
-                // Expression returned a non-bool value. This is a guardrail
-                // authoring error. Fail-closed by default to prevent bypass.
                 Ok(non_bool) => {
-                    // Log the full internal detail server-side only.
-                    // The opaque reason returned to the caller must NOT include
-                    // `non_bool` — CEL result internals can reflect
-                    // user-controlled expression fragments and must not be
-                    // surfaced to the API caller.
                     #[cfg(feature = "tracing")]
                     tracing::error!(
                         guardrail = self.guardrail_name,
@@ -260,21 +240,13 @@ impl Guardrail for CelGuardrail {
                         GuardrailDecision::Allow
                     } else {
                         GuardrailDecision::Block {
-                            // Opaque reason — no internal detail.
                             reason: "policy evaluation error".to_owned(),
                             code: CEL_EVAL_ERROR_CODE,
                         }
                     }
                 }
 
-                // CEL runtime error. Fail-closed by default: an attacker who
-                // can trigger eval errors must not be able to bypass guardrails.
                 Err(e) => {
-                    // Log the full error server-side only.
-                    // The opaque reason returned to the caller must NOT include
-                    // `e` — CEL runtime errors can reflect user-controlled
-                    // expression internals and must not be surfaced to the
-                    // API caller via the `reason` field.
                     #[cfg(feature = "tracing")]
                     tracing::error!(
                         guardrail = self.guardrail_name,
@@ -294,8 +266,6 @@ impl Guardrail for CelGuardrail {
                         GuardrailDecision::Allow
                     } else {
                         GuardrailDecision::Block {
-                            // Opaque reason — no internal detail.
-                            // The full error is logged above (server-side only).
                             reason: "policy evaluation error".to_owned(),
                             code: CEL_EVAL_ERROR_CODE,
                         }
@@ -305,8 +275,6 @@ impl Guardrail for CelGuardrail {
         })
     }
 }
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 /// Convert a [`serde_json::Value`] to a CEL [`Value`].
 ///
@@ -348,8 +316,6 @@ fn metadata_to_cel(metadata: &HashMap<String, String>) -> Value {
     Value::Map(Map { map: Arc::new(map) })
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
-
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
@@ -362,8 +328,6 @@ mod tests {
     fn meta_with(pairs: &[(&str, &str)]) -> HashMap<String, String> {
         pairs.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()
     }
-
-    // ── Existing tests (unchanged behaviour) ──────────────────────────────────
 
     #[tokio::test]
     async fn cel_guardrail_blocks_when_expression_is_true() {
@@ -521,8 +485,6 @@ mod tests {
         assert!(decision.is_allow());
     }
 
-    // ── New security tests ────────────────────────────────────────────────────
-
     /// A CEL expression that references an undeclared variable triggers an
     /// `ExecutionError::UndeclaredReference` at eval time. Default (fail-closed)
     /// must return Block/4001.
@@ -533,8 +495,6 @@ mod tests {
 
         let guardrail = CelGuardrail::new(
             "undeclared-var-guardrail",
-            // `undeclared_var` is never bound in the activation — this is a
-            // reliable `ExecutionError::UndeclaredReference` at eval time.
             "undeclared_var == true",
             CelAction::Block {
                 code: 1500,
@@ -555,9 +515,6 @@ mod tests {
         match decision {
             GuardrailDecision::Block { code, reason } => {
                 assert_eq!(code, CEL_EVAL_ERROR_CODE, "eval error must use code 4001");
-                // The reason returned to callers must be opaque — no internal
-                // detail (e.g. CEL error message, expression internals) may be
-                // included.  Full error detail is logged server-side only.
                 assert_eq!(
                     reason, "policy evaluation error",
                     "eval error reason must be opaque; got: {reason}"
@@ -610,7 +567,6 @@ mod tests {
         let meta = HashMap::new();
         let req = serde_json::json!({ "model": "gpt-4o" });
 
-        // `request.model` is a string, not a bool — non-bool result path.
         let guardrail_default = CelGuardrail::new(
             "non-bool-default",
             "request.model",
@@ -641,7 +597,6 @@ mod tests {
             metadata: &meta,
         };
 
-        // Default: fail-closed → Block/4001
         let decision_default = guardrail_default.check(GuardrailStage::Input, &ctx).await;
         match &decision_default {
             GuardrailDecision::Block { code, .. } => {
@@ -650,7 +605,6 @@ mod tests {
             other => panic!("expected Block(4001) for non-bool result (fail-closed default), got {other:?}"),
         }
 
-        // With fail_open=true → Allow
         let decision_open = guardrail_fail_open.check(GuardrailStage::Input, &ctx).await;
         assert!(
             decision_open.is_allow(),
@@ -676,8 +630,6 @@ mod tests {
         );
     }
 
-    // ── Security: opaque error reasons ───────────────────────────────────────
-
     /// Induce a CEL eval error via an undeclared variable reference and assert
     /// that the reason returned to the caller is the opaque sentinel string,
     /// NOT the internal `format!("guardrail evaluation error: {e}")` form.
@@ -689,9 +641,6 @@ mod tests {
         let meta = HashMap::new();
         let req = serde_json::json!({ "model": "gpt-4o" });
 
-        // An undeclared variable reference triggers `ExecutionError::UndeclaredReference`
-        // at eval time.  The error message produced by `cel_interpreter` contains
-        // the variable name — that must NOT reach the caller.
         let guardrail = CelGuardrail::new(
             "leaky-error-guardrail",
             "undeclared_internal_var == true",
@@ -715,19 +664,16 @@ mod tests {
             GuardrailDecision::Block { code, reason } => {
                 assert_eq!(code, CEL_EVAL_ERROR_CODE, "eval error must use code 4001");
 
-                // The caller-facing reason must be the opaque sentinel.
                 assert_eq!(
                     reason, "policy evaluation error",
                     "reason must be opaque sentinel, not internal error detail; got: {reason:?}"
                 );
 
-                // Regression guard: the old verbose form must NOT appear.
                 assert!(
                     !reason.contains("guardrail evaluation error"),
                     "old verbose reason must not leak to caller; got: {reason:?}"
                 );
 
-                // The internal variable name must NOT appear in the reason.
                 assert!(
                     !reason.contains("undeclared_internal_var"),
                     "internal CEL variable name must not leak to caller; got: {reason:?}"
@@ -744,8 +690,6 @@ mod tests {
         let meta = HashMap::new();
         let req = serde_json::json!({ "model": "gpt-4o" });
 
-        // `request.model` returns the string "gpt-4o" — a non-bool result.
-        // The old code included the model name in the reason via `format!`.
         let guardrail = CelGuardrail::new(
             "non-bool-leak-check",
             "request.model",
@@ -772,7 +716,6 @@ mod tests {
                     reason, "policy evaluation error",
                     "non-bool reason must be opaque; got: {reason:?}"
                 );
-                // The actual model name must NOT appear in the reason.
                 assert!(
                     !reason.contains("gpt-4o"),
                     "CEL result value must not leak to caller; got: {reason:?}"

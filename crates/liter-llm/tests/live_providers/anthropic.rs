@@ -14,8 +14,6 @@ fn chat_request(model: &str, prompt: &str, max_tokens: u64) -> liter_llm::ChatCo
 
 const MODEL: &str = "claude-haiku-4-5-20251001";
 
-// ── Basic chat ──────────────────────────────────────────────────────────────
-
 #[tokio::test]
 async fn chat_basic() {
     let key = require_env!("ANTHROPIC_API_KEY");
@@ -31,8 +29,6 @@ async fn chat_basic() {
     assert!(usage.prompt_tokens > 0, "prompt_tokens should be > 0");
     assert!(usage.total_tokens > 0, "total_tokens should be > 0");
 }
-
-// ── Streaming ───────────────────────────────────────────────────────────────
 
 #[tokio::test]
 async fn chat_stream() {
@@ -77,8 +73,6 @@ async fn chat_stream() {
     assert!(saw_finish, "should see a finish_reason in the stream");
 }
 
-// ── Multi-turn conversation ─────────────────────────────────────────────────
-
 #[tokio::test]
 async fn chat_multi_turn() {
     let key = require_env!("ANTHROPIC_API_KEY");
@@ -104,8 +98,6 @@ async fn chat_multi_turn() {
     );
 }
 
-// ── System message ──────────────────────────────────────────────────────────
-
 #[tokio::test]
 async fn chat_system_message() {
     let key = require_env!("ANTHROPIC_API_KEY");
@@ -124,8 +116,6 @@ async fn chat_system_message() {
     let resp = client.chat(req).await.unwrap();
     assert_chat_response_valid(&resp, "anthropic/chat_system_message");
 }
-
-// ── Tool calling ────────────────────────────────────────────────────────────
 
 #[tokio::test]
 async fn chat_tool_calling() {
@@ -165,7 +155,6 @@ async fn chat_tool_calling() {
     let call = &tool_calls[0];
     assert_eq!(call.function.name, "get_weather");
 
-    // Verify arguments is valid JSON containing "location"
     let args: serde_json::Value =
         serde_json::from_str(&call.function.arguments).expect("tool call arguments should be valid JSON");
     assert!(
@@ -173,8 +162,6 @@ async fn chat_tool_calling() {
         "arguments should contain 'location', got: {args}"
     );
 }
-
-// ── Tool calling with streaming ─────────────────────────────────────────────
 
 #[tokio::test]
 async fn chat_tool_calling_stream() {
@@ -240,14 +227,11 @@ async fn chat_tool_calling_stream() {
     assert!(!tool_args.is_empty(), "tool arguments should be non-empty");
 }
 
-// ── Max tokens / length finish reason ───────────────────────────────────────
-
 #[tokio::test]
 async fn chat_max_tokens_truncation() {
     let key = require_env!("ANTHROPIC_API_KEY");
     let client = anthropic_client(&key);
 
-    // Request a long response but cap at 5 tokens
     let resp = client
         .chat(chat_request(MODEL, "Write a 500 word essay about the ocean.", 5))
         .await
@@ -259,8 +243,6 @@ async fn chat_max_tokens_truncation() {
         resp.choices[0].finish_reason
     );
 }
-
-// ── Error: invalid API key ──────────────────────────────────────────────────
 
 #[tokio::test]
 async fn error_invalid_key() {

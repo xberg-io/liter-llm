@@ -33,10 +33,6 @@ use vaultrs::client::{VaultClient, VaultClientSettingsBuilder};
 
 use super::{SecretError, SecretManager, SecretMetadata, SecretValue};
 
-// ---------------------------------------------------------------------------
-// Cache (reuses the same pattern as the AWS backend)
-// ---------------------------------------------------------------------------
-
 /// A single cached entry.
 ///
 /// `raw` is a [`SecretString`] so the heap memory is zeroed on eviction
@@ -79,8 +75,7 @@ impl SecretCache {
         let store = self.store.lock().expect("cache mutex poisoned");
         let entry = store.get(key)?;
         if entry.cached_at.elapsed() < self.ttl {
-            // Clone exposes the underlying bytes momentarily; the new
-            // SecretString takes ownership and will zero them on drop.
+            // ~keep Clone exposes bytes briefly; the new SecretString owns and zeroes them on drop.
             let cloned = SecretString::from(entry.raw.expose_secret().to_owned());
             Some((cloned, entry.metadata.clone()))
         } else {
@@ -115,10 +110,6 @@ impl SecretCache {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Provider
-// ---------------------------------------------------------------------------
-
 /// HashiCorp Vault KV-v2 secret manager.
 pub struct HashiCorpVaultProvider {
     client: Arc<VaultClient>,
@@ -135,7 +126,6 @@ impl HashiCorpVaultProvider {
     /// Look up a KV-v2 path in the form `"path/to/secret"` and field
     /// `"field_name"`.  The full cache key is `"mount:path:field"`.
     async fn fetch_from_vault(&self, name: &str) -> Result<SecretValue, SecretError> {
-        // Split `path[:field]` — if the caller uses `path#field`, we split on `#`.
         let (path, field) = if let Some(idx) = name.find('#') {
             (&name[..idx], &name[idx + 1..])
         } else {
@@ -162,9 +152,7 @@ impl HashiCorpVaultProvider {
             .cloned()
             .ok_or_else(|| SecretError::NotFound(format!("{name} (field '{field}'  not present in KV data)")))?;
 
-        // Vault KV-v2 metadata (version, created_time) is returned in a
-        // separate API call.  To keep the hot path cheap we read it
-        // opportunistically and fall back to defaults on error.
+        // ~keep Vault KV-v2 metadata is a separate call; failures fall back to defaults.
         let (version, created_at, tags) =
             match vaultrs::kv2::read_metadata(self.client.as_ref(), &self.mount, path).await {
                 Ok(meta) => {
@@ -191,11 +179,9 @@ impl HashiCorpVaultProvider {
             tags,
         };
 
-        // Wrap in SecretString before caching so the cache never holds a
-        // plain `String`.  Expose the secret only at the very last moment
-        // when handing it to the caller.
+        // ~keep Cache secrets as SecretString so the cache never stores a plain String.
         let secret_value = SecretString::from(raw);
-        // Clone via expose_secret: the cache entry gets its own SecretString.
+        // ~keep The cache entry needs its own SecretString allocation.
         self.cache.insert(
             name,
             SecretString::from(secret_value.expose_secret().to_owned()),
@@ -216,7 +202,7 @@ impl SecretManager for HashiCorpVaultProvider {
 
     fn get<'a>(&'a self, name: &'a str) -> Pin<Box<dyn Future<Output = Result<SecretValue, SecretError>> + Send + 'a>> {
         Box::pin(async move {
-            // Cache returns a SecretString; no intermediate plain String.
+            // ~keep Cache hits return SecretString without an intermediate plain String.
             if let Some((secret, metadata)) = self.cache.get(name) {
                 return Ok(SecretValue {
                     value: secret,
@@ -263,7 +249,6 @@ impl SecretManager for HashiCorpVaultProvider {
                 expires_at: None,
                 tags: tags.clone(),
             };
-            // Cache as SecretString so the heap bytes are zeroed on eviction.
             self.cache.insert(name, SecretString::from(raw), metadata.clone());
             Ok(metadata)
         })
@@ -290,10 +275,6 @@ impl SecretManager for HashiCorpVaultProvider {
         })
     }
 }
-
-// ---------------------------------------------------------------------------
-// Builder
-// ---------------------------------------------------------------------------
 
 /// Builder for [`HashiCorpVaultProvider`].
 #[derive(Default)]
@@ -355,11 +336,7 @@ impl HashiCorpVaultProviderBuilder {
         let mount = self.mount.unwrap_or_else(|| "secret".to_owned());
         let cache_ttl = self.cache_ttl.unwrap_or(Duration::from_secs(60));
 
-        // ── SSRF guard ────────────────────────────────────────────────────────
-        // Validate the address against the active outbound policy.  The sync
-        // variant handles literal-IP private ranges (loopback, link-local,
-        // CGNAT) without requiring an async context; hostname-based addresses
-        // get additional checks at connect time via `GuardedResolver`.
+        // ~keep Validate literal private ranges synchronously; hostnames get checked by GuardedResolver.
         validate_outbound_url_sync(&address).map_err(|e| {
             SecretError::Forbidden(format!("Vault address '{address}' rejected by outbound policy: {e}"))
         })?;
@@ -381,17 +358,11 @@ impl HashiCorpVaultProviderBuilder {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 #[cfg(test)]
 mod tests {
     use std::time::Duration;
 
     use super::*;
-
-    // ── SecretString cache type verification ──────────────────────────────────
 
     /// Verify that the cache stores [`SecretString`] values so heap memory is
     /// zeroed on eviction.  This is a type-level assertion: `SecretCache::get`
@@ -408,11 +379,8 @@ mod tests {
             expires_at: None,
             tags: HashMap::new(),
         };
-        // Insert as SecretString (the only accepted type).
         cache.insert("my/secret", SecretString::from("plaintext-value".to_owned()), meta);
 
-        // get() must return SecretString, not String.
-        // If this type annotation compiles, the cache uses SecretString in memory.
         let result: Option<(SecretString, SecretMetadata)> = cache.get("my/secret");
         assert!(result.is_some(), "cache hit expected");
         let (secret, _meta) = result.unwrap();
@@ -422,13 +390,9 @@ mod tests {
             "value round-trips through SecretString cache"
         );
 
-        // Evict the entry — the CacheEntry (and its SecretString) is dropped,
-        // which triggers zeroization of the heap allocation.
         cache.evict("my/secret");
         assert!(cache.get("my/secret").is_none(), "evicted entry must not be found");
     }
-
-    // ── SSRF guard tests ──────────────────────────────────────────────────────
 
     /// The Vault builder must reject private/loopback addresses when the
     /// `DenyPrivate` outbound policy is active.
@@ -446,10 +410,8 @@ mod tests {
     fn vault_address_rejects_internal_endpoints() {
         use liter_llm::provider::{OutboundPolicy, set_outbound_policy};
 
-        // Activate the deny-private policy for this test.
         set_outbound_policy(OutboundPolicy::DenyPrivate);
 
-        // Loopback addresses are forbidden under DenyPrivate.
         let err_loopback = HashiCorpVaultProvider::builder()
             .address("http://127.0.0.1:8200")
             .token("test-token")
@@ -469,7 +431,6 @@ mod tests {
             other => panic!("expected SecretError::Forbidden, got {other:?}"),
         }
 
-        // Link-local / cloud-metadata addresses are also forbidden.
         let err_metadata = HashiCorpVaultProvider::builder()
             .address("http://169.254.169.254/latest/meta-data/")
             .token("test-token")
@@ -489,7 +450,6 @@ mod tests {
             other => panic!("expected SecretError::Forbidden for link-local, got {other:?}"),
         }
 
-        // Reset to Off so subsequent tests are unaffected.
         set_outbound_policy(OutboundPolicy::Off);
     }
 
@@ -505,7 +465,6 @@ mod tests {
             tags: HashMap::new(),
         };
         cache.insert("path/key", SecretString::from("secret-val".to_owned()), meta);
-        // Immediately expired.
         assert!(cache.get("path/key").is_none());
     }
 
@@ -523,15 +482,12 @@ mod tests {
         cache.insert("path/key", SecretString::from("secret-val".to_owned()), meta);
         let hit = cache.get("path/key");
         assert!(hit.is_some());
-        // Compare via expose_secret since SecretString does not impl PartialEq<&str>.
         assert_eq!(hit.unwrap().0.expose_secret(), "secret-val");
     }
 
     /// Verify that the builder falls back to sane defaults.
     #[test]
     fn builder_defaults_produce_provider() {
-        // This test doesn't need a real Vault server — it only checks that the
-        // builder constructs the object without panicking.
         let result = HashiCorpVaultProvider::builder()
             .address("http://127.0.0.1:8200")
             .token("test-token")

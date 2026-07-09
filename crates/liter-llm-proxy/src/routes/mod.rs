@@ -61,63 +61,43 @@ pub(crate) async fn dispatch(
 /// Build the full axum router with all routes, middleware, and shared state.
 pub fn build_router(state: AppState) -> Router {
     let v1_routes = Router::new()
-        // Chat & Completions
         .route("/v1/chat/completions", post(chat::chat_completions))
-        // Embeddings
         .route("/v1/embeddings", post(embeddings::create_embedding))
-        // Models
         .route("/v1/models", get(models::list_models))
-        // Images
         .route("/v1/images/generations", post(images::create_image))
-        // Audio
         .route("/v1/audio/speech", post(audio::create_speech))
         .route("/v1/audio/transcriptions", post(audio::create_transcription))
-        // Moderations
         .route("/v1/moderations", post(moderations::create_moderation))
-        // Extended endpoints
         .route("/v1/rerank", post(rerank::rerank))
         .route("/v1/search", post(search::search))
         .route("/v1/ocr", post(ocr::ocr))
-        // Files
         .route("/v1/files", post(files::create_file).get(files::list_files))
         .route(
             "/v1/files/{file_id}",
             get(files::retrieve_file).delete(files::delete_file),
         )
         .route("/v1/files/{file_id}/content", get(files::file_content))
-        // Batches
         .route("/v1/batches", post(batches::create_batch).get(batches::list_batches))
         .route("/v1/batches/{batch_id}", get(batches::retrieve_batch))
         .route("/v1/batches/{batch_id}/cancel", post(batches::cancel_batch))
-        // Responses
         .route("/v1/responses", post(responses::create_response))
         .route("/v1/responses/{response_id}", get(responses::retrieve_response))
         .route("/v1/responses/{response_id}/cancel", post(responses::cancel_response))
-        // Realtime WebSocket proxy
         .route("/v1/realtime", get(realtime::realtime_websocket))
-        // Auth middleware on all /v1 routes
         .layer(middleware::from_fn_with_state(state.clone(), auth::validate_api_key));
 
     let health_routes = Router::new()
-        // Legacy health endpoints (retained for backward compatibility).
         .route("/health", get(health::health))
         .route("/health/liveness", get(health::liveness))
         .route("/health/readiness", get(health::readiness))
-        // v1.6 enriched endpoints.
         .route("/healthz", get(health::healthz))
         .route("/readyz", get(health::readyz))
         .route("/openapi.json", get(crate::openapi::openapi_schema));
 
-    // Snapshot the current config for router-build decisions (CORS origins,
-    // body limit). These are applied once at startup; a hot-reload of CORS
-    // origins or body_limit_bytes requires a server restart. Request handlers
-    // that need per-request config should call `state.config.load()`.
+    // ~keep Router-build config is startup-only; handlers must load config per request.
     let cfg_snapshot = state.config.load();
 
-    // Build an optional CORS layer.  Empty cors_origins means CORS is disabled
-    // entirely — no CorsLayer is added to the router.  A wildcard origin ("*")
-    // is allowed but must NOT expose the Authorization header, which would
-    // permit credentialed cross-origin requests from any origin.
+    // ~keep Wildcard CORS must not expose Authorization or it permits credentialed requests.
     let cors_layer: Option<CorsLayer> = if cfg_snapshot.server.cors_origins.is_empty() {
         None
     } else if cfg_snapshot.server.cors_origins.iter().any(|o| o == "*") {
@@ -125,8 +105,7 @@ pub fn build_router(state: AppState) -> Router {
             CorsLayer::new()
                 .allow_origin(Any)
                 .allow_methods(Any)
-                // Deliberately exclude Authorization — wildcard origins must not
-                // receive credentialed cross-origin access.
+                // ~keep Deliberately exclude Authorization for wildcard origins.
                 .allow_headers([axum::http::header::CONTENT_TYPE, axum::http::header::ACCEPT]),
         )
     } else {

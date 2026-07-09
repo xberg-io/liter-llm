@@ -48,8 +48,6 @@ pub struct ProxyServer {
     config: ProxyConfig,
     watch_mode: WatchMode,
     key_resolver_override: Option<Arc<dyn liter_llm::tenant::KeyResolver>>,
-    // `UsageSink` uses RPITIT and is not dyn-compatible; we erase it at the
-    // builder boundary via the `UsageSinkErased` blanket impl.
     usage_sink: Option<Arc<dyn liter_llm::observability::UsageSinkErased>>,
 }
 
@@ -104,13 +102,8 @@ impl ProxyServer {
     pub async fn serve_with_shutdown(self, shutdown_handle: Option<shutdown::ShutdownHandle>) -> Result<(), String> {
         liter_llm::ensure_crypto_provider();
 
-        // Activate the SSRF outbound policy before any config or backend is
-        // instantiated.  This ensures that provider URL validation calls
-        // (`validate_outbound_url_sync`) are not no-ops at runtime.
-        //
-        // The proxy default is `DenyPrivate`; operators may explicitly opt
-        // out to `off` in `[security]` when running in a fully-trusted
-        // environment.
+        // ~keep Activate the SSRF outbound policy before config or backend setup so URL validation is live.
+        // ~keep The default is `DenyPrivate`; operators must explicitly opt out in trusted environments.
         {
             use config::OutboundPolicyKind;
             use liter_llm::provider::{self as lp, OutboundPolicy};
@@ -132,16 +125,13 @@ impl ProxyServer {
 
         let arc_config = Arc::new(ArcSwap::from(Arc::new(self.config)));
 
-        // Spawn the hot-reload background watcher when requested.
         let cancel = shutdown_handle
             .as_ref()
             .map(|h| h.cancellation_token())
             .unwrap_or_default();
 
         match self.watch_mode {
-            WatchMode::Off => {
-                // No watcher — arc_config is static.
-            }
+            WatchMode::Off => {}
             WatchMode::File { path } => {
                 let provider = Arc::new(config::FileWatchConfigProvider::new(path));
                 config::watcher::spawn_watcher(provider, Arc::clone(&arc_config), cancel.clone()).await;
@@ -162,9 +152,6 @@ impl ProxyServer {
                 .map_err(|e| format!("invalid listen address: {e}"))?
         };
 
-        // Build the default secret registry with the env backend as the
-        // fallback. AWS and Vault backends are added when the corresponding
-        // features are enabled and configured.
         let secret_registry = Arc::new(
             secrets::SecretManagerRegistry::builder()
                 .register(
@@ -176,7 +163,6 @@ impl ProxyServer {
         );
 
         let key_store = Arc::new(key_store);
-        // Fall back to the config-backed KeyStore when no override is supplied.
         let key_resolver: Arc<dyn liter_llm::tenant::KeyResolver> = self
             .key_resolver_override
             .clone()
@@ -202,8 +188,6 @@ impl ProxyServer {
 
         match shutdown_handle {
             Some(handle) => {
-                // Use the coordinator's cancellation token so axum drains on
-                // the first signal, not just on process exit.
                 let token = handle.cancellation_token();
                 axum::serve(listener, router)
                     .with_graceful_shutdown(async move { token.cancelled().await })
@@ -211,7 +195,6 @@ impl ProxyServer {
                     .map_err(|e| format!("server error: {e}"))?;
             }
             None => {
-                // Fallback: ctrl-c only (legacy / test usage).
                 let shutdown = async {
                     let _ = tokio::signal::ctrl_c().await;
                     tracing::info!("shutdown signal received");
@@ -288,8 +271,6 @@ mod tests {
 
     #[test]
     fn parse_allowlist_urls_skips_invalid_entries() {
-        // "htps://…" is syntactically valid (the url crate accepts any scheme),
-        // so only "not a url at all" (relative URL without a base) is rejected.
         let entries = vec![
             "htps://api.openai.com".to_string(),
             "https://api.anthropic.com".to_string(),
@@ -317,7 +298,6 @@ mod tests {
     /// code path exercised in `parse_allowlist_urls_skips_invalid_entries`.
     #[test]
     fn parse_allowlist_urls_emits_warn_on_invalid_entry() {
-        // "not-a-url" has no scheme and no base → parse error → warn emitted at runtime.
         let entries = vec!["not-a-url".to_string(), "https://api.anthropic.com".to_string()];
         let urls = parse_allowlist_urls(&entries);
         assert_eq!(

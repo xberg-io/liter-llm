@@ -40,7 +40,6 @@ async fn list_models_returns_configured_models() {
 async fn list_models_filtered_by_key_permissions() {
     let upstream = common::mock_upstream::MockUpstream::start(vec![]).await;
 
-    // Config with two models, but the virtual key only has access to one.
     let config = liter_llm_proxy::config::ProxyConfig::from_toml_str(&format!(
         r#"
 [general]

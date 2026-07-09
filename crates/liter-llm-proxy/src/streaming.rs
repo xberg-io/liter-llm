@@ -118,15 +118,12 @@ mod tests {
         let body = body_string(response).await;
         let events = parse_sse_data(&body);
 
-        // 3 data chunks + 1 [DONE] sentinel
         assert_eq!(events.len(), 4, "expected 4 events, got: {events:?}");
 
-        // Verify first chunk is valid JSON with expected content.
         let first: serde_json::Value = serde_json::from_str(&events[0]).expect("first event should be valid JSON");
         assert_eq!(first["id"], "c1");
         assert_eq!(first["choices"][0]["delta"]["content"], "Hello");
 
-        // Verify [DONE] sentinel.
         assert_eq!(events[3], "[DONE]");
     }
 
@@ -144,10 +141,8 @@ mod tests {
         let body = body_string(response).await;
         let events = parse_sse_data(&body);
 
-        // 1 ok chunk + 1 error chunk + 1 [DONE]
         assert_eq!(events.len(), 3, "expected 3 events, got: {events:?}");
 
-        // The error event should contain the error message (back-compat substring check).
         assert!(
             events[1].contains("connection reset"),
             "error event should contain the error message, got: {}",
@@ -168,7 +163,6 @@ mod tests {
         let body = body_string(response).await;
         let events = parse_sse_data(&body);
 
-        // 1 error event + 1 [DONE]
         assert_eq!(events.len(), 2, "expected 2 events, got: {events:?}");
 
         let value: serde_json::Value = serde_json::from_str(&events[0]).expect("SSE error payload must be valid JSON");

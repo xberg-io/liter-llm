@@ -19,8 +19,6 @@ use liter_llm::types::ChatCompletionRequest;
 use liter_llm::{AuthHeaderFormat, CustomProviderConfig, register_custom_provider, unregister_custom_provider};
 use serial_test::serial;
 
-// ── Minimal mock HTTP server ───────────────────────────────────────────────
-
 /// A captured HTTP request from the mock server.
 #[derive(Debug, Clone)]
 struct CapturedRequest {
@@ -108,12 +106,6 @@ impl MockServer {
                     }
                 });
                 let body_str = response_body.to_string();
-                // `Connection: close` is required for correctness: this handler serves exactly one
-                // request per accepted connection, then loops back to `incoming()`. Without it the
-                // HTTP client may keep the socket alive and send a follow-up request on the same
-                // connection, which this server never reads — so the request is silently dropped
-                // and `requests()` undercounts. Closing each connection forces a fresh accept per
-                // request, making the captured-request count deterministic.
                 let response = format!(
                     "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
                     body_str.len(),
@@ -162,8 +154,6 @@ fn chat_request(model: &str) -> ChatCompletionRequest {
     .expect("minimal chat request should deserialize")
 }
 
-// ── Tests ──────────────────────────────────────────────────────────────────
-
 #[tokio::test]
 async fn should_route_to_mock_with_bearer_auth_when_base_url_set() {
     let mock = MockServer::start();
@@ -184,7 +174,6 @@ async fn should_route_to_mock_with_bearer_auth_when_base_url_set() {
     assert_eq!(captured.method, "POST");
     assert_eq!(captured.path, "/chat/completions");
 
-    // With base_url override the provider is OpenAI-compatible (Bearer auth).
     let auth = find_header(&captured.headers, "authorization");
     assert!(auth.is_some(), "should have Authorization header");
     assert!(
@@ -196,9 +185,6 @@ async fn should_route_to_mock_with_bearer_auth_when_base_url_set() {
 
 #[tokio::test]
 async fn should_use_bearer_auth_even_for_anthropic_model_when_base_url_overrides() {
-    // When base_url is set, per-request routing to Anthropic is bypassed.
-    // The request should still use Bearer auth (from the custom provider),
-    // NOT x-api-key (which Anthropic would use).
     let mock = MockServer::start();
     let config = ClientConfigBuilder::new("test-key-override")
         .base_url(mock.url())
@@ -216,7 +202,6 @@ async fn should_use_bearer_auth_even_for_anthropic_model_when_base_url_overrides
     let captured = &requests[0];
     assert_eq!(captured.path, "/chat/completions");
 
-    // With base_url override, auth is Bearer, NOT x-api-key.
     let auth = find_header(&captured.headers, "authorization");
     assert!(auth.is_some(), "should use Bearer auth with base_url override");
     assert!(auth.unwrap().starts_with("Bearer "), "should be Bearer, not x-api-key");
@@ -243,7 +228,6 @@ async fn should_strip_stream_false_into_body_for_non_streaming() {
     let requests = mock.requests();
     let body: serde_json::Value = serde_json::from_str(&requests[0].body).unwrap();
 
-    // The client should set stream=false for non-streaming requests.
     assert_eq!(body["stream"], false, "non-streaming request should have stream=false");
 }
 
@@ -266,7 +250,6 @@ async fn should_pass_model_in_body() {
 
 #[tokio::test]
 async fn should_construct_client_with_model_hint_for_openai() {
-    // Constructing with model_hint="openai/gpt-4" and base_url should work.
     let mock = MockServer::start();
     let config = ClientConfigBuilder::new("test-key")
         .base_url(mock.url())
@@ -278,7 +261,6 @@ async fn should_construct_client_with_model_hint_for_openai() {
 
 #[tokio::test]
 async fn should_construct_client_with_model_hint_for_anthropic() {
-    // Constructing with model_hint="anthropic/claude-3" and base_url should work.
     let mock = MockServer::start();
     let config = ClientConfigBuilder::new("test-key")
         .base_url(mock.url())
@@ -290,8 +272,6 @@ async fn should_construct_client_with_model_hint_for_anthropic() {
 
 #[tokio::test]
 async fn should_default_to_openai_when_no_hint() {
-    // Without model_hint, the client defaults to OpenAI.
-    // Verify by sending a request and checking Bearer auth is used.
     let mock = MockServer::start();
     let config = ClientConfigBuilder::new("test-key-default")
         .base_url(mock.url())
@@ -324,8 +304,6 @@ async fn should_route_custom_provider_with_custom_auth_header() {
     };
     register_custom_provider(custom_config).expect("registration should succeed");
 
-    // Build client WITHOUT base_url so per-request routing is active.
-    // The custom provider's base_url points to our mock.
     let config = ClientConfigBuilder::new("custom-key").max_retries(0).build();
     let client = DefaultClient::new(config, Some("routing-test/my-model")).expect("client creation should succeed");
 
@@ -337,16 +315,13 @@ async fn should_route_custom_provider_with_custom_auth_header() {
     assert_eq!(requests.len(), 1);
 
     let captured = &requests[0];
-    // Custom provider should use the custom auth header.
     let custom_auth = find_header(&captured.headers, "x-routing-test");
     assert!(custom_auth.is_some(), "should use custom auth header X-Routing-Test");
     assert_eq!(custom_auth.unwrap(), "custom-key");
 
-    // Should NOT have standard Authorization header.
     let bearer = find_header(&captured.headers, "authorization");
     assert!(bearer.is_none(), "custom provider should not use Authorization header");
 
-    // Clean up global state.
     unregister_custom_provider("routing-test-provider").expect("unregister should succeed");
 }
 
@@ -363,8 +338,6 @@ async fn should_route_custom_provider_per_request_when_construction_hint_differs
     };
     register_custom_provider(custom_config).expect("registration should succeed");
 
-    // Build client with model_hint for OpenAI (default).
-    // Then send a request with override-test/ prefix — should route to custom provider.
     let config = ClientConfigBuilder::new("override-key").max_retries(0).build();
     let client = DefaultClient::new(config, None).expect("client creation should succeed");
 
@@ -375,7 +348,6 @@ async fn should_route_custom_provider_per_request_when_construction_hint_differs
     let requests = mock.requests();
     assert_eq!(requests.len(), 1);
 
-    // Per-request routing should have detected the custom provider.
     let custom_auth = find_header(&requests[0].headers, "x-override");
     assert!(
         custom_auth.is_some(),
@@ -459,11 +431,9 @@ async fn should_deserialize_mock_response_correctly() {
 
 #[tokio::test]
 async fn all_providers_registry_is_populated() {
-    // Verify the provider registry is loaded and contains providers.
     let providers = liter_llm::all_providers().expect("registry should load");
     assert!(!providers.is_empty(), "registry should contain providers");
 
-    // Verify some well-known providers exist.
     let names: Vec<&str> = providers.iter().map(|p| p.name.as_str()).collect();
     assert!(names.contains(&"openai"), "registry should contain openai");
     assert!(names.contains(&"anthropic"), "registry should contain anthropic");

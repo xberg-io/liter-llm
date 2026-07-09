@@ -134,10 +134,6 @@ pub fn has_secret_scheme(value: &str) -> bool {
     )
 }
 
-// ---------------------------------------------------------------------------
-// Builder
-// ---------------------------------------------------------------------------
-
 /// Builder for [`SecretManagerRegistry`].
 #[derive(Default)]
 pub struct SecretManagerRegistryBuilder {
@@ -171,10 +167,6 @@ impl SecretManagerRegistryBuilder {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
@@ -193,8 +185,6 @@ mod tests {
             .default_backend(Arc::clone(&env))
             .build()
     }
-
-    // ── Routing ─────────────────────────────────────────────────────────────
 
     #[test]
     fn secret_manager_registry_routes_by_prefix() {
@@ -234,8 +224,6 @@ mod tests {
         assert_eq!(path, "prod/api-key");
     }
 
-    // ── has_secret_scheme ───────────────────────────────────────────────────
-
     #[test]
     fn has_secret_scheme_detects_known_schemes() {
         assert!(has_secret_scheme("aws://prod/key"));
@@ -250,8 +238,6 @@ mod tests {
         assert!(!has_secret_scheme("https://example.com"));
         assert!(!has_secret_scheme("gcp://not-supported-yet"));
     }
-
-    // ── resolve_api_key ─────────────────────────────────────────────────────
 
     #[tokio::test]
     async fn resolve_api_key_returns_literal_when_no_scheme() {
@@ -278,8 +264,6 @@ mod tests {
         assert_eq!(result.unwrap(), "fetched-value");
     }
 
-    // ── Rotation warning ────────────────────────────────────────────────────
-
     #[traced_test]
     #[test]
     fn secret_manager_rotation_warning_within_24h() {
@@ -288,7 +272,6 @@ mod tests {
             version: "1".to_owned(),
             created_at: SystemTime::now(),
             updated_at: SystemTime::now(),
-            // Expires in 23 hours — within the 24h threshold.
             expires_at: Some(SystemTime::now() + Duration::from_secs(23 * 60 * 60)),
             tags: HashMap::new(),
         };
@@ -304,7 +287,6 @@ mod tests {
             version: "1".to_owned(),
             created_at: SystemTime::now(),
             updated_at: SystemTime::now(),
-            // Expires in 48 hours — outside the 24h threshold.
             expires_at: Some(SystemTime::now() + Duration::from_secs(48 * 60 * 60)),
             tags: HashMap::new(),
         };

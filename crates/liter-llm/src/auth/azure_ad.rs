@@ -99,7 +99,6 @@ impl AzureAdCredentialProvider {
     /// Returns [`LiterLlmError::Authentication`] if required environment
     /// variables are missing.
     pub fn from_env() -> Result<Arc<dyn CredentialProvider>, LiterLlmError> {
-        // Fast path: static token from environment.
         if let Ok(token) = std::env::var("AZURE_AD_TOKEN") {
             return Ok(Arc::new(StaticTokenProvider::new(SecretString::from(token))));
         }
@@ -166,7 +165,6 @@ impl AzureAdCredentialProvider {
 impl CredentialProvider for AzureAdCredentialProvider {
     fn resolve(&self) -> BoxFuture<'_, crate::error::Result<Credential>> {
         Box::pin(async move {
-            // Fast path: read lock to check cache.
             {
                 let guard = self.cached.read().await;
                 if let Some(ref cached) = *guard
@@ -176,10 +174,8 @@ impl CredentialProvider for AzureAdCredentialProvider {
                 }
             }
 
-            // Slow path: write lock to refresh.
             let mut guard = self.cached.write().await;
 
-            // Double-check after acquiring write lock (another task may have refreshed).
             if let Some(ref cached) = *guard
                 && cached.is_valid()
             {
@@ -228,8 +224,7 @@ mod tests {
     fn cached_token_expired() {
         let cached = CachedToken {
             token: SecretString::from("test-token".to_owned()),
-            // A token with zero lifetime is immediately expired (no Duration subtraction
-            // needed, which avoids panics on Windows where Instant uptime may be < 1h).
+            // ~keep Zero lifetime means immediately expired and avoids Windows Instant subtraction panics.
             acquired_at: Instant::now(),
             expires_in_secs: 0,
         };
@@ -240,7 +235,6 @@ mod tests {
     fn cached_token_within_buffer() {
         let cached = CachedToken {
             token: SecretString::from("test-token".to_owned()),
-            // 200s lifetime is within the 300s expiry buffer, so the token is invalid.
             acquired_at: Instant::now(),
             expires_in_secs: 200,
         };
@@ -261,10 +255,10 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore] // Requires network access and valid Azure AD credentials.
+    #[ignore]
     async fn live_azure_ad_token_exchange() {
         let Ok(provider) = AzureAdCredentialProvider::from_env() else {
-            return; // Skip when Azure AD credentials are not configured.
+            return;
         };
         let credential = provider.resolve().await.expect("token exchange failed");
         assert!(matches!(credential, Credential::BearerToken(_)));

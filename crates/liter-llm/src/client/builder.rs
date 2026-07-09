@@ -39,8 +39,6 @@ use crate::http::transport::TransportConfig;
 #[cfg(feature = "tower")]
 use crate::tower::{BudgetConfig, CacheConfig, CacheStore, LlmHook, RateLimitConfig};
 
-// ── Type-state markers ───────────────────────────────────────────────────────
-
 /// Marker: no API key has been set on this builder.
 pub struct NoApiKey;
 /// Marker: an API key has been set on this builder.
@@ -49,8 +47,6 @@ pub struct WithApiKey;
 pub struct NoProvider;
 /// Marker: a provider name (model hint) has been set on this builder.
 pub struct WithProvider;
-
-// ── Builder ──────────────────────────────────────────────────────────────────
 
 /// Type-state builder for [`DefaultClient`](super::DefaultClient).
 ///
@@ -370,8 +366,6 @@ impl<K, P> ClientBuilder<K, P> {
     }
 }
 
-// ── Terminal: build() is only available with WithApiKey + WithProvider ────────
-
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 impl ClientBuilder<WithApiKey, WithProvider> {
     /// Consume the builder and construct a [`DefaultClient`](super::DefaultClient).
@@ -420,8 +414,6 @@ impl ClientBuilder<WithApiKey, WithProvider> {
             enable_tracing: self.enable_tracing,
         };
 
-        // Use the provider_hint for model detection; an empty hint defaults to
-        // OpenAI (same semantics as DefaultClient::new with None hint).
         let hint = if self.provider_hint.is_empty() {
             None
         } else {

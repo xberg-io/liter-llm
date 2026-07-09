@@ -14,8 +14,6 @@
 use std::collections::HashMap;
 use std::time::Duration;
 
-// ── CachePolicyContext ────────────────────────────────────────────────────────
-
 /// Context passed to [`CachePolicy::decide`].
 pub struct CachePolicyContext<'a> {
     /// Model identifier (e.g. `"openai/gpt-4o"`).
@@ -30,8 +28,6 @@ pub struct CachePolicyContext<'a> {
     /// other key injected by the caller before the layer is reached.
     pub metadata: &'a HashMap<String, String>,
 }
-
-// ── CacheDecision ─────────────────────────────────────────────────────────────
 
 /// Decision produced by [`CachePolicy::decide`].
 ///
@@ -73,8 +69,6 @@ impl Default for CacheDecision {
     }
 }
 
-// ── CachePolicy trait ─────────────────────────────────────────────────────────
-
 /// Pluggable per-request cache decision maker.
 ///
 /// Implement this trait to control which cache tiers are consulted, when the
@@ -89,8 +83,6 @@ pub trait CachePolicy: Send + Sync + 'static {
     /// Decide how to handle caching for the given request context.
     fn decide(&self, ctx: &CachePolicyContext<'_>) -> CacheDecision;
 }
-
-// ── StandardCachePolicy ───────────────────────────────────────────────────────
 
 /// Standard cache policy with configurable tier selection and bypass logic.
 ///
@@ -143,8 +135,6 @@ impl CachePolicy for StandardCachePolicy {
         }
     }
 }
-
-// ── Tests ─────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {

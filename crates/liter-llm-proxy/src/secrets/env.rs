@@ -80,10 +80,6 @@ impl SecretManager for EnvVarSecretManager {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 #[cfg(test)]
 mod tests {
     use secrecy::ExposeSecret;
@@ -92,8 +88,7 @@ mod tests {
 
     #[tokio::test]
     async fn secret_manager_env_returns_value_from_env_var() {
-        // SAFETY: this test sets a uniquely-named var; parallel tests will not
-        // collide on it.
+        // ~keep SAFETY: this test uses a unique env var, so parallel tests do not collide.
         unsafe {
             std::env::set_var("LITER_TEST_SECRET_12345", "supersecret");
         }
@@ -101,7 +96,7 @@ mod tests {
         let mgr = EnvVarSecretManager::new();
         let result = mgr.get("LITER_TEST_SECRET_12345").await;
 
-        // SAFETY: clean up before any assertion that might panic.
+        // ~keep SAFETY: clean up the test-only env var before any assertion can panic.
         unsafe {
             std::env::remove_var("LITER_TEST_SECRET_12345");
         }

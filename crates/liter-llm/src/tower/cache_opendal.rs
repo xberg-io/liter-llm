@@ -58,10 +58,6 @@ impl OpenDalCacheStore {
         prefix: impl Into<String>,
         ttl: Duration,
     ) -> crate::error::Result<Self> {
-        // opendal 0.56 takes the scheme as a string directly; the typed `Scheme`
-        // enum is no longer exported. `via_iter` validates the scheme name
-        // against the registered services list and returns an error for
-        // unknown values.
         let operator = Operator::via_iter(scheme, config).map_err(|e| crate::error::LiterLlmError::InternalError {
             message: format!("failed to build OpenDAL operator for '{scheme}': {e}"),
         })?;
@@ -93,13 +89,10 @@ impl CacheStore for OpenDalCacheStore {
                 Ok(e) => e,
                 Err(_) => return None,
             };
-            // Check TTL
             if Self::now_secs() > entry.expires_at {
-                // Lazily delete expired entry
                 let _ = self.operator.delete(&path).await;
                 return None;
             }
-            // Verify request body matches (collision guard)
             if entry.request_body != request_body {
                 return None;
             }
@@ -204,17 +197,14 @@ mod tests {
     async fn get_returns_none_for_wrong_request_body() {
         let store = memory_store(300);
         store.put(1, "body-alpha".into(), dummy_response()).await;
-        // Same key but different request body should miss (collision guard).
         let result = store.get(1, "body-beta").await;
         assert!(result.is_none(), "expected None when request body does not match");
     }
 
     #[tokio::test]
     async fn expired_entry_returns_none() {
-        let store = memory_store(0); // 0-second TTL = immediate expiry
+        let store = memory_store(0);
         store.put(1, "req".into(), dummy_response()).await;
-        // TTL is stored in whole seconds, so we must wait at least 1 full
-        // second for the wall-clock to advance past the `expires_at` timestamp.
         tokio::time::sleep(Duration::from_millis(1100)).await;
         let result = store.get(1, "req").await;
         assert!(result.is_none(), "expected None for expired entry");
@@ -224,9 +214,7 @@ mod tests {
     async fn remove_deletes_entry() {
         let store = memory_store(300);
         store.put(7, "req".into(), dummy_response()).await;
-        // Confirm it exists first.
         assert!(store.get(7, "req").await.is_some());
-        // Remove and verify it is gone.
         store.remove(7).await;
         assert!(store.get(7, "req").await.is_none(), "expected None after remove");
     }
@@ -236,7 +224,6 @@ mod tests {
         let store = memory_store(300);
         store.put(1, "req".into(), dummy_response()).await;
 
-        // Overwrite with a different response.
         let replacement = CachedResponse::Chat(ChatCompletionResponse {
             id: "test-resp-002".into(),
             object: "chat.completion".into(),

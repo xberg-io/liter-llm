@@ -19,8 +19,6 @@ use std::time::{Duration, SystemTime};
 
 use secrecy::SecretString;
 
-// ─── CredentialHandle ─────────────────────────────────────────────────────────
-
 /// A credential obtained from a [`CredentialPool`].
 ///
 /// Handles are lightweight clones: `id` is a `String` copy; `api_key` is a
@@ -46,8 +44,6 @@ impl std::fmt::Debug for CredentialHandle {
     }
 }
 
-// ─── CredentialError ──────────────────────────────────────────────────────────
-
 /// Errors returned by [`CredentialPool`] operations.
 #[derive(Debug, thiserror::Error)]
 pub enum CredentialError {
@@ -61,8 +57,6 @@ pub enum CredentialError {
     #[error("credential backend error: {0}")]
     BackendError(#[from] Box<dyn std::error::Error + Send + Sync>),
 }
-
-// ─── PoolSnapshot ─────────────────────────────────────────────────────────────
 
 /// Observability snapshot of a pool's state at a point in time.
 #[derive(Debug, Clone)]
@@ -78,8 +72,6 @@ pub struct PoolSnapshot {
     /// `None` when there are no exhausted credentials or the pool is empty.
     pub next_recovery: Option<SystemTime>,
 }
-
-// ─── CredentialPool trait ─────────────────────────────────────────────────────
 
 /// A pool of API credentials for a single provider with automatic rotation.
 ///

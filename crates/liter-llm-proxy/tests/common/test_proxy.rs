@@ -23,7 +23,7 @@ pub struct TestProxy {
 impl TestProxy {
     /// Create a proxy whose single model (`test-model`) points at
     /// `mock_url` and accepts `Bearer sk-master` or `Bearer sk-test`.
-    #[allow(dead_code)] // used by some integration test binaries, not all
+    #[allow(dead_code)]
     pub fn new(mock_url: &str) -> Self {
         Self::with_config(default_config(mock_url))
     }
@@ -103,7 +103,7 @@ impl TestProxy {
 /// - master key: `sk-master`
 /// - virtual key: `sk-test` (access to `test-model`)
 /// - one model: `test-model` backed by `openai/gpt-4o` at `mock_url`
-#[allow(dead_code)] // used by some integration test binaries, not all
+#[allow(dead_code)]
 pub fn default_config(mock_url: &str) -> ProxyConfig {
     ProxyConfig::from_toml_str(&format!(
         r#"

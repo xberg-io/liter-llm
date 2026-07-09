@@ -34,10 +34,10 @@ use ahash::RandomState;
 ///
 /// These constants MUST NOT be changed after cache entries have been persisted,
 /// as changing them would invalidate all existing cache keys.
-const CACHE_KEY_SEED_0: u64 = 0x6c69_7465_725f_6c6c; // "liter_ll"
-const CACHE_KEY_SEED_1: u64 = 0x6d5f_6361_6368_655f; // "m_cache_"
-const CACHE_KEY_SEED_2: u64 = 0x6b65_795f_7374_7261; // "key_stra"
-const CACHE_KEY_SEED_3: u64 = 0x7465_6779_5f76_3100; // "tegy_v1\0"
+const CACHE_KEY_SEED_0: u64 = 0x6c69_7465_725f_6c6c;
+const CACHE_KEY_SEED_1: u64 = 0x6d5f_6361_6368_655f;
+const CACHE_KEY_SEED_2: u64 = 0x6b65_795f_7374_7261;
+const CACHE_KEY_SEED_3: u64 = 0x7465_6779_5f76_3100;
 
 /// The process-global deterministic random state.  Constructed once from
 /// compile-time-fixed seeds so the same input always yields the same hash,
@@ -55,8 +55,6 @@ fn cache_random_state() -> &'static RandomState {
 fn seeded_hasher() -> impl Hasher {
     cache_random_state().build_hasher()
 }
-
-// ── CacheKeyInput ─────────────────────────────────────────────────────────────
 
 /// Input to a [`CacheKeyStrategy`].
 ///
@@ -76,8 +74,6 @@ pub struct CacheKeyInput<'a> {
     /// file, etc.) before the request reaches the cache layer.
     pub system_prompt: Option<&'a str>,
 }
-
-// ── CacheKeyStrategy trait ────────────────────────────────────────────────────
 
 /// Pluggable key derivation strategy for the response cache.
 ///
@@ -102,8 +98,6 @@ pub trait CacheKeyStrategy: Send + Sync + 'static {
     fn key_for(&self, input: &CacheKeyInput<'_>) -> (u64, String);
 }
 
-// ── ExactHashStrategy ─────────────────────────────────────────────────────────
-
 /// Hash the entire serialized request (model + messages + params).
 ///
 /// This is the default behavior: two requests are cache-equivalent only when
@@ -115,8 +109,7 @@ pub struct ExactHashStrategy;
 
 impl CacheKeyStrategy for ExactHashStrategy {
     fn key_for(&self, input: &CacheKeyInput<'_>) -> (u64, String) {
-        // Canonical body: join all relevant fields with a delimiter that cannot
-        // appear inside a JSON string without escaping.
+        // ~keep `|` cannot appear unescaped in JSON strings, so it safely delimits canonical fields.
         let body = format!(
             "{}|{}|{}|{}|{}",
             input.model,
@@ -131,8 +124,6 @@ impl CacheKeyStrategy for ExactHashStrategy {
     }
 }
 
-// ── SystemPromptAwareStrategy ─────────────────────────────────────────────────
-
 /// Hash includes the resolved system prompt but ignores per-call metadata
 /// noise (tenant ID).
 ///
@@ -146,7 +137,7 @@ pub struct SystemPromptAwareStrategy;
 
 impl CacheKeyStrategy for SystemPromptAwareStrategy {
     fn key_for(&self, input: &CacheKeyInput<'_>) -> (u64, String) {
-        // Omit tenant_id so two tenants with the same prompt share a cache slot.
+        // ~keep Omit tenant_id here so tenant isolation can be handled by a higher layer.
         let body = format!(
             "{}|{}|{}|{}",
             input.model,
@@ -160,8 +151,6 @@ impl CacheKeyStrategy for SystemPromptAwareStrategy {
     }
 }
 
-// ── TenantScopedStrategy ──────────────────────────────────────────────────────
-
 /// Adds a tenant prefix so two tenants requesting the same prompt receive
 /// separate cache entries.
 ///
@@ -173,8 +162,7 @@ pub struct TenantScopedStrategy;
 
 impl CacheKeyStrategy for TenantScopedStrategy {
     fn key_for(&self, input: &CacheKeyInput<'_>) -> (u64, String) {
-        // Tenant prefix is included first so the same body under different
-        // tenants always produces a different key.
+        // ~keep Tenant prefix comes first so identical request bodies differ across tenants.
         let body = format!(
             "tenant:{}|{}|{}|{}|{}",
             input.tenant_id.unwrap_or("__global__"),
@@ -188,8 +176,6 @@ impl CacheKeyStrategy for TenantScopedStrategy {
         (hasher.finish(), body)
     }
 }
-
-// ── Tests ─────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -210,8 +196,6 @@ mod tests {
             system_prompt,
         }
     }
-
-    // ── ExactHashStrategy ─────────────────────────────────────────────────────
 
     #[test]
     fn exact_hash_strategy_is_deterministic() {
@@ -255,8 +239,6 @@ mod tests {
         assert_ne!(k1, k2, "exact hash must differentiate tenants");
     }
 
-    // ── SystemPromptAwareStrategy ─────────────────────────────────────────────
-
     #[test]
     fn system_prompt_aware_strategy_is_deterministic() {
         let s = SystemPromptAwareStrategy;
@@ -295,8 +277,6 @@ mod tests {
         assert_eq!(k1, k2, "system-prompt-aware strategy should ignore tenant_id");
     }
 
-    // ── TenantScopedStrategy ──────────────────────────────────────────────────
-
     #[test]
     fn tenant_scoped_strategy_is_deterministic() {
         let s = TenantScopedStrategy;
@@ -322,7 +302,6 @@ mod tests {
     fn tenant_scoped_strategy_no_tenant_uses_global_prefix() {
         let s = TenantScopedStrategy;
         let msgs = r#"[{"role":"user","content":"hi"}]"#;
-        // Both have no tenant — should be equal.
         let i1 = input("gpt-4", msgs, "{}", None, None);
         let i2 = input("gpt-4", msgs, "{}", None, None);
         let (k1, _) = s.key_for(&i1);
@@ -333,13 +312,8 @@ mod tests {
         );
     }
 
-    // ── Determinism across instances (process-restart stability) ──────────────
-
     #[test]
     fn cache_key_deterministic_across_invocations() {
-        // Ten independent ExactHashStrategy instances must all produce the same
-        // key and body for the same input.  This verifies that the fixed-seed
-        // hasher is stable regardless of when the hasher is constructed.
         let reference_input = input(
             "openai/gpt-4o",
             r#"[{"role":"user","content":"hello world"}]"#,
@@ -361,8 +335,6 @@ mod tests {
         }
     }
 
-    // ── Cross-strategy isolation ───────────────────────────────────────────────
-
     #[test]
     fn strategies_can_produce_different_keys_for_same_input() {
         let exact = ExactHashStrategy;
@@ -371,14 +343,9 @@ mod tests {
         let i = input("gpt-4", msgs, "{}", Some("acme"), None);
         let (ke, _) = exact.key_for(&i);
         let (kt, _) = tenant.key_for(&i);
-        // Exact and tenant-scoped strategies produce different bodies, so their
-        // keys may differ (hash of different strings).
-        // We assert the bodies differ since the prefixing changes the content.
         let (_, be) = exact.key_for(&i);
         let (_, bt) = tenant.key_for(&i);
         assert_ne!(be, bt, "bodies produced by different strategies must differ");
-        // Keys derived from different bodies will very likely differ too, but
-        // we cannot assert inequality absolutely (hash collisions, however rare).
-        let _ = (ke, kt); // suppress unused warning
+        let _ = (ke, kt);
     }
 }

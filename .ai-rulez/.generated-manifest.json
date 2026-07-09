@@ -1,18 +1,6 @@
 {
   "version": "1",
   "files": [
-    ".agents/agents/code-reviewer.md",
-    ".agents/agents/devops-engineer.md",
-    ".agents/agents/docs-writer.md",
-    ".agents/agents/ffi-engineer.md",
-    ".agents/agents/performance-engineer.md",
-    ".agents/agents/polyglot-architect.md",
-    ".agents/agents/release-engineer.md",
-    ".agents/agents/rust-core-engineer.md",
-    ".agents/agents/security-auditor.md",
-    ".agents/skills/alef/SKILL.md",
-    ".agents/skills/common-task-commands/SKILL.md",
-    ".agents/skills/quick-start/SKILL.md",
     ".claude/agents/code-reviewer.md",
     ".claude/agents/devops-engineer.md",
     ".claude/agents/docs-writer.md",
@@ -41,10 +29,8 @@
     ".codex/skills/alef/SKILL.md",
     ".codex/skills/common-task-commands/SKILL.md",
     ".codex/skills/quick-start/SKILL.md",
-    ".gemini/settings.json",
     ".mcp.json",
     "AGENTS.md",
-    "CLAUDE.md",
-    "GEMINI.md"
+    "CLAUDE.md"
   ]
 }

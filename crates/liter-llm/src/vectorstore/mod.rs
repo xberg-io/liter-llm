@@ -27,8 +27,6 @@ use std::time::SystemTime;
 
 use crate::error::Result;
 
-// ── VectorMetadata ────────────────────────────────────────────────────────────
-
 /// Metadata stored alongside each vector entry.
 #[cfg_attr(alef, alef(skip))]
 #[derive(Debug, Clone)]
@@ -55,8 +53,6 @@ pub struct VectorMetadata {
     pub extra: HashMap<String, String>,
 }
 
-// ── VectorMatch ───────────────────────────────────────────────────────────────
-
 /// A single result returned by [`VectorStore::search`].
 #[derive(Debug, Clone)]
 pub struct VectorMatch {
@@ -67,8 +63,6 @@ pub struct VectorMatch {
     /// Metadata associated with the matched vector.
     pub metadata: VectorMetadata,
 }
-
-// ── VectorStore trait ─────────────────────────────────────────────────────────
 
 /// Pluggable vector store for the semantic cache tier.
 ///

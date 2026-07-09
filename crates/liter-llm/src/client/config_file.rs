@@ -152,14 +152,9 @@ impl FileConfig {
             builder = builder.max_retries(r);
         }
 
-        // Extra headers: push validated headers directly to the builder's
-        // internal config.  We cannot use `builder.header()` in a loop because
-        // it consumes `self` and on `Err` the builder is lost.  Since we are
-        // in the same crate, we can access `pub(crate)` fields.
         #[cfg(any(feature = "native-http", feature = "wasm-http"))]
         if let Some(headers) = self.extra_headers {
             for (k, v) in headers {
-                // Validate header name and value before pushing.
                 if reqwest::header::HeaderName::from_bytes(k.as_bytes()).is_ok()
                     && reqwest::header::HeaderValue::from_str(&v).is_ok()
                 {
@@ -168,10 +163,8 @@ impl FileConfig {
             }
         }
 
-        // Tower middleware configs
         #[cfg(feature = "tower")]
         {
-            // Cache
             if let Some(cache) = self.cache {
                 use crate::tower::{CacheBackend, CacheConfig};
                 let backend = match cache.backend.as_deref() {
@@ -191,7 +184,6 @@ impl FileConfig {
                 });
             }
 
-            // Budget
             if let Some(budget) = self.budget {
                 use crate::tower::{BudgetConfig, Enforcement};
                 builder = builder.budget(BudgetConfig {
@@ -204,12 +196,10 @@ impl FileConfig {
                 });
             }
 
-            // Cooldown
             if let Some(secs) = self.cooldown_secs {
                 builder = builder.cooldown(Duration::from_secs(secs));
             }
 
-            // Rate limit
             if let Some(rl) = self.rate_limit {
                 use crate::tower::RateLimitConfig;
                 builder = builder.rate_limit(RateLimitConfig {
@@ -219,17 +209,14 @@ impl FileConfig {
                 });
             }
 
-            // Health check
             if let Some(secs) = self.health_check_secs {
                 builder = builder.health_check(Duration::from_secs(secs));
             }
 
-            // Cost tracking
             if let Some(ct) = self.cost_tracking {
                 builder = builder.cost_tracking(ct);
             }
 
-            // Tracing
             if let Some(t) = self.tracing {
                 builder = builder.tracing(t);
             }

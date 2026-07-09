@@ -90,8 +90,6 @@ impl Provider for GoogleAiProvider {
     }
 }
 
-// ── Unit tests ────────────────────────────────────────────────────────────────
-
 #[cfg(test)]
 mod tests {
     use serde_json::json;
@@ -103,15 +101,11 @@ mod tests {
         GoogleAiProvider
     }
 
-    // ── base_url ──────────────────────────────────────────────────────────────
-
     #[test]
     fn base_url_is_generative_language_api() {
         let p = provider();
         assert_eq!(p.base_url(), "https://generativelanguage.googleapis.com/v1beta");
     }
-
-    // ── auth_header ──────────────────────────────────────────────────────────
 
     #[test]
     fn auth_header_uses_x_goog_api_key() {
@@ -120,8 +114,6 @@ mod tests {
         assert_eq!(name.as_ref(), "x-goog-api-key");
         assert_eq!(value.as_ref(), "test-key");
     }
-
-    // ── model matching ───────────────────────────────────────────────────────
 
     #[test]
     fn matches_gemini_prefix() {
@@ -139,8 +131,6 @@ mod tests {
         assert_eq!(p.strip_model_prefix("google_ai/gemini-pro"), "gemini-pro");
         assert_eq!(p.strip_model_prefix("gemini-2.0-flash"), "gemini-2.0-flash");
     }
-
-    // ── build_url ─────────────────────────────────────────────────────────────
 
     #[test]
     fn build_url_chat_completions() {
@@ -169,8 +159,6 @@ mod tests {
         assert!(url.ends_with("?alt=sse"));
         assert!(url.contains(":generateContent"));
     }
-
-    // ── transform_request (delegates to shared Gemini logic) ─────────────────
 
     #[test]
     fn transform_request_basic_chat() {
@@ -230,8 +218,6 @@ mod tests {
         assert_eq!(body["cachedContent"], "cachedContents/abc123");
     }
 
-    // ── transform_response (delegates to shared Gemini logic) ────────────────
-
     #[test]
     fn transform_response_basic() {
         let p = provider();
@@ -258,8 +244,6 @@ mod tests {
         assert_eq!(body["usage"]["prompt_tokens"], 5);
         assert_eq!(body["usage"]["completion_tokens"], 4);
     }
-
-    // ── parse_stream_event (delegates to shared Gemini logic) ────────────────
 
     #[test]
     fn parse_stream_event_empty_returns_none() {

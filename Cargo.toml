@@ -20,34 +20,18 @@ exclude = [
 resolver = "2"
 
 [workspace.lints.clippy]
-# --- Deny: correctness -------------------------------------------------------
-# Catches logic bugs that are almost certainly wrong.
 correctness = { level = "deny", priority = -1 }
-# --- Deny: suspicious --------------------------------------------------------
-# Catches patterns that are likely unintentional or misleading.
 suspicious = { level = "deny", priority = -1 }
-# --- Deny: perf --------------------------------------------------------------
-# Catches avoidable performance regressions.
 perf = { level = "deny", priority = -1 }
-# --- Warn: style -------------------------------------------------------------
-# Enforces consistent, idiomatic Rust — warn rather than deny so style issues
-# don't block non-style PRs.
 style = { level = "warn", priority = -1 }
-# --- Explicit allows ---------------------------------------------------------
-# unused-unit: generated FFI bridge shims (alef/swift-bridge) emit `-> ()`.
-# Denying this would require patching generated output on every regen.
+# ~keep unused-unit: generated FFI bridge shims (alef/swift-bridge) emit `-> ()`.
+# ~keep Denying this would require patching generated output on every regen.
 unused-unit = "allow"
-# needless-pass-by-value: public API takes owned values for FFI-friendliness;
-# changing signatures would break cross-language ABI stability.
+# ~keep needless-pass-by-value: public API takes owned values for FFI-friendliness;
+# ~keep changing signatures would break cross-language ABI stability.
 needless-pass-by-value = "allow"
-# module-name-repetitions: `LlmError`, `LlmClient` etc. are idiomatic in a
-# library crate named `liter-llm` — the repetition aids discoverability.
 module-name-repetitions = "allow"
-# missing-errors-doc: not all public functions are public API in the
-# rustdoc sense; requiring `# Errors` on every fn that returns `Result`
-# is too noisy during active development.
 missing-errors-doc = "allow"
-# missing-panics-doc: same rationale as missing-errors-doc.
 missing-panics-doc = "allow"
 
 [workspace.lints.rust]
@@ -69,7 +53,6 @@ anyhow = "1"
 arc-swap = "1"
 async-trait = "0.1"
 
-# Secret backends
 aws-config = { version = "1", default-features = false, features = ["rustls"] }
 aws-sdk-secretsmanager = { version = "1", default-features = false, features = ["rustls"] }
 
@@ -79,7 +62,6 @@ base64 = "0.22"
 bytes = "1"
 chrono = { version = "0.4", default-features = false, features = ["std"] }
 
-# CLI (for tools)
 clap = { version = "4", features = ["derive", "env"] }
 dashmap = "6"
 etcd-client = { version = "0.19", default-features = false }
@@ -91,11 +73,8 @@ http = "1"
 jsonschema = "0.46"
 jsonwebtoken = { version = "10", default-features = false, features = ["use_pem"] }
 
-# Binding frameworks
 magnus = "0.8"
 memchr = "2"
-# Optional global allocators — selected via `mimalloc`/`jemalloc` features on
-# `liter-llm-cli`.  Off by default; absence means the system allocator is used.
 mimalloc = { version = "0.1", default-features = false }
 napi = { version = "3", features = ["napi4", "serde-json", "async"] }
 napi-build = "2"
@@ -113,7 +92,7 @@ pyo3 = { version = "0.29", features = ["abi3-py310", "multiple-pymethods"] }
 pyo3-async-runtimes = { version = "0.29", features = ["tokio-runtime"] }
 rayon = "1"
 rb-sys = "0.9"
-# Async / HTTP — TLS-agnostic base only; each crate adds TLS features target-conditionally
+# ~keep Async / HTTP: TLS-agnostic base only; each crate adds TLS features target-conditionally.
 reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "multipart", "form"] }
 rmcp = { version = "2.1", features = [
     "server",
@@ -126,10 +105,8 @@ rust_decimal = { version = "1", features = ["serde"] }
 rustler = "0.38"
 rustls = { version = "0.23", default-features = false, features = ["ring", "logging", "std", "tls12"] }
 
-# Serialization
 schemars = "1"
 
-# Security
 secrecy = { version = "0.10", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -138,17 +115,13 @@ sha2 = "0.11"
 subtle = "2.6"
 tempfile = "3"
 
-# Error handling
 thiserror = "2"
 tikv-jemallocator = { version = "0.7" }
 tokenizers = { version = "0.23", default-features = false, features = ["http", "fancy-regex"] }
 tokio = { version = "1", features = ["full"] }
-# Use `rustls-tls-native-roots` so tokio-tungstenite does NOT pull
-# native-tls → openssl-sys (which breaks brew bottle builds on Linux runners
-# without `openssl-dev`, and would also force the same OpenSSL dep on every
-# downstream consumer of liter-llm-proxy). The rest of the stack already uses
-# rustls (reqwest, etc.); pulling native-tls just for tungstenite was the
-# only thing keeping openssl-sys in the dep tree.
+# ~keep Use `rustls-tls-native-roots` so tokio-tungstenite does not pull
+# ~keep native-tls -> openssl-sys, which breaks Linux brew bottles without
+# ~keep `openssl-dev` and would force OpenSSL on downstream liter-llm-proxy users.
 tokio-tungstenite = { version = "0.29", default-features = false, features = [
     "connect",
     "handshake",

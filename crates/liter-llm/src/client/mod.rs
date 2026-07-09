@@ -32,7 +32,6 @@ use crate::types::{
     ModelsListResponse,
 };
 
-// DefaultClient and its LlmClient impl require reqwest + tokio.
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 use crate::auth::Credential;
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
@@ -550,13 +549,8 @@ impl DefaultClient {
     /// Returns `LiterLlmError::Http` if the underlying HTTP client cannot be constructed.
     pub fn new(config: ClientConfig, model_hint: Option<&str>) -> Result<Self> {
         let provider = build_provider(&config, model_hint);
-        // Validate configuration eagerly so callers get a clear error at
-        // construction time rather than on the first request.
         provider.validate()?;
 
-        // Auto-load the API key from the environment when no explicit key was
-        // provided and `load_env` is enabled.  Skipped on WASM where
-        // `std::env::var` is unavailable.
         #[cfg(not(target_arch = "wasm32"))]
         let mut config = config;
         #[cfg(not(target_arch = "wasm32"))]
@@ -577,14 +571,8 @@ impl DefaultClient {
             }
         }
 
-        // Auto-install VertexAdcCredentialProvider when the resolved provider is
-        // Vertex AI and the caller supplied neither an explicit api_key nor a
-        // credential_provider. The ADC provider obtains short-lived OAuth2 tokens
-        // from the GKE / Compute Engine metadata server (or via gcp_auth's ADC
-        // discovery chain for local development), which is the canonical auth
-        // path for Workload Identity deployments. Callers that supply a
-        // pre-obtained access token via api_key or explicitly set a
-        // credential_provider continue to take precedence.
+        // ~keep Auto-install Vertex ADC only when Vertex AI has no explicit api_key or credential_provider.
+        // ~keep Explicit tokens and credential providers stay authoritative over Workload Identity defaults.
         #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
         if config.credential_provider.is_none()
             && config.api_key.expose_secret().is_empty()
@@ -593,10 +581,6 @@ impl DefaultClient {
             config.credential_provider = Some(Arc::new(crate::auth::vertex_adc::VertexAdcCredentialProvider::new()));
         }
 
-        // Build the header map from pre-validated headers stored in the config.
-        // The builder already validated each header name/value, so these
-        // conversions are expected to succeed; return a proper error if they
-        // somehow fail rather than panicking.
         let mut header_map = reqwest::header::HeaderMap::new();
         for (k, v) in config.headers() {
             let name =
@@ -615,12 +599,8 @@ impl DefaultClient {
             #[cfg(feature = "native-http")]
             crate::ensure_crypto_provider();
             let builder = reqwest::Client::builder().default_headers(header_map);
-            // Install the guarded DNS resolver when the outbound policy is not
-            // Off.  This provides defense-in-depth against DNS rebinding: even
-            // if a hostname initially passed the sync registration-time check,
-            // the resolver re-validates every resolved address at connect time.
-            // WASM uses the browser fetch API; DNS happens in the browser and
-            // cannot be intercepted from Rust, so this is native-only.
+            // ~keep GuardedResolver re-validates resolved addresses to defend against DNS rebinding.
+            // ~keep WASM DNS happens in browser fetch, so Rust can only enforce native resolver guards.
             #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
             let builder = {
                 if !matches!(crate::provider::current_policy(), crate::provider::OutboundPolicy::Off) {
@@ -629,26 +609,17 @@ impl DefaultClient {
                     builder
                 }
             };
-            // reqwest's WASM backend uses the browser fetch API and does not
-            // support per-client timeout configuration.
             #[cfg(not(target_arch = "wasm32"))]
             let builder = builder.timeout(config.timeout);
-            // Apply transport config (connection pool, TCP keepalive, HTTP
-            // version negotiation).  WASM uses the browser fetch API which
-            // controls these settings independently.
             #[cfg(not(target_arch = "wasm32"))]
             let builder = config.transport.apply_to_builder(builder);
             builder.build().map_err(LiterLlmError::from)?
         };
 
-        // Pre-compute the auth header once at construction time to avoid
-        // `format!("Bearer {key}")` on every request.
         let cached_auth_header = provider
             .auth_header(config.api_key.expose_secret())
             .map(|(name, value)| (name.into_owned(), value.into_owned()));
 
-        // Pre-compute static extra headers once to avoid `&'static str` ->
-        // `String` conversion on every request.
         let cached_extra_headers = provider
             .extra_headers()
             .iter()
@@ -670,21 +641,17 @@ impl DefaultClient {
     /// construction-time default, the detected provider is returned.  Otherwise
     /// the construction-time provider is reused (zero allocation).
     fn resolve_provider_for_model(&self, model: &str) -> Arc<dyn Provider> {
-        // When a base_url override is set, always use the construction-time
-        // provider — the user explicitly pointed the client at a specific
-        // endpoint (e.g. a mock server or custom proxy).
+        // ~keep A base_url override pins the construction-time provider for mock/proxy endpoints.
         if self.config.base_url.is_some() {
             return Arc::clone(&self.provider);
         }
-        // If the construction-time provider already matches this model, keep it.
+        // ~keep Keep the construction-time provider when it already matches the model.
         if self.provider.matches_model(model) {
             return Arc::clone(&self.provider);
         }
-        // Attempt per-request detection from the model prefix.
         if let Some(detected) = provider::detect_provider(model) {
             return Arc::from(detected);
         }
-        // Fall back to the construction-time provider.
         Arc::clone(&self.provider)
     }
 
@@ -701,7 +668,7 @@ impl DefaultClient {
                 Credential::AwsCredentials { .. } => Ok(None),
             }
         } else {
-            // Re-compute auth header for the resolved provider.
+            // ~keep Auth headers must be recomputed after per-request provider resolution.
             Ok(prov
                 .auth_header(self.config.api_key.expose_secret())
                 .map(|(name, value)| (name.into_owned(), value.into_owned())))
@@ -753,8 +720,7 @@ impl DefaultClient {
 
         let prov = self.resolve_provider_for_model(model);
         let bare_model = prov.strip_model_prefix(model).to_owned();
-        // Use build_url so providers like Azure and Bedrock can embed the model
-        // name or deployment identifier into the URL.
+        // ~keep Providers such as Azure and Bedrock embed model/deployment identifiers in URLs.
         let endpoint_path = endpoint_fn(prov.as_ref());
         let url = prov.build_url(endpoint_path, &bare_model);
 
@@ -767,9 +733,7 @@ impl DefaultClient {
         }
         prov.transform_request(&mut body)?;
 
-        // Serialize exactly once — the same bytes are used for signing and for
-        // the HTTP request body.  `Bytes` is reference-counted, so cloning on
-        // retry is a zero-copy bump.
+        // ~keep Serialize once so signing bytes and request body bytes are identical.
         let body_bytes = bytes::Bytes::from(serde_json::to_vec(&body)?);
 
         Ok(PreparedRequest {
@@ -847,7 +811,6 @@ fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Arc<dyn Pr
     if let Some(model) = model_hint
         && let Some(p) = provider::detect_provider(model)
     {
-        // detect_provider returns Box<dyn Provider>; convert to Arc.
         return Arc::from(p);
     }
 
@@ -858,7 +821,7 @@ fn build_provider(config: &ClientConfig, model_hint: Option<&str>) -> Arc<dyn Pr
 impl LlmClient for DefaultClient {
     fn chat(&self, req: ChatCompletionRequest) -> BoxFuture<'_, Result<ChatCompletionResponse>> {
         Box::pin(async move {
-            // Pass stream=false so providers can inspect the flag in transform_request.
+            // ~keep Pass stream=false so providers can transform non-streaming chat correctly.
             let prepared = self.prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(false))?;
 
             let auth_header = self
@@ -893,11 +856,10 @@ impl LlmClient for DefaultClient {
         req: ChatCompletionRequest,
     ) -> BoxFuture<'_, Result<BoxStream<'static, Result<ChatCompletionChunk>>>> {
         Box::pin(async move {
-            // Use prepare_request for validation, model-prefix stripping, and
-            // transform_request — then override the URL via build_stream_url.
+            // ~keep Prepare first for validation/transforms, then override with provider stream URL.
             let prepared = self.prepare_request(&req, |p| p.chat_completions_path(), &req.model, Some(true))?;
 
-            // Always use build_stream_url for the streaming endpoint.
+            // ~keep Streaming endpoints can differ from non-streaming provider URLs.
             let bare_model = prepared.provider.strip_model_prefix(&req.model);
             let url = prepared
                 .provider
@@ -951,7 +913,7 @@ impl LlmClient for DefaultClient {
 
     fn embed(&self, req: EmbeddingRequest) -> BoxFuture<'_, Result<EmbeddingResponse>> {
         Box::pin(async move {
-            // Embeddings have no stream flag; pass None so it is not inserted.
+            // ~keep Embeddings have no stream flag; passing None prevents inserting one.
             let prepared = self.prepare_request(&req, |p| p.embeddings_path(), &req.model, None)?;
 
             let auth_header = self
@@ -983,7 +945,7 @@ impl LlmClient for DefaultClient {
 
     fn list_models(&self) -> BoxFuture<'_, Result<ModelsListResponse>> {
         Box::pin(async move {
-            // list_models has no model string — use the construction-time provider.
+            // ~keep list_models has no model string, so use the construction-time provider.
             let url = self.provider.build_url(self.provider.models_path(), "");
             let auth_header = self.resolve_auth_header().await?;
             let auth = auth_header.as_ref().map(str_pair);
@@ -1611,7 +1573,6 @@ impl FileClient for DefaultClient {
             let all_headers = self.all_headers("POST", &url, &serde_json::Value::Null, &[]);
             let extra: Vec<(&str, &str)> = all_headers.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
 
-            // Decode the base64-encoded file data into raw bytes for the multipart upload.
             use base64::Engine;
             let file_bytes = base64::engine::general_purpose::STANDARD
                 .decode(&req.file)
@@ -1843,8 +1804,6 @@ pub async fn wait_for_batch_impl<R: BatchRetriever>(
     batch_id: &str,
     config: WaitForBatchConfig,
 ) -> std::result::Result<BatchObject, BatchWaitError> {
-    // `tokio::time` requires the `native-http` feature, so on `wasm-http` builds
-    // we fall back to `web_time::Instant` + `gloo_timers::future::sleep`.
     #[cfg(not(target_arch = "wasm32"))]
     let started = tokio::time::Instant::now();
     #[cfg(target_arch = "wasm32")]
@@ -1977,10 +1936,6 @@ mod build_provider_tests {
 
     #[test]
     fn azure_model_with_per_model_base_url_uses_azure_provider() {
-        // Regression test for issue #83: when `[[models]]` pins a per-model
-        // `base_url` AND the provider_model is azure/..., the resolved
-        // provider must be Azure (which embeds the deployment name and
-        // ?api-version=… in the URL), NOT a naive OpenAI-compatible URL.
         let config = ClientConfigBuilder::new("test-key")
             .base_url("https://resourceA.cognitiveservices.azure.com")
             .build();
@@ -1995,8 +1950,6 @@ mod build_provider_tests {
 
     #[test]
     fn non_azure_model_with_base_url_uses_openai_compatible() {
-        // The Azure carve-out must not regress the LM Studio / Ollama / vLLM
-        // path, which legitimately uses the naive base_url + endpoint shape.
         let config = ClientConfigBuilder::new("test-key")
             .base_url("http://localhost:11434/v1")
             .build();
@@ -2010,13 +1963,8 @@ mod build_provider_tests {
     fn no_base_url_falls_through_to_detect_provider() {
         let config = ClientConfigBuilder::new("test-key").build();
         let p = build_provider(&config, Some("azure/gpt-4o"));
-        // Without an explicit per-model base_url, Azure provider is still
-        // detected — but base_url comes from env vars (likely empty in CI),
-        // so validate() would fail. We only assert the name here.
         assert_eq!(p.name(), "azure");
     }
-
-    // ── Vertex AI ADC auto-install ───────────────────────────────────────────
 
     /// When the resolved provider is Vertex AI and the caller supplied neither
     /// an explicit `api_key` nor a `credential_provider`, `DefaultClient::new`
@@ -2027,8 +1975,8 @@ mod build_provider_tests {
     #[test]
     #[serial_test::serial]
     fn vertex_ai_auto_installs_adc_provider_when_no_credentials_configured() {
-        // SAFETY: serial_test::serial guarantees no other test mutates these
-        // env vars concurrently. We restore the prior values on drop below.
+        // ~keep SAFETY: serial_test::serial prevents concurrent env mutation.
+        // ~keep Prior values are restored by the guard below.
         let prior_project = std::env::var("VERTEXAI_PROJECT").ok();
         let prior_location = std::env::var("VERTEXAI_LOCATION").ok();
         struct EnvGuard {
@@ -2037,7 +1985,7 @@ mod build_provider_tests {
         }
         impl Drop for EnvGuard {
             fn drop(&mut self) {
-                // SAFETY: single-threaded restoration during test teardown.
+                // ~keep SAFETY: single-threaded restoration during test teardown.
                 unsafe {
                     match &self.prior_project {
                         Some(v) => std::env::set_var("VERTEXAI_PROJECT", v),
@@ -2054,7 +2002,7 @@ mod build_provider_tests {
             prior_project,
             prior_location,
         };
-        // SAFETY: serial_test::serial ensures exclusive access.
+        // ~keep SAFETY: serial_test::serial ensures exclusive env access.
         unsafe {
             std::env::set_var("VERTEXAI_PROJECT", "test-project");
             std::env::set_var("VERTEXAI_LOCATION", "us-central1");
@@ -2162,7 +2110,6 @@ mod build_provider_tests {
             "auto-install must not overwrite an explicitly-supplied credential_provider"
         );
 
-        // Sanity check: the explicit provider still resolves to its static token.
         let rt = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()

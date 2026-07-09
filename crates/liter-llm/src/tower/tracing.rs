@@ -72,12 +72,8 @@ where
 
     fn call(&mut self, req: LlmRequest) -> Self::Future {
         let operation_name = req.operation_name();
-        // Borrow the model string from the request; split_once gives a &str
-        // slice so we avoid an extra allocation for the provider prefix.
         let model_str = req.model().unwrap_or("");
         let system = model_str.split_once('/').map_or("", |(prefix, _)| prefix);
-        // Clone once so the span owns the string values (required by tracing
-        // macros, which store field values inside the span).
         let model = model_str.to_owned();
 
         let span = tracing::info_span!(
@@ -96,16 +92,10 @@ where
 
         let fut = self.inner.call(req);
 
-        // Use `.instrument(span)` rather than `span.enter()` in the async
-        // block.  `span.enter()` in an async context is incorrect because the
-        // guard is dropped when the future suspends at an await point, causing
-        // the span to close prematurely.  `Instrument` attaches the span to
-        // the future so it is entered and exited correctly around each poll.
         Box::pin(
             async move {
                 match fut.await {
                     Ok(resp) => {
-                        // Record usage statistics and response metadata from the response when available.
                         record_response(&tracing::Span::current(), &resp);
                         Ok(resp)
                     }
@@ -153,7 +143,6 @@ fn record_response(span: &tracing::Span, resp: &LlmResponse) {
         LlmResponse::Embed(r) => {
             span.record("gen_ai.response.model", r.model.as_str());
         }
-        // Other response variants do not carry aggregated usage or response metadata.
         LlmResponse::ChatStream(_)
         | LlmResponse::ListModels(_)
         | LlmResponse::ImageGenerate(_)
@@ -165,8 +154,6 @@ fn record_response(span: &tracing::Span, resp: &LlmResponse) {
         | LlmResponse::Ocr(_) => {}
     }
 
-    // Record usage tokens from the shared accessor — avoids duplicating the
-    // match arms that extract `Option<&Usage>` from each response variant.
     if let Some(usage) = resp.usage() {
         span.record("gen_ai.usage.input_tokens", usage.prompt_tokens);
         span.record("gen_ai.usage.output_tokens", usage.completion_tokens);
@@ -180,9 +167,7 @@ fn record_response(span: &tracing::Span, resp: &LlmResponse) {
 /// reason, the static `&str` is returned directly as an owned `String` without
 /// an intermediate `Vec` or repeated `push_str` calls.
 fn finish_reasons_str<'a>(reasons: impl Iterator<Item = Option<&'a FinishReason>>) -> String {
-    // Fast path: single reason (the overwhelmingly common case).
     let first = reasons.filter_map(|r| r.map(finish_reason_name));
-    // We need to re-bind after filter_map, so use a peekable to check length.
     let mut iter = first.peekable();
     let Some(first_name) = iter.next() else {
         return String::new();
@@ -190,7 +175,6 @@ fn finish_reasons_str<'a>(reasons: impl Iterator<Item = Option<&'a FinishReason>
     if iter.peek().is_none() {
         return first_name.to_owned();
     }
-    // Multi-choice path: fold remaining names with space separator.
     iter.fold(first_name.to_owned(), |mut acc, name| {
         acc.push(' ');
         acc.push_str(name);

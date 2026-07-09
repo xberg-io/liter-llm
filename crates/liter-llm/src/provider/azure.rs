@@ -99,7 +99,7 @@ impl Provider for AzureProvider {
     }
 
     fn auth_header<'a>(&'a self, api_key: &'a str) -> Option<(Cow<'static, str>, Cow<'a, str>)> {
-        // Azure uses `api-key`, not `Authorization: Bearer`.
+        // ~keep Azure uses `api-key`, not Authorization: Bearer.
         Some((Cow::Borrowed("api-key"), Cow::Borrowed(api_key)))
     }
 
@@ -142,13 +142,8 @@ impl Provider for AzureProvider {
     /// before any request is fired.
     fn build_url(&self, endpoint_path: &str, model: &str) -> String {
         if self.base_url.is_empty() {
-            // validate() should have caught this; return a broken URL so the
-            // HTTP layer surfaces a clear connection error rather than silently
-            // hitting the wrong endpoint.
             return endpoint_path.to_owned();
         }
-        // If the base URL already contains the deployments path (e.g. it was
-        // supplied pre-formatted), avoid duplicating it.
         if self.base_url.contains("/openai/deployments/") {
             return format!("{}{}?api-version={}", self.base_url, endpoint_path, self.api_version);
         }
@@ -168,18 +163,16 @@ impl Provider for AzureProvider {
     /// [`build_url`]: AzureProvider::build_url
     fn transform_request(&self, body: &mut serde_json::Value) -> Result<()> {
         if let Some(obj) = body.as_object_mut() {
-            // Capture the model name before removing it for O-series detection.
             let model_name = obj.get("model").and_then(|m| m.as_str()).unwrap_or("").to_owned();
 
             obj.remove("model");
 
-            // O-series model handling (o1, o3, o4).
             if is_o_series_model(&model_name) {
-                // Azure rejects temperature and top_p for O-series reasoning models.
+                // ~keep Azure rejects temperature and top_p for O-series reasoning models.
                 obj.remove("temperature");
                 obj.remove("top_p");
 
-                // o1 models do not support streaming in some Azure API versions.
+                // ~keep o1 models do not support streaming in some Azure API versions.
                 if model_name == "o1" || model_name.starts_with("o1-") || model_name.starts_with("o1.") {
                     obj.remove("stream");
                     obj.remove("stream_options");
@@ -201,18 +194,13 @@ impl Provider for AzureProvider {
     /// does have `content_filter_results`, we ensure the response still has
     /// a valid structure.
     fn transform_response(&self, body: &mut serde_json::Value) -> Result<()> {
-        // Azure content filtering: check each choice for filter results.
         if let Some(choices) = body.pointer("/choices").and_then(|c| c.as_array()) {
             for choice in choices {
                 if let Some(filter_results) = choice.get("content_filter_results") {
-                    // If any filter category has `filtered: true` and finish_reason
-                    // is already "content_filter", the response maps correctly.
-                    // Check for a missing message on blocked responses.
                     let is_filtered = choice.get("finish_reason").and_then(|fr| fr.as_str()) == Some("content_filter");
 
                     if is_filtered && choice.get("message").is_none() {
-                        // Inject a minimal message so downstream deserialization
-                        // does not fail on a missing `message` field.
+                        // ~keep Azure filtered responses can omit `message`; inject one for deserialization.
                         if let Some(choices_arr) = body.get_mut("choices").and_then(|c| c.as_array_mut())
                             && let Some(choice_obj) = choices_arr.first_mut().and_then(|c| c.as_object_mut())
                         {
@@ -228,8 +216,7 @@ impl Provider for AzureProvider {
                         break;
                     }
 
-                    // Preserve filter_results metadata: Azure already includes it
-                    // in the response and callers can inspect it via raw JSON.
+                    // ~keep Preserve Azure filter_results metadata for raw JSON inspection.
                     let _ = filter_results;
                 }
             }
@@ -243,7 +230,6 @@ impl Provider for AzureProvider {
 /// Matches: `o1`, `o1-preview`, `o1-mini`, `o3`, `o3-mini`, `o4`, `o4-mini`,
 /// and any variant with a dot suffix (e.g. `o3.5`).
 fn is_o_series_model(model: &str) -> bool {
-    // Match "o1", "o3", "o4" exactly or with a separator (-, .)
     for prefix in &["o1", "o3", "o4"] {
         if model == *prefix {
             return true;
@@ -256,8 +242,6 @@ fn is_o_series_model(model: &str) -> bool {
     }
     false
 }
-
-// ── Unit tests ───────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -303,17 +287,13 @@ mod tests {
 
     #[test]
     fn build_url_with_trailing_slash_stripped() {
-        // Simulate construction with a pre-stripped base_url (new() handles this).
         let provider = make_provider("https://myresource.openai.azure.com", "2024-10-21");
         let url = provider.build_url("/chat/completions", "gpt-4");
-        // Should not contain double slashes.
         assert!(!url.contains("//openai"), "double slash in url: {url}");
     }
 
     #[test]
     fn build_url_already_contains_deployments_path() {
-        // When base_url already contains /openai/deployments/{name}, do not
-        // insert the path fragment a second time.
         let provider = make_provider(
             "https://myresource.openai.azure.com/openai/deployments/gpt-4",
             "2025-02-01-preview",
@@ -333,7 +313,6 @@ mod tests {
     fn build_url_empty_base_returns_fallback() {
         let provider = make_provider("", "2024-10-21");
         let url = provider.build_url("/chat/completions", "gpt-4");
-        // Falls back to just the endpoint path — clearly broken, not a valid URL.
         assert_eq!(url, "/chat/completions");
     }
 
@@ -347,7 +326,6 @@ mod tests {
         });
         provider.transform_request(&mut body).expect("transform should succeed");
         assert!(body.get("model").is_none(), "model should be removed from body");
-        // Other fields must be preserved.
         assert!(body.get("messages").is_some());
         assert!(body.get("temperature").is_some());
     }
@@ -356,7 +334,6 @@ mod tests {
     fn transform_request_non_object_body_is_noop() {
         let provider = make_provider("https://myresource.openai.azure.com", "2024-10-21");
         let mut body = json!("not an object");
-        // Must not panic or return an error.
         assert!(provider.transform_request(&mut body).is_ok());
     }
 
@@ -383,8 +360,6 @@ mod tests {
 
     #[test]
     fn explicit_base_url_and_api_version_are_stored() {
-        // Test the constructor's field assignment directly, bypassing env vars
-        // to avoid thread-unsafe env mutation in parallel test runs.
         let provider = make_provider("https://test.openai.azure.com", "2099-01-01");
         assert_eq!(provider.base_url, "https://test.openai.azure.com");
         assert_eq!(provider.api_version, "2099-01-01");
@@ -392,8 +367,6 @@ mod tests {
 
     #[test]
     fn default_api_version_is_preview() {
-        // Verify the default api_version matches what `new()` would set when
-        // the AZURE_API_VERSION env var is absent.
         let provider = make_provider("https://test.openai.azure.com", "2025-02-01-preview");
         assert_eq!(provider.api_version, "2025-02-01-preview");
     }
@@ -420,8 +393,6 @@ mod tests {
         let (name, _value) = provider.auth_header("test-key").expect("should return Some");
         assert_eq!(name.as_ref(), "api-key");
     }
-
-    // ── O-series model handling ──────────────────────────────────────────────
 
     #[test]
     fn is_o_series_model_detection() {
@@ -452,21 +423,17 @@ mod tests {
         });
         provider.transform_request(&mut body).expect("transform should succeed");
 
-        // model removed (standard Azure behavior)
         assert!(body.get("model").is_none());
-        // temperature and top_p removed for O-series
         assert!(
             body.get("temperature").is_none(),
             "temperature should be removed for O-series"
         );
         assert!(body.get("top_p").is_none(), "top_p should be removed for O-series");
-        // reasoning_effort preserved
         assert_eq!(
             body.get("reasoning_effort")
                 .expect("reasoning_effort should be present"),
             "high"
         );
-        // messages preserved
         assert!(body.get("messages").is_some());
     }
 
@@ -503,7 +470,6 @@ mod tests {
         });
         provider.transform_request(&mut body).expect("transform should succeed");
 
-        // o3 supports streaming, stream should be kept
         assert!(body.get("stream").is_some(), "stream should remain for o3");
     }
 
@@ -527,8 +493,6 @@ mod tests {
         assert!(body.get("top_p").is_some(), "top_p should be kept for non-O-series");
         assert!(body.get("stream").is_some(), "stream should be kept for non-O-series");
     }
-
-    // ── Content filtering response handling ──────────────────────────────────
 
     #[test]
     fn transform_response_passthrough_normal() {
@@ -566,7 +530,6 @@ mod tests {
         provider
             .transform_response(&mut body)
             .expect("transform should succeed");
-        // Message already present, so no injection needed.
         assert_eq!(body["choices"][0]["finish_reason"], "content_filter");
         assert!(body["choices"][0]["message"].is_object());
     }
@@ -587,7 +550,6 @@ mod tests {
         provider
             .transform_response(&mut body)
             .expect("transform should succeed");
-        // Should inject a minimal message for blocked responses.
         let message = &body["choices"][0]["message"];
         assert_eq!(message["role"], "assistant");
         assert!(message["content"].is_null());
@@ -617,13 +579,8 @@ mod tests {
 
     #[test]
     fn with_base_url_build_url_routes_through_azure_deployment_format() {
-        // Regression test for issue #83 — per-model `base_url` must produce
-        // the Azure URL shape, not a naive concat used by generic OpenAI-
-        // compatible providers.
         let p = AzureProvider::with_base_url("https://resourceA.cognitiveservices.azure.com");
         let url = p.build_url("/chat/completions", "gpt-5-mini");
-        // Must embed deployment name AND ?api-version=… — both missing in the
-        // pre-fix behaviour where the override was treated as OpenAI-compatible.
         assert!(
             url.starts_with("https://resourceA.cognitiveservices.azure.com/openai/deployments/gpt-5-mini/chat/completions?api-version="),
             "url = {url}"

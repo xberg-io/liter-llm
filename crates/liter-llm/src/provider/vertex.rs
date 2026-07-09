@@ -146,7 +146,6 @@ impl Provider for VertexAiProvider {
     }
 
     fn auth_header<'a>(&'a self, api_key: &'a str) -> Option<(Cow<'static, str>, Cow<'a, str>)> {
-        // Vertex AI requires an OAuth2 Bearer token.
         Some((Cow::Borrowed("Authorization"), Cow::Owned(format!("Bearer {api_key}"))))
     }
 
@@ -166,7 +165,6 @@ impl Provider for VertexAiProvider {
     fn build_url(&self, endpoint_path: &str, model: &str) -> String {
         let base = self.base_url();
         if base.is_empty() {
-            // Caller must supply a base_url; will fail at validate() / HTTP layer.
             return String::new();
         }
         let base = base.trim_end_matches('/');
@@ -180,8 +178,6 @@ impl Provider for VertexAiProvider {
     }
 
     fn transform_request(&self, body: &mut serde_json::Value) -> Result<()> {
-        // Vertex AI `:predict` endpoint uses a different embed format than
-        // Google AI's `:embedContent`.
         if body.get("input").is_some() && body.get("messages").is_none() {
             return transform_vertex_embed_request(body);
         }
@@ -210,11 +206,6 @@ impl Provider for VertexAiProvider {
     }
 }
 
-// ── Shared Gemini transform functions ────────────────────────────────────────
-//
-// These are `pub(crate)` so that both `VertexAiProvider` and `GoogleAiProvider`
-// can reuse the same Gemini request/response translation logic.
-
 /// Convert an OpenAI-style chat request to Gemini `generateContent` format.
 ///
 /// Key translations:
@@ -232,15 +223,10 @@ impl Provider for VertexAiProvider {
 pub(crate) fn transform_gemini_request(body: &mut serde_json::Value) -> Result<()> {
     use serde_json::json;
 
-    // ── Embedding requests ────────────────────────────────────────────────
-    // Embedding requests have `input` instead of `messages`.  Convert from
-    // OpenAI embedding format to Gemini embedContent format.
     if body.get("input").is_some() && body.get("messages").is_none() {
         return transform_gemini_embed_request(body);
     }
 
-    // Extract extra_body before taking ownership of fields, since it may contain
-    // Gemini-specific extensions (safety_settings, grounding_config, cached_content).
     let extra_body = body
         .as_object_mut()
         .and_then(|o| o.remove("extra_body"))
@@ -249,7 +235,6 @@ pub(crate) fn transform_gemini_request(body: &mut serde_json::Value) -> Result<(
             _ => None,
         });
 
-    // Take ownership of the messages array to avoid cloning.
     let messages = body
         .as_object_mut()
         .and_then(|o| o.remove("messages"))
@@ -283,7 +268,6 @@ pub(crate) fn transform_gemini_request(body: &mut serde_json::Value) -> Result<(
                 {
                     parts.push(json!({"text": text}));
                 }
-                // Convert OpenAI tool_calls to Gemini functionCall parts.
                 if let Some(tool_calls) = msg.get("tool_calls").and_then(|t| t.as_array()) {
                     for tc in tool_calls {
                         let args: serde_json::Value = tc
@@ -302,14 +286,9 @@ pub(crate) fn transform_gemini_request(body: &mut serde_json::Value) -> Result<(
                 if parts.is_empty() {
                     parts.push(json!({"text": ""}));
                 }
-                // Gemini uses "model" role for assistant turns.
                 contents.push(json!({"role": "model", "parts": parts}));
             }
             "tool" => {
-                // Map tool result back to a user turn with a functionResponse part.
-                // Gemini requires the function name — use the `name` field only.
-                // The `tool_call_id` is an OpenAI correlation ID, not a function name,
-                // so we must not fall back to it.
                 let name = msg.get("name").and_then(|n| n.as_str()).unwrap_or("tool");
                 let result_content = content.cloned().unwrap_or(json!(null));
                 contents.push(json!({
@@ -326,9 +305,7 @@ pub(crate) fn transform_gemini_request(body: &mut serde_json::Value) -> Result<(
         }
     }
 
-    // Build generationConfig from OpenAI parameters.
     let mut gen_config = json!({});
-    // Support both max_tokens (legacy) and max_completion_tokens (newer OpenAI spec).
     if let Some(max_tokens) = body.get("max_completion_tokens").or_else(|| body.get("max_tokens")) {
         gen_config["maxOutputTokens"] = max_tokens.clone();
     }
@@ -347,7 +324,6 @@ pub(crate) fn transform_gemini_request(body: &mut serde_json::Value) -> Result<(
         gen_config["stopSequences"] = json!(sequences);
     }
 
-    // Translate response_format to Gemini's responseMimeType.
     if let Some(rf) = body.get("response_format") {
         let rf_type = rf.get("type").and_then(|t| t.as_str()).unwrap_or("");
         match rf_type {
@@ -356,18 +332,14 @@ pub(crate) fn transform_gemini_request(body: &mut serde_json::Value) -> Result<(
             }
             "json_schema" => {
                 gen_config["responseMimeType"] = json!("application/json");
-                // If a JSON schema is provided, pass it through.
                 if let Some(schema) = rf.get("json_schema").and_then(|s| s.get("schema")) {
                     gen_config["responseSchema"] = schema.clone();
                 }
             }
-            // "text" or unknown types: no special handling needed.
             _ => {}
         }
     }
 
-    // Translate modalities to Gemini's responseModalities (uppercase strings).
-    // OpenAI uses lowercase ("text", "audio", "image"); Gemini expects uppercase.
     if let Some(modalities) = body.get("modalities").and_then(|m| m.as_array()) {
         let gemini_modalities: Vec<serde_json::Value> = modalities
             .iter()
@@ -379,7 +351,6 @@ pub(crate) fn transform_gemini_request(body: &mut serde_json::Value) -> Result<(
         }
     }
 
-    // Translate OpenAI tools array to Gemini functionDeclarations.
     let mut tools_value = body.get("tools").and_then(|t| t.as_array()).map(|arr| {
         let declarations: Vec<serde_json::Value> = arr
             .iter()
@@ -400,20 +371,16 @@ pub(crate) fn transform_gemini_request(body: &mut serde_json::Value) -> Result<(
         json!([{"functionDeclarations": declarations}])
     });
 
-    // Translate tool_choice to Gemini toolConfig.functionCallingConfig.mode.
     let tool_config = translate_tool_choice(body.get("tool_choice"));
 
-    // ── extra_body extensions ────────────────────────────────────────────────
     let mut safety_settings: Option<serde_json::Value> = None;
     let mut cached_content: Option<serde_json::Value> = None;
 
     if let Some(ref eb) = extra_body {
-        // Safety settings: inject as top-level safetySettings array.
         if let Some(ss) = eb.get("safety_settings") {
             safety_settings = Some(ss.clone());
         }
 
-        // Grounding / Google Search: add google_search_retrieval to tools array.
         if eb.contains_key("grounding_config") || eb.contains_key("google_search_retrieval") {
             let grounding_tool = json!({"google_search_retrieval": {}});
             match &mut tools_value {
@@ -428,7 +395,6 @@ pub(crate) fn transform_gemini_request(body: &mut serde_json::Value) -> Result<(
             }
         }
 
-        // Context caching: inject as top-level cachedContent field.
         if let Some(cc) = eb.get("cached_content") {
             cached_content = Some(cc.clone());
         }
@@ -436,7 +402,6 @@ pub(crate) fn transform_gemini_request(body: &mut serde_json::Value) -> Result<(
 
     let mut new_body = json!({"contents": contents});
     if !system_parts.is_empty() {
-        // Gemini API requires camelCase: systemInstruction.
         new_body["systemInstruction"] = json!({"parts": system_parts});
     }
     if let Some(obj) = gen_config.as_object()
@@ -470,7 +435,6 @@ fn transform_gemini_embed_request(body: &mut serde_json::Value) -> Result<()> {
 
     let input = body.get("input").cloned().unwrap_or_default();
 
-    // Support both single string and array of strings
     let text = match &input {
         serde_json::Value::String(s) => s.clone(),
         serde_json::Value::Array(arr) => arr.first().and_then(|v| v.as_str()).unwrap_or("").to_string(),
@@ -523,9 +487,6 @@ fn transform_vertex_embed_request(body: &mut serde_json::Value) -> Result<()> {
 pub(crate) fn transform_gemini_response(body: &mut serde_json::Value) -> Result<()> {
     use serde_json::json;
 
-    // ── Vertex AI predict (embedding) response ─────────────────────────
-    // Vertex returns: {"predictions": [{"embeddings": {"values": [...]}}]}
-    // Convert to OpenAI format.
     if let Some(predictions) = body.get("predictions").and_then(|p| p.as_array()) {
         let data: Vec<serde_json::Value> = predictions
             .iter()
@@ -544,15 +505,11 @@ pub(crate) fn transform_gemini_response(body: &mut serde_json::Value) -> Result<
         return Ok(());
     }
 
-    // ── List models response ────────────────────────────────────────────
-    // Gemini returns: {"models": [{"name": "models/gemini-pro", "displayName": "...", ...}]}
-    // Convert to OpenAI format: {"object":"list","data":[{"id":"gemini-pro","object":"model","created":0,"owned_by":"google"}]}
     if let Some(models) = body.get("models").and_then(|m| m.as_array()) {
         let data: Vec<serde_json::Value> = models
             .iter()
             .map(|m| {
                 let name = m.get("name").and_then(|n| n.as_str()).unwrap_or("");
-                // Strip "models/" prefix from name
                 let id = name.strip_prefix("models/").unwrap_or(name);
                 json!({
                     "id": id,
@@ -569,9 +526,6 @@ pub(crate) fn transform_gemini_response(body: &mut serde_json::Value) -> Result<
         return Ok(());
     }
 
-    // ── Embedding response ────────────────────────────────────────────────
-    // Gemini embedContent returns: {"embedding": {"values": [...]}}
-    // Convert to OpenAI format: {"object":"list","data":[{"object":"embedding","embedding":[...],"index":0}],"model":""}
     if body.get("embedding").is_some() {
         let values = body.pointer("/embedding/values").cloned().unwrap_or(json!([]));
         *body = json!({
@@ -583,7 +537,6 @@ pub(crate) fn transform_gemini_response(body: &mut serde_json::Value) -> Result<
         return Ok(());
     }
 
-    // Check for a blocked prompt (no candidates, but promptFeedback.blockReason set).
     let candidates = body.get("candidates").and_then(|c| c.as_array());
     if candidates.is_none_or(|c| c.is_empty()) {
         let block_reason = body
@@ -628,9 +581,6 @@ pub(crate) fn transform_gemini_response(body: &mut serde_json::Value) -> Result<
         .cloned()
         .unwrap_or_default();
 
-    // Collect text and inline_data parts, building AssistantPart JSON objects.
-    // Text-only responses fold into a scalar string for back-compat.
-    // Mixed or media-only responses emit an array of typed parts.
     let mut text_parts: Vec<String> = vec![];
     let mut output_parts: Vec<serde_json::Value> = vec![];
     for p in &parts {
@@ -646,7 +596,6 @@ pub(crate) fn transform_gemini_response(body: &mut serde_json::Value) -> Result<
                 .and_then(|v| v.as_str())
                 .unwrap_or("application/octet-stream");
             let data = inline.get("data").and_then(|v| v.as_str()).unwrap_or("");
-            // Gemini already base64-encodes the data — wrap directly as data URL.
             let data_url = format!("data:{mime_type};base64,{data}");
             if mime_type.starts_with("image/") {
                 output_parts.push(json!({
@@ -654,14 +603,12 @@ pub(crate) fn transform_gemini_response(body: &mut serde_json::Value) -> Result<
                     "image_url": {"url": data_url}
                 }));
             } else if mime_type.starts_with("audio/") {
-                // Extract format from mime_type (e.g. "audio/wav" -> "wav").
                 let fmt = mime_type.split('/').nth(1).unwrap_or("wav");
                 output_parts.push(json!({
                     "type": "output_audio",
                     "audio": {"data": data, "format": fmt}
                 }));
             } else {
-                // Unknown media type — emit as output_image with the data URL.
                 output_parts.push(json!({
                     "type": "output_image",
                     "image_url": {"url": data_url}
@@ -669,15 +616,11 @@ pub(crate) fn transform_gemini_response(body: &mut serde_json::Value) -> Result<
             }
         }
     }
-    // Back-compat: if all output is text, keep the scalar string form.
     let has_non_text = output_parts
         .iter()
         .any(|p| p.get("type").and_then(|t| t.as_str()) != Some("text"));
     let text: String = text_parts.join("");
 
-    // Collect functionCall parts and convert to OpenAI tool_calls.
-    // Each call gets a unique ID via an atomic counter to avoid collisions
-    // when the same function is called multiple times.
     let tool_calls: Vec<serde_json::Value> = parts
         .iter()
         .filter_map(|p| {
@@ -718,7 +661,6 @@ pub(crate) fn transform_gemini_response(body: &mut serde_json::Value) -> Result<
     let response_id = body.get("responseId").cloned().unwrap_or_else(|| json!("gemini-resp"));
 
     let content_value: serde_json::Value = if has_non_text && !output_parts.is_empty() {
-        // Structured response with images/audio — emit as parts array.
         json!(output_parts)
     } else if text.is_empty() {
         json!(null)
@@ -731,7 +673,6 @@ pub(crate) fn transform_gemini_response(body: &mut serde_json::Value) -> Result<
         message["tool_calls"] = json!(tool_calls);
     }
 
-    // Extract grounding metadata if present (supplementary data from Google Search grounding).
     let grounding_metadata = candidate.as_ref().and_then(|c| c.get("groundingMetadata")).cloned();
 
     let mut result = json!({
@@ -771,7 +712,7 @@ pub(crate) fn transform_gemini_response(body: &mut serde_json::Value) -> Result<
 /// because Gemini's streaming payloads do not include them, and this parser
 /// is stateless.
 pub(crate) fn parse_gemini_stream_event(event_data: &str) -> Result<Option<ChatCompletionChunk>> {
-    // NOTE: `[DONE]` is handled at the SSE parser level; no check needed here.
+    // ~keep `[DONE]` is consumed by the SSE parser before provider parsing.
     if event_data.trim().is_empty() {
         return Ok(None);
     }
@@ -780,10 +721,8 @@ pub(crate) fn parse_gemini_stream_event(event_data: &str) -> Result<Option<ChatC
         message: format!("failed to parse Gemini SSE data: {e}"),
     })?;
 
-    // Normalize to OpenAI chat completion format.
     transform_gemini_response(&mut body)?;
 
-    // Extract fields from the normalized response.
     let id = body
         .get("id")
         .and_then(|v| v.as_str())
@@ -801,7 +740,6 @@ pub(crate) fn parse_gemini_stream_event(event_data: &str) -> Result<Option<ChatC
         .and_then(|v| v.as_str())
         .unwrap_or("");
 
-    // Extract tool_calls from the normalized message if present.
     let stream_tool_calls = choice
         .and_then(|c| c.pointer("/message/tool_calls"))
         .and_then(|v| v.as_array())
@@ -856,8 +794,6 @@ pub(crate) fn parse_gemini_stream_event(event_data: &str) -> Result<Option<ChatC
     Ok(Some(chunk))
 }
 
-// ── Helper functions ──────────────────────────────────────────────────────────
-
 /// Convert OpenAI user content (string or content-part array) to Gemini parts.
 ///
 /// Handles four cases:
@@ -870,66 +806,60 @@ pub(crate) fn convert_user_content_to_gemini(content: Option<&serde_json::Value>
 
     match content {
         Some(serde_json::Value::String(s)) => vec![json!({"text": s})],
-        Some(serde_json::Value::Array(parts)) => {
-            parts
-                .iter()
-                .filter_map(|part| {
-                    let part_type = part.get("type").and_then(|t| t.as_str())?;
-                    match part_type {
-                        "text" => {
-                            let text = part.get("text").and_then(|t| t.as_str()).unwrap_or("");
-                            Some(json!({"text": text}))
-                        }
-                        "image_url" => {
-                            let url = part.pointer("/image_url/url").and_then(|u| u.as_str())?;
-                            if url.starts_with("data:") {
-                                // data:<media_type>;base64,<data>
-                                if let Some((header, data)) = url.split_once(',') {
-                                    let mime_type = header.trim_start_matches("data:").trim_end_matches(";base64");
-                                    return Some(json!({
-                                        "inlineData": {
-                                            "mimeType": mime_type,
-                                            "data": data
-                                        }
-                                    }));
-                                }
-                            }
-                            // Plain URL -- use Gemini's fileData format.
-                            Some(json!({
-                                "fileData": {
-                                    "mimeType": "image/jpeg",
-                                    "fileUri": url
-                                }
-                            }))
-                        }
-                        "document" => {
-                            // ContentPart::Document -> Gemini inlineData.
-                            let doc = part.get("document")?;
-                            let data = doc.get("data").and_then(|d| d.as_str())?;
-                            let media_type = doc
-                                .get("media_type")
-                                .and_then(|m| m.as_str())
-                                .unwrap_or("application/pdf");
-                            Some(json!({
+        Some(serde_json::Value::Array(parts)) => parts
+            .iter()
+            .filter_map(|part| {
+                let part_type = part.get("type").and_then(|t| t.as_str())?;
+                match part_type {
+                    "text" => {
+                        let text = part.get("text").and_then(|t| t.as_str()).unwrap_or("");
+                        Some(json!({"text": text}))
+                    }
+                    "image_url" => {
+                        let url = part.pointer("/image_url/url").and_then(|u| u.as_str())?;
+                        if url.starts_with("data:")
+                            && let Some((header, data)) = url.split_once(',')
+                        {
+                            let mime_type = header.trim_start_matches("data:").trim_end_matches(";base64");
+                            return Some(json!({
                                 "inlineData": {
-                                    "mimeType": media_type,
+                                    "mimeType": mime_type,
                                     "data": data
                                 }
-                            }))
+                            }));
                         }
-                        _ => {
-                            // Unknown content part types: fall back to text representation.
-                            let text = part.get("text").and_then(|t| t.as_str()).unwrap_or("");
-                            if text.is_empty() {
-                                None
-                            } else {
-                                Some(json!({"text": text}))
+                        Some(json!({
+                            "fileData": {
+                                "mimeType": "image/jpeg",
+                                "fileUri": url
                             }
+                        }))
+                    }
+                    "document" => {
+                        let doc = part.get("document")?;
+                        let data = doc.get("data").and_then(|d| d.as_str())?;
+                        let media_type = doc
+                            .get("media_type")
+                            .and_then(|m| m.as_str())
+                            .unwrap_or("application/pdf");
+                        Some(json!({
+                            "inlineData": {
+                                "mimeType": media_type,
+                                "data": data
+                            }
+                        }))
+                    }
+                    _ => {
+                        let text = part.get("text").and_then(|t| t.as_str()).unwrap_or("");
+                        if text.is_empty() {
+                            None
+                        } else {
+                            Some(json!({"text": text}))
                         }
                     }
-                })
-                .collect()
-        }
+                }
+            })
+            .collect(),
         _ => vec![json!({"text": ""})],
     }
 }
@@ -960,7 +890,6 @@ fn translate_tool_choice(tool_choice: Option<&serde_json::Value>) -> Option<serd
         }));
     }
 
-    // Object form: {"type": "function", "function": {"name": "specific_fn"}}
     if let Some(name) = tc.pointer("/function/name").and_then(|n| n.as_str()) {
         return Some(json!({
             "functionCallingConfig": {
@@ -972,8 +901,6 @@ fn translate_tool_choice(tool_choice: Option<&serde_json::Value>) -> Option<serd
 
     None
 }
-
-// ── Unit tests ────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -992,8 +919,6 @@ mod tests {
         }
     }
 
-    // ── validate ──────────────────────────────────────────────────────────────
-
     #[test]
     fn validate_succeeds_with_project() {
         let p = provider();
@@ -1009,8 +934,6 @@ mod tests {
             "error should mention VERTEXAI_PROJECT"
         );
     }
-
-    // ── base_url ──────────────────────────────────────────────────────────────
 
     #[test]
     fn base_url_constructed_from_project_and_location() {
@@ -1029,8 +952,6 @@ mod tests {
             "https://europe-west1-aiplatform.googleapis.com/v1/projects/my-proj/locations/europe-west1"
         );
     }
-
-    // ── build_url ─────────────────────────────────────────────────────────────
 
     #[test]
     fn build_url_returns_empty_without_base() {
@@ -1053,8 +974,6 @@ mod tests {
         assert!(url.ends_with("/publishers/google/models/text-embedding-004:predict"));
     }
 
-    // ── transform_request ─────────────────────────────────────────────────────
-
     #[test]
     fn transform_request_basic_chat() {
         let p = provider();
@@ -1070,17 +989,14 @@ mod tests {
         p.transform_request(&mut body)
             .expect("transform_request should not fail");
 
-        // System instruction extracted with camelCase key required by Gemini API.
         assert_eq!(
             body["systemInstruction"]["parts"][0]["text"],
             "You are a helpful assistant."
         );
 
-        // User message converted to Gemini format.
         assert_eq!(body["contents"][0]["role"], "user");
         assert_eq!(body["contents"][0]["parts"][0]["text"], "Hello!");
 
-        // Generation config set.
         assert_eq!(body["generationConfig"]["maxOutputTokens"], 200);
         assert_eq!(body["generationConfig"]["temperature"], 0.5);
     }
@@ -1132,14 +1048,12 @@ mod tests {
         let contents = body["contents"].as_array().expect("contents should be an array");
         assert_eq!(contents.len(), 3);
 
-        // Assistant turn with functionCall part.
         let model_turn = &contents[1];
         assert_eq!(model_turn["role"], "model");
         let fn_call = &model_turn["parts"][0]["functionCall"];
         assert_eq!(fn_call["name"], "get_weather");
         assert_eq!(fn_call["args"]["city"], "Berlin");
 
-        // Tool result as user turn with functionResponse.
         let tool_turn = &contents[2];
         assert_eq!(tool_turn["role"], "user");
         let fn_resp = &tool_turn["parts"][0]["functionResponse"];
@@ -1165,8 +1079,6 @@ mod tests {
         assert_eq!(stop_seqs[1], "STOP");
     }
 
-    // ── transform_request: safety settings ───────────────────────────────────
-
     #[test]
     fn transform_request_safety_settings_from_extra_body() {
         let p = provider();
@@ -1191,8 +1103,6 @@ mod tests {
         assert_eq!(settings[0]["threshold"], "BLOCK_MEDIUM_AND_ABOVE");
         assert_eq!(settings[1]["category"], "HARM_CATEGORY_DANGEROUS_CONTENT");
     }
-
-    // ── transform_request: grounding / Google Search ─────────────────────────
 
     #[test]
     fn transform_request_grounding_config_adds_google_search() {
@@ -1229,13 +1139,10 @@ mod tests {
             .expect("transform_request should not fail");
 
         let tools = body["tools"].as_array().expect("tools should be an array");
-        // Should have functionDeclarations + google_search_retrieval.
         assert_eq!(tools.len(), 2);
         assert!(tools[0].get("functionDeclarations").is_some());
         assert!(tools[1].get("google_search_retrieval").is_some());
     }
-
-    // ── transform_request: context caching ───────────────────────────────────
 
     #[test]
     fn transform_request_cached_content_from_extra_body() {
@@ -1253,8 +1160,6 @@ mod tests {
 
         assert_eq!(body["cachedContent"], cached);
     }
-
-    // ── transform_request: document handling ─────────────────────────────────
 
     #[test]
     fn transform_request_document_content_part() {
@@ -1286,8 +1191,6 @@ mod tests {
         assert_eq!(parts[1]["inlineData"]["mimeType"], "application/pdf");
         assert_eq!(parts[1]["inlineData"]["data"], "JVBERi0xLjQ=");
     }
-
-    // ── transform_response ────────────────────────────────────────────────────
 
     #[test]
     fn transform_response_basic() {
@@ -1354,14 +1257,12 @@ mod tests {
             .expect("tool_calls should be an array");
         assert_eq!(tool_calls.len(), 2);
 
-        // Both calls should have the function name "get_weather" but different IDs.
         let id0 = tool_calls[0]["id"].as_str().expect("id should be a string");
         let id1 = tool_calls[1]["id"].as_str().expect("id should be a string");
         assert_ne!(id0, id1, "tool call IDs must be unique even for the same function");
         assert!(id0.starts_with("call_get_weather_"));
         assert!(id1.starts_with("call_get_weather_"));
 
-        // Verify arguments are correct.
         let args0: serde_json::Value = serde_json::from_str(
             tool_calls[0]["function"]["arguments"]
                 .as_str()
@@ -1405,7 +1306,6 @@ mod tests {
             .expect("tool_calls should be an array");
         assert_eq!(tool_calls.len(), 1);
         assert_eq!(tool_calls[0]["function"]["name"], "get_weather");
-        // ID should contain the function name and a unique counter.
         let id = tool_calls[0]["id"].as_str().expect("id should be a string");
         assert!(
             id.starts_with("call_get_weather_"),
@@ -1477,8 +1377,6 @@ mod tests {
         );
     }
 
-    // ── parse_stream_event ────────────────────────────────────────────────────
-
     #[test]
     fn parse_stream_event_empty_returns_none() {
         let p = provider();
@@ -1488,8 +1386,6 @@ mod tests {
 
     #[test]
     fn parse_stream_event_done_is_handled_at_sse_level() {
-        // `[DONE]` is now caught by the SSE parser before reaching the provider.
-        // If it were to reach the provider, it would be invalid JSON.
         let p = provider();
         let result = p.parse_stream_event("[DONE]");
         assert!(
@@ -1518,8 +1414,6 @@ mod tests {
         assert_eq!(chunk.choices[0].delta.content.as_deref(), Some("Hello"));
     }
 
-    // ── model prefix / matching ───────────────────────────────────────────────
-
     #[test]
     fn strip_model_prefix() {
         let p = provider();
@@ -1534,8 +1428,6 @@ mod tests {
         assert!(!p.matches_model("gemini-2.0-flash"));
         assert!(!p.matches_model("gpt-4"));
     }
-
-    // ── multimodal content ────────────────────────────────────────────────────
 
     #[test]
     fn transform_request_multimodal_user_content() {
@@ -1585,8 +1477,6 @@ mod tests {
         assert_eq!(parts[1]["fileData"]["fileUri"], "https://example.com/image.jpg");
     }
 
-    // ── response_format translation ───────────────────────────────────────────
-
     #[test]
     fn transform_request_response_format_json_object() {
         let p = provider();
@@ -1621,8 +1511,6 @@ mod tests {
         assert_eq!(body["generationConfig"]["responseMimeType"], "application/json");
         assert_eq!(body["generationConfig"]["responseSchema"]["type"], "object");
     }
-
-    // ── tool_choice translation ───────────────────────────────────────────────
 
     #[test]
     fn transform_request_tool_choice_auto() {
@@ -1687,8 +1575,6 @@ mod tests {
             "get_weather"
         );
     }
-
-    // ── helper function tests ─────────────────────────────────────────────────
 
     #[test]
     fn convert_user_content_string() {
@@ -1755,8 +1641,6 @@ mod tests {
     fn translate_tool_choice_none_input() {
         assert!(translate_tool_choice(None).is_none());
     }
-
-    // ── inline_data response transform ──────────────────────────────────────
 
     #[test]
     fn transform_response_inline_data_image_emits_output_image() {
@@ -1831,7 +1715,6 @@ mod tests {
         let content = body
             .pointer("/choices/0/message/content")
             .expect("content must be present");
-        // Text-only responses must stay as a scalar string for back-compat.
         assert!(
             content.is_string(),
             "text-only response must be a scalar string, got: {content}"

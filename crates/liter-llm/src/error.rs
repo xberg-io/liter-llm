@@ -1,6 +1,5 @@
-// Error variants are documented through `thiserror`'s `#[error("...")]`
-// messages, which double as user-facing display strings and rustdoc-style
-// summaries. `missing_docs` would force us to duplicate those messages.
+//! OpenAI-compatible error normalization.
+
 #![allow(missing_docs)]
 
 use std::time::Duration;
@@ -299,8 +298,6 @@ impl LiterLlmError {
             401 | 403 => Self::Authentication { message, status },
             429 => Self::RateLimited { message, retry_after },
             400 | 422 => {
-                // Check the structured `code` field first — it is more reliable
-                // than substring matching on the human-readable message.
                 if code.as_deref() == Some("context_length_exceeded") {
                     Self::ContextWindowExceeded { message }
                 } else if code.as_deref() == Some("content_policy_violation")
@@ -308,8 +305,7 @@ impl LiterLlmError {
                 {
                     Self::ContentPolicy { message }
                 }
-                // Fall back to message-based heuristics for providers that do not
-                // populate the `code` field.
+                // ~keep Some providers omit `code`, so classify retryable errors from stable message fragments.
                 else if message.contains("context_length_exceeded")
                     || message.contains("context window")
                     || message.contains("maximum context length")
@@ -326,8 +322,6 @@ impl LiterLlmError {
             408 => Self::Timeout,
             500 => Self::ServerError { message, status },
             502..=504 => Self::ServiceUnavailable { message, status },
-            // Map remaining 4xx codes to BadRequest (client errors) and
-            // everything else (5xx, unknown) to ServerError.
             400..=499 => Self::BadRequest { message, status },
             _ => Self::ServerError { message, status },
         }

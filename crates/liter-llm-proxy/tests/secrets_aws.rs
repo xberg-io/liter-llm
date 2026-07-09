@@ -21,17 +21,4 @@
 ///   2. Remove the `#[ignore]` attribute below.
 #[tokio::test]
 #[ignore = "aws-smithy-mocks-experimental not in dev-dependencies; enable once available"]
-async fn fetch_returns_error_on_resource_not_found() {
-    // Pseudo-code body — fully realisable once a mocking harness is wired in:
-    //
-    // use aws_sdk_secretsmanager::operation::get_secret_value::GetSecretValueError;
-    // use aws_smithy_mocks_experimental::{mock, mock_client, RuleMode};
-    //
-    // let not_found = mock!(aws_sdk_secretsmanager::Client::get_secret_value)
-    //     .then_error(|| GetSecretValueError::ResourceNotFoundException(/* … */));
-    // let client = mock_client!(aws_sdk_secretsmanager, RuleMode::Sequential, &[&not_found]);
-    //
-    // let provider = AwsSecretsManagerProvider::from_client(client, std::time::Duration::from_secs(60));
-    // let err = provider.get("missing").await.expect_err("404 must error");
-    // assert!(matches!(err, SecretError::NotFound(_)));
-}
+async fn fetch_returns_error_on_resource_not_found() {}

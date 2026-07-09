@@ -5,10 +5,6 @@ use bytes::Bytes;
 use crate::error::{LiterLlmError, Result};
 use crate::http::retry;
 
-// ---------------------------------------------------------------------------
-// Shared retry loop helper
-// ---------------------------------------------------------------------------
-
 /// Extract an optional `Retry-After` delay from a response.
 pub(crate) fn retry_after_from_response(resp: &reqwest::Response) -> Option<std::time::Duration> {
     let value = resp.headers().get(reqwest::header::RETRY_AFTER)?.to_str().ok()?;
@@ -42,7 +38,6 @@ where
             return Ok(resp);
         }
 
-        // Parse Retry-After *before* consuming the body.
         let server_retry_after = retry_after_from_response(&resp);
 
         if let Some(delay) = retry::should_retry(status, attempt, max_retries, server_retry_after) {
@@ -54,7 +49,6 @@ where
             continue;
         }
 
-        // Non-retryable — read the body for a useful error message.
         let text = resp
             .text()
             .await
@@ -62,10 +56,6 @@ where
         return Err(LiterLlmError::from_status(status, &text, server_retry_after));
     }
 }
-
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
 
 /// Send a POST request with a JSON body and return the raw response JSON.
 ///
@@ -97,7 +87,6 @@ pub async fn post_json_raw(
     let mut retry_count = 0u32;
 
     let resp = with_retry(max_retries, || {
-        // Clone is a zero-copy ref-count bump on `Bytes`.
         let mut builder = client
             .post(url)
             .header(reqwest::header::CONTENT_TYPE, "application/json")

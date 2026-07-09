@@ -18,21 +18,16 @@ pub fn should_retry(status: u16, attempt: u32, max_retries: u32, retry_after: Op
         return None;
     }
 
-    // Only retry on rate limit (429) and server errors (500, 502, 503, 504).
     if !matches!(status, 429 | 500 | 502 | 503 | 504) {
         return None;
     }
 
-    // For 429, prefer the server-supplied Retry-After value when present.
     if status == 429
         && let Some(server_delay) = retry_after
     {
-        // Cap the server-supplied delay to 60 seconds to avoid stalling forever.
         return Some(server_delay.min(Duration::from_secs(60)));
     }
 
-    // Exponential backoff: 1s, 2s, 4s, 8s … capped at 30 s.
-    // Use checked_shl to avoid overflow on large attempt counts.
     let base_delay = Duration::from_secs(1u64.checked_shl(attempt).unwrap_or(u64::MAX));
     let capped = base_delay.min(Duration::from_secs(30));
 
@@ -72,14 +67,10 @@ fn jittered(delay: Duration) -> Duration {
 pub fn parse_retry_after(value: &str) -> Option<Duration> {
     let trimmed = value.trim();
 
-    // Attempt to parse as a plain integer (seconds).
     if let Ok(secs) = trimmed.parse::<u64>() {
         return Some(Duration::from_secs(secs));
     }
 
-    // HTTP-date format (e.g. "Wed, 21 Oct 2015 07:28:00 GMT") is not yet
-    // parsed.  Emit a warning so operators know when servers use this format,
-    // and return None to fall back to exponential backoff.
     #[cfg(feature = "tracing")]
     tracing::warn!(
         retry_after = trimmed,

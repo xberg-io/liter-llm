@@ -26,11 +26,8 @@ pub struct HedgeExhaustedError {
     pub attempts: u32,
 }
 
-// ─── Conversions ─────────────────────────────────────────────────────────────
-
 impl From<CircuitOpenError> for crate::error::LiterLlmError {
     fn from(e: CircuitOpenError) -> Self {
-        // TODO(1.A): replace with a dedicated CircuitOpen variant.
         Self::ServiceUnavailable {
             message: e.to_string(),
             status: 503,
@@ -40,7 +37,6 @@ impl From<CircuitOpenError> for crate::error::LiterLlmError {
 
 impl From<HedgeExhaustedError> for crate::error::LiterLlmError {
     fn from(_e: HedgeExhaustedError) -> Self {
-        // TODO(1.A): replace with a dedicated HedgeExhausted variant.
         Self::Timeout
     }
 }

@@ -28,8 +28,6 @@ use tokio::time::Instant;
 use super::credential_pool::{CredentialError, CredentialHandle, CredentialPool, PoolSnapshot};
 use super::metrics as cred_metrics;
 
-// ─── CredentialState ──────────────────────────────────────────────────────────
-
 /// Internal lifecycle state of a single credential entry.
 #[derive(Debug, Clone)]
 pub(super) enum CredentialState {
@@ -42,16 +40,12 @@ pub(super) enum CredentialState {
     },
 }
 
-// ─── CredentialEntry ─────────────────────────────────────────────────────────
-
 /// Internal pool entry pairing a handle with its lifecycle state.
 #[derive(Debug, Clone)]
 pub(super) struct CredentialEntry {
     pub(super) handle: CredentialHandle,
     pub(super) state: CredentialState,
 }
-
-// ─── ProviderBucket ──────────────────────────────────────────────────────────
 
 /// Per-provider credential collection with an active-index cursor.
 struct ProviderBucket {
@@ -76,10 +70,6 @@ impl ProviderBucket {
             return None;
         }
 
-        // Scan all positions starting at the current cursor (inclusive).
-        // The cursor points to the most-recently returned entry; we honour it
-        // as-is on the first call (cursor = 0), and on subsequent calls we
-        // cycle through from where we left off.
         for offset in 0..len {
             let idx = (self.cursor + offset) % len;
             if matches!(self.entries[idx].state, CredentialState::Active) {
@@ -96,8 +86,6 @@ impl ProviderBucket {
         for (idx, entry) in self.entries.iter_mut().enumerate() {
             if entry.handle.id == id {
                 entry.state = CredentialState::Exhausted { until };
-                // Advance the cursor past the exhausted entry so the next
-                // `next_active()` skips it automatically.
                 let len = self.entries.len();
                 self.cursor = (idx + 1) % len;
                 return Some(idx);
@@ -133,8 +121,6 @@ impl ProviderBucket {
         (active, exhausted, earliest)
     }
 }
-
-// ─── InMemoryCredentialPool ───────────────────────────────────────────────────
 
 /// Default credential pool backed by an in-memory `DashMap`.
 ///
@@ -225,9 +211,6 @@ impl CredentialPool for InMemoryCredentialPool {
                 return Err(CredentialError::PoolEmpty);
             }
 
-            // Re-check Exhausted entries to see if any has recovered by now.
-            // This handles the case where the Tokio recovery task hasn't fired
-            // yet but the cooldown has elapsed on the wall clock.
             let now = Instant::now();
             for entry in bucket.entries.iter_mut() {
                 if let CredentialState::Exhausted { until } = entry.state
@@ -262,7 +245,6 @@ impl CredentialPool for InMemoryCredentialPool {
             {
                 let mut bucket = bucket_arc.lock().expect("provider bucket mutex poisoned");
                 if bucket.mark_exhausted(&id, until).is_none() {
-                    // Credential not found in this pool — no-op.
                     return;
                 }
 
@@ -274,8 +256,6 @@ impl CredentialPool for InMemoryCredentialPool {
 
             cred_metrics::record_credential_rotation(&provider_owned);
 
-            // Spawn a recovery task.  The task holds an `Arc` clone of the
-            // bucket so it does not keep `&self` alive across the await point.
             let bucket_arc_clone = Arc::clone(&bucket_arc);
             let id_clone = id.clone();
             let provider_clone = provider_owned.clone();
@@ -308,7 +288,6 @@ impl CredentialPool for InMemoryCredentialPool {
         let total = bucket.entries.len();
         let (active, exhausted, earliest_instant) = bucket.stats();
 
-        // Convert monotonic `Instant` to `SystemTime` for the public API.
         let next_recovery = earliest_instant.map(|instant| {
             let remaining = instant.saturating_duration_since(Instant::now());
             SystemTime::now() + remaining
@@ -322,8 +301,6 @@ impl CredentialPool for InMemoryCredentialPool {
         }
     }
 }
-
-// ─── Tests ────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -341,18 +318,15 @@ mod tests {
         p
     }
 
-    // ── 1 ────────────────────────────────────────────────────────────────────
     /// current() returns the first active credential when all three are active.
     #[tokio::test]
     async fn credential_pool_current_returns_first_active() {
         let pool = pool_with("openai", &[("sk-a", None), ("sk-b", None), ("sk-c", None)]);
 
         let handle = pool.current("openai").await.expect("should return a handle");
-        // First active credential has id "key-0".
         assert_eq!(handle.id, "key-0");
     }
 
-    // ── 2 ────────────────────────────────────────────────────────────────────
     /// After exhausting the first credential, the next current() returns the second.
     #[tokio::test]
     async fn credential_pool_mark_exhausted_advances_round_robin() {
@@ -367,7 +341,6 @@ mod tests {
         assert_eq!(second.id, "key-1");
     }
 
-    // ── 3 ────────────────────────────────────────────────────────────────────
     /// When all credentials are exhausted, current() returns AllExhausted.
     #[tokio::test]
     async fn credential_pool_all_exhausted_returns_error() {
@@ -386,7 +359,6 @@ mod tests {
         );
     }
 
-    // ── 4 ────────────────────────────────────────────────────────────────────
     /// After the cooldown elapses, current() returns the reactivated credential.
     ///
     /// The inline wall-clock re-check inside `current()` handles the case where
@@ -399,20 +371,15 @@ mod tests {
         let h = pool.current("openai").await.expect("initial");
         pool.mark_exhausted("openai", &h, Duration::from_millis(100)).await;
 
-        // Credential is exhausted immediately.
         let err = pool.current("openai").await.expect_err("should be exhausted");
         assert!(matches!(err, CredentialError::AllExhausted));
 
-        // Advance the virtual clock past the cooldown.  The inline `Instant::now()`
-        // check inside `current()` will see the advanced time and treat the
-        // credential as recovered without needing the spawned task to fire.
         tokio::time::advance(Duration::from_millis(150)).await;
 
         let recovered = pool.current("openai").await.expect("should recover");
         assert_eq!(recovered.id, "key-0");
     }
 
-    // ── 5 ────────────────────────────────────────────────────────────────────
     /// When credential A only allows "gpt-4o" and credential B allows "claude-3",
     /// current() still returns A (the first active one regardless of model).
     /// The model-allowlist filtering happens at the auto-cycle layer, not in the pool.
@@ -432,7 +399,6 @@ mod tests {
         assert_eq!(h.model_allowlist, Some(vec!["gpt-4o".to_owned()]));
     }
 
-    // ── snapshot ──────────────────────────────────────────────────────────────
     #[tokio::test]
     async fn snapshot_counts_are_accurate() {
         let pool = pool_with("openai", &[("sk-a", None), ("sk-b", None), ("sk-c", None)]);

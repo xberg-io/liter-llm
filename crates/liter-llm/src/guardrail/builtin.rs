@@ -20,8 +20,6 @@ use regex::Regex;
 
 use super::{Guardrail, GuardrailContext, GuardrailDecision, GuardrailStage};
 
-// ── Helper: walk JSON and redact matching strings ─────────────────────────────
-
 /// Walk a [`serde_json::Value`] tree and apply `regex.replace_all` to every
 /// string-typed leaf, writing the result back in place.
 ///
@@ -55,12 +53,9 @@ fn redact_in_place(value: &mut serde_json::Value, regex: &Regex, replacement: &s
             }
             any
         }
-        // Numbers, booleans, null — never contain PII in structured form.
         _ => false,
     }
 }
-
-// ── Helper: extract text content from context ─────────────────────────────────
 
 /// Extract the relevant text from a [`GuardrailContext`] for text-based checks.
 ///
@@ -77,8 +72,6 @@ fn extract_text<'a>(stage: GuardrailStage, ctx: &'a GuardrailContext<'a>) -> std
         GuardrailStage::Input => std::borrow::Cow::Owned(ctx.request.to_string()),
     }
 }
-
-// ── What to do when a guardrail fires ─────────────────────────────────────────
 
 /// Action taken when a [`RegexGuardrail`] finds a match.
 #[cfg_attr(alef, alef(skip))]
@@ -97,8 +90,6 @@ pub enum OnMatch {
         replacement: String,
     },
 }
-
-// ── RegexGuardrail ────────────────────────────────────────────────────────────
 
 /// Blocks or redacts content when it matches a regular expression.
 ///
@@ -157,34 +148,28 @@ impl Guardrail for RegexGuardrail {
                         reason: format!("{reason_prefix}: pattern matched"),
                         code: *code,
                     },
-                    OnMatch::Redact { replacement } => {
-                        match stage {
-                            GuardrailStage::OutputChunk => {
-                                // Chunk is a raw string — replace directly.
-                                let redacted = self.pattern.replace_all(&text, replacement.as_str()).into_owned();
-                                GuardrailDecision::Mutate {
-                                    new_payload: serde_json::Value::String(redacted),
-                                }
-                            }
-                            _ => {
-                                // Input/Output: walk the JSON tree and redact only
-                                // string-typed leaves.  This preserves JSON structure
-                                // regardless of what the regex matches.
-                                let mut payload = ctx.request.clone();
-                                if stage == GuardrailStage::Output
-                                    && let Some(resp) = ctx.response
-                                {
-                                    payload = resp.clone();
-                                }
-                                let changed = redact_in_place(&mut payload, &self.pattern, replacement);
-                                if changed {
-                                    GuardrailDecision::Mutate { new_payload: payload }
-                                } else {
-                                    GuardrailDecision::Allow
-                                }
+                    OnMatch::Redact { replacement } => match stage {
+                        GuardrailStage::OutputChunk => {
+                            let redacted = self.pattern.replace_all(&text, replacement.as_str()).into_owned();
+                            GuardrailDecision::Mutate {
+                                new_payload: serde_json::Value::String(redacted),
                             }
                         }
-                    }
+                        _ => {
+                            let mut payload = ctx.request.clone();
+                            if stage == GuardrailStage::Output
+                                && let Some(resp) = ctx.response
+                            {
+                                payload = resp.clone();
+                            }
+                            let changed = redact_in_place(&mut payload, &self.pattern, replacement);
+                            if changed {
+                                GuardrailDecision::Mutate { new_payload: payload }
+                            } else {
+                                GuardrailDecision::Allow
+                            }
+                        }
+                    },
                 }
             } else {
                 GuardrailDecision::Allow
@@ -192,8 +177,6 @@ impl Guardrail for RegexGuardrail {
         })
     }
 }
-
-// ── AllowListGuardrail ────────────────────────────────────────────────────────
 
 /// Blocks requests where a specific metadata field is not in an allow-list.
 ///
@@ -259,8 +242,6 @@ impl Guardrail for AllowListGuardrail {
     }
 }
 
-// ── DenyListGuardrail ─────────────────────────────────────────────────────────
-
 /// Blocks requests where a specific metadata field matches a deny-list entry.
 ///
 /// If the field is absent from `metadata`, the request is allowed through
@@ -315,8 +296,6 @@ impl Guardrail for DenyListGuardrail {
         })
     }
 }
-
-// ── LengthCapGuardrail ────────────────────────────────────────────────────────
 
 /// Blocks requests or responses that exceed a maximum character count.
 ///
@@ -376,8 +355,6 @@ impl Guardrail for LengthCapGuardrail {
         })
     }
 }
-
-// ── PromptInjectionHeuristic ──────────────────────────────────────────────────
 
 /// Heuristic check for common prompt-injection patterns in the request.
 ///
@@ -457,8 +434,6 @@ impl Guardrail for PromptInjectionHeuristic {
     }
 }
 
-// ── Unit tests ────────────────────────────────────────────────────────────────
-
 #[cfg(test)]
 mod tests {
     use std::collections::{HashMap, HashSet};
@@ -516,8 +491,6 @@ mod tests {
             metadata: meta,
         }
     }
-
-    // ── RegexGuardrail ────────────────────────────────────────────────────────
 
     #[tokio::test]
     async fn regex_guardrail_blocks_on_match() {
@@ -584,8 +557,6 @@ mod tests {
         }
     }
 
-    // ── AllowListGuardrail ────────────────────────────────────────────────────
-
     #[tokio::test]
     async fn allow_list_guardrail_permits_listed_value() {
         let list: HashSet<String> = ["premium", "enterprise"].iter().map(|s| s.to_string()).collect();
@@ -621,8 +592,6 @@ mod tests {
         let decision = guardrail.check(GuardrailStage::Input, &ctx).await;
         assert!(decision.is_block(), "absent field should block (fail-closed)");
     }
-
-    // ── DenyListGuardrail ─────────────────────────────────────────────────────
 
     #[tokio::test]
     async fn deny_list_guardrail_blocks_listed_value() {
@@ -663,8 +632,6 @@ mod tests {
         );
     }
 
-    // ── LengthCapGuardrail ────────────────────────────────────────────────────
-
     #[tokio::test]
     async fn length_cap_guardrail_allows_short_content() {
         static STAGES: &[GuardrailStage] = &[GuardrailStage::Input];
@@ -688,8 +655,6 @@ mod tests {
         let decision = guardrail.check(GuardrailStage::Input, &ctx).await;
         assert!(decision.is_block());
     }
-
-    // ── PromptInjectionHeuristic ──────────────────────────────────────────────
 
     #[tokio::test]
     async fn prompt_injection_heuristic_blocks_obvious_injection() {
@@ -745,8 +710,6 @@ mod tests {
         assert!(decision.is_block(), "should block confidential content in output");
     }
 
-    // ── RegexGuardrail redact — JSON-structural correctness ───────────────────
-
     /// A SSN pattern in a message's content field must be redacted as a string
     /// value only; the resulting payload must remain a valid JSON object with all
     /// other fields intact.
@@ -774,13 +737,10 @@ mod tests {
 
         match decision {
             GuardrailDecision::Mutate { new_payload } => {
-                // Must still be an object, not a raw string.
                 assert!(new_payload.is_object(), "mutated payload must remain a JSON object");
 
-                // model field must be untouched.
                 assert_eq!(new_payload["model"].as_str(), Some("gpt-4o"));
 
-                // content must contain the redaction token, not the original SSN.
                 let content = new_payload["messages"][0]["content"].as_str().unwrap();
                 assert!(
                     content.contains("[REDACTED]"),
@@ -836,7 +796,6 @@ mod tests {
                 let text1 = blocks[1]["text"].as_str().unwrap();
                 assert!(text1.contains("[REDACTED]") && !text1.contains("444-55-6666"));
 
-                // image_url block must be completely untouched.
                 assert_eq!(
                     blocks[2]["image_url"]["url"].as_str().unwrap(),
                     "data:image/png;base64,abc",
@@ -861,7 +820,6 @@ mod tests {
             &[GuardrailStage::Input],
         );
 
-        // Payload that contains no SSN pattern.
         let req = req_value("tell me a joke");
         let meta = empty_meta();
         let ctx = ctx_input(&req, &meta);
@@ -877,7 +835,6 @@ mod tests {
     /// never map *keys*.
     #[tokio::test]
     async fn regex_guardrail_redact_does_not_touch_field_keys() {
-        // Matches the literal word "role".
         let pattern = Regex::new(r"role").unwrap();
         let guardrail = RegexGuardrail::new(
             "role-redact",
@@ -901,17 +858,13 @@ mod tests {
             GuardrailDecision::Mutate { new_payload } => {
                 let msg = &new_payload["messages"][0];
 
-                // The key "role" must still be present as a key.
                 assert!(
                     msg.get("role").is_some(),
                     "map key 'role' must not be modified; payload: {new_payload}"
                 );
 
-                // The *value* of "role" (the string "user") does not contain "role"
-                // so it must also be unmodified.
                 assert_eq!(msg["role"].as_str(), Some("user"));
 
-                // The content value does contain "role" — it must be redacted.
                 let content = msg["content"].as_str().unwrap();
                 assert!(
                     content.contains("[R]") && !content.contains("my role"),

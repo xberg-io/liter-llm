@@ -15,18 +15,13 @@ use crate::http::request::with_retry;
 use crate::types::ChatCompletionChunk;
 
 /// Maximum number of bytes buffered before declaring a streaming error.
-const MAX_BUFFER_BYTES: usize = 1024 * 1024; // 1 MiB
+const MAX_BUFFER_BYTES: usize = 1024 * 1024;
 
 /// Maximum capacity a reclaimed `BytesMut` buffer may have before it is
 /// discarded rather than returned to the pool.  Prevents unbounded memory
 /// accumulation on idle clients that previously processed very large chunks.
 #[cfg(test)]
-const MAX_POOL_BUFFER_CAPACITY: usize = 64 * 1024; // 64 KiB
-
-// ---------------------------------------------------------------------------
-// Threadlocal BytesMut pool (test-only; no production callers after removing
-// the SseParser scratch allocation)
-// ---------------------------------------------------------------------------
+const MAX_POOL_BUFFER_CAPACITY: usize = 64 * 1024;
 
 #[cfg(test)]
 thread_local! {
@@ -66,12 +61,7 @@ fn pool_release(buf: BytesMut) {
             *cell.borrow_mut() = Some(buf);
         });
     }
-    // Buffers larger than the cap are silently dropped here.
 }
-
-// ---------------------------------------------------------------------------
-// CancellationToken re-export (native-http only)
-// ---------------------------------------------------------------------------
 
 /// A token that can be used to cancel an in-progress streaming response.
 ///
@@ -81,10 +71,6 @@ fn pool_release(buf: BytesMut) {
 /// Only available when the `native-http` feature is enabled.
 #[cfg(feature = "native-http")]
 pub use tokio_util::sync::CancellationToken;
-
-// ---------------------------------------------------------------------------
-// Public entry points
-// ---------------------------------------------------------------------------
 
 /// Send a streaming POST request and return an SSE stream of
 /// `ChatCompletionChunk`s.
@@ -130,7 +116,6 @@ where
     let mut retry_count = 0u32;
 
     let resp = with_retry(max_retries, || {
-        // Clone is a zero-copy ref-count bump on `Bytes`.
         let mut builder = client
             .post(url)
             .header(reqwest::header::CONTENT_TYPE, "application/json")
@@ -164,8 +149,8 @@ where
 /// token is cancelled (e.g. because the downstream client disconnected), the
 /// SSE stream is aborted cleanly and no further chunks are yielded.
 #[cfg(feature = "native-http")]
-#[allow(dead_code)] // Public API; not yet wired to provider call sites.
-#[allow(clippy::too_many_arguments)] // The cancel token is the necessary 8th arg.
+#[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 #[cfg_attr(
     feature = "tracing",
     tracing::instrument(
@@ -221,15 +206,7 @@ where
     Ok(Box::pin(stream))
 }
 
-// ---------------------------------------------------------------------------
-// SSE parser
-// ---------------------------------------------------------------------------
-//
-// `pin_project_lite` does not support `#[cfg(...)]` attributes on individual
-// struct fields.  We work around this by always including the `cancel` field
-// but typing it as `Option<CancellationToken>` only on the `native-http` path
-// and as `Option<std::convert::Infallible>` on the WASM path (zero size, never
-// constructed with `Some`).
+// ~keep `pin_project_lite` cannot cfg individual fields; WASM uses a zero-size Infallible cancel field.
 
 #[cfg(feature = "native-http")]
 type CancelField = Option<CancellationToken>;
@@ -261,25 +238,14 @@ pin_project! {
         #[pin]
         inner: S,
         buffer: String,
-        // Read cursor into `buffer`.  All bytes before `cursor` have already
-        // been processed.  We compact (drain) only when the cursor exceeds
-        // half the buffer length, amortising memmove cost to O(total_bytes).
         cursor: usize,
-        // Set to true once the inner stream is exhausted or cancelled.
         done: bool,
-        // Provider-supplied event parser; translates raw SSE data payloads.
         parse_event: P,
-        // Optional cancellation signal.
-        //
-        // On native-http: `Option<CancellationToken>`.
-        // On wasm-http: `Option<Infallible>` (always None, zero size).
         cancel: CancelField,
     }
 
     impl<S, P> PinnedDrop for SseParser<S, P> {
         fn drop(this: Pin<&mut Self>) {
-            // Nothing to return to the pool: SseParser no longer holds a
-            // BytesMut scratch buffer.
             let _ = this;
         }
     }
@@ -292,8 +258,6 @@ where
     fn new(inner: S, parse_event: P, cancel: CancelField) -> Self {
         Self {
             inner,
-            // Pre-allocate 4 KiB — a reasonable size for SSE lines to
-            // reduce reallocations during the first few chunks.
             buffer: String::with_capacity(4096),
             cursor: 0,
             done: false,
@@ -313,7 +277,6 @@ where
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let mut this = self.project();
 
-        // Check cancellation before doing any work.
         #[cfg(feature = "native-http")]
         if this.cancel.as_ref().is_some_and(|t| t.is_cancelled()) {
             #[cfg(feature = "tracing")]
@@ -323,17 +286,11 @@ where
         }
 
         loop {
-            // --- Process any complete lines already in the buffer ---
-            // Search for `\n` only in the unprocessed portion (from cursor onward).
             if let Some(offset) = memchr(b'\n', &this.buffer.as_bytes()[*this.cursor..]) {
                 let newline_pos = *this.cursor + offset;
 
-                // Borrow the line slice from cursor..newline_pos — zero allocation
-                // on the hot path.  All decisions (empty check, prefix match, JSON
-                // parse) operate on this borrowed `&str`.
                 let line = this.buffer[*this.cursor..newline_pos].trim_end_matches('\r').trim();
 
-                // Skip empty lines and SSE comments.
                 if line.is_empty() || line.starts_with(':') {
                     *this.cursor = newline_pos + 1;
                     compact_if_needed(this.buffer, this.cursor);
@@ -341,22 +298,15 @@ where
                 }
 
                 if let Some(raw) = line.strip_prefix("data:") {
-                    // Strip exactly one optional leading space (RFC 8895 §3.3).
                     let data = raw.strip_prefix(' ').unwrap_or(raw).trim();
 
-                    // Handle the OpenAI `[DONE]` sentinel at the SSE parser
-                    // level — this terminates the stream regardless of provider.
+                    // ~keep `[DONE]` terminates at the SSE parser level regardless of provider.
                     if data == "[DONE]" {
                         *this.cursor = newline_pos + 1;
                         compact_if_needed(this.buffer, this.cursor);
                         return Poll::Ready(None);
                     }
 
-                    // Delegate to the provider-supplied parser.
-                    // - `Ok(Some(chunk))` → yield the chunk.
-                    // - `Ok(None)` → skip this event (e.g. Anthropic ping,
-                    //   content_block_stop, message_stop) and continue parsing.
-                    // - `Err(e)` → yield the error to the consumer.
                     let result = (this.parse_event)(data);
                     *this.cursor = newline_pos + 1;
                     compact_if_needed(this.buffer, this.cursor);
@@ -367,19 +317,13 @@ where
                     }
                 }
 
-                // Ignore other SSE fields (event:, id:, retry:).
                 *this.cursor = newline_pos + 1;
                 compact_if_needed(this.buffer, this.cursor);
                 continue;
             }
 
-            // --- Buffer has only a partial line (or nothing unprocessed); fetch more bytes ---
-
             if *this.done {
-                // Any bytes remaining in the buffer after the stream ends were
-                // not terminated by a newline — they form an incomplete SSE
-                // line that would be silently dropped.  Emit a warning so that
-                // protocol bugs or truncated responses are visible in logs.
+                // ~keep Leftover bytes at EOF are an incomplete SSE line and indicate truncation.
                 let remaining = this.buffer.len() - *this.cursor;
                 if remaining > 0 {
                     #[cfg(feature = "tracing")]
@@ -394,7 +338,7 @@ where
                 return Poll::Ready(None);
             }
 
-            // Re-check cancellation before blocking on the inner stream.
+            // ~keep Re-check cancellation before blocking on the inner stream.
             #[cfg(feature = "native-http")]
             if this.cancel.as_ref().is_some_and(|t| t.is_cancelled()) {
                 #[cfg(feature = "tracing")]
@@ -405,21 +349,16 @@ where
 
             match this.inner.as_mut().poll_next(cx) {
                 Poll::Ready(Some(Ok(bytes))) => {
-                    // Guard against unbounded growth.
                     if this.buffer.len() + bytes.len() > MAX_BUFFER_BYTES {
-                        // Mark done so subsequent polls don't continue reading.
                         *this.done = true;
                         return Poll::Ready(Some(Err(LiterLlmError::Streaming {
                             message: format!("SSE buffer exceeded {MAX_BUFFER_BYTES} bytes; stream aborted"),
                         })));
                     }
-                    // Decode directly from the incoming `Bytes` slice into the
-                    // main `String` buffer.
                     match std::str::from_utf8(&bytes) {
                         Ok(s) => this.buffer.push_str(s),
                         Err(e) => {
-                            // Mark done so the next poll does not try to read
-                            // more data from the (now-corrupt) stream.
+                            // ~keep Invalid UTF-8 corrupts the SSE stream; stop polling after this error.
                             *this.done = true;
                             return Poll::Ready(Some(Err(LiterLlmError::Streaming {
                                 message: format!("invalid UTF-8 in SSE stream: {e}"),
@@ -432,7 +371,6 @@ where
                 }
                 Poll::Ready(None) => {
                     *this.done = true;
-                    // Loop once more to flush any remaining buffered line.
                     continue;
                 }
                 Poll::Pending => {
@@ -455,10 +393,6 @@ fn compact_if_needed(buffer: &mut String, cursor: &mut usize) {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Utility
-// ---------------------------------------------------------------------------
-
 /// Parse a single SSE `data:` line into a `ChatCompletionChunk`.
 ///
 /// Returns `None` for the terminal `[DONE]` sentinel.
@@ -467,7 +401,6 @@ fn compact_if_needed(buffer: &mut String, cursor: &mut usize) {
 /// streaming API instead.
 #[cfg(test)]
 pub(crate) fn parse_sse_line(line: &str) -> Option<Result<ChatCompletionChunk>> {
-    // Strip "data:" then optionally one leading space (RFC 8895 §3.3).
     let raw = line.strip_prefix("data:")?;
     let data = raw.strip_prefix(' ').unwrap_or(raw).trim();
     if data == "[DONE]" {
@@ -478,43 +411,30 @@ pub(crate) fn parse_sse_line(line: &str) -> Option<Result<ChatCompletionChunk>> 
     }))
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    // ─── BytesMut pool tests ──────────────────────────────────────────────────
-
     #[test]
     fn bytes_pool_reuses_buffer() {
-        // Acquire and release a buffer.
         let buf = pool_acquire();
         let ptr_before = buf.as_ptr();
         pool_release(buf);
 
-        // A second acquire on the same thread should get the same backing store.
         let buf2 = pool_acquire();
         let ptr_after = buf2.as_ptr();
 
-        // The pointer should be the same, confirming reuse.
         assert_eq!(ptr_before, ptr_after, "pool should reuse the same BytesMut allocation");
         pool_release(buf2);
     }
 
     #[test]
     fn bytes_pool_discards_oversized_buffers() {
-        // Create a buffer that exceeds the pool cap.
         let mut big = BytesMut::with_capacity(MAX_POOL_BUFFER_CAPACITY + 1);
-        // Write enough to actually allocate at least MAX_POOL_BUFFER_CAPACITY + 1.
         big.resize(MAX_POOL_BUFFER_CAPACITY + 1, 0u8);
 
         pool_release(big);
 
-        // A subsequent acquire should not get the oversized buffer back.
-        // It should instead allocate a fresh 4 KiB buffer.
         let acquired = pool_acquire();
         assert!(
             acquired.capacity() <= 4096,
@@ -523,8 +443,6 @@ mod tests {
         );
         pool_release(acquired);
     }
-
-    // ─── SseParser pool isolation ─────────────────────────────────────────────
 
     #[test]
     fn sse_parser_does_not_hold_idle_buffer_when_stream_idle() {
@@ -544,22 +462,16 @@ mod tests {
             }
         }
 
-        // Seed the pool with a known buffer so we can detect whether
-        // SseParser construction drains it.
         let sentinel = pool_acquire();
         let sentinel_ptr = sentinel.as_ptr();
         pool_release(sentinel);
 
-        // Constructing SseParser must NOT call pool_acquire; the sentinel
-        // buffer must remain in the pool slot.
         let parser = SseParser::new(
             NeverStream,
             |_data: &str| -> Result<Option<crate::types::ChatCompletionChunk>> { Ok(None) },
             None,
         );
 
-        // Re-acquire from the pool: we must get the same sentinel back,
-        // confirming the constructor did not drain it.
         let reclaimed = pool_acquire();
         assert_eq!(
             reclaimed.as_ptr(),
@@ -568,7 +480,6 @@ mod tests {
         );
         pool_release(reclaimed);
 
-        // Drop the parser and confirm Drop does not corrupt the pool slot.
         drop(parser);
 
         let after_drop = pool_acquire();
@@ -579,8 +490,6 @@ mod tests {
         );
         pool_release(after_drop);
     }
-
-    // ─── Cancellation tests ───────────────────────────────────────────────────
 
     #[cfg(feature = "native-http")]
     #[tokio::test]
@@ -607,17 +516,14 @@ mod tests {
         let token = CancellationToken::new();
         let token_clone = token.clone();
 
-        // Build an SseParser wrapping the infinite stream.
         let mut parser: Pin<Box<SseParser<_, _>>> = Box::pin(SseParser::new(
             InfiniteStream,
             |_data: &str| -> Result<Option<ChatCompletionChunk>> { Ok(None) },
             Some(token_clone),
         ));
 
-        // Cancel the token.
         token.cancel();
 
-        // The stream should immediately return None (clean termination).
         let result = futures_util::StreamExt::next(&mut parser).await;
         assert!(result.is_none(), "cancelled stream should return None immediately");
     }

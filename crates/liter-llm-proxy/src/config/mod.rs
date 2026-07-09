@@ -23,10 +23,6 @@ use std::path::Path;
 use secrecy::SecretString;
 use serde::Deserialize;
 
-// ---------------------------------------------------------------------------
-// Default helpers
-// ---------------------------------------------------------------------------
-
 fn default_timeout() -> u64 {
     120
 }
@@ -38,10 +34,6 @@ fn default_retries() -> u32 {
 fn default_cache_backend() -> String {
     "memory".to_string()
 }
-
-// ---------------------------------------------------------------------------
-// Sub-configs defined in mod.rs (not large enough for their own files)
-// ---------------------------------------------------------------------------
 
 /// General proxy behaviour: master key, timeouts, retries, feature flags.
 ///
@@ -129,10 +121,6 @@ pub struct CooldownConfig {
     pub duration_secs: u64,
 }
 
-// ---------------------------------------------------------------------------
-// Top-level ProxyConfig
-// ---------------------------------------------------------------------------
-
 /// Root configuration for the liter-llm proxy server.
 ///
 /// Loaded from a `liter-llm-proxy.toml` file. After deserialization all
@@ -163,10 +151,6 @@ pub struct ProxyConfig {
     pub security: SecurityConfig,
 }
 
-// ---------------------------------------------------------------------------
-// Environment variable interpolation
-// ---------------------------------------------------------------------------
-
 /// Replace all `${VAR_NAME}` occurrences in `s` with the value of the
 /// corresponding environment variable. Unknown variables are replaced with
 /// the empty string.
@@ -176,7 +160,6 @@ pub fn interpolate_env_vars(s: &str) -> String {
 
     while let Some(ch) = chars.next() {
         if ch == '$' && chars.peek() == Some(&'{') {
-            // consume '{'
             chars.next();
             let mut var_name = String::new();
             let mut found_closing = false;
@@ -192,7 +175,6 @@ pub fn interpolate_env_vars(s: &str) -> String {
                     result.push_str(&val);
                 }
             } else {
-                // No closing '}' found — treat `${...` as literal text.
                 result.push('$');
                 result.push('{');
                 result.push_str(&var_name);
@@ -255,7 +237,6 @@ mod tests {
 
     use super::*;
 
-    // 1. Parse minimal config (empty string)
     #[test]
     fn parse_minimal_config() {
         let config = ProxyConfig::from_toml_str("").expect("TOML config should parse");
@@ -273,7 +254,6 @@ mod tests {
         assert!(config.cooldown.is_none());
     }
 
-    // 2. Parse full config with all sections
     #[test]
     fn parse_full_config() {
         let toml = r#"
@@ -347,14 +327,12 @@ duration_secs = 60
 "#;
         let config = ProxyConfig::from_toml_str(toml).expect("TOML config should parse");
 
-        // Server
         assert_eq!(config.server.host, "127.0.0.1");
         assert_eq!(config.server.port, 8080);
         assert_eq!(config.server.request_timeout_secs, 300);
         assert_eq!(config.server.body_limit_bytes, 5_242_880);
         assert_eq!(config.server.cors_origins, vec!["https://example.com"]);
 
-        // General
         assert_eq!(
             config.general.master_key.as_ref().map(|s| s.expose_secret()),
             Some("sk-master")
@@ -364,7 +342,6 @@ duration_secs = 60
         assert!(config.general.enable_cost_tracking);
         assert!(config.general.enable_tracing);
 
-        // Models
         assert_eq!(config.models.len(), 2);
         assert_eq!(config.models[0].name, "gpt-4o");
         assert_eq!(config.models[0].provider_model, "openai/gpt-4o");
@@ -373,34 +350,28 @@ duration_secs = 60
         assert_eq!(config.models[1].name, "claude-sonnet");
         assert!(config.models[1].api_key.is_none());
 
-        // Aliases
         assert_eq!(config.aliases.len(), 1);
         assert_eq!(config.aliases[0].pattern, "anthropic/*");
 
-        // Keys
         assert_eq!(config.keys.len(), 1);
         assert_eq!(config.keys[0].key, "vk-team-a");
         assert_eq!(config.keys[0].models, vec!["gpt-4o"]);
         assert_eq!(config.keys[0].rpm, Some(60));
 
-        // Rate limit
         let rl = config.rate_limit.expect("rate_limit should be present");
         assert_eq!(rl.rpm, Some(120));
         assert_eq!(rl.tpm, Some(500_000));
 
-        // Budget
         let budget = config.budget.expect("budget should be present");
         assert_eq!(budget.global_limit, Some(100.0));
         assert_eq!(budget.enforcement, EnforcementMode::Soft);
         assert_eq!(budget.model_limits.get("openai/gpt-4o"), Some(&50.0));
 
-        // Cache
         let cache = config.cache.expect("cache should be present");
         assert_eq!(cache.max_entries, Some(1024));
         assert_eq!(cache.ttl_seconds, Some(600));
         assert_eq!(cache.backend, "memory");
 
-        // Files
         let files = config.files.expect("files should be present");
         assert_eq!(files.backend, "s3");
         assert_eq!(files.prefix, "proxy-files/");
@@ -409,20 +380,16 @@ duration_secs = 60
             "my-bucket"
         );
 
-        // Health
         let health = config.health.expect("health should be present");
         assert_eq!(health.interval_secs, Some(30));
         assert_eq!(health.probe_model.as_deref(), Some("openai/gpt-4o-mini"));
 
-        // Cooldown
         assert_eq!(config.cooldown.expect("cooldown should be present").duration_secs, 60);
     }
 
-    // 3. Env var interpolation
     #[test]
     fn env_var_interpolation() {
-        // SAFETY: test is not running concurrently with other tests that
-        // depend on these specific env vars.
+        // ~keep SAFETY: this test does not run concurrently with users of these env vars.
         unsafe {
             std::env::set_var("LITER_TEST_KEY", "sk-from-env");
             std::env::set_var("LITER_TEST_HOST", "10.0.0.1");
@@ -442,7 +409,7 @@ master_key = "${LITER_TEST_KEY}"
             Some("sk-from-env")
         );
 
-        // SAFETY: cleaning up test-only env vars.
+        // ~keep SAFETY: cleaning up test-only env vars.
         unsafe {
             std::env::remove_var("LITER_TEST_KEY");
             std::env::remove_var("LITER_TEST_HOST");
@@ -465,7 +432,6 @@ host = "literal-value"
         assert_eq!(result, "prefix--suffix");
     }
 
-    // 4. Unknown field rejection
     #[test]
     fn rejects_unknown_top_level_field() {
         let toml = r#"
@@ -493,7 +459,6 @@ unknown_option = true
         assert!(ProxyConfig::from_toml_str(toml).is_err());
     }
 
-    // 5. Default values applied correctly
     #[test]
     fn default_values_applied() {
         let config = ProxyConfig::default();
@@ -543,7 +508,6 @@ max_entries = 256
         assert!(files.backend_config.is_empty());
     }
 
-    // 6. Multiple models with same name (load balancing)
     #[test]
     fn multiple_models_same_name() {
         let toml = r#"
@@ -564,7 +528,6 @@ api_key = "sk-key-2"
         assert_ne!(config.models[0].provider_model, config.models[1].provider_model);
     }
 
-    // 7. Model with fallbacks
     #[test]
     fn model_with_fallbacks() {
         let toml = r#"
@@ -596,15 +559,14 @@ provider_model = "groq/llama3-70b"
 
     #[test]
     fn interpolate_env_vars_multiple() {
-        // SAFETY: test is not running concurrently with other tests that
-        // depend on these specific env vars.
+        // ~keep SAFETY: this test does not run concurrently with users of these env vars.
         unsafe {
             std::env::set_var("LITER_A", "hello");
             std::env::set_var("LITER_B", "world");
         }
         let result = interpolate_env_vars("${LITER_A} ${LITER_B}!");
         assert_eq!(result, "hello world!");
-        // SAFETY: cleaning up test-only env vars.
+        // ~keep SAFETY: cleaning up test-only env vars.
         unsafe {
             std::env::remove_var("LITER_A");
             std::env::remove_var("LITER_B");
@@ -613,7 +575,6 @@ provider_model = "groq/llama3-70b"
 
     #[test]
     fn interpolate_env_vars_unclosed_brace_treated_as_literal() {
-        // Unclosed `${` should be preserved as literal text, not silently dropped.
         assert_eq!(interpolate_env_vars("prefix-${UNCLOSED"), "prefix-${UNCLOSED");
         assert_eq!(interpolate_env_vars("${"), "${");
         assert_eq!(interpolate_env_vars("a${b"), "a${b");

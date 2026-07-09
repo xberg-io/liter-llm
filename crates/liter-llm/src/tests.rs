@@ -271,7 +271,6 @@ mod serde_tests {
 
     #[test]
     fn finish_reason_other_unknown_string() {
-        // Catch-all variant for unknown finish reasons from non-OpenAI providers
         let json = r#""custom_stop_reason""#;
         let reason: FinishReason = serde_json::from_str(json).expect("deserialization should not fail");
         assert_eq!(reason, FinishReason::Other);
@@ -472,7 +471,6 @@ mod serde_tests {
 
     #[test]
     fn message_variant_equality() {
-        // Test that Message variants support PartialEq correctly
         let msg1 = Message::System(SystemMessage {
             content: "test".into(),
             name: None,
@@ -570,8 +568,6 @@ mod serde_tests {
         assert_eq!(msg, parsed);
     }
 
-    // -- Search type serialization tests --
-
     #[test]
     fn search_request_round_trip() {
         use crate::types::search::SearchRequest;
@@ -628,8 +624,6 @@ mod serde_tests {
         assert_eq!(resp.model, "brave/web-search");
         assert_eq!(resp.results[0].title, "Rust");
     }
-
-    // -- OCR type serialization tests --
 
     #[test]
     fn ocr_request_url_variant() {
@@ -742,9 +736,6 @@ mod provider_tests {
 
     #[test]
     fn detect_mistral_prefix() {
-        // The registry uses the "mistral/" routing prefix for Mistral models.
-        // Bare model names without a slash prefix return None; callers should
-        // use the prefixed form "mistral/mistral-large-latest".
         let p = detect_provider("mistral/mistral-large-latest").expect("provider should be detected");
         assert_eq!(p.name(), "mistral");
         assert_eq!(p.base_url(), "https://api.mistral.ai/v1");
@@ -763,9 +754,6 @@ mod provider_tests {
     }
 
     fn make_provider(auth_type: AuthType) -> ConfigDrivenProvider {
-        // Box::leak gives us a &'static reference, which ConfigDrivenProvider
-        // now requires.  Leaking in tests is acceptable — each test process is
-        // short-lived and the total number of leaked configs is tiny.
         let cfg: &'static ProviderConfig = Box::leak(Box::new(ProviderConfig {
             name: "test-provider".into(),
             display_name: None,
@@ -853,7 +841,7 @@ mod provider_tests {
     fn provider_strip_model_prefix_openai() {
         let p = OpenAiProvider;
         let stripped = p.strip_model_prefix("gpt-4");
-        assert_eq!(stripped, "gpt-4"); // OpenAI has no prefix
+        assert_eq!(stripped, "gpt-4");
     }
 
     #[test]
@@ -968,11 +956,7 @@ mod provider_tests {
 
     #[test]
     fn vertex_ai_does_not_match_gemini_unprefixed() {
-        // Unprefixed "gemini-*" models route to the Google AI Studio (gemini)
-        // provider, not Vertex AI.  Vertex AI requires the explicit prefix.
         let p = detect_provider("gemini-2.0-flash");
-        // May return Some (from the registry gemini provider) but must NOT be
-        // the vertex_ai provider.
         if let Some(p) = p {
             assert_ne!(p.name(), "vertex_ai");
         }
@@ -984,8 +968,6 @@ mod provider_tests {
         let p = VertexAiProvider::new("test-project", "us-central1");
         assert!(p.extra_headers().is_empty());
     }
-
-    // ── AWS Bedrock ─────────────────────────────────────────────────────────
 
     #[test]
     fn detect_bedrock_by_prefix() {
@@ -1000,7 +982,6 @@ mod provider_tests {
         let p = BedrockProvider::from_env();
         assert!(p.matches_model("bedrock/anthropic.claude-3-sonnet-20240229-v1:0"));
         assert!(p.matches_model("bedrock/amazon.nova-pro-v1:0"));
-        // Unprefixed model IDs must NOT match — they belong to other providers.
         assert!(!p.matches_model("anthropic.claude-3-sonnet-20240229-v1:0"));
         assert!(!p.matches_model("amazon.nova-pro-v1:0"));
     }
@@ -1019,7 +1000,6 @@ mod provider_tests {
     fn bedrock_bare_model_not_stripped() {
         use crate::provider::bedrock::BedrockProvider;
         let p = BedrockProvider::from_env();
-        // Without the "bedrock/" prefix, the model name is returned unchanged.
         assert_eq!(
             p.strip_model_prefix("anthropic.claude-3-sonnet-20240229-v1:0"),
             "anthropic.claude-3-sonnet-20240229-v1:0"
@@ -1028,7 +1008,6 @@ mod provider_tests {
 
     #[test]
     fn bedrock_auth_header_returns_none() {
-        // SigV4 uses computed headers, not a static auth header.
         let p =
             detect_provider("bedrock/anthropic.claude-3-sonnet-20240229-v1:0").expect("provider should be detected");
         let header = p.auth_header("ignored-for-sigv4");
@@ -1052,23 +1031,15 @@ mod provider_tests {
     #[test]
     fn bedrock_default_region_is_us_east_1() {
         use crate::provider::bedrock::BedrockProvider;
-        // Ensure AWS_DEFAULT_REGION / AWS_REGION are not set in this test process.
-        // We use a direct constructor to guarantee the region regardless of env.
         let p = BedrockProvider::new("us-east-1");
         assert!(p.base_url().contains("us-east-1"));
     }
 
     #[test]
     fn bedrock_signing_headers_without_feature_returns_empty() {
-        // When the `bedrock` feature is disabled, signing_headers() must return
-        // an empty vec so requests work against override base-URLs (e.g. mock servers).
-        // When the feature IS enabled but credentials are absent, it also returns
-        // empty (the error is silently swallowed to avoid panicking).
         use crate::provider::bedrock::BedrockProvider;
         let p = BedrockProvider::new("us-east-1");
         let headers = p.signing_headers("POST", "http://localhost/chat/completions", b"{}");
-        // In CI without real AWS credentials, headers will be empty either way.
-        // The important invariant: it must not panic.
         let _ = headers;
     }
 
@@ -1140,7 +1111,6 @@ mod provider_tests {
             .transform_request(&mut body)
             .expect("transform_request should not fail");
 
-        // Field untouched when no mappings configured
         assert_eq!(body["max_completion_tokens"], 512);
     }
 
@@ -1233,8 +1203,6 @@ mod error_tests {
 
     #[test]
     fn error_from_403_forbidden() {
-        // 403 Forbidden indicates invalid credentials / insufficient
-        // permissions — map to Authentication, not ServerError.
         let err = LiterLlmError::from_status(403, "Forbidden", None);
         assert!(matches!(err, LiterLlmError::Authentication { .. }));
     }
@@ -1296,7 +1264,7 @@ mod retry_tests {
         assert!(should_retry(429, 0, 3, None).is_some());
         assert!(should_retry(429, 1, 3, None).is_some());
         assert!(should_retry(429, 2, 3, None).is_some());
-        assert!(should_retry(429, 3, 3, None).is_none()); // exhausted
+        assert!(should_retry(429, 3, 3, None).is_none());
     }
 
     #[test]
@@ -1320,8 +1288,6 @@ mod retry_tests {
     #[test]
     fn exponential_backoff() {
         use std::time::Duration;
-        // With jitter in [0.5, 1.0] of the base delay, verify each attempt
-        // stays within its expected range.  Base delays: 1s, 2s, 4s.
         let d0 = should_retry(429, 0, 3, None).expect("should_retry should return Some for retryable status");
         let d1 = should_retry(429, 1, 3, None).expect("should_retry should return Some for retryable status");
         let d2 = should_retry(429, 2, 3, None).expect("should_retry should return Some for retryable status");
@@ -1341,10 +1307,8 @@ mod retry_tests {
     #[test]
     fn retry_after_header_ignored_on_500() {
         use std::time::Duration;
-        // Retry-After is only honoured for 429; on 500 we use exponential backoff.
         let server_delay = Duration::from_secs(42);
         let delay = should_retry(500, 0, 3, Some(server_delay)).expect("should retry on 500");
-        // Exponential backoff for attempt 0 = 1 s base, with jitter in [0.5, 1.0].
         assert!(delay >= Duration::from_millis(500) && delay <= Duration::from_secs(1));
     }
 
@@ -1359,7 +1323,6 @@ mod retry_tests {
     #[test]
     fn retry_on_504() {
         use std::time::Duration;
-        // Jitter scales base delay by [0.5, 1.0], so we check ranges.
         let d0 = should_retry(504, 0, 3, None).expect("should_retry should return Some for retryable status");
         assert!(d0 >= Duration::from_millis(500) && d0 <= Duration::from_secs(1));
         let d1 = should_retry(504, 1, 3, None).expect("should_retry should return Some for retryable status");
@@ -1379,7 +1342,6 @@ mod retry_tests {
         use std::time::Duration;
         let server_delay = Duration::from_secs(120);
         let delay = should_retry(429, 0, 3, Some(server_delay)).expect("should retry on 429 with Retry-After");
-        // Should be capped at 60 seconds
         assert_eq!(delay, Duration::from_secs(60));
     }
 
@@ -1388,14 +1350,12 @@ mod retry_tests {
         use std::time::Duration;
         let server_delay = Duration::from_secs(30);
         let delay = should_retry(429, 0, 3, Some(server_delay)).expect("should retry on 429 with Retry-After");
-        // Under 60s cap, should use server value
         assert_eq!(delay, Duration::from_secs(30));
     }
 
     #[test]
     fn exponential_backoff_caps_at_30s() {
         use std::time::Duration;
-        // Attempt 5 would be 2^5 = 32 seconds, capped at 30, then jitter [0.5, 1.0].
         let delay = should_retry(500, 5, 10, None).expect("should_retry should return Some for retryable status");
         assert!(delay >= Duration::from_secs(15) && delay <= Duration::from_secs(30));
     }
@@ -1433,7 +1393,6 @@ mod sse_tests {
 
     #[test]
     fn parse_data_without_space() {
-        // Some implementations emit "data:{json}" without a trailing space.
         let line = r#"data:{"id":"chatcmpl-123","object":"chat.completion.chunk","created":1700000000,"model":"gpt-4","choices":[{"index":0,"delta":{"content":"Hi"},"finish_reason":null}]}"#;
         let result = parse_sse_line(line)
             .expect("parse_sse_line should not fail")
@@ -1453,7 +1412,6 @@ mod config_tests {
 
     #[test]
     fn base_url_sanitization() {
-        // Test trailing slash removal
         let builder = ClientConfigBuilder::new("key").base_url("https://api.example.com/");
         let config = builder.build();
         assert_eq!(
@@ -1461,7 +1419,6 @@ mod config_tests {
             "https://api.example.com"
         );
 
-        // Test multiple trailing slashes
         let builder = ClientConfigBuilder::new("key").base_url("https://api.example.com///");
         let config = builder.build();
         assert_eq!(
@@ -1469,7 +1426,6 @@ mod config_tests {
             "https://api.example.com"
         );
 
-        // Test no trailing slash (remains unchanged)
         let builder = ClientConfigBuilder::new("key").base_url("https://api.example.com");
         let config = builder.build();
         assert_eq!(
@@ -1478,8 +1434,6 @@ mod config_tests {
         );
     }
 }
-
-// ── 2.F tests: capabilities, streaming_format, type-state builder ─────────────
 
 #[cfg(test)]
 mod capability_tests {
@@ -1493,8 +1447,6 @@ mod capability_tests {
     fn schema_all_providers_have_capabilities_and_streaming_format() {
         let providers = all_providers().expect("registry should load");
         for cfg in providers {
-            // capabilities() accesses the internal ProviderEntry which carries
-            // the deserialized capabilities and streaming_format fields.
             let caps = capabilities(&cfg.name);
             let _: bool = caps.vision;
             let _: bool = caps.reasoning;
@@ -1584,16 +1536,6 @@ mod capability_tests {
 
 #[cfg(test)]
 mod builder_tests {
-    // Positive test: ClientBuilder::new().api_key().provider().build() compiles and succeeds.
-    //
-    // The negative compile-time test (calling .build() without api_key + provider)
-    // is enforced by the type-state.  The `build` method is only defined on
-    // `ClientBuilder<WithApiKey, WithProvider>`.  Uncommenting any of the
-    // following in a test would cause a compile error:
-    //
-    //   liter_llm::ClientBuilder::new().build();                     // no method `build`
-    //   liter_llm::ClientBuilder::new().api_key("k").build();        // no method `build`
-    //   liter_llm::ClientBuilder::new().provider("openai").build();  // no method `build`
 
     use crate::client::builder::{ClientBuilder, NoApiKey, NoProvider, WithApiKey, WithProvider};
 
@@ -1646,11 +1588,6 @@ mod builder_tests {
     }
 }
 
-// Regression test: `liter_llm::ContentPart` must resolve to the VLM/chat
-// variant (types::ContentPart), not the realtime variant.  Before the fix,
-// `realtime::ContentPart` was re-exported at the crate root and shadowed
-// `types::ContentPart`, causing E0599 ("no variant named `ImageUrl`") in
-// downstream VLM-OCR consumers.
 #[cfg(test)]
 mod content_part_root_reexport_tests {
     /// Importing `liter_llm::ContentPart` must expose the `ImageUrl` variant.

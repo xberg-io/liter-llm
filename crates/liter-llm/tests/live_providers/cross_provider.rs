@@ -97,6 +97,5 @@ async fn chat_parity_across_providers() {
             resp.choices[0].message.text().is_some_and(|c| !c.is_empty()),
             "{provider}: first choice content should be non-empty"
         );
-        // Note: Gemini doesn't include model name in responses, so we skip this check.
     }
 }

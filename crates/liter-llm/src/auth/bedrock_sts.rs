@@ -164,7 +164,6 @@ impl WebIdentityCredentialProvider {
             });
         }
 
-        // Parse the XML response to extract credentials.
         let creds = parse_sts_response(&body)?;
 
         Ok(CachedCredentials {
@@ -180,7 +179,6 @@ impl WebIdentityCredentialProvider {
 impl CredentialProvider for WebIdentityCredentialProvider {
     fn resolve(&self) -> BoxFuture<'_, crate::error::Result<Credential>> {
         Box::pin(async move {
-            // Fast path: read lock to check cache.
             {
                 let guard = self.cached.read().await;
                 if let Some(ref cached) = *guard
@@ -194,10 +192,8 @@ impl CredentialProvider for WebIdentityCredentialProvider {
                 }
             }
 
-            // Slow path: write lock to refresh.
             let mut guard = self.cached.write().await;
 
-            // Double-check after acquiring write lock.
             if let Some(ref cached) = *guard
                 && cached.is_valid()
             {
@@ -291,7 +287,7 @@ mod tests {
             access_key_id: SecretString::from("AKIA...".to_owned()),
             secret_access_key: SecretString::from("secret".to_owned()),
             session_token: SecretString::from("token".to_owned()),
-            // Zero lifetime is immediately expired; avoids Duration subtraction panic on Windows.
+            // ~keep Zero lifetime means immediately expired and avoids Windows Instant subtraction panics.
             acquired_at: Instant::now(),
             expires_in_secs: 0,
         };
@@ -352,10 +348,10 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore] // Requires network access and valid AWS OIDC credentials.
+    #[ignore]
     async fn live_sts_web_identity_exchange() {
         let Ok(provider) = WebIdentityCredentialProvider::from_env() else {
-            return; // Skip when AWS OIDC credentials are not configured.
+            return;
         };
         let credential = provider.resolve().await.expect("STS exchange failed");
         assert!(matches!(credential, Credential::AwsCredentials { .. }));

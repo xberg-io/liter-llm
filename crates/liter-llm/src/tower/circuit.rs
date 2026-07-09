@@ -37,8 +37,6 @@ use super::types::{LlmRequest, LlmResponse};
 use crate::client::BoxFuture;
 use crate::error::{LiterLlmError, Result};
 
-// ─── CircuitState ─────────────────────────────────────────────────────────────
-
 /// Observable state of a circuit breaker.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
@@ -60,8 +58,6 @@ impl CircuitState {
         }
     }
 }
-
-// ─── ProbeGuard ───────────────────────────────────────────────────────────────
 
 /// RAII guard that releases the probe slot via [`CircuitPolicy::release_probe_slot`]
 /// when dropped.
@@ -92,14 +88,11 @@ impl<P: CircuitPolicy> ProbeGuard<P> {
 impl<P: CircuitPolicy> Drop for ProbeGuard<P> {
     fn drop(&mut self) {
         if let Self::Half(policy) = self {
-            // The probe future was dropped without completing (cancel or panic).
-            // Release the slot so subsequent requests can attempt a probe.
+            // ~keep Dropped probe futures release the HalfOpen slot so later requests can probe.
             policy.release_probe_slot();
         }
     }
 }
-
-// ─── CircuitPolicy trait ──────────────────────────────────────────────────────
 
 /// Policy that drives a circuit breaker's state transitions.
 ///
@@ -131,8 +124,6 @@ pub trait CircuitPolicy: Send + Sync + 'static {
     /// this to clear the flag.
     fn release_probe_slot(&self) {}
 }
-
-// ─── ExponentialBackoffCircuit ─────────────────────────────────────────────────
 
 /// Per-provider atomic state shared between all clones of the service.
 struct CircuitInner {
@@ -208,7 +199,6 @@ impl ExponentialBackoffCircuit {
     /// has opened.
     fn current_backoff(&self) -> Duration {
         let count = self.open_count.load(Ordering::Relaxed);
-        // 2^count saturation — clamp count to avoid overflow in the shift.
         let shift = count.min(62) as u64;
         let factor = 1u64.checked_shl(shift as u32).unwrap_or(u64::MAX);
         let nanos = self.base_backoff.as_nanos().saturating_mul(factor as u128);
@@ -240,7 +230,7 @@ impl CircuitPolicy for ExponentialBackoffCircuit {
     fn record_success(&self) {
         self.inner.consecutive_failures.store(0, Ordering::Relaxed);
         let prev = self.inner.state.swap(CircuitState::Closed as u8, Ordering::Release);
-        // Release the probe slot so a future HalfOpen round can happen.
+        // ~keep Successful probes release the HalfOpen slot for future open cycles.
         self.inner.probe_in_flight.store(false, Ordering::Release);
         if CircuitState::from_u8(prev) != CircuitState::Closed {
             tracing::info!("circuit breaker closed after successful probe");
@@ -250,16 +240,11 @@ impl CircuitPolicy for ExponentialBackoffCircuit {
     fn record_failure(&self) {
         let failures = self.inner.consecutive_failures.fetch_add(1, Ordering::AcqRel) + 1;
 
-        // Open if threshold reached, or re-open after a failed half-open probe.
-        // Use a CAS so that exactly ONE concurrent caller performs the transition:
-        // the winner atomically changes the state from non-Open to Open; all other
-        // concurrent callers see the CAS fail and skip.  This prevents N concurrent
-        // failures from incrementing `open_count` N times, which would make the
-        // exponential-backoff exponent grow N times faster than intended.
+        // ~keep Use a CAS so exactly one concurrent failure opens the circuit and increments backoff.
         let current_u8 = self.inner.state.load(Ordering::Acquire);
         let current = CircuitState::from_u8(current_u8);
 
-        // Already open: nothing to do.
+        // ~keep Already-open circuits skip failure accounting to avoid backoff inflation.
         if current == CircuitState::Open {
             return;
         }
@@ -269,9 +254,7 @@ impl CircuitPolicy for ExponentialBackoffCircuit {
             return;
         }
 
-        // Attempt to atomically transition Closed/HalfOpen to Open.  Only the
-        // single thread whose CAS succeeds proceeds to update metadata; losers
-        // see Err(_) and skip silently because another thread already won.
+        // ~keep Only the CAS winner updates open metadata; losers skip because another caller opened it.
         let result = self.inner.state.compare_exchange(
             current_u8,
             CircuitState::Open as u8,
@@ -280,17 +263,14 @@ impl CircuitPolicy for ExponentialBackoffCircuit {
         );
 
         if result.is_ok() {
-            // We are the sole winner: capture the backoff BEFORE incrementing
-            // open_count so that `current_backoff()` uses the pre-transition
-            // exponent.  The increment records that a new open cycle has begun
-            // (for the NEXT half-open probe delay).
+            // ~keep Capture backoff before incrementing so this cycle uses the pre-transition exponent.
             let backoff = self.current_backoff();
             let open_count = self.open_count.fetch_add(1, Ordering::Relaxed) + 1;
             {
                 let mut guard = self.inner.open_since.lock().expect("open_since mutex poisoned");
                 *guard = Some(Instant::now());
             }
-            // Release the probe slot; a fresh cooldown is now in effect.
+            // ~keep Release the probe slot when reopening; a fresh cooldown is now in effect.
             self.inner.probe_in_flight.store(false, Ordering::Release);
             tracing::warn!(
                 consecutive_failures = failures,
@@ -299,16 +279,16 @@ impl CircuitPolicy for ExponentialBackoffCircuit {
                 "circuit breaker opened"
             );
         }
-        // Losers (result.is_err()) skip silently -- the circuit is already Open.
+        // ~keep CAS losers skip silently because the circuit is already Open.
     }
 
     fn should_allow(&self) -> bool {
         match CircuitState::from_u8(self.inner.state.load(Ordering::Acquire)) {
             CircuitState::Closed => true,
             CircuitState::Open => {
-                // Attempt the timer-driven Open → HalfOpen transition.
+                // ~keep Timer-driven Open-to-HalfOpen transition happens on the request path.
                 if self.maybe_half_open() {
-                    // Claim the single probe slot.
+                    // ~keep Claim the single HalfOpen probe slot.
                     self.inner
                         .probe_in_flight
                         .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
@@ -318,7 +298,7 @@ impl CircuitPolicy for ExponentialBackoffCircuit {
                 }
             }
             CircuitState::HalfOpen => {
-                // Exactly ONE concurrent probe: first CAS winner gets the slot.
+                // ~keep Exactly one concurrent HalfOpen probe: first CAS winner gets the slot.
                 self.inner
                     .probe_in_flight
                     .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
@@ -339,8 +319,6 @@ impl CircuitPolicy for ExponentialBackoffCircuit {
         self.inner.probe_in_flight.store(false, Ordering::Release);
     }
 }
-
-// ─── Layer ────────────────────────────────────────────────────────────────────
 
 /// Tower [`Layer`] that wraps a service with a [`CircuitPolicy`].
 ///
@@ -381,8 +359,6 @@ impl<P: CircuitPolicy, S> Layer<S> for CircuitLayer<P> {
     }
 }
 
-// ─── Service ─────────────────────────────────────────────────────────────────
-
 /// Tower service produced by [`CircuitLayer`].
 #[cfg_attr(alef, alef(skip))]
 pub struct CircuitService<P, S> {
@@ -422,19 +398,12 @@ where
         let system = model.split_once('/').map(|(p, _)| p.to_owned()).unwrap_or_default();
         let state = self.policy.state();
 
-        // Tower readiness contract: `poll_ready` was called on `self.inner`
-        // (the "polled-ready" instance).  We must call `inner.call(req)` on
-        // that exact instance -- not on a fresh clone -- to consume any permit
-        // reserved by `poll_ready` (e.g. ConcurrencyLimit slot, Buffer slot).
-        //
-        // Standard pattern (docs.rs/tower "Be careful when cloning inner
-        // services"): take the ready instance for this call, leave a fresh
-        // clone behind so the next `poll_ready`/`call` round starts clean.
+        // ~keep Call the exact service instance readied by poll_ready so permits are consumed.
+        // ~keep Leave a fresh clone behind for the next poll_ready/call cycle.
         let clone = self.inner.clone();
         let mut inner = std::mem::replace(&mut self.inner, clone);
 
         Box::pin(async move {
-            // Use a block to ensure `EnteredSpan` is dropped before any await.
             let (allowed, is_probe) = {
                 let _span = tracing::debug_span!(
                     "circuit_breaker",
@@ -449,7 +418,6 @@ where
             if !allowed {
                 tracing::debug!(provider = %provider, "circuit open -- rejecting request");
 
-                // Emit circuit metric via the metrics module.
                 super::metrics::record_circuit_trip(&system, &model);
 
                 return Err(LiterLlmError::ServiceUnavailable {
@@ -458,10 +426,7 @@ where
                 });
             }
 
-            // Arm a probe guard when we are on the HalfOpen probe path.
-            // If the future is dropped before `record_success`/`record_failure`
-            // are called (panic or cancellation), the guard releases the probe
-            // slot so the next request can attempt a probe.
+            // ~keep ProbeGuard releases the HalfOpen slot if the future is cancelled or panics.
             let mut probe_guard: ProbeGuard<P> = if is_probe {
                 ProbeGuard::Half(Arc::clone(&policy))
             } else {
@@ -472,22 +437,18 @@ where
 
             match inner.call(req).await {
                 Ok(resp) => {
-                    // Disarm the guard before calling record_success, which
-                    // handles probe_in_flight internally.
+                    // ~keep Disarm before record_success; it handles probe_in_flight internally.
                     probe_guard.disarm();
                     policy.record_success();
                     Ok(resp)
                 }
                 Err(e) => {
                     if e.is_transient() {
-                        // Disarm before record_failure, which clears probe slot.
+                        // ~keep Disarm before record_failure; it clears the probe slot.
                         probe_guard.disarm();
                         policy.record_failure();
                     } else {
-                        // Non-transient error: if we are on the probe path, the
-                        // circuit stays HalfOpen (we did not count this as a
-                        // failure), so we need to release the probe slot
-                        // explicitly so the next request can retry.
+                        // ~keep Non-transient probe errors leave HalfOpen unchanged; release the slot manually.
                         probe_guard.disarm();
                         if is_probe {
                             policy.release_probe_slot();
@@ -499,8 +460,6 @@ where
         })
     }
 }
-
-// ─── Tests ────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -531,12 +490,10 @@ mod tests {
         let layer = CircuitLayer::new(Arc::clone(&p), "test");
         let mut svc = layer.layer(LlmService::new(MockClient::failing_timeout()));
 
-        // Drive 3 transient failures.
         for _ in 0..3 {
             let _ = svc.call(LlmRequest::Chat(chat_req("openai/gpt-4"))).await;
         }
 
-        // State is updated synchronously -- no sleep needed.
         assert_eq!(
             p.state(),
             CircuitState::Open,
@@ -552,12 +509,10 @@ mod tests {
         let layer = CircuitLayer::new(Arc::clone(&p), "test");
         let mut svc = layer.layer(LlmService::new(mock));
 
-        // Trigger open -- state is set synchronously, no sleep needed.
         let _ = svc.call(LlmRequest::Chat(chat_req("openai/gpt-4"))).await;
 
         let before = call_count.load(std::sync::atomic::Ordering::SeqCst);
 
-        // Next call should be rejected by the layer, NOT by the inner service.
         let err = svc
             .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
             .await
@@ -567,7 +522,6 @@ mod tests {
             matches!(err, LiterLlmError::ServiceUnavailable { .. }),
             "expected ServiceUnavailable from open circuit, got {err:?}"
         );
-        // Inner service should NOT have been called again.
         assert_eq!(
             call_count.load(std::sync::atomic::Ordering::SeqCst),
             before,
@@ -581,14 +535,11 @@ mod tests {
         let layer = CircuitLayer::new(Arc::clone(&p), "test");
         let mut svc = layer.layer(LlmService::new(MockClient::failing_timeout()));
 
-        // Open the circuit -- state is set synchronously, no sleep needed.
         let _ = svc.call(LlmRequest::Chat(chat_req("openai/gpt-4"))).await;
         assert_eq!(p.state(), CircuitState::Open);
 
-        // Wait for backoff to elapse.
         tokio::time::sleep(Duration::from_millis(50)).await;
 
-        // Manually transition to half-open (mirrors what the layer does on probe).
         let allowed = p.maybe_half_open();
         assert!(allowed, "should transition to half-open after backoff");
         assert_eq!(p.state(), CircuitState::HalfOpen);
@@ -597,19 +548,15 @@ mod tests {
     #[tokio::test]
     async fn circuit_closes_after_successful_probe() {
         let p = policy(1);
-        // First service: always fails.
         let failing = LlmService::new(MockClient::failing_timeout());
         let layer = CircuitLayer::new(Arc::clone(&p), "test");
         let mut svc = layer.layer(failing);
 
-        // Open the circuit -- state is set synchronously.
         let _ = svc.call(LlmRequest::Chat(chat_req("openai/gpt-4"))).await;
         assert_eq!(p.state(), CircuitState::Open);
 
-        // Manually transition to half-open.
         p.inner.state.store(CircuitState::HalfOpen as u8, Ordering::Release);
 
-        // Now swap in a succeeding inner service (simulate service recovery).
         let recovering = LlmService::new(MockClient::ok());
         let layer2 = CircuitLayer::new(Arc::clone(&p), "test");
         let mut svc2 = layer2.layer(recovering);
@@ -626,14 +573,12 @@ mod tests {
     async fn non_transient_errors_do_not_trip_circuit() {
         let p = policy(2);
         let layer = CircuitLayer::new(Arc::clone(&p), "test");
-        // Authentication errors are not transient.
         let mut svc = layer.layer(LlmService::new(MockClient::failing_auth()));
 
         for _ in 0..5 {
             let _ = svc.call(LlmRequest::Chat(chat_req("openai/gpt-4"))).await;
         }
 
-        // Circuit should still be closed -- auth errors are not transient.
         assert_eq!(
             p.state(),
             CircuitState::Closed,
@@ -649,9 +594,6 @@ mod tests {
     fn circuit_concurrent_failures_open_count_increments_once() {
         use std::thread;
 
-        // Threshold of 3: each thread calls record_failure once, so threads 3..N
-        // all see failures >= threshold.  Only one should win the CAS and
-        // increment open_count.
         let circuit = Arc::new(ExponentialBackoffCircuit::new(3, Duration::from_millis(50)));
 
         let handles: Vec<_> = (0..10)
@@ -682,9 +624,7 @@ mod tests {
     /// "no current runtime" in non-async contexts (sync tests, Drop impls).
     #[test]
     fn circuit_record_failure_works_outside_tokio_runtime() {
-        // This is a plain (non-async) test function -- no Tokio runtime is active.
         let circuit = ExponentialBackoffCircuit::new(1, Duration::from_millis(50));
-        // Should not panic.
         circuit.record_failure();
         assert_eq!(
             circuit.state(),
@@ -710,8 +650,6 @@ mod tests {
 
         use tower::limit::ConcurrencyLimit;
 
-        // Inner service that blocks until the future is dropped, allowing us to
-        // hold the ConcurrencyLimit permit open across concurrent callers.
         #[derive(Clone)]
         struct BlockingInner {
             call_count: Arc<AtomicUsize>,
@@ -728,7 +666,6 @@ mod tests {
 
             fn call(&mut self, _req: LlmRequest) -> Self::Future {
                 self.call_count.fetch_add(1, AtomicOrdering::SeqCst);
-                // Block forever -- keeps the concurrency permit held.
                 Box::pin(std::future::pending())
             }
         }
@@ -738,7 +675,6 @@ mod tests {
             call_count: Arc::clone(&call_count),
         };
 
-        // Limit to 1 concurrent request.  Wrap it in CircuitService.
         let limited: ConcurrencyLimit<BlockingInner> = ConcurrencyLimit::new(inner, 1);
         let p = Arc::new(ExponentialBackoffCircuit::new(5, Duration::from_millis(50)));
         let mut svc = CircuitService {
@@ -747,30 +683,22 @@ mod tests {
             provider: "test".into(),
         };
 
-        // First poll_ready + call: acquires the permit, dispatches the blocking future.
         futures_util::future::poll_fn(|cx| svc.poll_ready(cx))
             .await
             .expect("first poll_ready should succeed");
         let mut held_fut = svc.call(LlmRequest::ListModels());
 
-        // Drive the future once so that the async block runs to the point where
-        // `inner.call(req)` is invoked (BlockingInner::call increments the counter
-        // and returns `pending()`).  A single poll is sufficient.
         {
             let mut noop_cx = std::task::Context::from_waker(futures_util::task::noop_waker_ref());
             let _ = Pin::new(&mut held_fut).poll(&mut noop_cx);
         }
 
-        // The inner service should have been called exactly once.
         assert_eq!(
             call_count.load(AtomicOrdering::SeqCst),
             1,
             "inner service should have been called exactly once"
         );
 
-        // The concurrency slot is now exhausted.  A second poll_ready on the
-        // circuit service should propagate the Pending from ConcurrencyLimit --
-        // not return Ready by bypassing poll_ready on a stale clone.
         let mut noop_cx = std::task::Context::from_waker(futures_util::task::noop_waker_ref());
         let poll = svc.poll_ready(&mut noop_cx);
         assert!(
@@ -788,11 +716,9 @@ mod tests {
         let mut svc_fail = layer.layer(LlmService::new(MockClient::failing_timeout()));
         let _ = svc_fail.call(LlmRequest::Chat(chat_req("openai/gpt-4"))).await;
         assert_eq!(p.state(), CircuitState::Open);
-        // Wait for real-clock cooldown to elapse.
         tokio::time::sleep(Duration::from_millis(50)).await;
         let layer2 = CircuitLayer::new(Arc::clone(&p), "test");
         let mut svc_ok = layer2.layer(LlmService::new(MockClient::ok()));
-        // Next call: should_allow transitions Open→HalfOpen, claims probe slot.
         let resp = svc_ok
             .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
             .await
@@ -852,13 +778,11 @@ mod tests {
 
         let p = Arc::new(ExponentialBackoffCircuit::new(1, Duration::from_millis(10)));
 
-        // Open the circuit then manually advance to HalfOpen.
         p.record_failure();
         assert_eq!(p.state(), CircuitState::Open);
         p.inner.state.store(CircuitState::HalfOpen as u8, AO::Release);
         p.inner.probe_in_flight.store(false, AO::Release);
 
-        // Inner service that blocks forever (simulates a request that is cancelled).
         #[derive(Clone)]
         struct BlockForever;
         impl tower::Service<LlmRequest> for BlockForever {
@@ -876,20 +800,16 @@ mod tests {
         let layer = CircuitLayer::new(Arc::clone(&p), "test");
         let mut svc = layer.layer(BlockForever);
 
-        // Start a probe call and then immediately drop the future (cancel).
         {
             let fut = svc.call(LlmRequest::Chat(chat_req("openai/gpt-4")));
-            // Dropping `fut` here cancels it — ProbeGuard::drop must fire.
             drop(fut);
         }
 
-        // probe_in_flight must be cleared so the next request can probe.
         assert!(
             !p.inner.probe_in_flight.load(AO::Acquire),
             "probe_in_flight must be false after probe future is dropped"
         );
 
-        // A subsequent request is now allowed to probe (not stuck in HalfOpen-rejected limbo).
         assert!(
             p.should_allow(),
             "should allow another probe after cancelled probe slot was released"

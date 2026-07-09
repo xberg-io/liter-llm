@@ -69,12 +69,7 @@ use crate::tower::cache_policy::{CacheDecision, CachePolicy, CachePolicyContext,
 use crate::types::{ChatCompletionResponse, EmbeddingResponse};
 use crate::vectorstore::VectorStore;
 
-// ─── Task-local cache state ───────────────────────────────────────────────────
-
-// `Cell<CacheState>` (not a plain `CacheState`) is used here because
-// `tokio::task_local!` values must be `'static`. `Cell` provides interior
-// mutability without `Sync`, which is fine because task-locals are per-task
-// and never accessed concurrently.
+// ~keep task_local! values must be 'static; Cell gives per-task mutability without Sync.
 tokio::task_local! {
     /// Records the cache outcome for the current request task.
     ///
@@ -94,8 +89,6 @@ tokio::task_local! {
 pub fn record_cache_state(state: CacheState) {
     let _ = CACHE_STATE_CELL.try_with(|c| c.set(state));
 }
-
-// ---- Config ----------------------------------------------------------------
 
 /// Storage backend for the response cache.
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
@@ -134,8 +127,6 @@ impl Default for CacheConfig {
         }
     }
 }
-
-// ---- Cached response -------------------------------------------------------
 
 /// The subset of [`LlmResponse`] variants that can be cached.
 ///
@@ -202,12 +193,6 @@ pub enum CachedResponse {
     },
 }
 
-// Manual Serialize/Deserialize for CachedResponse.
-//
-// The `Error` variant holds `Arc<LiterLlmError>` which is not `Serialize`
-// (the `reqwest::Error` inside `LiterLlmError` does not implement `Serialize`).
-// We serialise only `Chat` and `Embed` via a repr enum; `Error` entries are
-// in-memory only.
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 enum CachedResponseRepr {
@@ -268,8 +253,6 @@ impl CachedResponse {
     }
 }
 
-// ---- CacheMetadata ---------------------------------------------------------
-
 /// Metadata about a cached entry.
 ///
 /// Returned by [`CacheStore::metadata`].  Implementations that cannot track
@@ -286,8 +269,6 @@ pub struct CacheMetadata {
     /// Number of times this entry has been served since insertion.
     pub hit_count: u64,
 }
-
-// ---- CacheStore trait ------------------------------------------------------
 
 /// Pluggable cache backend.
 ///
@@ -351,8 +332,6 @@ pub trait CacheStore: Send + Sync + 'static {
     }
 }
 
-// ---- In-memory store -------------------------------------------------------
-
 /// A cached response with its insertion timestamp and the serialized request
 /// body used to verify lookups (guarding against 64-bit hash collisions).
 #[derive(Clone)]
@@ -404,10 +383,8 @@ impl InnerCache {
     fn get_if_valid(&self, key: u64, request_body: &str) -> Option<CachedResponse> {
         let entry = self.map.get(&key)?;
         if entry.request_body != request_body {
-            // Hash collision — different request mapped to the same key.
             return None;
         }
-        // Error entries carry their own expiry; success entries use the effective TTL.
         let is_expired = match &entry.response {
             CachedResponse::Error { expires_at, .. } => Instant::now() >= *expires_at,
             _ => entry.inserted_at.elapsed() > self.effective_ttl(entry),
@@ -415,15 +392,12 @@ impl InnerCache {
         if is_expired {
             return None;
         }
-        // Clone is required: the cache retains ownership while the caller
-        // receives an independent copy.  See `CachedResponse` doc comment for
-        // performance discussion.
         Some(entry.response.clone())
     }
 
     /// Remove an expired entry (eviction under write lock).
     fn remove_expired(&mut self, key: u64) {
-        let ttl = self.ttl; // borrow-split
+        let ttl = self.ttl;
         let expired = self.map.get(&key).is_some_and(|e| {
             let eff = e.ttl_override.unwrap_or(ttl);
             match &e.response {
@@ -433,18 +407,14 @@ impl InnerCache {
         });
         if expired {
             self.map.remove(&key);
-            // Lazily cleaned from `order` during eviction.
         }
     }
 
     fn insert(&mut self, key: u64, request_body: String, response: CachedResponse) {
-        // Remove duplicate from the LRU deque before reinserting so entries
-        // are not counted twice toward the capacity limit.
         if self.map.contains_key(&key) {
             self.order.retain(|k| *k != key);
         }
 
-        // Evict oldest entries if at capacity.
         while self.map.len() >= self.max_entries {
             if let Some(oldest_key) = self.order.pop_front() {
                 self.map.remove(&oldest_key);
@@ -497,26 +467,12 @@ impl InMemoryStore {
 
 impl CacheStore for InMemoryStore {
     fn get(&self, key: u64, request_body: &str) -> Pin<Box<dyn Future<Output = Option<CachedResponse>> + Send + '_>> {
-        // Perform all synchronous work eagerly under a single write lock, then
-        // wrap the result in a ready future.
-        //
-        // Previous implementation took a read lock, dropped it, then
-        // conditionally took a write lock for expiry eviction, dropped it, and
-        // then took a third write lock for hit counting.  That three-lock
-        // sequence introduced a TOCTOU race: a concurrent `put` of the same key
-        // between the read unlock and the write lock for eviction could race the
-        // expired-entry cleanup, leaving stale state or double-counting.
-        //
-        // Collapsing to one write lock per call serializes reads and writes but
-        // eliminates the race entirely.  For workloads where lock contention
-        // matters, the right upgrade is sharded locks (e.g. `dashmap`), not
-        // multiple lock re-acquisitions.
+        // ~keep Perform synchronous cache read/expiry/hit-count work under one write lock to avoid TOCTOU.
+        // ~keep Sharded locks are the upgrade path if this single-lock path becomes contentious.
         let hit = self.inner.write().ok().and_then(|mut cache| {
-            // Check validity first; `get_if_valid` handles expiry inline.
+            // ~keep Check validity first; `get_if_valid` handles expiry inline.
             let hit = cache.get_if_valid(key, request_body);
             if hit.is_none() {
-                // Evict the expired entry if present so the map does not
-                // accumulate expired-but-not-yet-collected tombstones.
                 cache.remove_expired(key);
             } else {
                 cache.record_hit(key);
@@ -576,8 +532,6 @@ impl CacheStore for InMemoryStore {
         Box::pin(std::future::ready(result))
     }
 }
-
-// ---- Layer -----------------------------------------------------------------
 
 /// Tower [`Layer`] that caches non-streaming LLM responses.
 ///
@@ -668,8 +622,6 @@ impl<S> Layer<S> for CacheLayer {
     }
 }
 
-// ---- Service ---------------------------------------------------------------
-
 /// Tower service produced by [`CacheLayer`].
 #[cfg_attr(alef, alef(skip))]
 pub struct CacheService<S> {
@@ -705,17 +657,7 @@ impl<S> CacheService<S> {
     pub async fn warm<'a>(&self, requests: impl Iterator<Item = CacheKeyInput<'a>>) {
         for input in requests {
             let (key, body) = self.key_strategy.key_for(&input);
-            // Only allocate if the slot is not already occupied.
             if self.store.get(key, &body).await.is_none() {
-                // We cannot populate with a real response (no upstream call),
-                // so we skip writing.  The `warm` contract is to pre-hash so
-                // that future concurrent writes see a consistent key — the
-                // actual population happens on the first real request.
-                //
-                // For stores that benefit from pre-allocation (e.g. reserving
-                // Redis keys with a short-TTL sentinel), implementors can
-                // override `warm` behaviour by calling `store.put` with a
-                // sentinel value. The default here is a no-op write.
                 let _ = (key, body);
             }
         }
@@ -735,7 +677,6 @@ pub(crate) fn cache_key(req: &LlmRequest) -> Option<(u64, String)> {
     let json = match &req.kind {
         LlmRequestKind::Chat(r) => serde_json::to_string(r).ok()?,
         LlmRequestKind::Embed(r) => serde_json::to_string(r).ok()?,
-        // Not cacheable.
         _ => return None,
     };
 
@@ -762,12 +703,10 @@ pub(crate) fn cache_key(req: &LlmRequest) -> Option<(u64, String)> {
 /// produce isolation keys correctly; previously both fields were hard-coded to
 /// `None`, which meant tenant A's response could be served to tenant B.
 fn strategy_key(strategy: &dyn CacheKeyStrategy, req: &LlmRequest) -> Option<(u64, String)> {
-    // reads tenant_id from request when set
     let req_tenant = req.tenant_id().map(|t| t.as_ref().to_owned());
     let (model, messages_json, params_json, tenant_id, system_prompt) = match &req.kind {
         LlmRequestKind::Chat(r) => {
             let msgs = serde_json::to_string(&r.messages).ok()?;
-            // Serialize inference params as a separate JSON object.
             let params = serde_json::json!({
                 "temperature": r.temperature,
                 "top_p": r.top_p,
@@ -775,14 +714,12 @@ fn strategy_key(strategy: &dyn CacheKeyStrategy, req: &LlmRequest) -> Option<(u6
                 "n": r.n,
                 "stop": r.stop,
             });
-            // Prefer explicit tenant_id from request; fall back to `user` field convention.
             let tenant_id: Option<String> = req_tenant.or_else(|| {
                 r.user
                     .as_deref()
                     .and_then(|u| u.strip_prefix("tenant:"))
                     .map(str::to_owned)
             });
-            // Extract system prompt from the first System message.
             let system_prompt: Option<String> = r.messages.iter().find_map(|m| {
                 if let crate::types::Message::System(s) = m {
                     s.content.as_text()
@@ -833,10 +770,7 @@ where
     }
 
     fn call(&mut self, req: LlmRequest) -> Self::Future {
-        // Build cache decision from policy context.
-        // SAFETY: We use a static empty HashMap to avoid allocating on every call.
-        // The CachePolicy implementation (StandardCachePolicy) only reads from metadata,
-        // never writes, so sharing a static reference is safe.
+        // ~keep SAFETY: StandardCachePolicy only reads metadata, so the static empty map is shared safely.
         static EMPTY_METADATA: OnceLock<HashMap<String, String>> = OnceLock::new();
         let empty_meta = EMPTY_METADATA.get_or_init(HashMap::new);
 
@@ -851,7 +785,6 @@ where
         };
         let decision: CacheDecision = self.cache_policy.decide(&ctx);
 
-        // Derive the key using the pluggable strategy.
         let key_and_body = if decision.bypass {
             None
         } else {
@@ -862,14 +795,12 @@ where
         let embedding_provider = self.embedding_provider.clone();
         let vector_store = self.vector_store.clone();
 
-        // Tower readiness contract: consume the polled-ready instance for this
-        // call; leave a fresh clone as standby for the next round.
+        // ~keep Consume the poll-ready service instance and leave a fresh standby clone.
         let standby = self.inner.clone();
         let mut inner = std::mem::replace(&mut self.inner, standby);
         let fut = inner.call(req);
 
         Box::pin(async move {
-            // ── Tier 1: Exact hash ─────────────────────────────────────────
             if decision.use_exact
                 && let Some((k, ref body)) = key_and_body
                 && let Some(cached) = store.get(k, body).await
@@ -884,15 +815,10 @@ where
                 crate::tower::metrics::record_cache_tier_miss("", &model, "exact");
             }
 
-            // ── Tier 2: Semantic similarity ────────────────────────────────
             if decision.use_semantic
                 && let (Some(ep), Some(vs)) = (&embedding_provider, &vector_store)
                 && let Some((_, ref body)) = key_and_body
             {
-                // The key_and_body body string serves as the query text for
-                // embedding.  For a real deployment the caller would pass the
-                // raw prompt text, but using the canonical body keeps the
-                // implementation self-contained without mutating the request.
                 let maybe_cached = async {
                     let query_vec = ep.embed(body).await.ok()?;
                     let best = vs
@@ -900,12 +826,7 @@ where
                         .await
                         .into_iter()
                         .next()?;
-                    // Use the *original* request body stored in the vector
-                    // metadata rather than the current request's body.  The
-                    // collision guard in `CacheStore::get` compares the supplied
-                    // body against the one stored at insertion time; passing the
-                    // current body always fails because semantically-similar
-                    // requests are not byte-identical by definition.
+                    // ~keep Semantic hits must use the stored original body for collision checking.
                     store
                         .get(best.metadata.cache_key, &best.metadata.original_request_body)
                         .await
@@ -921,15 +842,9 @@ where
                 crate::tower::metrics::record_cache_tier_miss("", &model, "semantic");
             }
 
-            // ── Tier 3 (streaming replay) is handled by the outer
-            // SingleflightLayer — if a leader is in-flight, followers receive
-            // the result via the broadcast channel before they reach this layer.
-
-            // ── Cache miss → upstream call ─────────────────────────────────
             record_cache_state(CacheState::Miss);
             let resp = fut.await?;
 
-            // ── Populate tiers on success ──────────────────────────────────
             if let Some((k, body)) = key_and_body {
                 let cached = match &resp {
                     LlmResponse::Chat(r) => Some(CachedResponse::Chat(r.clone())),
@@ -937,24 +852,17 @@ where
                     _ => None,
                 };
                 if let Some(cached_resp) = cached {
-                    // Apply TTL override from policy.
                     store.put(k, body.clone(), cached_resp).await;
                     if let Some(ttl) = decision.ttl_override {
                         store.set_ttl(k, ttl).await;
                     }
 
-                    // Populate vector store on success.
                     if decision.use_semantic
                         && let (Some(ep), Some(vs)) = (&embedding_provider, &vector_store)
                         && let Ok(vec) = ep.embed(&body).await
                     {
                         let metadata = crate::vectorstore::VectorMetadata {
                             cache_key: k,
-                            // Store the canonical body so the semantic-tier
-                            // lookup can pass it to `CacheStore::get` for the
-                            // collision-guard check.  Without this the guard
-                            // always fails because the current request body
-                            // differs from the original by definition.
                             original_request_body: body.clone(),
                             tenant_id: None,
                             inserted_at: std::time::SystemTime::now(),
@@ -969,8 +877,6 @@ where
         })
     }
 }
-
-// ---- Tests -----------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
@@ -996,13 +902,11 @@ mod tests {
         let inner = LlmService::new(client);
         let mut svc = layer.layer(inner);
 
-        // First call — cache miss.
         svc.call(LlmRequest::Chat(chat_req("gpt-4")))
             .await
             .expect("service call should not fail");
         assert_eq!(call_count.load(Ordering::SeqCst), 1);
 
-        // Second call — cache hit.
         svc.call(LlmRequest::Chat(chat_req("gpt-4")))
             .await
             .expect("service call should not fail");
@@ -1044,19 +948,16 @@ mod tests {
         let inner = LlmService::new(client);
         let mut svc = layer.layer(inner);
 
-        // Fill cache with model-a.
         svc.call(LlmRequest::Chat(chat_req("model-a")))
             .await
             .expect("service call should not fail");
         assert_eq!(call_count.load(Ordering::SeqCst), 1);
 
-        // Insert model-b, evicting model-a.
         svc.call(LlmRequest::Chat(chat_req("model-b")))
             .await
             .expect("service call should not fail");
         assert_eq!(call_count.load(Ordering::SeqCst), 2);
 
-        // model-a should be evicted — cache miss.
         svc.call(LlmRequest::Chat(chat_req("model-a")))
             .await
             .expect("service call should not fail");
@@ -1093,8 +994,6 @@ mod tests {
         );
     }
 
-    // ── CacheStore extension methods ──────────────────────────────────────────
-
     #[tokio::test]
     async fn in_memory_store_set_ttl_overrides_default_ttl() {
         let config = CacheConfig {
@@ -1103,7 +1002,6 @@ mod tests {
             backend: CacheBackend::default(),
         };
         let store = InMemoryStore::new(&config);
-        // Write an entry.
         store
             .put(
                 1,
@@ -1111,9 +1009,7 @@ mod tests {
                 CachedResponse::Chat(crate::tower::tests_common::make_chat_response("gpt-4")),
             )
             .await;
-        // Override TTL to near-zero.
         store.set_ttl(1, Duration::from_nanos(1)).await;
-        // Wait a tiny bit for the TTL to expire.
         tokio::time::sleep(Duration::from_millis(2)).await;
         let result = store.get(1, "body").await;
         assert!(result.is_none(), "entry with overridden near-zero TTL must be expired");
@@ -1161,16 +1057,12 @@ mod tests {
                 CachedResponse::Chat(crate::tower::tests_common::make_chat_response("gpt-4")),
             )
             .await;
-        // First hit.
         let _ = store.get(42, "req").await;
-        // Second hit.
         let _ = store.get(42, "req").await;
         let meta = store.metadata(42).await.expect("metadata must be present");
         assert_eq!(meta.hit_count, 2, "hit_count must reflect both cache hits");
         assert!(meta.size_bytes > 0, "size_bytes must be non-zero");
     }
-
-    // ── Three-tier lookup integration tests ───────────────────────────────────
 
     #[tokio::test]
     async fn three_tier_exact_hit_short_circuits_upstream() {
@@ -1185,11 +1077,9 @@ mod tests {
         let inner = LlmService::new(client);
         let mut svc = layer.layer(inner);
 
-        // Prime the cache with one call.
         svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
         assert_eq!(call_count.load(Ordering::SeqCst), 1);
 
-        // Second call must hit the exact tier and not call upstream.
         svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
         assert_eq!(
             call_count.load(Ordering::SeqCst),
@@ -1226,17 +1116,11 @@ mod tests {
         };
         let store: Arc<dyn CacheStore> = Arc::new(InMemoryStore::new(&config));
 
-        // Pre-populate the exact store with a known response under a sentinel
-        // body string that differs from what the incoming "gpt-4" request produces.
         let cached = CachedResponse::Chat(crate::tower::tests_common::make_chat_response("gpt-4"));
         let exact_key: u64 = 9999;
         let sentinel_body = "sentinel-body";
         store.put(exact_key, sentinel_body.into(), cached).await;
 
-        // Pre-populate the vector store pointing at exact_key and carrying the
-        // original body so the semantic tier can pass it to the collision guard.
-        // NoOpEmbeddingProvider returns zero vectors; cosine(0,0) = 0.0 >=
-        // threshold 0.0, so the search guarantees a match.
         let vs: Arc<dyn VectorStore> = Arc::new(InMemoryVectorStore::new(1));
         vs.upsert(
             "sentinel".into(),
@@ -1270,10 +1154,6 @@ mod tests {
         let inner = LlmService::new(client);
         let mut svc = layer.layer(inner);
 
-        // The exact key for "gpt-4" will not match the sentinel body, so the
-        // exact tier misses.  The semantic tier finds the vector match, uses
-        // `original_request_body` from metadata to pass to store.get, and
-        // returns the pre-seeded response — upstream must NOT be called.
         svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
         assert_eq!(
             call_count.load(Ordering::SeqCst),
@@ -1281,8 +1161,6 @@ mod tests {
             "semantic hit must short-circuit upstream without calling it"
         );
     }
-
-    // ── Tenant / system-prompt isolation tests ────────────────────────────────
 
     /// Verify that `TenantScopedStrategy` produces different cache keys for
     /// different tenants so that tenant A's response is never served to tenant B.
@@ -1305,20 +1183,15 @@ mod tests {
         let inner = LlmService::new(client);
         let mut svc = layer.layer(inner);
 
-        // Build a request for tenant-a (convention: user = "tenant:<id>").
         let mut req_a = chat_req("gpt-4");
         req_a.user = Some("tenant:acme".into());
 
-        // Build an identical prompt for tenant-b.
         let mut req_b = chat_req("gpt-4");
         req_b.user = Some("tenant:globex".into());
 
-        // First call — tenant-a, cache miss → upstream.
         svc.call(LlmRequest::Chat(req_a.clone())).await.unwrap();
         assert_eq!(call_count.load(Ordering::SeqCst), 1, "first call must miss");
 
-        // Second call — tenant-b with the same prompt.
-        // Must be a MISS because the tenant prefix is different.
         svc.call(LlmRequest::Chat(req_b)).await.unwrap();
         assert_eq!(
             call_count.load(Ordering::SeqCst),
@@ -1326,7 +1199,6 @@ mod tests {
             "tenant-b must not receive tenant-a cached response"
         );
 
-        // Third call — tenant-a again.  Must be a HIT.
         svc.call(LlmRequest::Chat(req_a)).await.unwrap();
         assert_eq!(
             call_count.load(Ordering::SeqCst),
@@ -1356,7 +1228,6 @@ mod tests {
         let inner = LlmService::new(client);
         let mut svc = layer.layer(inner);
 
-        // Build a request with system prompt A.
         let mut req_a = chat_req("gpt-4");
         req_a.messages = vec![
             Message::System(SystemMessage {
@@ -1369,7 +1240,6 @@ mod tests {
             }),
         ];
 
-        // Same user message, different system prompt.
         let mut req_b = chat_req("gpt-4");
         req_b.messages = vec![
             Message::System(SystemMessage {
@@ -1382,11 +1252,9 @@ mod tests {
             }),
         ];
 
-        // First call — system prompt A, cache miss.
         svc.call(LlmRequest::Chat(req_a.clone())).await.unwrap();
         assert_eq!(call_count.load(Ordering::SeqCst), 1, "first call must miss");
 
-        // Second call — system prompt B, must be a MISS.
         svc.call(LlmRequest::Chat(req_b)).await.unwrap();
         assert_eq!(
             call_count.load(Ordering::SeqCst),
@@ -1394,7 +1262,6 @@ mod tests {
             "different system prompt must produce a cache miss"
         );
 
-        // Third call — system prompt A again, must be a HIT.
         svc.call(LlmRequest::Chat(req_a)).await.unwrap();
         assert_eq!(
             call_count.load(Ordering::SeqCst),
@@ -1457,8 +1324,6 @@ mod tests {
         assert_eq!(call_count.load(Ordering::SeqCst), 1, "full miss must call upstream");
     }
 
-    // ── Cache warming ─────────────────────────────────────────────────────────
-
     #[tokio::test]
     async fn warm_does_not_call_inner_service() {
         use crate::cache_key::CacheKeyInput;
@@ -1493,17 +1358,13 @@ mod tests {
 
         svc.warm(inputs.into_iter()).await;
 
-        // Warming must not trigger any upstream calls.
         assert_eq!(call_count.load(Ordering::SeqCst), 0, "warm must not call inner service");
     }
-
-    // ── CachePolicy bypass ────────────────────────────────────────────────────
 
     #[tokio::test]
     async fn cache_bypassed_when_policy_returns_bypass() {
         use crate::tower::cache_policy::{CacheDecision, CachePolicy, CachePolicyContext};
 
-        // Use a custom policy that always bypasses.
         struct AlwaysBypassPolicy;
         impl CachePolicy for AlwaysBypassPolicy {
             fn decide(&self, _ctx: &CachePolicyContext<'_>) -> CacheDecision {
@@ -1525,8 +1386,6 @@ mod tests {
         let inner = LlmService::new(client);
         let mut svc = layer.layer(inner);
 
-        // Two identical calls — the bypass policy should prevent caching, so
-        // both hit upstream.
         svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
         svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.unwrap();
         assert_eq!(
@@ -1549,10 +1408,6 @@ mod tests {
         use std::sync::atomic::AtomicUsize;
         use std::task::Poll;
 
-        // A service that counts how many times poll_ready is called.
-        // It always returns Ready — we use the call count to verify that
-        // the mem::replace pattern results in poll_ready being called for
-        // each round (once per call cycle on the fresh standby).
         #[derive(Clone)]
         struct CountingService {
             poll_ready_count: Arc<AtomicUsize>,
@@ -1588,13 +1443,11 @@ mod tests {
 
         let config = CacheConfig {
             max_entries: 10,
-            // Very short TTL so second call is a cache miss.
             ttl: Duration::from_nanos(1),
             backend: CacheBackend::default(),
         };
         let mut svc = CacheLayer::new(config).layer(inner);
 
-        // First call: poll_ready → call.
         use tower::ServiceExt as _;
         svc.ready()
             .await
@@ -1604,10 +1457,6 @@ mod tests {
             .unwrap();
         assert_eq!(call_count.load(Ordering::SeqCst), 1, "inner called once");
 
-        // Second call: poll_ready → call again (TTL expired, cache miss).
-        // With mem::replace, self.inner is a fresh standby and poll_ready will
-        // be called on it; without mem::replace the second call would attempt to
-        // call on an already-called instance.
         tokio::time::sleep(Duration::from_millis(1)).await;
         svc.ready()
             .await
@@ -1640,14 +1489,8 @@ mod tests {
         let inner = LlmService::new(client);
         let mut svc = layer.layer(inner);
 
-        // Make 1000 calls — without the optimization, this would allocate 1000 HashMaps.
-        // With the static EMPTY_METADATA optimization, no allocations occur (reuse single static).
         for _ in 0..1000 {
             let _ = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
         }
-
-        // If we reach here without OOM, the optimization is working.
-        // The test passes by not panicking — a true allocator-instrumented test
-        // would use jemalloc stats or similar, but this sanity check is useful.
     }
 }

@@ -61,7 +61,6 @@ impl MockUpstream {
                     }
                 }
 
-                // No matching route found.
                 Response::builder()
                     .status(StatusCode::NOT_FOUND)
                     .body(Body::from(r#"{"error":"mock: no matching route"}"#))

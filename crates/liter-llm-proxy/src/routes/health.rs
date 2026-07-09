@@ -30,10 +30,6 @@ use utoipa::ToSchema;
 
 use crate::state::AppState;
 
-// ---------------------------------------------------------------------------
-// Startup instant (process-global)
-// ---------------------------------------------------------------------------
-
 /// The instant the process initialised this module for the first time.
 ///
 /// Used to compute `uptime_seconds` for `/healthz`.  Initialised on the first
@@ -46,19 +42,11 @@ fn uptime_seconds() -> u64 {
     started.elapsed().as_secs()
 }
 
-// ---------------------------------------------------------------------------
-// Tokio queue-depth threshold
-// ---------------------------------------------------------------------------
-
 /// Reject `/readyz` when the Tokio task-injection queue exceeds this many tasks.
 ///
 /// A queue depth above this value indicates the runtime is under heavy load
 /// and new work is being accepted faster than workers can drain it.
 const TOKIO_INJECTION_QUEUE_DEPTH_LIMIT: usize = 1_000;
-
-// ---------------------------------------------------------------------------
-// ReadinessProbe trait
-// ---------------------------------------------------------------------------
 
 /// The result of a single readiness probe.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -105,10 +93,6 @@ pub trait ReadinessProbe: Send + Sync + 'static {
     /// blocking functions.  The caller may impose a timeout.
     fn check(&self) -> Pin<Box<dyn Future<Output = ProbeResult> + Send + '_>>;
 }
-
-// ---------------------------------------------------------------------------
-// Built-in probes
-// ---------------------------------------------------------------------------
 
 /// Probe: at least one model service is configured in the service pool.
 pub struct ServicePoolProbe {
@@ -179,9 +163,6 @@ impl ReadinessProbe for TokioQueueDepthProbe {
     fn check(&self) -> Pin<Box<dyn Future<Output = ProbeResult> + Send + '_>> {
         let limit = self.limit;
         Box::pin(async move {
-            // tokio's queue-depth metrics live behind the `tokio_unstable` cfg.
-            // With stable tokio, fall back to alive-task count, which scales with
-            // queue pressure under typical proxy load.
             let alive = tokio::runtime::Handle::current().metrics().num_alive_tasks();
             if alive > limit {
                 ProbeResult::NotReady {
@@ -193,10 +174,6 @@ impl ReadinessProbe for TokioQueueDepthProbe {
         })
     }
 }
-
-// ---------------------------------------------------------------------------
-// Response shapes
-// ---------------------------------------------------------------------------
 
 /// Health check response body (legacy `/health` endpoint).
 #[derive(Serialize, ToSchema)]
@@ -236,16 +213,8 @@ pub struct ReadinessFailResponse {
     pub reason: String,
 }
 
-// ---------------------------------------------------------------------------
-// Crate version (injected at compile time)
-// ---------------------------------------------------------------------------
-
 /// The version string baked in at compile time from `CARGO_PKG_VERSION`.
 const VERSION: &str = env!("CARGO_PKG_VERSION");
-
-// ---------------------------------------------------------------------------
-// v1.6 handlers
-// ---------------------------------------------------------------------------
 
 /// GET /healthz — liveness endpoint.
 ///
@@ -319,10 +288,6 @@ pub async fn run_probes(probes: &[Box<dyn ReadinessProbe>]) -> impl IntoResponse
     (StatusCode::OK, Json(body).into_response()).into_response()
 }
 
-// ---------------------------------------------------------------------------
-// Legacy handlers (retained for backward compatibility)
-// ---------------------------------------------------------------------------
-
 /// GET /health — full health check with model list.
 #[utoipa::path(
     get,
@@ -381,17 +346,11 @@ pub async fn readiness(State(state): State<AppState>) -> StatusCode {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 #[cfg(test)]
 mod tests {
     use std::sync::atomic::AtomicBool;
 
     use super::*;
-
-    // ------ ProbeResult ------
 
     #[test]
     fn probe_result_is_ready_returns_true_for_ready() {
@@ -403,8 +362,6 @@ mod tests {
         let r = ProbeResult::NotReady { reason: "nope".into() };
         assert!(!r.is_ready());
     }
-
-    // ------ Mock probe ------
 
     struct MockProbe {
         name: &'static str,
@@ -450,8 +407,6 @@ mod tests {
         }
     }
 
-    // ------ run_probes ------
-
     #[tokio::test]
     async fn run_probes_returns_200_when_all_probes_pass() {
         let probes: Vec<Box<dyn ReadinessProbe>> =
@@ -487,8 +442,6 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
     }
 
-    // ------ ServicePoolProbe ------
-
     #[test]
     fn service_pool_probe_name_is_service_pool() {
         let probe = ServicePoolProbe { has_any: true };
@@ -513,8 +466,6 @@ mod tests {
         }
     }
 
-    // ------ TokioQueueDepthProbe ------
-
     #[test]
     fn tokio_queue_depth_probe_name_is_tokio_queue_depth() {
         let probe = TokioQueueDepthProbe::new();
@@ -523,24 +474,15 @@ mod tests {
 
     #[tokio::test]
     async fn tokio_queue_depth_probe_passes_under_high_limit() {
-        // Limit of usize::MAX should always pass in a test environment.
         let probe = TokioQueueDepthProbe::with_limit(usize::MAX);
         assert_eq!(probe.check().await, ProbeResult::Ready);
     }
 
     #[tokio::test]
     async fn tokio_queue_depth_probe_fails_under_zero_limit() {
-        // Limit of 0 means any queue depth > 0 fails; depth of exactly 0 passes.
-        // In practice the test runtime's injection queue is almost certainly empty
-        // after the spawn+await required to get here, so queue depth = 0.
-        // We use limit = 0 and verify we can set an unreasonably tight limit.
         let probe = TokioQueueDepthProbe::with_limit(0);
-        // We can't guarantee which way this goes in a test runtime, but we can
-        // verify that the probe returns a result without panicking.
         let _ = probe.check().await;
     }
-
-    // ------ uptime_seconds ------
 
     #[test]
     fn uptime_seconds_is_non_decreasing() {
@@ -549,14 +491,11 @@ mod tests {
         assert!(t1 >= t0, "uptime should be non-decreasing");
     }
 
-    // ------ healthz body shape ------
-
     #[tokio::test]
     async fn healthz_returns_ok_status_and_version() {
         let Json(resp) = healthz().await;
         assert_eq!(resp.status, "ok");
         assert_eq!(resp.version, VERSION);
-        // version must look like a semver string
         assert!(
             resp.version.contains('.'),
             "version should contain a dot: {}",
@@ -564,15 +503,11 @@ mod tests {
         );
     }
 
-    // ------ AtomicBool sentinel used by other probe impls ------
-
     #[test]
     fn atomic_bool_probe_compiles() {
-        // Ensure the trait object is dyn-safe by constructing one.
         let _probe: Box<dyn ReadinessProbe> = Box::new(MockProbe::passing("sentinel"));
     }
 
-    // ------ unused-field / unused-import lint guard ------
     #[allow(dead_code)]
     fn _use_atomic_bool(_: &AtomicBool) {}
 }

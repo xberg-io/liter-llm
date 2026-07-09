@@ -3,7 +3,7 @@ name = "liter-llm"
 description = "Multi-language LLM library with Rust core and polyglot bindings (Python, TypeScript, Ruby, PHP, Elixir, Go, Java, C#, WASM)"
 gitignore = true
 
-presets = ["claude", "gemini", "codex"]
+presets = ["claude", "codex"]
 
 [header]
 style = "minimal"

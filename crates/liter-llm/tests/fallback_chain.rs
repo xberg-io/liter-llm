@@ -19,8 +19,6 @@ use liter_llm::types::{
     Usage,
 };
 
-// ─── helpers ─────────────────────────────────────────────────────────────────
-
 fn chat_req() -> LlmRequest {
     LlmRequest::Chat(ChatCompletionRequest {
         model: "gpt-4".into(),
@@ -132,14 +130,10 @@ impl Service<LlmRequest> for StubService {
     }
 }
 
-// Convenience: build a `FallbackChainService` directly from a `Vec<StubService>`.
 fn make_chain(services: Vec<StubService>) -> FallbackChainService<StubService> {
     let layer = FallbackChainLayer::<StubService, DefaultRetryPolicy>::new(services);
-    // Layer<()> — inner is ignored, chain is the source of services.
     layer.layer(())
 }
-
-// ─── tests ────────────────────────────────────────────────────────────────────
 
 /// Primary returns transient, secondary returns success → final OK.
 #[tokio::test]
@@ -331,7 +325,6 @@ async fn default_policy_treats_rate_limited_as_transient() {
     let backup = StubService::succeeding("backup");
     let backup_calls = Arc::clone(&backup.call_count);
 
-    // To compose heterogeneous service types, box them.
     #[derive(Clone)]
     struct ErasedService(Arc<dyn Fn(LlmRequest) -> Result<LlmResponse> + Send + Sync>);
 

@@ -152,8 +152,6 @@ mod tests {
 
     #[test]
     fn byte_patterns_round_trip() {
-        // Property-style coverage over a fixed table of byte patterns; the
-        // proptest crate is not a workspace dev-dep.
         let test_cases: &[&[u8]] = &[
             b"",
             b"\x00",

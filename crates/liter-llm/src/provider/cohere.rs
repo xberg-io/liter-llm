@@ -239,7 +239,6 @@ impl Provider for CohereProvider {
                 }))
             }
 
-            // Unknown event types are silently skipped.
             _ => Ok(None),
         }
     }
@@ -252,7 +251,6 @@ impl Provider for CohereProvider {
     ///   `usage.{prompt,completion,total}_tokens`.
     /// - Ensures `object` and `created` fields are present.
     fn transform_response(&self, body: &mut Value) -> Result<()> {
-        // Map finish reasons in choices.
         if let Some(choices) = body.get_mut("choices").and_then(Value::as_array_mut) {
             for choice in choices {
                 if let Some(reason) = choice.get("finish_reason").and_then(Value::as_str) {
@@ -267,7 +265,6 @@ impl Provider for CohereProvider {
             }
         }
 
-        // Normalize usage from Cohere's `tokens` format.
         if body.get("usage").is_none()
             && let Some(tokens) = body.get("tokens")
         {
@@ -280,7 +277,6 @@ impl Provider for CohereProvider {
             });
         }
 
-        // Ensure standard OpenAI fields are present.
         if body.get("object").is_none() {
             body["object"] = Value::String("chat.completion".to_owned());
         }
@@ -374,10 +370,8 @@ mod tests {
             "stream_options": {"include_usage": true}
         });
         provider.transform_request(&mut body).expect("transform should succeed");
-        // Cohere v2 needs `stream` in the body — only `stream_options` is removed.
         assert_eq!(body["stream"], true);
         assert!(body.get("stream_options").is_none());
-        // Other fields preserved.
         assert_eq!(body["model"], "command-r-plus");
     }
 
@@ -445,11 +439,8 @@ mod tests {
             .transform_response(&mut body)
             .expect("transform should succeed");
 
-        // Existing usage should not be overwritten.
         assert_eq!(body["usage"]["prompt_tokens"], 5);
     }
-
-    // ── Streaming SSE parser tests ───────────────────────────────────────────
 
     #[test]
     fn test_parse_stream_event_stream_start() {

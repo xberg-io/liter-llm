@@ -41,9 +41,7 @@ pub async fn chat_completions(
     Extension(key_ctx): Extension<KeyContext>,
     Json(body): Json<serde_json::Value>,
 ) -> Result<Response, ProxyError> {
-    // Peek at the `stream` flag and `model` from the raw JSON before
-    // deserializing into the typed request (the `stream` field is `pub(crate)`
-    // in liter-llm).
+    // ~keep Read `stream` and `model` from raw JSON because the typed `stream` field is pub(crate).
     let is_stream = body.get("stream").and_then(serde_json::Value::as_bool).unwrap_or(false);
 
     let model = body
@@ -52,7 +50,6 @@ pub async fn chat_completions(
         .ok_or_else(|| ProxyError::bad_request("missing 'model' field"))?
         .to_owned();
 
-    // Check model access early, before deserializing the full request.
     if !key_ctx.can_access_model(&model) {
         return Err(ProxyError::forbidden(format!(
             "key '{}' is not allowed to access model '{model}'",
@@ -60,7 +57,6 @@ pub async fn chat_completions(
         )));
     }
 
-    // `body` must be consumed here; `model` is already an owned String above.
     let req: ChatCompletionRequest =
         serde_json::from_value(body.clone()).map_err(|e| ProxyError::bad_request(e.to_string()))?;
 

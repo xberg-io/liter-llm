@@ -152,7 +152,6 @@ impl From<LiterLlmError> for ProxyError {
         let error_type = err.error_type().to_owned();
         let message = sanitize_message(&err.to_string());
 
-        // Extract retry_after before we lose access to the variant fields.
         let retry_after = if let LiterLlmError::RateLimited { retry_after, .. } = &err {
             *retry_after
         } else {
@@ -177,12 +176,9 @@ impl From<LiterLlmError> for ProxyError {
             LiterLlmError::InvalidHeader { .. } => StatusCode::BAD_REQUEST,
             LiterLlmError::Serialization(_) => StatusCode::BAD_REQUEST,
             LiterLlmError::InternalError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
-            // A custom-provider base_url that violates the outbound policy
-            // (e.g. points at a cloud-metadata or private-network address) is
-            // mapped to 502 Bad Gateway — the upstream destination is invalid.
+            // ~keep Outbound policy violations are bad upstream destinations, not caller 4xx errors.
             LiterLlmError::OutboundForbidden { .. } => StatusCode::BAD_GATEWAY,
-            // LiterLlmError is #[non_exhaustive]; treat unknown future variants
-            // as internal server errors.
+            // ~keep LiterLlmError is #[non_exhaustive]; unknown variants default to 500.
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -226,8 +222,6 @@ mod tests {
         let body: ErrorResponse = serde_json::from_slice(&bytes).expect("response body should be valid JSON");
         (status, body)
     }
-
-    // ── Variant -> HTTP status mapping ───────────────────────────────────
 
     #[tokio::test]
     async fn authentication_maps_to_401() {
@@ -388,8 +382,6 @@ mod tests {
         assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
     }
 
-    // ── IntoResponse produces valid JSON ─────────────────────────────────
-
     #[tokio::test]
     async fn into_response_produces_valid_json_with_correct_fields() {
         let err: ProxyError = LiterLlmError::Authentication {
@@ -402,8 +394,6 @@ mod tests {
         assert_eq!(body.error.error_type, "Authentication");
         assert!(body.error.message.contains("invalid api key"));
     }
-
-    // ── Constructor methods ──────────────────────────────────────────────
 
     #[tokio::test]
     async fn constructor_authentication() {
@@ -443,8 +433,6 @@ mod tests {
         assert_eq!(status, StatusCode::TOO_MANY_REQUESTS);
     }
 
-    // ── Retry-After header ───────────────────────────────────────────────
-
     #[tokio::test]
     async fn rate_limited_with_retry_after_includes_header() {
         let err: ProxyError = LiterLlmError::RateLimited {
@@ -473,8 +461,6 @@ mod tests {
         assert!(response.headers().get("retry-after").is_none());
     }
 
-    // ── Display impl ─────────────────────────────────────────────────────
-
     #[test]
     fn display_delegates_to_body_message() {
         let err = ProxyError::authentication("bad api key");
@@ -489,8 +475,6 @@ mod tests {
         .into();
         assert!(err.to_string().contains("model gone"));
     }
-
-    // ── sanitize_message / truncation / control-char stripping ───────────
 
     #[test]
     fn long_message_is_truncated_to_max_chars() {
@@ -531,8 +515,6 @@ mod tests {
         assert!(msg.contains('\n'), "newline should survive: {msg:?}");
         assert!(msg.contains('\t'), "tab should survive: {msg:?}");
     }
-
-    // ── to_sse_payload ───────────────────────────────────────────────────
 
     #[test]
     fn to_sse_payload_is_valid_json() {

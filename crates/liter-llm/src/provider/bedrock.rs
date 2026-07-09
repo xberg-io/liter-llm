@@ -15,7 +15,7 @@ fn reasoning_effort_to_budget_tokens(effort: &str) -> u64 {
         "low" => 1024,
         "medium" => 4096,
         "high" => 16384,
-        _ => 4096, // default to medium
+        _ => 4096,
     }
 }
 
@@ -23,7 +23,6 @@ fn reasoning_effort_to_budget_tokens(effort: &str) -> u64 {
 ///
 /// E.g. `"application/pdf"` → `"pdf"`, `"text/csv"` → `"csv"`.
 fn format_from_media_type(media_type: &str) -> &str {
-    // Use the subtype portion after the slash.
     media_type.split('/').nth(1).unwrap_or("pdf")
 }
 
@@ -49,13 +48,11 @@ fn percent_encode_model(model: &str) -> String {
     let mut encoded = String::with_capacity(model.len());
     for byte in model.bytes() {
         match byte {
-            // Unreserved characters per RFC 3986 §2.3 — safe to pass through.
             b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
                 encoded.push(byte as char);
             }
             other => {
                 encoded.push('%');
-                // RFC 3986 §2.1 requires uppercase hex digits.
                 let hi = char::from_digit(u32::from(other >> 4), 16).unwrap_or('0');
                 let lo = char::from_digit(u32::from(other & 0xf), 16).unwrap_or('0');
                 encoded.push(hi.to_ascii_uppercase());
@@ -119,8 +116,6 @@ impl BedrockProvider {
             let dns_suffix = dns_suffix_for_region(&region);
             format!("https://bedrock-runtime.{region}.{dns_suffix}")
         });
-        // Cross-region prefix is ignored when a custom base URL is set,
-        // since the caller controls the full endpoint.
         let cross_region_prefix = if custom_base_url.is_some() {
             None
         } else {
@@ -247,7 +242,6 @@ impl Provider for BedrockProvider {
         if endpoint_path.contains("chat/completions") {
             format!("{base}/model/{encoded_model}/converse-stream")
         } else {
-            // Non-chat streaming falls back to the regular URL.
             self.build_url(endpoint_path, model)
         }
     }
@@ -262,7 +256,6 @@ impl Provider for BedrockProvider {
     fn transform_request(&self, body: &mut serde_json::Value) -> Result<()> {
         use serde_json::json;
 
-        // Take ownership of the messages array to avoid cloning.
         let messages = body
             .as_object_mut()
             .and_then(|o| o.remove("messages"))
@@ -284,7 +277,6 @@ impl Provider for BedrockProvider {
                     if let Some(text) = content.and_then(|c| c.as_str()) {
                         system_parts.push(json!({"text": text}));
                     } else if let Some(array) = content.and_then(|c| c.as_array()) {
-                        // System content may be a list of typed blocks; extract text parts.
                         for part in array {
                             if let Some(text) = part.get("text").and_then(|t| t.as_str()) {
                                 system_parts.push(json!({"text": text}));
@@ -296,7 +288,6 @@ impl Provider for BedrockProvider {
                     let parts = if let Some(text) = content.and_then(|c| c.as_str()) {
                         vec![json!({"text": text})]
                     } else if let Some(array) = content.and_then(|c| c.as_array()) {
-                        // Multimodal content: iterate parts and translate each block.
                         array
                             .iter()
                             .filter_map(|part| {
@@ -307,10 +298,8 @@ impl Provider for BedrockProvider {
                                         Some(json!({"text": text}))
                                     }
                                     "image_url" => {
-                                        // Map OpenAI image_url to Bedrock image block.
                                         let url = part.pointer("/image_url/url").and_then(|u| u.as_str()).unwrap_or("");
                                         if let Some(data_part) = url.strip_prefix("data:") {
-                                            // data:{media_type};base64,{data}
                                             let mut iter = data_part.splitn(2, ';');
                                             let media_type = iter.next().unwrap_or("image/jpeg");
                                             let b64 = iter.next().and_then(|s| s.strip_prefix("base64,")).unwrap_or("");
@@ -321,13 +310,10 @@ impl Provider for BedrockProvider {
                                                 }
                                             }))
                                         } else {
-                                            // Plain URL — not directly supported by Bedrock;
-                                            // include as text so the message is not silently dropped.
                                             Some(json!({"text": url}))
                                         }
                                     }
                                     "document" => {
-                                        // Map ContentPart::Document to Bedrock document block.
                                         let data =
                                             part.pointer("/document/data").and_then(|d| d.as_str()).unwrap_or("");
                                         let media_type = part
@@ -348,7 +334,6 @@ impl Provider for BedrockProvider {
                             })
                             .collect()
                     } else {
-                        // Fallback: represent unknown content as an empty text block.
                         vec![json!({"text": ""})]
                     };
                     converse_messages.push(json!({"role": "user", "content": parts}));
@@ -360,7 +345,6 @@ impl Provider for BedrockProvider {
                     {
                         parts.push(json!({"text": text}));
                     }
-                    // Convert OpenAI tool_calls to Bedrock toolUse blocks.
                     if let Some(tool_calls) = msg.get("tool_calls").and_then(|t| t.as_array()) {
                         for tc in tool_calls {
                             let input: serde_json::Value = tc
@@ -385,7 +369,6 @@ impl Provider for BedrockProvider {
                 "tool" => {
                     let tool_call_id = msg.get("tool_call_id").and_then(|t| t.as_str()).unwrap_or("");
                     let result_text = content.and_then(|c| c.as_str()).unwrap_or("");
-                    // Determine status: treat explicit error markers as failures.
                     let is_error = msg.get("is_error").and_then(|v| v.as_bool()).unwrap_or(false);
                     let status = if is_error { "error" } else { "success" };
                     converse_messages.push(json!({
@@ -403,7 +386,6 @@ impl Provider for BedrockProvider {
             }
         }
 
-        // Build inferenceConfig from OpenAI generation parameters.
         let mut inference_config = json!({});
         if let Some(max_tokens) = body.get("max_tokens").or_else(|| body.get("max_completion_tokens")) {
             inference_config["maxTokens"] = max_tokens.clone();
@@ -423,7 +405,6 @@ impl Provider for BedrockProvider {
             inference_config["stopSequences"] = json!(sequences);
         }
 
-        // Build toolConfig if tools are present.
         let tool_config = body.get("tools").and_then(|tools| {
             tools.as_array().map(|arr| {
                 let bedrock_tools: Vec<serde_json::Value> = arr
@@ -446,9 +427,6 @@ impl Provider for BedrockProvider {
             })
         });
 
-        // ── Extended thinking / reasoning effort ────────────────────────────
-        // When reasoning_effort is set, map to Bedrock's additionalModelRequestFields
-        // for Claude-on-Bedrock extended thinking.
         let mut additional_model_fields: Option<serde_json::Value> = None;
         if let Some(effort) = body.get("reasoning_effort").and_then(|e| e.as_str()) {
             let budget_tokens = reasoning_effort_to_budget_tokens(effort);
@@ -460,9 +438,6 @@ impl Provider for BedrockProvider {
             }));
         }
 
-        // ── Response format → system instruction ────────────────────────────
-        // Bedrock/Claude doesn't have native JSON mode. When response_format is
-        // json_schema or json_object, add a system instruction for JSON output.
         if let Some(response_format) = body.get("response_format") {
             let rf_type = response_format.get("type").and_then(|t| t.as_str()).unwrap_or("");
             match rf_type {
@@ -487,11 +462,8 @@ impl Provider for BedrockProvider {
             }
         }
 
-        // ── Guardrails ──────────────────────────────────────────────────────
-        // Extract guardrailConfig from extra_body if present.
         let guardrail_config = body.get("extra_body").and_then(|eb| eb.get("guardrailConfig")).cloned();
 
-        // Assemble the Bedrock Converse request body.
         let mut new_body = json!({
             "messages": converse_messages,
         });
@@ -533,14 +505,12 @@ impl Provider for BedrockProvider {
         let stop_reason = body.get("stopReason").and_then(|s| s.as_str()).unwrap_or("end_turn");
         let usage = body.get("usage").cloned();
 
-        // Content blocks live under output.message.content[].
         let content_blocks = body
             .pointer("/output/message/content")
             .and_then(|c| c.as_array())
             .cloned()
             .unwrap_or_default();
 
-        // Collect text and toolUse blocks separately.
         let text: String = content_blocks
             .iter()
             .filter_map(|b| b.get("text").and_then(|t| t.as_str()))
@@ -689,7 +659,6 @@ pub(crate) fn parse_bedrock_stream_event(event_type: &str, payload: &str) -> Res
         }
         "contentBlockStart" => {
             let index = v.get("contentBlockIndex").and_then(|i| i.as_u64()).unwrap_or(0);
-            // Check if this is a tool_use start.
             if let Some(tool_use) = v.pointer("/start/toolUse") {
                 let tool_use_id = tool_use.get("toolUseId").and_then(|t| t.as_str()).unwrap_or("");
                 let name = tool_use.get("name").and_then(|n| n.as_str()).unwrap_or("");
@@ -713,14 +682,12 @@ pub(crate) fn parse_bedrock_stream_event(event_type: &str, payload: &str) -> Res
                 }))
                 .map(Some)
             } else {
-                // Text content block start — no delta content yet.
                 Ok(None)
             }
         }
         "contentBlockDelta" => {
             let index = v.get("contentBlockIndex").and_then(|i| i.as_u64()).unwrap_or(0);
 
-            // Text delta.
             if let Some(text) = v.pointer("/delta/text").and_then(|t| t.as_str()) {
                 return chunk_from_json(json!({
                     "id": "bedrock-stream",
@@ -736,7 +703,6 @@ pub(crate) fn parse_bedrock_stream_event(event_type: &str, payload: &str) -> Res
                 .map(Some);
             }
 
-            // Tool use input delta.
             if let Some(input_json) = v.pointer("/delta/toolUse/input").and_then(|i| i.as_str()) {
                 return chunk_from_json(json!({
                     "id": "bedrock-stream",
@@ -757,7 +723,6 @@ pub(crate) fn parse_bedrock_stream_event(event_type: &str, payload: &str) -> Res
                 .map(Some);
             }
 
-            // Unrecognized delta shape — log so callers know data was skipped.
             #[cfg(feature = "tracing")]
             tracing::debug!(
                 content_block_index = index,
@@ -791,7 +756,6 @@ pub(crate) fn parse_bedrock_stream_event(event_type: &str, payload: &str) -> Res
             .map(Some)
         }
         "metadata" => {
-            // Emit usage as a final chunk with empty choices.
             let input_tokens = v.pointer("/usage/inputTokens").and_then(|t| t.as_u64()).unwrap_or(0);
             let output_tokens = v.pointer("/usage/outputTokens").and_then(|t| t.as_u64()).unwrap_or(0);
             chunk_from_json(json!({
@@ -808,10 +772,7 @@ pub(crate) fn parse_bedrock_stream_event(event_type: &str, payload: &str) -> Res
             }))
             .map(Some)
         }
-        _ => {
-            // Unknown event type — skip silently.
-            Ok(None)
-        }
+        _ => Ok(None),
     }
 }
 
@@ -883,13 +844,7 @@ fn sigv4_sign(method: &str, url: &str, body: &[u8], region: &str) -> Result<Vec<
     })?;
     let session_token = std::env::var("AWS_SESSION_TOKEN").ok();
 
-    let credentials = Credentials::new(
-        access_key,
-        secret_key,
-        session_token,
-        None, // expiry
-        "env",
-    );
+    let credentials = Credentials::new(access_key, secret_key, session_token, None, "env");
 
     let identity = credentials.into();
 
@@ -908,7 +863,6 @@ fn sigv4_sign(method: &str, url: &str, body: &[u8], region: &str) -> Result<Vec<
             status: 400,
         })?;
 
-    // Build a signable request from the method, URL, and body.
     let signable = SignableRequest::new(
         method,
         url,
@@ -934,8 +888,6 @@ fn sigv4_sign(method: &str, url: &str, body: &[u8], region: &str) -> Result<Vec<
     Ok(signed_headers)
 }
 
-// ── Unit tests ────────────────────────────────────────────────────────────────
-
 #[cfg(test)]
 mod tests {
     use serde_json::json;
@@ -947,21 +899,18 @@ mod tests {
     use crate::types::chat::FinishReason;
 
     fn provider() -> BedrockProvider {
-        // SAFETY: env vars are process-global; `#[serial]` on callers prevents races.
+        // ~keep SAFETY: env vars are process-global; `#[serial]` on callers prevents races.
         unsafe { std::env::remove_var("BEDROCK_BASE_URL") };
         BedrockProvider::new("us-east-1")
     }
 
-    // ── build_url ─────────────────────────────────────────────────────────────
-
     #[test]
     #[serial]
     fn build_url_chat_completions() {
-        // SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
+        // ~keep SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
         unsafe { std::env::remove_var("BEDROCK_CROSS_REGION") };
         let p = provider();
         let url = p.build_url("/chat/completions", "anthropic.claude-3-sonnet-20240229-v1:0");
-        // Colon must be uppercase-encoded per RFC 3986 §2.1.
         assert_eq!(
             url,
             "https://bedrock-runtime.us-east-1.amazonaws.com/model/anthropic.claude-3-sonnet-20240229-v1%3A0/converse"
@@ -971,7 +920,7 @@ mod tests {
     #[test]
     #[serial]
     fn build_url_embeddings() {
-        // SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
+        // ~keep SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
         unsafe { std::env::remove_var("BEDROCK_CROSS_REGION") };
         let p = provider();
         let url = p.build_url("/embeddings", "amazon.titan-embed-text-v1");
@@ -984,7 +933,7 @@ mod tests {
     #[test]
     #[serial]
     fn build_url_other_path() {
-        // SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
+        // ~keep SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
         unsafe { std::env::remove_var("BEDROCK_CROSS_REGION") };
         let p = provider();
         let url = p.build_url("/models", "any-model");
@@ -1052,7 +1001,6 @@ mod tests {
         unsafe { std::env::set_var("BEDROCK_CROSS_REGION", "eu") };
         let p = BedrockProvider::new("us-east-1");
         let url = p.build_url("/chat/completions", "anthropic.claude-3-sonnet-20240229-v1:0");
-        // Cross-region prefix should NOT be applied when base URL is overridden.
         assert_eq!(
             url,
             "https://custom.endpoint.example.com/model/anthropic.claude-3-sonnet-20240229-v1%3A0/converse"
@@ -1060,8 +1008,6 @@ mod tests {
         unsafe { std::env::remove_var("BEDROCK_BASE_URL") };
         unsafe { std::env::remove_var("BEDROCK_CROSS_REGION") };
     }
-
-    // ── dns_suffix_for_region ────────────────────────────────────────────────
 
     #[test]
     fn dns_suffix_standard_regions() {
@@ -1081,12 +1027,9 @@ mod tests {
         assert_eq!(dns_suffix_for_region("cn-northwest-1"), "amazonaws.com.cn");
     }
 
-    // ── percent_encode_model ──────────────────────────────────────────────────
-
     #[test]
     fn percent_encode_model_colon() {
         let encoded = percent_encode_model("anthropic.claude-3-sonnet-20240229-v1:0");
-        // RFC 3986 §2.1 requires uppercase hex digits.
         assert!(
             encoded.contains("%3A"),
             "colon should be percent-encoded with uppercase hex: {encoded}"
@@ -1100,8 +1043,6 @@ mod tests {
         let encoded = percent_encode_model("amazon.titan-embed-text-v1");
         assert_eq!(encoded, "amazon.titan-embed-text-v1");
     }
-
-    // ── transform_request ─────────────────────────────────────────────────────
 
     #[test]
     #[serial]
@@ -1120,14 +1061,11 @@ mod tests {
         p.transform_request(&mut body)
             .expect("transform_request should not fail");
 
-        // System messages extracted to top-level array.
         assert_eq!(body["system"][0]["text"], "You are helpful.");
 
-        // User message converted to content blocks.
         assert_eq!(body["messages"][0]["role"], "user");
         assert_eq!(body["messages"][0]["content"][0]["text"], "Hello!");
 
-        // Generation params in inferenceConfig.
         assert_eq!(body["inferenceConfig"]["maxTokens"], 100);
         assert_eq!(body["inferenceConfig"]["temperature"], 0.7);
     }
@@ -1162,7 +1100,6 @@ mod tests {
         let messages = body["messages"].as_array().expect("messages should be an array");
         assert_eq!(messages.len(), 3);
 
-        // Assistant message has toolUse block.
         let assistant = &messages[1];
         assert_eq!(assistant["role"], "assistant");
         let tool_use = &assistant["content"][0]["toolUse"];
@@ -1170,7 +1107,6 @@ mod tests {
         assert_eq!(tool_use["name"], "get_weather");
         assert_eq!(tool_use["input"]["city"], "Berlin");
 
-        // Tool result converted to user message with toolResult block.
         let tool_result_msg = &messages[2];
         assert_eq!(tool_result_msg["role"], "user");
         let tool_result = &tool_result_msg["content"][0]["toolResult"];
@@ -1206,8 +1142,6 @@ mod tests {
         assert_eq!(spec["description"], "Search the web");
         assert_eq!(spec["inputSchema"]["json"]["type"], "object");
     }
-
-    // ── transform_response ────────────────────────────────────────────────────
 
     #[test]
     #[serial]
@@ -1308,8 +1242,6 @@ mod tests {
         }
     }
 
-    // ── model prefix / matching ───────────────────────────────────────────────
-
     #[test]
     #[serial]
     fn strip_model_prefix() {
@@ -1327,8 +1259,6 @@ mod tests {
         assert!(!p.matches_model("gpt-4"));
     }
 
-    // ── stream_format ─────────────────────────────────────────────────────────
-
     #[test]
     #[serial]
     fn stream_format_is_eventstream() {
@@ -1336,12 +1266,10 @@ mod tests {
         assert_eq!(p.stream_format(), StreamFormat::AwsEventStream);
     }
 
-    // ── build_stream_url ──────────────────────────────────────────────────────
-
     #[test]
     #[serial]
     fn build_stream_url_chat_completions() {
-        // SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
+        // ~keep SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
         unsafe { std::env::remove_var("BEDROCK_CROSS_REGION") };
         let p = provider();
         let url = p.build_stream_url("/chat/completions", "anthropic.claude-3-sonnet-20240229-v1:0");
@@ -1361,8 +1289,6 @@ mod tests {
             "https://bedrock-runtime.us-east-1.amazonaws.com/model/amazon.titan-embed-text-v1/invoke"
         );
     }
-
-    // ── parse_bedrock_stream_event ────────────────────────────────────────────
 
     #[test]
     fn parse_stream_event_message_start() {
@@ -1461,8 +1387,6 @@ mod tests {
         assert!(result.is_none());
     }
 
-    // ── Extended thinking / reasoning effort ─────────────────────────────────
-
     #[test]
     #[serial]
     fn transform_request_reasoning_effort_low() {
@@ -1521,8 +1445,6 @@ mod tests {
         assert!(body.get("additionalModelRequestFields").is_none());
     }
 
-    // ── Document handling ────────────────────────────────────────────────────
-
     #[test]
     #[serial]
     fn transform_request_document_content_part() {
@@ -1550,10 +1472,8 @@ mod tests {
             .expect("content should be an array");
         assert_eq!(content.len(), 2);
 
-        // First part: text
         assert_eq!(content[0]["text"], "Summarize this document.");
 
-        // Second part: document
         let doc = &content[1]["document"];
         assert_eq!(doc["name"], "doc");
         assert_eq!(doc["format"], "pdf");
@@ -1584,8 +1504,6 @@ mod tests {
         let doc = &body["messages"][0]["content"][0]["document"];
         assert_eq!(doc["format"], "csv");
     }
-
-    // ── Guardrails ───────────────────────────────────────────────────────────
 
     #[test]
     #[serial]
@@ -1623,8 +1541,6 @@ mod tests {
         assert!(body.get("guardrailConfig").is_none());
     }
 
-    // ── Response format / structured output ──────────────────────────────────
-
     #[test]
     #[serial]
     fn transform_request_json_object_response_format() {
@@ -1636,7 +1552,6 @@ mod tests {
         p.transform_request(&mut body)
             .expect("transform_request should not fail");
 
-        // Should have a system instruction for JSON output.
         let system = body["system"].as_array().expect("system should be an array");
         let has_json_instruction = system
             .iter()
@@ -1690,16 +1605,13 @@ mod tests {
         p.transform_request(&mut body)
             .expect("transform_request should not fail");
 
-        // No system instruction should be added for plain text format.
         assert!(body.get("system").is_none());
     }
-
-    // ── Cross-region inference ───────────────────────────────────────────────
 
     #[test]
     #[serial]
     fn apply_cross_region_prefix_when_set() {
-        // SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
+        // ~keep SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
         unsafe { std::env::set_var("BEDROCK_CROSS_REGION", "us") };
         let result = super::apply_cross_region_prefix("anthropic.claude-3-sonnet-20240229-v1:0");
         assert_eq!(result, "us.anthropic.claude-3-sonnet-20240229-v1:0");
@@ -1709,7 +1621,7 @@ mod tests {
     #[test]
     #[serial]
     fn apply_cross_region_prefix_no_double_prefix() {
-        // SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
+        // ~keep SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
         unsafe { std::env::set_var("BEDROCK_CROSS_REGION", "eu") };
         let result = super::apply_cross_region_prefix("eu.anthropic.claude-3-sonnet-20240229-v1:0");
         assert_eq!(
@@ -1722,13 +1634,11 @@ mod tests {
     #[test]
     #[serial]
     fn apply_cross_region_prefix_unset() {
-        // SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
+        // ~keep SAFETY: env vars are process-global; `#[serial]` ensures no parallel mutation.
         unsafe { std::env::remove_var("BEDROCK_CROSS_REGION") };
         let result = super::apply_cross_region_prefix("anthropic.claude-3-sonnet-20240229-v1:0");
         assert_eq!(result, "anthropic.claude-3-sonnet-20240229-v1:0");
     }
-
-    // ── Helper function tests ────────────────────────────────────────────────
 
     #[test]
     fn reasoning_effort_budget_tokens() {
@@ -1746,6 +1656,6 @@ mod tests {
             super::format_from_media_type("application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
             "vnd.openxmlformats-officedocument.wordprocessingml.document"
         );
-        assert_eq!(super::format_from_media_type("pdf"), "pdf"); // fallback
+        assert_eq!(super::format_from_media_type("pdf"), "pdf");
     }
 }

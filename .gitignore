@@ -289,4 +289,5 @@ test_apps/swift_e2e/*.artifactbundle.zip
 !.claude/skills/mcp/SKILL.md
 
 # BEGIN ai-rulez (DO NOT EDIT - managed by ai-rulez)
+.ai-rulez/.generated-manifest.json
 # END ai-rulez

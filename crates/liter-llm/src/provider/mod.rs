@@ -35,8 +35,6 @@ pub enum StreamFormat {
     AwsEventStream,
 }
 
-// ── Provider capability flags ─────────────────────────────────────────────────
-
 /// Static capability flags for a provider.
 ///
 /// Each flag indicates whether the provider's models *generally* support that
@@ -109,7 +107,6 @@ pub fn capabilities(provider_name: &str) -> ProviderCapabilities {
     DEFAULT_CAPABILITIES
 }
 
-// Embed the generated providers registry at compile time.
 const PROVIDERS_JSON: &str = include_str!("../../schemas/providers.json");
 
 /// Lazy-initialised registry parsed from the embedded JSON.
@@ -128,8 +125,6 @@ fn registry() -> Result<&'static ProviderRegistry> {
         status: 500,
     })
 }
-
-// ── Registry types (deserialised from providers.json) ────────────────────────
 
 /// Internal JSON shape: each provider entry with capability flags and streaming
 /// format, stored separately from the public [`ProviderConfig`] schema.
@@ -246,8 +241,6 @@ pub struct AuthConfig {
     pub env_var: Option<String>,
 }
 
-// ── Provider trait ───────────────────────────────────────────────────────────
-
 /// A provider defines how to reach an LLM API endpoint.
 pub(crate) trait Provider: Send + Sync {
     /// Validate provider configuration at construction time.
@@ -319,7 +312,6 @@ pub(crate) trait Provider: Send + Sync {
     /// E.g. `"groq/llama3-70b"` → `"llama3-70b"`.
     /// Returns the model name unchanged when no prefix is present.
     fn strip_model_prefix<'m>(&self, model: &'m str) -> &'m str {
-        // Try "name/" prefix without allocating.
         if let Some(rest) = model.strip_prefix(self.name())
             && let Some(stripped) = rest.strip_prefix('/')
         {
@@ -496,8 +488,6 @@ pub use outbound_policy::{
     OutboundPolicy, current_policy, set_outbound_policy, validate_outbound_url, validate_outbound_url_sync,
 };
 
-// ── Built-in providers ───────────────────────────────────────────────────────
-
 /// Built-in OpenAI provider.
 pub(crate) struct OpenAiProvider;
 
@@ -671,8 +661,6 @@ impl Provider for ConfigDrivenProvider {
     }
 
     fn base_url(&self) -> &str {
-        // Return an empty string when unconfigured; `transform_request` or the
-        // HTTP layer will surface a useful error before any network call goes out.
         self.config.base_url.as_deref().unwrap_or("")
     }
 
@@ -702,10 +690,8 @@ impl Provider for ConfigDrivenProvider {
             .unwrap_or(&AuthType::Bearer);
 
         match auth_type {
-            // No auth header required; return None so callers skip it entirely.
             AuthType::None => None,
             AuthType::ApiKey => Some((Cow::Borrowed("x-api-key"), Cow::Borrowed(api_key))),
-            // Bearer, Unknown, and anything else defaults to Bearer token.
             AuthType::Bearer | AuthType::Unknown => {
                 Some((Cow::Borrowed("Authorization"), Cow::Owned(format!("Bearer {api_key}"))))
             }
@@ -720,8 +706,6 @@ impl Provider for ConfigDrivenProvider {
         }
     }
 }
-
-// ── Provider detection ───────────────────────────────────────────────────────
 
 /// Detect which provider to use based on model name.
 ///
@@ -742,49 +726,40 @@ impl Provider for ConfigDrivenProvider {
 /// are excluded from config-driven routing because they require custom
 /// auth/request logic beyond simple bearer tokens.
 pub(crate) fn detect_provider(model: &str) -> Option<Box<dyn Provider>> {
-    // 0. Custom (runtime-registered) providers take highest priority.
     if let Some(provider) = custom::detect_custom_provider(model) {
         return Some(provider);
     }
 
-    // 1. OpenAI hardcoded patterns.
     let openai = OpenAiProvider;
     if openai.matches_model(model) {
         return Some(Box::new(openai));
     }
 
-    // 2. Anthropic: "claude-*" model names or "anthropic/" prefix.
     let anthropic = anthropic::AnthropicProvider;
     if anthropic.matches_model(model) {
         return Some(Box::new(anthropic));
     }
 
-    // 3. Azure: "azure/" prefix.
     if model.starts_with("azure/") {
         return Some(Box::new(azure::AzureProvider::new()));
     }
 
-    // 4. Google AI Studio: "gemini/" or "google_ai/" prefix.
     if model.starts_with("gemini/") || model.starts_with("google_ai/") {
         return Some(Box::new(google_ai::GoogleAiProvider));
     }
 
-    // 5. Vertex AI: "vertex_ai/" prefix.
     if model.starts_with("vertex_ai/") {
         return Some(Box::new(vertex::VertexAiProvider::from_env()));
     }
 
-    // 6. AWS Bedrock: "bedrock/" prefix.
     if model.starts_with("bedrock/") {
         return Some(Box::new(bedrock::BedrockProvider::from_env()));
     }
 
-    // 7. Cohere: "command-*" model names or "cohere/" prefix.
     if model.starts_with("command-") || model.starts_with("cohere/") {
         return Some(Box::new(cohere::CohereProvider));
     }
 
-    // 8. Mistral: "mistral-*", "codestral-*", "pixtral-*" model names or "mistral/" prefix.
     if model.starts_with("mistral-")
         || model.starts_with("codestral-")
         || model.starts_with("pixtral-")
@@ -793,30 +768,23 @@ pub(crate) fn detect_provider(model: &str) -> Option<Box<dyn Provider>> {
         return Some(Box::new(mistral::MistralProvider));
     }
 
-    // 9. GitHub Copilot: "github_copilot/" prefix.
     if model.starts_with("github_copilot/") {
         return Some(Box::new(github_copilot::GithubCopilotProvider::from_env()));
     }
 
-    // Grab the registry; if it failed to parse we cannot route.
     let reg = match REGISTRY.as_ref() {
         Ok(r) => r,
         Err(_) => return None,
     };
 
-    // 10. Slash-prefix routing (e.g. "groq/llama3-70b").
     if let Some((prefix, _)) = model.split_once('/')
         && let Some(entry) = reg.providers.iter().find(|e| e.config.name == prefix)
         && entry.config.base_url.is_some()
         && !reg.complex_providers.contains(&entry.config.name)
     {
-        // entry.config is &'static ProviderConfig because reg comes from LazyLock.
-        // Only use the registry entry if it has a usable base_url and is not
-        // a complex provider requiring dedicated auth logic.
         return Some(Box::new(ConfigDrivenProvider::new(&entry.config)));
     }
 
-    // 11. Walk registry model_prefixes for unprefixed model names.
     for entry in &reg.providers {
         if reg.complex_providers.contains(&entry.config.name) {
             continue;
@@ -826,7 +794,6 @@ pub(crate) fn detect_provider(model: &str) -> Option<Box<dyn Provider>> {
                 .iter()
                 .any(|p| model.starts_with(p.as_str()) && !p.ends_with('/'));
             if matches && entry.config.base_url.is_some() {
-                // entry.config is &'static ProviderConfig because reg comes from LazyLock.
                 return Some(Box::new(ConfigDrivenProvider::new(&entry.config)));
             }
         }
@@ -890,7 +857,6 @@ mod tests {
             .expect("content must be present");
         assert!(content.is_array(), "content must be a parts array, got: {content}");
         let parts = content.as_array().expect("array");
-        // transcript emitted as text part, audio data as output_audio part.
         assert_eq!(parts.len(), 2);
         assert_eq!(parts[0]["type"], "text");
         assert_eq!(parts[0]["text"], "hello");

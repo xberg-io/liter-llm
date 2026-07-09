@@ -35,10 +35,6 @@ const MAX_FRAME_SIZE: usize = 16 * 1024 * 1024;
 /// Header value type for UTF-8 strings.
 const HEADER_TYPE_STRING: u8 = 7;
 
-// ---------------------------------------------------------------------------
-// Public entry point
-// ---------------------------------------------------------------------------
-
 /// Send a streaming POST request and return a stream of `ChatCompletionChunk`s
 /// parsed from AWS EventStream binary frames.
 ///
@@ -71,7 +67,6 @@ where
     let mut retry_count = 0u32;
 
     let resp = with_retry(max_retries, || {
-        // Clone is a zero-copy ref-count bump on `Bytes`.
         let mut builder = client
             .post(url)
             .header(reqwest::header::CONTENT_TYPE, "application/json")
@@ -98,10 +93,6 @@ where
     let stream = EventStreamParser::new(byte_stream, parse_event);
     Ok(Box::pin(stream))
 }
-
-// ---------------------------------------------------------------------------
-// EventStream frame parser
-// ---------------------------------------------------------------------------
 
 /// A parsed header from an EventStream frame.
 struct EventHeader {
@@ -138,7 +129,6 @@ fn parse_headers(mut data: &[u8]) -> Result<Vec<EventHeader>> {
         data = &data[1..];
 
         if value_type == HEADER_TYPE_STRING {
-            // String: 2-byte big-endian length + UTF-8 value.
             if data.len() < 2 {
                 return Err(LiterLlmError::Streaming {
                     message: "EventStream string header length truncated".into(),
@@ -159,18 +149,15 @@ fn parse_headers(mut data: &[u8]) -> Result<Vec<EventHeader>> {
             data = &data[value_len..];
             headers.push(EventHeader { name, value });
         } else {
-            // Skip non-string header types based on their wire sizes.
-            // AWS EventStream spec: bool types have no value bytes (the type
-            // byte itself encodes true/false).
+            // ~keep AWS EventStream bool header types have no value bytes; the type byte encodes true/false.
             let skip = match value_type {
-                0 => 0, // bool_true  — no value bytes
-                1 => 0, // bool_false — no value bytes
-                2 => 1, // byte
-                3 => 2, // short
-                4 => 4, // int
-                5 => 8, // long
+                0 => 0,
+                1 => 0,
+                2 => 1,
+                3 => 2,
+                4 => 4,
+                5 => 8,
                 6 => {
-                    // bytes: 2-byte length prefix
                     if data.len() < 2 {
                         return Err(LiterLlmError::Streaming {
                             message: "EventStream bytes header length truncated".into(),
@@ -179,8 +166,8 @@ fn parse_headers(mut data: &[u8]) -> Result<Vec<EventHeader>> {
                     let len = u16::from_be_bytes([data[0], data[1]]) as usize;
                     2 + len
                 }
-                8 => 8,  // timestamp
-                9 => 16, // uuid
+                8 => 8,
+                9 => 16,
                 _ => {
                     return Err(LiterLlmError::Streaming {
                         message: format!("unknown EventStream header type: {value_type}"),
@@ -231,10 +218,6 @@ fn crc32(data: &[u8]) -> u32 {
     crc ^ 0xFFFF_FFFF
 }
 
-// ---------------------------------------------------------------------------
-// EventStream Stream adapter
-// ---------------------------------------------------------------------------
-
 pin_project! {
     /// Wraps a `bytes::Bytes` stream and yields `ChatCompletionChunk`s parsed
     /// from AWS EventStream binary frames.
@@ -272,12 +255,10 @@ where
         let mut this = self.project();
 
         loop {
-            // --- Try to parse a complete frame from the buffer ---
             if this.buffer.len() >= MIN_FRAME_SIZE {
                 let total_length =
                     u32::from_be_bytes([this.buffer[0], this.buffer[1], this.buffer[2], this.buffer[3]]) as usize;
 
-                // Sanity check on frame size.
                 if !(MIN_FRAME_SIZE..=MAX_FRAME_SIZE).contains(&total_length) {
                     return Poll::Ready(Some(Err(LiterLlmError::Streaming {
                         message: format!(
@@ -286,16 +267,12 @@ where
                     })));
                 }
 
-                // Wait for the full frame to be buffered.
                 if this.buffer.len() < total_length {
-                    // Need more data — fall through to read more bytes.
                 } else {
-                    // We have a complete frame. Extract and advance.
                     let frame = this.buffer.split_to(total_length);
 
                     let headers_length = u32::from_be_bytes([frame[4], frame[5], frame[6], frame[7]]) as usize;
 
-                    // Validate prelude CRC (covers first 8 bytes).
                     let prelude_crc_expected = u32::from_be_bytes([frame[8], frame[9], frame[10], frame[11]]);
                     let prelude_crc_actual = crc32(&frame[..8]);
                     if prelude_crc_expected != prelude_crc_actual {
@@ -306,7 +283,6 @@ where
                         })));
                     }
 
-                    // Validate message CRC (covers everything except the last 4 bytes).
                     let message_crc_expected = u32::from_be_bytes([
                         frame[total_length - 4],
                         frame[total_length - 3],
@@ -322,8 +298,7 @@ where
                         })));
                     }
 
-                    // Parse headers.
-                    let headers_start = 12; // after prelude (total_len + headers_len + prelude_crc)
+                    let headers_start = 12;
                     let headers_end = headers_start + headers_length;
                     if headers_end > total_length - 4 {
                         return Poll::Ready(Some(Err(LiterLlmError::Streaming {
@@ -336,7 +311,6 @@ where
                         Err(e) => return Poll::Ready(Some(Err(e))),
                     };
 
-                    // Extract event-type and message-type headers.
                     let mut event_type = "";
                     let mut message_type = "";
                     for h in &headers {
@@ -347,7 +321,6 @@ where
                         }
                     }
 
-                    // Handle exceptions (error events from the service).
                     if message_type == "exception" {
                         let payload = &frame[headers_end..total_length - 4];
                         let payload_str = std::str::from_utf8(payload).unwrap_or("<binary>");
@@ -356,12 +329,10 @@ where
                         })));
                     }
 
-                    // Only process "event" messages.
                     if message_type != "event" {
                         continue;
                     }
 
-                    // Extract payload.
                     let payload = &frame[headers_end..total_length - 4];
                     let payload_str = match std::str::from_utf8(payload) {
                         Ok(s) => s,
@@ -372,12 +343,9 @@ where
                         }
                     };
 
-                    // Delegate to the provider-supplied parser.
                     match (this.parse_event)(event_type, payload_str) {
                         Ok(None) => {
-                            // Terminal event (e.g. messageStop) — stream complete.
-                            // But don't end yet; there may be a metadata event after.
-                            // Only truly end when the inner stream is done.
+                            // ~keep Bedrock may send metadata after terminal events; drain the inner stream.
                             continue;
                         }
                         Ok(Some(chunk)) => return Poll::Ready(Some(Ok(chunk))),
@@ -386,9 +354,8 @@ where
                 }
             }
 
-            // --- Need more bytes ---
             if *this.done {
-                // If the buffer still has bytes, the stream ended mid-frame.
+                // ~keep Leftover bytes at EOF mean the EventStream ended mid-frame.
                 if !this.buffer.is_empty() {
                     let leftover = this.buffer.len();
                     this.buffer.clear();
@@ -417,7 +384,6 @@ where
                     if this.buffer.is_empty() {
                         return Poll::Ready(None);
                     }
-                    // Loop once more to try parsing any buffered frames.
                     continue;
                 }
                 Poll::Pending => {
@@ -428,22 +394,17 @@ where
     }
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     /// Build a valid EventStream frame from headers and payload.
     fn build_frame(headers: &[(&str, &str)], payload: &[u8]) -> Vec<u8> {
-        // Encode headers.
         let mut header_bytes = Vec::new();
         for (name, value) in headers {
             header_bytes.push(name.len() as u8);
             header_bytes.extend_from_slice(name.as_bytes());
-            header_bytes.push(HEADER_TYPE_STRING); // type 7 = string
+            header_bytes.push(HEADER_TYPE_STRING);
             let value_bytes = value.as_bytes();
             header_bytes.extend_from_slice(&(value_bytes.len() as u16).to_be_bytes());
             header_bytes.extend_from_slice(value_bytes);
@@ -454,19 +415,15 @@ mod tests {
 
         let mut frame = Vec::with_capacity(total_length);
 
-        // Prelude: total_length + headers_length.
         frame.extend_from_slice(&(total_length as u32).to_be_bytes());
         frame.extend_from_slice(&headers_length.to_be_bytes());
 
-        // Prelude CRC.
         let prelude_crc = crc32(&frame[..8]);
         frame.extend_from_slice(&prelude_crc.to_be_bytes());
 
-        // Headers + payload.
         frame.extend_from_slice(&header_bytes);
         frame.extend_from_slice(payload);
 
-        // Message CRC.
         let message_crc = crc32(&frame);
         frame.extend_from_slice(&message_crc.to_be_bytes());
 
@@ -475,9 +432,7 @@ mod tests {
 
     #[test]
     fn crc32_known_values() {
-        // CRC32 of empty string is 0x00000000.
         assert_eq!(crc32(b""), 0x0000_0000);
-        // CRC32 of "123456789" is 0xCBF43926 (standard ISO 3309).
         assert_eq!(crc32(b"123456789"), 0xCBF4_3926);
     }
 
@@ -485,7 +440,6 @@ mod tests {
     fn parse_headers_basic() {
         let headers_data = {
             let mut buf = Vec::new();
-            // Header: ":event-type" = "contentBlockDelta"
             let name = b":event-type";
             buf.push(name.len() as u8);
             buf.extend_from_slice(name);
@@ -514,11 +468,9 @@ mod tests {
             payload,
         );
 
-        // Verify frame is parseable: check total_length.
         let total_length = u32::from_be_bytes([frame[0], frame[1], frame[2], frame[3]]) as usize;
         assert_eq!(total_length, frame.len());
 
-        // Verify CRCs.
         let prelude_crc_stored = u32::from_be_bytes([frame[8], frame[9], frame[10], frame[11]]);
         assert_eq!(crc32(&frame[..8]), prelude_crc_stored);
 
@@ -537,7 +489,6 @@ mod tests {
         use std::pin::pin;
         use std::task::{Context, Poll};
 
-        // Build a few EventStream frames.
         let frame1 = build_frame(
             &[(":message-type", "event"), (":event-type", "contentBlockDelta")],
             br#"{"contentBlockIndex":0,"delta":{"text":"Hello"}}"#,
@@ -547,22 +498,18 @@ mod tests {
             br#"{"stopReason":"end_turn"}"#,
         );
 
-        // Concatenate frames into a single bytes chunk.
         let mut all_bytes = Vec::new();
         all_bytes.extend_from_slice(&frame1);
         all_bytes.extend_from_slice(&frame2);
 
-        // Create a simple stream that yields the bytes in one chunk.
         let byte_stream = once_future(async { Ok::<_, reqwest::Error>(bytes::Bytes::from(all_bytes)) });
 
-        // Parse function that creates a chunk for text deltas and returns None for stop.
         let parse = |event_type: &str, payload: &str| -> Result<Option<ChatCompletionChunk>> {
             match event_type {
                 "contentBlockDelta" => {
                     let v: serde_json::Value = serde_json::from_str(payload)
                         .map_err(|e| LiterLlmError::Streaming { message: e.to_string() })?;
                     let text = v.pointer("/delta/text").and_then(|t| t.as_str()).unwrap_or("");
-                    // Build a minimal ChatCompletionChunk.
                     let chunk_json = serde_json::json!({
                         "id": "test",
                         "object": "chat.completion.chunk",
@@ -586,7 +533,6 @@ mod tests {
         let parser = EventStreamParser::new(byte_stream, parse);
         let mut pinned = pin!(parser);
 
-        // Poll once — should get the text delta chunk.
         let waker = std::task::Waker::noop();
         let mut cx = Context::from_waker(waker);
 
@@ -628,7 +574,6 @@ mod tests {
             &[(":message-type", "event"), (":event-type", "messageStop")],
             br#"{"stopReason":"end_turn"}"#,
         );
-        // Corrupt byte 9 (part of prelude CRC).
         frame[9] ^= 0xFF;
 
         let total_length = u32::from_be_bytes([frame[0], frame[1], frame[2], frame[3]]) as usize;
@@ -646,7 +591,6 @@ mod tests {
             br#"{"stopReason":"end_turn"}"#,
         );
         let len = frame.len();
-        // Corrupt a payload byte.
         frame[len / 2] ^= 0xFF;
 
         let message_crc_stored = u32::from_be_bytes([frame[len - 4], frame[len - 3], frame[len - 2], frame[len - 1]]);
@@ -672,7 +616,6 @@ mod tests {
             br#"{"contentBlockIndex":0,"delta":{"text":"split"}}"#,
         );
 
-        // Split the frame in half to simulate TCP segmentation.
         let mid = frame.len() / 2;
         let chunk1 = bytes::Bytes::from(frame[..mid].to_vec());
         let chunk2 = bytes::Bytes::from(frame[mid..].to_vec());
@@ -699,8 +642,6 @@ mod tests {
         let waker = std::task::Waker::noop();
         let mut cx = Context::from_waker(waker);
 
-        // First poll may return Pending (first chunk doesn't complete the frame).
-        // Keep polling until we get the result.
         let mut result = None;
         for _ in 0..10 {
             match pinned.as_mut().poll_next(&mut cx) {
@@ -728,7 +669,6 @@ mod tests {
             br#"{"contentBlockIndex":0,"delta":{"text":"truncated"}}"#,
         );
 
-        // Only deliver the first half — simulate connection drop.
         let partial = bytes::Bytes::from(frame[..frame.len() / 2].to_vec());
         let byte_stream = VecStream::new(vec![Ok(partial)]);
 
@@ -740,7 +680,6 @@ mod tests {
         let waker = std::task::Waker::noop();
         let mut cx = Context::from_waker(waker);
 
-        // Poll until we get an error about truncated data.
         let mut got_error = false;
         for _ in 0..10 {
             match pinned.as_mut().poll_next(&mut cx) {

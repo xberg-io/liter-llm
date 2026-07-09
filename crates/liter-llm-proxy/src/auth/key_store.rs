@@ -167,22 +167,12 @@ impl KeyStore {
         let token_bytes = token.as_bytes();
         let mut found: Option<VirtualKeyConfig> = None;
 
-        // Iterate ALL entries unconditionally — no early exit.
-        // `subtle::ConstantTimeEq` prevents branch-based timing leaks when
-        // comparing two byte slices.  We capture the first match but continue
-        // the loop to completion so the total work is the same for "hit" and
-        // "miss" inputs.
         for entry in self.keys.iter() {
             let stored_bytes = entry.key().as_bytes();
 
-            // ct_eq returns Choice(1) on match, Choice(0) on mismatch.
-            // Mapping to bool via `.into()` is safe here because we only
-            // use the bool after the comparison — no branching on the secret
-            // value occurs inside the comparison itself.
             if bool::from(stored_bytes.ct_eq(token_bytes)) && found.is_none() {
                 found = Some(entry.value().clone());
             }
-            // Loop continues unconditionally even after a match.
         }
 
         found
@@ -194,8 +184,6 @@ impl KeyResolver for KeyStore {
         &self,
         api_key: String,
     ) -> Pin<Box<dyn Future<Output = Result<ResolvedKey, KeyResolverError>> + Send + 'static>> {
-        // Perform the synchronous constant-time lookup on the calling thread so the
-        // returned future is 'static (it captures an owned result, not a borrow of self).
         let result = match self.get(&api_key) {
             None => Err(KeyResolverError::NotFound),
             Some(cfg) => Ok(ResolvedKey {
@@ -231,8 +219,6 @@ mod tests {
         }
     }
 
-    // ── KeyStore tests ──────────────────────────────────────────────────
-
     #[test]
     fn master_key_match_returns_true() {
         let store = KeyStore::from_config(Some(SecretString::from("sk-master".to_string())), &[]);
@@ -253,7 +239,6 @@ mod tests {
 
     #[test]
     fn master_key_near_miss_returns_false() {
-        // Same length, one character different — ensures ct_eq compares content, not just length.
         let store = KeyStore::from_config(Some(SecretString::from("sk-master".to_string())), &[]);
         assert!(!store.is_master_key("sk-mastex"));
     }
@@ -276,8 +261,6 @@ mod tests {
         assert!(store.get("vk-missing").is_none());
     }
 
-    // ── Constant-time lookup verification ───────────────────────────────
-
     /// Verify that `get` uses `subtle::ConstantTimeEq` for comparison and
     /// iterates ALL keys unconditionally, not stopping on first match.
     ///
@@ -292,23 +275,17 @@ mod tests {
         let cfg_c = sample_key_config("vk-cccc", vec![]);
         let store = KeyStore::from_config(None, &[cfg_a, cfg_b, cfg_c]);
 
-        // Exact match — must be found.
         assert!(store.get("vk-aaaa").is_some(), "exact match must be found");
         assert!(store.get("vk-bbbb").is_some(), "exact match must be found");
         assert!(store.get("vk-cccc").is_some(), "exact match must be found");
 
-        // Near-miss (same length, different content) — must not be found.
-        // subtle::ConstantTimeEq returns Choice(0) here; no early exit.
         assert!(store.get("vk-aaab").is_none(), "near-miss must not be found");
         assert!(store.get("vk-aaaz").is_none(), "near-miss must not be found");
 
-        // Prefix of a registered key — must not be found.
         assert!(store.get("vk-aaa").is_none(), "prefix must not be found");
 
-        // Superstring of a registered key — must not be found.
         assert!(store.get("vk-aaaax").is_none(), "superstring must not be found");
 
-        // Empty token — must not be found.
         assert!(store.get("").is_none(), "empty token must not be found");
     }
 
@@ -332,8 +309,6 @@ mod tests {
             assert_eq!(found.models, vec![format!("model-{i}")]);
         }
     }
-
-    // ── KeyContext tests ────────────────────────────────────────────────
 
     #[test]
     fn master_context_has_no_restrictions() {

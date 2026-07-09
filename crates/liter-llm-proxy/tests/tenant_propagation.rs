@@ -11,8 +11,6 @@ use tower::ServiceExt;
 
 use common::mock_upstream::{MockRoute, MockUpstream};
 
-// ── In-test sink ──────────────────────────────────────────────────────────────
-
 /// Captures every emitted [`UsageEvent`] in a `Vec` so tests can inspect them.
 #[derive(Default, Clone)]
 struct VecUsageSink {
@@ -32,16 +30,12 @@ impl UsageSink for VecUsageSink {
     }
 }
 
-// ── Mock response bodies ──────────────────────────────────────────────────────
-
 const CHAT_BODY: &str = r#"{"id":"cmpl-1","object":"chat.completion","created":1700000000,"model":"gpt-4o","choices":[{"index":0,"message":{"role":"assistant","content":"ok"},"finish_reason":"stop"}],"usage":{"prompt_tokens":5,"completion_tokens":3,"total_tokens":8}}"#;
 
 const EMBED_BODY: &str = r#"{"object":"list","data":[{"object":"embedding","index":0,"embedding":[0.1,0.2]}],"model":"text-embedding-3-small","usage":{"prompt_tokens":5,"total_tokens":5}}"#;
 
 const RERANK_BODY: &str =
     r#"{"model":"rerank-v3","results":[{"index":0,"relevance_score":0.9,"document":{"text":"doc"}}]}"#;
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 /// Build a `ResolvedKey` for a given `tenant_id` that has unrestricted model access.
 fn resolved_key(tenant_id: impl Into<String>) -> ResolvedKey {
@@ -98,8 +92,6 @@ async fn post_json(
         .unwrap()
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
-
 /// Chat requests made with a virtual key carry the key's `tenant_id` in the
 /// emitted `UsageEvent`.
 #[tokio::test]
@@ -123,7 +115,6 @@ async fn chat_request_carries_tenant_id() {
     let json: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
     assert_eq!(json["object"], "chat.completion", "expected a chat completion response");
 
-    // HooksLayer emits via tokio::spawn; yield to let the background task run.
     tokio::task::yield_now().await;
     let events = sink.collected();
     assert_eq!(events.len(), 1, "expected exactly one usage event");
@@ -211,7 +202,6 @@ async fn master_key_resolves_to_master_tenant() {
     let sink = VecUsageSink::default();
     let sink_erased: Arc<dyn UsageSinkErased> = Arc::new(sink.clone());
 
-    // No custom resolver: the default KeyStore handles master-key auth.
     let proxy = common::test_proxy::TestProxy::with_injection(&upstream.url, None, Some(sink_erased));
 
     let body = r#"{"model":"test-model","messages":[{"role":"user","content":"hi"}]}"#;
@@ -281,7 +271,6 @@ async fn parameterized_endpoints_carry_tenant() {
         },
     ];
 
-    // Run each case independently with a fresh sink so event counts are exact.
     for case in &cases {
         let (proxy, sink) =
             build_proxy_with_sink(&upstream.url, vec![("sk-multi", resolved_key("multi-endpoint-corp"))]);

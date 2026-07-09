@@ -3,8 +3,6 @@ use serde::{Deserialize, Serialize};
 use super::common::Usage;
 use crate::cost;
 
-// ─── Encoding format ──────────────────────────────────────────────────────────
-
 /// The format in which the embedding vectors are returned.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -14,8 +12,6 @@ pub enum EmbeddingFormat {
     /// Base64-encoded string representation of the floats.
     Base64,
 }
-
-// ─── Request ──────────────────────────────────────────────────────────────────
 
 /// Embedding request.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -52,8 +48,6 @@ impl Default for EmbeddingInput {
         Self::Single(String::new())
     }
 }
-
-// ─── Response ─────────────────────────────────────────────────────────────────
 
 /// Embedding response.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

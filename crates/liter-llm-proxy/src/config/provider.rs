@@ -26,10 +26,6 @@ use tokio::sync::mpsc;
 
 use super::{ProxyConfig, interpolate_env_vars};
 
-// ---------------------------------------------------------------------------
-// ConfigError
-// ---------------------------------------------------------------------------
-
 /// Errors that a [`ConfigProvider`] can produce.
 #[derive(Debug, thiserror::Error)]
 pub enum ConfigError {
@@ -49,10 +45,6 @@ pub enum ConfigError {
     #[error("parse error: {0}")]
     Parse(String),
 }
-
-// ---------------------------------------------------------------------------
-// ConfigEvent
-// ---------------------------------------------------------------------------
 
 /// Events emitted by the MPSC receiver returned from
 /// [`ConfigProvider::watch`].
@@ -103,10 +95,6 @@ impl std::fmt::Debug for ConfigEvent {
         }
     }
 }
-
-// ---------------------------------------------------------------------------
-// ConfigProvider trait
-// ---------------------------------------------------------------------------
 
 /// Source of proxy configuration.
 ///
@@ -164,10 +152,6 @@ pub trait ConfigProvider: Send + Sync + 'static {
     ) -> Pin<Box<dyn Future<Output = Result<mpsc::Receiver<ConfigEvent>, ConfigError>> + Send + 'a>>;
 }
 
-// ---------------------------------------------------------------------------
-// StaticFileConfigProvider
-// ---------------------------------------------------------------------------
-
 /// Loads a TOML configuration file once at startup. The `watch` method
 /// returns a receiver that never yields events — suitable for simple
 /// single-instance deployments that restart the process to pick up changes.
@@ -192,19 +176,11 @@ impl ConfigProvider for StaticFileConfigProvider {
         &'a self,
     ) -> Pin<Box<dyn Future<Output = Result<mpsc::Receiver<ConfigEvent>, ConfigError>> + Send + 'a>> {
         Box::pin(async move {
-            // Channel capacity 1 is sufficient — this receiver never yields.
             let (_tx, rx) = mpsc::channel::<ConfigEvent>(1);
-            // _tx is dropped immediately, so the receiver will return None
-            // on the first poll. Callers that select! on the receiver will
-            // simply never be woken.
             Ok(rx)
         })
     }
 }
-
-// ---------------------------------------------------------------------------
-// FileWatchConfigProvider
-// ---------------------------------------------------------------------------
 
 /// Watches a TOML file for changes using the `notify` crate (OS-level file
 /// system events). Emits a [`ConfigEvent::Put`] whenever the file is modified
@@ -239,11 +215,8 @@ impl ConfigProvider for FileWatchConfigProvider {
             let (event_tx, mut event_rx) = mpsc::channel::<notify::Result<notify::Event>>(32);
             let (config_tx, config_rx) = mpsc::channel::<ConfigEvent>(8);
 
-            // Spawn the watcher on a blocking thread — `notify` requires a
-            // synchronous callback.
             let watch_path = path.clone();
             let mut watcher = notify::recommended_watcher(move |res: notify::Result<notify::Event>| {
-                // Best-effort: if the channel is full or closed we drop the event.
                 let _ = event_tx.blocking_send(res);
             })
             .map_err(|e| ConfigError::Backend(Box::new(e)))?;
@@ -252,9 +225,9 @@ impl ConfigProvider for FileWatchConfigProvider {
                 .watch(&watch_path, RecursiveMode::NonRecursive)
                 .map_err(|e| ConfigError::Backend(Box::new(e)))?;
 
-            // Move the watcher into the task to keep it alive.
+            // ~keep The notify watcher must stay owned by the task to keep OS watching active.
             tokio::spawn(async move {
-                // `_watcher` must stay alive for the OS watch to remain active.
+                // ~keep `_watcher` must stay alive for the OS watch to remain active.
                 let _watcher = watcher;
 
                 while let Some(event) = event_rx.recv().await {
@@ -277,7 +250,6 @@ impl ConfigProvider for FileWatchConfigProvider {
                         continue;
                     }
 
-                    // Small debounce: wait for writes to settle before reading.
                     tokio::time::sleep(std::time::Duration::from_millis(50)).await;
 
                     let revision = file_mtime_secs(&path).unwrap_or(0);
@@ -285,7 +257,6 @@ impl ConfigProvider for FileWatchConfigProvider {
                     match load_toml_file(&path) {
                         Ok(config) => {
                             if config_tx.send(ConfigEvent::Put { revision, config }).await.is_err() {
-                                // Receiver closed — stop watching.
                                 break;
                             }
                         }
@@ -300,10 +271,6 @@ impl ConfigProvider for FileWatchConfigProvider {
         })
     }
 }
-
-// ---------------------------------------------------------------------------
-// EtcdConfigProvider
-// ---------------------------------------------------------------------------
 
 #[cfg(feature = "etcd-watch")]
 /// Watches an etcd key prefix for configuration changes.
@@ -380,7 +347,7 @@ async fn etcd_watch_loop(
     use etcd_client::WatchOptions;
 
     loop {
-        // Attempt to open a watch stream.
+        // ~keep Recreate the etcd watch stream on every reconnect attempt.
         let mut stream = {
             let mut guard = client.lock().await;
             match guard.watch(key.as_str(), Some(WatchOptions::new().with_prefix())).await {
@@ -438,7 +405,7 @@ async fn etcd_watch_loop(
                     }
                 }
                 Ok(None) => {
-                    // Stream ended cleanly — break and reconnect.
+                    // ~keep Clean watch termination still triggers reconnect and resync.
                     tracing::warn!("etcd watch stream ended; reconnecting");
                     break;
                 }
@@ -449,8 +416,7 @@ async fn etcd_watch_loop(
             }
         }
 
-        // The watch stream was interrupted. Fetch a fresh snapshot and emit
-        // Resync before reconnecting.
+        // ~keep Interrupted etcd watches emit a fresh snapshot before reconnecting.
         let resync_config = {
             let mut guard = client.lock().await;
             guard
@@ -473,14 +439,9 @@ async fn etcd_watch_loop(
             return;
         }
 
-        // Brief pause before reconnecting to avoid a tight retry loop.
         tokio::time::sleep(std::time::Duration::from_secs(1)).await;
     }
 }
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
 /// Load and parse a TOML file with env-var interpolation.
 fn load_toml_file(path: &Path) -> Result<ProxyConfig, ConfigError> {
@@ -502,10 +463,6 @@ fn file_mtime_secs(path: &Path) -> Option<u64> {
     mtime.duration_since(UNIX_EPOCH).ok().map(|d| d.as_secs())
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 #[cfg(test)]
 mod tests {
     use std::io::Write;
@@ -514,14 +471,11 @@ mod tests {
 
     use super::*;
 
-    // Minimal valid TOML that deserializes into ProxyConfig.
     const MINIMAL_TOML: &str = r#"
 [server]
 host = "127.0.0.1"
 port = 9000
 "#;
-
-    // ── StaticFileConfigProvider ─────────────────────────────────────────
 
     #[tokio::test]
     async fn config_provider_static_file_loads_once() {
@@ -544,10 +498,7 @@ port = 9000
         let provider = StaticFileConfigProvider::new(file.path());
         let mut rx = provider.watch().await.expect("watch should succeed");
 
-        // The tx was dropped immediately; recv() must return None without blocking.
         let result = tokio::time::timeout(std::time::Duration::from_millis(50), rx.recv()).await;
-        // Either a timeout (channel open but no events) or None (channel closed).
-        // StaticFileConfigProvider drops the sender, so the channel is closed.
         assert!(
             result.is_err() || result.unwrap().is_none(),
             "static provider watch should never yield events"
@@ -575,8 +526,6 @@ port = 9000
         assert!(matches!(err, ConfigError::Parse(_)), "expected Parse, got: {err:?}");
     }
 
-    // ── FileWatchConfigProvider ──────────────────────────────────────────
-
     #[tokio::test]
     async fn config_provider_file_watch_emits_event_on_save() {
         let mut file = NamedTempFile::new().expect("temp file");
@@ -585,16 +534,13 @@ port = 9000
 
         let provider = FileWatchConfigProvider::new(file.path().to_path_buf());
 
-        // Verify initial load works.
         let initial = provider.load().await.expect("initial load");
         assert_eq!(initial.server.port, 9000);
 
         let mut rx = provider.watch().await.expect("watch");
 
-        // Give the watcher a moment to install the OS-level watch.
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
-        // Write a new config to the watched file.
         let updated_toml = r#"
 [server]
 host = "127.0.0.1"
@@ -610,7 +556,6 @@ port = 9001
             f.flush().expect("flush update");
         }
 
-        // Expect a Put event within 500ms.
         let event = tokio::time::timeout(std::time::Duration::from_millis(500), rx.recv())
             .await
             .expect("event should arrive within 500ms")
@@ -636,30 +581,9 @@ port = 9001
         assert_eq!(config.server.port, 9000);
     }
 
-    // ── EtcdConfigProvider — unit-level trait contract ───────────────────
-    //
-    // Full etcd integration tests require a live etcd cluster, which is not
-    // available in the standard unit-test environment. The etcd provider
-    // logic is covered at two levels:
-    //
-    // 1. The `connect` constructor rejects bad endpoints at the type level
-    //    (compile-time) — the `EtcdConfigProvider::connect` signature
-    //    demands `Vec<String>`, preventing misuse.
-    //
-    // 2. The watch loop reconnection logic (resync on stream interrupt,
-    //    event dispatch, channel close detection) is integration-tested
-    //    against a Docker-based etcd in CI via the `ci-etcd` workflow.
-    //    See `.github/workflows/ci-rust.yml` for the service container setup.
-    //
-    // Trade-off: mocking `etcd_client::Client` would require wrapping it in
-    // a trait, which would add a layer of indirection to every etcd call and
-    // complicate the production code path for marginal unit-test coverage
-    // over generated protobuf stubs. The etcd client crate itself is tested
-    // upstream. We test our *glue* logic at the integration level.
     #[cfg(feature = "etcd-watch")]
     #[test]
     fn config_provider_etcd_type_is_send_sync() {
-        // Compile-time assertion: EtcdConfigProvider satisfies ConfigProvider bounds.
         fn assert_send_sync<T: Send + Sync + 'static>() {}
         assert_send_sync::<EtcdConfigProvider>();
     }

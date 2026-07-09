@@ -37,8 +37,6 @@ use super::types::{LlmRequest, LlmResponse};
 use crate::client::BoxFuture;
 use crate::error::{LiterLlmError, Result};
 
-// ---- HealthStatus ----------------------------------------------------------
-
 /// The result of a single health probe.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HealthStatus {
@@ -47,8 +45,6 @@ pub enum HealthStatus {
     /// The probe failed; the upstream may be down.
     Unhealthy,
 }
-
-// ---- HealthCheckConfig -----------------------------------------------------
 
 /// Per-provider health-check configuration.
 ///
@@ -78,8 +74,6 @@ impl Default for HealthCheckConfig {
     }
 }
 
-// ---- HealthChecker trait ---------------------------------------------------
-
 /// Abstraction over a health probe strategy.
 ///
 /// Implementors issue a lightweight probe against `upstream` (typically a
@@ -95,8 +89,6 @@ pub trait HealthChecker: Send + Sync + 'static {
         upstream: String,
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = HealthStatus> + Send + 'static>>;
 }
-
-// ---- HttpProbeHealthChecker ------------------------------------------------
 
 /// A [`HealthChecker`] that probes an HTTP endpoint.
 ///
@@ -172,8 +164,6 @@ impl HealthChecker for HttpProbeHealthChecker {
     }
 }
 
-// ---- Per-provider probe state ----------------------------------------------
-
 /// Shared state for a single provider's health probe.
 ///
 /// Tracks consecutive success/failure counts and the current health flag using
@@ -233,8 +223,6 @@ impl ProviderHealthState {
     }
 }
 
-// ---- Per-provider probe background task -----------------------------------
-
 async fn run_provider_health_probe<C: HealthChecker>(
     checker: Arc<C>,
     upstream: String,
@@ -244,8 +232,6 @@ async fn run_provider_health_probe<C: HealthChecker>(
     loop {
         tokio::time::sleep(config.interval).await;
 
-        // Stop when the state Arc is only held by this task — all service
-        // clones have been dropped.
         if Arc::strong_count(&state) <= 1 {
             break;
         }
@@ -254,8 +240,6 @@ async fn run_provider_health_probe<C: HealthChecker>(
         state.record(status, &config);
     }
 }
-
-// ---- PerProviderHealthCheck service ---------------------------------------
 
 /// A service wrapper that enforces per-provider health-check thresholds.
 ///
@@ -286,7 +270,6 @@ where
     ///
     /// Spawns a background probe task immediately.
     pub fn new<C: HealthChecker>(inner: S, checker: Arc<C>, upstream: String, config: HealthCheckConfig) -> Self {
-        // Start healthy; the first failure within threshold won't block requests.
         let state = ProviderHealthState::new(true);
         let probe_state = Arc::clone(&state);
         let probe_checker = Arc::clone(&checker);
@@ -338,8 +321,6 @@ where
     }
 }
 
-// ---- Backward-compatible global health gate --------------------------------
-
 /// Tower [`Layer`] that monitors service health via periodic probes.
 ///
 /// The background health-check task is spawned when the layer wraps a service
@@ -368,7 +349,6 @@ where
     fn layer(&self, inner: S) -> Self::Service {
         let healthy = Arc::new(AtomicBool::new(true));
 
-        // Spawn the background probe task.
         let probe_svc = inner.clone();
         let probe_healthy = Arc::clone(&healthy);
         let interval = self.interval;
@@ -381,8 +361,6 @@ where
     }
 }
 
-// ---- Background probe ------------------------------------------------------
-
 async fn run_health_probe<S>(mut svc: S, healthy: Arc<AtomicBool>, interval: Duration)
 where
     S: Service<LlmRequest, Response = LlmResponse, Error = LiterLlmError> + Send + 'static,
@@ -391,8 +369,6 @@ where
     loop {
         tokio::time::sleep(interval).await;
 
-        // If the Arc is held only by us, all service clones have been dropped
-        // and we should stop probing.
         if Arc::strong_count(&healthy) <= 1 {
             break;
         }
@@ -406,8 +382,6 @@ where
         }
     }
 }
-
-// ---- Service ---------------------------------------------------------------
 
 /// Tower service produced by [`HealthCheckLayer`].
 #[cfg_attr(alef, alef(skip))]
@@ -466,8 +440,6 @@ where
     }
 }
 
-// ---- Tests -----------------------------------------------------------------
-
 #[cfg(test)]
 mod tests {
     use std::sync::atomic::Ordering;
@@ -478,8 +450,6 @@ mod tests {
     use crate::tower::service::LlmService;
     use crate::tower::tests_common::{MockClient, chat_req};
     use crate::tower::types::LlmRequest;
-
-    // ---- HealthCheckService (backward-compat) tests -------------------------
 
     #[tokio::test]
     async fn healthy_service_passes_through() {
@@ -533,15 +503,11 @@ mod tests {
             healthy: Arc::clone(&healthy),
         };
 
-        // Unhealthy — should reject.
         assert!(svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.is_err());
 
-        // Mark as healthy again.
         healthy.store(true, Ordering::Release);
         assert!(svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.is_ok());
     }
-
-    // ---- HealthCheckConfig defaults ----------------------------------------
 
     #[test]
     fn health_check_config_default_values() {
@@ -552,8 +518,6 @@ mod tests {
         assert_eq!(config.healthy_threshold, 2);
     }
 
-    // ---- ProviderHealthState threshold tests --------------------------------
-
     #[test]
     fn health_checker_marks_down_after_threshold() {
         let config = HealthCheckConfig {
@@ -563,14 +527,12 @@ mod tests {
         };
         let state = ProviderHealthState::new(true);
 
-        // Two failures — still healthy (below threshold).
         state.record(HealthStatus::Unhealthy, &config);
         assert!(state.is_healthy(), "should still be healthy after 1 failure");
 
         state.record(HealthStatus::Unhealthy, &config);
         assert!(state.is_healthy(), "should still be healthy after 2 failures");
 
-        // Third failure — crosses threshold.
         state.record(HealthStatus::Unhealthy, &config);
         assert!(!state.is_healthy(), "should be unhealthy after 3 consecutive failures");
     }
@@ -582,13 +544,11 @@ mod tests {
             healthy_threshold: 2,
             ..Default::default()
         };
-        let state = ProviderHealthState::new(false); // start unhealthy
+        let state = ProviderHealthState::new(false);
 
-        // One success — still unhealthy (below threshold of 2).
         state.record(HealthStatus::Healthy, &config);
         assert!(!state.is_healthy(), "should still be unhealthy after 1 success");
 
-        // Second success — crosses healthy threshold.
         state.record(HealthStatus::Healthy, &config);
         assert!(state.is_healthy(), "should be healthy after 2 consecutive successes");
     }
@@ -602,22 +562,16 @@ mod tests {
         };
         let state = ProviderHealthState::new(true);
 
-        // One failure.
         state.record(HealthStatus::Unhealthy, &config);
-        // A success resets the failure counter.
         state.record(HealthStatus::Healthy, &config);
-        // Now need two more failures to mark down.
         state.record(HealthStatus::Unhealthy, &config);
         assert!(state.is_healthy(), "one failure after reset should not mark unhealthy");
         state.record(HealthStatus::Unhealthy, &config);
         assert!(!state.is_healthy(), "second failure after reset should mark unhealthy");
     }
 
-    // ---- PerProviderHealthCheck service tests --------------------------------
-
     #[tokio::test]
     async fn per_provider_healthy_passes_through() {
-        // Build a no-op checker that always returns Healthy.
         struct AlwaysHealthy;
         impl HealthChecker for AlwaysHealthy {
             fn check(
@@ -651,7 +605,6 @@ mod tests {
         }
 
         let inner = LlmService::new(MockClient::ok());
-        // Use threshold=1 so first failure immediately marks down.
         let config = HealthCheckConfig {
             unhealthy_threshold: 1,
             healthy_threshold: 1,
@@ -660,8 +613,6 @@ mod tests {
         let checker = Arc::new(AlwaysUnhealthy);
         let mut svc = PerProviderHealthCheck::new(inner, checker, "test-provider".into(), config);
 
-        // Manually drive the state to unhealthy (the background probe hasn't
-        // fired in this synchronous test; we test the state logic directly).
         svc.state.record(
             HealthStatus::Unhealthy,
             &HealthCheckConfig {

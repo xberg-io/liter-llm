@@ -7,36 +7,28 @@
 
 use crate::error::{LiterLlmError, Result};
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
 /// Maximum bytes buffered in the SSE line parser before the stream is aborted.
 ///
 /// This matches the value in `http::streaming` and is re-exported here so
 /// application code can reference it without depending on internal modules.
-pub const SSE_BUFFER_MAX_BYTES: usize = 1024 * 1024; // 1 MiB
+pub const SSE_BUFFER_MAX_BYTES: usize = 1024 * 1024;
 
 /// Maximum bytes buffered in the AWS EventStream binary parser before abort.
 ///
 /// Matches `http::eventstream::MAX_FRAME_SIZE`.
-pub const EVENT_STREAM_BUFFER_MAX_BYTES: usize = 16 * 1024 * 1024; // 16 MiB
+pub const EVENT_STREAM_BUFFER_MAX_BYTES: usize = 16 * 1024 * 1024;
 
 /// Maximum bytes accepted in a non-streaming response body before abort.
 ///
 /// Protects against upstreams that send unexpectedly large JSON bodies.
 /// Set conservatively at 32 MiB — the largest plausible chat completion body.
-pub const RESPONSE_BODY_MAX_BYTES: usize = 32 * 1024 * 1024; // 32 MiB
+pub const RESPONSE_BODY_MAX_BYTES: usize = 32 * 1024 * 1024;
 
 /// Maximum bytes accumulated when collecting streamed chunks into a Vec for
 /// non-streaming response assembly.
 ///
 /// Set to the same value as [`RESPONSE_BODY_MAX_BYTES`].
 pub const CHUNK_ACCUMULATION_MAX_BYTES: usize = RESPONSE_BODY_MAX_BYTES;
-
-// ---------------------------------------------------------------------------
-// Helper
-// ---------------------------------------------------------------------------
 
 /// Assert that `current_len + incoming` does not exceed `limit`.
 ///
@@ -67,10 +59,6 @@ pub fn check_bound(context: &str, current_len: usize, incoming: usize, limit: us
     Ok(())
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -94,7 +82,6 @@ mod tests {
 
     #[test]
     fn check_bound_saturating_add_does_not_overflow() {
-        // Ensure usize::MAX additions don't panic.
         let err = check_bound("overflow", usize::MAX, 1, 1024).unwrap_err();
         assert!(err.to_string().contains("overflow"));
     }

@@ -116,7 +116,6 @@ async fn cache_miss_then_hit_through_full_stack() {
             .unwrap()
     };
 
-    // First request — cold path through the entire stack.
     let resp1 = proxy.router().oneshot(make_request()).await.unwrap();
     assert_eq!(resp1.status(), StatusCode::OK, "first request must succeed");
     let bytes1 = Body::new(resp1.into_body()).collect().await.unwrap().to_bytes();
@@ -124,9 +123,6 @@ async fn cache_miss_then_hit_through_full_stack() {
     assert_eq!(body1["object"], "chat.completion");
     assert_eq!(body1["choices"][0]["message"]["content"], "Hello!");
 
-    // Second identical request — same end-to-end response.  Without cache
-    // wired in, this still asserts response shape is byte-identical across
-    // repeated calls — a useful regression signal for the full stack.
     let resp2 = proxy.router().oneshot(make_request()).await.unwrap();
     assert_eq!(resp2.status(), StatusCode::OK, "second request must succeed");
     let bytes2 = Body::new(resp2.into_body()).collect().await.unwrap().to_bytes();

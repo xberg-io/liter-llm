@@ -148,7 +148,6 @@ impl VertexAdcCredentialProvider {
     #[must_use]
     pub fn with_metadata_url(metadata_base_url: impl Into<String>) -> Self {
         let scope = std::env::var("VERTEX_AI_SCOPE").unwrap_or_else(|_| DEFAULT_SCOPE.to_owned());
-        // Append the metadata path to the supplied base URL.
         let base = metadata_base_url.into();
         let metadata_token_url = format!(
             "{}/computeMetadata/v1/instance/service-accounts/default/token",
@@ -267,7 +266,6 @@ impl Default for VertexAdcCredentialProvider {
 impl CredentialProvider for VertexAdcCredentialProvider {
     fn resolve(&self) -> BoxFuture<'_, crate::error::Result<Credential>> {
         Box::pin(async move {
-            // Fast path: read lock to check cache.
             {
                 let guard = self.cached.read().await;
                 if let Some(ref cached) = *guard
@@ -279,11 +277,9 @@ impl CredentialProvider for VertexAdcCredentialProvider {
                 }
             }
 
-            // Slow path: write lock to refresh.
             let mut guard = self.cached.write().await;
 
-            // Double-check after acquiring write lock to avoid a redundant fetch
-            // when two tasks race to the slow path simultaneously.
+            // ~keep Double-check after write-lock acquisition to avoid duplicate token fetches.
             if let Some(ref cached) = *guard
                 && cached.is_valid()
             {
@@ -316,8 +312,6 @@ mod tests {
 
     use super::*;
 
-    // ── CachedToken validity ─────────────────────────────────────────────────
-
     #[test]
     fn cached_token_is_valid_with_plenty_of_time() {
         let cached = CachedToken {
@@ -343,18 +337,14 @@ mod tests {
         let cached = CachedToken {
             token: SecretString::from("tok".to_owned()),
             acquired_at: Instant::now(),
-            // Less than EXPIRY_BUFFER_SECS remaining.
             expires_in_secs: 200,
         };
         assert!(!cached.is_valid());
     }
 
-    // ── Constructor and scope override ────────────────────────────────────────
-
     #[test]
     #[serial_test::serial(vertex_adc_env)]
     fn default_scope_is_cloud_platform() {
-        // Temporarily unset the env var to test the hard-coded default.
         let _guard = EnvGuard::new("VERTEX_AI_SCOPE", None);
         let provider = VertexAdcCredentialProvider::new();
         assert_eq!(provider.scope, DEFAULT_SCOPE);
@@ -406,8 +396,6 @@ mod tests {
         );
     }
 
-    // ── RAII env var guard for test isolation ─────────────────────────────────
-
     struct EnvGuard {
         key: &'static str,
         original: Option<String>,
@@ -416,11 +404,7 @@ mod tests {
     impl EnvGuard {
         fn new(key: &'static str, value: Option<&str>) -> Self {
             let original = std::env::var(key).ok();
-            // SAFETY: tests that use EnvGuard are single-threaded (unit tests,
-            // not spawning additional threads that read this variable).  Mutating
-            // env vars is inherently unsafe in multi-threaded code; acceptable
-            // here because we restore the original value on drop and each guard
-            // covers a short, non-concurrent scope.
+            // ~keep SAFETY: EnvGuard tests are single-threaded and restore env vars on drop.
             unsafe {
                 match value {
                     Some(v) => std::env::set_var(key, v),
@@ -433,8 +417,7 @@ mod tests {
 
     impl Drop for EnvGuard {
         fn drop(&mut self) {
-            // SAFETY: same invariant as `EnvGuard::new` — restoring during drop
-            // in a single-threaded test context.
+            // ~keep SAFETY: same single-threaded EnvGuard invariant during drop.
             unsafe {
                 match &self.original {
                     Some(v) => std::env::set_var(self.key, v),
@@ -444,10 +427,8 @@ mod tests {
         }
     }
 
-    // ── Live / integration tests (ignored by default) ─────────────────────────
-
     #[tokio::test]
-    #[ignore] // Requires a GCP metadata server or configured ADC.
+    #[ignore]
     async fn live_metadata_server_or_adc_returns_bearer_token() {
         let provider = VertexAdcCredentialProvider::new();
         let credential = provider.resolve().await.expect("token acquisition failed");

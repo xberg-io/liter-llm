@@ -51,7 +51,7 @@ impl Provider for AnthropicProvider {
     }
 
     fn auth_header<'a>(&'a self, api_key: &'a str) -> Option<(Cow<'static, str>, Cow<'a, str>)> {
-        // Anthropic uses x-api-key, not Authorization: Bearer.
+        // ~keep Anthropic uses x-api-key, not Authorization: Bearer.
         Some((Cow::Borrowed("x-api-key"), Cow::Borrowed(api_key)))
     }
 
@@ -69,12 +69,10 @@ impl Provider for AnthropicProvider {
     fn dynamic_headers(&self, body: &serde_json::Value) -> Vec<(String, String)> {
         let mut betas: Vec<&str> = Vec::new();
 
-        // Check for extended thinking.
         if body.get("thinking").is_some() {
             betas.push(BETA_THINKING);
         }
 
-        // Check for hosted tools in the tools array.
         if let Some(tools) = body.get("tools").and_then(|t| t.as_array()) {
             for tool in tools {
                 let tool_type = tool.get("type").and_then(|t| t.as_str()).unwrap_or("");
@@ -93,12 +91,10 @@ impl Provider for AnthropicProvider {
             }
         }
 
-        // Check for prompt caching: any `cache_control` field anywhere in the body.
         if body_contains_cache_control(body) && !betas.contains(&BETA_PROMPT_CACHING) {
             betas.push(BETA_PROMPT_CACHING);
         }
 
-        // Check for PDF/document content blocks.
         if body_contains_document_block(body) && !betas.contains(&BETA_PDFS) {
             betas.push(BETA_PDFS);
         }
@@ -137,8 +133,6 @@ impl Provider for AnthropicProvider {
     /// - Unsupported parameters removed: `n`, `presence_penalty`, `frequency_penalty`,
     ///   `logit_bias`, `stream` (the client handles stream separately).
     fn transform_request(&self, body: &mut Value) -> Result<()> {
-        // ── 0. Validate messages array is non-empty ────────────────────────────
-        // Take ownership of the messages array to avoid cloning.
         let messages = body
             .as_object_mut()
             .and_then(|o| o.remove("messages"))
@@ -155,33 +149,27 @@ impl Provider for AnthropicProvider {
             });
         }
 
-        // ── 1. Extract system messages ────────────────────────────────────────
         let mut system_blocks: Vec<Value> = Vec::new();
         let mut non_system_messages: Vec<Value> = Vec::new();
 
         for msg in messages {
             let role = msg.get("role").and_then(|r| r.as_str()).unwrap_or("");
             match role {
-                "system" | "developer" => {
-                    // Both system and developer roles map to Anthropic system content.
-                    // Content may be a string or a content-block array.
-                    match msg.get("content") {
-                        Some(Value::String(s)) if !s.is_empty() => {
-                            let mut block = json!({"type": "text", "text": s});
-                            // Propagate cache_control if present.
-                            if let Some(cc) = msg.get("cache_control") {
-                                block["cache_control"] = cc.clone();
-                            }
-                            system_blocks.push(block);
+                "system" | "developer" => match msg.get("content") {
+                    Some(Value::String(s)) if !s.is_empty() => {
+                        let mut block = json!({"type": "text", "text": s});
+                        if let Some(cc) = msg.get("cache_control") {
+                            block["cache_control"] = cc.clone();
                         }
-                        Some(Value::Array(parts)) => {
-                            for part in parts {
-                                system_blocks.push(part.clone());
-                            }
-                        }
-                        _ => {}
+                        system_blocks.push(block);
                     }
-                }
+                    Some(Value::Array(parts)) => {
+                        for part in parts {
+                            system_blocks.push(part.clone());
+                        }
+                    }
+                    _ => {}
+                },
                 _ => non_system_messages.push(msg),
             }
         }
@@ -190,20 +178,15 @@ impl Provider for AnthropicProvider {
             body["system"] = json!(system_blocks);
         }
 
-        // ── 2. Convert non-system messages to Anthropic format ────────────────
         let converted_messages: Vec<Value> = non_system_messages
             .into_iter()
             .map(convert_message_to_anthropic)
             .collect();
 
-        // ── 3. Merge consecutive same-role messages ───────────────────────────
-        // Anthropic requires strictly alternating user/assistant roles.
         let merged_messages = merge_consecutive_same_role(converted_messages);
 
         body["messages"] = json!(merged_messages);
 
-        // ── 4. Ensure max_tokens is present (required by Anthropic) ───────────
-        // Also handle the OpenAI alias max_completion_tokens.
         if body.get("max_tokens").is_none() {
             if let Some(mct) = body.get("max_completion_tokens").cloned() {
                 body["max_tokens"] = mct;
@@ -213,7 +196,6 @@ impl Provider for AnthropicProvider {
         }
         body.as_object_mut().map(|o| o.remove("max_completion_tokens"));
 
-        // ── 5. Convert stop → stop_sequences (must be array) ─────────────────
         if let Some(stop) = body.as_object_mut().and_then(|o| o.remove("stop")) {
             let stop_sequences = match stop {
                 Value::String(s) => json!([s]),
@@ -223,7 +205,6 @@ impl Provider for AnthropicProvider {
             body["stop_sequences"] = stop_sequences;
         }
 
-        // ── 6. Convert tool_choice ─────────────────────────────────────────────
         if let Some(tool_choice) = body.as_object_mut().and_then(|o| o.remove("tool_choice")) {
             let anthropic_tool_choice = convert_tool_choice(&tool_choice);
             match anthropic_tool_choice {
@@ -231,15 +212,11 @@ impl Provider for AnthropicProvider {
                     body["tool_choice"] = tc;
                 }
                 None => {
-                    // tool_choice: "none" → remove tools entirely
                     body.as_object_mut().map(|o| o.remove("tools"));
                 }
             }
         }
 
-        // ── 7. Convert tools from OpenAI format to Anthropic format ───────────
-        // Hosted tools (computer_use, web_search, code_execution) are passed through
-        // as-is in Anthropic's native format; only function-type tools are converted.
         if let Some(tools) = body.as_object_mut().and_then(|o| o.remove("tools"))
             && let Some(tools_array) = tools.as_array()
         {
@@ -248,7 +225,6 @@ impl Provider for AnthropicProvider {
                 .map(|tool| {
                     let tool_type = tool.get("type").and_then(|t| t.as_str()).unwrap_or("");
                     if is_hosted_tool_type(tool_type) {
-                        // Pass through hosted tool definitions as-is.
                         tool.clone()
                     } else {
                         convert_tool_to_anthropic(tool)
@@ -258,8 +234,6 @@ impl Provider for AnthropicProvider {
             body["tools"] = json!(anthropic_tools);
         }
 
-        // ── 7a. Extended thinking / reasoning effort ──────────────────────────
-        // Map reasoning_effort (from body or extra_body) to Anthropic's thinking block.
         let reasoning_effort = body
             .as_object_mut()
             .and_then(|o| o.remove("reasoning_effort"))
@@ -274,15 +248,13 @@ impl Provider for AnthropicProvider {
                 "low" => 1024,
                 "medium" => 4096,
                 "high" => 16384,
-                _ => 4096, // default to medium for unknown values
+                _ => 4096,
             };
             body["thinking"] = json!({
                 "type": "enabled",
                 "budget_tokens": budget_tokens
             });
 
-            // Anthropic requires max_tokens >= budget_tokens + 1 when thinking
-            // is enabled.  Auto-increase if the current value is too low.
             let min_max_tokens = budget_tokens + 1;
             let current_max = body.get("max_tokens").and_then(|v| v.as_u64()).unwrap_or(0);
             if current_max < min_max_tokens {
@@ -290,13 +262,10 @@ impl Provider for AnthropicProvider {
             }
         }
 
-        // ── 7b. Response format → JSON mode ───────────────────────────────────
-        // Anthropic doesn't have a native JSON mode, so we prepend system instructions.
         if let Some(response_format) = body.as_object_mut().and_then(|o| o.remove("response_format")) {
             let rf_type = response_format.get("type").and_then(|t| t.as_str()).unwrap_or("");
             match rf_type {
                 "json_object" => {
-                    // Prepend a system instruction to respond with valid JSON.
                     let instruction = json!({"type": "text", "text": "Respond with valid JSON only. Do not include any text outside the JSON object."});
                     if let Some(system) = body.get_mut("system").and_then(|s| s.as_array_mut()) {
                         system.insert(0, instruction);
@@ -305,7 +274,6 @@ impl Provider for AnthropicProvider {
                     }
                 }
                 "json_schema" => {
-                    // Prepend the schema as a system instruction.
                     if let Some(schema_def) = response_format.get("json_schema") {
                         let schema_name = schema_def.get("name").and_then(|n| n.as_str()).unwrap_or("output");
                         let schema = schema_def.get("schema").cloned().unwrap_or(json!({}));
@@ -321,13 +289,11 @@ impl Provider for AnthropicProvider {
                         }
                     }
                 }
-                _ => {} // "text" or unknown — no-op
+                _ => {}
             }
         }
 
-        // ── 8. Remove unsupported parameters ──────────────────────────────────
-        // NOTE: `stream` is intentionally kept — Anthropic requires it in the
-        // request body to enable streaming responses.
+        // ~keep Keep `stream` in the body; Anthropic requires it for streaming responses.
         if let Some(obj) = body.as_object_mut() {
             for key in &[
                 "n",
@@ -358,7 +324,6 @@ impl Provider for AnthropicProvider {
     ///   "usage": {"input_tokens": N, "output_tokens": M} }
     /// ```
     fn transform_response(&self, body: &mut Value) -> Result<()> {
-        // Only transform if this looks like an Anthropic response (has "stop_reason").
         if body.get("stop_reason").is_none() {
             return Ok(());
         }
@@ -368,11 +333,8 @@ impl Provider for AnthropicProvider {
 
         let content_blocks = body.get("content").and_then(|v| v.as_array()).cloned();
 
-        // Extract text content from `type: "text"` blocks only.
-        // Thinking blocks (`type: "thinking"`) are Anthropic's internal chain-of-thought
-        // and are intentionally excluded from the user-facing content field.
-        // Citation blocks (`type: "citation"`) are metadata — the text they reference
-        // is already included in adjacent text blocks, so they are skipped here.
+        // ~keep Exclude Anthropic thinking blocks from user-facing content.
+        // ~keep Citation text is already present in adjacent text blocks.
         let text_content: Option<String> = content_blocks.as_ref().map(|blocks| {
             blocks
                 .iter()
@@ -382,8 +344,6 @@ impl Provider for AnthropicProvider {
                 .join("")
         });
 
-        // Extract tool_use blocks into OpenAI-format tool_calls.
-        // Treat both "tool_use" and "server_tool_use" the same way.
         let tool_calls: Option<Vec<Value>> = content_blocks.as_ref().map(|blocks| {
             blocks
                 .iter()
@@ -407,12 +367,9 @@ impl Provider for AnthropicProvider {
                 .collect()
         });
 
-        // Map Anthropic stop_reason → OpenAI finish_reason.
         let stop_reason = body.get("stop_reason").and_then(|v| v.as_str()).unwrap_or("end_turn");
         let finish_reason = map_stop_reason(stop_reason);
 
-        // Map Anthropic usage → OpenAI usage.
-        // Cache tokens count towards prompt tokens for billing purposes.
         let input_tokens = body
             .pointer("/usage/input_tokens")
             .and_then(|v| v.as_u64())
@@ -431,7 +388,6 @@ impl Provider for AnthropicProvider {
             .unwrap_or(0);
         let prompt_tokens = input_tokens + cache_creation_tokens + cache_read_tokens;
 
-        // Build the message object — content is null when only tool_calls are present.
         let has_tool_calls = tool_calls.as_ref().is_some_and(|tc| !tc.is_empty());
         let message_content = if has_tool_calls && text_content.as_deref().unwrap_or("").is_empty() {
             Value::Null
@@ -485,7 +441,7 @@ impl Provider for AnthropicProvider {
     /// from earlier events.  This differs from the OpenAI format where every
     /// chunk includes `id` and `model`.
     fn parse_stream_event(&self, event_data: &str) -> Result<Option<ChatCompletionChunk>> {
-        // NOTE: `[DONE]` is handled at the SSE parser level; no check needed here.
+        // ~keep `[DONE]` is consumed by the SSE parser before provider parsing.
 
         let event: Value = serde_json::from_str(event_data).map_err(|e| LiterLlmError::Streaming {
             message: format!("failed to parse Anthropic SSE event: {e}"),
@@ -499,8 +455,6 @@ impl Provider for AnthropicProvider {
                 let id = msg.get("id").and_then(|v| v.as_str()).unwrap_or("").to_owned();
                 let model = msg.get("model").and_then(|v| v.as_str()).unwrap_or("").to_owned();
 
-                // Anthropic sends initial usage in message_start (input tokens only).
-                // Also account for cache tokens in the prompt count.
                 let input_tokens = msg.pointer("/usage/input_tokens").and_then(|v| v.as_u64()).unwrap_or(0);
                 let cache_creation = msg
                     .pointer("/usage/cache_creation_input_tokens")
@@ -546,17 +500,10 @@ impl Provider for AnthropicProvider {
             }
 
             "content_block_start" => {
-                // For tool_use blocks, emit the tool_call header (id + name, empty arguments).
                 let block = &event["content_block"];
                 let block_type = block.get("type").and_then(|t| t.as_str()).unwrap_or("");
-                // NOTE: We use Anthropic's block index directly, which counts ALL content blocks
-                // (text + thinking + tool_use). This differs from OpenAI's sequential tool-call
-                // indices (0, 1, 2...) but is safe because:
-                // 1. The same index is used in both content_block_start and content_block_delta,
-                //    so they are consistent with each other.
-                // 2. OpenAI clients typically correlate tool calls by `id`, not by index.
-                // 3. OpenAI's own streaming format allows index gaps in tool_calls[].
-                // Known limitation: indices may have gaps when text/thinking blocks precede tool_use.
+                // ~keep Anthropic block indices include text/thinking/tool blocks, so tool indices may have gaps.
+                // ~keep The same index appears in start and delta events, and clients correlate by id.
                 let anthropic_index = event.get("index").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
 
                 if block_type == "tool_use" || block_type == "server_tool_use" {
@@ -570,7 +517,6 @@ impl Provider for AnthropicProvider {
                     )));
                 }
 
-                // Text / thinking block start — emit Ok(None) since there is no content yet.
                 Ok(None)
             }
 
@@ -585,13 +531,10 @@ impl Provider for AnthropicProvider {
                         Ok(Some(make_text_chunk("", "", text)))
                     }
                     "thinking_delta" => {
-                        // Extended thinking blocks are Anthropic's internal chain-of-thought.
-                        // Non-streaming already filters thinking blocks from content, so
-                        // streaming must be consistent: skip them entirely.
+                        // ~keep Skip Anthropic thinking blocks in streaming for parity with non-streaming.
                         Ok(None)
                     }
                     "input_json_delta" => {
-                        // Partial JSON for tool input — emit as tool_call arguments delta.
                         let partial_json = delta.get("partial_json").and_then(|v| v.as_str()).unwrap_or("");
                         Ok(Some(make_tool_arguments_delta(index, partial_json)))
                     }
@@ -600,7 +543,6 @@ impl Provider for AnthropicProvider {
             }
 
             "message_delta" => {
-                // Final chunk: carries stop_reason and output token count.
                 let stop_reason = event.pointer("/delta/stop_reason").and_then(|v| v.as_str());
                 let finish_reason = stop_reason.map(map_stop_reason);
                 let output_tokens = event.pointer("/usage/output_tokens").and_then(|v| v.as_u64());
@@ -643,10 +585,7 @@ impl Provider for AnthropicProvider {
 
             "message_stop" => Ok(None),
 
-            "content_block_stop" | "ping" => {
-                // These events carry no delta content; return Ok(None).
-                Ok(None)
-            }
+            "content_block_stop" | "ping" => Ok(None),
 
             "error" => {
                 let message = event
@@ -658,15 +597,10 @@ impl Provider for AnthropicProvider {
                 })
             }
 
-            _ => {
-                // Unknown event types are silently skipped.
-                Ok(None)
-            }
+            _ => Ok(None),
         }
     }
 }
-
-// ── Helper functions ──────────────────────────────────────────────────────────
 
 /// Sanitize a tool_call_id so it only contains characters allowed by Anthropic: `[a-zA-Z0-9_-]`.
 /// Any other character is replaced with `_`.
@@ -727,7 +661,6 @@ fn merge_consecutive_same_role(messages: Vec<Value>) -> Vec<Value> {
         if let Some(last) = merged.last_mut() {
             let last_role = last.get("role").and_then(|r| r.as_str()).unwrap_or("");
             if last_role == role {
-                // Merge content blocks.
                 let incoming_content = match msg.get("content") {
                     Some(Value::Array(arr)) => arr.clone(),
                     Some(Value::String(s)) => vec![json!({"type": "text", "text": s})],
@@ -738,7 +671,6 @@ fn merge_consecutive_same_role(messages: Vec<Value>) -> Vec<Value> {
                 if let Some(Value::Array(existing)) = last.get_mut("content") {
                     existing.extend(incoming_content);
                 } else {
-                    // Normalize existing content to array first.
                     let existing_content = match last.get("content") {
                         Some(Value::String(s)) => vec![json!({"type": "text", "text": s.clone()})],
                         Some(Value::Array(arr)) => arr.clone(),
@@ -767,7 +699,6 @@ fn convert_message_to_anthropic(msg: Value) -> Value {
         "user" => {
             let content = convert_user_content_to_anthropic(msg.get("content"));
             let mut user_msg = json!({"role": "user", "content": content});
-            // Propagate message-level cache_control to the last content block.
             if let Some(cc) = msg.get("cache_control")
                 && let Some(blocks) = user_msg.get_mut("content").and_then(|c| c.as_array_mut())
                 && let Some(last) = blocks.last_mut()
@@ -779,19 +710,16 @@ fn convert_message_to_anthropic(msg: Value) -> Value {
         "assistant" => {
             let mut blocks: Vec<Value> = Vec::new();
 
-            // Text content block.
             if let Some(text) = msg.get("content").and_then(|c| c.as_str())
                 && !text.is_empty()
             {
                 let mut block = json!({"type": "text", "text": text});
-                // Propagate cache_control from the assistant message to its text block.
                 if let Some(cc) = msg.get("cache_control") {
                     block["cache_control"] = cc.clone();
                 }
                 blocks.push(block);
             }
 
-            // Tool call blocks.
             if let Some(tool_calls) = msg.get("tool_calls").and_then(|tc| tc.as_array()) {
                 for tc in tool_calls {
                     let id = tc.get("id").and_then(|v| v.as_str()).unwrap_or("");
@@ -810,45 +738,37 @@ fn convert_message_to_anthropic(msg: Value) -> Value {
                 }
             }
 
-            // If no blocks were produced AND there are no tool_calls, emit an empty text block.
-            // Do NOT inject empty text when tool_use blocks are present — Anthropic rejects it.
             let has_tool_use = blocks
                 .iter()
                 .any(|b| b.get("type").and_then(|t| t.as_str()) == Some("tool_use"));
             if blocks.is_empty() {
                 blocks.push(json!({"type": "text", "text": ""}));
             } else if !has_tool_use {
-                // only text blocks: fine as-is
             }
-            // When there are tool_use blocks, do not add an empty text block.
 
             json!({"role": "assistant", "content": blocks})
         }
         "tool" => {
-            // OpenAI tool message → Anthropic user message with tool_result block.
             let raw_id = msg.get("tool_call_id").and_then(|v| v.as_str()).unwrap_or("");
             let tool_use_id = sanitize_tool_call_id(raw_id);
 
-            // Content may be a string or an array (e.g. images in tool results).
             let result_content = match msg.get("content") {
-                Some(Value::Array(arr)) => {
-                    // Pass through content array (may contain image blocks, etc.)
-                    arr.iter()
-                        .map(|part| {
-                            let part_type = part.get("type").and_then(|t| t.as_str()).unwrap_or("text");
-                            match part_type {
-                                "image_url" => {
-                                    let url = part.pointer("/image_url/url").and_then(|u| u.as_str()).unwrap_or("");
-                                    convert_image_url_to_anthropic_source(url)
-                                }
-                                _ => {
-                                    let text = part.get("text").and_then(|t| t.as_str()).unwrap_or("");
-                                    json!({"type": "text", "text": text})
-                                }
+                Some(Value::Array(arr)) => arr
+                    .iter()
+                    .map(|part| {
+                        let part_type = part.get("type").and_then(|t| t.as_str()).unwrap_or("text");
+                        match part_type {
+                            "image_url" => {
+                                let url = part.pointer("/image_url/url").and_then(|u| u.as_str()).unwrap_or("");
+                                convert_image_url_to_anthropic_source(url)
                             }
-                        })
-                        .collect::<Vec<_>>()
-                }
+                            _ => {
+                                let text = part.get("text").and_then(|t| t.as_str()).unwrap_or("");
+                                json!({"type": "text", "text": text})
+                            }
+                        }
+                    })
+                    .collect::<Vec<_>>(),
                 Some(Value::String(s)) => vec![json!({"type": "text", "text": s})],
                 _ => vec![json!({"type": "text", "text": ""})],
             };
@@ -859,7 +779,6 @@ fn convert_message_to_anthropic(msg: Value) -> Value {
                 "content": result_content
             });
 
-            // Propagate cache_control if present.
             if let Some(cc) = msg.get("cache_control") {
                 tool_result_block["cache_control"] = cc.clone();
             }
@@ -870,7 +789,6 @@ fn convert_message_to_anthropic(msg: Value) -> Value {
             })
         }
         "function" => {
-            // Deprecated function-role message — treat as a tool result.
             let name = msg.get("name").and_then(|v| v.as_str()).unwrap_or("");
             let sanitized_name = sanitize_tool_call_id(name);
             let content_text = msg.get("content").and_then(|c| c.as_str()).unwrap_or("");
@@ -883,10 +801,7 @@ fn convert_message_to_anthropic(msg: Value) -> Value {
                 }]
             })
         }
-        _ => {
-            // Unknown role — pass through as-is.
-            msg
-        }
+        _ => msg,
     }
 }
 
@@ -904,7 +819,6 @@ fn convert_user_content_to_anthropic(content: Option<&Value>) -> Value {
                         "text" => {
                             let text = part.get("text").and_then(|t| t.as_str()).unwrap_or("");
                             let mut block = json!({"type": "text", "text": text});
-                            // Propagate cache_control if present.
                             if let Some(cc) = part.get("cache_control") {
                                 block["cache_control"] = cc.clone();
                             }
@@ -919,7 +833,6 @@ fn convert_user_content_to_anthropic(content: Option<&Value>) -> Value {
                             Some(block)
                         }
                         "document" => {
-                            // Convert ContentPart::Document to Anthropic document block.
                             let data = part.pointer("/document/data").and_then(|d| d.as_str())?;
                             let media_type = part
                                 .pointer("/document/media_type")
@@ -939,8 +852,6 @@ fn convert_user_content_to_anthropic(content: Option<&Value>) -> Value {
                             Some(block)
                         }
                         _ => {
-                            // Unknown content part types: fall back to text representation
-                            // and log a warning so callers can investigate.
                             #[cfg(feature = "tracing")]
                             tracing::warn!(
                                 part_type = part_type,
@@ -973,7 +884,6 @@ fn convert_tool_choice(tool_choice: &Value) -> Option<Value> {
             _ => Some(json!({"type": "auto"})),
         },
         Value::Object(_) => {
-            // {"type": "function", "function": {"name": "X"}} → {"type": "tool", "name": "X"}
             let name = tool_choice.pointer("/function/name").and_then(|v| v.as_str());
             if let Some(name) = name {
                 Some(json!({"type": "tool", "name": name}))
@@ -1000,7 +910,6 @@ fn convert_tool_to_anthropic(tool: &Value) -> Value {
         .cloned()
         .unwrap_or(json!({"type": "object", "properties": {}}));
 
-    // Normalize input_schema.type to "object" — Anthropic rejects other values.
     if parameters.get("type").and_then(|t| t.as_str()) != Some("object") {
         parameters["type"] = json!("object");
     }
@@ -1014,7 +923,6 @@ fn convert_tool_to_anthropic(tool: &Value) -> Value {
         tool_def["description"] = desc;
     }
 
-    // Propagate cache_control if present on the tool definition.
     if let Some(cc) = tool.get("cache_control") {
         tool_def["cache_control"] = cc.clone();
     } else if let Some(cc) = function.and_then(|f| f.get("cache_control")) {
@@ -1162,8 +1070,6 @@ fn make_tool_arguments_delta(tool_index: u32, partial_json: &str) -> ChatComplet
     }
 }
 
-// ── Unit tests ────────────────────────────────────────────────────────────────
-
 #[cfg(test)]
 mod tests {
     use serde_json::json;
@@ -1173,8 +1079,6 @@ mod tests {
     fn provider() -> AnthropicProvider {
         AnthropicProvider
     }
-
-    // ── transform_request tests ───────────────────────────────────────────────
 
     #[test]
     fn transform_request_extracts_system_message() {
@@ -1190,13 +1094,11 @@ mod tests {
             .transform_request(&mut body)
             .expect("transform_request should not fail");
 
-        // System messages lifted to top-level `system` field.
         assert_eq!(
             body["system"],
             json!([{"type": "text", "text": "You are a helpful assistant."}])
         );
 
-        // Only the user message remains in `messages`.
         let messages = body["messages"].as_array().expect("messages should be an array");
         assert_eq!(messages.len(), 1);
         assert_eq!(messages[0]["role"], "user");
@@ -1360,7 +1262,6 @@ mod tests {
         assert_eq!(tools[0]["name"], "get_weather");
         assert_eq!(tools[0]["description"], "Get current weather");
         assert!(tools[0].get("input_schema").is_some());
-        // OpenAI-style "function" wrapper should be gone.
         assert!(tools[0].get("function").is_none());
     }
 
@@ -1383,7 +1284,6 @@ mod tests {
         for key in &["n", "presence_penalty", "frequency_penalty", "logit_bias"] {
             assert!(body.get(key).is_none(), "`{key}` should be removed");
         }
-        // stream is intentionally preserved — Anthropic requires it for streaming.
         assert_eq!(body["stream"], true);
     }
 
@@ -1407,7 +1307,6 @@ mod tests {
             .expect("transform_request should not fail");
 
         let messages = body["messages"].as_array().expect("messages should be an array");
-        // tool message → user message with tool_result block
         let tool_result_msg = &messages[2];
         assert_eq!(tool_result_msg["role"], "user");
         let content = tool_result_msg["content"]
@@ -1441,8 +1340,6 @@ mod tests {
         assert_eq!(content[1]["source"]["type"], "base64");
         assert_eq!(content[1]["source"]["media_type"], "image/jpeg");
     }
-
-    // ── transform_response tests ──────────────────────────────────────────────
 
     #[test]
     fn transform_response_basic_text() {
@@ -1521,7 +1418,6 @@ mod tests {
         assert_eq!(tool_calls[0]["id"], "toolu_01abc");
         assert_eq!(tool_calls[0]["function"]["name"], "get_weather");
 
-        // arguments must be a JSON string
         let args_str = tool_calls[0]["function"]["arguments"]
             .as_str()
             .expect("arguments should be a string");
@@ -1531,7 +1427,6 @@ mod tests {
 
     #[test]
     fn transform_response_is_noop_for_openai_format() {
-        // A body without "stop_reason" should be left unchanged (already OpenAI format).
         let original = json!({
             "id": "chatcmpl-xxx",
             "object": "chat.completion",
@@ -1546,12 +1441,8 @@ mod tests {
         assert_eq!(body, original);
     }
 
-    // ── parse_stream_event tests ──────────────────────────────────────────────
-
     #[test]
     fn parse_stream_event_done_is_handled_at_sse_level() {
-        // `[DONE]` is now caught by the SSE parser before reaching the provider.
-        // If it were to reach the provider, it would be invalid JSON.
         let result = provider().parse_stream_event("[DONE]");
         assert!(
             result.is_err(),
@@ -1664,14 +1555,10 @@ mod tests {
         assert!(result.is_none(), "content_block_stop should return Ok(None)");
     }
 
-    // ── chat_completions_path test ────────────────────────────────────────────
-
     #[test]
     fn chat_completions_path_is_messages() {
         assert_eq!(provider().chat_completions_path(), "/messages");
     }
-
-    // ── new tests for fixed issues ────────────────────────────────────────────
 
     #[test]
     fn transform_request_empty_messages_returns_error() {
@@ -1701,12 +1588,10 @@ mod tests {
             .transform_request(&mut body)
             .expect("transform_request should not fail");
         let messages = body["messages"].as_array().expect("messages should be an array");
-        // The tool_result message is the last one (index 2 after merging nothing)
         let tool_result_msg = messages
             .iter()
             .find(|m| m["role"] == "user" && m["content"][0]["type"] == "tool_result")
             .expect("tool_result message should be present");
-        // Dots should be replaced with underscores.
         assert_eq!(tool_result_msg["content"][0]["tool_use_id"], "call_abc_123");
     }
 
@@ -1723,7 +1608,6 @@ mod tests {
             .transform_request(&mut body)
             .expect("transform_request should not fail");
         let messages = body["messages"].as_array().expect("messages should be an array");
-        // Two consecutive user messages should be merged into one.
         assert_eq!(messages.len(), 1);
         assert_eq!(messages[0]["role"], "user");
         let content = messages[0]["content"].as_array().expect("content should be an array");
@@ -1795,7 +1679,6 @@ mod tests {
                 "function": {
                     "name": "my_tool",
                     "parameters": {"properties": {}}
-                    // no "type" field
                 }
             }]
         });
@@ -1878,7 +1761,6 @@ mod tests {
         let content = body["choices"][0]["message"]["content"]
             .as_str()
             .expect("content should be a string");
-        // Thinking blocks are internal chain-of-thought and must NOT appear in user-facing content.
         assert!(
             !content.contains("Let me reason..."),
             "thinking blocks should be filtered out"
@@ -1932,7 +1814,6 @@ mod tests {
         provider()
             .transform_response(&mut body)
             .expect("transform_response should not fail");
-        // prompt_tokens = 100 + 50 + 25 = 175
         assert_eq!(body["usage"]["prompt_tokens"], 175u64);
         assert_eq!(body["usage"]["completion_tokens"], 10u64);
         assert_eq!(body["usage"]["total_tokens"], 185u64);
@@ -1940,7 +1821,6 @@ mod tests {
 
     #[test]
     fn transform_response_tool_only_no_empty_text_block_in_request() {
-        // When assistant has only tool_calls, the converted message should NOT inject empty text.
         let mut body = json!({
             "model": "claude-3-5-sonnet-20241022",
             "messages": [
@@ -1962,14 +1842,12 @@ mod tests {
             .find(|m| m["role"] == "assistant")
             .expect("assistant message should be present");
         let blocks = assistant_msg["content"].as_array().expect("content should be an array");
-        // Only the tool_use block should be present; no empty text block.
         assert!(blocks.iter().all(|b| b["type"] != "text" || b["text"] != ""));
         assert!(blocks.iter().any(|b| b["type"] == "tool_use"));
     }
 
     #[test]
     fn parse_stream_event_thinking_delta_returns_none() {
-        // Thinking blocks are filtered in both streaming and non-streaming for consistency.
         let event = r#"{"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"I am thinking..."}}"#;
         let result = provider()
             .parse_stream_event(event)
@@ -1985,7 +1863,6 @@ mod tests {
             .expect("parse_stream_event should not fail")
             .expect("expected chunk");
         let usage = chunk.usage.expect("usage should be present");
-        // prompt_tokens = 100 + 50 + 25 = 175
         assert_eq!(usage.prompt_tokens, 175);
     }
 
@@ -1994,9 +1871,7 @@ mod tests {
         assert_eq!(sanitize_tool_call_id("call.abc!123").as_ref(), "call_abc_123");
         assert_eq!(sanitize_tool_call_id("call-abc_123").as_ref(), "call-abc_123");
         assert_eq!(sanitize_tool_call_id("call abc").as_ref(), "call_abc");
-        // Already-valid IDs should borrow (no allocation).
         assert!(matches!(sanitize_tool_call_id("toolu_01abc"), Cow::Borrowed(_)));
-        // IDs with invalid chars should allocate.
         assert!(matches!(sanitize_tool_call_id("call.123"), Cow::Owned(_)));
     }
 
@@ -2005,8 +1880,6 @@ mod tests {
         assert_eq!(map_stop_reason("content_filtered"), "content_filter");
         assert_eq!(map_stop_reason("refusal"), "content_filter");
     }
-
-    // ── Phase 1A: Extended thinking / reasoning effort ──────────────────────
 
     #[test]
     fn transform_request_reasoning_effort_low() {
@@ -2068,8 +1941,6 @@ mod tests {
         assert_eq!(body["thinking"]["budget_tokens"], 16384);
     }
 
-    // ── Phase 1A: Dynamic beta headers ──────────────────────────────────────
-
     #[test]
     fn dynamic_headers_thinking_beta() {
         let body = json!({
@@ -2128,8 +1999,6 @@ mod tests {
         assert_eq!(headers.len(), 1);
         assert!(headers[0].1.contains("code-execution-2025-05-22"));
     }
-
-    // ── Phase 1A: Prompt caching on messages + tools ────────────────────────
 
     #[test]
     fn transform_request_tool_cache_control_propagated() {
@@ -2193,8 +2062,6 @@ mod tests {
         assert_eq!(content[0]["cache_control"]["type"], "ephemeral");
     }
 
-    // ── Phase 1A: Document/PDF handling ─────────────────────────────────────
-
     #[test]
     fn transform_request_document_content_part() {
         let mut body = json!({
@@ -2243,8 +2110,6 @@ mod tests {
         let content = messages[0]["content"].as_array().expect("content should be an array");
         assert_eq!(content[0]["cache_control"]["type"], "ephemeral");
     }
-
-    // ── Phase 1A: Response format -> JSON mode ──────────────────────────────
 
     #[test]
     fn transform_request_json_object_response_format() {
@@ -2319,8 +2184,6 @@ mod tests {
         assert_eq!(system[1]["text"], "You are helpful.");
     }
 
-    // ── Phase 1A: Hosted tools ──────────────────────────────────────────────
-
     #[test]
     fn transform_request_hosted_tool_passed_through() {
         let mut body = json!({
@@ -2364,8 +2227,6 @@ mod tests {
         assert_eq!(tools[0]["display_width_px"], 1024);
     }
 
-    // ── Phase 1A: Citation blocks in response ───────────────────────────────
-
     #[test]
     fn transform_response_citation_blocks_skipped() {
         let mut body = json!({
@@ -2390,8 +2251,6 @@ mod tests {
         assert_eq!(content, "According to the document, Rust is a fast language.");
         assert!(!content.contains("citation"));
     }
-
-    // ── Phase 1A: is_hosted_tool_type helper ────────────────────────────────
 
     #[test]
     fn is_hosted_tool_type_recognizes_all_types() {

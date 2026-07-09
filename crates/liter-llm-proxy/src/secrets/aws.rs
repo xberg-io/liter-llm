@@ -18,10 +18,6 @@ use secrecy::{ExposeSecret, SecretString};
 
 use super::{SecretError, SecretManager, SecretMetadata, SecretValue};
 
-// ---------------------------------------------------------------------------
-// Cache
-// ---------------------------------------------------------------------------
-
 /// A single cached entry.
 ///
 /// `value` is a [`SecretString`] so the heap memory is zeroed on eviction
@@ -67,8 +63,7 @@ impl SecretCache {
         let store = self.store.lock().expect("cache mutex poisoned");
         let entry = store.get(name)?;
         if entry.cached_at.elapsed() < self.ttl {
-            // Clone exposes the underlying bytes momentarily; the new
-            // SecretString takes ownership and will zero them on drop.
+            // ~keep Clone through a fresh SecretString so returned heap bytes are zeroed on drop.
             let cloned = SecretString::from(entry.value.expose_secret().to_owned());
             Some((cloned, entry.metadata.clone()))
         } else {
@@ -103,10 +98,6 @@ impl SecretCache {
         store.remove(name);
     }
 }
-
-// ---------------------------------------------------------------------------
-// Provider
-// ---------------------------------------------------------------------------
 
 /// AWS Secrets Manager secret manager.
 ///
@@ -179,17 +170,13 @@ impl AwsSecretsManagerProvider {
             })
             .ok_or_else(|| SecretError::backend_msg("AWS returned a secret with no string or binary value"))?;
 
-        // Extract timestamps from the API response.
         let created_at = resp
             .created_date()
             .and_then(|dt| UNIX_EPOCH.checked_add(Duration::from_secs_f64(dt.as_secs_f64())))
             .unwrap_or(SystemTime::UNIX_EPOCH);
 
-        // AWS Secrets Manager doesn't surface `updated_at` in GetSecretValue;
-        // use the version creation date as a best proxy.
         let updated_at = created_at;
 
-        // Build tags from the version stages list (no separate tags in GetSecretValue).
         let tags: HashMap<String, String> = resp
             .version_stages()
             .iter()
@@ -204,15 +191,13 @@ impl AwsSecretsManagerProvider {
             version,
             created_at,
             updated_at,
-            expires_at: None, // GetSecretValue does not surface rotation schedule
+            expires_at: None,
             tags,
         };
 
-        // Wrap in SecretString before caching so the cache never holds a
-        // plain `String`.  Expose the secret only at the very last moment
-        // when handing it to the caller.
+        // ~keep Cache AWS secrets as SecretString, never plain String.
         let secret_value = SecretString::from(raw_value);
-        // Clone via expose_secret: the cache entry gets its own SecretString.
+        // ~keep Cache entry owns a separate SecretString allocation.
         self.cache.insert(
             name,
             SecretString::from(secret_value.expose_secret().to_owned()),
@@ -233,8 +218,6 @@ impl SecretManager for AwsSecretsManagerProvider {
 
     fn get<'a>(&'a self, name: &'a str) -> Pin<Box<dyn Future<Output = Result<SecretValue, SecretError>> + Send + 'a>> {
         Box::pin(async move {
-            // Cache hit — skip the AWS API call.
-            // The cache returns a SecretString; no intermediate plain String.
             if let Some((secret, metadata)) = self.cache.get(name) {
                 return Ok(SecretValue {
                     value: secret,
@@ -252,14 +235,11 @@ impl SecretManager for AwsSecretsManagerProvider {
         tags: HashMap<String, String>,
     ) -> Pin<Box<dyn Future<Output = Result<SecretMetadata, SecretError>> + Send + 'a>> {
         Box::pin(async move {
-            // Convert tags to AWS Tag structs.
             let aws_tags: Vec<aws_sdk_secretsmanager::types::Tag> = tags
                 .iter()
                 .map(|(k, v)| aws_sdk_secretsmanager::types::Tag::builder().key(k).value(v).build())
                 .collect();
 
-            // Try PutSecretValue first; fall back to CreateSecret on
-            // ResourceNotFoundException.
             let raw = value.expose_secret().to_owned();
             let put_result = self
                 .client
@@ -281,7 +261,6 @@ impl SecretManager for AwsSecretsManagerProvider {
                             if matches!(svc.err(), PutSecretValueError::ResourceNotFoundException(_))
                     );
                     if is_not_found {
-                        // Secret does not exist yet — create it.
                         let mut req = self.client.create_secret().name(name).secret_string(&raw);
                         for tag in &aws_tags {
                             if let (Some(k), Some(v)) = (tag.key(), tag.value()) {
@@ -307,7 +286,7 @@ impl SecretManager for AwsSecretsManagerProvider {
                 expires_at: None,
                 tags: tags.clone(),
             };
-            // Cache the value as SecretString so the heap bytes are zeroed on eviction.
+            // ~keep Cache the value as SecretString so heap bytes are zeroed on eviction.
             self.cache.insert(name, SecretString::from(raw), metadata.clone());
             Ok(metadata)
         })
@@ -327,20 +306,11 @@ impl SecretManager for AwsSecretsManagerProvider {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 #[cfg(test)]
 mod tests {
     use std::time::Duration;
 
     use super::*;
-
-    // The AWS SDK does not ship a built-in mock HTTP client accessible from
-    // outside the SDK.  We test the cache layer directly using the internal
-    // `SecretCache` struct, and leave full AWS integration tests to the CI
-    // pipeline running against LocalStack.
 
     #[test]
     fn cache_hit_returns_cached_value() {
@@ -357,13 +327,11 @@ mod tests {
         let hit = cache.get("prod/api-key");
         assert!(hit.is_some());
         let (val, _meta) = hit.unwrap();
-        // Compare via expose_secret since SecretString does not impl PartialEq<&str>.
         assert_eq!(val.expose_secret(), "super-secret");
     }
 
     #[test]
     fn secret_manager_aws_cache_hit_avoids_second_fetch() {
-        // Populate cache directly and confirm a second .get() returns it.
         let cache = Arc::new(SecretCache::new(Duration::from_secs(60)));
         let meta = SecretMetadata {
             name: "my/secret".to_owned(),
@@ -375,21 +343,17 @@ mod tests {
         };
         cache.insert("my/secret", SecretString::from("value-one".to_owned()), meta.clone());
 
-        // A second insert would overwrite — but the cache TTL hasn't expired,
-        // so get() returns the original.
         let hit1 = cache.get("my/secret");
         let hit2 = cache.get("my/secret");
 
         assert!(hit1.is_some());
         assert!(hit2.is_some());
-        // Compare via expose_secret since SecretString does not impl PartialEq<&str>.
         assert_eq!(hit1.unwrap().0.expose_secret(), "value-one");
         assert_eq!(hit2.unwrap().0.expose_secret(), "value-one");
     }
 
     #[test]
     fn secret_manager_aws_cache_miss_after_ttl() {
-        // Use a zero TTL so every lookup is a miss.
         let cache = SecretCache::new(Duration::ZERO);
         let meta = SecretMetadata {
             name: "key".to_owned(),
@@ -400,7 +364,6 @@ mod tests {
             tags: HashMap::new(),
         };
         cache.insert("key", SecretString::from("val".to_owned()), meta);
-        // Immediately expired because ttl == 0.
         assert!(cache.get("key").is_none(), "zero-TTL cache should always miss");
     }
 
@@ -425,10 +388,8 @@ mod tests {
             expires_at: None,
             tags: HashMap::new(),
         };
-        // Insert accepts only SecretString — plain String is rejected at compile time.
         cache.insert("my/secret", SecretString::from("plaintext-value".to_owned()), meta);
 
-        // get() must return SecretString, not String.
         let result: Option<(SecretString, SecretMetadata)> = cache.get("my/secret");
         assert!(result.is_some(), "cache hit expected");
         let (secret, _meta) = result.unwrap();
@@ -438,8 +399,6 @@ mod tests {
             "value round-trips through SecretString cache"
         );
 
-        // Evict the entry — the CacheEntry (and its SecretString) is dropped,
-        // which triggers zeroization of the heap allocation.
         cache.evict("my/secret");
         assert!(cache.get("my/secret").is_none(), "evicted entry must not be found");
     }

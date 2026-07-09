@@ -30,8 +30,6 @@ use crate::types::{
 };
 use tower::Layer;
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
 /// A stream that yields no items.
 struct EmptyStream;
 
@@ -41,8 +39,6 @@ impl Stream for EmptyStream {
         Poll::Ready(None)
     }
 }
-
-// ─── Mock client ─────────────────────────────────────────────────────────────
 
 /// A synchronous mock client.  All methods return configurable canned
 /// responses or errors.
@@ -83,8 +79,6 @@ impl LiterLlmErrorKind {
                 status: 503,
             },
             Self::Timeout => LiterLlmError::Timeout,
-            // MockClient maps auth error to BadRequest (not Authentication) because
-            // the mock's chat() doesn't distinguish — see MockClient::ok().
             Self::Authentication { message } => LiterLlmError::BadRequest {
                 message: message.clone(),
                 status: 400,
@@ -187,7 +181,6 @@ impl LlmClient for MockClient {
         _req: ChatCompletionRequest,
     ) -> BoxFuture<'_, Result<BoxStream<'static, Result<crate::types::ChatCompletionChunk>>>> {
         Box::pin(async move {
-            // Return an immediately-finished stream.
             let stream: BoxStream<'static, Result<crate::types::ChatCompletionChunk>> = Box::pin(EmptyStream);
             Ok(stream)
         })
@@ -284,8 +277,6 @@ impl LlmClient for MockClient {
     }
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
 fn chat_req(model: &str) -> ChatCompletionRequest {
     ChatCompletionRequest {
         model: model.into(),
@@ -296,8 +287,6 @@ fn chat_req(model: &str) -> ChatCompletionRequest {
         ..Default::default()
     }
 }
-
-// ─── LlmService tests ────────────────────────────────────────────────────────
 
 #[tokio::test]
 async fn service_chat_returns_correct_response() {
@@ -352,8 +341,6 @@ async fn service_propagates_client_error() {
     ));
 }
 
-// ─── TracingLayer tests ───────────────────────────────────────────────────────
-
 #[tokio::test]
 async fn tracing_layer_passes_through_success() {
     let inner = LlmService::new(MockClient::ok());
@@ -373,8 +360,6 @@ async fn tracing_layer_propagates_error() {
     assert!(matches!(err, LiterLlmError::Timeout));
 }
 
-// ─── FallbackLayer tests ──────────────────────────────────────────────────────
-
 #[tokio::test]
 async fn fallback_not_triggered_on_success() {
     let primary = LlmService::new(MockClient::ok());
@@ -385,7 +370,6 @@ async fn fallback_not_triggered_on_success() {
         .call(LlmRequest::Chat(chat_req("gpt-4")))
         .await
         .expect("service call should not fail");
-    // The response is Chat — confirming primary was called and succeeded.
     assert!(matches!(resp, LlmResponse::Chat(_)));
 }
 
@@ -421,14 +405,9 @@ async fn fallback_not_triggered_on_auth_error() {
     let fallback = LlmService::new(MockClient::ok());
 
     let mut svc = FallbackLayer::new(fallback).layer(primary);
-    // Authentication errors are not transient; fallback should NOT be tried.
-    // MockClient::failing_auth maps the error to BadRequest (non-transient),
-    // so an error should propagate rather than the fallback succeeding.
     let result = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
     assert!(result.is_err(), "expected auth error to propagate, not fall back");
 }
-
-// ─── LlmRequest helpers ───────────────────────────────────────────────────────
 
 #[test]
 fn request_type_labels() {
@@ -471,8 +450,6 @@ fn request_model_returns_none_for_list_models() {
     assert!(LlmRequest::ListModels().model().is_none());
 }
 
-// ─── Router tests ─────────────────────────────────────────────────────────────
-
 use crate::tower::router::{Router, RoutingStrategy};
 
 /// Build a `Router` over three mock `LlmService` instances and return
@@ -496,7 +473,6 @@ fn make_round_robin_router() -> (Router<LlmService<MockClient>>, [Arc<MockClient
 async fn router_round_robin_distributes_across_deployments() {
     let (mut router, counters) = make_round_robin_router();
 
-    // Fire 6 requests — each deployment should receive exactly 2.
     for _ in 0..6 {
         router
             .call(LlmRequest::Chat(chat_req("gpt-4")))
@@ -523,7 +499,6 @@ async fn router_round_robin_distributes_across_deployments() {
 
 #[tokio::test]
 async fn router_fallback_tries_next_on_transient_error_then_succeeds() {
-    // First two deployments fail with a transient error; the third succeeds.
     let deployments: Vec<LlmService<MockClient>> = vec![
         LlmService::new(MockClient::failing_rate_limited()),
         LlmService::new(MockClient::failing_service_unavailable()),
@@ -550,8 +525,6 @@ async fn router_fallback_tries_next_on_transient_error_then_succeeds() {
 
 #[tokio::test]
 async fn router_fallback_stops_on_non_transient_error() {
-    // First deployment fails with a non-transient (auth) error; the second
-    // would succeed but must NOT be reached.
     let ok_client = MockClient::ok();
     let ok_counter = Arc::clone(&ok_client.inner);
 

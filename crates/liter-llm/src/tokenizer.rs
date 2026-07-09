@@ -54,8 +54,6 @@ fn resolve_tokenizer_id(model: &str) -> &'static str {
     } else if model.starts_with("llama") || model.starts_with("meta-llama") {
         "meta-llama/Meta-Llama-3-8B"
     } else {
-        // Default to GPT-4o tokenizer for unknown models — it produces a
-        // reasonable approximation for most modern LLMs.
         "Xenova/gpt-4o"
     }
 }
@@ -67,7 +65,6 @@ fn resolve_tokenizer_id(model: &str) -> &'static str {
 fn get_or_load_tokenizer(model: &str) -> Result<Arc<Tokenizer>> {
     let tokenizer_id = resolve_tokenizer_id(model);
 
-    // Fast path: read lock
     {
         let cache = TOKENIZER_CACHE.read().map_err(|e| LiterLlmError::BadRequest {
             message: format!("tokenizer cache lock poisoned: {e}"),
@@ -78,7 +75,6 @@ fn get_or_load_tokenizer(model: &str) -> Result<Arc<Tokenizer>> {
         }
     }
 
-    // Slow path: write lock, double-check, initialize
     let mut cache = TOKENIZER_CACHE.write().map_err(|e| LiterLlmError::BadRequest {
         message: format!("tokenizer cache lock poisoned: {e}"),
         status: 400,
@@ -193,8 +189,6 @@ pub fn count_request_tokens(model: &str, req: &ChatCompletionRequest) -> Result<
                     }
                     None => {}
                 }
-                // Tool-call-only assistant messages also contribute their tool-call
-                // arguments to the token budget regardless of content shape.
                 if m.content.is_none()
                     && let Some(ref calls) = m.tool_calls
                 {
@@ -209,8 +203,6 @@ pub fn count_request_tokens(model: &str, req: &ChatCompletionRequest) -> Result<
         }
     }
 
-    // Per-message overhead: ~4 tokens for role tag, separators, and formatting
-    // metadata. This matches the OpenAI tokenization overhead estimate.
     total += req.messages.len() * 4;
 
     Ok(total)
@@ -299,7 +291,6 @@ mod tests {
             ..Default::default()
         };
         let count = count_request_tokens("gpt-4o", &req).expect("tokenization should succeed");
-        // 2 messages * 4 overhead + actual tokens
         assert!(count >= 8, "should include per-message overhead");
         assert!(count < 100, "short conversation should not be many tokens");
     }

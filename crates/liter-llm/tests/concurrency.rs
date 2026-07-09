@@ -19,8 +19,6 @@ use liter_llm::tower::{
 use tokio::task::JoinSet;
 use tower::{Service, ServiceBuilder};
 
-// ---- Helpers ---------------------------------------------------------------
-
 /// Minimal mock client that always returns a successful chat response with
 /// usage: prompt_tokens=10, completion_tokens=5.
 #[derive(Clone)]
@@ -200,8 +198,6 @@ fn chat_req(model: &str) -> liter_llm::types::ChatCompletionRequest {
     .expect("test request should deserialize")
 }
 
-// ---- Tests -----------------------------------------------------------------
-
 /// Spawn 100 concurrent requests through BudgetLayer. Verify that the final
 /// accumulated spend equals the expected sum (within the documented overshoot
 /// tolerance for hard enforcement — concurrent in-flight requests may all pass
@@ -210,7 +206,7 @@ fn chat_req(model: &str) -> liter_llm::types::ChatCompletionRequest {
 async fn concurrent_budget_tracking() {
     let state = Arc::new(BudgetState::new());
     let config = BudgetConfig {
-        global_limit: Some(100.0), // High enough to not reject any request.
+        global_limit: Some(100.0),
         enforcement: Enforcement::Soft,
         ..Default::default()
     };
@@ -239,9 +235,6 @@ async fn concurrent_budget_tracking() {
     }
 
     assert_eq!(ok_count, 100, "all 100 requests should succeed under soft enforcement");
-    // Budget state should reflect all 100 calls. The exact value depends on
-    // cost::completion_cost for gpt-4 with prompt=10, completion=5. We just
-    // verify it is positive and non-zero.
     assert!(
         state.global_spend() > 0.0,
         "global spend should be positive after 100 calls, got {}",
@@ -279,7 +272,6 @@ async fn concurrent_cache_writes() {
     while let Some(result) = tasks.join_next().await {
         let inner = result.expect("task should not panic");
         let resp = inner.expect("each request should succeed");
-        // Verify the response is a Chat variant with valid content.
         match resp {
             liter_llm::tower::LlmResponse::Chat(r) => {
                 assert_eq!(r.model, "gpt-4", "response model should match request");
@@ -306,9 +298,6 @@ async fn concurrent_rate_limit() {
         .layer(ModelRateLimitLayer::new(config))
         .service(LlmService::new(ConcurrencyMockClient));
 
-    // Rate limiting uses a shared DashMap, so concurrent access to the *same*
-    // mutable service requires serialisation. We clone the service for each
-    // task — the Arc<DashMap> is shared.
     let svc = Arc::new(tokio::sync::Mutex::new(svc));
     let mut tasks = JoinSet::new();
 
@@ -352,7 +341,7 @@ async fn concurrent_full_stack() {
         ..Default::default()
     };
     let rate_config = RateLimitConfig {
-        rpm: Some(100), // High enough not to reject.
+        rpm: Some(100),
         tpm: None,
         window: Duration::from_secs(60),
     };
@@ -368,7 +357,6 @@ async fn concurrent_full_stack() {
 
     for i in 0..10 {
         let svc = Arc::clone(&svc);
-        // Use two different models to exercise separate rate-limit buckets.
         let model = if i % 2 == 0 { "gpt-4" } else { "gpt-3.5-turbo" };
         tasks.spawn(async move {
             let mut s = svc.lock().await.clone();
@@ -376,7 +364,6 @@ async fn concurrent_full_stack() {
         });
     }
 
-    // Wrap in a timeout to catch deadlocks.
     let result = tokio::time::timeout(Duration::from_secs(10), async {
         let mut ok_count = 0u64;
         while let Some(result) = tasks.join_next().await {

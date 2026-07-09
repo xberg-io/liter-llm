@@ -88,12 +88,8 @@ where
                     Ok(LlmResponse::Chat(resp))
                 }
                 LlmRequestKind::ChatStream(r) => {
-                    // Collect the stream into a Vec while the Arc-backed client is
-                    // alive.  This avoids the unsound transmute that would otherwise
-                    // be needed to extend the stream's borrow lifetime to 'static.
-                    // The cost is that streaming chunks are buffered before being
-                    // yielded; this is acceptable because tower middleware cannot
-                    // express borrowed lifetimes across the Service boundary.
+                    // ~keep Buffer chunks to avoid unsoundly extending the borrowed stream lifetime to 'static.
+                    // ~keep Tower middleware cannot express borrowed lifetimes across the Service boundary.
                     let stream = client.chat_stream(r).await?;
                     let chunks = collect_stream(stream).await?;
                     let static_stream: crate::client::BoxStream<'static, Result<ChatCompletionChunk>> =
@@ -147,7 +143,6 @@ async fn collect_stream<'a>(
 ) -> Result<VecDeque<ChatCompletionChunk>> {
     let mut chunks = VecDeque::new();
     loop {
-        // Drive the stream by polling it inside a future::poll_fn.
         let item = std::future::poll_fn(|cx| Pin::as_mut(&mut stream).poll_next(cx)).await;
         match item {
             Some(Ok(chunk)) => chunks.push_back(chunk),

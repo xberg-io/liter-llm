@@ -41,8 +41,6 @@ use regex::Regex;
 use crate::client::LlmClient;
 use crate::types::{ChatCompletionRequest, EmbeddingInput, EmbeddingRequest, Message, SystemMessage, UserMessage};
 
-// ─── OTel helpers (guarded) ──────────────────────────────────────────────────
-
 /// Emit `gen_ai.route.classify.duration` histogram if the `otel` feature is
 /// active; otherwise a zero-cost no-op.
 #[inline]
@@ -59,7 +57,6 @@ fn record_classify_duration(tier: &'static str, duration_secs: f64) {
                 .record(duration_secs, &[KeyValue::new("route.classifier.tier", tier)]);
         }
     }
-    // Suppress unused parameter warnings when otel is off.
     let _ = (tier, duration_secs);
 }
 
@@ -81,8 +78,6 @@ fn record_classify_hit(tier: &'static str) {
     let _ = tier;
 }
 
-// ─── ClassifyContext ──────────────────────────────────────────────────────────
-
 /// Immutable context passed to every [`RouteClassifier::classify`] call.
 #[cfg_attr(alef, alef(skip))]
 pub struct ClassifyContext<'a> {
@@ -95,8 +90,6 @@ pub struct ClassifyContext<'a> {
     /// The set of model identifiers the router currently considers available.
     pub available_models: &'a [String],
 }
-
-// ─── RouteClassifier trait ────────────────────────────────────────────────────
 
 /// A single tier in the semantic routing cascade.
 ///
@@ -133,8 +126,6 @@ pub trait RouteClassifier: Send + Sync + 'static {
         0.0
     }
 }
-
-// ─── KeywordClassifier ────────────────────────────────────────────────────────
 
 /// Tier-1 classifier: regex matching against the user prompt.
 ///
@@ -186,12 +177,9 @@ impl RouteClassifier for KeywordClassifier {
 
     /// Keyword matches are always decisive — confidence is 1.0 on match.
     fn confidence_threshold(&self) -> f32 {
-        // The actual gate is match/no-match; a matched rule always returns Some.
         0.0
     }
 }
-
-// ─── EmbeddingSimilarityClassifier ───────────────────────────────────────────
 
 /// An intent prototype: `(intent_name, prototype_embedding, target_model_id)`.
 pub struct IntentPrototype {
@@ -300,7 +288,6 @@ impl RouteClassifier for EmbeddingSimilarityClassifier {
                 }
             };
 
-            // Find the most similar prototype.
             let best = self
                 .prototypes
                 .iter()
@@ -338,8 +325,6 @@ impl RouteClassifier for EmbeddingSimilarityClassifier {
         t
     }
 }
-
-// ─── LlmClassifier ───────────────────────────────────────────────────────────
 
 /// Tier-3 classifier: LLM-based intent classification.
 ///
@@ -387,8 +372,6 @@ impl LlmClassifier {
 
     /// Parse the model ID from a JSON string like `{"model":"gpt-4o"}`.
     fn parse_model_from_response(text: &str) -> Option<String> {
-        // Try to find a JSON object in the response.  The model may include
-        // preamble or whitespace around the JSON.
         let start = text.find('{')?;
         let end = text.rfind('}')?;
         if end < start {
@@ -396,7 +379,6 @@ impl LlmClassifier {
         }
         let json_str = &text[start..=end];
 
-        // Use serde_json for robust parsing.
         let value: serde_json::Value = serde_json::from_str(json_str).ok()?;
         value.get("model").and_then(|v| v.as_str()).map(ToOwned::to_owned)
     }
@@ -452,7 +434,6 @@ impl RouteClassifier for LlmClassifier {
                 );
             }
 
-            // Validate: only return models that are actually available.
             model_id.filter(|m| ctx.available_models.contains(m))
         })
     }
@@ -461,8 +442,6 @@ impl RouteClassifier for LlmClassifier {
         0.0
     }
 }
-
-// ─── CascadeClassifier ───────────────────────────────────────────────────────
 
 /// Composes N classifiers in priority order.
 ///
@@ -515,8 +494,6 @@ impl RouteClassifier for CascadeClassifier {
         0.0
     }
 }
-
-// ─── ClassifierVerdictCache ───────────────────────────────────────────────────
 
 /// A cached classifier verdict.
 struct VerdictEntry {
@@ -596,17 +573,14 @@ impl<C: RouteClassifier> RouteClassifier for ClassifierVerdictCache<C> {
         Box::pin(async move {
             let key = Self::cache_key(ctx);
 
-            // Fast path: cache hit.
             if let Some(model) = self.get_cached(key) {
                 record_classify_hit("cache");
                 tracing::debug!(%model, "classifier verdict cache hit");
                 return Some(model);
             }
 
-            // Slow path: call inner classifier.
             let result = self.inner.classify(ctx).await;
 
-            // Cache non-None verdicts only.
             if let Some(ref model) = result {
                 self.put_cached(key, model.clone());
             }
@@ -619,8 +593,6 @@ impl<C: RouteClassifier> RouteClassifier for ClassifierVerdictCache<C> {
         self.inner.confidence_threshold()
     }
 }
-
-// ─── Tests ───────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -644,8 +616,6 @@ mod tests {
         EmbeddingResponse, FinishReason, ModelsListResponse, Usage,
     };
 
-    // ── helpers ───────────────────────────────────────────────────────────────
-
     fn empty_meta() -> HashMap<String, String> {
         HashMap::new()
     }
@@ -662,8 +632,6 @@ mod tests {
             available_models: available,
         }
     }
-
-    // ── MockLlmClient ─────────────────────────────────────────────────────────
 
     /// A minimal mock that controls chat and embed responses independently.
     #[derive(Clone)]
@@ -859,8 +827,6 @@ mod tests {
         }
     }
 
-    // ── KeywordClassifier tests ───────────────────────────────────────────────
-
     #[tokio::test]
     async fn keyword_classifier_first_match_wins() {
         let rules = vec![
@@ -873,7 +839,6 @@ mod tests {
         let avail = models(&["dall-e-3", "gpt-4o", "claude-3-5-sonnet"]);
         let ctx = ctx("Write me python code", &meta, &avail);
 
-        // "python|code" is the 2nd rule and should match; the 1st rule ("image") should not.
         let result = kw.classify(&ctx).await;
         assert_eq!(result, Some("gpt-4o".into()));
     }
@@ -893,12 +858,8 @@ mod tests {
         assert_eq!(result, None);
     }
 
-    // ── EmbeddingSimilarityClassifier tests ───────────────────────────────────
-
     #[tokio::test]
     async fn embedding_classifier_returns_nearest_above_threshold() {
-        // Two prototypes: A points in direction [1,0,0], B in direction [0,1,0].
-        // Prompt embedding points in direction [0.9, 0.1, 0] — closer to A.
         let prototypes = vec![
             IntentPrototype {
                 name: "coding".into(),
@@ -912,7 +873,6 @@ mod tests {
             },
         ];
 
-        // The mock client returns the prompt-side embedding.
         let client = Arc::new(MockLlmClient::with_embed_vec(vec![0.9, 0.1, 0.0]));
         let classifier = EmbeddingSimilarityClassifier::new(client, "text-embedding-3-small", prototypes, 0.5);
 
@@ -921,8 +881,6 @@ mod tests {
         let ctx = ctx("Debug my Rust code", &meta, &avail);
 
         let result = classifier.classify(&ctx).await;
-        // cosine([0.9,0.1,0], [1,0,0]) ≈ 0.994, cosine([0.9,0.1,0], [0,1,0]) ≈ 0.11
-        // Nearest is "coding" → "gpt-4o"
         assert_eq!(result, Some("gpt-4o".into()));
     }
 
@@ -934,9 +892,7 @@ mod tests {
             model: "gpt-4o".into(),
         }];
 
-        // Prompt embedding is orthogonal to the prototype: similarity = 0.
         let client = Arc::new(MockLlmClient::with_embed_vec(vec![0.0, 1.0, 0.0]));
-        // High threshold so cosine 0.0 < 0.8 → defer.
         let classifier = EmbeddingSimilarityClassifier::new(client, "text-embedding-3-small", prototypes, 0.8);
 
         let meta = empty_meta();
@@ -947,11 +903,8 @@ mod tests {
         assert_eq!(result, None);
     }
 
-    // ── LlmClassifier tests ───────────────────────────────────────────────────
-
     #[tokio::test]
     async fn llm_classifier_parses_model_id_from_response() {
-        // The mock LLM returns a JSON object with the chosen model.
         let client = Arc::new(MockLlmClient::with_chat_response(r#"{"model":"gpt-4o"}"#));
         let classifier = LlmClassifier::new(
             client,
@@ -969,7 +922,6 @@ mod tests {
 
     #[tokio::test]
     async fn llm_classifier_ignores_unavailable_model() {
-        // The LLM returns a model that is not in available_models.
         let client = Arc::new(MockLlmClient::with_chat_response(r#"{"model":"unknown-model"}"#));
         let classifier = LlmClassifier::new(client, "gpt-4o-mini", "Route the request.");
 
@@ -977,12 +929,9 @@ mod tests {
         let avail = models(&["gpt-4o", "claude-3-5-sonnet"]);
         let ctx = ctx("Hello", &meta, &avail);
 
-        // "unknown-model" is not in available_models so the classifier defers.
         let result = classifier.classify(&ctx).await;
         assert_eq!(result, None);
     }
-
-    // ── CascadeClassifier tests ───────────────────────────────────────────────
 
     /// Keyword hits should short-circuit the cascade — embedding and LLM must
     /// not be called.
@@ -1056,19 +1005,16 @@ mod tests {
 
         let meta = empty_meta();
         let avail = models(&["gpt-4o", "dall-e-3"]);
-        // Prompt has no image keyword, embedding will point toward "coding".
         let ctx = ctx("Debug my Rust program", &meta, &avail);
 
         let result = cascade.classify(&ctx).await;
         assert_eq!(result, Some("gpt-4o".into()));
-        // LLM should not be called since embedding tier resolved.
         assert_eq!(llm_call_count.load(Ordering::SeqCst), 0);
     }
 
     /// All tiers defer → cascade returns None.
     #[tokio::test]
     async fn cascade_all_defer_returns_none() {
-        // Keyword: no match. Embedding: below threshold. LLM: no response.
         let kw = KeywordClassifier::new(vec![]);
 
         let embed_client = Arc::new(MockLlmClient::with_embed_vec(vec![0.0, 1.0]));
@@ -1080,7 +1026,7 @@ mod tests {
                 embedding: vec![1.0, 0.0],
                 model: "gpt-4o".into(),
             }],
-            0.99, // very high threshold → will defer
+            0.99,
         );
 
         let llm_client = Arc::new(MockLlmClient::no_response());
@@ -1099,8 +1045,6 @@ mod tests {
         let result = cascade.classify(&ctx).await;
         assert_eq!(result, None);
     }
-
-    // ── ClassifierVerdictCache tests ──────────────────────────────────────────
 
     /// A simple counting classifier that records how many times it was called.
     struct CountingClassifier {
@@ -1132,7 +1076,6 @@ mod tests {
         let avail = models(&["gpt-4o"]);
         let prompt = "Tell me a joke";
 
-        // First call → cache miss, inner called.
         let ctx1 = ClassifyContext {
             prompt,
             system_prompt: None,
@@ -1143,7 +1086,6 @@ mod tests {
         assert_eq!(r1, Some("gpt-4o".into()));
         assert_eq!(call_count.load(Ordering::SeqCst), 1);
 
-        // Second call with same prompt → cache hit, inner NOT called again.
         let ctx2 = ClassifyContext {
             prompt,
             system_prompt: None,
@@ -1162,14 +1104,12 @@ mod tests {
             model: "gpt-4o".into(),
             call_count: Arc::clone(&call_count),
         };
-        // Very short TTL so we can test expiry without sleeping long.
         let cached = ClassifierVerdictCache::with_ttl(inner, Duration::from_millis(10));
 
         let meta = empty_meta();
         let avail = models(&["gpt-4o"]);
         let prompt = "Expire me";
 
-        // First call → miss.
         let ctx1 = ClassifyContext {
             prompt,
             system_prompt: None,
@@ -1180,10 +1120,8 @@ mod tests {
         assert_eq!(r1, Some("gpt-4o".into()));
         assert_eq!(call_count.load(Ordering::SeqCst), 1);
 
-        // Wait for TTL to expire.
         tokio::time::sleep(Duration::from_millis(20)).await;
 
-        // Second call → cache expired → inner called again.
         let ctx2 = ClassifyContext {
             prompt,
             system_prompt: None,
@@ -1194,8 +1132,6 @@ mod tests {
         assert_eq!(r2, Some("gpt-4o".into()));
         assert_eq!(call_count.load(Ordering::SeqCst), 2, "inner should be called after TTL");
     }
-
-    // ── cosine_similarity unit tests ─────────────────────────────────────────
 
     #[test]
     fn cosine_similarity_identical_vectors() {
@@ -1219,8 +1155,6 @@ mod tests {
         let sim = cosine_similarity(&zero, &other);
         assert_eq!(sim, 0.0, "zero vector should yield similarity 0.0");
     }
-
-    // ── LlmClassifier JSON parsing ────────────────────────────────────────────
 
     #[test]
     fn llm_classifier_parse_with_preamble() {

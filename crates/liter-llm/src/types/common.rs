@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-// ─── Messages ────────────────────────────────────────────────────────────────
-
 /// A chat message in a conversation.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "role")]
@@ -389,8 +387,6 @@ pub struct FunctionMessage {
     pub name: String,
 }
 
-// ─── Ergonomic constructors ───────────────────────────────────────────────────
-
 impl Message {
     /// Build a user message with multimodal content parts.
     ///
@@ -652,8 +648,6 @@ mod tests {
         );
     }
 
-    // ── ResponseFormat / JsonSchemaFormat constructors ──────────────────────
-
     #[test]
     fn json_schema_new_defaults_strict_true() {
         let fmt = JsonSchemaFormat::new("S", serde_json::json!({}));
@@ -689,7 +683,6 @@ mod tests {
                 }
             })
         );
-        // description must be absent (skip_serializing_if = "Option::is_none")
         assert!(value["json_schema"].get("description").is_none());
     }
 
@@ -723,8 +716,6 @@ mod tests {
         assert_eq!(rf["json_schema"]["name"], "PersonSchema");
         assert_eq!(rf["json_schema"]["strict"], true);
     }
-
-    // ── AssistantContent / AssistantPart ─────────────────────────────────────
 
     #[test]
     fn assistant_content_text_deserializes_from_scalar_string() {
@@ -760,7 +751,6 @@ mod tests {
             AssistantPart::Text { text: "b".into() },
         ]);
         assert_eq!(parts.to_string(), "ab");
-        // Image-only / non-text content renders as an empty string.
         let image_only = AssistantContent::Parts(vec![AssistantPart::OutputImage {
             image_url: ImageUrl::default(),
         }]);
@@ -869,8 +859,6 @@ mod tests {
 
     #[test]
     fn system_message_content_from_string_back_compat() {
-        // Providers that return `"content": "plain text"` for system messages
-        // must still round-trip via the untagged UserContent.
         let json = r#"{"role":"system","content":"You are a helpful assistant."}"#;
         let msg: Message = serde_json::from_str(json).expect("must deserialise");
         let Message::System(s) = msg else {
@@ -879,8 +867,6 @@ mod tests {
         assert_eq!(s.content, UserContent::Text("You are a helpful assistant.".into()));
     }
 }
-
-// ─── Tools ───────────────────────────────────────────────────────────────────
 
 /// The type discriminator for tool/tool-call objects.
 ///
@@ -943,8 +929,6 @@ pub struct FunctionCall {
     pub arguments: String,
 }
 
-// ─── Tool Choice ─────────────────────────────────────────────────────────────
-
 /// Tool usage mode or a specific tool to call.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -991,8 +975,6 @@ pub struct SpecificFunction {
     /// Function name.
     pub name: String,
 }
-
-// ─── Response Format ─────────────────────────────────────────────────────────
 
 /// Wire format for the chat completions `response_format` field.
 ///
@@ -1131,7 +1113,7 @@ impl JsonSchemaFormat {
     /// let fmt = JsonSchemaFormat::new("S", json!({})).strict(false);
     /// assert_eq!(fmt.strict, Some(false));
     /// ```
-    // Builder-pattern method: takes owned `self` (not expressible across FFI boundaries).
+    // ~keep Owned-self builder methods are skipped because they are not FFI-expressible.
     #[cfg_attr(alef, alef(skip))]
     #[must_use]
     pub fn strict(mut self, on: bool) -> Self {
@@ -1149,8 +1131,8 @@ impl JsonSchemaFormat {
     /// let fmt = JsonSchemaFormat::new("S", json!({})).description("A person object");
     /// assert_eq!(fmt.description.as_deref(), Some("A person object"));
     /// ```
-    // Builder-pattern method: takes owned `self` (not expressible across FFI boundaries).
-    // Also, the method name `description` collides with the struct field `description`.
+    // ~keep Owned-self builder methods are skipped because they are not FFI-expressible.
+    // ~keep The method name also collides with the `description` field.
     #[cfg_attr(alef, alef(skip))]
     #[must_use]
     pub fn description(mut self, d: impl Into<String>) -> Self {
@@ -1158,8 +1140,6 @@ impl JsonSchemaFormat {
         self
     }
 }
-
-// ─── Usage ───────────────────────────────────────────────────────────────────
 
 /// Token-usage accounting returned by the provider on each completion / embedding call.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -1195,8 +1175,6 @@ pub struct PromptTokensDetails {
     #[serde(default)]
     pub audio_tokens: u64,
 }
-
-// ─── Stop Sequence ───────────────────────────────────────────────────────────
 
 /// Stop sequence(s) that cause the model to stop generating.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

@@ -54,22 +54,18 @@ impl Provider for MistralProvider {
     ///   `presence_penalty`, `frequency_penalty`.
     fn transform_request(&self, body: &mut Value) -> Result<()> {
         if let Some(obj) = body.as_object_mut() {
-            // Map tool_choice "required" -> "any".
             if let Some(tc) = obj.get_mut("tool_choice")
                 && tc.as_str() == Some("required")
             {
                 *tc = Value::String("any".to_owned());
             }
 
-            // Strip unsupported parameters.
             for param in UNSUPPORTED_PARAMS {
                 obj.remove(*param);
             }
         }
         Ok(())
     }
-
-    // Response is OpenAI-compatible; no transform_response override needed.
 }
 
 #[cfg(test)]
@@ -170,7 +166,6 @@ mod tests {
         assert!(body.get("logit_bias").is_none());
         assert!(body.get("presence_penalty").is_none());
         assert!(body.get("frequency_penalty").is_none());
-        // Supported params preserved.
         assert_eq!(body["temperature"], 0.7);
         assert_eq!(body["model"], "mistral-large-latest");
     }

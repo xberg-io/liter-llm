@@ -21,8 +21,6 @@ use liter_llm::tenant::{KeyResolver, KeyResolverError, ResolvedKey, TenantId};
 
 use common::test_proxy::TestProxy;
 
-// ─── Mock fixtures ───────────────────────────────────────────────────────────
-
 const CHAT_COMPLETION_BODY: &str = r#"{"id":"chatcmpl-1","object":"chat.completion","created":1700000000,"model":"gpt-4o","choices":[{"index":0,"message":{"role":"assistant","content":"Hello!"},"finish_reason":"stop"}],"usage":{"prompt_tokens":5,"completion_tokens":3,"total_tokens":8}}"#;
 
 fn chat_route() -> common::mock_upstream::MockRoute {
@@ -102,8 +100,6 @@ impl UsageSink for VecUsageSink {
     }
 }
 
-// ─── Tests ───────────────────────────────────────────────────────────────────
-
 /// Verify that a proxy built with no builder calls serves requests the same
 /// way it does today (no regression in default behaviour).
 #[tokio::test]
@@ -160,8 +156,6 @@ async fn custom_key_resolver_is_consulted() {
         .await
         .unwrap();
 
-    // The resolver returns an unrestricted `ResolvedKey`, so the request
-    // should proceed through to the upstream and succeed.
     assert_eq!(
         resp.status(),
         StatusCode::OK,
@@ -202,8 +196,6 @@ async fn custom_usage_sink_receives_events() {
 
     assert_eq!(resp.status(), StatusCode::OK);
 
-    // The sink emit is fire-and-forget via `tokio::spawn` inside `HooksLayer`.
-    // Yield a few times so the spawned task can run.
     for _ in 0..10 {
         tokio::task::yield_now().await;
     }
@@ -229,7 +221,6 @@ async fn custom_usage_sink_receives_events() {
 async fn default_path_has_no_sink_no_panic() {
     let upstream = common::mock_upstream::MockUpstream::start(vec![chat_route()]).await;
 
-    // No sink injected — HooksLayer must not be in the stack.
     let proxy = TestProxy::with_injection(&upstream.url, None, None);
 
     let resp = proxy
@@ -246,7 +237,6 @@ async fn default_path_has_no_sink_no_panic() {
         .await
         .unwrap();
 
-    // Request must succeed; no panic may have occurred.
     assert_eq!(resp.status(), StatusCode::OK);
 
     upstream.shutdown();

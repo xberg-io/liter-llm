@@ -30,8 +30,6 @@ use crate::client::BoxFuture;
 use crate::cost;
 use crate::error::{LiterLlmError, Result};
 
-// ─── Layer ────────────────────────────────────────────────────────────────────
-
 /// Tower [`Layer`] that records estimated USD cost on the current tracing span.
 ///
 /// After each successful response the layer calls [`cost::completion_cost`] and
@@ -48,8 +46,6 @@ impl<S> Layer<S> for CostTrackingLayer {
         CostTrackingService { inner }
     }
 }
-
-// ─── Service ──────────────────────────────────────────────────────────────────
 
 /// Tower service produced by [`CostTrackingLayer`].
 #[cfg_attr(alef, alef(skip))]
@@ -82,8 +78,6 @@ where
     }
 
     fn call(&mut self, req: LlmRequest) -> Self::Future {
-        // Capture the model name before moving `req` into the inner call, so we
-        // can look up pricing after the response arrives.
         let model = req.model().map(ToOwned::to_owned);
         let fut = self.inner.call(req);
 
@@ -94,8 +88,6 @@ where
         })
     }
 }
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /// Extract usage from the response and record an estimated cost on the current
 /// tracing span as `gen_ai.usage.cost`.
@@ -110,8 +102,6 @@ fn record_cost(model: &Option<String>, resp: &LlmResponse) {
         tracing::Span::current().record("gen_ai.usage.cost", usd);
     }
 }
-
-// ─── Tests ────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -142,8 +132,6 @@ mod tests {
     use futures_core::Stream;
 
     use super::CostTrackingLayer;
-
-    // ── Minimal mock ─────────────────────────────────────────────────────────
 
     struct EmptyStream;
 
@@ -304,8 +292,6 @@ mod tests {
         }
     }
 
-    // ── Tests ─────────────────────────────────────────────────────────────────
-
     /// CostTrackingLayer passes through the response unchanged for a known model.
     #[tokio::test]
     async fn cost_tracking_passes_through_chat_response_for_known_model() {
@@ -315,13 +301,10 @@ mod tests {
             .call(LlmRequest::Chat(chat_req("gpt-4")))
             .await
             .expect("should succeed");
-        // The response must still be a Chat variant with the correct model.
         match resp {
             LlmResponse::Chat(r) => {
                 assert_eq!(r.model, "gpt-4");
-                // estimated_cost should return Some for gpt-4.
                 let cost = r.estimated_cost().expect("gpt-4 must have pricing");
-                // 100 * 0.00003 + 50 * 0.00006 = 0.006
                 assert!((cost - 0.006).abs() < 1e-9, "unexpected cost: {cost}");
             }
             other => panic!("expected Chat response, got {:?}", std::mem::discriminant(&other)),
@@ -339,7 +322,6 @@ mod tests {
             .call(LlmRequest::Chat(chat_req("unknown-model")))
             .await
             .expect("should succeed without error");
-        // Response passes through; no panic even though model has no pricing.
         assert!(matches!(resp, LlmResponse::Chat(_)));
     }
 

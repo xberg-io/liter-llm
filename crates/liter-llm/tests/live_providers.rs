@@ -38,8 +38,6 @@ mod openai;
 #[path = "live_providers/vertex_ai.rs"]
 mod vertex_ai;
 
-// ── Skip macro ──────────────────────────────────────────────────────────────
-
 /// Skip a test if the named env var is not set or empty.
 macro_rules! require_env {
     ($var:expr) => {
@@ -53,8 +51,6 @@ macro_rules! require_env {
     };
 }
 pub(crate) use require_env;
-
-// ── Client factories ────────────────────────────────────────────────────────
 
 pub fn openai_client(api_key: &str) -> DefaultClient {
     let config = ClientConfigBuilder::new(api_key).max_retries(2).build();
@@ -73,7 +69,6 @@ pub fn google_ai_client(api_key: &str) -> DefaultClient {
 
 #[cfg(feature = "bedrock")]
 pub fn bedrock_client() -> DefaultClient {
-    // Bedrock uses AWS credentials from env (SigV4 signing), not an API key.
     let config = ClientConfigBuilder::new("").max_retries(2).build();
     DefaultClient::new(config, Some("bedrock/us.anthropic.claude-sonnet-4-6")).unwrap()
 }
@@ -123,8 +118,6 @@ macro_rules! require_vertex {
 }
 pub(crate) use require_vertex;
 
-// ── Shared request builders ─────────────────────────────────────────────────
-
 pub fn simple_chat_request(model: &str) -> ChatCompletionRequest {
     serde_json::from_value(serde_json::json!({
         "model": model,
@@ -143,8 +136,6 @@ pub fn simple_embed_request(model: &str) -> EmbeddingRequest {
         user: None,
     }
 }
-
-// ── Assertion helpers ───────────────────────────────────────────────────────
 
 pub fn assert_chat_response_valid(resp: &liter_llm::ChatCompletionResponse, label: &str) {
     assert!(!resp.choices.is_empty(), "{label}: choices should not be empty");

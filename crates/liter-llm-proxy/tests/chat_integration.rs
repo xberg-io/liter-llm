@@ -53,9 +53,6 @@ async fn chat_json_response() {
 
 #[tokio::test]
 async fn chat_streaming_sse() {
-    // SSE streaming requires a TCP server for proper testing because the response
-    // body is an unbounded stream.  oneshot() can work if the mock returns a
-    // finite SSE body, so we test the happy-path here.
     let chunk1 = r#"{"id":"chatcmpl-1","object":"chat.completion.chunk","created":1700000000,"model":"gpt-4o","choices":[{"index":0,"delta":{"role":"assistant","content":"Hi"},"finish_reason":null}]}"#;
     let chunk2 = r#"{"id":"chatcmpl-1","object":"chat.completion.chunk","created":1700000000,"model":"gpt-4o","choices":[{"index":0,"delta":{"content":"!"},"finish_reason":"stop"}]}"#;
 
@@ -85,7 +82,6 @@ async fn chat_streaming_sse() {
         .await
         .unwrap();
 
-    // The proxy should return 200 with an SSE content type.
     assert_eq!(resp.status(), StatusCode::OK);
     let content_type = resp
         .headers()
@@ -178,10 +174,6 @@ async fn chat_invalid_json_returns_400() {
 
 #[tokio::test]
 async fn chat_upstream_receives_correct_request() {
-    // The mock upstream always returns the same response regardless of input.
-    // This test verifies the proxy returns a valid completion when given a
-    // properly-formed request -- confirming the request made it through the
-    // proxy and reached the mock upstream intact.
     let upstream = common::mock_upstream::MockUpstream::start(vec![chat_route()]).await;
     let proxy = common::test_proxy::TestProxy::new(&upstream.url);
 
@@ -203,7 +195,6 @@ async fn chat_upstream_receives_correct_request() {
 
     let bytes = Body::new(resp.into_body()).collect().await.unwrap().to_bytes();
     let body: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
-    // Verify the response includes expected fields from the mock upstream.
     assert!(body["id"].is_string());
     assert!(body["choices"].is_array());
     assert!(body["usage"]["prompt_tokens"].is_number());

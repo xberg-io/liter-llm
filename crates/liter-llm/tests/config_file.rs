@@ -15,8 +15,6 @@ use secrecy::ExposeSecret;
 use liter_llm::tower::{CacheBackend, Enforcement};
 use liter_llm::{ClientConfig, FileConfig};
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
 const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/config");
 
 fn fixture(name: &str) -> String {
@@ -32,8 +30,6 @@ fn load(name: &str) -> FileConfig {
 fn load_and_build(name: &str) -> ClientConfig {
     load(name).into_builder().build()
 }
-
-// ── Parsing: minimal ────────────────────────────────────────────────────────
 
 #[test]
 fn minimal_config_parses_api_key() {
@@ -55,18 +51,13 @@ fn minimal_config_builds_with_defaults() {
     assert_eq!(config.max_retries, 3);
 }
 
-// ── Parsing: empty ──────────────────────────────────────────────────────────
-
 #[test]
 fn empty_config_is_valid() {
     let fc = FileConfig::from_toml_str("").expect("empty config should parse");
     assert!(fc.api_key.is_none());
     let config = fc.into_builder().build();
-    // Empty api_key becomes empty string in the builder
     assert_eq!(config.api_key.expose_secret(), "");
 }
-
-// ── Parsing: full config ────────────────────────────────────────────────────
 
 #[test]
 fn full_config_parses_all_top_level_fields() {
@@ -136,8 +127,6 @@ fn full_config_parses_providers() {
     assert_eq!(providers[1].model_prefixes, vec!["another/", "alt/"]);
 }
 
-// ── Builder conversion: full config ─────────────────────────────────────────
-
 #[test]
 fn full_config_builds_core_fields() {
     let config = load_and_build("full.toml");
@@ -200,8 +189,6 @@ fn full_config_builds_cost_tracking_and_tracing() {
     assert!(config.enable_tracing);
 }
 
-// ── Standalone sections ─────────────────────────────────────────────────────
-
 #[cfg(feature = "tower")]
 #[test]
 fn cache_only_config_sets_cache_leaves_rest_default() {
@@ -211,7 +198,6 @@ fn cache_only_config_sets_cache_leaves_rest_default() {
     assert_eq!(cache.ttl, Duration::from_secs(900));
     assert!(matches!(cache.backend, CacheBackend::Memory));
 
-    // Everything else should be default/None
     assert!(config.budget_config.is_none());
     assert!(config.rate_limit_config.is_none());
     assert!(config.cooldown_duration.is_none());
@@ -237,7 +223,6 @@ fn rate_limit_only_uses_default_window() {
     let rl = config.rate_limit_config.as_ref().expect("rate_limit_config not set");
     assert_eq!(rl.rpm, Some(100));
     assert_eq!(rl.tpm, Some(200_000));
-    // window_seconds not set in fixture -> default 60s
     assert_eq!(rl.window, Duration::from_secs(60));
 }
 
@@ -251,8 +236,6 @@ fn providers_only_config_parses_multiple_providers() {
     assert_eq!(providers[1].name, "local-llm");
     assert_eq!(providers[1].model_prefixes, vec!["local/", "local-llm/"]);
 }
-
-// ── OpenDAL cache backend ───────────────────────────────────────────────────
 
 #[test]
 fn opendal_cache_config_parses_backend_and_config() {
@@ -271,7 +254,6 @@ fn opendal_cache_config_parses_backend_and_config() {
 fn opendal_cache_falls_back_to_memory_without_feature() {
     let config = load_and_build("cache_opendal.toml");
     let cache = config.cache_config.as_ref().expect("cache_config not set");
-    // Without opendal-cache feature, non-"memory" backend falls back to Memory
     assert!(matches!(cache.backend, CacheBackend::Memory));
     assert_eq!(cache.max_entries, 2048);
     assert_eq!(cache.ttl, Duration::from_secs(3600));
@@ -291,8 +273,6 @@ fn opendal_cache_builds_opendal_backend_with_feature() {
         CacheBackend::Memory => panic!("expected OpenDal backend, got Memory"),
     }
 }
-
-// ── Error cases: invalid TOML ───────────────────────────────────────────────
 
 #[test]
 fn rejects_unknown_top_level_field() {
@@ -328,8 +308,6 @@ fn nonexistent_file_returns_error() {
     assert!(result.is_err());
 }
 
-// ── Edge cases ──────────────────────────────────────────────────────────────
-
 #[test]
 fn budget_defaults_to_hard_enforcement() {
     let fc = FileConfig::from_toml_str(
@@ -340,7 +318,6 @@ global_limit = 10.0
     )
     .unwrap();
     assert!(fc.budget.as_ref().unwrap().enforcement.is_none());
-    // into_builder maps None -> Hard
     #[cfg(feature = "tower")]
     {
         let config = fc.into_builder().build();

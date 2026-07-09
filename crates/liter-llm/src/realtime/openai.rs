@@ -33,8 +33,6 @@ impl OpenAiRealtimeTranslator {
     }
 }
 
-// ── Helper: extract a required string field ───────────────────────────────────
-
 fn get_str<'a>(obj: &'a Value, key: &str) -> Result<&'a str> {
     obj.get(key)
         .and_then(|v| v.as_str())
@@ -51,8 +49,6 @@ fn get_str_opt<'a>(obj: &'a Value, key: &str) -> Option<&'a str> {
 fn get_u32(obj: &Value, key: &str) -> Option<u32> {
     obj.get(key).and_then(|v| v.as_u64()).map(|n| n as u32)
 }
-
-// ── Helper: parse content parts from OpenAI content array ────────────────────
 
 fn parse_content_parts(raw: &Value) -> Vec<ContentPart> {
     let Some(arr) = raw.as_array() else {
@@ -84,23 +80,17 @@ fn parse_content_parts(raw: &Value) -> Vec<ContentPart> {
         .collect()
 }
 
-// ── Helper: parse a reset_at timestamp ───────────────────────────────────────
-
 /// Parse `reset_at` from a provider JSON object into Unix milliseconds.
 fn parse_reset_at_ms(obj: &Value) -> i64 {
-    // OpenAI may supply `reset_at` as a Unix timestamp (f64 or integer).
     if let Some(ts) = obj.get("reset_at").and_then(|v| v.as_f64()) {
         return (ts * 1_000.0) as i64;
     }
-    // Fallback: reset 60 seconds from now.
     let now_ms = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_millis() as i64)
         .unwrap_or(0);
     now_ms + 60_000
 }
-
-// ── RealtimeTranslator impl ───────────────────────────────────────────────────
 
 impl RealtimeTranslator for OpenAiRealtimeTranslator {
     fn provider(&self) -> &'static str {
@@ -111,7 +101,6 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
         let event_type = get_str(&raw, "type")?;
 
         let event = match event_type {
-            // ── Session ───────────────────────────────────────────────────────
             "session.created" => {
                 let session = raw.get("session").unwrap_or(&Value::Null);
                 RealtimeEvent::SessionCreated {
@@ -127,7 +116,6 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
                 }
             }
 
-            // ── Conversation items ────────────────────────────────────────────
             "conversation.item.created" | "conversation.item.added" => {
                 let item = raw.get("item").unwrap_or(&Value::Null);
                 let content = item.get("content").map(parse_content_parts).unwrap_or_default();
@@ -141,7 +129,6 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
                 item_id: raw.get("item_id").and_then(|v| v.as_str()).unwrap_or("").into(),
             },
 
-            // ── Response lifecycle ────────────────────────────────────────────
             "response.created" => {
                 let response = raw.get("response").unwrap_or(&Value::Null);
                 RealtimeEvent::ResponseCreated {
@@ -163,7 +150,6 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
                 }
             }
 
-            // ── Text streaming ────────────────────────────────────────────────
             "response.text.delta" => RealtimeEvent::ResponseTextDelta {
                 response_id: raw.get("response_id").and_then(|v| v.as_str()).unwrap_or("").into(),
                 delta: raw.get("delta").and_then(|v| v.as_str()).unwrap_or("").into(),
@@ -173,7 +159,6 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
                 text: raw.get("text").and_then(|v| v.as_str()).unwrap_or("").into(),
             },
 
-            // ── Audio streaming ───────────────────────────────────────────────
             "response.audio.delta" => RealtimeEvent::ResponseAudioDelta {
                 response_id: raw.get("response_id").and_then(|v| v.as_str()).unwrap_or("").into(),
                 delta_base64: raw.get("delta").and_then(|v| v.as_str()).unwrap_or("").into(),
@@ -182,7 +167,6 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
                 response_id: raw.get("response_id").and_then(|v| v.as_str()).unwrap_or("").into(),
             },
 
-            // ── Audio transcript streaming ─────────────────────────────────────
             "response.audio_transcript.delta" => RealtimeEvent::ResponseAudioTranscriptDelta {
                 response_id: raw.get("response_id").and_then(|v| v.as_str()).unwrap_or("").into(),
                 delta: raw.get("delta").and_then(|v| v.as_str()).unwrap_or("").into(),
@@ -192,7 +176,6 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
                 transcript: raw.get("transcript").and_then(|v| v.as_str()).unwrap_or("").into(),
             },
 
-            // ── Function call streaming ───────────────────────────────────────
             "response.function_call_arguments.delta" => RealtimeEvent::ResponseFunctionCallArgumentsDelta {
                 response_id: raw.get("response_id").and_then(|v| v.as_str()).unwrap_or("").into(),
                 call_id: raw.get("call_id").and_then(|v| v.as_str()).unwrap_or("").into(),
@@ -205,7 +188,6 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
                 arguments: raw.get("arguments").and_then(|v| v.as_str()).unwrap_or("").into(),
             },
 
-            // ── Input audio buffer ────────────────────────────────────────────
             "input_audio_buffer.append" => RealtimeEvent::InputAudioBufferAppend {
                 audio_base64: raw.get("audio").and_then(|v| v.as_str()).unwrap_or("").into(),
             },
@@ -219,9 +201,7 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
                 audio_end_ms: get_u32(&raw, "audio_end_ms").unwrap_or(0),
             },
 
-            // ── Rate limits ───────────────────────────────────────────────────
             "rate_limits.updated" => {
-                // OpenAI sends an array of rate-limit objects.
                 let limits = raw.get("rate_limits").and_then(|v| v.as_array());
                 let mut remaining_requests = None;
                 let mut remaining_tokens = None;
@@ -254,7 +234,6 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
                 }
             }
 
-            // ── Error ─────────────────────────────────────────────────────────
             "error" => {
                 let err = raw.get("error").unwrap_or(&raw);
                 RealtimeEvent::Error {
@@ -264,7 +243,6 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
                 }
             }
 
-            // ── Catch-all ─────────────────────────────────────────────────────
             other => RealtimeEvent::Raw {
                 event_type: other.into(),
                 payload: raw,
@@ -440,7 +418,6 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
                 obj
             }
             RealtimeEvent::Raw { event_type, payload } => {
-                // Forward raw events as-is, but normalise the type field.
                 let mut out = payload.clone();
                 if let Some(obj) = out.as_object_mut() {
                     obj.insert("type".into(), json!(event_type));
@@ -453,8 +430,6 @@ impl RealtimeTranslator for OpenAiRealtimeTranslator {
     }
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
-
 #[cfg(test)]
 mod tests {
     use serde_json::json;
@@ -465,20 +440,15 @@ mod tests {
         OpenAiRealtimeTranslator::new()
     }
 
-    // ─── provider() ─────────────────────────────────────────────────────────
-
     #[test]
     fn provider_returns_openai() {
         assert_eq!(translator().provider(), "openai");
     }
 
-    // ─── round-trip through openai translator ─────────────────────────────────
-
     #[test]
     fn realtime_event_round_trips_through_openai_translator() {
         let tr = translator();
 
-        // Canonical OpenAI session.created event.
         let original = json!({
             "type": "session.created",
             "event_id": "evt_abc123",
@@ -488,17 +458,14 @@ mod tests {
             }
         });
 
-        // Inbound: OpenAI JSON → unified RealtimeEvent
         let event = tr.translate_inbound(original.clone()).unwrap();
         assert!(
             matches!(event, RealtimeEvent::SessionCreated { ref session_id, ref model }
                 if session_id == "sess_xyz" && model == "gpt-4o-realtime-preview")
         );
 
-        // Outbound: unified RealtimeEvent → OpenAI JSON
         let outbound = tr.translate_outbound(&event).unwrap();
 
-        // The round-tripped output must carry the same session id and model.
         let session = outbound.get("session").expect("session field present");
         assert_eq!(session["id"], json!("sess_xyz"));
         assert_eq!(session["model"], json!("gpt-4o-realtime-preview"));
@@ -563,8 +530,6 @@ mod tests {
         assert_eq!(out["arguments"], "{\"location\":\"London\"}");
     }
 
-    // ─── unknown event type falls to Raw ─────────────────────────────────────
-
     #[test]
     fn realtime_event_unknown_event_type_falls_to_raw() {
         let tr = translator();
@@ -586,8 +551,6 @@ mod tests {
             other => panic!("expected Raw, got {other:?}"),
         }
     }
-
-    // ─── error event ─────────────────────────────────────────────────────────
 
     #[test]
     fn realtime_event_error_preserves_fields() {
@@ -612,8 +575,6 @@ mod tests {
         }
     }
 
-    // ─── input audio buffer events ────────────────────────────────────────────
-
     #[test]
     fn input_audio_buffer_commit_round_trips() {
         let tr = translator();
@@ -634,8 +595,6 @@ mod tests {
         assert_eq!(out["type"], "input_audio_buffer.clear");
     }
 
-    // ─── missing required field returns error ─────────────────────────────────
-
     #[test]
     fn translate_inbound_missing_type_returns_error() {
         let tr = translator();
@@ -643,8 +602,6 @@ mod tests {
         let result = tr.translate_inbound(raw);
         assert!(result.is_err());
     }
-
-    // ─── Pass-2 round-trips for previously-uncovered variants ────────────────
 
     #[test]
     fn realtime_session_updated_round_trips() {
@@ -764,8 +721,6 @@ mod tests {
     #[test]
     fn realtime_rate_limits_updated_round_trips() {
         let tr = translator();
-        // OpenAI reports per-axis limits in an array.  reset_at is 1_700_000_000.0
-        // Unix seconds = 1_700_000_000_000 Unix milliseconds.
         let reset_ts: f64 = 1_700_000_000.0;
         let expected_ms: i64 = 1_700_000_000_000;
         let raw = json!({
@@ -793,7 +748,6 @@ mod tests {
         assert_eq!(out["type"], "rate_limits.updated");
         let arr = out["rate_limits"].as_array().expect("rate_limits array");
         assert_eq!(arr.len(), 2, "both axes must be serialised back");
-        // requests entry first, tokens second.
         let req_entry = arr
             .iter()
             .find(|e| e["name"] == "requests")

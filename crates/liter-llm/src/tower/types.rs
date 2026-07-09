@@ -76,14 +76,6 @@ impl serde::Serialize for LlmRequest {
     }
 }
 
-// ── Constructors ──────────────────────────────────────────────────────────────
-
-// Constructors mirror the old enum variant syntax (`LlmRequest::Chat(r)`) so
-// that all existing call sites continue to compile without modification.
-// The non_snake_case names are intentional and match the previous enum variants.
-// They are `#[doc(hidden)]` so they do not appear in rustdoc; callers should
-// build `LlmRequestKind` directly and wrap it, or use the `kind()` accessor
-// for pattern matching.
 #[allow(non_snake_case)]
 #[cfg_attr(alef, alef(skip))]
 impl LlmRequest {
@@ -208,8 +200,6 @@ impl LlmRequest {
         }
     }
 }
-
-// ── Accessors and builder ─────────────────────────────────────────────────────
 
 #[cfg_attr(alef, alef(skip))]
 impl LlmRequest {

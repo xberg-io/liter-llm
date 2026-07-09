@@ -50,10 +50,6 @@ use crate::types::{
     ModelsListResponse,
 };
 
-// ---------------------------------------------------------------------------
-// Type-erased Tower service wrapper
-// ---------------------------------------------------------------------------
-
 /// A `Send + Sync` wrapper around [`tower::util::BoxCloneService`].
 ///
 /// `BoxCloneService` is `Send` but not `Sync` because its inner trait object
@@ -81,10 +77,6 @@ impl SyncService {
     }
 }
 
-// ---------------------------------------------------------------------------
-// ManagedClient
-// ---------------------------------------------------------------------------
-
 /// A managed LLM client that wraps [`DefaultClient`] with optional Tower
 /// middleware (cache, cooldown, rate limiting, health checks, cost tracking,
 /// budget, hooks, tracing).
@@ -111,10 +103,8 @@ pub struct ManagedClient {
     budget_state: Option<Arc<BudgetState>>,
 }
 
-// SAFETY: `SyncService` wraps a `Mutex<BoxCloneService>` which is `Send + Sync`.
-// `Arc<DefaultClient>` and `Arc<BudgetState>` are both `Send + Sync`.
-// The compiler can verify Send + Sync on `ManagedClient` automatically now
-// that `SyncService` is `Send + Sync` (Mutex<T: Send> is Sync).
+// ~keep SAFETY: `SyncService` wraps a `Mutex<BoxCloneService>` which is `Send + Sync`.
+// ~keep `Arc<DefaultClient>` and `Arc<BudgetState>` are both `Send + Sync`.
 
 impl ManagedClient {
     /// Build a managed client.
@@ -165,8 +155,6 @@ impl ManagedClient {
         self.service.is_some()
     }
 
-    // -- helpers ----------------------------------------------------------
-
     /// Clone the Tower service and call it with `req`, returning the raw
     /// [`LlmResponse`].
     fn call_service(&self, req: LlmRequest) -> BoxFuture<'static, Result<LlmResponse>> {
@@ -214,19 +202,14 @@ fn build_service_stack(
         return (None, None);
     }
 
-    // Start with the base LlmService wrapping the DefaultClient.
     let base = LlmService::new_from_arc(client);
 
     let mut budget_state: Option<Arc<BudgetState>> = None;
 
-    // We cannot use ServiceBuilder generics easily when layers are optional,
-    // so we type-erase into BoxCloneService at each step.
     type Bcs = tower::util::BoxCloneService<LlmRequest, LlmResponse, LiterLlmError>;
 
-    // Start by boxing the base service.
     let svc: Bcs = tower::util::BoxCloneService::new(base);
 
-    // 1. Cache (innermost — avoids hitting downstream for cached responses).
     let svc = if let Some(ref cache_cfg) = config.cache_config {
         let layer = if let Some(ref store) = config.cache_store {
             CacheLayer::with_store(Arc::clone(store))
@@ -253,7 +236,6 @@ fn build_service_stack(
         svc
     };
 
-    // 2. Health check — rejects requests when provider is unhealthy.
     let svc = if let Some(interval) = config.health_check_interval {
         let layer = HealthCheckLayer::new(interval);
         tower::util::BoxCloneService::new(layer.layer(svc))
@@ -261,7 +243,6 @@ fn build_service_stack(
         svc
     };
 
-    // 3. Cooldown — rejects requests during cooldown after transient errors.
     let svc = if let Some(duration) = config.cooldown_duration {
         let layer = CooldownLayer::new(duration);
         tower::util::BoxCloneService::new(layer.layer(svc))
@@ -269,7 +250,6 @@ fn build_service_stack(
         svc
     };
 
-    // 4. Rate limit — enforces per-model RPM/TPM limits.
     let svc = if let Some(ref rl_cfg) = config.rate_limit_config {
         let layer = ModelRateLimitLayer::new(rl_cfg.clone());
         tower::util::BoxCloneService::new(layer.layer(svc))
@@ -277,14 +257,12 @@ fn build_service_stack(
         svc
     };
 
-    // 5. Cost tracking — records estimated USD cost on tracing spans.
     let svc = if has_cost {
         tower::util::BoxCloneService::new(CostTrackingLayer.layer(svc))
     } else {
         svc
     };
 
-    // 6. Budget — enforces spending limits.
     let svc = if let Some(ref budget_cfg) = config.budget_config {
         let state = Arc::new(BudgetState::new());
         budget_state = Some(Arc::clone(&state));
@@ -294,7 +272,6 @@ fn build_service_stack(
         svc
     };
 
-    // 7. Hooks — user-defined pre/post request callbacks.
     let svc = if has_hooks {
         let layer = HooksLayer::new(config.hooks.clone());
         tower::util::BoxCloneService::new(layer.layer(svc))
@@ -302,20 +279,14 @@ fn build_service_stack(
         svc
     };
 
-    // 8. Tracing (outermost — wraps everything in an OpenTelemetry span).
     let svc = if has_tracing {
         tower::util::BoxCloneService::new(TracingLayer.layer(svc))
     } else {
         svc
     };
 
-    // Wrap in SyncService so ManagedClient is Sync.
     (Some(SyncService { inner: Mutex::new(svc) }), budget_state)
 }
-
-// ---------------------------------------------------------------------------
-// LlmClient implementation
-// ---------------------------------------------------------------------------
 
 impl LlmClient for ManagedClient {
     fn chat(&self, req: ChatCompletionRequest) -> BoxFuture<'_, Result<ChatCompletionResponse>> {
@@ -487,11 +458,7 @@ impl LlmClient for ManagedClient {
     }
 }
 
-// ---------------------------------------------------------------------------
-// FileClient implementation — delegates directly to the inner DefaultClient.
-// File operations are not routed through the Tower middleware stack because
-// they are administrative and should not be subject to cache/budget/hooks.
-// ---------------------------------------------------------------------------
+// ~keep File operations bypass Tower middleware because they are administrative, not model inference.
 
 impl FileClient for ManagedClient {
     fn create_file(&self, req: CreateFileRequest) -> BoxFuture<'_, Result<FileObject>> {
@@ -515,10 +482,6 @@ impl FileClient for ManagedClient {
     }
 }
 
-// ---------------------------------------------------------------------------
-// BatchClient implementation — delegates directly to the inner DefaultClient.
-// ---------------------------------------------------------------------------
-
 impl BatchClient for ManagedClient {
     fn create_batch(&self, req: CreateBatchRequest) -> BoxFuture<'_, Result<BatchObject>> {
         self.inner.create_batch(req)
@@ -536,10 +499,6 @@ impl BatchClient for ManagedClient {
         self.inner.cancel_batch(batch_id)
     }
 }
-
-// ---------------------------------------------------------------------------
-// ResponseClient implementation — delegates directly to the inner DefaultClient.
-// ---------------------------------------------------------------------------
 
 impl ResponseClient for ManagedClient {
     fn create_response(&self, req: CreateResponseRequest) -> BoxFuture<'_, Result<ResponseObject>> {
@@ -645,7 +604,6 @@ mod tests {
         let m = Arc::new(Mutex::new(String::from("inner")));
         let m2 = Arc::clone(&m);
 
-        // Poison the mutex by panicking while holding the lock.
         let _ = thread::spawn(move || {
             let _guard = m2.lock().expect("acquiring test mutex should succeed");
             panic!("intentional panic to poison the mutex");
@@ -654,7 +612,6 @@ mod tests {
 
         assert!(m.is_poisoned(), "mutex should be poisoned after thread panic");
 
-        // Mirror the recovery pattern used in `clone_service`.
         let cloned = match m.lock() {
             Ok(guard) => guard.clone(),
             Err(poisoned) => poisoned.into_inner().clone(),

@@ -32,8 +32,6 @@ use crate::client::BoxFuture;
 use crate::cost;
 use crate::error::{LiterLlmError, Result};
 
-// ---- Config ----------------------------------------------------------------
-
 /// Configuration for per-model rate limits.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct RateLimitConfig {
@@ -54,8 +52,6 @@ impl Default for RateLimitConfig {
         }
     }
 }
-
-// ---- State -----------------------------------------------------------------
 
 /// Per-model counters for the current window.
 struct ModelRateState {
@@ -82,8 +78,6 @@ impl ModelRateState {
         }
     }
 }
-
-// ---- Layer -----------------------------------------------------------------
 
 /// Tower [`Layer`] that enforces per-model rate limits.
 #[cfg_attr(alef, alef(skip))]
@@ -114,8 +108,6 @@ impl<S> Layer<S> for ModelRateLimitLayer {
         }
     }
 }
-
-// ---- Service ---------------------------------------------------------------
 
 /// Tower service produced by [`ModelRateLimitLayer`].
 #[cfg_attr(alef, alef(skip))]
@@ -153,7 +145,6 @@ where
         let config = self.config.clone();
         let state = Arc::clone(&self.state);
 
-        // --- Pre-flight: check RPM limit ---
         {
             let mut entry = state.entry(model.clone()).or_insert_with(ModelRateState::new);
             entry.maybe_reset(config.window);
@@ -186,7 +177,6 @@ where
                 });
             }
 
-            // Increment request count optimistically.
             entry.request_count += 1;
         }
 
@@ -195,7 +185,6 @@ where
         Box::pin(async move {
             let resp = fut.await?;
 
-            // --- Post-flight: update token count ---
             if let Some(usage) = resp.usage() {
                 let total_tokens = usage.prompt_tokens + usage.completion_tokens;
                 if let Some(mut entry) = state.get_mut(&model) {
@@ -208,8 +197,6 @@ where
         })
     }
 }
-
-// ─── Cost rate-limit config ───────────────────────────────────────────────────
 
 /// Configuration for the cost-based rate-limit axis.
 ///
@@ -228,8 +215,6 @@ pub struct CostRateLimitConfig {
     /// unlimited.
     pub max_usd_per_day: Option<f64>,
 }
-
-// ─── Cost sliding-window state ────────────────────────────────────────────────
 
 /// Atomic sliding-window accumulator for a single cost window.
 ///
@@ -268,7 +253,7 @@ impl CostWindow {
 
     /// Add `usd` to the window accumulator.
     fn add(&self, usd: f64, now_secs: u64) {
-        let _ = self.spend_usd(now_secs); // reset if expired
+        let _ = self.spend_usd(now_secs);
         if usd > 0.0 {
             let mc = (usd * 1_000_000.0).round() as u64;
             self.spend_mc.fetch_add(mc, Ordering::Relaxed);
@@ -346,8 +331,6 @@ impl CostRateLimitState {
     }
 }
 
-// ─── CostRateLimitLayer ───────────────────────────────────────────────────────
-
 /// Tower [`Layer`] that enforces cost-based rate limits (USD per time window).
 ///
 /// Rejects requests with [`LiterLlmError::RateLimited`] when any configured
@@ -381,8 +364,6 @@ impl<S> Layer<S> for CostRateLimitLayer {
         }
     }
 }
-
-// ─── CostRateLimitService ─────────────────────────────────────────────────────
 
 /// Tower service produced by [`CostRateLimitLayer`].
 #[cfg_attr(alef, alef(skip))]
@@ -420,7 +401,6 @@ where
         let config = self.config.clone();
         let state = Arc::clone(&self.state);
 
-        // Pre-flight: check whether any cost window is already exhausted.
         if let Some(err) = state.check(&config) {
             return Box::pin(async move { Err(err) });
         }
@@ -430,7 +410,6 @@ where
         Box::pin(async move {
             let resp = fut.await?;
 
-            // Post-flight: record actual cost.
             if let Some(usage) = resp.usage()
                 && let Some(usd) = cost::completion_cost(&model, usage.prompt_tokens, usage.completion_tokens)
             {
@@ -441,8 +420,6 @@ where
         })
     }
 }
-
-// ---- Tests -----------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
@@ -482,7 +459,6 @@ mod tests {
         let inner = LlmService::new(MockClient::ok());
         let mut svc = layer.layer(inner);
 
-        // First two succeed.
         svc.call(LlmRequest::Chat(chat_req("gpt-4")))
             .await
             .expect("service call should not fail");
@@ -490,7 +466,6 @@ mod tests {
             .await
             .expect("service call should not fail");
 
-        // Third should be rate limited.
         let err = svc
             .call(LlmRequest::Chat(chat_req("gpt-4")))
             .await
@@ -512,7 +487,6 @@ mod tests {
         svc.call(LlmRequest::Chat(chat_req("gpt-4")))
             .await
             .expect("service call should not fail");
-        // Different model should still work.
         svc.call(LlmRequest::Chat(chat_req("gpt-3.5-turbo")))
             .await
             .expect("service call should not fail");
@@ -522,19 +496,17 @@ mod tests {
     async fn tpm_limit_rejects_after_threshold() {
         let config = RateLimitConfig {
             rpm: None,
-            tpm: Some(10), // Very low threshold — the mock returns 15 total tokens.
+            tpm: Some(10),
             window: Duration::from_secs(60),
         };
         let layer = ModelRateLimitLayer::new(config);
         let inner = LlmService::new(MockClient::ok());
         let mut svc = layer.layer(inner);
 
-        // First call succeeds and records 15 tokens (over the 10 limit).
         svc.call(LlmRequest::Chat(chat_req("gpt-4")))
             .await
             .expect("service call should not fail");
 
-        // Second call should be rejected because token count >= tpm.
         let err = svc
             .call(LlmRequest::Chat(chat_req("gpt-4")))
             .await
@@ -554,8 +526,6 @@ mod tests {
         }
     }
 
-    // ── Cost rate-limit tests ─────────────────────────────────────────────────
-
     /// When the accumulated cost in the minute window already exceeds the
     /// configured `max_usd_per_minute`, the layer must reject the next request
     /// without forwarding it to the inner service.
@@ -570,15 +540,6 @@ mod tests {
         let inner = LlmService::new(MockClient::ok());
         let mut svc = layer.layer(inner);
 
-        // Directly prime the per-minute window to exceed the $0.01 limit.
-        // gpt-4: 10 prompt + 5 completion tokens = $0.0006; we need > $0.01.
-        // Pre-seed by calling record directly on the internal state.
-        // Since state is private, we instead issue requests until the window
-        // accumulates enough cost — but the mock returns tiny spend.  Instead
-        // use the public layer API: call `record` by manually pumping cost.
-        //
-        // Approach: set max_usd_per_minute very low ($0.000001) so that even
-        // a single mock call of gpt-4 ($0.0006) exceeds it after recording.
         let config2 = CostRateLimitConfig {
             max_usd_per_minute: Some(0.000001),
             max_usd_per_hour: None,
@@ -588,12 +549,10 @@ mod tests {
         let inner2 = LlmService::new(MockClient::ok());
         let mut svc2 = layer2.layer(inner2);
 
-        // First call succeeds and records ~$0.0006 into the window.
         svc2.call(LlmRequest::Chat(chat_req("gpt-4")))
             .await
             .expect("first call should succeed");
 
-        // Second call should be rejected: window spend ($0.0006) >= limit ($0.000001).
         let err = svc2
             .call(LlmRequest::Chat(chat_req("gpt-4")))
             .await
@@ -603,8 +562,6 @@ mod tests {
             "expected RateLimited, got {err:?}"
         );
 
-        // The original svc with a $0.01 limit should still allow requests since
-        // no cost has been recorded in it.
         svc.call(LlmRequest::Chat(chat_req("gpt-4")))
             .await
             .expect("request under cost limit should succeed");

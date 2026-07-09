@@ -167,7 +167,6 @@ async fn health_endpoints_require_no_auth() {
     let upstream = common::mock_upstream::MockUpstream::start(vec![]).await;
     let proxy = common::test_proxy::TestProxy::new(&upstream.url);
 
-    // GET /health without auth
     let resp = proxy
         .router()
         .oneshot(
@@ -181,7 +180,6 @@ async fn health_endpoints_require_no_auth() {
         .unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
 
-    // GET /health/liveness without auth
     let resp = proxy
         .router()
         .oneshot(

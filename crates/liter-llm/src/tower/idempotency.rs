@@ -67,16 +67,14 @@ use crate::error::Result as LiterResult;
 use crate::tower::cache::CachedResponse;
 use crate::tower::types::{LlmRequest, LlmRequestKind, LlmResponse};
 
-// ── Body hash ─────────────────────────────────────────────────────────────────
-
 /// Fixed seeds for the `ahash` [`RandomState`] used by body hashing.
 ///
 /// These constants MUST NOT be changed once idempotency entries have been
 /// persisted, as a seed change would invalidate stored hashes.
-const IDEM_HASH_SEED_0: u64 = 0x6964_656d_706f_7465; // "idempote"
-const IDEM_HASH_SEED_1: u64 = 0x6e63_795f_6861_7368; // "ncy_hash"
-const IDEM_HASH_SEED_2: u64 = 0x5f73_6565_6430_5f76; // "_seed0_v"
-const IDEM_HASH_SEED_3: u64 = 0x315f_6c6c_6d00_0000; // "1_llm\0\0\0"
+const IDEM_HASH_SEED_0: u64 = 0x6964_656d_706f_7465;
+const IDEM_HASH_SEED_1: u64 = 0x6e63_795f_6861_7368;
+const IDEM_HASH_SEED_2: u64 = 0x5f73_6565_6430_5f76;
+const IDEM_HASH_SEED_3: u64 = 0x315f_6c6c_6d00_0000;
 
 /// Process-global deterministic [`ahash::RandomState`] for body hashing.
 ///
@@ -106,17 +104,13 @@ fn idem_random_state() -> &'static ahash::RandomState {
 /// Returns `None` for request variants that cannot be serialised (should
 /// never happen in practice — all variants derive `serde::Serialize`).
 fn compute_body_hash(request: &LlmRequest) -> Option<String> {
-    // Serialise only the kind (provider payload), excluding infra metadata.
+    // ~keep Hash only the provider payload so infra metadata does not affect idempotency.
     let json = serde_json::to_string(&request.kind).ok()?;
 
     let h = idem_random_state().hash_one(&json);
-    // Embed a JSON body prefix alongside the hash for extra collision
-    // resistance: a collision only causes a spurious IdempotencyConflict,
-    // never silent data corruption.
+    // ~keep Embed a JSON prefix so hash collisions cause conflicts, not silent corruption.
     Some(format!("{h:016x}:{}", &json[..json.len().min(64)]))
 }
-
-// ── IdempotencyEntry ──────────────────────────────────────────────────────────
 
 /// An entry in the idempotency store.
 #[derive(Clone)]
@@ -148,8 +142,6 @@ impl IdempotencyEntry {
     }
 }
 
-// ── IdempotencyStoreError ─────────────────────────────────────────────────────
-
 /// Error type for [`IdempotencyStore`] operations.
 #[derive(Debug, thiserror::Error)]
 pub enum IdempotencyStoreError {
@@ -157,8 +149,6 @@ pub enum IdempotencyStoreError {
     #[error("idempotency store backend error: {0}")]
     Backend(String),
 }
-
-// ── IdempotencyStore trait ────────────────────────────────────────────────────
 
 /// Pluggable backing store for the idempotency layer.
 ///
@@ -211,8 +201,6 @@ pub trait IdempotencyStore: Send + Sync + 'static {
         key: &'a str,
     ) -> Pin<Box<dyn Future<Output = Result<(), IdempotencyStoreError>> + Send + 'a>>;
 }
-
-// ── InMemoryIdempotencyStore ──────────────────────────────────────────────────
 
 /// In-memory idempotency store backed by a [`DashMap`].
 ///
@@ -268,7 +256,7 @@ impl IdempotencyStore for InMemoryIdempotencyStore {
                 true
             }
             Entry::Occupied(entry) => {
-                // If the existing entry is expired, replace it and win.
+                // ~keep Expired idempotency entries are replaced atomically so one caller wins the retry.
                 if entry.get().is_expired() {
                     entry.replace_entry(IdempotencyEntry {
                         body_hash: body_hash.to_owned(),
@@ -304,8 +292,6 @@ impl IdempotencyStore for InMemoryIdempotencyStore {
         Box::pin(std::future::ready(Ok(())))
     }
 }
-
-// ── IdempotencyLayer ──────────────────────────────────────────────────────────
 
 /// Tower [`Layer`] that deduplicates requests sharing the same `Idempotency-Key`.
 ///
@@ -354,8 +340,6 @@ impl<I, S: IdempotencyStore> Layer<I> for IdempotencyLayer<S> {
     }
 }
 
-// ── IdempotencyService ────────────────────────────────────────────────────────
-
 /// Tower service produced by [`IdempotencyLayer`].
 #[cfg_attr(alef, alef(skip))]
 pub struct IdempotencyService<I, S: IdempotencyStore> {
@@ -389,8 +373,7 @@ where
     }
 
     fn call(&mut self, request: LlmRequest) -> Self::Future {
-        // Tower contract: consume the polled-ready inner instance, leave a
-        // fresh clone as standby for the next poll_ready/call cycle.
+        // ~keep Tower contract: consume the polled-ready instance and leave a fresh standby clone.
         let standby = self.inner.clone();
         let mut inner = std::mem::replace(&mut self.inner, standby);
 
@@ -398,67 +381,45 @@ where
         let ttl = self.ttl;
 
         Box::pin(async move {
-            // ── No key: pass through ──────────────────────────────────────
             let Some(ref raw_key) = request.idempotency_key.clone() else {
                 return inner.call(request).await;
             };
 
-            // ── Tenant-scope the store key ────────────────────────────────
-            // An idempotency key is scoped to the tenant that supplied it.
-            // Without a tenant prefix, a guessable key such as `"req-001"` used
-            // by tenant A would collide with the same key used by tenant B,
-            // leaking tenant A's cached response to tenant B.
+            // ~keep Tenant-scope idempotency keys so guessable keys cannot leak responses across tenants.
             let tenant_prefix = request.tenant_id.as_ref().map(|t| t.as_ref()).unwrap_or("_");
             let key = format!("{tenant_prefix}:{raw_key}");
 
-            // ── Compute body hash ─────────────────────────────────────────
             let body_hash = match compute_body_hash(&request) {
                 Some(h) => h,
                 None => {
-                    // Serialisation failed (should never happen) — pass through
-                    // to avoid blocking the caller.
                     return inner.call(request).await;
                 }
             };
 
-            // ── Check existing entry ──────────────────────────────────────
             if let Some(entry) = store.get(&key).await.map_err(store_err)? {
                 if entry.body_hash != body_hash {
-                    // Report the raw (user-facing) key in the error, not the
-                    // tenant-scoped internal store key.
+                    // ~keep Report the raw user-facing key, not the tenant-scoped internal store key.
                     return Err(LiterLlmError::IdempotencyConflict { key: raw_key.clone() });
                 }
                 if let Some(cached) = entry.response {
-                    // Hit: return stored response without calling inner.
                     return cached.into_llm_response();
                 }
-                // Entry exists but no response yet — another caller is the
-                // writer and has not completed.  Error-out so the caller can
-                // retry after a brief delay (see module docs for rationale).
                 return Err(LiterLlmError::IdempotencyInFlight { key: raw_key.clone() });
             }
 
-            // ── Try to become the writer ──────────────────────────────────
             let inserted = store.try_insert(&key, &body_hash, ttl).await.map_err(store_err)?;
 
-            if !inserted {
-                // Lost the race.  Re-read and apply the same logic as above.
-                if let Some(entry) = store.get(&key).await.map_err(store_err)? {
-                    if entry.body_hash != body_hash {
-                        return Err(LiterLlmError::IdempotencyConflict { key: raw_key.clone() });
-                    }
-                    if let Some(cached) = entry.response {
-                        return cached.into_llm_response();
-                    }
-                    return Err(LiterLlmError::IdempotencyInFlight { key: raw_key.clone() });
+            // ~keep If expiry wins this race, an extra upstream call is safer than blocking the caller.
+            if !inserted && let Some(entry) = store.get(&key).await.map_err(store_err)? {
+                if entry.body_hash != body_hash {
+                    return Err(LiterLlmError::IdempotencyConflict { key: raw_key.clone() });
                 }
-                // Entry disappeared between try_insert and get (expired between
-                // the two calls) — fall through to call inner.
-                // This is an extremely unlikely race; if it happens the caller
-                // makes an extra upstream call, which is safe.
+                if let Some(cached) = entry.response {
+                    return cached.into_llm_response();
+                }
+                return Err(LiterLlmError::IdempotencyInFlight { key: raw_key.clone() });
             }
 
-            // ── Call inner service ────────────────────────────────────────
             let result = inner.call(request).await;
 
             match &result {
@@ -466,10 +427,7 @@ where
                     let cached = match resp {
                         LlmResponse::Chat(r) => Some(CachedResponse::Chat(r.clone())),
                         LlmResponse::Embed(r) => Some(CachedResponse::Embed(r.clone())),
-                        // Non-cacheable variants (streaming, image, audio, …):
-                        // remove the placeholder so subsequent callers can retry.
-                        // Idempotency for streaming responses is intentionally
-                        // not supported — streams are consumed once.
+                        // ~keep Non-cacheable responses remove the placeholder; consumed streams are not replayable.
                         _ => None,
                     };
                     if let Some(cached_resp) = cached {
@@ -479,8 +437,6 @@ where
                     }
                 }
                 Err(_) => {
-                    // On inner error: remove the placeholder so subsequent
-                    // callers with the same key+body can retry the operation.
                     let _ = store.remove(&key).await;
                 }
             }
@@ -508,8 +464,6 @@ pub(crate) fn is_cacheable_kind(kind: &LlmRequestKind) -> bool {
     matches!(kind, LlmRequestKind::Chat(_) | LlmRequestKind::Embed(_))
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
-
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
@@ -524,8 +478,6 @@ mod tests {
     use crate::tower::tests_common::{MockClient, chat_req};
     use crate::tower::types::{LlmRequest, LlmResponse};
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
     fn make_layer() -> IdempotencyLayer<InMemoryIdempotencyStore> {
         IdempotencyLayer::new(InMemoryIdempotencyStore::new())
     }
@@ -533,8 +485,6 @@ mod tests {
     fn req_with_key(model: &str, key: &str) -> LlmRequest {
         LlmRequest::Chat(chat_req(model)).with_idempotency_key(key)
     }
-
-    // ── Unit tests for InMemoryIdempotencyStore ───────────────────────────────
 
     #[tokio::test]
     async fn store_get_returns_none_on_miss() {
@@ -549,7 +499,6 @@ mod tests {
         let inserted = store.try_insert("k1", "hash1", Duration::from_secs(60)).await.unwrap();
         assert!(inserted, "first caller must win insertion");
 
-        // Second insertion for the same key must fail.
         let second = store.try_insert("k1", "hash1", Duration::from_secs(60)).await.unwrap();
         assert!(!second, "second caller must lose insertion race");
     }
@@ -557,13 +506,10 @@ mod tests {
     #[tokio::test]
     async fn store_try_insert_wins_after_expiry() {
         let store = InMemoryIdempotencyStore::new();
-        // Insert with near-zero TTL so it expires immediately.
         store.try_insert("k2", "hash", Duration::from_nanos(1)).await.unwrap();
 
-        // Sleep past the TTL.
         tokio::time::sleep(Duration::from_millis(2)).await;
 
-        // Second insertion should now win because the entry is expired.
         let inserted = store.try_insert("k2", "hash", Duration::from_secs(60)).await.unwrap();
         assert!(inserted, "insertion after TTL expiry must succeed");
     }
@@ -597,8 +543,6 @@ mod tests {
         assert!(result.is_none(), "removed entry must not be present");
     }
 
-    // ── IdempotencyService tests ──────────────────────────────────────────────
-
     #[tokio::test]
     async fn first_request_hits_inner() {
         let layer = make_layer();
@@ -618,13 +562,11 @@ mod tests {
         let call_count = Arc::clone(&client.call_count);
         let mut svc = layer.layer(LlmService::new(client));
 
-        // First call — populates the store.
         svc.call(req_with_key("gpt-4", "key-002"))
             .await
             .expect("first call must succeed");
         assert_eq!(call_count.load(Ordering::SeqCst), 1);
 
-        // Second call — same key + same body, must return cached response.
         let result = svc.call(req_with_key("gpt-4", "key-002")).await;
         assert!(result.is_ok(), "second call must succeed");
         assert_eq!(
@@ -640,12 +582,10 @@ mod tests {
         let client = MockClient::ok();
         let mut svc = layer.layer(LlmService::new(client));
 
-        // First call with model-a.
         svc.call(req_with_key("gpt-4", "key-003"))
             .await
             .expect("first call must succeed");
 
-        // Second call — same key, different model (→ different body hash).
         let result = svc.call(req_with_key("gpt-3.5-turbo", "key-003")).await;
         assert!(
             matches!(result, Err(LiterLlmError::IdempotencyConflict { .. })),
@@ -660,7 +600,6 @@ mod tests {
         let call_count = Arc::clone(&client.call_count);
         let mut svc = layer.layer(LlmService::new(client));
 
-        // Request without idempotency_key — no store interaction.
         let result = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
         assert!(result.is_ok(), "request without key must succeed");
         assert_eq!(
@@ -677,13 +616,10 @@ mod tests {
         let call_count = Arc::clone(&client.call_count);
         let mut svc = layer.layer(LlmService::new(client));
 
-        // First call — inner fails with RateLimited.
         let first = svc.call(req_with_key("gpt-4", "key-err")).await;
         assert!(first.is_err(), "first call must fail");
         assert_eq!(call_count.load(Ordering::SeqCst), 1);
 
-        // Second call — same key+body; placeholder was removed on error,
-        // so inner is called again (retry semantics).
         let second = svc.call(req_with_key("gpt-4", "key-err")).await;
         assert!(second.is_err(), "second call must also fail (same inner error)");
         assert_eq!(
@@ -695,10 +631,7 @@ mod tests {
 
     #[tokio::test]
     #[ignore = "moka time-mocking not available; TTL expiry tested via InMemoryIdempotencyStore unit tests"]
-    async fn ttl_expiry_allows_new_invocation() {
-        // This test is covered by `store_try_insert_wins_after_expiry` above,
-        // which exercises the same TTL expiry path at the store level.
-    }
+    async fn ttl_expiry_allows_new_invocation() {}
 
     #[tokio::test]
     async fn different_keys_are_independent() {
@@ -713,14 +646,12 @@ mod tests {
         svc.call(req_with_key("gpt-4", "key-B"))
             .await
             .expect("call B must succeed");
-        // Both must hit inner — different keys are independent.
         assert_eq!(
             call_count.load(Ordering::SeqCst),
             2,
             "different keys must both hit inner"
         );
 
-        // Repeat each key — both must return cached.
         svc.call(req_with_key("gpt-4", "key-A"))
             .await
             .expect("repeat A must succeed");
@@ -761,8 +692,6 @@ mod tests {
         assert_eq!(first_model, second_model, "cached response must match original");
     }
 
-    // ── Fix 2: ahash determinism ──────────────────────────────────────────────
-
     /// `compute_body_hash` must return the same value on every call for the
     /// same request, even when constructed from independent instances.
     /// The old `DefaultHasher` used a randomized seed (Rust 1.36+), so two
@@ -775,7 +704,6 @@ mod tests {
 
         let hashes: Vec<_> = (0..10).map(|_| compute_body_hash(&req)).collect();
 
-        // Every hash must be Some and identical to the first.
         let first = hashes[0].as_ref().expect("hash must be Some");
         for (i, h) in hashes.iter().enumerate() {
             assert_eq!(
@@ -785,8 +713,6 @@ mod tests {
             );
         }
     }
-
-    // ── Fix 3: tenant-scoped keys ─────────────────────────────────────────────
 
     /// Two requests with the same idempotency key but different tenant IDs must
     /// not share the same cached response.  Before the fix, the store key was
@@ -799,10 +725,8 @@ mod tests {
         let store = Arc::new(InMemoryIdempotencyStore::new());
         let layer_a = IdempotencyLayer::new(InMemoryIdempotencyStore::new());
         let layer_b = IdempotencyLayer::new(InMemoryIdempotencyStore::new());
-        // Use the same shared store for both tenants to verify isolation.
-        let _ = (store, layer_a, layer_b); // silence unused
+        let _ = (store, layer_a, layer_b);
 
-        // Build a shared store and two layers that share it.
         let shared_store = Arc::new(InMemoryIdempotencyStore::new());
         let make_layer_shared = || IdempotencyLayer {
             store: Arc::clone(&shared_store),
@@ -817,7 +741,6 @@ mod tests {
         let call_count_b = Arc::clone(&client_b.call_count);
         let mut svc_b = make_layer_shared().layer(LlmService::new(client_b));
 
-        // Both tenants use the exact same idempotency key "shared-key".
         let req_a = LlmRequest::Chat(chat_req("gpt-4"))
             .with_idempotency_key("shared-key")
             .with_tenant_id("tenant-A");
@@ -825,12 +748,10 @@ mod tests {
             .with_idempotency_key("shared-key")
             .with_tenant_id("tenant-B");
 
-        // Tenant A's first request — must hit inner.
         let resp_a = svc_a.call(req_a.clone()).await.expect("tenant A first call");
         assert!(matches!(resp_a, LlmResponse::Chat(_)));
         assert_eq!(call_count_a.load(Ordering::SeqCst), 1, "inner called for tenant A");
 
-        // Tenant B's first request — must ALSO hit inner (different store key).
         let resp_b = svc_b.call(req_b.clone()).await.expect("tenant B first call");
         assert!(matches!(resp_b, LlmResponse::Chat(_)));
         assert_eq!(
@@ -839,7 +760,6 @@ mod tests {
             "inner called for tenant B (no cross-tenant hit)"
         );
 
-        // Repeat for both — should now return cached without calling inner again.
         svc_a.call(req_a).await.expect("tenant A repeat");
         assert_eq!(
             call_count_a.load(Ordering::SeqCst),

@@ -12,10 +12,6 @@
 
 use liter_llm::tenant::{EtcdKeyResolver, EtcdKeyResolverConfig, KeyResolver, KeyResolverError};
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 /// Write a JSON-serialised [`ResolvedKey`]-shaped document to etcd.
 ///
 /// `ResolvedKey` does not derive `Serialize`; we build the JSON by hand so
@@ -51,10 +47,6 @@ async fn delete_resolved_key(api_key: &str) {
         let _ = client.delete(path.as_bytes(), None).await;
     }
 }
-
-// ---------------------------------------------------------------------------
-// Integration tests (require live etcd at localhost:2379)
-// ---------------------------------------------------------------------------
 
 #[tokio::test]
 #[ignore = "requires etcd at localhost:2379; run with --include-ignored"]
@@ -133,10 +125,6 @@ async fn malformed_json_returns_backend_error() {
 
     let _ = raw_client.delete(path.as_bytes(), None).await;
 }
-
-// ---------------------------------------------------------------------------
-// Unit tests — pure logic, no network required
-// ---------------------------------------------------------------------------
 
 #[test]
 fn hash_api_key_is_deterministic() {

@@ -10,7 +10,6 @@ async fn chat_basic() {
 
     let resp = client.chat(simple_chat_request("gemini-2.5-flash-lite")).await.unwrap();
 
-    // Vertex AI (like Google AI) doesn't include model name in responses.
     assert!(!resp.choices.is_empty(), "vertex_ai: choices should not be empty");
     assert!(
         resp.choices[0].message.text().is_some_and(|c| !c.is_empty()),

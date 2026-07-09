@@ -1,8 +1,3 @@
-// DTOs in this tree are OpenAI-compatible mirrors of provider request/response
-// schemas; field meanings are documented in the provider docs (openai.com/docs,
-// anthropic docs, etc.) rather than re-stated per-field here. Suppress
-// `missing_docs` on each DTO submodule to avoid duplicating upstream docs.
-
 #[allow(missing_docs)]
 pub mod audio;
 #[allow(missing_docs)]

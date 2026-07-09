@@ -12,10 +12,6 @@
 //! The helpers are no-ops when the `otel` feature is disabled or when
 //! [`liter_llm::tower::metrics::init_meter`] has not yet been called.
 
-// Delegate to the core tower metrics module's global meter to avoid
-// creating a second `Meter` singleton inside the proxy.  This keeps
-// all OTel wiring in one place.
-
 /// Record a credential rotation event (one credential replaced by another).
 #[inline]
 pub fn record_credential_rotation(provider: &str) {
@@ -29,7 +25,7 @@ pub fn record_credential_rotation(provider: &str) {
                 .add(1, &[opentelemetry::KeyValue::new("provider", provider.to_owned())]);
         }
     }
-    let _ = provider; // suppress unused-variable warning when otel is off
+    let _ = provider;
 }
 
 /// Record a credential exhaustion event.
@@ -56,11 +52,6 @@ pub fn record_credential_pool_active(provider: &str, active_count: usize) {
     #[cfg(feature = "otel")]
     {
         if let Some(meter) = liter_llm::tower::metrics::global_meter() {
-            // OTel has no "gauge" that accepts absolute values easily; we emit
-            // the current count as an observable gauge via a one-shot record on
-            // an UpDownCounter reset.  For simple observability this is
-            // sufficient; a proper observable gauge requires a closure registered
-            // at setup time.
             meter
                 .i64_up_down_counter("gen_ai.credential.pool.active")
                 .with_description("Current number of active credentials in the pool")

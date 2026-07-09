@@ -55,16 +55,12 @@ use crate::config::VirtualKeyConfig;
 use crate::error::ProxyError;
 use crate::state::AppState;
 
-// ── Query parameters ──────────────────────────────────────────────────────────
-
 /// Query parameters accepted by `GET /v1/realtime`.
 #[derive(Debug, Deserialize)]
 pub struct RealtimeQueryParams {
     /// The model to use for the realtime session (e.g. `gpt-4o-realtime-preview`).
     pub model: Option<String>,
 }
-
-// ── Handler ───────────────────────────────────────────────────────────────────
 
 /// `GET /v1/realtime` — upgrades to WebSocket and starts the bidirectional proxy.
 ///
@@ -91,9 +87,6 @@ pub async fn realtime_websocket(
 ) -> impl IntoResponse {
     let model = params.model.unwrap_or_default();
 
-    // ── Security gate 1: model allowlist check ────────────────────────────
-    // This MUST happen before the WebSocket upgrade so the caller receives a
-    // proper HTTP 403 response rather than a WS-level error message.
     if !key_ctx.can_access_model(&model) {
         let err = ProxyError::forbidden(format!(
             "key '{}' is not allowed to access model '{model}'",
@@ -102,14 +95,10 @@ pub async fn realtime_websocket(
         return err.into_response();
     }
 
-    // ── Security gate 2: resolve upstream credential ──────────────────────
-    // Load the config snapshot once. Each request gets a stable view of the
-    // config even if a hot-reload fires mid-request.
+    // ~keep Each request uses one stable config snapshot even if hot-reload fires.
     let config = state.config.load();
 
-    // Resolve the upstream OpenAI API key from the virtual key's credential
-    // pool.  Never fall back to master_key — that would allow any VK holder
-    // to escalate to the master billing key.
+    // ~keep Never fall back to master_key; that would let VK holders use the master billing key.
     let upstream_api_key: SecretString = match resolve_upstream_credential(&key_ctx, &config.keys, &model) {
         Some(key) => key,
         None => {
@@ -122,7 +111,6 @@ pub async fn realtime_websocket(
         }
     };
 
-    // Credentials and model-access check passed — now upgrade to WebSocket.
     ws.on_upgrade(move |socket| handle_session(socket, model, upstream_api_key, state))
         .into_response()
 }
@@ -145,20 +133,13 @@ fn resolve_upstream_credential(
     vk_configs: &[VirtualKeyConfig],
     model: &str,
 ) -> Option<SecretString> {
-    // Master-key callers do not have a VirtualKeyConfig.  We intentionally do
-    // NOT fall back to `config.general.master_key` here — leaking the master
-    // key to upstream WebSocket connections is the vulnerability we are fixing.
-    // Operators should configure an explicit provider credential even for
-    // master-key sessions, or use a virtual key with provider_credentials.
+    // ~keep Master-key callers need explicit provider credentials; never leak master_key upstream.
     if key_ctx.is_master {
-        // No VK config available; cannot resolve a per-model credential.
         return None;
     }
 
-    // Find the VirtualKeyConfig for this key_id.
     let vk_config = vk_configs.iter().find(|vk| vk.key == key_ctx.key_id)?;
 
-    // Find the first OpenAI credential that allows the requested model.
     vk_config
         .provider_credentials
         .iter()
@@ -172,8 +153,6 @@ fn resolve_upstream_credential(
         .map(|cred| cred.api_key.clone())
 }
 
-// ── Session handler ───────────────────────────────────────────────────────────
-
 /// Spawned per WebSocket connection.  Opens the upstream connection using the
 /// pre-resolved `upstream_api_key` and runs the bidirectional proxy until
 /// either side closes.
@@ -183,8 +162,6 @@ fn resolve_upstream_credential(
 async fn handle_session(client_socket: WebSocket, model: String, upstream_api_key: SecretString, state: AppState) {
     let session_start = Instant::now();
 
-    // Percent-encode the model name so query string is valid even if the model
-    // contains special characters (e.g. a future `/` separated model id).
     let encoded_model: String = model
         .chars()
         .flat_map(|c| {
@@ -203,7 +180,6 @@ async fn handle_session(client_socket: WebSocket, model: String, upstream_api_ke
         "realtime session starting"
     );
 
-    // Open the upstream WebSocket using the per-VK credential.
     let upstream = match connect_upstream(&upstream_url, upstream_api_key.expose_secret()).await {
         Ok(ws) => ws,
         Err(err) => {
@@ -213,18 +189,12 @@ async fn handle_session(client_socket: WebSocket, model: String, upstream_api_ke
         }
     };
 
-    // Build a cancellation token.
-    //
-    // When the proxy has a shutdown handle we reuse its cancellation token so
-    // the session participates in the coordinated drain.  Otherwise we allocate
-    // a new, independent token for this session only.
     let cancel = state
         .shutdown
         .as_ref()
         .map(|handle| handle.cancellation_token())
         .unwrap_or_default();
 
-    // Empty guardrail list — callers inject guardrails in future iterations.
     let guardrails: Vec<Arc<dyn Guardrail>> = vec![];
 
     run_proxy(client_socket, upstream, cancel, guardrails, "openai").await;
@@ -233,8 +203,6 @@ async fn handle_session(client_socket: WebSocket, model: String, upstream_api_ke
     record_realtime_session_duration("openai", duration);
     tracing::info!(duration_secs = duration, "realtime session ended");
 }
-
-// ── Upstream connection ───────────────────────────────────────────────────────
 
 type UpstreamStream = tokio_tungstenite::WebSocketStream<MaybeTlsStream<TcpStream>>;
 
@@ -264,8 +232,6 @@ async fn connect_upstream(url: &str, api_key: &str) -> Result<UpstreamStream, St
     Ok(ws)
 }
 
-// ── Bidirectional proxy ───────────────────────────────────────────────────────
-
 /// Run the bidirectional proxy loop.
 ///
 /// - Reads from `client_socket` (axum `WebSocket`) and forwards to `upstream`
@@ -285,13 +251,11 @@ pub(crate) async fn run_proxy(
     let (client_tx, client_rx) = client_socket.split();
     let (upstream_tx, upstream_rx) = upstream.split();
 
-    // Wrap sinks in Mutex so they can be shared across the two halves.
     let client_tx = Arc::new(Mutex::new(client_tx));
     let upstream_tx = Arc::new(Mutex::new(upstream_tx));
 
     let guardrails = Arc::new(guardrails);
 
-    // --- Client → upstream task -----------------------------------------------
     let upstream_tx_c2u = Arc::clone(&upstream_tx);
     let client_tx_c2u = Arc::clone(&client_tx);
     let cancel_c2u = cancel.clone();
@@ -321,7 +285,6 @@ pub(crate) async fn run_proxy(
                                 }
                             };
 
-                            // Apply Input guardrails before forwarding.
                             if let Some(err_json) =
                                 apply_guardrails_input(&guardrails_c2u, &raw, &HashMap::new()).await
                             {
@@ -330,8 +293,6 @@ pub(crate) async fn run_proxy(
                                 continue;
                             }
 
-                            // Translate client JSON to unified event then back to
-                            // provider wire format (identity for OpenAI).
                             let event = match translator_c2u.translate_inbound(raw) {
                                 Ok(e) => e,
                                 Err(e) => {
@@ -342,7 +303,6 @@ pub(crate) async fn run_proxy(
 
                             let label = event_type_label(&event);
 
-                            // Count audio bytes before moving event.
                             let audio_bytes = audio_bytes_for_event(&event);
 
                             let outbound = match translator_c2u.translate_outbound(&event) {
@@ -389,7 +349,6 @@ pub(crate) async fn run_proxy(
         cancel_c2u.cancel();
     });
 
-    // --- Upstream → client task -----------------------------------------------
     let client_tx_u2c = Arc::clone(&client_tx);
     let cancel_u2c = cancel.clone();
     let guardrails_u2c = Arc::clone(&guardrails);
@@ -417,7 +376,6 @@ pub(crate) async fn run_proxy(
                                             error = %e,
                                             "upstream sent invalid JSON"
                                         );
-                                        // Forward verbatim to avoid data loss.
                                         let mut tx = client_tx_u2c.lock().await;
                                         let _ = tx
                                             .send(Message::Text(text.to_string().into()))
@@ -440,7 +398,6 @@ pub(crate) async fn run_proxy(
                             let label = event_type_label(&event);
                             let audio_bytes = audio_bytes_for_event(&event);
 
-                            // Apply OutputChunk guardrails.
                             let forward_json = match apply_guardrails_output_chunk(
                                 &guardrails_u2c,
                                 &raw,
@@ -503,8 +460,6 @@ pub(crate) async fn run_proxy(
 
     let _ = tokio::join!(c2u, u2c);
 }
-
-// ── Guardrail helpers ─────────────────────────────────────────────────────────
 
 /// Outcome of running guardrails on a chunk.
 pub(crate) enum GuardrailOutcome {
@@ -575,8 +530,6 @@ pub(crate) async fn apply_guardrails_output_chunk(
     GuardrailOutcome::Allow(current)
 }
 
-// ── Utility ───────────────────────────────────────────────────────────────────
-
 pub(crate) fn event_type_label(event: &RealtimeEvent) -> &'static str {
     match event {
         RealtimeEvent::SessionCreated { .. } => "session.created",
@@ -624,8 +577,6 @@ async fn send_error_to_axum_socket(mut socket: WebSocket, code: &str, message: &
     let _ = socket.close().await;
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
-
 #[cfg(test)]
 mod tests {
     use std::pin::Pin;
@@ -640,8 +591,6 @@ mod tests {
     use super::*;
     use liter_llm::guardrail::{GuardrailContext, GuardrailDecision, GuardrailStage};
     use liter_llm::realtime::RealtimeEvent;
-
-    // ── Helper: spawn a mock WebSocket server ─────────────────────────────────
 
     async fn spawn_mock_ws_server<F, Fut>(handler: F) -> std::net::SocketAddr
     where
@@ -658,8 +607,6 @@ mod tests {
         addr
     }
 
-    // ── realtime_websocket_proxy_forwards_bidirectional ───────────────────────
-
     /// Verifies that the mock server can exchange messages bi-directionally.
     ///
     /// The test speaks tungstenite directly (not through axum) because wiring
@@ -670,7 +617,6 @@ mod tests {
     #[tokio::test]
     async fn realtime_websocket_proxy_forwards_bidirectional() {
         let addr = spawn_mock_ws_server(|mut ws| async move {
-            // Upstream → client: send a session.created greeting.
             let greeting = serde_json::json!({
                 "type": "session.created",
                 "session": { "id": "sess_1", "model": "gpt-4o-realtime-preview" }
@@ -679,25 +625,21 @@ mod tests {
                 .send(Msg::Text(serde_json::to_string(&greeting).unwrap().into()))
                 .await;
 
-            // Client → upstream: echo back whatever we receive.
             if let Some(Ok(msg)) = ws.next().await {
                 let _ = ws.send(msg).await;
             }
         })
         .await;
 
-        // Connect as the "client" to the mock server.
         let url = format!("ws://{addr}");
         let (mut stream, _) = tokio_tungstenite::connect_async(&url).await.unwrap();
 
-        // Upstream → client direction: read the session.created greeting.
         let greeting_msg = stream.next().await.unwrap().unwrap();
         assert!(greeting_msg.is_text(), "expected text frame from upstream");
         let val: serde_json::Value = serde_json::from_str(greeting_msg.into_text().unwrap().as_str()).unwrap();
         assert_eq!(val["type"], "session.created");
         assert_eq!(val["session"]["id"], "sess_1");
 
-        // Client → upstream direction: send a commit and get it echoed back.
         let commit = serde_json::json!({ "type": "input_audio_buffer.commit" });
         stream
             .send(Msg::Text(serde_json::to_string(&commit).unwrap().into()))
@@ -708,8 +650,6 @@ mod tests {
         let echo_val: serde_json::Value = serde_json::from_str(echo.into_text().unwrap().as_str()).unwrap();
         assert_eq!(echo_val["type"], "input_audio_buffer.commit");
     }
-
-    // ── realtime_websocket_proxy_cancels_on_client_disconnect ─────────────────
 
     /// A pre-cancelled token resolves immediately — models client disconnect.
     #[tokio::test]
@@ -722,8 +662,6 @@ mod tests {
         assert!(result.is_ok(), "cancellation should complete within 100ms");
         assert!(start.elapsed() < Duration::from_millis(100), "should not have blocked");
     }
-
-    // ── realtime_websocket_proxy_blocks_on_guardrail ──────────────────────────
 
     /// A guardrail that blocks every event prevents the payload from reaching
     /// the upstream and sends an error event to the client.
@@ -772,8 +710,6 @@ mod tests {
         );
     }
 
-    // ── OutputChunk guardrail allows clean events ─────────────────────────────
-
     #[tokio::test]
     async fn apply_guardrails_output_chunk_allows_clean_event() {
         let guardrails: Vec<Arc<dyn Guardrail>> = vec![];
@@ -781,8 +717,6 @@ mod tests {
         let outcome = apply_guardrails_output_chunk(&guardrails, &payload, &HashMap::new()).await;
         assert!(matches!(outcome, GuardrailOutcome::Allow(_)));
     }
-
-    // ── event_type_label ─────────────────────────────────────────────────────
 
     #[test]
     fn event_type_label_returns_correct_strings() {
@@ -808,8 +742,6 @@ mod tests {
         }
     }
 
-    // ── audio_bytes_for_event ─────────────────────────────────────────────────
-
     #[test]
     fn audio_bytes_for_event_returns_zero_for_non_audio() {
         let event = RealtimeEvent::InputAudioBufferCommit;
@@ -818,14 +750,11 @@ mod tests {
 
     #[test]
     fn audio_bytes_for_event_returns_nonzero_for_audio_append() {
-        // base64("AAAA") → 3 bytes
         let event = RealtimeEvent::InputAudioBufferAppend {
             audio_base64: "AAAA".into(),
         };
         assert!(audio_bytes_for_event(&event) > 0);
     }
-
-    // ── Security: per-model credential resolution ─────────────────────────────
 
     use secrecy::{ExposeSecret, SecretString};
 
@@ -868,9 +797,7 @@ mod tests {
     #[test]
     fn provider_credential_api_key_is_secret_string() {
         let cred = make_provider_cred("openai", "cred-1", "sk-test-secret", None);
-        // Compile-time type assertion: the field must be SecretString.
         let _: &SecretString = &cred.api_key;
-        // Debug output must NOT expose the secret value.
         let debug = format!("{cred:?}");
         assert!(
             !debug.contains("sk-test-secret"),
@@ -894,7 +821,6 @@ mod tests {
         let vk_b = make_vk_config("vk-team-b", vec!["gpt-4o-realtime".into()], vec![cred_b]);
         let vk_configs = vec![vk_a, vk_b];
 
-        // Authenticating as vk-team-a should resolve sk-vk-a-secret.
         let ctx_a = KeyContext {
             key_id: "vk-team-a".into(),
             allowed_models: Some(vec!["gpt-4o-realtime".into()]),
@@ -908,7 +834,6 @@ mod tests {
             "team-a should get its own credential, not master key or team-b's key"
         );
 
-        // Authenticating as vk-team-b should resolve sk-vk-b-secret.
         let ctx_b = KeyContext {
             key_id: "vk-team-b".into(),
             allowed_models: Some(vec!["gpt-4o-realtime".into()]),
@@ -922,7 +847,6 @@ mod tests {
             "team-b should get its own credential"
         );
 
-        // A master-key caller must NOT receive any credential (returns None → 503).
         let ctx_master = KeyContext::master();
         let resolved_master = resolve_upstream_credential(&ctx_master, &vk_configs, "gpt-4o-realtime");
         assert!(
@@ -953,11 +877,9 @@ mod tests {
             tenant_id: liter_llm::tenant::TenantId::from("vk-1"),
         };
 
-        // Matching model — should resolve.
         let matched = resolve_upstream_credential(&ctx, &vk_configs, "gpt-4o-realtime-preview");
         assert_eq!(matched.as_ref().map(|s| s.expose_secret()), Some("sk-vk-secret"));
 
-        // Non-matching model — must return None.
         let unmatched = resolve_upstream_credential(&ctx, &vk_configs, "gpt-4o-mini");
         assert!(
             unmatched.is_none(),
@@ -969,7 +891,6 @@ mod tests {
     /// This tests the `KeyContext` method used by the handler's security gate.
     #[test]
     fn realtime_websocket_denies_unallowed_model_with_403() {
-        // A VK restricted to gpt-4o must be denied for gpt-4o-mini.
         let ctx = KeyContext {
             key_id: "vk-restricted".into(),
             allowed_models: Some(vec!["gpt-4o".into()]),

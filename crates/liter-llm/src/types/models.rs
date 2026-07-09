@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-// ─── Responses ────────────────────────────────────────────────────────────────
-
 /// Response listing available models.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ModelsListResponse {

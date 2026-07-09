@@ -1,3 +1,5 @@
+//! Batch polling behavior tests.
+
 #![cfg(all(test, any(feature = "native-http", feature = "wasm-http")))]
 
 use std::sync::{Arc, Mutex};
@@ -14,7 +16,6 @@ struct StubRetriever {
 impl StubRetriever {
     fn new(statuses: Vec<BatchStatus>) -> Self {
         Self {
-            // `pop` returns the last element first — declared order is reverse-chronological.
             statuses: Arc::new(Mutex::new(statuses)),
             call_count: Arc::new(Mutex::new(0)),
         }
@@ -195,7 +196,6 @@ async fn timeout_after_multiple_polls() {
 
 #[tokio::test(start_paused = true)]
 async fn finalized_statuses_immediately_return() {
-    // Vec is reverse-chronological — pop returns the last element first.
     let stub = StubRetriever::new(vec![BatchStatus::Completed, BatchStatus::Finalizing]);
     let result = wait_for_batch_impl(&stub, "b-1", WaitForBatchConfig::default()).await;
     assert!(result.is_ok());

@@ -7,10 +7,6 @@ use tower::ServiceExt;
 
 use common::test_proxy::{TestProxy, empty_config};
 
-// ---------------------------------------------------------------------------
-// Legacy endpoints
-// ---------------------------------------------------------------------------
-
 #[tokio::test]
 async fn health_returns_200_with_models() {
     let upstream = common::mock_upstream::MockUpstream::start(vec![]).await;
@@ -93,10 +89,6 @@ async fn readiness_returns_200_with_models() {
     upstream.shutdown();
 }
 
-// ---------------------------------------------------------------------------
-// v1.6 enriched: /healthz
-// ---------------------------------------------------------------------------
-
 #[tokio::test]
 async fn healthz_returns_200() {
     let proxy = TestProxy::with_config(empty_config());
@@ -140,7 +132,6 @@ async fn healthz_returns_ok_status_and_version_fields() {
 
 #[tokio::test]
 async fn healthz_is_always_200_even_without_models() {
-    // /healthz is a liveness check — it must never reflect service pool state.
     let proxy = TestProxy::with_config(empty_config());
 
     let resp = proxy
@@ -155,10 +146,6 @@ async fn healthz_is_always_200_even_without_models() {
         "/healthz must return 200 regardless of model config"
     );
 }
-
-// ---------------------------------------------------------------------------
-// v1.6 enriched: /readyz
-// ---------------------------------------------------------------------------
 
 #[tokio::test]
 async fn readyz_returns_503_when_no_models_configured() {
@@ -243,19 +230,15 @@ async fn readyz_returns_200_body_with_ready_status() {
 
 #[tokio::test]
 async fn readyz_no_auth_required() {
-    // /readyz must be accessible without an API key (it's in the health_routes,
-    // not in the authenticated v1_routes).
     let upstream = common::mock_upstream::MockUpstream::start(vec![]).await;
     let proxy = TestProxy::new(&upstream.url);
 
-    // No Authorization header.
     let resp = proxy
         .router()
         .oneshot(Request::get("/readyz").body(Body::empty()).unwrap())
         .await
         .unwrap();
 
-    // 200 or 503 is acceptable; 401 is not.
     assert_ne!(
         resp.status(),
         StatusCode::UNAUTHORIZED,

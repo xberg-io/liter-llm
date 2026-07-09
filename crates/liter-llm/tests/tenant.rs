@@ -11,8 +11,6 @@ use liter_llm::tower::budget::{
 #[cfg(feature = "tower")]
 use liter_llm::tower::types::LlmRequest;
 
-// ── TenantId and TenantContext ────────────────────────────────────────────────
-
 #[test]
 fn tenant_id_from_str() {
     let id = TenantId::from("acme-corp");
@@ -48,8 +46,6 @@ fn tenant_context_builder() {
     assert_eq!(ctx.attributes.get("region").map(String::as_str), Some("eu-west-1"));
 }
 
-// ── LlmRequest tenant_id round-trip ──────────────────────────────────────────
-
 #[cfg(feature = "tower")]
 #[test]
 fn tenant_id_round_trip() {
@@ -84,8 +80,6 @@ fn request_without_tenant_returns_none() {
 
     assert_eq!(req.tenant_id(), None);
 }
-
-// ── InMemoryKeyResolver ───────────────────────────────────────────────────────
 
 fn sample_key(tenant: &str, active: bool) -> ResolvedKey {
     ResolvedKey {
@@ -161,8 +155,6 @@ async fn in_memory_resolver_with_entries() {
     assert_eq!(b.tenant_id.as_ref(), "tenant-b");
 }
 
-// ── BudgetLedger reads Tenant dimension from request ─────────────────────────
-
 #[tokio::test]
 async fn budget_ledger_reads_tenant_from_request_context() {
     let mut limits = DimensionLimits::default();
@@ -170,7 +162,6 @@ async fn budget_ledger_reads_tenant_from_request_context() {
 
     let ledger = InMemoryBudgetLedger::new(limits, Duration::from_secs(3600));
 
-    // Simulate: after resolving the request's tenant_id, populate CostRecordContext.
     let tenant_id_str = "acme";
 
     ledger
@@ -187,7 +178,6 @@ async fn budget_ledger_reads_tenant_from_request_context() {
         })
         .await;
 
-    // Check should reject: 0.10 > 0.05 limit.
     let verdict = ledger
         .check(&CostCheckContext {
             model: "gpt-4",
@@ -217,7 +207,6 @@ async fn budget_ledger_skips_tenant_check_when_none() {
 
     let ledger = InMemoryBudgetLedger::new(limits, Duration::from_secs(3600));
 
-    // Record spend that would exceed acme's limit — but this context has no tenant.
     ledger
         .record(&CostRecordContext {
             model: "gpt-4",
@@ -232,7 +221,6 @@ async fn budget_ledger_skips_tenant_check_when_none() {
         })
         .await;
 
-    // Check without tenant — should allow (no tenant limit applies to unidentified traffic).
     let verdict = ledger
         .check(&CostCheckContext {
             model: "gpt-4",
@@ -250,15 +238,12 @@ async fn budget_ledger_skips_tenant_check_when_none() {
     );
 }
 
-// ── Pass-2: tenant serde + concurrent resolver ───────────────────────────────
-
 /// `TenantId` must serialise to JSON as a transparent string and deserialise
 /// back losslessly.
 #[test]
 fn tenant_id_serde_round_trip() {
     let id = TenantId::from("acme");
     let json = serde_json::to_string(&id).expect("serialize");
-    // Transparent string newtype — JSON output is the quoted string.
     assert_eq!(json, "\"acme\"", "TenantId must serialize as a bare string");
 
     let back: TenantId = serde_json::from_str(&json).expect("deserialize");
@@ -281,20 +266,17 @@ async fn in_memory_resolver_concurrent_get_and_remove() {
 
     let mut set = JoinSet::new();
 
-    // 50 readers — repeatedly resolve a key from the set.
     for r in 0..50 {
         let resolver = Arc::clone(&resolver);
         let keys = keys.clone();
         set.spawn(async move {
             for i in 0..20 {
                 let k = keys[(r + i) % keys.len()].clone();
-                // Either resolves successfully or returns NotFound (after removal).
                 let _ = resolver.resolve(k).await;
             }
         });
     }
 
-    // 5 removers — each removes a disjoint subset (i % 5 == r).
     for r in 0..5 {
         let resolver = Arc::clone(&resolver);
         let keys = keys.clone();
@@ -311,7 +293,6 @@ async fn in_memory_resolver_concurrent_get_and_remove() {
         res.expect("no task should panic");
     }
 
-    // Final state: every key has been removed by exactly one remover.
     for k in &keys {
         let r = resolver.resolve(k.clone()).await;
         assert!(
@@ -320,8 +301,6 @@ async fn in_memory_resolver_concurrent_get_and_remove() {
         );
     }
 }
-
-// ── KeyResolver object-safety ─────────────────────────────────────────────────
 
 #[tokio::test]
 async fn key_resolver_is_object_safe() {

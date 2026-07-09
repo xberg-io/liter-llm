@@ -12,8 +12,6 @@ use dashmap::DashMap;
 use super::{VectorMatch, VectorMetadata, VectorStore};
 use crate::error::{LiterLlmError, Result};
 
-// ── Cosine similarity helper ──────────────────────────────────────────────────
-
 /// Compute the cosine similarity between two vectors of equal length.
 ///
 /// Returns `0.0` when either vector is the zero vector (to avoid division by
@@ -31,14 +29,10 @@ fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
     dot / (norm_a * norm_b)
 }
 
-// ── Entry type ────────────────────────────────────────────────────────────────
-
 struct Entry {
     vec: Vec<f32>,
     metadata: VectorMetadata,
 }
-
-// ── InMemoryVectorStore ───────────────────────────────────────────────────────
 
 /// In-memory vector store using brute-force cosine similarity.
 ///
@@ -89,7 +83,6 @@ impl VectorStore for InMemoryVectorStore {
         k: usize,
         threshold: f32,
     ) -> Pin<Box<dyn Future<Output = Vec<VectorMatch>> + Send + 'a>> {
-        // Collect and sort synchronously, wrap in a ready future.
         let mut matches: Vec<VectorMatch> = self
             .entries
             .iter()
@@ -107,7 +100,6 @@ impl VectorStore for InMemoryVectorStore {
             })
             .collect();
 
-        // Sort by similarity descending, then truncate to k.
         matches.sort_by(|a, b| {
             b.similarity
                 .partial_cmp(&a.similarity)
@@ -146,8 +138,6 @@ impl VectorStore for InMemoryVectorStore {
         self.dim
     }
 }
-
-// ── Tests ─────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -211,7 +201,6 @@ mod tests {
         store.upsert("v1".into(), vec![1.0, 0.0, 0.0], meta(1)).await.unwrap();
         store.upsert("v2".into(), vec![0.0, 1.0, 0.0], meta(2)).await.unwrap();
 
-        // Query close to v1; v2 is orthogonal (similarity = 0) — below threshold 0.9.
         let results = store.search(&[1.0, 0.0, 0.0], 5, 0.9).await;
         assert_eq!(results.len(), 1, "orthogonal vector should be filtered out");
         assert_eq!(results[0].id, "v1");
@@ -226,7 +215,6 @@ mod tests {
 
         let results = store.search(&[1.0, 0.0], 2, 0.0).await;
         assert_eq!(results.len(), 2, "should return exactly k results");
-        // Results should be sorted by similarity descending.
         assert!(results[0].similarity >= results[1].similarity);
     }
 
@@ -259,7 +247,6 @@ mod tests {
         store.upsert("v1".into(), vec![1.0, 0.0, 0.0], meta(1)).await.unwrap();
         store.upsert("v1".into(), vec![0.0, 1.0, 0.0], meta(99)).await.unwrap();
 
-        // Search for the new vector — should find it.
         let results = store.search(&[0.0, 1.0, 0.0], 5, 0.99).await;
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].metadata.cache_key, 99, "upsert should replace metadata");

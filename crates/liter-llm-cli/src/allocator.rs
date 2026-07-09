@@ -13,8 +13,6 @@
 //! would reject the crate.  Cargo feature resolution does not prevent this
 //! automatically, so callers must not enable both.
 
-// Only one allocator is active per build; the unused imports below are
-// conditional on features that are mutually exclusive by convention.
 #![cfg_attr(
     all(feature = "mimalloc", feature = "jemalloc"),
     compile_error(
@@ -25,15 +23,12 @@
 
 #[cfg(feature = "mimalloc")]
 #[global_allocator]
-// SAFETY: `mimalloc::MiMalloc` is a stateless ZST that implements
-// `GlobalAlloc` correctly.  The crate guarantees thread-safety and the
-// allocator does not impose any alignment constraints beyond those required
-// by the Rust allocator contract.
+// ~keep SAFETY: `mimalloc::MiMalloc` is a stateless ZST implementing GlobalAlloc.
+// ~keep The crate guarantees thread-safety and allocator-contract compliance.
 static ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[cfg(feature = "jemalloc")]
 #[global_allocator]
-// SAFETY: `tikv_jemallocator::Jemalloc` is a stateless ZST that implements
-// `GlobalAlloc` by delegating to jemalloc.  Thread-safety and allocator
-// contract compliance are guaranteed by the upstream crate.
+// ~keep SAFETY: `tikv_jemallocator::Jemalloc` delegates GlobalAlloc to jemalloc.
+// ~keep Thread-safety and allocator-contract compliance are guaranteed upstream.
 static ALLOCATOR: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;

@@ -13,30 +13,21 @@ keywords = ["llm", "proxy", "openai", "gateway", "xberg"]
 ignored = ["opentelemetry", "tracing-opentelemetry", "notify", "tracing-test"]
 
 [features]
-# OTel export bridge — forwarded to the core `liter-llm/otel` feature.
-# OTel is the single observability surface; no prometheus feature exists by design.
 otel = ["liter-llm/otel", "dep:opentelemetry", "dep:tracing-opentelemetry"]
 
-# Caching layer backed by opendal — forwarded to `liter-llm/opendal-cache`.
 opendal-cache = ["liter-llm/opendal-cache"]
 
-# `proxy` — MCP server, files, batches, and responses endpoints.
-# All are always compiled into the proxy binary; this feature is a named
-# surface so upstream crates can depend on the proxy with explicit intent.
+# ~keep The proxy endpoints are always compiled; this named feature is an
+# ~keep explicit dependency surface for upstream crates.
 proxy = []
 
-# Secret backends.
-# `secrets-aws`   — AWS Secrets Manager via `aws-sdk-secretsmanager`.
-# `secrets-vault` — HashiCorp Vault KV-v2 via `vaultrs`.
-# The `env://` backend is always available with no feature gate.
+# ~keep The `env://` secret backend is always available with no feature gate.
 secrets-aws = ["dep:aws-config", "dep:aws-sdk-secretsmanager"]
 secrets-vault = ["dep:vaultrs", "dep:chrono"]
 
-# `etcd-watch` — etcd-backed config watch via `etcd-client`. Off by default to
-# avoid the transitive `protoc`/`prost-build` requirement in sandboxed builds.
+# ~keep Off by default; etcd watch pulls transitive `protoc`/`prost-build`.
 etcd-watch = ["dep:etcd-client"]
 
-# `full` — all proxy features: otel + opendal-cache + both secret backends + etcd watch.
 full = [
     "otel",
     "opendal-cache",
@@ -51,7 +42,6 @@ default = ["proxy"]
 [dependencies]
 arc-swap = { workspace = true }
 
-# Feature-gated: secrets-aws
 aws-config = { workspace = true, optional = true }
 aws-sdk-secretsmanager = { workspace = true, optional = true }
 axum = { workspace = true }
@@ -66,7 +56,6 @@ liter-llm = { path = "../liter-llm", version = "1.9.3", features = ["native-http
 notify = { workspace = true }
 opendal = { workspace = true }
 
-# Feature-gated: OTel
 opentelemetry = { workspace = true, optional = true }
 rmcp = { workspace = true }
 rust_decimal = { workspace = true }
@@ -87,7 +76,6 @@ tracing-opentelemetry = { workspace = true, optional = true }
 url = { workspace = true }
 utoipa = { workspace = true }
 
-# Feature-gated: secrets-vault
 vaultrs = { workspace = true, optional = true }
 
 [dev-dependencies]

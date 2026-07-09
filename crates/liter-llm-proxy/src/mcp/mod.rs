@@ -86,8 +86,6 @@ impl LiterLlmMcp {
         }
     }
 
-    // ── Auth helpers ──────────────────────────────────────────────────────
-
     /// Resolve the [`KeyContext`] for a tool invocation.
     ///
     /// For HTTP transports rmcp's `StreamableHttpService` puts the axum
@@ -104,8 +102,6 @@ impl LiterLlmMcp {
             {
                 return key_ctx.clone();
             }
-            // Middleware did not run — this should never happen in a correctly
-            // wired HTTP deployment.
             tracing::warn!(
                 "MCP HTTP tool called without a KeyContext in request extensions; \
                  falling back to default_ctx — check that validate_api_key middleware is wired"
@@ -170,15 +166,11 @@ impl LiterLlmMcp {
     }
 }
 
-// ─── Helper ──────────────────────────────────────────────────────────────────
-
 /// Serialize a value to pretty JSON and wrap it in a successful `CallToolResult`.
 fn json_success<T: serde::Serialize>(value: &T) -> Result<CallToolResult, rmcp::ErrorData> {
     let json = serde_json::to_string_pretty(value).map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))?;
     Ok(CallToolResult::success(vec![ContentBlock::text(json)]))
 }
-
-// ─── Prompt templates ─────────────────────────────────────────────────────────
 
 #[prompt_router]
 impl LiterLlmMcp {
@@ -224,8 +216,6 @@ impl LiterLlmMcp {
         Ok(vec![PromptMessage::new_text(Role::User, text)])
     }
 }
-
-// ─── Resource & completion catalog ──────────────────────────────────────────────
 
 /// Resource URI for the configured-model list.
 const RESOURCE_MODELS: &str = "liter-llm://models";
@@ -307,8 +297,6 @@ fn complete_values(arg_name: &str, partial: &str, model_names: &[&str]) -> Vec<S
         _ => Vec::new(),
     }
 }
-
-// ─── ServerHandler implementation ────────────────────────────────────────────
 
 #[tool_handler]
 #[prompt_handler]
@@ -397,8 +385,6 @@ impl ServerHandler for LiterLlmMcp {
     }
 }
 
-// ─── Tests ────────────────────────────────────────────────────────────────────
-
 #[cfg(test)]
 mod tests {
     use crate::auth::KeyContext;
@@ -419,8 +405,6 @@ mod tests {
         KeyContext::from_config(&cfg)
     }
 
-    // ── check_model_access: restricted key blocked for unlisted model ─────
-
     #[test]
     fn restricted_key_rejected_for_unlisted_model_in_chat() {
         let key_ctx = restricted_ctx("vk-test", vec!["gpt-4o".to_string()]);
@@ -432,16 +416,12 @@ mod tests {
         assert!(msg.contains("claude-sonnet"), "error must name the model: {msg}");
     }
 
-    // ── check_model_access: master key allows any model ───────────────────
-
     #[test]
     fn master_ctx_allows_chat_for_any_model() {
         let key_ctx = KeyContext::master();
         assert!(LiterLlmMcp::check_model_access(&key_ctx, "claude-sonnet").is_ok());
         assert!(LiterLlmMcp::check_model_access(&key_ctx, "some-random-model").is_ok());
     }
-
-    // ── check_model_access: allowed model passes ──────────────────────────
 
     #[test]
     fn restricted_key_allowed_for_listed_model() {
@@ -450,8 +430,6 @@ mod tests {
         assert!(LiterLlmMcp::check_model_access(&key_ctx, "claude-opus").is_ok());
         assert!(LiterLlmMcp::check_model_access(&key_ctx, "other-model").is_err());
     }
-
-    // ── check_master_access: non-master rejected for master-only tools ────
 
     #[test]
     fn non_master_ctx_rejected_for_create_file() {
@@ -464,8 +442,6 @@ mod tests {
         assert!(msg.contains("master-key"), "error must mention master-key: {msg}");
     }
 
-    // ── check_master_access: master key allowed for master-only tools ──────
-
     #[test]
     fn master_ctx_allowed_for_master_only_tool() {
         let key_ctx = KeyContext::master();
@@ -473,28 +449,20 @@ mod tests {
         assert!(LiterLlmMcp::check_master_access(&key_ctx, "create_batch").is_ok());
     }
 
-    // ── check_model_access: unrestricted virtual key (empty models) ───────
-
     #[test]
     fn unrestricted_key_allows_any_model() {
-        // models: [] → no restriction (same as master for model access).
         let key_ctx = restricted_ctx("vk-all-models", vec![]);
         assert!(LiterLlmMcp::check_model_access(&key_ctx, "gpt-4o").is_ok());
         assert!(LiterLlmMcp::check_model_access(&key_ctx, "claude-opus").is_ok());
     }
 
-    // ── check_master_access: unrestricted virtual key still blocked ───────
-
     #[test]
     fn unrestricted_key_still_blocked_for_master_only_tool() {
-        // An unrestricted virtual key has wide model access but is NOT master.
         let key_ctx = restricted_ctx("vk-all-models", vec![]);
         let result = LiterLlmMcp::check_master_access(&key_ctx, "list_files");
         assert!(result.is_err());
         assert!(result.unwrap_err().message.contains("list_files"));
     }
-
-    // ── Tool annotations: every tool advertises MCP hints ─────────────────
 
     /// Every exposed tool must carry `ToolAnnotations` with a human title and
     /// the open-world hint set (all tools reach external providers). Clients
@@ -539,19 +507,16 @@ mod tests {
                 .unwrap_or_else(|| panic!("tool '{name}' missing annotations"))
         };
 
-        // Pure query tools are read-only.
         for name in ["chat", "embed", "list_models", "list_files", "retrieve_batch"] {
             assert_eq!(by_name(name).read_only_hint, Some(true), "{name} should be read-only");
         }
 
-        // create_* mutate state but are not destructive.
         for name in ["create_file", "create_batch", "create_response"] {
             let ann = by_name(name);
             assert_eq!(ann.read_only_hint, Some(false), "{name} should not be read-only");
             assert_eq!(ann.destructive_hint, Some(false), "{name} should not be destructive");
         }
 
-        // delete_* / cancel_* are destructive and idempotent.
         for name in ["delete_file", "cancel_batch", "cancel_response"] {
             let ann = by_name(name);
             assert_eq!(ann.read_only_hint, Some(false), "{name} should not be read-only");
@@ -559,8 +524,6 @@ mod tests {
             assert_eq!(ann.idempotent_hint, Some(true), "{name} should be idempotent");
         }
     }
-
-    // ── Prompts: the three templates are registered ───────────────────────
 
     #[test]
     fn prompt_router_lists_all_templates() {
@@ -571,8 +534,6 @@ mod tests {
         assert!(names.contains(&"extract"), "missing extract prompt: {names:?}");
         assert_eq!(names.len(), 3, "unexpected prompt set: {names:?}");
     }
-
-    // ── Resources: pure body resolver ─────────────────────────────────────
 
     #[test]
     fn resource_body_models_lists_configured_names() {
@@ -592,7 +553,6 @@ mod tests {
             json.trim_start().starts_with('['),
             "providers should be a JSON array: {json}"
         );
-        // The built-in registry ships many providers; openai is always present.
         assert!(json.contains("openai"), "providers JSON should include openai");
     }
 
@@ -606,8 +566,6 @@ mod tests {
         );
     }
 
-    // ── Completion: pure value resolver ───────────────────────────────────
-
     #[test]
     fn complete_values_filters_models_by_prefix() {
         let models = ["openai/gpt-4o", "openai/gpt-4o-mini", "anthropic/claude-sonnet"];
@@ -615,17 +573,14 @@ mod tests {
         assert_eq!(out.len(), 2, "should match the two openai models: {out:?}");
         assert!(out.iter().all(|m| m.starts_with("openai/")));
 
-        // Case-insensitive prefix.
         let out = super::complete_values("model", "ANTHRO", &models);
         assert_eq!(out, vec!["anthropic/claude-sonnet".to_string()]);
 
-        // Unknown argument names yield nothing.
         assert!(super::complete_values("nonsense", "x", &models).is_empty());
     }
 
     #[test]
     fn complete_values_filters_provider_names() {
-        // Provider names come from the global registry, independent of models.
         let out = super::complete_values("name", "openai", &[]);
         assert!(out.iter().any(|n| n == "openai"), "should suggest openai: {out:?}");
         assert!(out.iter().all(|n| n.starts_with("openai")));

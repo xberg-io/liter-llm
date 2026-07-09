@@ -29,8 +29,6 @@ use super::{LiterLlmMcp, json_success, params};
 
 #[tool_router(vis = "pub(super)")]
 impl LiterLlmMcp {
-    // ── Chat & Embeddings ────────────────────────────────────────────────
-
     #[tool(
         description = "Send a chat completion request to an LLM",
         annotations(title = "Chat Completion", read_only_hint = true, open_world_hint = true)
@@ -108,10 +106,8 @@ impl LiterLlmMcp {
         ctx: RequestContext<RoleServer>,
         Parameters(_params): Parameters<params::EmptyParams>,
     ) -> Result<CallToolResult, rmcp::ErrorData> {
-        // Any authenticated key may list models — just ensure auth ran.
         let _key_ctx = self.resolve_ctx(&ctx);
 
-        // Try to list models from the first available service.
         let model_names = self.service_pool.model_names();
         if model_names.is_empty() {
             return Err(rmcp::ErrorData::internal_error("no models configured", None));
@@ -134,8 +130,6 @@ impl LiterLlmMcp {
         }
     }
 
-    // ── Image generation ─────────────────────────────────────────────────
-
     #[tool(
         description = "Generate images from a text prompt",
         annotations(title = "Generate Images", read_only_hint = true, open_world_hint = true)
@@ -145,8 +139,6 @@ impl LiterLlmMcp {
         ctx: RequestContext<RoleServer>,
         Parameters(params): Parameters<params::ImageParams>,
     ) -> Result<CallToolResult, rmcp::ErrorData> {
-        // When a model is specified, enforce access; otherwise fall back to
-        // the first configured model and enforce access against that.
         let effective_model = match params.model.as_deref() {
             Some(m) => m.to_owned(),
             None => {
@@ -185,8 +177,6 @@ impl LiterLlmMcp {
             )),
         }
     }
-
-    // ── Audio ────────────────────────────────────────────────────────────
 
     #[tool(
         description = "Generate speech audio from text (text-to-speech)",
@@ -267,8 +257,6 @@ impl LiterLlmMcp {
         }
     }
 
-    // ── Moderation ───────────────────────────────────────────────────────
-
     #[tool(
         description = "Check content against moderation policies",
         annotations(title = "Moderate Content", read_only_hint = true, open_world_hint = true)
@@ -278,8 +266,6 @@ impl LiterLlmMcp {
         ctx: RequestContext<RoleServer>,
         Parameters(params): Parameters<params::ModerateParams>,
     ) -> Result<CallToolResult, rmcp::ErrorData> {
-        // When a model is specified, enforce access; otherwise fall back to
-        // the first configured model and enforce access against that.
         let effective_model = match params.model.as_deref() {
             Some(m) => m.to_owned(),
             None => {
@@ -313,8 +299,6 @@ impl LiterLlmMcp {
             )),
         }
     }
-
-    // ── Rerank ───────────────────────────────────────────────────────────
 
     #[tool(
         description = "Rerank documents by relevance to a query",
@@ -351,8 +335,6 @@ impl LiterLlmMcp {
         }
     }
 
-    // ── Search ───────────────────────────────────────────────────────────
-
     #[tool(
         description = "Perform a web or document search",
         annotations(title = "Search", read_only_hint = true, open_world_hint = true)
@@ -387,8 +369,6 @@ impl LiterLlmMcp {
             )),
         }
     }
-
-    // ── OCR ──────────────────────────────────────────────────────────────
 
     #[tool(
         description = "Extract text from an image or document via OCR",
@@ -435,8 +415,6 @@ impl LiterLlmMcp {
             )),
         }
     }
-
-    // ── File operations ──────────────────────────────────────────────────
 
     #[tool(
         description = "Upload a file to the LLM provider",
@@ -579,8 +557,6 @@ impl LiterLlmMcp {
         ))]))
     }
 
-    // ── Batch operations ─────────────────────────────────────────────────
-
     #[tool(
         description = "Create a new batch processing job",
         annotations(
@@ -688,8 +664,6 @@ impl LiterLlmMcp {
         let result = client.cancel_batch(&params.batch_id).await.map_err(to_error_data)?;
         json_success(&result)
     }
-
-    // ── Response operations ──────────────────────────────────────────────
 
     #[tool(
         description = "Create a new response (Responses API)",

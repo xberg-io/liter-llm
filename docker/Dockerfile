@@ -18,12 +18,8 @@ RUN --mount=type=cache,id=cargo-registry-${TARGETARCH},target=/usr/local/cargo/r
     cp target/release/liter-llm /usr/local/bin/liter-llm
 
 # ── Runtime (Chainguard) ─────────────────────────────────────────────
-# Chainguard glibc-dynamic ships a continuously-rebuilt :latest tag that is the
-# documented consumption pattern (cgr.dev does not publish stable semver tags
-# for this image). Pin advisories should target the cgr.dev/chainguard SBOM,
-# not the image tag.
-# hadolint ignore=DL3007
-FROM cgr.dev/chainguard/glibc-dynamic:latest
+# Pinned multi-platform index for cgr.dev/chainguard/glibc-dynamic.
+FROM cgr.dev/chainguard/glibc-dynamic@sha256:7ff79e2caef2b8a137ddaf9940fb790e91148482092363760d6661e4591fd54c
 
 COPY --from=builder /usr/local/bin/liter-llm /usr/bin/liter-llm
 

@@ -7,8 +7,6 @@ use super::common::{
 };
 use crate::cost;
 
-// ─── Modality ────────────────────────────────────────────────────────────────
-
 /// Output modality requested from the model.
 ///
 /// Passed as `modalities: ["text", "audio"]` (OpenAI) or translated to
@@ -35,8 +33,6 @@ pub enum Modality {
     /// Image output (Gemini Imagen, gpt-image-1).
     Image,
 }
-
-// ─── Finish Reason ────────────────────────────────────────────────────────────
 
 /// Why a choice stopped generating tokens.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -72,8 +68,6 @@ impl std::fmt::Display for FinishReason {
     }
 }
 
-// ─── Reasoning Effort ────────────────────────────────────────────────────────
-
 /// Controls how much reasoning effort the model should use.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -83,8 +77,6 @@ pub enum ReasoningEffort {
     Medium,
     High,
 }
-
-// ─── Request ─────────────────────────────────────────────────────────────────
 
 /// Chat completion request (compatible with OpenAI and similar APIs).
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -169,8 +161,6 @@ pub struct StreamOptions {
     pub include_usage: Option<bool>,
 }
 
-// ─── Response ────────────────────────────────────────────────────────────────
-
 /// Chat completion response from the API.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ChatCompletionResponse {
@@ -230,8 +220,6 @@ pub struct Choice {
     /// Why the model stopped generating (stop, length, tool_calls, content_filter, etc.).
     pub finish_reason: Option<FinishReason>,
 }
-
-// ─── Stream Chunk ────────────────────────────────────────────────────────────
 
 /// A streamed chunk of a chat completion response.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -336,7 +324,6 @@ mod tests {
 
     #[test]
     fn estimated_cost_applies_cache_discount_when_prompt_tokens_details_present() {
-        // claude-sonnet-4-5 has cache_read pricing in the registry.
         let resp = make_response(
             "claude-sonnet-4-5",
             Usage {
@@ -369,7 +356,6 @@ mod tests {
 
     #[test]
     fn estimated_cost_ignores_cached_tokens_when_no_pricing_difference() {
-        // gpt-4 has no cache pricing — cached tokens should not change cost.
         let usage_with_cached = Usage {
             prompt_tokens: 1_000,
             completion_tokens: 50,

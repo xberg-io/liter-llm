@@ -6,18 +6,12 @@
 //! (native-http only) for the canonical reqwest-backed implementation, and
 //! [`client::ClientConfig`] for builder-style configuration.
 
-// Provider, HTTP, and retry infrastructure are only active with native-http.
-// Suppress dead_code lints on the wasm / no-native-http target so that the
-// type-only surface compiles cleanly.
+// ~keep wasm/no-native-http builds expose a type-only surface, so dead code is expected.
 #![cfg_attr(
     not(any(feature = "native-http", feature = "wasm-http")),
     allow(dead_code, unused_imports)
 )]
-// Many doc comments reference types by short name (`Service`, `LlmRequest`,
-// `LiterLlmError::ServiceUnavailable`) when they are in lexical scope inside
-// the surrounding `impl` block but not in the rustdoc resolution context.
-// These links render fine in the rendered docs (rustdoc treats them as
-// plain text); the warnings are noise for our docs flow.
+// ~keep rustdoc cannot resolve some short names visible in impl scope; rendered docs are still correct.
 #![allow(rustdoc::broken_intra_doc_links)]
 
 /// Per-provider authentication strategies (API keys, AWS SigV4, OAuth tokens).
@@ -77,41 +71,34 @@ pub mod util;
 #[cfg(feature = "tower")]
 pub mod vectorstore;
 
-// Re-export key types at crate root.
 pub use client::{
     BatchClient, BoxFuture, BoxStream, ClientBuilder, ClientConfig, ClientConfigBuilder, FileClient, FileConfig,
     LlmClient, LlmClientRaw, ResponseClient,
 };
-// Batch polling helpers: WaitForBatchConfig and BatchWaitError are Tier C
-// (binding-public) — users call wait_for_batch from every language binding.
+// ~keep Batch polling helpers are binding-public and used by every language binding.
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 pub use client::{BatchWaitError, WaitForBatchConfig};
 pub use http::transport::TransportConfig;
-// DefaultClient requires the native HTTP stack (reqwest on native or WASM fetch API).
+// ~keep DefaultClient requires an HTTP stack: reqwest on native or browser fetch on WASM.
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 pub use client::DefaultClient;
-// Binding-friendly constructors require the native HTTP stack.
+// ~keep Binding-friendly constructors require an HTTP stack.
 #[cfg(any(feature = "native-http", feature = "wasm-http"))]
 pub use bindings::{create_client, create_client_from_json};
-// ManagedClient requires both the native HTTP stack and Tower middleware.
+// ~keep ManagedClient requires both native HTTP and Tower middleware.
 #[cfg(all(feature = "native-http", feature = "tower"))]
 pub use client::managed::ManagedClient;
 pub use error::{LiterLlmError, Result};
-// Tower middleware public config DTOs (only the configs — Layer/Service/State
-// types stay inside the `tower` module since middleware composition is a Rust
-// pattern that does not cross FFI cleanly).
+// ~keep Export only Tower config DTOs at root; Layer/Service composition is not FFI-friendly.
 #[cfg(feature = "tower")]
 pub use tower::{BudgetConfig, CacheBackend, CacheConfig, Enforcement, RateLimitConfig};
-// Cache key strategies and vector store / embedding / guardrail abstractions
-// are surfaced at the crate root so bindings and application code can import
-// them without spelling out the full `tower::` path.
+// ~keep Root-export Tower DTOs and traits that bindings need without exposing Layer/Service types.
 #[cfg(feature = "tower")]
 pub use tower::{
     CacheKeyStrategy, EmbeddingProvider, ExactHashStrategy, Guardrail, GuardrailContext, GuardrailDecision,
     GuardrailStage, NoOpEmbeddingProvider, SystemPromptAwareStrategy, TenantScopedStrategy, VectorMatch, VectorStore,
 };
-// Re-export the public provider helper functions that are part of the crate's
-// public API even though the `provider` module itself is pub(crate).
+// ~keep Re-export provider helpers that are public API while the module stays pub(crate).
 pub use cost::{completion_cost, completion_cost_with_cache};
 pub use provider::custom::{
     AuthHeaderFormat, CustomProviderConfig, register_custom_provider, unregister_custom_provider,
@@ -124,14 +111,8 @@ pub use provider::{
 pub use tokenizer::{count_request_tokens, count_tokens};
 pub use types::*;
 
-// Realtime API public surface.
-// NOTE: `realtime::ContentPart` is intentionally NOT re-exported here.
-// `types::ContentPart` (the VLM/chat variant with `ImageUrl`, `Document`,
-// etc.) is already at the crate root via `pub use types::*`. Re-exporting
-// the realtime variant under the same name would shadow the types one and
-// break downstream consumers that rely on `liter_llm::ContentPart::ImageUrl`.
-// Callers that need the realtime variant must import it explicitly:
-// `use liter_llm::realtime::ContentPart as RealtimeContentPart;`
+// ~keep Do not re-export `realtime::ContentPart`; it would shadow `types::ContentPart`.
+// ~keep Downstream callers rely on `liter_llm::ContentPart::ImageUrl`.
 pub use realtime::{OpenAiRealtimeTranslator, RealtimeEnvelope, RealtimeEvent, RealtimeTranslator, ResponseStatus};
 /// Tenant primitives re-exported at the crate root.
 ///
@@ -167,9 +148,7 @@ pub fn ensure_crypto_provider() {
     use std::sync::Once;
     static INIT: Once = Once::new();
     INIT.call_once(|| {
-        // `install_default` returns Err if another provider is already installed.
-        // That is fine — the caller may have installed `aws-lc-rs` deliberately;
-        // we do not want to override their choice.
+        // ~keep Ignore `install_default` errors; callers may deliberately install another rustls provider.
         let _ = rustls::crypto::ring::default_provider().install_default();
     });
 }

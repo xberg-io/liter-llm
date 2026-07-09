@@ -45,8 +45,6 @@ mod tests;
 
 pub use registry::GuardrailRegistry;
 
-// ── Core Trait ────────────────────────────────────────────────────────────────
-
 /// Core trait for all guardrail implementations.
 ///
 /// Implement this trait to create a guardrail plugin. All implementations must
@@ -83,8 +81,6 @@ pub trait Guardrail: Send + Sync + 'static {
     ) -> Pin<Box<dyn Future<Output = GuardrailDecision> + Send + 'a>>;
 }
 
-// ── Stage Enum ────────────────────────────────────────────────────────────────
-
 /// The lifecycle stage at which a guardrail runs.
 #[cfg_attr(alef, alef(skip))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -97,8 +93,6 @@ pub enum GuardrailStage {
     /// per chunk and may block or mutate individual chunks.
     OutputChunk,
 }
-
-// ── Context ───────────────────────────────────────────────────────────────────
 
 /// Per-call context passed to every guardrail check.
 ///
@@ -118,8 +112,6 @@ pub struct GuardrailContext<'a> {
     /// Populated by the caller (e.g., the Tower layer or the application).
     pub metadata: &'a HashMap<String, String>,
 }
-
-// ── Decision Enum ─────────────────────────────────────────────────────────────
 
 /// The outcome of a guardrail check.
 #[cfg_attr(alef, alef(skip))]

@@ -15,8 +15,6 @@ use liter_llm::tower::idempotency::{IdempotencyLayer, InMemoryIdempotencyStore};
 use liter_llm::tower::types::{LlmRequest, LlmResponse};
 use tower::{Layer as _, Service, ServiceExt as _};
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 /// Build a mock chat completion request for the given model name.
 fn chat_req(model: &str) -> liter_llm::types::ChatCompletionRequest {
     use liter_llm::types::{Message, SystemMessage};
@@ -95,8 +93,6 @@ fn req_with_key(model: &str, key: &str) -> LlmRequest {
     LlmRequest::Chat(chat_req(model)).with_idempotency_key(key)
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
-
 /// First request with a new key must invoke the inner service exactly once.
 #[tokio::test]
 async fn first_request_hits_inner() {
@@ -126,7 +122,6 @@ async fn repeat_same_key_same_body_returns_cached() {
     let layer = IdempotencyLayer::new(InMemoryIdempotencyStore::new());
     let mut svc = layer.layer(ok_inner(Arc::clone(&count), "gpt-4"));
 
-    // First call — populates the store.
     svc.ready()
         .await
         .unwrap()
@@ -135,7 +130,6 @@ async fn repeat_same_key_same_body_returns_cached() {
         .expect("first call must succeed");
     assert_eq!(count.load(Ordering::SeqCst), 1);
 
-    // Second call — same key + same body → must return stored response.
     let resp = svc
         .ready()
         .await
@@ -149,7 +143,6 @@ async fn repeat_same_key_same_body_returns_cached() {
         "inner must NOT be called again when returning cached response"
     );
 
-    // Verify the returned response is the stored one (model string matches).
     match resp {
         LlmResponse::Chat(r) => assert_eq!(r.model, "gpt-4"),
         _ => panic!("expected Chat response"),
@@ -164,7 +157,6 @@ async fn repeat_same_key_different_body_returns_conflict() {
     let layer = IdempotencyLayer::new(InMemoryIdempotencyStore::new());
     let mut svc = layer.layer(ok_inner(Arc::clone(&count), "gpt-4"));
 
-    // First call with model-a.
     svc.ready()
         .await
         .unwrap()
@@ -172,7 +164,6 @@ async fn repeat_same_key_different_body_returns_conflict() {
         .await
         .expect("first call must succeed");
 
-    // Second call — same key, different model → different body hash.
     let result = svc
         .ready()
         .await
@@ -184,7 +175,6 @@ async fn repeat_same_key_different_body_returns_conflict() {
         matches!(result, Err(LiterLlmError::IdempotencyConflict { .. })),
         "different body for same key must return IdempotencyConflict, got: {result:?}"
     );
-    // Inner must not be called for the conflicting second request.
     assert_eq!(count.load(Ordering::SeqCst), 1, "inner must not be invoked on conflict");
 }
 
@@ -209,7 +199,6 @@ async fn no_key_passes_through() {
         "inner must be called for keyless request"
     );
 
-    // A second keyless call must also hit inner (no dedup without a key).
     svc.ready()
         .await
         .unwrap()
@@ -231,12 +220,10 @@ async fn inner_error_does_not_cache() {
     let layer = IdempotencyLayer::new(InMemoryIdempotencyStore::new());
     let mut svc = layer.layer(failing_inner(Arc::clone(&count)));
 
-    // First call — inner fails.
     let first = svc.ready().await.unwrap().call(req_with_key("gpt-4", "k-err")).await;
     assert!(first.is_err(), "first call must fail");
     assert_eq!(count.load(Ordering::SeqCst), 1);
 
-    // Second call — placeholder was removed; inner must be called again.
     let second = svc.ready().await.unwrap().call(req_with_key("gpt-4", "k-err")).await;
     assert!(second.is_err(), "second call must also fail");
     assert_eq!(
@@ -245,8 +232,6 @@ async fn inner_error_does_not_cache() {
         "inner must be called again after first failed call (error must not be cached)"
     );
 }
-
-// ── Pass-2 concurrent-race tests ─────────────────────────────────────────────
 
 /// Spawn 10 concurrent callers with the same key+body via a shared barrier.
 /// Exactly one must reach the inner service; all 10 must receive bytes-equal
@@ -259,9 +244,6 @@ async fn concurrent_same_key_same_body_only_one_inner_call() {
     let count = Arc::new(AtomicUsize::new(0));
     let layer = IdempotencyLayer::new(InMemoryIdempotencyStore::new());
 
-    // Inner service holds a barrier so all 10 callers stack up before the
-    // winner finishes; the winner must complete first so the losers either
-    // hit the cache or get the in-flight error.
     let barrier = Arc::new(Barrier::new(1));
     let inner = {
         let count = Arc::clone(&count);
@@ -270,9 +252,7 @@ async fn concurrent_same_key_same_body_only_one_inner_call() {
             let count = Arc::clone(&count);
             let barrier = Arc::clone(&barrier);
             async move {
-                // Single-permit barrier just records arrival; we use a slight
-                // pause to allow other tasks to stack against the store.
-                let _ = barrier; // keep the barrier alive for the test
+                let _ = barrier;
                 count.fetch_add(1, Ordering::SeqCst);
                 Ok::<_, LiterLlmError>(make_chat_response("gpt-4"))
             }
@@ -287,7 +267,6 @@ async fn concurrent_same_key_same_body_only_one_inner_call() {
         let start = Arc::clone(&start);
         handles.push(tokio::spawn(async move {
             start.wait().await;
-            // Treat in-flight as a "loser" — the winner will eventually populate.
             svc.ready().await.unwrap().call(req_with_key("gpt-4", "race-1")).await
         }));
     }
@@ -328,7 +307,6 @@ async fn concurrent_same_key_different_body_one_conflicts() {
     let start = Arc::new(Barrier::new(2));
     let svc_a = svc.clone();
     let svc_b = {
-        // ensure the clone path is exercised
         let _ = svc.ready().await.unwrap();
         svc.clone()
     };
@@ -358,8 +336,6 @@ async fn concurrent_same_key_different_body_one_conflicts() {
     let r_a = h_a.await.unwrap();
     let r_b = h_b.await.unwrap();
 
-    // Exactly one of them must be a conflict; the other must be either OK
-    // (winner finalised) or in-flight (winner hadn't stored yet).
     let conflicts = [&r_a, &r_b]
         .iter()
         .filter(|r| matches!(r, Err(LiterLlmError::IdempotencyConflict { .. })))
@@ -391,7 +367,6 @@ async fn inner_failure_clears_placeholder_allows_retry() {
     assert!(first.is_err());
     assert_eq!(count.load(Ordering::SeqCst), 1);
 
-    // Second call — placeholder must have been removed, so inner is called.
     let second = svc.ready().await.unwrap().call(req_with_key("gpt-4", "k-clear")).await;
     assert!(second.is_err());
     assert_eq!(
@@ -419,7 +394,6 @@ async fn in_flight_caller_receives_in_flight_error() {
         let count = Arc::clone(&count_inner);
         async move {
             count.fetch_add(1, Ordering::SeqCst);
-            // Block until released by the test driver.
             release.notified().await;
             Ok::<_, LiterLlmError>(make_chat_response("gpt-4"))
         }
@@ -427,7 +401,6 @@ async fn in_flight_caller_receives_in_flight_error() {
 
     let svc = layer.layer(inner);
 
-    // Start the writer.
     let writer = tokio::spawn({
         let mut svc = svc.clone();
         async move {
@@ -439,11 +412,9 @@ async fn in_flight_caller_receives_in_flight_error() {
         }
     });
 
-    // Give the writer time to insert its placeholder before calling B.
     tokio::time::sleep(Duration::from_millis(20)).await;
     assert_eq!(count.load(Ordering::SeqCst), 1, "writer must have started");
 
-    // B observes in-flight.
     let mut svc_b = svc.clone();
     let b_result = svc_b
         .ready()
@@ -456,7 +427,6 @@ async fn in_flight_caller_receives_in_flight_error() {
         "concurrent same-key+body call must return IdempotencyInFlight, got {b_result:?}"
     );
 
-    // Release the writer.
     release.notify_one();
     let a_result = writer.await.unwrap();
     assert!(a_result.is_ok(), "writer must succeed once released");
@@ -468,16 +438,12 @@ async fn in_flight_caller_receives_in_flight_error() {
 async fn idempotency_body_hash_deterministic() {
     let count = Arc::new(AtomicUsize::new(0));
 
-    // Build 10 fresh layers/stores and compare what the "first" caller observes.
-    // The hash is internal, so we exercise it indirectly: two layers with the
-    // same key+body must both store-then-return the same cached payload.
     let mut models = Vec::new();
     for i in 0..10 {
         let key = format!("k-det-{i}");
         let layer = IdempotencyLayer::new(InMemoryIdempotencyStore::new());
         let mut svc = layer.layer(ok_inner(Arc::clone(&count), "gpt-4"));
 
-        // First call populates; the response carries a deterministic model.
         let first = svc
             .ready()
             .await
@@ -485,7 +451,6 @@ async fn idempotency_body_hash_deterministic() {
             .call(req_with_key("gpt-4", &key))
             .await
             .unwrap();
-        // Second call must hit the cache — same key+body.
         let second = svc
             .ready()
             .await
@@ -538,7 +503,6 @@ async fn idempotency_tenant_scoped_keys_dont_collide() {
         "different tenants with the same key must NOT share the store entry; both must hit inner"
     );
 
-    // Repeats: each tenant gets its own cached response.
     svc.ready().await.unwrap().call(req_a).await.expect("tenant-a repeat");
     svc.ready().await.unwrap().call(req_b).await.expect("tenant-b repeat");
     assert_eq!(
@@ -569,10 +533,8 @@ async fn ttl_expiry_allows_new_invocation() {
         .expect("first call");
     assert_eq!(count.load(Ordering::SeqCst), 1);
 
-    // Wait past the TTL.
     tokio::time::sleep(Duration::from_millis(5)).await;
 
-    // Entry expired — inner must be called again.
     svc.ready()
         .await
         .unwrap()

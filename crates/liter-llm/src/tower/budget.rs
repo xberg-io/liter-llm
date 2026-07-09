@@ -61,8 +61,6 @@ use crate::client::BoxFuture;
 use crate::cost;
 use crate::error::{LiterLlmError, Result};
 
-// ─── Ledger trait types ───────────────────────────────────────────────────────
-
 /// The dimension along which a budget rejection was triggered.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BudgetDimension {
@@ -190,8 +188,6 @@ pub trait BudgetLedger: Send + Sync + 'static {
     fn snapshot(&self) -> BudgetSnapshot;
 }
 
-// ─── InMemoryBudgetLedger ─────────────────────────────────────────────────────
-
 /// Sliding-window accumulator for a single budget dimension.
 ///
 /// Each dimension (global, model, tenant, user, API-key) maintains its own
@@ -235,23 +231,16 @@ impl WindowEntry {
         let now_secs = now.duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default().as_secs();
         let start = self.window_start_secs.load(Ordering::Acquire);
         if now_secs.saturating_sub(start) >= self.window_secs {
-            // Snapshot the old accumulation BEFORE the CAS.  Any `fetch_add`
-            // that races in after this snapshot is a new-window increment and
-            // must not be erased.
+            // ~keep Snapshot before CAS so racing increments after this point are preserved.
             let old_mc = self.spend_mc.load(Ordering::Acquire);
 
-            // CAS: only one thread advances the window start.  The loser sees
-            // `Err` and skips the reset — the winner performs the rollover.
+            // ~keep Only the CAS winner performs rollover; losers keep the winner's reset.
             if self
                 .window_start_secs
                 .compare_exchange(start, now_secs, Ordering::AcqRel, Ordering::Acquire)
                 .is_ok()
             {
-                // We won the race.  Subtract the pre-rollover snapshot from
-                // `spend_mc`.  Any `fetch_add` that arrived after `old_mc`
-                // was read — whether before or after the CAS — stays in the
-                // counter because `fetch_sub(old_mc)` only removes exactly the
-                // old-window amount, leaving racing new-window increments intact.
+                // ~keep Subtract only the old-window amount so new-window racing increments remain.
                 self.spend_mc.fetch_sub(old_mc, Ordering::AcqRel);
             }
         }
@@ -260,8 +249,6 @@ impl WindowEntry {
 
     /// Add `usd` to this entry, respecting the sliding window.
     fn add(&self, usd: f64, now: SystemTime) {
-        // Trigger window reset via `spend_usd` first.  The CAS inside ensures
-        // exactly one thread performs the reset even under concurrent calls.
         let _ = self.spend_usd(now);
         self.spend_mc.fetch_add(usd_to_microcents(usd), Ordering::AcqRel);
     }
@@ -329,7 +316,6 @@ impl InMemoryBudgetLedger {
             per_model: config.model_limits.clone(),
             ..Default::default()
         };
-        // Default window: 30 days — resets monthly.
         Self::new(limits, Duration::from_secs(30 * 24 * 3600))
     }
 
@@ -364,14 +350,13 @@ impl InMemoryBudgetLedger {
     /// Reset all dimension counters to zero (useful for tests and manual overrides).
     pub fn reset(&self) {
         let now = SystemTime::now();
-        // Force window expiry on the global entry by back-dating start.
         let zero_secs = SystemTime::UNIX_EPOCH
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
         self.global.spend_mc.store(0, Ordering::Relaxed);
         self.global.window_start_secs.store(zero_secs, Ordering::Relaxed);
-        let _ = self.global.spend_usd(now); // re-arm window
+        let _ = self.global.spend_usd(now);
 
         self.per_model.clear();
         self.per_tenant.clear();
@@ -417,7 +402,6 @@ impl BudgetLedger for InMemoryBudgetLedger {
                 Self::entry_add(&self.per_api_key, key, ctx.cost_usd, self.window, now);
             }
 
-            // OTel: emit per-dimension spend gauge
             #[cfg(feature = "otel")]
             {
                 use super::metrics;
@@ -437,7 +421,6 @@ impl BudgetLedger for InMemoryBudgetLedger {
         Box::pin(async move {
             let now = ctx.timestamp;
 
-            // Global
             if let Some(limit) = self.limits.global {
                 let spend = self.global.spend_usd(now);
                 if let Some(v) = Self::check_limit(spend, limit, BudgetDimension::Global, "global") {
@@ -445,7 +428,6 @@ impl BudgetLedger for InMemoryBudgetLedger {
                 }
             }
 
-            // Per-model
             if let Some(&limit) = self.limits.per_model.get(ctx.model) {
                 let spend = Self::entry_spend(&self.per_model, ctx.model, now);
                 if let Some(v) = Self::check_limit(
@@ -458,7 +440,6 @@ impl BudgetLedger for InMemoryBudgetLedger {
                 }
             }
 
-            // Per-tenant
             if let Some(tenant) = ctx.tenant_id
                 && let Some(&limit) = self.limits.per_tenant.get(tenant)
             {
@@ -473,7 +454,6 @@ impl BudgetLedger for InMemoryBudgetLedger {
                 }
             }
 
-            // Per-user
             if let Some(user) = ctx.user_id
                 && let Some(&limit) = self.limits.per_user.get(user)
             {
@@ -488,7 +468,6 @@ impl BudgetLedger for InMemoryBudgetLedger {
                 }
             }
 
-            // Per-API-key
             if let Some(key) = ctx.api_key_id
                 && let Some(&limit) = self.limits.per_api_key.get(key)
             {
@@ -550,8 +529,6 @@ impl BudgetLedger for InMemoryBudgetLedger {
     }
 }
 
-// ─── Hedge helper ─────────────────────────────────────────────────────────────
-
 /// Advise the hedge layer wiring whether to issue a speculative duplicate
 /// request for the given pre-flight context.
 ///
@@ -588,24 +565,20 @@ pub fn should_hedge<L: BudgetLedger>(
     safety_margin_pct: f64,
 ) -> bool {
     let snap = ledger.snapshot();
-    // A hedge issues two copies of the request.
     let hedge_cost = 2.0 * estimated_cost_usd;
     let margin = safety_margin_pct.clamp(0.0, 0.999);
 
-    // Returns `true` when `spend + hedge_cost` fits within the effective limit.
     let has_headroom = |spend: f64, limit: f64| -> bool {
         let effective_limit = limit * (1.0 - margin);
         spend + hedge_cost < effective_limit
     };
 
-    // Global dimension.
     if let Some(global_limit) = snap.limit_global
         && !has_headroom(snap.global_spend_usd, global_limit)
     {
         return false;
     }
 
-    // Per-user dimension.
     if let Some(user) = ctx.user_id
         && let Some(&user_limit) = snap.limits_per_user.get(user)
     {
@@ -615,7 +588,6 @@ pub fn should_hedge<L: BudgetLedger>(
         }
     }
 
-    // Per-API-key dimension.
     if let Some(key) = ctx.api_key_id
         && let Some(&key_limit) = snap.limits_per_api_key.get(key)
     {
@@ -625,7 +597,6 @@ pub fn should_hedge<L: BudgetLedger>(
         }
     }
 
-    // Per-tenant dimension.
     if let Some(tenant) = ctx.tenant_id
         && let Some(&tenant_limit) = snap.limits_per_tenant.get(tenant)
     {
@@ -638,8 +609,6 @@ pub fn should_hedge<L: BudgetLedger>(
     true
 }
 
-// ── Types -----------------------------------------------------------------
-
 /// How budget limits are enforced.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum Enforcement {
@@ -650,8 +619,6 @@ pub enum Enforcement {
     /// exceeded.
     Soft,
 }
-
-// ── Config ----------------------------------------------------------------
 
 /// Configuration for budget enforcement.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -674,8 +641,6 @@ impl Default for BudgetConfig {
         }
     }
 }
-
-// ── State -----------------------------------------------------------------
 
 /// Shared, thread-safe budget accumulator.
 ///
@@ -739,10 +704,7 @@ impl Default for BudgetState {
     }
 }
 
-// ── Conversions -----------------------------------------------------------
-
 fn usd_to_microcents(usd: f64) -> u64 {
-    // Clamp negative values to zero to avoid wrapping in unsigned arithmetic.
     if usd <= 0.0 {
         return 0;
     }
@@ -752,8 +714,6 @@ fn usd_to_microcents(usd: f64) -> u64 {
 fn microcents_to_usd(mc: u64) -> f64 {
     mc as f64 / 1_000_000.0
 }
-
-// ── Layer -----------------------------------------------------------------
 
 /// Tower [`Layer`] that enforces spending budgets.
 #[cfg_attr(alef, alef(skip))]
@@ -785,8 +745,6 @@ impl<S> Layer<S> for BudgetLayer {
         }
     }
 }
-
-// ── Service ---------------------------------------------------------------
 
 /// Tower service produced by [`BudgetLayer`].
 #[cfg_attr(alef, alef(skip))]
@@ -824,7 +782,6 @@ where
         let config = self.config.clone();
         let state = Arc::clone(&self.state);
 
-        // --- Pre-flight: hard enforcement check ---
         if config.enforcement == Enforcement::Hard
             && let Some(err) = check_budget(&config, &state, &model)
         {
@@ -836,13 +793,11 @@ where
         Box::pin(async move {
             let resp = fut.await?;
 
-            // --- Post-flight: record cost ---
             if let Some(usage) = resp.usage()
                 && let Some(usd) = cost::completion_cost(&model, usage.prompt_tokens, usage.completion_tokens)
             {
                 state.record(&model, usd);
 
-                // Soft enforcement: warn after recording.
                 if config.enforcement == Enforcement::Soft {
                     emit_soft_warnings(&config, &state, &model);
                 }
@@ -852,8 +807,6 @@ where
         })
     }
 }
-
-// ── Helpers ---------------------------------------------------------------
 
 /// Check whether the current spend exceeds any configured limit.  Returns
 /// `Some(LiterLlmError)` if the budget is exceeded under hard enforcement.
@@ -867,7 +820,6 @@ where
 /// in-flight requests.  For strict dollar-accurate enforcement, use an
 /// external budget service with transactional semantics.
 fn check_budget(config: &BudgetConfig, state: &BudgetState, model: &str) -> Option<LiterLlmError> {
-    // Global limit check.
     if let Some(limit) = config.global_limit
         && state.global_spend() >= limit
     {
@@ -881,7 +833,6 @@ fn check_budget(config: &BudgetConfig, state: &BudgetState, model: &str) -> Opti
         });
     }
 
-    // Per-model limit check.
     if let Some(&limit) = config.model_limits.get(model)
         && state.model_spend(model) >= limit
     {
@@ -922,8 +873,6 @@ fn emit_soft_warnings(config: &BudgetConfig, state: &BudgetState, model: &str) {
     }
 }
 
-// ── Tests -----------------------------------------------------------------
-
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
@@ -944,12 +893,9 @@ mod tests {
         layer.layer(inner)
     }
 
-    // ── Hard enforcement ────────────────────────────────────────────────────
-
     #[tokio::test]
     async fn hard_enforcement_rejects_when_global_limit_exceeded() {
         let state = Arc::new(BudgetState::new());
-        // Pre-seed spend above the limit.
         state.global_spend.store(usd_to_microcents(10.0), Ordering::Relaxed);
 
         let config = BudgetConfig {
@@ -969,7 +915,6 @@ mod tests {
     #[tokio::test]
     async fn hard_enforcement_rejects_when_model_limit_exceeded() {
         let state = Arc::new(BudgetState::new());
-        // Pre-seed per-model spend above the model limit.
         state
             .model_spend
             .entry("gpt-4".to_owned())
@@ -1013,8 +958,6 @@ mod tests {
         assert!(resp.is_ok(), "request under budget should succeed");
     }
 
-    // ── Soft enforcement ────────────────────────────────────────────────────
-
     #[tokio::test]
     async fn soft_enforcement_allows_requests_over_global_limit() {
         let state = Arc::new(BudgetState::new());
@@ -1054,8 +997,6 @@ mod tests {
         assert!(resp.is_ok(), "soft mode should never reject");
     }
 
-    // ── Cost accumulation ───────────────────────────────────────────────────
-
     #[tokio::test]
     async fn accumulates_cost_after_response() {
         let state = Arc::new(BudgetState::new());
@@ -1066,23 +1007,17 @@ mod tests {
         };
 
         let mut svc = build_service(config, Arc::clone(&state));
-        // MockClient returns usage: prompt=10, completion=5 for the model.
         svc.call(LlmRequest::Chat(chat_req("gpt-4")))
             .await
             .expect("service call should not fail");
 
-        // gpt-4 pricing: input=0.00003/token, output=0.00006/token
-        // 10 * 0.00003 + 5 * 0.00006 = 0.0003 + 0.0003 = 0.0006
         assert!(state.global_spend() > 0.0, "global spend should be recorded");
         assert!(state.model_spend("gpt-4") > 0.0, "model spend should be recorded");
     }
 
-    // ── Per-model limits (independent) ──────────────────────────────────────
-
     #[tokio::test]
     async fn per_model_limits_are_independent() {
         let state = Arc::new(BudgetState::new());
-        // Set gpt-4 over its limit, but gpt-3.5-turbo has no model limit.
         state
             .model_spend
             .entry("gpt-4".to_owned())
@@ -1100,16 +1035,12 @@ mod tests {
 
         let mut svc = build_service(config, state);
 
-        // gpt-4 should be rejected.
         let err = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
         assert!(err.is_err(), "gpt-4 should be rejected");
 
-        // gpt-3.5-turbo has no per-model limit, should succeed.
         let ok = svc.call(LlmRequest::Chat(chat_req("gpt-3.5-turbo"))).await;
         assert!(ok.is_ok(), "gpt-3.5-turbo should not be limited");
     }
-
-    // ── Reset ───────────────────────────────────────────────────────────────
 
     #[tokio::test]
     async fn reset_clears_all_counters() {
@@ -1134,8 +1065,6 @@ mod tests {
         );
     }
 
-    // ── Reset then allow ────────────────────────────────────────────────────
-
     #[tokio::test]
     async fn reset_allows_previously_blocked_requests() {
         let state = Arc::new(BudgetState::new());
@@ -1149,17 +1078,13 @@ mod tests {
 
         let mut svc = build_service(config, Arc::clone(&state));
 
-        // Should be rejected.
         let err = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
         assert!(err.is_err());
 
-        // Reset and retry.
         state.reset();
         let ok = svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
         assert!(ok.is_ok(), "should succeed after reset");
     }
-
-    // ── Unlimited config ────────────────────────────────────────────────────
 
     #[tokio::test]
     async fn unlimited_config_allows_all_requests() {
@@ -1171,8 +1096,6 @@ mod tests {
             assert!(svc.call(LlmRequest::Chat(chat_req("gpt-4"))).await.is_ok());
         }
     }
-
-    // ── Propagates inner errors ─────────────────────────────────────────────
 
     #[tokio::test]
     async fn propagates_inner_service_errors() {
@@ -1193,8 +1116,6 @@ mod tests {
             .expect_err("should propagate inner error");
         assert!(matches!(err, LiterLlmError::Timeout));
     }
-
-    // ── BudgetLedger: per-key and per-user recording ─────────────────────────
 
     #[tokio::test]
     async fn budget_ledger_records_per_key_and_per_user() {
@@ -1241,8 +1162,6 @@ mod tests {
         assert!((snap.per_api_key["key-2"] - 0.20).abs() < 1e-9);
     }
 
-    // ── BudgetLedger: reject when user limit exceeded ─────────────────────────
-
     #[tokio::test]
     async fn budget_ledger_rejects_when_user_limit_exceeded() {
         let mut limits = DimensionLimits::default();
@@ -1250,7 +1169,6 @@ mod tests {
 
         let ledger = InMemoryBudgetLedger::new(limits, Duration::from_secs(3600));
 
-        // Record spend that pushes alice over her $0.05 cap.
         ledger
             .record(&CostRecordContext {
                 model: "gpt-4",
@@ -1287,19 +1205,15 @@ mod tests {
         }
     }
 
-    // ── BudgetLedger: resets at window boundary ───────────────────────────────
-
     #[tokio::test]
     async fn budget_ledger_resets_at_window_boundary() {
         let limits = DimensionLimits {
             global: Some(100.0),
             ..Default::default()
         };
-        // Very short window — 1 second.
         let window = Duration::from_secs(1);
         let ledger = InMemoryBudgetLedger::new(limits, window);
 
-        // Record spend inside the window.
         ledger
             .record(&CostRecordContext {
                 model: "gpt-4",
@@ -1316,16 +1230,11 @@ mod tests {
 
         assert!(ledger.snapshot().global_spend_usd > 0.0);
 
-        // Advance mock time past the window boundary by using a timestamp
-        // that is 2 seconds in the future.
         let future = SystemTime::now() + Duration::from_secs(2);
 
-        // spend_usd on the global entry will detect the elapsed window when queried.
         let spend_after_window = ledger.global.spend_usd(future);
         assert_eq!(spend_after_window, 0.0, "spend should reset to 0 after window boundary");
     }
-
-    // ── BudgetSnapshot CSV export ─────────────────────────────────────────────
 
     #[tokio::test]
     async fn budget_snapshot_csv_export_round_trips() {
@@ -1349,10 +1258,8 @@ mod tests {
         ledger.export_csv(&mut csv_bytes).expect("CSV export must not fail");
         let csv = String::from_utf8(csv_bytes).expect("CSV must be valid UTF-8");
 
-        // Verify the header row is present.
         assert!(csv.starts_with("dimension,spend_usd\n"), "missing header: {csv}");
 
-        // Parse the CSV back and verify each row.
         let mut found_global = false;
         let mut found_model = false;
         let mut found_tenant = false;
@@ -1397,8 +1304,6 @@ mod tests {
         assert!(found_key, "api_key row missing from CSV");
     }
 
-    // ── Window rollover concurrency ──────────────────────────────────────────
-
     /// Spawn 100 threads each calling `add($0.10)` exactly at the window
     /// boundary and assert the total is $10.00, not less.
     ///
@@ -1412,13 +1317,8 @@ mod tests {
         use std::sync::Barrier;
         use std::thread;
 
-        // Very short window (1 second) so we can trigger a rollover without
-        // actually sleeping: we manually pass a "future" timestamp.
         let entry = Arc::new(WindowEntry::new(Duration::from_secs(1)));
 
-        // All 100 threads will add $0.10 using a timestamp that is 2 seconds
-        // past the window start — i.e., all threads see the window as expired
-        // and race for the CAS.
         let future_now = SystemTime::now() + Duration::from_secs(2);
 
         let barrier = Arc::new(Barrier::new(100));
@@ -1428,8 +1328,6 @@ mod tests {
             let entry_clone = Arc::clone(&entry);
             let barrier_clone = Arc::clone(&barrier);
             handles.push(thread::spawn(move || {
-                // Synchronise all threads so they hit the window boundary at
-                // the same instant, maximising the chance of a race.
                 barrier_clone.wait();
                 entry_clone.add(0.10, future_now);
             }));
@@ -1440,8 +1338,6 @@ mod tests {
         }
 
         let total = microcents_to_usd(entry.spend_mc.load(Ordering::Acquire));
-        // Allow a tiny floating-point rounding tolerance (microcents are
-        // integers, so the real tolerance is 0 but we allow 1 µ$ of drift).
         assert!(
             (total - 10.0_f64).abs() < 1e-4,
             "expected $10.00 total, got ${total:.6} — window rollover race caused under-counting"
@@ -1478,8 +1374,6 @@ mod tests {
             "expected $20.00 total after 200 concurrent adds at rollover; got ${total:.6}"
         );
     }
-
-    // ── should_hedge: respects configured user budget ────────────────────────
 
     /// $10 user budget, $9.50 spend, estimated_cost=$0.50, safety_margin=0.10
     /// → effective limit = $10 × 0.90 = $9.00.

@@ -24,7 +24,6 @@ fn main() {
     liter_llm::ensure_crypto_provider();
     let cli = Cli::parse();
 
-    // Build the Tokio runtime with optional worker thread overrides.
     let runtime = build_tokio_runtime(&cli);
 
     if let Err(e) = runtime.block_on(run(cli)) {
@@ -36,12 +35,10 @@ fn main() {
 fn build_tokio_runtime(cli: &Cli) -> tokio::runtime::Runtime {
     let mut builder = tokio::runtime::Builder::new_multi_thread();
 
-    // Configure worker threads if specified.
     if let Some(worker_threads) = cli.tokio_worker_threads {
         builder.worker_threads(worker_threads.get());
     }
 
-    // Configure max blocking threads if specified.
     if let Some(max_blocking) = cli.tokio_max_blocking_threads {
         builder.max_blocking_threads(max_blocking.get());
     }

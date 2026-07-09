@@ -21,8 +21,6 @@ use serde::{Deserialize, Serialize};
 use super::{VectorMatch, VectorMetadata, VectorStore};
 use crate::error::{LiterLlmError, Result};
 
-// ── Cosine similarity (duplicated from `memory` module to avoid dep) ──────────
-
 fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
     if a.len() != b.len() || a.is_empty() {
         return 0.0;
@@ -35,8 +33,6 @@ fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
     }
     dot / (norm_a * norm_b)
 }
-
-// ── Serialized entry ──────────────────────────────────────────────────────────
 
 #[derive(Serialize, Deserialize)]
 struct StoredVector {
@@ -66,8 +62,6 @@ impl StoredVector {
         }
     }
 }
-
-// ── OpenDalVectorStore ────────────────────────────────────────────────────────
 
 /// Vector store backed by an [`opendal::Operator`].
 ///
@@ -113,7 +107,6 @@ impl VectorStore for OpenDalVectorStore {
         threshold: f32,
     ) -> Pin<Box<dyn Future<Output = Vec<VectorMatch>> + Send + 'a>> {
         Box::pin(async move {
-            // List all entries under prefix.
             let entries = match self.operator.list(&self.prefix).await {
                 Ok(e) => e,
                 Err(_) => return Vec::new(),
@@ -132,7 +125,6 @@ impl VectorStore for OpenDalVectorStore {
                 };
                 let sim = cosine_similarity(query_vec, &stored.vec);
                 if sim >= threshold {
-                    // Extract id from path by stripping prefix.
                     let id = path.strip_prefix(&self.prefix).unwrap_or(&path).to_owned();
                     let metadata = stored.into_metadata();
                     matches.push(VectorMatch {
@@ -194,7 +186,6 @@ impl VectorStore for OpenDalVectorStore {
     fn delete<'a>(&'a self, id: &'a str) -> Pin<Box<dyn Future<Output = Result<()>> + Send + 'a>> {
         Box::pin(async move {
             let path = self.entry_path(id);
-            // Ignore NotFound — delete is idempotent by contract.
             match self.operator.delete(&path).await {
                 Ok(()) => Ok(()),
                 Err(e) if e.kind() == opendal::ErrorKind::NotFound => Ok(()),
@@ -209,8 +200,6 @@ impl VectorStore for OpenDalVectorStore {
         self.dim
     }
 }
-
-// ── Tests ─────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {

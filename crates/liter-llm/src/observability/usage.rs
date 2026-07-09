@@ -34,8 +34,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::tenant::TenantId;
 
-// ─── Event shape ─────────────────────────────────────────────────────────────
-
 /// Canonical per-request usage event emitted by [`crate::tower::hooks::HooksLayer`]
 /// after every request (success or failure).
 ///
@@ -107,8 +105,6 @@ pub struct UsageEvent {
     pub received_at: SystemTime,
 }
 
-// ─── CacheState ──────────────────────────────────────────────────────────────
-
 /// Cache outcome for a single request.
 #[cfg_attr(alef, alef(skip))]
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Hash, Serialize, Deserialize)]
@@ -127,8 +123,6 @@ pub enum CacheState {
     Bypass,
 }
 
-// ─── UsageEventOutcome ───────────────────────────────────────────────────────
-
 /// High-level outcome of the request.
 #[cfg_attr(alef, alef(skip))]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
@@ -144,8 +138,6 @@ pub enum UsageEventOutcome {
     TimedOut,
 }
 
-// ─── UsageSink ───────────────────────────────────────────────────────────────
-
 /// Pluggable consumer of [`UsageEvent`]s.
 ///
 /// Implementations should be cheap on the hot path — defer heavy I/O to
@@ -160,15 +152,6 @@ pub trait UsageSink: Send + Sync + 'static {
     fn emit(&self, event: UsageEvent) -> impl Future<Output = Result<(), UsageSinkError>> + Send;
 }
 
-// ─── Object-safe erased helper ───────────────────────────────────────────────
-
-// `UsageSink` uses RPITIT which is not object-safe. This sealed helper trait
-// lets `HooksLayer` and `MultiUsageSink` store sinks behind `dyn` pointers.
-//
-// It is `pub` (not `pub(crate)`) so that users can pass heterogeneous sink
-// collections to [`MultiUsageSink::from_erased`] without reaching into the
-// crate internals.  The trait is intentionally not re-exported from the crate
-// root to discourage direct implementation — use [`UsageSink`] instead.
 /// Type-erased version of [`UsageSink`] used by [`MultiUsageSink`] to store
 /// heterogeneous sinks behind a single trait object. The blanket impl below
 /// applies to any [`UsageSink`], so downstream code should never implement
@@ -192,8 +175,6 @@ impl<T: UsageSink> UsageSinkErased for T {
     }
 }
 
-// ─── UsageSinkError ──────────────────────────────────────────────────────────
-
 /// Error returned by a [`UsageSink`] implementation.
 #[cfg_attr(alef, alef(skip))]
 #[derive(Debug, thiserror::Error)]
@@ -202,8 +183,6 @@ pub enum UsageSinkError {
     #[error("usage sink backend error: {0}")]
     Backend(String),
 }
-
-// ─── LoggingUsageSink ────────────────────────────────────────────────────────
 
 /// `tracing`-backed sink that emits each [`UsageEvent`] as a structured
 /// `INFO` event on the `gen_ai.usage` target.
@@ -236,8 +215,6 @@ impl UsageSink for LoggingUsageSink {
         Ok(())
     }
 }
-
-// ─── MultiUsageSink ──────────────────────────────────────────────────────────
 
 /// Fan-out sink that delivers each event to multiple inner sinks concurrently.
 ///
@@ -317,12 +294,6 @@ impl MultiUsageSink {
 
 impl UsageSink for MultiUsageSink {
     async fn emit(&self, event: UsageEvent) -> Result<(), UsageSinkError> {
-        // Sequential emit — fan-out sinks are best-effort observability; if
-        // one sink is slow, it adds latency but does not block correctness.
-        // Sequentialising avoids pulling `futures_util` into minimal builds
-        // (JNI/wasm umbrella crates).  Use `join_all` from `futures_util`
-        // explicitly in your own `UsageSink` impl if concurrent fan-out is
-        // important — it's a workspace dep gated behind the `tower` feature.
         for sink in &self.sinks {
             if let Err(_err) = sink.emit_erased(event.clone()).await {
                 #[cfg(feature = "tracing")]

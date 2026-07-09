@@ -151,7 +151,6 @@ impl ClientConfig {
 /// accidentally logged via `{:?}`.
 impl std::fmt::Debug for ClientConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // Redact all header values — they may contain API keys or secrets.
         let redacted_headers: Vec<(&str, &str)> = self
             .extra_headers
             .iter()
@@ -272,13 +271,11 @@ impl ClientConfigBuilder {
         let key = key.into();
         let value = value.into();
 
-        // Validate header name.
         reqwest::header::HeaderName::from_bytes(key.as_bytes()).map_err(|e| LiterLlmError::InvalidHeader {
             name: key.clone(),
             reason: e.to_string(),
         })?;
 
-        // Validate header value.
         reqwest::header::HeaderValue::from_str(&value).map_err(|e| LiterLlmError::InvalidHeader {
             name: key.clone(),
             reason: e.to_string(),

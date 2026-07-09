@@ -38,8 +38,6 @@ use super::types::{LlmRequest, LlmRequestKind, LlmResponse};
 use crate::client::BoxFuture;
 use crate::error::{LiterLlmError, Result};
 
-// ---- Weight ----------------------------------------------------------------
-
 /// An integer traffic weight in the range [0, [`u32::MAX`]].
 ///
 /// Uses saturating conversion from `f64` so that NaN and negative values
@@ -81,7 +79,6 @@ impl Weight {
         } else if f.is_infinite() {
             Self::MAX
         } else {
-            // saturating_cast: values > u32::MAX as f64 are clamped.
             #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
             let w = f.round().min(f64::from(u32::MAX)) as u32;
             Self(w)
@@ -106,8 +103,6 @@ impl fmt::Display for Weight {
         write!(f, "{}", self.0)
     }
 }
-
-// ---- Routing strategy ------------------------------------------------------
 
 /// Routing strategy for selecting among multiple deployments.
 #[derive(Clone)]
@@ -159,8 +154,6 @@ impl std::fmt::Debug for RoutingStrategy {
     }
 }
 
-// ---- Per-deployment metrics ------------------------------------------------
-
 /// Tracks per-deployment latency using an exponential moving average.
 #[derive(Debug)]
 struct DeploymentMetrics {
@@ -182,7 +175,6 @@ impl Default for DeploymentMetrics {
 impl DeploymentMetrics {
     /// Update the EMA with a new latency sample (in seconds).
     fn record_latency(&mut self, latency_secs: f64) {
-        // Smoothing factor for EMA — higher values weight recent samples more.
         const ALPHA: f64 = 0.3;
 
         if self.request_count == 0 {
@@ -215,8 +207,6 @@ impl Clone for RouterState {
         }
     }
 }
-
-// ---- Router ----------------------------------------------------------------
 
 /// A router that distributes [`LlmRequest`]s across multiple service
 /// instances according to a [`RoutingStrategy`].
@@ -303,10 +293,6 @@ where
     type Future = BoxFuture<'static, Result<LlmResponse>>;
 
     fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<()>> {
-        // All inner services are cloned per-call, so there is no persistent
-        // readied slot to manage here.  A more sophisticated implementation
-        // could poll each deployment's readiness and track the result, but
-        // for DefaultClient (which is always ready) this is unnecessary.
         Poll::Ready(Ok(()))
     }
 
@@ -344,8 +330,6 @@ where
                 let state = self.state.clone();
                 let n = self.deployments.len();
 
-                // Pick deployment with the lowest latency EMA.
-                // Deployments with no data default to EMA 0.0 (optimistic).
                 let mut best_idx = 0;
                 let mut best_ema = f64::MAX;
                 for i in 0..n {
@@ -373,18 +357,6 @@ where
                 let model = req.model().map(ToOwned::to_owned);
                 let deployments = self.deployments.clone();
 
-                // For cost-based routing, we try to pick the cheapest deployment.
-                // Since all deployments serve the same model, cost is typically
-                // uniform.  The differentiator is when deployments wrap different
-                // providers (e.g., OpenAI vs Azure) with different pricing.
-                //
-                // Without per-deployment provider metadata, we use a simple
-                // heuristic: try each deployment in order and return the first
-                // success.  A future enhancement could attach provider metadata
-                // to each deployment.
-                //
-                // For now, CostBased routes identically to Fallback but logs the
-                // cost after success.
                 Box::pin(async move {
                     let mut last_err: Option<LiterLlmError> = None;
                     for mut svc in deployments {
@@ -430,20 +402,9 @@ where
                 let deployments = self.deployments.clone();
                 let counter = Arc::clone(&self.counter);
 
-                // Build a list of model strings from the request so the
-                // classifier knows what is available.  We derive model names
-                // from deployment indices as opaque "deployment-{i}" keys
-                // when the deployments do not carry metadata; the classifier
-                // can then map these back to a deployment index.
-                //
-                // For typical usage the caller registers one deployment per
-                // model and names them accordingly.  We expose the indices
-                // 0..n as model identifiers so the classifier can refer to
-                // them.
                 let n = deployments.len();
                 let available_models: Vec<String> = (0..n).map(|i| i.to_string()).collect();
 
-                // Extract prompt and system prompt from the request.
                 let (prompt, system_prompt) = match &req.kind {
                     LlmRequestKind::Chat(r) => {
                         let prompt = r
@@ -482,14 +443,12 @@ where
                         available_models: &available_models,
                     };
 
-                    // Call the classifier; if it returns a model index, parse it.
                     let idx = classifier
                         .classify(&ctx)
                         .await
                         .and_then(|model_str| model_str.parse::<usize>().ok())
                         .filter(|&i| i < n);
 
-                    // Fallback to round-robin when the classifier defers.
                     let idx = idx.unwrap_or_else(|| counter.fetch_add(1, Ordering::Relaxed) % n);
 
                     deployments[idx].clone().call(req).await
@@ -508,10 +467,6 @@ fn weighted_random_select(weights: &[Weight]) -> usize {
     if total == 0 {
         return 0;
     }
-    // Simple pseudo-random: use the lower bits of the current time.
-    // This avoids adding a `rand` dependency.  For production use,
-    // callers who need better randomness can use the `rand` crate
-    // externally.
     let nanos = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
@@ -525,11 +480,8 @@ fn weighted_random_select(weights: &[Weight]) -> usize {
             return i;
         }
     }
-    // Fallback to last non-zero deployment (rounding edge case).
     weights.len() - 1
 }
-
-// ---- UpstreamDiscover trait -----------------------------------------------
 
 /// A typed extension of [`tower::discover::Discover`] for LLM upstream
 /// services.
@@ -555,14 +507,9 @@ fn weighted_random_select(weights: &[Weight]) -> usize {
 /// If the router encounters a discovery error, it wraps it in
 /// [`RouterError::Discover`].  The 1.A error-consolidation workstream should
 /// replace this local enum with the canonical error hierarchy.
-// Object-safety: not required — used only as a generic parameter on
-// `DynamicRouter<D>`.  `tower::discover::Discover` is itself a blanket
-// alias over `TryStream` which is not object-safe.
 pub trait UpstreamDiscover: Discover<Key = String> + Unpin + Send {}
 
 impl<D> UpstreamDiscover for D where D: Discover<Key = String> + Unpin + Send {}
-
-// ---- Router-local error (for 1.A to consolidate) --------------------------
 
 /// Errors produced exclusively by the router.
 ///
@@ -607,8 +554,6 @@ impl From<RouterError> for LiterLlmError {
     }
 }
 
-// ---- StaticDiscover -------------------------------------------------------
-
 /// A [`tower::discover::Discover`]-compatible stream that wraps a fixed list
 /// of named services.
 ///
@@ -648,8 +593,6 @@ impl<S: Unpin> Stream for StaticDiscover<S> {
     }
 }
 
-// ---- Per-provider concurrency limit ---------------------------------------
-
 /// Default maximum concurrent in-flight requests per upstream provider.
 ///
 /// Prevents a single slow provider from exhausting all Tokio permits.
@@ -673,8 +616,6 @@ impl Default for ProviderConfig {
         }
     }
 }
-
-// ---- DynamicRouter --------------------------------------------------------
 
 /// A router over a [`tower::discover::Discover`] stream of LLM upstreams.
 ///
@@ -770,7 +711,7 @@ where
         loop {
             match Pin::new(&mut self.discover).poll_discover(cx) {
                 Poll::Pending => return Ok(()),
-                Poll::Ready(None) => return Ok(()), // stream exhausted
+                Poll::Ready(None) => return Ok(()),
                 Poll::Ready(Some(Err(e))) => {
                     return Err(RouterError::Discover {
                         source: e.into(),
@@ -806,12 +747,10 @@ where
     type Future = BoxFuture<'static, Result<LlmResponse>>;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<()>> {
-        // Drain discovery updates.
         if let Err(e) = self.update_from_discover(cx) {
             return Poll::Ready(Err(e.into()));
         }
 
-        // Drive the ready cache to promote newly-inserted services.
         let _ = self.services.poll_pending(cx);
 
         if self.services.ready_len() > 0 {
@@ -825,14 +764,10 @@ where
         if self.services.ready_len() == 0 {
             return Box::pin(async { Err(RouterError::NoReadyUpstream { code: 2002 }.into()) });
         }
-        // Round-robin across ready services by using the first ready slot.
-        // A future enhancement can use weighted selection here.
         let fut = self.services.call_ready_index(0, req);
         Box::pin(fut)
     }
 }
-
-// ---- Tests -----------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
@@ -847,8 +782,6 @@ mod tests {
     use crate::tower::service::LlmService;
     use crate::tower::tests_common::{MockClient, chat_req};
     use crate::tower::types::LlmRequest;
-
-    // ---- Weight tests -------------------------------------------------------
 
     #[test]
     fn weight_clamps_nan_to_zero() {
@@ -879,14 +812,8 @@ mod tests {
         assert_eq!(Weight::default().as_u32(), 1);
     }
 
-    // ---- weighted_random_select proportionality test ----------------------
-
     #[test]
     fn weighted_random_selects_proportionally() {
-        // Weight distribution: 0:1, 1:2, 2:3 → ~1/6, ~2/6, ~3/6
-        // With 600 samples we expect each bucket to be within ±100 of its
-        // expected count.  The pseudo-random source is time-based, so this
-        // is a distribution sanity check, not a strict uniform test.
         let weights = vec![Weight(1), Weight(2), Weight(3)];
         let mut counts = [0usize; 3];
 
@@ -896,13 +823,10 @@ mod tests {
             counts[idx] += 1;
         }
 
-        // Every index must have been selected at least once across 600 calls.
         for (i, &count) in counts.iter().enumerate() {
             assert!(count > 0, "index {i} was never selected (counts: {counts:?})");
         }
     }
-
-    // ---- Router (static, strategy-based) tests ----------------------------
 
     #[tokio::test]
     async fn latency_based_routes_to_fastest() {
@@ -911,12 +835,9 @@ mod tests {
 
         let mut router = Router::new(deployments, RoutingStrategy::LatencyBased).expect("non-empty deployments");
 
-        // First call goes to deployment 0 (both have EMA 0.0, picks first).
         let resp = router.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
         assert!(resp.is_ok());
 
-        // After the first call, deployment 0 has a non-zero EMA.
-        // The second call should go to deployment 1 (still at 0.0 EMA).
         let resp = router.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
         assert!(resp.is_ok());
     }
@@ -950,8 +871,6 @@ mod tests {
         )
         .expect("non-empty deployments");
 
-        // Run several requests — all should succeed regardless of which
-        // deployment is selected.
         for _ in 0..20 {
             let resp = router.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
             assert!(resp.is_ok());
@@ -966,7 +885,7 @@ mod tests {
         let result = Router::new(
             deployments,
             RoutingStrategy::WeightedRandom {
-                weights: vec![Weight(1)], // Wrong length.
+                weights: vec![Weight(1)],
             },
         );
         assert!(result.is_err());
@@ -1004,14 +923,11 @@ mod tests {
         );
 
         m.record_latency(0.0);
-        // EMA = 0.3 * 0.0 + 0.7 * 1.0 = 0.7
         assert!(
             (m.latency_ema - 0.7).abs() < 1e-9,
             "EMA should be 0.7 after second sample"
         );
     }
-
-    // ---- DynamicRouter tests -----------------------------------------------
 
     /// A `Stream`-based discover that drains from a pre-built VecDeque.
     /// In tower 0.5, `Discover` is a blanket impl over `TryStream`, so
@@ -1047,7 +963,6 @@ mod tests {
 
         let mut router = DynamicRouter::new(discover);
 
-        // poll_ready should drain the discovery updates and warm the cache.
         futures_util::future::poll_fn(|cx| match router.poll_ready(cx) {
             Poll::Ready(Ok(())) => Poll::Ready(()),
             Poll::Ready(Err(e)) => panic!("unexpected error: {e}"),
@@ -1087,20 +1002,14 @@ mod tests {
         let discover = InsertThenRemoveDiscover { step: 0 };
         let mut router = DynamicRouter::new(discover);
 
-        // Drive once to process insert + remove.
         let mut noop_cx = std::task::Context::from_waker(futures_util::task::noop_waker_ref());
         let _ = router.poll_ready(&mut noop_cx);
 
-        // After eviction the router should have zero entries.
         assert_eq!(router.len(), 0, "evicted service should be removed");
     }
 
-    // ---- Concurrency limit test --------------------------------------------
-
     #[tokio::test]
     async fn concurrency_limit_rejects_at_max() {
-        // A service that blocks until a signal is set, so we can hold the
-        // permit open.
         #[derive(Clone)]
         struct BlockingService {
             call_count: Arc<AtomicUsize>,
@@ -1126,21 +1035,15 @@ mod tests {
             call_count: Arc::clone(&counter),
         };
 
-        // Limit to 1 concurrent request.
         let mut limited = ConcurrencyLimit::new(inner, 1);
 
-        // First poll_ready → should succeed, acquiring the permit.
         assert!(
             futures_util::future::poll_fn(|cx| limited.poll_ready(cx)).await.is_ok(),
             "first poll_ready should be ok"
         );
 
-        // Dispatch the first call (holds the permit open indefinitely).
         let _held_fut = limited.call(LlmRequest::ListModels());
 
-        // Now the concurrency slot is exhausted.  poll_ready should return
-        // Pending (the tower ConcurrencyLimit only returns Ready once the
-        // semaphore has a slot).
         let mut noop_cx = std::task::Context::from_waker(futures_util::task::noop_waker_ref());
         let poll = limited.poll_ready(&mut noop_cx);
         assert!(
@@ -1148,8 +1051,6 @@ mod tests {
             "second poll_ready should be Pending when limit=1 and one request is in-flight"
         );
     }
-
-    // ---- StaticDiscover tests -----------------------------------------------
 
     #[tokio::test]
     async fn static_discover_yields_all_services() {
@@ -1160,19 +1061,15 @@ mod tests {
 
         let mut noop_cx = std::task::Context::from_waker(futures_util::task::noop_waker_ref());
 
-        // StaticDiscover implements Stream (not Discover directly).
         let first = Pin::new(&mut discover).poll_next(&mut noop_cx);
         assert!(matches!(first, Poll::Ready(Some(Ok(Change::Insert(ref k, _)))) if k == "a"));
 
         let second = Pin::new(&mut discover).poll_next(&mut noop_cx);
         assert!(matches!(second, Poll::Ready(Some(Ok(Change::Insert(ref k, _)))) if k == "b"));
 
-        // After all services are yielded, stream ends.
         let third = Pin::new(&mut discover).poll_next(&mut noop_cx);
         assert!(matches!(third, Poll::Ready(None)));
     }
-
-    // ---- Semantic routing tests -------------------------------------------
 
     /// A classifier that always routes to deployment index `target`.
     struct FixedIndexClassifier {
@@ -1229,7 +1126,6 @@ mod tests {
         let classifier = Arc::new(DeferringClassifier);
         let mut router = Router::new(deployments, RoutingStrategy::Semantic(classifier)).expect("valid router");
 
-        // Even with a deferring classifier the request must succeed via round-robin fallback.
         let resp = router.call(LlmRequest::Chat(chat_req("gpt-4"))).await;
         assert!(resp.is_ok(), "fallback round-robin should handle the request");
     }

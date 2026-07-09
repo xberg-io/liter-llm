@@ -60,7 +60,6 @@ impl KeyResolver for InMemoryKeyResolver {
         &self,
         api_key: String,
     ) -> Pin<Box<dyn Future<Output = Result<ResolvedKey, KeyResolverError>> + Send + 'static>> {
-        // Clone the Arc-backed DashMap so the future owns it and is 'static.
         let keys = self.keys.clone();
         Box::pin(async move {
             match keys.get(&api_key) {

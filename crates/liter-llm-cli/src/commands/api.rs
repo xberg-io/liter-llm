@@ -66,16 +66,13 @@ pub async fn run(args: ApiArgs) -> Result<(), String> {
         ProxyConfig::discover()?.unwrap_or_default()
     };
 
-    // Apply CLI overrides (highest precedence).
     config.server.host.clone_from(&args.host);
     config.server.port = args.port;
     if let Some(ref key) = args.master_key {
         config.general.master_key = Some(SecretString::from(key.clone()));
     }
 
-    // Warn when wildcard CORS is combined with a public-facing bind address.
-    // This combination allows any origin to make credentialed cross-origin
-    // requests, which is a common misconfiguration.
+    // ~keep Warn when wildcard CORS plus public bind permits credentialed cross-origin requests.
     if config.server.cors_origins.iter().any(|o| o == "*") && config.server.host == "0.0.0.0" {
         tracing::warn!(
             "wildcard CORS (cors_origins=[\"*\"]) combined with host=0.0.0.0 exposes \
@@ -83,24 +80,17 @@ pub async fn run(args: ApiArgs) -> Result<(), String> {
         );
     }
 
-    // Apply the outbound policy BEFORE any custom providers are registered or
-    // requests are accepted.  The library default is Off; the proxy default
-    // (via SecurityConfig) is DenyPrivate, blocking SSRF into metadata services
-    // and private networks.
+    // ~keep Apply outbound policy before custom providers or requests can open SSRF paths.
     let policy = build_outbound_policy(&config)?;
     set_outbound_policy(policy);
 
-    // Resolve the watch mode from CLI flags.
     let watch_mode = resolve_watch_mode(&args)?;
 
-    // ── Shutdown coordinator ──────────────────────────────────────────────
     let coordinator = ShutdownCoordinator::new();
     let handle = coordinator.handle();
 
-    // Signal handler: SIGTERM / SIGINT → Draining; second signal → Aborted.
     coordinator.spawn_signal_handler();
 
-    // Axum server — drains via the cancellation token.
     let server_handle = handle.clone();
     let server_task = tokio::spawn(async move {
         ProxyServer::new(config)
@@ -109,7 +99,6 @@ pub async fn run(args: ApiArgs) -> Result<(), String> {
             .await
     });
 
-    // Wait until we enter Draining (or beyond) before logging drain progress.
     {
         let mut drain_handle = handle.clone();
         drain_handle.wait_for_drain_start().await;
@@ -120,9 +109,6 @@ pub async fn run(args: ApiArgs) -> Result<(), String> {
         tracing::info!("Draining — waiting for in-flight requests to complete...");
     }
 
-    // Wait for the coordinator to finish draining all subsystems, emitting a
-    // progress log every DRAIN_LOG_INTERVAL so operators know draining is
-    // in progress.
     let final_phase = drain_with_progress_log(coordinator, DRAIN_LOG_INTERVAL).await;
 
     match final_phase {
@@ -137,7 +123,6 @@ pub async fn run(args: ApiArgs) -> Result<(), String> {
         }
     }
 
-    // Await the server task to collect any error it returned.
     match server_task.await {
         Ok(Ok(())) => {}
         Ok(Err(e)) => {

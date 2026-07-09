@@ -38,8 +38,6 @@ use crate::guardrail::{GuardrailContext, GuardrailDecision, GuardrailStage};
 
 use super::types::{LlmRequest, LlmResponse};
 
-// ── Layer ─────────────────────────────────────────────────────────────────────
-
 /// Tower [`Layer`] that enforces guardrail checks around an inner service.
 ///
 /// `registry` holds the ordered list of guardrails to evaluate.
@@ -86,8 +84,6 @@ impl<S> Layer<S> for GuardrailLayer {
     }
 }
 
-// ── Service ───────────────────────────────────────────────────────────────────
-
 /// Tower service produced by [`GuardrailLayer`].
 #[cfg_attr(alef, alef(skip))]
 pub struct GuardrailService<S> {
@@ -125,7 +121,6 @@ where
         let inner_fut = self.inner.call(req.clone());
 
         Box::pin(async move {
-            // Serialize the request once for use in guardrail contexts.
             let request_json = match serde_json::to_value(&req) {
                 Ok(v) => v,
                 Err(e) => {
@@ -135,7 +130,6 @@ where
                 }
             };
 
-            // ── Input stage ─────────────────────────────────────────────────
             let input_ctx = GuardrailContext {
                 request: &request_json,
                 response: None,
@@ -151,22 +145,13 @@ where
                     });
                 }
                 GuardrailDecision::Mutate { .. } => {
-                    // Mutate at Input stage: in a full implementation, the mutated
-                    // payload would be used to rebuild the request before forwarding.
-                    // For now, we log and proceed with the original — implementing
-                    // full request mutation requires per-variant deserialization.
                     tracing::debug!("guardrail: Input stage Mutate decision; proceeding with original request");
                 }
                 GuardrailDecision::Allow => {}
             }
 
-            // ── Inner service call ───────────────────────────────────────────
             let response = inner_fut.await?;
 
-            // ── Output stage ─────────────────────────────────────────────────
-            // Serialize the inner response for guardrail context, matching on the
-            // specific variants that implement `Serialize`.  Streaming and other
-            // non-serialisable variants skip the Output stage and return directly.
             let response_json = match &response {
                 LlmResponse::Chat(r) => match serde_json::to_value(r) {
                     Ok(v) => v,
@@ -180,7 +165,6 @@ where
                     Ok(v) => v,
                     Err(_) => return Ok(response),
                 },
-                // Non-serialisable variants skip Output-stage checks.
                 _ => return Ok(response),
             };
 
@@ -197,8 +181,6 @@ where
                     message: format!("guardrail blocked output [code={code}]: {reason}"),
                 }),
                 GuardrailDecision::Mutate { .. } => {
-                    // Response mutation requires rebuilding the typed response from JSON.
-                    // For the initial implementation we log and return the original.
                     tracing::debug!("guardrail: Output stage Mutate decision; returning original response");
                     Ok(response)
                 }
@@ -207,8 +189,6 @@ where
         })
     }
 }
-
-// ── Unit tests ────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {

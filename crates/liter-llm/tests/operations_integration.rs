@@ -20,8 +20,6 @@ use liter_llm::types::batch::{BatchListQuery, CreateBatchRequest};
 use liter_llm::types::files::FileListQuery;
 use liter_llm::types::responses::CreateResponseRequest;
 
-// ── Mock HTTP server ───────────────────────────────────────────────────────
-
 /// A captured HTTP request.
 #[derive(Debug, Clone)]
 struct CapturedRequest {
@@ -68,7 +66,6 @@ impl MockServer {
                 let parts: Vec<&str> = request_line.trim().splitn(3, ' ').collect();
                 let method = parts.first().unwrap_or(&"").to_string();
                 let full_path = parts.get(1).unwrap_or(&"").to_string();
-                // Separate path from query string.
                 let path = full_path.split('?').next().unwrap_or("").to_string();
 
                 let mut headers = Vec::new();
@@ -101,7 +98,6 @@ impl MockServer {
                     body,
                 });
 
-                // Find matching route.
                 let response_body = routes
                     .iter()
                     .find(|r| r.method == method && path.starts_with(&r.path_prefix))
@@ -115,12 +111,6 @@ impl MockServer {
                     204 => "No Content",
                     _ => "OK",
                 };
-                // `Connection: close` is required for correctness: this handler serves exactly one
-                // request per accepted connection, then loops back to `incoming()`. Without it the
-                // HTTP client may keep the socket alive and send a follow-up request on the same
-                // connection, which this server never reads — so the request is silently dropped
-                // and `requests()` undercounts. Closing each connection forces a fresh accept per
-                // request, making the captured-request count deterministic.
                 let response = format!(
                     "HTTP/1.1 {} {}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
                     status,
@@ -156,8 +146,6 @@ fn build_client(mock: &MockServer) -> DefaultClient {
         .build();
     DefaultClient::new(config, None).expect("client creation should succeed")
 }
-
-// ── File operation JSON responses ──────────────────────────────────────────
 
 fn file_object_json() -> String {
     serde_json::json!({
@@ -245,8 +233,6 @@ fn response_object_json() -> String {
     })
     .to_string()
 }
-
-// ── File Client Tests ──────────────────────────────────────────────────────
 
 #[tokio::test]
 async fn retrieve_file_should_send_get_to_correct_path() {
@@ -362,8 +348,6 @@ async fn file_content_should_return_bytes() {
     assert_eq!(requests[0].path, "/files/file-abc123/content");
 }
 
-// ── Batch Client Tests ─────────────────────────────────────────────────────
-
 #[tokio::test]
 async fn create_batch_should_send_post_with_json_body() {
     let mock = MockServer::start_with_routes(vec![MockRoute {
@@ -392,7 +376,6 @@ async fn create_batch_should_send_post_with_json_body() {
     assert_eq!(requests[0].method, "POST");
     assert_eq!(requests[0].path, "/batches");
 
-    // Verify the request body contains expected fields.
     let body: serde_json::Value = serde_json::from_str(&requests[0].body).unwrap();
     assert_eq!(body["input_file_id"], "file-abc123");
     assert_eq!(body["endpoint"], "/v1/chat/completions");
@@ -485,8 +468,6 @@ async fn cancel_batch_should_post_to_cancel_endpoint() {
     assert_eq!(requests[0].path, "/batches/batch-xyz789/cancel");
 }
 
-// ── Response Client Tests ──────────────────────────────────────────────────
-
 #[tokio::test]
 async fn create_response_should_send_post_with_json_body() {
     let mock = MockServer::start_with_routes(vec![MockRoute {
@@ -568,8 +549,6 @@ async fn cancel_response_should_post_to_cancel_endpoint() {
     assert_eq!(requests[0].path, "/responses/resp-001/cancel");
 }
 
-// ── Cross-cutting concerns ─────────────────────────────────────────────────
-
 #[tokio::test]
 async fn all_operations_should_include_auth_header() {
     let mock = MockServer::start_with_routes(vec![
@@ -588,7 +567,6 @@ async fn all_operations_should_include_auth_header() {
     ]);
     let client = build_client(&mock);
 
-    // Issue two requests.
     let _ = client.list_files(None).await;
     let _ = client.list_batches(None).await;
 

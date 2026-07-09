@@ -186,8 +186,6 @@ pub struct CreateResponseParams {
     pub input: serde_json::Value,
 }
 
-// ── Prompt parameters ─────────────────────────────────────────────────────────
-
 /// Arguments for the `summarize` prompt template.
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 pub struct SummarizeArgs {

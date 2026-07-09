@@ -15,8 +15,6 @@ use url::Url;
 
 use crate::error::LiterLlmError;
 
-// ── Policy enum ───────────────────────────────────────────────────────────────
-
 /// Controls which upstream URLs the library is allowed to connect to.
 ///
 /// Set once at application startup via [`set_outbound_policy`].  Checked at
@@ -40,8 +38,6 @@ pub enum OutboundPolicy {
     Allowlist(Vec<Url>),
 }
 
-// ── Global policy ─────────────────────────────────────────────────────────────
-
 static GLOBAL_POLICY: OnceLock<RwLock<OutboundPolicy>> = OnceLock::new();
 
 fn policy_lock() -> &'static RwLock<OutboundPolicy> {
@@ -63,8 +59,6 @@ pub fn set_outbound_policy(policy: OutboundPolicy) {
 pub fn current_policy() -> OutboundPolicy {
     policy_lock().read().expect("outbound policy lock poisoned").clone()
 }
-
-// ── URL validation ────────────────────────────────────────────────────────────
 
 /// Validate `raw_url` against the current outbound policy.
 ///
@@ -106,9 +100,7 @@ pub async fn validate_outbound_url(raw_url: &str) -> Result<(), LiterLlmError> {
 
 #[cfg(target_arch = "wasm32")]
 async fn check_deny_private(_url: &Url, _raw: &str) -> Result<(), LiterLlmError> {
-    // WASM has no DNS resolver — the sync literal-IP check above is the only
-    // SSRF guard available.  Hostname resolution defense in depth lives in the
-    // GuardedResolver path which is native-only.
+    // ~keep WASM has no Rust DNS hook; only native GuardedResolver can block hostname SSRF.
     Ok(())
 }
 
@@ -141,10 +133,6 @@ pub fn validate_outbound_url_sync(raw_url: &str) -> Result<(), LiterLlmError> {
         }
     }
 
-    // If the host is already a literal IP address, check it right now.
-    // url::Url::host() returns the parsed Host enum; use it to avoid
-    // bracket-stripping issues with IPv6 (`host_str()` includes the `[...]`
-    // wrapper so `host_str().parse::<IpAddr>()` would fail for IPv6).
     match url.host() {
         Some(url::Host::Ipv4(v4)) if is_forbidden(IpAddr::V4(v4)) => {
             return Err(LiterLlmError::OutboundForbidden {
@@ -159,12 +147,10 @@ pub fn validate_outbound_url_sync(raw_url: &str) -> Result<(), LiterLlmError> {
             });
         }
         _ => {
-            // Domain name (or allowed IP) — no sync DNS; GuardedResolver
-            // handles hostname-based SSRF at connect time.
+            // ~keep No sync DNS here; GuardedResolver handles hostname SSRF at connect time.
         }
     }
 
-    // Allowlist check is purely structural — no DNS needed.
     if let OutboundPolicy::Allowlist(allowed) = policy {
         return check_allowlist(&url, raw_url, &allowed);
     }
@@ -216,8 +202,6 @@ fn check_allowlist(url: &Url, raw: &str, allowed: &[Url]) -> Result<(), LiterLlm
     }
 }
 
-// ── IP classification ─────────────────────────────────────────────────────────
-
 /// Returns `true` if `ip` is in a range that must not be reached from a
 /// multi-tenant proxy.
 ///
@@ -262,8 +246,6 @@ fn is_unique_local_v6(ip: std::net::Ipv6Addr) -> bool {
 fn is_link_local_v6(ip: std::net::Ipv6Addr) -> bool {
     (ip.segments()[0] & 0xffc0) == 0xfe80
 }
-
-// ── GuardedResolver ───────────────────────────────────────────────────────────
 
 /// A `reqwest` DNS resolver that filters resolved addresses through the
 /// current [`OutboundPolicy`].
@@ -328,8 +310,6 @@ mod resolver_impl {
 #[cfg(all(feature = "native-http", not(target_arch = "wasm32")))]
 pub use resolver_impl::guarded_resolver;
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
-
 #[cfg(test)]
 mod tests {
     use serial_test::serial;
@@ -344,8 +324,6 @@ mod tests {
         set_outbound_policy(OutboundPolicy::Off);
     }
 
-    // ── is_forbidden table tests ──────────────────────────────────────────────
-
     #[test]
     fn is_forbidden_recognizes_private_ranges() {
         let cases: &[(&str, bool)] = &[
@@ -354,12 +332,12 @@ mod tests {
             ("192.168.1.1", true),
             ("127.0.0.1", true),
             ("169.254.0.1", true),
-            ("100.100.0.1", true),     // CGNAT
-            ("0.0.0.0", true),         // unspecified
-            ("255.255.255.255", true), // broadcast
-            ("224.0.0.1", true),       // multicast
-            ("8.8.8.8", false),        // public DNS — allowed
-            ("1.1.1.1", false),        // Cloudflare — allowed
+            ("100.100.0.1", true),
+            ("0.0.0.0", true),
+            ("255.255.255.255", true),
+            ("224.0.0.1", true),
+            ("8.8.8.8", false),
+            ("1.1.1.1", false),
         ];
         for (addr, expected) in cases {
             let ip: IpAddr = addr.parse().expect("valid IP");
@@ -389,14 +367,9 @@ mod tests {
     fn is_forbidden_ipv6_public() {
         let ip: IpAddr = "2001:4860:4860::8888"
             .parse()
-            .expect("Google DNS is a valid IPv6 address"); // Google DNS
+            .expect("Google DNS is a valid IPv6 address");
         assert!(!is_forbidden(ip));
     }
-
-    // ── validate_outbound_url_sync ────────────────────────────────────────────
-    //
-    // All policy-mutating tests share `#[serial(outbound_policy)]` so they
-    // never run concurrently with each other or with the async tests below.
 
     #[test]
     #[serial(outbound_policy)]
@@ -478,8 +451,6 @@ mod tests {
             assert!(result.is_err(), "different host should be rejected");
         });
     }
-
-    // ── validate_outbound_url (async, DNS) ────────────────────────────────────
 
     #[tokio::test]
     #[serial(outbound_policy)]

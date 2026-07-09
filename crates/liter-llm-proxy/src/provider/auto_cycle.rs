@@ -48,8 +48,6 @@ use super::credential_pool::{CredentialError, CredentialHandle, CredentialPool};
 /// Default cooldown when no `Retry-After` header is present.
 const DEFAULT_COOLDOWN: Duration = Duration::from_secs(60);
 
-// ─── ServiceFactory ───────────────────────────────────────────────────────────
-
 /// A factory that produces a new `tower::Service<LlmRequest>` for a given
 /// API key.  Used by [`AutoCycleService`] to rebuild the inner service when a
 /// credential is rotated.
@@ -68,8 +66,6 @@ pub trait ServiceFactory: Send + Sync + 'static {
     /// (e.g. invalid header).
     fn build(&self, api_key: &secrecy::SecretString) -> Result<Self::Service>;
 }
-
-// ─── AutoCycleLayer ───────────────────────────────────────────────────────────
 
 /// Tower [`Layer`] that wraps a service with credential auto-cycling.
 pub struct AutoCycleLayer<P, F> {
@@ -107,8 +103,6 @@ where
         }
     }
 }
-
-// ─── AutoCycleService ─────────────────────────────────────────────────────────
 
 /// Tower service produced by [`AutoCycleLayer`].
 pub struct AutoCycleService<P, F, S> {
@@ -152,15 +146,13 @@ where
         let provider = self.provider.clone();
         let model = req.model().unwrap_or("").to_owned();
 
-        // Tower readiness contract: consume the polled-ready instance.
+        // ~keep Tower readiness contract: consume the polled-ready instance.
         let clone = self.inner.clone();
         let mut inner = std::mem::replace(&mut self.inner, clone);
 
         Box::pin(async move {
-            // Obtain the initial credential from the pool.
             let initial_handle = pool.current(&provider).await.ok();
 
-            // First attempt — use the existing (pre-built) inner service.
             let first_result = inner.call(req.clone()).await;
 
             match first_result {
@@ -168,35 +160,28 @@ where
                 Err(err) if needs_rotation(&err) => {
                     let cooldown = cooldown_from_error(&err);
 
-                    // Park the exhausted credential.
                     if let Some(ref handle) = initial_handle {
                         pool.mark_exhausted(&provider, handle, cooldown).await;
                     }
 
-                    // Find the next credential compatible with the model.
                     let next_handle = next_credential_for_model(&pool, &provider, &model).await;
 
                     match next_handle {
                         Some(handle) => {
-                            // Build a new service with the rotated credential.
                             let mut rotated_svc = factory.build(&handle.api_key)?;
 
-                            // poll_ready on the fresh service (it always returns Ready
-                            // for stateless HTTP transports).
+                            // ~keep poll_ready still runs on rotated services so permit-based layers stay correct.
                             std::future::poll_fn(|cx| rotated_svc.poll_ready(cx)).await?;
 
                             rotated_svc.call(req).await
                         }
-                        None => {
-                            // All credentials exhausted for this model/provider.
-                            Err(LiterLlmError::ServiceUnavailable {
-                                message: format!(
-                                    "all credentials exhausted for provider '{provider}' \
+                        None => Err(LiterLlmError::ServiceUnavailable {
+                            message: format!(
+                                "all credentials exhausted for provider '{provider}' \
                                      (model: '{model}')"
-                                ),
-                                status: 503,
-                            })
-                        }
+                            ),
+                            status: 503,
+                        }),
                     }
                 }
                 Err(other) => Err(other),
@@ -204,8 +189,6 @@ where
         })
     }
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /// Return `true` for errors that should trigger a credential rotation.
 ///
@@ -246,7 +229,6 @@ async fn next_credential_for_model<P: CredentialPool>(
     provider: &str,
     model: &str,
 ) -> Option<CredentialHandle> {
-    // Guard against infinite loops in degenerate configurations.
     const MAX_ATTEMPTS: usize = 128;
 
     for _ in 0..MAX_ATTEMPTS {
@@ -257,7 +239,6 @@ async fn next_credential_for_model<P: CredentialPool>(
                     .as_ref()
                     .is_some_and(|allowlist| !allowlist.iter().any(|m| m == model))
                 {
-                    // Skip this credential for this model by parking it briefly.
                     pool.mark_exhausted(provider, &handle, Duration::from_secs(1)).await;
                     continue;
                 }
@@ -269,8 +250,6 @@ async fn next_credential_for_model<P: CredentialPool>(
     }
     None
 }
-
-// ─── Tests ────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -290,8 +269,6 @@ mod tests {
     use crate::provider::credential_pool_memory::InMemoryCredentialPool;
 
     use super::*;
-
-    // ─── test helpers ─────────────────────────────────────────────────────────
 
     fn chat_req(model: &str) -> LlmRequest {
         use liter_llm::types::common::{UserContent, UserMessage};
@@ -334,10 +311,6 @@ mod tests {
         })
     }
 
-    // ─── Scripted inner service ───────────────────────────────────────────────
-
-    // A script entry is either Ok or Err, stored as a factory so we can replay
-    // the last entry without needing Clone on LiterLlmError.
     type ScriptEntry = Box<dyn Fn() -> Result<LlmResponse> + Send + Sync>;
 
     /// An inner service that returns a preset sequence of results.
@@ -401,8 +374,6 @@ mod tests {
         }
     }
 
-    // ─── Scripted ServiceFactory ──────────────────────────────────────────────
-
     /// A `ServiceFactory` that returns a scripted service with a given key recorder.
     #[derive(Clone)]
     struct ScriptedFactory {
@@ -434,7 +405,6 @@ mod tests {
         }
     }
 
-    // ─── 6 ───────────────────────────────────────────────────────────────────
     /// auto_cycle_on_429_retries_with_fresh_credential
     ///
     /// The initial call returns 429; the rotation should produce a service
@@ -443,14 +413,12 @@ mod tests {
     async fn auto_cycle_on_429_retries_with_fresh_credential() {
         let pool = pool_with_keys("openai", &[("sk-a", None), ("sk-b", None)]);
 
-        // The factory records the key used and returns OK on every call.
         let factory = Arc::new(ScriptedFactory::new());
         let last_key = Arc::clone(&factory.last_key);
         let factory_call_count = Arc::clone(&factory.factory_call_count);
 
         let layer = AutoCycleLayer::new(Arc::clone(&pool), Arc::clone(&factory), "openai");
 
-        // The initial inner service returns 429 once.
         let initial_inner =
             ScriptedService::new(vec![ScriptedService::rate_limit_entry(Some(Duration::from_millis(1)))]);
         let initial_call_count = Arc::clone(&initial_inner.call_count);
@@ -463,21 +431,16 @@ mod tests {
             .expect("should succeed on retry");
         assert!(matches!(resp, LlmResponse::Chat(_)), "expected Chat response");
 
-        // Initial service called once (the 429 attempt).
         assert_eq!(initial_call_count.load(Ordering::SeqCst), 1);
-        // Factory-produced service called once (the retry).
         assert_eq!(factory_call_count.load(Ordering::SeqCst), 1);
 
-        // The factory received the second key ("sk-b").
         let key = last_key.lock().unwrap().clone();
         assert_eq!(key.as_deref(), Some("sk-b"), "retry should use second credential");
     }
 
-    // ─── 7 ───────────────────────────────────────────────────────────────────
     /// auto_cycle_all_exhausted_surfaces_error
     #[tokio::test]
     async fn auto_cycle_all_exhausted_surfaces_error() {
-        // Only one credential — after one 429 the pool is empty.
         let pool = pool_with_keys("openai", &[("sk-only", None)]);
         let factory = Arc::new(ScriptedFactory::new());
 
@@ -493,7 +456,6 @@ mod tests {
         );
     }
 
-    // ─── 8 ───────────────────────────────────────────────────────────────────
     /// auto_cycle_does_not_trip_circuit_on_single_exhaustion
     ///
     /// One 429 triggers rotation; the retry succeeds.  The circuit breaker
@@ -507,16 +469,13 @@ mod tests {
         let policy = Arc::new(ExponentialBackoffCircuit::new(3, Duration::from_millis(50)));
         let policy_ref = Arc::clone(&policy);
 
-        // Factory produces a service that returns OK.
         let factory = Arc::new(ScriptedFactory::new());
         let auto_layer = AutoCycleLayer::new(Arc::clone(&pool), Arc::clone(&factory), "openai");
         let circuit_layer = CircuitLayer::new(Arc::clone(&policy), "openai");
 
-        // Initial inner: returns 429 once.
         let initial_inner =
             ScriptedService::new(vec![ScriptedService::rate_limit_entry(Some(Duration::from_millis(1)))]);
 
-        // Stack: CircuitLayer → AutoCycleLayer → initial_inner.
         let auto_svc = auto_layer.layer(initial_inner);
         let mut svc = circuit_layer.layer(auto_svc);
 
@@ -526,7 +485,6 @@ mod tests {
             .expect("should succeed after rotation");
         assert!(matches!(resp, LlmResponse::Chat(_)));
 
-        // Circuit must still be Closed — rotation was transparent.
         assert_eq!(
             policy_ref.state(),
             CircuitState::Closed,
@@ -534,7 +492,6 @@ mod tests {
         );
     }
 
-    // ─── model allowlist skip ─────────────────────────────────────────────────
     /// Credential A allows only "gpt-4o"; credential B allows "claude-3".
     /// next_credential_for_model("claude-3") should skip A and return B.
     #[tokio::test]

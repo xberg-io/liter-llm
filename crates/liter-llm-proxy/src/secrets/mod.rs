@@ -33,10 +33,6 @@ pub mod aws;
 #[cfg(feature = "secrets-vault")]
 pub mod vault;
 
-// ---------------------------------------------------------------------------
-// Public re-exports
-// ---------------------------------------------------------------------------
-
 pub use env::EnvVarSecretManager;
 pub use registry::SecretManagerRegistry;
 
@@ -45,10 +41,6 @@ pub use aws::AwsSecretsManagerProvider;
 
 #[cfg(feature = "secrets-vault")]
 pub use vault::HashiCorpVaultProvider;
-
-// ---------------------------------------------------------------------------
-// Error type
-// ---------------------------------------------------------------------------
 
 /// Errors returned by [`SecretManager`] operations.
 #[derive(Debug, thiserror::Error)]
@@ -98,10 +90,6 @@ impl SecretError {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Value + metadata
-// ---------------------------------------------------------------------------
-
 /// A secret value with full metadata.
 ///
 /// The [`value`](SecretValue::value) field is a [`SecretString`] and is
@@ -130,10 +118,6 @@ pub struct SecretMetadata {
     /// Arbitrary key-value labels from the backend (AWS tags, Vault metadata).
     pub tags: HashMap<String, String>,
 }
-
-// ---------------------------------------------------------------------------
-// Trait
-// ---------------------------------------------------------------------------
 
 /// Unified secret-management interface.
 ///
@@ -214,10 +198,6 @@ pub trait SecretManager: Send + Sync + 'static {
     fn backend(&self) -> &'static str;
 }
 
-// ---------------------------------------------------------------------------
-// Rotation-warning helper (shared by registry convenience methods)
-// ---------------------------------------------------------------------------
-
 /// Duration threshold at which a rotation warning is emitted.
 pub(crate) const ROTATION_WARNING_THRESHOLD: Duration = Duration::from_secs(24 * 60 * 60);
 
@@ -240,7 +220,6 @@ pub(crate) fn check_rotation_warning(name: &str, metadata: &SecretMetadata, back
             );
         }
     } else {
-        // expires_at is in the past.
         tracing::warn!(
             secret.name = name,
             secret.backend = backend,
@@ -248,10 +227,6 @@ pub(crate) fn check_rotation_warning(name: &str, metadata: &SecretMetadata, back
         );
     }
 }
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
@@ -270,7 +245,6 @@ mod tests {
             expires_at: None,
             tags: HashMap::new(),
         };
-        // Must not panic.
         check_rotation_warning("test", &meta, "env");
     }
 
@@ -284,7 +258,6 @@ mod tests {
             expires_at: Some(SystemTime::now() + Duration::from_secs(48 * 60 * 60)),
             tags: HashMap::new(),
         };
-        // Must not panic (no assert on log output here; tracing-test covers it).
         check_rotation_warning("test", &meta, "env");
     }
 

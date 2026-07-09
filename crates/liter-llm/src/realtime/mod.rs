@@ -35,8 +35,6 @@ pub use openai::OpenAiRealtimeTranslator;
 
 use crate::error::Result;
 
-// ── Supporting types ──────────────────────────────────────────────────────────
-
 /// A single content part within a conversation item.
 ///
 /// Conversation items may carry text, audio, or an image (by reference).
@@ -93,8 +91,6 @@ pub enum ResponseStatus {
     Incomplete,
 }
 
-// ── Core event enum ───────────────────────────────────────────────────────────
-
 /// Unified Realtime event — the normalised in-memory representation of every
 /// server-to-client or client-to-server message in the liter-llm Realtime API.
 ///
@@ -107,7 +103,6 @@ pub enum ResponseStatus {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum RealtimeEvent {
-    // ── Session ───────────────────────────────────────────────────────────────
     /// The provider confirmed that a new session was created.
     SessionCreated {
         /// Provider-assigned session identifier.
@@ -123,7 +118,6 @@ pub enum RealtimeEvent {
         instructions: Option<String>,
     },
 
-    // ── Conversation items ────────────────────────────────────────────────────
     /// A new conversation item was appended to the conversation.
     ConversationItemCreated {
         /// Provider-assigned item identifier.
@@ -139,7 +133,6 @@ pub enum RealtimeEvent {
         item_id: String,
     },
 
-    // ── Response lifecycle ────────────────────────────────────────────────────
     /// The provider started generating a new response.
     ResponseCreated {
         /// Provider-assigned response identifier.
@@ -153,7 +146,6 @@ pub enum RealtimeEvent {
         status: ResponseStatus,
     },
 
-    // ── Text streaming ────────────────────────────────────────────────────────
     /// An incremental text delta from the model's response.
     ResponseTextDelta {
         /// Response this delta belongs to.
@@ -169,7 +161,6 @@ pub enum RealtimeEvent {
         text: String,
     },
 
-    // ── Audio streaming ───────────────────────────────────────────────────────
     /// An incremental audio delta from the model's response.
     ResponseAudioDelta {
         /// Response this delta belongs to.
@@ -183,7 +174,6 @@ pub enum RealtimeEvent {
         response_id: String,
     },
 
-    // ── Audio transcript streaming ────────────────────────────────────────────
     /// An incremental transcript delta for the model's audio output.
     ResponseAudioTranscriptDelta {
         /// Response this delta belongs to.
@@ -199,7 +189,6 @@ pub enum RealtimeEvent {
         transcript: String,
     },
 
-    // ── Function call streaming ───────────────────────────────────────────────
     /// An incremental JSON delta for a function-call's arguments.
     ResponseFunctionCallArgumentsDelta {
         /// Response this delta belongs to.
@@ -221,7 +210,6 @@ pub enum RealtimeEvent {
         arguments: String,
     },
 
-    // ── Input audio buffer ────────────────────────────────────────────────────
     /// Client is appending a chunk of audio to the input buffer.
     InputAudioBufferAppend {
         /// Base64-encoded audio bytes to append.
@@ -244,7 +232,6 @@ pub enum RealtimeEvent {
         audio_end_ms: u32,
     },
 
-    // ── Rate limits ───────────────────────────────────────────────────────────
     /// The provider sent updated rate-limit information.
     RateLimitsUpdated {
         /// Remaining request quota, when reported.
@@ -255,7 +242,6 @@ pub enum RealtimeEvent {
         reset_at_unix_ms: i64,
     },
 
-    // ── Error ─────────────────────────────────────────────────────────────────
     /// The provider or proxy encountered an error.
     Error {
         /// Provider-specific or proxy error code string.
@@ -266,7 +252,6 @@ pub enum RealtimeEvent {
         event_id: Option<String>,
     },
 
-    // ── Catch-all ────────────────────────────────────────────────────────────
     /// An event type that this library does not yet model explicitly.
     ///
     /// The proxy forwards `Raw` events transparently to avoid data loss when
@@ -279,8 +264,6 @@ pub enum RealtimeEvent {
         payload: serde_json::Value,
     },
 }
-
-// ── Envelope ──────────────────────────────────────────────────────────────────
 
 /// Wire-level envelope that associates a per-frame `event_id` with a
 /// [`RealtimeEvent`].
@@ -312,8 +295,6 @@ impl RealtimeEnvelope {
         }
     }
 }
-
-// ── Translator trait ──────────────────────────────────────────────────────────
 
 /// Per-provider translation between the provider's native wire format and the
 /// unified [`RealtimeEvent`] schema.
@@ -381,8 +362,6 @@ pub trait RealtimeTranslator: Send + Sync + 'static {
     /// Must be a static string (e.g. `"openai"`, `"anthropic-realtime"`).
     fn provider(&self) -> &'static str;
 }
-
-// ── Tests ─────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {

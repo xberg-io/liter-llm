@@ -6,10 +6,6 @@ use tower::ServiceExt;
 
 use liter_llm_proxy::config::ProxyConfig;
 
-// ---------------------------------------------------------------------------
-// Helper: build a proxy config with given cors_origins
-// ---------------------------------------------------------------------------
-
 fn config_with_cors(mock_url: &str, cors_origins: &[&str]) -> ProxyConfig {
     let origins_toml = cors_origins
         .iter()
@@ -33,10 +29,6 @@ base_url = "{mock_url}"
     ))
     .expect("cors config TOML")
 }
-
-// ---------------------------------------------------------------------------
-// F7 — empty cors_origins (new strict default) → no CORS headers
-// ---------------------------------------------------------------------------
 
 #[tokio::test]
 async fn empty_cors_origins_produces_no_allow_origin_header() {
@@ -93,10 +85,6 @@ async fn empty_cors_origins_preflight_returns_no_cors_headers() {
     upstream.shutdown();
 }
 
-// ---------------------------------------------------------------------------
-// F7 — wildcard cors_origins → allow-origin=* but NO Authorization header
-// ---------------------------------------------------------------------------
-
 #[tokio::test]
 async fn wildcard_cors_allows_any_origin() {
     let upstream = common::mock_upstream::MockUpstream::start(vec![]).await;
@@ -133,7 +121,6 @@ async fn wildcard_cors_does_not_allow_authorization_header() {
     let upstream = common::mock_upstream::MockUpstream::start(vec![]).await;
     let proxy = common::test_proxy::TestProxy::with_config(config_with_cors(&upstream.url, &["*"]));
 
-    // An OPTIONS preflight requesting the Authorization header.
     let resp = proxy
         .router()
         .oneshot(
@@ -162,10 +149,6 @@ async fn wildcard_cors_does_not_allow_authorization_header() {
 
     upstream.shutdown();
 }
-
-// ---------------------------------------------------------------------------
-// F7 — explicit cors_origins → echoes the specific origin
-// ---------------------------------------------------------------------------
 
 #[tokio::test]
 async fn explicit_origin_is_echoed() {

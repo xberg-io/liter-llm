@@ -18,8 +18,6 @@ use super::types::{LlmRequest, LlmResponse};
 use crate::client::BoxFuture;
 use crate::error::{LiterLlmError, Result};
 
-// ─── RetryClass ───────────────────────────────────────────────────────────────
-
 /// Classification of a single attempt error.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum RetryClass {
@@ -29,8 +27,6 @@ pub enum RetryClass {
     Terminal,
 }
 
-// ─── RetryPolicy trait ────────────────────────────────────────────────────────
-
 /// Classifies an error as transient or terminal for fallback chain decisions.
 ///
 /// Implement this to provide custom retry logic (e.g. to treat 429 as
@@ -39,8 +35,6 @@ pub trait RetryPolicy: Send + Sync + 'static {
     /// Classify `error` as [`RetryClass::Transient`] or [`RetryClass::Terminal`].
     fn classify(&self, error: &LiterLlmError) -> RetryClass;
 }
-
-// ─── DefaultRetryPolicy ───────────────────────────────────────────────────────
 
 /// Default [`RetryPolicy`]: delegates to [`LiterLlmError::is_transient`].
 ///
@@ -60,8 +54,6 @@ impl RetryPolicy for DefaultRetryPolicy {
         }
     }
 }
-
-// ─── FallbackChainLayer ───────────────────────────────────────────────────────
 
 /// Tower [`Layer`] that walks an ordered list of services on transient errors.
 ///
@@ -148,8 +140,6 @@ impl<S: Clone, R: RetryPolicy> Layer<()> for FallbackChainLayer<S, R> {
     type Service = FallbackChainService<S, R>;
 
     fn layer(&self, _inner: ()) -> Self::Service {
-        // The entire chain is stored internally; `_inner` is the unit
-        // placeholder required by `ServiceBuilder::new().layer(...)` composition.
         FallbackChainService {
             chain: Arc::clone(&self.chain),
             policy: Arc::clone(&self.policy),
@@ -175,8 +165,6 @@ impl<S: Clone, R: RetryPolicy> FallbackChainLayer<S, R> {
         self
     }
 }
-
-// ─── FallbackChainService ─────────────────────────────────────────────────────
 
 /// Tower service produced by [`FallbackChainLayer`].
 #[cfg_attr(alef, alef(skip))]
@@ -205,8 +193,6 @@ where
     type Future = BoxFuture<'static, Result<LlmResponse>>;
 
     fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<()>> {
-        // Services are cloned per-call (same rationale as `Router`); no
-        // persistent readied slot to manage here.
         Poll::Ready(Ok(()))
     }
 
@@ -237,10 +223,7 @@ where
                 );
                 let _guard = span.enter();
 
-                // Honour the Tower readiness contract: drive the service to
-                // ready before calling it.  This is required for services with
-                // permit-based readiness (e.g. `ConcurrencyLimit`, `Buffer`)
-                // that reserve a resource slot inside `poll_ready`.
+                // ~keep Drive each fallback service to ready so permit-based readiness is honored.
                 let svc = match svc.ready().await {
                     Ok(s) => s,
                     Err(e) => match policy.classify(&e) {
@@ -303,8 +286,6 @@ where
     }
 }
 
-// ─── Tests ────────────────────────────────────────────────────────────────────
-
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
@@ -318,8 +299,6 @@ mod tests {
     use crate::tower::service::LlmService;
     use crate::tower::tests_common::{MockClient, chat_req};
     use crate::tower::types::{LlmRequest, LlmResponse};
-
-    // ── Basic chain behaviour ─────────────────────────────────────────────────
 
     #[tokio::test]
     async fn fallback_chain_succeeds_on_first_service() {
@@ -340,7 +319,7 @@ mod tests {
         let failing = LlmService::new(MockClient::failing_timeout());
         let succeeding = LlmService::new(MockClient::ok());
         let call_count = Arc::clone(&MockClient::ok().call_count);
-        let _ = call_count; // counts via MockClient::ok() above — use a fresh one below
+        let _ = call_count;
 
         let ok_client = MockClient::ok();
         let ok_calls = Arc::clone(&ok_client.call_count);
@@ -348,7 +327,7 @@ mod tests {
             chain: Arc::new(vec![failing, LlmService::new(ok_client)]),
             policy: Arc::new(DefaultRetryPolicy),
         };
-        let _ = succeeding; // not used
+        let _ = succeeding;
 
         let resp = svc
             .call(LlmRequest::Chat(chat_req("openai/gpt-4")))
@@ -399,8 +378,6 @@ mod tests {
         );
     }
 
-    // ── Fix 5: prepend() adds a service at chain head ─────────────────────────
-
     /// `FallbackChainLayer::prepend(head)` inserts `head` at position 0 so that
     /// it is tried first.  Without this method there was no ergonomic way to
     /// compose a primary service with a fallback chain; callers had to manually
@@ -411,7 +388,6 @@ mod tests {
         let ok_calls = Arc::clone(&ok_client.call_count);
         let head_svc = LlmService::new(ok_client);
 
-        // Chain has one failing service; after prepend, head_svc is tried first.
         let chain_svc = LlmService::new(MockClient::failing_timeout());
         let layer = FallbackChainLayer::new(vec![chain_svc]).prepend(head_svc);
         let mut svc = layer.layer(());
@@ -428,15 +404,12 @@ mod tests {
         );
     }
 
-    // ── Fix 4: Tower readiness contract ───────────────────────────────────────
-
     /// `FallbackChainService::call` must invoke `poll_ready` on each cloned
     /// service before calling it.  Without `svc.ready().await`, services that
     /// reserve a resource in `poll_ready` (e.g. `ConcurrencyLimit`) would have
     /// their readiness bypassed, potentially exceeding the concurrency limit.
     #[tokio::test]
     async fn fallback_chain_respects_inner_readiness() {
-        // Counting service: tracks concurrent calls in flight.
         #[derive(Clone)]
         struct CountingService {
             concurrent: Arc<AtomicUsize>,
@@ -458,7 +431,6 @@ mod tests {
                 Box::pin(async move {
                     let current = concurrent.fetch_add(1, Ordering::SeqCst) + 1;
                     peak.fetch_max(current, Ordering::SeqCst);
-                    // Yield once so parallel tasks can interleave.
                     tokio::task::yield_now().await;
                     concurrent.fetch_sub(1, Ordering::SeqCst);
                     Ok(LlmResponse::Chat(crate::tower::tests_common::make_chat_response(
@@ -468,7 +440,6 @@ mod tests {
             }
         }
 
-        // Wrap with ConcurrencyLimit(1) so only one call at a time is allowed.
         let concurrent = Arc::new(AtomicUsize::new(0));
         let peak = Arc::new(AtomicUsize::new(0));
         let inner = CountingService {
@@ -481,24 +452,18 @@ mod tests {
             policy: Arc::new(DefaultRetryPolicy),
         };
 
-        // Run 5 sequential calls (FallbackChainService clones per call).
-        // Each clone must call ready() before call(), respecting the limit.
         for _ in 0..5 {
             svc.call(LlmRequest::Chat(chat_req("openai/gpt-4")))
                 .await
                 .expect("each call must succeed");
         }
 
-        // Since calls are sequential here and each waits for completion,
-        // peak concurrent should be exactly 1.
         assert_eq!(
             peak.load(Ordering::SeqCst),
             1,
             "peak concurrent calls must be 1 (ConcurrencyLimit respected)"
         );
 
-        // Also verify that a FallbackChainService with a ConcurrencyLimit(1)
-        // and two concurrent tasks does not exceed the limit.
         let concurrent2 = Arc::new(AtomicUsize::new(0));
         let peak2 = Arc::new(AtomicUsize::new(0));
         let inner2 = CountingService {
@@ -511,9 +476,6 @@ mod tests {
             policy: Arc::new(DefaultRetryPolicy),
         };
 
-        // Spawn tasks; they share the same chain Arc but clone per call.
-        // Without ready(), peak would exceed 1.  With ready(), the limit
-        // is serialized by the ConcurrencyLimit permit.
         let handles: Vec<_> = (0..5)
             .map(|_| {
                 let mut s = svc2.clone();

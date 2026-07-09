@@ -55,8 +55,6 @@ mod inner {
 
     use std::sync::Arc;
 
-    // ─── Meter singleton ──────────────────────────────────────────────────────
-
     static METER: OnceLock<Meter> = OnceLock::new();
 
     /// Initialise the global `Meter` used by all [`MetricsLayer`] instances.
@@ -87,8 +85,6 @@ mod inner {
         METER.get()
     }
 
-    // ─── Instrument set ───────────────────────────────────────────────────────
-
     /// Cached OTel instruments for recording metrics.
     ///
     /// Initialized once via [`init_meter`] and shared across all requests and
@@ -108,7 +104,6 @@ mod inner {
         budget_spend: Histogram<f64>,
         /// `gen_ai.budget.rejection` — counter incremented on budget reject.
         budget_rejection: Counter<u64>,
-        // ── Realtime instruments ───────────────────────────────────────────────
         /// `gen_ai.realtime.session.duration` — WebSocket session lifetime in seconds.
         realtime_session_duration: Histogram<f64>,
         /// `gen_ai.realtime.event.count` — events forwarded (inbound + outbound).
@@ -182,8 +177,6 @@ mod inner {
         }
     }
 
-    // ─── Attributes cache ────────────────────────────────────────────────────
-
     /// Cached base attributes keyed by (system, model) to avoid repeated clones
     /// on every request.
     type BaseAttrsKey = (Arc<str>, Arc<str>);
@@ -216,12 +209,10 @@ mod inner {
 
         let cache = base_attrs_cache();
 
-        // Try fast path: entry already cached.
         if let Some(entry) = cache.get(&key) {
             return Arc::clone(&entry);
         }
 
-        // Slow path: build and cache.
         let attrs = Arc::from(
             vec![
                 KeyValue::new("gen_ai.system", system_arc.to_string()),
@@ -232,7 +223,6 @@ mod inner {
             .into_boxed_slice(),
         );
 
-        // Insert and return (another thread might race; we use entry to minimize reinsert).
         cache.entry(key).or_insert_with(|| Arc::clone(&attrs));
 
         attrs
@@ -247,7 +237,6 @@ mod inner {
 
         let cache = token_attrs_cache();
 
-        // Try fast path: entry already cached.
         if let Some(entry) = cache.get(&key) {
             return CachedTokenAttrs {
                 input: Arc::clone(&entry.input),
@@ -255,7 +244,6 @@ mod inner {
             };
         }
 
-        // Slow path: build base and extend with token types.
         let base = get_or_build_base_attrs(&system_arc, &model_arc, response_model, operation);
 
         let mut input_attrs = base.to_vec();
@@ -271,7 +259,6 @@ mod inner {
             output: Arc::clone(&output_arc),
         };
 
-        // Insert and return.
         cache.entry(key).or_insert_with(|| CachedTokenAttrs {
             input: Arc::clone(&input_arc),
             output: Arc::clone(&output_arc),
@@ -280,23 +267,17 @@ mod inner {
         cached
     }
 
-    // ─── Instruments cache ────────────────────────────────────────────────────
-
     static INSTRUMENTS: OnceLock<Arc<Instruments>> = OnceLock::new();
 
     /// Return the cached instruments, initializing them if the meter is available.
     /// Returns `None` if the meter has not yet been initialized.
     fn instruments() -> Option<Arc<Instruments>> {
-        // Fast path: instruments already cached.
         if let Some(cached) = INSTRUMENTS.get() {
             return Some(Arc::clone(cached));
         }
 
-        // Slow path: lazy initialization from meter.
-        // This is called at most once per thread (first time after METER is set).
         if let Some(meter) = global_meter() {
             let new_instruments = Arc::new(Instruments::new(meter));
-            // Best-effort cache insertion; another thread may beat us to it.
             let result = INSTRUMENTS
                 .set(Arc::clone(&new_instruments))
                 .ok()
@@ -306,8 +287,6 @@ mod inner {
 
         None
     }
-
-    // ─── Layer ────────────────────────────────────────────────────────────────
 
     /// Tower [`Layer`] that records OTel GenAI semantic-convention metrics.
     ///
@@ -324,8 +303,6 @@ mod inner {
             MetricsService { inner }
         }
     }
-
-    // ─── Service ─────────────────────────────────────────────────────────────
 
     /// Tower service produced by [`MetricsLayer`].
     pub struct MetricsService<S> {
@@ -356,7 +333,6 @@ mod inner {
         fn call(&mut self, req: LlmRequest) -> Self::Future {
             let start = Instant::now();
 
-            // Capture metadata before moving `req` into the inner future.
             let operation = req.operation_name();
             let model_str = req.model().unwrap_or("").to_owned();
             let system = model_str
@@ -370,9 +346,7 @@ mod inner {
                 let result = fut.await;
                 let elapsed = start.elapsed().as_secs_f64();
 
-                // Only record metrics when instruments are available.
                 if let Some(instr) = instruments() {
-                    // Determine response model.
                     let response_model = match &result {
                         Ok(resp) => match resp {
                             LlmResponse::Chat(r) => r.model.clone(),
@@ -382,25 +356,19 @@ mod inner {
                         Err(_) => model_str.clone(),
                     };
 
-                    // Retrieve or build cached base attributes (Arc-backed to avoid per-request clones).
                     let base_attrs = get_or_build_base_attrs(&system, &model_str, &response_model, operation);
 
-                    // Operation duration.
                     instr.op_duration.record(elapsed, base_attrs.as_ref());
 
-                    // Token usage — only when the response carries usage data.
                     if let Ok(resp) = &result
                         && let Some(usage) = resp.usage()
                     {
-                        // Retrieve or build cached token-type attributes to avoid per-recording allocations.
                         let token_attrs = get_or_build_token_attrs(&system, &model_str, &response_model, operation);
 
-                        // Input tokens.
                         instr
                             .token_usage
                             .record(usage.prompt_tokens, token_attrs.input.as_ref());
 
-                        // Output tokens.
                         instr
                             .token_usage
                             .record(usage.completion_tokens, token_attrs.output.as_ref());
@@ -411,8 +379,6 @@ mod inner {
             })
         }
     }
-
-    // ─── Public helpers ───────────────────────────────────────────────────────
 
     /// Record a cache hit metric.
     ///
@@ -586,8 +552,6 @@ mod inner {
         }
     }
 
-    // ─── Realtime metric helpers ──────────────────────────────────────────────
-
     /// Record the lifetime of a completed Realtime WebSocket session.
     ///
     /// Emits `gen_ai.realtime.session.duration` (seconds).
@@ -636,8 +600,6 @@ mod inner {
         }
     }
 
-    // ─── Tests ────────────────────────────────────────────────────────────────
-
     #[cfg(test)]
     mod tests {
         use tower::{Layer as _, Service as _};
@@ -682,25 +644,17 @@ mod inner {
         fn instruments_initialised_once() {
             use opentelemetry::global;
 
-            // Initialize a test meter using the global provider.
-            // In testing, we use a no-op provider if nothing has been configured.
             let meter = global::meter("liter-llm-test");
 
-            // Initialize once.
             init_meter(meter.clone());
 
-            // Retrieve instruments the first time.
             let instr1 = instruments().expect("instruments should be cached");
 
-            // Attempt to initialize again (should be ignored).
             let meter2 = global::meter("liter-llm-test-2");
             init_meter(meter2);
 
-            // Retrieve instruments the second time.
             let instr2 = instruments().expect("instruments should still be cached");
 
-            // Verify pointer identity: both `Arc` pointers should reference the same
-            // allocation, proving that the second initialization was ignored.
             assert!(Arc::ptr_eq(&instr1, &instr2), "instruments should be reused");
         }
 
@@ -708,23 +662,11 @@ mod inner {
         /// These should not panic even when called without `init_meter`.
         #[test]
         fn metrics_record_helpers_no_op_without_meter() {
-            // Note: we cannot clear the global METER or INSTRUMENTS state in tests
-            // (OnceLock doesn't expose a reset API). This test assumes a fresh test
-            // process or carefully sequenced test ordering. In CI, each test should
-            // ideally run in isolation. For now, we at least document the expected
-            // behavior.
-
-            // If instruments are not yet cached and the meter is not initialized,
-            // these calls should return early and do nothing.
             record_cache_hit("openai", "gpt-4", "chat");
             record_cache_miss("openai", "gpt-4", "chat");
             record_cache_stale("openai", "gpt-4", "chat");
             record_circuit_trip("openai", "gpt-4");
             record_retry_attempt("openai", "gpt-4", "chat");
-
-            // If we reach here without panicking, the test passes.
-            // (A proper test would require resettable global state, which OnceLock
-            // does not provide.)
         }
 
         /// Verify that base attributes are reused across calls with the same (system, model) pair.
@@ -736,38 +678,26 @@ mod inner {
             let inner = LlmService::new(MockClient::ok());
             let mut svc = MetricsLayer.layer(inner);
 
-            // Make 100 requests with the same (system, model) pair.
-            // Without caching, we would allocate a new Vec on each request.
-            // With caching, the same Arc<[KeyValue]> is reused.
             for _ in 0..100 {
                 let _ = svc.call(LlmRequest::Chat(chat_req("openai/gpt-4"))).await;
             }
 
-            // Verify that the cache contains at least one entry for the (openai, gpt-4) pair.
             let cache = base_attrs_cache();
             let openai_arc = Arc::<str>::from("openai");
             let gpt4_arc = Arc::<str>::from("gpt-4");
             let key = (openai_arc, gpt4_arc);
 
             if let Some(entry) = cache.get(&key) {
-                // Check that the Arc has been cloned multiple times (strong_count > 100).
-                // This proves that the same cached entry is being reused rather than
-                // creating a new allocation on each request.
                 let strong_count = Arc::strong_count(&entry);
                 assert!(
                     strong_count > 10,
                     "expected cached entry to be reused (strong_count > 10), got {}",
                     strong_count
                 );
-            } else {
-                // If the cache is empty, the test is inconclusive (meter not initialized).
-                // We still pass because the primary invariant (no panic) holds.
             }
         }
     }
 }
-
-// ─── No-op stub when otel feature is off ─────────────────────────────────────
 
 #[cfg(not(feature = "otel"))]
 mod inner {
@@ -880,10 +810,7 @@ mod inner {
     pub fn record_realtime_bytes(_provider: &str, _direction: &str, _byte_count: u64) {}
 }
 
-// Re-export the active implementation.
 pub use inner::*;
-
-// ─── Top-level tests (run regardless of otel feature) ──────────────────────
 
 #[cfg(test)]
 #[cfg(feature = "otel")]
@@ -928,13 +855,10 @@ mod tests {
     /// These should not panic even when called without `init_meter`.
     #[test]
     fn tower_metrics_record_helpers_no_op_without_meter() {
-        // These calls should return early and do nothing when meter is not initialized.
         record_cache_hit("openai", "gpt-4", "chat");
         record_cache_miss("openai", "gpt-4", "chat");
         record_cache_stale("openai", "gpt-4", "chat");
         record_circuit_trip("openai", "gpt-4");
         record_retry_attempt("openai", "gpt-4", "chat");
-
-        // If we reach here without panicking, the test passes.
     }
 }

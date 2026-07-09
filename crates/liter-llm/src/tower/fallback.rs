@@ -39,7 +39,6 @@ where
     fn layer(&self, primary: S) -> Self::Service {
         FallbackService {
             primary,
-            // Clone the fallback so the produced service owns it independently.
             fallback: self.fallback.clone(),
         }
     }
@@ -77,15 +76,8 @@ where
     type Future = BoxFuture<'static, Result<LlmResponse>>;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<()>> {
-        // Tower contract: poll_ready should prepare exactly one service for a
-        // subsequent call.  Ideally we would only poll the primary here and
-        // poll the fallback lazily in `call`.  However, because `call` takes
-        // `&mut self` and must return a `'static` future (no reference to
-        // `self`), we cannot hold a mutable borrow across the await point.
-        // For our concrete use case (DefaultClient is always ready), polling
-        // both here is not harmful — neither service blocks and both remain
-        // ready until the next call.  Callers that compose non-trivially-ready
-        // services should use a dedicated load-balancing layer instead.
+        // ~keep Tower requires one ready service per call, but `call` returns a 'static future.
+        // ~keep Polling both services is valid only for always-ready DefaultClient-style services.
         match self.primary.poll_ready(cx) {
             Poll::Pending => return Poll::Pending,
             Poll::Ready(Err(e)) => return Poll::Ready(Err(e)),
@@ -95,15 +87,11 @@ where
     }
 
     fn call(&mut self, req: LlmRequest) -> Self::Future {
-        // Clone the request so it can be replayed on the fallback if needed.
         let fallback_req = req.clone();
         let primary_fut = self.primary.call(req);
 
-        // `poll_ready` readied `self.fallback` for exactly one call.
-        // We move the readied service into the async block (so the future is
-        // 'static) and replace it with a fresh clone for the *next* call cycle.
-        // Tower's contract guarantees at most one `call` per `poll_ready`, so
-        // the fresh clone is not used until `poll_ready` runs again.
+        // ~keep Move the readied fallback into the 'static future and leave a fresh clone for next cycle.
+        // ~keep Tower permits at most one call per poll_ready, so the fresh clone is not used early.
         let fresh = self.fallback.clone();
         let mut readied_fallback = std::mem::replace(&mut self.fallback, fresh);
 

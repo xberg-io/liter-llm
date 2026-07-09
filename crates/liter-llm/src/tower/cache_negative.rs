@@ -54,8 +54,6 @@ use super::types::{LlmRequest, LlmResponse};
 use crate::client::BoxFuture;
 use crate::error::{LiterLlmError, Result};
 
-// ─── NegativeCachePolicy trait ────────────────────────────────────────────────
-
 /// Decides whether and for how long to cache an upstream error.
 ///
 /// Implement this trait to provide custom negative-cache strategies (e.g.
@@ -70,8 +68,6 @@ pub trait NegativeCachePolicy: Send + Sync + 'static {
     /// - `None` — do not cache this error (let callers retry immediately).
     fn cache_for(&self, error: &LiterLlmError) -> Option<Duration>;
 }
-
-// ─── FixedWindowNegativeCache ─────────────────────────────────────────────────
 
 /// Default [`NegativeCachePolicy`]: cache transient errors for a fixed window.
 ///
@@ -136,8 +132,6 @@ impl NegativeCachePolicy for FixedWindowNegativeCache {
     }
 }
 
-// ─── NegativeCacheLayer ───────────────────────────────────────────────────────
-
 /// Tower [`Layer`] that intercepts upstream errors and caches them.
 ///
 /// This layer wraps any inner service and a [`CacheStore`].  On an upstream
@@ -201,8 +195,6 @@ impl<P: NegativeCachePolicy, S> Layer<S> for NegativeCacheLayer<P> {
     }
 }
 
-// ─── NegativeCacheService ─────────────────────────────────────────────────────
-
 /// Tower service produced by [`NegativeCacheLayer`].
 #[cfg_attr(alef, alef(skip))]
 pub struct NegativeCacheService<P: NegativeCachePolicy, S> {
@@ -248,10 +240,7 @@ where
                 && let Some((key, body)) = key_and_body
             {
                 let expires_at = Instant::now() + window;
-                // We cannot clone `LiterLlmError` (`reqwest::Error` is not `Clone`),
-                // so we store the error's `Display` string as an `InternalError`.
-                // The caller already holds the real error via `result`; the cached
-                // version is served only to *subsequent* callers.
+                // ~keep LiterLlmError is not cloneable; cache only a display-string error for later callers.
                 let cached_err = CachedResponse::Error {
                     error: Arc::new(LiterLlmError::InternalError {
                         message: err.to_string(),
@@ -264,8 +253,6 @@ where
         })
     }
 }
-
-// ─── Tests ────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -306,20 +293,16 @@ mod tests {
     /// A `BadRequest` error must not be written to the store (retryable_only = true).
     #[tokio::test]
     async fn negative_cache_skips_non_transient_errors_by_default() {
-        let client = MockClient::failing_auth(); // returns BadRequest
-        let policy = FixedWindowNegativeCache::default(); // retryable_only = true
+        let client = MockClient::failing_auth();
+        let policy = FixedWindowNegativeCache::default();
         let (store, mut svc) = build_stack(client, policy);
 
         let req = LlmRequest::Chat(chat_req("gpt-4"));
         let _ = svc.call(req).await;
 
-        // Nothing should be in the store.
-        let hit = store
-            .get(0, "") // any key — store was never written
-            .await;
+        let hit = store.get(0, "").await;
         assert!(hit.is_none(), "non-transient error must not be cached");
 
-        // Verify by checking a realistic key.
         let body = serde_json::to_string(&chat_req("gpt-4")).unwrap();
         use std::hash::{DefaultHasher, Hash, Hasher};
         let mut hasher = DefaultHasher::new();
@@ -338,7 +321,6 @@ mod tests {
 
         let req_body = chat_req("gpt-4");
 
-        // First call — cache miss, upstream returns RateLimited.
         let first = svc
             .ready()
             .await
@@ -347,7 +329,6 @@ mod tests {
             .await;
         assert!(first.is_err(), "first call should propagate the upstream error");
 
-        // Verify the error was written to the store.
         let serialized = serde_json::to_string(&req_body).unwrap();
         use std::hash::{DefaultHasher, Hash, Hasher};
         let mut hasher = DefaultHasher::new();
@@ -361,8 +342,6 @@ mod tests {
             "stored entry must be CachedResponse::Error"
         );
 
-        // Second call — should return from cache (the inner service won't be called
-        // again, but CacheLayer returns the cached Error entry).
         let second = svc.ready().await.unwrap().call(LlmRequest::Chat(req_body)).await;
         assert!(second.is_err(), "second call must also return an error (cached)");
     }
@@ -370,7 +349,6 @@ mod tests {
     /// After the negative-cache window, the cache misses and inner is called again.
     #[tokio::test]
     async fn negative_cache_returns_to_normal_after_window() {
-        // Use a very short window.
         let client = MockClient::failing_rate_limited();
         let call_count = Arc::clone(&client.call_count);
         let policy = FixedWindowNegativeCache::new(Duration::from_millis(50), true);
@@ -378,7 +356,6 @@ mod tests {
 
         let req_body = chat_req("gpt-4");
 
-        // First call — hits upstream, gets RateLimited, caches it.
         let _ = svc
             .ready()
             .await
@@ -387,10 +364,8 @@ mod tests {
             .await;
         assert_eq!(call_count.load(std::sync::atomic::Ordering::SeqCst), 1);
 
-        // Wait for the window to elapse.
         tokio::time::sleep(Duration::from_millis(100)).await;
 
-        // After window — cache miss, inner is called again.
         let _ = svc.ready().await.unwrap().call(LlmRequest::Chat(req_body)).await;
         assert_eq!(
             call_count.load(std::sync::atomic::Ordering::SeqCst),

@@ -31,8 +31,6 @@ use liter_llm::types::{
 use tower::Layer as _;
 use tower::Service as _;
 
-// ─── VecSink ─────────────────────────────────────────────────────────────────
-
 #[derive(Default)]
 struct VecSink {
     events: Arc<Mutex<Vec<UsageEvent>>>,
@@ -50,8 +48,6 @@ impl UsageSink for VecSink {
         Ok(())
     }
 }
-
-// ─── Helper clients ───────────────────────────────────────────────────────────
 
 /// Client that echoes the requested model name in the response.
 #[derive(Clone)]
@@ -287,8 +283,6 @@ impl LlmClient for ResolvedModelClient {
     }
 }
 
-// ─── Helper ───────────────────────────────────────────────────────────────────
-
 fn chat_req(model: &str) -> ChatCompletionRequest {
     ChatCompletionRequest {
         model: model.into(),
@@ -305,8 +299,6 @@ async fn flush_sink() {
     tokio::task::yield_now().await;
     tokio::task::yield_now().await;
 }
-
-// ─── Tests ────────────────────────────────────────────────────────────────────
 
 /// First request with a CacheLayer in the stack produces `cache_state == Miss`.
 #[tokio::test]
@@ -350,13 +342,11 @@ async fn exact_hit_records_exact_hit() {
         .with_usage_sink(Arc::clone(&sink))
         .layer(cache_layer.layer(inner));
 
-    // First call — populates the cache.
     svc.call(LlmRequest::Chat(chat_req("gpt-4o")))
         .await
         .expect("should succeed");
     flush_sink().await;
 
-    // Second call — should hit the exact tier.
     svc.call(LlmRequest::Chat(chat_req("gpt-4o")))
         .await
         .expect("should succeed");
@@ -386,7 +376,6 @@ async fn semantic_hit_records_semantic_hit() {
     };
     let store: Arc<dyn liter_llm::tower::CacheStore> = Arc::new(InMemoryStore::new(&config));
 
-    // Pre-seed the cache store with a canned response under a sentinel key and body.
     use liter_llm::tower::CachedResponse;
     let sentinel_key: u64 = 7777;
     let sentinel_body = "sentinel-body";
@@ -398,9 +387,6 @@ async fn semantic_hit_records_semantic_hit() {
         )
         .await;
 
-    // Pre-seed the vector store with a zero vector pointing at the sentinel.
-    // `NoOpEmbeddingProvider` returns a zero vector of the requested dimension;
-    // cosine similarity of two zero vectors is 0.0, which is >= threshold 0.0.
     let vs: Arc<dyn VectorStore> = Arc::new(InMemoryVectorStore::new(1));
     vs.upsert(
         "v".into(),

@@ -15,22 +15,16 @@ categories = ["api-bindings", "web-programming::http-client"]
 ignored = ["dashmap", "tower-http"]
 
 [features]
-# ---------------------------------------------------------------------------
-# Transport features
-# ---------------------------------------------------------------------------
 
-# Enable the native HTTP stack (reqwest + tokio).  Disable this feature when
-# compiling for WebAssembly, where the browser / Node.js fetch API is used
-# instead and the tokio multi-thread runtime is unavailable.
+# ~keep Disable `native-http` for WebAssembly; browser and Node builds use fetch
+# ~keep and cannot run the Tokio multi-thread runtime.
 native-http = [
     "dep:reqwest",
-    # reqwest/http2 is required for `ClientBuilder::http2_prior_knowledge()` which
-    # is gated behind reqwest's `http2` feature.  Enable it alongside native-http
-    # so `TransportConfig::http2_prior_knowledge` can be wired through.
+    # ~keep reqwest/http2 gates `ClientBuilder::http2_prior_knowledge()`, which
+    # ~keep backs `TransportConfig::http2_prior_knowledge`.
     "reqwest/http2",
-    # dep:rustls is only satisfied on non-Windows (see target-conditional deps below).
-    # Cargo silently ignores feature activations for optional deps that are absent on
-    # the current target, so this entry is a no-op on Windows without causing an error.
+    # ~keep dep:rustls is only present on non-Windows; Cargo ignores optional
+    # ~keep feature activations for absent target-conditional deps.
     "dep:rustls",
     "dep:tokio",
     "dep:tokio-util",
@@ -38,92 +32,40 @@ native-http = [
     "dep:gcp_auth",
 ]
 
-# WASM transport: browser / Node.js fetch API via gloo-timers.
-# Mutually exclusive with `native-http`.
 wasm-http = ["dep:reqwest", "dep:memchr", "dep:gloo-timers", "dep:web-time"]
-# (HTTP/3 feature is declared further down — see the http3 entry under transports.)
-# ---------------------------------------------------------------------------
-# Observability features
-# ---------------------------------------------------------------------------
 
-# Structured tracing via the `tracing` crate.  Adds `#[instrument]` spans on
-# HTTP functions and SSE parser warnings.  Can be enabled independently of the
-# Tower middleware integration.
 tracing = ["dep:tracing"]
 
-# OpenTelemetry export bridge via `tracing-opentelemetry`.  Depends on `tracing`
-# and re-exports `tracing_opentelemetry` so callers can compose their own
-# subscriber stack without a hard dependency on the crate themselves.
-# OTel is the single observability surface — no prometheus feature exists by design.
 otel = ["tracing", "dep:tracing-opentelemetry", "dep:opentelemetry"]
-# ---------------------------------------------------------------------------
-# Middleware feature
-# ---------------------------------------------------------------------------
 
-# Tower middleware integration (LlmService, TracingLayer, FallbackLayer,
-# rate_limit, budget, health, retry, circuit, hedge, cache).
 tower = ["dep:tower", "dep:tower-http", "dep:futures-util", "tracing"]
-# ---------------------------------------------------------------------------
-# Caching feature
-# ---------------------------------------------------------------------------
 
-# Caching layer backed by opendal (memory, Redis, S3, filesystem).
-# Requires the `tower` feature for the middleware stack.
 opendal-cache = ["dep:opendal", "tower"]
 
-# CEL (Common Expression Language) policy DSL for guardrails.
-# Enables `CelGuardrail` in the `guardrail::cel` module.
 guardrail-cel = ["dep:cel-interpreter"]
-# ---------------------------------------------------------------------------
-# Cloud-provider auth features
-# ---------------------------------------------------------------------------
 
-# AWS Bedrock SigV4 signing support.  Enables the `aws-sigv4` dependency and
-# activates real SigV4 signing in `BedrockProvider`.  When this feature is
-# disabled, `BedrockProvider` still routes `bedrock/` prefixed model names
-# and strips the prefix, but sends requests unsigned (suitable for tests
-# using a `base_url` override pointing to a mock server).
+# ~keep Without `bedrock`, `BedrockProvider` still routes `bedrock/` model names
+# ~keep and strips the prefix, but sends unsigned requests for mock base URLs.
 bedrock = ["native-http", "dep:aws-credential-types", "dep:aws-sigv4"]
 
-# Azure AD OAuth2 credential provider (client-credentials flow).
 azure-auth = ["native-http"]
 
-# GitHub Copilot OAuth Device Flow credential provider.
 copilot-auth = ["native-http"]
 
-# Google Vertex AI OAuth2 credential provider (service-account JWT flow).
 vertex-auth = ["native-http", "dep:jsonwebtoken"]
 
-# Google Vertex AI ADC credential provider (metadata server + gcp_auth fallback).
-# Back-compat alias: native-http already pulls in gcp_auth so the ADC provider
-# is reachable whenever native-http is on. ADC is the recommended auth path
-# for GKE / Workload Identity deployments — no service-account key file needed.
+# ~keep Back-compat alias: native-http already pulls in gcp_auth, so the ADC
+# ~keep provider is reachable whenever native-http is on.
 vertex-adc = ["native-http"]
 
-# AWS STS Web Identity credential provider (EKS / IRSA token exchange).
 bedrock-auth = ["native-http"]
 
-# HTTP/3 (h3-quinn) support in reqwest. Requires the `native-http` feature.
-# When enabled, the HTTP client negotiates HTTP/3 during connection establishment.
 http3 = ["native-http"]
-# ---------------------------------------------------------------------------
-# Token counting
-# ---------------------------------------------------------------------------
 
-# Token counting via HuggingFace tokenizers.  Provides lazy-cached tokenizer
-# loading and token counting for text and chat completion requests.
 tokenizer = ["dep:tokenizers"]
-# ---------------------------------------------------------------------------
-# Composite presets
-# ---------------------------------------------------------------------------
 
-# `lite` — bare client with native HTTP, no opendal, no Tower middleware,
-# no tokenizer.  Suitable for embedded usage or minimal binary size targets.
 lite = ["native-http"]
 
-# `full` — everything: native HTTP + tower + tracing + otel + bedrock +
-# tokenizer + all auth providers + opendal cache.
-# Default for the proxy and CLI; downstream crates use granular features.
 full = [
     "native-http",
     "tower",
@@ -139,12 +81,9 @@ full = [
     "opendal-cache",
 ]
 
-# etcd-backed KeyResolver implementation.
-# Adds EtcdKeyResolver and EtcdKeyResolverConfig to liter_llm::tenant.
 etcd-key-resolver = ["dep:etcd-client", "dep:hex", "dep:sha2"]
 
-# Default: native HTTP only — matches `lite` without the alias.
-# Keeps `cargo build` in downstream projects working without opt-in to heavy deps.
+# ~keep Default remains native HTTP only so downstream `cargo build` avoids heavy deps.
 default = ["native-http"]
 
 [dependencies]
@@ -152,10 +91,8 @@ ahash = { workspace = true }
 async-trait = { workspace = true }
 aws-credential-types = { version = "1", optional = true }
 aws-sigv4 = { version = "1", features = ["sign-http", "http1"], optional = true }
-# Unconditional: `crate::image::{encode_data_url, decode_data_url}` are
-# transport-agnostic helpers used to build `data:` URIs for multimodal
-# `ContentPart::ImageUrl` payloads. Previously gated behind `native-http` /
-# `wasm-http`; unblocking those transports is no longer the only caller.
+# ~keep Image data-URI helpers are transport-agnostic and must stay available
+# ~keep outside `native-http` and `wasm-http`.
 base64 = { workspace = true }
 bytes = { workspace = true }
 cel-interpreter = { version = "0.10", optional = true }
@@ -189,14 +126,14 @@ tracing-opentelemetry = { workspace = true, optional = true }
 url = { workspace = true }
 web-time = { version = "1", optional = true }
 
-# Non-Windows: use rustls + ring (avoids aws-lc-sys, the only provider bundled by default on Linux/macOS).
-# The workspace reqwest base declares TLS-agnostic features; we layer the TLS provider here.
+# ~keep Non-Windows uses rustls + ring to avoid aws-lc-sys as the bundled TLS provider.
+# ~keep The workspace reqwest base is TLS-agnostic; this layer supplies TLS.
 [target.'cfg(not(target_os = "windows"))'.dependencies]
 reqwest = { workspace = true, optional = true, features = ["rustls-no-provider"] }
 rustls = { workspace = true, optional = true }
 
-# Windows: use SChannel via native-tls; this avoids the aws-lc-sys MSVC build failure.
-# rustls is intentionally not pulled in on Windows.
+# ~keep Windows uses SChannel via native-tls to avoid aws-lc-sys MSVC build failures.
+# ~keep rustls is intentionally not pulled in on Windows.
 [target.'cfg(target_os = "windows")'.dependencies]
 reqwest = { workspace = true, optional = true, features = ["native-tls"] }
 

@@ -31,8 +31,6 @@ use super::{Credential, CredentialProvider, StaticTokenProvider};
 use crate::client::BoxFuture;
 use crate::error::LiterLlmError;
 
-// ── Constants ────────────────────────────────────────────────────────────────
-
 /// Public GitHub OAuth App client ID for GitHub Copilot.
 const DEFAULT_CLIENT_ID: &str = "Iv1.b507a08c87ecfe98";
 
@@ -66,8 +64,6 @@ const DEVICE_FLOW_POLL_INTERVAL: Duration = Duration::from_secs(5);
 /// Minimum remaining lifetime before a Copilot API key is considered expired.
 const EXPIRY_BUFFER_SECS: u64 = 300;
 
-// ── Internal types ────────────────────────────────────────────────────────────
-
 /// In-memory cached Copilot API key with its expiry timestamp.
 struct CachedToken {
     token: SecretString,
@@ -86,8 +82,6 @@ impl CachedToken {
         now + EXPIRY_BUFFER_SECS < self.expires_at
     }
 }
-
-// ── Serde helpers (private) ──────────────────────────────────────────────────
 
 #[derive(serde::Deserialize)]
 struct DeviceCodeResponse {
@@ -121,8 +115,6 @@ struct PersistedApiKey {
     expires_at: u64,
     api_endpoint: Option<String>,
 }
-
-// ── Provider ─────────────────────────────────────────────────────────────────
 
 /// GitHub Copilot credential provider using the OAuth Device Flow.
 ///
@@ -172,8 +164,6 @@ impl GithubCopilotCredentialProvider {
         crate::ensure_crypto_provider();
         let http_client = reqwest::Client::new();
 
-        // Allow a pre-existing static token via the access-token env var.
-        // This matches the azure_ad fast-path pattern.
         if let Ok(token) = std::env::var("GITHUB_COPILOT_TOKEN") {
             return Ok(Arc::new(StaticTokenProvider::new(SecretString::from(token))));
         }
@@ -220,14 +210,10 @@ impl GithubCopilotCredentialProvider {
     /// Returns `None` when no API key has been fetched yet or the response did
     /// not include an `endpoints.api` field.
     pub fn api_base(&self) -> Option<String> {
-        // Read from disk cache — cheap, avoids holding the async RwLock in a
-        // sync context.
         let raw = std::fs::read_to_string(&self.api_key_path).ok()?;
         let persisted: PersistedApiKey = serde_json::from_str(&raw).ok()?;
         persisted.api_endpoint
     }
-
-    // ── Private helpers ───────────────────────────────────────────────────────
 
     /// Load the GitHub OAuth access token from disk, if present.
     fn load_access_token(&self) -> Option<SecretString> {
@@ -263,7 +249,6 @@ impl GithubCopilotCredentialProvider {
 
     /// Run the GitHub OAuth Device Flow to obtain a new access token.
     async fn run_device_flow(&self) -> Result<SecretString, LiterLlmError> {
-        // Step 1: request a device code.
         let device_resp = self
             .http_client
             .post(&self.device_code_url)
@@ -303,13 +288,11 @@ impl GithubCopilotCredentialProvider {
                 status: 401,
             })?;
 
-        // Step 2: prompt the user.
         eprintln!(
             "\nTo authenticate with GitHub Copilot, visit: {}\nand enter code: {}\n",
             device.verification_uri, device.user_code
         );
 
-        // Step 3: poll for the access token.
         for attempt in 0..DEVICE_FLOW_POLL_ATTEMPTS {
             tokio::time::sleep(DEVICE_FLOW_POLL_INTERVAL).await;
 
@@ -353,9 +336,7 @@ impl GithubCopilotCredentialProvider {
 
             if let Some(ref error) = parsed.error {
                 match error.as_str() {
-                    "authorization_pending" | "slow_down" => {
-                        // Continue polling.
-                    }
+                    "authorization_pending" | "slow_down" => {}
                     other => {
                         return Err(LiterLlmError::Authentication {
                             message: format!("GitHub Device Flow error after attempt {attempt}: {other}"),
@@ -423,7 +404,6 @@ impl GithubCopilotCredentialProvider {
             status: 401,
         })?;
 
-        // Persist to disk so `api_base()` can read it without holding a lock.
         let api_endpoint = parsed.endpoints.as_ref().and_then(|e| e.api.clone());
         let persisted = PersistedApiKey {
             token: parsed.token.clone(),
@@ -431,8 +411,6 @@ impl GithubCopilotCredentialProvider {
             api_endpoint,
         };
         if let Some(parent) = self.api_key_path.parent() {
-            // Best-effort — if the directory exists we write; ignore create
-            // failures here since the token is still usable in memory.
             let _ = tokio::fs::create_dir_all(parent).await;
         }
         let _ = tokio::fs::write(
@@ -451,7 +429,6 @@ impl GithubCopilotCredentialProvider {
 impl CredentialProvider for GithubCopilotCredentialProvider {
     fn resolve(&self) -> BoxFuture<'_, crate::error::Result<Credential>> {
         Box::pin(async move {
-            // Fast path: read lock to check in-memory cache.
             {
                 let guard = self.cached.read().await;
                 if let Some(ref cached) = *guard
@@ -461,10 +438,8 @@ impl CredentialProvider for GithubCopilotCredentialProvider {
                 }
             }
 
-            // Slow path: write lock to refresh.
             let mut guard = self.cached.write().await;
 
-            // Double-check after acquiring write lock (another task may have refreshed).
             if let Some(ref cached) = *guard
                 && cached.is_valid()
             {
@@ -481,8 +456,6 @@ impl CredentialProvider for GithubCopilotCredentialProvider {
     }
 }
 
-// ── Module-level helpers ──────────────────────────────────────────────────────
-
 /// Resolve the default token directory: `~/.config/liter-llm/github_copilot/`.
 ///
 /// On Unix, uses `$XDG_CONFIG_HOME` if set, otherwise `$HOME/.config`.
@@ -496,22 +469,17 @@ fn default_token_dir() -> PathBuf {
 
 /// Platform-portable config directory resolution (no external crate required).
 fn platform_config_dir() -> Option<PathBuf> {
-    // Respect XDG on Unix.
     if let Ok(xdg) = std::env::var("XDG_CONFIG_HOME") {
         return Some(PathBuf::from(xdg));
     }
-    // Windows: %APPDATA%
     #[cfg(target_os = "windows")]
     if let Ok(appdata) = std::env::var("APPDATA") {
         return Some(PathBuf::from(appdata));
     }
-    // Unix fallback: $HOME/.config
     std::env::var("HOME")
         .ok()
         .map(|home| PathBuf::from(home).join(".config"))
 }
-
-// ── Tests ─────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
@@ -533,21 +501,18 @@ mod tests {
 
     #[test]
     fn cached_token_validity() {
-        // Expiry 1 hour in the future — well outside the 300s buffer.
         let token = make_cached_token(unix_now() + 3600);
         assert!(token.is_valid());
     }
 
     #[test]
     fn cached_token_expired() {
-        // Already expired.
         let token = make_cached_token(unix_now().saturating_sub(60));
         assert!(!token.is_valid());
     }
 
     #[test]
     fn cached_token_within_buffer() {
-        // Expires in 200s — inside the 300s buffer, so treated as invalid.
         let token = make_cached_token(unix_now() + 200);
         assert!(!token.is_valid());
     }
@@ -578,7 +543,6 @@ mod tests {
     #[test]
     fn default_token_dir() {
         let provider = GithubCopilotCredentialProvider::new(reqwest::Client::new());
-        // The paths must end with the canonical file names.
         assert_eq!(
             provider.access_token_path.file_name().and_then(|n| n.to_str()),
             Some(ACCESS_TOKEN_FILE_NAME)
@@ -587,24 +551,17 @@ mod tests {
             provider.api_key_path.file_name().and_then(|n| n.to_str()),
             Some(API_KEY_FILE_NAME)
         );
-        // Both paths must share the same parent directory.
         assert_eq!(provider.access_token_path.parent(), provider.api_key_path.parent());
     }
 
     #[test]
     fn env_override_client_id() {
-        // SAFETY: This is a single-threaded test that is the sole writer for
-        // this env var.  Rust 2024 requires an unsafe block for set_var /
-        // remove_var because they are unsound in multi-threaded programs; the
-        // risk is acceptable in a focused unit test with no other threads
-        // accessing this variable concurrently.
+        // ~keep SAFETY: this single-threaded test is the sole writer for this env var.
         unsafe {
             std::env::set_var("GITHUB_COPILOT_CLIENT_ID", "custom-client-id");
         }
         let provider =
             GithubCopilotCredentialProvider::from_env().expect("from_env should not fail with default paths");
-        // Downcast is not possible through Arc<dyn CredentialProvider>, so we
-        // validate construction success as a proxy for env-var reading.
         unsafe {
             std::env::remove_var("GITHUB_COPILOT_CLIENT_ID");
         }
@@ -613,7 +570,7 @@ mod tests {
 
     #[test]
     fn default_client_id_used_when_no_env() {
-        // SAFETY: sole writer in this test; see safety comment above.
+        // ~keep SAFETY: sole writer in this test; see safety comment above.
         unsafe {
             std::env::remove_var("GITHUB_COPILOT_CLIENT_ID");
         }
@@ -622,7 +579,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore] // Requires interactive browser session and live GitHub access.
+    #[ignore]
     async fn live_device_flow() {
         let provider = GithubCopilotCredentialProvider::from_env().expect("from_env should succeed");
         let credential = provider.resolve().await.expect("resolve should return a credential");
