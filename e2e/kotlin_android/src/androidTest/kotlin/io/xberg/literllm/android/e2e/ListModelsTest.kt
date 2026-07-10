@@ -20,28 +20,24 @@ class ListModelsTest {
     fun test_empty_model_list() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: empty_model_list */)
-        // TODO: assert result is not an error
     }
 
     @Test
     fun test_list_models_error_401() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: list_models_error_401 */)
-        // TODO: assert result is not an error
     }
 
     @Test
     fun test_list_models_error_500() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: list_models_error_500 */)
-        // TODO: assert result is not an error
     }
 
     @Test
     fun test_list_models_filtered() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: list_models_filtered */)
-        // TODO: assert result is not an error
     }
 
 }

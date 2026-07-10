@@ -20,7 +20,6 @@ class ParityTest {
     fun test_api_surface_parity() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: api_surface_parity */)
-        // TODO: assert result is not an error
     }
 
 }

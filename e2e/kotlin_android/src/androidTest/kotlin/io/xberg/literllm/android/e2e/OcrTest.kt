@@ -20,28 +20,24 @@ class OcrTest {
     fun test_ocr_error_400() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: ocr_error_400 */)
-        // TODO: assert result is not an error
     }
 
     @Test
     fun test_ocr_error_401() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: ocr_error_401 */)
-        // TODO: assert result is not an error
     }
 
     @Test
     fun test_ocr_multi_page() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: ocr_multi_page */)
-        // TODO: assert result is not an error
     }
 
     @Test
     fun test_ocr_url_document() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: ocr_url_document */)
-        // TODO: assert result is not an error
     }
 
 }

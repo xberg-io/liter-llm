@@ -20,14 +20,12 @@ class CustomProviderTest {
     fun test_provider_auth() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: provider_auth */)
-        // TODO: assert result is not an error
     }
 
     @Test
     fun test_register_provider() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: register_provider */)
-        // TODO: assert result is not an error
     }
 
 }

@@ -86,7 +86,7 @@ pub struct VectorMatch {
 ///         k: usize,
 ///         threshold: f32,
 ///     ) -> Pin<Box<dyn Future<Output = Vec<VectorMatch>> + Send + 'a>> {
-///         todo!()
+///         Box::pin(async move { Vec::new() })
 ///     }
 ///
 ///     fn upsert<'a>(
@@ -95,14 +95,14 @@ pub struct VectorMatch {
 ///         vec: Vec<f32>,
 ///         metadata: VectorMetadata,
 ///     ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + 'a>> {
-///         todo!()
+///         Box::pin(async move { Ok(()) })
 ///     }
 ///
 ///     fn delete<'a>(
 ///         &'a self,
 ///         id: &'a str,
 ///     ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + 'a>> {
-///         todo!()
+///         Box::pin(async move { Ok(()) })
 ///     }
 ///
 ///     fn dim(&self) -> usize { 1536 }

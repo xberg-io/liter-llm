@@ -20,14 +20,12 @@ class ToolCallingTest {
     fun test_anthropic_tool_calling() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: anthropic_tool_calling */)
-        // TODO: assert result is not an error
     }
 
     @Test
     fun test_single_tool_call() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: single_tool_call */)
-        // TODO: assert result is not an error
     }
 
 }

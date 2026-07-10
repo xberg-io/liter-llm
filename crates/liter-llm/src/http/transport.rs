@@ -153,7 +153,7 @@ impl TransportConfig {
     /// the underlying HTTP stack.  A future reqwest release or a custom
     /// `hickory-dns` resolver integration may allow this.
     ///
-    /// TODO: wire `dns_cache_ttl` once reqwest exposes a DNS-cache TTL hook.
+    /// ~keep TODO: wire `dns_cache_ttl` once reqwest exposes a DNS-cache TTL hook.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn apply_to_builder(&self, builder: reqwest::ClientBuilder) -> reqwest::ClientBuilder {
         let builder = builder

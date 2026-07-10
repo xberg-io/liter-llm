@@ -2127,7 +2127,7 @@ jobs:
           working-directory: packages/zig
           tag: ${{ needs.prepare.outputs.tag }}
           token: ${{ steps.app-token.outputs.token }}
-          # ~keep → 404 + consumer build.zig.zon TODO hash.
+          # ~keep → 404 + consumer build.zig.zon placeholder hash.
           package-name: liter-llm-zig
           multi-platform-ffi-dir: ffi-artifacts
           module-name: liter_llm

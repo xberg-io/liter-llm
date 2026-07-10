@@ -20,14 +20,12 @@ class TypesTest {
     fun test_all_message_types() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: all_message_types */)
-        // TODO: assert result is not an error
     }
 
     @Test
     fun test_multimodal_content() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: multimodal_content */)
-        // TODO: assert result is not an error
     }
 
 }

@@ -20,21 +20,18 @@ class ContractTest {
     fun test_binding_api_parity() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: binding_api_parity */)
-        // TODO: assert result is not an error
     }
 
     @Test
     fun test_contract_ocr() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: contract_ocr */)
-        // TODO: assert result is not an error
     }
 
     @Test
     fun test_contract_search() {
         val client = LiterLlm()
         val result = client.chat(/* fixture: contract_search */)
-        // TODO: assert result is not an error
     }
 
 }

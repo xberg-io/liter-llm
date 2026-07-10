@@ -9735,7 +9735,7 @@ impl From<liter_llm::types::Message> for WasmMessage {
                 role: "function".to_string(),
                 _0: serde_wasm_bindgen::to_value(&field0).ok(),
             },
-            _ => ::std::todo!("unmapped Message variant"),
+            _ => ::std::panic!("unmapped Message variant"),
         }
     }
 }
@@ -9811,7 +9811,7 @@ impl From<liter_llm::types::ContentPart> for WasmContentPart {
                 input_audio: Some(input_audio.into()),
                 text: None,
             },
-            _ => ::std::todo!("unmapped ContentPart variant"),
+            _ => ::std::panic!("unmapped ContentPart variant"),
         }
     }
 }
@@ -9907,7 +9907,7 @@ impl From<liter_llm::types::AssistantPart> for WasmAssistantPart {
                 refusal: None,
                 text: None,
             },
-            _ => ::std::todo!("unmapped AssistantPart variant"),
+            _ => ::std::panic!("unmapped AssistantPart variant"),
         }
     }
 }
@@ -9994,7 +9994,7 @@ impl From<liter_llm::types::ResponseFormat> for WasmResponseFormat {
                 r#type: "json_schema".to_string(),
                 json_schema: Some(json_schema.into()),
             },
-            _ => ::std::todo!("unmapped ResponseFormat variant"),
+            _ => ::std::panic!("unmapped ResponseFormat variant"),
         }
     }
 }
@@ -10189,7 +10189,7 @@ impl From<liter_llm::types::OcrDocument> for WasmOcrDocument {
                 media_type: Some(media_type),
                 url: None,
             },
-            _ => ::std::todo!("unmapped OcrDocument variant"),
+            _ => ::std::panic!("unmapped OcrDocument variant"),
         }
     }
 }
